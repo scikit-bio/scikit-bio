@@ -10,14 +10,32 @@
 # distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
 from cython cimport floating
-from libc.math cimport INFINITY
+from libc.math cimport INFINITY, fabs, fabsf
 from libc.float cimport FLT_MAX, DBL_MAX
 
 
-cdef floating _lower_bound(bint local, floating gap_extend):
-    """Get lower bound when calculating cell scores."""
-    # gap_extend is supplied because otherwise it will complain: "Return type is not
-    # specified as argument type".
+cdef inline floating xabs(floating x) noexcept nogil:
+    """Calculate absolute value of a floating-point number.
+
+    It takes a fused floating type variable (float or double) and dispatches the
+    corresponding C function (fabsf or fabs). Since it is inlined, there is little
+    overhead compared with directly calling the C function.
+
+    """
+    if floating is float:
+        return fabsf(x)
+    else:
+        return fabs(x)
+
+
+cdef inline floating lbound(bint local, floating gap_extend) noexcept nogil:
+    """Get lower bound of alignment score.
+
+    `gap_extend` is supplied to let the compiler know the floating type (float or
+    double). Otherwise it will complain: "Return type is not specified as argument
+    type".
+
+    """
     if local:
         return 0
     elif floating is float:
@@ -115,6 +133,180 @@ def _fill_affine_matrices(
 
             scomat[i, j] = max(sub_, ins_, del_, bound)
 
+
+def _trace_one_linear(
+    char[::1] path,
+    Py_ssize_t pos,
+    Py_ssize_t i,
+    Py_ssize_t j,
+    floating[:, ::1] scomat,
+    floating gap_extend,
+    bint local,
+    floating eps,
+):
+    """Traceback across matrix body with linear gap penalty.
+
+    Parameters:
+    ----------
+    path : memoryview of ndarray of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    scomat : memoryview of ndarray of shape (m, n)
+        Main matrix.
+    gap_extend : floating
+        Gap extension penalty.
+    local : bint
+        Local (True) or global (False) alignment.
+    eps : floating
+        Absolute tolerance.
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+    int
+        Updated row index in the matrix.
+    int
+        Updated column index in the matrix.
+
+    Notes
+    -----
+    Only one optimal alignment path is traced. The priority is:
+    
+        deletion > insertion > substitution
+
+    This function does not involve the original sequences or the substitution matrix,
+    thereby improving memory efficiency.
+
+    """
+    cdef floating score, gap_score
+
+    # will stop when reaching either edge of the matrix
+    while i and j:
+        score = scomat[i, j]
+        if local and xabs(score) <= eps:
+            break
+        gap_score = gap_extend + score
+        pos -= 1
+
+        # deletion (vertical; gap in seq2)
+        if xabs(scomat[i - 1, j] - gap_score) <= eps:
+            path[pos] = 2
+            i -= 1
+        # insertion (horizontal; gap in seq1)
+        elif xabs(scomat[i, j - 1] - gap_score) <= eps:
+            path[pos] = 1
+            j -= 1
+        # substitution (diagonal; no gap)
+        else:
+            path[pos] = 0
+            i -= 1
+            j -= 1
+
+    return pos, i, j
+
+
+def _trace_one_affine(
+    char[::1] path,
+    Py_ssize_t pos,
+    Py_ssize_t i,
+    Py_ssize_t j,
+    floating[:, ::1] scomat,
+    floating[:, ::1] insmat,
+    floating[:, ::1] delmat,
+    floating gap_extend,
+    bint local,
+    floating eps,
+):
+    """Traceback across matrix body with affine gap penalty.
+
+    Parameters:
+    ----------
+    path : memoryview of ndarray of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    scomat : memoryview of ndarray of shape (m, n)
+        Main matrix.
+    insmat : memoryview of ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : memoryview of ndarray of shape (m, n)
+        Deletion matrix.
+    gap_extend : floating
+        Gap extension penalty.
+    local : bint
+        Local (True) or global (False) alignment.
+    eps : floating
+        Absolute tolerance.
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+    int
+        Updated row index in the matrix.
+    int
+        Updated column index in the matrix.
+
+    Notes
+    -----
+    Only one optimal alignment path is traced. The priority is:
+    
+        Main matrix: jumping to deletion matrix > jumping to insertion matrix >
+          substitution.
+        Deletion matrix: staying in deletion matrix > jumping to main matrix.
+        Insertion matrix: staying in insertion matrix > jumping to main matrix.
+
+    """
+    cdef floating score
+    cdef int mat = 0
+
+    while i and j:
+        score = scomat[i, j]
+        if local and xabs(score) <= eps:
+            break
+
+        # deletion matrix (vertical; gap in seq2)
+        if mat == 2:
+            # extend an existing gap (stay in the current matrix),
+            # or open a new gap (jump back to main matrix)
+            if xabs(delmat[i - 1, j] - gap_extend - delmat[i, j]) > eps:
+                mat = 0
+            i -= 1
+            pos -= 1
+            path[pos] = 2
+
+        # insertion matrix (horizontal; gap in seq1)
+        elif mat == 1:
+            # same as above
+            if xabs(insmat[i, j - 1] - gap_extend - insmat[i, j]) > eps:
+                mat = 0
+            j -= 1
+            pos -= 1
+            path[pos] = 1
+
+        # main matrix
+        else:
+            if xabs(delmat[i, j] - score) <= eps:  # jump to deletion matrix
+                mat = 2
+            elif xabs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
+                mat = 1
+            else:  # substitution (diagonal; no gap)
+                i -= 1
+                j -= 1
+                pos -= 1
+                path[pos] = 0
+
+    return pos, i, j
 
 
 # def local_align_fill(float32_t[:, :] D_view, float32_t[:, :] P_view, float32_t[:, :] Q_view, const cnp.float64_t[:, :] subMatrix, const cnp.uint8_t[::1] seq1, const cnp.uint8_t[::1] seq2, const int8_t gap_open, const int8_t gap_extend) noexcept nogil:

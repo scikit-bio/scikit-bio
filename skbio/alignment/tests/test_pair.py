@@ -14,7 +14,10 @@ import numpy.testing as npt
 import skbio.io
 from skbio.util import get_data_path
 from skbio.alignment import TabularMSA
-from skbio.sequence import Sequence, DNA, Protein, SubstitutionMatrix
+from skbio.sequence import Sequence, GrammaredSequence, DNA, Protein
+from skbio.sequence import SubstitutionMatrix
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
 
 from skbio.alignment._pair import (
     pair_align,
@@ -161,7 +164,7 @@ class PairAlignTests(unittest.TestCase):
         seq1 = Protein("PKKKRKV")
         seq2 = Protein("PAAKRVKLD")
 
-        # Default BLASTP parameters.
+        # default BLASTP parameters
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 11)
         self.assertEqual(obs.paths[0].to_cigar(), "7M2I")
@@ -169,13 +172,84 @@ class PairAlignTests(unittest.TestCase):
             ("PKKKRKV--",
              "PAAKRVKLD"))
 
-        # Defensins (a category of antimicrobial peptides, or AMPs) of human (2PM4)
-        # and rat (NP_775421.1).
+        # Defensins (a category of antimicrobial peptides) of human (2PM4) and rat
+        # (NP_775421.1).
         seq1 = Protein("DCYCRIPACIAGEKKYGTCIYQGKLWAFCC")
         seq2 = Protein("CYCRIGACVSGERLTGACGLNGRIYRLCC")
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 97)
         self.assertEqual(obs.paths[0].to_cigar(), "1D29M")
+
+        # alternative substitution matrix
+        obs = pair_align(seq1, seq2, sub_score="PAM70", gap_cost=(11, 1))
+        self.assertEqual(obs.score, 86)
+        self.assertEqual(obs.paths[0].to_cigar(), "1D29M")
+
+    def test_pair_align_custom(self):
+        # Align custom sequence types. This example is taken from the previous
+        # scikit-bio code.
+
+        class CustomSequence(GrammaredSequence):
+            @classproperty
+            @overrides(GrammaredSequence)
+            def gap_chars(cls):
+                return set('^$')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '^'
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def definite_chars(cls):
+                return set('WXYZ')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def degenerate_map(cls):
+                return {}
+
+        seq1 = CustomSequence("WXYZ")
+        seq2 = CustomSequence("WXYYZZ")
+        obs = pair_align(seq1, seq2)
+        self.assertEqual(obs.score, 2)
+        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+            "WXYZ^^",
+            "WXYYZZ",
+        ))
+        obs = pair_align(seq1, seq2, free_ends=False)
+        self.assertEqual(obs.score, 0)
+        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+            "WXY^Z^",
+            "WXYYZZ",
+        ))
+        obs = pair_align(seq1, seq2, local=True)
+        self.assertEqual(obs.score, 3)
+        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+            "WXY",
+            "WXY",
+        ))
+
+        # also from the previous scikit-bio code
+        seq1 = CustomSequence("YWXXZZYWXXWYYZWXX")
+        seq2 = CustomSequence("YWWXZZZYWXYZWWX")
+        obs = pair_align(seq1, seq2, local=True, sub_score=(5, -4),
+                         gap_cost=(4.5, 0.5), max_paths=None)
+        self.assertEqual(obs.score, 41)
+        self.assertEqual(len(obs.paths), 5)
+        self.assertEqual(
+            TabularMSA.from_path_seqs(obs.paths[4], [seq1, seq2]),
+            TabularMSA([CustomSequence("WXXZZYWXXWYYZWXX"),
+                        CustomSequence("WXZZZYWX^^^YZWWX")]))
+
+    def test_pair_align_raw(self):
+        # Align raw strings.
+        seq1 = "accttgcaaaa"
+        seq2 = "cctgca"
+        obs = pair_align(seq1, seq2, local=True)
+        self.assertEqual(obs.score, 4)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M1D3M")
 
     def test_pair_align_challenge(self):
         # This example is from Altschul & Erickson, Bull Math Biol, 1986 (Fig. 2),
@@ -580,13 +654,13 @@ class PairAlignTests(unittest.TestCase):
                            [ -4,  -1,  -2,  -2,  -4,  -6],
                            [ -6,  -3,  -2,  -3,  -3,  -5],
                            [ -8,  -5,  -4,  -3,  -4,  -4],
-                           [-10,  -7,  -4,  -5,  -2,  -4]])
-        obs = _traceback_one(5, 5, [scomat], 0, 2, local=False)
+                           [-10,  -7,  -4,  -5,  -2,  -4]], dtype=float)
+        obs = _traceback_one(5, 5, (scomat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "1D4M1I")
 
         # transpose: bottom-right corner to top row
         scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(5, 5, [scomat], 0, 2, local=False)
+        obs = _traceback_one(5, 5, (scomat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "1I4M1D")
 
         # semi-global: unique path, bottom row to left-most column
@@ -595,13 +669,13 @@ class PairAlignTests(unittest.TestCase):
                            [ 0,  1, -1,  0, -1,  0],
                            [ 0, -1,  0, -2, -1, -2],
                            [ 0,  1, -1, -1, -3, -2],
-                           [ 0, -1,  2,  0,  0, -2]])
-        obs = _traceback_one(5, 2, [scomat], 0, 2, local=False)
+                           [ 0, -1,  2,  0,  0, -2]], dtype=float)
+        obs = _traceback_one(5, 2, (scomat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "3D2M3I")
 
         # transpose: right-most column to top row
         scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(2, 5, [scomat], 0, 2, local=False)
+        obs = _traceback_one(2, 5, (scomat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "3I2M3D")
 
         # local: unique path, bottom row to left-most column
@@ -610,14 +684,14 @@ class PairAlignTests(unittest.TestCase):
                            [0, 1, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0],
                            [0, 1, 0, 0, 0, 0],
-                           [0, 0, 2, 0, 1, 0]])
-        obs = _traceback_one(5, 2, [scomat], 0, 2, local=True)
+                           [0, 0, 2, 0, 1, 0]], dtype=float)
+        obs = _traceback_one(5, 2, (scomat,), 0., 2., local=True)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [3, 0])
 
         # transpose: right-most column to top row
         scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(2, 5, [scomat], 0, 2, local=True)
+        obs = _traceback_one(2, 5, (scomat,), 0., 2., local=True)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [0, 3])
 
@@ -628,8 +702,8 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 0, 0],
                            [0, 0, 1, 1, 0],
                            [0, 1, 0, 0, 2],
-                           [0, 0, 0, 0, 0]])
-        obs = _traceback_one(4, 4, [scomat], 0, 2, local=True)
+                           [0, 0, 0, 0, 0]], dtype=float)
+        obs = _traceback_one(4, 4, (scomat,), 0., 2., local=True)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [2, 2])
 
@@ -639,8 +713,8 @@ class PairAlignTests(unittest.TestCase):
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
-                           [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _traceback_one(4, 5, [scomat], 0, 2, local=False)
+                           [ -8,  -5,  -4,  -3,   0,  -2]], dtype=float)
+        obs = _traceback_one(4, 5, (scomat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "4M1I")
 
         # TAGCATC vs TCAGTC, sub=(2, -1), gap=(3, 1) (affine), global
@@ -653,7 +727,7 @@ class PairAlignTests(unittest.TestCase):
                            [ -7,  -4,  -1,  -4,  -1,   1,   0],
                            [ -8,  -5,  -5,   1,  -3,  -2,   0],
                            [ -9,  -6,  -6,  -3,   0,  -1,  -3],
-                           [-10,  -7,  -4,  -4,  -4,  -1,   1]])
+                           [-10,  -7,  -4,  -4,  -4,  -1,   1]], dtype=float)
         insmat = np.array([[NAN, NAN, NAN, NAN, NAN, NAN, NAN],
                            [INF,  -8,  -2,  -3,  -4,  -5,  -6],
                            [INF,  -9,  -6,  -3,  -4,  -5,  -6],
@@ -661,7 +735,7 @@ class PairAlignTests(unittest.TestCase):
                            [INF, -11,  -8,  -5,  -6,  -5,  -3],
                            [INF, -12,  -9,  -9,  -3,  -4,  -5],
                            [INF, -13, -10, -10,  -7,  -4,  -5],
-                           [INF, -14, -11,  -8,  -8,  -8,  -5]])
+                           [INF, -14, -11,  -8,  -8,  -8,  -5]], dtype=float)
         delmat = np.array([[NAN, INF, INF, INF, INF, INF, INF],
                            [NAN,  -8,  -9, -10, -11, -12, -13],
                            [NAN,  -2,  -6,  -7,  -8,  -9, -10],
@@ -669,17 +743,17 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -4,  -4,  -4,  -2,  -6,  -7],
                            [NAN,  -5,  -5,  -5,  -3,  -3,  -4],
                            [NAN,  -6,  -6,  -3,  -4,  -4,  -4],
-                           [NAN,  -7,  -7,  -4,  -4,  -5,  -5]])
-        matrices = [scomat, insmat, delmat]
-        obs = _traceback_one(7, 6, matrices, 3, 1, local=False)
+                           [NAN,  -7,  -7,  -4,  -4,  -5,  -5]], dtype=float)
+        matrices = (scomat, insmat, delmat)
+        obs = _traceback_one(7, 6, matrices, 3., 1., local=False)
         self.assertEqual(obs.to_cigar(), "1M1I2M2D2M")
 
         # transpose (needs to transpose all 3 matrices and shuffle the latter 2)
         scomat = np.ascontiguousarray(scomat.T)
         insmat = np.ascontiguousarray(insmat.T)
         delmat = np.ascontiguousarray(delmat.T)
-        matrices = [scomat, delmat, insmat]
-        obs = _traceback_one(6, 7, matrices, 3, 1, local=False)
+        matrices = (scomat, delmat, insmat)
+        obs = _traceback_one(6, 7, matrices, 3., 1., local=False)
         self.assertEqual(obs.to_cigar(), "1M2I2M1D2M")
 
         # GTCGG vs ATCGA, sub=(2, -1), gap=(3, 1), local
@@ -689,21 +763,21 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 2, 0, 0, 1],
                            [0, 0, 0, 4, 0, 0],
                            [0, 0, 0, 0, 6, 2],
-                           [0, 0, 0, 0, 2, 5]])
+                           [0, 0, 0, 0, 2, 5]], dtype=float)
         insmat = np.array([[NAN, NAN, NAN, NAN, NAN, NAN],
                            [INF,  -4,  -4,  -4,  -4,  -2],
                            [INF,  -4,  -4,  -2,  -3,  -4],
                            [INF,  -4,  -4,  -4,   0,  -1],
                            [INF,  -4,  -4,  -4,  -4,   2],
-                           [INF,  -4,  -4,  -4,  -4,  -2]])
+                           [INF,  -4,  -4,  -4,  -4,  -2]], dtype=float)
         delmat = np.array([[NAN, INF, INF, INF, INF, INF],
                            [NAN,  -4,  -4,  -4,  -4,  -4],
                            [NAN,  -4,  -4,  -4,  -2,  -4],
                            [NAN,  -4,  -2,  -4,  -3,  -3],
                            [NAN,  -4,  -3,   0,  -4,  -4],
-                           [NAN,  -4,  -4,  -1,   2,  -2]])
-        matrices = [scomat, insmat, delmat]
-        obs = _traceback_one(4, 4, matrices, 3, 1, local=True)
+                           [NAN,  -4,  -4,  -1,   2,  -2]], dtype=float)
+        matrices = (scomat, insmat, delmat)
+        obs = _traceback_one(4, 4, matrices, 3., 1., local=True)
         self.assertEqual(obs.to_cigar(), "3M")
 
     def test_traceback_all(self):

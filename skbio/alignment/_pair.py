@@ -11,11 +11,14 @@ from collections import namedtuple
 
 import numpy as np
 
-from skbio._base import SkbioObject
-from skbio.util._decorator import classonlymethod
 from skbio.sequence import Sequence, SubstitutionMatrix
 from skbio.alignment import PairAlignPath
-from ._c_pair import _fill_linear_matrix, _fill_affine_matrices
+from ._c_pair import (
+    _fill_linear_matrix,
+    _fill_affine_matrices,
+    _trace_one_linear,
+    _trace_one_affine,
+)
 
 
 def pair_align(
@@ -26,7 +29,7 @@ def pair_align(
     gap_cost=2,
     free_ends=True,
     max_paths=1,
-    tolerance=1e-5,
+    atol=1e-5,
     keep_matrices=False,
 ):
     r"""Perform pairwise alignment of two sequences.
@@ -65,7 +68,7 @@ def pair_align(
         total number of paths may be extremely large and could stress the system.
         Setting it as 0 will disable traceback and return no path.
 
-    tolerance : float, optional
+    atol : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
         to ensure floating-point arithmetic safety when ``sub_score`` or ``gap_cost``
         involve decimal numbers. Default is 1e-5. Setting it to 0 or None will slightly
@@ -87,7 +90,7 @@ def pair_align(
         Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
         paths are optimal and share the same alignment score.
 
-    matrices : list of ndarray of float of shape (m + 1, n + 1), optional
+    matrices : tuple of ndarray of float of shape (m + 1, n + 1), optional
         Alignment matrices generated during the computation.
 
     See Also
@@ -126,6 +129,8 @@ def pair_align(
     m = seq1.size
     n = seq2.size
 
+    # TODO: Cast all scores to float32 or 64
+
     # substitution matrix
     if isinstance(sub_score, str):
         sub_score = SubstitutionMatrix.by_name(sub_score)
@@ -140,6 +145,7 @@ def pair_align(
         gap_open, gap_extend = 0, gap_cost
     else:
         gap_open, gap_extend = gap_cost
+    gap_open, gap_extend = float(gap_open), float(gap_extend)
 
     # allocate alignment matrices
     matrices = _alloc_matrices(m, n, gap_open)
@@ -157,29 +163,29 @@ def pair_align(
     if max_paths == 1:
         score, stops = _one_stop(matrices[0], local, free_ends)
     else:
-        score, stops = _all_stops(matrices[0], local, free_ends, tolerance)
+        score, stops = _all_stops(matrices[0], local, free_ends, atol)
 
     # no path is found
-    if local and abs(score) <= tolerance:
-        paths, stops = [], np.empty((0, 2), dtype=int)
+    if local and abs(score) <= atol:
+        paths = []
 
     # traceback from each stop to reconstruct optimal alignment path(s)
     elif max_paths == 0:
         paths = []
     elif max_paths == 1:
-        paths = [_traceback_one(*stops[0], matrices, gap_open, gap_extend, local)]
+        paths = [_traceback_one(*stops[0], matrices, gap_open, gap_extend, local, atol)]
     else:
         paths = _traceback_all(
-            stops, matrices, submat, gap_open, gap_extend, local, max_paths
+            stops, matrices, submat, gap_open, gap_extend, local, max_paths, atol
         )
 
     # discard or keep matrices
     if not keep_matrices:
-        matrices = []
+        matrices = ()
     elif gap_open:
         _fill_nan(matrices)
     else:
-        matrices = [matrices[0]]
+        matrices = (matrices[0],)
 
     return PairAlignResult(float(score), paths, matrices)
 
@@ -196,24 +202,6 @@ def _seq_to_bytes(seq):
         return np.frombuffer(seq.encode("ascii"), dtype=np.uint8)
     else:
         raise ValueError("Sequence must be a string or a `Sequence` object.")
-
-
-def _moves(i, j, alnmat, seq1, seq2, mthmis, gap):
-    """Calculate scores of moving in three directions."""
-    return (
-        # substitution (diagonal)
-        alnmat[i - 1, j - 1] + mthmis[int(seq1[i - 1] != seq2[j - 1])],
-        # TODO: alternative methods:
-        # (a == b) * match + (a != b) * mismatch
-        # match if a == b else mismatch
-        # insertion (left to right)
-        alnmat[i, j - 1] + gap,
-        # deletion (upper to lower)
-        alnmat[i - 1, j] + gap,
-    )
-
-
-### Create substitution matrix
 
 
 def _submat_from_mm(seq1, seq2, match, mismatch):
@@ -373,7 +361,7 @@ def _one_stop(scomat, local, free_ends):
     return scomat[i, j], np.array([[i, j]])
 
 
-def _all_stops(scomat, local, free_ends, eps=1e-7):
+def _all_stops(scomat, local, free_ends, eps=1e-5):
     """Locate all stops with optimal alignment score.
 
     Parameters
@@ -385,7 +373,7 @@ def _all_stops(scomat, local, free_ends, eps=1e-7):
     free_ends : bool
         If end gaps are free from penalty.
     eps : float, optional
-        Absolute tolerance. Default is 1e-7.
+        Absolute tolerance. Default is 1e-5.
 
     Returns
     -------
@@ -434,22 +422,203 @@ def _all_stops(scomat, local, free_ends, eps=1e-7):
         return scomat[m, n], np.array([[m, n]])
 
 
-# Encodings of moving directions during traceback. Columns are:
-# 0. Row offset (i)
-#   - Can be calculated with (state & 1) ^ 1
-# 1. Column offset (j)
-#   - Can be calculated with (state >> 1) ^ 1
-# 2. Gap state
-#   0. Substitution (no gap)
-#   1. Insertion (gap in seq1)
-#   2. Deletion (gap in seq2)
-#   3. Invalid state
-# 3. Matrix index
-#   0. Main matrix
-#   1. Insertion matrix (affine)
-#   2. Deletion matrix (affine)
-#   3. Insertion matrix 2 (2-piece affine)
-#   4. Deletion matrix 2 (2-piece affine)
+def _encode_path(path, i, j):
+    """Perform run-length encoding (RLE) on a dense alignment path.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    i : int
+        Start position in sequence 1.
+    j : int
+        Start position in sequence 2.
+
+    Returns
+    -------
+    PairAlignPath
+        Encoded alignment path.
+
+    See Also
+    --------
+    skbio.alignment.AlignPath.from_bits
+
+    """
+    segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+    lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
+    return PairAlignPath(lens, path[segs], [i, j])
+
+
+def _trailing_gaps(path, pos, i, j, m, n):
+    """Fill trailing gaps before traceback starts.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    m : int
+        Last row index in the matrix (length of sequence 1).
+    n : int
+        Last column index in the matrix (length of sequence 2).
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+
+    """
+    # bottom row: ends with insertions (gaps in seq1)
+    if i == m and j < n:
+        pos -= n - j
+        path[pos:] = 1
+    # right-most column: ends with deletions (gaps in seq2)
+    elif j == n and i < m:
+        pos -= m - i
+        path[pos:] = 2
+    return pos
+
+
+def _leading_gaps(path, pos, i, j):
+    """Fill leading gaps after traceback ends.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+
+    """
+    stop = pos
+    # top row: starts with insertions (gaps in seq1)
+    if i == 0 and j > 0:
+        pos -= j
+        path[pos:stop] = 1
+    # left-most column: starts with deletions (gaps in seq2)
+    elif j == 0 and i > 0:
+        pos -= i
+        path[pos:stop] = 2
+    return pos
+
+
+def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
+    """Traceback and return one optimal alignment path.
+
+    Parameters
+    ----------
+    i : int
+        Stop position in sequence 1.
+    j : int
+        Stop position in sequence 2.
+    matrices : tuple of ndarray of float of shape (m + 1, n + 1)
+        Alignment matrices.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Global (False) or local (True) alignment.
+    eps : float, optional
+        Absolute tolerance.
+
+    Returns
+    -------
+    PairAlignPath
+        Optimal alignment path.
+
+    See Also
+    --------
+    _traceback_all
+
+    Notes
+    -----
+    This function pre-allocates memory space for the path, which has a maximum length
+    of m + n. Each element represents the gap status of one position in the alignment:
+
+        0: no gap
+        1: gap in seq1
+        2: gap in seq2
+
+    The path will be filled in reverse order (from stop to start, i.e., trace*back*).
+
+    After the path is completed, run-length encoding (RLE) will be performed to
+    compress it into a compact form.
+
+    Alternatively, one can encode the path while constructing it, which reduces memory
+    consumption. However, that will complicate Cythonization (it will need C++ vector).
+    There is no obvious runtime difference between the two methods.
+
+    """
+    scomat = matrices[0]
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+
+    # current start position of the path, i.e., the index right *after* the next
+    # position to be filled.
+    pos = m + n
+
+    # allocate space for path
+    path = np.empty(pos, dtype=np.uint8)
+
+    # fill trailing gaps (from edge to bottom-right cell).
+    if not local:
+        pos = _trailing_gaps(path, pos, i, j, m, n)
+
+    # Traceback matrix body. This is a time-consuming step. However, it is O(m + n),
+    # thus is faster than the matrix filling step.
+    if gap_open:
+        pos, i, j = _trace_one_affine(
+            path, pos, i, j, *matrices, gap_extend, local, eps
+        )
+    else:
+        pos, i, j = _trace_one_linear(path, pos, i, j, scomat, gap_extend, local, eps)
+
+    # fill leading gaps (from top-left cell to edge).
+    if not local:
+        pos = _leading_gaps(path, pos, i, j)
+        i, j = 0, 0
+
+    # encode path
+    return _encode_path(path[pos:], i, j)
+
+
+"""Encodings of moving directions during traceback. Columns are:
+
+    0. Row offset (i)
+        - Can be calculated with (state & 1) ^ 1
+
+    1. Column offset (j)
+        - Can be calculated with (state >> 1) ^ 1
+
+    2. Gap state
+        0. Substitution (no gap)
+        1. Insertion (gap in seq1)
+        2. Deletion (gap in seq2)
+        3. Invalid state
+
+    3. Matrix index
+        0. Main matrix
+        1. Insertion matrix (affine)
+        2. Deletion matrix (affine)
+        3. Insertion matrix 2 (2-piece affine)
+        4. Deletion matrix 2 (2-piece affine)
+
+"""
 MOVES = np.array(
     [
         [1, 1, 0, 0],  # substitution
@@ -463,345 +632,81 @@ MOVES = np.array(
         [1, 0, 2, 4],  # extend deletion 2
         [0, 0, 3, 3],  # jump to insertion matrix 2
         [0, 0, 3, 4],  # jump to deletion matrix 2
-    ],
-    dtype=int,
+    ]
 )
 
 
-def _trailing_gaps(i, j, m, n, lengths, states):
-    """Fill trailing gaps before traceback starts."""
-    state = 3
+def _linear_moves(i, j, scomat, submat, gap, eps):
+    """Identify move direction(s) at a cell with linear gap penalty.
 
-    # bottom row: ends with insertions (gaps in seq1)
-    if i == m and j < n:
-        state = 1
-        L = n - j
+    Parameters
+    ----------
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    submat : ndarray of shape (m, n)
+        Substitution matrix.
+    gap : float
+        Gap penalty.
+    eps : float
+        Absolute tolerance.
 
-    # right-most column: ends with deletions (gaps in seq2)
-    elif j == n and i < m:
-        state = 2
-        L = m - i
+    Returns
+    -------
+    list of int
+        Move directions.
 
-    # add a gap segment to path
-    if state != 3:
-        states.append(state)
-        lengths.append(L)
-
-    return state
-
-
-def _leading_gaps(i, j, m, n, lengths, states):
-    """Fill leading gaps after traceback ends."""
-    state = 3
-
-    # top row: starts with insertions (gaps in seq1)
-    if i == 0 and j > 0:
-        state = 1
-        L = j
-
-    # left-most column: starts with deletions (gaps in seq2)
-    elif j == 0 and i > 0:
-        state = 2
-        L = i
-
-    # add a gap segment to path
-    if state != 3:
-        # Note: The traceback algorithm terminates when reaching either edge, thus
-        # guaranteeing that `state` cannot be equal to the previous state in the
-        # path.
-        states.append(state)
-        lengths.append(L)
-
-
-def _trace_one_linear_eq(lengths, states, i, j, matrices, gap, local, eps=1e-7):
-    """Traceback across matrix body with linear gap penalty."""
-    scomat = matrices[0]
-    pos = len(lengths) - 1
-    prev = states[pos] if pos >= 0 else 3
-
-    # will stop when reaching either edge of the matrix
-    while i and j:
-        score = scomat[i, j]
-        if local and score == 0:
-            break
-
-        # deletion (vertical; gap in seq2)
-        if score == scomat[i - 1, j] - gap:
-            state = 2
-            i -= 1
-        # insertion (horizontal; gap in seq1)
-        elif score == scomat[i, j - 1] - gap:
-            state = 1
-            j -= 1
-        # substitution (diagonal; no gap)
-        else:
-            state = 0
-            i -= 1
-            j -= 1
-
-        # extend existing segment or create new segment
-        if state == prev:
-            lengths[pos] += 1
-        else:
-            lengths.append(1)
-            states.append(state)
-            prev = state
-            pos += 1
-
-    return i, j
-
-
-def _trace_one_linear_tol(lengths, states, i, j, matrices, gap, local, eps=1e-7):
-    """Traceback across matrix body with linear gap penalty."""
-    scomat = matrices[0]
-    pos = len(lengths) - 1
-    prev = states[pos] if pos >= 0 else 3
-
-    # will stop when reaching either edge of the matrix
-    while i and j:
-        score = scomat[i, j]
-        if local and abs(score) <= eps:
-            break
-        gap_score = gap + score
-
-        # deletion (vertical; gap in seq2)
-        if abs(scomat[i - 1, j] - gap_score) <= eps:
-            state = 2
-            i -= 1
-        # insertion (horizontal; gap in seq1)
-        elif abs(scomat[i, j - 1] - gap_score) <= eps:
-            state = 1
-            j -= 1
-        # substitution (diagonal; no gap)
-        else:
-            state = 0
-            i -= 1
-            j -= 1
-
-        # extend existing segment or create new segment
-        if state == prev:
-            lengths[pos] += 1
-        else:
-            lengths.append(1)
-            states.append(state)
-            prev = state
-            pos += 1
-
-    return i, j
-
-
-def _trace_one_affine_eq(lengths, states, i, j, matrices, gap, local, eps=1e-7):
-    """Traceback across matrix body with linear gap penalty."""
-    scomat, insmat, delmat = matrices[:3]
-    pos = len(lengths) - 1
-    prev = states[pos] if pos >= 0 else 3
-    mat = 0
-
-    while i and j:
-        score = scomat[i, j]
-        if local and score == 0:
-            break
-        state = 3
-
-        # main matrix
-        if mat == 0:
-            if score == delmat[i, j]:  # jump to deletion matrix
-                mat = 2
-            elif score == insmat[i, j]:  # jump to insertion matrix
-                mat = 1
-            else:  # substitution (diagonal; no gap)
-                state = 0
-                i -= 1
-                j -= 1
-
-        # deletion matrix (vertical; gap in seq2)
-        elif mat == 2:
-            # open a new gap (jump back to main matrix) or extend an existing gap
-            # (stay in the current matrix).
-            if delmat[i, j] == scomat[i - 1, j] - gap:
-                mat = 0
-            state = 2
-            i -= 1
-
-        # insertion matrix (horizontal; gap in seq1)
-        elif mat == 1:
-            # same as above
-            if insmat[i, j] == scomat[i, j - 1] - gap:
-                mat = 0
-            state = 1
-            j -= 1
-
-        # extend existing segment or create new segment
-        if state != 3:
-            if state == prev:
-                lengths[pos] += 1
-            else:
-                lengths.append(1)
-                states.append(state)
-                prev = state
-                pos += 1
-
-    return i, j
-
-
-def _trace_one_affine_tol(lengths, states, i, j, matrices, gap, local, eps=1e-7):
-    """Traceback across matrix body with linear gap penalty."""
-    scomat, insmat, delmat = matrices[:3]
-    pos = len(lengths) - 1
-    prev = states[pos] if pos >= 0 else 3
-    mat = 0
-
-    while i and j:
-        score = scomat[i, j]
-        if local and abs(score) <= eps:
-            break
-        state = 3
-
-        # main matrix
-        if mat == 0:
-            if abs(delmat[i, j] - score) <= eps:  # jump to deletion matrix
-                mat = 2
-            elif abs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
-                mat = 1
-            else:  # substitution (diagonal; no gap)
-                state = 0
-                i -= 1
-                j -= 1
-
-        # deletion matrix (vertical; gap in seq2)
-        elif mat == 2:
-            # open a new gap (jump back to main matrix) or extend an existing gap
-            # (stay in the current matrix).
-            if abs(scomat[i - 1, j] - gap - delmat[i, j]) <= eps:
-                mat = 0
-            state = 2
-            i -= 1
-
-        # insertion matrix (horizontal; gap in seq1)
-        elif mat == 1:
-            # same as above
-            if abs(scomat[i, j - 1] - gap - insmat[i, j]) <= eps:
-                mat = 0
-            state = 1
-            j -= 1
-
-        # extend existing segment or create new segment
-        if state != 3:
-            if state == prev:
-                lengths[pos] += 1
-            else:
-                lengths.append(1)
-                states.append(state)
-                prev = state
-                pos += 1
-
-    return i, j
-
-
-def _make_path_obj(i, j, lengths, states):
-    """Create a pairwise alignment path object."""
-    return PairAlignPath(
-        np.array(lengths[::-1], dtype=np.int64),
-        np.array(states[::-1], dtype=np.uint8),
-        np.array([i, j], dtype=np.int64),
-    )
-
-
-def _traceback_one(i, j, matrices, gap_open, gap_extend, local):
-    """Traceback and return one optimal alignment path."""
-    scomat = matrices[0]
-    m = scomat.shape[0] - 1
-    n = scomat.shape[1] - 1
-    gap = gap_open + gap_extend
-
-    lengths = []
-    states = []
-
-    # fill trailing gaps
-    if not local:
-        _trailing_gaps(i, j, m, n, lengths, states)
-
-    # traceback matrix body
-    if gap_open:
-        i, j = _trace_one_affine_tol(lengths, states, i, j, matrices, gap, local)
-    else:
-        i, j = _trace_one_linear_tol(lengths, states, i, j, matrices, gap, local)
-
-    # fill leading gaps
-    if not local:
-        _leading_gaps(i, j, m, n, lengths, states)
-        i, j = 0, 0
-
-    return _make_path_obj(i, j, lengths, states)
-
-
-def _linear_moves_eq(i, j, matrices, idx, submat, gap_oe, gap_extend, eps=1e-7):
-    """Identify move direction(s) at a cell with linear gap penalty."""
-    scomat = matrices[0]
-    score = scomat[i, j]
-    moves = []
-    if score == scomat[i - 1, j - 1] + submat[i - 1, j - 1]:  # subsitution
-        moves.append(0)
-    if score == scomat[i, j - 1] - gap_extend:  # insertion
-        moves.append(1)
-    if score == scomat[i - 1, j] - gap_extend:  # deletion
-        moves.append(2)
-    return moves
-
-
-def _linear_moves_tol(i, j, matrices, idx, submat, gap_oe, gap_extend, eps=1e-7):
-    """Identify move direction(s) at a cell with linear gap penalty."""
-    scomat = matrices[0]
+    """
     score = scomat[i, j]
     moves = []
     if abs(scomat[i - 1, j - 1] + submat[i - 1, j - 1] - score) <= eps:  # subsitution
         moves.append(0)
-    if abs(scomat[i, j - 1] - gap_extend - score) <= eps:  # insertion
+    if abs(scomat[i, j - 1] - gap - score) <= eps:  # insertion
         moves.append(1)
-    if abs(scomat[i - 1, j] - gap_extend - score) <= eps:  # deletion
+    if abs(scomat[i - 1, j] - gap - score) <= eps:  # deletion
         moves.append(2)
     return moves
 
 
-def _affine_moves_eq(i, j, matrices, idx, submat, gap_oe, gap_extend, eps=1e-7):
-    """Identify move direction(s) at a cell with affine gap penalty."""
-    scomat, insmat, delmat = matrices[:3]
+def _affine_moves(i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_e, eps):
+    """Identify move direction(s) at a cell with affine gap penalty.
+
+    Parameters
+    ----------
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    mat : in
+        Current matrix index.
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+    submat : ndarray of shape (m, n)
+        Substitution matrix.
+    gap_oe : float
+        Gap opening + extension penalty.
+    gap_e : float
+        Gap extension penalty.
+    eps : float
+        Absolute tolerance.
+
+    Returns
+    -------
+    list of int
+        Move directions.
+
+    """
     moves = []
 
     # main matrix
-    if idx == 0:
-        score = scomat[i, j]
-        if score == scomat[i - 1, j - 1] + submat[i - 1, j - 1]:  # subsitution
-            moves.append(0)
-        if score == insmat[i, j]:  # jump to insertion matrix
-            moves.append(5)
-        if score == delmat[i, j]:  # jump to deletion matrix
-            moves.append(6)
-    # insertion matrix
-    elif idx == 1:
-        score = insmat[i, j]
-        if score == scomat[i, j - 1] - gap_oe:  # open insertion
-            moves.append(1)
-        if score == insmat[i, j - 1] - gap_extend:  # extend insertion
-            moves.append(3)
-    # deletion matrix
-    else:
-        score = delmat[i, j]
-        if score == scomat[i - 1, j] - gap_oe:  # open deletion
-            moves.append(2)
-        if score == delmat[i - 1, j] - gap_extend:  # extend deletion
-            moves.append(4)
-
-    return moves
-
-
-def _affine_moves_tol(i, j, matrices, idx, submat, gap_oe, gap_extend, eps=1e-7):
-    """Identify move direction(s) at a cell with affine gap penalty."""
-    scomat, insmat, delmat = matrices[:3]
-    moves = []
-
-    # main matrix
-    if idx == 0:
+    if mat == 0:
         score = scomat[i, j]
         if (
             abs(scomat[i - 1, j - 1] + submat[i - 1, j - 1] - score) <= eps
@@ -812,84 +717,123 @@ def _affine_moves_tol(i, j, matrices, idx, submat, gap_oe, gap_extend, eps=1e-7)
         if abs(delmat[i, j] - score) <= eps:  # jump to deletion matrix
             moves.append(6)
     # insertion matrix
-    elif idx == 1:
+    elif mat == 1:
         score = insmat[i, j]
         if abs(scomat[i, j - 1] - gap_oe - score) <= eps:  # open insertion
             moves.append(1)
-        if abs(insmat[i, j - 1] - gap_extend - score) <= eps:  # extend insertion
+        if abs(insmat[i, j - 1] - gap_e - score) <= eps:  # extend insertion
             moves.append(3)
     # deletion matrix
     else:
         score = delmat[i, j]
         if abs(scomat[i - 1, j] - gap_oe - score) <= eps:  # open deletion
             moves.append(2)
-        if abs(delmat[i - 1, j] - gap_extend - score) <= eps:  # extend deletion
+        if abs(delmat[i - 1, j] - gap_e - score) <= eps:  # extend deletion
             moves.append(4)
 
     return moves
 
 
 def _traceback_all(
-    stops, matrices, submat, gap_open, gap_extend, local, max_paths=None, eps=1e-7
+    stops, matrices, submat, gap_open, gap_extend, local, max_paths=None, eps=1e-5
 ):
     """Traceback and return all optimal alignment paths.
 
-    max_paths must be >= 1 or None
+    Parameters
+    ----------
+    stops : sequence of (int, int)
+        Stop positions in both sequences.
+    matrices : tuple of ndarray of float of shape (m + 1, n + 1)
+        Alignment matrices.
+    submat : ndarray of float of shape (m, n)
+        Substitution matrix.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Global (False) or local (True) alignment.
+    max_paths : int, optional
+        Maximum number of paths to return, or None to return all paths. Cannot be 0.
+    eps : float, optional
+        Absolute tolerance.
+
+    Returns
+    -------
+    list of PairAlignPath
+        Optimal alignment paths.
+
+    See Also
+    --------
+    _traceback_one
+
+    Notes
+    -----
+    This function enumerates all optimal alignment paths or until a given number of
+    paths has been reached.
+
+    A stack is used to store branching paths and to enable depth-first search (DFS).
+    For linear gap penalty, the stack's maximum size is m + n, which is equivalent to
+    the maximum size of a full path, times (b - 1), where b is the number of possible
+    branches (3). For affine gap penalty, the space is appr. (m + n) * 3. Regardless
+    of the total number of full paths, which could easily explode, the stack size is
+    linear and manageable.
+
+    This function is purely Python and is not as efficient as it could be. Cythonizing
+    it is possible but complicated (requiring C++ vector and class). This can be done
+    in the future.
 
     """
     scomat = matrices[0]
     m = scomat.shape[0] - 1
     n = scomat.shape[1] - 1
-    gap_oe = gap_open + gap_extend
+    max_len = m + n
 
-    # Dispatch function that decides the moving direction at each cell.
-    moves_func = _affine_moves_tol if gap_open else _linear_moves_tol
+    if gap_open:
+        gap_oe = gap_open + gap_extend
+        insmat = matrices[1]
+        delmat = matrices[2]
 
-    # Results (optimal alignment paths)
+    # results (optimal alignment paths)
     paths = []
 
-    # Iterate over all starting points.
+    # allocate the first path
+    path = np.empty(max_len, dtype=np.uint8)
+
+    # iterate over all starting points
     for i, j in stops:
-        lengths = []  # segment lengths
-        states = []  # segment states (0 - substitution, 1 - insertion, 2 - deletion)
+        pos = max_len
 
-        prev_state = 3  # previous segment status (start with an impossible code 3)
-        mat_idx = 0  # matrix index (start from main matrix (0))
-
-        # Pre-populate the path with trailing gaps, if applicable.
+        # fill trailing gaps
         if not local:
-            prev = _trailing_gaps(i, j, m, n, lengths, states)
+            pos = _trailing_gaps(path, pos, i, j, m, n)
 
-        # Create a stack to store branching alignment paths and to enable depth-first
-        # search (DFS).
-        stack = [(i, j, mat_idx, lengths, states, prev_state)]
+        # matrix index (start from main matrix (0))
+        mat = 0
 
-        # Note: The stack's maximum size is m + n, which is equivalent to the maximum
-        # size of a full path, times (b - 1), where b is the number possible branches
-        # per cell (3 for linear and affine). Regardless of the total number of full
-        # paths, which could easily explode, the stack size is linear and manageable.
-
+        # perform DFS to enumerate all paths
+        stack = [(path, pos, i, j, mat)]
         while stack:
-            i, j, mat_idx, lengths, states, prev_state = stack.pop()
+            path, pos, i, j, mat = stack.pop()
 
             # Check whether a full path has been completed. There are two scenarios:
             finished = False
 
-            # 1) Local alignment: Cell value is 0. Path is already completed.
-            if local and scomat[i, j] == 0:  # TODO: floating point
+            # 1) Local alignment: Path terminates where cell = 0.
+            if local and abs(scomat[i, j]) <= eps:
                 finished = True
 
             # 2) Global alignment: Reached the top or left-most edge of the matrix.
             # Path will extend straight left or up to the top-left cell.
             elif i == 0 or j == 0:
                 if not local:
-                    _leading_gaps(i, j, m, n, lengths, states)
+                    pos = _leading_gaps(path, pos, i, j)
                     i, j = 0, 0
                 finished = True
 
             # Create a path object, and halt if the path number limit has been reached.
             if finished:
-                paths.append(_make_path_obj(i, j, lengths, states))
+                paths.append(_encode_path(path[pos:], i, j))
                 if max_paths and len(paths) == max_paths:
                     break
                 else:
@@ -898,41 +842,37 @@ def _traceback_all(
             # Otherwise, the current cell must be within the main body of the matrix.
             # Check all possible moving directions and get ones that match the current
             # optimal alignment score.
-            moves = moves_func(i, j, matrices, mat_idx, submat, gap_oe, gap_extend)
+            if gap_open:
+                moves = _affine_moves(
+                    i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_extend, eps
+                )
+            else:
+                moves = _linear_moves(i, j, scomat, submat, gap_extend, eps)
 
             # This is impossible. Raise error for debugging purpose.
-            n_moves = len(moves)
-            if n_moves == 0:
-                raise ValueError("Traceback cannot proceed.")
+            # if not moves:
+            #     raise ValueError("Traceback cannot proceed.")
 
-            n_moves_1 = n_moves - 1
-            for k in range(n_moves):  # TODO: avoid copy
-                row = MOVES[moves[k]]
+            last = len(moves) - 1
+            for k, move in enumerate(moves):
+                di, dj, state, mat_ = MOVES[move]
 
                 # If path branches at this cell (i.e., 1 path becomes 2 or 3), we need
-                # to create copies of the path. Otherwise, we can use the same path to
+                # to create a copy of the path. Otherwise, we can use the same path to
                 # save memory and runtime.
-                if k < n_moves_1:
-                    lengths_ = lengths.copy()
-                    states_ = states.copy()
+                if k < last:
+                    path_ = path.copy()
                 else:
-                    lengths_ = lengths
-                    states_ = states
+                    path_ = path
 
-                # Deal with gap state. 3 means jumping from main matrix into another
-                # matrix without advancing the path, therefore reset the state to the
-                # previous state. Otherwise (0, 1, 2), check if state is identical to
-                # the previous state. If so, extend the current segment. Else, create
-                # a new segment.
-                state = row[2]
-                if state == 3:
-                    state = prev_state
-                elif state == prev_state:
-                    lengths_[-1] += 1
+                # Deal with gap state (3 means jumping from main matrix into another
+                # matrix without advancing the path).
+                if state < 3:
+                    pos_ = pos - 1
+                    path_[pos_] = state
                 else:
-                    lengths_.append(1)
-                    states_.append(state)
+                    pos_ = pos
 
-                stack.append((i - row[0], j - row[1], row[3], lengths_, states_, state))
+                stack.append((path_, pos_, i - di, j - dj, mat_))
 
     return paths
