@@ -1223,14 +1223,14 @@ class CategoricalStatsHelperFunctionTests(TestCase):
 
 
 class DissimilarityMatrixTests(DissimilarityMatrixTestBase, TestCase):
-    matobj = DissimilarityMatrix
+    matobj = DissimilarityMatrix  # type: ignore[assignment]
 
     def setUp(self):
         super(DissimilarityMatrixTests, self).setUp()
 
 
 class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
-    matobj = DistanceMatrix
+    matobj = DistanceMatrix  # type: ignore[assignment]
 
     def setUp(self):
         super(DistanceMatrixTests, self).setUp()
