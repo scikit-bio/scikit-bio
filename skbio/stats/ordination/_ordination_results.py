@@ -178,6 +178,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         cmap=None,
         s=20,
         n_dims=3,
+        plot_centroids=False
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -223,6 +224,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
+        plot_centroids : bool, optional
+            If True, plot the centroids of each category in `column`.
 
         Returns
         -------
@@ -350,6 +353,32 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             plot = scatter_fn()
         else:
             plot = scatter_fn(c=point_colors)
+        
+        if plot_centroids and category_to_color:
+            centroids = self.samples.groupby(df[column]).mean()
+            for label, color in category_to_color.items():
+                if label in centroids.index:
+                    if zs is None:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
+                    else:
+                        ax.scatter(
+                            centroids.loc[label].iloc[axes[0]],
+                            centroids.loc[label].iloc[axes[1]],
+                            centroids.loc[label].iloc[axes[2]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                            edgecolors="black",
+                        )
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
