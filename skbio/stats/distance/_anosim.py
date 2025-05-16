@@ -200,7 +200,7 @@ def anosim(
 
 def _compute_r_stat(
     tri_idxs: Tuple["NDArray[np.int_]", "NDArray[np.int_]"],
-    ranked_dists: "NDArray[np.float_]",
+    ranked_dists: "NDArray[np.float64]",
     divisor: float,
     grouping: "NDArray[np.number]",
 ) -> float:
