@@ -765,7 +765,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             interval_metadata=self, bounds=bounds, fuzzy=fuzzy, metadata=metadata
         )
 
-    @_rebuild_tree
+    @_rebuild_tree  # type: ignore[arg-type]
     def _query_interval(self, bound):
         """Yield ``Interval`` objects that overlap with the bound."""
         _assert_valid_bound(bound)
@@ -808,7 +808,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             else:
                 yield intvl
 
-    @_rebuild_tree
+    @_rebuild_tree  # type: ignore[arg-type]
     def query(self, bounds=None, metadata=None):
         """Yield ``Interval`` object with the bounds and attributes.
 
