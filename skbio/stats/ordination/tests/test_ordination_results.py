@@ -204,6 +204,24 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
             cmap='Accent')
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
+    def test_plot_with_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', plot_centroids=True, cmap='Set1')
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' centroid" in labels)
+        self.assertTrue("'22' centroid" in labels)
+
+    def test_plot_without_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', plot_centroids=False, cmap='Set1')
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' centroid" not in labels)
+            self.assertTrue("'22' centroid" not in labels)
+
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
@@ -406,6 +424,24 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
             self.df, 'categorical', axes=[0, 1], title='a title',
             cmap='Accent')
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '0', '1')
+    
+    def test_plot_with_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', plot_centroids=True, cmap='Set1', n_dims=2)
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' centroid" in labels)
+        self.assertTrue("'22' centroid" in labels)
+
+    def test_plot_without_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', plot_centroids=False, cmap='Set1', n_dims=2)
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' centroid" not in labels)
+            self.assertTrue("'22' centroid" not in labels)
 
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*3'):
