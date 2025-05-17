@@ -8,6 +8,7 @@
 
 import itertools
 from copy import deepcopy
+from typing import Any, Callable, Iterable, ClassVar, Optional, Sequence, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -95,14 +96,24 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     """
 
-    default_write_format = "lsmat"
+    default_write_format: ClassVar[str] = "lsmat"
     # Used in __str__
-    _matrix_element_name = "dissimilarity"
+    _matrix_element_name: ClassVar[str] = "dissimilarity"
 
     read = Read()
     write = Write()
 
-    def __init__(self, data, ids=None, validate=True):
+    def __init__(
+        self,
+        data: Union[
+            np.ndarray,
+            Sequence[float],
+            Sequence[Sequence[float]],
+            "DissimilarityMatrix",
+        ],
+        ids: Optional[Sequence[str]] = None,
+        validate: Optional[bool] = True,
+    ) -> None:
         validate_full = validate
         validate_shape = False
         validate_ids = False
@@ -141,6 +152,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         if _issue_copy:
             data = np.asarray(data, dtype="float")
 
+        data = cast(np.ndarray, data)
         if data.ndim == 1:
             # We can assume squareform will return a symmetric square matrix
             # so no need for full validation.
@@ -152,7 +164,8 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
             validate_ids = True
 
         if ids is None:
-            ids = (str(i) for i in range(data.shape[0]))
+            data = cast(np.ndarray, data)
+            ids = tuple(str(i) for i in range(data.shape[0]))
             # I just created the ids, so no need to re-validate them
             validate_ids = False
         ids = tuple(ids)
@@ -170,7 +183,13 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         self._id_index = self._index_list(self._ids)
 
     @classonlymethod
-    def from_iterable(cls, iterable, metric, key=None, keys=None):
+    def from_iterable(
+        cls,
+        iterable: Iterable[Any],
+        metric: Callable,
+        key: Optional[Any] = None,
+        keys: Optional[Iterable[Any]] = None,
+    ) -> "DissimilarityMatrix":
         """Create DissimilarityMatrix from an iterable given a metric.
 
         Parameters
@@ -203,23 +222,23 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same time.")
 
         keys_ = None
         if key is not None:
             keys_ = [resolve_key(e, key) for e in iterable]
         elif keys is not None:
-            keys_ = keys
+            keys_ = list(keys)
 
         dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable):
                 dm[i, j] = metric(a, b)
 
-        return cls(dm, keys_)
+        return cls(dm, keys_)  # type: ignore[operator]
 
     @property
-    def data(self):
+    def data(self) -> np.ndarray:
         """Array of dissimilarities.
 
         A square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
@@ -527,7 +546,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         not_present = ids - set(self._id_index)
         if not_present:
             raise MissingIDError(
-                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+                "At least one ID (e.g., '%s') was not found." % not_present.pop()
             )
 
         return self._subset_to_dataframe(ids, ids)
@@ -589,7 +608,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         not_present = all_ids - set(self._id_index)
         if not_present:
             raise MissingIDError(
-                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+                "At least one ID (e.g., '%s') was not found." % not_present.pop()
             )
 
         overlapping = from_ & to_
@@ -921,7 +940,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
                 "following duplicate IDs: %s" % formatted_duplicates
             )
         if 0 == len(ids):
-            raise DissimilarityMatrixError("IDs must be at least 1 in " "size.")
+            raise DissimilarityMatrixError("IDs must be at least 1 in size.")
         if len(ids) != data.shape[0]:
             raise DissimilarityMatrixError(
                 "The number of IDs (%d) must match "
@@ -944,18 +963,16 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         """
         if 0 in data.shape:
-            raise DissimilarityMatrixError("Data must be at least 1x1 in " "size.")
+            raise DissimilarityMatrixError("Data must be at least 1x1 in size.")
         if len(data.shape) != 2:
-            raise DissimilarityMatrixError("Data must have exactly two " "dimensions.")
+            raise DissimilarityMatrixError("Data must have exactly two dimensions.")
         if data.shape[0] != data.shape[1]:
             raise DissimilarityMatrixError(
-                "Data must be square (i.e., have "
-                "the same number of rows and "
-                "columns)."
+                "Data must be square (i.e., have the same number of rows and columns)."
             )
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError(
-                "Data must contain only floating " "point values."
+                "Data must contain only floating point values."
             )
 
     def _validate(self, data, ids):
@@ -1089,7 +1106,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same time.")
 
         keys_ = None
         if key is not None:
@@ -1190,7 +1207,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
         if not data_hol:
             raise DistanceMatrixError(
-                "Data must be hollow (i.e., the diagonal" " can only contain zeros)."
+                "Data must be hollow (i.e., the diagonal can only contain zeros)."
             )
 
     def to_series(self):
@@ -1335,8 +1352,7 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
 
     if len(grouping) != sample_size:
         raise ValueError(
-            "Grouping vector size must match the number of IDs in the "
-            "distance matrix."
+            "Grouping vector size must match the number of IDs in the distance matrix."
         )
 
     # Find the group labels and convert grouping to an integer vector
@@ -1419,7 +1435,7 @@ def _df_to_vector(ids, df, column):
     grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
-            "One or more IDs in the distance matrix are not in the data " "frame."
+            "One or more IDs in the distance matrix are not in the data frame."
         )
     return grouping.tolist()
 
