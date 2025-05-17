@@ -55,7 +55,9 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     Methods are provided to load and save dissimilarity matrices from/to disk,
     as well as perform common operations such as extracting dissimilarities
-    based on object ID.
+    based on object ID. Additionally, the 
+    :func:`~skbio.stats.distance.DissimilarityMatrix.plot` method provides
+    convenient built-in plotting functionality.
 
     Parameters
     ----------
@@ -995,7 +997,9 @@ class DistanceMatrix(DissimilarityMatrix):
 
     A `DistanceMatrix` is a `DissimilarityMatrix` with the additional
     requirement that the matrix data is symmetric. There are additional methods
-    made available that take advantage of this symmetry.
+    made available that take advantage of this symmetry. The 
+    :func:`~skbio.stats.distance.DissimilarityMatrix.plot` method provides
+    convenient built-in plotting functionality.
 
     Parameters
     ----------
