@@ -55,7 +55,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
     Methods are provided to load and save dissimilarity matrices from/to disk,
     as well as perform common operations such as extracting dissimilarities
-    based on object ID. Additionally, the 
+    based on object ID. Additionally, the
     :func:`~skbio.stats.distance.DissimilarityMatrix.plot` method provides
     convenient built-in plotting functionality.
 
@@ -205,7 +205,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same time.")
 
         keys_ = None
         if key is not None:
@@ -529,7 +529,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         not_present = ids - set(self._id_index)
         if not_present:
             raise MissingIDError(
-                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+                "At least one ID (e.g., '%s') was not found." % not_present.pop()
             )
 
         return self._subset_to_dataframe(ids, ids)
@@ -591,7 +591,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         not_present = all_ids - set(self._id_index)
         if not_present:
             raise MissingIDError(
-                "At least one ID (e.g., '%s') was not " "found." % not_present.pop()
+                "At least one ID (e.g., '%s') was not found." % not_present.pop()
             )
 
         overlapping = from_ & to_
@@ -923,7 +923,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
                 "following duplicate IDs: %s" % formatted_duplicates
             )
         if 0 == len(ids):
-            raise DissimilarityMatrixError("IDs must be at least 1 in " "size.")
+            raise DissimilarityMatrixError("IDs must be at least 1 in size.")
         if len(ids) != data.shape[0]:
             raise DissimilarityMatrixError(
                 "The number of IDs (%d) must match "
@@ -946,18 +946,16 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
 
         """
         if 0 in data.shape:
-            raise DissimilarityMatrixError("Data must be at least 1x1 in " "size.")
+            raise DissimilarityMatrixError("Data must be at least 1x1 in size.")
         if len(data.shape) != 2:
-            raise DissimilarityMatrixError("Data must have exactly two " "dimensions.")
+            raise DissimilarityMatrixError("Data must have exactly two dimensions.")
         if data.shape[0] != data.shape[1]:
             raise DissimilarityMatrixError(
-                "Data must be square (i.e., have "
-                "the same number of rows and "
-                "columns)."
+                "Data must be square (i.e., have the same number of rows and columns)."
             )
         if data.dtype not in (np.float32, np.float64):
             raise DissimilarityMatrixError(
-                "Data must contain only floating " "point values."
+                "Data must contain only floating point values."
             )
 
     def _validate(self, data, ids):
@@ -997,7 +995,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
     A `DistanceMatrix` is a `DissimilarityMatrix` with the additional
     requirement that the matrix data is symmetric. There are additional methods
-    made available that take advantage of this symmetry. The 
+    made available that take advantage of this symmetry. The
     :func:`~skbio.stats.distance.DissimilarityMatrix.plot` method provides
     convenient built-in plotting functionality.
 
@@ -1093,7 +1091,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
         iterable = list(iterable)
         if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same" " time.")
+            raise ValueError("Cannot use both `key` and `keys` at the same time.")
 
         keys_ = None
         if key is not None:
@@ -1194,7 +1192,7 @@ class DistanceMatrix(DissimilarityMatrix):
 
         if not data_hol:
             raise DistanceMatrixError(
-                "Data must be hollow (i.e., the diagonal" " can only contain zeros)."
+                "Data must be hollow (i.e., the diagonal can only contain zeros)."
             )
 
     def to_series(self):
@@ -1339,8 +1337,7 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
 
     if len(grouping) != sample_size:
         raise ValueError(
-            "Grouping vector size must match the number of IDs in the "
-            "distance matrix."
+            "Grouping vector size must match the number of IDs in the distance matrix."
         )
 
     # Find the group labels and convert grouping to an integer vector
@@ -1423,7 +1420,7 @@ def _df_to_vector(ids, df, column):
     grouping = df.reindex(ids, axis=0).loc[:, column]
     if grouping.isnull().any():
         raise ValueError(
-            "One or more IDs in the distance matrix are not in the data " "frame."
+            "One or more IDs in the distance matrix are not in the data frame."
         )
     return grouping.tolist()
 
