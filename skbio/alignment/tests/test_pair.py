@@ -306,15 +306,16 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align("A", "T", local=True)
         self.assertEqual(len(obs.paths), 0)  # no path returned
 
-    def test_pair_align_real(self):
-        # Perform semi-global alignment of the 16S rRNA gene sequences of Escherichia
-        # coli and Streptococcus pneumoniae, using BLASTN's default parameters.
+    def test_pair_align_real_1(self):
+        # 16S rRNA gene sequences of Escherichia coli and Streptococcus pneumoniae
         with open(get_data_path("16s.frn"), "r") as fh:
             seq1, seq2 = skbio.io.read(fh, format="fasta", constructor=DNA)
+
+        # Perform semi-global alignment using BLASTN's default parameters.
         obs = pair_align(seq1, seq2, sub_score=(2, -3), gap_cost=(5, 2))
         self.assertEqual(obs.score, 1199)
 
-        # Instead perform global alignment using EMBOSS needle's default parameters.
+        # Perform global alignment using EMBOSS needle's default parameters.
         # Note: the score should be exact because it only involves half-integers.
         # `assertAlmostEqual` is used here just in case.
         obs = pair_align(seq1, seq2, sub_score="NUC.4.4", gap_cost=(9.5, 0.5),
@@ -351,6 +352,15 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.score, 28)
         self.assertEqual(len(obs.paths), 1)
         self.assertEqual(obs.paths[0].to_cigar(), "19M")
+
+    def test_pair_align_real_2(self):
+        # Insulin sequences of human and mouse
+        with open(get_data_path("insulin.faa"), "r") as fh:
+            seq1, seq2 = skbio.io.read(fh, format="fasta", constructor=Protein)
+
+        # Perform semi-global alignment using BLASTP's default parameters.
+        obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
+        self.assertEqual(obs.score, 440)
 
     def test_alloc_matrices(self):
         # linear

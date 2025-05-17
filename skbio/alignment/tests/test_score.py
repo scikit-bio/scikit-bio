@@ -8,6 +8,7 @@
 
 import unittest
 
+import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import DNA, Protein, SubstitutionMatrix
@@ -17,7 +18,7 @@ from skbio.util import get_data_path
 from skbio.alignment._score import trim_end_gaps, align_score
 
 
-class TestScore(unittest.TestCase):
+class AlignScoreTests(unittest.TestCase):
 
     def test_trim_end_gaps(self):
         aln = [
@@ -214,6 +215,35 @@ class TestScore(unittest.TestCase):
         self.assertEqual(obs, -20)
         obs = align_score(aln, (5, -4), (5, 2), free_ends=True)
         self.assertEqual(obs, 20)
+
+    def test_align_score_floating(self):
+        """Test on mixed floating-point types."""
+        aln = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACAC--"]
+        # original (float64)
+        submat = SubstitutionMatrix.by_name("NUC.4.4")
+        self.assertEqual(submat.dtype, np.float64)
+        obs = align_score(aln, submat, (9.5, 0.5))
+        self.assertEqual(obs, 44.0)
+        self.assertIsInstance(obs, float)
+
+        # substitution matrix is float32
+        submat2 = submat.copy()
+        submat2._data = submat2._data.astype(np.float32)
+        self.assertEqual(submat2.dtype, np.float32)
+        obs = align_score(aln, submat2, (9.5, 0.5))
+        self.assertEqual(obs, 44.0)
+        self.assertIsInstance(obs, float)
+
+        # gap costs are float32
+        self.assertEqual(submat.dtype, np.float64)
+        obs = align_score(aln, submat2, (np.float32(9.5), np.float32(0.5)))
+        self.assertEqual(obs, 44.0)
+
+        # mixed types
+        obs = align_score(aln, (np.float32(5), -4), (np.float32(9.5), 0.5))
+        self.assertEqual(obs, 44.0)
 
     def test_align_score_error(self):
         """Test on inputs that cause errors."""

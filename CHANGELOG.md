@@ -17,6 +17,7 @@
 
 ### Bug Fixes
 
+* Fixed a bug that a `SubstitutionMatrix` cannot be copied.
 * Fixed a bug in `AlignPath.to_indices` which would throw an error if the alignment path has only one segment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
 

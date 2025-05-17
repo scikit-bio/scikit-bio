@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
-# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
 from cython cimport floating
 
@@ -37,9 +36,9 @@ def _trim_end_gaps(
     This function works for both the original alignment (columns are positions) and
     the alignment path (columns are segments).
 
-    """
-    # TODO: Parallelization is possible, although perhaps unnecessary.
+    Parallelization is possible, although perhaps unnecessary.
 
+    """
     cdef Py_ssize_t i, j, k
     cdef Py_ssize_t n = bits.shape[1]
 

@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numbers import Real
 from collections import namedtuple
 
 import numpy as np
@@ -141,7 +140,7 @@ def pair_align(
         submat = _submat_from_mm(seq1, seq2, *sub_score)
 
     # affine or linear gap penalty
-    if isinstance(gap_cost, Real):
+    if np.isscalar(gap_cost):
         gap_open, gap_extend = 0, gap_cost
     else:
         gap_open, gap_extend = gap_cost
@@ -204,9 +203,9 @@ def _seq_to_bytes(seq):
         raise ValueError("Sequence must be a string or a `Sequence` object.")
 
 
-def _submat_from_mm(seq1, seq2, match, mismatch):
+def _submat_from_mm(seq1, seq2, match, mismatch, dtype=np.float64):
     """Pre-compute a match/mismatch array to facilitate lookup."""
-    match, mismatch = float(match), float(mismatch)
+    match, mismatch = dtype(match), dtype(mismatch)
     return np.where(seq1[:, None] == seq2[None, :], match, mismatch)
 
 

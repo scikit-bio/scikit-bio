@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from copy import deepcopy
+
 import numpy as np
 
 from skbio.util._decorator import classonlymethod
@@ -153,6 +155,21 @@ class SubstitutionMatrix(DissimilarityMatrix):
         else:
             self._is_ascii = True
             self._char_hash = hash_
+
+    def copy(self):
+        """Return a deep copy of the substitution matrix.
+
+        Returns
+        -------
+        SubstitutionMatrix
+            Named substitution matrix.
+
+        """
+        return self.__class__(
+            deepcopy(self.alphabet),
+            self.scores.copy(),
+            validate=False,
+        )
 
     def to_dict(self):
         """Create a 2D dictionary from the substitution matrix.

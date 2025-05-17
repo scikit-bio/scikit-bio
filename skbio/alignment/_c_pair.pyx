@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
-# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
 from cython cimport floating
 from libc.math cimport INFINITY, fabs, fabsf
@@ -65,11 +64,11 @@ def _fill_linear_matrix(
 
     """
     cdef floating bound = 0 if local else -INFINITY
-    cdef Py_ssize_t m = scomat.shape[0], n = scomat.shape[1]
+    cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
     cdef Py_ssize_t i, j
 
-    for i in range(1, m):
-        for j in range(1, n):
+    for i in range(1, m1):
+        for j in range(1, n1):
             scomat[i, j] = max(
                 scomat[i - 1, j - 1] + submat[i - 1, j - 1],
                 scomat[i, j - 1] - gap_extend,
@@ -109,12 +108,12 @@ def _fill_affine_matrices(
     """
     cdef floating bound = 0 if local else -INFINITY
     cdef floating gap_open_extend = gap_open + gap_extend
-    cdef Py_ssize_t m = scomat.shape[0], n = scomat.shape[1]
+    cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
     cdef Py_ssize_t i, j
     cdef floating sub_, ins_, del_
 
-    for i in range(1, m):
-        for j in range(1, n):
+    for i in range(1, m1):
+        for j in range(1, n1):
 
             # substitution (diagonal)
             sub_ = scomat[i - 1, j - 1] + submat[i - 1, j - 1]
@@ -135,7 +134,7 @@ def _fill_affine_matrices(
 
 
 def _trace_one_linear(
-    char[::1] path,
+    unsigned char[::1] path,
     Py_ssize_t pos,
     Py_ssize_t i,
     Py_ssize_t j,
@@ -212,7 +211,7 @@ def _trace_one_linear(
 
 
 def _trace_one_affine(
-    char[::1] path,
+    unsigned char[::1] path,
     Py_ssize_t pos,
     Py_ssize_t i,
     Py_ssize_t j,

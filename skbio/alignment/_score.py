@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from numbers import Real
-
 import numpy as np
 
 from skbio.sequence import Sequence, SubstitutionMatrix
@@ -273,7 +271,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     # affine or linear gap penalty
     # TODO: Add support for dual affine gap penalty (four numbers).
-    if isinstance(gap_cost, Real):
+    if np.isscalar(gap_cost):
         gap_open, gap_extend = 0, gap_cost
     else:
         gap_open, gap_extend = gap_cost
