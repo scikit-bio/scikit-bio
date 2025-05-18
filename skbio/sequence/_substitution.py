@@ -16,7 +16,7 @@ from skbio.sequence._alphabet import _alphabet_to_hashes
 
 
 class SubstitutionMatrix(DissimilarityMatrix):
-    """Scoring matrix between characters in biological sequences.
+    r"""Scoring matrix between characters in biological sequences.
 
     Parameters
     ----------
@@ -62,24 +62,96 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     Examples
     --------
+    Create a simple substitution matrix between the four nucleotide bases "A", "C", "G"
+    and "T". The value 2 in the main diagonal represents a match between two identical
+    bases. The value -1 in the upper-right and lower-left triangles represents a
+    mismatch between two different bases.
+
     >>> from skbio import SubstitutionMatrix
-    >>> mat = SubstitutionMatrix('ACGT', np.array([
+    >>> sm = SubstitutionMatrix('ACGT', np.array([
     ...     [2, -1, -1, -1],
     ...     [-1, 2, -1, -1],
     ...     [-1, -1, 2, -1],
     ...     [-1, -1, -1, 2]]))
-    >>> mat.alphabet
+    >>> sm.alphabet
     ('A', 'C', 'G', 'T')
-    >>> mat.scores
+    >>> sm.scores
     array([[ 2., -1., -1., -1.],
            [-1.,  2., -1., -1.],
            [-1., -1.,  2., -1.],
            [-1., -1., -1.,  2.]])
-    >>> mat['A', 'T']
+
+    Look up the substitution score between a pair of bases.
+
+    >>> sm['A', 'T']
     -1.0
-    >>> mat['G', 'G']
+    >>> sm['G', 'G']
     2.0
-    >>> blosum62 = SubstitutionMatrix.by_name('BLOSUM62')
+
+    This matrix can also be created using the ``identity`` method.
+
+    >>> sm = SubstitutionMatrix.identity('ACGT', 2, -1)
+
+    Load the pre-defined subsitution matrix "NUC.4.4", which covers the four bases plus
+    degenerate codes.
+
+    >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
+    >>> sm.alphabet
+    ('A', 'T', 'G', 'C', 'S', 'W', 'R', 'Y', 'K', 'M', 'B', 'V', 'H', 'D', 'N')
+
+    With a :class:`~skbio.sequence.Sequence` object, one can efficiently map all
+    characters to their indices in the subsitution matrix.
+
+    >>> from skbio import DNA
+    >>> seq = DNA('GGATCC')
+    >>> seq.to_indices(sm)
+    array([2, 2, 0, 1, 3, 3], dtype=uint8)
+
+    This approach enables various subsequent operations. For example, one can
+    efficiently create position-to-position scoring matrix between two sequences.
+
+    >>> seq1, seq2 = DNA('GGATCC'), DNA('AGATCT')
+    >>> idx1, idx2 = seq1.to_indices(sm), seq2.to_indices(sm)
+    >>> sm.scores[idx1[:, None], idx2[None, :]]
+    array([[-4.,  5., -4., -4., -4., -4.],
+           [-4.,  5., -4., -4., -4., -4.],
+           [ 5., -4.,  5., -4., -4., -4.],
+           [-4., -4., -4.,  5., -4.,  5.],
+           [-4., -4., -4., -4.,  5., -4.],
+           [-4., -4., -4., -4.,  5., -4.]])
+
+    Finding indices of sequence characters is most efficient when the alphabet consists
+    of only ASCII codes (0 to 127). This can be determined by the ``is_ascii`` flag of
+    a subsitution matrix. Most common nucleotide and amino acid subsitution matrices
+    only contain ASCII codes.
+
+    However, one is not limited to ASCII characters. Using Unicode characters beyond
+    code point 127 is valid.
+
+    >>> sm = SubstitutionMatrix('äëïöü', np.array([
+    ...     [0, 1, 2, 3, 4],
+    ...     [1, 0, 5, 6, 7],
+    ...     [2, 5, 0, 8, 9],
+    ...     [3, 6, 8, 0, 0],
+    ...     [4, 7, 9, 0, 1]]))
+    >>> sm.alphabet
+    ('ä', 'ë', 'ï', 'ö', 'ü')
+
+    Any iterables of hashable elements are valid alphabets, granting flexibility in
+    working with non-character data types. For example, one can include words/tokens
+    in a substitution matrix.
+
+    >>> tokens = 'lorem ipsum dolor sit amet'.split()
+    >>> sm = SubstitutionMatrix(tokens, np.array([
+    ...     [3, 1, 2, 0, 0],
+    ...     [1, 3, 1, 2, 0],
+    ...     [2, 1, 3, 1, 2],
+    ...     [0, 2, 1, 3, 1],
+    ...     [0, 0, 2, 1, 3]]))
+    >>> sm.alphabet
+    ('lorem', 'ipsum', 'dolor', 'sit', 'amet')
+    >>> sm['lorem', 'ipsum']
+    1.0
 
     """
 
@@ -125,7 +197,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """Whether alphabet consists of single ASCII characters.
 
         `True` if every character in the alphabet can be represented by a
-        single ASCII character within code point range 0 to 255.
+        single ASCII character within code point range 0 to 127.
 
         Returns
         -------
@@ -152,6 +224,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
             hash_ = _alphabet_to_hashes(alphabet)
         except (TypeError, ValueError, UnicodeEncodeError):
             self._is_ascii = False
+            self._char_hash = None
         else:
             self._is_ascii = True
             self._char_hash = hash_
@@ -271,7 +344,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
         """
         alphabet = tuple(alphabet)
-        scores = np.identity(len(alphabet)) * (match - mismatch) + mismatch
+        n = len(alphabet)
+        scores = np.full((n, n), mismatch, dtype=float)
+        np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 
     @classonlymethod

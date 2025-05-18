@@ -137,6 +137,9 @@ def pair_align(
         submat = _submat_from_sm(seq1, seq2, sub_score)
     # match/mismatch scores
     else:
+        if _idmat is None:
+            _idmat = SubstitutionMatrix.identity(_ascii_chars, match, mismatch)
+
         submat = _submat_from_mm(seq1, seq2, *sub_score)
 
     # affine or linear gap penalty
@@ -201,6 +204,17 @@ def _seq_to_bytes(seq):
         return np.frombuffer(seq.encode("ascii"), dtype=np.uint8)
     else:
         raise ValueError("Sequence must be a string or a `Sequence` object.")
+
+
+def _submat_from_mm2(seq1, seq2, match, mismatch, dtype=np.float64):
+    """Pre-compute a match/mismatch array to facilitate lookup."""
+    match, mismatch = dtype(match), dtype(mismatch)
+    if _idmat is None:
+        _idmat = SubstitutionMatrix.identity(_ascii_chars, match, mismatch)
+    elif _idmat._data[0, 0] != match or _idmat._data[0, 1] != mismatch:
+        pass
+
+    submat = _submat_from_mm(seq1, seq2, *sub_score)
 
 
 def _submat_from_mm(seq1, seq2, match, mismatch, dtype=np.float64):
@@ -875,3 +889,9 @@ def _traceback_all(
                 stack.append((path_, pos_, i - di, j - dj, mat_))
 
     return paths
+
+
+_ascii_chars = tuple(map(chr, range(128)))
+
+# match/mismatch matrix
+_idmat = None

@@ -2118,7 +2118,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         alphabet : iterable of scalar or skbio.SubstitutionMatrix, optional
             Explicitly provided alphabet. The returned indices will be indices
             of characters in this alphabet. If `None`, will return indices of
-            unique characters observed in the sequence.s
+            unique characters observed in the sequence.
         mask_gaps : 'auto' or bool, optional
             Mask gap characters in the sequence, and return a masked array
             instead of a standard array. The gap characters are defined by the
@@ -2216,9 +2216,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     mask, seq = gaps, seq[~gaps]
 
             elif mask_gaps is True:
-                raise ValueError(
-                    "Gap character(s) are not defined for the " "sequence."
-                )
+                raise ValueError("Gap character(s) are not defined for the sequence.")
 
         # according to an alphabet
         if alphabet is not None:
@@ -2231,7 +2229,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 try:
                     assert (wildcard := ord(wildcard)) < 128
                 except (TypeError, AssertionError):
-                    raise ValueError("Wildcard must be a single ASCII " "character.")
+                    raise ValueError("Wildcard must be a single ASCII character.")
 
             # extract alphabet from a substitution matrix
             if hasattr(alphabet, "_is_ascii"):
@@ -2241,19 +2239,19 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
                 else:
                     raise ValueError(
-                        "Alphabet in the substitution matrix "
-                        "are not single ASCII characters."
+                        "Alphabet in the substitution matrix are not single ASCII "
+                        "characters."
                     )
 
             # process alphabet from scratch
             else:
                 if find_duplicates(alphabet):
-                    raise ValueError("Alphabet contains duplicated " "characters.")
+                    raise ValueError("Alphabet contains duplicated characters.")
                 try:
                     alphabet = _alphabet_to_hashes(alphabet)
                 except (TypeError, ValueError, UnicodeEncodeError):
                     raise ValueError(
-                        "Alphabet cannot be encoded as single " "ASCII characters."
+                        "Alphabet cannot be encoded as single ASCII characters."
                     )
                 indices = _indices_in_alphabet_ascii(seq, alphabet, wildcard=wildcard)
 

@@ -68,6 +68,23 @@ class TestSubstitutionMatrix(TestCase):
             obs = SubstitutionMatrix(alp, self.scores)
             self.assertTupleEqual(obs.alphabet, alphabet)
 
+    def test_init_non_ascii(self):
+        # non-ASCII characters in the alphabet
+        obs = SubstitutionMatrix("äëïöü", self.scores)
+        self.assertTupleEqual(obs.alphabet, ("ä", "ë", "ï", "ö", "ü"))
+        self.assertEqual(obs["ï", "ë"], -2)
+        self.assertFalse(obs.is_ascii)
+        self.assertIsNone(obs._char_hash)
+
+    def test_init_words(self):
+        # words in the alphabet
+        words = "lorem ipsum dolor sit amet".split()
+        obs = SubstitutionMatrix(words, self.scores)
+        self.assertTupleEqual(obs.alphabet, tuple(words))
+        self.assertEqual(obs["dolor", "ipsum"], -2)
+        self.assertFalse(obs.is_ascii)
+        self.assertIsNone(obs._char_hash)
+
     def test_init_alt_scores(self):
         # alternative format of scores: nested list
         obs = SubstitutionMatrix(self.alphabet, self.scores.tolist())

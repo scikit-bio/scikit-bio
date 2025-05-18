@@ -175,14 +175,11 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
         try:
             wildcard = alphabet[wildcard]
         except KeyError:
-            raise ValueError(
-                f'Wildcard character "{wildcard}" is not in the ' "alphabet."
-            )
+            raise ValueError(f'Wildcard character "{wildcard}" is not in the alphabet.')
         pos = [wildcard if x is None else x for x in pos]
     elif None in pos:
         raise ValueError(
-            "One or multiple characters in the sequence are "
-            "absent from the alphabet."
+            "One or multiple characters in the sequence are absent from the alphabet."
         )
     return np.array(pos)
 
@@ -236,7 +233,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
             assert (wild := alphabet[wildcard]) != 255
         except AssertionError:
             raise ValueError(
-                f'Wildcard character "{chr(wildcard)}" is not in ' "the alphabet."
+                f'Wildcard character "{chr(wildcard)}" is not in the alphabet.'
             )
         pos = np.where(absent, wild, pos)
     return pos
