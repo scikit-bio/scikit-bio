@@ -92,7 +92,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     >>> sm = SubstitutionMatrix.identity('ACGT', 2, -1)
 
-    Load the pre-defined subsitution matrix "NUC.4.4", which covers the four bases plus
+    Load the pre-defined substitution matrix "NUC.4.4", which covers the four bases plus
     degenerate codes.
 
     >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
@@ -100,7 +100,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     ('A', 'T', 'G', 'C', 'S', 'W', 'R', 'Y', 'K', 'M', 'B', 'V', 'H', 'D', 'N')
 
     With a :class:`~skbio.sequence.Sequence` object, one can efficiently map all
-    characters to their indices in the subsitution matrix.
+    characters to their indices in the substitution matrix.
 
     >>> from skbio import DNA
     >>> seq = DNA('GGATCC')
@@ -108,7 +108,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     array([2, 2, 0, 1, 3, 3], dtype=uint8)
 
     This approach enables various subsequent operations. For example, one can
-    efficiently create position-to-position scoring matrix between two sequences.
+    efficiently create a position-to-position scoring matrix between two sequences.
 
     >>> seq1, seq2 = DNA('GGATCC'), DNA('AGATCT')
     >>> idx1, idx2 = seq1.to_indices(sm), seq2.to_indices(sm)
@@ -122,7 +122,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     Finding indices of sequence characters is most efficient when the alphabet consists
     of only ASCII codes (0 to 127). This can be determined by the ``is_ascii`` flag of
-    a subsitution matrix. Most common nucleotide and amino acid subsitution matrices
+    a substitution matrix. Most common nucleotide and amino acid substitution matrices
     only contain ASCII codes.
 
     However, one is not limited to ASCII characters. Using Unicode characters beyond
@@ -457,6 +457,13 @@ def _vector_to_matrix(vec):
 
 # Defined according to the matrices hosted at the NCBI FTP server:
 # https://ftp.ncbi.nlm.nih.gov/blast/matrices/
+
+# Note: "N" is the wildcard for nucleotide bases and "X" is the wildcard for amino
+# acids. They can be automatically recognized by `Sequence.to_indices`.
+
+# Note: "*" is the stop codon and it usually has the lowest score in the matrix.
+# See: https://bioinformatics.stackexchange.com/questions/21705/
+
 # fmt: off
 _named_substitution_matrices = {
     # NUC.4.4, a.k.a. DNAfull

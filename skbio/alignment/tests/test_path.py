@@ -13,7 +13,7 @@ import numpy.testing as npt
 
 from skbio.alignment._path import PairAlignPath, AlignPath, _run_length_encode
 from skbio.alignment import TabularMSA
-from skbio.sequence import DNA
+from skbio.sequence import DNA, Protein
 
 
 class TestAlignPath(unittest.TestCase):
@@ -121,6 +121,67 @@ class TestAlignPath(unittest.TestCase):
                         starts=[1, 2, 3]).stops()
         exp = np.array([18, 19, 22])
         npt.assert_array_equal(obs, exp)
+
+    def test_aligned(self):
+        # globally aligned DNA sequences
+        path = AlignPath(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        seqs = [DNA("CGGTCGTAACGCGTACA"),
+                DNA("CAGGTAAGCATACCTCA"),
+                DNA("CGGTCGTCACTGTACACTA")]
+        obs = path.aligned(seqs)
+        exp = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # custom gap character
+        obs = path.aligned(seqs, gap_char=".")
+        exp = ["CGGTCGTAACGCGTA...CA",
+               "CAG..GTAAG.CATACCTCA",
+               "CGGTCGTCAC.TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # raw strings with flanking regions
+        path.starts[0] = 5
+        path.starts[1] = 1
+        seqs = ["XXXXXCGGTCGTAACGCGTACAXXXXXXX",
+                "XCAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACTAXX"]
+        obs = path.aligned(seqs, flanking=3)
+        exp = ["XXXCGGTCGTAACGCGTA---CAXXX",
+               "  XCAG--GTAAG-CATACCTCA   ",
+               "   CGGTCGTCAC-TGTACACTAXX "]
+        self.assertListEqual(obs, exp)
+
+        # locally aligned protein sequences
+        path = AlignPath(
+            lengths=[5, 1, 6],
+            states=[0, 2, 0],
+            starts=[0, 8],
+        )
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVYTTSQVGGLITHVLWEIVEMRKELCNGNSD")]
+        obs = path.aligned(seqs, flanking=(5, 10))
+        exp = ["     RQPLTSSERIDK          ",
+               "DTTPNRPVYT-TSQVGGLITHVLWEIV"]
+        self.assertListEqual(obs, exp)
+
+        msg = "There are more sequences than in the path."
+        seqs.append(Protein("AKGDATSDKMLFTSPDKTEELIK"))
+        with self.assertRaises(ValueError) as cm:
+            _ = path.aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence 1 is shorter than in the path."
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVY")]
+        with self.assertRaises(ValueError) as cm:
+            _ = path.aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
 
     def test_from_bits(self):
         # test 1D base case, less than 8 sequences

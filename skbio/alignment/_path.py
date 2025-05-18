@@ -263,6 +263,120 @@ class AlignPath(SkbioObject):
         """
         return self._starts + (self._lengths * (1 - self._to_bits())).sum(axis=1)
 
+    def aligned(self, seqs, gap_char="-", flanking=None):
+        r"""Extract aligned regions from original sequences.
+
+        .. versionadded:: 0.6.4
+
+        Parameters
+        ----------
+        seqs : iterable of Sequence or str
+            Original sequences.
+        gap_char : str, optional
+            Character to fill gap regions. Default is "-". Set as "" to suppress gaps
+            in the output.
+        flanking : int or (int, int), optional
+            Length of flanking regions in the original sequences to be included in the
+            output. Can be two numbers (leading and trailing, respectively) or one
+            number (same for leading and trailing). If the specified flanking region
+            is longer than a sequence actually has, the remaining space will be filled
+            with white spaces (" ").
+
+        Returns
+        -------
+        list of str
+            Aligned regions of the sequences.
+
+        Raises
+        ------
+        ValueError
+            If there are more sequences than in the path.
+        ValueError
+            If any sequence is shorter than in the path.
+
+        See Also
+        --------
+        skbio.TabularMSA.from_path_seqs
+
+        Notes
+        -----
+        This method provides a convenient way to process and display alignments,
+        without invoking the explicit `TabularMSA` class. Both `Sequence` objects and
+        raw strings are valid input sequences.
+
+        However, it only outputs strings without retaining the `Sequence` objects and
+        their metadata. For the later purpose, please use ``TabularMSA``'s
+        :meth:`~skbio.TabularMSA.from_path_seqs` method instead.
+
+        Examples
+        --------
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import AlignPath
+        >>> path = AlignPath(
+        ...     lengths=[2, 2, 2, 1, 1],
+        ...     states=[0, 2, 0, 6, 0],
+        ...     starts=[0, 3, 0],
+        ... )
+        >>> seqs = [
+        ...    DNA('CGTCGTGC'),
+        ...    DNA('ATTCAGTCGG'),
+        ...    DNA('CGTCGTTAA')
+        ... ]
+        >>> path.aligned(seqs)
+        ['CGTCGTGC',
+         'CA--GT-C',
+         'CGTCGT-T']
+
+        """
+        starts = self._starts
+        lens = self._lengths
+        bits = self._to_bits()
+
+        if isinstance(flanking, tuple):
+            leading, trailing = flanking
+        else:
+            leading, trailing = flanking, flanking
+
+        res = []
+        for i, seq in enumerate(map(str, seqs)):
+            try:
+                pos = starts[i]
+            except IndexError:
+                raise ValueError("There are more sequences than in the path.")
+            aln = ""
+
+            # leading flanking region
+            if leading:
+                offset = pos - leading
+                if offset >= 0:
+                    aln += seq[offset:pos]
+                else:
+                    aln += " " * -offset + seq[:pos]
+
+            # alignment region
+            for L, gap in zip(lens, bits[i]):
+                if gap:
+                    aln += gap_char * L
+                else:
+                    new_pos = pos + L
+                    aln += seq[pos:new_pos]
+                    pos = new_pos
+
+            remaining = len(seq) - pos
+            if remaining < 0:
+                raise ValueError(f"Sequence {i} is shorter than in the path.")
+
+            # trailing flanking region
+            if trailing:
+                offset = remaining - trailing
+                if offset >= 0:
+                    aln += seq[pos : pos + trailing]
+                else:
+                    aln += seq[pos:] + " " * -offset
+
+            res.append(aln)
+        return res
+
     @classonlymethod
     def from_bits(cls, bits, starts=None):
         r"""Create an alignment path from a bit array (0 - character, 1 - gap).

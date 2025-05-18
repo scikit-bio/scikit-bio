@@ -36,11 +36,6 @@ from skbio.alignment._c_pair import (
 )
 
 
-def _get_aligned(seq1, seq2, path):
-    msa = TabularMSA.from_path_seqs(path, [seq1, seq2])
-    return str(msa[0]), str(msa[1])
-
-
 class PairAlignTests(unittest.TestCase):
     def test_pair_align_nucl(self):
         # Recognition sites of restriction enzymes EcoRI (GAATTC) and BglII (AGATCT).
@@ -56,10 +51,10 @@ class PairAlignTests(unittest.TestCase):
 
         # Print the aligned sequences.
         path = res.paths[0]
-        obs = _get_aligned(seq1, seq2, path)
-        exp = ("-GAATTC",
-               "AGATCT-")
-        self.assertTupleEqual(obs, exp)
+        obs = path.aligned((seq1, seq2))
+        exp = ["-GAATTC",
+               "AGATCT-"]
+        self.assertListEqual(obs, exp)
 
         # A path can be represented by a CIGAR string.
         self.assertEqual(path.to_cigar(), "1I5M1D")
@@ -75,12 +70,12 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(len(res.paths), 2)
 
         # The 1st path is identical to the previous one. But the 2nd is different.
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        self.assertTupleEqual(obs, exp)
-        obs = _get_aligned(seq1, seq2, res.paths[1])
-        exp = ("GAATTC-",
-               "-AGATCT")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        self.assertListEqual(obs, exp)
+        obs = res.paths[1].aligned((seq1, seq2))
+        exp = ["GAATTC-",
+               "-AGATCT"]
+        self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 1)
 
         # Keep the alignment matrix.
@@ -99,29 +94,27 @@ class PairAlignTests(unittest.TestCase):
         # Disable free ends. This is the true global alignment (i.e, the Needleman-
         # Wunsch algorithm in textbooks).
         res = pair_align(seq1, seq2, free_ends=False)
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        exp = ("GAATTC",
-               "AGATCT")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        exp = ["GAATTC",
+               "AGATCT"]
+        self.assertListEqual(obs, exp)
         self.assertEqual(res.score, -2)
 
         # Local alignment (i.e., the Smith-Waterman algorithm in textbooks). It gets
         # subsequences that are best aligned.
         res = pair_align(seq1, seq2, local=True)
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        exp = ("GA", "GA")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        exp = ["GA", "GA"]
+        self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 2)
 
         # Return all alignments.
         res = pair_align(seq1, seq2, local=True, max_paths=None)
         self.assertEqual(len(res.paths), 3)
-        obs = _get_aligned(seq1, seq2, res.paths[1])
-        exp = ("AT", "AT")
-        self.assertTupleEqual(obs, exp)
-        obs = _get_aligned(seq1, seq2, res.paths[2])
-        exp = ("TC", "TC")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[1].aligned((seq1, seq2))
+        self.assertListEqual(obs, ["AT", "AT"])
+        obs = res.paths[2].aligned((seq1, seq2))
+        self.assertListEqual(obs, ["TC", "TC"])
 
         # Tweak the parameters: match score = 1, mismatch score = -2, linear gap
         # penalty = 2.5. These are the default MegaBLAST parameters.
@@ -129,34 +122,34 @@ class PairAlignTests(unittest.TestCase):
 
         # With greater mismatch and gap penalties, the two sequences are not aligned
         # at all. (Semi-)global alignment returns the unaligned "alignment" anyway.
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        exp = ("------GAATTC",
-               "AGATCT------")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        exp = ["------GAATTC",
+               "AGATCT------"]
+        self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 0)
 
         # Try a different scoring scheme with affine gap penalty: match score = 5,
         # mismatch score = -4, gap opening penalty = 5, gap extension penalty = 2.
         # This triggers the Gotoh algorithm.
         res = pair_align(seq1, seq2, sub_score=(5, -4), gap_cost=(5, 2))
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        exp = ("-GAATTC-",
-               "AGA--TCT")
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        exp = ["-GAATTC-",
+               "AGA--TCT"]
+        self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 11)
 
         # The scores match = 5 and mismatch = -4 correspond to the standard
         # nucleotide substitution matrix "NUC.4.4" (a.k.a., DNAfull). We can
         # specify it and get the same result.
         res = pair_align(seq1, seq2, sub_score="NUC.4.4", gap_cost=(5, 2))
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        self.assertListEqual(obs, exp)
 
         # Or load an instance of SubstitutionMatrix.
         submat = SubstitutionMatrix.by_name("NUC.4.4")
         res = pair_align(seq1, seq2, sub_score=submat, gap_cost=(5, 2))
-        obs = _get_aligned(seq1, seq2, res.paths[0])
-        self.assertTupleEqual(obs, exp)
+        obs = res.paths[0].aligned((seq1, seq2))
+        self.assertListEqual(obs, exp)
 
     def test_pair_align_prot(self):
         # Nuclear localization signals (NLS') of SV40 (PKKKRKV) (Kalderon et al.,
@@ -168,9 +161,9 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 11)
         self.assertEqual(obs.paths[0].to_cigar(), "7M2I")
-        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]),
-            ("PKKKRKV--",
-             "PAAKRVKLD"))
+        exp = ["PKKKRKV--",
+               "PAAKRVKLD"]
+        self.assertListEqual(obs.paths[0].aligned((seq1, seq2)), exp)
 
         # Defensins (a category of antimicrobial peptides) of human (2PM4) and rat
         # (NP_775421.1).
@@ -214,22 +207,22 @@ class PairAlignTests(unittest.TestCase):
         seq2 = CustomSequence("WXYYZZ")
         obs = pair_align(seq1, seq2)
         self.assertEqual(obs.score, 2)
-        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+        self.assertListEqual(obs.paths[0].aligned((seq1, seq2), gap_char="^"), [
             "WXYZ^^",
             "WXYYZZ",
-        ))
+        ])
         obs = pair_align(seq1, seq2, free_ends=False)
         self.assertEqual(obs.score, 0)
-        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+        self.assertListEqual(obs.paths[0].aligned((seq1, seq2), gap_char="^"), [
             "WXY^Z^",
             "WXYYZZ",
-        ))
+        ])
         obs = pair_align(seq1, seq2, local=True)
         self.assertEqual(obs.score, 3)
-        self.assertTupleEqual(_get_aligned(seq1, seq2, obs.paths[0]), (
+        self.assertListEqual(obs.paths[0].aligned((seq1, seq2), gap_char="^"), [
             "WXY",
             "WXY",
-        ))
+        ])
 
         # also from the previous scikit-bio code
         seq1 = CustomSequence("YWXXZZYWXXWYYZWXX")

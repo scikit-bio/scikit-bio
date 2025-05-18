@@ -12,6 +12,7 @@ import numpy as np
 
 from skbio.sequence import Sequence, SubstitutionMatrix
 from skbio.alignment import PairAlignPath
+from ._utils import _prep_seqs_submat
 from ._c_pair import (
     _fill_linear_matrix,
     _fill_affine_matrices,
@@ -122,25 +123,25 @@ def pair_align(
        affine gap costs. Bull Math Biol, 48, 603-616.
 
     """
+    (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), sub_score)
+
     # encode sequences
-    seq1 = _seq_to_bytes(seq1)
-    seq2 = _seq_to_bytes(seq2)
+    # seq1 = _seq_to_bytes(seq1)
+    # seq2 = _seq_to_bytes(seq2)
     m = seq1.size
     n = seq2.size
-
     # TODO: Cast all scores to float32 or 64
 
-    # substitution matrix
-    if isinstance(sub_score, str):
-        sub_score = SubstitutionMatrix.by_name(sub_score)
-    if isinstance(sub_score, SubstitutionMatrix):
-        submat = _submat_from_sm(seq1, seq2, sub_score)
-    # match/mismatch scores
-    else:
-        if _idmat is None:
-            _idmat = SubstitutionMatrix.identity(_ascii_chars, match, mismatch)
+    submat = submat[seq1[:, None], seq2[None, :]]
 
-        submat = _submat_from_mm(seq1, seq2, *sub_score)
+    # # substitution matrix
+    # if isinstance(sub_score, str):
+    #     sub_score = SubstitutionMatrix.by_name(sub_score)
+    # if isinstance(sub_score, SubstitutionMatrix):
+    #     submat = _submat_from_sm(seq1, seq2, sub_score)
+    # # match/mismatch scores
+    # else:
+    #     submat = _submat_from_mm(seq1, seq2, *sub_score)
 
     # affine or linear gap penalty
     if np.isscalar(gap_cost):
@@ -889,9 +890,3 @@ def _traceback_all(
                 stack.append((path_, pos_, i - di, j - dj, mat_))
 
     return paths
-
-
-_ascii_chars = tuple(map(chr, range(128)))
-
-# match/mismatch matrix
-_idmat = None
