@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added `AlignPath.aligned` to extract aligned regions of the original sequences.
 * Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment. It supports linear and affine gap penalties, match/mismatch or substitution matrix, and optional terminal gap penalty ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Added `AlignPath.stops` to calculate the stop (a.k.a., end, right, 3-prime, C-terminus) position of the aligned region within a sequence ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187)).
@@ -25,6 +26,7 @@
 
 ### Miscellaneous
 
+* Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type.
 * Enriched the documentation of `SubstitutionMatrix`.
 * Let `AlignPath.states` be uniformly 2-D, even if there are 8 or less sequences in the alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Let `AlignPath.shape` return native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).

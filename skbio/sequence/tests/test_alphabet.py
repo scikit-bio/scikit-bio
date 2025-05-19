@@ -72,7 +72,7 @@ class TestAlphabet(TestCase):
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            dtype=np.uint8)
+            dtype=np.intp)
         npt.assert_equal(obs, exp)
 
     def test_indices_in_alphabet(self):
@@ -130,14 +130,14 @@ class TestAlphabet(TestCase):
         # convert an alphabet into a vector of indices
         alpha = 'ACGTN'
         idx = np.frombuffer(alpha.encode('ascii'), dtype=np.uint8)
-        alpha = np.full(128, 255, dtype=np.uint8)
+        alpha = np.full(128, 255, dtype=np.intp)
         alpha[idx] = np.arange(idx.size)
 
         # a typical case
         obs = _indices_in_alphabet_ascii(seq, alpha)
         exp = np.array([2, 0, 2, 1, 3, 1, 0])
         npt.assert_equal(obs, exp)
-        self.assertTrue(obs.dtype.type is np.uint8)
+        self.assertTrue(obs.dtype.type is np.intp)
 
         # one character is absent
         seq = np.insert(seq, 3, ord('R'))
@@ -150,7 +150,7 @@ class TestAlphabet(TestCase):
         obs = _indices_in_alphabet_ascii(seq, alpha, wildcard=ord('N'))
         exp = np.array([2, 0, 2, 4, 1, 3, 1, 0])
         npt.assert_equal(obs, exp)
-        self.assertTrue(obs.dtype.type is np.uint8)
+        self.assertTrue(obs.dtype.type is np.intp)
 
         # wildcard not in alphabet
         msg = 'Wildcard character "&" is not in the alphabet.'

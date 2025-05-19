@@ -2134,9 +2134,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Returns
         -------
-        1D np.ndarray or np.ma.ndarray of uint8
+        1D np.ndarray or np.ma.ndarray of intp
             Vector of character indices representing the sequence
-        str or 1D np.array of uint8, optional
+
+            .. versionchanged:: 0.6.4
+                The array data type was changed from ``uint8`` to ``intp``, which is
+                the native NumPy indexing type without the need of casting.
+
+        str or 1D np.ndarray of uint8, optional
             Sorted unique characters observed in the sequence.
 
         Raises
@@ -2157,7 +2162,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = Protein('MEEPQSDPSV')
         >>> idx, uniq = seq.to_indices()
         >>> idx
-        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6], dtype=uint8)
+        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6])
         >>> uniq
         'DEMPQSV'
 
@@ -2168,7 +2173,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('CTCAAAAGTC')
         >>> idx = seq.to_indices(alphabet='TCGA')
         >>> idx
-        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1], dtype=uint8)
+        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1])
 
         Use the alphabet included in a substitution matrix.
 
@@ -2176,7 +2181,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
         >>> idx = seq.to_indices(alphabet=sm)
         >>> idx
-        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3], dtype=uint8)
+        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3])
 
         Gap characters ("-" and ".") in the sequence will be masked
         (`mask_gaps='auto'` is the default behavior).
@@ -2195,7 +2200,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('GAGRCTC')
         >>> idx = seq.to_indices(alphabet='ACGTN', wildcard='auto')
         >>> idx
-        array([2, 0, 2, 4, 1, 3, 1], dtype=uint8)
+        array([2, 0, 2, 4, 1, 3, 1])
 
         """
         seq = self._bytes
@@ -2256,13 +2261,12 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         # according to observed characters
         else:
             (indices,), observed = _indices_in_observed([seq])
-            indices = indices.astype(np.uint8)
             if return_codes is False:
                 observed = observed.tobytes().decode("ascii")
 
         # construct masked array
         if mask is not None:
-            indices_ = np.full(mask.size, 255, dtype=np.uint8)
+            indices_ = np.full(mask.size, 255, dtype=np.intp)
             indices_[~mask] = indices
             indices = np.ma.array(indices_, mask=mask)
 

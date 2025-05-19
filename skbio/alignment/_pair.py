@@ -10,9 +10,8 @@ from collections import namedtuple
 
 import numpy as np
 
-from skbio.sequence import Sequence, SubstitutionMatrix
 from skbio.alignment import PairAlignPath
-from ._utils import _prep_seqs_submat
+from ._utils import _prep_seqs_submat, _prep_gap_cost
 from ._c_pair import (
     _fill_linear_matrix,
     _fill_affine_matrices,
@@ -25,8 +24,8 @@ def pair_align(
     seq1,
     seq2,
     local=False,
-    sub_score=(1, -1),
-    gap_cost=2,
+    sub_score=(1.0, -1.0),
+    gap_cost=2.0,
     free_ends=True,
     max_paths=1,
     atol=1e-5,
@@ -50,11 +49,11 @@ def pair_align(
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
         Score of a substitution. May be two numbers (match, mismatch), a substitution
         matrix, or its name. See :func:`align_score` for instructions. Default is
-        (1, -1).
+        (1.0, -1.0).
 
     gap_cost : float or tuple of (float, float), optional
         Penalty of a gap. May be one (linear) or two numbers (affine). See
-        :func:`align_score` for instructions and rationales. Default is -2.
+        :func:`align_score` for instructions and rationales. Default is -2.0.
 
     free_ends : bool, optional
         Whether gaps at the sequence terminals are free from penalization. See
@@ -90,8 +89,9 @@ def pair_align(
         Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
         paths are optimal and share the same alignment score.
 
-    matrices : tuple of ndarray of float of shape (m + 1, n + 1), optional
-        Alignment matrices generated during the computation.
+    matrices : tuple of ndarray of shape (m + 1, n + 1)
+        Alignment matrices generated during the computation (if ``keep_matrices`` is
+        True).
 
     See Also
     --------
@@ -100,12 +100,11 @@ def pair_align(
 
     Notes
     -----
-    This function implements the classical dynamic programming (DP) method for
-    pairwise sequence alignment. This method is commonly known as the Needleman-Wunsch
-    algorithm [1]_ for global alignment or the Smith-Waterman algorithm [2]_ for local
-    alignment. These two algorithms are for linear gap penalty. When affine gap
-    penalty is specified, the underlying method is the Gotoh algorithm [3]_, with
-    later modifications [4]_.
+    This function implements the classic dynamic programming (DP) method for pairwise
+    sequence alignment. It is commonly known as the Needleman-Wunsch algorithm [1]_ for
+    global alignment, or the Smith-Waterman algorithm [2]_ for local alignment. These
+    two algorithms use linear gap penalty. When affine gap penalty is specified, the
+    underlying method is the Gotoh algorithm [3]_, with later modifications [4]_.
 
     References
     ----------
@@ -123,69 +122,68 @@ def pair_align(
        affine gap costs. Bull Math Biol, 48, 603-616.
 
     """
+    # This function implements the classic dynamic programming method for pairwise
+    # sequence alignment. While the most time-consuming step (matrix filling) is done
+    # in Cython, this function retains as many steps as possible in Python, thereby
+    # "outsourcing" computation and optimization to the upstream library (NumPy).
+
+    # Prepare sequences and substitution matrix.
+    # If `sub_score` consists of match/mismatch scores, an identity matrix will be
+    # created or retrieved from cache. The two sequences are converted into indices
+    # in the substitution matrix, which facilitate lookup and memory locality.
     (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), sub_score)
 
-    # encode sequences
-    # seq1 = _seq_to_bytes(seq1)
-    # seq2 = _seq_to_bytes(seq2)
-    m = seq1.size
-    n = seq2.size
-    # TODO: Cast all scores to float32 or 64
+    # Profile seq1 (query), which will be aligned against seq2 (target).
+    # The profile is essentially a position-specific scoring matrix (PSSM). This design
+    # is useful for future implementation of profile search (like PSI-BLAST) and one-
+    # vs-many search.
+    query, target = np.ascontiguousarray(submat[seq1]), seq2
+    dtype = query.dtype.type
 
-    submat = submat[seq1[:, None], seq2[None, :]]
+    # Prepare affine or linear gap penalties.
+    gap_open, gap_extend = _prep_gap_cost(gap_cost, dtype=dtype)
+    affine = gap_open != 0
 
-    # # substitution matrix
-    # if isinstance(sub_score, str):
-    #     sub_score = SubstitutionMatrix.by_name(sub_score)
-    # if isinstance(sub_score, SubstitutionMatrix):
-    #     submat = _submat_from_sm(seq1, seq2, sub_score)
-    # # match/mismatch scores
-    # else:
-    #     submat = _submat_from_mm(seq1, seq2, *sub_score)
+    # Allocate alignment matrices.
+    # There is one matrix for linear gap penalty or three matrices for affine gap
+    # penalty. Each matrix is (m + 1) by (n + 1). They can become quite large and
+    # challenge the memory capacity. To overcome this, future implementation of
+    # Hirschberg's algorithm with linear space is desired.
+    matrices = _alloc_matrices(query.shape[0], target.size, affine, dtype=dtype)
 
-    # affine or linear gap penalty
-    if np.isscalar(gap_cost):
-        gap_open, gap_extend = 0, gap_cost
-    else:
-        gap_open, gap_extend = gap_cost
-    gap_open, gap_extend = float(gap_open), float(gap_extend)
-
-    # allocate alignment matrices
-    matrices = _alloc_matrices(m, n, gap_open)
-
-    # initialize alignment matrices
+    # Initialize alignment matrices.
     _init_matrices(*matrices, gap_open, gap_extend, local, free_ends)
 
-    # fill alignment matrices (quadratic; compute-intensive)
-    if gap_open:
-        _fill_affine_matrices(*matrices, submat, gap_open, gap_extend, local)
+    # Fill alignment matrices (quadratic; compute-intensive).
+    if affine:
+        _fill_affine_matrices(*matrices, query, target, gap_open, gap_extend, local)
     else:
-        _fill_linear_matrix(matrices[0], submat, gap_extend, local)
+        _fill_linear_matrix(matrices[0], query, target, gap_extend, local)
 
-    # get optimal alignment score and corresponding stop(s)
+    # Get optimal alignment score and corresponding stop(s).
     if max_paths == 1:
         score, stops = _one_stop(matrices[0], local, free_ends)
     else:
         score, stops = _all_stops(matrices[0], local, free_ends, atol)
 
-    # no path is found
+    # No path is found.
     if local and abs(score) <= atol:
         paths = []
 
-    # traceback from each stop to reconstruct optimal alignment path(s)
+    # Traceback from each stop to reconstruct optimal alignment path(s).
     elif max_paths == 0:
         paths = []
     elif max_paths == 1:
         paths = [_traceback_one(*stops[0], matrices, gap_open, gap_extend, local, atol)]
     else:
         paths = _traceback_all(
-            stops, matrices, submat, gap_open, gap_extend, local, max_paths, atol
+            stops, matrices, query, target, gap_open, gap_extend, local, max_paths, atol
         )
 
-    # discard or keep matrices
+    # Discard or keep matrices.
     if not keep_matrices:
         matrices = ()
-    elif gap_open:
+    elif affine:
         _fill_nan(matrices)
     else:
         matrices = (matrices[0],)
@@ -195,47 +193,6 @@ def pair_align(
 
 # pairwise alignment result
 PairAlignResult = namedtuple("PairAlignResult", ["score", "paths", "matrices"])
-
-
-def _seq_to_bytes(seq):
-    """Convert a sequence into bytes."""
-    if isinstance(seq, Sequence):
-        return seq._bytes
-    elif isinstance(seq, str):
-        return np.frombuffer(seq.encode("ascii"), dtype=np.uint8)
-    else:
-        raise ValueError("Sequence must be a string or a `Sequence` object.")
-
-
-def _submat_from_mm2(seq1, seq2, match, mismatch, dtype=np.float64):
-    """Pre-compute a match/mismatch array to facilitate lookup."""
-    match, mismatch = dtype(match), dtype(mismatch)
-    if _idmat is None:
-        _idmat = SubstitutionMatrix.identity(_ascii_chars, match, mismatch)
-    elif _idmat._data[0, 0] != match or _idmat._data[0, 1] != mismatch:
-        pass
-
-    submat = _submat_from_mm(seq1, seq2, *sub_score)
-
-
-def _submat_from_mm(seq1, seq2, match, mismatch, dtype=np.float64):
-    """Pre-compute a match/mismatch array to facilitate lookup."""
-    match, mismatch = dtype(match), dtype(mismatch)
-    return np.where(seq1[:, None] == seq2[None, :], match, mismatch)
-
-
-def _submat_from_sm(seq1, seq2, sub_score):
-    """Pre-compute a substitution array to facilitate lookup."""
-    seq1 = sub_score._char_hash[seq1]
-    seq2 = sub_score._char_hash[seq2]
-    try:
-        submat = sub_score._data[seq1][:, seq2]
-    except IndexError:
-        raise ValueError(
-            "Sequences contain characters that are not present in the provided "
-            "substitution matrix."
-        )
-    return np.ascontiguousarray(submat)
 
 
 def _alloc_matrices(m, n, affine, dtype=np.float64):
@@ -250,7 +207,7 @@ def _alloc_matrices(m, n, affine, dtype=np.float64):
     affine : bool
         Affine (True) or linear (False) gap penalty.
     dtype : type, optional
-        Data type (np.float32 or np.float64)
+        Data type (np.float32 or np.float64).
 
     Returns
     -------
@@ -262,7 +219,7 @@ def _alloc_matrices(m, n, affine, dtype=np.float64):
         Deletion matrix.
 
     """
-    # Note: The array should be C-contiguous to facilitate row-wise iteration.
+    # Note: The array should be C-contiguous to facilitate row-major operations.
     # NumPy's default array is already C-contiguous. This is also enforced by the
     # unit test.
     shape = (m + 1, n + 1)
@@ -322,7 +279,12 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
 
 
 def _fill_nan(matrices):
-    """ "Fill empty cells of affine matrices with NaN before returning."""
+    """Fill empty cells of affine matrices with NaN before returning.
+
+    These are not useful during alignment, but can make things less confusing for
+    diagnostic or educational purposes.
+
+    """
     _, insmat, delmat = matrices
     insmat[0, :] = np.nan
     delmat[:, 0] = np.nan
@@ -349,7 +311,7 @@ def _one_stop(scomat, local, free_ends):
 
     Notes
     -----
-    When there is a tie, the smallest index (col, row) is chosen.
+    When there is a tie, the smallest index (row, column) is chosen.
 
     """
     m = scomat.shape[0] - 1
@@ -398,7 +360,7 @@ def _all_stops(scomat, local, free_ends, eps=1e-5):
 
     Notes
     -----
-    Coordinates (col, row) are sorted in ascending order.
+    Coordinates (row, column) are sorted in ascending order.
 
     """
     m = scomat.shape[0] - 1
@@ -650,7 +612,7 @@ MOVES = np.array(
 )
 
 
-def _linear_moves(i, j, scomat, submat, gap, eps):
+def _linear_moves(i, j, scomat, query, target, gap, eps):
     """Identify move direction(s) at a cell with linear gap penalty.
 
     Parameters
@@ -661,8 +623,10 @@ def _linear_moves(i, j, scomat, submat, gap, eps):
         Current column index in the matrix.
     scomat : ndarray of shape (m, n)
         Main matrix.
-    submat : ndarray of shape (m, n)
-        Substitution matrix.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
     gap : float
         Gap penalty.
     eps : float
@@ -676,7 +640,9 @@ def _linear_moves(i, j, scomat, submat, gap, eps):
     """
     score = scomat[i, j]
     moves = []
-    if abs(scomat[i - 1, j - 1] + submat[i - 1, j - 1] - score) <= eps:  # subsitution
+    if (
+        abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
+    ):  # subsitution
         moves.append(0)
     if abs(scomat[i, j - 1] - gap - score) <= eps:  # insertion
         moves.append(1)
@@ -685,7 +651,7 @@ def _linear_moves(i, j, scomat, submat, gap, eps):
     return moves
 
 
-def _affine_moves(i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_e, eps):
+def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_e, eps):
     """Identify move direction(s) at a cell with affine gap penalty.
 
     Parameters
@@ -702,8 +668,10 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_e, eps)
         Insertion matrix.
     delmat : ndarray of shape (m, n)
         Deletion matrix.
-    submat : ndarray of shape (m, n)
-        Substitution matrix.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
     gap_oe : float
         Gap opening + extension penalty.
     gap_e : float
@@ -723,7 +691,7 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_e, eps)
     if mat == 0:
         score = scomat[i, j]
         if (
-            abs(scomat[i - 1, j - 1] + submat[i - 1, j - 1] - score) <= eps
+            abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
         ):  # subsitution
             moves.append(0)
         if abs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
@@ -749,7 +717,15 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_e, eps)
 
 
 def _traceback_all(
-    stops, matrices, submat, gap_open, gap_extend, local, max_paths=None, eps=1e-5
+    stops,
+    matrices,
+    query,
+    target,
+    gap_open,
+    gap_extend,
+    local,
+    max_paths=None,
+    eps=1e-5,
 ):
     """Traceback and return all optimal alignment paths.
 
@@ -759,8 +735,10 @@ def _traceback_all(
         Stop positions in both sequences.
     matrices : tuple of ndarray of float of shape (m + 1, n + 1)
         Alignment matrices.
-    submat : ndarray of float of shape (m, n)
-        Substitution matrix.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
     gap_open : float
         Gap opening penalty.
     gap_extend : float
@@ -858,10 +836,20 @@ def _traceback_all(
             # optimal alignment score.
             if gap_open:
                 moves = _affine_moves(
-                    i, j, mat, scomat, insmat, delmat, submat, gap_oe, gap_extend, eps
+                    i,
+                    j,
+                    mat,
+                    scomat,
+                    insmat,
+                    delmat,
+                    query,
+                    target,
+                    gap_oe,
+                    gap_extend,
+                    eps,
                 )
             else:
-                moves = _linear_moves(i, j, scomat, submat, gap_extend, eps)
+                moves = _linear_moves(i, j, scomat, query, target, gap_extend, eps)
 
             # This is impossible. Raise error for debugging purpose.
             # if not moves:

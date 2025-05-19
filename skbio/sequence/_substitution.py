@@ -105,7 +105,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     >>> from skbio import DNA
     >>> seq = DNA('GGATCC')
     >>> seq.to_indices(sm)
-    array([2, 2, 0, 1, 3, 3], dtype=uint8)
+    array([2, 2, 0, 1, 3, 3])
 
     This approach enables various subsequent operations. For example, one can
     efficiently create a position-to-position scoring matrix between two sequences.

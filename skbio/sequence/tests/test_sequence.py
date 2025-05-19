@@ -2056,6 +2056,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         exp_idx, exp_alp = np.array([1, 0, 2, 2, 3]), 'ehlo'
         npt.assert_equal(obs_idx, exp_idx)
         self.assertEqual(obs_alp, exp_alp)
+        self.assertTrue(obs_idx.dtype.type is np.intp)
 
         # return ASCII code points
         obs_idx, obs_alp = seq.to_indices(return_codes=True)
@@ -2074,6 +2075,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = seq.to_indices('oleh')
         exp = np.array([3, 2, 1, 1, 0])
         npt.assert_equal(obs, exp)
+        self.assertTrue(obs.dtype.type is np.intp)
 
         # grammared sequence
         seq = DNA('GAGCTC')

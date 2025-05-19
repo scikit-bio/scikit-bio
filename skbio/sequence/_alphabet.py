@@ -99,7 +99,7 @@ def _alphabet_to_hashes(alphabet):
 
     Returns
     -------
-    np.ndarray of np.uint8 of shape (128,)
+    np.ndarray of intp of shape (128,)
         Hash table of ASCII code points to indices.
 
     Raises
@@ -127,7 +127,7 @@ def _alphabet_to_hashes(alphabet):
 
     """
     idx = _encode_alphabet(alphabet)
-    res = np.full(128, 255, dtype=np.uint8)
+    res = np.full(128, 255, dtype=np.intp)
     res[idx] = np.arange(idx.size)
     return res
 
@@ -191,7 +191,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     ----------
     seq : 1D np.ndarray of int
         Input sequence as ASCII code points.
-    alphabet : np.ndarray of shape (128,) of int
+    alphabet : np.ndarray of shape (128,) of intp
         Input alphabet as a hash table of all ASCII code points to character
         indices, or 255 if absent from the alphabet.
     wildcard : int, optional
@@ -200,7 +200,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
 
     Returns
     -------
-    1D np.ndarray of uint8
+    1D np.ndarray of intp
         Vector of indices of characters in an alphabet.
 
     Raises

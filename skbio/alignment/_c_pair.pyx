@@ -34,6 +34,8 @@ cdef inline floating lbound(bint local, floating gap_extend) noexcept nogil:
     double). Otherwise it will complain: "Return type is not specified as argument
     type".
 
+    Currently it is not used, because `-INFINITY` is good enough.
+
     """
     if local:
         return 0
@@ -45,7 +47,8 @@ cdef inline floating lbound(bint local, floating gap_extend) noexcept nogil:
 
 def _fill_linear_matrix(
     floating[:, ::1] scomat,
-    floating[:, ::1] submat,
+    const floating[:, ::1] query,
+    const Py_ssize_t[::1] target,
     floating gap_extend,
     bint local,
 ):
@@ -55,22 +58,52 @@ def _fill_linear_matrix(
     ----------
     scomat : memoryview of ndarray of shape (m, n)
         Main matrix.
-    submat : memoryview of ndarray of shape (m, n)
-        Substitution matrix.
+    query : memoryview of ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : memoryview of ndarray of int of shape (n,)
+        Target sequence.
     gap_extend : floating
         Gap extension penalty.
     local : bint
         Local (True) or global (False) alignment.
 
+    Notes
+    -----
+    Matrix filling is the most computationally intensive step in pairwise sequence
+    alignment using dynamic programming. It is O(mn). The current algorithm adopts
+    the classic and simple double loops method.
+
+    Efficiency is achieved through memory locality and compiler's auto-optimization.
+    All arrays are C-contiguous in memory, facilitating row-wise iteration (i.e.,
+    from left to right), which is what the inner loop (j-indexed) does. The loop
+    content is as simple as possible, involving a single `max` and no branches. The
+    linear and affine versions are separated, whereas the global and local versions
+    are unified with a lower bound constant defined prior to the loops. Directions
+    are not saved during matrix filling, but instead re-calculated during traceback,
+    which is O(m + n) anyway.
+
+    `query` is a pre-computed profile of the query sequence. Each row represents a
+    character in the query sequence and each column represents a symbol in the
+    subsitution matrix. `target` is a vector of indices in the subsitution matrix,
+    and each elements represents a character in the target sequence. Therefore,
+    `query[i - 1, target[j - 1]]` directly looks up the substitution score between
+    i-th character in query and j-th character in target.
+    
+    Although this algorithm does not utilize various manual optimization techniques
+    that have been developed, such as wavefront sweep, loop tiling, SIMD striping and
+    prefix scan, they are noted here for reference.
+
     """
     cdef floating bound = 0 if local else -INFINITY
     cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
     cdef Py_ssize_t i, j
+    cdef floating* row
 
     for i in range(1, m1):
+        row = &query[i - 1, 0]
         for j in range(1, n1):
             scomat[i, j] = max(
-                scomat[i - 1, j - 1] + submat[i - 1, j - 1],
+                scomat[i - 1, j - 1] + row[target[j - 1]],
                 scomat[i, j - 1] - gap_extend,
                 scomat[i - 1, j] - gap_extend,
                 bound,
@@ -81,7 +114,8 @@ def _fill_affine_matrices(
     floating[:, ::1] scomat,
     floating[:, ::1] insmat,
     floating[:, ::1] delmat,
-    floating[:, ::1] submat,
+    const floating[:, ::1] query,
+    const Py_ssize_t[::1] target,
     floating gap_open,
     floating gap_extend,
     bint local,
@@ -96,8 +130,10 @@ def _fill_affine_matrices(
         Insertion matrix.
     delmat : memoryview of ndarray of shape (m, n)
         Deletion matrix.
-    submat : memoryview of ndarray of shape (m, n)
-        Substitution matrix.
+    query : memoryview of ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : memoryview of ndarray of int of shape (n,)
+        Target sequence.
     gap_open : floating
         Gap opening penalty.
     gap_extend : floating
@@ -105,18 +141,24 @@ def _fill_affine_matrices(
     local : bint
         Local (True) or global (False) alignment.
 
+    See Also
+    --------
+    _fill_linear_matrix
+
     """
     cdef floating bound = 0 if local else -INFINITY
     cdef floating gap_open_extend = gap_open + gap_extend
     cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
     cdef Py_ssize_t i, j
     cdef floating sub_, ins_, del_
+    cdef floating* row
 
     for i in range(1, m1):
+        row = &query[i - 1, 0]
         for j in range(1, n1):
 
             # substitution (diagonal)
-            sub_ = scomat[i - 1, j - 1] + submat[i - 1, j - 1]
+            sub_ = scomat[i - 1, j - 1] + row[target[j - 1]]
 
             # open a new insertion or extend a previous insertion (horizontal)
             ins_ = insmat[i, j] = max(
@@ -176,7 +218,7 @@ def _trace_one_linear(
     Notes
     -----
     Only one optimal alignment path is traced. The priority is:
-    
+
         deletion > insertion > substitution
 
     This function does not involve the original sequences or the substitution matrix,

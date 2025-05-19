@@ -54,7 +54,7 @@ class TestSubstitutionMatrix(TestCase):
 
         # hash table of ASCII characters
         self.assertTrue(isinstance(obs._char_hash, np.ndarray))
-        self.assertTrue(obs._char_hash.dtype.type is np.uint8)
+        self.assertTrue(obs._char_hash.dtype.type is np.intp)
         for i, char in enumerate(alphabet):
             self.assertEqual(i, obs._char_hash[ord(char)])
 

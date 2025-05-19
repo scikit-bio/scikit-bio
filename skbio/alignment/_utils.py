@@ -18,33 +18,66 @@ from skbio.sequence._alphabet import (
 )
 
 
+# cached identity matrices for alignment with match/mismatch scores
 _idmats = {}
+
+# indices of cached identity matrices
 _ididxs = {}
 
 
 def _check_same_type(items):
-    """Return the common type of variables."""
+    """Return the common type of variables.
+
+    Parameters
+    ----------
+    items : iterable of any
+        Variables.
+
+    Returns
+    -------
+    type
+        Common type.
+
+    Raises
+    ------
+    TypeError
+        If there are more than one type.
+
+    """
+    # TODO: This function can be moved to skbio.util._misc.
     dtype = type(items[0])
     for item in items[1:]:
         if type(item) is not dtype:
-            raise ValueError("Variables are of different types.")
+            raise TypeError("Variables are of different types.")
     return dtype
 
 
 def _parse_seqs(seqs):
-    """Parse sequences.
+    """Parse sequences for alignment.
 
     Parameters
     ----------
-    seqs : iterable of iterable
+    seqs : iterable of iterable of scalar
         Sequences.
 
     Returns
     -------
     list of ndarray of uint8 or int
         Encoded sequences.
-    type or "ascii" or int
+    type, int, or "ascii"
         Sequence type | alphabet is ASCII | alphabet size
+
+    Notes
+    -----
+    It converts sequences into arrays of indices in a hypothetical subsitution matrix,
+    and suggests how to construct this subsitution matrix. Three scenarios:
+
+        1) GrammaredSequence, with a finite alphabet.
+           => size of alphabet
+        2) Non-grammared Sequence, characters and integers within ASCII range (0-127).
+           => size = 128
+        3) Unicode characters, arbitrary numbers, hashables.
+           => size = count of unique elements
 
     """
     seqtype = _check_same_type(seqs)
@@ -66,7 +99,7 @@ def _parse_seqs_submat(seqs, submat):
 
     Parameters
     ----------
-    seqs : iterable of iterable
+    seqs : iterable of iterable of scalar
         Sequences.
     submat : SubstitutionMatrix
         Substitution matrix.
@@ -90,7 +123,7 @@ def _parse_seqs_submat(seqs, submat):
         return [_indices_in_alphabet(x, submat._char_map) for x in seqs]
 
 
-def _prep_seqs_submat(seqs, sub_score):
+def _prep_seqs_submat(seqs, sub_score, dtype=np.float64):
     """Prepare sequences and substitution matrix for alignment.
 
     Parameters
@@ -100,6 +133,9 @@ def _prep_seqs_submat(seqs, sub_score):
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a substitution. May be two numbers (match, mismatch), a substitution
         matrix, or its name.
+    dtype : type, optional
+        Default floating-point data type (np.float32 or np.float64) to use if it cannot
+        be automatically inferred.
 
     Returns
     -------
@@ -120,8 +156,8 @@ def _prep_seqs_submat(seqs, sub_score):
 
         # create a temporary matrix of arbitrary size
         if isinstance(key, int):
-            submat = np.full((key, key), mismatch, dtype=float)
-            np.fill_diagonal(scores, match)
+            submat = np.full((key, key), mismatch, dtype=dtype)
+            np.fill_diagonal(submat, match)
 
         # check existing matrix in cache and update it if needed
         elif key in _idmats:
@@ -130,7 +166,10 @@ def _prep_seqs_submat(seqs, sub_score):
                 submat[:] = mismatch
             if submat[0, 0] != match:
                 np.fill_diagonal(submat, match)
-            if key != "ascii":
+            if key == "ascii":
+                # cast ASCII codes (uint8) into indices (intp)
+                seqs = [x.astype(np.intp) for x in seqs]
+            else:
                 # translate ASCII codes to indices in matrix
                 idx = _ididxs[key]
                 seqs = [idx[x] for x in seqs]
@@ -139,6 +178,7 @@ def _prep_seqs_submat(seqs, sub_score):
         else:
             if key == "ascii":
                 alphabet = [chr(i) for i in range(128)]
+                seqs = [x.astype(np.intp) for x in seqs]
             else:
                 alphabet = sorted(key.alphabet)
                 # create index and translate
@@ -146,8 +186,34 @@ def _prep_seqs_submat(seqs, sub_score):
                 seqs = [idx[x] for x in seqs]
 
             n = len(alphabet)
-            submat = np.full((n, n), mismatch, dtype=float)
+            submat = np.full((n, n), mismatch, dtype=dtype)
             np.fill_diagonal(submat, match)
             _idmats[key] = submat
 
     return seqs, submat
+
+
+def _prep_gap_cost(gap_cost, dtype=np.float64):
+    """Prepare gap penalty for alignment.
+
+    Parameters
+    ----------
+    gap_cost : float or tuple of (float, float), optional
+        Penalty of a gap. May be one (linear) or two numbers (affine). See
+        :func:`align_score` for instructions and rationales. Default is -2.
+    dtype : type, optional
+        Floating-point data type (np.float32 or np.float64) to use.
+
+    Returns
+    -------
+    float
+        Gap opening penalty.
+    float
+        Gap extension penalty.
+
+    """
+    if np.isscalar(gap_cost):
+        gap_open, gap_extend = 0, gap_cost
+    else:
+        gap_open, gap_extend = gap_cost
+    return dtype(gap_open), dtype(gap_extend)
