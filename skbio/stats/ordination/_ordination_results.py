@@ -25,7 +25,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     Stores various components of ordination results. Provides methods for
     serializing/deserializing results, as well as generation of basic
     matplotlib 3-D scatterplots using the
-    :func:`~skbio.stats.ordination.OrdinationResults.plot` method.
+    :meth:`plot` method.
 
     Attributes
     ----------
