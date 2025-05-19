@@ -2266,7 +2266,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         # construct masked array
         if mask is not None:
-            indices_ = np.full(mask.size, 255, dtype=np.intp)
+            indices_ = np.full(mask.size, -1, dtype=np.intp)
             indices_[~mask] = indices
             indices = np.ma.array(indices_, mask=mask)
 

@@ -25,121 +25,26 @@ _idmats = {}
 _ididxs = {}
 
 
-def _check_same_type(items):
-    """Return the common type of variables.
-
-    Parameters
-    ----------
-    items : iterable of any
-        Variables.
-
-    Returns
-    -------
-    type
-        Common type.
-
-    Raises
-    ------
-    TypeError
-        If there are more than one type.
-
-    """
-    # TODO: This function can be moved to skbio.util._misc.
-    dtype = type(items[0])
-    for item in items[1:]:
-        if type(item) is not dtype:
-            raise TypeError("Variables are of different types.")
-    return dtype
-
-
-def _parse_seqs(seqs):
-    """Parse sequences for alignment.
-
-    Parameters
-    ----------
-    seqs : iterable of iterable of scalar
-        Sequences.
-
-    Returns
-    -------
-    list of ndarray of uint8 or int
-        Encoded sequences.
-    type, int, or "ascii"
-        Sequence type | alphabet is ASCII | alphabet size
-
-    Notes
-    -----
-    It converts sequences into arrays of indices in a hypothetical subsitution matrix,
-    and suggests how to construct this subsitution matrix. Three scenarios:
-
-    1. GrammaredSequence, with a finite alphabet.
-        => size of alphabet (<= 128)
-    2. Non-grammared Sequence, characters and integers within ASCII range (0-127).
-        => size = 128
-    3. Unicode characters, arbitrary numbers, hashables.
-        => size = count of unique elements
-
-    """
-    seqtype = _check_same_type(seqs)
-    if issubclass(seqtype, GrammaredSequence):
-        return [x._bytes for x in seqs], seqtype
-    elif issubclass(seqtype, Sequence):
-        return [x._bytes for x in seqs], "ascii"
-    try:
-        seqs = [_encode_alphabet(x) for x in seqs]
-    except (TypeError, ValueError, UnicodeEncodeError):
-        seqs, uniq = _indices_in_observed(seqs)
-        return seqs, uniq.size
-    else:
-        return seqs, "ascii"
-
-
-def _parse_seqs_submat(seqs, submat):
-    """Parse sequences with substitution matrix.
-
-    Parameters
-    ----------
-    seqs : iterable of iterable of scalar
-        Sequences.
-    submat : SubstitutionMatrix
-        Substitution matrix.
-
-    Returns
-    -------
-    list of ndarray of uint8 or int
-        Indices of sequence characters in the substitution matrix.
-
-    """
-    seqtype = _check_same_type(seqs)
-    if issubclass(seqtype, Sequence):
-        return [x.to_indices(submat, mask_gaps=False) for x in seqs]
-    if submat._is_ascii:
-        try:
-            seqs = [_encode_alphabet(x) for x in seqs]
-        except (TypeError, ValueError, UnicodeEncodeError):
-            raise ValueError("Cannot encode ASCII characters.")
-        return [_indices_in_alphabet_ascii(x, submat._char_hash) for x in seqs]
-    else:
-        return [_indices_in_alphabet(x, submat._char_map) for x in seqs]
-
-
 def _prep_seqs_submat(seqs, sub_score, dtype=np.float64):
     """Prepare sequences and substitution matrix for alignment.
 
+    This function converts sequences into indices in the substitution matrix to
+    facilitate subsequent alignment operations.
+
     Parameters
     ----------
-    seqs : iterable of Sequence or sequence
-        Sequences.
+    seqs : iterable of Sequence, str, or sequence of scalar
+        Input sequences.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
-        Score of a substitution. May be two numbers (match, mismatch), a substitution
-        matrix, or its name.
+        Substitution scoring method. Can be two numbers (match, mismatch), a
+        substitution matrix, or its name.
     dtype : type, optional
-        Default floating-point data type (np.float32 or np.float64) to use if it cannot
-        be automatically inferred.
+        Default floating-point data type (np.float32 or np.float64) to use if it
+        cannot be automatically inferred.
 
     Returns
     -------
-    list of ndarray of uint8 or int
+    list of ndarray of intp
         Indices of sequence characters in the substitution matrix.
     ndarray of float of shape (n_alphabet, n_alphabet)
         Substitution matrix.
@@ -148,47 +53,13 @@ def _prep_seqs_submat(seqs, sub_score, dtype=np.float64):
     if isinstance(sub_score, str):
         sub_score = SubstitutionMatrix.by_name(sub_score)
     if isinstance(sub_score, SubstitutionMatrix):
-        seqs = _parse_seqs_submat(seqs, sub_score)
+        seqs = _parse_seqs_with_submat(seqs, sub_score)
         submat = sub_score._data
     else:
         match, mismatch = sub_score
-        seqs, key = _parse_seqs(seqs)
-
-        # create a temporary matrix of arbitrary size
-        if isinstance(key, int):
-            submat = np.full((key, key), mismatch, dtype=dtype)
-            np.fill_diagonal(submat, match)
-
-        # check existing matrix in cache and update it if needed
-        elif key in _idmats:
-            submat = _idmats[key]
-            if submat[0, 1] != mismatch:
-                submat[:] = mismatch
-            if submat[0, 0] != match:
-                np.fill_diagonal(submat, match)
-            if key == "ascii":
-                # cast ASCII codes (uint8) into indices (intp)
-                seqs = [x.astype(np.intp) for x in seqs]
-            else:
-                # translate ASCII codes to indices in matrix
-                idx = _ididxs[key]
-                seqs = [idx[x] for x in seqs]
-
-        # create a new matrix and save it to cache
-        else:
-            if key == "ascii":
-                alphabet = [chr(i) for i in range(128)]
-                seqs = [x.astype(np.intp) for x in seqs]
-            else:
-                alphabet = sorted(key.alphabet)
-                # create index and translate
-                idx = _ididxs[key] = _alphabet_to_hashes(alphabet)
-                seqs = [idx[x] for x in seqs]
-
-            n = len(alphabet)
-            submat = np.full((n, n), mismatch, dtype=dtype)
-            np.fill_diagonal(submat, match)
-            _idmats[key] = submat
+        match, mismatch = dtype(match), dtype(mismatch)
+        seqs, key = _parse_seqs_alone(seqs)
+        seqs, submat = _prep_idmat(seqs, key, match, mismatch)
 
     return seqs, submat
 
@@ -217,3 +88,175 @@ def _prep_gap_cost(gap_cost, dtype=np.float64):
     else:
         gap_open, gap_extend = gap_cost
     return dtype(gap_open), dtype(gap_extend)
+
+
+def _parse_seqs_with_submat(seqs, submat):
+    """Parse sequences with a specified substitution matrix.
+
+    Parameters
+    ----------
+    seqs : iterable of Sequence, str, or sequence of scalar
+        Sequences.
+    submat : SubstitutionMatrix
+        Substitution matrix.
+
+    Returns
+    -------
+    list of ndarray of intp
+        Indices of sequence characters in the substitution matrix.
+
+    """
+    seqtype = _check_same_type(seqs)
+    if issubclass(seqtype, Sequence):
+        return [x.to_indices(submat, mask_gaps=False) for x in seqs]
+    if submat._is_ascii:
+        try:
+            seqs = [_encode_alphabet(x) for x in seqs]
+        except (TypeError, ValueError, UnicodeEncodeError):
+            raise ValueError("Cannot encode ASCII characters.")
+        return [_indices_in_alphabet_ascii(x, submat._char_hash) for x in seqs]
+    else:
+        return [_indices_in_alphabet(x, submat._char_map) for x in seqs]
+
+
+def _parse_seqs_alone(seqs):
+    """Parse sequences without a specified substitution matrix.
+
+    Parameters
+    ----------
+    seqs : iterable of iterable of scalar
+        Sequences.
+
+    Returns
+    -------
+    list of ndarray of uint8 or int
+        Encoded sequences.
+    type, int, or "ascii"
+        Sequence type | alphabet is ASCII | alphabet size
+
+    Notes
+    -----
+    It converts sequences into arrays of indices in a hypothetical subsitution matrix,
+    and suggests how to construct this subsitution matrix. There are three scenarios:
+
+    1. GrammaredSequence, with a finite alphabet.
+        => size of alphabet (<= 128)
+    2. Non-grammared Sequence, characters and integers within ASCII range (0-127).
+        => size = 128
+    3. Unicode characters, arbitrary numbers, hashables.
+        => size = count of unique elements
+
+    """
+    seqtype = _check_same_type(seqs)
+    if issubclass(seqtype, GrammaredSequence):
+        return [x._bytes for x in seqs], seqtype
+    elif issubclass(seqtype, Sequence):
+        return [x._bytes for x in seqs], "ascii"
+    try:
+        seqs = [_encode_alphabet(x) for x in seqs]
+    except (TypeError, ValueError, UnicodeEncodeError):
+        seqs, uniq = _indices_in_observed(seqs)
+        return seqs, uniq.size
+    else:
+        return seqs, "ascii"
+
+
+def _prep_idmat(seqs, key, match, mismatch):
+    """Prepare an indentity matrix based on match/mismatch scores.
+
+    Parameters
+    ----------
+    seqs : list of ndarray of uint8 or int
+        Encoded sequences.
+    key: type, int, or "ascii"
+        Sequence type | alphabet is ASCII | alphabet size
+    match : float
+        Match score.
+    mismatch : float
+        Mismatch score.
+
+    Returns
+    -------
+    list of ndarray of intp
+        Indices of sequence characters in the substitution matrix.
+    ndarray of float of shape (n_alphabet, n_alphabet)
+        Substitution matrix.
+
+    Notes
+    -----
+    An identity matrix is created on the first use and saved in the cache for reuse.
+    There are three scenarios:
+
+    1. Each GrammaredSequence type (such as DNA and Protein) will have its own identity
+       matrix that covers its specific alphabet.
+    2. For non-grammared Sequence, string and other types that can be ASCII-encoded, a
+       single identity matrix with all 128 ASCII codes will be created and cached.
+    3. For other types, an indentity matrix will be created each time and not cached.
+       It will cover all unique elements in the sequences.
+
+    """
+    # create a temporary matrix of arbitrary size
+    if isinstance(key, int):
+        submat = np.full((key, key), mismatch)
+        np.fill_diagonal(submat, match)
+
+    # check existing matrix in cache and update it if needed
+    elif key in _idmats:
+        submat = _idmats[key]
+        if submat[0, 1] != mismatch:
+            submat[:] = mismatch
+        if submat[0, 0] != match:
+            np.fill_diagonal(submat, match)
+        if key == "ascii":
+            # cast ASCII codes (uint8) into indices (intp)
+            seqs = [x.astype(np.intp) for x in seqs]
+        else:
+            # translate ASCII codes to indices in matrix
+            idx = _ididxs[key]
+            seqs = [idx[x] for x in seqs]
+
+    # create a new matrix and save it to cache
+    else:
+        if key == "ascii":
+            # TODO: This can be further optimized in `SubstitutionMatrix`.
+            alphabet = [chr(i) for i in range(128)]
+            seqs = [x.astype(np.intp) for x in seqs]
+        else:
+            alphabet = sorted(key.alphabet)
+            # create index and translate
+            idx = _ididxs[key] = _alphabet_to_hashes(alphabet)
+            seqs = [idx[x] for x in seqs]
+
+        n = len(alphabet)
+        submat = np.full((n, n), mismatch)
+        np.fill_diagonal(submat, match)
+        _idmats[key] = submat
+
+    return seqs, submat
+
+
+def _check_same_type(items):
+    """Return the common type of variables.
+
+    Parameters
+    ----------
+    items : iterable of any
+        Variables.
+
+    Returns
+    -------
+    type
+        Common type.
+
+    Raises
+    ------
+    TypeError
+        If there are more than one type.
+
+    """
+    # TODO: This function can be moved to skbio.util._misc.
+    dtype = type(items[0])
+    for item in items[1:]:
+        if type(item) is not dtype:
+            raise TypeError("Variables are of different types.")
+    return dtype

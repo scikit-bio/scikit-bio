@@ -122,12 +122,12 @@ def _alphabet_to_hashes(alphabet):
     The hash table has a constant size of 128, which is the total number of
     ASCII characters.
 
-    Code points absent from the alphabet are filled with 255, which is beyond
+    Code points absent from the alphabet are filled with -1, which is beyond
     the range of ASCII characters, hence the maximum index in the alphabet.
 
     """
     idx = _encode_alphabet(alphabet)
-    res = np.full(128, 255, dtype=np.intp)
+    res = np.full(128, -1, dtype=np.intp)
     res[idx] = np.arange(idx.size)
     return res
 
@@ -200,7 +200,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None, gaps=None):
         Input sequence(s) as ASCII code points.
     alphabet : ndarray of shape (128,) of intp
         Input alphabet as a hash table of all ASCII code points to character indices,
-        or 255 if absent from the alphabet.
+        or -1 if absent from the alphabet.
     wildcard : int, optional
         Code point of character to replace any characters that are absent from the
         alphabet. If omitted, will raise an error if such characters exist.
@@ -232,7 +232,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None, gaps=None):
 
     """
     pos = alphabet[seq]
-    absent = pos == 255
+    absent = pos == -1
     if gaps is not None:
         absent &= ~gaps
     if absent.any():
@@ -241,7 +241,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None, gaps=None):
                 "One or more characters in the sequence are absent from the alphabet."
             )
         try:
-            assert (wild := alphabet[wildcard]) != 255
+            assert (wild := alphabet[wildcard]) != -1
         except AssertionError:
             raise ValueError(
                 f'Wildcard character "{chr(wildcard)}" is not in the alphabet.'

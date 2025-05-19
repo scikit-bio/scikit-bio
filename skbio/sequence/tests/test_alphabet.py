@@ -61,16 +61,16 @@ class TestAlphabet(TestCase):
         alpha = 'ATGCSWRYKMBVHDN'
         obs = _alphabet_to_hashes(alpha)
         exp = np.array([
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            0, 10, 3, 13, 255, 255, 2, 12, 255, 255, 8, 255, 9,
-            14, 255, 255, 255, 6, 4, 1, 255, 11, 5, 255, 7, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            0, 10, 3, 13, -1, -1, 2, 12, -1, -1, 8, -1, 9,
+            14, -1, -1, -1, 6, 4, 1, -1, 11, 5, -1, 7, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
             dtype=np.intp)
         npt.assert_array_equal(obs, exp)
 
@@ -143,7 +143,7 @@ class TestAlphabet(TestCase):
         # convert an alphabet into a vector of indices
         alpha = 'ACGTN'
         idx = np.frombuffer(alpha.encode('ascii'), dtype=np.uint8)
-        alpha = np.full(128, 255, dtype=np.intp)
+        alpha = np.full(128, -1, dtype=np.intp)
         alpha[idx] = np.arange(idx.size)
 
         # a typical case
@@ -178,7 +178,7 @@ class TestAlphabet(TestCase):
                         [1, 1, 3, 3, 0, 2, 0]])
         npt.assert_array_equal(obs, exp)
 
-        # sequences with gaps (which become 255)
+        # sequences with gaps (which become -1)
         seqs = ('GAG-TCA', 'A-G-TAT', 'CCTTA-A')
         seqs = np.vstack([
             np.frombuffer(x.encode('ascii'), dtype=np.uint8) for x in seqs])
@@ -186,20 +186,20 @@ class TestAlphabet(TestCase):
                          [0, 1, 0, 1, 0, 0, 0],
                          [0, 0, 0, 0, 0, 1, 0]], dtype=bool)
         obs = _indices_in_alphabet_ascii(seqs, alpha, gaps=gaps)
-        exp = np.array([[2, 0, 2, 255, 3, 1, 0],
-                        [0, 255, 2, 255, 3, 0, 3],
-                        [1, 1, 3, 3, 0, 255, 0]])
+        exp = np.array([[2, 0, 2, -1, 3, 1, 0],
+                        [0, -1, 2, -1, 3, 0, 3],
+                        [1, 1, 3, 3, 0, -1, 0]])
         npt.assert_array_equal(obs, exp)
 
         # sequences with degenerate codes and gap positions (the former are casted into
-        # 'N' but the later remain 255)
+        # 'N' but the later remain -1)
         seqs = ('RAG-TNA', 'A-G-TAT', 'CCYTA-A')
         seqs = np.vstack([
             np.frombuffer(x.encode('ascii'), dtype=np.uint8) for x in seqs])
         obs = _indices_in_alphabet_ascii(seqs, alpha, wildcard=ord('N'), gaps=gaps)
-        exp = np.array([[4, 0, 2, 255, 3, 4, 0],
-                        [0, 255, 2, 255, 3, 0, 3],
-                        [1, 1, 4, 3, 0, 255, 0]])
+        exp = np.array([[4, 0, 2, -1, 3, 4, 0],
+                        [0, -1, 2, -1, 3, 0, 3],
+                        [1, 1, 4, 3, 0, -1, 0]])
         npt.assert_array_equal(obs, exp)
 
     def test_indices_in_observed(self):

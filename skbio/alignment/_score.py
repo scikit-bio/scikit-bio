@@ -96,7 +96,7 @@ def trim_end_gaps(alignment, gap_chars="-."):
         Start position of terminal gap-free region of each sequence.
         (i.e., index of the first position within non-gap)
     ndarray of int of shape (n_sequences,)
-        End position of terminal gap-free region of each sequence.
+        Stop position of terminal gap-free region of each sequence.
         (i.e., index of the first position after non-gap)
 
     Notes
@@ -258,7 +258,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
         # convert sequences into indices in the matrix
         seqs = sub_score._char_hash[seqs]
         # TODO: add a `validate` flag to skip this check
-        if (seqs[~gaps] >= sub_score.shape[0]).any():
+        if (seqs[~gaps] == -1).any():
             raise ValueError(
                 "Sequences contain characters that are not present in the provided "
                 "substitution matrix."
@@ -266,6 +266,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
         submat = sub_score._data
         match, mismatch = 0, 0
     else:
+        seqs = seqs.astype(np.intp)  #####
         submat = np.empty((0, 0))
         match, mismatch = sub_score
 

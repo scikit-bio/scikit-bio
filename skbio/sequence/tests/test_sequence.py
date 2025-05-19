@@ -2140,7 +2140,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # gaps are automatically identified and masked
         obs_idx, obs_alp = DNA('GAG-CTC').to_indices()
         self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
-        npt.assert_equal(obs_idx.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs_idx.data, [2, 0, 2, -1, 1, 3, 1])
         npt.assert_equal(obs_idx.mask, [0, 0, 0, 1, 0, 0, 0])
         self.assertEqual(obs_alp, 'ACGT')
 
@@ -2165,7 +2165,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # with alphabet
         obs = DNA('GAG-CTC').to_indices('ACGT')
         self.assertTrue(isinstance(obs, np.ma.MaskedArray))
-        npt.assert_equal(obs.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs.data, [2, 0, 2, -1, 1, 3, 1])
         npt.assert_equal(obs.mask, [0, 0, 0, 1, 0, 0, 0])
 
     def test_copy_without_metadata(self):
