@@ -14,7 +14,10 @@ from typing import (
     Iterable,
     ClassVar,
     Sized,
+    Self,
     Collection,
+    TypeVar,
+    Type,
     Optional,
     Sequence,
     Union,
@@ -40,6 +43,10 @@ from ._utils import distmat_reorder, distmat_reorder_condensed
 if TYPE_CHECKING:
     import matplotlib.figure
     from matplotlib.colors import Colormap
+    from numpy.random import RandomState, Generator
+    from numpy.typing import ArrayLike
+
+T = TypeVar("T", bound="DissimilarityMatrix")
 
 
 class DissimilarityMatrixError(Exception):
@@ -1088,10 +1095,17 @@ class DistanceMatrix(DissimilarityMatrix):
     """
 
     # Override here, used in superclass __str__
-    _matrix_element_name = "distance"
+    _matrix_element_name: ClassVar[str] = "distance"
 
     @classonlymethod
-    def from_iterable(cls, iterable, metric, key=None, keys=None, validate=True):
+    def from_iterable(
+        cls,
+        iterable: Iterable[Any],
+        metric: Callable,
+        key: Optional[Any] = None,
+        keys: Optional[Iterable[Any]] = None,
+        validate: bool = True,
+    ) -> "DistanceMatrix":
         """Create DistanceMatrix from all pairs in an iterable given a metric.
 
         Parameters
@@ -1141,16 +1155,16 @@ class DistanceMatrix(DissimilarityMatrix):
         if key is not None:
             keys_ = [resolve_key(e, key) for e in iterable]
         elif keys is not None:
-            keys_ = keys
+            keys_ = list(keys)
 
         dm = np.zeros((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable[:i]):
                 dm[i, j] = dm[j, i] = metric(a, b)
 
-        return cls(dm, keys_)
+        return cls(dm, keys_)  # type: ignore[operator]
 
-    def condensed_form(self):
+    def condensed_form(self) -> np.ndarray:
         """Return an array of distances in condensed format.
 
         Returns
@@ -1172,7 +1186,11 @@ class DistanceMatrix(DissimilarityMatrix):
         """
         return squareform(self._data, force="tovector", checks=False)
 
-    def permute(self, condensed=False, seed=None):
+    def permute(
+        self,
+        condensed: bool = False,
+        seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    ) -> Union["DistanceMatrix", np.ndarray]:
         """Randomly permute both rows and columns in the matrix.
 
         Randomly permutes the ordering of rows and columns in the matrix. The
@@ -1220,7 +1238,7 @@ class DistanceMatrix(DissimilarityMatrix):
             permuted = distmat_reorder(self._data, order)
             return self.__class__(permuted, self.ids, validate=False)
 
-    def _validate(self, data, ids):
+    def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the data array and IDs.
 
         Overrides the superclass `_validate`. Performs a check for symmetry in
@@ -1239,7 +1257,7 @@ class DistanceMatrix(DissimilarityMatrix):
                 "Data must be hollow (i.e., the diagonal can only contain zeros)."
             )
 
-    def to_series(self):
+    def to_series(self) -> pd.Series:
         """Create a ``pandas.Series`` from this ``DistanceMatrix``.
 
         The series will contain distances in condensed form: only distances
@@ -1289,7 +1307,12 @@ class DistanceMatrix(DissimilarityMatrix):
         return pd.Series(data=distances, index=index, dtype=float)
 
 
-def randdm(num_objects, ids=None, constructor=None, random_fn=None):
+def randdm(
+    num_objects: int,
+    ids: Optional[Sequence[str]] = None,
+    constructor: Optional[Type[Union["DissimilarityMatrix", "DistanceMatrix"]]] = None,
+    random_fn: Optional[Union[int, "Generator", Callable]] = None,
+) -> Union["DissimilarityMatrix", "DistanceMatrix"]:
     r"""Generate a distance matrix populated with random distances.
 
     Using the default ``random_fn``, distances are randomly drawn from a uniform
@@ -1340,11 +1363,12 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
     if not callable(random_fn):
         random_fn = get_rng(random_fn).random
 
+    random_fn = cast(Callable, random_fn)
     data = np.tril(random_fn((num_objects, num_objects)), -1)
     data += data.T
 
     if not ids:
-        ids = map(str, range(1, num_objects + 1))
+        ids = tuple(map(str, range(1, num_objects + 1)))
 
     return constructor(data, ids)
 
@@ -1352,7 +1376,12 @@ def randdm(num_objects, ids=None, constructor=None, random_fn=None):
 # helper functions for anosim and permanova
 
 
-def _preprocess_input_sng(ids, sample_size, grouping, column):
+def _preprocess_input_sng(
+    ids: Sequence,
+    sample_size: int,
+    grouping: Union["pd.DataFrame", Sequence],
+    column: Optional[str],
+) -> tuple:
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1407,7 +1436,11 @@ def _preprocess_input_sng(ids, sample_size, grouping, column):
     return num_groups, grouping
 
 
-def _preprocess_input(distance_matrix, grouping, column):
+def _preprocess_input(
+    distance_matrix: "DistanceMatrix",
+    grouping: Union["pd.DataFrame", Sequence],
+    column: Optional[str],
+) -> tuple:
     """Compute intermediate results not affected by permutations.
 
     These intermediate results can be computed a single time for efficiency,
@@ -1432,12 +1465,12 @@ def _preprocess_input(distance_matrix, grouping, column):
     return sample_size, num_groups, grouping, tri_idxs, distances
 
 
-def _df_to_vector(ids, df, column):
+def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:
     """Return a grouping vector from a ``DataFrame`` column.
 
     Parameters
     ----------
-    ids : liat
+    ids : Sequence
         IDs that will be mapped to group labels.
     df : pandas.DataFrame
         ``DataFrame`` (indexed by distance matrix ID).
