@@ -132,7 +132,7 @@ def _alphabet_to_hashes(alphabet):
     return res
 
 
-def _indices_in_alphabet(seq, alphabet, wildcard=None):
+def _indices_in_alphabet(seq, alphabet, wildcard=None, gaps=None):
     """Convert a sequence into indices of characters in an alphabet.
 
     Parameters
@@ -140,15 +140,18 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
     seq : iterable
         Input sequence.
     alphabet : dict or iterable
-        Input alphabet. Can be a dictionary of characters to indices, or an
-        iterable of other types from which the dictionary will be constructed.
+        Input alphabet. Can be a dictionary of characters to indices, or an iterable
+        of other types from which the dictionary will be constructed.
     wildcard : hashable, optional
-        Character to replace any characters that are absent from the alphabet.
-        If omitted, will raise an error if the latter characters exist.
+        Character to replace any characters that are absent from the alphabet. If
+        omitted, will raise an error if the latter characters exist.
+    gaps : iterable, optional
+        Boolean mask of the sequence representing gap positions. Must be of the same
+        length as `seq`.
 
     Returns
     -------
-    1D np.ndarray of int
+    1D ndarray of intp
         Vector of indices of characters in an alphabet.
 
     Raises
@@ -156,8 +159,8 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
     ValueError
         If the wildcard character is not in the alphabet.
     ValueError
-        If one or more characters in the sequence are absent from the
-        alphabet, whereas `wildcard` is not set.
+        If one or more characters in the sequence are absent from the alphabet, whereas
+        `wildcard` is not set.
 
     See Also
     --------
@@ -171,6 +174,10 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
     if not isinstance(alphabet, dict):
         alphabet = {x: i for i, x in enumerate(alphabet)}
     pos = list(map(alphabet.get, seq))
+    if gaps is not None:
+        for i, gap in enumerate(gaps):
+            if gap:
+                pos[i] = -1
     if wildcard is not None:
         try:
             wildcard = alphabet[wildcard]
@@ -181,26 +188,29 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
         raise ValueError(
             "One or more characters in the sequence are absent from the alphabet."
         )
-    return np.array(pos)
+    return np.array(pos, dtype=np.intp)
 
 
-def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
-    """Convert a sequence into indices of characters in an ASCII alphabet.
+def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None, gaps=None):
+    """Convert sequence(s) into indices of characters in an ASCII alphabet.
 
     Parameters
     ----------
-    seq : 1D np.ndarray of int
-        Input sequence as ASCII code points.
-    alphabet : np.ndarray of shape (128,) of intp
-        Input alphabet as a hash table of all ASCII code points to character
-        indices, or 255 if absent from the alphabet.
+    seq : ndarray of int
+        Input sequence(s) as ASCII code points.
+    alphabet : ndarray of shape (128,) of intp
+        Input alphabet as a hash table of all ASCII code points to character indices,
+        or 255 if absent from the alphabet.
     wildcard : int, optional
-        Code point of character to replace any characters that are absent from
-        the alphabet. If omitted, will raise an error if such characters exist.
+        Code point of character to replace any characters that are absent from the
+        alphabet. If omitted, will raise an error if such characters exist.
+    gaps : ndarray of bool, optional
+        Boolean mask of the sequence(s) representing gap positions. Must be of the same
+        shape as `seq`.
 
     Returns
     -------
-    1D np.ndarray of intp
+    ndarray of intp
         Vector of indices of characters in an alphabet.
 
     Raises
@@ -208,8 +218,8 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     ValueError
         If the wildcard character is not in the alphabet.
     ValueError
-        If one or more characters in the sequence are absent from the
-        alphabet, whereas `wildcard` is not set.
+        If one or more characters in the sequence are absent from the alphabet, whereas
+        `wildcard` is not set.
 
     See Also
     --------
@@ -223,11 +233,12 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     """
     pos = alphabet[seq]
     absent = pos == 255
+    if gaps is not None:
+        absent &= ~gaps
     if absent.any():
         if wildcard is None:
             raise ValueError(
-                "One or more characters in the sequence are "
-                "absent from the alphabet."
+                "One or more characters in the sequence are absent from the alphabet."
             )
         try:
             assert (wild := alphabet[wildcard]) != 255

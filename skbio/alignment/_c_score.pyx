@@ -12,7 +12,7 @@ from cython cimport floating
 
 
 def _trim_end_gaps(
-    unsigned char[:, :] bits,
+    const unsigned char[:, :] bits,
     Py_ssize_t[::1] starts,
     Py_ssize_t[::1] stops,
 ):
@@ -58,12 +58,12 @@ def _trim_end_gaps(
 
 
 def _multi_align_score(
-    unsigned char[:, :] seqs,
-    unsigned char[:, :] bits,
-    Py_ssize_t[:] lens,
-    Py_ssize_t[::1] starts,
-    Py_ssize_t[::1] stops,
-    floating[:, :] submat,
+    const Py_ssize_t[:, :] seqs,
+    const unsigned char[:, :] bits,
+    const Py_ssize_t[:] lens,
+    const Py_ssize_t[::1] starts,
+    const Py_ssize_t[::1] stops,
+    const floating[:, :] submat,
     floating match,
     floating mismatch,
     floating gap_open,

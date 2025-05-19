@@ -23,18 +23,17 @@ class TestAlphabet(TestCase):
         # ascii characters
         alpha = 'ACGT'
         exp = np.array([65, 67, 71, 84], dtype=np.uint8)
-        npt.assert_equal(_encode_alphabet(alpha), exp)
-        npt.assert_equal(_encode_alphabet(list(alpha)), exp)
-        npt.assert_equal(_encode_alphabet(tuple(alpha)), exp)
-        npt.assert_equal(_encode_alphabet(np.array(list(alpha))), exp)
-        npt.assert_equal(_encode_alphabet(np.char.encode(list(alpha))), exp)
+        npt.assert_array_equal(_encode_alphabet(alpha), exp)
+        npt.assert_array_equal(_encode_alphabet(list(alpha)), exp)
+        npt.assert_array_equal(_encode_alphabet(tuple(alpha)), exp)
+        npt.assert_array_equal(_encode_alphabet(np.array(list(alpha))), exp)
+        npt.assert_array_equal(_encode_alphabet(np.char.encode(list(alpha))), exp)
 
         # ascii code points
         codes = list(map(ord, alpha))
-        npt.assert_equal(_encode_alphabet(codes), exp)
-        npt.assert_equal(_encode_alphabet(np.array(codes)), exp)
-        npt.assert_equal(_encode_alphabet(np.array(codes).astype(
-            np.uint8)), exp)
+        npt.assert_array_equal(_encode_alphabet(codes), exp)
+        npt.assert_array_equal(_encode_alphabet(np.array(codes)), exp)
+        npt.assert_array_equal(_encode_alphabet(np.array(codes).astype(np.uint8)), exp)
 
         # wrong data types
         with self.assertRaises(TypeError):
@@ -73,7 +72,7 @@ class TestAlphabet(TestCase):
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
             dtype=np.intp)
-        npt.assert_equal(obs, exp)
+        npt.assert_array_equal(obs, exp)
 
     def test_indices_in_alphabet(self):
         seq = 'GAGCTCA'  # DNA sequence without degenerate characters
@@ -81,12 +80,12 @@ class TestAlphabet(TestCase):
         exp = np.array([2, 0, 2, 1, 3, 1, 0])  # indices of characters
 
         # either alphabet or sequence may be string, list/tuple, or iterator
-        npt.assert_equal(_indices_in_alphabet(seq, alpha), exp)
-        npt.assert_equal(_indices_in_alphabet(list(seq), list(alpha)), exp)
-        npt.assert_equal(_indices_in_alphabet(iter(seq), iter(alpha)), exp)
+        npt.assert_array_equal(_indices_in_alphabet(seq, alpha), exp)
+        npt.assert_array_equal(_indices_in_alphabet(list(seq), list(alpha)), exp)
+        npt.assert_array_equal(_indices_in_alphabet(iter(seq), iter(alpha)), exp)
 
         # alphabet is a dictionary of character : index (most performant)
-        npt.assert_equal(_indices_in_alphabet(seq, dict(zip(alpha, range(len(
+        npt.assert_array_equal(_indices_in_alphabet(seq, dict(zip(alpha, range(len(
             alpha))))), exp)
 
         # one character is absent from alphabet
@@ -98,7 +97,7 @@ class TestAlphabet(TestCase):
         # replace absent character with wildcard
         obs = _indices_in_alphabet(seq, alpha, wildcard='N')
         exp = np.array([2, 0, 2, 4, 1, 3, 1, 0])
-        npt.assert_equal(obs, exp)
+        npt.assert_array_equal(obs, exp)
 
         # wildcard not in alphabet
         msg = 'Wildcard character "X" is not in the alphabet.'
@@ -109,17 +108,32 @@ class TestAlphabet(TestCase):
         seq = 'MEEPQSDPSV'
         alpha = 'ARNDCQEGHILKMFPSTWYVBZX'
         exp = np.array([12, 6, 6, 14, 5, 15, 3, 14, 15, 19])
-        npt.assert_equal(_indices_in_alphabet(seq, alpha), exp)
+        npt.assert_array_equal(_indices_in_alphabet(seq, alpha), exp)
 
         # natural language
         seq = 'The quick brown fox jumps over the lazy dog'.split()
         alpha = ['dog', 'fox', 'jumps', 'the']
         obs = _indices_in_alphabet(seq, alpha, wildcard='the')
         exp = np.array([3, 3, 3, 1, 2, 3, 3, 3, 0])
-        npt.assert_equal(obs, exp)
+        npt.assert_array_equal(obs, exp)
 
         # empty sequence
         self.assertEqual(_indices_in_alphabet('', alpha).size, 0)
+
+        # sequence with gaps
+        alpha = 'ACGTN'
+        seq = 'GAG--TCA'
+        gaps = [0, 0, 0, 1, 1, 0, 0, 0]
+        obs = _indices_in_alphabet(seq, alpha, gaps=gaps)
+        exp = np.array([2, 0, 2, -1, -1, 3, 1, 0])
+        npt.assert_array_equal(obs, exp)
+
+        # sequence with gaps and degenerate code
+        seq = 'GRG--YCA'
+        gaps = [0, 0, 0, 1, 1, 0, 0, 0]
+        obs = _indices_in_alphabet(seq, alpha, wildcard='N', gaps=gaps)
+        exp = np.array([2, 4, 2, -1, -1, 4, 1, 0])
+        npt.assert_array_equal(obs, exp)
 
     def test_indices_in_alphabet_ascii(self):
         # convert a sequence into a vector of code points
@@ -135,8 +149,8 @@ class TestAlphabet(TestCase):
         # a typical case
         obs = _indices_in_alphabet_ascii(seq, alpha)
         exp = np.array([2, 0, 2, 1, 3, 1, 0])
-        npt.assert_equal(obs, exp)
-        self.assertTrue(obs.dtype.type is np.intp)
+        npt.assert_array_equal(obs, exp)
+        self.assertIs(obs.dtype.type, np.intp)
 
         # one character is absent
         seq = np.insert(seq, 3, ord('R'))
@@ -147,13 +161,46 @@ class TestAlphabet(TestCase):
         # replace absent character
         obs = _indices_in_alphabet_ascii(seq, alpha, wildcard=ord('N'))
         exp = np.array([2, 0, 2, 4, 1, 3, 1, 0])
-        npt.assert_equal(obs, exp)
-        self.assertTrue(obs.dtype.type is np.intp)
+        npt.assert_array_equal(obs, exp)
 
         # wildcard not in alphabet
         msg = 'Wildcard character "&" is not in the alphabet.'
         with self.assertRaisesRegex(ValueError, msg):
             _indices_in_alphabet_ascii(seq, alpha, wildcard=38)
+
+        # multiple sequences of the same length
+        seqs = ('GAGCTCA', 'ACGGTAT', 'CCTTAGA')
+        seqs = np.vstack([
+            np.frombuffer(x.encode('ascii'), dtype=np.uint8) for x in seqs])
+        obs = _indices_in_alphabet_ascii(seqs, alpha, wildcard=ord('N'))
+        exp = np.array([[2, 0, 2, 1, 3, 1, 0],
+                        [0, 1, 2, 2, 3, 0, 3],
+                        [1, 1, 3, 3, 0, 2, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # sequences with gaps (which become 255)
+        seqs = ('GAG-TCA', 'A-G-TAT', 'CCTTA-A')
+        seqs = np.vstack([
+            np.frombuffer(x.encode('ascii'), dtype=np.uint8) for x in seqs])
+        gaps = np.array([[0, 0, 0, 1, 0, 0, 1],
+                         [0, 1, 0, 1, 0, 0, 0],
+                         [0, 0, 0, 0, 0, 1, 0]], dtype=bool)
+        obs = _indices_in_alphabet_ascii(seqs, alpha, gaps=gaps)
+        exp = np.array([[2, 0, 2, 255, 3, 1, 0],
+                        [0, 255, 2, 255, 3, 0, 3],
+                        [1, 1, 3, 3, 0, 255, 0]])
+        npt.assert_array_equal(obs, exp)
+
+        # sequences with degenerate codes and gap positions (the former are casted into
+        # 'N' but the later remain 255)
+        seqs = ('RAG-TNA', 'A-G-TAT', 'CCYTA-A')
+        seqs = np.vstack([
+            np.frombuffer(x.encode('ascii'), dtype=np.uint8) for x in seqs])
+        obs = _indices_in_alphabet_ascii(seqs, alpha, wildcard=ord('N'), gaps=gaps)
+        exp = np.array([[4, 0, 2, 255, 3, 4, 0],
+                        [0, 255, 2, 255, 3, 0, 3],
+                        [1, 1, 4, 3, 0, 255, 0]])
+        npt.assert_array_equal(obs, exp)
 
     def test_indices_in_observed(self):
         # data from human TP53 protein (NP_000537.3)
@@ -170,9 +217,9 @@ class TestAlphabet(TestCase):
                       13, 10]),
             np.array([1, 1, 5, 2, 11, 16, 3, 14, 2, 1, 10, 4, 10, 1, 2, 0, 10,
                       12, 8, 10, 2, 0, 0]))
-        npt.assert_equal(obs_alp, exp_alp)
+        npt.assert_array_equal(obs_alp, exp_alp)
         for obs, exp in zip(obs_idx, exp_idx):
-            npt.assert_equal(obs, exp)
+            npt.assert_array_equal(obs, exp)
 
         # reconstruct original sequences
         for idx, seq in zip(obs_idx, seqs):
@@ -183,9 +230,9 @@ class TestAlphabet(TestCase):
                 [3, 3, 4, 1, 0],
                 [5, 2, 5, 8, 0])
         obs_idx, obs_alp = _indices_in_observed(seqs)
-        npt.assert_equal(obs_alp, np.arange(9))
+        npt.assert_array_equal(obs_alp, np.arange(9))
         for idx, seq in zip(obs_idx, seqs):
-            npt.assert_equal(obs_alp[idx], np.array(seq))
+            npt.assert_array_equal(obs_alp[idx], np.array(seq))
 
         # sequences are natural language
         seqs = (['this', 'is', 'a', 'cat'],
@@ -193,13 +240,13 @@ class TestAlphabet(TestCase):
                 ['cat', 'is', 'not', 'dog'])
         obs_idx, obs_alp = _indices_in_observed(seqs)
         exp_alp = np.unique(np.concatenate(seqs))
-        npt.assert_equal(obs_alp, exp_alp)
+        npt.assert_array_equal(obs_alp, exp_alp)
         for idx, seq in zip(obs_idx, seqs):
-            npt.assert_equal(obs_alp[idx], np.array(seq))
+            npt.assert_array_equal(obs_alp[idx], np.array(seq))
 
         # sequences are individual characters
         obs_idx, obs_alp = _indices_in_observed(['hello'])
-        npt.assert_equal(obs_alp, np.array(['e', 'h', 'l', 'o']))
+        npt.assert_array_equal(obs_alp, np.array(['e', 'h', 'l', 'o']))
         self.assertEqual(''.join(obs_alp[np.concatenate(obs_idx)]), 'hello')
 
         # empty sequence
