@@ -137,9 +137,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
     >>> sm.alphabet
     ('ä', 'ë', 'ï', 'ö', 'ü')
 
-    Any iterables of hashable elements are valid alphabets, granting flexibility in
-    working with non-character data types. For example, one can include words/tokens
-    in a substitution matrix.
+    Any iterables of scalars are valid alphabets, granting flexibility in working with
+    non-character data types. For example, one can include words or tokens in a
+    substitution matrix.
 
     >>> tokens = 'lorem ipsum dolor sit amet'.split()
     >>> sm = SubstitutionMatrix(tokens, np.array([

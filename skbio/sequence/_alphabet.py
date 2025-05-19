@@ -156,7 +156,7 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
     ValueError
         If the wildcard character is not in the alphabet.
     ValueError
-        If one or multiple characters in the sequence are absent from the
+        If one or more characters in the sequence are absent from the
         alphabet, whereas `wildcard` is not set.
 
     See Also
@@ -179,7 +179,7 @@ def _indices_in_alphabet(seq, alphabet, wildcard=None):
         pos = [wildcard if x is None else x for x in pos]
     elif None in pos:
         raise ValueError(
-            "One or multiple characters in the sequence are absent from the alphabet."
+            "One or more characters in the sequence are absent from the alphabet."
         )
     return np.array(pos)
 
@@ -208,7 +208,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     ValueError
         If the wildcard character is not in the alphabet.
     ValueError
-        If one or multiple characters in the sequence are absent from the
+        If one or more characters in the sequence are absent from the
         alphabet, whereas `wildcard` is not set.
 
     See Also
@@ -226,7 +226,7 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None):
     if absent.any():
         if wildcard is None:
             raise ValueError(
-                "One or multiple characters in the sequence are "
+                "One or more characters in the sequence are "
                 "absent from the alphabet."
             )
         try:

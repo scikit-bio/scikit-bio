@@ -91,8 +91,7 @@ class TestAlphabet(TestCase):
 
         # one character is absent from alphabet
         seq = 'GAGRCTCA'
-        msg = ('One or multiple characters in the sequence are absent from '
-               'the alphabet.')
+        msg = 'One or more characters in the sequence are absent from the alphabet.'
         with self.assertRaisesRegex(ValueError, msg):
             _indices_in_alphabet(seq, alpha)
 
@@ -141,8 +140,7 @@ class TestAlphabet(TestCase):
 
         # one character is absent
         seq = np.insert(seq, 3, ord('R'))
-        msg = ('One or multiple characters in the sequence are absent from '
-               'the alphabet.')
+        msg = 'One or more characters in the sequence are absent from the alphabet.'
         with self.assertRaisesRegex(ValueError, msg):
             _indices_in_alphabet_ascii(seq, alpha)
 

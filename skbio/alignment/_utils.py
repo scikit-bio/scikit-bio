@@ -72,12 +72,12 @@ def _parse_seqs(seqs):
     It converts sequences into arrays of indices in a hypothetical subsitution matrix,
     and suggests how to construct this subsitution matrix. Three scenarios:
 
-        1) GrammaredSequence, with a finite alphabet.
-           => size of alphabet
-        2) Non-grammared Sequence, characters and integers within ASCII range (0-127).
-           => size = 128
-        3) Unicode characters, arbitrary numbers, hashables.
-           => size = count of unique elements
+    1. GrammaredSequence, with a finite alphabet.
+        => size of alphabet (<= 128)
+    2. Non-grammared Sequence, characters and integers within ASCII range (0-127).
+        => size = 128
+    3. Unicode characters, arbitrary numbers, hashables.
+        => size = count of unique elements
 
     """
     seqtype = _check_same_type(seqs)
