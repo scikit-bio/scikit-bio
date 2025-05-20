@@ -14,12 +14,10 @@ from typing import (
     Iterable,
     ClassVar,
     Collection,
-    TypeVar,
     Type,
     Optional,
     Sequence,
     Union,
-    cast,
     TYPE_CHECKING,
 )
 
@@ -42,9 +40,6 @@ if TYPE_CHECKING:
     import matplotlib.figure
     from matplotlib.colors import Colormap
     from numpy.random import RandomState, Generator
-    from numpy.typing import ArrayLike
-
-T = TypeVar("T", bound="DissimilarityMatrix")
 
 
 class DissimilarityMatrixError(Exception):
@@ -175,36 +170,37 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         if _issue_copy:
             data = np.asarray(data, dtype="float")
 
-        data = cast(np.ndarray, data)
-        if data.ndim == 1:
+        # Make data_ explicitly an ndarray to help with type checking.
+        # At this point in the code we can be certain that data is an
+        # ndarray.
+        assert isinstance(data, np.ndarray)
+        data_: np.ndarray = data
+
+        if data_.ndim == 1:
             # We can assume squareform will return a symmetric square matrix
             # so no need for full validation.
             # Still do basic checks (e.g. zero length)
             # and id validation
-            data = squareform(data, force="tomatrix", checks=False)
+            data_ = squareform(data_, force="tomatrix", checks=False)
             validate_full = False
             validate_shape = True
             validate_ids = True
 
         if ids is None:
-            data = cast(np.ndarray, data)
-            ids = tuple(str(i) for i in range(data.shape[0]))
+            ids = tuple(str(i) for i in range(data_.shape[0]))
             # I just created the ids, so no need to re-validate them
             validate_ids = False
         ids = tuple(ids)
 
         if validate_full:
-            data = cast(np.ndarray, data)
-            self._validate(data, ids)
+            self._validate(data_, ids)
         else:
             if validate_shape:
-                data = cast(np.ndarray, data)
-                self._validate_shape(data)
+                self._validate_shape(data_)
             if validate_ids:
-                data = cast(np.ndarray, data)
-                self._validate_ids(data, ids)
+                self._validate_ids(data_, ids)
 
-        self._data = data
+        self._data = data_
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
@@ -275,7 +271,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         This property is not writeable.
 
         """
-        return cast(np.ndarray, self._data)
+        return self._data
 
     @property
     def ids(self) -> tuple:
@@ -691,8 +687,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
             i.extend([self.ids[i_idx]] * j_length)
             j.extend(j_labels)
 
-            data_ = cast(np.ndarray, self._data)
-            subset = data_[i_idx, j_indices]
+            subset = self._data[i_idx, j_indices]
             values.append(subset)
 
         i = pd.Series(i, name="i", dtype=str)
@@ -1365,7 +1360,7 @@ def randdm(
     if not callable(random_fn):
         random_fn = get_rng(random_fn).random
 
-    random_fn = cast(Callable, random_fn)
+    assert callable(random_fn)
     data = np.tril(random_fn((num_objects, num_objects)), -1)
     data += data.T
 
@@ -1381,7 +1376,7 @@ def randdm(
 def _preprocess_input_sng(
     ids: Sequence,
     sample_size: int,
-    grouping: Union["pd.DataFrame", Sequence],
+    grouping: Union[pd.DataFrame, Sequence],
     column: Optional[str],
 ) -> tuple:
     """Compute intermediate results not affected by permutations.
@@ -1440,7 +1435,7 @@ def _preprocess_input_sng(
 
 def _preprocess_input(
     distance_matrix: "DistanceMatrix",
-    grouping: Union["pd.DataFrame", Sequence],
+    grouping: Union[pd.DataFrame, Sequence],
     column: Optional[str],
 ) -> tuple:
     """Compute intermediate results not affected by permutations.
@@ -1504,7 +1499,12 @@ def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:
     return grouping.tolist()
 
 
-def _run_monte_carlo_stats(test_stat_function, grouping, permutations, seed=None):
+def _run_monte_carlo_stats(
+    test_stat_function: Callable,
+    grouping: Union[pd.DataFrame, Sequence],
+    permutations: int,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+) -> tuple:
     """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:
         raise ValueError(
@@ -1527,8 +1527,14 @@ def _run_monte_carlo_stats(test_stat_function, grouping, permutations, seed=None
 
 
 def _build_results(
-    method_name, test_stat_name, sample_size, num_groups, stat, p_value, permutations
-):
+    method_name: str,
+    test_stat_name: str,
+    sample_size: int,
+    num_groups: int,
+    stat: float,
+    p_value: float,
+    permutations: int,
+) -> pd.Series:
     """Return ``pandas.Series`` containing results of statistical test."""
     return pd.Series(
         data=[
