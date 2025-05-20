@@ -9,6 +9,7 @@
 import io
 import unittest
 from unittest import TestCase, main
+from typing import Optional, Type, Any, ClassVar
 
 import numpy as np
 import numpy.testing as npt
@@ -50,10 +51,13 @@ class DissimilarityMatrixTestData:
 
 
 class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
-    matobj = None
+    @classmethod
+    def get_matrix_class(cls):
+        return None
 
     def setUp(self):
         super(DissimilarityMatrixTestBase, self).setUp()
+        self.matobj = self.get_matrix_class()
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
         self.dm_2x2_asym = self.matobj(self.dm_2x2_asym_data,
@@ -740,11 +744,13 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
 
 
 class DistanceMatrixTestBase(DissimilarityMatrixTestData):
-    matobj = None
+    @classmethod
+    def get_matrix_class(cls):
+        return None
 
     def setUp(self):
         super(DistanceMatrixTestBase, self).setUp()
-
+        self.matobj = self.get_matrix_class()
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
         self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
@@ -1223,14 +1229,18 @@ class CategoricalStatsHelperFunctionTests(TestCase):
 
 
 class DissimilarityMatrixTests(DissimilarityMatrixTestBase, TestCase):
-    matobj = DissimilarityMatrix  # type: ignore[assignment]
+    @classmethod
+    def get_matrix_class(cls):
+        return DissimilarityMatrix
 
     def setUp(self):
         super(DissimilarityMatrixTests, self).setUp()
 
 
 class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
-    matobj = DistanceMatrix  # type: ignore[assignment]
+    @classmethod
+    def get_matrix_class(cls):
+        return DistanceMatrix
 
     def setUp(self):
         super(DistanceMatrixTests, self).setUp()
