@@ -26,7 +26,7 @@ def anosim(
     distance_matrix: "DistanceMatrix",
     grouping: Union["pd.DataFrame", "ArrayLike"],
     column: Optional[str] = None,
-    permutations: Optional[int] = 999,
+    permutations: int = 999,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
 ) -> "pd.Series":
     r"""Test for significant differences between groups using ANOSIM.

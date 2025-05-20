@@ -13,8 +13,6 @@ from typing import (
     Callable,
     Iterable,
     ClassVar,
-    Sized,
-    Self,
     Collection,
     TypeVar,
     Type,
