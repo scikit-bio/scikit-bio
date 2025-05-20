@@ -1,5 +1,118 @@
+[project]
+name = "scikit-bio"
+dynamic = ["version"]
+description = "Data structures, algorithms and educational resources for bioinformatics."
+readme = "README.rst"
+requires-python = ">=3.9"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "scikit-bio development team", email = "qiyunzhu@gmail.com"}
+]
+maintainers = [
+    {name = "scikit-bio development team", email = "qiyunzhu@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows"
+]
+dependencies = [
+    "requests >= 2.20.0",
+    "decorator >= 3.4.2",
+    "natsort >= 4.0.3",
+    "numpy >= 1.17.0",
+    "pandas >= 1.5.0",
+    "scipy >= 1.9.0",
+    "h5py >= 3.6.0",
+    "biom-format >= 2.1.16",
+    "statsmodels >= 0.14.0",
+    "patsy >= 0.5.0",
+]
+
+[project.urls]
+Homepage = "https://scikit.bio"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "coverage",
+    "responses",
+    "matplotlib"
+]
+docs = [
+    "sphinx",
+    "sphinx-design",
+    "sphinx-copybutton",
+    "pydata-sphinx-theme",
+    "sphinxcontrib-youtube",
+    "sphinx-sitemap",
+    "numpydoc",
+    "matplotlib",
+    "statsmodels",
+    "patsy"
+]
+lint = [
+    "check-manifest",
+    "python-dateutil",
+    "numpy",
+    "ruff",
+    "pre-commit"
+]
+dev = [
+    "pytest",
+    "coverage",
+    "responses",
+    "matplotlib",
+    "sphinx",
+    "sphinx-design",
+    "sphinx-copybutton",
+    "pydata-sphinx-theme",
+    "sphinxcontrib-youtube",
+    "sphinx-sitemap",
+    "numpydoc",
+    "statsmodels",
+    "patsy",
+    "check-manifest",
+    "python-dateutil",
+    "numpy",
+    "ruff",
+    "pre-commit"
+]
+
 [build-system]
-requires = ["setuptools", "wheel", "numpy", "cython"]
+requires = ["setuptools>=45", "wheel", "numpy>=1.17.0", "cython>=0.29.32"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "skbio.__version__"}
+
+[tool.setuptools]
+packages = ["skbio"]
+
+[tool.setuptools.package-data]
+"skbio.alignment.tests" = ["data/*"]
+"skbio.diversity.alpha.tests" = ["data/qiime-191-tt/*"]
+"skbio.diversity.beta.tests" = ["data/qiime-191-tt/*"]
+"skbio.io.tests" = ["data/*"]
+"skbio.io.format.tests" = ["data/*"]
+"skbio.stats.tests" = ["data/*"]
+"skbio.stats.distance.tests" = ["data/*"]
+"skbio.stats.ordination.tests" = ["data/*"]
+"skbio.metadata.tests" = ["data/invalid/*", "data/valid/*"]
+"skbio.embedding.tests" = ["data/*"]
 
 [tool.pytest.ini_options]
 addopts = [
