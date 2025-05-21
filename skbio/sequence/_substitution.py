@@ -211,6 +211,10 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """Initialize a substitution matrix object."""
         super().__init__(scores, alphabet, **kwargs)
 
+        # make sure matrix is C-contiguous (row-major) in memory
+        if not self._data.flags.c_contiguous:
+            self._data = np.ascontiguousarray(self._data)
+
         # `_char_map`: dictionary of characters to indices in the alphabet.
         # It is to enable efficient conversion of sequences into indices.
         # It is compatible with generalized sequences.

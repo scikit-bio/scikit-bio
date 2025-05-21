@@ -15,8 +15,9 @@ from skbio.sequence import Sequence, DNA, Protein, SubstitutionMatrix
 from skbio.alignment import TabularMSA
 from skbio.alignment._utils import (
     encode_sequences,
-    _prep_gapcost,
-    _prep_idmat,
+    encode_alignment,
+    prepare_gapcost,
+    prepare_identity_matrix,
     _check_seqtype,
 )
 
@@ -197,28 +198,95 @@ class UtilsTests(unittest.TestCase):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1].shape[0], 5)
 
-    def test_prep_gapcost(self):
-        obs = _prep_gapcost(3)
+    def test_encode_alignment_aligned(self):
+        # Note: the unit-tests of this function aren't adequate. It still has 100%
+        # coverage because all conditions have been tested in upstream and downstream
+        # functions. But it would be good to enrich tests in the future.
+        match, mismatch = 1, -1
+
+        # raw sequences
+        seqs = ["GCG-TCAGT",
+                "AGG-TCATT",
+                "ACGTTC--T"]
+        obs = encode_alignment(seqs, (match, mismatch))
+        exp0 = np.array([[71, 67, 71, 45, 84, 67, 65, 71, 84],
+                         [65, 71, 71, 45, 84, 67, 65, 84, 84],
+                         [65, 67, 71, 84, 84, 67, 45, 45, 84]])
+        npt.assert_array_equal(obs[0], exp0)
+        self.assertEqual(obs[1].shape[0], 128)
+        exp2 = np.array([[0, 1, 0, 0, 0],
+                         [0, 1, 0, 0, 0],
+                         [0, 0, 0, 1, 0]]).astype(bool)
+        npt.assert_array_equal(obs[2], exp2)
+        exp3 = np.array([3, 1, 2, 2, 1])
+        npt.assert_array_equal(obs[3], exp3)
+
+        # grammared sequences
+        seqs = list(map(DNA, seqs))
+        obs = encode_alignment(seqs, (match, mismatch))
+        exp0 = np.array([[6,  4,  6,  0, 13,  4,  2,  6, 13],
+                         [2,  6,  6,  0, 13,  4,  2, 13, 13],
+                         [2,  4,  6, 13, 13,  4,  0,  0, 13]])
+        npt.assert_array_equal(obs[0], exp0)
+        self.assertEqual(obs[1].shape[0], 17)
+
+        # tabular alignment
+        msa = TabularMSA(map(DNA, seqs))
+        obs = encode_alignment(msa, (match, mismatch))
+        npt.assert_array_equal(obs[0], exp0)
+        self.assertEqual(obs[1].shape[0], 17)
+
+        # Unicode characters
+        seqs = ["ïëï-öëäïö",
+                "äïï-öëäöö",
+                "äëïööë--ö"]
+        obs = encode_alignment(seqs, (match, mismatch))
+        exp0 = np.array([[3, 2, 3, 0, 4, 2, 1, 3, 4],
+                         [1, 3, 3, 0, 4, 2, 1, 4, 4],
+                         [1, 2, 3, 4, 4, 2, 0, 0, 4]])
+        npt.assert_array_equal(obs[0], exp0)
+
+        # substitution matrix
+        alphabet = "ACGT"
+        sm = SubstitutionMatrix.identity(alphabet, 1, -1)
+        seqs = (DNA("GAA-CC"),
+                DNA("AGATCT"))
+        obs = encode_alignment(seqs, sm)
+        exp = [[2, 0, 0, -1, 1, 1],
+               [0, 2, 0, 3, 1, 3]]
+        for o, e in zip(obs[0], exp):
+            npt.assert_array_equal(o, e)
+        self.assertIs(obs[1], sm._data)
+
+        # ASCII sequences against Unicode matrix
+        alphabet += chr(100) + chr(200) + chr(300)
+        sm = SubstitutionMatrix.identity(alphabet, 1, -1)
+        obs = encode_alignment(seqs, sm)
+        for o, e in zip(obs[0], exp):
+            npt.assert_array_equal(o, e)
+
+    def test_prepare_gapcost(self):
+        obs = prepare_gapcost(3)
         self.assertTupleEqual(obs, (0.0, 3.0))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-        obs = _prep_gapcost((2, 5))
+        obs = prepare_gapcost((2, 5))
         self.assertTupleEqual(obs, (2.0, 5.0))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-        obs = _prep_gapcost((0.5, -2.5))
+        obs = prepare_gapcost((0.5, -2.5))
         self.assertTupleEqual(obs, (0.5, -2.5))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-    def test_prep_idmat(self):
+    def testprepare_identity_matrix(self):
         # Grammared (DNA) matrix
         seqs = [np.array([71, 65, 65, 84, 67, 67]),
                 np.array([65, 71, 65, 84, 67, 84]),
                 np.array([67, 67, 71, 71])]
-        obs = _prep_idmat(seqs, DNA, 1.0, -1.0)
+        obs = prepare_identity_matrix(seqs, DNA, 1.0, -1.0)
         exp = [np.array([6, 2, 2, 13, 4, 4]),
                 np.array([2, 6, 2, 13, 4, 13]),
                 np.array([4, 4, 6, 6])]
@@ -230,7 +298,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # update cached matrix without recreating it
-        obs = _prep_idmat(seqs, DNA, 2.0, -3.0)
+        obs = prepare_identity_matrix(seqs, DNA, 2.0, -3.0)
         for o, e in zip(obs[0], exp):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1].shape[0], 17)
@@ -241,7 +309,7 @@ class UtilsTests(unittest.TestCase):
         # ASCII matrix
         seqs = [np.array([9, 4, 4, 2, 3], dtype=np.uint8),
                 np.array([5, 2, 4, 3, 3, 3, 7], dtype=np.uint8)]
-        obs = _prep_idmat(seqs, "ascii", 2.0, -3.0)
+        obs = prepare_identity_matrix(seqs, "ascii", 2.0, -3.0)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
             self.assertIs(o.dtype.type, np.intp)
@@ -251,7 +319,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # update cached matrix
-        obs = _prep_idmat(seqs, "ascii", 1.0, -2.5)
+        obs = prepare_identity_matrix(seqs, "ascii", 1.0, -2.5)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1][5, 5], 1.0)
@@ -261,7 +329,7 @@ class UtilsTests(unittest.TestCase):
         # arbitrary matrix
         seqs = [np.array([0, 1, 2, 2, 3]),
                 np.array([1, 3, 3, 2, 0, 4])]
-        obs = _prep_idmat(seqs, 5, 1.0, -2.5)
+        obs = prepare_identity_matrix(seqs, 5, 1.0, -2.5)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
             self.assertIs(o.dtype.type, np.intp)
@@ -271,7 +339,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # create every time (no update)
-        obs = _prep_idmat(seqs, 5, 3.5, -4.0)
+        obs = prepare_identity_matrix(seqs, 5, 3.5, -4.0)
         self.assertEqual(obs[1][2, 2], 3.5)
         self.assertEqual(obs[1][3, 1], -4.0)
         self.assertIsNot(obs[1], submat)

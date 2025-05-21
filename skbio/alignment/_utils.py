@@ -27,7 +27,7 @@ _ididxs = {}
 
 
 def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-"):
-    """Encode sequences for subsequent alignment.
+    """Encode sequences for alignment operations.
 
     This function transforms sequences into indices in a substitution matrix to
     facilitate subsequent alignment operations.
@@ -63,6 +63,10 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
         If sequences are of heterogeneous types.
     ValueError
         If there is no sequence.
+
+    See Also
+    --------
+    encode_alignment
 
     Notes
     -----
@@ -160,22 +164,72 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
         else:
             seqs, uniq = _indices_in_observed(seqs)
             key = uniq.size
-        seqs, submat = _prep_idmat(seqs, key, match, mismatch)
+        seqs, submat = prepare_identity_matrix(seqs, key, match, mismatch)
 
     return seqs, submat, gaps
 
 
 def encode_alignment(aln, sub_score, gap_chars="-"):
+    """Encode sequences for alignment operations.
+
+    This function transforms an alignment into a 2D array of indices in a
+    substitution matrix, and run-length encoded gaps, which will facilitate
+    subsequent alignment operations.
+
+    Parameters
+    ----------
+    aln : TabularMSA, iterable, or (AlignPath, iterable)
+        Input alignment.
+    sub_score : tuple of (float, float), SubstitutionMatrix, or str
+        Substitution scoring method. Can be two numbers (match, mismatch), a
+        substitution matrix, or its name.
+    gap_chars : str, optional
+        Characters that should be treated as gaps in aligned sequences.
+
+    Returns
+    -------
+    seqs : list of ndarray of intp
+        Indices of sequence characters in the substitution matrix.
+    submat : ndarray of float of shape (n_alphabet, n_alphabet)
+        Substitution matrix.
+    bits : ndarray of bool of shape (n_sequences, n_segments)
+        Gap status of segments in the alignment path.
+    lens : ndarray of int of shape (n_segments,)
+        Lengths of segments in the alignment path.
+
+    Raises
+    ------
+    TypeError
+        If sequences are of heterogeneous types.
+    ValueError
+        If the alignment has no sequence.
+    ValueError
+        If the alignment has no column (position).
+
+    See Also
+    --------
+    encode_sequences
+
+    Notes
+    -----
+    This function is currently private but it could be exposed as a public API.
+
+    """
+    # There are two scenarios:
     is_path = False
     if isinstance(aln, (list, tuple)) and len(aln) == 2:
         path, seqs = aln
         if isinstance(path, AlignPath) and isinstance(seqs, Iterable):
             is_path = True
+
+    # 1. Input is an alignment path and original (unaligned) sequences.
     if is_path:
         seqs, submat, _ = encode_sequences(
             seqs, sub_score, aligned=False, gap_chars=gap_chars
         )
         seqs, _, bits, lens = path._to_matrices(seqs)
+
+    # 2. Input is aligned sequences (with gaps inside them).
     else:
         seqs, submat, gaps = encode_sequences(
             aln, sub_score, aligned=True, gap_chars=gap_chars
@@ -184,10 +238,11 @@ def encode_alignment(aln, sub_score, gap_chars="-"):
         if seqs.shape[1] == 0:
             raise ValueError("The alignment has a length of zero.")
         bits, lens = _get_align_path(gaps)
-    return seqs, bits, lens, submat
+
+    return seqs, submat, bits, lens
 
 
-def _prep_gapcost(gap_cost, dtype=np.float64):
+def prepare_gapcost(gap_cost, dtype=float):
     """Prepare gap penalty method for alignment.
 
     Parameters
@@ -213,7 +268,7 @@ def _prep_gapcost(gap_cost, dtype=np.float64):
     return dtype(gap_open), dtype(gap_extend)
 
 
-def _prep_idmat(seqs, key, match, mismatch):
+def prepare_identity_matrix(seqs, key, match, mismatch):
     """Prepare an indentity matrix based on match/mismatch scores.
 
     Parameters
@@ -288,24 +343,7 @@ def _prep_idmat(seqs, key, match, mismatch):
 
 
 def _check_seqtype(seqs):
-    """Get the common type of sequences.
-
-    Parameters
-    ----------
-    items : iterable of any
-        Sequences.
-
-    Returns
-    -------
-    type
-        Common sequence type.
-
-    Raises
-    ------
-    TypeError
-        If there are more than one type.
-
-    """
+    """Check if sequences are homogeneous, and return the common type."""
     if isinstance(seqs, TabularMSA):
         dtype = seqs.dtype
         if seqs.shape[0] == 0:
@@ -323,7 +361,10 @@ def _check_seqtype(seqs):
 
 def _mask_gaps(seqs, gap_codes):
     """Mask gap positions in aligned sequences."""
-    gaps = [np.isin(x, gap_codes) for x in seqs]
+    if isinstance(seqs[0], str):
+        gaps = [np.isin(list(x), gap_codes) for x in seqs]
+    else:
+        gaps = [np.isin(x, gap_codes) for x in seqs]
     try:
         return np.vstack(gaps)
     except ValueError:

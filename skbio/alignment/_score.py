@@ -8,8 +8,8 @@
 
 import numpy as np
 
-from ._utils import encode_alignment, _prep_gapcost
-from ._c_score import _trim_end_gaps, _multi_align_score
+from ._utils import encode_alignment, prepare_gapcost
+from ._cutils import _trim_end_gaps, _multi_align_score
 
 
 def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
@@ -22,8 +22,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     Parameters
     ----------
-    alignment : TabularMSA, list of Sequence or str, or (AlignPath, list of Sequence
-    or str)
+    alignment : TabularMSA, iterable, or (AlignPath, iterable)
         Aligned sequences. Can be any of the following:
 
         - :class:`~skbio.alignment.TabularMSA`.
@@ -148,19 +147,15 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     """
     # process input alignment
-    seqs, bits, lens, submat = encode_alignment(alignment, sub_score, gap_chars)
-    if seqs.shape[0] < 2:
+    seqs, submat, bits, lens = encode_alignment(alignment, sub_score, gap_chars)
+    if (n := seqs.shape[0]) < 2:
         raise ValueError("Alignment must contain at least two sequences.")
-    if seqs.shape[1] == 0:
-        raise ValueError("The alignment has a length of zero.")
 
     # determine gap penalty method
-    gap_open, gap_extend = _prep_gapcost(gap_cost, dtype=submat.dtype.type)
+    gap_open, gap_extend = prepare_gapcost(gap_cost, dtype=submat.dtype.type)
 
     # identify terminal gaps
-    n = seqs.shape[0]
-    starts = np.empty(n, dtype=int)
-    stops = np.empty(n, dtype=int)
+    starts, stops = np.empty(n, dtype=int), np.empty(n, dtype=int)
     _trim_end_gaps(bits, starts, stops)
     if not (starts + stops).all():
         raise ValueError("The alignment contains gap-only sequence(s).")

@@ -11,8 +11,8 @@ from collections import namedtuple
 import numpy as np
 
 from skbio.alignment import PairAlignPath
-from ._utils import encode_sequences, _prep_gapcost
-from ._c_pair import (
+from ._utils import encode_sequences, prepare_gapcost
+from ._cutils import (
     _fill_linear_matrix,
     _fill_affine_matrices,
     _trace_one_linear,
@@ -141,7 +141,7 @@ def pair_align(
     dtype = query.dtype.type
 
     # Prepare affine or linear gap penalties.
-    gap_open, gap_extend = _prep_gapcost(gap_cost, dtype=dtype)
+    gap_open, gap_extend = prepare_gapcost(gap_cost, dtype=dtype)
     affine = gap_open != 0
 
     # Allocate alignment matrices.
@@ -195,7 +195,7 @@ def pair_align(
 PairAlignResult = namedtuple("PairAlignResult", ["score", "paths", "matrices"])
 
 
-def _alloc_matrices(m, n, affine, dtype=np.float64):
+def _alloc_matrices(m, n, affine, dtype=float):
     """Allocate alignment matrix(ces).
 
     Parameters

@@ -58,6 +58,11 @@ class TestSubstitutionMatrix(TestCase):
         for i, char in enumerate(alphabet):
             self.assertEqual(i, obs._char_hash[ord(char)])
 
+        # matrix is guaranteed to be C-contiguous
+        obs = SubstitutionMatrix(self.alphabet, np.asfortranarray(self.scores))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertTrue(obs.scores.flags.c_contiguous)
+
     def test_init_alt_alphabet(self):
         # alternative formats of alphabet: list, dictionary (only keys matter),
         # and iterator
