@@ -9,30 +9,15 @@
 import unittest
 
 import numpy as np
-import numpy.testing as npt
 
 from skbio.sequence import DNA, Protein, SubstitutionMatrix
 from skbio.alignment import TabularMSA, AlignPath
 from skbio.util import get_data_path
 
-from skbio.alignment._score import trim_end_gaps, align_score
+from skbio.alignment._score import align_score
 
 
-class AlignScoreTests(unittest.TestCase):
-
-    def test_trim_end_gaps(self):
-        aln = [
-            "GAGTCCCA",  # no gap
-            "--GTTCCA",  # leading gap
-            "CAATT---",  # trailing gap
-            "-AGGTCC-",  # both gaps
-            "-AG--CC-",  # with internal gap
-            "--------",  # gap-only
-        ]
-        obs = trim_end_gaps(aln)
-        exp = ([0, 2, 0, 1, 1, 0], [8, 8, 5, 7, 7, 0])
-        for o, e in zip(obs, exp):
-            npt.assert_array_equal(o, e)
+class ScoreTests(unittest.TestCase):
 
     def test_align_score_basic(self):
         """Test on a basic case."""
@@ -105,6 +90,7 @@ class AlignScoreTests(unittest.TestCase):
         self.assertEqual(obs, 53)
 
         # custom gap_chars
+        seqs = aln
         obs = align_score(seqs, (5, -4), (5, 2), gap_chars="A")
         self.assertEqual(obs, -8)
 
@@ -116,6 +102,11 @@ class AlignScoreTests(unittest.TestCase):
         ]
         obs = align_score(aln2, (5, -4), (5, 2))
         self.assertEqual(obs, -8)
+
+        # gap_chars doesn't impact GrammaredSequence
+        seqs = list(map(DNA, aln))
+        obs = align_score(seqs, (5, -4), (5, 2), gap_chars="A")
+        self.assertEqual(obs, 53)
 
         # TabularMSA object
         msa = TabularMSA(map(DNA, aln))
@@ -247,16 +238,17 @@ class AlignScoreTests(unittest.TestCase):
 
     def test_align_score_error(self):
         """Test on inputs that cause errors."""
-        msg = "Sequences must be strings or Sequence objects."
-        with self.assertRaises(ValueError) as cm:
+        msg = "Sequences are of different types."
+        with self.assertRaises(TypeError) as cm:
             align_score([1, None, 0.5], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Alignment must contain at least two sequences."
+        msg = "No sequence is provided."
         with self.assertRaises(ValueError) as cm:
             align_score([], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "Alignment must contain at least two sequences."
         with self.assertRaises(ValueError) as cm:
             align_score(["ABC"], (5, -4), (5, 2))
         self.assertEqual(str(cm.exception), msg)
@@ -279,8 +271,7 @@ class AlignScoreTests(unittest.TestCase):
         aln = ["MKQ-PSV", "MKIDTS-"]
         obs = align_score(aln, "BLOSUM62", (5, 2))
         self.assertEqual(obs, 3)
-        msg = ("Sequences contain characters that are not present in the provided "
-               "substitution matrix.")
+        msg = "Sequence 1 contain character(s) absent from the substitution matrix."
         with self.assertRaises(ValueError) as cm:
             align_score(aln, "NUC.4.4", (5, 2))
         self.assertEqual(str(cm.exception), msg)

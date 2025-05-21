@@ -18,7 +18,7 @@ from skbio.sequence import Sequence, GrammaredSequence, DNA, Protein
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import classproperty
 from skbio.util._decorator import overrides
-from skbio.alignment._utils import _prep_seqs_submat
+from skbio.alignment._utils import encode_sequences
 
 from skbio.alignment._pair import (
     pair_align,
@@ -305,7 +305,7 @@ class PairAlignTests(unittest.TestCase):
 
         # Won't work if the substitution matrix doesn't contain "N".
         submat = SubstitutionMatrix.identity("ACGT", 1, -1)
-        msg = 'Wildcard character "N" is not in the alphabet.'
+        msg = "Sequence 1 contain character(s) absent from the substitution matrix."
         with self.assertRaises(ValueError) as cm:
             _ = pair_align(seq1, seq2, sub_score=submat)
         self.assertEqual(str(cm.exception), msg)
@@ -482,7 +482,7 @@ class PairAlignTests(unittest.TestCase):
     def test_fill_linear_matrix(self):
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (1, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
         dtype=query.dtype.type
         m, n = seq1.size, seq2.size
@@ -523,7 +523,7 @@ class PairAlignTests(unittest.TestCase):
     def test_fill_affine_matrices(self):
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (1, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
         dtype=query.dtype.type
         m, n = seq1.size, seq2.size
@@ -858,7 +858,7 @@ class PairAlignTests(unittest.TestCase):
         # linear, global, one stop, unique path
         seq1 = DNA("ACTCA")
         seq2 = DNA("CAGAG")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (1, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
 
         scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
@@ -874,7 +874,7 @@ class PairAlignTests(unittest.TestCase):
         # one stop, three paths (ordering: D > I > M in reverse order)
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (1, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
@@ -913,7 +913,7 @@ class PairAlignTests(unittest.TestCase):
         # local, two stops, one path each
         seq1 = DNA("CGTC")
         seq2 = DNA("TCGAG")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (1, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         scomat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 1],
@@ -928,7 +928,7 @@ class PairAlignTests(unittest.TestCase):
         # affine, one stop, two paths (involving both opening and extension)
         seq1 = DNA("TAGCATC")
         seq2 = DNA("TCAGTC")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (2, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
         NAN, INF = np.nan, -np.inf
         scomat = np.array([[  0,  -4,  -5,  -6,  -7,  -8,  -9],
                            [ -4,   2,  -2,  -3,  -4,  -5,  -6],
@@ -974,7 +974,7 @@ class PairAlignTests(unittest.TestCase):
         # local, unique path, middle to middle
         seq1 = DNA("GTCGG")
         seq2 = DNA("ATCGA")
-        (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), (2, -1))
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
         scomat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 2, 0],
                            [0, 0, 2, 0, 0, 1],

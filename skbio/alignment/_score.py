@@ -8,109 +8,8 @@
 
 import numpy as np
 
-from skbio.sequence import Sequence, SubstitutionMatrix
-from skbio.alignment import TabularMSA, AlignPath
+from ._utils import encode_alignment, _prep_gapcost
 from ._c_score import _trim_end_gaps, _multi_align_score
-
-
-def _seqs_to_bytes(seqs):
-    """Convert sequences into bytes."""
-    res = []
-    res_append = res.append
-    for seq in seqs:
-        if isinstance(seq, Sequence):
-            res_append(seq._bytes)
-        elif isinstance(seq, str):
-            res_append(np.frombuffer(seq.encode("ascii"), dtype=np.uint8))
-        else:
-            raise ValueError("Sequences must be strings or Sequence objects.")
-    return res
-
-
-def _parse_alignment(aln, gap_chars):
-    """Parse input alignment in any supported format."""
-    # 1. tabular alignment
-    if isinstance(aln, TabularMSA):
-        seqs = [x._bytes for x in aln]
-        gap_codes = aln.dtype._gap_codes
-        not_path = True
-
-    # 2. alignment path and list of original sequences
-    elif len(aln) == 2 and isinstance(aln[0], AlignPath):
-        seqs = _seqs_to_bytes(aln[1])
-        seqs, gaps, bits, lens = aln[0]._to_matrices(seqs)
-        not_path = False
-
-    # 3. list of aligned sequences
-    else:
-        seqs = _seqs_to_bytes(aln)
-        gap_codes = [ord(x) for x in gap_chars]
-        not_path = True
-
-    if len(seqs) < 2:
-        raise ValueError("Alignment must contain at least two sequences.")
-
-    if not_path:
-        try:
-            seqs = np.vstack(seqs)
-        except ValueError:
-            raise ValueError("Sequence lengths do not match.")
-
-    if seqs.shape[1] == 0:
-        raise ValueError("The alignment has a length of zero.")
-
-    if not_path:
-        gaps = np.isin(seqs, gap_codes)
-        bits, lens = _get_align_path(gaps)
-
-    return seqs, gaps, bits, lens
-
-
-def _get_align_path(bits):
-    r"""Calculate the path of an alignment.
-
-    This process is similar to ``AlignPath.from_tabular``, except that bits don't need
-    to be packed into uint8's.
-
-    """
-    idx = np.append(0, np.where((bits[:, :-1] != bits[:, 1:]).any(axis=0))[0] + 1)
-    lens = np.append(idx[1:] - idx[:-1], bits.shape[1] - idx[-1])
-    bits = bits[:, idx]
-    return bits, lens
-
-
-def trim_end_gaps(alignment, gap_chars="-."):
-    r"""Identify the terminal gap-free region of a multiple alignment.
-
-    Parameters
-    ----------
-    alignment : TabularMSA, iterable of Sequence or str
-        Aligned sequences.
-    gap_chars : iterable of 1-length str, optional
-        Character(s) that represent gaps. Only relevant when ``alignment`` is
-        not a ``TabularMSA`` (which itself defines gap character(s)).
-
-    Returns
-    -------
-    ndarray of int of shape (n_sequences,)
-        Start position of terminal gap-free region of each sequence.
-        (i.e., index of the first position within non-gap)
-    ndarray of int of shape (n_sequences,)
-        Stop position of terminal gap-free region of each sequence.
-        (i.e., index of the first position after non-gap)
-
-    Notes
-    -----
-    If any sequence contains only gaps, the returned start and end positions will both
-    be zeros.
-
-    """
-    seqs, gaps, _, _ = _parse_alignment(alignment, gap_chars)
-    n = seqs.shape[0]
-    starts = np.empty(n, dtype=int)
-    stops = np.empty(n, dtype=int)
-    _trim_end_gaps(gaps, starts, stops)
-    return starts, stops
 
 
 def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
@@ -249,33 +148,14 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     """
     # process input alignment
-    seqs, gaps, bits, lens = _parse_alignment(alignment, gap_chars)
+    seqs, bits, lens, submat = encode_alignment(alignment, sub_score, gap_chars)
+    if seqs.shape[0] < 2:
+        raise ValueError("Alignment must contain at least two sequences.")
+    if seqs.shape[1] == 0:
+        raise ValueError("The alignment has a length of zero.")
 
-    # substitution matrix or match/mismatch scores
-    if isinstance(sub_score, str):
-        sub_score = SubstitutionMatrix.by_name(sub_score)
-    if isinstance(sub_score, SubstitutionMatrix):
-        # convert sequences into indices in the matrix
-        seqs = sub_score._char_hash[seqs]
-        # TODO: add a `validate` flag to skip this check
-        if (seqs[~gaps] == -1).any():
-            raise ValueError(
-                "Sequences contain characters that are not present in the provided "
-                "substitution matrix."
-            )
-        submat = sub_score._data
-        match, mismatch = 0, 0
-    else:
-        seqs = seqs.astype(np.intp)  #####
-        submat = np.empty((0, 0))
-        match, mismatch = sub_score
-
-    # affine or linear gap penalty
-    # TODO: Add support for dual affine gap penalty (four numbers).
-    if np.isscalar(gap_cost):
-        gap_open, gap_extend = 0, gap_cost
-    else:
-        gap_open, gap_extend = gap_cost
+    # determine gap penalty method
+    gap_open, gap_extend = _prep_gapcost(gap_cost, dtype=submat.dtype.type)
 
     # identify terminal gaps
     n = seqs.shape[0]
@@ -287,15 +167,5 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     # TODO: Add support for different treatments of 5' and 3' terminal gaps.
     return _multi_align_score(
-        seqs,
-        bits,
-        lens,
-        starts,
-        stops,
-        submat,
-        match,
-        mismatch,
-        gap_open,
-        gap_extend,
-        free_ends,
+        seqs, bits, lens, starts, stops, submat, gap_open, gap_extend, free_ends
     )

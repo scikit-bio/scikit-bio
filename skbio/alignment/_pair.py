@@ -11,7 +11,7 @@ from collections import namedtuple
 import numpy as np
 
 from skbio.alignment import PairAlignPath
-from ._utils import _prep_seqs_submat, _prep_gap_cost
+from ._utils import encode_sequences, _prep_gapcost
 from ._c_pair import (
     _fill_linear_matrix,
     _fill_affine_matrices,
@@ -131,7 +131,7 @@ def pair_align(
     # If `sub_score` consists of match/mismatch scores, an identity matrix will be
     # created or retrieved from cache. The two sequences are converted into indices
     # in the substitution matrix, which facilitate lookup and memory locality.
-    (seq1, seq2), submat = _prep_seqs_submat((seq1, seq2), sub_score)
+    (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), sub_score)
 
     # Profile seq1 (query), which will be aligned against seq2 (target).
     # The profile is essentially a position-specific scoring matrix (PSSM). This design
@@ -141,7 +141,7 @@ def pair_align(
     dtype = query.dtype.type
 
     # Prepare affine or linear gap penalties.
-    gap_open, gap_extend = _prep_gap_cost(gap_cost, dtype=dtype)
+    gap_open, gap_extend = _prep_gapcost(gap_cost, dtype=dtype)
     affine = gap_open != 0
 
     # Allocate alignment matrices.

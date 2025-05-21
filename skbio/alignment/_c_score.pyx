@@ -64,8 +64,6 @@ def _multi_align_score(
     const Py_ssize_t[::1] starts,
     const Py_ssize_t[::1] stops,
     const floating[:, :] submat,
-    floating match,
-    floating mismatch,
     floating gap_open,
     floating gap_extend,
     bint free_ends,
@@ -125,8 +123,6 @@ def _multi_align_score(
     cdef Py_ssize_t start, end, pos
     cdef int L, cumL, prev, curr
 
-    cdef bint is_submat = submat.shape[0] > 0
-
     cdef floating score = 0  # cumulative alignment score
     cdef Py_ssize_t n = seqs.shape[0]  # number of sequences
 
@@ -165,19 +161,10 @@ def _multi_align_score(
                 if prev and curr != prev:
                     score -= gap_open + cumL * gap_extend
 
-                # non-gap in both sequences
+                # non-gap in both sequences: iterate by position within segment
                 if curr == 0:
-
-                    # iterate by position within segment
-                    if is_submat:
-                        for k in range(pos, pos + L):
-                            score += submat[seqs[i1, k], seqs[i2, k]]
-                    else:
-                        for k in range(pos, pos + L):
-                            if seqs[i1, k] == seqs[i2, k]:
-                                score += match
-                            else:
-                                score += mismatch
+                    for k in range(pos, pos + L):
+                        score += submat[seqs[i1, k], seqs[i2, k]]
 
                 # gap in either sequence
                 else:

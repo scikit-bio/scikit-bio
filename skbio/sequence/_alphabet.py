@@ -58,8 +58,8 @@ def _encode_alphabet(alphabet):
     # 1d numpy array
     elif not isinstance(alphabet, np.ndarray):
         raise TypeError(errmsg)
-    if alphabet.ndim != 1:
-        raise TypeError(errmsg)
+    # if alphabet.ndim != 1:
+    #     raise TypeError(errmsg)
     dtype = alphabet.dtype
 
     # integers represent ascii code points

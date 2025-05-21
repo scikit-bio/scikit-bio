@@ -35,6 +35,11 @@ class TestAlphabet(TestCase):
         npt.assert_array_equal(_encode_alphabet(np.array(codes)), exp)
         npt.assert_array_equal(_encode_alphabet(np.array(codes).astype(np.uint8)), exp)
 
+        # 2d array
+        alpha = np.array([[65, 67], [71, 84]], dtype=np.uint8)
+        obs = _encode_alphabet(alpha)
+        npt.assert_array_equal(obs, alpha)
+
         # wrong data types
         with self.assertRaises(TypeError):
             _encode_alphabet(123)
@@ -42,8 +47,8 @@ class TestAlphabet(TestCase):
             _encode_alphabet(set(alpha))
         with self.assertRaises(TypeError):
             _encode_alphabet([1.0, 1.5, 2.0])
-        with self.assertRaises(TypeError):
-            _encode_alphabet([['a', 'b'], ['c', 'd']])
+        # with self.assertRaises(TypeError):
+        #     _encode_alphabet([['a', 'b'], ['c', 'd']])
 
         # not single characters
         with self.assertRaises(ValueError):

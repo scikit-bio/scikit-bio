@@ -433,18 +433,18 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        seqs : list of ndarray of uint8
+        seqs : list of ndarray
             Original sequences as bytes.
         gap_code : uint8, optional
             Code to fill in gap positions in the character matrix. Default is 45 (-).
 
         Returns
         -------
-        ndarray of uint8 of shape (n_sequences, n_positions)
+        ndarray of shape (n_sequences, n_positions)
             Matrix of character codes.
         ndarray of bool of shape (n_sequences, n_positions)
             Matrix of gap status.
-        ndarray of uint8 of shape (n_sequences, n_segments)
+        ndarray of shape (n_sequences, n_segments)
             Matrix of segment status.
         ndarray of int of shape (n_segments,)
             Vector of segment lengths.
@@ -473,7 +473,7 @@ class AlignPath(SkbioObject):
         gaps = np.repeat(bits, lens, axis=1).astype(bool)
 
         # allocate byte array
-        chars = np.empty(self._shape, dtype=np.uint8)
+        chars = np.empty(self._shape, dtype=seqs[0].dtype)
 
         # fill in gaps (optional)
         if gap_code is not None:

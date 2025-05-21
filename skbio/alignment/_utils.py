@@ -6,15 +6,16 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from collections.abc import Iterable
+
 import numpy as np
 
+from skbio.alignment import TabularMSA, AlignPath
 from skbio.sequence import Sequence, GrammaredSequence, SubstitutionMatrix
 from skbio.sequence._alphabet import (
     _encode_alphabet,
     _alphabet_to_hashes,
     _indices_in_observed,
-    _indices_in_alphabet,
-    _indices_in_alphabet_ascii,
 )
 
 
@@ -25,10 +26,10 @@ _idmats = {}
 _ididxs = {}
 
 
-def _prep_seqs_submat(seqs, sub_score, dtype=np.float64):
-    """Prepare sequences and substitution matrix for alignment.
+def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-"):
+    """Encode sequences for subsequent alignment.
 
-    This function converts sequences into indices in the substitution matrix to
+    This function transforms sequences into indices in a substitution matrix to
     facilitate subsequent alignment operations.
 
     Parameters
@@ -38,34 +39,156 @@ def _prep_seqs_submat(seqs, sub_score, dtype=np.float64):
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Substitution scoring method. Can be two numbers (match, mismatch), a
         substitution matrix, or its name.
+    aligned : bool, optional
+        Whether sequences are aligned. If True, sequences will be checked for equal
+        length and gaps will be encoded into a Boolean mask.
     dtype : type, optional
         Default floating-point data type (np.float32 or np.float64) to use if it
         cannot be automatically inferred.
+    gap_chars : str, optional
+        Characters that should be treated as gaps in aligned sequences.
 
     Returns
     -------
-    list of ndarray of intp
+    seqs : list of ndarray of intp
         Indices of sequence characters in the substitution matrix.
-    ndarray of float of shape (n_alphabet, n_alphabet)
+    submat : ndarray of float of shape (n_alphabet, n_alphabet)
         Substitution matrix.
+    gaps : ndarray of bool of shape (n_sequences, n_positions), optional
+        Boolean mask of gap positions.
+
+    Raises
+    ------
+    TypeError
+        If sequences are of heterogeneous types.
+    ValueError
+        If there is no sequence.
+
+    Notes
+    -----
+    This function is currently private but it could be exposed as a public API.
 
     """
+    # Determine type of sequences. They can be skbio sequences (grammared or not),
+    # raw strings or any iterables of scalars. Heterogeneous sequences are not allowed.
+    seqtype = _check_seqtype(seqs)
+    grammared = issubclass(seqtype, GrammaredSequence)
+
+    # Determine substitution scoring method. It can be a specified substitution matrix
+    # or match & mismatch scores. For the later scenario, an identity matrix will be
+    # later constructed or retrieved from the cache.
     if isinstance(sub_score, str):
-        sub_score = SubstitutionMatrix.by_name(sub_score)
-    if isinstance(sub_score, SubstitutionMatrix):
-        seqs = _parse_seqs_with_submat(seqs, sub_score)
-        submat = sub_score._data
+        submat = SubstitutionMatrix.by_name(sub_score)
+        is_submat = True
+    elif isinstance(sub_score, SubstitutionMatrix):
+        submat = sub_score
+        is_submat = True
     else:
+        is_submat = False
         match, mismatch = sub_score
         match, mismatch = dtype(match), dtype(mismatch)
-        seqs, key = _parse_seqs_alone(seqs)
+
+    # Determine whether sequences should be encoded as ASCII codes, which skbio has
+    # optimizations for.
+    # This requires that 1) sequences are ASCII, and 2) substitution matrix (if
+    # provided) supports ASCII.
+    # If yes, convert sequences into ASCII codes. Otherwise, keep sequences as strings
+    # or whatever iterables in the original form.
+    if not is_submat or submat.is_ascii:
+        if issubclass(seqtype, Sequence):
+            is_ascii = True
+            seqs = [x._bytes for x in seqs]
+        else:
+            try:
+                seqs = [_encode_alphabet(x) for x in seqs]
+            except (TypeError, ValueError, UnicodeEncodeError):
+                if is_submat:
+                    raise ValueError(
+                        "Substitution matrix has an ASCII alphabet, but sequences "
+                        "cannot be fully encoded into ASCII codes."
+                    )
+                is_ascii = False
+            else:
+                is_ascii = True
+    else:
+        is_ascii = False
+        if issubclass(seqtype, Sequence):
+            seqs = [str(x) for x in seqs]
+
+    # Identify gaps in aligned sequences. The output is a 2D Boolean mask representing
+    # gap positions (0: character, 1: gap). This process also validates that all
+    # sequences in the alignment are of equal length.
+    gaps = None
+    if aligned:
+        if is_ascii:
+            if grammared:
+                gap_codes = seqtype._gap_codes
+            else:
+                gap_codes = [ord(x) for x in gap_chars]
+        else:
+            if grammared:
+                gap_codes = list(seqtype.gap_chars)
+            else:
+                gap_codes = list(gap_chars)
+
+        gaps = _mask_gaps(seqs, gap_codes)
+
+    # Index sequences according to a given substitution matrix.
+    if is_submat:
+        # Determine wildcard if available.
+        wild = None
+        if grammared:
+            wild = getattr(seqtype, "wildcard_char", None)
+            if is_ascii and wild is not None:
+                wild = ord(wild)
+
+        if is_ascii:
+            seqs = _map_chars_ascii(seqs, submat._char_hash, wild=wild)
+        else:
+            seqs = _map_chars(seqs, submat._char_map, wild=wild)
+
+        # Validate that all non-gap positions have valid indices.
+        _check_indices(seqs, gaps)
+
+        submat = submat._data
+
+    # Construct a substitution matrix based on match/mismatch scores, or retrieve one
+    # from cache.
+    else:
+        if is_ascii:
+            key = seqtype if grammared else "ascii"
+        else:
+            seqs, uniq = _indices_in_observed(seqs)
+            key = uniq.size
         seqs, submat = _prep_idmat(seqs, key, match, mismatch)
 
-    return seqs, submat
+    return seqs, submat, gaps
 
 
-def _prep_gap_cost(gap_cost, dtype=np.float64):
-    """Prepare gap penalty for alignment.
+def encode_alignment(aln, sub_score, gap_chars="-"):
+    is_path = False
+    if isinstance(aln, (list, tuple)) and len(aln) == 2:
+        path, seqs = aln
+        if isinstance(path, AlignPath) and isinstance(seqs, Iterable):
+            is_path = True
+    if is_path:
+        seqs, submat, _ = encode_sequences(
+            seqs, sub_score, aligned=False, gap_chars=gap_chars
+        )
+        seqs, _, bits, lens = path._to_matrices(seqs)
+    else:
+        seqs, submat, gaps = encode_sequences(
+            aln, sub_score, aligned=True, gap_chars=gap_chars
+        )
+        seqs = np.vstack(seqs)
+        if seqs.shape[1] == 0:
+            raise ValueError("The alignment has a length of zero.")
+        bits, lens = _get_align_path(gaps)
+    return seqs, bits, lens, submat
+
+
+def _prep_gapcost(gap_cost, dtype=np.float64):
+    """Prepare gap penalty method for alignment.
 
     Parameters
     ----------
@@ -88,77 +211,6 @@ def _prep_gap_cost(gap_cost, dtype=np.float64):
     else:
         gap_open, gap_extend = gap_cost
     return dtype(gap_open), dtype(gap_extend)
-
-
-def _parse_seqs_with_submat(seqs, submat):
-    """Parse sequences with a specified substitution matrix.
-
-    Parameters
-    ----------
-    seqs : iterable of Sequence, str, or sequence of scalar
-        Sequences.
-    submat : SubstitutionMatrix
-        Substitution matrix.
-
-    Returns
-    -------
-    list of ndarray of intp
-        Indices of sequence characters in the substitution matrix.
-
-    """
-    seqtype = _check_same_type(seqs)
-    if issubclass(seqtype, Sequence):
-        return [x.to_indices(submat, mask_gaps=False) for x in seqs]
-    if submat._is_ascii:
-        try:
-            seqs = [_encode_alphabet(x) for x in seqs]
-        except (TypeError, ValueError, UnicodeEncodeError):
-            raise ValueError("Cannot encode ASCII characters.")
-        return [_indices_in_alphabet_ascii(x, submat._char_hash) for x in seqs]
-    else:
-        return [_indices_in_alphabet(x, submat._char_map) for x in seqs]
-
-
-def _parse_seqs_alone(seqs):
-    """Parse sequences without a specified substitution matrix.
-
-    Parameters
-    ----------
-    seqs : iterable of iterable of scalar
-        Sequences.
-
-    Returns
-    -------
-    list of ndarray of uint8 or int
-        Encoded sequences.
-    type, int, or "ascii"
-        Sequence type | alphabet is ASCII | alphabet size
-
-    Notes
-    -----
-    It converts sequences into arrays of indices in a hypothetical subsitution matrix,
-    and suggests how to construct this subsitution matrix. There are three scenarios:
-
-    1. GrammaredSequence, with a finite alphabet.
-        => size of alphabet (<= 128)
-    2. Non-grammared Sequence, characters and integers within ASCII range (0-127).
-        => size = 128
-    3. Unicode characters, arbitrary numbers, hashables.
-        => size = count of unique elements
-
-    """
-    seqtype = _check_same_type(seqs)
-    if issubclass(seqtype, GrammaredSequence):
-        return [x._bytes for x in seqs], seqtype
-    elif issubclass(seqtype, Sequence):
-        return [x._bytes for x in seqs], "ascii"
-    try:
-        seqs = [_encode_alphabet(x) for x in seqs]
-    except (TypeError, ValueError, UnicodeEncodeError):
-        seqs, uniq = _indices_in_observed(seqs)
-        return seqs, uniq.size
-    else:
-        return seqs, "ascii"
 
 
 def _prep_idmat(seqs, key, match, mismatch):
@@ -235,18 +287,18 @@ def _prep_idmat(seqs, key, match, mismatch):
     return seqs, submat
 
 
-def _check_same_type(items):
-    """Return the common type of variables.
+def _check_seqtype(seqs):
+    """Get the common type of sequences.
 
     Parameters
     ----------
     items : iterable of any
-        Variables.
+        Sequences.
 
     Returns
     -------
     type
-        Common type.
+        Common sequence type.
 
     Raises
     ------
@@ -254,9 +306,85 @@ def _check_same_type(items):
         If there are more than one type.
 
     """
-    # TODO: This function can be moved to skbio.util._misc.
-    dtype = type(items[0])
-    for item in items[1:]:
-        if type(item) is not dtype:
-            raise TypeError("Variables are of different types.")
+    if isinstance(seqs, TabularMSA):
+        dtype = seqs.dtype
+        if seqs.shape[0] == 0:
+            raise ValueError("No sequence is provided.")
+        return dtype
+    try:
+        dtype = type(seqs[0])
+    except IndexError:
+        raise ValueError("No sequence is provided.")
+    for seq in seqs[1:]:
+        if type(seq) is not dtype:
+            raise TypeError("Sequences are of different types.")
     return dtype
+
+
+def _mask_gaps(seqs, gap_codes):
+    """Mask gap positions in aligned sequences."""
+    gaps = [np.isin(x, gap_codes) for x in seqs]
+    try:
+        return np.vstack(gaps)
+    except ValueError:
+        raise ValueError("Sequence lengths do not match.")
+
+
+def _map_chars_ascii(seqs, mapping, wild=None):
+    """Map characters in sequences to indices.
+
+    `mapping` is an array of ASCII codes (n=128).
+
+    This function can be considered as a refined and batched version of
+    `skbio.sequence._alphabet._indices_in_alphabet_ascii`.
+
+    """
+    seqs = [mapping[x] for x in seqs]
+    if wild is not None and (wild := mapping[wild]) != -1:
+        for seq in seqs:
+            seq[seq == -1] = wild
+    return seqs
+
+
+def _map_chars(seqs, mapping, wild=None):
+    """Map characters in sequences to indices.
+
+    `mapping` is a dictionary of original characters.
+
+    This function can be considered as a refined and batched version of
+    `skbio.sequence._alphabet._indices_in_alphabet`.
+
+    """
+    wild = -1 if wild is None else mapping.get(wild, -1)
+    return [np.array([mapping.get(x, wild) for x in y], dtype=np.intp) for y in seqs]
+
+
+def _check_indices(seqs, gaps=None):
+    """Validate that all non-gap positions have valid indices.
+
+    `gaps` is a 2D Boolean mask whereas `seqs` are a list of equal-size arrays (they
+    will be vstack'ed later).
+
+    """
+    msg = "Sequence {} contain character(s) absent from the substitution matrix."
+    if gaps is None:
+        for i, seq in enumerate(seqs):
+            if (seq == -1).any():
+                raise ValueError(msg.format(i + 1))
+    else:
+        for i, (seq, gap) in enumerate(zip(seqs, gaps)):
+            if (seq[~gap] == -1).any():
+                raise ValueError(msg.format(i + 1))
+
+
+def _get_align_path(bits):
+    """Calculate the path of an alignment.
+
+    This function is similar to `AlignPath.from_tabular`, except that bits don't need
+    to be packed into uint8's.
+
+    """
+    idx = np.append(0, np.where((bits[:, :-1] != bits[:, 1:]).any(axis=0))[0] + 1)
+    lens = np.append(idx[1:] - idx[:-1], bits.shape[1] - idx[-1])
+    bits = bits[:, idx]
+    return bits, lens
