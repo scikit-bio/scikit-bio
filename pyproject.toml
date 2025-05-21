@@ -1,10 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel", "numpy", "cython"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "scikit-bio"
 dynamic = ["version"]
 description = "Data structures, algorithms and educational resources for bioinformatics."
 readme = "README.rst"
 requires-python = ">=3.9"
-license = {text = "BSD-3-Clause"}
+license = {file = "LICENSE"}
 authors = [
     {name = "scikit-bio development team", email = "qiyunzhu@gmail.com"}
 ]
@@ -44,6 +48,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://scikit.bio"
+Documentation = "https://scikit.bio/docs/latest/"
+Repository = "https://github.com/scikit-bio/scikit-bio"
+Issues = "https://github.com/scikit-bio/scikit-bio/issues"
 
 [project.optional-dependencies]
 test = [
@@ -92,10 +99,6 @@ dev = [
     "pre-commit"
 ]
 
-[build-system]
-requires = ["setuptools>=45", "wheel", "numpy>=1.17.0", "cython>=0.29.32"]
-build-backend = "setuptools.build_meta"
-
 [tool.setuptools.dynamic]
 version = {attr = "skbio.__version__"}
 
@@ -113,6 +116,12 @@ packages = ["skbio"]
 "skbio.stats.ordination.tests" = ["data/*"]
 "skbio.metadata.tests" = ["data/invalid/*", "data/valid/*"]
 "skbio.embedding.tests" = ["data/*"]
+
+[tool.cibuildhweel]
+test-command = "pytest {project}/skbio/tests"
+test-requires = ["pytest"]
+environment = { SKBIO_TEST_RUNNER = "True" }
+build = "cp39-* cp10-* cp311-* cp312-*"
 
 [tool.pytest.ini_options]
 addopts = [
