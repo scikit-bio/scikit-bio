@@ -374,7 +374,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     _ascii_invert_case_bit_offset = 32
     _ascii_lowercase_boundary = 90
     default_write_format = "fasta"
-    __hash__ = None
+    __hash__ = None  # type: ignore[assignment]
 
     @property
     def values(self):

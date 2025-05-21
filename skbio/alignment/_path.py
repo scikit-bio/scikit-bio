@@ -15,7 +15,7 @@ from skbio.util._decorator import classonlymethod
 from skbio.sequence import Sequence
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])
+_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 # CIGAR codes indexed by states in PairAlignPath
 _cigar_codes = np.array(["M", "I", "D", "P"])

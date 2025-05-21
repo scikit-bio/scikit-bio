@@ -20,8 +20,8 @@ DataTable = Union[pd.DataFrame, np.ndarray, Table]
 # add other types depending on availability
 pl, has_polars = _get_package("polars", raise_error=False, no_bool=False)
 if has_polars:
-    DataTable = Union[DataTable, pl.DataFrame]
+    DataTable = Union[DataTable, pl.DataFrame]  # type: ignore[misc]
 
 adt, has_anndata = _get_package("anndata", raise_error=False, no_bool=False)
 if has_anndata:
-    DataTable = Union[DataTable, adt.AnnData]
+    DataTable = Union[DataTable, adt.AnnData]  # type: ignore[misc]

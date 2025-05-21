@@ -11,11 +11,10 @@
 
 ### Performance enhancements
 
+* Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function `pair_align`.
 * Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Enhanced and changed the default behavior of `AlignPath.to_bits`, which now returns a bit array representing positions instead of segments. This is desired because with the old default behavior, `to_bits` and `from_bits` are not consistent with each other ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-
-* Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function ```pairwise_align()```. ([#1864](https://github.com/scikit-bio/scikit-bio/pull/2196))
 
 ### Bug Fixes
 
@@ -32,6 +31,8 @@
 * Let `AlignPath.shape` return native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
 * Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
+* Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [2223](https://github.com/scikit-bio/scikit-bio/pull/2223))
+* Initiated efforts to add type annotations to scikit-bio's codebase, starting with the `stats.distance` module [2219](https://github.com/scikit-bio/scikit-bio/pull/2219)
 
 
 ## Version 0.6.3

@@ -151,7 +151,7 @@ def _embed_to_generator(
             emb = embed_fh[j:idptr]
         string = str(id_.tobytes().decode("ascii"))
         j = idptr
-        k = embptr if has_embedding_ptr else None
+        k = embptr if has_embedding_ptr else None  # type: ignore[assignment]
         yield constructor(emb, string, **kwargs)
 
 

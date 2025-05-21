@@ -12,6 +12,7 @@ import itertools
 import sqlite3
 import types
 import warnings
+from typing import Optional
 
 import pandas as pd
 import numpy as np
@@ -935,7 +936,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
     """
 
     # Abstract, must be defined by subclasses.
-    type = None
+    type: Optional[str] = None
 
     @classmethod
     @abc.abstractmethod
