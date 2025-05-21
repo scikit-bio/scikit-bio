@@ -29,7 +29,7 @@ from skbio.alignment._pair import (
     _traceback_one,
     _traceback_all,
 )
-from skbio.alignment._c_pair import (
+from skbio.alignment._cutils import (
     _fill_linear_matrix,
     _fill_affine_matrices,
 )
