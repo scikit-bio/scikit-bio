@@ -892,7 +892,9 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         return lookup_id in self._id_index
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self, index: Union[str, tuple[str, str], Any]
+    ) -> Union[np.ndarray, float]:
         """Slice into dissimilarity data by object ID or numpy indexing.
 
         Extracts data from the dissimilarity matrix by object ID, a pair of
@@ -941,10 +943,12 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         """
         if isinstance(index, str):
             return self.data[self.index(index)]
-        elif self._is_id_pair(index):
+        elif isinstance(index, tuple) and self._is_id_pair(index):
             return self.data[self.index(index[0]), self.index(index[1])]
         else:
-            return self.data.__getitem__(index)
+            # NumPy index types are numerous and complex, easier to just
+            # ignore them in type checking.
+            return self.data.__getitem__(index)  # type: ignore[index]
 
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
@@ -1031,11 +1035,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
         return {id_: idx for idx, id_ in enumerate(list_)}
 
     def _is_id_pair(self, index: tuple) -> bool:
-        return (
-            isinstance(index, tuple)
-            and len(index) == 2
-            and all(map(lambda e: isinstance(e, str), index))
-        )
+        return len(index) == 2 and all(map(lambda e: isinstance(e, str), index))
 
 
 class DistanceMatrix(DissimilarityMatrix):
@@ -1309,7 +1309,7 @@ def randdm(
     ids: Optional[Sequence[str]] = None,
     constructor: Optional[Type[Union["DissimilarityMatrix", "DistanceMatrix"]]] = None,
     random_fn: Optional[Union[int, "Generator", Callable]] = None,
-) -> Union["DissimilarityMatrix", "DistanceMatrix"]:
+) -> "DissimilarityMatrix":
     r"""Generate a distance matrix populated with random distances.
 
     Using the default ``random_fn``, distances are randomly drawn from a uniform
