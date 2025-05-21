@@ -25,6 +25,7 @@
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
 * Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
 * Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [2223](https://github.com/scikit-bio/scikit-bio/pull/2223))
+* Initiated efforts to add type annotations to scikit-bio's codebase, starting with the `stats.distance` module [2219](https://github.com/scikit-bio/scikit-bio/pull/2219)
 
 
 ## Version 0.6.3
