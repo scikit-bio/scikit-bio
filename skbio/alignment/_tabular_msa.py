@@ -25,7 +25,7 @@ from skbio.io.descriptors import Read, Write
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])
+_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -142,7 +142,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """
 
     default_write_format = "fasta"
-    __hash__ = None
+    __hash__ = None  # type: ignore[assignment]
 
     read = Read()
     write = Write()
