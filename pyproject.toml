@@ -117,12 +117,6 @@ packages = ["skbio"]
 "skbio.metadata.tests" = ["data/invalid/*", "data/valid/*"]
 "skbio.embedding.tests" = ["data/*"]
 
-[tool.cibuildhweel]
-test-command = "pytest {project}/skbio/tests"
-test-requires = ["pytest"]
-environment = { SKBIO_TEST_RUNNER = "True" }
-build = "cp39-* cp10-* cp311-* cp312-*"
-
 [tool.pytest.ini_options]
 addopts = [
     "--doctest-modules",
