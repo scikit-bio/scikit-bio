@@ -253,6 +253,19 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
     free_ends : bool
         If end gaps are free from penalty.
 
+    Notes
+    -----
+    The initial values in the insertion and deletion matrices are -inf, which follows
+    conventions and should be correct. However, one should note from Flouri et al.
+    (2015) [1]_ that the original Gotoh algorithm (1982) made a mistake in it by using
+    gap_open + k * gap_extend. Flouri et al. suggested that the minimum values must be
+    2 * gap_open + k * gap_extend.
+
+    References
+    ----------
+    .. [1] Flouri, T., Kobert, K., Rognes, T., & Stamatakis, A. (2015). Are all global
+       alignment algorithms and implementations correct?. bioRxiv, 031500.
+
     """
     m1, n1 = scomat.shape
 
@@ -273,6 +286,7 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
     if gap_open:
         insmat[1:m1, 0] = -np.inf
         delmat[0, 1:n1] = -np.inf
+        # Flouri's minimum value:
         # series -= gap_open
         # insmat[1:m1, 0] = series[:m1 - 1]
         # delmat[0, 1:n1] = series[:n1 - 1]

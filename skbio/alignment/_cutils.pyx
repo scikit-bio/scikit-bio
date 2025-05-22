@@ -224,6 +224,17 @@ def _trace_one_linear(
     This function does not involve the original sequences or the substitution matrix,
     thereby improving memory efficiency.
 
+    Altschul & Erickson (1986) [1]_ pointed out that the original Gotoh algorithm
+    could fail in some situations. Specifically, if the traceback process does not
+    jump between matrices, it won't be able to distinguish ties between creating a
+    new gap vs. extending an existing gap. The current function follows the modified
+    Gotoh algorithm.
+
+    References
+    ----------
+    .. [1] Altschul, S. F., & Erickson, B. W. (1986). Optimal sequence alignment using
+       affine gap costs. Bull Math Biol, 48, 603-616.
+
     """
     cdef floating score, gap_score
 

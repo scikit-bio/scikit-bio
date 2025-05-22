@@ -310,7 +310,7 @@ class PairAlignTests(unittest.TestCase):
             _ = pair_align(seq1, seq2, sub_score=submat)
         self.assertEqual(str(cm.exception), msg)
 
-    def test_pair_align_challenge(self):
+    def test_pair_align_trick_1(self):
         # This example is from Altschul & Erickson, Bull Math Biol, 1986 (Fig. 2),
         # which showed that the original Gotoh algorithm (1982) could fail in some
         # situations. Specifically, if the traceback process does not jump between
@@ -340,6 +340,17 @@ class PairAlignTests(unittest.TestCase):
             [-4, -5, -6, -7, -8, -9],
             [-3, -5, -5, -7, -8, -9],
             [-4, -3, -5, -5, -7, -8]]))
+
+    def test_pair_align_trick_2(self):
+        # This example is from Flouri et al., BioRxiv, 2015, which stated that the
+        # original Gotoh algorithm (1982) had a mistake in the initialization of the
+        # matrices. Specifically, the insertion and deletion matrices should be
+        # initialized with at least 2 gap_open + k gap_extend. If one does this with
+        # gap_open + k * gap_extend, as the Gotoh paper suggested, this example will
+        # break.
+        obs = pair_align("A", "G", sub_score=(0, -5), gap_cost=(2, 1), free_ends=False)
+        self.assertEqual(obs.score, -5)
+        self.assertEqual(obs.paths[0].to_cigar(), "1M")
 
     def test_pair_align_edge(self):
         """Edge cases in alignment."""
