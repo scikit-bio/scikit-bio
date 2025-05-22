@@ -1,0 +1,880 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+from collections import namedtuple
+
+import numpy as np
+
+from skbio.alignment import PairAlignPath
+from ._utils import encode_sequences, prepare_gapcost
+from ._cutils import (
+    _fill_linear_matrix,
+    _fill_affine_matrices,
+    _trace_one_linear,
+    _trace_one_affine,
+)
+
+
+def pair_align(
+    seq1,
+    seq2,
+    local=False,
+    sub_score=(1.0, -1.0),
+    gap_cost=2.0,
+    free_ends=True,
+    max_paths=1,
+    atol=1e-5,
+    keep_matrices=False,
+):
+    r"""Perform pairwise alignment of two sequences.
+
+    .. versionadded:: 0.6.4
+
+    Parameters
+    ----------
+    seq1 : GrammaredSequence or str
+        The first sequence to be aligned.
+
+    seq2 : GrammaredSequence or str
+        The second sequence to be aligned.
+
+    local : bool, optional
+        Perform global alignment (False, default) or local alignment (True).
+
+    sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
+        Score of a substitution. May be two numbers (match, mismatch), a substitution
+        matrix, or its name. See :func:`align_score` for instructions. Default is
+        (1.0, -1.0).
+
+    gap_cost : float or tuple of (float, float), optional
+        Penalty of a gap. May be one (linear) or two numbers (affine). See
+        :func:`align_score` for instructions and rationales. Default is -2.0.
+
+    free_ends : bool, optional
+        Whether gaps at the sequence terminals are free from penalization. See
+        :func:`align_score` for instructions. Default is True.
+
+    max_paths : int, optional
+        Maximum number of alignment paths to return. Default is 1, which is generated
+        through a performance-oriented traceback algorithm. A value larger than 1 will
+        trigger a less efficient traceback algorithm to enumerate up to this number of
+        paths. Setting it as None will return all paths. However, be cautious that the
+        total number of paths may be extremely large and could stress the system.
+        Setting it as 0 will disable traceback and return no path.
+
+    atol : float, optional
+        Absolute tolerance in comparing scores of alternative alignment paths. This is
+        to ensure floating-point arithmetic safety when ``sub_score`` or ``gap_cost``
+        involve decimal numbers. Default is 1e-5. Setting it to 0 or None will slightly
+        increase performance, and is usually safe when there are only integers (e.g.,
+        2.0), half integers (e.g., 2.5) or numbers with exact binary representation
+        involved. Note: relative tolerance is not involved in the calculation.
+
+    keep_matrices : bool, optional
+        Whether to include the alignment matrix(ces) in the returned value. They are
+        typically for diagnostic or educational purposes. Default is False, which lets
+        the memory space free up after the function finishes.
+
+    Returns
+    -------
+    score : float
+        Optimal alignment score.
+
+    paths : list of :class:`~skbio.alignment.PairAlignPath`
+        Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
+        paths are optimal and share the same alignment score.
+
+    matrices : tuple of ndarray of shape (m + 1, n + 1)
+        Alignment matrices generated during the computation (if ``keep_matrices`` is
+        True).
+
+    See Also
+    --------
+    align_score
+    skbio.alignment.PairAlignPath
+
+    Notes
+    -----
+    This function implements the classic dynamic programming (DP) method for pairwise
+    sequence alignment. It is commonly known as the Needleman-Wunsch algorithm [1]_ for
+    global alignment, or the Smith-Waterman algorithm [2]_ for local alignment. These
+    two algorithms use linear gap penalty. When affine gap penalty is specified, the
+    underlying method is the Gotoh algorithm [3]_, with later modifications [4]_.
+
+    References
+    ----------
+    .. [1] Needleman, S. B., & Wunsch, C. D. (1970). A general method applicable to the
+       search for similarities in the amino acid sequence of two proteins. J Mol Biol,
+       48(3), 443-453.
+
+    .. [2] Smith, T. F., & Waterman, M. S. (1981). Identification of common molecular
+       subsequences. J Mol Biol, 147(1), 195-197.
+
+    .. [3] Gotoh, O. (1982). An improved algorithm for matching biological sequences.
+       J Mol Biol, 162(3), 705-708.
+
+    .. [4] Altschul, S. F., & Erickson, B. W. (1986). Optimal sequence alignment using
+       affine gap costs. Bull Math Biol, 48, 603-616.
+
+    """
+    # This function implements the classic dynamic programming method for pairwise
+    # sequence alignment. While the most time-consuming step (matrix filling) is done
+    # in Cython, this function retains as many steps as possible in Python, thereby
+    # "outsourcing" computation and optimization to the upstream library (NumPy).
+
+    # Prepare sequences and substitution matrix.
+    # If `sub_score` consists of match/mismatch scores, an identity matrix will be
+    # created or retrieved from cache. The two sequences are converted into indices
+    # in the substitution matrix, which facilitate lookup and memory locality.
+    (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), sub_score)
+
+    # Profile seq1 (query), which will be aligned against seq2 (target).
+    # The profile is essentially a position-specific scoring matrix (PSSM). This design
+    # is useful for future implementation of profile search (like PSI-BLAST) and one-
+    # vs-many search.
+    query, target = np.ascontiguousarray(submat[seq1]), seq2
+    dtype = query.dtype.type
+
+    # Prepare affine or linear gap penalties.
+    gap_open, gap_extend = prepare_gapcost(gap_cost, dtype=dtype)
+    affine = gap_open != 0
+
+    # Allocate alignment matrices.
+    # There is one matrix for linear gap penalty or three matrices for affine gap
+    # penalty. Each matrix is (m + 1) by (n + 1). They can become quite large and
+    # challenge the memory capacity. To overcome this, future implementation of
+    # Hirschberg's algorithm with linear space is desired.
+    matrices = _alloc_matrices(query.shape[0], target.size, affine, dtype=dtype)
+
+    # Initialize alignment matrices.
+    _init_matrices(*matrices, gap_open, gap_extend, local, free_ends)
+
+    # Fill alignment matrices (quadratic; compute-intensive).
+    if affine:
+        _fill_affine_matrices(*matrices, query, target, gap_open, gap_extend, local)
+    else:
+        _fill_linear_matrix(matrices[0], query, target, gap_extend, local)
+
+    # Get optimal alignment score and corresponding stop(s).
+    if max_paths == 1:
+        score, stops = _one_stop(matrices[0], local, free_ends)
+    else:
+        score, stops = _all_stops(matrices[0], local, free_ends, atol)
+
+    # No path is found.
+    if local and abs(score) <= atol:
+        paths = []
+
+    # Traceback from each stop to reconstruct optimal alignment path(s).
+    elif max_paths == 0:
+        paths = []
+    elif max_paths == 1:
+        paths = [_traceback_one(*stops[0], matrices, gap_open, gap_extend, local, atol)]
+    else:
+        paths = _traceback_all(
+            stops, matrices, query, target, gap_open, gap_extend, local, max_paths, atol
+        )
+
+    # Discard or keep matrices.
+    if not keep_matrices:
+        matrices = ()
+    elif affine:
+        _fill_nan(matrices)
+    else:
+        matrices = (matrices[0],)
+
+    return PairAlignResult(float(score), paths, matrices)
+
+
+# pairwise alignment result
+PairAlignResult = namedtuple("PairAlignResult", ["score", "paths", "matrices"])
+
+
+def _alloc_matrices(m, n, affine, dtype=float):
+    """Allocate alignment matrix(ces).
+
+    Parameters
+    ----------
+    m : int
+        Length of sequence 1.
+    n : int
+        Length of sequence 2.
+    affine : bool
+        Affine (True) or linear (False) gap penalty.
+    dtype : type, optional
+        Data type (np.float32 or np.float64).
+
+    Returns
+    -------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+
+    """
+    # Note: The array should be C-contiguous to facilitate row-major operations.
+    # NumPy's default array is already C-contiguous. This is also enforced by the
+    # unit test.
+    shape = (m + 1, n + 1)
+    scomat = np.empty(shape, dtype=dtype)
+    if affine:
+        insmat = np.empty(shape, dtype=dtype)
+        delmat = np.empty(shape, dtype=dtype)
+    else:
+        insmat = None
+        delmat = None
+    return scomat, insmat, delmat
+
+
+def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_ends):
+    """Initialize alignment matrix(ces) by populating first column and row.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+
+    """
+    m1, n1 = scomat.shape
+
+    # initialize main scoring matrix
+    scomat[0, 0] = 0
+    if local or free_ends:
+        scomat[1:m1, 0] = 0
+        scomat[0, 1:n1] = 0
+    else:
+        series = np.arange(1, max(m1, n1), dtype=scomat.dtype)
+        series *= -gap_extend
+        if gap_open:
+            series -= gap_open
+        scomat[1:m1, 0] = series[: m1 - 1]
+        scomat[0, 1:n1] = series[: n1 - 1]
+
+    # initialize insertion and deletion matrices
+    if gap_open:
+        insmat[1:m1, 0] = -np.inf
+        delmat[0, 1:n1] = -np.inf
+        # series -= gap_open
+        # insmat[1:m1, 0] = series[:m1 - 1]
+        # delmat[0, 1:n1] = series[:n1 - 1]
+
+
+def _fill_nan(matrices):
+    """Fill empty cells of affine matrices with NaN before returning.
+
+    These are not useful during alignment, but can make things less confusing for
+    diagnostic or educational purposes.
+
+    """
+    _, insmat, delmat = matrices
+    insmat[0, :] = np.nan
+    delmat[:, 0] = np.nan
+
+
+def _one_stop(scomat, local, free_ends):
+    """Locate one stop with optimal alignment score.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+
+    Returns
+    -------
+    float
+        Optimal alignment score.
+    ndarray of int of shape (1, 2)
+        Coordinates of one alignment stop.
+
+    Notes
+    -----
+    When there is a tie, the smallest index (row, column) is chosen.
+
+    """
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+
+    # local alignment: maximum cell in the matrix
+    if local:
+        i, j = np.divmod(scomat.argmax(), n + 1)
+
+    # semi-global alignment: maximum cell in the last column and row
+    elif free_ends:
+        i = scomat[:m, n].argmax()  # last column (ends with deletion)
+        j = scomat[m, :].argmax()  # last row (ends with insertion)
+        if scomat[i, n] >= scomat[m, j]:
+            j = n
+        else:
+            i = m
+
+    # global alignment: bottom right cell
+    else:
+        i, j = m, n
+
+    return scomat[i, j], np.array([[i, j]])
+
+
+def _all_stops(scomat, local, free_ends, eps=1e-5):
+    """Locate all stops with optimal alignment score.
+
+    Parameters
+    ----------
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    local : bool
+        Local or global alignment.
+    free_ends : bool
+        If end gaps are free from penalty.
+    eps : float, optional
+        Absolute tolerance. Default is 1e-5.
+
+    Returns
+    -------
+    float
+        Optimal alignment score.
+    ndarray of int of shape (k, 2)
+        Coordinates of all (k) alignment stops.
+
+    Notes
+    -----
+    Coordinates (row, column) are sorted in ascending order.
+
+    """
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+
+    # local alignment
+    if local:
+        max_ = scomat.max()
+        if eps:
+            tests = np.isclose(scomat, max_, rtol=0, atol=eps)
+        else:
+            tests = scomat == max_
+        return max_, np.argwhere(tests)
+
+    # semi-global alignment
+    elif free_ends:
+        max_ = np.max([scomat[:, n].max(), scomat[m, :].max()])
+        if eps:
+            test1 = np.isclose(scomat[:m, n], max_, rtol=0, atol=eps)
+            test2 = np.isclose(scomat[m, :], max_, rtol=0, atol=eps)
+        else:
+            test1 = scomat[:m, n] == max_
+            test2 = scomat[m, :] == max_
+        ii = np.argwhere(test1)
+        jj = np.argwhere(test2)
+        return max_, np.vstack(
+            (
+                np.column_stack((ii, np.full(ii.shape[0], n))),
+                np.column_stack((np.full(jj.shape[0], m), jj)),
+            )
+        )
+
+    # global alignment
+    else:
+        return scomat[m, n], np.array([[m, n]])
+
+
+def _encode_path(path, i, j):
+    """Perform run-length encoding (RLE) on a dense alignment path.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    i : int
+        Start position in sequence 1.
+    j : int
+        Start position in sequence 2.
+
+    Returns
+    -------
+    PairAlignPath
+        Encoded alignment path.
+
+    See Also
+    --------
+    skbio.alignment.AlignPath.from_bits
+
+    """
+    segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+    lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
+    return PairAlignPath(lens, path[segs], [i, j])
+
+
+def _trailing_gaps(path, pos, i, j, m, n):
+    """Fill trailing gaps before traceback starts.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    m : int
+        Last row index in the matrix (length of sequence 1).
+    n : int
+        Last column index in the matrix (length of sequence 2).
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+
+    """
+    # bottom row: ends with insertions (gaps in seq1)
+    if i == m and j < n:
+        pos -= n - j
+        path[pos:] = 1
+    # right-most column: ends with deletions (gaps in seq2)
+    elif j == n and i < m:
+        pos -= m - i
+        path[pos:] = 2
+    return pos
+
+
+def _leading_gaps(path, pos, i, j):
+    """Fill leading gaps after traceback ends.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    pos : int
+        Current start position of the path.
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+
+    Returns
+    -------
+    int
+        Updated start position of the path.
+
+    """
+    stop = pos
+    # top row: starts with insertions (gaps in seq1)
+    if i == 0 and j > 0:
+        pos -= j
+        path[pos:stop] = 1
+    # left-most column: starts with deletions (gaps in seq2)
+    elif j == 0 and i > 0:
+        pos -= i
+        path[pos:stop] = 2
+    return pos
+
+
+def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
+    """Traceback and return one optimal alignment path.
+
+    Parameters
+    ----------
+    i : int
+        Stop position in sequence 1.
+    j : int
+        Stop position in sequence 2.
+    matrices : tuple of ndarray of float of shape (m + 1, n + 1)
+        Alignment matrices.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Global (False) or local (True) alignment.
+    eps : float, optional
+        Absolute tolerance.
+
+    Returns
+    -------
+    PairAlignPath
+        Optimal alignment path.
+
+    See Also
+    --------
+    _traceback_all
+
+    Notes
+    -----
+    This function pre-allocates memory space for the path, which has a maximum length
+    of m + n. Each element represents the gap status of one position in the alignment:
+
+        0: no gap
+        1: gap in seq1
+        2: gap in seq2
+
+    The path will be filled in reverse order (from stop to start, i.e., trace*back*).
+
+    After the path is completed, run-length encoding (RLE) will be performed to
+    compress it into a compact form.
+
+    Alternatively, one can encode the path while constructing it, which reduces memory
+    consumption. However, that will complicate Cythonization (it will need C++ vector).
+    There is no obvious runtime difference between the two methods.
+
+    """
+    scomat = matrices[0]
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+
+    # current start position of the path, i.e., the index right *after* the next
+    # position to be filled.
+    pos = m + n
+
+    # allocate space for path
+    path = np.empty(pos, dtype=np.uint8)
+
+    # fill trailing gaps (from edge to bottom-right cell).
+    if not local:
+        pos = _trailing_gaps(path, pos, i, j, m, n)
+
+    # Traceback matrix body. This is a time-consuming step. However, it is O(m + n),
+    # thus is faster than the matrix filling step.
+    if gap_open:
+        pos, i, j = _trace_one_affine(
+            path, pos, i, j, *matrices, gap_extend, local, eps
+        )
+    else:
+        pos, i, j = _trace_one_linear(path, pos, i, j, scomat, gap_extend, local, eps)
+
+    # fill leading gaps (from top-left cell to edge).
+    if not local:
+        pos = _leading_gaps(path, pos, i, j)
+        i, j = 0, 0
+
+    # encode path
+    return _encode_path(path[pos:], i, j)
+
+
+"""Encodings of moving directions during traceback. Columns are:
+
+    0. Row offset (i)
+        - Can be calculated with (state & 1) ^ 1
+
+    1. Column offset (j)
+        - Can be calculated with (state >> 1) ^ 1
+
+    2. Gap state
+        0. Substitution (no gap)
+        1. Insertion (gap in seq1)
+        2. Deletion (gap in seq2)
+        3. Invalid state
+
+    3. Matrix index
+        0. Main matrix
+        1. Insertion matrix (affine)
+        2. Deletion matrix (affine)
+        3. Insertion matrix 2 (2-piece affine)
+        4. Deletion matrix 2 (2-piece affine)
+
+"""
+MOVES = np.array(
+    [
+        [1, 1, 0, 0],  # substitution
+        [0, 1, 1, 0],  # insertion
+        [1, 0, 2, 0],  # deletion
+        [0, 1, 1, 1],  # extend insertion
+        [1, 0, 2, 2],  # extend deletion
+        [0, 0, 3, 1],  # jump to insertion matrix
+        [0, 0, 3, 2],  # jump to deletion matrix
+        [0, 1, 1, 3],  # extend insertion 2
+        [1, 0, 2, 4],  # extend deletion 2
+        [0, 0, 3, 3],  # jump to insertion matrix 2
+        [0, 0, 3, 4],  # jump to deletion matrix 2
+    ]
+)
+
+
+def _linear_moves(i, j, scomat, query, target, gap, eps):
+    """Identify move direction(s) at a cell with linear gap penalty.
+
+    Parameters
+    ----------
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
+    gap : float
+        Gap penalty.
+    eps : float
+        Absolute tolerance.
+
+    Returns
+    -------
+    list of int
+        Move directions.
+
+    """
+    score = scomat[i, j]
+    moves = []
+    if (
+        abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
+    ):  # subsitution
+        moves.append(0)
+    if abs(scomat[i, j - 1] - gap - score) <= eps:  # insertion
+        moves.append(1)
+    if abs(scomat[i - 1, j] - gap - score) <= eps:  # deletion
+        moves.append(2)
+    return moves
+
+
+def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_e, eps):
+    """Identify move direction(s) at a cell with affine gap penalty.
+
+    Parameters
+    ----------
+    i : int
+        Current row index in the matrix.
+    j : int
+        Current column index in the matrix.
+    mat : in
+        Current matrix index.
+    scomat : ndarray of shape (m, n)
+        Main matrix.
+    insmat : ndarray of shape (m, n)
+        Insertion matrix.
+    delmat : ndarray of shape (m, n)
+        Deletion matrix.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
+    gap_oe : float
+        Gap opening + extension penalty.
+    gap_e : float
+        Gap extension penalty.
+    eps : float
+        Absolute tolerance.
+
+    Returns
+    -------
+    list of int
+        Move directions.
+
+    """
+    moves = []
+
+    # main matrix
+    if mat == 0:
+        score = scomat[i, j]
+        if (
+            abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
+        ):  # subsitution
+            moves.append(0)
+        if abs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
+            moves.append(5)
+        if abs(delmat[i, j] - score) <= eps:  # jump to deletion matrix
+            moves.append(6)
+    # insertion matrix
+    elif mat == 1:
+        score = insmat[i, j]
+        if abs(scomat[i, j - 1] - gap_oe - score) <= eps:  # open insertion
+            moves.append(1)
+        if abs(insmat[i, j - 1] - gap_e - score) <= eps:  # extend insertion
+            moves.append(3)
+    # deletion matrix
+    else:
+        score = delmat[i, j]
+        if abs(scomat[i - 1, j] - gap_oe - score) <= eps:  # open deletion
+            moves.append(2)
+        if abs(delmat[i - 1, j] - gap_e - score) <= eps:  # extend deletion
+            moves.append(4)
+
+    return moves
+
+
+def _traceback_all(
+    stops,
+    matrices,
+    query,
+    target,
+    gap_open,
+    gap_extend,
+    local,
+    max_paths=None,
+    eps=1e-5,
+):
+    """Traceback and return all optimal alignment paths.
+
+    Parameters
+    ----------
+    stops : sequence of (int, int)
+        Stop positions in both sequences.
+    matrices : tuple of ndarray of float of shape (m + 1, n + 1)
+        Alignment matrices.
+    query : ndarray of float of shape (m, n_symbols)
+        Query profile.
+    target : ndarray of int of shape (n,)
+        Target sequence.
+    gap_open : float
+        Gap opening penalty.
+    gap_extend : float
+        Gap extension penalty.
+    local : bool
+        Global (False) or local (True) alignment.
+    max_paths : int, optional
+        Maximum number of paths to return, or None to return all paths. Cannot be 0.
+    eps : float, optional
+        Absolute tolerance.
+
+    Returns
+    -------
+    list of PairAlignPath
+        Optimal alignment paths.
+
+    See Also
+    --------
+    _traceback_one
+
+    Notes
+    -----
+    This function enumerates all optimal alignment paths or until a given number of
+    paths has been reached.
+
+    A stack is used to store branching paths and to enable depth-first search (DFS).
+    For linear gap penalty, the stack's maximum size is m + n, which is equivalent to
+    the maximum size of a full path, times (b - 1), where b is the number of possible
+    branches (3). For affine gap penalty, the space is appr. (m + n) * 3. Regardless
+    of the total number of full paths, which could easily explode, the stack size is
+    linear and manageable.
+
+    This function is purely Python and is not as efficient as it could be. Cythonizing
+    it is possible but complicated (requiring C++ vector and class). This can be done
+    in the future.
+
+    """
+    scomat = matrices[0]
+    m = scomat.shape[0] - 1
+    n = scomat.shape[1] - 1
+    max_len = m + n
+
+    if gap_open:
+        gap_oe = gap_open + gap_extend
+        insmat = matrices[1]
+        delmat = matrices[2]
+
+    # results (optimal alignment paths)
+    paths = []
+
+    # allocate the first path
+    path = np.empty(max_len, dtype=np.uint8)
+
+    # iterate over all starting points
+    for i, j in stops:
+        pos = max_len
+
+        # fill trailing gaps
+        if not local:
+            pos = _trailing_gaps(path, pos, i, j, m, n)
+
+        # matrix index (start from main matrix (0))
+        mat = 0
+
+        # perform DFS to enumerate all paths
+        stack = [(path, pos, i, j, mat)]
+        while stack:
+            path, pos, i, j, mat = stack.pop()
+
+            # Check whether a full path has been completed. There are two scenarios:
+            finished = False
+
+            # 1) Local alignment: Path terminates where cell = 0.
+            if local and abs(scomat[i, j]) <= eps:
+                finished = True
+
+            # 2) Global alignment: Reached the top or left-most edge of the matrix.
+            # Path will extend straight left or up to the top-left cell.
+            elif i == 0 or j == 0:
+                if not local:
+                    pos = _leading_gaps(path, pos, i, j)
+                    i, j = 0, 0
+                finished = True
+
+            # Create a path object, and halt if the path number limit has been reached.
+            if finished:
+                paths.append(_encode_path(path[pos:], i, j))
+                if max_paths and len(paths) == max_paths:
+                    break
+                else:
+                    continue
+
+            # Otherwise, the current cell must be within the main body of the matrix.
+            # Check all possible moving directions and get ones that match the current
+            # optimal alignment score.
+            if gap_open:
+                moves = _affine_moves(
+                    i,
+                    j,
+                    mat,
+                    scomat,
+                    insmat,
+                    delmat,
+                    query,
+                    target,
+                    gap_oe,
+                    gap_extend,
+                    eps,
+                )
+            else:
+                moves = _linear_moves(i, j, scomat, query, target, gap_extend, eps)
+
+            # This is impossible. Raise error for debugging purpose.
+            # if not moves:
+            #     raise ValueError("Traceback cannot proceed.")
+
+            last = len(moves) - 1
+            for k, move in enumerate(moves):
+                di, dj, state, mat_ = MOVES[move]
+
+                # If path branches at this cell (i.e., 1 path becomes 2 or 3), we need
+                # to create a copy of the path. Otherwise, we can use the same path to
+                # save memory and runtime.
+                if k < last:
+                    path_ = path.copy()
+                else:
+                    path_ = path
+
+                # Deal with gap state (3 means jumping from main matrix into another
+                # matrix without advancing the path).
+                if state < 3:
+                    pos_ = pos - 1
+                    path_[pos_] = state
+                else:
+                    pos_ = pos
+
+                stack.append((path_, pos_, i - di, j - dj, mat_))
+
+    return paths

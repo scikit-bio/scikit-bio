@@ -86,10 +86,8 @@ class Sequence(
 
     References
     ----------
-    .. [1] Nomenclature for incompletely specified bases in nucleic acid
-       sequences: recommendations 1984.
-       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-       A Cornish-Bowden
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
+       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
 
     Examples
     --------
@@ -2118,7 +2116,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         alphabet : iterable of scalar or skbio.SubstitutionMatrix, optional
             Explicitly provided alphabet. The returned indices will be indices
             of characters in this alphabet. If `None`, will return indices of
-            unique characters observed in the sequence.s
+            unique characters observed in the sequence.
         mask_gaps : 'auto' or bool, optional
             Mask gap characters in the sequence, and return a masked array
             instead of a standard array. The gap characters are defined by the
@@ -2136,9 +2134,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Returns
         -------
-        1D np.ndarray or np.ma.ndarray of uint8
+        1D np.ndarray or np.ma.ndarray of intp
             Vector of character indices representing the sequence
-        str or 1D np.array of uint8, optional
+
+            .. versionchanged:: 0.6.4
+                The array data type was changed from ``uint8`` to ``intp``, which is
+                the native NumPy indexing type without the need of casting.
+
+        str or 1D np.ndarray of uint8, optional
             Sorted unique characters observed in the sequence.
 
         Raises
@@ -2159,7 +2162,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = Protein('MEEPQSDPSV')
         >>> idx, uniq = seq.to_indices()
         >>> idx
-        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6], dtype=uint8)
+        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6])
         >>> uniq
         'DEMPQSV'
 
@@ -2170,7 +2173,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('CTCAAAAGTC')
         >>> idx = seq.to_indices(alphabet='TCGA')
         >>> idx
-        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1], dtype=uint8)
+        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1])
 
         Use the alphabet included in a substitution matrix.
 
@@ -2178,7 +2181,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
         >>> idx = seq.to_indices(alphabet=sm)
         >>> idx
-        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3], dtype=uint8)
+        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3])
 
         Gap characters ("-" and ".") in the sequence will be masked
         (`mask_gaps='auto'` is the default behavior).
@@ -2197,7 +2200,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('GAGRCTC')
         >>> idx = seq.to_indices(alphabet='ACGTN', wildcard='auto')
         >>> idx
-        array([2, 0, 2, 4, 1, 3, 1], dtype=uint8)
+        array([2, 0, 2, 4, 1, 3, 1])
 
         """
         seq = self._bytes
@@ -2216,9 +2219,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     mask, seq = gaps, seq[~gaps]
 
             elif mask_gaps is True:
-                raise ValueError(
-                    "Gap character(s) are not defined for the " "sequence."
-                )
+                raise ValueError("Gap character(s) are not defined for the sequence.")
 
         # according to an alphabet
         if alphabet is not None:
@@ -2231,7 +2232,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 try:
                     assert (wildcard := ord(wildcard)) < 128
                 except (TypeError, AssertionError):
-                    raise ValueError("Wildcard must be a single ASCII " "character.")
+                    raise ValueError("Wildcard must be a single ASCII character.")
 
             # extract alphabet from a substitution matrix
             if hasattr(alphabet, "_is_ascii"):
@@ -2241,32 +2242,31 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
                 else:
                     raise ValueError(
-                        "Alphabet in the substitution matrix "
-                        "are not single ASCII characters."
+                        "Alphabet in the substitution matrix are not single ASCII "
+                        "characters."
                     )
 
             # process alphabet from scratch
             else:
                 if find_duplicates(alphabet):
-                    raise ValueError("Alphabet contains duplicated " "characters.")
+                    raise ValueError("Alphabet contains duplicated characters.")
                 try:
                     alphabet = _alphabet_to_hashes(alphabet)
                 except (TypeError, ValueError, UnicodeEncodeError):
                     raise ValueError(
-                        "Alphabet cannot be encoded as single " "ASCII characters."
+                        "Alphabet cannot be encoded as single ASCII characters."
                     )
                 indices = _indices_in_alphabet_ascii(seq, alphabet, wildcard=wildcard)
 
         # according to observed characters
         else:
             (indices,), observed = _indices_in_observed([seq])
-            indices = indices.astype(np.uint8)
             if return_codes is False:
                 observed = observed.tobytes().decode("ascii")
 
         # construct masked array
         if mask is not None:
-            indices_ = np.full(mask.size, 255, dtype=np.uint8)
+            indices_ = np.full(mask.size, -1, dtype=np.intp)
             indices_[~mask] = indices
             indices = np.ma.array(indices_, mask=mask)
 

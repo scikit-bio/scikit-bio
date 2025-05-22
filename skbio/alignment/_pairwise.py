@@ -69,7 +69,7 @@ def local_pairwise_align_nucleotide(
     skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -136,7 +136,7 @@ def local_pairwise_align_protein(
     skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -204,7 +204,7 @@ def local_pairwise_align(
     skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -420,7 +420,7 @@ def global_pairwise_align_protein(
     local_pairwise_align_nucleotide
     skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -514,7 +514,7 @@ def global_pairwise_align(
     local_pairwise_align_nucleotide
     skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
