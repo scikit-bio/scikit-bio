@@ -43,7 +43,7 @@ Users of Arch Linux or variants (such as Manjaro) may install scikit-bio from AU
 Nightly build
 -------------
 
-scikit-bio is undergoing expansion, with many new features being introduced. You are welcome to try these features by installing the current development version from :repo:`GitHub repo`::
+scikit-bio is undergoing expansion, with many new features being introduced. You are welcome to try these features by installing the current development version from our `GitHub repo <https://github.com/scikit-bio/scikit-bio>`_.
 
     pip install git+https://github.com/scikit-bio/scikit-bio.git
 
