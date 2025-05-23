@@ -1,0 +1,113 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.0
+        env:
+          # Skip 32-bit builds, PyPy, and muslinux
+          CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
+          
+          # Python versions to build (matching your supported versions)
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
+          
+          # Install test dependencies and run a simple import test
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "python -c \"import skbio; print(skbio.__version__)\""
+          
+          # Use latest manylinux image
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          
+          # Install numpy before building (required by setup.py)
+          CIBW_BEFORE_BUILD: "pip install numpy cython"
+          
+          # macOS: use native compilers, enable OpenMP via libomp
+          CIBW_BEFORE_BUILD_MACOS: "brew install libomp && pip install numpy cython"
+          CIBW_ENVIRONMENT_MACOS: >
+            CC=clang
+            CXX=clang++
+            CFLAGS="-I/opt/homebrew/opt/libomp/include -I/usr/local/opt/libomp/include"
+            LDFLAGS="-L/opt/homebrew/opt/libomp/lib -L/usr/local/opt/libomp/lib -lomp"
+          
+          # Windows: Use MSVC compiler
+          CIBW_BEFORE_BUILD_WINDOWS: "pip install numpy cython"
+          
+          # Build native wheels for Apple Silicon
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          
+          # Enable building Linux aarch64 wheels (emulated)
+          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Install build dependencies
+        run: |
+          pip install numpy cython build
+      
+      - name: Build sdist
+        run: python -m build --sdist
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # Only upload to PyPI on tagged commits
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+      
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

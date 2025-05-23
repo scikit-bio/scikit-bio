@@ -117,6 +117,29 @@ packages = ["skbio"]
 "skbio.metadata.tests" = ["data/invalid/*", "data/valid/*"]
 "skbio.embedding.tests" = ["data/*"]
 
+# Add this section to your existing pyproject.toml
+
+[tool.cibuildwheel]
+# Skip 32-bit builds, PyPy, and musllinux
+skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
+
+# Test command - just import the package
+test-command = "python -c \"import skbio; print(skbio.__version__)\""
+test-requires = ["pytest"]
+before-build = "pip install numpy cython"
+
+[tool.cibuildwheel.macos]
+before-build = "pip install numpy cython"
+archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
+archs = ["x86_64", "aarch64"]
+
+[tool.cibuildwheel.windows]
+before-build = "pip install numpy cython"
+
 [tool.pytest.ini_options]
 addopts = [
     "--doctest-modules",
