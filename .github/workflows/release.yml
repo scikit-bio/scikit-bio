@@ -6,6 +6,7 @@ on:
       - '*'
 
 env:
+  earliest_python: "3.9"
   latest_python: "3.13"
   miniforge_version: "23.11.0-0"
   miniforge_variant: "Mambaforge"

@@ -117,8 +117,6 @@ packages = ["skbio"]
 "skbio.metadata.tests" = ["data/invalid/*", "data/valid/*"]
 "skbio.embedding.tests" = ["data/*"]
 
-# Add this section to your existing pyproject.toml
-
 [tool.cibuildwheel]
 # Skip 32-bit builds, PyPy, and musllinux
 skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
