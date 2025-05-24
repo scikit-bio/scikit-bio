@@ -198,6 +198,25 @@ class UtilsTests(unittest.TestCase):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1].shape[0], 5)
 
+    def test_encode_sequences_error(self):
+        msg = "Sequences are of different types."
+        with self.assertRaises(TypeError) as cm:
+            _ = encode_sequences([DNA("CGT"), Protein("MKY")], (1, -1))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "No sequence is provided."
+        with self.assertRaises(ValueError) as cm:
+            _ = encode_sequences([], (1, -1))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence {} has a length of zero."
+        with self.assertRaises(ValueError) as cm:
+            _ = encode_sequences(["", "ATG"], (1, -1))
+        self.assertEqual(str(cm.exception), msg.format(1))
+        with self.assertRaises(ValueError) as cm:
+            _ = encode_sequences(["MKY", ""], (1, -1))
+        self.assertEqual(str(cm.exception), msg.format(2))
+
     def test_encode_alignment_aligned(self):
         # Note: the unit-tests of this function aren't adequate. It still has 100%
         # coverage because all conditions have been tested in upstream and downstream
@@ -276,8 +295,8 @@ class UtilsTests(unittest.TestCase):
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-        obs = prepare_gapcost((0.5, -2.5))
-        self.assertTupleEqual(obs, (0.5, -2.5))
+        obs = prepare_gapcost((0.5, 2.5))
+        self.assertTupleEqual(obs, (0.5, 2.5))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 

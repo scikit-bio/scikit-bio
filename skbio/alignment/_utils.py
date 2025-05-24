@@ -63,6 +63,8 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
         If sequences are of heterogeneous types.
     ValueError
         If there is no sequence.
+    ValueError
+        If any sequence has a length of zero.
 
     See Also
     --------
@@ -166,6 +168,10 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
             key = uniq.size
         seqs, submat = prepare_identity_matrix(seqs, key, match, mismatch)
 
+    for i, seq in enumerate(seqs):
+        if seq.size == 0:
+            raise ValueError(f"Sequence {i + 1} has a length of zero.")
+
     return seqs, submat, gaps
 
 
@@ -259,6 +265,13 @@ def prepare_gapcost(gap_cost, dtype=float):
         Gap opening penalty.
     float
         Gap extension penalty.
+
+    Notes
+    -----
+    Gap penalties are usually positive, representing subtractions from the alignment
+    score. Although scikit-bio does not prohibit negative gap penalties, it should be
+    noted that negative penalties (positive scores) might lead to all-gap alignments,
+    especially when gaps are scored higher than substitutions.
 
     """
     if np.isscalar(gap_cost):

@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from collections import namedtuple
+from typing import NamedTuple, Optional, Union, Tuple, List, TYPE_CHECKING
 
 import numpy as np
 
@@ -19,18 +19,28 @@ from ._cutils import (
     _trace_one_affine,
 )
 
+if TYPE_CHECKING:
+    from skbio.sequence import Sequence, SubstitutionMatrix
+
+
+class PairAlignResult(NamedTuple):
+    score: float
+    paths: Optional[List["PairAlignPath"]] = None
+    matrices: Optional[Tuple[np.ndarray, ...]] = None
+
 
 def pair_align(
-    seq1,
-    seq2,
-    local=False,
-    sub_score=(1.0, -1.0),
-    gap_cost=2.0,
-    free_ends=True,
-    max_paths=1,
-    atol=1e-5,
-    keep_matrices=False,
-):
+    seq1: Union["Sequence", str],
+    seq2: Union["Sequence", str],
+    /,
+    mode: str = "global",
+    sub_score: Union[Tuple[float, float], "SubstitutionMatrix"] = (1.0, -1.0),
+    gap_cost: Union[float, Tuple[float, float]] = 2.0,
+    free_ends: bool = True,
+    max_paths: Optional[int] = 1,
+    atol: float = 1e-5,
+    keep_matrices: bool = False,
+) -> PairAlignResult:
     r"""Perform pairwise alignment of two sequences.
 
     .. versionadded:: 0.6.4
@@ -43,8 +53,8 @@ def pair_align(
     seq2 : GrammaredSequence or str
         The second sequence to be aligned.
 
-    local : bool, optional
-        Perform global alignment (False, default) or local alignment (True).
+    mode : {'global', 'local'}, optional
+        Mode of alignment. Options are "global" (default) and "local".
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
         Score of a substitution. May be two numbers (match, mismatch), a substitution
@@ -126,6 +136,12 @@ def pair_align(
     # sequence alignment. While the most time-consuming step (matrix filling) is done
     # in Cython, this function retains as many steps as possible in Python, thereby
     # "outsourcing" computation and optimization to the upstream library (NumPy).
+    if mode == "global":
+        local = False
+    elif mode == "local":
+        local = True
+    else:
+        raise ValueError(f"Invalid mode: {mode}.")
 
     # Prepare sequences and substitution matrix.
     # If `sub_score` consists of match/mismatch scores, an identity matrix will be
@@ -152,7 +168,7 @@ def pair_align(
     matrices = _alloc_matrices(query.shape[0], target.size, affine, dtype=dtype)
 
     # Initialize alignment matrices.
-    _init_matrices(*matrices, gap_open, gap_extend, local, free_ends)
+    _init_matrices(matrices, gap_open, gap_extend, local, free_ends)
 
     # Fill alignment matrices (quadratic; compute-intensive).
     if affine:
@@ -166,15 +182,15 @@ def pair_align(
     else:
         score, stops = _all_stops(matrices[0], local, free_ends, atol)
 
-    # No path is found.
-    if local and abs(score) <= atol:
+    if max_paths == 0:  # traceback is disabled
+        paths = None
+    elif local and abs(score) <= atol:  # no path is found
         paths = []
 
     # Traceback from each stop to reconstruct optimal alignment path(s).
-    elif max_paths == 0:
-        paths = []
     elif max_paths == 1:
-        paths = [_traceback_one(*stops[0], matrices, gap_open, gap_extend, local, atol)]
+        i, j = stops[0]
+        paths = [_traceback_one(i, j, matrices, gap_open, gap_extend, local, atol)]
     else:
         paths = _traceback_all(
             stops, matrices, query, target, gap_open, gap_extend, local, max_paths, atol
@@ -182,17 +198,11 @@ def pair_align(
 
     # Discard or keep matrices.
     if not keep_matrices:
-        matrices = ()
+        matrices = None
     elif affine:
         _fill_nan(matrices)
-    else:
-        matrices = (matrices[0],)
 
     return PairAlignResult(float(score), paths, matrices)
-
-
-# pairwise alignment result
-PairAlignResult = namedtuple("PairAlignResult", ["score", "paths", "matrices"])
 
 
 def _alloc_matrices(m, n, affine, dtype=float):
@@ -211,39 +221,31 @@ def _alloc_matrices(m, n, affine, dtype=float):
 
     Returns
     -------
-    scomat : ndarray of shape (m, n)
-        Main matrix.
-    insmat : ndarray of shape (m, n)
-        Insertion matrix.
-    delmat : ndarray of shape (m, n)
-        Deletion matrix.
+    tuple of ndarray of shape (m + 1, n + 1)
+        Alignment matrix(ces).
+
+    Notes
+    -----
+    The arrays should be C-contiguous to facilitate row-major operations. NumPy's
+    default array is already C-contiguous. This is also enforced by the unit test.
 
     """
-    # Note: The array should be C-contiguous to facilitate row-major operations.
-    # NumPy's default array is already C-contiguous. This is also enforced by the
-    # unit test.
     shape = (m + 1, n + 1)
     scomat = np.empty(shape, dtype=dtype)
-    if affine:
-        insmat = np.empty(shape, dtype=dtype)
-        delmat = np.empty(shape, dtype=dtype)
-    else:
-        insmat = None
-        delmat = None
+    if not affine:
+        return (scomat,)
+    insmat = np.empty(shape, dtype=dtype)
+    delmat = np.empty(shape, dtype=dtype)
     return scomat, insmat, delmat
 
 
-def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_ends):
+def _init_matrices(matrices, gap_open, gap_extend, local, free_ends):
     """Initialize alignment matrix(ces) by populating first column and row.
 
     Parameters
     ----------
-    scomat : ndarray of shape (m, n)
-        Main matrix.
-    insmat : ndarray of shape (m, n)
-        Insertion matrix.
-    delmat : ndarray of shape (m, n)
-        Deletion matrix.
+    matrices : list of ndarray of shape (m + 1, n + 1)
+        Alignment matrices.
     gap_open : float
         Gap opening penalty.
     gap_extend : float
@@ -267,6 +269,7 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
        alignment algorithms and implementations correct?. bioRxiv, 031500.
 
     """
+    scomat = matrices[0]
     m1, n1 = scomat.shape
 
     # initialize main scoring matrix
@@ -284,6 +287,8 @@ def _init_matrices(scomat, insmat, delmat, gap_open, gap_extend, local, free_end
 
     # initialize insertion and deletion matrices
     if gap_open:
+        insmat = matrices[1]
+        delmat = matrices[2]
         insmat[1:m1, 0] = -np.inf
         delmat[0, 1:n1] = -np.inf
         # Flouri's minimum value:
@@ -299,9 +304,13 @@ def _fill_nan(matrices):
     diagnostic or educational purposes.
 
     """
-    _, insmat, delmat = matrices
-    insmat[0, :] = np.nan
-    delmat[:, 0] = np.nan
+    n = len(matrices)
+    # odd numbers are insertion matrices
+    for i in range(1, n, 2):
+        matrices[i][0, :] = np.nan
+    # even numbers are deletion matrices
+    for i in range(2, n, 2):
+        matrices[i][:, 0] = np.nan
 
 
 def _one_stop(scomat, local, free_ends):
@@ -333,7 +342,7 @@ def _one_stop(scomat, local, free_ends):
 
     # local alignment: maximum cell in the matrix
     if local:
-        i, j = np.divmod(scomat.argmax(), n + 1)
+        i, j = np.unravel_index(scomat.argmax(), scomat.shape)
 
     # semi-global alignment: maximum cell in the last column and row
     elif free_ends:

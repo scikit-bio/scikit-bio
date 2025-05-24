@@ -63,7 +63,7 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(res.score, 1)
 
         # By default, the alignment matrix is discarded.
-        self.assertEqual(len(res.matrices), 0)
+        self.assertIsNone(res.matrices)
 
         # Return all optimal alignments. There are two.
         res = pair_align(seq1, seq2, max_paths=None)
@@ -77,6 +77,10 @@ class PairAlignTests(unittest.TestCase):
                "-AGATCT"]
         self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 1)
+
+        # Disable traceback.
+        res = pair_align(seq1, seq2, max_paths=0)
+        self.assertIsNone(res.paths)
 
         # Keep the alignment matrix.
         res = pair_align(seq1, seq2, keep_matrices=True)
@@ -93,7 +97,7 @@ class PairAlignTests(unittest.TestCase):
 
         # Disable free ends. This is the true global alignment (i.e, the Needleman-
         # Wunsch algorithm in textbooks).
-        res = pair_align(seq1, seq2, free_ends=False)
+        res = pair_align(seq1, seq2, mode="global", free_ends=False)
         obs = res.paths[0].aligned((seq1, seq2))
         exp = ["GAATTC",
                "AGATCT"]
@@ -102,14 +106,14 @@ class PairAlignTests(unittest.TestCase):
 
         # Local alignment (i.e., the Smith-Waterman algorithm in textbooks). It gets
         # subsequences that are best aligned.
-        res = pair_align(seq1, seq2, local=True)
+        res = pair_align(seq1, seq2, mode="local")
         obs = res.paths[0].aligned((seq1, seq2))
         exp = ["GA", "GA"]
         self.assertListEqual(obs, exp)
         self.assertEqual(res.score, 2)
 
         # Return all alignments.
-        res = pair_align(seq1, seq2, local=True, max_paths=None)
+        res = pair_align(seq1, seq2, mode="local", max_paths=None)
         self.assertEqual(len(res.paths), 3)
         obs = res.paths[1].aligned((seq1, seq2))
         self.assertListEqual(obs, ["AT", "AT"])
@@ -150,6 +154,38 @@ class PairAlignTests(unittest.TestCase):
         res = pair_align(seq1, seq2, sub_score=submat, gap_cost=(5, 2))
         obs = res.paths[0].aligned((seq1, seq2))
         self.assertListEqual(obs, exp)
+
+    def test_pair_align_demo(self):
+        """Demonstration of very simple cases."""
+        # perfect match
+        obs = pair_align("ACG", "ACG")
+        self.assertEqual(obs.score, 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M")
+
+        # one mismatch
+        obs = pair_align("ACG", "ATG")
+        self.assertEqual(obs.score, 1)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M")
+
+        # leading insertion
+        obs = pair_align("CGT", "ACGT")
+        self.assertEqual(obs.score, 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M")
+
+        # trailing deletion
+        obs = pair_align("ACGT", "ACG")
+        self.assertEqual(obs.score, 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M1D")
+
+        # overlap
+        obs = pair_align("CGT", "ACGTA")
+        self.assertEqual(obs.score, 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
+
+        # one gap
+        obs = pair_align("CGT", "ACGTA")
+        self.assertEqual(obs.score, 3)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
 
     def test_pair_align_prot(self):
         """Align protein sequences."""
@@ -218,7 +254,7 @@ class PairAlignTests(unittest.TestCase):
             "WXY^Z^",
             "WXYYZZ",
         ])
-        obs = pair_align(seq1, seq2, local=True)
+        obs = pair_align(seq1, seq2, mode="local")
         self.assertEqual(obs.score, 3)
         self.assertListEqual(obs.paths[0].aligned((seq1, seq2), gap_char="^"), [
             "WXY",
@@ -228,7 +264,7 @@ class PairAlignTests(unittest.TestCase):
         # also from the previous scikit-bio code
         seq1 = CustomSequence("YWXXZZYWXXWYYZWXX")
         seq2 = CustomSequence("YWWXZZZYWXYZWWX")
-        obs = pair_align(seq1, seq2, local=True, sub_score=(5, -4),
+        obs = pair_align(seq1, seq2, mode="local", sub_score=(5, -4),
                          gap_cost=(4.5, 0.5), max_paths=None)
         self.assertEqual(obs.score, 41)
         self.assertEqual(len(obs.paths), 5)
@@ -252,7 +288,7 @@ class PairAlignTests(unittest.TestCase):
         """Align raw strings."""
         seq1 = "accttgcaaaa"
         seq2 = "cctgca"
-        obs = pair_align(seq1, seq2, local=True)
+        obs = pair_align(seq1, seq2, mode="local")
         self.assertEqual(obs.score, 4)
         self.assertEqual(obs.paths[0].to_cigar(), "3M1D3M")
         self.assertListEqual(obs.paths[0].aligned((seq1, seq2)), [
@@ -275,7 +311,7 @@ class PairAlignTests(unittest.TestCase):
         """Align sentences of words."""
         seq1 = "lorem ipsum sit amet tempor".split()
         seq2 = "ipsum sit dolor sed eiusmod".split()
-        obs = pair_align(seq1, seq2, local=True)
+        obs = pair_align(seq1, seq2, mode="local")
         self.assertEqual(obs.score, 2)
         self.assertEqual(obs.paths[0].to_cigar(), "2M")
         npt.assert_array_equal(obs.paths[0].starts, [1, 0])
@@ -284,7 +320,7 @@ class PairAlignTests(unittest.TestCase):
         """Align arrays of numbers."""
         seq1 = np.array([2, 13, 52, 11, 27, 8, 33, 77, 25])
         seq2 = np.array([95, 11, 27, 8, 62, 33, 77, 25, 5])
-        obs = pair_align(seq1, seq2, local=True)
+        obs = pair_align(seq1, seq2, mode="local")
         self.assertEqual(obs.score, 4)
         self.assertEqual(obs.paths[0].to_cigar(), "3M1I3M")
         npt.assert_array_equal(obs.paths[0].starts, [3, 1])
@@ -311,6 +347,7 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg)
 
     def test_pair_align_trick_1(self):
+        """Tricky case 1."""
         # This example is from Altschul & Erickson, Bull Math Biol, 1986 (Fig. 2),
         # which showed that the original Gotoh algorithm (1982) could fail in some
         # situations. Specifically, if the traceback process does not jump between
@@ -342,6 +379,7 @@ class PairAlignTests(unittest.TestCase):
             [-4, -3, -5, -5, -7, -8]]))
 
     def test_pair_align_trick_2(self):
+        """Tricky case 2."""
         # This example is from Flouri et al., BioRxiv, 2015, which stated that the
         # original Gotoh algorithm (1982) had a mistake in the initialization of the
         # matrices. Specifically, the insertion and deletion matrices should be
@@ -353,12 +391,13 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
 
     def test_pair_align_edge(self):
-        """Edge cases in alignment."""
+        """Edge cases."""
+        # distinct sequences: global alignment completely misaligned
         obs = pair_align("AAA", "TTT", sub_score=(1, -1), gap_cost=2)
         self.assertEqual(obs.paths[0].to_cigar(), "3I3D")
 
-        # local alignment returns no path or stops
-        obs = pair_align("AAA", "TTT", local=True, sub_score=(1, -1), gap_cost=2)
+        # local alignment returns no path
+        obs = pair_align("AAA", "TTT", mode="local", sub_score=(1, -1), gap_cost=2)
         self.assertEqual(len(obs.paths), 0)
 
         # single character, identical
@@ -366,7 +405,7 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
         obs = pair_align("A", "A", free_ends=False)
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
-        obs = pair_align("A", "A", local=True)
+        obs = pair_align("A", "A", mode="local")
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
 
         # single character, different
@@ -374,8 +413,20 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.paths[0].to_cigar(), "1I1D")
         obs = pair_align("A", "T", free_ends=False)
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
-        obs = pair_align("A", "T", local=True)
+        obs = pair_align("A", "T", mode="local")
         self.assertEqual(len(obs.paths), 0)  # no path returned
+
+    def test_pair_align_error(self):
+        """Errors."""
+        msg = "Sequence 2 has a length of zero."
+        with self.assertRaises(ValueError) as cm:
+            _ = pair_align("ATG", "")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Invalid mode: xyz."
+        with self.assertRaises(ValueError) as cm:
+            _ = pair_align("ACGT", "TCGA", mode="xyz")
+        self.assertEqual(str(cm.exception), msg)
 
     def test_pair_align_real_1(self):
         # 16S rRNA gene sequences of Escherichia coli and Streptococcus pneumoniae
@@ -418,7 +469,7 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(str(msa[1]), "AAACAGGATTAGATACCCTGGTAGTCCACGCCGTA")
 
         # Perform local alignment instead.
-        obs = pair_align(seq515F, seq1, local=True, sub_score=(2, -3),
+        obs = pair_align(seq515F, seq1, mode="local", sub_score=(2, -3),
                          gap_cost=(5, 2), max_paths=10)
         self.assertEqual(obs.score, 28)
         self.assertEqual(len(obs.paths), 1)
@@ -436,17 +487,17 @@ class PairAlignTests(unittest.TestCase):
     def test_alloc_matrices(self):
         # linear
         obs = _alloc_matrices(3, 4, affine=False)
+        self.assertEqual(len(obs), 1)
         self.assertTrue(isinstance(obs[0], np.ndarray))
         self.assertTupleEqual(obs[0].shape, (4, 5))
         self.assertEqual(obs[0].dtype, np.float64)
-        self.assertIsNone(obs[1])
-        self.assertIsNone(obs[2])
 
         # ensure matrix is C-contiguous
         self.assertTrue(obs[0].flags.c_contiguous)
 
         # affine
         obs = _alloc_matrices(3, 4, affine=True)
+        self.assertEqual(len(obs), 3)
         for mat in obs:
             self.assertTupleEqual(mat.shape, (4, 5))
             self.assertEqual(mat.dtype, np.float64)
@@ -458,25 +509,25 @@ class PairAlignTests(unittest.TestCase):
     def test_init_matrices(self):
         # classical global alignment
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(*obs, 0, 2, local=False, free_ends=False)
+        _init_matrices(obs, 0, 2, local=False, free_ends=False)
         npt.assert_array_equal(obs[0][:, 0], [0, -2, -4, -6])
         npt.assert_array_equal(obs[0][0, :], [0, -2, -4, -6, -8])
 
         # local alignment
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(*obs, 0, 2, local=True, free_ends=False)
+        _init_matrices(obs, 0, 2, local=True, free_ends=False)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
 
         # semi-global alignment (free ends)
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(*obs, 0, 2, local=False, free_ends=True)
+        _init_matrices(obs, 0, 2, local=False, free_ends=True)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
 
         # affine and global
         obs = _alloc_matrices(3, 4, affine=True)
-        _init_matrices(*obs, 5, 2, local=False, free_ends=False)
+        _init_matrices(obs, 5, 2, local=False, free_ends=False)
         npt.assert_array_equal(obs[0][:, 0], [0, -7, -9, -11])
         npt.assert_array_equal(obs[0][0, :], [0, -7, -9, -11, -13])
         self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
@@ -484,7 +535,7 @@ class PairAlignTests(unittest.TestCase):
 
         # affine and local
         obs = _alloc_matrices(3, 4, affine=True)
-        _init_matrices(*obs, 5, 2, local=True, free_ends=False)
+        _init_matrices(obs, 5, 2, local=True, free_ends=False)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
         self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
@@ -500,7 +551,7 @@ class PairAlignTests(unittest.TestCase):
 
         # global
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(*obs, 0, 2, local=False, free_ends=False)
+        _init_matrices(obs, 0, 2, local=False, free_ends=False)
         _fill_linear_matrix(obs[0], query, target, 2, local=False)
         exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                         [ -2,   1,  -1,  -3,  -5,  -7],
@@ -511,7 +562,7 @@ class PairAlignTests(unittest.TestCase):
 
         # local
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(*obs, 0, 2, local=True, free_ends=False)
+        _init_matrices(obs, 0, 2, local=True, free_ends=False)
         _fill_linear_matrix(obs[0], query, target, 2, local=True)
         exp = np.array([[0, 0, 0, 0, 0, 0],
                         [0, 1, 1, 0, 0, 0],
@@ -522,7 +573,7 @@ class PairAlignTests(unittest.TestCase):
 
         # semi-global
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(*obs, 0, 2, local=False, free_ends=True)
+        _init_matrices(obs, 0, 2, local=False, free_ends=True)
         _fill_linear_matrix(obs[0], query, target, 2, local=False)
         exp = np.array([[ 0,  0,  0,  0,  0,  0],
                         [ 0,  1,  1, -1, -1, -1],
@@ -541,7 +592,7 @@ class PairAlignTests(unittest.TestCase):
 
         # global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(*obs, 3, 1, local=False, free_ends=False)
+        _init_matrices(obs, 3, 1, local=False, free_ends=False)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0, -4, -5, -6, -7, -8],
                          [-4,  1, -3, -4, -5, -6],
@@ -562,7 +613,7 @@ class PairAlignTests(unittest.TestCase):
 
         # local
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(*obs, 3, 1, local=True, free_ends=False)
+        _init_matrices(obs, 3, 1, local=True, free_ends=False)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=True)
         exp0 = np.array([[0, 0, 0, 0, 0, 0],
                          [0, 1, 1, 0, 0, 0],
@@ -583,7 +634,7 @@ class PairAlignTests(unittest.TestCase):
 
         # semi-global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(*obs, 3, 1, local=False, free_ends=True)
+        _init_matrices(obs, 3, 1, local=False, free_ends=True)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0,  0,  0,  0,  0,  0],
                          [ 0,  1,  1, -1, -1, -1],
@@ -865,6 +916,16 @@ class PairAlignTests(unittest.TestCase):
         obs = _traceback_one(4, 4, matrices, 3., 1., local=True)
         self.assertEqual(obs.to_cigar(), "3M")
 
+        # floating-point tolerance
+        scomat = np.array([[0, -2], [-2, -4]], dtype=float)
+        args = (1, 1, (scomat,), 0., 2., False)
+        self.assertEqual(_traceback_one(*args).to_cigar(), "1I1D")
+        scomat[0, 1] = -2.0000000001
+        self.assertEqual(_traceback_one(*args).to_cigar(), "1I1D")
+        scomat[0, 1] = -2.0001
+        self.assertEqual(_traceback_one(*args).to_cigar(), "1D1I")
+        self.assertEqual(_traceback_one(*args, eps=1.0e-2).to_cigar(), "1I1D")
+
     def test_traceback_all(self):
         # linear, global, one stop, unique path
         seq1 = DNA("ACTCA")
@@ -1008,6 +1069,35 @@ class PairAlignTests(unittest.TestCase):
         obs = _traceback_all([[4, 4]], matrices, submat[seq1], seq2, 3, 1, local=True)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "3M")
+
+        # floating-point tolerance
+        seq1 = DNA("A")
+        seq2 = DNA("A")
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
+        scomat = np.array([[1, 5], [5, 3]], dtype=float)
+        args = ([[1, 1]], (scomat,), submat[seq1], seq2, 0., 2., False)
+        obs = _traceback_all(*args)
+        self.assertEqual(len(obs), 3)
+        for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
+            self.assertEqual(obs[i].to_cigar(), exp)
+
+        scomat[0, 1] -= 0.00000001
+        scomat[1, 0] += 0.00000001
+        obs = _traceback_all(*args)
+        self.assertEqual(len(obs), 3)
+        for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
+            self.assertEqual(obs[i].to_cigar(), exp)
+
+        scomat[0, 1] -= 0.0001
+        scomat[1, 0] += 0.0001
+        obs = _traceback_all(*args)
+        self.assertEqual(len(obs), 1)
+        self.assertEqual(obs[0].to_cigar(), "1M")
+
+        obs = _traceback_all(*args, eps=1.0e-2)
+        self.assertEqual(len(obs), 3)
+        for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
+            self.assertEqual(obs[i].to_cigar(), exp)
 
 
 if __name__ == "__main__":
