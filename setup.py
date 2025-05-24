@@ -13,8 +13,6 @@ The full license is in the file LICENSE.txt, distributed with this software.
 
 import os
 import platform
-import re
-import ast
 import sys
 import sysconfig
 import subprocess
@@ -108,42 +106,6 @@ if gcc:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-# version parsing from __init__ pulled from Flask's setup.py
-# https://github.com/mitsuhiko/flask/blob/master/setup.py
-_version_re = re.compile(r"__version__\s+=\s+(.*)")
-
-with open("skbio/__init__.py", "rb") as f:
-    hit = _version_re.search(f.read().decode("utf-8")).group(1)
-    version = str(ast.literal_eval(hit))
-
-classes = """
-    Development Status :: 4 - Beta
-    License :: OSI Approved :: BSD License
-    Topic :: Software Development :: Libraries
-    Topic :: Scientific/Engineering
-    Topic :: Scientific/Engineering :: Bio-Informatics
-    Programming Language :: Python :: 3
-    Programming Language :: Python :: 3 :: Only
-    Programming Language :: Python :: 3.9
-    Programming Language :: Python :: 3.10
-    Programming Language :: Python :: 3.11
-    Programming Language :: Python :: 3.12
-    Programming Language :: Python :: 3.13
-    Operating System :: Unix
-    Operating System :: POSIX
-    Operating System :: MacOS :: MacOS X
-    Operating System :: Microsoft :: Windows
-"""
-classifiers = [s.strip() for s in classes.split("\n") if s]
-
-description = (
-    "Data structures, algorithms and educational " "resources for bioinformatics."
-)
-
-with open("README.rst") as f:
-    long_description = f.read()
-
-
 # Compile SSW module
 ssw_extra_compile_args = ["-I."]
 
@@ -224,43 +186,7 @@ extensions = cythonize(extensions, force=True)
 
 
 setup(
-    name="scikit-bio",
-    version=version,
-    license="BSD-3-Clause",
-    description=description,
-    long_description=long_description,
-    author="scikit-bio development team",
-    author_email="qiyunzhu@gmail.com",
-    maintainer="scikit-bio development team",
-    maintainer_email="qiyunzhu@gmail.com",
-    url="https://scikit.bio",
     packages=find_packages(),
     ext_modules=extensions,
     include_dirs=[np.get_include()],
-    tests_require=["pytest", "coverage"],
-    install_requires=[
-        "requests >= 2.20.0",
-        "decorator >= 3.4.2",
-        "natsort >= 4.0.3",
-        "numpy >= 1.17.0",
-        "pandas >= 1.5.0",
-        "scipy >= 1.9.0",
-        "h5py >= 3.6.0",
-        "biom-format >= 2.1.16",
-        "statsmodels >= 0.14.0",
-        "patsy >= 0.5.0",
-    ],
-    classifiers=classifiers,
-    package_data={
-        "skbio.alignment.tests": ["data/*"],
-        "skbio.diversity.alpha.tests": ["data/qiime-191-tt/*"],
-        "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
-        "skbio.io.tests": ["data/*"],
-        "skbio.io.format.tests": ["data/*"],
-        "skbio.stats.tests": ["data/*"],
-        "skbio.stats.distance.tests": ["data/*"],
-        "skbio.stats.ordination.tests": ["data/*"],
-        "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
-        "skbio.embedding.tests": ["data/*"],
-    },
 )
