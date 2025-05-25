@@ -19,8 +19,26 @@ Alignment structure
    PairAlignPath
 
 
-Alignment algorithms
+Alignment algorithm (new)
+-------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    pair_align
+
+
+Alignment statistics
 --------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    align_score
+
+
+Alignment algorithms (deprecated)
+---------------------------------
 
 .. rubric:: Optimized (i.e., production-ready) algorithms
 
@@ -42,24 +60,6 @@ Alignment algorithms
    local_pairwise_align_nucleotide
    local_pairwise_align_protein
    local_pairwise_align
-
-
-Alignment statistics
---------------------
-
-.. autosummary::
-   :toctree: generated/
-
-    align_score
-
-
-Alignment algorithms (new)
---------------------------
-
-.. autosummary::
-   :toctree: generated/
-
-    pair_align
 
 
 Deprecated functionality

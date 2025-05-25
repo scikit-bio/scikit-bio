@@ -43,62 +43,96 @@ def pair_align(
 ) -> PairAlignResult:
     r"""Perform pairwise alignment of two sequences.
 
+    A versatile, efficient and generalizable function for pairwise alignment using
+    dynamic programming. It supports:
+
+    * Global, local and semi-global alignments (with all four ends customizable).
+    * Nucleotide, protein, and un-grammared sequences, plain strings (ASCII and
+      Unicode), words/tokens, and numbers.
+    * Match/mismatch scores or substitution matrix.
+    * Linear and affine gap penalties.
+    * Integer, decimal and infinite scores.
+    * Returning one, multiple or all optimal alignment paths.
+
     .. versionadded:: 0.6.4
 
     Parameters
     ----------
-    seq1 : GrammaredSequence or str
+    seq1 : :class:`~skbio.sequence.Sequence`, str, or sequence of scalar
         The first sequence to be aligned.
 
-    seq2 : GrammaredSequence or str
+    seq2 : :class:`~skbio.sequence.Sequence`, str, or sequence of scalar
         The second sequence to be aligned.
 
     mode : {'global', 'local'}, optional
-        Mode of alignment. Options are "global" (default) and "local".
+        Mode of alignment. Options are:
+
+        - "global" (default): Global alignment, as in the Needleman-Wunsch algorithm.
+          The two sequences are aligned end-to-end. See also ``free_ends`` below.
+        - "local": Local alignment, as in the Smith-Waterman algorithm. It identifies
+          similar regions between two sequences.
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
-        Score of a substitution. May be two numbers (match, mismatch), a substitution
-        matrix, or its name. See :func:`align_score` for instructions. Default is
-        (1.0, -1.0).
+        Score of a substitution. May be one of the following:
+
+        - Tuple of two numbers: Match score (same symbol) and mismatch score (different
+          symbols).
+        - :class:`~skbio.sequence.SubstitutionMatrix`: A matrix of substitution scores
+          between all symbols in the alphabet.
+        - String: Name of the substitution matrix that can be recognized by
+          ``SubstitutionMatrix.by_name``, such as "NUC.4.4" or "BLOSUM62".
+
+        Default is (1.0, -1.0) (match, mismatch).
 
     gap_cost : float or tuple of (float, float), optional
-        Penalty of a gap. May be one (linear) or two numbers (affine). See
-        :func:`align_score` for instructions and rationales. Default is -2.0.
+        Penalty of a gap. Values are usually positive, representing subtractions from
+        the alignment score. May be one of the following:
+
+        - One number: Linear gap penalty. Each gap position is penalized by this value
+          (*g*). A contiguous gap of length *k* has a total penalty of *g* * *k*.
+        - Tuple of two numbers: Affine gap penalty. The two numbers (*o*, *e*)
+          represent gap opening penalty and gap extension penalty, respectively. A
+          contiguous gap of length *k* has a total penalty of *o* + *e* * *k*.
+          See also notes below.
+
+        Default is 2.0 (linear gap penalty).
 
     free_ends : bool, 2-tuple of bool, or 4-tuple of bool, optional
         Whether gaps at the sequence terminals are free from penalization. Relevant
         when ``mode`` is "global". Alignment with free ends is known as semi-global
         (or "glocal") alignment. Values can be:
 
-        - False (default): Penalize all terminal gaps using the same method defined by
-          ``gap_cost``. This behavior is the true global alignment.
-
-        - True (default): Do not penalize any terminal gap. This behavior is referred
-          to as "overlap", as it identifies the maximum overlap between two sequences.
-
-        - Tuple of two Booleans: Whether terminal gaps of ``seq1`` and ``seq2`` are
-          are free, respectively. For example, (True, False) is the typical semi-global
-          alignment, useful for mapping a short ``seq1`` inside a long ``seq2``.
-
-        - Tuple of four Booleans: Whether leading gap of ``seq1``, trailing gap of
-          ``seq1``, leading gap of ``seq2``, and trailing gap of ``seq2`` are free,
-          respectively.
+        - False: Penalize terminal gaps using the same method defined by ``gap_cost``.
+          This behavior is the true global alignment.
+        - True (default): Do not penalize any terminal gap. This behavior is known
+          as "overlap", as it identifies the maximum overlap between the two sequences.
+        - Tuple of two Booleans: Whether terminal gaps of seq1 and seq2 are free,
+          respectively. For example, (True, False) is the typical semi-global
+          alignment, useful for aligning a short seq1 within a long seq2.
+        - Tuple of four Booleans: Whether leading gap of seq1, trailing gap of seq1,
+          leading gap of seq2, and trailing gap of seq2 are free, respectively. For
+          example, (False, True, True, False) joins the tail of seq1 with the head
+          of seq2.
 
     max_paths : int, optional
         Maximum number of alignment paths to return. Default is 1, which is generated
         through a performance-oriented traceback algorithm. A value larger than 1 will
         trigger a less efficient traceback algorithm to enumerate up to this number of
         paths. Setting it as None will return all paths. However, be cautious that the
-        total number of paths may be extremely large and could stress the system.
-        Setting it as 0 will disable traceback and return no path.
+        total number of paths may be extremely large. Setting it as 0 will disable
+        traceback and return no path (None).
+
+        - Note: When ``mode="local"``, it is possible that there is no path with a
+          score > 0. In this case, an empty list will be returned.
 
     atol : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
         to ensure floating-point arithmetic safety when ``sub_score`` or ``gap_cost``
         involve decimal numbers. Default is 1e-5. Setting it to 0 or None will slightly
         increase performance, and is usually safe when there are only integers (e.g.,
-        2.0), half integers (e.g., 2.5) or numbers with exact binary representation
-        involved. Note: relative tolerance is not involved in the calculation.
+        2.0) or half integers (e.g., 2.5) involved.
+
+        - Note: relative tolerance is not involved in the calculation.
 
     keep_matrices : bool, optional
         Whether to include the alignment matrix(ces) in the returned value. They are
@@ -110,13 +144,17 @@ def pair_align(
     score : float
         Optimal alignment score.
 
-    paths : list of :class:`~skbio.alignment.PairAlignPath`
+    paths : list of :class:`~skbio.alignment.PairAlignPath`, optional
         Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
         paths are optimal and share the same alignment score.
 
-    matrices : tuple of ndarray of shape (m + 1, n + 1)
+    matrices : tuple of ndarray of shape (m + 1, n + 1), optional
         Alignment matrices generated during the computation (if ``keep_matrices`` is
-        True).
+        True). *m* and *n* are the lengths of seq1 and seq2, respectively.
+
+        - For linear gap penalty, one main matrix will be returned.
+        - For affine gap penalty, the main matrix, plus an insertion matrix (gap in
+          seq1) and a deletion matrix (gap in seq2) will be returned.
 
     See Also
     --------
@@ -130,6 +168,86 @@ def pair_align(
     global alignment, or the Smith-Waterman algorithm [2]_ for local alignment. These
     two algorithms use linear gap penalty. When affine gap penalty is specified, the
     underlying method is the Gotoh algorithm [3]_, with later modifications [4]_.
+
+    **Parameters**
+
+    The default parameters ``sub_score=(1, -1), gap_cost=2`` is a simple scoring scheme
+    that quickly captures sequence similarity. However, in bioinformatics applications,
+    one always wants to replace them with more realistic parameters according to the
+    specific task. For your reference, below are the default parameters of some common
+    bioinformatics programs:
+
+    - NCBI MegaBLAST (nucleotide): ``sub_score=(1, -2), gap_cost=2.5``
+    - NCBI BLASTN (nucleotide): ``sub_score=(2, -3), gap_cost=(5, 2)``
+    - NCBI BLASTP (protein): ``sub_score="BLOSUM62", gap_cost=(11, 1)``
+    - EMBOSS Needle/Water (protein): ``sub_score="BLOSUM62", gap_cost=(9.5, 0.5)``
+      (for nucleotide, replace ``sub_score`` with ``"NUC.4.4"``)
+    - EBI FASTA (protein): ``sub_score="BLOSUM50", gap_cost=(8, 2)``
+
+    The flexibility of these parameters, especially the support for infinity, enables
+    some common tasks in text analysis:
+
+    - Edit (Levenshtein) distance: ``sub_score=(0, -1), gap_cost=1``
+    - Longest common subsequence (LCS):
+      ``mode="local", sub_score=(1, -np.inf), gap_cost=0``
+    - Longest common substring:
+      ``mode="local", sub_score=(1, -np.inf), gap_cost=np.inf``
+
+    **Input sequences**
+
+    The format of input sequences is flexible. The function is most efficient when they
+    are subclasses of :class:`~skbio.sequence.GrammaredSequence`, such as ``DNA`` and
+    ``Protein``, or any user-customized class. They have a finite alphabet, and permit
+    auto-replacing degenerate codes with wildcard (such as nucleotides to "N" and amino
+    acids to "X"), as long as the substitution matrix has the wildcard character.
+
+    For non-grammared sequences, such as plain strings, bytes, and integer arrays, the
+    the function will attempt to encode them into ASCII codes (*n* = 128), which permit
+    efficient indexing. If ASCII encoding is not possible (for example lists of words,
+    large or negative integers, or floats), unique symbols will be extracted from the
+    sequences and indexed.
+
+    This function does not discriminate between seq1 and seq2. Nevertheless, aligning a
+    shorter seq1 (often referred to as "query") against a longer seq2 (often referred to
+    as "target" or "reference") is usually more efficient than the other way around.
+
+    **Affine gap penalty**
+
+    Under the affine gap penalty mode, the penalty of a contiguous gap of length
+    :math:`k` is calculated as:
+
+    .. math::
+
+       G(k) = o + e \times k \tag{1}
+
+    where :math:`o` is the gap opening penalty and :math:`e` is the gap extension
+    penalty.
+
+    It should be noted that, discrepancy exists among literature and implementations
+    regarding whether gap extension penalty should apply to the first position of a
+    gap. scikit-bio's equation is consistent with multiple common alignment tools,
+    such as BLAST [5]_, Minimap2, SeqAn3, and WFA2-lib.
+
+    Meanwhile, multiple other tools, such as EMBOSS, parasail, Biopython and Biotite,
+    use the following equation instead:
+
+    .. math::
+
+       G(k) = o + e \times (k - 1) \tag{2}
+
+    Therefore, if you intend to reproduce the behavior of a software tool of the
+    latter category using scikit-bio, you will need to subtract :math:`e` from
+    :math:`o` when adopting its parameters. For example, EMBOSS' default parameters
+    ``o=10, e=0.5`` will become ``o=9.5, e=0.5`` in scikit-bio. Vice versa.
+
+    .. versionchanged:: 0.6.4
+        Previous alignment algorithms in scikit-bio used Eq. 2. These functions were
+        deprecated in 0.5.x and will be removed in 0.6.x. Future functions will
+        uniformly use Eq. 1.
+
+    Related: A simple but less common scenario is constant gap penalty, where a
+    contiguous gap has a constant penalty :math:`g` regardless of its length. This can
+    be specified as ``gap_cost=(g, 0)``.
 
     References
     ----------
@@ -146,6 +264,8 @@ def pair_align(
     .. [4] Altschul, S. F., & Erickson, B. W. (1986). Optimal sequence alignment using
        affine gap costs. Bull Math Biol, 48, 603-616.
 
+    .. [5] https://www.ncbi.nlm.nih.gov/books/NBK62051/
+
     """
     # This function implements the classic dynamic programming method for pairwise
     # sequence alignment. While the most time-consuming step (matrix filling) is done
@@ -157,8 +277,8 @@ def pair_align(
 
     # Prepare sequences and substitution matrix.
     # If `sub_score` consists of match/mismatch scores, an identity matrix will be
-    # created or retrieved from cache. The two sequences are converted into indices
-    # in the substitution matrix, which facilitate lookup and memory locality.
+    # created or retrieved from cache. The two sequences are converted into indices in
+    # the substitution matrix, which facilitate lookup and memory locality.
     (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), sub_score)
 
     # Profile seq1 (query), which will be aligned against seq2 (target).
@@ -267,16 +387,17 @@ def _prep_free_ends(free_ends):
         lead1, trail1, lead2, trail2 = free_ends
         return lead1, trail1, lead2, trail2
 
+    else:
+        raise ValueError("`free_ends` must be one, two or four Booleans.")
+
 
 def _alloc_matrices(m, n, affine, dtype=float):
     """Allocate alignment matrix(ces).
 
     Parameters
     ----------
-    m : int
-        Length of sequence 1.
-    n : int
-        Length of sequence 2.
+    m, n: int
+        Lengths of sequences 1 and 2, respectively.
     affine : bool
         Affine (True) or linear (False) gap penalty.
     dtype : type, optional
@@ -521,10 +642,8 @@ def _encode_path(path, i, j):
     ----------
     path : ndarray of uint8 of shape (n_positions,)
         Dense alignment path.
-    i : int
-        Start position in sequence 1.
-    j : int
-        Start position in sequence 2.
+    i, j : int
+        Start positions in sequences 1 and 2, respectively.
 
     Returns
     -------
@@ -607,10 +726,8 @@ def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
 
     Parameters
     ----------
-    i : int
-        Stop position in sequence 1.
-    j : int
-        Stop position in sequence 2.
+    i, j : int
+        Stop positions in sequences 1 and 2, respectively.
     matrices : tuple of ndarray of float of shape (m + 1, n + 1)
         Alignment matrices.
     gap_open : float
@@ -727,10 +844,8 @@ def _linear_moves(i, j, scomat, query, target, gap, eps):
 
     Parameters
     ----------
-    i : int
-        Current row index in the matrix.
-    j : int
-        Current column index in the matrix.
+    i, j : int
+        Current row and column indices in the matrix, respectively.
     scomat : ndarray of shape (m + 1, n + 1)
         Main matrix.
     query : ndarray of float of shape (m, n_symbols)
@@ -766,10 +881,8 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_
 
     Parameters
     ----------
-    i : int
-        Current row index in the matrix.
-    j : int
-        Current column index in the matrix.
+    i, j : int
+        Current row and column indices in the matrix, respectively.
     mat : int
         Current matrix index.
     scomat : ndarray of shape (m + 1, n + 1)

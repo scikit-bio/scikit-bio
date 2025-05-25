@@ -26,7 +26,14 @@ _idmats = {}
 _ididxs = {}
 
 
-def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-"):
+def encode_sequences(
+    seqs,
+    sub_score,
+    aligned=False,
+    dtype=float,
+    gap_chars="-",
+    not_empty=True,
+):
     """Encode sequences for alignment operations.
 
     This function transforms sequences into indices in a substitution matrix to
@@ -43,10 +50,12 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
         Whether sequences are aligned. If True, sequences will be checked for equal
         length and gaps will be encoded into a Boolean mask.
     dtype : type, optional
-        Default floating-point data type (np.float32 or np.float64) to use if it
-        cannot be automatically inferred.
+        Default floating-point data type (np.float32 or np.float64) to use if it cannot
+        be automatically inferred.
     gap_chars : str, optional
-        Characters that should be treated as gaps in aligned sequences.
+        Characters that should be treated as gaps in aligned sequences. Default is "-".
+    not_empty : bool, optional
+        If True (default), each sequence must not be empty.
 
     Returns
     -------
@@ -168,9 +177,10 @@ def encode_sequences(seqs, sub_score, aligned=False, dtype=float, gap_chars="-")
             key = uniq.size
         seqs, submat = prepare_identity_matrix(seqs, key, match, mismatch)
 
-    for i, seq in enumerate(seqs):
-        if seq.size == 0:
-            raise ValueError(f"Sequence {i + 1} has a length of zero.")
+    if not_empty:
+        for i, seq in enumerate(seqs):
+            if seq.size == 0:
+                raise ValueError(f"Sequence {i + 1} has a length of zero.")
 
     return seqs, submat, gaps
 
@@ -238,7 +248,7 @@ def encode_alignment(aln, sub_score, gap_chars="-"):
     # 2. Input is aligned sequences (with gaps inside them).
     else:
         seqs, submat, gaps = encode_sequences(
-            aln, sub_score, aligned=True, gap_chars=gap_chars
+            aln, sub_score, aligned=True, gap_chars=gap_chars, not_empty=False
         )
         seqs = np.vstack(seqs)
         if seqs.shape[1] == 0:

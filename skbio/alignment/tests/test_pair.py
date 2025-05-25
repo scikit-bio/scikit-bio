@@ -22,6 +22,7 @@ from skbio.alignment._utils import encode_sequences
 
 from skbio.alignment._pair import (
     pair_align,
+    _prep_free_ends,
     _alloc_matrices,
     _init_matrices,
     _one_stop,
@@ -390,6 +391,69 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.score, -5)
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
 
+    def test_pair_align_semi(self):
+        """Customization of end gap policy."""
+        # case 1: search longer seq1 for shorter seq1
+        seq1 = "TCGA"
+        seq2 = "ATCGAG"
+
+        # true global: end gaps penalized
+        obs = pair_align(seq1, seq2, free_ends=False)
+        self.assertEqual(obs.score, 0)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I4M1I")
+
+        # ends completely free
+        obs = pair_align(seq1, seq2, free_ends=True)
+        self.assertEqual(obs.score, 4)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I4M1I")
+
+        # seq1 free (typical semi-global)
+        obs = pair_align(seq1, seq2, free_ends=(True, False))
+        self.assertEqual(obs.score, 4)
+
+        # seq2 free (not helpful here)
+        obs = pair_align(seq1, seq2, free_ends=(False, True))
+        self.assertEqual(obs.score, 0)
+
+        # case 2: seq1 can align to either side of seq2
+        seq1 = "ACGT"
+        seq2 = "ACGTACGT"
+        obs = pair_align(seq1, seq2, free_ends=True, max_paths=None)
+        self.assertEqual(obs.score, 4)
+        self.assertEqual(len(obs.paths), 2)
+        self.assertEqual(obs.paths[0].to_cigar(), "4M4I")
+        self.assertEqual(obs.paths[1].to_cigar(), "4I4M")
+
+        # force align to left
+        obs = pair_align(seq1, seq2, free_ends=(False, True, False, False), max_paths=None)
+        self.assertEqual(obs.score, 4)
+        path, = obs.paths
+        self.assertEqual(path.to_cigar(), "4M4I")
+
+        # force align to right
+        obs = pair_align(seq1, seq2, free_ends=(True, False, False, False), max_paths=None)
+        self.assertEqual(obs.score, 4)
+        path, = obs.paths
+        self.assertEqual(path.to_cigar(), "4I4M")
+
+        # case 3: seqs overlap on either side
+        seq1 = "GAATTC"
+        seq2 = "TTCGAA"
+        obs = pair_align(seq1, seq2, free_ends=True, max_paths=None)
+        path1, path2 = obs.paths
+        self.assertEqual(path1.to_cigar(), "3I3M3D")
+        self.assertEqual(path2.to_cigar(), "3D3M3I")
+
+        # seq1 left connects seq2 right
+        obs = pair_align(seq1, seq2, free_ends=(True, False, False, True), max_paths=None)
+        path, = obs.paths
+        self.assertEqual(path.to_cigar(), "3I3M3D")
+
+        # seq1 right connects seq2 left
+        obs = pair_align(seq1, seq2, free_ends=(False, True, True, False), max_paths=None)
+        path, = obs.paths
+        self.assertEqual(path.to_cigar(), "3D3M3I")
+
     def test_pair_align_edge(self):
         """Edge cases."""
         # distinct sequences: global alignment completely misaligned
@@ -483,6 +547,20 @@ class PairAlignTests(unittest.TestCase):
         # Perform semi-global alignment using BLASTP's default parameters.
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 440)
+
+    def test_prep_free_ends(self):
+        obs = _prep_free_ends(True)
+        self.assertTupleEqual(obs, (True, True, True, True))
+        obs = _prep_free_ends(False)
+        self.assertTupleEqual(obs, (False, False, False, False))
+        obs = _prep_free_ends((True, False))
+        self.assertTupleEqual(obs, (True, True, False, False))
+        obs = _prep_free_ends((True, False, False, True))
+        self.assertTupleEqual(obs, (True, False, False, True))
+        msg = "`free_ends` must be one, two or four Booleans."
+        with self.assertRaises(ValueError) as cm:
+            _ = _prep_free_ends((True, True, True))
+        self.assertEqual(str(cm.exception), msg)
 
     def test_alloc_matrices(self):
         # linear
