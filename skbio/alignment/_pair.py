@@ -36,7 +36,7 @@ def pair_align(
     mode: str = "global",
     sub_score: Union[Tuple[float, float], "SubstitutionMatrix"] = (1.0, -1.0),
     gap_cost: Union[float, Tuple[float, float]] = 2.0,
-    free_ends: bool = True,
+    free_ends: Union[bool, Tuple[bool, bool], Tuple[bool, bool, bool, bool]] = True,
     max_paths: Optional[int] = 1,
     atol: float = 1e-5,
     keep_matrices: bool = False,
@@ -65,9 +65,24 @@ def pair_align(
         Penalty of a gap. May be one (linear) or two numbers (affine). See
         :func:`align_score` for instructions and rationales. Default is -2.0.
 
-    free_ends : bool, optional
-        Whether gaps at the sequence terminals are free from penalization. See
-        :func:`align_score` for instructions. Default is True.
+    free_ends : bool, 2-tuple of bool, or 4-tuple of bool, optional
+        Whether gaps at the sequence terminals are free from penalization. Relevant
+        when ``mode`` is "global". Alignment with free ends is known as semi-global
+        (or "glocal") alignment. Values can be:
+
+        - False (default): Penalize all terminal gaps using the same method defined by
+          ``gap_cost``. This behavior is the true global alignment.
+
+        - True (default): Do not penalize any terminal gap. This behavior is referred
+          to as "overlap", as it identifies the maximum overlap between two sequences.
+
+        - Tuple of two Booleans: Whether terminal gaps of ``seq1`` and ``seq2`` are
+          are free, respectively. For example, (True, False) is the typical semi-global
+          alignment, useful for mapping a short ``seq1`` inside a long ``seq2``.
+
+        - Tuple of four Booleans: Whether leading gap of ``seq1``, trailing gap of
+          ``seq1``, leading gap of ``seq2``, and trailing gap of ``seq2`` are free,
+          respectively.
 
     max_paths : int, optional
         Maximum number of alignment paths to return. Default is 1, which is generated
@@ -136,12 +151,9 @@ def pair_align(
     # sequence alignment. While the most time-consuming step (matrix filling) is done
     # in Cython, this function retains as many steps as possible in Python, thereby
     # "outsourcing" computation and optimization to the upstream library (NumPy).
-    if mode == "global":
-        local = False
-    elif mode == "local":
-        local = True
-    else:
-        raise ValueError(f"Invalid mode: {mode}.")
+
+    local = _prep_mode(mode)
+    lead1, trail1, lead2, trail2 = _prep_free_ends(free_ends)
 
     # Prepare sequences and substitution matrix.
     # If `sub_score` consists of match/mismatch scores, an identity matrix will be
@@ -168,7 +180,7 @@ def pair_align(
     matrices = _alloc_matrices(query.shape[0], target.size, affine, dtype=dtype)
 
     # Initialize alignment matrices.
-    _init_matrices(matrices, gap_open, gap_extend, local, free_ends)
+    _init_matrices(matrices, gap_open, gap_extend, local, lead1, lead2)
 
     # Fill alignment matrices (quadratic; compute-intensive).
     if affine:
@@ -178,9 +190,9 @@ def pair_align(
 
     # Get optimal alignment score and corresponding stop(s).
     if max_paths == 1:
-        score, stops = _one_stop(matrices[0], local, free_ends)
+        score, stops = _one_stop(matrices[0], local, trail1, trail2)
     else:
-        score, stops = _all_stops(matrices[0], local, free_ends, atol)
+        score, stops = _all_stops(matrices[0], local, trail1, trail2)
 
     if max_paths == 0:  # traceback is disabled
         paths = None
@@ -203,6 +215,57 @@ def pair_align(
         _fill_nan(matrices)
 
     return PairAlignResult(float(score), paths, matrices)
+
+
+def _prep_mode(mode):
+    """Prepare pairwise alignment mode.
+
+    Parameters
+    ----------
+    mode : str
+        Alignment mode.
+
+    Returns
+    -------
+    bool
+        Whether alignment mode is local.
+
+    """
+    if mode == "global":
+        return False
+    elif mode == "local":
+        return True
+    else:
+        raise ValueError(f"Invalid mode: {mode}.")
+
+
+def _prep_free_ends(free_ends):
+    """Prepare end gap policy for pairwise alignment.
+
+    Parameters
+    ----------
+    free_ends : bool, (bool, bool), or (bool, bool, bool, bool)
+        Free ends policy.
+
+    Returns
+    -------
+    lead1, trail1, lead2, trail2 : bool
+        Whether leading and trailing gaps of seq1 and seq2 are free.
+
+    """
+    # all four ends
+    if np.isscalar(free_ends):
+        return free_ends, free_ends, free_ends, free_ends
+
+    # both ends for seq1 and seq2
+    elif (n := len(free_ends)) == 2:
+        free1, free2 = free_ends
+        return free1, free1, free2, free2
+
+    # leading and trailing ends for seq1 and seq2
+    elif n == 4:
+        lead1, trail1, lead2, trail2 = free_ends
+        return lead1, trail1, lead2, trail2
 
 
 def _alloc_matrices(m, n, affine, dtype=float):
@@ -239,12 +302,12 @@ def _alloc_matrices(m, n, affine, dtype=float):
     return scomat, insmat, delmat
 
 
-def _init_matrices(matrices, gap_open, gap_extend, local, free_ends):
+def _init_matrices(matrices, gap_open, gap_extend, local, lead1, lead2):
     """Initialize alignment matrix(ces) by populating first column and row.
 
     Parameters
     ----------
-    matrices : list of ndarray of shape (m + 1, n + 1)
+    matrices : tuple of ndarray of shape (m + 1, n + 1)
         Alignment matrices.
     gap_open : float
         Gap opening penalty.
@@ -252,8 +315,8 @@ def _init_matrices(matrices, gap_open, gap_extend, local, free_ends):
         Gap extension penalty.
     local : bool
         Local or global alignment.
-    free_ends : bool
-        If end gaps are free from penalty.
+    lead1, lead2 : bool
+        Whether leading gaps of sequence 1 and 2 are free.
 
     Notes
     -----
@@ -274,7 +337,7 @@ def _init_matrices(matrices, gap_open, gap_extend, local, free_ends):
 
     # initialize main scoring matrix
     scomat[0, 0] = 0
-    if local or free_ends:
+    if local:
         scomat[1:m1, 0] = 0
         scomat[0, 1:n1] = 0
     else:
@@ -282,8 +345,8 @@ def _init_matrices(matrices, gap_open, gap_extend, local, free_ends):
         series *= -gap_extend
         if gap_open:
             series -= gap_open
-        scomat[1:m1, 0] = series[: m1 - 1]
-        scomat[0, 1:n1] = series[: n1 - 1]
+        scomat[1:m1, 0] = 0 if lead2 else series[: m1 - 1]
+        scomat[0, 1:n1] = 0 if lead1 else series[: n1 - 1]
 
     # initialize insertion and deletion matrices
     if gap_open:
@@ -303,6 +366,8 @@ def _fill_nan(matrices):
     These are not useful during alignment, but can make things less confusing for
     diagnostic or educational purposes.
 
+    This function supports arbitrary number of affine pieces.
+
     """
     n = len(matrices)
     # odd numbers are insertion matrices
@@ -313,17 +378,17 @@ def _fill_nan(matrices):
         matrices[i][:, 0] = np.nan
 
 
-def _one_stop(scomat, local, free_ends):
+def _one_stop(scomat, local, trail1, trail2):
     """Locate one stop with optimal alignment score.
 
     Parameters
     ----------
-    scomat : ndarray of shape (m, n)
+    scomat : ndarray of shape (m + 1, n + 1)
         Main matrix.
     local : bool
         Local or global alignment.
-    free_ends : bool
-        If end gaps are free from penalty.
+    trail1, trail2 : bool
+        Whether trailing gaps of sequence 1 and 2 are free.
 
     Returns
     -------
@@ -344,14 +409,23 @@ def _one_stop(scomat, local, free_ends):
     if local:
         i, j = np.unravel_index(scomat.argmax(), scomat.shape)
 
-    # semi-global alignment: maximum cell in the last column and row
-    elif free_ends:
+    # semi-global alignment
+    # free trailing gaps for both: maximum cell in the last column and row
+    elif trail1 and trail2:
         i = scomat[:m, n].argmax()  # last column (ends with deletion)
         j = scomat[m, :].argmax()  # last row (ends with insertion)
         if scomat[i, n] >= scomat[m, j]:
             j = n
         else:
             i = m
+
+    # free trailing gaps in seq1: maximum in last row
+    elif trail1:
+        i, j = m, scomat[m, :].argmax()
+
+    # free trailing gaps in seq2: maximum in last column
+    elif trail2:
+        i, j = scomat[:, n].argmax(), n
 
     # global alignment: bottom right cell
     else:
@@ -360,17 +434,17 @@ def _one_stop(scomat, local, free_ends):
     return scomat[i, j], np.array([[i, j]])
 
 
-def _all_stops(scomat, local, free_ends, eps=1e-5):
+def _all_stops(scomat, local, trail1, trail2, eps=1e-5):
     """Locate all stops with optimal alignment score.
 
     Parameters
     ----------
-    scomat : ndarray of shape (m, n)
+    scomat : ndarray of shape (m + 1, n + 1)
         Main matrix.
     local : bool
         Local or global alignment.
-    free_ends : bool
-        If end gaps are free from penalty.
+    trail1, trail2 : bool
+        Whether trailing gaps of sequence 1 and 2 are free.
     eps : float, optional
         Absolute tolerance. Default is 1e-5.
 
@@ -391,30 +465,49 @@ def _all_stops(scomat, local, free_ends, eps=1e-5):
 
     # local alignment
     if local:
-        max_ = scomat.max()
+        best = scomat.max()
         if eps:
-            tests = np.isclose(scomat, max_, rtol=0, atol=eps)
+            test = np.isclose(scomat, best, rtol=0, atol=eps)
         else:
-            tests = scomat == max_
-        return max_, np.argwhere(tests)
+            test = scomat == best
+        return best, np.argwhere(test)
 
-    # semi-global alignment
-    elif free_ends:
-        max_ = np.max([scomat[:, n].max(), scomat[m, :].max()])
+    # semi-global alignment, free trailing gaps for both
+    elif trail1 and trail2:
+        col_n, row_m = scomat[:m, n], scomat[m, :]
+        best = np.max([col_n.max(), row_m.max()])
         if eps:
-            test1 = np.isclose(scomat[:m, n], max_, rtol=0, atol=eps)
-            test2 = np.isclose(scomat[m, :], max_, rtol=0, atol=eps)
+            test1 = np.isclose(col_n, best, rtol=0, atol=eps)
+            test2 = np.isclose(row_m, best, rtol=0, atol=eps)
         else:
-            test1 = scomat[:m, n] == max_
-            test2 = scomat[m, :] == max_
+            test1 = col_n == best
+            test2 = row_m == best
         ii = np.argwhere(test1)
         jj = np.argwhere(test2)
-        return max_, np.vstack(
+        return best, np.vstack(
             (
                 np.column_stack((ii, np.full(ii.shape[0], n))),
                 np.column_stack((np.full(jj.shape[0], m), jj)),
             )
         )
+
+    # free trailing gaps in seq1
+    elif trail1:
+        row_m = scomat[m, :]
+        best = row_m.max()
+        jj = np.argwhere(
+            np.isclose(row_m, best, rtol=0, atol=eps) if eps else row_m == best
+        )
+        return best, np.column_stack((np.full(jj.shape[0], m), jj))
+
+    # free trailing gaps in seq2
+    elif trail2:
+        col_n = scomat[:, n]
+        best = col_n.max()
+        ii = np.argwhere(
+            np.isclose(col_n, best, rtol=0, atol=eps) if eps else col_n == best
+        )
+        return best, np.column_stack((ii, np.full(ii.shape[0], n)))
 
     # global alignment
     else:
@@ -457,14 +550,10 @@ def _trailing_gaps(path, pos, i, j, m, n):
         Dense alignment path.
     pos : int
         Current start position of the path.
-    i : int
-        Current row index in the matrix.
-    j : int
-        Current column index in the matrix.
-    m : int
-        Last row index in the matrix (length of sequence 1).
-    n : int
-        Last column index in the matrix (length of sequence 2).
+    i, j: int
+        Current row and column indices in the matrix.
+    m, n : int
+        Last row and column indices in the matrix (lengths of seq1 and seq2).
 
     Returns
     -------
@@ -492,10 +581,8 @@ def _leading_gaps(path, pos, i, j):
         Dense alignment path.
     pos : int
         Current start position of the path.
-    i : int
-        Current row index in the matrix.
-    j : int
-        Current column index in the matrix.
+    i, j: int
+        Current row and column indices in the matrix.
 
     Returns
     -------
@@ -644,7 +731,7 @@ def _linear_moves(i, j, scomat, query, target, gap, eps):
         Current row index in the matrix.
     j : int
         Current column index in the matrix.
-    scomat : ndarray of shape (m, n)
+    scomat : ndarray of shape (m + 1, n + 1)
         Main matrix.
     query : ndarray of float of shape (m, n_symbols)
         Query profile.
@@ -683,13 +770,13 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_
         Current row index in the matrix.
     j : int
         Current column index in the matrix.
-    mat : in
+    mat : int
         Current matrix index.
-    scomat : ndarray of shape (m, n)
+    scomat : ndarray of shape (m + 1, n + 1)
         Main matrix.
-    insmat : ndarray of shape (m, n)
+    insmat : ndarray of shape (m + 1, n + 1)
         Insertion matrix.
-    delmat : ndarray of shape (m, n)
+    delmat : ndarray of shape (m + 1, n + 1)
         Deletion matrix.
     query : ndarray of float of shape (m, n_symbols)
         Query profile.

@@ -507,27 +507,39 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs[0].dtype, np.float32)
 
     def test_init_matrices(self):
-        # classical global alignment
+        # classic global alignment
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(obs, 0, 2, local=False, free_ends=False)
+        _init_matrices(obs, 0, 2, local=False, lead1=False, lead2=False)
         npt.assert_array_equal(obs[0][:, 0], [0, -2, -4, -6])
         npt.assert_array_equal(obs[0][0, :], [0, -2, -4, -6, -8])
 
         # local alignment
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(obs, 0, 2, local=True, free_ends=False)
+        _init_matrices(obs, 0, 2, local=True, lead1=False, lead2=False)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
 
         # semi-global alignment (free ends)
         obs = _alloc_matrices(3, 4, affine=False)
-        _init_matrices(obs, 0, 2, local=False, free_ends=True)
+        _init_matrices(obs, 0, 2, local=False, lead1=True, lead2=True)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
 
+        # free end for seq1
+        obs = _alloc_matrices(3, 4, affine=False)
+        _init_matrices(obs, 0, 2, local=False, lead1=True, lead2=False)
+        npt.assert_array_equal(obs[0][:, 0], [0, -2, -4, -6])
+        self.assertTrue((obs[0][0, :] == 0).all())
+
+        # free end for seq2
+        obs = _alloc_matrices(3, 4, affine=False)
+        _init_matrices(obs, 0, 2, local=False, lead1=False, lead2=True)
+        self.assertTrue((obs[0][:, 0] == 0).all())
+        npt.assert_array_equal(obs[0][0, :], [0, -2, -4, -6, -8])
+
         # affine and global
         obs = _alloc_matrices(3, 4, affine=True)
-        _init_matrices(obs, 5, 2, local=False, free_ends=False)
+        _init_matrices(obs, 5, 2, local=False, lead1=False, lead2=False)
         npt.assert_array_equal(obs[0][:, 0], [0, -7, -9, -11])
         npt.assert_array_equal(obs[0][0, :], [0, -7, -9, -11, -13])
         self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
@@ -535,7 +547,7 @@ class PairAlignTests(unittest.TestCase):
 
         # affine and local
         obs = _alloc_matrices(3, 4, affine=True)
-        _init_matrices(obs, 5, 2, local=True, free_ends=False)
+        _init_matrices(obs, 5, 2, local=True, lead1=False, lead2=False)
         self.assertTrue((obs[0][:, 0] == 0).all())
         self.assertTrue((obs[0][0, :] == 0).all())
         self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
@@ -551,7 +563,7 @@ class PairAlignTests(unittest.TestCase):
 
         # global
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=False, free_ends=False)
+        _init_matrices(obs, 0, 2, local=False, lead1=False, lead2=False)
         _fill_linear_matrix(obs[0], query, target, 2, local=False)
         exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                         [ -2,   1,  -1,  -3,  -5,  -7],
@@ -562,7 +574,7 @@ class PairAlignTests(unittest.TestCase):
 
         # local
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=True, free_ends=False)
+        _init_matrices(obs, 0, 2, local=True, lead1=False, lead2=False)
         _fill_linear_matrix(obs[0], query, target, 2, local=True)
         exp = np.array([[0, 0, 0, 0, 0, 0],
                         [0, 1, 1, 0, 0, 0],
@@ -573,7 +585,7 @@ class PairAlignTests(unittest.TestCase):
 
         # semi-global
         obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=False, free_ends=True)
+        _init_matrices(obs, 0, 2, local=False, lead1=True, lead2=True)
         _fill_linear_matrix(obs[0], query, target, 2, local=False)
         exp = np.array([[ 0,  0,  0,  0,  0,  0],
                         [ 0,  1,  1, -1, -1, -1],
@@ -592,7 +604,7 @@ class PairAlignTests(unittest.TestCase):
 
         # global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(obs, 3, 1, local=False, free_ends=False)
+        _init_matrices(obs, 3, 1, local=False, lead1=False, lead2=False)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0, -4, -5, -6, -7, -8],
                          [-4,  1, -3, -4, -5, -6],
@@ -613,7 +625,7 @@ class PairAlignTests(unittest.TestCase):
 
         # local
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(obs, 3, 1, local=True, free_ends=False)
+        _init_matrices(obs, 3, 1, local=True, lead1=False, lead2=False)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=True)
         exp0 = np.array([[0, 0, 0, 0, 0, 0],
                          [0, 1, 1, 0, 0, 0],
@@ -634,7 +646,7 @@ class PairAlignTests(unittest.TestCase):
 
         # semi-global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
-        _init_matrices(obs, 3, 1, local=False, free_ends=True)
+        _init_matrices(obs, 3, 1, local=False, lead1=True, lead2=True)
         _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0,  0,  0,  0,  0,  0],
                          [ 0,  1,  1, -1, -1, -1],
@@ -661,7 +673,7 @@ class PairAlignTests(unittest.TestCase):
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _one_stop(scomat, local=False, free_ends=False)
+        obs = _one_stop(scomat, local=False, trail1=False, trail2=False)
         self.assertEqual(obs[0], -2)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
@@ -671,7 +683,7 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 2, 0, 0],
                            [0, 0, 0, 0, 1, 1],
                            [0, 0, 0, 0, 1, 0]])
-        obs = _one_stop(scomat, local=True, free_ends=False)
+        obs = _one_stop(scomat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
@@ -681,7 +693,7 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _one_stop(scomat, local=True, free_ends=False)
+        obs = _one_stop(scomat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
@@ -691,13 +703,23 @@ class PairAlignTests(unittest.TestCase):
                            [ 0, -1, -2,  2, -2, -2, -2],
                            [ 0, -1, -2, -2,  3, -1, -1],
                            [ 0,  1, -2, -3, -1,  4,  0]])
-        obs = _one_stop(scomat, local=False, free_ends=True)
+        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
+        # bottom row only
+        obs = _one_stop(scomat, local=False, trail1=True, trail2=False)
+        self.assertEqual(obs[0], 4)
+        npt.assert_array_equal(obs[1], [[4, 5]])
+
+        # right-most column only
+        obs = _one_stop(scomat, local=False, trail1=False, trail2=True)
+        self.assertEqual(obs[0], 0)
+        npt.assert_array_equal(obs[1], [[0, 6]])
+
         # transpose and maximum in right-most column
         scomat = np.ascontiguousarray(scomat.T)
-        obs = _one_stop(scomat, local=False, free_ends=True)
+        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[5, 4]])
 
@@ -707,7 +729,7 @@ class PairAlignTests(unittest.TestCase):
                            [ 0, -1,  0,  2,  0, -2],
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
-        obs = _one_stop(scomat, local=False, free_ends=True)
+        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5]])
 
@@ -719,7 +741,7 @@ class PairAlignTests(unittest.TestCase):
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _all_stops(scomat, local=False, free_ends=False)
+        obs = _all_stops(scomat, local=False, trail1=False, trail2=False)
         self.assertEqual(obs[0], -2)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
@@ -729,7 +751,7 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 2, 0, 0],
                            [0, 0, 0, 0, 1, 1],
                            [0, 0, 0, 0, 1, 0]])
-        obs = _all_stops(scomat, local=True, free_ends=False)
+        obs = _all_stops(scomat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
@@ -739,12 +761,12 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _all_stops(scomat, local=True, free_ends=False)
+        obs = _all_stops(scomat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3], [4, 2]])
 
         # exact comparison
-        obs = _all_stops(scomat, local=True, free_ends=False, eps=None)
+        obs = _all_stops(scomat, local=True, trail1=False, trail2=False, eps=None)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3], [4, 2]])
 
@@ -754,7 +776,7 @@ class PairAlignTests(unittest.TestCase):
                            [ 0, -1, -2,  2, -2, -2, -2],
                            [ 0, -1, -2, -2,  3, -1, -1],
                            [ 0,  1, -2, -3, -1,  4,  0]])
-        obs = _all_stops(scomat, local=False, free_ends=True)
+        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
@@ -764,12 +786,22 @@ class PairAlignTests(unittest.TestCase):
                            [ 0, -1,  0,  2,  0, -2],
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
-        obs = _all_stops(scomat, local=False, free_ends=True)
+        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5], [4, 4]])
 
+        # bottom row only
+        obs = _all_stops(scomat, local=False, trail1=True, trail2=False)
+        self.assertEqual(obs[0], 1)
+        npt.assert_array_equal(obs[1], [[4, 4]])
+
+        # right-most column only
+        obs = _all_stops(scomat, local=False, trail1=False, trail2=True)
+        self.assertEqual(obs[0], 1)
+        npt.assert_array_equal(obs[1], [[3, 5]])
+
         # exact comparison
-        obs = _all_stops(scomat, local=False, free_ends=True, eps=None)
+        obs = _all_stops(scomat, local=False, trail1=True, trail2=True, eps=None)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5], [4, 4]])
 
@@ -778,7 +810,7 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 0, 1],
                            [0, 0, 0, 0, 1],
                            [0, 0, 1, 1, 1]])
-        obs = _all_stops(scomat, local=False, free_ends=True)
+        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[1, 4], [2, 4], [3, 2], [3, 3], [3, 4]])
 
