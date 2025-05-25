@@ -80,6 +80,13 @@ class TestAlignPath(unittest.TestCase):
         self.assertEqual(obs.position, 20)
         self.assertTupleEqual(obs, (3, 20))
 
+    def test_stops(self):
+        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                        states=[0, 2, 0, 6, 0, 1, 0],
+                        starts=[1, 2, 3]).stops()
+        exp = np.array([18, 19, 22])
+        npt.assert_array_equal(obs, exp)
+
     def test_to_bits(self):
         path = AlignPath(lengths=[2, 2, 2, 1, 1],
                          states=[0, 2, 0, 6, 0],
@@ -114,74 +121,6 @@ class TestAlignPath(unittest.TestCase):
             exp = path.to_bits(expand=expand)
             self.assertEqual(exp.size, 0)
             self.assertTupleEqual(exp.shape, (3, 0))
-
-    def test_stops(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[1, 2, 3]).stops()
-        exp = np.array([18, 19, 22])
-        npt.assert_array_equal(obs, exp)
-
-    def test_aligned(self):
-        # globally aligned DNA sequences
-        path = AlignPath(
-            lengths=[3, 2, 5, 1, 4, 3, 2],
-            states=[0, 2, 0, 6, 0, 1, 0],
-            starts=[0, 0, 0],
-        )
-        seqs = [DNA("CGGTCGTAACGCGTACA"),
-                DNA("CAGGTAAGCATACCTCA"),
-                DNA("CGGTCGTCACTGTACACTA")]
-        obs = path.aligned(seqs)
-        exp = ["CGGTCGTAACGCGTA---CA",
-               "CAG--GTAAG-CATACCTCA",
-               "CGGTCGTCAC-TGTACACTA"]
-        self.assertListEqual(obs, exp)
-
-        # custom gap character
-        obs = path.aligned(seqs, gap_char=".")
-        exp = ["CGGTCGTAACGCGTA...CA",
-               "CAG..GTAAG.CATACCTCA",
-               "CGGTCGTCAC.TGTACACTA"]
-        self.assertListEqual(obs, exp)
-
-        # raw strings with flanking regions
-        path.starts[0] = 5
-        path.starts[1] = 1
-        seqs = ["XXXXXCGGTCGTAACGCGTACAXXXXXXX",
-                "XCAGGTAAGCATACCTCA",
-                "CGGTCGTCACTGTACACTAXX"]
-        obs = path.aligned(seqs, flanking=3)
-        exp = ["XXXCGGTCGTAACGCGTA---CAXXX",
-               "  XCAG--GTAAG-CATACCTCA   ",
-               "   CGGTCGTCAC-TGTACACTAXX "]
-        self.assertListEqual(obs, exp)
-
-        # locally aligned protein sequences
-        path = AlignPath(
-            lengths=[5, 1, 6],
-            states=[0, 2, 0],
-            starts=[0, 8],
-        )
-        seqs = [Protein("RQPLTSSERIDK"),
-                Protein("FTEDTTPNRPVYTTSQVGGLITHVLWEIVEMRKELCNGNSD")]
-        obs = path.aligned(seqs, flanking=(5, 10))
-        exp = ["     RQPLTSSERIDK          ",
-               "DTTPNRPVYT-TSQVGGLITHVLWEIV"]
-        self.assertListEqual(obs, exp)
-
-        msg = "There are more sequences than in the path."
-        seqs.append(Protein("AKGDATSDKMLFTSPDKTEELIK"))
-        with self.assertRaises(ValueError) as cm:
-            _ = path.aligned(seqs, flanking=(5, 10))
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = "Sequence 1 is shorter than in the path."
-        seqs = [Protein("RQPLTSSERIDK"),
-                Protein("FTEDTTPNRPVY")]
-        with self.assertRaises(ValueError) as cm:
-            _ = path.aligned(seqs, flanking=(5, 10))
-        self.assertEqual(str(cm.exception), msg)
 
     def test_from_bits(self):
         # test 1D base case, less than 8 sequences
@@ -241,16 +180,132 @@ class TestAlignPath(unittest.TestCase):
             self.path1._to_matrices(seqs, gap_code=45)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_from_aligned(self):
+        aln = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACACTA"]
+        obs = AlignPath.from_aligned(aln)
+        exp = AlignPath(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        aln = list(map(DNA, aln))
+        obs = AlignPath.from_aligned(aln)
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        msa = TabularMSA(aln)
+        obs = AlignPath.from_aligned(msa)
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        obs = AlignPath.from_aligned(aln, starts=[1, 2, 3])
+        exp._starts[:] = [1, 2, 3]
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        # custom gap character
+        aln = ["AAX", "AXA", "XAA"]
+        obs = AlignPath.from_aligned(aln, gap_chars="X")
+        npt.assert_array_equal(obs.lengths, [1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [4, 2, 1])
+
+        # multiple gap characters
+        aln = ["AAX", "AYA", "ZAA"]
+        obs = AlignPath.from_aligned(aln, gap_chars="XYZ")
+        npt.assert_array_equal(obs.lengths, [1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [4, 2, 1])
+
+        # non-string sequences
+        aln = [[1, 2, 3, 0], [1, 0, 4, 5], [2, 0, 2, 3]]
+        obs = AlignPath.from_aligned(aln, gap_chars={0})
+        npt.assert_array_equal(obs.lengths, [1, 1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [0, 6, 0, 1])
+
+        msg = "Sequence lengths do not match."
+        with self.assertRaises(ValueError) as cm:
+            _ = AlignPath.from_aligned(["A", "AA", "AAA"])
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_to_aligned(self):
+        # globally aligned DNA sequences
+        path = AlignPath(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        seqs = [DNA("CGGTCGTAACGCGTACA"),
+                DNA("CAGGTAAGCATACCTCA"),
+                DNA("CGGTCGTCACTGTACACTA")]
+        obs = path.to_aligned(seqs)
+        exp = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # custom gap character
+        obs = path.to_aligned(seqs, gap_char=".")
+        exp = ["CGGTCGTAACGCGTA...CA",
+               "CAG..GTAAG.CATACCTCA",
+               "CGGTCGTCAC.TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # raw strings with flanking regions
+        path.starts[0] = 5
+        path.starts[1] = 1
+        seqs = ["XXXXXCGGTCGTAACGCGTACAXXXXXXX",
+                "XCAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACTAXX"]
+        obs = path.to_aligned(seqs, flanking=3)
+        exp = ["XXXCGGTCGTAACGCGTA---CAXXX",
+               "  XCAG--GTAAG-CATACCTCA   ",
+               "   CGGTCGTCAC-TGTACACTAXX "]
+        self.assertListEqual(obs, exp)
+
+        # locally aligned protein sequences
+        path = AlignPath(
+            lengths=[5, 1, 6],
+            states=[0, 2, 0],
+            starts=[0, 8],
+        )
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVYTTSQVGGLITHVLWEIVEMRKELCNGNSD")]
+        obs = path.to_aligned(seqs, flanking=(5, 10))
+        exp = ["     RQPLTSSERIDK          ",
+               "DTTPNRPVYT-TSQVGGLITHVLWEIV"]
+        self.assertListEqual(obs, exp)
+
+        msg = "There are more sequences than in the path."
+        seqs.append(Protein("AKGDATSDKMLFTSPDKTEELIK"))
+        with self.assertRaises(ValueError) as cm:
+            _ = path.to_aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence 1 is shorter than in the path."
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVY")]
+        with self.assertRaises(ValueError) as cm:
+            _ = path.to_aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
+
     def test_from_tabular(self):
         msa = ('CGGTCGTAACGCGTA---CA',
                'CAG--GTAAG-CATACCTCA',
                'CGGTCGTCAC-TGTACACTA')
         tabular = TabularMSA([DNA(x) for x in msa])
-        path = AlignPath.from_tabular(tabular)
+        obs = AlignPath.from_tabular(tabular)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
-        npt.assert_array_equal(lengths, path.lengths)
-        npt.assert_array_equal(states, np.squeeze(path.states))
+        npt.assert_array_equal(obs.lengths, lengths)
+        npt.assert_array_equal(np.squeeze(obs.states), states)
+        npt.assert_array_equal(obs.starts, [0, 0, 0])
+
+        obs = AlignPath.from_tabular(tabular, starts=[1, 2, 3])
+        npt.assert_array_equal(obs.starts, [1, 2, 3])
 
     def test_to_indices(self):
         # test gap = -1

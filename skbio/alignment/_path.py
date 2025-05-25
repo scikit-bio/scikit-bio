@@ -12,7 +12,6 @@ import numpy as np
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
-from skbio.sequence import Sequence
 
 
 _Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
@@ -193,6 +192,26 @@ class AlignPath(SkbioObject):
             self._states, axis=0, count=self._shape[0], bitorder="little"
         )
 
+    def stops(self):
+        r"""Calculate the stop positions of sequences in the alignment.
+
+        Returns
+        -------
+        ndarray of int of shape (n_sequences,)
+            Stop position (0-based) of each sequence in the alignment.
+
+        Notes
+        -----
+        The stop position of a sequence is the position immediately after the aligned
+        region. Therefore, for any sequence, the aligned region can be extracted with:
+        ``seq[start:stop]``.
+
+        Unlike :attr:`starts`, which are stored in the alignment path, ``stops`` are
+        calculated from the path when this method is called.
+
+        """
+        return self._starts + (self._lengths * (1 - self._to_bits())).sum(axis=1)
+
     def to_bits(self, expand=True):
         r"""Unpack the alignment path into an array of bits.
 
@@ -243,27 +262,58 @@ class AlignPath(SkbioObject):
         bits = self._to_bits()
         return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
-    def stops(self):
-        r"""Calculate the stop positions of sequences in the alignment.
+    @classonlymethod
+    def from_bits(cls, bits, starts=None):
+        r"""Create an alignment path from a bit array (0 - character, 1 - gap).
+
+        Parameters
+        ----------
+        bits : array_like of (0, 1) of shape (n_sequences, n_positions)
+            Array of zeros (character) and ones (gap) which represent the alignment.
+        starts : array_like of int of shape (n_sequences,), optional
+            Start position (0-based) of each sequence in the alignment. If omitted,
+            will set as zeros.
 
         Returns
         -------
-        ndarray of int of shape (n_sequences,)
-            Stop position (0-based) of each sequence in the alignment.
+        AlignPath
+            The alignment path created from the given bit array.
 
-        Notes
-        -----
-        The stop position of a sequence is the position immediately after the aligned
-        region. Therefore, for any sequence, the aligned region can be extracted with:
-        ``seq[start:stop]``.
-
-        Unlike :attr:`starts`, which are stored in the alignment path, ``stops`` are
-        calculated from the path when this method is called.
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.alignment import AlignPath
+        >>> bit_arr = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+        ...                     [0, 0, 1, 1, 0, 0, 1, 0],
+        ...                     [0, 0, 0, 0, 0, 0, 1, 0]])
+        >>> path = AlignPath.from_bits(bit_arr)
+        >>> path
+        AlignPath
+        Shape(sequence=3, position=8)
+        lengths: [2 2 2 1 1]
+        states: [0 2 0 6 0]
 
         """
-        return self._starts + (self._lengths * (1 - self._to_bits())).sum(axis=1)
+        # pack bits into integers
+        ints = np.packbits(bits, axis=0, bitorder="little")
 
-    def aligned(self, seqs, gap_char="-", flanking=None):
+        # get indices where segments start
+        idx = np.append(0, np.where((ints[:, :-1] != ints[:, 1:]).any(axis=0))[0] + 1)
+
+        # get lengths of segments
+        lens = np.append(idx[1:] - idx[:-1], ints.shape[1] - idx[-1])
+
+        # keep indices of segment starts
+        ints = ints[:, idx]
+
+        # set start positions as zeros if not specified
+        if starts is None:
+            starts = np.zeros(bits.shape[0], dtype=int)
+
+        # return per-segment lengths and states
+        return cls(lens, ints, starts)
+
+    def to_aligned(self, seqs, gap_char="-", flanking=None):
         r"""Extract aligned regions from original sequences.
 
         .. versionadded:: 0.6.4
@@ -296,6 +346,7 @@ class AlignPath(SkbioObject):
 
         See Also
         --------
+        from_aligned
         skbio.TabularMSA.from_path_seqs
 
         Notes
@@ -322,7 +373,7 @@ class AlignPath(SkbioObject):
         ...    DNA('ATTCAGTCGG'),
         ...    DNA('CGTCGTTAA')
         ... ]
-        >>> path.aligned(seqs)
+        >>> path.to_aligned(seqs)
         ['CGTCGTGC',
          'CA--GT-C',
          'CGTCGT-T']
@@ -378,30 +429,44 @@ class AlignPath(SkbioObject):
         return res
 
     @classonlymethod
-    def from_bits(cls, bits, starts=None):
-        r"""Create an alignment path from a bit array (0 - character, 1 - gap).
+    def from_aligned(cls, aln, gap_chars="-", starts=None):
+        r"""Create an alignment path from aligned sequences.
 
         Parameters
         ----------
-        bits : array_like of (0, 1) of shape (n_sequences, n_positions)
-            Array of zeros (character) and ones (gap) which represent the alignment.
-        starts : array_like of int of shape (n_sequences,), optional
-            Start position (0-based) of each sequence in the alignment. If omitted,
-            will set as zeros.
+        aln : iterable of :class:`~skbio.sequence.Sequence`, str or sequence
+            Aligned sequences. Can be skbio sequences, strings or sequences of any
+            scalars.
+        gap_chars : str or container, optional
+            Characters that should be treated as gaps in aligned sequences. Default
+            is "-".
+        starts : array_like of int of shape (2,), optional
+            Start positions of sequences. If omitted, will be all zeros.
 
         Returns
         -------
         AlignPath
-            The alignment path created from the given bit array.
+            The alignment path created from the aligned sequences.
+
+        See Also
+        --------
+        to_aligned
+        from_tabular
+
+        Notes
+        -----
+        This method is more general but less efficient than ``from_tabular``. It works
+        with various sequence formats.
 
         Examples
         --------
-        >>> import numpy as np
         >>> from skbio.alignment import AlignPath
-        >>> bit_arr = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
-        ...                     [0, 0, 1, 1, 0, 0, 1, 0],
-        ...                     [0, 0, 0, 0, 0, 0, 1, 0]])
-        >>> path = AlignPath.from_bits(bit_arr)
+        >>> aln = [
+        ...    'CGTCGTGC',
+        ...    'CA--GT-C',
+        ...    'CGTCGT-T'
+        ... ]
+        >>> path = AlignPath.from_aligned(aln)
         >>> path
         AlignPath
         Shape(sequence=3, position=8)
@@ -409,24 +474,19 @@ class AlignPath(SkbioObject):
         states: [0 2 0 6 0]
 
         """
-        # pack bits into integers
-        ints = np.packbits(bits, axis=0, bitorder="little")
+        from skbio.sequence import Sequence
 
-        # get indices where segments start
-        idx = np.append(0, np.where((ints[:, :-1] != ints[:, 1:]).any(axis=0))[0] + 1)
-
-        # get lengths of segments
-        lens = np.append(idx[1:] - idx[:-1], ints.shape[1] - idx[-1])
-
-        # keep indices of segment starts
-        ints = ints[:, idx]
-
-        # set start positions as zeros if not specified
-        if starts is None:
-            starts = np.zeros(bits.shape[0], dtype=int)
-
-        # return per-segment lengths and states
-        return cls(lens, ints, starts)
+        gaps = []
+        for seq in aln:
+            if isinstance(seq, Sequence):
+                seq = str(seq)
+            row = [x in gap_chars for x in seq]
+            gaps.append(np.array(row, dtype=int))
+        try:
+            gaps = np.vstack(gaps)
+        except ValueError:
+            raise ValueError("Sequence lengths do not match.")
+        return cls.from_bits(gaps, starts=starts)
 
     def _to_matrices(self, seqs, gap_code=45):
         r"""Generate matrices representing the alignment.
@@ -492,27 +552,29 @@ class AlignPath(SkbioObject):
         return chars, gaps, bits, lens
 
     @classonlymethod
-    def from_tabular(cls, msa):
+    def from_tabular(cls, msa, starts=None):
         r"""Create an alignment path from a `TabularMSA` object.
 
         Parameters
         ----------
         msa : TabularMSA
             TabularMSA to be converted into AlignPath object.
+        starts : array_like of int of shape (2,), optional
+            Start positions of sequences. If omitted, will be all zeros.
 
         Returns
         -------
         AlignPath
             The alignment path created from the TabularMSA object.
 
-        Notes
-        -----
-        The returned alignment path will span across the entire tabular MSA. Its start
-        positions will be uniformly zeros.
-
         See Also
         --------
+        from_aligned
         skbio.TabularMSA.from_path_seqs
+
+        Notes
+        -----
+        This method is more efficient and more specific than ``from_aligned``.
 
         """
         # Convert TabularMSA into a 2D array of bytes.
@@ -525,7 +587,7 @@ class AlignPath(SkbioObject):
 
         # Identify gap positions, and convert them into a bit array, then create an
         # alignment path based on it.
-        return cls.from_bits(np.isin(byte_arr, gap_chars))
+        return cls.from_bits(np.isin(byte_arr, gap_chars), starts=starts)
 
     def to_indices(self, gap=-1):
         r"""Generate an array of indices of characters in the original sequences.
@@ -811,8 +873,9 @@ class PairAlignPath(AlignPath):
         '2M5P3D1I'
 
         """
-        cigar = []
+        from skbio.sequence import Sequence
 
+        cigar = []
         states = np.squeeze(self._states)
 
         if seqs is not None:
