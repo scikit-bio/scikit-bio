@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import collections
+from typing import NamedTuple, Optional, Union, Tuple, List, TYPE_CHECKING
 
 import numpy as np
 
@@ -47,14 +48,18 @@ class AlignPath(SkbioObject):
     states : array_like of uint8 of shape (n_segments,) or (n_packs, n_segments)
         Packed bits representing character (0) or gap (1) status per sequence per
         segment in the alignment.
-    starts : array_like of int of shape (n_sequences,)
-        Start position (0-based) of each sequence in the alignment.
+    ranges : array_like of int of shape (n_sequences, 2), optional
+        Start and stop positions of each sequence in the alignment.
+    starts : array_like of int of shape (n_sequences,), optional
+        Start position of each sequence in the alignment.
+    stops : array_like of int of shape (n_sequences,), optional
+        Stop position of each sequence in the alignment.
 
     See Also
     --------
     PairAlignPath
-    skbio.sequence.Sequence
     skbio.alignment.TabularMSA
+    skbio.sequence.Sequence
 
     Notes
     -----
@@ -64,10 +69,11 @@ class AlignPath(SkbioObject):
     consistent gap status. The states vector contains the packed bits of gap (1) and
     and character (0) status for each position in the alignment.
 
-    This data structure is calculated by performing run-length encoding (RLE) [1]_ on
-    the alignment, considering each segment with consistent gap status to be a unit in
-    the encoding. It resembles the CIGAR string (see :meth:`PairAlignPath.to_cigar`),
-    but is generalized to an arbitrary number of sequences.
+    This data structure is calculated by performing
+    :wiki:`run-length encoding <Run-length_encoding>` (RLE) on the alignment,
+    considering each segment with consistent gap status to be a unit in the encoding.
+    This resembles the CIGAR string (see :meth:`PairAlignPath.to_cigar`), and is
+    generalized to an arbitrary number of sequences.
 
     An ``AlignPath`` object is detached from the original or aligned sequences and is
     highly memory efficient. The more similar the sequences are (i.e., the fewer gaps),
@@ -78,9 +84,16 @@ class AlignPath(SkbioObject):
     between various formats such as aligned sequences, indices (Biotite), and
     coordinates (Biopython).
 
-    References
-    ----------
-    .. [1] https://en.wikipedia.org/wiki/Run-length_encoding
+    In addition to alignment operations, an ``AlignPath`` object also stores the ranges
+    of the aligned region in the original sequences. This facilitates extraction of
+    aligned sequences. The start and stop coordinates are 0-based and half-open,
+    consistent with Python indexing, and compatible with the
+    :wiki:`BED format <BED_(file_format)>`. Therefore, the aligned part of a sequence
+    can be extracted with ``seq[start:stop]``.
+
+    The ranges can be defined by supplying ``starts``, ``stops`` or ``ranges``. With
+    either of the first two, the program will calculate the full ranges. For the last
+    one, it will NOT validate the correctness of the values but simply take them.
 
     Examples
     --------
@@ -110,15 +123,46 @@ class AlignPath(SkbioObject):
 
     >>> path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
     ...                  states=[0, 2, 0, 6, 0, 1, 0],
-    ...                  starts=[0, 0, 0])
+    ...                  starts=[5, 1, 0])
 
-    The parameter ``starts`` defines the starting positions of the alignment in each
-    sequence.
+    The parameter ``starts`` defines the start positions of the aligned region of each
+    sequence. The program will automatically calculate the stop positions.
+
+    >>> path.starts
+    array([5, 1, 0])
+
+    >>> path.stops
+    array([22, 18, 19])
+
+    >>> path.ranges
+    array([[ 5, 22],
+           [ 1, 18],
+           [ 0, 19]])
+
+    With the ranges, one can extract aligned subsequences from the original sequences.
+
+    >>> seqs = [
+    ...     DNA("NNNNNCGGTCGTAACGCGTACANNNNNNN"),
+    ...     DNA("NCAGGTAAGCATACCTCA"),
+    ...     DNA("CGGTCGTCACTGTACACTANN"),
+    ... ]
+    >>> for seq, (start, stop) in zip(seqs, path.ranges):
+    ...     print(seq[start:stop])
+    CGGTCGTAACGCGTACA
+    CAGGTAAGCATACCTCA
+    CGGTCGTCACTGTACACTA
+
+    Alternatively, one can extract the aligned sequences with gap characters:
+
+    >>> print(*path.to_aligned(seqs), sep='\n')
+    CGGTCGTAACGCGTA---CA
+    CAG--GTAAG-CATACCTCA
+    CGGTCGTCAC-TGTACACTA
 
     """
 
-    def __init__(self, lengths, states, starts):
-        self._lengths = np.asarray(lengths, dtype=np.int64)
+    def __init__(self, lengths, states, *, ranges=None, starts=None, stops=None):
+        self._lengths = np.asarray(lengths, dtype=np.intp)
         if self._lengths.ndim > 1:
             raise TypeError("`lengths` must be a 1-D array.")
 
@@ -132,18 +176,36 @@ class AlignPath(SkbioObject):
                 f"and `states` ({self._states.shape[1]}) do not match."
             )
 
+        if ranges is not None:
+            self._ranges = np.asarray(ranges, dtype=np.intp)
+            if self._ranges.ndim != 2 or self._ranges.shape[1] != 2:
+                raise TypeError("`ranges` must be a 2-column array.")
+        else:
+            if starts is not None:
+                starts_ = np.asarray(starts, dtype=np.intp)
+                if starts_.ndim != 1:
+                    raise TypeError("`starts` must be a 1-D array.")
+                self._ranges = np.column_stack(
+                    (starts_, starts_ + self._to_sizes(starts_.shape[0]))
+                )
+            elif stops is not None:
+                stops_ = np.asarray(stops, dtype=np.intp)
+                if stops_.ndim != 1:
+                    raise TypeError("`stops` must be a 1-D array.")
+                self._ranges = np.column_stack(
+                    (stops_ - self._to_sizes(stops_.shape[0]), stops_)
+                )
+            else:
+                raise ValueError("`ranges`, `starts` or `stops` must be provided.")
+
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
-        self._starts = np.asarray(starts, dtype=np.int64)
-        if self._starts.ndim > 1:
-            raise TypeError("`starts` must be a 1-D array.")
-
-        n_sequences = len(self._starts)
+        n_sequences = self._ranges.shape[0]
         if np.ceil(n_sequences / 8) != self._states.shape[0]:
             max_seqs = self._states.shape[0] * 8
             raise ValueError(
-                f"Number of sequences in `starts` ({n_sequences}) and capacity of "
-                f"`states` ({max_seqs - 7} to {max_seqs}) do not match."
+                f"Number of sequences in ranges ({n_sequences}) and capacity of "
+                f"states ({max_seqs - 7} to {max_seqs}) do not match."
             )
 
         # Shape is n_sequences (rows) x n_positions (columns), which is consistent with
@@ -171,56 +233,44 @@ class AlignPath(SkbioObject):
         )
 
     @property
-    def lengths(self):
+    def lengths(self) -> np.ndarray:
         """Array of lengths of segments in alignment path."""
         return self._lengths
 
     @property
-    def states(self):
+    def states(self) -> np.ndarray:
         """Array of gap status of segments in alignment path."""
         return self._states
 
     @property
-    def starts(self):
-        """Array of start positions of sequences in the alignment."""
-        return self._starts
+    def ranges(self) -> np.ndarray:
+        """Array of (start, stop) positions of sequences in the alignment."""
+        return self._ranges
 
     @property
-    def shape(self):
-        """Number of sequences (rows) and positions (columns).
+    def starts(self) -> np.ndarray:
+        """Array of start positions of sequences in the alignment."""
+        return self._ranges[:, 0]
 
-        Notes
-        -----
-        This property is not writeable.
+    @property
+    def stops(self) -> np.ndarray:
+        """Array of stop positions of sequences in the alignment."""
+        return self._ranges[:, 1]
 
-        """
+    @property
+    def shape(self) -> Tuple[int, int]:
+        """Number of sequences (rows) and positions (columns)."""
         return self._shape
 
-    def _to_bits(self):
+    def _to_bits(self, count=None):
         r"""Unpack the alignment path into an array of bits by segment."""
-        return np.unpackbits(
-            self._states, axis=0, count=self._shape[0], bitorder="little"
-        )
+        if count is None:
+            count = self._shape[0]
+        return np.unpackbits(self._states, axis=0, count=count, bitorder="little")
 
-    def stops(self):
-        r"""Calculate the stop positions of sequences in the alignment.
-
-        Returns
-        -------
-        ndarray of int of shape (n_sequences,)
-            Stop position (0-based) of each sequence in the alignment.
-
-        Notes
-        -----
-        The stop position of a sequence is the position immediately after the aligned
-        region. Therefore, for any sequence, the aligned region can be extracted with:
-        ``seq[start:stop]``.
-
-        Unlike :attr:`starts`, which are stored in the alignment path, ``stops`` are
-        calculated from the path when this method is called.
-
-        """
-        return self._starts + (self._lengths * (1 - self._to_bits())).sum(axis=1)
+    def _to_sizes(self, count=None):
+        r"""Calculate the size of aligned region within each sequence."""
+        return (self._lengths * (1 - self._to_bits(count=count))).sum(axis=1)
 
     def to_bits(self, expand=True):
         r"""Unpack the alignment path into an array of bits.
@@ -281,8 +331,8 @@ class AlignPath(SkbioObject):
         bits : array_like of (0, 1) of shape (n_sequences, n_positions)
             Array of zeros (character) and ones (gap) which represent the alignment.
         starts : array_like of int of shape (n_sequences,), optional
-            Start position (0-based) of each sequence in the alignment. If omitted,
-            will set as zeros.
+            Start position of each sequence in the alignment. If omitted, will set as
+            zeros.
 
         Returns
         -------
@@ -321,7 +371,7 @@ class AlignPath(SkbioObject):
             starts = np.zeros(bits.shape[0], dtype=int)
 
         # return per-segment lengths and states
-        return cls(lens, ints, starts)
+        return cls(lens, ints, starts=starts)
 
     def to_aligned(self, seqs, gap_char="-", flanking=None):
         r"""Extract aligned regions from original sequences.
@@ -389,7 +439,7 @@ class AlignPath(SkbioObject):
          'CGTCGT-T']
 
         """
-        starts = self._starts
+        starts = self._ranges[:, 0]
         lens = self._lengths
         bits = self._to_bits()
 
@@ -536,8 +586,8 @@ class AlignPath(SkbioObject):
         lens = self._lengths
 
         # locate aligned region
-        starts = self._starts
-        stops = starts + (lens * (1 - bits)).sum(axis=1)
+        starts = self._ranges[:, 0]
+        stops = self._ranges[:, 1]
 
         # create gap array
         gaps = np.repeat(bits, lens, axis=1).astype(bool)
@@ -642,8 +692,8 @@ class AlignPath(SkbioObject):
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self._lengths, axis=1)
         idx = np.cumsum(pos, axis=1, dtype=int) - 1
-        if self._starts.any():
-            idx += self._starts.reshape(-1, 1)
+        if (starts := self._ranges[:, 0]).any():
+            idx += starts.reshape(-1, 1)
         if gap == "del":
             keep = np.repeat(self._states == 0, self._lengths)
             return idx[:, keep]
@@ -775,7 +825,7 @@ class AlignPath(SkbioObject):
         ints = np.packbits(bits, axis=0, bitorder="little")
         if ints.shape[0] == 1:
             ints = np.squeeze(ints, axis=0)
-        return cls(lens, ints, starts)
+        return cls(lens, ints, starts=starts)
 
 
 class PairAlignPath(AlignPath):
@@ -791,8 +841,12 @@ class PairAlignPath(AlignPath):
     states : array_like of uint8 of shape (n_segments,)
         Bits representing character (0) or gap (1) status per sequence per segment in
         the alignment.
-    starts : array_like of (int, int), optional
-        Start position (0-based) of each sequence in the alignment. Default is (0, 0).
+    ranges : array_like of int of shape (n_sequences, 2), optional
+        Start and stop positions of each sequence in the alignment.
+    starts : array_like of int of shape (n_sequences,), optional
+        Start position of each sequence in the alignment.
+    stops : array_like of int of shape (n_sequences,), optional
+        Stop position of each sequence in the alignment.
 
     See Also
     --------
@@ -800,10 +854,17 @@ class PairAlignPath(AlignPath):
     skbio.sequence.Sequence
     skbio.alignment.TabularMSA
 
+    Notes
+    -----
+    If none of ``ranges``, ``starts`` or ``stops`` are provided, ``starts=[0, 0]`` will
+    be used.
+
     """
 
-    def __init__(self, lengths, states, starts=(0, 0)):
-        super().__init__(lengths, states, starts)
+    def __init__(self, lengths, states, *, ranges=None, starts=None, stops=None):
+        if ranges is None and starts is None and stops is None:
+            starts = [0, 0]
+        super().__init__(lengths, states, ranges=ranges, starts=starts, stops=stops)
         if (self._states[0] > 3).any():
             raise ValueError(
                 "For pairwise alignment, `states` must only contain zeros, ones, "
@@ -909,7 +970,7 @@ class PairAlignPath(AlignPath):
             else:
                 raise TypeError("`seqs` must be strings or Sequence objects.")
 
-            idx1, idx2 = self._starts
+            idx1, idx2 = self._ranges[:, 0]
 
             for length, state in zip(self._lengths, states):
                 if state == 0:
@@ -951,8 +1012,8 @@ class PairAlignPath(AlignPath):
         cigar : str
             CIGAR format string used to build the PairAlignPath.
         starts : array_like of (int, int), optional
-            Start position (0-based) of each sequence in the alignment. If omitted,
-            will set as zeros.
+            Start position of each sequence in the alignment. If omitted, will set as
+            zeros.
 
         Returns
         -------
@@ -992,7 +1053,7 @@ class PairAlignPath(AlignPath):
                 raise ValueError("CIGAR string contains invalid character(s).")
         lengths, gaps = _fix_arrays(lengths=np.array(lengths), gaps=np.array(gaps))
 
-        return cls(lengths, gaps, [0, 0] if starts is None else starts)
+        return cls(lengths, gaps, starts=([0, 0] if starts is None else starts))
 
 
 def _fix_arrays(lengths, gaps):

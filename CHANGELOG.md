@@ -8,11 +8,11 @@
 * Added `AlignPath.from_aligned` to reconstruct a path from aligned sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Added parameter `starts` to `AlignPath.from_tabular` to specify starting positions in the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment. It supports linear and affine gap penalties, match/mismatch or substitution matrix, and optional terminal gap penalty ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-* Added `AlignPath.stops` to calculate the stop (a.k.a., end, right, 3-prime, C-terminus) position of the aligned region within a sequence ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187)).
 
 ### Performance enhancements
 
+* Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function `pair_align` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
@@ -27,6 +27,8 @@
 
 ### Miscellaneous
 
+* Adjusted the string representation of `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Changed `AlignPath.lengths` and `AlignPath.starts`'s dtype from `int64` to `intp`, as these attributes are to facilitate indexing ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Enriched the documentation of `SubstitutionMatrix` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Let `AlignPath.states` be uniformly 2-D, even if there are 8 or less sequences in the alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).

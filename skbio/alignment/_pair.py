@@ -714,7 +714,7 @@ def _encode_path(path, i, j):
     """
     segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
     lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
-    return PairAlignPath(lens, path[segs], [i, j])
+    return PairAlignPath(lens, path[segs], starts=[i, j])
 
 
 def _trailing_gaps(path, pos, i, j, m, n):

@@ -18,24 +18,70 @@ from skbio.sequence import DNA, Protein
 
 class TestAlignPath(unittest.TestCase):
     def setUp(self):
-        # alignment path with 3 sequences, 20 positions and 7 segments
-        self.data1 = dict(
+        self.path1 = AlignPath(
             lengths=[3, 2, 5, 1, 4, 3, 2],
             states=[0, 2, 0, 6, 0, 1, 0],
             starts=[0, 0, 0],
         )
-        self.path1 = AlignPath(**self.data1)
 
     def test_init(self):
-        # test normal case
-        data = self.data1
-        obs = AlignPath(**data)
-        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
-        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        data = dict(
+            lengths = np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.intp),
+            states = np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8),
+            ranges = np.array([[0, 17], [0, 17], [0, 19]], dtype=np.intp),
+            starts = np.array([0, 0, 0], dtype=np.intp),
+            stops = np.array([17, 17, 19], dtype=np.intp),
+        )
+
+        # supply all components as-is (including ranges)
+        obs = AlignPath(data["lengths"], data["states"], ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
         self.assertTupleEqual(obs.shape, (3, 20))
 
-        # test errors
+        # confirm that data are not copied
+        self.assertIs(obs.lengths, data["lengths"])
+        self.assertIs(obs.states, data["states"])
+        self.assertIs(obs.ranges, data["ranges"])
+
+        # confirm that starts and stops are views of ranges
+        self.assertIs(obs.starts.base, data["ranges"])
+        self.assertIs(obs.stops.base, data["ranges"])
+
+        # supply starts instead of ranges, and stops will be calculated
+        obs = AlignPath(data["lengths"], data["states"], starts=data["starts"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+        self.assertIsNot(obs.ranges, data["ranges"])
+
+        # supply stops instead of ranges, and starts will be calculated
+        obs = AlignPath(data["lengths"], data["states"], stops=data["stops"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+        self.assertIsNot(obs.ranges, data["ranges"])
+
+        # supply states as 1-D array, which will be reshaped to 2-D
+        states_1d = np.squeeze(data["states"]).copy()
+        obs = AlignPath(data["lengths"], states_1d, ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+
+        # although states was reshaped, it wasn't copied
+        self.assertIs(obs.states.base, states_1d)
+
+        # supply parameters as plain lists
+        obs = AlignPath(data["lengths"].tolist(),
+                        data["states"].tolist(),
+                        ranges=data["ranges"].tolist())
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+
+    def test_init_error(self):
         msg = "`lengths` must be a 1-D array."
         with self.assertRaises(TypeError) as cm:
             AlignPath(lengths=[[1, 2, 3]], states=[0, 1, 2], starts=[0, 0])
@@ -51,28 +97,54 @@ class TestAlignPath(unittest.TestCase):
             AlignPath(lengths=[1, 2, 3], states=[1, 0, 1, 0], starts=[0, 0])
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "`ranges` must be a 2-column array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], ranges=[1, 2])
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], ranges=[[1, 2, 3]])
+        self.assertEqual(str(cm.exception), msg)
+
         msg = "`starts` must be a 1-D array."
         with self.assertRaises(TypeError) as cm:
             AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[[0], [0]])
         self.assertEqual(str(cm.exception), msg)
 
-        msg = ("Number of sequences in `starts` (10) and capacity of `states` "
+        msg = "`stops` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], stops=[[0], [0]])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ("Number of sequences in ranges (10) and capacity of states "
                "(1 to 8) do not match.")
         with self.assertRaises(ValueError) as cm:
             AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0] * 10)
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "`ranges`, `starts` or `stops` must be provided."
+        with self.assertRaises(ValueError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2])
+        self.assertEqual(str(cm.exception), msg)
+
     def test_lengths(self):
         obs = self.path1.lengths
-        npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.int64))
+        npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2]))
 
     def test_states(self):
         obs = self.path1.states
-        npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8))
+        npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]]))
+
+    def test_ranges(self):
+        obs = self.path1.ranges
+        npt.assert_array_equal(obs, np.array([[0, 17], [0, 17], [0, 19]]))
 
     def test_starts(self):
         obs = self.path1.starts
-        npt.assert_array_equal(obs, np.array([0, 0, 0], dtype=np.int64))
+        npt.assert_array_equal(obs, np.array([0, 0, 0]))
+
+    def test_stops(self):
+        obs = self.path1.stops
+        npt.assert_array_equal(obs, np.array([17, 17, 19]))
 
     def test_shape(self):
         obs = self.path1.shape
@@ -80,12 +152,14 @@ class TestAlignPath(unittest.TestCase):
         self.assertEqual(obs.position, 20)
         self.assertTupleEqual(obs, (3, 20))
 
-    def test_stops(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[1, 2, 3]).stops()
-        exp = np.array([18, 19, 22])
-        npt.assert_array_equal(obs, exp)
+    def test_to_sizes(self):
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                         states=[0, 2, 0, 6, 0, 1, 0],
+                         starts=[1, 2, 3])
+        obs = path._to_sizes()
+        npt.assert_array_equal(obs, [17, 17, 19])
+        obs = path._to_sizes(2)
+        npt.assert_array_equal(obs, [17, 17])
 
     def test_to_bits(self):
         path = AlignPath(lengths=[2, 2, 2, 1, 1],
@@ -204,7 +278,7 @@ class TestAlignPath(unittest.TestCase):
             npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
 
         obs = AlignPath.from_aligned(aln, starts=[1, 2, 3])
-        exp._starts[:] = [1, 2, 3]
+        exp._ranges[:, 0] = [1, 2, 3]
         for x in ("lengths", "states", "starts"):
             npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
 
@@ -483,26 +557,40 @@ class TestAlignPath(unittest.TestCase):
 
 class TestPairAlignPath(unittest.TestCase):
     def setUp(self):
-        # alignment path with 3 sequences, 20 positions and 7 segments
-        self.data1 = dict(
+        # alignment path with 2 sequences, 20 positions and 7 segments
+        self.path1 = PairAlignPath(
             lengths=[3, 2, 5, 1, 4, 3, 2],
             states=[0, 2, 0, 2, 0, 1, 0],
             starts=[0, 0],
         )
-        self.path1 = PairAlignPath(**self.data1)
 
     def test_init(self):
         # normal case
-        data = self.data1
-        obs = PairAlignPath(**data)
-        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
-        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        data = dict(
+            lengths = np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.intp),
+            states = np.array([[0, 2, 0, 2, 0, 1, 0]], dtype=np.uint8),
+            ranges = np.array([[0, 17], [0, 17]], dtype=np.intp),
+            starts = np.array([0, 0], dtype=np.intp),
+            stops = np.array([17, 17], dtype=np.intp),
+        )
+        obs = PairAlignPath(data["lengths"], data["states"], starts=data["starts"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
         self.assertTupleEqual(obs.shape, (2, 20))
+        for key in ("lengths", "states"):
+            self.assertIs(getattr(obs, key), data[key])
+
+        # supply ranges
+        obs = PairAlignPath(data["lengths"], data["states"], ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (2, 20))
+        for key in ("lengths", "states", "ranges"):
+            self.assertIs(getattr(obs, key), data[key])
 
         # omit starts
         obs = PairAlignPath(data["lengths"], data["states"])
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        npt.assert_array_equal(obs.starts, data["starts"])
         self.assertTupleEqual(obs.shape, (2, 20))
 
         # more than two sequences
