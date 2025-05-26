@@ -175,7 +175,7 @@ def encode_sequences(
         else:
             seqs, uniq = _indices_in_observed(seqs)
             key = uniq.size
-        seqs, submat = prepare_identity_matrix(seqs, key, match, mismatch)
+        seqs, submat = prep_identity_matrix(seqs, key, match, mismatch)
 
     if not_empty:
         for i, seq in enumerate(seqs):
@@ -258,7 +258,7 @@ def encode_alignment(aln, sub_score, gap_chars="-"):
     return seqs, submat, bits, lens
 
 
-def prepare_gapcost(gap_cost, dtype=float):
+def prep_gapcost(gap_cost, dtype=float):
     """Prepare gap penalty method for alignment.
 
     Parameters
@@ -291,7 +291,7 @@ def prepare_gapcost(gap_cost, dtype=float):
     return dtype(gap_open), dtype(gap_extend)
 
 
-def prepare_identity_matrix(seqs, key, match, mismatch):
+def prep_identity_matrix(seqs, key, match, mismatch):
     """Prepare an indentity matrix based on match/mismatch scores.
 
     Parameters

@@ -16,8 +16,8 @@ from skbio.alignment import TabularMSA
 from skbio.alignment._utils import (
     encode_sequences,
     encode_alignment,
-    prepare_gapcost,
-    prepare_identity_matrix,
+    prep_gapcost,
+    prep_identity_matrix,
     _check_seqtype,
 )
 
@@ -284,28 +284,28 @@ class UtilsTests(unittest.TestCase):
         for o, e in zip(obs[0], exp):
             npt.assert_array_equal(o, e)
 
-    def test_prepare_gapcost(self):
-        obs = prepare_gapcost(3)
+    def test_prep_gapcost(self):
+        obs = prep_gapcost(3)
         self.assertTupleEqual(obs, (0.0, 3.0))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-        obs = prepare_gapcost((2, 5))
+        obs = prep_gapcost((2, 5))
         self.assertTupleEqual(obs, (2.0, 5.0))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-        obs = prepare_gapcost((0.5, 2.5))
+        obs = prep_gapcost((0.5, 2.5))
         self.assertTupleEqual(obs, (0.5, 2.5))
         self.assertIsInstance(obs[0], float)
         self.assertIsInstance(obs[1], float)
 
-    def testprepare_identity_matrix(self):
+    def testprep_identity_matrix(self):
         # Grammared (DNA) matrix
         seqs = [np.array([71, 65, 65, 84, 67, 67]),
                 np.array([65, 71, 65, 84, 67, 84]),
                 np.array([67, 67, 71, 71])]
-        obs = prepare_identity_matrix(seqs, DNA, 1.0, -1.0)
+        obs = prep_identity_matrix(seqs, DNA, 1.0, -1.0)
         exp = [np.array([6, 2, 2, 13, 4, 4]),
                 np.array([2, 6, 2, 13, 4, 13]),
                 np.array([4, 4, 6, 6])]
@@ -317,7 +317,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # update cached matrix without recreating it
-        obs = prepare_identity_matrix(seqs, DNA, 2.0, -3.0)
+        obs = prep_identity_matrix(seqs, DNA, 2.0, -3.0)
         for o, e in zip(obs[0], exp):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1].shape[0], 17)
@@ -328,7 +328,7 @@ class UtilsTests(unittest.TestCase):
         # ASCII matrix
         seqs = [np.array([9, 4, 4, 2, 3], dtype=np.uint8),
                 np.array([5, 2, 4, 3, 3, 3, 7], dtype=np.uint8)]
-        obs = prepare_identity_matrix(seqs, "ascii", 2.0, -3.0)
+        obs = prep_identity_matrix(seqs, "ascii", 2.0, -3.0)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
             self.assertIs(o.dtype.type, np.intp)
@@ -338,7 +338,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # update cached matrix
-        obs = prepare_identity_matrix(seqs, "ascii", 1.0, -2.5)
+        obs = prep_identity_matrix(seqs, "ascii", 1.0, -2.5)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
         self.assertEqual(obs[1][5, 5], 1.0)
@@ -348,7 +348,7 @@ class UtilsTests(unittest.TestCase):
         # arbitrary matrix
         seqs = [np.array([0, 1, 2, 2, 3]),
                 np.array([1, 3, 3, 2, 0, 4])]
-        obs = prepare_identity_matrix(seqs, 5, 1.0, -2.5)
+        obs = prep_identity_matrix(seqs, 5, 1.0, -2.5)
         for o, e in zip(obs[0], seqs):
             npt.assert_array_equal(o, e)
             self.assertIs(o.dtype.type, np.intp)
@@ -358,7 +358,7 @@ class UtilsTests(unittest.TestCase):
         submat = obs[1]
 
         # create every time (no update)
-        obs = prepare_identity_matrix(seqs, 5, 3.5, -4.0)
+        obs = prep_identity_matrix(seqs, 5, 3.5, -4.0)
         self.assertEqual(obs[1][2, 2], 3.5)
         self.assertEqual(obs[1][3, 1], -4.0)
         self.assertIsNot(obs[1], submat)

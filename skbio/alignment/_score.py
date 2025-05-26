@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from ._utils import encode_alignment, prepare_gapcost
+from ._utils import encode_alignment, prep_gapcost
 from ._cutils import _trim_end_gaps, _multi_align_score
 
 
@@ -152,7 +152,7 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
         raise ValueError("Alignment must contain at least two sequences.")
 
     # determine gap penalty method
-    gap_open, gap_extend = prepare_gapcost(gap_cost, dtype=submat.dtype.type)
+    gap_open, gap_extend = prep_gapcost(gap_cost, dtype=submat.dtype.type)
 
     # identify terminal gaps
     starts, stops = np.empty(n, dtype=int), np.empty(n, dtype=int)

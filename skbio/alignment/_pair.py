@@ -11,7 +11,7 @@ from typing import NamedTuple, Optional, Union, Tuple, List, TYPE_CHECKING
 import numpy as np
 
 from skbio.alignment import PairAlignPath
-from ._utils import encode_sequences, prepare_gapcost
+from ._utils import encode_sequences, prep_gapcost
 from ._cutils import (
     _fill_linear_matrix,
     _fill_affine_matrices,
@@ -289,7 +289,7 @@ def pair_align(
     dtype = query.dtype.type
 
     # Prepare affine or linear gap penalties.
-    gap_open, gap_extend = prepare_gapcost(gap_cost, dtype=dtype)
+    gap_open, gap_extend = prep_gapcost(gap_cost, dtype=dtype)
     affine = gap_open != 0
 
     # Allocate alignment matrices.

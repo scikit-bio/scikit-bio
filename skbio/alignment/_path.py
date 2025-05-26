@@ -36,19 +36,9 @@ _cigar_mapping = {
 class AlignPath(SkbioObject):
     r"""Store an alignment path between sequences.
 
-    It defines the operations of aligning sequences by inserting gaps into designated
-    positions between characters.
-
-    The underlying data structure of the ``AlignPath`` class efficiently represents a
-    sequence alignment as two equal-length vectors: lengths and gap status. The lengths
-    vector contains the lengths of individual segments of the alignment with consistent
-    gap status. The gap status vector contains the encoded bits of the gap (1) and
-    character (0) status for each position in the alignment.
-
-    This data structure is detached from the original sequences and is highly memory
-    efficient. It permits fully vectorized operations and enables efficient conversion
-    between various formats such as CIGAR, tabular, indices (Biotite), and coordinates
-    (Biopython).
+    It is a compact data structure that stores the operations of sequence alignment:
+    inserting gaps into designated positions between subsequences. It does not store
+    the sequence data.
 
     Parameters
     ----------
@@ -68,18 +58,29 @@ class AlignPath(SkbioObject):
 
     Notes
     -----
-    The underlying logic of the ``AlignPath`` data structure is rooted in two concepts:
-    run length encoding and bit arrays.
+    The underlying data structure of the ``AlignPath`` class efficiently represents a
+    sequence alignment as two equal-length vectors: ``lengths`` and ``states``. The
+    lengths vector contains the lengths of individual segments of the alignment with
+    consistent gap status. The states vector contains the packed bits of gap (1) and
+    and character (0) status for each position in the alignment.
 
-    The lengths array is calculated by performing run length encoding on the alignment,
-    considering each segment with consistent gap status to be an individual unit in the
-    encoding. In the above example, the first three positions of the alignment contain
-    no gaps, so the first value in the lengths array is 3, and so on.
+    This data structure is calculated by performing run-length encoding (RLE) [1]_ on
+    the alignment, considering each segment with consistent gap status to be a unit in
+    the encoding. It resembles the CIGAR string (see :meth:`PairAlignPath.to_cigar`),
+    but is generalized to an arbitrary number of sequences.
 
-    The states array is calculated by turning the alignment segments into a bit array
-    where gaps become 1's, and characters become zeros. Then, the 0's and 1's are
-    converted into bytes. In the above example, the fourth segment, which has length 1,
-    would become [0, 1, 1], which then becomes 6.
+    An ``AlignPath`` object is detached from the original or aligned sequences and is
+    highly memory efficient. The more similar the sequences are (i.e., the fewer gaps),
+    the more compact this data structure is. In the worst case, this object consumes
+    1/8 memory space of the aligned sequences.
+
+    This class permits fully vectorized operations and enables efficient conversion
+    between various formats such as aligned sequences, indices (Biotite), and
+    coordinates (Biopython).
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Run-length_encoding
 
     Examples
     --------
@@ -88,28 +89,31 @@ class AlignPath(SkbioObject):
 
     >>> from skbio import DNA, TabularMSA
     >>> from skbio.alignment import AlignPath
-    >>> seqs = [
+    >>> msa = TabularMSA([
     ...    DNA('CGGTCGTAACGCGTA---CA'),
     ...    DNA('CAG--GTAAG-CATACCTCA'),
-    ...    DNA('CGGTCGTCAC-TGTACACTA')
-    ... ]
-    >>> msa = TabularMSA(seqs)
-    >>> msa
-    TabularMSA[DNA]
-    ----------------------
-    Stats:
-        sequence count: 3
-        position count: 20
-    ----------------------
-    CGGTCGTAACGCGTA---CA
-    CAG--GTAAG-CATACCTCA
-    CGGTCGTCAC-TGTACACTA
+    ...    DNA('CGGTCGTCAC-TGTACACTA'),
+    ... ])
     >>> path = AlignPath.from_tabular(msa)
     >>> path
     AlignPath
     Shape(sequence=3, position=20)
     lengths: [3 2 5 1 4 3 2]
     states: [0 2 0 6 0 1 0]
+
+    In the above example, the first three positions of the alignment contain no gaps,
+    so the first value in the lengths array is 3, and that in the states array is 0.
+    The fourth segment, which has length 1, would have gap status (0, 1, 1), which
+    then becomes 6 after bit packing. So on so forth.
+
+    An ``AlignPath`` object is rarely created from scratch. But one still could, like:
+
+    >>> path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+    ...                  states=[0, 2, 0, 6, 0, 1, 0],
+    ...                  starts=[0, 0, 0])
+
+    The parameter ``starts`` defines the starting positions of the alignment in each
+    sequence.
 
     """
 
@@ -155,6 +159,12 @@ class AlignPath(SkbioObject):
 
     def __repr__(self):
         r"""Return summary of the alignment path."""
+        # return (
+        #     f"<{self.__class__.__name__}, "
+        #     f"sequences: {self._shape[0]}, "
+        #     f"positions: {self._shape[1]}, "
+        #     f"segments: {self._lengths.size}>"
+        # )
         return (
             f"{self.__class__.__name__}\n{self._shape}\nlengths: "
             f"{self._lengths}\nstates: {np.squeeze(self._states)}"
@@ -323,8 +333,8 @@ class AlignPath(SkbioObject):
         seqs : iterable of Sequence or str
             Original sequences.
         gap_char : str, optional
-            Character to fill gap regions. Default is "-". Set as "" to suppress gaps
-            in the output.
+            Character to be placed in each gap position. Default is "-". Set as "" to
+            suppress gaps in the output.
         flanking : int or (int, int), optional
             Length of flanking regions in the original sequences to be included in the
             output. Can be two numbers (leading and trailing, respectively) or one
@@ -347,17 +357,17 @@ class AlignPath(SkbioObject):
         See Also
         --------
         from_aligned
-        skbio.TabularMSA.from_path_seqs
+        skbio.alignment.TabularMSA.from_path_seqs
 
         Notes
         -----
         This method provides a convenient way to process and display alignments,
-        without invoking the explicit `TabularMSA` class. Both `Sequence` objects and
-        raw strings are valid input sequences.
+        without invoking the explicit ``TabularMSA`` class. Both ``Sequence`` objects
+        and plain strings are valid input sequences.
 
-        However, it only outputs strings without retaining the `Sequence` objects and
+        However, it only outputs strings without retaining the ``Sequence`` objects and
         their metadata. For the later purpose, please use ``TabularMSA``'s
-        :meth:`~skbio.TabularMSA.from_path_seqs` method instead.
+        :meth:`~skbio.alignment.TabularMSA.from_path_seqs` method instead.
 
         Examples
         --------
@@ -811,10 +821,20 @@ class PairAlignPath(AlignPath):
 
     def __repr__(self):
         r"""Return summary of the alignment path."""
-        return (
-            f"<{self.__class__.__name__}, position count: {self._shape[1]}, "
-            f"CIGAR: '{self.to_cigar()}'>"
-        )
+        repr_ = f"{self.__class__.__name__}, positions: {self._shape[1]}"
+        width = 58 - len(repr_)  # 71 is the line width
+        cigar = self.to_cigar()
+        if len(cigar) > width:
+            if width >= 13:
+                cigar = cigar[: width - 3] + "..."
+            elif width >= 3:
+                cigar = "..."
+            else:
+                cigar = None
+        if cigar:
+            return f"<{repr_}, CIGAR: '{cigar}'>"
+        else:
+            return f"<{repr_}>"
 
     @classonlymethod
     def from_bits(cls, bits, starts=None):
@@ -945,7 +965,7 @@ class PairAlignPath(AlignPath):
         >>> cigar = "2M5P3D1I"
         >>> path = PairAlignPath.from_cigar(cigar)
         >>> path
-        <PairAlignPath, position count: 11, CIGAR: '2M5P3D1I'>
+        <PairAlignPath, positions: 11, CIGAR: '2M5P3D1I'>
 
         """
         # Make sure cigar is not empty.

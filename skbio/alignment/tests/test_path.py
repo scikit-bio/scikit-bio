@@ -513,7 +513,6 @@ class TestPairAlignPath(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg % 3)
 
         # only one sequence
-        bits = np.array([[0, 0, 1, 1, 0]])
         with self.assertRaises(ValueError) as cm:
             PairAlignPath(lengths=[1], states=[0], starts=[0])
         self.assertEqual(str(cm.exception), msg % 1)
@@ -524,6 +523,11 @@ class TestPairAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0])
         self.assertEqual(str(cm.exception), msg)
+
+    def test_repr(self):
+        obs = repr(self.path1)
+        exp = "<PairAlignPath, positions: 20, CIGAR: '3M2D5M1D4M3I2M'>"
+        self.assertEqual(obs, exp)
 
     def test_from_bits(self):
         # test base case
