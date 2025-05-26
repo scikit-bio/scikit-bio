@@ -266,6 +266,63 @@ def pair_align(
 
     .. [5] https://www.ncbi.nlm.nih.gov/books/NBK62051/
 
+    Examples
+    --------
+    >>> from skbio.sequence import DNA, Protein
+    >>> from skbio.alignment import pair_align
+
+    Align two DNA sequences using default parameters (global alignment with free end
+    gaps, match/mismatch scores, linear gap penalty, returns just one path):
+
+    >>> seq1 = DNA('ACTACCAGATTACTTACGGATCAGGTACTTGCCAACAA')
+    >>> seq2 = DNA('CGAAACTACTAGATTACGGATCTTACTTTCCAGCAAGG')
+
+    >>> res = pair_align(seq1, seq2)
+    >>> res.score
+    12.0
+
+    Obtain the alignment path, which can be represented by a CIGAR string. See
+    :class:`PairAlignPath` for details.
+
+    >>> res.paths[0]
+    <PairAlignPath, positions: 44, CIGAR: '4I13M4D6M2D13M2I'>
+
+    Extract aligned sequences:
+
+    >>> aln = res.paths[0].to_aligned((seq1, seq2))
+    >>> aln
+    ['----ACTACCAGATTACTTACGGATCAGGTACTTGCCAACAA--',
+     'CGAAACTACTAGATTAC----GGATCT--TACTTTCCAGCAAGG']
+
+    Align two protein sequences using local alignment, substitution matrix, and affine
+    gap penalty (the default parameters of BLASTP):
+
+    >>> seq1 = Protein('MKRTLKGHFVQWC')
+    >>> seq2 = Protein('MQMLKTHYAQTRN')
+    >>> score, paths, _ = pair_align(seq1, seq2, mode='local', sub_score='BLOSUM62',
+    ...                              gap_cost=(11, 1))
+    >>> score
+    23.0
+
+    >>> paths[0].to_aligned((seq1, seq2))
+    ['LKGHFVQ', 'LKTHYAQ']
+
+    Search a short sequencing read against a long genome sequence and return all hits.
+
+    >>> query = "ACCGT"
+    >>> target = "AAACGCTACCGTCCGTAGACCGTGACCGTGCGAAGC"
+    >>> score, paths, _ = pair_align(query, target, mode="global", sub_score=(1, -2),
+    ...                              gap_cost=2.5, free_ends=(True, False),
+    ...                              max_paths=None)
+
+    Calculate the edit distance between two sentences.
+
+    >>> text1 = 'The quick brown fox jumps over the lazy dog'.split()
+    >>> text2 = 'The slow brown wolf jumps over a lazy dog'.split()
+    >>> -int(pair_align(text1, text2, mode='global', sub_score=(0, -1), gap_cost=1,
+    ...                 free_ends=False, max_paths=0).score)
+    3
+
     """
     # This function implements the classic dynamic programming method for pairwise
     # sequence alignment. While the most time-consuming step (matrix filling) is done
