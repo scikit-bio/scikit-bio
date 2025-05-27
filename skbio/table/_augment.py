@@ -24,7 +24,7 @@ from skbio.util.config._dispatcher import _ingest_array, _create_table
 
 def _validate_tree(tree: TreeNode) -> None:
     """Ensure that tree is a TreeNode object."""
-    if tree is not None and not isinstance(tree, TreeNode):
+    if not isinstance(tree, TreeNode):
         raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
 
 
@@ -246,15 +246,10 @@ def mixup(
 
     Examples
     --------
-    >>> from skbio.table import Table
-    >>> from skbio.table import Augmentation
-    >>> data = np.arange(40).reshape(10, 4)
-    >>> sample_ids = ['S%d' % i for i in range(4)]
-    >>> feature_ids = ['O%d' % i for i in range(10)]
-    >>> table = Table(data, feature_ids, sample_ids)
-    >>> label = np.random.randint(0, 2, size=table.shape[1])
-    >>> augmentation = Augmentation(table, label)
-    >>> aug_matrix, aug_label = augmentation.mixup(n_samples=5)
+    >>> from skbio.table import mixup
+    >>> data = np.arange(40).reshape(4, 10)
+    >>> label = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_label = mixup(data, label=label, n_samples=5)
     >>> print(aug_matrix.shape)
     (9, 10)
     >>> print(aug_label.shape)
@@ -382,16 +377,10 @@ def aitchison_mixup(
 
     Examples
     --------
-    >>> from skbio.table import Table
-    >>> from skbio.table import Augmentation
-    >>> data = np.arange(40).reshape(10, 4)
-    >>> sample_ids = ['S%d' % i for i in range(4)]
-    >>> feature_ids = ['O%d' % i for i in range(10)]
-    >>> table = Table(data, feature_ids, sample_ids)
-    >>> table_compositional = table.norm(axis="sample")
-    >>> label = np.random.randint(0, 2, size=table.shape[1])
-    >>> augmentation = Augmentation(table_compositional, label)
-    >>> aug_matrix, aug_label = augmentation.aitchison_mixup(n_samples=5)
+    >>> from skbio.table import aitchison_mixup
+    >>> data = np.arange(40).reshape(4, 10)
+    >>> label = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_label = aitchison_mixup(data, label=label, n_samples=5)
     >>> print(aug_matrix.shape)
     (9, 10)
     >>> print(aug_label.shape)
@@ -524,19 +513,14 @@ def compositional_cutmix(
 
     Examples
     --------
-    >>> from skbio.table import Table
-    >>> from skbio.table import Augmentation
-    >>> data = np.arange(40).reshape(10, 4)
-    >>> sample_ids = ['S%d' % i for i in range(4)]
-    >>> feature_ids = ['O%d' % i for i in range(10)]
-    >>> table = Table(data, feature_ids, sample_ids)
-    >>> label = np.random.randint(0, 2, size=4)
-    >>> augmentation = Augmentation(table, label)
-    >>> aug_matrix, aug_label = augmentation.compositional_cutmix(n_samples=5)
+    >>> from skbio.table import compositional_cutmix
+    >>> data = np.arange(40).reshape(4, 10)
+    >>> label = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_label = compositional_cutmix(data, label=label, n_samples=5)
     >>> print(aug_matrix.shape)
     (9, 10)
     >>> print(aug_label.shape)
-    (9,)
+    (9, 1)
 
     Notes
     -----
@@ -604,28 +588,45 @@ def compositional_cutmix(
 
 def phylomix(
     table,
-    tree,
-    tip_to_obs_mapping,
-    n_samples,
-    label=None,
-    alpha=2,
-    seed=None,
-    output_format=None,
-    normalize=False,
-):
+    tree: TreeNode,
+    tip_to_obs_mapping: dict,
+    n_samples: int,
+    label: Optional[np.ndarray] = None,
+    alpha: float = 2,
+    normalize: bool = False,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    output_format: Optional[str] = None,
+) -> tuple:
     r"""Data augmentation by phylomix.
 
     Parameters
     ----------
+    table : table_like
+        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+    tree : skbio.tree.TreeNode
+        The tree to use to augment the table.
     tip_to_obs_mapping : dict
         A dictionary mapping tips to feature indices.
     n_samples : int
         The number of new samples to generate.
+    label : np.ndarray
+        The label of the table. The label is expected to has a shape of ``(n_samples,)``
+        or ``(n_samples, n_classes)``.
     alpha : float
         The alpha parameter of the beta distribution.
+    normalize : bool, optional
+        If ``True`` and the input is not already compositional, scikit-bio's
+        :func:`~skbio.stats.composition.closure` function will be called, ensuring
+        values for each sample add up to 1. Defaults to ``False``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+    output_format : str, optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
 
     Returns
@@ -640,17 +641,16 @@ def phylomix(
 
     Examples
     --------
-    >>> from skbio.table import Table
-    >>> from skbio.table import Augmentation
-    >>> data = np.arange(10).reshape(5, 2)
-    >>> sample_ids = ['S%d' % i for i in range(2)]
-    >>> feature_ids = ['O%d' % i for i in range(5)]
+    >>> from skbio.table import phylomix
+    >>> data = np.arange(10).reshape(2, 5)
     >>> tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
-    >>> table = Table(data, feature_ids, sample_ids)
-    >>> label = np.random.randint(0, 2, size=2)
-    >>> aug = Augmentation(table, label, tree=tree)
+    >>> label = np.array([0, 1])
     >>> tip_to_obs_mapping = {'a': 0, 'b': 1, 'c': 2, 'x': 3, 'y': 4}
-    >>> aug_matrix, aug_label = aug.phylomix(tip_to_obs_mapping, n_samples=5)
+    >>> aug_matrix, aug_label = phylomix(data,
+    ...                                  tree,
+    ...                                  tip_to_obs_mapping,
+    ...                                  label=label,
+    ...                                  n_samples=5)
     >>> print(aug_matrix.shape)
     (7, 5)
     >>> print(aug_label.shape)
@@ -721,7 +721,7 @@ def phylomix(
         x1, x2 = matrix[pair[0]], matrix[pair[1]]
         _lambda = rng.beta(alpha, alpha)
         n_leaves = int(np.ceil((1 - _lambda) * num_leaves))
-        selected_index = set()
+        selected_index: set[int] = set()
         mixed_x = x1.copy()
 
         while len(selected_index) < n_leaves:
@@ -757,13 +757,13 @@ def phylomix(
         augmented_matrix.append(mixed_x)
 
     if label is not None:
-        augmented_matrix = np.array(augmented_matrix)
-        augmented_label = np.array(augmented_label)
-        augmented_matrix = np.concatenate([matrix, augmented_matrix], axis=0)
-        augmented_label = np.concatenate([one_hot_label, augmented_label])
+        augmented_matrix_ = np.array(augmented_matrix)
+        augmented_label_ = np.array(augmented_label)
+        augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
+        augmented_label = np.concatenate([one_hot_label, augmented_label_])
     else:
         augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
-        augmented_label = None
+        augmented_label = None  # type: ignore[assignment]
 
     return _create_table(augmented_matrix, backend=output_format), _create_table(
         augmented_label, backend=output_format

@@ -413,8 +413,6 @@ class TestAugmentFunctions(TestCase):
         n_samples = 40
         n_features = 100
         self.data = np.arange(n_samples * n_features).reshape(n_samples, n_features)
-        sample_ids = ["S%d" % i for i in range(n_samples)]
-        feature_ids = ["O%d" % i for i in range(n_features)]
         feature_metadata = [
             {"phylogeny": "a"},
             {"phylogeny": "b"},
@@ -517,14 +515,8 @@ class TestAugmentFunctions(TestCase):
             {"phylogeny": "e"},
             {"phylogeny": "f"},
         ]
-        # # a complex tree to test the phylomix method
-        # self.table = Table(data.T, sample_ids, feature_ids, feature_metadata)
-        # self.table_min = np.min(self.table.to_dataframe().values)
-        # self.table_max = np.max(self.table.to_dataframe().values)
 
-        data_simple = np.arange(10).reshape(5, 2)
-        sample_ids_simple = ["S%d" % i for i in range(2)]
-        feature_ids_simple = ["O%d" % i for i in range(5)]
+        self.data_simple = np.arange(10).reshape(2, 5)
         feature_metadata_simple = [
             {"phylogeny": "a"},
             {"phylogeny": "b"},
@@ -532,9 +524,6 @@ class TestAugmentFunctions(TestCase):
             {"phylogeny": "x"},
             {"phylogeny": "y"},
         ]
-        # self.table_simple = Table(
-        #     data_simple, feature_ids_simple, sample_ids_simple, feature_metadata_simple
-        # )
         self.simple_tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
         self.complex_tree = TreeNode.read(
             ["(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
@@ -545,16 +534,16 @@ class TestAugmentFunctions(TestCase):
         tree_tips = {tip.name for tip in self.complex_tree.tips()}
         self.tips_to_feature_mapping = {}
         self.tips_to_feature_mapping_simple = {}
-        # for idx, metadata in enumerate(self.table.metadata(axis="observation")):
-        #     if metadata and "phylogeny" in metadata:
-        #         phylogeny_label = metadata["phylogeny"]
-        #         if phylogeny_label in tree_tips:
-        #             self.tips_to_feature_mapping[phylogeny_label] = idx
-        # for idx, metadata in enumerate(self.table_simple.metadata(axis="observation")):
-        #     if metadata and "phylogeny" in metadata:
-        #         phylogeny_label = metadata["phylogeny"]
-        #         if phylogeny_label in tree_tips_simple:
-        #             self.tips_to_feature_mapping_simple[phylogeny_label] = idx
+        for idx, metadata in enumerate(feature_metadata):
+            if metadata and "phylogeny" in metadata:
+                phylogeny_label = metadata["phylogeny"]
+                if phylogeny_label in tree_tips:
+                    self.tips_to_feature_mapping[phylogeny_label] = idx
+        for idx, metadata in enumerate(feature_metadata_simple):
+            if metadata and "phylogeny" in metadata:
+                phylogeny_label = metadata["phylogeny"]
+                if phylogeny_label in tree_tips_simple:
+                    self.tips_to_feature_mapping_simple[phylogeny_label] = idx
         self.labels = np.random.randint(0, 2, size=self.data.shape[0])
         self.labels_simple = np.array([0, 1])
         self.one_hot_labels = np.eye(2)[self.labels]
@@ -564,7 +553,10 @@ class TestAugmentFunctions(TestCase):
         _validate_tree(self.simple_tree)  # Should not raise
 
         # Test with None
-        _validate_tree(None)  # Should not raise
+        with self.assertRaisesRegex(
+            TypeError, "`tree` must be a skbio.tree.TreeNode object."
+        ):
+            _validate_tree(None)
 
         # Test with invalid type
         with self.assertRaisesRegex(
@@ -724,22 +716,22 @@ class TestAugmentFunctions(TestCase):
 
     def test_phylomix_simple(self):
         augmented_matrix, augmented_label = phylomix(
-            self.table_simple,
+            self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
             n_samples=20,
             label=self.labels_simple,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[0])
+        self.assertEqual(augmented_matrix.shape[0], self.data_simple.shape[0] + 20)
+        self.assertEqual(augmented_matrix.shape[1], self.data_simple.shape[1])
 
     def test_phylomix_no_tree(self):
         with self.assertRaisesRegex(
             TypeError, "`tree` must be a skbio.tree.TreeNode object."
         ):
             phylomix(
-                self.table_simple,
+                self.data_simple,
                 tree=None,
                 tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
                 n_samples=20,
@@ -754,7 +746,7 @@ class TestAugmentFunctions(TestCase):
             ValueError, "tip_to_obs_mapping must contain all tips in the tree"
         ):
             phylomix(
-                self.table_simple,
+                self.data_simple,
                 tree=self.simple_tree,
                 tip_to_obs_mapping=bad_mapping,
                 n_samples=20,
@@ -763,43 +755,43 @@ class TestAugmentFunctions(TestCase):
 
     def test_phylomix_no_label(self):
         augmented_matrix, augmented_label = phylomix(
-            self.table_simple,
+            self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
             n_samples=20,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[0])
-        self.assertIsNone(augmented_label)
+        self.assertEqual(augmented_matrix.shape[0], self.data_simple.shape[0] + 20)
+        self.assertEqual(augmented_matrix.shape[1], self.data_simple.shape[1])
+        self.assertTrue(augmented_label.empty)
 
     def test_phylomix(self):
         augmented_matrix, augmented_label = phylomix(
-            self.table,
+            self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
             n_samples=20,
             label=self.labels,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
+        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
         self.assertEqual(augmented_label.shape[0], len(self.labels) + 20)
         self.assertEqual(augmented_label.shape[1], 2)
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
 
     def test_multiclass_phylomix(self):
-        labels_multiclass = np.random.randint(0, 3, size=self.table.shape[1])
+        labels_multiclass = np.random.randint(0, 3, size=self.data.shape[0])
         augmented_matrix, augmented_label = phylomix(
-            self.table,
+            self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
             n_samples=20,
             label=labels_multiclass,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
+        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
         self.assertEqual(augmented_label.shape[0], len(labels_multiclass) + 20)
         self.assertEqual(augmented_label.shape[1], 3)  # 3 classes
 
