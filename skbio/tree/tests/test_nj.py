@@ -102,6 +102,19 @@ class NjTests(TestCase):
         with self.assertRaises(AssertionError):
             npt.assert_almost_equal(dm.data, self.dm3.data)
 
+    def test_nj_floating(self):
+        dm = self.dm3.copy()
+        exp = nj(dm)
+        dm._data = dm._data.astype("float64")
+        obs = nj(dm)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        dm._data = dm._data.astype("float32")
+        obs = nj(dm)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        dm._data = dm._data.astype("int32")
+        with self.assertRaises(TypeError):
+            _ = nj(dm)
+
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative
         # branch length. self is excluded as branch length is None

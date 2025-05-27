@@ -51,6 +51,8 @@ extensions = [
 root_doc = 'index'
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# set to none to avoid overly complicated function signatures
+autodoc_typehints = 'none'
 
 
 # -- Options for manual page output ------------------------------------------

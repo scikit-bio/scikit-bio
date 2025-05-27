@@ -8,13 +8,27 @@
 
 from functools import partial
 
+from typing import Optional, Tuple, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._base import DistanceMatrix
+    from numpy.random import RandomState, Generator
+    from numpy.typing import ArrayLike, NDArray
+    import pandas as pd
+
 import numpy as np
 from scipy.stats import rankdata
 
 from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
 
 
-def anosim(distance_matrix, grouping, column=None, permutations=999, seed=None):
+def anosim(
+    distance_matrix: "DistanceMatrix",
+    grouping: Union["pd.DataFrame", "ArrayLike"],
+    column: Optional[str] = None,
+    permutations: int = 999,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+) -> "pd.Series":
     r"""Test for significant differences between groups using ANOSIM.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
@@ -184,7 +198,12 @@ def anosim(distance_matrix, grouping, column=None, permutations=999, seed=None):
     )
 
 
-def _compute_r_stat(tri_idxs, ranked_dists, divisor, grouping):
+def _compute_r_stat(
+    tri_idxs: Tuple["NDArray[np.int_]", "NDArray[np.int_]"],
+    ranked_dists: "NDArray[np.float64]",
+    divisor: float,
+    grouping: "NDArray[np.number]",
+) -> float:
     """Compute ANOSIM R statistic (between -1 and +1)."""
     # Create a matrix where True means that the two objects are in the same
     # group. This ufunc requires that grouping is a numeric vector (e.g., it
