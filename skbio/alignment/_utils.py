@@ -49,7 +49,7 @@ def encode_sequences(
     seqs: Iterable["SequenceLike"],
     sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
     aligned: bool = False,
-    dtype: type = float,
+    dtype: type = np.float32,
     gap_chars: str = "-",
     not_empty: bool = True,
 ) -> Tuple[List[NDArray], NDArray, NDArray]:
@@ -281,7 +281,7 @@ def encode_alignment(
     return seqs, submat, bits, lens
 
 
-def prep_gapcost(gap_cost, dtype=float):
+def prep_gapcost(gap_cost, dtype=np.float32):
     """Prepare gap penalty method for alignment.
 
     Parameters

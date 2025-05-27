@@ -60,6 +60,14 @@ class SubstitutionMatrix(DissimilarityMatrix):
     ``SubstitutionMatrix`` is a subclass of ``DissimilarityMatrix``. Therefore,
     all attributes and methods of the latter also apply to the former.
 
+    The default floating-point data type of ``SubstitutionMatrix`` is float32. If you
+    create with an integer array or nested lists, it will be automatically casted into
+    float32. However, if the input array is already in float64 type, the type will be
+    preserved.
+
+    The underlying array of an ``SubstitutionMatrix`` object is guaranteed to be
+    C-contiguous, which facilitates row-major operations.
+
     Examples
     --------
     Create a simple substitution matrix between the four nucleotide bases "A", "C", "G"
@@ -79,7 +87,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     array([[ 2., -1., -1., -1.],
            [-1.,  2., -1., -1.],
            [-1., -1.,  2., -1.],
-           [-1., -1., -1.,  2.]])
+           [-1., -1., -1.,  2.]], dtype=float32)
 
     Look up the substitution score between a pair of bases.
 
@@ -118,7 +126,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
            [ 5., -4.,  5., -4., -4., -4.],
            [-4., -4., -4.,  5., -4.,  5.],
            [-4., -4., -4., -4.,  5., -4.],
-           [-4., -4., -4., -4.,  5., -4.]])
+           [-4., -4., -4., -4.,  5., -4.]], dtype=float32)
 
     Finding indices of sequence characters is most efficient when the alphabet consists
     of only ASCII codes (0 to 127). This can be determined by the ``is_ascii`` flag of
@@ -209,11 +217,19 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     def __init__(self, alphabet, scores, **kwargs):
         """Initialize a substitution matrix object."""
-        super().__init__(scores, alphabet, **kwargs)
+        # cast to float32 (see DissimilarityMatrix.__init__)
+        _issue_copy = True
+        if isinstance(scores, np.ndarray):
+            if scores.dtype in (np.float32, np.float64):
+                _issue_copy = False
+        if _issue_copy:
+            scores = np.asarray(scores, dtype=np.float32)
 
         # make sure matrix is C-contiguous (row-major) in memory
-        if not self._data.flags.c_contiguous:
-            self._data = np.ascontiguousarray(self._data)
+        if not scores.flags.c_contiguous:
+            scores = np.ascontiguousarray(scores)
+
+        super().__init__(scores, alphabet, **kwargs)
 
         # `_char_map`: dictionary of characters to indices in the alphabet.
         # It is to enable efficient conversion of sequences into indices.
@@ -262,7 +278,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         }
 
     @classonlymethod
-    def from_dict(cls, dictionary):
+    def from_dict(cls, dictionary, dtype="float32"):
         """Create a substitution matrix from a 2D dictionary.
 
         Parameters
@@ -275,6 +291,8 @@ class SubstitutionMatrix(DissimilarityMatrix):
         -------
         SubstitutionMatrix
             Substitution matrix constructed from the dictionary.
+        dtype : {'float32', 'float64'}, optional
+            Floating-point data type of the matrix. Default is "float32".
 
         Raises
         ------
@@ -295,13 +313,14 @@ class SubstitutionMatrix(DissimilarityMatrix):
         >>> mat.scores
         array([[ 1.,  0.,  0.],
                [ 0.,  1.,  0.],
-               [ 0.,  0.,  1.]])
+               [ 0.,  0.,  1.]], dtype=float32)
 
         """
         alphabet, rows = zip(*dictionary.items())
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
-        scores = np.zeros((n := len(alphabet), n))
+        n = len(alphabet)
+        scores = np.full((n, n), np.nan, dtype=dtype)
         for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError(
@@ -309,13 +328,12 @@ class SubstitutionMatrix(DissimilarityMatrix):
                     " must have the same set of keys."
                 )
             for key, value in row.items():
-                scores[i][idmap[key]] = float(value)
-
+                scores[i][idmap[key]] = value
         return cls(alphabet, scores)
 
     @classonlymethod
-    def identity(cls, alphabet, match, mismatch):
-        """Create an identity substitution matrix.
+    def identity(cls, alphabet, match, mismatch, dtype="float32"):
+        f"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
         respectively, regardless of the character.
@@ -328,6 +346,8 @@ class SubstitutionMatrix(DissimilarityMatrix):
             Score assigned to all matches.
         mismatch : int or float
             Score assigned to all mismatches.
+        dtype : {"float32", "float64"}, optional
+            Floating-point data type of the matrix. Default is "float32".
 
         Returns
         -------
@@ -344,12 +364,12 @@ class SubstitutionMatrix(DissimilarityMatrix):
         array([[ 1., -2., -2., -2.],
                [-2.,  1., -2., -2.],
                [-2., -2.,  1., -2.],
-               [-2., -2., -2.,  1.]])
+               [-2., -2., -2.,  1.]], dtype=float32)
 
         """
         alphabet = tuple(alphabet)
         n = len(alphabet)
-        scores = np.full((n, n), mismatch, dtype=float)
+        scores = np.full((n, n), mismatch, dtype=dtype)
         np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 
@@ -446,7 +466,7 @@ def _matrix_to_vector(mat):
     return mat[np.triu_indices(len(mat))]
 
 
-def _vector_to_matrix(vec):
+def _vector_to_matrix(vec, dtype="float32"):
     """Revert a vector representing a flattened matrix to square form."""
     assert len(vec.shape) == 1
     # a square matrix of shape (n, n) will have n * (n + 1) / 2 elements in the
@@ -454,7 +474,7 @@ def _vector_to_matrix(vec):
     # original shape of the matrix
     n = (np.sqrt(1 + 8 * len(vec)) - 1) / 2
     assert n == (n := int(n))
-    mat = np.zeros((n, n))
+    mat = np.zeros((n, n), dtype=dtype)
     mat[np.triu_indices(n)] = vec
     return mat + np.triu(mat, k=1).T
 

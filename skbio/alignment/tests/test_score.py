@@ -212,28 +212,28 @@ class ScoreTests(unittest.TestCase):
         aln = ["CGGTCGTAACGCGTA---CA",
                "CAG--GTAAG-CATACCTCA",
                "CGGTCGTCAC-TGTACAC--"]
-        # original (float64)
+        # original (float32)
         submat = SubstitutionMatrix.by_name("NUC.4.4")
-        self.assertEqual(submat.dtype, np.float64)
+        self.assertEqual(submat.dtype, np.float32)
         obs = align_score(aln, submat, (9.5, 0.5))
         self.assertEqual(obs, 44.0)
         self.assertIsInstance(obs, float)
 
-        # substitution matrix is float32
+        # substitution matrix is float64
         submat2 = submat.copy()
-        submat2._data = submat2._data.astype(np.float32)
-        self.assertEqual(submat2.dtype, np.float32)
+        submat2._data = submat2._data.astype(np.float64)
+        self.assertEqual(submat2.dtype, np.float64)
         obs = align_score(aln, submat2, (9.5, 0.5))
         self.assertEqual(obs, 44.0)
         self.assertIsInstance(obs, float)
 
-        # gap costs are float32
-        self.assertEqual(submat.dtype, np.float64)
-        obs = align_score(aln, submat2, (np.float32(9.5), np.float32(0.5)))
+        # gap costs are float64
+        self.assertEqual(submat.dtype, np.float32)
+        obs = align_score(aln, submat2, (np.float64(9.5), np.float64(0.5)))
         self.assertEqual(obs, 44.0)
 
         # mixed types
-        obs = align_score(aln, (np.float32(5), -4), (np.float32(9.5), 0.5))
+        obs = align_score(aln, (np.float64(5), -4), (np.float64(9.5), 0.5))
         self.assertEqual(obs, 44.0)
 
     def test_align_score_error(self):

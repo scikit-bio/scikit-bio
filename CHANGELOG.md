@@ -4,7 +4,7 @@
 
 ### Features
 
-* Added function `pair_align`, a re-designed pairwise sequence alignment engine that is versatile, efficient, and generalizable ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)). It is meant to replace the old slow Python engine and the SSW wrapper. It supports:
+* Added function `pair_align`, a re-designed pairwise sequence alignment engine that is versatile, efficient, and generalizable ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2196](https://github.com/scikit-bio/scikit-bio/pull/2196)). It is meant to replace the old slow Python engine and the SSW wrapper. It supports:
   - Global, local and semi-global alignments (with all four ends customizable).
   - Nucleotide, protein, and un-grammared sequences, plain strings (ASCII and Unicode), words/tokens, and numbers.
   - Match/mismatch scores or substitution matrix.
@@ -20,7 +20,6 @@
 ### Performance enhancements
 
 * Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-* Implemented new faster pairwise alignment algorithm in the alignment module. Can be accessed with the front-facing function `pair_align` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Enhanced and changed the default behavior of `AlignPath.to_bits`, which now returns a bit array representing positions instead of segments. This is desired because with the old default behavior, `to_bits` and `from_bits` are not consistent with each other ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
@@ -35,6 +34,7 @@
 
 ### Miscellaneous
 
+* Set the default data type of `SubstitutionMatrix` as `np.float32` (previous it was `float`, which is equivalent to `np.float64`). Made `dtype` an optional parameter in `from_dict` and `identity` methods.
 * Adjusted the string representation of `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Changed `AlignPath.lengths` and `AlignPath.starts`'s dtype from `int64` to `intp`, as these attributes are to facilitate indexing ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).

@@ -287,18 +287,33 @@ class UtilsTests(unittest.TestCase):
     def test_prep_gapcost(self):
         obs = prep_gapcost(3)
         self.assertTupleEqual(obs, (0.0, 3.0))
-        self.assertIsInstance(obs[0], float)
-        self.assertIsInstance(obs[1], float)
+        self.assertIsInstance(obs[0], np.float32)
+        self.assertIsInstance(obs[1], np.float32)
 
         obs = prep_gapcost((2, 5))
         self.assertTupleEqual(obs, (2.0, 5.0))
-        self.assertIsInstance(obs[0], float)
-        self.assertIsInstance(obs[1], float)
+        self.assertIsInstance(obs[0], np.float32)
+        self.assertIsInstance(obs[1], np.float32)
 
         obs = prep_gapcost((0.5, 2.5))
         self.assertTupleEqual(obs, (0.5, 2.5))
-        self.assertIsInstance(obs[0], float)
-        self.assertIsInstance(obs[1], float)
+        self.assertIsInstance(obs[0], np.float32)
+        self.assertIsInstance(obs[1], np.float32)
+
+        obs = prep_gapcost((0.5, 2.5), dtype=np.float64)
+        self.assertTupleEqual(obs, (0.5, 2.5))
+        self.assertIsInstance(obs[0], np.float64)
+        self.assertIsInstance(obs[1], np.float64)
+
+        obs = prep_gapcost((np.float64(0.5), np.float64(2.5)))
+        self.assertTupleEqual(obs, (0.5, 2.5))
+        self.assertIsInstance(obs[0], np.float32)
+        self.assertIsInstance(obs[1], np.float32)
+
+        obs = prep_gapcost((np.float32(0.5), np.float32(2.5)), dtype=np.float64)
+        self.assertTupleEqual(obs, (0.5, 2.5))
+        self.assertIsInstance(obs[0], np.float64)
+        self.assertIsInstance(obs[1], np.float64)
 
     def testprep_identity_matrix(self):
         # Grammared (DNA) matrix

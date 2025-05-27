@@ -519,6 +519,17 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs[1].starts[1], 7)
         self.assertEqual(obs[2].starts[1], 8)
 
+    def test_pair_align_64bit(self):
+        """Float64 scoring scheme."""
+        obs = pair_align("GAATTC", "AGATCT", keep_matrices=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I5M1D")
+        self.assertEqual(obs.matrices[0].dtype, np.float32)
+
+        submat = SubstitutionMatrix.identity("ACGTN", 1, -1, dtype="float64")
+        obs = pair_align("GAATTC", "AGATCT", sub_score=submat, keep_matrices=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I5M1D")
+        self.assertEqual(obs.matrices[0].dtype, np.float64)
+
     def test_pair_align_edge(self):
         """Edge cases."""
         # distinct sequences: global alignment completely misaligned
@@ -694,21 +705,21 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(len(obs), 1)
         self.assertTrue(isinstance(obs[0], np.ndarray))
         self.assertTupleEqual(obs[0].shape, (4, 5))
-        self.assertEqual(obs[0].dtype, np.float64)
+        self.assertEqual(obs[0].dtype, np.float32)
 
         # ensure matrix is C-contiguous
         self.assertTrue(obs[0].flags.c_contiguous)
 
         # affine
-        obs = _alloc_matrices(3, 4, affine=True)
+        obs = _alloc_matrices(3, 4, affine=True, dtype=np.float32)
         self.assertEqual(len(obs), 3)
         for mat in obs:
             self.assertTupleEqual(mat.shape, (4, 5))
-            self.assertEqual(mat.dtype, np.float64)
+            self.assertEqual(mat.dtype, np.float32)
 
-        # float32
-        obs = _alloc_matrices(3, 4, affine=False, dtype=np.float32)
-        self.assertEqual(obs[0].dtype, np.float32)
+        # float64
+        obs = _alloc_matrices(3, 4, affine=False, dtype=np.float64)
+        self.assertEqual(obs[0].dtype, np.float64)
 
     def test_init_matrices(self):
         # classic global alignment

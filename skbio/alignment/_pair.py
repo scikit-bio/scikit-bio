@@ -223,9 +223,30 @@ def pair_align(
     large or negative integers, or floats), unique symbols will be extracted from the
     sequences and indexed.
 
+    **Performance**
+
+    The algorithm is quadratic (*O*\(*mn*\)) in both time and space, where *m* and *n*
+    are the lengths of the two sequences, respectively. Affine gap penalty costs 3x
+    as much memory and 2.5-3x as much runtime than linear gap penalty.
+
+    The underlying dynamic programming kernel is a plain dual loop structure, without
+    further vectorization
+
+
+    Although this algorithm does not utilize various manual optimization techniques
+    that have been developed and shown effective in pairwise sequence alignment, such
+    as wavefront sweep, loop tiling, SIMD striping and prefix scan, they are noted
+    here for reference.
+
     This function does not discriminate between seq1 and seq2. Nevertheless, aligning a
     shorter seq1 (often referred to as "query") against a longer seq2 (often referred to
     as "target" or "reference") is usually more efficient than the other way around.
+
+    The algorithm defaults to float32, which is sufficient for most use cases. It also
+    supports float64, with a higher memory cost (4x) and moderately increased runtime.
+    If float64 is what you need, you may supply a substitution matrix of float64 type,
+    using e.g., ``SubstitutionMatrix.identity("ACGT", 1, -2, dtype="float64")``, which
+    will be respected by the function without casting throughout calculation.
 
     **Affine gap penalty**
 
@@ -523,7 +544,7 @@ def _prep_free_ends(local, free_ends, trim_ends):
     return (free_lead, free_trail), (trim_lead, trim_trail)
 
 
-def _alloc_matrices(m, n, affine, dtype=float):
+def _alloc_matrices(m, n, affine, dtype=np.float32):
     """Allocate alignment matrix(ces).
 
     Parameters
