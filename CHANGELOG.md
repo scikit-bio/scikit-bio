@@ -20,6 +20,7 @@
 
 ### Bug Fixes
 
+* Fixed an inaccurate statement that one can specify `gap` as np.inf or np.nan in `AlignPath.to_indices`. These cases are impossible because the output is integer type.
 * Fixed an inaccurate statement in the documentation of `SubstitutionMatrix.is_ascii`. This attribute is True when all characters in the alphabet are ASCII codes (0 to 127), not extended ASCII codes (0 to 255) ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Fixed a bug that a `SubstitutionMatrix` cannot be copied ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Fixed a bug in `AlignPath.to_indices` which would throw an error if the alignment path has only one segment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).

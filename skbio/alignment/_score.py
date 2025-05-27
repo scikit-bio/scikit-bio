@@ -31,31 +31,16 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
           *original* (unaligned) sequences.
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
-        Score of a match, mismatch or substitution. It can be one of the following:
-
-        - Tuple of two numbers: Match score and mismatch score.
-        - :class:`~skbio.sequence.SubstitutionMatrix`: A matrix of substitution scores.
-        - String: Name of the substitution matrix that can be recognized by
-          ``SubstitutionMatrix.by_name``.
+        Score of a substitution. May be two numbers (match, mismatch), a substitution
+        matrix, or its name. See :func:`pair_align` for instructions. Default is
+        (1.0, -1.0).
 
     gap_cost : float or tuple of (float, float)
-        Penalty of a gap. The value is usually positive, representing a subtraction
-        from the alignment score. It can be one of the following:
-
-        - One number: Linear gap penalty. Each gap position is penalized by this value
-          (*g*). A contiguous gap of length *n* has a total penalty of *g* * *n*.
-        - Tuple of two numbers: Affine gap penalty. The two numbers (*o*, *e*)
-          represent gap opening penalty and gap extension penalty, respectively. A
-          contiguous gap of length *n* has a total penalty of *o* + *e* * *n*.
-          See also notes below.
+        Penalty of a gap. May be one (linear) or two numbers (affine). See
+        :func:`pair_align` for instructions and rationales. Default is -2.0.
 
     free_ends : bool, optional
-        Whether gaps at the sequence terminals are free from penalization. It can be:
-
-        - True (default): Do not penalize terminal gaps. This behavior is known as the
-          semi-global (or "glocal") alignment.
-        - False: Penalize terminal gaps using the same method defined by ``gap_cost``.
-          This behavior is the true global alignment.
+        If True (default), gaps at the sequence terminals are free from penalization.
 
     gap_chars : iterable of 1-length str, optional
         Character(s) that represent gaps. Only relevant when ``alignment`` is
@@ -80,45 +65,8 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     See Also
     --------
+    pair_align
     skbio.sequence.SubstitutionMatrix
-
-    Notes
-    -----
-    Under the affine gap penalty mode, which is the most common situation, the penalty
-    of a contiguous gap of length :math:`n` is calculated as:
-
-    .. math::
-
-       G(n) = o + e \times n \tag{1}
-
-    where :math:`o` is the gap opening penalty and :math:`e` is the gap extension
-    penalty.
-
-    It should be noted that, discrepancy exists among literature and implementations
-    regarding whether gap extension penalty should apply to the first position of a
-    gap. scikit-bio's equation is consistent with multiple common alignment tools,
-    such as BLAST [1]_, Minimap2, SeqAn3, and WFA2-lib.
-
-    Meanwhile, multiple other tools, such as EMBOSS, parasail, Biopython and Biotite,
-    use the following equation instead:
-
-    .. math::
-
-       G(n) = o + e \times (n - 1) \tag{2}
-
-    Therefore, if you intend to reproduce the behavior of a software tool of the
-    latter category using scikit-bio, you will need to subtract :math:`e` from
-    :math:`o` when adopting its parameters. For example, EMBOSS' default parameters
-    ``o=10, e=0.5`` will become ``o=9.5, e=0.5`` in scikit-bio. Vice versa.
-
-    .. versionchanged:: 0.6.4
-        Previous alignment algorithms in scikit-bio used Eq. 2. These functions were
-        deprecated in 0.5.x and will be removed in 0.6.x. Future functions will
-        uniformly use Eq. 1.
-
-    References
-    ----------
-    .. [1] https://www.ncbi.nlm.nih.gov/books/NBK62051/
 
     Examples
     --------
@@ -160,7 +108,6 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
     if not (starts + stops).all():
         raise ValueError("The alignment contains gap-only sequence(s).")
 
-    # TODO: Add support for different treatments of 5' and 3' terminal gaps.
     return _multi_align_score(
         seqs, bits, lens, starts, stops, submat, gap_open, gap_extend, free_ends
     )

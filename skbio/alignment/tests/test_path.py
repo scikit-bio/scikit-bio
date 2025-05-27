@@ -240,6 +240,11 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs[2], self.path1._to_bits())
         npt.assert_array_equal(obs[3], self.path1._lengths)
 
+        # no gap code (leave empty)
+        obs = self.path1._to_matrices(seqs, gap_code=None)
+        npt.assert_array_equal(
+            obs[0][0, :6], np.frombuffer("CGGTCG".encode("ascii"), dtype=np.uint8))
+
         msg = "Fewer sequences were provided than in alignment path."
         seqs = ["CGGTCGTAACGCGTACA", "CAGGTAAGCATACCTCA"]
         seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
@@ -460,10 +465,13 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
 
         # test invalid gap
-        with self.assertRaises(TypeError,
-                               msg="Gap must be an integer, np.nan, np.inf, 'del', "
-                               "or 'mask'."):
-            path.to_indices(gap="no")
+        msg = "Gap must be an integer, 'del', or 'mask'."
+        with self.assertRaises(TypeError) as cm:
+            _ = path.to_indices(gap="no")
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            _ = path.to_indices(gap=2.5)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_from_indices(self):
         # test no mask
@@ -483,6 +491,11 @@ class TestAlignPath(unittest.TestCase):
         path = AlignPath.from_indices(masked, gap="mask")
         npt.assert_array_equal(lengths, path.lengths)
         npt.assert_array_equal(states, np.squeeze(path.states))
+
+        msg = "For masked arrays, gap must be 'mask'."
+        with self.assertRaises(TypeError) as cm:
+            _ = AlignPath.from_indices(masked, gap=-1)
+        self.assertEqual(str(cm.exception), msg)
 
         # test non-zero indices
         indices = np.array([[25, 26, -1, -1, 27, 28, 29, 30],
@@ -616,6 +629,28 @@ class TestPairAlignPath(unittest.TestCase):
         obs = repr(self.path1)
         exp = "<PairAlignPath, positions: 20, CIGAR: '3M2D5M1D4M3I2M'>"
         self.assertEqual(obs, exp)
+
+        # make a long CIGAR string
+        path = PairAlignPath.from_bits(np.array((
+            [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1])))
+        obs = repr(path)
+        exp = "<PairAlignPath, positions: 21, CIGAR: '1M1I1D1M1I1D1M1I1D1M1I1D1M1...'>"
+        self.assertEqual(obs, exp)
+        self.assertEqual(len(obs), 71)
+
+        obs = str(path)
+        self.assertEqual(obs, exp)
+
+        # make a long number
+        path._shape = (0, "I_am_a_long_number_look_at_me")
+        exp = "<PairAlignPath, positions: I_am_a_long_number_look_at_me, CIGAR: '...'>"
+        self.assertEqual(repr(path), exp)
+
+        # make a longer number
+        path._shape = (0, "I_am_a_long_number_see_how_long_I_am")
+        exp = "<PairAlignPath, positions: I_am_a_long_number_see_how_long_I_am>"
+        self.assertEqual(repr(path), exp)
 
     def test_from_bits(self):
         # test base case

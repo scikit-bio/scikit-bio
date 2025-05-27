@@ -19,7 +19,7 @@ from ._cutils import (
     _trace_one_affine,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from skbio.sequence import Sequence, SubstitutionMatrix
 
 
@@ -37,6 +37,7 @@ def pair_align(
     sub_score: Union[Tuple[float, float], "SubstitutionMatrix"] = (1.0, -1.0),
     gap_cost: Union[float, Tuple[float, float]] = 2.0,
     free_ends: Union[bool, Tuple[bool, bool], Tuple[bool, bool, bool, bool]] = True,
+    trim_ends: bool = False,
     max_paths: Optional[int] = 1,
     atol: float = 1e-5,
     keep_matrices: bool = False,
@@ -104,8 +105,8 @@ def pair_align(
 
         - False: Penalize terminal gaps using the same method defined by ``gap_cost``.
           This behavior is the true global alignment.
-        - True (default): Do not penalize any terminal gap. This behavior is known
-          as "overlap", as it identifies the maximum overlap between the two sequences.
+        - True: Do not penalize any terminal gap. This behavior is known as "overlap",
+          as it identifies the maximum overlap between two sequences.
         - Tuple of two Booleans: Whether terminal gaps of seq1 and seq2 are free,
           respectively. For example, (True, False) is the typical semi-global
           alignment, useful for aligning a short seq1 within a long seq2.
@@ -113,6 +114,13 @@ def pair_align(
           leading gap of seq2, and trailing gap of seq2 are free, respectively. For
           example, (False, True, True, False) joins the tail of seq1 with the head
           of seq2.
+
+        Default is True (overlap).
+
+    trim_ends : bool, optional
+        If True, penalty-free terminal gaps defined by ``free_ends`` will be excluded
+        from returned paths. Useful for locating a short query in a long reference.
+        Default is False.
 
     max_paths : int, optional
         Maximum number of alignment paths to return. Default is 1, which is generated
@@ -122,8 +130,9 @@ def pair_align(
         total number of paths may be extremely large. Setting it as 0 will disable
         traceback and return no path (None).
 
-        - Note: When ``mode="local"``, it is possible that there is no path with a
-          score > 0. In this case, an empty list will be returned.
+        .. note::
+           When ``mode="local"``, it is possible that there is no path with a score >
+           0. In this case, an empty list will be returned.
 
     atol : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
@@ -132,7 +141,8 @@ def pair_align(
         increase performance, and is usually safe when there are only integers (e.g.,
         2.0) or half integers (e.g., 2.5) involved.
 
-        - Note: relative tolerance is not involved in the calculation.
+        .. note::
+           Relative tolerance is not involved in the calculation.
 
     keep_matrices : bool, optional
         Whether to include the alignment matrix(ces) in the returned value. They are
@@ -184,10 +194,15 @@ def pair_align(
       (for nucleotide, replace ``sub_score`` with ``"NUC.4.4"``)
     - EBI FASTA (protein): ``sub_score="BLOSUM50", gap_cost=(8, 2)``
 
+    .. note::
+       These are scoring schemes only. ``pair_align`` does not reproduce the behavior
+       of the programs mentioned.
+
     The flexibility of these parameters, especially the support for infinity, enables
     some common tasks in text analysis:
 
-    - Edit (Levenshtein) distance: ``sub_score=(0, -1), gap_cost=1``
+    - Edit (Levenshtein) distance: ``sub_score=(0, -1), gap_cost=1`` (negate the score
+      to get the distance)
     - Longest common subsequence (LCS):
       ``mode="local", sub_score=(1, -np.inf), gap_cost=0``
     - Longest common substring:
@@ -272,7 +287,7 @@ def pair_align(
     >>> from skbio.alignment import pair_align
 
     Align two DNA sequences using default parameters (global alignment with free end
-    gaps, match/mismatch scores, linear gap penalty, returns just one path):
+    gaps, match/mismatch scores, linear gap penalty, returning just one path):
 
     >>> seq1 = DNA('ACTACCAGATTACTTACGGATCAGGTACTTGCCAACAA')
     >>> seq2 = DNA('CGAAACTACTAGATTACGGATCTTACTTTCCAGCAAGG')
@@ -284,15 +299,20 @@ def pair_align(
     Obtain the alignment path, which can be represented by a CIGAR string. See
     :class:`PairAlignPath` for details.
 
-    >>> res.paths[0]
+    >>> path = res.paths[0]
+    >>> path
     <PairAlignPath, positions: 44, CIGAR: '4I13M4D6M2D13M2I'>
 
     Extract aligned sequences:
 
-    >>> aln = res.paths[0].to_aligned((seq1, seq2))
+    >>> aln = path.to_aligned((seq1, seq2))
     >>> aln
     ['----ACTACCAGATTACTTACGGATCAGGTACTTGCCAACAA--',
      'CGAAACTACTAGATTAC----GGATCT--TACTTTCCAGCAAGG']
+
+    Alternatively, you can do ``TabularMSA.from_path_seqs(path, (seq1, seq2))`` to
+    create a dedicated sequence alignment structure. See :class:`TabularMSA` for
+    details.
 
     Align two protein sequences using local alignment, substitution matrix, and affine
     gap penalty (the default parameters of BLASTP):
@@ -307,15 +327,28 @@ def pair_align(
     >>> paths[0].to_aligned((seq1, seq2))
     ['LKGHFVQ', 'LKTHYAQ']
 
-    Search a short sequencing read against a long genome sequence and return all hits.
+    Search a sequencing read against a reference genome using the default parameters of
+    MegaBLAST and return locations of all hits.
 
     >>> query = "ACCGT"
     >>> target = "AAACGCTACCGTCCGTAGACCGTGACCGTGCGAAGC"
-    >>> score, paths, _ = pair_align(query, target, mode="global", sub_score=(1, -2),
+    >>> score, paths, _ = pair_align(query, target, mode='global', sub_score=(1, -2),
     ...                              gap_cost=2.5, free_ends=(True, False),
-    ...                              max_paths=None)
+    ...                              trim_ends=True, max_paths=None)
+    >>> len(paths)
+    3
 
-    Calculate the edit distance between two sentences.
+    >>> for x in paths:
+    ...     print(x.ranges[1])
+    [ 7 12]
+    [18 23]
+    [24 29]
+
+    Note: ``ranges[1]`` stores the start and stop positions of the aligned region in
+    the target (``ranges[0]`` stores those of the query). The numbers are BED-like
+    (i.e., 0-based, half-open).
+
+    Calculate the edit distance between two sentences (lists of words).
 
     >>> text1 = 'The quick brown fox jumps over the lazy dog'.split()
     >>> text2 = 'The slow brown wolf jumps over a lazy dog'.split()
@@ -329,8 +362,9 @@ def pair_align(
     # in Cython, this function retains as many steps as possible in Python, thereby
     # "outsourcing" computation and optimization to the upstream library (NumPy).
 
+    # Prepare end treatment method.
     local = _prep_mode(mode)
-    lead1, trail1, lead2, trail2 = _prep_free_ends(free_ends)
+    (free_lead, free_trail), trims = _prep_free_ends(local, free_ends, trim_ends)
 
     # Prepare sequences and substitution matrix.
     # If `sub_score` consists of match/mismatch scores, an identity matrix will be
@@ -357,7 +391,7 @@ def pair_align(
     matrices = _alloc_matrices(query.shape[0], target.size, affine, dtype=dtype)
 
     # Initialize alignment matrices.
-    _init_matrices(matrices, gap_open, gap_extend, local, lead1, lead2)
+    _init_matrices(matrices, gap_open, gap_extend, local, *free_lead)
 
     # Fill alignment matrices (quadratic; compute-intensive).
     if affine:
@@ -367,9 +401,9 @@ def pair_align(
 
     # Get optimal alignment score and corresponding stop(s).
     if max_paths == 1:
-        score, stops = _one_stop(matrices[0], local, trail1, trail2)
+        score, stops = _one_stop(matrices[0], local, *free_trail)
     else:
-        score, stops = _all_stops(matrices[0], local, trail1, trail2)
+        score, stops = _all_stops(matrices[0], local, *free_trail)
 
     if max_paths == 0:  # traceback is disabled
         paths = None
@@ -379,10 +413,21 @@ def pair_align(
     # Traceback from each stop to reconstruct optimal alignment path(s).
     elif max_paths == 1:
         i, j = stops[0]
-        paths = [_traceback_one(i, j, matrices, gap_open, gap_extend, local, atol)]
+        paths = [
+            _traceback_one(i, j, matrices, gap_open, gap_extend, local, *trims, atol)
+        ]
     else:
         paths = _traceback_all(
-            stops, matrices, query, target, gap_open, gap_extend, local, max_paths, atol
+            stops,
+            matrices,
+            query,
+            target,
+            gap_open,
+            gap_extend,
+            local,
+            *trims,
+            max_paths,
+            atol,
         )
 
     # Discard or keep matrices.
@@ -416,36 +461,65 @@ def _prep_mode(mode):
         raise ValueError(f"Invalid mode: {mode}.")
 
 
-def _prep_free_ends(free_ends):
+def _prep_free_ends(local, free_ends, trim_ends):
     """Prepare end gap policy for pairwise alignment.
 
     Parameters
     ----------
+    local : bool
+        Local or global alignment.
     free_ends : bool, (bool, bool), or (bool, bool, bool, bool)
         Free ends policy.
+    trim_ends : bool
+        End trimming policy.
 
     Returns
     -------
-    lead1, trail1, lead2, trail2 : bool
-        Whether leading and trailing gaps of seq1 and seq2 are free.
+    tuple of
+        (bool, bool)
+            Leading gaps of sequences 1 and 2 are free, respectively.
+        (bool, bool)
+            Trailing gaps of sequences 1 and 2 are free, respectively.
+    tuple of
+        (bool, bool)
+            Leading gaps of sequences 1 and 2 to be trimmed, respectively.
+        (bool, bool)
+            Trailing gaps of sequences 1 and 2 to be trimmed, respectively.
+
+    Notes
+    -----
+    This function returns a total of eight Booleans contained in three layers of nested
+    tuples. This is for granular control of end gap treatment.
 
     """
+    # not relevant
+    if local:
+        return (((True,) * 2,) * 2,) * 2
+
     # all four ends
     if np.isscalar(free_ends):
-        return free_ends, free_ends, free_ends, free_ends
+        free_lead = free_trail = (free_ends,) * 2
 
     # both ends for seq1 and seq2
     elif (n := len(free_ends)) == 2:
         free1, free2 = free_ends
-        return free1, free1, free2, free2
+        free_lead = free_trail = (free1, free2)
 
     # leading and trailing ends for seq1 and seq2
     elif n == 4:
         lead1, trail1, lead2, trail2 = free_ends
-        return lead1, trail1, lead2, trail2
+        free_lead, free_trail = (lead1, lead2), (trail1, trail2)
 
     else:
         raise ValueError("`free_ends` must be one, two or four Booleans.")
+
+    # whether free ends should be trimmed
+    if trim_ends:
+        trim_lead, trim_trail = free_lead, free_trail
+    else:
+        trim_lead = trim_trail = (False, False)
+
+    return (free_lead, free_trail), (trim_lead, trim_trail)
 
 
 def _alloc_matrices(m, n, affine, dtype=float):
@@ -692,15 +766,17 @@ def _all_stops(scomat, local, trail1, trail2, eps=1e-5):
         return scomat[m, n], np.array([[m, n]])
 
 
-def _encode_path(path, i, j):
+def _encode_path(path, i0, i1, j0, j1):
     """Perform run-length encoding (RLE) on a dense alignment path.
 
     Parameters
     ----------
     path : ndarray of uint8 of shape (n_positions,)
         Dense alignment path.
-    i, j : int
-        Start positions in sequences 1 and 2, respectively.
+    i0, i1 : int
+        Start and stop positions in sequences 1, respectively.
+    j0, j1 : int
+        Start and stop positions in sequences 2, respectively.
 
     Returns
     -------
@@ -714,10 +790,11 @@ def _encode_path(path, i, j):
     """
     segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
     lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
-    return PairAlignPath(lens, path[segs], starts=[i, j])
+    ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
+    return PairAlignPath(lens, path[segs], ranges=ranges)
 
 
-def _trailing_gaps(path, pos, i, j, m, n):
+def _trailing_gaps(path, pos, i, j, m, n, local, trim1, trim2):
     """Fill trailing gaps before traceback starts.
 
     Parameters
@@ -730,25 +807,39 @@ def _trailing_gaps(path, pos, i, j, m, n):
         Current row and column indices in the matrix.
     m, n : int
         Last row and column indices in the matrix (lengths of seq1 and seq2).
+    local : bool
+        Global (False) or local (True) alignment.
+    trim1, trim2 : bool
+        Exclude trailing gaps in sequences 1 and 2, respectively.
 
     Returns
     -------
     int
         Updated start position of the path.
+    int, int
+        Stop positions of the path in sequences 1 and 2, respectively.
 
     """
+    if local:
+        return pos, i, j
+
     # bottom row: ends with insertions (gaps in seq1)
-    if i == m and j < n:
+    if not trim1 and i == m and j < n:
         pos -= n - j
         path[pos:] = 1
+        return pos, m, n
+
     # right-most column: ends with deletions (gaps in seq2)
-    elif j == n and i < m:
+    elif not trim2 and j == n and i < m:
         pos -= m - i
         path[pos:] = 2
-    return pos
+        return pos, m, n
+
+    else:
+        return pos, i, j
 
 
-def _leading_gaps(path, pos, i, j):
+def _leading_gaps(path, pos, i, j, local, trim1, trim2):
     """Fill leading gaps after traceback ends.
 
     Parameters
@@ -759,26 +850,50 @@ def _leading_gaps(path, pos, i, j):
         Current start position of the path.
     i, j: int
         Current row and column indices in the matrix.
+    local : bool
+        Global (False) or local (True) alignment.
+    trim1, trim2 : bool
+        Exclude leading gaps in sequences 1 and 2, respectively.
 
     Returns
     -------
     int
         Updated start position of the path.
+    int, int
+        Start positions of the path in sequences 1 and 2, respectively.
 
     """
+    if local:
+        return pos, i, j
     stop = pos
+
     # top row: starts with insertions (gaps in seq1)
-    if i == 0 and j > 0:
+    if not trim1 and i == 0 and j > 0:
         pos -= j
         path[pos:stop] = 1
+        return pos, 0, 0
+
     # left-most column: starts with deletions (gaps in seq2)
-    elif j == 0 and i > 0:
+    elif not trim2 and j == 0 and i > 0:
         pos -= i
         path[pos:stop] = 2
-    return pos
+        return pos, 0, 0
+
+    else:
+        return pos, i, j
 
 
-def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
+def _traceback_one(
+    i,
+    j,
+    matrices,
+    gap_open,
+    gap_extend,
+    local=False,
+    leads=(False, False),
+    trails=(False, False),
+    eps=1e-5,
+):
     """Traceback and return one optimal alignment path.
 
     Parameters
@@ -791,8 +906,12 @@ def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
         Gap opening penalty.
     gap_extend : float
         Gap extension penalty.
-    local : bool
+    local : bool, optional
         Global (False) or local (True) alignment.
+    leads : (bool, bool), optional
+        Whether leading gaps of sequences 1 and 2 should be trimmed, respectively.
+    trails : (bool, bool), optional
+        Whether trailing gaps of sequences 1 and 2 should be trimmed, respectively.
     eps : float, optional
         Absolute tolerance.
 
@@ -836,8 +955,7 @@ def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
     path = np.empty(pos, dtype=np.uint8)
 
     # fill trailing gaps (from edge to bottom-right cell).
-    if not local:
-        pos = _trailing_gaps(path, pos, i, j, m, n)
+    pos, i1, j1 = _trailing_gaps(path, pos, i, j, m, n, local, *trails)
 
     # Traceback matrix body. This is a time-consuming step. However, it is O(m + n),
     # thus is faster than the matrix filling step.
@@ -849,12 +967,10 @@ def _traceback_one(i, j, matrices, gap_open, gap_extend, local, eps=1e-5):
         pos, i, j = _trace_one_linear(path, pos, i, j, scomat, gap_extend, local, eps)
 
     # fill leading gaps (from top-left cell to edge).
-    if not local:
-        pos = _leading_gaps(path, pos, i, j)
-        i, j = 0, 0
+    pos, i0, j0 = _leading_gaps(path, pos, i, j, local, *leads)
 
     # encode path
-    return _encode_path(path[pos:], i, j)
+    return _encode_path(path[pos:], i0, i1, j0, j1)
 
 
 """Encodings of moving directions during traceback. Columns are:
@@ -1003,7 +1119,9 @@ def _traceback_all(
     target,
     gap_open,
     gap_extend,
-    local,
+    local=False,
+    leads=(False, False),
+    trails=(False, False),
     max_paths=None,
     eps=1e-5,
 ):
@@ -1023,8 +1141,12 @@ def _traceback_all(
         Gap opening penalty.
     gap_extend : float
         Gap extension penalty.
-    local : bool
+    local : bool, optional
         Global (False) or local (True) alignment.
+    leads : (bool, bool), optional
+        Whether leading gaps of sequences 1 and 2 should be trimmed, respectively.
+    trails : (bool, bool), optional
+        Whether trailing gaps of sequences 1 and 2 should be trimmed, respectively.
     max_paths : int, optional
         Maximum number of paths to return, or None to return all paths. Cannot be 0.
     eps : float, optional
@@ -1077,8 +1199,7 @@ def _traceback_all(
         pos = max_len
 
         # fill trailing gaps
-        if not local:
-            pos = _trailing_gaps(path, pos, i, j, m, n)
+        pos, i1, j1 = _trailing_gaps(path, pos, i, j, m, n, local, *trails)
 
         # matrix index (start from main matrix (0))
         mat = 0
@@ -1093,19 +1214,18 @@ def _traceback_all(
 
             # 1) Local alignment: Path terminates where cell = 0.
             if local and abs(scomat[i, j]) <= eps:
+                i0, j0 = i, j
                 finished = True
 
             # 2) Global alignment: Reached the top or left-most edge of the matrix.
             # Path will extend straight left or up to the top-left cell.
             elif i == 0 or j == 0:
-                if not local:
-                    pos = _leading_gaps(path, pos, i, j)
-                    i, j = 0, 0
+                pos, i0, j0 = _leading_gaps(path, pos, i, j, local, *leads)
                 finished = True
 
             # Create a path object, and halt if the path number limit has been reached.
             if finished:
-                paths.append(_encode_path(path[pos:], i, j))
+                paths.append(_encode_path(path[pos:], i0, i1, j0, j1))
                 if max_paths and len(paths) == max_paths:
                     break
                 else:

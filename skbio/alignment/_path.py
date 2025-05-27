@@ -7,9 +7,10 @@
 # ----------------------------------------------------------------------------
 
 import collections
-from typing import NamedTuple, Optional, Union, Tuple, List, TYPE_CHECKING
+from typing import Optional, Tuple
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
@@ -85,15 +86,15 @@ class AlignPath(SkbioObject):
     coordinates (Biopython).
 
     In addition to alignment operations, an ``AlignPath`` object also stores the ranges
-    of the aligned region in the original sequences. This facilitates extraction of
-    aligned sequences. The start and stop coordinates are 0-based and half-open,
-    consistent with Python indexing, and compatible with the
-    :wiki:`BED format <BED_(file_format)>`. Therefore, the aligned part of a sequence
-    can be extracted with ``seq[start:stop]``.
+    (start and stop positions) of the aligned region in the original sequences. This
+    facilitates extraction of aligned sequences. The positions are 0-based and
+    half-open, consistent with Python indexing, and compatible with the
+    :wiki:`BED format <BED_(file_format)>`.
 
     The ranges can be defined by supplying ``starts``, ``stops`` or ``ranges``. With
-    either of the first two, the program will calculate the full ranges. For the last
-    one, it will NOT validate the correctness of the values but simply take them.
+    either of the first two, the program will locate the other side based on lengths
+    and states. For the last one, the program will NOT validate the correctness of the
+    values but simply take them.
 
     Examples
     --------
@@ -161,7 +162,15 @@ class AlignPath(SkbioObject):
 
     """
 
-    def __init__(self, lengths, states, *, ranges=None, starts=None, stops=None):
+    def __init__(
+        self,
+        lengths: ArrayLike,
+        states: ArrayLike,
+        *,
+        ranges: Optional[ArrayLike] = None,
+        starts: Optional[ArrayLike] = None,
+        stops: Optional[ArrayLike] = None,
+    ):
         self._lengths = np.asarray(lengths, dtype=np.intp)
         if self._lengths.ndim > 1:
             raise TypeError("`lengths` must be a 1-D array.")
@@ -233,27 +242,27 @@ class AlignPath(SkbioObject):
         )
 
     @property
-    def lengths(self) -> np.ndarray:
+    def lengths(self) -> NDArray[np.intp]:
         """Array of lengths of segments in alignment path."""
         return self._lengths
 
     @property
-    def states(self) -> np.ndarray:
+    def states(self) -> NDArray[np.uint8]:
         """Array of gap status of segments in alignment path."""
         return self._states
 
     @property
-    def ranges(self) -> np.ndarray:
+    def ranges(self) -> NDArray[np.intp]:
         """Array of (start, stop) positions of sequences in the alignment."""
         return self._ranges
 
     @property
-    def starts(self) -> np.ndarray:
+    def starts(self) -> NDArray[np.intp]:
         """Array of start positions of sequences in the alignment."""
         return self._ranges[:, 0]
 
     @property
-    def stops(self) -> np.ndarray:
+    def stops(self) -> np.ndarray[np.intp]:
         """Array of stop positions of sequences in the alignment."""
         return self._ranges[:, 1]
 
@@ -272,7 +281,7 @@ class AlignPath(SkbioObject):
         r"""Calculate the size of aligned region within each sequence."""
         return (self._lengths * (1 - self._to_bits(count=count))).sum(axis=1)
 
-    def to_bits(self, expand=True):
+    def to_bits(self, expand=True) -> NDArray[np.uint8]:
         r"""Unpack the alignment path into an array of bits.
 
         .. versionchanged:: 0.6.4
@@ -676,13 +685,10 @@ class AlignPath(SkbioObject):
                [ 0, -1, -1,  1,  2, -1]])
 
         """
-        errmsg = "Gap must be an integer, np.nan, np.inf, 'del', or 'mask'."
+        errmsg = "Gap must be an integer, 'del', or 'mask'."
         valid_gaps = {"del", "mask"}
         if isinstance(gap, str):
             if gap not in valid_gaps:
-                raise TypeError(errmsg)
-        elif isinstance(gap, float):
-            if not (np.isnan(gap) or np.isinf(gap)):
                 raise TypeError(errmsg)
         elif not np.issubdtype(type(gap), np.integer):
             raise TypeError(errmsg)
@@ -861,7 +867,15 @@ class PairAlignPath(AlignPath):
 
     """
 
-    def __init__(self, lengths, states, *, ranges=None, starts=None, stops=None):
+    def __init__(
+        self,
+        lengths: ArrayLike,
+        states: ArrayLike,
+        *,
+        ranges: Optional[ArrayLike] = None,
+        starts: Optional[ArrayLike] = None,
+        stops: Optional[ArrayLike] = None,
+    ):
         if ranges is None and starts is None and stops is None:
             starts = [0, 0]
         super().__init__(lengths, states, ranges=ranges, starts=starts, stops=stops)
@@ -995,7 +1009,7 @@ class PairAlignPath(AlignPath):
                 elif state == 2:
                     cigar.append(str(length) + "D")
                     idx1 += length
-                elif state == 3:
+                else:  # state == 3:
                     cigar.append(str(length) + "P")
             return "".join(cigar)
         else:
