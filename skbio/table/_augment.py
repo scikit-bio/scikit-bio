@@ -28,7 +28,7 @@ def _validate_tree(tree: TreeNode) -> None:
         raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
 
 
-def _validate_label(
+def _validate_label(  # type: ignore[return]
     label: np.ndarray, matrix: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """Ensure that the provided label is appropriate for the provided matrix.
@@ -473,19 +473,18 @@ def aitchison_mixup(
         augmented_matrix.append(augmented_x)
     augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
     if label is not None:
-        augmented_label = np.concatenate([one_hot_label, augmented_label])
+        augmented_label_ = np.concatenate([one_hot_label, augmented_label])
     else:
-        augmented_label = None
-    print(augmented_label)
+        augmented_label_ = None
     return _create_table(augmented_matrix, backend=output_format), _create_table(
-        augmented_label, backend=output_format
+        augmented_label_, backend=output_format
     )
 
 
 def compositional_cutmix(
     table,
     n_samples: int,
-    label: Optional[np.ndarray] = None,
+    label: np.ndarray,
     normalize: bool = True,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
     output_format: Optional[str] = None,
@@ -572,8 +571,7 @@ def compositional_cutmix(
     rng = get_rng(seed)
 
     matrix, row_ids, col_ids = _ingest_array(table)
-    if label is not None:
-        label, one_hot_label = _validate_label(label, matrix)
+    label, one_hot_label = _validate_label(label, matrix)
 
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):
@@ -595,10 +593,10 @@ def compositional_cutmix(
         label_ = label[idx1]
         augmented_label.append(label_)
 
-    augmented_matrix = np.array(augmented_matrix)
-    augmented_label = np.array(augmented_label)
-    augmented_matrix = np.concatenate([matrix, augmented_matrix], axis=0)
-    augmented_label = np.concatenate([label, augmented_label])
+    augmented_matrix_ = np.array(augmented_matrix)
+    augmented_label_ = np.array(augmented_label)
+    augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
+    augmented_label = np.concatenate([label, augmented_label_])
     return _create_table(augmented_matrix, backend=output_format), _create_table(
         augmented_label, backend=output_format
     )
