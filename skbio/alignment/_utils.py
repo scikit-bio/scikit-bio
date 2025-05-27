@@ -6,9 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from collections.abc import Iterable
+from typing import Iterable, Union, Tuple, List, TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import NDArray
 
 from skbio.alignment import TabularMSA, AlignPath
 from skbio.sequence import Sequence, GrammaredSequence, SubstitutionMatrix
@@ -19,21 +20,39 @@ from skbio.sequence._alphabet import (
 )
 
 
+# This could be exposed as a public API.
+SequenceLike = Union[
+    "Sequence",
+    str,
+    bytes,
+    Iterable[Union[str, bytes, int, float, bool]],
+    NDArray,
+]
+
+
+# This could be exposed as a public API.
+AlignmentLike = Union[
+    "TabularMSA",
+    Iterable["SequenceLike"],
+    Tuple["AlignPath", Iterable["SequenceLike"]],
+]
+
+
 # cached identity matrices for alignment with match/mismatch scores
-_idmats = {}
+_idmats: dict[Union[str, type], NDArray] = {}
 
 # indices of cached identity matrices
-_ididxs = {}
+_ididxs: dict[type, NDArray] = {}
 
 
 def encode_sequences(
-    seqs,
-    sub_score,
-    aligned=False,
-    dtype=float,
-    gap_chars="-",
-    not_empty=True,
-):
+    seqs: Iterable["SequenceLike"],
+    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    aligned: bool = False,
+    dtype: type = float,
+    gap_chars: str = "-",
+    not_empty: bool = True,
+) -> Tuple[List[NDArray], NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms sequences into indices in a substitution matrix to
@@ -185,7 +204,11 @@ def encode_sequences(
     return seqs, submat, gaps
 
 
-def encode_alignment(aln, sub_score, gap_chars="-"):
+def encode_alignment(
+    aln: "AlignmentLike",
+    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    gap_chars: str = "-",
+) -> Tuple[List[NDArray], NDArray, NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms an alignment into a 2D array of indices in a

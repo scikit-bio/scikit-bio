@@ -6,13 +6,25 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Union, Tuple, TYPE_CHECKING
+
 import numpy as np
 
 from ._utils import encode_alignment, prep_gapcost
 from ._cutils import _trim_end_gaps, _multi_align_score
 
+if TYPE_CHECKING:  # pragma: no cover
+    from ._utils import AlignmentLike
+    from skbio.sequence import SubstitutionMatrix
 
-def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
+
+def align_score(
+    alignment: "AlignmentLike",
+    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str] = (1.0, -1.0),
+    gap_cost: Union[float, Tuple[float, float]] = 2.0,
+    free_ends: bool = True,
+    gap_chars: str = "-.",
+) -> float:
     r"""Calculate the alignment score of two or more aligned sequences.
 
     For two sequences, their pairwise alignment score will be calculated. For three or
@@ -32,12 +44,12 @@ def align_score(alignment, sub_score, gap_cost, free_ends=True, gap_chars="-."):
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a substitution. May be two numbers (match, mismatch), a substitution
-        matrix, or its name. See :func:`pair_align` for instructions. Default is
+        matrix, or its name. See :func:`pair_align` for details. Default is
         (1.0, -1.0).
 
     gap_cost : float or tuple of (float, float)
         Penalty of a gap. May be one (linear) or two numbers (affine). See
-        :func:`pair_align` for instructions and rationales. Default is -2.0.
+        :func:`pair_align` for details. Default is 2.0.
 
     free_ends : bool, optional
         If True (default), gaps at the sequence terminals are free from penalization.

@@ -20,7 +20,8 @@ from ._cutils import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from skbio.sequence import Sequence, SubstitutionMatrix
+    from skbio.sequence import SubstitutionMatrix
+    from ._utils import SequenceLike
 
 
 class PairAlignResult(NamedTuple):
@@ -30,11 +31,11 @@ class PairAlignResult(NamedTuple):
 
 
 def pair_align(
-    seq1: Union["Sequence", str],
-    seq2: Union["Sequence", str],
+    seq1: "SequenceLike",
+    seq2: "SequenceLike",
     /,
     mode: str = "global",
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix"] = (1.0, -1.0),
+    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str] = (1.0, -1.0),
     gap_cost: Union[float, Tuple[float, float]] = 2.0,
     free_ends: Union[bool, Tuple[bool, bool], Tuple[bool, bool, bool, bool]] = True,
     trim_ends: bool = False,
