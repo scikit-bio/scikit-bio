@@ -7,6 +7,11 @@
 # ----------------------------------------------------------------------------
 
 import warnings
+from typing import Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from numpy.random import RandomState, Generator
+
 import numpy as np
 import pandas as pd
 from skbio.table import Table
@@ -17,19 +22,38 @@ from skbio.util import get_rng
 from skbio.util.config._dispatcher import _ingest_array, _create_table
 
 
-def _validate_tree(tree):
+def _validate_tree(tree: TreeNode) -> None:
+    """Ensure that tree is a TreeNode object."""
     if tree is not None and not isinstance(tree, TreeNode):
         raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
 
 
-def _validate_label(label, matrix):
-    # ensure number of elements in label matches number of samples,
-    # assuming matrix is samples=rows and features=columns
-    if not label.shape[0] == matrix.shape[0]:
-        raise ValueError(
-            f"Number of elements in label ({label.shape[0]}) does not "
-            f"match number of samples in input data ({matrix.shape[0]})"
-        )
+def _validate_label(
+    label: np.ndarray, matrix: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Ensure that the provided label is appropriate for the provided matrix.
+
+    Parameters
+    ----------
+    label : np.ndarray
+        The class labels for the data. The label is expected to have shape
+        ``(n_samples,)`` or ``(n_samples, n_classes)``.
+    matrix : np.ndarray
+        The data matrix of shape ``(n_samples, n_features).``
+
+    Returns
+    -------
+    label_1d : np.ndarray
+        The class labels in 1D format with shape ``(n_samples,)``. Contains
+        integer class labels from 0 to n_classes-1. If the input was already
+        1D, this is the same as the input. If the input was one-hot encoded,
+        this is the argmax reconstruction.
+    label_one_hot : np.ndarray
+        The class labels in one-hot encoded format with shape
+        ``(n_samples, n_classes)``. Each row contains exactly one 1 and the
+        rest 0s, indicating the class membership for that sample.
+
+    """
     if not isinstance(label, np.ndarray):
         raise ValueError(
             f"label must be a numpy.ndarray, but got {type(label)} instead."
@@ -39,7 +63,12 @@ def _validate_label(label, matrix):
             f"labels should have shape (n_samples,) or (n_samples, n_classes)"
             f"but got {label.shape} instead."
         )
-    if label.ndim == 1:  # and num_classes is None:
+    if not label.shape[0] == matrix.shape[0]:
+        raise ValueError(
+            f"Number of elements in label ({label.shape[0]}) does not "
+            f"match number of samples in input data ({matrix.shape[0]})"
+        )
+    if label.ndim == 1:
         if label.dtype != int:
             raise TypeError(f"label must only contain integer values.")
         # check that labels is 0 indexed
@@ -76,11 +105,11 @@ def _validate_label(label, matrix):
             )
         # do this for consistent return values whether a one hot encoded or 1D label
         # is provided
-        reconstructed_label = np.argmax(label, axis=1)
-        return reconstructed_label, label
+        label_1d = np.argmax(label, axis=1)
+        return label_1d, label
 
 
-def _aitchison_addition(x, v):
+def _aitchison_addition(x: np.ndarray, v: np.ndarray) -> np.ndarray:
     r"""Perform Aitchison addition on two samples x and v.
 
     Parameters
@@ -98,7 +127,7 @@ def _aitchison_addition(x, v):
     return (xv := x * v) / np.sum(xv)
 
 
-def _aitchison_scalar_multiplication(lam, x):
+def _aitchison_scalar_multiplication(lam: float, x: np.ndarray) -> np.ndarray:
     r"""Perform Aitchison multiplication on sample x, with scalar lambda.
 
     Parameters
@@ -117,11 +146,15 @@ def _aitchison_scalar_multiplication(lam, x):
     return (x_to_lam := x**lam) / np.sum(x_to_lam)
 
 
-def _get_all_possible_pairs(matrix, label=None, intra_class=False):
+def _get_all_possible_pairs(
+    matrix: np.ndarray, label: Optional[np.ndarray] = None, intra_class: bool = False
+) -> np.ndarray:
     r"""Get all possible pairs of samples that can be used for augmentation.
 
     Parameters
     ----------
+    label : np.ndarray, optional
+        The 1D class labels for the data.
     intra_class : bool
         If ``True``, only return pairs of samples within the same class. This
         functionality is only available for binary classification.
@@ -160,13 +193,13 @@ def _get_all_possible_pairs(matrix, label=None, intra_class=False):
 
 def mixup(
     table,
-    n_samples,
-    label=None,
-    alpha=2,
-    seed=None,
-    output_format=None,
-    normalize=False,
-):
+    n_samples: int,
+    label: Optional[np.ndarray] = None,
+    alpha: float = 2,
+    normalize: bool = False,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    output_format: Optional[str] = None,
+) -> tuple:
     r"""Data Augmentation by vanilla mixup.
 
     Randomly select two samples :math:`s_1` and :math:`s_2` from the OTU table,
@@ -188,13 +221,28 @@ def mixup(
 
     Parameters
     ----------
+    table : table_like
+        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
     n_samples : int
         The number of new samples to generate.
+    label : np.ndarray
+        The label of the table. The label is expected to has a shape of ``(n_samples,)``
+        or ``(n_samples, n_classes)``.
     alpha : float
         The alpha parameter of the beta distribution.
+    normalize : bool, optional
+        If ``True`` and the input is not already compositional, scikit-bio's
+        :func:`~skbio.stats.composition.closure` function will be called, ensuring
+        values for each sample add up to 1. Defaults to ``False``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+    output_format : str, optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Examples
     --------
@@ -214,9 +262,9 @@ def mixup(
 
     Returns
     -------
-    augmented_matrix : numpy.ndarray
+    augmented_matrix : table_like
         The augmented matrix.
-    augmented_label : numpy.ndarray
+    augmented_label : table_like
         The augmented label, in one-hot encoding.
         If the user wants to use the augmented label for regression,
         users can simply call ``np.argmax(aug_label, axis=1)``
@@ -284,8 +332,14 @@ def mixup(
 
 
 def aitchison_mixup(
-    table, n_samples, label=None, alpha=2, seed=None, output_format=None, normalize=True
-):
+    table,
+    n_samples: int,
+    label: Optional[np.ndarray] = None,
+    alpha: float = 2,
+    normalize: bool = True,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    output_format: Optional[str] = None,
+) -> tuple:
     r"""Data Augmentation by Aitchison mixup.
 
     This function requires the data to be compositional. If the
@@ -293,19 +347,34 @@ def aitchison_mixup(
 
     Parameters
     ----------
+    table : table_like
+        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
     n_samples : int
         The number of new samples to generate.
+    label : np.ndarray
+        The label of the table. The label is expected to has a shape of ``(n_samples,)``
+        or ``(n_samples, n_classes)``.
     alpha : float
         The alpha parameter of the beta distribution.
+    normalize : bool, optional
+        If ``True`` and the input is not already compositional, scikit-bio's
+        :func:`~skbio.stats.composition.closure` function will be called, ensuring
+        values for each sample add up to 1. Defaults to ``True``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+    output_format : str, optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Returns
     -------
-    augmented_matrix : numpy.ndarray
+    augmented_matrix : table_like
         The augmented matrix.
-    augmented_label : numpy.ndarray
+    augmented_label : table_like
         The augmented label, in one-hot encoding.
         if the user want to use the augmented label for regression,
         users can simply call ``np.argmax(aug_label, axis=1)``
@@ -407,30 +476,50 @@ def aitchison_mixup(
         augmented_label = np.concatenate([one_hot_label, augmented_label])
     else:
         augmented_label = None
-
+    print(augmented_label)
     return _create_table(augmented_matrix, backend=output_format), _create_table(
         augmented_label, backend=output_format
     )
 
 
 def compositional_cutmix(
-    table, n_samples, label=None, seed=None, output_format=None, normalize=True
-):
+    table,
+    n_samples: int,
+    label: Optional[np.ndarray] = None,
+    normalize: bool = True,
+    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    output_format: Optional[str] = None,
+) -> tuple:
     r"""Data Augmentation by compositional cutmix.
 
     Parameters
     ----------
+    table : table_like
+        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
     n_samples : int
         The number of new samples to generate.
+    label : np.ndarray
+        The label of the table. The label is expected to has a shape of
+        ``(n_samples,)`` or ``(n_samples, n_classes)``.
+    normalize : bool, optional
+        If ``True`` and the input is not already compositional, scikit-bio's
+        :func:`~skbio.stats.composition.closure` function will be called, ensuring
+        values for each sample add up to 1. Defaults to ``True``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+    output_format : str, optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
 
     Returns
     -------
-    augmented_matrix : numpy.ndarray
+    augmented_matrix : table_like
         The augmented matrix.
-    augmented_label : numpy.ndarray
+    augmented_label : table_like
         The augmented label, the label is 1D array.
         User can use the 1D label for both classification and regression.
 
