@@ -178,7 +178,8 @@ def pair_align(
     sequence alignment. It is commonly known as the Needleman-Wunsch algorithm [1]_ for
     global alignment, or the Smith-Waterman algorithm [2]_ for local alignment. These
     two algorithms use linear gap penalty. When affine gap penalty is specified, the
-    underlying method is the Gotoh algorithm [3]_, with later modifications [4]_.
+    underlying method is the Gotoh algorithm [3]_, with later modifications [4]_. The
+    method is exact and the output alignments are guaranteed to be optimal.
 
     **Parameters**
 
@@ -227,23 +228,17 @@ def pair_align(
 
     The algorithm is quadratic (*O*\(*mn*\)) in both time and space, where *m* and *n*
     are the lengths of the two sequences, respectively. Affine gap penalty costs 3x
-    as much memory and 2.5-3x as much runtime than linear gap penalty.
+    as much memory and 2-3x as much runtime than linear gap penalty.
 
     The underlying dynamic programming kernel is a plain dual loop structure, without
-    further vectorization
-
-
-    Although this algorithm does not utilize various manual optimization techniques
-    that have been developed and shown effective in pairwise sequence alignment, such
-    as wavefront sweep, loop tiling, SIMD striping and prefix scan, they are noted
-    here for reference.
+    further vectorization or parallelization techniques.
 
     This function does not discriminate between seq1 and seq2. Nevertheless, aligning a
     shorter seq1 (often referred to as "query") against a longer seq2 (often referred to
     as "target" or "reference") is usually more efficient than the other way around.
 
     The algorithm defaults to float32, which is sufficient for most use cases. It also
-    supports float64, with a higher memory cost (4x) and moderately increased runtime.
+    supports float64, with a higher memory cost (2x) and moderately increased runtime.
     If float64 is what you need, you may supply a substitution matrix of float64 type,
     using e.g., ``SubstitutionMatrix.identity("ACGT", 1, -2, dtype="float64")``, which
     will be respected by the function without casting throughout calculation.
