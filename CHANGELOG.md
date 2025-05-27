@@ -4,10 +4,17 @@
 
 ### Features
 
+* Added function `pair_align`, a re-designed pairwise sequence alignment engine that is versatile, efficient, and generalizable ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)). It is meant to replace the old slow Python engine and the SSW wrapper. It supports:
+  - Global, local and semi-global alignments (with all four ends customizable).
+  - Nucleotide, protein, and un-grammared sequences, plain strings (ASCII and Unicode), words/tokens, and numbers.
+  - Match/mismatch scores or substitution matrix.
+  - Linear and affine gap penalties.
+  - Integer, decimal and infinite scores.
+  - Returning one, multiple or all optimal alignment paths.
+* Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Added `AlignPath.to_aligned` to extract aligned regions of the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Added `AlignPath.from_aligned` to reconstruct a path from aligned sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Added parameter `starts` to `AlignPath.from_tabular` to specify starting positions in the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
-* Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment. It supports linear and affine gap penalties, match/mismatch or substitution matrix, and optional terminal gap penalty ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187)).
 
 ### Performance enhancements

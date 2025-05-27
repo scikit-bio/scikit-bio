@@ -454,6 +454,71 @@ class PairAlignTests(unittest.TestCase):
         path, = obs.paths
         self.assertEqual(path.to_cigar(), "3D3M3I")
 
+    def test_pair_align_text(self):
+        """Text analysis."""
+        # edit (Levenshtein) distance
+        txts = ["here", "hear"]
+        obs = pair_align(*txts, sub_score=(0, -1), gap_cost=1, free_ends=False)
+        self.assertEqual(obs.score, -2)
+        self.assertListEqual(obs.paths[0].to_aligned(txts), ["he-re", "hear-"])
+
+        # longest common subsequence (LCS)
+        txts = ["strawberry", "stranger"]
+        obs = pair_align(*txts, mode="local", sub_score=(1, -np.inf), gap_cost=0)
+        exp = ["stra--wber", "strang--er"]  # LCS is "straer"; gap allowed
+        self.assertListEqual(obs.paths[0].to_aligned(txts), exp)
+
+        # longest common substring
+        obs = pair_align(*txts, mode="local", sub_score=(1, -np.inf), gap_cost=np.inf)
+        exp = ["stra", "stra"]  # "stra"; gap not allowed
+        self.assertListEqual(obs.paths[0].to_aligned(txts), exp)
+
+    def test_pair_align_trim(self):
+        """Trim free gaps."""
+        # make match score large such that "AAA" in both sequences alway align
+        scoring = dict(sub_score=(9, -1))
+        # baseline (-AAA- vs TAAAT)
+        obs = pair_align("AAA", "TAAAT", **scoring)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
+        # trim both ends
+        obs = pair_align("AAA", "TAAAT", **scoring, trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M")
+        # no free, no trim
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=False, trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
+        # trim seq1 (can trim)
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(True, False),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M")
+        # trim seq2 (nothing to trim)
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(False, True),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
+        # trim leading gap
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(True, False, False, False),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M1I")
+        # no impact
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(True, False, True, False),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M1I")
+        # trim trailing gap
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(False, True, False, False),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M")
+        # no impact
+        obs = pair_align("AAA", "TAAAT", **scoring, free_ends=(False, True, False, True),
+                         trim_ends=True)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I3M")
+
+    def test_pair_align_search(self):
+        """Search for short query in long target."""
+        obs = pair_align("r", "strawberry", trim_ends=True, max_paths=None).paths
+        self.assertEqual(len(obs), 3)
+        self.assertEqual(obs[0].starts[1], 2)
+        self.assertEqual(obs[1].starts[1], 7)
+        self.assertEqual(obs[2].starts[1], 8)
+
     def test_pair_align_edge(self):
         """Edge cases."""
         # distinct sequences: global alignment completely misaligned
@@ -479,6 +544,44 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.paths[0].to_cigar(), "1M")
         obs = pair_align("A", "T", mode="local")
         self.assertEqual(len(obs.paths), 0)  # no path returned
+
+        # gap cost is negative (more favorable than match)
+        obs = pair_align("A", "A", sub_score=(1, -1), gap_cost=-2).paths[0]
+        self.assertEqual(obs.to_cigar(), "1I1D")
+        self.assertListEqual(obs.to_aligned(("A", "A")), ["-A", "A-"])
+
+        # mismatch score greater than match score
+        obs = pair_align("ATG", "ATG", sub_score=(1, 2)).paths[0]
+        self.assertEqual(obs.to_cigar(), "1I2M1D")
+        self.assertListEqual(obs.to_aligned(("ATG", "ATG")), ["-ATG", "ATG-"])
+
+    def test_pair_align_inf(self):
+        """Infinite scores."""
+        # infinite match score (returned score is also infinite)
+        obs = pair_align("ATG", "ATG", sub_score=(np.inf, 0))
+        self.assertTrue(np.isposinf(obs.score))
+
+        # infinite match score not working (there is no match)
+        obs = pair_align("AT", "GC", sub_score=(np.inf, 0))
+        self.assertEqual(obs.score, 0)
+
+        # infinite gap cost (which disables gaps)
+        obs = pair_align("ATT", "GGC", sub_score=(1, -100), gap_cost=np.inf,
+                         free_ends=False)
+        self.assertEqual(obs.score, -300)
+        self.assertEqual(obs.paths[0].to_cigar(), "3M")
+
+        # make sure things don't break
+        obs = pair_align("AT", "A", sub_score=(np.inf, np.inf),
+                         gap_cost=(np.inf, np.inf))
+        self.assertTrue(np.isposinf(obs.score))
+
+    def test_pair_align_nan(self):
+        """NaN scores."""
+        # this is nonsense; just want to make sure things don't break
+        obs = pair_align("AT", "A", sub_score=(np.nan, np.nan),
+                         gap_cost=(np.nan, np.nan))
+        self.assertTrue(np.isnan(obs.score))
 
     def test_pair_align_error(self):
         """Errors."""
