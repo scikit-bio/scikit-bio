@@ -133,7 +133,8 @@ def pair_align(
 
         .. note::
            When ``mode="local"``, it is possible that there is no path with a score >
-           0. In this case, an empty list will be returned.
+           0. In this case, an empty list will be returned. ``mode=global`` guarantees
+           to return at least one path, even if it's completely misaligned.
 
     atol : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
@@ -197,7 +198,7 @@ def pair_align(
     - EBI FASTA (protein): ``sub_score="BLOSUM50", gap_cost=(8, 2)``
 
     .. note::
-       These are scoring schemes only. ``pair_align`` does not reproduce the behavior
+       These are scoring schemes only. ``pair_align`` does not reproduce the output
        of the programs mentioned.
 
     The flexibility of these parameters, especially the support for infinity, enables
@@ -308,12 +309,16 @@ def pair_align(
 
     >>> seq1 = DNA('ACTACCAGATTACTTACGGATCAGGTACTTGCCAACAA')
     >>> seq2 = DNA('CGAAACTACTAGATTACGGATCTTACTTTCCAGCAAGG')
-
     >>> res = pair_align(seq1, seq2)
+
+    The result is a named tuple consisting of score, path(s), and matrices (off by
+    default). The score represents the "goodness" of the alignment.
+
     >>> res.score
     12.0
 
-    Obtain the alignment path, which can be represented by a CIGAR string. See
+    The alignment path can be represented by a
+    :wiki:`CIGAR string <Sequence_alignment#CIGAR_Format>` . See
     :class:`PairAlignPath` for details.
 
     >>> path = res.paths[0]
@@ -336,8 +341,8 @@ def pair_align(
 
     >>> seq1 = Protein('MKRTLKGHFVQWC')
     >>> seq2 = Protein('MQMLKTHYAQTRN')
-    >>> score, paths, _ = pair_align(seq1, seq2, mode='local', sub_score='BLOSUM62',
-    ...                              gap_cost=(11, 1))
+    >>> score, paths, _ = pair_align(seq1, seq2, mode='local',
+    ...                              sub_score='BLOSUM62', gap_cost=(11, 1))
     >>> score
     23.0
 
@@ -349,9 +354,10 @@ def pair_align(
 
     >>> query = "ACCGT"
     >>> target = "AAACGCTACCGTCCGTAGACCGTGACCGTGCGAAGC"
-    >>> score, paths, _ = pair_align(query, target, mode='global', sub_score=(1, -2),
-    ...                              gap_cost=2.5, free_ends=(True, False),
-    ...                              trim_ends=True, max_paths=None)
+    >>> score, paths, _ = pair_align(query, target, mode='global',
+    ...                              sub_score=(1, -2), gap_cost=2.5,
+    ...                              free_ends=(True, False), trim_ends=True,
+    ...                              max_paths=None)
     >>> len(paths)
     3
 
@@ -369,8 +375,10 @@ def pair_align(
 
     >>> text1 = 'The quick brown fox jumps over the lazy dog'.split()
     >>> text2 = 'The slow brown wolf jumps over a lazy dog'.split()
-    >>> -int(pair_align(text1, text2, mode='global', sub_score=(0, -1), gap_cost=1,
-    ...                 free_ends=False, max_paths=0).score)
+    >>> res = pair_align(text1, text2, mode='global',
+    ...                  sub_score=(0, -1), gap_cost=1,
+    ...                  free_ends=False, max_paths=0)
+    >>> -int(res.score)
     3
 
     """
@@ -422,12 +430,11 @@ def pair_align(
     else:
         score, stops = _all_stops(matrices[0], local, *free_trail)
 
+    # Traceback from each stop to reconstruct optimal alignment path(s).
     if max_paths == 0:  # traceback is disabled
         paths = None
     elif local and abs(score) <= atol:  # no path is found
         paths = []
-
-    # Traceback from each stop to reconstruct optimal alignment path(s).
     elif max_paths == 1:
         i, j = stops[0]
         paths = [

@@ -86,7 +86,7 @@ class UtilsTests(unittest.TestCase):
 
         # Unicode sequences against ASCII matrix
         self.assertTrue(sm.is_ascii)
-        seqs = ("あいう", "あうえお")
+        seqs = ("①②③", "①③④⑤")
         msg = ("Substitution matrix has an ASCII alphabet, but sequences cannot be "
                "fully encoded into ASCII codes.")
         with self.assertRaises(ValueError) as cm:
@@ -94,7 +94,7 @@ class UtilsTests(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg)
 
         # Unicode sequences against Unicode matrix
-        sm = SubstitutionMatrix.identity("あいうえお", 1, -1)
+        sm = SubstitutionMatrix.identity("①②③④⑤", 1, -1)
         self.assertFalse(sm.is_ascii)
         obs = encode_sequences(seqs, sm)
         exp = [[0, 1, 2], [0, 2, 3, 4]]
@@ -104,7 +104,7 @@ class UtilsTests(unittest.TestCase):
 
         # with missing characters
         msg = "Sequence 2 contain character(s) absent from the substitution matrix."
-        seqs = ("あうお", "かさた")
+        seqs = ("①③⑤", "④ⓐ②")
         with self.assertRaises(ValueError) as cm:
             _ = encode_sequences(seqs, sm)
         self.assertEqual(str(cm.exception), msg)
@@ -162,7 +162,7 @@ class UtilsTests(unittest.TestCase):
         self.assertIs(submat, obs[1])
 
         # Unicode strings: submat will cover unique elements
-        seqs = ("あいう", "あうえお")
+        seqs = ("①②③", "①③④⑤")
         exp = [[0, 1, 2], [0, 2, 3, 4]]
         obs = encode_sequences(seqs, (match, mismatch))
         for o, e in zip(obs[0], exp):

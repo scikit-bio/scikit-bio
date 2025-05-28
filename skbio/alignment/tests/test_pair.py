@@ -596,15 +596,15 @@ class PairAlignTests(unittest.TestCase):
 
     def test_pair_align_error(self):
         """Errors."""
-        msg = "Sequence 2 has a length of zero."
+        with self.assertRaises(ValueError) as cm:
+            _ = pair_align("", "ATG")
+        self.assertEqual(str(cm.exception), "Sequence 1 has a length of zero.")
         with self.assertRaises(ValueError) as cm:
             _ = pair_align("ATG", "")
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = "Invalid mode: xyz."
+        self.assertEqual(str(cm.exception), "Sequence 2 has a length of zero.")
         with self.assertRaises(ValueError) as cm:
             _ = pair_align("ACGT", "TCGA", mode="xyz")
-        self.assertEqual(str(cm.exception), msg)
+        self.assertEqual(str(cm.exception), "Invalid mode: xyz.")
 
     def test_pair_align_real_1(self):
         # 16S rRNA gene sequences of Escherichia coli and Streptococcus pneumoniae
