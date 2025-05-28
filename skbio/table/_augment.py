@@ -525,6 +525,9 @@ def compositional_cutmix(
     Notes
     -----
 
+    This algorithm currently only works with binary classification problems, as it
+    requires intra-class generation of possible sample pairs.
+
     The algorithm is described in [1]_,
     This method needs to do cutmix on compositional data in the same class.
     by randomly selecting counts from one of two samples to generate
