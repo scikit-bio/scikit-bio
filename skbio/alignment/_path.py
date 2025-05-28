@@ -170,7 +170,7 @@ class AlignPath(SkbioObject):
         ranges: Optional[ArrayLike] = None,
         starts: Optional[ArrayLike] = None,
         stops: Optional[ArrayLike] = None,
-    ):
+    ) -> None:
         self._lengths = np.asarray(lengths, dtype=np.intp)
         if self._lengths.ndim > 1:
             raise TypeError("`lengths` must be a 1-D array.")
@@ -222,20 +222,14 @@ class AlignPath(SkbioObject):
         n_positions = int(self._lengths.sum())
         self._shape = _Shape(sequence=n_sequences, position=n_positions)
 
-    def __str__(self):
+    def __str__(self) -> str:
         r"""Return string representation of this alignment path."""
         # Not sure if this makes sense for this class, but it is needed for all
         # SkbioObjects.
         return self.__repr__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         r"""Return summary of the alignment path."""
-        # return (
-        #     f"<{self.__class__.__name__}, "
-        #     f"sequences: {self._shape[0]}, "
-        #     f"positions: {self._shape[1]}, "
-        #     f"segments: {self._lengths.size}>"
-        # )
         return (
             f"{self.__class__.__name__}\n{self._shape}\nlengths: "
             f"{self._lengths}\nstates: {np.squeeze(self._states)}"
@@ -262,7 +256,7 @@ class AlignPath(SkbioObject):
         return self._ranges[:, 0]
 
     @property
-    def stops(self) -> np.ndarray[np.intp]:
+    def stops(self) -> NDArray[np.intp]:
         """Array of stop positions of sequences in the alignment."""
         return self._ranges[:, 1]
 
@@ -281,7 +275,7 @@ class AlignPath(SkbioObject):
         r"""Calculate the size of aligned region within each sequence."""
         return (self._lengths * (1 - self._to_bits(count=count))).sum(axis=1)
 
-    def to_bits(self, expand=True) -> NDArray[np.uint8]:
+    def to_bits(self, expand: bool = True) -> NDArray[np.uint8]:
         r"""Unpack the alignment path into an array of bits.
 
         .. versionchanged:: 0.6.4
@@ -332,7 +326,9 @@ class AlignPath(SkbioObject):
         return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
     @classonlymethod
-    def from_bits(cls, bits, starts=None):
+    def from_bits(
+        cls, bits: ArrayLike, starts: Optional[ArrayLike] = None
+    ) -> "AlignPath":
         r"""Create an alignment path from a bit array (0 - character, 1 - gap).
 
         Parameters

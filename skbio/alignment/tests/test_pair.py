@@ -673,39 +673,31 @@ class PairAlignTests(unittest.TestCase):
 
     def test_prep_free_ends(self):
         obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (
-            ((True, True), (True, True)), ((True, True), (True, True))))
-
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
+        obs = _prep_free_ends(local=False, free_ends=False, trim_ends=False)
+        self.assertTupleEqual(obs, (0, 0, 0, 0))
         obs = _prep_free_ends(local=False, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (
-            ((True, True), (True, True)), ((False, False), (False, False))))
-
+        self.assertTupleEqual(obs, (1, 1, 1, 1))
         obs = _prep_free_ends(local=False, free_ends=True, trim_ends=True)
-        self.assertTupleEqual(obs, (
-            ((True, True), (True, True)), ((True, True), (True, True))))
-
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
         obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=False)
-        self.assertTupleEqual(obs, (
-            ((True, False), (True, False)), ((False, False), (False, False))))
-
+        self.assertTupleEqual(obs, (1, 1, 0, 0))
         obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=True)
-        self.assertTupleEqual(obs, (
-            ((True, False), (True, False)), ((True, False), (True, False))))
-
+        self.assertTupleEqual(obs, (2, 2, 0, 0))
         obs = _prep_free_ends(
             local=False, free_ends=(True, False, False, True), trim_ends=True)
-        self.assertTupleEqual(obs, (
-            ((True, False), (False, True)), ((True, False), (False, True))))
-
+        self.assertTupleEqual(obs, (2, 0, 0, 2))
         obs = _prep_free_ends(
-            local=False, free_ends=(True, False, True, False), trim_ends=True)
-        self.assertTupleEqual(obs, (
-            ((True, True), (False, False)), ((True, True), (False, False))))
+            local=False, free_ends=(True, False, True, False), trim_ends=False)
+        self.assertTupleEqual(obs, (1, 0, 1, 0))
+
+        # non-Boolean inputs
+        obs = _prep_free_ends(local=False, free_ends=(0, 1, 2, 3), trim_ends="yes")
+        self.assertTupleEqual(obs, (0, 2, 2, 2))
 
         msg = "`free_ends` must be one, two or four Booleans."
         with self.assertRaises(ValueError) as cm:
-            _ = _prep_free_ends(
-                local=False, free_ends=(True, True, True), trim_ends=False)
+            _ = _prep_free_ends(local=False, free_ends=(1, 2, 3), trim_ends=False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_alloc_matrices(self):
@@ -1077,13 +1069,13 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 0, 0, 0],
                            [0, 1, 0, 0, 0, 0],
                            [0, 0, 2, 0, 1, 0]], dtype=float)
-        obs = _traceback_one(5, 2, (scomat,), 0., 2., local=True)
+        obs = _traceback_one(5, 2, (scomat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [3, 0])
 
         # transpose: right-most column to top row
         scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(2, 5, (scomat,), 0., 2., local=True)
+        obs = _traceback_one(2, 5, (scomat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [0, 3])
 
@@ -1095,7 +1087,7 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 1, 1, 0],
                            [0, 1, 0, 0, 2],
                            [0, 0, 0, 0, 0]], dtype=float)
-        obs = _traceback_one(4, 4, (scomat,), 0., 2., local=True)
+        obs = _traceback_one(4, 4, (scomat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [2, 2])
 
@@ -1169,7 +1161,7 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -4,  -3,   0,  -4,  -4],
                            [NAN,  -4,  -4,  -1,   2,  -2]], dtype=float)
         matrices = (scomat, insmat, delmat)
-        obs = _traceback_one(4, 4, matrices, 3., 1., local=True)
+        obs = _traceback_one(4, 4, matrices, 3., 1., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "3M")
 
         # floating-point tolerance
@@ -1195,7 +1187,7 @@ class PairAlignTests(unittest.TestCase):
                            [ -6,  -3,  -2,  -3,  -3,  -5],
                            [ -8,  -5,  -4,  -3,  -4,  -4],
                            [-10,  -7,  -4,  -5,  -2,  -4]])
-        obs = _traceback_all([[5, 5]], [scomat], query, target, 0, 2)
+        obs = _traceback_all([[5, 5]], None, (scomat,), query, target, 0, 2)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "1D4M1I")
 
@@ -1208,21 +1200,18 @@ class PairAlignTests(unittest.TestCase):
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _traceback_all(
-            [[4, 5]], [scomat], submat[seq1], seq2, 0, 2)
+        obs = _traceback_all([[4, 5]], None, (scomat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 3)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
         self.assertEqual(obs[1].to_cigar(), "1M1I3M")
         self.assertEqual(obs[2].to_cigar(), "1I4M")
 
         # limit number of paths to return
-        obs = _traceback_all(
-            [[4, 5]], [scomat], submat[seq1], seq2, 0, 2, max_paths=2)
+        obs = _traceback_all([[4, 5]], 2, (scomat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
         self.assertEqual(obs[1].to_cigar(), "1M1I3M")
-        obs = _traceback_all(
-            [[4, 5]], [scomat], submat[seq1], seq2, 0, 2, max_paths=1)
+        obs = _traceback_all([[4, 5]], 1, (scomat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
 
@@ -1233,7 +1222,7 @@ class PairAlignTests(unittest.TestCase):
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
         obs = _traceback_all(
-            [[3, 5], [4, 4]], [scomat], submat[seq1], seq2, 0, 2)
+            [[3, 5], [4, 4]], None, (scomat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1I2M1I1M1D")
         self.assertEqual(obs[1].to_cigar(), "1I2M1D1M1I")
@@ -1247,8 +1236,8 @@ class PairAlignTests(unittest.TestCase):
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _traceback_all(
-            [[2, 3], [4, 2]], [scomat], submat[seq1], seq2, 0, 2, local=True)
+        obs = _traceback_all([[2, 3], [4, 2]], None, (scomat,), submat[seq1], seq2,
+                             0, 2, True, 2, 2, 2, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "2M")
         self.assertEqual(obs[1].to_cigar(), "2M")
@@ -1283,7 +1272,7 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -6,  -6,  -3,  -4,  -4,  -4],
                            [NAN,  -7,  -7,  -4,  -4,  -5,  -5]])
         matrices = [scomat, insmat, delmat]
-        obs = _traceback_all([[7, 6]], matrices, submat[seq1], seq2, 3, 1)
+        obs = _traceback_all([[7, 6]], None, matrices, submat[seq1], seq2, 3, 1)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1M1I2M2D2M")
         self.assertEqual(obs[1].to_cigar(), "1M2D2M1I2M")
@@ -1294,7 +1283,7 @@ class PairAlignTests(unittest.TestCase):
         insmat = np.ascontiguousarray(insmat.T)
         delmat = np.ascontiguousarray(delmat.T)
         matrices = [scomat, delmat, insmat]
-        obs = _traceback_all([[6, 7]], matrices, submat[seq2], seq1, 3, 1)
+        obs = _traceback_all([[6, 7]], None, matrices, submat[seq2], seq1, 3, 1)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1M2I2M1D2M")
         self.assertEqual(obs[1].to_cigar(), "1M1D2M2I2M")
@@ -1322,7 +1311,8 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -4,  -3,   0,  -4,  -4],
                            [NAN,  -4,  -4,  -1,   2,  -2]])
         matrices = [scomat, insmat, delmat]
-        obs = _traceback_all([[4, 4]], matrices, submat[seq1], seq2, 3, 1, local=True)
+        obs = _traceback_all(
+            [[4, 4]], None, matrices, submat[seq1], seq2, 3, 1, True, 2, 2, 2, 2)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "3M")
 
@@ -1331,7 +1321,7 @@ class PairAlignTests(unittest.TestCase):
         seq2 = DNA("A")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
         scomat = np.array([[1, 5], [5, 3]], dtype=float)
-        args = ([[1, 1]], (scomat,), submat[seq1], seq2, 0., 2.)
+        args = ([[1, 1]], None, (scomat,), submat[seq1], seq2, 0., 2.)
         obs = _traceback_all(*args)
         self.assertEqual(len(obs), 3)
         for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
