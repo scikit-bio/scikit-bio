@@ -180,7 +180,11 @@ def pair_align(
     global alignment, or the Smith-Waterman algorithm [2]_ for local alignment. These
     two algorithms use linear gap penalty. When affine gap penalty is specified, the
     underlying method is the Gotoh algorithm [3]_, with later modifications [4]_. The
-    method is exact and the output alignments are guaranteed to be optimal.
+    algorithms are exact and the output alignments are guaranteed to be optimal.
+
+    The algorithms are quadratic (*O*\(*mn*\)) in both time and space, where *m* and
+    *n* are the lengths of the two sequences, respectively. Affine gap penalty costs
+    3x as much memory and 2-3x as much runtime than linear gap penalty.
 
     **Parameters**
 
@@ -226,10 +230,6 @@ def pair_align(
     sequences and indexed.
 
     **Performance**
-
-    The algorithm is quadratic (*O*\(*mn*\)) in both time and space, where *m* and *n*
-    are the lengths of the two sequences, respectively. Affine gap penalty costs 3x
-    as much memory and 2-3x as much runtime than linear gap penalty.
 
     The underlying dynamic programming kernel is a plain dual loop structure, without
     further vectorization or parallelization techniques.
@@ -401,6 +401,10 @@ def pair_align(
     # The profile is essentially a position-specific scoring matrix (PSSM). This design
     # is useful for future implementation of profile search (like PSI-BLAST) and one-
     # vs-many search.
+    # Query and target must be C-contiguous for efficient loops. submat, seq1 and seq2
+    # are guaranteed to be C-contiguous by upstream code. submat[seq1] should be C-
+    # contiguous too due to NumPy's advanced indexing. But `ascontiguousarray` is still
+    # called here to be safe.
     query, target = np.ascontiguousarray(submat[seq1]), seq2
     dtype = query.dtype.type
 
@@ -630,7 +634,7 @@ def _init_matrices(matrices, gap_open, gap_extend, local, lead1, lead2):
         delmat = matrices[2]
         insmat[1:m1, 0] = -np.inf
         delmat[0, 1:n1] = -np.inf
-        # Flouri's minimum value:
+        # Flouri's minimum value (see Notes):
         # series -= gap_open
         # insmat[1:m1, 0] = series[:m1 - 1]
         # delmat[0, 1:n1] = series[:n1 - 1]
@@ -951,7 +955,8 @@ def _traceback_one(
     Notes
     -----
     This function pre-allocates memory space for the path, which has a maximum length
-    of m + n. Each element represents the gap status of one position in the alignment:
+    of m + n (assuming none of the characters are aligned). Each element represents the
+    gap status of one position in the alignment:
 
         0: no gap
         1: gap in seq1
@@ -1237,6 +1242,9 @@ def _traceback_all(
             finished = False
 
             # 1) Local alignment: Path terminates where cell = 0.
+            # Note: The matrix filling functions guarantee that in local alignment,
+            # cell values cannot be negative. Otherwise this can terminate the loop
+            # prematurely.
             if local and abs(scomat[i, j]) <= eps:
                 i0, j0 = i, j
                 finished = True

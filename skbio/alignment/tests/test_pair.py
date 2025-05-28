@@ -566,6 +566,15 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.to_cigar(), "1I2M1D")
         self.assertListEqual(obs.to_aligned(("ATG", "ATG")), ["-ATG", "ATG-"])
 
+        # Make sure path length is always <= sum of sequence lengths. The maximum
+        # happens when all characters are misaligned. This check is to make sure
+        # the pre-allocation of path in the trackback functions does not lead to
+        # overflow.
+        seq1, seq2 = "AAAAA", "TTTTT"
+        obs = pair_align(seq1, seq2).paths[0]
+        self.assertEqual(obs.to_cigar(), "5I5D")
+        self.assertLessEqual(obs.lengths.sum(), len(seq1) + len(seq2))
+
     def test_pair_align_inf(self):
         """Infinite scores."""
         # infinite match score (returned score is also infinite)
