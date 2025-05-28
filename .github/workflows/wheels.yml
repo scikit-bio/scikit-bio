@@ -28,6 +28,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.0
         # Environment variables are set in pyproject.toml
+        env:
+          # Skip ARM64 builds on PRs to save time
+          CIBW_ARCHS_LINUX: ${{ github.event_name == 'pull_request' && 'x86_64' || 'x86_64 aarch64' }}
       
       - uses: actions/upload-artifact@v4
         with:
