@@ -22,38 +22,20 @@ jobs:
         with:
           submodules: true
       
+      # Set up QEMU for Linux ARM builds
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+      
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.0
-        env:
-          # Skip 32-bit builds, PyPy, and muslinux
-          CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-          
-          # Python versions to build
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
-          
-          # Install test dependencies and run a simple import test
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: "python -c \"import skbio; print(skbio.__version__)\""
-          
-          # Use latest manylinux image
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-          
-          # Install numpy before building (required by setup.py)
-          CIBW_BEFORE_BUILD: "pip install numpy cython"
-          
-          # Windows: Use MSVC compiler
-          CIBW_BEFORE_BUILD_WINDOWS: "pip install numpy cython"
-          
-          # Build native wheels for Apple Silicon
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          
-          # Enable building Linux aarch64 wheels
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+        # Environment variables are set in pyproject.toml
       
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -71,13 +53,10 @@ jobs:
       
       - name: Install build dependencies
         run: |
-          export RELEASE_VERSION=${{ github.ref_name }}
           pip install numpy cython build
       
       - name: Build sdist
-        run: |
-          export RELEASE_VERSION=${{ github.ref_name }}
-          python -m build --sdist
+        run: python -m build --sdist
       
       - uses: actions/upload-artifact@v4
         with:

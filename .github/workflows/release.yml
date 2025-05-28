@@ -21,6 +21,7 @@ jobs:
   doc:
     name: Publish documentation
     runs-on: ubuntu-latest
+    needs: build_and_publish  # Wait for wheels to be built
     defaults:
       run:
         shell: bash -l {0}
