@@ -115,8 +115,8 @@ def faith_pd(counts, taxa, tree, validate=True):
     Several other metrics, such as evolutionary history (EH) [3]_ and functional
     diversity (FD) [4]_, are equivalent to PD in calculation.
 
-    If computing Faith's PD for multiple samples, using
-    :func:`skbio.diversity.alpha_diversity` will be much faster than calling this
+    When computing Faith's PD for multiple samples, using
+    :func:`~skbio.diversity.alpha_diversity` will be much faster than calling this
     function individually on each sample.
 
     This implementation of Faith's PD is based on the array-based implementation of

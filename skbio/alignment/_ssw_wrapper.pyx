@@ -395,7 +395,7 @@ cdef class AlignmentStructure:
         return tuples
 
 cdef class StripedSmithWaterman:
-    """Performs a striped (banded) Smith Waterman Alignment.
+    """Performs a striped Smith Waterman Alignment.
 
     First a StripedSmithWaterman object must be instantiated with a query
     sequence. The resulting object is then callable with a target sequence and

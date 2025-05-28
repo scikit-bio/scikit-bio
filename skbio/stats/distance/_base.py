@@ -36,7 +36,7 @@ from skbio.io.descriptors import Read, Write
 from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import matplotlib.figure
     from matplotlib.colors import Colormap
     from numpy.random import RandomState, Generator

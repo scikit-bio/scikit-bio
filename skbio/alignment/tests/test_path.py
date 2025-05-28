@@ -13,29 +13,75 @@ import numpy.testing as npt
 
 from skbio.alignment._path import PairAlignPath, AlignPath, _run_length_encode
 from skbio.alignment import TabularMSA
-from skbio.sequence import DNA
+from skbio.sequence import DNA, Protein
 
 
 class TestAlignPath(unittest.TestCase):
     def setUp(self):
-        # alignment path with 3 sequences, 20 positions and 7 segments
-        self.data1 = dict(
+        self.path1 = AlignPath(
             lengths=[3, 2, 5, 1, 4, 3, 2],
             states=[0, 2, 0, 6, 0, 1, 0],
             starts=[0, 0, 0],
         )
-        self.path1 = AlignPath(**self.data1)
 
     def test_init(self):
-        # test normal case
-        data = self.data1
-        obs = AlignPath(**data)
-        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
-        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        # alignment path with 3 sequences, 20 positions and 7 segments
+        data = dict(
+            lengths = np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.intp),
+            states = np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8),
+            ranges = np.array([[0, 17], [0, 17], [0, 19]], dtype=np.intp),
+            starts = np.array([0, 0, 0], dtype=np.intp),
+            stops = np.array([17, 17, 19], dtype=np.intp),
+        )
+
+        # supply all components as-is (including ranges)
+        obs = AlignPath(data["lengths"], data["states"], ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
         self.assertTupleEqual(obs.shape, (3, 20))
 
-        # test errors
+        # confirm that data are not copied
+        self.assertIs(obs.lengths, data["lengths"])
+        self.assertIs(obs.states, data["states"])
+        self.assertIs(obs.ranges, data["ranges"])
+
+        # confirm that starts and stops are views of ranges
+        self.assertIs(obs.starts.base, data["ranges"])
+        self.assertIs(obs.stops.base, data["ranges"])
+
+        # supply starts instead of ranges, and stops will be calculated
+        obs = AlignPath(data["lengths"], data["states"], starts=data["starts"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+        self.assertIsNot(obs.ranges, data["ranges"])
+
+        # supply stops instead of ranges, and starts will be calculated
+        obs = AlignPath(data["lengths"], data["states"], stops=data["stops"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+        self.assertIsNot(obs.ranges, data["ranges"])
+
+        # supply states as 1-D array, which will be reshaped to 2-D
+        states_1d = np.squeeze(data["states"]).copy()
+        obs = AlignPath(data["lengths"], states_1d, ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+
+        # although states was reshaped, it wasn't copied
+        self.assertIs(obs.states.base, states_1d)
+
+        # supply parameters as plain lists
+        obs = AlignPath(data["lengths"].tolist(),
+                        data["states"].tolist(),
+                        ranges=data["ranges"].tolist())
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (3, 20))
+
+    def test_init_error(self):
         msg = "`lengths` must be a 1-D array."
         with self.assertRaises(TypeError) as cm:
             AlignPath(lengths=[[1, 2, 3]], states=[0, 1, 2], starts=[0, 0])
@@ -51,34 +97,69 @@ class TestAlignPath(unittest.TestCase):
             AlignPath(lengths=[1, 2, 3], states=[1, 0, 1, 0], starts=[0, 0])
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "`ranges` must be a 2-column array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], ranges=[1, 2])
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], ranges=[[1, 2, 3]])
+        self.assertEqual(str(cm.exception), msg)
+
         msg = "`starts` must be a 1-D array."
         with self.assertRaises(TypeError) as cm:
             AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[[0], [0]])
         self.assertEqual(str(cm.exception), msg)
 
-        msg = ("Number of sequences in `starts` (10) and capacity of `states` "
+        msg = "`stops` must be a 1-D array."
+        with self.assertRaises(TypeError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], stops=[[0], [0]])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ("Number of sequences in ranges (10) and capacity of states "
                "(1 to 8) do not match.")
         with self.assertRaises(ValueError) as cm:
             AlignPath(lengths=[1, 2, 3], states=[0, 1, 2], starts=[0] * 10)
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "`ranges`, `starts` or `stops` must be provided."
+        with self.assertRaises(ValueError) as cm:
+            AlignPath(lengths=[1, 2, 3], states=[0, 1, 2])
+        self.assertEqual(str(cm.exception), msg)
+
     def test_lengths(self):
         obs = self.path1.lengths
-        npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.int64))
+        npt.assert_array_equal(obs, np.array([3, 2, 5, 1, 4, 3, 2]))
 
     def test_states(self):
         obs = self.path1.states
-        npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]], dtype=np.uint8))
+        npt.assert_array_equal(obs, np.array([[0, 2, 0, 6, 0, 1, 0]]))
+
+    def test_ranges(self):
+        obs = self.path1.ranges
+        npt.assert_array_equal(obs, np.array([[0, 17], [0, 17], [0, 19]]))
 
     def test_starts(self):
         obs = self.path1.starts
-        npt.assert_array_equal(obs, np.array([0, 0, 0], dtype=np.int64))
+        npt.assert_array_equal(obs, np.array([0, 0, 0]))
+
+    def test_stops(self):
+        obs = self.path1.stops
+        npt.assert_array_equal(obs, np.array([17, 17, 19]))
 
     def test_shape(self):
         obs = self.path1.shape
         self.assertEqual(obs.sequence, 3)
         self.assertEqual(obs.position, 20)
         self.assertTupleEqual(obs, (3, 20))
+
+    def test_to_sizes(self):
+        path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
+                         states=[0, 2, 0, 6, 0, 1, 0],
+                         starts=[1, 2, 3])
+        obs = path._to_sizes()
+        npt.assert_array_equal(obs, [17, 17, 19])
+        obs = path._to_sizes(2)
+        npt.assert_array_equal(obs, [17, 17])
 
     def test_to_bits(self):
         path = AlignPath(lengths=[2, 2, 2, 1, 1],
@@ -114,13 +195,6 @@ class TestAlignPath(unittest.TestCase):
             exp = path.to_bits(expand=expand)
             self.assertEqual(exp.size, 0)
             self.assertTupleEqual(exp.shape, (3, 0))
-
-    def test_stops(self):
-        obs = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
-                        states=[0, 2, 0, 6, 0, 1, 0],
-                        starts=[1, 2, 3]).stops()
-        exp = np.array([18, 19, 22])
-        npt.assert_array_equal(obs, exp)
 
     def test_from_bits(self):
         # test 1D base case, less than 8 sequences
@@ -166,6 +240,11 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs[2], self.path1._to_bits())
         npt.assert_array_equal(obs[3], self.path1._lengths)
 
+        # no gap code (leave empty)
+        obs = self.path1._to_matrices(seqs, gap_code=None)
+        npt.assert_array_equal(
+            obs[0][0, :6], np.frombuffer("CGGTCG".encode("ascii"), dtype=np.uint8))
+
         msg = "Fewer sequences were provided than in alignment path."
         seqs = ["CGGTCGTAACGCGTACA", "CAGGTAAGCATACCTCA"]
         seqs = [np.frombuffer(x.encode("ascii"), dtype=np.uint8) for x in seqs]
@@ -180,16 +259,132 @@ class TestAlignPath(unittest.TestCase):
             self.path1._to_matrices(seqs, gap_code=45)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_from_aligned(self):
+        aln = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACACTA"]
+        obs = AlignPath.from_aligned(aln)
+        exp = AlignPath(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        aln = list(map(DNA, aln))
+        obs = AlignPath.from_aligned(aln)
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        msa = TabularMSA(aln)
+        obs = AlignPath.from_aligned(msa)
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        obs = AlignPath.from_aligned(aln, starts=[1, 2, 3])
+        exp._ranges[:, 0] = [1, 2, 3]
+        for x in ("lengths", "states", "starts"):
+            npt.assert_array_equal(getattr(obs, x), getattr(exp, x))
+
+        # custom gap character
+        aln = ["AAX", "AXA", "XAA"]
+        obs = AlignPath.from_aligned(aln, gap_chars="X")
+        npt.assert_array_equal(obs.lengths, [1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [4, 2, 1])
+
+        # multiple gap characters
+        aln = ["AAX", "AYA", "ZAA"]
+        obs = AlignPath.from_aligned(aln, gap_chars="XYZ")
+        npt.assert_array_equal(obs.lengths, [1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [4, 2, 1])
+
+        # non-string sequences
+        aln = [[1, 2, 3, 0], [1, 0, 4, 5], [2, 0, 2, 3]]
+        obs = AlignPath.from_aligned(aln, gap_chars={0})
+        npt.assert_array_equal(obs.lengths, [1, 1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [0, 6, 0, 1])
+
+        msg = "Sequence lengths do not match."
+        with self.assertRaises(ValueError) as cm:
+            _ = AlignPath.from_aligned(["A", "AA", "AAA"])
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_to_aligned(self):
+        # globally aligned DNA sequences
+        path = AlignPath(
+            lengths=[3, 2, 5, 1, 4, 3, 2],
+            states=[0, 2, 0, 6, 0, 1, 0],
+            starts=[0, 0, 0],
+        )
+        seqs = [DNA("CGGTCGTAACGCGTACA"),
+                DNA("CAGGTAAGCATACCTCA"),
+                DNA("CGGTCGTCACTGTACACTA")]
+        obs = path.to_aligned(seqs)
+        exp = ["CGGTCGTAACGCGTA---CA",
+               "CAG--GTAAG-CATACCTCA",
+               "CGGTCGTCAC-TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # custom gap character
+        obs = path.to_aligned(seqs, gap_char=".")
+        exp = ["CGGTCGTAACGCGTA...CA",
+               "CAG..GTAAG.CATACCTCA",
+               "CGGTCGTCAC.TGTACACTA"]
+        self.assertListEqual(obs, exp)
+
+        # raw strings with flanking regions
+        path.starts[0] = 5
+        path.starts[1] = 1
+        seqs = ["XXXXXCGGTCGTAACGCGTACAXXXXXXX",
+                "XCAGGTAAGCATACCTCA",
+                "CGGTCGTCACTGTACACTAXX"]
+        obs = path.to_aligned(seqs, flanking=3)
+        exp = ["XXXCGGTCGTAACGCGTA---CAXXX",
+               "  XCAG--GTAAG-CATACCTCA   ",
+               "   CGGTCGTCAC-TGTACACTAXX "]
+        self.assertListEqual(obs, exp)
+
+        # locally aligned protein sequences
+        path = AlignPath(
+            lengths=[5, 1, 6],
+            states=[0, 2, 0],
+            starts=[0, 8],
+        )
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVYTTSQVGGLITHVLWEIVEMRKELCNGNSD")]
+        obs = path.to_aligned(seqs, flanking=(5, 10))
+        exp = ["     RQPLTSSERIDK          ",
+               "DTTPNRPVYT-TSQVGGLITHVLWEIV"]
+        self.assertListEqual(obs, exp)
+
+        msg = "There are more sequences than in the path."
+        seqs.append(Protein("AKGDATSDKMLFTSPDKTEELIK"))
+        with self.assertRaises(ValueError) as cm:
+            _ = path.to_aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence 1 is shorter than in the path."
+        seqs = [Protein("RQPLTSSERIDK"),
+                Protein("FTEDTTPNRPVY")]
+        with self.assertRaises(ValueError) as cm:
+            _ = path.to_aligned(seqs, flanking=(5, 10))
+        self.assertEqual(str(cm.exception), msg)
+
     def test_from_tabular(self):
         msa = ('CGGTCGTAACGCGTA---CA',
                'CAG--GTAAG-CATACCTCA',
                'CGGTCGTCAC-TGTACACTA')
         tabular = TabularMSA([DNA(x) for x in msa])
-        path = AlignPath.from_tabular(tabular)
+        obs = AlignPath.from_tabular(tabular)
         lengths = [3, 2, 5, 1, 4, 3, 2]
         states = [0, 2, 0, 6, 0, 1, 0]
-        npt.assert_array_equal(lengths, path.lengths)
-        npt.assert_array_equal(states, np.squeeze(path.states))
+        npt.assert_array_equal(obs.lengths, lengths)
+        npt.assert_array_equal(np.squeeze(obs.states), states)
+        npt.assert_array_equal(obs.starts, [0, 0, 0])
+
+        obs = AlignPath.from_tabular(tabular, starts=[1, 2, 3])
+        npt.assert_array_equal(obs.starts, [1, 2, 3])
 
     def test_to_indices(self):
         # test gap = -1
@@ -270,10 +465,13 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs, exp)
 
         # test invalid gap
-        with self.assertRaises(TypeError,
-                               msg="Gap must be an integer, np.nan, np.inf, 'del', "
-                               "or 'mask'."):
-            path.to_indices(gap="no")
+        msg = "Gap must be an integer, 'del', or 'mask'."
+        with self.assertRaises(TypeError) as cm:
+            _ = path.to_indices(gap="no")
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            _ = path.to_indices(gap=2.5)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_from_indices(self):
         # test no mask
@@ -293,6 +491,11 @@ class TestAlignPath(unittest.TestCase):
         path = AlignPath.from_indices(masked, gap="mask")
         npt.assert_array_equal(lengths, path.lengths)
         npt.assert_array_equal(states, np.squeeze(path.states))
+
+        msg = "For masked arrays, gap must be 'mask'."
+        with self.assertRaises(TypeError) as cm:
+            _ = AlignPath.from_indices(masked, gap=-1)
+        self.assertEqual(str(cm.exception), msg)
 
         # test non-zero indices
         indices = np.array([[25, 26, -1, -1, 27, 28, 29, 30],
@@ -367,26 +570,40 @@ class TestAlignPath(unittest.TestCase):
 
 class TestPairAlignPath(unittest.TestCase):
     def setUp(self):
-        # alignment path with 3 sequences, 20 positions and 7 segments
-        self.data1 = dict(
+        # alignment path with 2 sequences, 20 positions and 7 segments
+        self.path1 = PairAlignPath(
             lengths=[3, 2, 5, 1, 4, 3, 2],
             states=[0, 2, 0, 2, 0, 1, 0],
             starts=[0, 0],
         )
-        self.path1 = PairAlignPath(**self.data1)
 
     def test_init(self):
         # normal case
-        data = self.data1
-        obs = PairAlignPath(**data)
-        npt.assert_array_equal(obs.lengths, np.array(data["lengths"]))
-        npt.assert_array_equal(obs.states, np.atleast_2d(data["states"]))
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        data = dict(
+            lengths = np.array([3, 2, 5, 1, 4, 3, 2], dtype=np.intp),
+            states = np.array([[0, 2, 0, 2, 0, 1, 0]], dtype=np.uint8),
+            ranges = np.array([[0, 17], [0, 17]], dtype=np.intp),
+            starts = np.array([0, 0], dtype=np.intp),
+            stops = np.array([17, 17], dtype=np.intp),
+        )
+        obs = PairAlignPath(data["lengths"], data["states"], starts=data["starts"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
         self.assertTupleEqual(obs.shape, (2, 20))
+        for key in ("lengths", "states"):
+            self.assertIs(getattr(obs, key), data[key])
+
+        # supply ranges
+        obs = PairAlignPath(data["lengths"], data["states"], ranges=data["ranges"])
+        for key, value in data.items():
+            npt.assert_array_equal(getattr(obs, key), value)
+        self.assertTupleEqual(obs.shape, (2, 20))
+        for key in ("lengths", "states", "ranges"):
+            self.assertIs(getattr(obs, key), data[key])
 
         # omit starts
         obs = PairAlignPath(data["lengths"], data["states"])
-        npt.assert_array_equal(obs.starts, np.array(data["starts"]))
+        npt.assert_array_equal(obs.starts, data["starts"])
         self.assertTupleEqual(obs.shape, (2, 20))
 
         # more than two sequences
@@ -397,7 +614,6 @@ class TestPairAlignPath(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg % 3)
 
         # only one sequence
-        bits = np.array([[0, 0, 1, 1, 0]])
         with self.assertRaises(ValueError) as cm:
             PairAlignPath(lengths=[1], states=[0], starts=[0])
         self.assertEqual(str(cm.exception), msg % 1)
@@ -408,6 +624,33 @@ class TestPairAlignPath(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             PairAlignPath(lengths=[1, 2, 3], states=[1, 2, 4], starts=[0, 0])
         self.assertEqual(str(cm.exception), msg)
+
+    def test_repr(self):
+        obs = repr(self.path1)
+        exp = "<PairAlignPath, positions: 20, CIGAR: '3M2D5M1D4M3I2M'>"
+        self.assertEqual(obs, exp)
+
+        # make a long CIGAR string
+        path = PairAlignPath.from_bits(np.array((
+            [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1])))
+        obs = repr(path)
+        exp = "<PairAlignPath, positions: 21, CIGAR: '1M1I1D1M1I1D1M1I1D1M1I1D1M1...'>"
+        self.assertEqual(obs, exp)
+        self.assertEqual(len(obs), 71)
+
+        obs = str(path)
+        self.assertEqual(obs, exp)
+
+        # make a long number
+        path._shape = (0, "I_am_a_long_number_look_at_me")
+        exp = "<PairAlignPath, positions: I_am_a_long_number_look_at_me, CIGAR: '...'>"
+        self.assertEqual(repr(path), exp)
+
+        # make a longer number
+        path._shape = (0, "I_am_a_long_number_see_how_long_I_am")
+        exp = "<PairAlignPath, positions: I_am_a_long_number_see_how_long_I_am>"
+        self.assertEqual(repr(path), exp)
 
     def test_from_bits(self):
         # test base case
