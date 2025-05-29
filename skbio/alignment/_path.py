@@ -799,27 +799,19 @@ class AlignPath(SkbioObject):
         One can create a Biopython ``Alignment`` object from the coordinates and the
         original sequences.
 
-        .. code-block:: python
+        >>> from Bio.Align import Alignment  # doctest: +SKIP
+        >>> seqs = ["ACGTGA", "TACTCA", "GGACTGA"]  # doctest: +SKIP
+        >>> aln = Alignment(seqs, coords)  # doctest: +SKIP
+        >>> aln.coordinates is coords  # doctest: +SKIP
+        True
 
-           >>> from Bio.Align import Alignment
-           >>> seqs = ["ACGTGA",
-           ...         "TACTCA",
-           ...         "GGACTGA"]
-           >>> aln = Alignment(seqs, coords)
-           >>> aln.coordinates is coords
-           True
+        >>> aln.counts()  # doctest: +SKIP
+        AlignmentCounts(gaps=5, identities=11, mismatches=2)
 
-        .. code-block:: python
-
-           >>> aln.counts()
-           AlignmentCounts(gaps=5, identities=11, mismatches=2)
-
-        .. code-block:: python
-
-           >>> print(aln)
-                             0 ACGTG- 5
-                             1 AC-TCA 6
-                             2 AC-TGA 7
+        >>> print(aln)  # doctest: +SKIP
+                          0 ACGTG- 5
+                          1 AC-TCA 6
+                          2 AC-TGA 7
 
         """
         lens = self._lengths * (1 - self._to_bits())
@@ -874,30 +866,23 @@ class AlignPath(SkbioObject):
         One can convert a Biopython's ``Alignment`` object into a scikit-bio alignment
         path using this method.
 
-        .. testcode::
-           :options: +SKIP
+        >>> from Bio import Align  # doctest: +SKIP
+        >>> a = Align.PairwiseAligner()  # doctest: +SKIP
+        >>> res = a.align("GATCGTC", "ATCGCTC")  # doctest: +SKIP
+        >>> print(res[0])  # doctest: +SKIP
+        target            0 GATCG-TC 7
+                          0 -||||-|| 8
+        query             0 -ATCGCTC 7
 
-           >>> from Bio import Align
-           >>> a = Align.PairwiseAligner()
-           >>> res = a.align("GATCGTC", "ATCGCTC")
-           >>> print(res[0])
-           target            0 GATCG-TC 7
-                             0 -||||-|| 8
-           query             0 -ATCGCTC 7
+        >>> coords = res[0].coordinates  # doctest: +SKIP
+        >>> coords  # doctest: +SKIP
+        array([[0, 1, 5, 5, 7],
+               [0, 0, 4, 5, 7]])
 
-        .. code-block:: python
-
-           >>> coords = res[0].coordinates
-           >>> coords
-           array([[0, 1, 5, 5, 7],
-                  [0, 0, 4, 5, 7]])
-
-        .. code-block:: python
-
-           >>> from skbio.alignment import PairAlignPath
-           >>> path = PairAlignPath.from_coordinates(coords)
-           >>> path
-           <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
+        >>> from skbio.alignment import PairAlignPath  # doctest: +SKIP
+        >>> path = PairAlignPath.from_coordinates(coords)  # doctest: +SKIP
+        >>> path  # doctest: +SKIP
+        <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
 
         """
         starts = coords[:, 0]
