@@ -782,7 +782,8 @@ class AlignPath(SkbioObject):
 
         References
         ----------
-        .. [1] https://biopython.org/docs/latest/Tutorial/chapter_align.html
+        .. [1] `Bio.Align.Alignment <https://biopython.org/docs/latest/api/
+           Bio.Align.html#Bio.Align.Alignment>`_
 
         Examples
         --------
@@ -843,11 +844,13 @@ class AlignPath(SkbioObject):
 
         Notes
         -----
-        The input is compatible with BioPython's ``Alignment`` data structure [1]_.
+        The input is compatible with the underlying data structure of BioPython's
+        ``Alignment`` class [1]_.
 
         References
         ----------
-        .. [1] https://biopython.org/docs/latest/Tutorial/chapter_align.html
+        .. [1] `Bio.Align.Alignment <https://biopython.org/docs/latest/api/
+           Bio.Align.html#Bio.Align.Alignment>`_
 
         Examples
         --------
