@@ -669,16 +669,46 @@ class AlignPath(SkbioObject):
         ndarray of int of shape (n_sequences, n_positions)
             Array of indices of characters in the original sequences.
 
+        See Also
+        --------
+        from_indices
+
+        Notes
+        -----
+        The transpose of the output matches the underlying data structure of Biotite's
+        ``Alignment`` class [1]_. Therefore, one can convert scikit-bio alignments into
+        Biotite alignments, and vice versa.
+
+        References
+        ----------
+        .. [1] `biotite.sequence.align.Alignment <https://www.biotite-python.org/
+           latest/apidoc/biotite.sequence.align.Alignment.html>`_
+
         Examples
         --------
         >>> from skbio.alignment import AlignPath
-        >>> path = AlignPath(lengths=[1, 2, 2, 1],
-        ...                  states=[0, 5, 2, 6],
-        ...                  starts=[0, 0, 0])
-        >>> path.to_indices()
-        array([[ 0, -1, -1,  1,  2,  3],
-               [ 0,  1,  2, -1, -1, -1],
-               [ 0, -1, -1,  1,  2, -1]])
+        >>> path = AlignPath(lengths=[2, 1, 2, 1],
+        ...                  states=[0, 6, 0, 1],
+        ...                  starts=[0, 1, 2])
+        >>> idx = path.to_indices()
+        >>> idx
+        array([[ 0,  1,  2,  3,  4, -1],
+               [ 1,  2, -1,  3,  4,  5],
+               [ 2,  3, -1,  4,  5,  6]])
+
+        One can create a Biotite ``Alignment`` object from the transposed indices and
+        the original sequences.
+
+        >>> from biotite.sequence import NucleotideSequence  # doctest: +SKIP
+        >>> from biotite.sequence.align import Alignment  # doctest: +SKIP
+        >>> seqs = [NucleotideSequence("ACGTGA"),  # doctest: +SKIP
+        ...         NucleotideSequence("TACTCA"),  # doctest: +SKIP
+        ...         NucleotideSequence("GGACTGA")]  # doctest: +SKIP
+        >>> aln = Alignment(seqs, idx.T)  # doctest: +SKIP
+        >>> print(aln)  # doctest: +SKIP
+        ACGTG-
+        AC-TCA
+        AC-TGA
 
         """
         errmsg = "Gap must be an integer, 'del', or 'mask'."
@@ -722,24 +752,66 @@ class AlignPath(SkbioObject):
         AlignPath
             The alignment path created from the given indices.
 
+        See Also
+        --------
+        to_indices
+
         Notes
         -----
         If a sequence in the alignment consists of entirely gap characters, its start
         position will be equal to the gap character.
 
+        The input is equivalent to the transpose of the underlying data structure of
+        Biotite's ``Alignment`` class [1]_.
+
+        References
+        ----------
+        .. [1] `biotite.sequence.align.Alignment <https://www.biotite-python.org/
+           latest/apidoc/biotite.sequence.align.Alignment.html>`_
+
         Examples
         --------
         >>> import numpy as np
         >>> from skbio.alignment import AlignPath
-        >>> indices = np.array([[0, -1, -1,  1,  2,  3],
-        ...                     [0,  1,  2, -1, -1, -1],
-        ...                     [0, -1, -1,  1,  2, -1]])
-        >>> path = AlignPath.from_indices(indices)
+        >>> idx = np.array([[0, -1, -1,  1,  2,  3],
+        ...                 [0,  1,  2, -1, -1, -1],
+        ...                 [0, -1, -1,  1,  2, -1]])
+        >>> path = AlignPath.from_indices(idx)
         >>> path
         AlignPath
         Shape(sequence=3, position=6)
         lengths: [1 2 2 1]
         states: [0 5 2 6]
+
+        One can convert a Biotite's ``Alignment`` object into a scikit-bio alignment
+        path using this method. For example:
+
+        >>> from biotite.sequence import NucleotideSequence  # doctest: +SKIP
+        >>> from biotite.sequence.align import SubstitutionMatrix  # doctest: +SKIP
+        >>> from biotite.sequence.align import align_optimal  # doctest: +SKIP
+        >>> submat = SubstitutionMatrix.std_nucleotide_matrix()  # doctest: +SKIP
+        >>> seq1 = NucleotideSequence("GATCGTC")  # doctest: +SKIP
+        >>> seq2 = NucleotideSequence("ATCGCTC")  # doctest: +SKIP
+        >>> res = align_optimal(seq1, seq2, submat)  # doctest: +SKIP
+        >>> print(res[0])  # doctest: +SKIP
+        GATCG-TC
+        -ATCGCTC
+
+        >>> trace = res[0].trace  # doctest: +SKIP
+        >>> trace  # doctest: +SKIP
+        array([[ 0, -1],
+               [ 1,  0],
+               [ 2,  1],
+               [ 3,  2],
+               [ 4,  3],
+               [-1,  4],
+               [ 5,  5],
+               [ 6,  6]])
+
+        >>> from skbio.alignment import PairAlignPath  # doctest: +SKIP
+        >>> path = PairAlignPath.from_indices(trace.T)  # doctest: +SKIP
+        >>> path  # doctest: +SKIP
+        <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
 
         """
         if gap == "mask":
