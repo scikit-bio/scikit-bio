@@ -874,7 +874,8 @@ class AlignPath(SkbioObject):
         One can convert a Biopython's ``Alignment`` object into a scikit-bio alignment
         path using this method.
 
-        .. code-block:: python
+        .. testcode::
+           :options: +SKIP
 
            >>> from Bio import Align
            >>> a = Align.PairwiseAligner()
