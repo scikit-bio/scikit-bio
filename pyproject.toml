@@ -151,7 +151,6 @@ ignore = [
     ".coveragerc",
     ".dockerignore",
     ".editorconfig",
-    "aarch64.Dockerfile",
     "checklist.py",
     # created by conda-incubator/setup-miniconda@v3 action
     "ci/setup-miniconda-patched-conda_host_env.yml",
