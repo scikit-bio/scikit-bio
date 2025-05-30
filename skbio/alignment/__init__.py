@@ -5,27 +5,45 @@ r"""Sequence Alignments (:mod:`skbio.alignment`)
 
 This module provides functionality for computing and manipulating sequence
 alignments. DNA, RNA, and protein sequences can be aligned, as well as
-sequences with custom alphabets.
+sequences with or without custom alphabets.
 
 
-Alignment structure
--------------------
+Alignment structures
+--------------------
+
+Tabular format of aligned sequences.
 
 .. autosummary::
    :toctree: generated/
 
    TabularMSA
+
+Compact format of alignment paths.
+
+.. autosummary::
+   :toctree: generated/
+
    AlignPath
    PairAlignPath
 
 
-Alignment algorithm (new)
--------------------------
+Pairwise alignment
+------------------
+
+A versatile, efficient and generalizable pairwise alignment algorithm.
 
 .. autosummary::
    :toctree: generated/
 
     pair_align
+
+Convenience wrappers with preset scoring schemes.
+
+.. autosummary::
+   :toctree: generated/
+
+    pair_align_nucl
+    pair_align_prot
 
 
 Alignment statistics
@@ -37,10 +55,12 @@ Alignment statistics
     align_score
 
 
-Alignment algorithms (deprecated)
----------------------------------
+Deprecated functionality
+------------------------
 
-.. rubric:: Optimized (i.e., production-ready) algorithms
+.. rubric:: Alignment algorithms
+
+SSW wrapper (optimized; production-ready)
 
 .. autosummary::
    :toctree: generated/
@@ -49,7 +69,7 @@ Alignment algorithms (deprecated)
    AlignmentStructure
    local_pairwise_align_ssw
 
-.. rubric:: Slow (i.e., educational-purposes only) algorithms
+Pure Python algorithms (slow; educational-purposes only)
 
 .. autosummary::
    :toctree: generated/
@@ -61,9 +81,7 @@ Alignment algorithms (deprecated)
    local_pairwise_align_protein
    local_pairwise_align
 
-
-Deprecated functionality
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. rubric:: Substitution matrix
 
 .. autosummary::
    :toctree: generated/
@@ -241,7 +259,7 @@ from ._pairwise import (
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
-from skbio.alignment._pair import pair_align
+from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
 
 __all__ = [
     "TabularMSA",
@@ -259,4 +277,6 @@ __all__ = [
     "make_identity_substitution_matrix",
     "align_score",
     "pair_align",
+    "pair_align_nucl",
+    "pair_align_prot",
 ]
