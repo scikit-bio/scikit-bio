@@ -22,6 +22,8 @@ from skbio.alignment._utils import encode_sequences
 
 from skbio.alignment._pair import (
     pair_align,
+    pair_align_nucl,
+    pair_align_prot,
     _prep_free_ends,
     _alloc_matrices,
     _init_matrices,
@@ -670,6 +672,36 @@ class PairAlignTests(unittest.TestCase):
         # Perform semi-global alignment using BLASTP's default parameters.
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 440)
+
+    def test_pair_align_nucl(self):
+        """Nucleotide sequence alignment."""
+        seq1 = DNA("GATCGTC")
+        seq2 = DNA("ATCGCTC")
+        obs = pair_align_nucl(seq1, seq2)
+        self.assertEqual(obs.score, 5)
+        self.assertEqual(obs.paths[0].to_cigar(), "1D4M1I2M")
+        self.assertListEqual(obs.paths[0].to_aligned((seq1, seq2)), [
+            "GATCG-TC",
+            "-ATCGCTC"])
+
+        kwargs = dict(sub_score="NUC.4.4", gap_cost=7)
+        obs = pair_align_nucl(seq1, seq2, **kwargs)
+        self.assertEqual(obs.score, 23)
+
+    def test_pair_align_prot(self):
+        """Protein sequence alignment."""
+        seq1 = Protein("PKKKRKV")
+        seq2 = Protein("PAAKRVKLD")
+        obs = pair_align_prot(seq1, seq2)
+        self.assertEqual(obs.score, 11)
+        self.assertEqual(obs.paths[0].to_cigar(), "7M2I")
+        self.assertListEqual(obs.paths[0].to_aligned((seq1, seq2)), [
+            "PKKKRKV--",
+            "PAAKRVKLD"])
+
+        kwargs = dict(sub_score="PAM70", gap_cost=6)
+        obs = pair_align_prot(seq1, seq2, **kwargs)
+        self.assertEqual(obs.score, 13)
 
     def test_prep_free_ends(self):
         obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)

@@ -99,6 +99,11 @@ def pair_align(
 
         Default is 2.0 (linear gap penalty).
 
+        .. note::
+           Infinites are valid values for ``sub_score`` and ``gap_cost``. For example,
+           ``gap_cost=np.inf`` disables gaps. ``sub_score=(..., -np.inf)`` disables
+           mismatches.
+
     free_ends : bool, 2-tuple of bool, or 4-tuple of bool, optional
         Whether gaps at the sequence terminals are free from penalization. Relevant
         when ``mode`` is "global". Alignment with free ends is known as semi-global
@@ -133,8 +138,8 @@ def pair_align(
 
         .. note::
            When ``mode="local"``, it is possible that there is no path with a score >
-           0. In this case, an empty list will be returned. ``mode=global`` guarantees
-           to return at least one path, even if it's completely misaligned.
+           0. In this case, an empty list will be returned. ``mode="global"``
+           guarantees to return at least one path, even if it's completely misaligned.
 
     atol : float, optional
         Absolute tolerance in comparing scores of alternative alignment paths. This is
@@ -191,12 +196,14 @@ def pair_align(
     The default parameters ``sub_score=(1, -1), gap_cost=2`` is a simple scoring scheme
     that quickly captures sequence similarity. However, in bioinformatics applications,
     one usually wants to replace them with more realistic parameters according to the
-    specific task. For your reference, below are the default parameters of some common
+    specific task. For reference, below are the default parameters of some common
     bioinformatics programs:
 
     - NCBI MegaBLAST (nucleotide): ``sub_score=(1, -2), gap_cost=2.5``
     - NCBI BLASTN (nucleotide): ``sub_score=(2, -3), gap_cost=(5, 2)``
+      (see also :func:`pair_align_nucl`)
     - NCBI BLASTP (protein): ``sub_score="BLOSUM62", gap_cost=(11, 1)``
+      (see also :func:`pair_align_prot`)
     - EMBOSS Needle/Water (protein): ``sub_score="BLOSUM62", gap_cost=(9.5, 0.5)``
       (for nucleotide, replace ``sub_score`` with ``"NUC.4.4"``)
     - EBI FASTA (protein): ``sub_score="BLOSUM50", gap_cost=(8, 2)``
@@ -456,6 +463,96 @@ def pair_align(
         _fill_nan(matrices)
 
     return PairAlignResult(float(score), paths, matrices)
+
+
+def pair_align_nucl(
+    seq1: "SequenceLike",
+    seq2: "SequenceLike",
+    /,
+    **kwargs,
+) -> PairAlignResult:
+    r"""Align two nucleotide sequences.
+
+    This is a convenience wrapper of ``pair_align`` for nucleotide sequence alignment.
+    It is preloaded with a scoring scheme consistent with BLASTN's defaults [1]_: match
+    score = 2, mismatch score = -3, gap opening penalty = 5, gap extension penalty = 2.
+    All parameters remain customizable. Refer to :func:`pair_align` for full
+    documentation.
+
+    See Also
+    --------
+    pair_align
+    pair_align_prot
+
+    References
+    ----------
+    .. [1] https://www.ncbi.nlm.nih.gov/books/NBK279684/
+
+    Examples
+    --------
+    >>> from skbio.sequence import DNA
+    >>> from skbio.alignment import pair_align_nucl
+    >>> seq1 = DNA('GATCGTC')
+    >>> seq2 = DNA('ATCGCTC')
+    >>> res = pair_align_nucl(seq1, seq2)
+    >>> res.score
+    5.0
+
+    >>> res.paths[0]
+    <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
+
+    >>> res.paths[0].to_aligned((seq1, seq2))
+    ['GATCG-TC', '-ATCGCTC']
+
+    """
+    params = dict(sub_score=(2.0, -3.0), gap_cost=(5.0, 2.0))
+    params.update(kwargs)
+    return pair_align(seq1, seq2, **params)
+
+
+def pair_align_prot(
+    seq1: "SequenceLike",
+    seq2: "SequenceLike",
+    /,
+    **kwargs,
+) -> PairAlignResult:
+    r"""Align two protein sequences.
+
+    This is a convenience wrapper of ``pair_align`` for protein sequence alignment.
+    It is preloaded with a scoring scheme consistent with BLASTP's defaults [1]_:
+    substitution matrix = BLOSUM62, gap opening penalty = 11, gap extension penalty
+    = 1. All parameters remain customizable. Refer to :func:`pair_align` for full
+    documentation.
+
+    See Also
+    --------
+    pair_align
+    pair_align_nucl
+
+    References
+    ----------
+    .. [1] https://www.ncbi.nlm.nih.gov/books/NBK279684/
+
+    Examples
+    --------
+    >>> from skbio.sequence import Protein
+    >>> from skbio.alignment import pair_align_prot
+    >>> seq1 = Protein('PKKKRKV')
+    >>> seq2 = Protein('PAAKRVKLD')
+    >>> res = pair_align_prot(seq1, seq2)
+    >>> res.score
+    11.0
+
+    >>> res.paths[0]
+    <PairAlignPath, positions: 9, CIGAR: '7M2I'>
+
+    >>> res.paths[0].to_aligned((seq1, seq2))
+    ['PKKKRKV--', 'PAAKRVKLD']
+
+    """
+    params = dict(sub_score="BLOSUM62", gap_cost=(11.0, 1.0))
+    params.update(kwargs)
+    return pair_align(seq1, seq2, **params)
 
 
 def _prep_mode(mode):
