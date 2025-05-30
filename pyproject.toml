@@ -126,34 +126,14 @@ build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 
 # Test command - just import the package
 test-command = "python -c \"import skbio; print(skbio.__version__)\""
-test-requires = ["pytest"]
-
-# Skip tests on emulated architectures (they're very slow)
-# This will skip tests for ARM64 on Linux but still build the wheels
-test-skip = "*-*linux_aarch64"
 
 # Install dependencies before building
 before-build = "pip install numpy cython"
-
-[tool.cibuildwheel.macos]
-# Build for both Intel and Apple Silicon
-archs = ["x86_64", "arm64"]
 
 [tool.cibuildwheel.linux]
 # Use manylinux2014 for better compatibility
 manylinux-x86_64-image = "manylinux2014"
 manylinux-aarch64-image = "manylinux2014"
-
-# Build for both x86_64 and ARM64
-archs = ["x86_64", "aarch64"]
-
-# Install system dependencies if needed for ARM builds
-# Uncomment if need specific system libraries:
-# before-all = "yum install -y epel-release && yum install -y openblas-devel"
-
-[tool.cibuildwheel.windows]
-# Windows only supports x86_64 (no ARM64 for Python on Windows yet)
-archs = ["AMD64"]
 
 [tool.pytest.ini_options]
 addopts = [
