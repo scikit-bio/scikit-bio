@@ -770,16 +770,49 @@ class AlignPath(SkbioObject):
             Array where each value defines the start positions (index) of each segment
             for each sequence.
 
+        See Also
+        --------
+        from_coordinates
+
+        Notes
+        -----
+        The output is consistent with the underlying data structure of BioPython's
+        ``Alignment`` class [1]_. Therefore, one can convert scikit-bio alignments into
+        Biopython alignments, and vice versa.
+
+        References
+        ----------
+        .. [1] `Bio.Align.Alignment <https://biopython.org/docs/latest/api/
+           Bio.Align.html#Bio.Align.Alignment>`_
+
         Examples
         --------
         >>> from skbio.alignment import AlignPath
-        >>> path = AlignPath(lengths=[1, 2, 2, 1],
-        ...                  states=[0, 5, 2, 6],
-        ...                  starts=[0, 0, 0])
-        >>> path.to_coordinates() # doctest: +ELLIPSIS
-        array([[0, 1, 1, 3, 4],
-               [0, 1, 3, 3, 3],
-               [0, 1, 1, 3, 3]]...
+        >>> path = AlignPath(lengths=[2, 1, 2, 1],
+        ...                  states=[0, 6, 0, 1],
+        ...                  starts=[0, 1, 2])
+        >>> coords = path.to_coordinates()
+        >>> coords # doctest: +ELLIPSIS
+        array([[0, 2, 3, 5, 5],
+               [1, 3, 3, 5, 6],
+               [2, 4, 4, 6, 7]]...
+
+        One can create a Biopython ``Alignment`` object from the coordinates and the
+        original sequences.
+
+        >>> from Bio.Align import Alignment  # doctest: +SKIP
+        >>> seqs = ["ACGTGA", "TACTCA", "GGACTGA"]  # doctest: +SKIP
+        >>> aln = Alignment(seqs, coords)  # doctest: +SKIP
+        >>> aln.coordinates is coords  # doctest: +SKIP
+        True
+
+        >>> aln.counts()  # doctest: +SKIP
+        AlignmentCounts(gaps=5, identities=11, mismatches=2)
+
+        >>> print(aln)  # doctest: +SKIP
+                          0 ACGTG- 5
+                          1 AC-TCA 6
+                          2 AC-TGA 7
 
         """
         lens = self._lengths * (1 - self._to_bits())
@@ -805,6 +838,20 @@ class AlignPath(SkbioObject):
         AlignPath
             The alignment path created from the given coordinates.
 
+        See Also
+        --------
+        to_coordinates
+
+        Notes
+        -----
+        The input is compatible with the underlying data structure of BioPython's
+        ``Alignment`` class [1]_.
+
+        References
+        ----------
+        .. [1] `Bio.Align.Alignment <https://biopython.org/docs/latest/api/
+           Bio.Align.html#Bio.Align.Alignment>`_
+
         Examples
         --------
         >>> import numpy as np
@@ -818,6 +865,27 @@ class AlignPath(SkbioObject):
         Shape(sequence=3, position=6)
         lengths: [1 2 2 1]
         states: [0 5 2 6]
+
+        One can convert a Biopython's ``Alignment`` object into a scikit-bio alignment
+        path using this method.
+
+        >>> from Bio import Align  # doctest: +SKIP
+        >>> a = Align.PairwiseAligner()  # doctest: +SKIP
+        >>> res = a.align("GATCGTC", "ATCGCTC")  # doctest: +SKIP
+        >>> print(res[0])  # doctest: +SKIP
+        target            0 GATCG-TC 7
+                          0 -||||-|| 8
+        query             0 -ATCGCTC 7
+
+        >>> coords = res[0].coordinates  # doctest: +SKIP
+        >>> coords  # doctest: +SKIP
+        array([[0, 1, 5, 5, 7],
+               [0, 0, 4, 5, 7]])
+
+        >>> from skbio.alignment import PairAlignPath  # doctest: +SKIP
+        >>> path = PairAlignPath.from_coordinates(coords)  # doctest: +SKIP
+        >>> path  # doctest: +SKIP
+        <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
 
         """
         starts = coords[:, 0]
