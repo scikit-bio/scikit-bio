@@ -7,13 +7,16 @@
 # ----------------------------------------------------------------------------
 
 import collections
-from typing import Optional, Tuple
+from typing import Optional, Union, Tuple, List, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
+
+if TYPE_CHECKING:  # pragma: no cover
+    from skbio.sequence import Sequence
 
 
 _Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
@@ -56,6 +59,12 @@ class AlignPath(SkbioObject):
     stops : array_like of int of shape (n_sequences,), optional
         Stop position of each sequence in the alignment.
 
+        .. note::
+           The ranges can be defined by supplying ``starts``, ``stops`` or ``ranges``.
+           With either of the first two, the program will locate the other side based
+           on ``lengths`` and ``states``. For the last (``ranges``), the program will
+           NOT validate the correctness of the values but simply take them.
+
     See Also
     --------
     PairAlignPath
@@ -90,11 +99,6 @@ class AlignPath(SkbioObject):
     facilitates extraction of aligned sequences. The positions are 0-based and
     half-open, consistent with Python indexing, and compatible with the
     :wiki:`BED format <BED_(file_format)>`.
-
-    The ranges can be defined by supplying ``starts``, ``stops`` or ``ranges``. With
-    either of the first two, the program will locate the other side based on lengths
-    and states. For the last one, the program will NOT validate the correctness of the
-    values but simply take them.
 
     Examples
     --------
@@ -990,6 +994,10 @@ class PairAlignPath(AlignPath):
     stops : array_like of int of shape (n_sequences,), optional
         Stop position of each sequence in the alignment.
 
+        .. note::
+           If none of ``ranges``, ``starts`` or ``stops`` are provided,
+           ``starts=[0, 0]`` will be used.
+
     See Also
     --------
     AlignPath
@@ -998,8 +1006,69 @@ class PairAlignPath(AlignPath):
 
     Notes
     -----
-    If none of ``ranges``, ``starts`` or ``stops`` are provided, ``starts=[0, 0]`` will
-    be used.
+    ``PairAlignPath`` uses a compact data structure to store alignment operations.
+    Specifically, it encodes gap status in the two sequences in ``states``, a 2-D array
+    with just one row of packed bits. The elements may be:
+
+    * 0: Gap in neither sequence.
+    * 1: Gap in sequence 1.
+    * 2: Gap in sequence 2.
+    * 3: Gap in both sequences.
+
+    Meanwhile, it stores the length of segment per gap status in a 1-D array
+    ``lengths``. For example, the following alignment:
+
+    .. code-block:: none
+
+       GAGCCAT-AC
+       GC--CATAAC
+
+    Can be represented by:
+
+    .. code-block:: none
+
+       lengths: 2 2 3 1 2
+        states: 0 2 0 1 0
+
+    This data structure resembles the :wiki:`CIGAR string <Sequence_alignment#CIGAR_
+    Format>`, as defined in the SAM format specification [1]_. One can convert a
+    pairwise alignment path to/from a CIGAR string using the :meth:`to_cigar` /
+    :meth:`from_cigar` methods.
+
+    The translation from CIGAR codes to ``states`` elements is as follows:
+
+    +-----+----+------+----------------------------------+
+    |Code |BAM |State |Description                       |
+    +=====+====+======+==================================+
+    |``M``|0   |0     |Alignment match                   |
+    +-----+----+------+----------------------------------+
+    |``I``|1   |1     |Insertion to the reference        |
+    +-----+----+------+----------------------------------+
+    |``D``|2   |2     |Deletion from the reference       |
+    +-----+----+------+----------------------------------+
+    |``N``|3   |2     |Skipped region from the reference |
+    +-----+----+------+----------------------------------+
+    |``S``|4   |1     |Soft clipping                     |
+    +-----+----+------+----------------------------------+
+    |``H``|5   |3     |Hard clipping                     |
+    +-----+----+------+----------------------------------+
+    |``P``|6   |3     |Padding                           |
+    +-----+----+------+----------------------------------+
+    |``=``|7   |0     |Sequence match                    |
+    +-----+----+------+----------------------------------+
+    |``X``|8   |0     |Sequence mismatch                 |
+    +-----+----+------+----------------------------------+
+
+    .. note::
+
+       Sequences 1 and 2 are referred to as "query" and "reference" in the SAM format.
+
+    See also the superclass :class:`AlignPath`, a generalization of this data structure
+    to an arbitrary number of sequences.
+
+    References
+    ----------
+    .. [1] https://samtools.github.io/hts-specs/SAMv1.pdf
 
     """
 
@@ -1078,7 +1147,7 @@ class PairAlignPath(AlignPath):
             )
         return super().from_bits(bits, starts)
 
-    def to_cigar(self, seqs=None):
+    def to_cigar(self, seqs: Optional[List[Union["Sequence", str]]] = None):
         r"""Generate a CIGAR string representing the pairwise alignment path.
 
         Parameters
@@ -1109,6 +1178,7 @@ class PairAlignPath(AlignPath):
         cigar = []
         states = np.squeeze(self._states)
 
+        # TODO: Make this compatible with `SequenceLike`.
         if seqs is not None:
             # test if seqs is strings or Sequence object or something else
             if isinstance(seqs[0], str) and isinstance(seqs[1], str):
@@ -1154,7 +1224,9 @@ class PairAlignPath(AlignPath):
             )
 
     @classonlymethod
-    def from_cigar(cls, cigar, starts=None):
+    def from_cigar(
+        cls, cigar: str, starts: Optional[ArrayLike] = None
+    ) -> "PairAlignPath":
         r"""Create a pairwise alignment path from a CIGAR string.
 
         Parameters
