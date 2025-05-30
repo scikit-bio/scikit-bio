@@ -11,19 +11,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
+        # The 5 runners correspond to 5 architectures. Details:
         # https://cibuildwheel.pypa.io/en/stable/options/#archs
+        # The runners and architectures should be automatically associated. However, in
+        # case not in the future, they can be manually specified as follows:
         # include:
         #   - os: ubuntu-latest
-        #     cibw_archs: 'x86_64'  # x86_64
+        #     cibw_archs: 'x86_64'
         #   - os: ubuntu-24.04-arm
         #     cibw_archs: 'aarch64'
         #   - os: windows-latest
-        #     cibw_archs: 'AMD64'  # AMD64
+        #     cibw_archs: 'AMD64'
         #   - os: macos-13
         #     cibw_archs: 'x86_64'
         #   - os: macos-latest
-        #     cibw_archs: 'arm64'  # arm64
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
+        #     cibw_archs: 'arm64'
 
     steps:
       - uses: actions/checkout@v4
@@ -32,10 +35,6 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
-        # Environment variables are set in pyproject.toml
-        # env:
-          # Skip ARM64 builds on PRs to save time
-          # CIBW_ARCHS_LINUX: ${{ github.event_name == 'pull_request' && 'x86_64' || 'x86_64 aarch64' }}
 
       - uses: actions/upload-artifact@v4
         with:
