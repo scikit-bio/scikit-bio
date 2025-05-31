@@ -26,7 +26,7 @@
 
 ### Bug Fixes
 
-* Fixed a bug that `AlignPath.from_cigar` would ignore the first insertion (`I`) of a CIGAR string ([#2236](https://github.com/scikit-bio/scikit-bio/pull/2236)).
+* Fixed a bug that `PairAlignPath.from_cigar` would ignore the first insertion (`I`) of a CIGAR string ([#2236](https://github.com/scikit-bio/scikit-bio/pull/2236)).
 * Fixed an inaccurate statement that one can specify `gap` as np.inf or np.nan in `AlignPath.to_indices`. These cases are impossible because the output is integer type.
 * Fixed an inaccurate statement in the documentation of `SubstitutionMatrix.is_ascii`. This attribute is True when all characters in the alphabet are ASCII codes (0 to 127), not extended ASCII codes (0 to 255) ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Fixed a bug that a `SubstitutionMatrix` cannot be copied ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
