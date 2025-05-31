@@ -689,6 +689,14 @@ class TestPairAlignPath(unittest.TestCase):
         self.assertEqual(str(cm.exception), msg % 1)
 
     def test_from_cigar(self):
+        # very simple case
+        cigar = "1I3M2D"
+        path = PairAlignPath.from_cigar(cigar)
+        lengths = [1, 3, 2]
+        states = [1, 0, 2]
+        npt.assert_array_equal(lengths, path.lengths)
+        npt.assert_array_equal(states, np.squeeze(path.states))
+
         # test valid cigar with no = or X
         cigar = "3M42I270M32D"
         path = PairAlignPath.from_cigar(cigar)

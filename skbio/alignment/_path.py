@@ -1260,6 +1260,8 @@ class PairAlignPath(AlignPath):
         if not cigar:
             raise ValueError("CIGAR string must not be empty.")
 
+        # TODO: This can be optimized and generalized to bytes. Maybe do
+        # `cigar.encode('ascii')`, then iterate over ints.
         lengths = []
         gaps = []
         current_length = 0
@@ -1278,29 +1280,28 @@ class PairAlignPath(AlignPath):
                 no_ones = True
             else:
                 raise ValueError("CIGAR string contains invalid character(s).")
-        lengths, gaps = _fix_arrays(lengths=np.array(lengths), gaps=np.array(gaps))
 
-        return cls(lengths, gaps, starts=([0, 0] if starts is None else starts))
+        lengths, gaps = _fix_arrays(np.array(lengths), np.array(gaps, dtype=np.uint8))
+
+        return cls(lengths, gaps, starts=(starts or [0, 0]))
 
 
-def _fix_arrays(lengths, gaps):
+def _fix_arrays(lens, gaps):
     r"""Merge consecutive same values from gaps array and sum corresponding values
     in lengths array.
 
     Parameters
     ----------
-    lengths : array_like of int of shape (n_segments,)
+    lens : array_like of int of shape (n_segments,)
         Length of each segment in the alignment.
     gaps : array_like of uint8 of shape (n_segments,) or (n_packs, n_segments)
         Packed bits representing character (0) or gap (1) status per sequence per
         segment in the alignment.
     """
-    idx = np.diff(gaps, prepend=np.array([True])) != 0
-    gaps_out = np.asarray(gaps[idx])
-    groups = np.cumsum(idx)
-    lengths_out = np.asarray(np.bincount(groups, weights=lengths).astype(int)[1:])
-
-    return lengths_out, gaps_out
+    idx = np.flatnonzero(np.r_[True, gaps[1:] != gaps[:-1]])
+    lens_out = np.add.reduceat(lens, idx).astype(np.intp)
+    gaps_out = gaps[idx]
+    return lens_out, gaps_out
 
 
 def _run_length_encode(s):
