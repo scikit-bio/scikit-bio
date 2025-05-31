@@ -148,9 +148,12 @@ class TestAlignPath(unittest.TestCase):
 
     def test_shape(self):
         obs = self.path1.shape
-        self.assertEqual(obs.sequence, 3)
-        self.assertEqual(obs.position, 20)
         self.assertTupleEqual(obs, (3, 20))
+
+    def test_repr(self):
+        obs = repr(self.path1)
+        exp = "<AlignPath, sequences: 3, positions: 20, segments: 7>"
+        self.assertEqual(obs, exp)
 
     def test_to_sizes(self):
         path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
@@ -165,7 +168,7 @@ class TestAlignPath(unittest.TestCase):
         path = AlignPath(lengths=[2, 2, 2, 1, 1],
                          states=[0, 2, 0, 6, 0],
                          starts=[0, 0, 0])
-        
+
         # return array of segments
         obs = path.to_bits(expand=False)
         exp = np.array([[0, 0, 0, 0, 0],
@@ -627,30 +630,38 @@ class TestPairAlignPath(unittest.TestCase):
 
     def test_repr(self):
         obs = repr(self.path1)
-        exp = "<PairAlignPath, positions: 20, CIGAR: '3M2D5M1D4M3I2M'>"
+        exp = "<PairAlignPath, positions: 20, segments: 7, CIGAR: '3M2D5M1D4M3I2M'>"
         self.assertEqual(obs, exp)
 
         # make a long CIGAR string
         path = PairAlignPath.from_bits(np.array((
-            [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-            [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1])))
+            [0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])))
         obs = repr(path)
-        exp = "<PairAlignPath, positions: 21, CIGAR: '1M1I1D1M1I1D1M1I1D1M1I1D1M1...'>"
+        exp = ("<PairAlignPath, positions: 21, segments: 19, "
+               "CIGAR: '1M1I1D2M1I1D1M1I1D1M1...'>")
         self.assertEqual(obs, exp)
-        self.assertEqual(len(obs), 71)
+        self.assertEqual(len(obs), 79)
 
+        # also check `__str__`
         obs = str(path)
         self.assertEqual(obs, exp)
 
-        # make a long number
-        path._shape = (0, "I_am_a_long_number_look_at_me")
-        exp = "<PairAlignPath, positions: I_am_a_long_number_look_at_me, CIGAR: '...'>"
-        self.assertEqual(repr(path), exp)
+        # make a long number (rare)
+        path._shape = (2, "I_am_a_long_number")
+        exp = ("<PairAlignPath, positions: I_am_a_long_number, segments: 19, "
+               "CIGAR: '1M1I1...'>")
+        obs = repr(path)
+        self.assertEqual(obs, exp)
+        self.assertEqual(len(obs), 79)
 
-        # make a longer number
-        path._shape = (0, "I_am_a_long_number_see_how_long_I_am")
-        exp = "<PairAlignPath, positions: I_am_a_long_number_see_how_long_I_am>"
-        self.assertEqual(repr(path), exp)
+        # an even longer number (rarer)
+        path._shape = (2, "I_am_a_long_number_look_at_me")
+        exp = ("<PairAlignPath, positions: I_am_a_long_number_look_at_me, "
+               "segments: 19, CIGAR: '...'>")
+        obs = repr(path)
+        self.assertEqual(obs, exp)
+        self.assertGreater(len(obs), 79)
 
     def test_from_bits(self):
         # test base case

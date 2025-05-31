@@ -330,7 +330,7 @@ def pair_align(
 
     >>> path = res.paths[0]
     >>> path
-    <PairAlignPath, positions: 44, CIGAR: '4I13M4D6M2D13M2I'>
+    <PairAlignPath, positions: 44, segments: 7, CIGAR: '4I13M4D6M2D13M2I'>
 
     Extract aligned sequences:
 
@@ -499,7 +499,7 @@ def pair_align_nucl(
     5.0
 
     >>> res.paths[0]
-    <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
+    <PairAlignPath, positions: 8, segments: 4, CIGAR: '1D4M1I2M'>
 
     >>> res.paths[0].to_aligned((seq1, seq2))
     ['GATCG-TC', '-ATCGCTC']
@@ -544,7 +544,7 @@ def pair_align_prot(
     11.0
 
     >>> res.paths[0]
-    <PairAlignPath, positions: 9, CIGAR: '7M2I'>
+    <PairAlignPath, positions: 9, segments: 2, CIGAR: '7M2I'>
 
     >>> res.paths[0].to_aligned((seq1, seq2))
     ['PKKKRKV--', 'PAAKRVKLD']
