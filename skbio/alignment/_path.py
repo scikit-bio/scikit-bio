@@ -19,8 +19,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from skbio.sequence import Sequence
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
-
 # CIGAR codes indexed by states in PairAlignPath
 _cigar_codes = np.array(["M", "I", "D", "P"])
 
@@ -114,15 +112,18 @@ class AlignPath(SkbioObject):
     ... ])
     >>> path = AlignPath.from_tabular(msa)
     >>> path
-    AlignPath
-    Shape(sequence=3, position=20)
-    lengths: [3 2 5 1 4 3 2]
-    states: [0 2 0 6 0 1 0]
+    <AlignPath, sequences: 3, positions: 20, segments: 7>
+
+    >>> path.lengths
+    array([3, 2, 5, 1, 4, 3, 2])
+
+    >>> path.states
+    array([[0, 2, 0, 6, 0, 1, 0]], dtype=uint8)
 
     In the above example, the first three positions of the alignment contain no gaps,
     so the first value in the lengths array is 3, and that in the states array is 0.
     The fourth segment, which has length 1, would have gap status (0, 1, 1), which
-    then becomes 6 after bit packing. So on so forth.
+    then becomes 6 after bit packing.
 
     An ``AlignPath`` object is rarely created from scratch. But one still could, like:
 
@@ -213,30 +214,30 @@ class AlignPath(SkbioObject):
 
         # Number of sequences needs to be explicitly provided, because the packed bits
         # does not contain this information. (It is merely in multiples of 8.)
-        n_sequences = self._ranges.shape[0]
-        if np.ceil(n_sequences / 8) != self._states.shape[0]:
+        nseq = self._ranges.shape[0]
+        if np.ceil(nseq / 8) != self._states.shape[0]:
             max_seqs = self._states.shape[0] * 8
             raise ValueError(
-                f"Number of sequences in ranges ({n_sequences}) and capacity of "
+                f"Number of sequences in ranges ({nseq}) and capacity of "
                 f"states ({max_seqs - 7} to {max_seqs}) do not match."
             )
 
         # Shape is n_sequences (rows) x n_positions (columns), which is consistent with
         # TabularMSA
-        n_positions = int(self._lengths.sum())
-        self._shape = _Shape(sequence=n_sequences, position=n_positions)
+        npos = int(self._lengths.sum())
+        self._shape = (nseq, npos)
 
     def __str__(self) -> str:
         r"""Return string representation of this alignment path."""
-        # Not sure if this makes sense for this class, but it is needed for all
-        # SkbioObjects.
         return self.__repr__()
 
     def __repr__(self) -> str:
         r"""Return summary of the alignment path."""
         return (
-            f"{self.__class__.__name__}\n{self._shape}\nlengths: "
-            f"{self._lengths}\nstates: {np.squeeze(self._states)}"
+            f"<{self.__class__.__name__}, "
+            f"sequences: {self._shape[0]}, "
+            f"positions: {self._shape[1]}, "
+            f"segments: {self._lengths.size}>"
         )
 
     @property
@@ -357,10 +358,7 @@ class AlignPath(SkbioObject):
         ...                     [0, 0, 0, 0, 0, 0, 1, 0]])
         >>> path = AlignPath.from_bits(bit_arr)
         >>> path
-        AlignPath
-        Shape(sequence=3, position=8)
-        lengths: [2 2 2 1 1]
-        states: [0 2 0 6 0]
+        <AlignPath, sequences: 3, positions: 8, segments: 5>
 
         """
         # pack bits into integers
@@ -537,10 +535,7 @@ class AlignPath(SkbioObject):
         ... ]
         >>> path = AlignPath.from_aligned(aln)
         >>> path
-        AlignPath
-        Shape(sequence=3, position=8)
-        lengths: [2 2 2 1 1]
-        states: [0 2 0 6 0]
+        <AlignPath, sequences: 3, positions: 8, segments: 5>
 
         """
         from skbio.sequence import Sequence
@@ -782,10 +777,7 @@ class AlignPath(SkbioObject):
         ...                 [0, -1, -1,  1,  2, -1]])
         >>> path = AlignPath.from_indices(idx)
         >>> path
-        AlignPath
-        Shape(sequence=3, position=6)
-        lengths: [1 2 2 1]
-        states: [0 5 2 6]
+        <AlignPath, sequences: 3, positions: 6, segments: 4>
 
         One can convert a Biotite's ``Alignment`` object into a scikit-bio alignment
         path using this method. For example:
@@ -815,7 +807,7 @@ class AlignPath(SkbioObject):
         >>> from skbio.alignment import PairAlignPath  # doctest: +SKIP
         >>> path = PairAlignPath.from_indices(trace.T)  # doctest: +SKIP
         >>> path  # doctest: +SKIP
-        <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
+        <PairAlignPath, positions: 8, segments: 4, CIGAR: '1D4M1I2M'>
 
         """
         if gap == "mask":
@@ -937,10 +929,7 @@ class AlignPath(SkbioObject):
         ...                         [0, 1, 1, 3, 3]])
         >>> path = AlignPath.from_coordinates(coordinates)
         >>> path
-        AlignPath
-        Shape(sequence=3, position=6)
-        lengths: [1 2 2 1]
-        states: [0 5 2 6]
+        <AlignPath, sequences: 3, positions: 6, segments: 4>
 
         One can convert a Biopython's ``Alignment`` object into a scikit-bio alignment
         path using this method.
@@ -961,7 +950,7 @@ class AlignPath(SkbioObject):
         >>> from skbio.alignment import PairAlignPath  # doctest: +SKIP
         >>> path = PairAlignPath.from_coordinates(coords)  # doctest: +SKIP
         >>> path  # doctest: +SKIP
-        <PairAlignPath, positions: 8, CIGAR: '1D4M1I2M'>
+        <PairAlignPath, positions: 8, segments: 4, CIGAR: '1D4M1I2M'>
 
         """
         starts = coords[:, 0]
@@ -1070,6 +1059,26 @@ class PairAlignPath(AlignPath):
     ----------
     .. [1] https://samtools.github.io/hts-specs/SAMv1.pdf
 
+    Examples
+    --------
+    >>> from skbio.alignment import pair_align
+    >>> seqs = 'GATCGTC', 'ATCGCTC'
+    >>> path = pair_align(*seqs).paths[0]
+    >>> path
+    <PairAlignPath, positions: 8, segments: 4, CIGAR: '1D4M1I2M'>
+
+    >>> path.to_cigar()
+    '1D4M1I2M'
+
+    >>> path.lengths
+    array([1, 4, 1, 2])
+
+    >>> path.states
+    array([[2, 0, 1, 0]], dtype=uint8)
+
+    >>> path.to_aligned(seqs)
+    ['GATCG-TC', '-ATCGCTC']
+
     """
 
     def __init__(
@@ -1095,26 +1104,22 @@ class PairAlignPath(AlignPath):
                 f"{self._shape[0]} were given."
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         r"""Return string representation of this alignment path."""
         return self.__repr__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         r"""Return summary of the alignment path."""
-        repr_ = f"{self.__class__.__name__}, positions: {self._shape[1]}"
-        width = 58 - len(repr_)  # 71 is the line width
+        repr_ = (
+            f"{self.__class__.__name__}, "
+            f"positions: {self._shape[1]}, "
+            f"segments: {self._lengths.size}"
+        )
+        width = 66 - len(repr_)  # maximum line width: 79
         cigar = self.to_cigar()
         if len(cigar) > width:
-            if width >= 13:
-                cigar = cigar[: width - 3] + "..."
-            elif width >= 3:
-                cigar = "..."
-            else:
-                cigar = None
-        if cigar:
-            return f"<{repr_}, CIGAR: '{cigar}'>"
-        else:
-            return f"<{repr_}>"
+            cigar = cigar[: max(width - 3, 0)] + "..."
+        return f"<{repr_}, CIGAR: '{cigar}'>"
 
     @classonlymethod
     def from_bits(cls, bits, starts=None):
@@ -1248,7 +1253,7 @@ class PairAlignPath(AlignPath):
         >>> cigar = "2M5P3D1I"
         >>> path = PairAlignPath.from_cigar(cigar)
         >>> path
-        <PairAlignPath, positions: 11, CIGAR: '2M5P3D1I'>
+        <PairAlignPath, positions: 11, segments: 4, CIGAR: '2M5P3D1I'>
 
         """
         # Make sure cigar is not empty.

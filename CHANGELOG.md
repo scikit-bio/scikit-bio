@@ -35,12 +35,12 @@
 ### Miscellaneous
 
 * Set the default data type of `SubstitutionMatrix` as `np.float32` (previous it was `float`, which is equivalent to `np.float64`). Made `dtype` an optional parameter in `from_dict` and `identity` methods.
-* Adjusted the string representation of `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Adjusted the `__repr__` of `AlignPath` and `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)).
+* Changed `AlignPath.shape`'s type from a named tuple to a normal tuple ([#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)). Let the values be native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Changed `AlignPath.lengths` and `AlignPath.starts`'s dtype from `int64` to `intp`, as these attributes are to facilitate indexing ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Enriched the documentation of `SubstitutionMatrix` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Let `AlignPath.states` be uniformly 2-D, even if there are 8 or less sequences in the alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-* Let `AlignPath.shape` return native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
 * Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
 * Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [2223](https://github.com/scikit-bio/scikit-bio/pull/2223))
