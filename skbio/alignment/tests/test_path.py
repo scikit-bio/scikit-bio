@@ -714,12 +714,25 @@ class TestPairAlignPath(unittest.TestCase):
         npt.assert_array_equal(states, np.squeeze(path.states))
 
         # test empty cigar string
-        with self.assertRaises(ValueError, msg="CIGAR string must not be empty."):
+        msg = "CIGAR string must not be empty."
+        with self.assertRaises(ValueError) as cm:
             PairAlignPath.from_cigar("")
+        self.assertEqual(str(cm.exception), msg)
 
         # test invalid cigar string
-        with self.assertRaises(ValueError, msg="Invalid characters in CIGAR string."):
+        msg = "CIGAR string contains invalid character(s)."
+        with self.assertRaises(ValueError) as cm:
             PairAlignPath.from_cigar("23M45B13X")
+        self.assertEqual(str(cm.exception), msg)
+
+        # test invalid cigar string
+        msg = "CIGAR string contains invalid character(s)."
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath.from_cigar("23M45B13X")
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            PairAlignPath.from_cigar("αβγ")
+        self.assertEqual(str(cm.exception), msg)
 
         # test valid cigar with no 1's
         cigar = "MID12MI"

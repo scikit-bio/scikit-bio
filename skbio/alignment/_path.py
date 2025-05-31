@@ -24,15 +24,15 @@ _cigar_codes = np.array(["M", "I", "D", "P"])
 
 # Mapping of CIGAR codes to states in PairAlignPath
 _cigar_mapping = {
-    "M": 0,
-    "I": 1,
-    "D": 2,
-    "P": 3,
-    "=": 0,
-    "X": 0,
-    "N": 2,
-    "S": 1,
-    "H": 3,
+    77: 0,  # M
+    73: 1,  # I
+    68: 2,  # D
+    80: 3,  # P
+    61: 0,  # =
+    88: 0,  # X
+    78: 2,  # N
+    83: 1,  # S
+    72: 3,  # H
 }
 
 
@@ -1230,13 +1230,13 @@ class PairAlignPath(AlignPath):
 
     @classonlymethod
     def from_cigar(
-        cls, cigar: str, starts: Optional[ArrayLike] = None
+        cls, cigar: Union[str, bytes], starts: Optional[ArrayLike] = None
     ) -> "PairAlignPath":
         r"""Create a pairwise alignment path from a CIGAR string.
 
         Parameters
         ----------
-        cigar : str
+        cigar : str or bytes
             CIGAR format string used to build the PairAlignPath.
         starts : array_like of (int, int), optional
             Start position of each sequence in the alignment. If omitted, will set as
@@ -1247,6 +1247,13 @@ class PairAlignPath(AlignPath):
         PairAlignPath
             The pairwise alignment path created from the given CIGAR string.
 
+        Raises
+        ------
+        ValueError
+            CIGAR string is empty.
+        ValueError
+            CIGAR string contains invalid characters.
+
         Examples
         --------
         >>> from skbio.alignment import PairAlignPath
@@ -1256,52 +1263,86 @@ class PairAlignPath(AlignPath):
         <PairAlignPath, positions: 11, segments: 4, CIGAR: '2M5P3D1I'>
 
         """
-        # Make sure cigar is not empty.
         if not cigar:
             raise ValueError("CIGAR string must not be empty.")
-
-        # TODO: This can be optimized and generalized to bytes. Maybe do
-        # `cigar.encode('ascii')`, then iterate over ints.
-        lengths = []
-        gaps = []
-        current_length = 0
-        no_ones = True
-        for char in cigar:
-            if char.isdigit():
-                no_ones = False
-                current_length = current_length * 10 + int(char)
-            elif char in _cigar_mapping:
-                if no_ones:
-                    lengths.append(current_length + 1)
-                else:
-                    lengths.append(current_length)
-                gaps.append(_cigar_mapping[char])
-                current_length = 0
-                no_ones = True
-            else:
+        if isinstance(cigar, str):
+            try:
+                cigar = cigar.encode("ascii")
+            except UnicodeEncodeError:
                 raise ValueError("CIGAR string contains invalid character(s).")
-
-        lengths, gaps = _fix_arrays(np.array(lengths), np.array(gaps, dtype=np.uint8))
-
-        return cls(lengths, gaps, starts=(starts or [0, 0]))
+        lens, gaps = _parse_cigar(cigar)
+        return cls(lens, gaps, starts=(starts or [0, 0]))
 
 
-def _fix_arrays(lens, gaps):
-    r"""Merge consecutive same values from gaps array and sum corresponding values
-    in lengths array.
+def _parse_cigar(cigar: bytes) -> Tuple[NDArray, NDArray]:
+    r"""Convert a CIGAR string into run-length vectors.
 
     Parameters
     ----------
-    lens : array_like of int of shape (n_segments,)
-        Length of each segment in the alignment.
-    gaps : array_like of uint8 of shape (n_segments,) or (n_packs, n_segments)
-        Packed bits representing character (0) or gap (1) status per sequence per
-        segment in the alignment.
+    cigar : bytes
+        CIGAR string.
+
+    Returns
+    -------
+    ndarray of intp
+        Lengths.
+    ndarray of uint8
+        Gap states.
+
+    """
+    lens, gaps = [], []
+    L, no_ones, last = 0, 1, None
+    for char in cigar:
+        if char in _cigar_mapping:  # letter (operation)
+            curr = _cigar_mapping[char]
+            if curr == last:
+                lens[-1] += L + no_ones
+            else:
+                lens.append(L + no_ones)
+                gaps.append(curr)
+                last = curr
+            L, no_ones = 0, 1
+        elif 48 <= char <= 57:  # number (length)
+            no_ones = 0
+            L = L * 10 + char - 48
+        else:
+            raise ValueError("CIGAR string contains invalid character(s).")
+    return (
+        np.array(lens, dtype=np.intp),
+        np.array(gaps, dtype=np.uint8),
+    )
+
+
+def _merge_same_1d(lens, gaps):
+    r"""Merge consecutive same gap states and sum corresponding lengths.
+
+    Parameters
+    ----------
+    lens : ndarray of int of shape (n_segments,)
+        Segment lengths.
+    gaps : ndarray of uint8 of shape (n_segments,)
+        Segment states.
+
+    Returns
+    -------
+    ndarray of int of shape (n_merged_segments,)
+        Merged segment lengths.
+    ndarray of uint8 of shape (n_merged_segments,)
+        Merged segment states.
+
     """
     idx = np.flatnonzero(np.r_[True, gaps[1:] != gaps[:-1]])
-    lens_out = np.add.reduceat(lens, idx).astype(np.intp)
-    gaps_out = gaps[idx]
-    return lens_out, gaps_out
+    return np.add.reduceat(lens, idx, dtype=lens.dtype), gaps[idx]
+
+
+def _merge_same_2d(lens, gaps):
+    r"""Merge consecutive same gap states and sum corresponding lengths.
+
+    Similar to ``_merge_same_1d`` but applies to a 2-D gaps array.
+
+    """
+    idx = np.flatnonzero(np.r_[True, (gaps[:, 1:] != gaps[:, :-1]).any(axis=0)])
+    return np.add.reduceat(lens, idx, dtype=lens.dtype), gaps[:, idx]
 
 
 def _run_length_encode(s):
