@@ -439,7 +439,7 @@ def pair_align(
         _fill_linear_matrix(matrices[0], query, target, gap_extend, local)
 
     # Get optimal alignment score and corresponding stop(s).
-    if max_paths == 1:
+    if max_paths == 1 or max_paths == 0:
         score, stops = _one_stop(matrices[0], local, trail1, trail2)
     else:
         score, stops = _all_stops(matrices[0], local, trail1, trail2)
