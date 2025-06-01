@@ -673,7 +673,7 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align(seq1, seq2, sub_score="BLOSUM62", gap_cost=(11, 1))
         self.assertEqual(obs.score, 440)
 
-    def test_pair_align_nucl(self):
+    def test_pair_align_nucl_wrap(self):
         """Nucleotide sequence alignment."""
         seq1 = DNA("GATCGTC")
         seq2 = DNA("ATCGCTC")
@@ -688,7 +688,7 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align_nucl(seq1, seq2, **kwargs)
         self.assertEqual(obs.score, 23)
 
-    def test_pair_align_prot(self):
+    def test_pair_align_prot_wrap(self):
         """Protein sequence alignment."""
         seq1 = Protein("PKKKRKV")
         seq2 = Protein("PAAKRVKLD")
