@@ -458,7 +458,7 @@ def _gme(dm):
     occupied, while the remaining positions are disregarded. There is no need to reset
     array values after each iteration.
 
-    Since they are created de novo, all arrays are C-continuous. This permits further
+    Since they are created de novo, all arrays are C-contiguous. This permits further
     optimization in the Cython code.
 
     """
