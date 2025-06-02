@@ -157,6 +157,42 @@ from statsmodels.regression.mixed_linear_model import MixedLM
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
+import array_api_compat as aac
+
+Array = object
+    
+# # codes from array_api_compat.common._typing
+# #===============================================================
+# from typing import Protocol, TypeAlias, Any
+# from typing_extensions import TypeIs, TypeVar
+
+# _T_co = TypeVar("_T_co", covariant=True)
+# class SupportsArrayNamespace(Protocol[_T_co]):
+#     def __array_namespace__(self, /, *, api_version: str | None) -> _T
+
+# import dask.array as da
+# import jax
+# import ndonnx as ndx
+# import numpy as np
+# import numpy.typing as npt
+# import sparse  # pyright: ignore[reportMissingTypeStubs]
+# import torch
+
+#     # TODO: import from typing (requires Python >=3.13)
+
+# _CupyArray: TypeAlias = Any  # cupy has no py.typed
+
+# _ArrayApiObj: TypeAlias = (
+#     npt.NDArray[Any]
+#     | da.Array
+#     | jax.Array
+#     | ndx.Array
+#     | sparse.SparseArray
+#     | torch.Tensor
+#     | SupportsArrayNamespace[Any]
+#     | _CupyArray
+# )
+
 
 def closure(mat):
     """Perform closure to ensure that all elements add up to 1.
@@ -449,7 +485,7 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat):
+def clr(mat:Array)-> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -489,13 +525,23 @@ def clr(mat):
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    mat = closure(mat)
-    lmat = np.log(mat)
-    gm = lmat.mean(axis=-1, keepdims=True)
-    return (lmat - gm).squeeze()
+    # xp is the namespace wrapper for different array libraries
+    xp = aac.array_namespace(mat)
+    
+    # ensure last dimension is not singleton
+    if xp.shape(mat)[-1] == 1:
+        for i in range(xp.shape(mat),0,-1):
+            if xp.shape(mat)[i] == 1:
+                mat = xp.squeeze(mat, axis=i)
+            else:
+                break
+    
+    lmat = xp.log(mat)
+    gm = xp.mean(lmat, axis=-1, keepdims=True)
+    return xp.subtract(lmat, gm)
 
 
-def clr_inv(mat):
+def clr_inv(mat:Array) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -533,12 +579,20 @@ def clr_inv(mat):
 
     """
     # for numerical stability (aka softmax trick)
-    mat = np.atleast_2d(mat)
-    emat = np.exp(mat - mat.max(axis=-1, keepdims=True))
-    return closure(emat)
+    xp = aac.array_namespace(mat)
+    
+    # ensure last dimension is not singleton
+    if xp.shape(mat)[-1] == 1:
+        for i in range(xp.shape(mat),0,-1):
+            if xp.shape(mat)[i] == 1:
+                mat = xp.squeeze(mat, axis=i)
+            else:
+                break
+    
+    gm = xp.mean(mat, axis=-1, keepdims=True)
+    return xp.exp(mat + gm)
 
-
-def ilr(mat, basis=None, check=True):
+def ilr(mat:Array, basis:Array|None=None, /, check:bool=True)-> Array:
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -590,23 +644,25 @@ def ilr(mat, basis=None, check=True):
     where rows represent basis vectors, and the columns represent proportions.
 
     """
-    mat = closure(mat)
+    xp = aac.array_namespace(mat)
     if basis is None:
         d = mat.shape[-1]
         basis = _gram_schmidt_basis(d)  # dimension (d-1) x d
-    else:
-        if len(basis.shape) != 2:
-            raise ValueError(
-                "Basis needs to be a 2D matrix, "
-                "not a %dD matrix." % (len(basis.shape))
-            )
-        if check:
-            _check_orthogonality(basis)
+    
+    assert isinstance(basis, xp.ndarray)
+    
+    if len(basis.shape) != 2:
+        raise ValueError(
+            "Basis needs to be a 2D matrix, "
+            "not a %dD matrix." % (len(basis.shape))
+        )
+    if check:
+        _check_orthogonality(basis)
 
-    return clr(mat) @ basis.T
+    return mat @ basis.T
 
 
-def ilr_inv(mat, basis=None, check=True):
+def ilr_inv(mat:Array, basis:Array|None=None, check:bool=True)-> Array:
     r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to Aitchison
@@ -658,26 +714,28 @@ def ilr_inv(mat, basis=None, check=True):
     where rows represent basis vectors, and the columns represent proportions.
 
     """
-    mat = np.atleast_2d(mat)
+    xp = aac.array_namespace(mat)
+    original_shape = xp.shape(mat)
+    
     if basis is None:
         # dimension d-1 x d basis
         basis = _gram_schmidt_basis(mat.shape[-1] + 1)
-    else:
-        if len(basis.shape) != 2:
-            raise ValueError(
-                "Basis needs to be a 2D matrix, "
-                "not a %dD matrix." % (len(basis.shape))
-            )
-        if check:
-            _check_orthogonality(basis)
+    assert isinstance(basis, xp.ndarray)
+    
+    if len(basis.shape) != 2:
+        raise ValueError(
+            "Basis needs to be a 2D matrix, "
+            "not a %dD matrix." % (len(basis.shape))
+        )
+    if check:
+        _check_orthogonality(basis)
         # this is necessary, since the clr function
         # performs np.squeeze()
-        basis = np.atleast_2d(basis)
 
-    return clr_inv(mat @ basis)
+    return mat @ basis
 
 
-def alr(mat, denominator_idx=0):
+def alr(mat:Array, denominator_idx:int|Array=0, /):
     r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -721,22 +779,24 @@ def alr(mat, denominator_idx=0):
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    mat = closure(mat)
-    if mat.ndim == 2:
+    xp = aac.array_namespace(mat)
+    if xp.ndim(mat) == 2:
+        M,N = xp.shape(mat)
         mat_t = mat.T
-        numerator_idx = list(range(0, mat_t.shape[0]))
-        del numerator_idx[denominator_idx]
-        lr = np.log(mat_t[numerator_idx, :] / mat_t[denominator_idx, :]).T
-    elif mat.ndim == 1:
-        numerator_idx = list(range(0, mat.shape[0]))
-        del numerator_idx[denominator_idx]
-        lr = np.log(mat[numerator_idx] / mat[denominator_idx])
+        numerator_matrix = mat_t[xp.repeat(xp.arange(N),M,axis=0) != denominator_idx] 
+        denominator_vector = mat_t[:, denominator_idx]
+        lr = xp.log(numerator_matrix / denominator_vector).T
+    elif mat.ndim == 1 and isinstance(denominator_idx, int):
+        M = len(mat)
+        numerator = mat_t[xp.arange(N) != denominator_idx] 
+        denominator = mat[denominator_idx]
+        lr = xp.log(numerator /denominator)
     else:
-        raise ValueError("mat must be either 1D or 2D")
+        raise ValueError("mat must be either 1D or 2D and denominator_idx must be an integer for 1D array")
     return lr
 
 
-def alr_inv(mat, denominator_idx=0):
+def alr_inv(mat:Array, denominator_idx:int|Array=0, /):
     r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -782,25 +842,30 @@ def alr_inv(mat, denominator_idx=0):
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    mat = np.array(mat)
+    xp = aac.array_namespace(mat)
     if mat.ndim == 2:
-        mat_idx = np.insert(mat, denominator_idx, np.repeat(0, mat.shape[0]), axis=1)
-        comp = np.zeros(mat_idx.shape)
-        comp[:, denominator_idx] = 1 / (np.exp(mat).sum(axis=1) + 1)
-        numerator_idx = list(range(0, comp.shape[1]))
-        del numerator_idx[denominator_idx]
-        for i in numerator_idx:
-            comp[:, i] = comp[:, denominator_idx] * np.exp(mat_idx[:, i])
-    elif mat.ndim == 1:
-        mat_idx = np.insert(mat, denominator_idx, 0, axis=0)
-        comp = np.zeros(mat_idx.shape)
-        comp[denominator_idx] = 1 / (np.exp(mat).sum(axis=0) + 1)
-        numerator_idx = list(range(0, comp.shape[0]))
-        del numerator_idx[denominator_idx]
-        for i in numerator_idx:
-            comp[i] = comp[denominator_idx] * np.exp(mat_idx[i])
+        M, N_minus_1 = mat.shape
+        N = N_minus_1 + 1
+        comp = xp.zeros((M, N), dtype=mat.dtype)
+        mat = xp.exp(mat)
+        # x_N / (x_1 + ... + x_{N-1} + x_N)
+        comp[:, denominator_idx] = 1 / (xp.sum(mat, axis=1) + 1)
+        # x_i/(x_1 + ... + x_{N-1} + x_N) = \frac{x_i}{x_N} * \frac{x_N}{x_1 + ... + x_{N-1} + x_N}
+        comp[xp.repeat(xp.arange(N),M, axis=0) != denominator_idx] = \
+                    mat[:, N_minus_1] * mat[:, :denominator_idx]
+    elif mat.ndim == 1 and isinstance(denominator_idx, int):
+        N_minus_1 = len(mat)
+        N = N_minus_1 + 1
+        M = 1
+        comp = xp.zeros((M, N), dtype=mat.dtype)
+        mat = xp.exp(mat)
+        # x_N / (x_1 + ... + x_{N-1} + x_N)
+        comp[:, denominator_idx] = 1 / (xp.sum(mat, axis=1) + 1)
+        # x_i/(x_1 + ... + x_{N-1} + x_N) = \frac{x_i}{x_N} * \frac{x_N}{x_1 + ... + x_{N-1} + x_N}
+        comp[xp.repeat(xp.arange(N),M,axis=0) != denominator_idx] = \
+                    mat[:, N_minus_1] * mat[:, :denominator_idx]
     else:
-        raise ValueError("mat must be either 1D or 2D")
+        raise ValueError("mat must be either 1D or 2D and denominator_idx must be an integer for 1D array")
     return comp
 
 
