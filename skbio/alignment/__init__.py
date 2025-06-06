@@ -58,17 +58,6 @@ Alignment statistics
 Deprecated functionality
 ------------------------
 
-.. rubric:: Alignment algorithms
-
-SSW wrapper (optimized; production-ready)
-
-.. autosummary::
-   :toctree: generated/
-
-   StripedSmithWaterman
-   AlignmentStructure
-   local_pairwise_align_ssw
-
 Pure Python algorithms (slow; educational-purposes only)
 
 .. autosummary::
@@ -81,7 +70,7 @@ Pure Python algorithms (slow; educational-purposes only)
    local_pairwise_align_protein
    local_pairwise_align
 
-.. rubric:: Substitution matrix
+Substitution matrix
 
 .. autosummary::
    :toctree: generated/
@@ -114,75 +103,16 @@ TCC--G-GGCA..
 >>> msa.index
 Index(['seq1', 'seq2'], dtype='object')
 
-Using the optimized alignment algorithm
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Alignment Algorithm Examples
+----------------------------
+scikit-bio provides pure-Python implementations of Smith-Waterman and
+Needleman-Wunsch alignment. These are much slower than implementations
+in languages such as C, but serve as useful educational examples as they're
+simpler to understand for programmers not experienced with C and are easy to
+experiment with. These are _far_ too slow to use in production applications
+when run on long sequences or run many times.
 
-Using the convenient ``local_pairwise_align_ssw`` function:
-
->>> from skbio.alignment import local_pairwise_align_ssw
->>> alignment, score, start_end_positions = local_pairwise_align_ssw(
-...     DNA("ACTAAGGCTCTCTACCCCTCTCAGAGA"),
-...     DNA("ACTAAGGCTCCTAACCCCCTTTTCTCAGA")
-... )
->>> alignment
-TabularMSA[DNA]
-------------------------------
-Stats:
-    sequence count: 2
-    position count: 30
-------------------------------
-ACTAAGGCTCTCT-ACCCC----TCTCAGA
-ACTAAGGCTC-CTAACCCCCTTTTCTCAGA
->>> score
-27
->>> start_end_positions
-[(0, 24), (0, 28)]
-
-Using the ``StripedSmithWaterman`` object:
-
->>> from skbio.alignment import StripedSmithWaterman
->>> query = StripedSmithWaterman("ACTAAGGCTCTCTACCCCTCTCAGAGA")
->>> alignment = query("AAAAAACTCTCTAAACTCACTAAGGCTCTCTACCCCTCTTCAGAGAAGTCGA")
->>> print(alignment)
-ACTAAGGCTC...
-ACTAAGGCTC...
-Score: 49
-Length: 28
-
-Using the ``StripedSmithWaterman`` object for multiple targets in an efficient
-way and finding the aligned sequence representations:
-
->>> from skbio.alignment import StripedSmithWaterman
->>> alignments = []
->>> target_sequences = [
-...     "GCTAACTAGGCTCCCTTCTACCCCTCTCAGAGA",
-...     "GCCCAGTAGCTTCCCAATATGAGAGCATCAATTGTAGATCGGGCC",
-...     "TCTATAAGATTCCGCATGCGTTACTTATAAGATGTCTCAACGG",
-...     "TAGAGATTAATTGCCACTGCCAAAATTCTG"
-... ]
->>> query_sequence = "ACTAAGGCTCTCTACCCCTCTCAGAGA"
->>> query = StripedSmithWaterman(query_sequence)
->>> for target_sequence in target_sequences:
-...     alignment = query(target_sequence)
-...     alignments.append(alignment)
-...
->>> print(alignments[0])
-ACTAAGGCTC...
-ACT-AGGCTC...
-Score: 38
-Length: 30
->>> print(alignments[0].aligned_query_sequence)
-ACTAAGGCTC---TCTACCCCTCTCAGAGA
->>> print(alignments[0].aligned_target_sequence)
-ACT-AGGCTCCCTTCTACCCCTCTCAGAGA
-
-Using the slow alignment algorithm
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-scikit-bio also provides pure-Python implementations of Smith-Waterman and
-Needleman-Wunsch alignment. These are much slower than the methods described
-above, but serve as useful educational examples as they're simpler to
-experiment with. Functions are provided for local and global alignment of
+Functions are provided for local and global alignment of
 protein and nucleotide sequences. The ``global*`` and ``local*`` functions
 differ in the underlying algorithm that is applied (``global*`` uses Needleman-
 Wunsch while ``local*`` uses Smith-Waterman), and ``*protein`` and
@@ -254,20 +184,15 @@ from ._pairwise import (
     global_pairwise_align_protein,
     global_pairwise_align,
     make_identity_substitution_matrix,
-    local_pairwise_align_ssw,
 )
-from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
 from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
 
 __all__ = [
     "TabularMSA",
-    "StripedSmithWaterman",
-    "AlignmentStructure",
     "AlignPath",
     "PairAlignPath",
-    "local_pairwise_align_ssw",
     "global_pairwise_align",
     "global_pairwise_align_nucleotide",
     "global_pairwise_align_protein",

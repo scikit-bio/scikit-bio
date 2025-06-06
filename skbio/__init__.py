@@ -14,7 +14,7 @@ import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode, SubstitutionMatrix
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+from skbio.alignment import TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.embedding import ProteinEmbedding
 from skbio.io import read, write
@@ -34,7 +34,6 @@ __all__ = [
     "SubstitutionMatrix",
     "DistanceMatrix",
     "TabularMSA",
-    "local_pairwise_align_ssw",
     "TreeNode",
     "nj",
     "read",

@@ -107,17 +107,17 @@ if gcc:
         pass
 
 # Compile SSW module
-ssw_extra_compile_args = ["-I."]
+extra_compile_args = ["-I."]
 
 if platform.system() != "Windows":
     if icc:
-        ssw_extra_compile_args.extend(["-qopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
+        extra_compile_args.extend(["-qopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
     elif not clang:
-        ssw_extra_compile_args.extend(["-fopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
+        extra_compile_args.extend(["-fopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
 elif platform.system() == "Windows":
-    ssw_extra_compile_args.extend(["-openmp:experimental"])
+    extra_compile_args.extend(["-openmp:experimental"])
 
-stats_extra_compile_args = [] + ssw_extra_compile_args
+stats_extra_compile_args = [] + extra_compile_args
 stats_extra_link_args = []
 if platform.system() != "Windows":
     if icc:
@@ -131,19 +131,13 @@ if platform.system() != "Windows":
 # SSW to be compiled. See https://github.com/scikit-bio/scikit-bio/issues/409
 # and http://stackoverflow.com/q/26211814/3776794 for details.
 if platform.machine() == "i686":
-    ssw_extra_compile_args.append("-msse2")
+    extra_compile_args.append("-msse2")
 
 
 # Cython modules (*.pyx). They will be compiled into C code (*.c) during build.
 ext = ".pyx"
 extensions = [
     Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
-    Extension(
-        "skbio.alignment._ssw_wrapper",
-        ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
-        extra_compile_args=ssw_extra_compile_args,
-        include_dirs=[np.get_include()],
-    ),
     Extension(
         "skbio.tree._c_nj",
         ["skbio/tree/_c_nj" + ext],
