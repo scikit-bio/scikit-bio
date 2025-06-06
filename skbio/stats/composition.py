@@ -515,11 +515,11 @@ def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
-    except:
+    except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-    
-    # NOTE:docstringed for backward compatibility    
+
+    # NOTE:docstringed for backward compatibility
     # assert xp.all(mat>0), 'Input must be of positive values.'
 
     if is_aitchison:
@@ -534,9 +534,9 @@ def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
     # squeeze the sigleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
     lmat = xp.log(mat)
-    return xp.reshape(lmat-xp.mean(lmat, axis=-1, keepdims=True), 
+    return xp.reshape(lmat-xp.mean(lmat, axis=-1, keepdims=True),
                       original_shape)
-    
+
 def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
             axis:int=-1) -> Array:
     r"""Perform inverse centre log ratio transformation.
@@ -578,12 +578,13 @@ def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
-    except:
+    except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
     if is_normalized:
         if validate:
-            # assert xp.all(xp.sum(mat, axis=-1) == 0), 'Input matrix is not in the clr range.'
+            # assert xp.all(xp.sum(mat, axis=-1) == 0), \
+                # 'Input matrix is not in the clr range.'
             pass
     else:
         # NOTE: for backward compatibility
@@ -654,10 +655,10 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
             "Input is not supported by array_namespace, converting to numpy array. ",
             UserWarning,
         )
-        
+
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-        
+
     if aitchison:
         # this input is known to be a composition
         if validate:
@@ -666,7 +667,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
     else:
         # if the input is not a composition, run closure
         mat = closure(mat)
-        
+
     if basis is None:
         d = mat.shape[axis]
         basis = xp.asarray(_gram_schmidt_basis(d))  # dimension (d-1) x d
@@ -676,10 +677,10 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
             raise ValueError(
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
-    
+
     if not isinstance(basis, xp.ndarray):
         basis = xp.asarray(basis)
-    
+
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
         mat = mat.permute_dims(switch_tuple)
@@ -750,7 +751,7 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
             "Input is not supported by array_namespace, converting to numpy array. ",
             UserWarning,
         )
-        
+
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
     if basis is None:
@@ -767,8 +768,8 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
         mat = mat.permute_dims(switch_tuple)
-        return xp.permute_dims(clr_inv(mat @ basis, validate=validate, is_normalized=True)\
-            , switch_tuple)
+        return xp.permute_dims(clr_inv(mat @ basis, validate=validate, \
+                                        is_normalized=True), switch_tuple)
     else:
         return clr_inv(mat @ basis, validate=validate, is_normalized=True)
 
@@ -825,7 +826,7 @@ def alr(mat:Array, denominator_idx:int=0, validate:bool=True, axis:int=-1):
             "Input is not supported by array_namespace, converting to numpy array. ",
             UserWarning,
         )
-        
+
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
 
@@ -914,10 +915,10 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
             "Input is not supported by array_namespace, converting to numpy array. ",
             UserWarning,
         )
-        
+
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-    
+
     if mat.ndim > 2:
         # NOTE: backward compatibility
         raise ValueError("mat must be either 1D or 2D")
@@ -927,7 +928,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
         #     UserWarning,
         # )
 
-    
+
     if mat.shape[axis] < 2:
         raise ValueError(
             f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
@@ -944,11 +945,11 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
     comp[..., numerator_indexs] = xp.exp(mat)
-    
+
     # recover the permutation
     if axis != -1:
         comp = comp.permute_dims(switch_tuple)
-        
+
     return comp/xp.sum(comp, axis=-1, keepdims=True)
 
 
