@@ -47,6 +47,11 @@
 * Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [2223](https://github.com/scikit-bio/scikit-bio/pull/2223))
 * Initiated efforts to add type annotations to scikit-bio's codebase, starting with the `stats.distance` module [2219](https://github.com/scikit-bio/scikit-bio/pull/2219)
 
+### Backward-incompatible changes
+
+* Removed the wrapper for the Striped Smith Waterman (SSW) library. Specifically, this removes `local_pairwise_align_ssw`, `StripedSmithWaterman`, and `AlignmentStructure` under `skbio.alignment`. We recommend using the new `skbio.alignment.pair_align` function for pairwise sequence alignment, or other packages that provide production-ready alignment algorithms. See [#1814](https://github.com/biocore/scikit-bio/issues/1814) for discussions.
+* Removed `skbio.alignment.make_identity_substitution_matrix`. This has been replaced with `skbio.sequence.SubstitutionMatrix.identity`.
+
 
 ## Version 0.6.3
 
@@ -322,6 +327,7 @@
 
 ### Bug fixes
 * Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/scikit-bio/scikit-bio/pull/1813)).
+
 
 ## Version 0.5.7
 
