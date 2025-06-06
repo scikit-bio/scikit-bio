@@ -158,40 +158,26 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
 import array_api_compat as aac
+import warnings
+from typing import Optional
 
 Array = object
-    
-# # codes from array_api_compat.common._typing
-# #===============================================================
-# from typing import Protocol, TypeAlias, Any
-# from typing_extensions import TypeIs, TypeVar
 
-# _T_co = TypeVar("_T_co", covariant=True)
-# class SupportsArrayNamespace(Protocol[_T_co]):
-#     def __array_namespace__(self, /, *, api_version: str | None) -> _T
+def _composition_check(mat: Array, axis: int = 1):
+    """Check if the input is a valid composition.
 
-# import dask.array as da
-# import jax
-# import ndonnx as ndx
-# import numpy as np
-# import numpy.typing as npt
-# import sparse  # pyright: ignore[reportMissingTypeStubs]
-# import torch
-
-#     # TODO: import from typing (requires Python >=3.13)
-
-# _CupyArray: TypeAlias = Any  # cupy has no py.typed
-
-# _ArrayApiObj: TypeAlias = (
-#     npt.NDArray[Any]
-#     | da.Array
-#     | jax.Array
-#     | ndx.Array
-#     | sparse.SparseArray
-#     | torch.Tensor
-#     | SupportsArrayNamespace[Any]
-#     | _CupyArray
-# )
+    Parameters
+    ----------
+    mat : array_like of shape (n_compositions, n_components)
+        A matrix of proportions.
+    """
+    xp = aac.array_namespace(mat)
+    if xp.any(mat < 0):
+        raise ValueError("Cannot have negative proportions")
+    if xp.all(mat == 0, axis=axis).sum() > 0:
+        raise ValueError("Input matrix cannot have rows with all zeros")
+    # assert xp.all(xp.sum(mat == 0, axis=axis) == 1), f"Input matrix is compositional\
+                            # for the given({axis}) dimension"
 
 
 def closure(mat):
@@ -485,7 +471,7 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat:Array)-> Array:
+def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -526,22 +512,33 @@ def clr(mat:Array)-> Array:
 
     """
     # xp is the namespace wrapper for different array libraries
-    xp = aac.array_namespace(mat)
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except:
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
     
-    # ensure last dimension is not singleton
-    if xp.shape(mat)[-1] == 1:
-        for i in range(xp.shape(mat),0,-1):
-            if xp.shape(mat)[i] == 1:
-                mat = xp.squeeze(mat, axis=i)
-            else:
-                break
-    
+    # NOTE:docstringed for backward compatibility    
+    # assert xp.all(mat>0), 'Input must be of positive values.'
+
+    if is_aitchison:
+        # this input is known to be a composition
+        if validate:
+            # check if the input is a composition
+            _composition_check(mat, axis=-1)
+    else:
+        # if the input is not a composition, run closure
+        mat = closure(mat)
+    original_shape = mat.shape
+    # squeeze the sigleton dimensions
+    mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
     lmat = xp.log(mat)
-    gm = xp.mean(lmat, axis=-1, keepdims=True)
-    return xp.subtract(lmat, gm)
-
-
-def clr_inv(mat:Array) -> Array:
+    return xp.reshape(lmat-xp.mean(lmat, axis=-1, keepdims=True), 
+                      original_shape)
+    
+def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
+            axis:int=-1) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -578,21 +575,26 @@ def clr_inv(mat:Array) -> Array:
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
 
     """
-    # for numerical stability (aka softmax trick)
-    xp = aac.array_namespace(mat)
-    
-    # ensure last dimension is not singleton
-    if xp.shape(mat)[-1] == 1:
-        for i in range(xp.shape(mat),0,-1):
-            if xp.shape(mat)[i] == 1:
-                mat = xp.squeeze(mat, axis=i)
-            else:
-                break
-    
-    gm = xp.mean(mat, axis=-1, keepdims=True)
-    return xp.exp(mat + gm)
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except:
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
+    if is_normalized:
+        if validate:
+            # assert xp.all(xp.sum(mat, axis=-1) == 0), 'Input matrix is not in the clr range.'
+            pass
+    else:
+        # NOTE: for backward compatibility
+        # mat = mat - xp.sum(mat, axis=-1, keepdims=True)
+        pass
+    # for numerical stability, shitting the values < 1
+    diff = xp.exp(mat - xp.max(mat, axis=-1, keepdims=True))
+    return diff / xp.sum(diff, axis=-1, keepdims=True)
 
-def ilr(mat:Array, basis:Array|None=None, /, check:bool=True)-> Array:
+def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
+        axis:int=-1, aitchison=False) -> Array:
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -644,25 +646,51 @@ def ilr(mat:Array, basis:Array|None=None, /, check:bool=True)-> Array:
     where rows represent basis vectors, and the columns represent proportions.
 
     """
-    xp = aac.array_namespace(mat)
-    if basis is None:
-        d = mat.shape[-1]
-        basis = _gram_schmidt_basis(d)  # dimension (d-1) x d
-    
-    assert isinstance(basis, xp.ndarray)
-    
-    if len(basis.shape) != 2:
-        raise ValueError(
-            "Basis needs to be a 2D matrix, "
-            "not a %dD matrix." % (len(basis.shape))
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except TypeError as e:
+        warnings.warn(
+            "Input is not supported by array_namespace, converting to numpy array. ",
+            UserWarning,
         )
-    if check:
+        
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
+        
+    if aitchison:
+        # this input is known to be a composition
+        if validate:
+            # check if the input is a composition
+            _composition_check(mat, axis=axis)
+    else:
+        # if the input is not a composition, run closure
+        mat = closure(mat)
+        
+    if basis is None:
+        d = mat.shape[axis]
+        basis = xp.asarray(_gram_schmidt_basis(d))  # dimension (d-1) x d
+    elif validate:
         _check_orthogonality(basis)
+        if len(basis.shape) != 2:
+            raise ValueError(
+                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
+            )
+    
+    if not isinstance(basis, xp.ndarray):
+        basis = xp.asarray(basis)
+    
+    if axis != -1:
+        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
+        mat = mat.permute_dims(switch_tuple)
+        return xp.permute_dims(clr(mat, validate=validate, is_aitchison=True) \
+            @ basis.T,switch_tuple)
+    else:
+        return clr(mat, validate=validate, is_aitchison=True) @ basis.T
 
-    return mat @ basis.T
 
-
-def ilr_inv(mat:Array, basis:Array|None=None, check:bool=True)-> Array:
+def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
+            axis:int=-1) -> Array:
     r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to Aitchison
@@ -714,28 +742,38 @@ def ilr_inv(mat:Array, basis:Array|None=None, check:bool=True)-> Array:
     where rows represent basis vectors, and the columns represent proportions.
 
     """
-    xp = aac.array_namespace(mat)
-    original_shape = xp.shape(mat)
-    
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except TypeError as e:
+        warnings.warn(
+            "Input is not supported by array_namespace, converting to numpy array. ",
+            UserWarning,
+        )
+        
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
     if basis is None:
         # dimension d-1 x d basis
-        basis = _gram_schmidt_basis(mat.shape[-1] + 1)
-    assert isinstance(basis, xp.ndarray)
-    
-    if len(basis.shape) != 2:
-        raise ValueError(
-            "Basis needs to be a 2D matrix, "
-            "not a %dD matrix." % (len(basis.shape))
-        )
-    if check:
+        basis = _gram_schmidt_basis(mat.shape[axis] + 1)
+    elif validate:
         _check_orthogonality(basis)
-        # this is necessary, since the clr function
-        # performs np.squeeze()
+        if len(basis.shape) != 2:
+            raise ValueError(
+                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
+            )
+    if not isinstance(basis, xp.ndarray):
+        basis = xp.asarray(basis)
+    if axis != -1:
+        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
+        mat = mat.permute_dims(switch_tuple)
+        return xp.permute_dims(clr_inv(mat @ basis, validate=validate, is_normalized=True)\
+            , switch_tuple)
+    else:
+        return clr_inv(mat @ basis, validate=validate, is_normalized=True)
 
-    return mat @ basis
 
-
-def alr(mat:Array, denominator_idx:int|Array=0, /):
+def alr(mat:Array, denominator_idx:int=0, validate:bool=True, axis:int=-1):
     r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -779,24 +817,50 @@ def alr(mat:Array, denominator_idx:int|Array=0, /):
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    xp = aac.array_namespace(mat)
-    if xp.ndim(mat) == 2:
-        M,N = xp.shape(mat)
-        mat_t = mat.T
-        numerator_matrix = mat_t[xp.repeat(xp.arange(N),M,axis=0) != denominator_idx] 
-        denominator_vector = mat_t[:, denominator_idx]
-        lr = xp.log(numerator_matrix / denominator_vector).T
-    elif mat.ndim == 1 and isinstance(denominator_idx, int):
-        M = len(mat)
-        numerator = mat_t[xp.arange(N) != denominator_idx] 
-        denominator = mat[denominator_idx]
-        lr = xp.log(numerator /denominator)
-    else:
-        raise ValueError("mat must be either 1D or 2D and denominator_idx must be an integer for 1D array")
-    return lr
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except TypeError as e:
+        warnings.warn(
+            "Input is not supported by array_namespace, converting to numpy array. ",
+            UserWarning,
+        )
+        
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
+
+    # switch the wanted axis to the last one
+    if validate:
+        if mat.ndim > 2:
+            warnings.warn(
+                "the input matrix has more than 2 dimensions, \
+                        high dimensional alr is new feature",
+                UserWarning,
+            )
+        if mat.shape[axis] < 2:
+            raise ValueError(
+                f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
+            )
+        if xp.any(mat <= 0):
+            raise ValueError("Input matrix must be positive")
+    if axis != -1:
+        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
+        mat = mat.permute_dims(switch_tuple)
+
+    # no matter (n,) or (n, w, z), it will return n
+    N = mat.shape[-1]
+    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
+    numerator_matrix = mat[..., numerator_indexs]
+    denominator_vector = mat[..., [denominator_idx]]
+    mat = xp.log(numerator_matrix / denominator_vector)
+
+    # recover the permutation
+    if axis != -1:
+        mat = mat.permute_dims(switch_tuple)
+    return mat
 
 
-def alr_inv(mat:Array, denominator_idx:int|Array=0, /):
+def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -842,31 +906,50 @@ def alr_inv(mat:Array, denominator_idx:int|Array=0, /):
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    xp = aac.array_namespace(mat)
-    if mat.ndim == 2:
-        M, N_minus_1 = mat.shape
-        N = N_minus_1 + 1
-        comp = xp.zeros((M, N), dtype=mat.dtype)
-        mat = xp.exp(mat)
-        # x_N / (x_1 + ... + x_{N-1} + x_N)
-        comp[:, denominator_idx] = 1 / (xp.sum(mat, axis=1) + 1)
-        # x_i/(x_1 + ... + x_{N-1} + x_N) = \frac{x_i}{x_N} * \frac{x_N}{x_1 + ... + x_{N-1} + x_N}
-        comp[xp.repeat(xp.arange(N),M, axis=0) != denominator_idx] = \
-                    mat[:, N_minus_1] * mat[:, :denominator_idx]
-    elif mat.ndim == 1 and isinstance(denominator_idx, int):
-        N_minus_1 = len(mat)
-        N = N_minus_1 + 1
-        M = 1
-        comp = xp.zeros((M, N), dtype=mat.dtype)
-        mat = xp.exp(mat)
-        # x_N / (x_1 + ... + x_{N-1} + x_N)
-        comp[:, denominator_idx] = 1 / (xp.sum(mat, axis=1) + 1)
-        # x_i/(x_1 + ... + x_{N-1} + x_N) = \frac{x_i}{x_N} * \frac{x_N}{x_1 + ... + x_{N-1} + x_N}
-        comp[xp.repeat(xp.arange(N),M,axis=0) != denominator_idx] = \
-                    mat[:, N_minus_1] * mat[:, :denominator_idx]
-    else:
-        raise ValueError("mat must be either 1D or 2D and denominator_idx must be an integer for 1D array")
-    return comp
+    # for backward compatibility for list input
+    try:
+        xp = aac.array_namespace(mat)
+    except TypeError as e:
+        warnings.warn(
+            "Input is not supported by array_namespace, converting to numpy array. ",
+            UserWarning,
+        )
+        
+        mat = np.asarray(mat)
+        xp = aac.array_namespace(mat)
+    
+    if mat.ndim > 2:
+        # NOTE: backward compatibility
+        raise ValueError("mat must be either 1D or 2D")
+        # warnings.warn(
+        #     "the input matrix has more than 2 dimensions, \
+        #               high dimensional alr is new feature",
+        #     UserWarning,
+        # )
+
+    
+    if mat.shape[axis] < 2:
+        raise ValueError(
+            f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
+        )
+    # switch the wanted axis to the last one
+    if axis != -1:
+        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
+        mat = mat.permute_dims(switch_tuple)
+
+    # no matter (n,) or (n, w, z), it will return n
+    N = mat.shape[-1]+1
+    comp = xp.ones(mat.shape[:-1]+ (N,), dtype=mat.dtype)
+    # NOTE: do we need to take the same implementation as clr_inv?
+    # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
+    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
+    comp[..., numerator_indexs] = xp.exp(mat)
+    
+    # recover the permutation
+    if axis != -1:
+        comp = comp.permute_dims(switch_tuple)
+        
+    return comp/xp.sum(comp, axis=-1, keepdims=True)
 
 
 def centralize(mat):
@@ -1524,11 +1607,11 @@ def ancom(
     """
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
-            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
         )
     if not isinstance(grouping, pd.Series):
         raise TypeError(
-            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
         )
 
     if np.any(table <= 0):
@@ -1595,7 +1678,7 @@ def ancom(
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
     if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` " "index must be consistent.")
+        raise ValueError("`table` index and `grouping` index must be consistent.")
 
     n_feat = mat.shape[1]
 
@@ -2042,11 +2125,11 @@ def dirmult_ttest(
     rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
-            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
         )
     if not isinstance(grouping, pd.Series):
         raise TypeError(
-            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
         )
 
     if np.any(table < 0):
@@ -2062,7 +2145,7 @@ def dirmult_ttest(
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
     if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` " "index must be consistent.")
+        raise ValueError("`table` index and `grouping` index must be consistent.")
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]
