@@ -106,49 +106,40 @@ if gcc:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-# Compile SSW module
-extra_compile_args = ["-I."]
 
-if platform.system() != "Windows":
-    if icc:
-        extra_compile_args.extend(["-qopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
-    elif not clang:
-        extra_compile_args.extend(["-fopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
-elif platform.system() == "Windows":
-    extra_compile_args.extend(["-openmp:experimental"])
+# Compiler flags
+extra_compile_args = ["-I."]  # search current directory
+extra_link_args = []
 
-stats_extra_compile_args = [] + extra_compile_args
-stats_extra_link_args = []
-if platform.system() != "Windows":
-    if icc:
-        stats_extra_compile_args.extend(["-qopenmp"])
-        stats_extra_link_args.extend(["-qopenmp"])
-    elif not clang:
-        stats_extra_compile_args.extend(["-fopenmp"])
-        stats_extra_link_args.extend(["-fopenmp"])
-
-# Users with i686 architectures have reported that adding this flag allows
-# SSW to be compiled. See https://github.com/scikit-bio/scikit-bio/issues/409
-# and http://stackoverflow.com/q/26211814/3776794 for details.
-if platform.machine() == "i686":
-    extra_compile_args.append("-msse2")
+# Enable OpenMP for parallelism.
+if platform.system() == "Windows":
+    extra_compile_args.append("/openmp")
+elif icc:
+    extra_compile_args.append("-qopenmp")
+    extra_link_args.append("-qopenmp")
+elif not clang:
+    extra_compile_args.append("-fopenmp")
+    extra_link_args.append("-fopenmp")
 
 
 # Cython modules (*.pyx). They will be compiled into C code (*.c) during build.
 ext = ".pyx"
 extensions = [
-    Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
+    Extension(
+        "skbio.metadata._intersection",
+        ["skbio/metadata/_intersection" + ext],
+    ),
     Extension(
         "skbio.tree._c_nj",
         ["skbio/tree/_c_nj" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.tree._c_me",
         ["skbio/tree/_c_me" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.diversity._phylogenetic",
@@ -158,20 +149,20 @@ extensions = [
     Extension(
         "skbio.stats.ordination._cutils",
         ["skbio/stats/ordination/_cutils" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.stats.distance._cutils",
         ["skbio/stats/distance/_cutils" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.alignment._cutils",
         ["skbio/alignment/_cutils" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
         include_dirs=[np.get_include()],
     ),
 ]
