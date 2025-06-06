@@ -216,10 +216,10 @@ def local_pairwise_align(
 
     """
     warn(
-        "You're using skbio's python implementation of Smith-Waterman "
-        "alignment. This will be very slow (e.g., thousands of times slower) "
-        "than implementations in other languages.",
-        EfficiencyWarning,
+        "You're using skbio's pure Python implementation of local pairwise "
+        "alignment. This is known to be very slow. We recommend using the "
+        "efficient `skbio.alignment.pair_align` function instead.",
+        PendingDeprecationWarning,
     )
 
     for seq in seq1, seq2:
@@ -353,9 +353,9 @@ def global_pairwise_align_nucleotide(
     # use the substitution matrix provided by the user, or compute from
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
-        substitution_matrix = make_identity_substitution_matrix(
-            match_score, mismatch_score
-        )
+        substitution_matrix = SubstitutionMatrix.identity(
+            "ACGTU", match_score, mismatch_score
+        ).to_dict()
 
     return global_pairwise_align(
         seq1,
@@ -528,11 +528,9 @@ def global_pairwise_align(
 
     """
     warn(
-        "You're using skbio's python implementation of Needleman-Wunsch "
-        "alignment. This is known to be very slow (e.g., thousands of times "
-        "slower than a native C implementation). We'll be adding a faster "
-        "version soon (see https://github.com/scikit-bio/scikit-bio/issues/"
-        "254 to track progress on this).",
+        "You're using skbio's pure Python implementation of global pairwise "
+        "alignment. This is known to be very slow. We recommend using the "
+        "efficient `skbio.alignment.pair_align` function instead.",
         PendingDeprecationWarning,
     )
 
@@ -585,47 +583,6 @@ def global_pairwise_align(
     msa = TabularMSA(aligned1 + aligned2)
 
     return msa, score, start_end_positions
-
-
-@deprecated(
-    as_of="0.4.0",
-    until="0.6.0",
-    reason="Will be replaced by a SubstitutionMatrix class. To track "
-    "progress, see [#161]"
-    "(https://github.com/biocore/scikit-bio/issues/161).",
-)
-def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
-    """Generate substitution matrix where all matches are scored equally
-
-    Parameters
-    ----------
-    match_score : int, float
-        The score that should be assigned for all matches. This value is
-        typically positive.
-    mismatch_score : int, float
-        The score that should be assigned for all mismatches. This value is
-        typically negative.
-    alphabet : iterable of str, optional
-        The characters that should be included in the substitution matrix.
-
-    Returns
-    -------
-    dict of dicts
-        All characters in alphabet are keys in both dictionaries, so that any
-        pair of characters can be looked up to get their match or mismatch
-        score.
-
-    """
-    result = {}
-    for c1 in alphabet:
-        row = {}
-        for c2 in alphabet:
-            if c1 == c2:
-                row[c2] = match_score
-            else:
-                row[c2] = mismatch_score
-        result[c1] = row
-    return result
 
 
 # Functions from here allow for generalized (global or local) alignment. I

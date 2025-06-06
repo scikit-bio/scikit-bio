@@ -70,13 +70,6 @@ Pure Python algorithms (slow; educational-purposes only)
    local_pairwise_align_protein
    local_pairwise_align
 
-Substitution matrix
-
-.. autosummary::
-   :toctree: generated/
-
-    make_identity_substitution_matrix
-
 
 Tutorial
 --------
@@ -183,7 +176,6 @@ from ._pairwise import (
     global_pairwise_align_nucleotide,
     global_pairwise_align_protein,
     global_pairwise_align,
-    make_identity_substitution_matrix,
 )
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
@@ -199,7 +191,6 @@ __all__ = [
     "local_pairwise_align",
     "local_pairwise_align_nucleotide",
     "local_pairwise_align_protein",
-    "make_identity_substitution_matrix",
     "align_score",
     "pair_align",
     "pair_align_nucl",
