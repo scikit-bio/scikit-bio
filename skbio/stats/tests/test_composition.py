@@ -314,7 +314,7 @@ class CompositionTests(TestCase):
                             rtol=1e-04, atol=1e-06)
 
         # no check
-        npt.assert_array_almost_equal(ilr(mat, check=False),
+        npt.assert_array_almost_equal(ilr(mat, validate=False),
                                       np.array([0.70710678, 0.40824829]))
 
         with self.assertRaises(ValueError):
@@ -360,7 +360,7 @@ class CompositionTests(TestCase):
                             rtol=1e-04, atol=1e-06)
 
         # no check
-        npt.assert_array_almost_equal(ilr_inv(ilr(mat), check=False), mat)
+        npt.assert_array_almost_equal(ilr_inv(ilr(mat), validate=False), mat)
 
         with self.assertRaises(ValueError):
             ilr_inv(self.cdata1, basis=self.cdata1)
