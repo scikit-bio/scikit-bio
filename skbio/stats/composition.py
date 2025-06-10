@@ -158,7 +158,7 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
 
-def closure(mat):
+def closure(mat, pseudo=None):
     """Perform closure to ensure that all elements add up to 1.
 
     Parameters
@@ -198,6 +198,8 @@ def closure(mat):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
+    if pseudo:
+        mat = mat + pseudo
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
@@ -597,8 +599,7 @@ def ilr(mat, basis=None, check=True):
     else:
         if len(basis.shape) != 2:
             raise ValueError(
-                "Basis needs to be a 2D matrix, "
-                "not a %dD matrix." % (len(basis.shape))
+                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
         if check:
             _check_orthogonality(basis)
@@ -665,8 +666,7 @@ def ilr_inv(mat, basis=None, check=True):
     else:
         if len(basis.shape) != 2:
             raise ValueError(
-                "Basis needs to be a 2D matrix, "
-                "not a %dD matrix." % (len(basis.shape))
+                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
         if check:
             _check_orthogonality(basis)
@@ -1459,11 +1459,11 @@ def ancom(
     """
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
-            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
         )
     if not isinstance(grouping, pd.Series):
         raise TypeError(
-            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
         )
 
     if np.any(table <= 0):
@@ -1530,7 +1530,7 @@ def ancom(
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
     if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` " "index must be consistent.")
+        raise ValueError("`table` index and `grouping` index must be consistent.")
 
     n_feat = mat.shape[1]
 
@@ -1977,11 +1977,11 @@ def dirmult_ttest(
     rng = get_rng(seed)
     if not isinstance(table, pd.DataFrame):
         raise TypeError(
-            "`table` must be a `pd.DataFrame`, " "not %r." % type(table).__name__
+            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
         )
     if not isinstance(grouping, pd.Series):
         raise TypeError(
-            "`grouping` must be a `pd.Series`," " not %r." % type(grouping).__name__
+            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
         )
 
     if np.any(table < 0):
@@ -1997,7 +1997,7 @@ def dirmult_ttest(
     grouping_index_len = len(grouping.index)
     mat, cats = table.align(grouping, axis=0, join="inner")
     if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` " "index must be consistent.")
+        raise ValueError("`table` index and `grouping` index must be consistent.")
 
     trt_group = grouping.loc[grouping == treatment]
     ref_group = grouping.loc[grouping == reference]

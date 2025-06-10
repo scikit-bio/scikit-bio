@@ -438,7 +438,7 @@ def aitchison_mixup(
 
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):
-            matrix = closure(matrix)
+            matrix = closure(matrix, pseudo=1e-6)
 
     rng = get_rng(seed)
     possible_pairs = _get_all_possible_pairs(matrix)
