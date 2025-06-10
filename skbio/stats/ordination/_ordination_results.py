@@ -181,6 +181,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         cmap=None,
         s=20,
         n_dims=3,
+        plot_confidence_ellipses=False
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -353,6 +354,28 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             plot = scatter_fn()
         else:
             plot = scatter_fn(c=point_colors)
+        
+        if plot_confidence_ellipses and zs is None and category_to_color:
+            for label, color in category_to_color.items():
+                group = self.samples[df[column] == label]
+                if len(group) < 2:
+                    continue  # can't draw ellipse with less than 2 points
+
+                x_vals = group.iloc[:, axes[0]]
+                y_vals = group.iloc[:, axes[1]]
+
+                mean_x = x_vals.mean()
+                mean_y = y_vals.mean()
+                std_x = x_vals.std()
+                std_y = y_vals.std()
+
+                t = np.linspace(0, 2 * np.pi, 100)
+                ellipse_x = mean_x + std_x * np.cos(t)
+                ellipse_y = mean_y + std_y * np.sin(t)
+
+                ax.plot(
+                    ellipse_x, ellipse_y, color=color, lw=2, label=f"'{label}' ellipse"
+                )
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
