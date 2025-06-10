@@ -15,10 +15,10 @@
 # class TestAugmentation(TestCase):
 
 #     def setUp(self):
-#         n_samples = 40
+#         samples = 40
 #         n_features = 100
-#         data = np.arange(n_samples * n_features).reshape(n_features, n_samples)
-#         sample_ids = ['S%d' % i for i in range(n_samples)]
+#         data = np.arange(samples * n_features).reshape(n_features, samples)
+#         sample_ids = ['S%d' % i for i in range(samples)]
 #         feature_ids = ['O%d' % i for i in range(n_features)]
 #         feature_metadata = [{'phylogeny': 'a'},
 #                              {'phylogeny': 'b'},
@@ -259,7 +259,7 @@
 #     def test_mixup(self):
 #         augmentation = Augmentation(self.table, label=self.labels) #, num_classes=2)
 
-#         augmented_matrix, augmented_label = augmentation.mixup(alpha=2, n_samples=10)
+#         augmented_matrix, augmented_label = augmentation.mixup(alpha=2, samples=10)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 10)
@@ -271,14 +271,14 @@
 
 #     def test_mixup_no_label(self):
 #         augmentation = Augmentation(self.table, label=None)
-#         augmented_matrix, augmented_label = augmentation.mixup(alpha=2, n_samples=10)
+#         augmented_matrix, augmented_label = augmentation.mixup(alpha=2, samples=10)
 #         self.assertIsNone(augmented_label)
 
 #     def test_aitchison_mixup(self):
 #         table_compositional = self.table.norm(axis="sample")
 #         augmentation = Augmentation(table_compositional, label=self.labels) #, num_classes=2)
 
-#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -293,7 +293,7 @@
 #     def test_aitchison_mixup_non_compositional(self):
 #         augmentation = Augmentation(self.table, label=self.labels) #, num_classes=2)
 
-#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -307,13 +307,13 @@
 
 #     def test_aitchison_mixup_no_label(self):
 #         augmentation = Augmentation(self.table, label=None)
-#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.aitchison_mixup(alpha=2, samples=20)
 #         self.assertIsNone(augmented_label)
 
 #     def test_phylomix_simple(self):
 #         augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=self.simple_tree)
 
-#         augmented_matrix, _ = augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
+#         augmented_matrix, _ = augmentation.phylomix(self.tips_to_feature_mapping_simple, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
@@ -323,18 +323,18 @@
 #     def test_phylomix_no_tree(self):
 #         augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=None)
 #         with self.assertRaisesRegex(ValueError, "tree is required for phylomix augmentation"):
-#             augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
+#             augmentation.phylomix(self.tips_to_feature_mapping_simple, samples=20)
 
 #     def test_phylomix_bad_tips(self):
 #         bad_mapping = {k: v for k, v in self.tips_to_feature_mapping_simple.items() if k != 'a'}
 #         augmentation = Augmentation(self.table_simple, label=self.labels_simple, tree=self.simple_tree)
 #         with self.assertRaisesRegex(ValueError, "tip_to_obs_mapping must contain all tips in the tree"):
-#             augmentation.phylomix(bad_mapping, n_samples=20)
+#             augmentation.phylomix(bad_mapping, samples=20)
 
 #     def test_phylomix_no_label(self):
 #         augmentation = Augmentation(self.table_simple, label=None, tree=self.simple_tree)
 
-#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping_simple, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping_simple, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table_simple.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table_simple.shape[1] + 20)
@@ -346,7 +346,7 @@
 #     def test_phylomix(self):
 #         augmentation = Augmentation(self.table, label=self.labels, tree=self.complex_tree)
 
-#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -362,7 +362,7 @@
 #         table_compositional = self.table.norm(axis="sample")
 #         augmentation = Augmentation(table_compositional, label=self.labels)
 
-#         augmented_matrix, augmented_label = augmentation.compositional_cutmix(n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.compositional_cutmix(samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -374,7 +374,7 @@
 #         labels = np.random.randint(0, 3, size=self.table.shape[1])
 #         augmentation = Augmentation(self.table, label=labels, tree=self.complex_tree)
 
-#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, n_samples=20)
+#         augmented_matrix, augmented_label = augmentation.phylomix(self.tips_to_feature_mapping, samples=20)
 
 #         self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
 #         self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -410,9 +410,9 @@ from skbio.table._augment import (
 
 class TestAugmentFunctions(TestCase):
     def setUp(self):
-        n_samples = 40
+        samples = 40
         n_features = 100
-        self.data = np.arange(n_samples * n_features).reshape(n_samples, n_features)
+        self.data = np.arange(samples * n_features).reshape(samples, n_features)
         feature_metadata = [
             {"phylogeny": "a"},
             {"phylogeny": "b"},
@@ -651,7 +651,7 @@ class TestAugmentFunctions(TestCase):
 
     def test_mixup(self):
         augmented_matrix, augmented_label = mixup(
-            self.data, n_samples=10, label=self.labels, alpha=2
+            self.data, samples=10, label=self.labels, alpha=2
         )
 
         self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 10)
@@ -661,12 +661,12 @@ class TestAugmentFunctions(TestCase):
         self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
 
     def test_mixup_no_label(self):
-        augmented_matrix, augmented_label = mixup(self.data, n_samples=10, alpha=2)
+        augmented_matrix, augmented_label = mixup(self.data, samples=10, alpha=2)
         self.assertTrue(augmented_label.empty)
 
     def test_aitchison_mixup(self):
         augmented_matrix, augmented_label = aitchison_mixup(
-            self.data, n_samples=20, label=self.labels, alpha=2
+            self.data, samples=20, label=self.labels, alpha=2
         )
 
         self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
@@ -682,7 +682,7 @@ class TestAugmentFunctions(TestCase):
     # def test_aitchison_mixup_non_compositional(self):
     #     # Test with non-compositional data (should normalize)
     #     augmented_matrix, augmented_label = aitchison_mixup(
-    #         self.table, n_samples=20, label=self.labels, alpha=2
+    #         self.table, samples=20, label=self.labels, alpha=2
     #     )
 
     #     self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
@@ -695,13 +695,13 @@ class TestAugmentFunctions(TestCase):
 
     def test_aitchison_mixup_no_label(self):
         augmented_matrix, augmented_label = aitchison_mixup(
-            self.data, n_samples=20, alpha=2
+            self.data, samples=20, alpha=2
         )
         self.assertTrue(augmented_label.empty)
 
     def test_compositional_cutmix(self):
         augmented_matrix, augmented_label = compositional_cutmix(
-            self.data, n_samples=20, label=self.labels, seed=42
+            self.data, samples=20, label=self.labels, seed=42
         )
 
         self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
@@ -719,7 +719,7 @@ class TestAugmentFunctions(TestCase):
             self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
-            n_samples=20,
+            samples=20,
             label=self.labels_simple,
         )
 
@@ -734,7 +734,7 @@ class TestAugmentFunctions(TestCase):
                 self.data_simple,
                 tree=None,
                 tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
-                n_samples=20,
+                samples=20,
                 label=self.labels_simple,
             )
 
@@ -749,7 +749,7 @@ class TestAugmentFunctions(TestCase):
                 self.data_simple,
                 tree=self.simple_tree,
                 tip_to_obs_mapping=bad_mapping,
-                n_samples=20,
+                samples=20,
                 label=self.labels_simple,
             )
 
@@ -758,7 +758,7 @@ class TestAugmentFunctions(TestCase):
             self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
-            n_samples=20,
+            samples=20,
         )
 
         self.assertEqual(augmented_matrix.shape[0], self.data_simple.shape[0] + 20)
@@ -770,7 +770,7 @@ class TestAugmentFunctions(TestCase):
             self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
-            n_samples=20,
+            samples=20,
             label=self.labels,
         )
 
@@ -786,7 +786,7 @@ class TestAugmentFunctions(TestCase):
             self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
-            n_samples=20,
+            samples=20,
             label=labels_multiclass,
         )
 
