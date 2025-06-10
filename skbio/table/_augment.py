@@ -68,9 +68,10 @@ def _validate_label(  # type: ignore[return]
             f"Number of elements in label ({label.shape[0]}) does not "
             f"match number of samples in input data ({matrix.shape[0]})"
         )
+    # make sure label is only whole numbers, then convert to int
+    if not np.all(np.equal(np.mod(label, 1), 0)):
+        raise TypeError(f"label must only contain integer values.")
     if label.ndim == 1:
-        if label.dtype != int:
-            raise TypeError(f"label must only contain integer values.")
         # check that labels is 0 indexed
         unique_labels = np.unique(label)
         if min(unique_labels) != 0:
