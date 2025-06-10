@@ -374,7 +374,7 @@ among organisms are inferred using genetic data.
 :wiki:`Distance-based methods <Distance_matrices_in_phylogeny>` are a common category
 of methods for such purpose. The distances are usually computed from sequence alignment
 (see :mod:`skbio.alignment`), but they can also be inferred using alternative methods
-such as _k_-mer frequency (see :func:`~skbio.sequence.Sequence.kmer_frequencies`) and
+such as *k*-mer frequency (see :func:`~skbio.sequence.Sequence.kmer_frequencies`) and
 community diversity (see :mod:`skbio.diversity.beta`), and the applications of
 distance-based tree building are not limited to evolutionary biology, but can be
 extended to other fields (e.g., :wiki:`hierarchical clustering

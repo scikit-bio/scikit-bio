@@ -5,43 +5,45 @@ r"""Sequence Alignments (:mod:`skbio.alignment`)
 
 This module provides functionality for computing and manipulating sequence
 alignments. DNA, RNA, and protein sequences can be aligned, as well as
-sequences with custom alphabets.
+sequences with or without custom alphabets.
 
 
-Alignment structure
--------------------
+Alignment structures
+--------------------
+
+Tabular format of aligned sequences.
 
 .. autosummary::
    :toctree: generated/
 
    TabularMSA
+
+Compact format of alignment paths.
+
+.. autosummary::
+   :toctree: generated/
+
    AlignPath
    PairAlignPath
 
 
-Alignment algorithms
---------------------
+Pairwise alignment
+------------------
 
-.. rubric:: Optimized (i.e., production-ready) algorithms
-
-.. autosummary::
-   :toctree: generated/
-
-   StripedSmithWaterman
-   AlignmentStructure
-   local_pairwise_align_ssw
-
-.. rubric:: Slow (i.e., educational-purposes only) algorithms
+A versatile, efficient and generalizable pairwise alignment algorithm.
 
 .. autosummary::
    :toctree: generated/
 
-   global_pairwise_align_nucleotide
-   global_pairwise_align_protein
-   global_pairwise_align
-   local_pairwise_align_nucleotide
-   local_pairwise_align_protein
-   local_pairwise_align
+    pair_align
+
+Convenience wrappers with preset scoring schemes.
+
+.. autosummary::
+   :toctree: generated/
+
+    pair_align_nucl
+    pair_align_prot
 
 
 Alignment statistics
@@ -54,7 +56,32 @@ Alignment statistics
 
 
 Deprecated functionality
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
+
+.. rubric:: Alignment algorithms
+
+SSW wrapper (optimized; production-ready)
+
+.. autosummary::
+   :toctree: generated/
+
+   StripedSmithWaterman
+   AlignmentStructure
+   local_pairwise_align_ssw
+
+Pure Python algorithms (slow; educational-purposes only)
+
+.. autosummary::
+   :toctree: generated/
+
+   global_pairwise_align_nucleotide
+   global_pairwise_align_protein
+   global_pairwise_align
+   local_pairwise_align_nucleotide
+   local_pairwise_align_protein
+   local_pairwise_align
+
+.. rubric:: Substitution matrix
 
 .. autosummary::
    :toctree: generated/
@@ -232,6 +259,7 @@ from ._pairwise import (
 from skbio.alignment._ssw_wrapper import StripedSmithWaterman, AlignmentStructure
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
+from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
 
 __all__ = [
     "TabularMSA",
@@ -248,4 +276,7 @@ __all__ = [
     "local_pairwise_align_protein",
     "make_identity_substitution_matrix",
     "align_score",
+    "pair_align",
+    "pair_align_nucl",
+    "pair_align_prot",
 ]

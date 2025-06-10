@@ -4,24 +4,44 @@
 
 ### Features
 
-* Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment. It supports linear and affine gap penalties, match/mismatch or substitution matrix, and optional terminal gap penalty ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-* Added `AlignPath.stops` to calculate the stop (a.k.a., end, right, 3-prime, C-terminus) position of the aligned region within a sequence ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Added function `pair_align`, a re-designed pairwise sequence alignment engine that is versatile, efficient, and generalizable ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2196](https://github.com/scikit-bio/scikit-bio/pull/2196)). It is meant to replace the old slow Python engine and the SSW wrapper. It supports:
+  - Global, local and semi-global alignments (with all four ends customizable).
+  - Nucleotide, protein, and un-grammared sequences, plain strings (ASCII and Unicode), words/tokens, and numbers.
+  - Match/mismatch scores or substitution matrix.
+  - Linear and affine gap penalties.
+  - Integer, decimal and infinite scores.
+  - Returning one, multiple or all optimal alignment paths.
+* Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Added `AlignPath.to_aligned` to extract aligned regions of the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Added `AlignPath.from_aligned` to reconstruct a path from aligned sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Added parameter `starts` to `AlignPath.from_tabular` to specify starting positions in the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187)).
 
 ### Performance enhancements
 
+* Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Enhanced and changed the default behavior of `AlignPath.to_bits`, which now returns a bit array representing positions instead of segments. This is desired because with the old default behavior, `to_bits` and `from_bits` are not consistent with each other ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 
 ### Bug Fixes
 
+* Fixed a bug that `PairAlignPath.from_cigar` would ignore the first insertion (`I`) of a CIGAR string ([#2236](https://github.com/scikit-bio/scikit-bio/pull/2236)).
+* Fixed an inaccurate statement that one can specify `gap` as np.inf or np.nan in `AlignPath.to_indices`. These cases are impossible because the output is integer type.
+* Fixed an inaccurate statement in the documentation of `SubstitutionMatrix.is_ascii`. This attribute is True when all characters in the alphabet are ASCII codes (0 to 127), not extended ASCII codes (0 to 255) ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Fixed a bug that a `SubstitutionMatrix` cannot be copied ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Fixed a bug in `AlignPath.to_indices` which would throw an error if the alignment path has only one segment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
 
 ### Miscellaneous
 
+* Set the default data type of `SubstitutionMatrix` as `np.float32` (previous it was `float`, which is equivalent to `np.float64`). Made `dtype` an optional parameter in `from_dict` and `identity` methods.
+* Adjusted the `__repr__` of `AlignPath` and `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)).
+* Changed `AlignPath.shape`'s type from a named tuple to a normal tuple ([#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)). Let the values be native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Changed `AlignPath.lengths` and `AlignPath.starts`'s dtype from `int64` to `intp`, as these attributes are to facilitate indexing ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Enriched the documentation of `SubstitutionMatrix` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Let `AlignPath.states` be uniformly 2-D, even if there are 8 or less sequences in the alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
-* Let `AlignPath.shape` return native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
 * Improved documentation for the `DistanceMatrix` object ([2204](https://github.com/scikit-bio/scikit-bio/pull/2204))
 * Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [2223](https://github.com/scikit-bio/scikit-bio/pull/2223))
