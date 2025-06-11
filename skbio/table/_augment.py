@@ -558,7 +558,9 @@ def compositional_cutmix(
 
     matrix, row_ids, col_ids = _ingest_array(table)
     # If label isn't provided, assume all samples have same class label
+    no_out_label = False
     if label is None:
+        no_out_label = True
         label = np.zeros(matrix.shape[0], dtype=int)
     label, one_hot_label = _validate_label(label, matrix)
 
@@ -576,13 +578,16 @@ def compositional_cutmix(
         indicator_binomial = rng.binomial(1, _lambda, size=matrix.shape[1])
         augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
         augmented_matrix.append(augmented_x)
-        label_ = label[idx1]
+        label_ = one_hot_label[idx1]
         augmented_label.append(label_)
 
     augmented_matrix_ = np.array(augmented_matrix)
-    augmented_label_ = np.array(augmented_label)
     augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
-    augmented_label = np.concatenate([label, augmented_label_])
+    if no_out_label:
+        augmented_label = None
+    else:
+        augmented_label_ = np.array(augmented_label)
+        augmented_label = np.concatenate([one_hot_label, augmented_label_])
     return _create_table(augmented_matrix, backend=output_format), _create_table(
         augmented_label, backend=output_format
     )
