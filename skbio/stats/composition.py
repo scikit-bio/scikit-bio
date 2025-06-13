@@ -163,6 +163,10 @@ from typing import Optional
 
 Array = object
 
+def supports_array_api(obj):
+    required_methods = ["__array_namespace__"]
+    return all(hasattr(obj, method) for method in required_methods)
+
 def _composition_check(mat: Array, axis: int = 1):
     """Check if the input is a valid composition.
 
@@ -213,15 +217,24 @@ def closure(mat):
            [ 0.4,  0.4,  0.2]])
 
     """
-    mat = np.atleast_2d(mat)
-    if np.any(mat < 0):
+    # mat = np.atleast_2d(mat)
+    
+    if not aac.is_array_api_obj(mat):
+        mat = np.array(mat)
+    xp = aac.array_namespace(mat)
+    if xp.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
     if mat.ndim > 2:
         raise ValueError("Input matrix can only have two dimensions or less")
-    if np.all(mat == 0, axis=1).sum() > 0:
+    elif mat.ndim ==1:
+        mat = mat.reshape(1, -1)
+    if xp.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
     mat = mat / mat.sum(axis=1, keepdims=True)
-    return mat.squeeze()
+    
+    return xp.squeeze(mat, 
+                      axis=tuple(i for i,m in enumerate(mat.shape) \
+                                 if m==1))
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -670,16 +683,18 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
 
     if basis is None:
         d = mat.shape[axis]
-        basis = xp.asarray(_gram_schmidt_basis(d))  # dimension (d-1) x d
+        basis = xp.asarray(_gram_schmidt_basis(d),
+                           device=mat.device,
+                           dtype=mat.dtype)  # dimension (d-1) x d
     elif validate:
         _check_orthogonality(basis)
         if len(basis.shape) != 2:
             raise ValueError(
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
-
-    if not isinstance(basis, xp.ndarray):
-        basis = xp.asarray(basis)
+        basis = xp.asarray(basis, 
+                        device=mat.device,
+                        dtype=mat.dtype)
 
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
@@ -763,8 +778,10 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
             raise ValueError(
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
-    if not isinstance(basis, xp.ndarray):
-        basis = xp.asarray(basis)
+    # if not isinstance(basis, xp.array):
+    basis = xp.asarray(basis, 
+                       device=mat.device,
+                       dtype=mat.dtype)
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
         mat = mat.permute_dims(switch_tuple)
@@ -838,6 +855,10 @@ def alr(mat:Array, denominator_idx:int=0, validate:bool=True, axis:int=-1):
                         high dimensional alr is new feature",
                 UserWarning,
             )
+            raise ValueError(
+                f"matrix must be 1d or 2d"
+            )
+            # for backward compactibility
         if mat.shape[axis] < 2:
             raise ValueError(
                 f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
@@ -940,7 +961,9 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
 
     # no matter (n,) or (n, w, z), it will return n
     N = mat.shape[-1]+1
-    comp = xp.ones(mat.shape[:-1]+ (N,), dtype=mat.dtype)
+    comp = xp.ones(mat.shape[:-1]+ (N,), 
+                   dtype=mat.dtype,
+                   device=mat.device)
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
@@ -1892,8 +1915,13 @@ def _check_orthogonality(basis):
         Basis in the Aitchison simplex of dimension :math:`(D - 1) \times D`.
 
     """
-    basis = np.atleast_2d(basis)
-    if not np.allclose(basis @ basis.T, np.identity(len(basis)), rtol=1e-4, atol=1e-6):
+    xp = aac.array_namespace(basis)
+    if basis.ndim<2:
+        basis = basis.reshape(1,-1)
+    eyes = xp.asarray(np.identity(len(basis)),
+                      device=basis.device,
+                      dtype=basis.dtype)
+    if not xp.all(xp.abs(basis @ basis.T- eyes)<(1e-4*eyes+1e-6)):
         raise ValueError("Basis is not orthonormal.")
 
 
