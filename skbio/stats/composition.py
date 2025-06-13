@@ -218,7 +218,7 @@ def closure(mat):
 
     """
     # mat = np.atleast_2d(mat)
-    
+
     if not aac.is_array_api_obj(mat):
         mat = np.array(mat)
     xp = aac.array_namespace(mat)
@@ -231,8 +231,8 @@ def closure(mat):
     if xp.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
     mat = mat / mat.sum(axis=1, keepdims=True)
-    
-    return xp.squeeze(mat, 
+
+    return xp.squeeze(mat,
                       axis=tuple(i for i,m in enumerate(mat.shape) \
                                  if m==1))
 
@@ -692,7 +692,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
             raise ValueError(
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
-        basis = xp.asarray(basis, 
+        basis = xp.asarray(basis,
                         device=mat.device,
                         dtype=mat.dtype)
 
@@ -779,7 +779,7 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
     # if not isinstance(basis, xp.array):
-    basis = xp.asarray(basis, 
+    basis = xp.asarray(basis,
                        device=mat.device,
                        dtype=mat.dtype)
     if axis != -1:
@@ -961,7 +961,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
 
     # no matter (n,) or (n, w, z), it will return n
     N = mat.shape[-1]+1
-    comp = xp.ones(mat.shape[:-1]+ (N,), 
+    comp = xp.ones(mat.shape[:-1]+ (N,),
                    dtype=mat.dtype,
                    device=mat.device)
     # NOTE: do we need to take the same implementation as clr_inv?
