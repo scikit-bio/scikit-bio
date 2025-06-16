@@ -519,7 +519,7 @@ def compositional_cutmix(
     >>> print(aug_matrix.shape)
     (9, 10)
     >>> print(aug_label.shape)
-    (9, 1)
+    (9, 2)
 
     Notes
     -----
