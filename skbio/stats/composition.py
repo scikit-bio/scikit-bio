@@ -484,7 +484,8 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
+def clr(mat: Array, axis=-1,
+        validate:bool=True, is_aitchison:bool=False) -> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -509,6 +510,15 @@ def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    axis: int, default -1
+        Ignored for the backward compactibility, as the mat
+        is assumed to be a (n_compositions, n_components) matrix.
+    validate: bool, default True
+        Checking of the mat is proportional.
+    is_aitchison: bool, default False
+        should be ignored for the backward compactibility, use True
+        when the input is known to be proportions. Otherwise closure
+        operation will be applied.
 
     Returns
     -------
@@ -525,33 +535,34 @@ def clr(mat: Array, validate:bool=True, is_aitchison:bool=False) -> Array:
 
     """
     # xp is the namespace wrapper for different array libraries
-    # for backward compatibility for list input
+    # NOTE: the following (try:) may reduce the efficiency but to 
+    # keep backward compatibility when the input is a list
     try:
         xp = aac.array_namespace(mat)
     except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
 
-    # NOTE:docstringed for backward compatibility
+    # NOTE:docstringed for satifying backward compatibility
     # assert xp.all(mat>0), 'Input must be of positive values.'
 
     if is_aitchison:
         # this input is known to be a composition
         if validate:
             # check if the input is a composition
-            _composition_check(mat, axis=-1)
+            _composition_check(mat, axis=axis)
     else:
         # if the input is not a composition, run closure
         mat = closure(mat)
     original_shape = mat.shape
-    # squeeze the sigleton dimensions
+    # squeeze the singleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
     lmat = xp.log(mat)
     return xp.reshape(lmat-xp.mean(lmat, axis=-1, keepdims=True),
                       original_shape)
 
-def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
-            axis:int=-1) -> Array:
+def clr_inv(mat: Array, axis:int=-1,
+            validate:bool=True, is_normalized:bool=False) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -573,6 +584,16 @@ def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of clr-transformed data.
+    axis: int, default -1
+        Should be ignored, as the mat is assumed to be a 
+        (n_compositions, n_components) matrix.
+    validate: bool, defautl True
+        Should be ignored for backward compactibility,the flag of 
+        checking whether the mat is centered at 0.
+    is_normalized: bool, default False
+        Should be ignored for the backward compactibility, using True 
+        when the input is known to be centered 
+        otherwise the data will be shifted to have 0 as center.
 
     Returns
     -------
@@ -607,8 +628,8 @@ def clr_inv(mat: Array, validate:bool=True, is_normalized:bool=False,
     diff = xp.exp(mat - xp.max(mat, axis=-1, keepdims=True))
     return diff / xp.sum(diff, axis=-1, keepdims=True)
 
-def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
-        axis:int=-1, aitchison=False) -> Array:
+def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
+        validate:bool=True, is_aitchison=False) -> Array:
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -636,8 +657,14 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
-    check : bool
+    axis: int, default -1
+        Should be ignored, as two-dimension mat is concerned, otherwise indicating 
+        which dimension of mat the ilr will be applied.
+    validate : bool, default True
         Check to see if basis is orthonormal.
+    is_aitchison: bool, default False
+        Should be ignored, True when the given mat is known to be aitchison, otherwise
+        closre will be performed.
 
     Returns
     -------
@@ -672,7 +699,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
 
-    if aitchison:
+    if is_aitchison:
         # this input is known to be a composition
         if validate:
             # check if the input is a composition
@@ -705,8 +732,8 @@ def ilr(mat:Array, basis:Optional[Array]=None, validate:bool=True,
         return clr(mat, validate=validate, is_aitchison=True) @ basis.T
 
 
-def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
-            axis:int=-1) -> Array:
+def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
+            validate:bool=True) -> Array:
     r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to Aitchison
@@ -734,7 +761,9 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
-    check : bool
+    axis: int, default -1
+        ignored for backward compactibility
+    validate : bool, default True
         Check to see if basis is orthonormal.
 
     Returns
@@ -791,7 +820,8 @@ def ilr_inv(mat: Array, basis: Optional[Array]=None, validate: bool = True,
         return clr_inv(mat @ basis, validate=validate, is_normalized=True)
 
 
-def alr(mat:Array, denominator_idx:int=0, validate:bool=True, axis:int=-1):
+def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
+        validate:bool=True):
     r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -815,10 +845,15 @@ def alr(mat:Array, denominator_idx:int=0, validate:bool=True, axis:int=-1):
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
-    denominator_idx : int
+    denominator_idx : int, default 0
         The index of the column (2-D matrix) or position (vector) of ``mat``
         which should be used as the reference composition. Default is 0 which
         specifies the first column or position.
+    axis: int, default -1
+        Should be ignored for backward compactibility, the index of dimension the
+        operation will be applied.
+    validate: bool, default True
+        Check whether the input is positive, whether the mat is 2D.
 
     Returns
     -------
@@ -909,10 +944,13 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     ----------
     mat : array_like of shape (n_compositions, n_components - 1)
         A matrix of alr-transformed data.
-    denominator_idx : int
+    denominator_idx : int, default 0
         The index of the column (2-D matrix) or position (vector) of ``mat``
         which should be used as the reference composition. Default is 0 which
         specifies the first column or position.
+    axis: int, default -1
+        Should be ignored for the backward compactivity, the index of dimension
+        that the operation will be applied on. 
 
     Returns
     -------
