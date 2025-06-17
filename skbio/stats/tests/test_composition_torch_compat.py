@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 import copy
 
 import numpy as np
@@ -29,6 +29,24 @@ import torch
 import array_api_compat as aac
 import warnings
 
+try:
+    import torch
+    no_torch = False
+except ImportError:
+    no_torch = True
+
+import subprocess
+def no_gpu_available():
+    try:
+        result = subprocess.run(
+            ["nvidia-smi"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return not result.returncode == 0
+    except FileNotFoundError:
+        return True
+
 # class name_space_config(TestCase)
 Array = object
 
@@ -48,7 +66,8 @@ def assert_allclose(x:Array, y:Array, rtol=1e-07, atol=1e-7):
     xp = aac.array_namespace(x)
     if not xp.all(xp.abs(x-y)<=(atol+rtol*xp.abs(y))):
         raise ValueError(f'Not equal to tolerance rtol={rtol}, atol={atol}')
-    
+
+@skipIf(no_torch, "Skipping all tests: no torch dependency")
 class torch_cpu(TestCase):
     def setUp(self):
         # args
@@ -546,7 +565,8 @@ class torch_cpu(TestCase):
     #     npt.assert_allclose(psi, sbpbasis)
     
 
-    
+@skipIf(no_gpu_available() or no_torch, "Skipping all tests: no GPU available \
+                                        or no PyTorch dependency")
 class torch_cuda(TestCase):
     def setUp(self):
         # args
