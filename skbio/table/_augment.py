@@ -8,6 +8,7 @@
 
 import warnings
 from typing import Optional, Union, TYPE_CHECKING
+import itertools
 
 if TYPE_CHECKING:
     from numpy.random import RandomState, Generator
@@ -175,23 +176,14 @@ def _get_all_possible_pairs(
     if intra_class:
         if label is None:
             raise ValueError("Label is required for intra-class augmentation.")
-        matrix_cls0_indices = np.where(label == 0)[0]
-        matrix_cls1_indices = np.where(label == 1)[0]
-        for idx1 in range(matrix_cls0_indices.shape[0]):
-            for idx2 in range(idx1 + 1, matrix_cls0_indices.shape[0]):
-                possible_pairs.append(
-                    (matrix_cls0_indices[idx1], matrix_cls0_indices[idx2])
-                )
-        for idx1 in range(matrix_cls1_indices.shape[0]):
-            for idx2 in range(idx1 + 1, matrix_cls1_indices.shape[0]):
-                possible_pairs.append(
-                    (matrix_cls1_indices[idx1], matrix_cls1_indices[idx2])
-                )
+        possible_pairs = list(
+            itertools.chain(
+                itertools.combinations(np.where(label == 0)[0], 2),
+                itertools.combinations(np.where(label == 1)[0], 2),
+            )
+        )
     else:
-        samples = matrix.shape[0]
-        for idx1 in range(samples):
-            for idx2 in range(idx1 + 1, samples):
-                possible_pairs.append((idx1, idx2))
+        possible_pairs = list(itertools.combinations(np.arange(matrix.shape[0]), 2))
     return np.array(possible_pairs)
 
 
