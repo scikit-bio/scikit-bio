@@ -535,7 +535,7 @@ def clr(mat: Array, axis=-1,
 
     """
     # xp is the namespace wrapper for different array libraries
-    # NOTE: the following (try:) may reduce the efficiency but to 
+    # NOTE: the following (try:) may reduce the efficiency but to
     # keep backward compatibility when the input is a list
     try:
         xp = aac.array_namespace(mat)
@@ -585,14 +585,14 @@ def clr_inv(mat: Array, axis:int=-1,
     mat : array_like of shape (n_compositions, n_components)
         A matrix of clr-transformed data.
     axis: int, default -1
-        Should be ignored, as the mat is assumed to be a 
+        Should be ignored, as the mat is assumed to be a
         (n_compositions, n_components) matrix.
     validate: bool, defautl True
-        Should be ignored for backward compactibility,the flag of 
+        Should be ignored for backward compactibility,the flag of
         checking whether the mat is centered at 0.
     is_normalized: bool, default False
-        Should be ignored for the backward compactibility, using True 
-        when the input is known to be centered 
+        Should be ignored for the backward compactibility, using True
+        when the input is known to be centered
         otherwise the data will be shifted to have 0 as center.
 
     Returns
@@ -658,7 +658,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
     axis: int, default -1
-        Should be ignored, as two-dimension mat is concerned, otherwise indicating 
+        Should be ignored, as two-dimension mat is concerned, otherwise indicating
         which dimension of mat the ilr will be applied.
     validate : bool, default True
         Check to see if basis is orthonormal.
@@ -950,7 +950,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
         specifies the first column or position.
     axis: int, default -1
         Should be ignored for the backward compactivity, the index of dimension
-        that the operation will be applied on. 
+        that the operation will be applied on.
 
     Returns
     -------
@@ -1005,10 +1005,10 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
-   
+
     if xp.__name__=='jax.numpy':
-        # NOTE: TypeError: JAX arrays are immutable and 
-        # do not support in-place item assignment. 
+        # NOTE: TypeError: JAX arrays are immutable and
+        # do not support in-place item assignment.
         # Instead of x[idx] = y, use x = x.at[idx].set(y)
         comp = comp.at[..., numerator_indexs].set(xp.exp(mat))
     else:

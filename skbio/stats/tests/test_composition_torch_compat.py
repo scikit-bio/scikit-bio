@@ -74,7 +74,7 @@ class torch_cpu(TestCase):
         self.namespace = torch
         self.namespace_asarray = torch.tensor
         self.device = "cpu"
-        
+
         # data
         # 2d ndarray, shape (2,3)
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
@@ -85,17 +85,17 @@ class torch_cpu(TestCase):
                                          [1, 0, 0, 4, 5],
                                          [1, 2, 3, 4, 5]],
                                         device = self.device)
-        
+
         self.cdata4 = self.namespace_asarray([1, 2, 3, 0, 5],
                                         device = self.device)
-        
+
         # 2d nested list, shape (2,3), containing zeros
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         # 2d nested list, shape (3,5), containing zeros
         self.cdata6 = [[1, 2, 3, 0, 5],
                        [1, 0, 0, 4, 5],
                        [1, 2, 3, 4, 5]]
-        
+
         self.cdata7 = [np.exp(1), 1, 1]
         self.cdata8 = [np.exp(1), 1, 1, 1]
 
@@ -124,35 +124,35 @@ class torch_cpu(TestCase):
         # singleton array
         self.bad3 = self.namespace_asarray([[1], [2], [3], [4], [5]],
                                       device=self.device)
-    
+
     def test_closure(self):
         self.cdata1 = self.namespace_asarray(
                                         [[2, 2, 6],
-                                         [4, 4, 2]], 
+                                         [4, 4, 2]],
                                         device = self.device)
         rst_1 = closure(self.cdata1)
         rst_1_ = self.namespace_asarray([[.2, .2, .6],
                                       [.4, .4, .2]], device = self.device)
         assert_allclose(rst_1, rst_1_)
-        
+
         self.cdata2 = self.namespace_asarray([2, 2, 6], device = self.device)
         rst_2 = closure(self.cdata2)
         rst_2_ = self.namespace_asarray([.2, .2, .6], device = self.device)
         assert_allclose(rst_2, rst_2_)
-        
+
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         rst_3 = closure(self.cdata5)
         rst_3_ = np.array([[.2, .2, .6],
                         [.4, .4, .2]])
         assert_allclose(rst_3, rst_3_)
-        
+
         with self.assertRaises(ValueError):
-            self.bad1 = self.namespace_asarray([1, 2, -1], 
+            self.bad1 = self.namespace_asarray([1, 2, -1],
                                                device=self.device)
             closure(self.bad1)
 
         with self.assertRaises(ValueError):
-            self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]], 
+            self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                                device=self.device)
             closure(self.bad2)
 
@@ -173,25 +173,25 @@ class torch_cpu(TestCase):
     def test_clr(self):
         #
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
-                                              [4, 4, 2]], 
+                                              [4, 4, 2]],
                                              device = self.device)
         cmat = clr(closure(self.cdata1))
         A = np.array([.2, .2, .6])
         B = np.array([.4, .4, .2])
-        
+
         cmat_ = self.namespace_asarray([np.log(A / np.exp(np.log(A).mean())),
                                             np.log(B / np.exp(np.log(B).mean()))],
                                         device = self.device)
         assert_allclose(cmat, cmat_)
-        
-        # 
+
+        #
         self.cdata2 = self.namespace_asarray([2, 2, 6], device = self.device)
         cmat = clr(closure(self.cdata2))
         A = np.array([.2, .2, .6])
         cmat_ = self.namespace_asarray(np.log(A / np.exp(np.log(A).mean())),
                                        device=self.device)
         assert_allclose(cmat, cmat_)
-        
+
         #
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         cmat = clr(closure(self.cdata5))
@@ -200,13 +200,13 @@ class torch_cpu(TestCase):
         npt.assert_allclose(cmat,
                             [np.log(A / np.exp(np.log(A).mean())),
                              np.log(B / np.exp(np.log(B).mean()))])
-        
-        # 
+
+        #
         self.bad1 = self.namespace_asarray([1, 2, -1],
                                            device=self.device)
         with self.assertRaises(ValueError):
             clr(self.bad1)
-        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]], 
+        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                            device=self.device)
         with self.assertRaises(ValueError):
             clr(self.bad2)
@@ -264,7 +264,7 @@ class torch_cpu(TestCase):
         # no check
         self.cdata1 = self.namespace_asarray(
                                         [[2, 2, 6],
-                                         [4, 4, 2]], 
+                                         [4, 4, 2]],
                                         device = self.device)
         assert_allclose(ilr(mat, validate=False),
                         self.namespace_asarray([0.70710678, 0.40824829],
@@ -332,12 +332,12 @@ class torch_cpu(TestCase):
         # no check
         assert_allclose(ilr_inv(ilr(mat), validate=False), mat)
 
-        # 
+        #
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
-                                              [4, 4, 2]], 
+                                              [4, 4, 2]],
                                             device = self.device)
         with self.assertRaises(ValueError):
-            ilr_inv(self.cdata1, 
+            ilr_inv(self.cdata1,
                     basis=self.cdata1)
 
         # make sure that inplace modification is not occurring
@@ -363,7 +363,7 @@ class torch_cpu(TestCase):
         lr = ilr_inv(table, basis=basis)
         res = ilr(lr, basis=basis)
         assert_allclose(res, table)
-        
+
         #
         table = self.namespace_asarray([[1., 10.],
                           [1.14141414, 9.90909091],
@@ -412,19 +412,19 @@ class torch_cpu(TestCase):
     def test_alr(self):
         # 2d-composition
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
-                                              [4, 4, 2]], 
+                                              [4, 4, 2]],
                                             device = self.device)
         comp1 = closure(self.cdata1)
         alr2d_method = alr(comp1, denominator_idx=1)
-        
+
         comp_1_byhand = np.array([[2, 2, 6],\
                                   [4, 4, 2]])
         alr2d_byhand = self.namespace_asarray(
-                        [np.log(comp_1_byhand[:, 0]/comp_1_byhand[:, 1]), 
+                        [np.log(comp_1_byhand[:, 0]/comp_1_byhand[:, 1]),
                             np.log(comp_1_byhand[:, 2]/comp_1_byhand[:, 1])],
                         device=self.device
                     ).T
-        
+
         assert_allclose(alr2d_byhand, alr2d_method)
 
         # 1d-composition
@@ -437,7 +437,7 @@ class torch_cpu(TestCase):
                                               ).T
         alr1d_method = alr(comp2, denominator_idx=1)
         assert_allclose(alr1d_byhand, alr1d_method)
-        
+
         #
         self.bad1 = self.namespace_asarray([1, 2, -1],
                                            device=self.device)
@@ -466,22 +466,22 @@ class torch_cpu(TestCase):
         # 2d-composition
         self.cdata1 = self.namespace_asarray(
                                         [[2, 2, 6],
-                                         [4, 4, 2]], 
+                                         [4, 4, 2]],
                                         device = self.device)
         comp1 = closure(self.cdata1)
         alr2d_method = alr(comp1, denominator_idx=1)
         alrinv2d_method = alr_inv(alr2d_method, denominator_idx=1)
-        
+
         comp1_byhand = closure(np.array([[2, 2, 6],
                                  [4, 4, 2]]))
         alr2d_byhand = np.array([np.log(comp1_byhand[:, 0]/comp1_byhand[:, 1]),
                                  np.log(comp1_byhand[:, 2]/comp1_byhand[:, 1])],
-                                ).T 
+                                ).T
         B = 1/(1 + np.exp(alr2d_byhand[:, 0]) + np.exp(alr2d_byhand[:, 1]))
         A = B * np.exp(alr2d_byhand[:, 0])
         C = B * np.exp(alr2d_byhand[:, 1])
         alrinv2d_byhand = np.column_stack((A, B, C))
-        alrinv2d_byhand = self.namespace_asarray(alrinv2d_byhand, 
+        alrinv2d_byhand = self.namespace_asarray(alrinv2d_byhand,
                                                  device=self.device)
         assert_allclose(alrinv2d_byhand, alrinv2d_method)
 
@@ -491,17 +491,17 @@ class torch_cpu(TestCase):
         comp2 = closure(self.cdata2)
         alr1d_method = alr(comp2, denominator_idx=1)
         alrinv1d_method = alr_inv(alr1d_method, denominator_idx=1)
-        
+
         alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]),
                                  np.log(comp2[2]/comp2[1])]).T
         B = 1/(1 + np.exp(alr1d_byhand[0]) + np.exp(alr1d_byhand[1]))
         A = B * np.exp(alr1d_byhand[0])
         C = B * np.exp(alr1d_byhand[1])
         alrinv1d_byhand = np.column_stack((A, B, C))[0, :]
-        alrinv1d_byhand = self.namespace_asarray(alrinv1d_byhand, 
+        alrinv1d_byhand = self.namespace_asarray(alrinv1d_byhand,
                                                  device=self.device)
         assert_allclose(alrinv1d_byhand, alrinv1d_method)
-        
+
         # make sure that inplace modification is not occurring
         self.rdata1 = self.namespace_asarray([
                         [0.70710678, -0.70710678, 0., 0.],
@@ -517,7 +517,7 @@ class torch_cpu(TestCase):
                                             0.28867513, -0.8660254]],
                                      device=self.device)
         assert_allclose(self.rdata1, rst)
-        
+
         #
         self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                            device=self.device)
@@ -563,7 +563,7 @@ class torch_cpu(TestCase):
     #             elif sbp[i, j] == -1:
     #                 psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
     #     npt.assert_allclose(psi, sbpbasis)
-    
+
 
 @skipIf(no_gpu_available() or no_torch, "Skipping all tests: no GPU available \
                                         or no PyTorch dependency")
@@ -573,7 +573,7 @@ class torch_cuda(TestCase):
         self.namespace = torch
         self.namespace_asarray = torch.tensor
         self.device = "cuda"
-        
+
         # data
         # 2d ndarray, shape (2,3)
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
@@ -584,17 +584,17 @@ class torch_cuda(TestCase):
                                          [1, 0, 0, 4, 5],
                                          [1, 2, 3, 4, 5]],
                                         device = self.device)
-        
+
         self.cdata4 = self.namespace_asarray([1, 2, 3, 0, 5],
                                         device = self.device)
-        
+
         # 2d nested list, shape (2,3), containing zeros
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         # 2d nested list, shape (3,5), containing zeros
         self.cdata6 = [[1, 2, 3, 0, 5],
                        [1, 0, 0, 4, 5],
                        [1, 2, 3, 4, 5]]
-        
+
         self.cdata7 = [np.exp(1), 1, 1]
         self.cdata8 = [np.exp(1), 1, 1, 1]
 
@@ -622,35 +622,35 @@ class torch_cuda(TestCase):
         # singleton array
         self.bad3 = self.namespace_asarray([[1], [2], [3], [4], [5]],
                                       device=self.device)
-    
+
     def test_closure(self):
         self.cdata1 = self.namespace_asarray(
                                         [[2, 2, 6],
-                                         [4, 4, 2]], 
+                                         [4, 4, 2]],
                                         device = self.device)
         rst_1 = closure(self.cdata1)
         rst_1_ = self.namespace_asarray([[.2, .2, .6],
                                       [.4, .4, .2]], device = self.device)
         assert_allclose(rst_1, rst_1_)
-        
+
         self.cdata2 = self.namespace_asarray([2, 2, 6], device = self.device)
         rst_2 = closure(self.cdata2)
         rst_2_ = self.namespace_asarray([.2, .2, .6], device = self.device)
         assert_allclose(rst_2, rst_2_)
-        
+
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         rst_3 = closure(self.cdata5)
         rst_3_ = np.array([[.2, .2, .6],
                         [.4, .4, .2]])
         assert_allclose(rst_3, rst_3_)
-        
+
         with self.assertRaises(ValueError):
-            self.bad1 = self.namespace_asarray([1, 2, -1], 
+            self.bad1 = self.namespace_asarray([1, 2, -1],
                                                device=self.device)
             closure(self.bad1)
 
         with self.assertRaises(ValueError):
-            self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]], 
+            self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                                device=self.device)
             closure(self.bad2)
 
@@ -675,20 +675,20 @@ class torch_cuda(TestCase):
         cmat = clr(closure(self.cdata1))
         A = np.array([.2, .2, .6])
         B = np.array([.4, .4, .2])
-        
+
         cmat_ = self.namespace_asarray([np.log(A / np.exp(np.log(A).mean())),
                                             np.log(B / np.exp(np.log(B).mean()))],
                                         device = self.device)
         assert_allclose(cmat, cmat_)
-        
-        # 
+
+        #
         self.cdata2 = self.namespace_asarray([2, 2, 6], device = self.device)
         cmat = clr(closure(self.cdata2))
         A = np.array([.2, .2, .6])
         cmat_ = self.namespace_asarray(np.log(A / np.exp(np.log(A).mean())),
                                        device=self.device)
         assert_allclose(cmat, cmat_)
-        
+
         #
         self.cdata5 = [[2, 2, 6], [4, 4, 2]]
         cmat = clr(closure(self.cdata5))
@@ -697,13 +697,13 @@ class torch_cuda(TestCase):
         npt.assert_allclose(cmat,
                             [np.log(A / np.exp(np.log(A).mean())),
                              np.log(B / np.exp(np.log(B).mean()))])
-        
-        # 
+
+        #
         self.bad1 = self.namespace_asarray([1, 2, -1],
                                            device=self.device)
         with self.assertRaises(ValueError):
             clr(self.bad1)
-        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]], 
+        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                            device=self.device)
         with self.assertRaises(ValueError):
             clr(self.bad2)
@@ -754,14 +754,14 @@ class torch_cuda(TestCase):
                      [0.3379924, 0.3379924, 0.0993132, 0.22470201],
                      [0.3016453, 0.3016453, 0.3016453, 0.09506409]],
                     device=self.device
-                    ) 
+                    )
         eyes = self.namespace_asarray(np.identity(3),
                                         device=self.device)
         assert_allclose(ilr(self.ortho1), eyes)
 
         # no check
         self.cdata1 = self.namespace_asarray([[2, 2, 6],
-                                              [4, 4, 2]], 
+                                              [4, 4, 2]],
                                         device = self.device,
                                         dtype=torch.float32)
         assert_allclose(ilr(mat, validate=False),
@@ -828,10 +828,10 @@ class torch_cuda(TestCase):
         # no check
         assert_allclose(ilr_inv(ilr(mat), validate=False), mat)
 
-        # 
+        #
         self.cdata1 = self.namespace_asarray(
                                             [[2, 2, 6],
-                                             [4, 4, 2]], 
+                                             [4, 4, 2]],
                                             device = self.device,
                                             dtype=torch.float32)
         with self.assertRaises(ValueError):
@@ -860,7 +860,7 @@ class torch_cuda(TestCase):
         lr = ilr_inv(table, basis=basis)
         res = ilr(lr, basis=basis)
         assert_allclose(res, table)
-        
+
         #
         table = self.namespace_asarray([[1., 10.],
                           [1.14141414, 9.90909091],
@@ -910,21 +910,21 @@ class torch_cuda(TestCase):
         # 2d-composition
         self.cdata1 = self.namespace_asarray(
                                             [[2, 2, 6],
-                                             [4, 4, 2]], 
+                                             [4, 4, 2]],
                                             device = self.device)
         comp1 = closure(self.cdata1)
         alr2d_method = alr(comp1, denominator_idx=1)
-        
+
         comp1_byhand = closure(np.array(
                                 [[2, 2, 6],
-                                [4, 4, 2]])) # the support for closure 
+                                [4, 4, 2]])) # the support for closure
                                              # is tested in another file
         alr2d_byhand = self.namespace_asarray(
-                        [np.log(comp1_byhand[:, 0]/comp1_byhand[:, 1]), 
+                        [np.log(comp1_byhand[:, 0]/comp1_byhand[:, 1]),
                          np.log(comp1_byhand[:, 2]/comp1_byhand[:, 1])],
                         device=self.device
                     ).T
-        
+
         assert_allclose(alr2d_byhand, alr2d_method)
 
         # 1d-composition
@@ -938,9 +938,9 @@ class torch_cuda(TestCase):
                         np.log(comp2_byhand[2]/comp2_byhand[1])],
                                               device=self.device
                                               ).T
-        
+
         assert_allclose(alr1d_byhand, alr1d_method)
-        
+
         #
         self.bad1 = self.namespace_asarray([1, 2, -1],
                                            device=self.device)
@@ -969,22 +969,22 @@ class torch_cuda(TestCase):
         # 2d-composition
         self.cdata1 = self.namespace_asarray(
                                         [[2, 2, 6],
-                                         [4, 4, 2]], 
+                                         [4, 4, 2]],
                                         device = self.device)
         comp1 = closure(self.cdata1)
         alr2d_method = alr(comp1, denominator_idx=1)
         alrinv2d_method = alr_inv(alr2d_method, denominator_idx=1)
-        
+
         comp1_byhand = closure(np.array([[2, 2, 6],
                                   [4, 4, 2]]))
         alr2d_byhand = np.array([np.log(comp1_byhand[:, 0]/comp1_byhand[:, 1]),
                                  np.log(comp1_byhand[:, 2]/comp1_byhand[:, 1])],
-                                ).T 
+                                ).T
         B = 1/(1 + np.exp(alr2d_byhand[:, 0]) + np.exp(alr2d_byhand[:, 1]))
         A = B * np.exp(alr2d_byhand[:, 0])
         C = B * np.exp(alr2d_byhand[:, 1])
         alrinv2d_byhand = np.column_stack((A, B, C))
-        alrinv2d_byhand = self.namespace_asarray(alrinv2d_byhand, 
+        alrinv2d_byhand = self.namespace_asarray(alrinv2d_byhand,
                                                  device=self.device)
         assert_allclose(alrinv2d_byhand, alrinv2d_method)
 
@@ -994,7 +994,7 @@ class torch_cuda(TestCase):
         comp2 = closure(self.cdata2)
         alr1d_method = alr(comp2, denominator_idx=1)
         alrinv1d_method = alr_inv(alr1d_method, denominator_idx=1)
-        
+
         comp2_byhand = closure(np.array([2, 2, 6]))
         alr1d_byhand = np.array([
                         np.log(comp2_byhand[0]/comp2_byhand[1]),
@@ -1004,10 +1004,10 @@ class torch_cuda(TestCase):
         A = B * np.exp(alr1d_byhand[0])
         C = B * np.exp(alr1d_byhand[1])
         alrinv1d_byhand = np.column_stack((A, B, C))[0, :]
-        alrinv1d_byhand = self.namespace_asarray(alrinv1d_byhand, 
+        alrinv1d_byhand = self.namespace_asarray(alrinv1d_byhand,
                                                  device=self.device)
         assert_allclose(alrinv1d_byhand, alrinv1d_method)
-        
+
         # make sure that inplace modification is not occurring
         self.rdata1 = self.namespace_asarray([
                         [0.70710678, -0.70710678, 0., 0.],
@@ -1023,7 +1023,7 @@ class torch_cuda(TestCase):
                                             0.28867513, -0.8660254]],
                                      device=self.device)
         assert_allclose(self.rdata1, rst)
-        
+
         #
         self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
                                            device=self.device)
@@ -1069,5 +1069,4 @@ class torch_cuda(TestCase):
     #             elif sbp[i, j] == -1:
     #                 psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
     #     npt.assert_allclose(psi, sbpbasis)
-    
-    
+

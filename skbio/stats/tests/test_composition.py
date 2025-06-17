@@ -1436,44 +1436,52 @@ class DirMultTTestTests(TestCase):
         self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
 
     def test_dirmult_ttest_valid_input(self):
-        result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+        result = dirmult_ttest(self.table, self.grouping,\
+                                self.treatment, self.reference)
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(result.shape[1], 8)  # Expected number of columns
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
 
     def test_dirmult_ttest_no_p_adjust(self):
-        result = dirmult_ttest(self.table, self.grouping, self.treatment, self.reference,
+        result = dirmult_ttest(self.table, self.grouping,\
+                                self.treatment, self.reference,
                                p_adjust=None)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
     def test_dirmult_ttest_invalid_table_type(self):
         with self.assertRaises(TypeError):
-            dirmult_ttest("invalid_table", self.grouping, self.treatment, self.reference)
+            dirmult_ttest("invalid_table", self.grouping,\
+                                self.treatment, self.reference)
 
     def test_dirmult_ttest_invalid_grouping_type(self):
         with self.assertRaises(TypeError):
-            dirmult_ttest(self.table, "invalid_grouping", self.treatment, self.reference)
+            dirmult_ttest(self.table, "invalid_grouping", \
+                            self.treatment, self.reference)
 
     def test_dirmult_ttest_negative_values_in_table(self):
         self.table.iloc[0, 0] = -5  # Modify a value to be negative
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping,\
+                            self.treatment, self.reference)
 
     def test_dirmult_ttest_missing_values_in_grouping(self):
         self.grouping[1] = np.nan  # Introduce a missing value in grouping
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping,\
+                            self.treatment, self.reference)
 
     def test_dirmult_ttest_missing_values_in_table(self):
         self.table.iloc[2, 1] = np.nan  # Introduce a missing value in the table
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping,\
+                            self.treatment, self.reference)
 
     def test_dirmult_ttest_inconsistent_indexes(self):
         self.table.index = ['a', 'b', 'c', 'd', 'e']  # Change table index
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)   
+            dirmult_ttest(self.table, self.grouping,\
+                            self.treatment, self.reference)
 
 class DirMultLMETests(TestCase):
     def setUp(self):
