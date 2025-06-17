@@ -1005,7 +1005,15 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
-    comp[..., numerator_indexs] = xp.exp(mat)
+   
+    if xp.__name__=='jax.numpy':
+        # NOTE: TypeError: JAX arrays are immutable and 
+        # do not support in-place item assignment. 
+        # Instead of x[idx] = y, use x = x.at[idx].set(y)
+        comp = comp.at[..., numerator_indexs].set(xp.exp(mat))
+    else:
+        # in-place item assignment
+        comp[..., numerator_indexs] = xp.exp(mat)
 
     # recover the permutation
     if axis != -1:
