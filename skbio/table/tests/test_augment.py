@@ -261,7 +261,7 @@ class TestAugmentFunctions(TestCase):
 
         # Test intra-class without label
         with self.assertRaisesRegex(
-            ValueError, "label is required for intra-class augmentation"
+            ValueError, "Label is required for intra-class augmentation."
         ):
             _get_all_possible_pairs(matrix, intra_class=True)
 
