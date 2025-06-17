@@ -25,7 +25,6 @@ from skbio.stats.composition import (
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _calc_p_adjust,
     ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
-import torch
 import array_api_compat as aac
 import warnings
 
