@@ -36,20 +36,20 @@ def _validate_label(  # type: ignore[return]
 
     Parameters
     ----------
-    label : np.ndarray
+    label : ndarray
         The class labels for the data. The label is expected to have shape
         ``(samples,)`` or ``(samples, n_classes)``.
-    matrix : np.ndarray
+    matrix : ndarray
         The data matrix of shape ``(samples, n_features).``
 
     Returns
     -------
-    label_1d : np.ndarray
+    label_1d : ndarray
         The class labels in 1D format with shape ``(samples,)``. Contains
         integer class labels from 0 to n_classes-1. If the input was already
         1D, this is the same as the input. If the input was one-hot encoded,
         this is the argmax reconstruction.
-    label_one_hot : np.ndarray
+    label_one_hot : ndarray
         The class labels in one-hot encoded format with shape
         ``(samples, n_classes)``. Each row contains exactly one 1 and the
         rest 0s, indicating the class membership for that sample.
@@ -126,7 +126,7 @@ def _aitchison_addition(x: "NDArray", v: "NDArray") -> "NDArray":
     numpy.ndarray
         The result of Aitchison addition.
     """
-    return (xv := x * v) / np.sum(xv)
+    return (xv := x * v) / xv.sum()
 
 
 def _aitchison_scalar_multiplication(lam: float, x: "NDArray") -> "NDArray":
@@ -145,7 +145,7 @@ def _aitchison_scalar_multiplication(lam: float, x: "NDArray") -> "NDArray":
         The result of Aitchison multiplication.
 
     """
-    return (x_to_lam := x**lam) / np.sum(x_to_lam)
+    return (x_to_lam := x**lam) / x_to_lam.sum()
 
 
 def _get_all_possible_pairs(
@@ -155,7 +155,9 @@ def _get_all_possible_pairs(
 
     Parameters
     ----------
-    label : np.ndarray, optional
+    matrix : ndarray
+        Sample by features array of the input data.
+    label : ndarray, optional
         The 1D class labels for the data.
     intra_class : bool
         If ``True``, only return pairs of samples within the same class. This
@@ -164,15 +166,15 @@ def _get_all_possible_pairs(
 
     Returns
     -------
-    numpy.ndarray
+    ndarray
         An array of all possible pairs of samples.
 
     """
     possible_pairs = []
+    # Intra-class pair generation is currently only possible for binary classification.
     if intra_class:
         if label is None:
-            raise ValueError("label is required for intra-class augmentation")
-        # so is this only for binary?!
+            raise ValueError("Label is required for intra-class augmentation.")
         matrix_cls0_indices = np.where(label == 0)[0]
         matrix_cls1_indices = np.where(label == 1)[0]
         for idx1 in range(matrix_cls0_indices.shape[0]):
@@ -229,7 +231,7 @@ def mixup(
         documentation for details.
     samples : int
         The number of new samples to generate.
-    label : np.ndarray
+    label : ndarray
         The label of the table. The label is expected to has a shape of ``(samples,)``
         or ``(samples, n_classes)``.
     alpha : float
@@ -348,7 +350,7 @@ def aitchison_mixup(
         documentation for details.
     samples : int
         The number of new samples to generate.
-    label : np.ndarray
+    label : ndarray
         The label of the table. The label is expected to has a shape of ``(samples,)``
         or ``(samples, n_classes)``.
     alpha : float
@@ -484,10 +486,9 @@ def compositional_cutmix(
         Samples by features table (n, m). See the `DataTable <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
-    # could rename this to just samples
     samples : int
         The number of new samples to generate.
-    label : np.ndarray, optional
+    label : ndarray, optional
         The label of the table. The label is expected to has a shape of
         ``(samples,)`` or ``(samples, n_classes)``.
     normalize : bool, optional
@@ -618,7 +619,7 @@ def phylomix(
         A dictionary mapping tips to feature indices.
     samples : int
         The number of new samples to generate.
-    label : np.ndarray
+    label : ndarray
         The label of the table. The label is expected to has a shape of ``(samples,)``
         or ``(samples, n_classes)``.
     alpha : float
@@ -635,12 +636,11 @@ def phylomix(
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
-
     Returns
     -------
-    augmented_matrix : numpy.ndarray
+    augmented_matrix : table_like
         The augmented matrix.
-    augmented_label : numpy.ndarray
+    augmented_label : table_like
         The augmented label, in one-hot encoding.
         if the user want to use the augmented label for regression,
         users can simply call ``np.argmax(aug_label, axis=1)``
