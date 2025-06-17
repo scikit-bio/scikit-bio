@@ -158,7 +158,7 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from patsy import dmatrix
 
 
-def closure(mat, pseudo=None):
+def closure(mat):
     """Perform closure to ensure that all elements add up to 1.
 
     Parameters
@@ -198,8 +198,6 @@ def closure(mat, pseudo=None):
         raise ValueError("Input matrix can only have two dimensions or less")
     if np.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
-    if pseudo:
-        mat = mat + pseudo
     mat = mat / mat.sum(axis=1, keepdims=True)
     return mat.squeeze()
 
