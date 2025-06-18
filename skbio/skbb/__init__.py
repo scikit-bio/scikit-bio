@@ -26,9 +26,13 @@ from ._util import (
     skbb_get_api_version,
     skbb_set_random_seed,
 )
+from ._ordination import (
+    skbb_pcoa_fsvd_inplace,
+)
 
 __all__ = [
     "skbb_available",
     "skbb_get_api_version",
     "skbb_set_random_seed",
+    "skbb_pcoa_fsvd_inplace",
 ]
