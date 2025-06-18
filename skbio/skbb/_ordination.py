@@ -13,18 +13,27 @@ from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll, skbb_set_rando
 # ====================================================
 
 # perform PCoA using the FSVD method
-def skbb_pcoa_fsvd_inplace(
+def skbb_pcoa_fsvd(
     distance_matrix,
     number_of_dimensions,
+    inplace=False,
     seed=None,
 ):
     if skbb_get_api_version()>=1: # minimum version that support pcoa
         if (seed is not None):
             # TBD: Switch from global lo local
             skbb_set_random_seed(seed)
-        # get internal representations
-        distance_matrix_shape0 = distance_matrix.shape[0]
-        distance_matrix_data = distance_matrix.data
+        if isinstance(distance_matrix,np.ndarray):
+            # already a raw matrix, jsut use
+            distance_matrix_data = distance_matrix
+        else: 
+            # we are assuming it is a DistanceMatrix object
+            # get internal representations
+            distance_matrix_data = distance_matrix.data
+        distance_matrix_shape0 = distance_matrix_data.shape[0]
+        if (len(distance_matrix_data.shape)!=2 or 
+            distance_matrix_data.shape[1] != distance_matrix_shape0):
+               raise TypeError("distance_matrix not square")
         # create output buffers
         eigenvalues = np.ndarray(
                 shape=(number_of_dimensions,),
@@ -38,24 +47,24 @@ def skbb_pcoa_fsvd_inplace(
                 order="C")
         # ready to call the C functions
         dll = get_skbb_dll()
+        i_mdim = ctypes.c_uint(distance_matrix_shape0)
+        i_mat = distance_matrix_data.ctypes.data_as(ctypes.c_void_p)
+        i_n_eigh = ctypes.c_uint(number_of_dimensions)
+        o_ev = eigenvalues.ctypes.data_as(ctypes.c_void_p)
+        o_sp = samples.ctypes.data_as(ctypes.c_void_p)
+        o_pe = proportion_explained.ctypes.data_as(ctypes.c_void_p)
         if distance_matrix_data.dtype == np.dtype('float64'):
-            dll.skbb_pcoa_fsvd_inplace_fp64(
-                ctypes.c_uint(distance_matrix_shape0),
-                distance_matrix_data.ctypes.data_as(ctypes.c_void_p),
-                ctypes.c_uint(number_of_dimensions),
-                eigenvalues.ctypes.data_as(ctypes.c_void_p),
-                samples.ctypes.data_as(ctypes.c_void_p),
-                proportion_explained.ctypes.data_as(ctypes.c_void_p) )
+            if (inplace):
+                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+            else:
+                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
         elif distance_matrix_data.dtype == np.dtype('float32'):
-            dll.skbb_pcoa_fsvd_inplace_fp64(
-                ctypes.c_uint(distance_matrix_shape0),
-                distance_matrix_data.ctypes.data_as(ctypes.c_void_p),
-                ctypes.c_uint(number_of_dimensions),
-                eigenvalues.ctypes.data_as(ctypes.c_void_p),
-                samples.ctypes.data_as(ctypes.c_void_p),
-                proportion_explained.ctypes.data_as(ctypes.c_void_p) )
+            if (inplace):
+                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+            else:
+                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
         else:
-            raise TypeError("distance_matrix must be either float32 or float64")
+            raise TypeError("distance_matrix type must be either float32 or float64")
         # if we got here, everything went well
         return eigenvalues, samples, proportion_explained
     else:
