@@ -13,6 +13,9 @@ immutable object that translates DNA or RNA sequences into protein sequences, an
 the :class:`SubstitutionMatrix` class, which stores scores of substitutions between
 sequence characters.
 
+See the :ref:`sequence_tutorial` section for working with biological sequences using
+scikit-bio.
+
 
 Sequence types
 --------------
@@ -55,6 +58,8 @@ Abstract classes
    NucleotideMixin
 
 
+.. _sequence_tutorial:
+
 Tutorial
 --------
 
@@ -68,11 +73,26 @@ of a DNA sequence, or searching for N-glycosylation motifs in protein sequences.
 attributes provide valid character sets, complement maps for different sequence types,
 and degenerate character definitions.
 
-New sequences are created with optional metadata and positional metadata.
+Create a DNA sequence from the sequence data (nucleotides):
+
+>>> from skbio.sequence import DNA
+>>> seq = DNA('ACCGGGTA')
+>>> seq
+DNA
+--------------------------
+Stats:
+    length: 8
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 62.50%
+--------------------------
+0 ACCGGGTA
+
+New sequences may be created with optional metadata and positional metadata.
 Metadata is stored as a Python ``dict``, while positional metadata is stored as
 a pandas ``DataFrame``.
 
->>> from skbio import DNA, RNA
 >>> d = DNA('ACCGGGTA', metadata={'id':"my-sequence", 'description':"GFP"},
 ...          positional_metadata={'quality':[22, 25, 22, 18, 23, 25, 25, 25]})
 >>> d
@@ -130,6 +150,7 @@ using user-defined distance metrics, the default is Hamming distance which
 requires that the sequences being compared are the same length) for use in
 sequence clustering, phylogenetic reconstruction, etc.
 
+>>> from skbio.sequence import RNA
 >>> r1 = RNA('GACCCGCUUU')
 >>> r2 = RNA('GCCCCCCUUU')
 >>> r1.distance(r2)
@@ -318,6 +339,187 @@ Class-level methods contain information about the molecule types.
 >>> sorted(RNA.degenerate_map['B'])
 ['C', 'G', 'U']
 
+
+Sequence metadata
+^^^^^^^^^^^^^^^^^
+
+Metadata describe the properties of a sequence or some of its regions/sites. scikit-bio
+supports three types of sequence metadata: **metadata** (for the entire sequence),
+**positional metadata** (for sites), and **interval metadata** (for regions).
+
+``metadata`` stores the properties of the entire sequence, such as ID, description,
+source, function, etc., as a Python dictionary. The following example creates a DNA
+sequence with "gene" and "product" properties.
+
+>>> seq = DNA('TGGTATATAGTTTAAACAAAACGAATGATTTCGACTCATTAAATTATGATAATCATATTTACCAA',
+...           metadata={'gene': 'TRNR', 'product': 'tRNA-Arg'})
+>>> seq
+DNA
+--------------------------------------------------------------------
+Metadata:
+    'gene': 'TRNR'
+    'product': 'tRNA-Arg'
+Stats:
+    length: 65
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 23.08%
+--------------------------------------------------------------------
+0  TGGTATATAG TTTAAACAAA ACGAATGATT TCGACTCATT AAATTATGAT AATCATATTT
+60 ACCAA
+
+Access the metadata by key:
+
+>>> seq.metadata['product']
+'tRNA-Arg'
+
+Modify the metadata of an existing sequence:
+
+>>> seq.metadata['organism'] = 'Homo sapiens'
+
+Many of scikit-bio's file format parsers can automatically populate metadata fields.
+For example, the :mod:`FASTA <skbio.io.format.fasta>` parser reads the sequence ID and
+description into the ``id`` and ``description`` fields:
+
+>>> fasta = '''>NP_000591.1 interleukin-6 isoform 1 precursor [Homo sapiens]
+... MNSFSTSAFGPVAFSLGLLLVLPAAFPAPVPPGEDSKDVAAPHRQPLTSSERIDKQIRYILDGISALRKE
+... TCNKSNMCESSKEALAENNLNLPKMAEKDGCFQSGFNEETCLVKIITGLLEFEVYLEYLQNRFESSEEQA
+... RAVQMSTKVLIQFLQKKAKNLDAITTPDPTTNASLLTKLQAQNQWLQDMTTHLILRSFKEFLQSSLRALR
+... QM'''
+>>> from skbio.sequence import Protein
+>>> seq = Protein.read([fasta], format='fasta')
+>>> seq
+Protein
+---------------------------------------------------------------------
+Metadata:
+    'description': 'interleukin-6 isoform 1 precursor [Homo sapiens]'
+    'id': 'NP_000591.1'
+Stats:
+    length: 212
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    has stops: False
+---------------------------------------------------------------------
+0   MNSFSTSAFG PVAFSLGLLL VLPAAFPAPV PPGEDSKDVA APHRQPLTSS ERIDKQIRYI
+60  LDGISALRKE TCNKSNMCES SKEALAENNL NLPKMAEKDG CFQSGFNEET CLVKIITGLL
+120 EFEVYLEYLQ NRFESSEEQA RAVQMSTKVL IQFLQKKAKN LDAITTPDPT TNASLLTKLQ
+180 AQNQWLQDMT THLILRSFKE FLQSSLRALR QM
+
+``positional_metadata`` stores per-character properties. Each property has the same
+number of values as the sequence length. The following example annotates three types
+of sites on the human TP53 protein sequence.
+
+>>> seq = (
+...     'MEEPQSDPSVEPPLSQETFSDLWKLLPENNVLSPLPSQAMDDLMLSPDDIEQWFTEDPGPDEAPRMPEAA'
+...     'PPVAPAPAAPTPAAPAPAPSWPLSSSVPSQKTYQGSYGFRLGFLHSGTAKSVTCTYSPALNKMFCQLAKT'
+...     'CPVQLWVDSTPPPGTRVRAMAIYKQSQHMTEVVRRCPHHERCSDSDGLAPPQHLIRVEGNLRVEYLDDRN'
+...     'TFRHSVVVPYEPPEVGSDCTTIHYNYMCNSSCMGGMNRRPILTIITLEDSSGNLLGRNSFEVRVCACPGR'
+...     'DRRTEEENLRKKGEPHHELPPGSTKRALPNNTSSSPQPKKKPLDGEYFTLQIRGRERFEMFRELNEALEL'
+...     'KDAQAGKEPGGSRAHSSHLKSKKGQSTSRHKKLMFKTEGPDSD'
+... )
+>>> import numpy as np
+>>> sites = np.full(len(seq), False)
+>>> acetylation = sites.copy()
+>>> acetylation[[119, 304, 320, 372, 380, 381]] = True
+>>> methylation = sites.copy()
+>>> methylation[[332, 334, 336, 369, 371, 372, 381]] = True
+>>> phosphorylation = sites.copy()
+>>> phosphorylation[[8, 14, 17, 19, 32, 36, 45, 54, 182, 268, 314, 391]] = True
+>>> seq = Protein(seq, metadata={'id': 'NP_000537.3', 'description': 'TP53'},
+...               positional_metadata={'acetylation': acetylation,
+...                                    'methylation': methylation,
+...                                    'phosphorylation': phosphorylation})
+
+Once created, positional metadata are stored as a dataframe.
+
+>>> print(seq.positional_metadata)
+     acetylation  methylation  phosphorylation
+0          False        False            False
+1          False        False            False
+2          False        False            False
+3          False        False            False
+4          False        False            False
+..           ...          ...              ...
+388        False        False            False
+389        False        False            False
+390        False        False            False
+391        False        False             True
+392        False        False            False
+<BLANKLINE>
+[393 rows x 3 columns]
+
+Likewise, scikit-bio's :mod:`FASTQ <skbio.io.format.fastq>` parser can automatically
+populate the "quality" column of the positional metadata:
+
+>>> fastq = '''@S00001/1
+... CGTGCTCCACGCTCTCCTGCACGCCCGAGCCGTTGCGGTCGGCGAGAGCCATGTCGACGGCGGGCTTGAG
+... +
+... DDAEGGGGIIIGIJKJKKKHIKJAKKKHCGIKKJAJGICKKKAJEJA:G1EJJKJHJFKJIDIEII?=DC
+... '''
+>>> seq = DNA.read([fastq], format='fastq', phred_offset=33)
+>>> seq
+DNA
+--------------------------------------------------------------------
+Metadata:
+    'description': ''
+    'id': 'S00001/1'
+Positional metadata:
+    'quality': <dtype: uint8>
+Stats:
+    length: 70
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 71.43%
+--------------------------------------------------------------------
+0  CGTGCTCCAC GCTCTCCTGC ACGCCCGAGC CGTTGCGGTC GGCGAGAGCC ATGTCGACGG
+60 CGGGCTTGAG
+
+>>> print(seq.positional_metadata['quality'])
+0     35
+1     35
+2     32
+3     36
+4     38
+      ..
+65    40
+66    30
+67    28
+68    35
+69    34
+Name: quality, Length: 70, dtype: uint8
+
+``interval_metadata`` stores properties that span a range in the sequence, such as
+genes and regulatory elements. The following example annotates three regions of the
+human H4C6 gene.
+
+>>> fasta = '''>NM_003540.4 Homo sapiens H4 clustered histone 6 (H4C6), mRNA
+GCAAAAGTTAAGAGTTGTTGTTTGTCTTCGATCATGTCTGGTAGAGGCAAAGGTGGTAAAGGTTTAGGAA
+AGGGAGGCGCCAAGCGCCATCGCAAAGTGCTGCGTGACAACATACAGGGCATCACGAAGCCCGCCATCCG
+TCGCTTGGCCCGACGCGGCGGCGTGAAACGCATTTCGGGCCTCATTTATGAGGAGACCCGCGGTGTTCTT
+AAGGTGTTCCTGGAGAATGTGATACGGGACGCCGTAACCTACACGGAGCACGCCAAGCGTAAGACAGTCA
+CTGCAATGGATGTTGTCTACGCGCTCAAGCGCCAGGGACGCACTCTGTACGGCTTTGGTGGCTGAGCCTC
+ACCCCGGCTTTTTATTTAACAGCTCACCCATAAAAGGCCCTTTTCAGGGCC'''
+>>> seq = DNA.read([fasta], format='fasta')
+>>> seq.interval_metadata.add(bounds=[(0, 401)], metadata={'name': 'exon'})
+>>> seq.interval_metadata.add(bounds=[(33, 345)], metadata={'name': 'cds'})
+>>> seq.interval_metadata.add(bounds=[(385, 401)], metadata={'name': 'stem_loop'})
+
+scikit-bio's :mod:`GFF3 <skbio.io.format.gff3>` parser can read sequence annotation
+into interval metadata. The following code reads a genome's sequence and annotation
+from separate files and combine.
+
+>>> from skbio.metadata import IntervalMetadata
+>>> seq = DNA.read('genomic.fna', format='fasta')  # doctest: +SKIP
+>>> seq.interval_metadata = IntervalMetadata.read(  # doctest: +SKIP
+...     'genomic.gff', format='gff3', seq_id=seq.metadata['id'])
+
+If the GFF3 contains the sequence, one can read the sequence and annotation all at
+once:
+
+>>> seq = DNA.read('genomic.gff', format='gff3')  # doctest: +SKIP
 
 """  # noqa: D205, D415
 

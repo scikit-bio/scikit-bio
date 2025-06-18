@@ -107,7 +107,7 @@ class Sequence(
     ---------------
     0 GGUCGUGAAG GA
 
-    Create a sequence with metadata and positional metadata:
+    Create a sequence with metadata, positional metadata and interval metadata:
 
     >>> metadata = {'authors': ['Alice'], 'desc':'seq desc', 'id':'seq-id'}
     >>> positional_metadata = {'exons': [True, True, False, True],
@@ -2291,7 +2291,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
             else:
                 raise ValueError(
-                    "No positional metadata associated with key " "'%s'" % sliceable
+                    "No positional metadata associated with key '%s'" % sliceable
                 )
 
         if not hasattr(sliceable, "dtype") or (
@@ -2314,7 +2314,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                         % s.__class__.__name__
                     )
             if bool_mode and int_mode:
-                raise TypeError("Cannot provide iterable of both bool and" " int.")
+                raise TypeError("Cannot provide iterable of both bool and int.")
             sliceable = np.r_[sliceable]
 
         if sliceable.dtype == bool:
@@ -2404,8 +2404,6 @@ def _slices_from_iter(array, indexables):
         elif _is_single_index(i):
             i = _single_index_to_slice(i)
         else:
-            raise IndexError(
-                "Cannot slice sequence from iterable " "containing %r." % i
-            )
+            raise IndexError("Cannot slice sequence from iterable containing %r." % i)
 
         yield array[i]
