@@ -24,9 +24,11 @@ needed shared library.
 from ._util import (
     skbb_available,
     skbb_get_api_version,
+    skbb_set_random_seed,
 )
 
 __all__ = [
     "skbb_available",
     "skbb_get_api_version",
+    "skbb_set_random_seed",
 ]
