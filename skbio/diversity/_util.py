@@ -147,7 +147,7 @@ def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
         raise ValueError("``taxa`` cannot contain duplicated ids.")
 
     if len(counts) != len_taxa:
-        raise ValueError("``taxa`` must be the same length as ``counts`` " "vector(s).")
+        raise ValueError("``taxa`` must be the same length as ``counts`` vector(s).")
 
     if len(tree.root().children) == 0:
         raise ValueError("``tree`` must contain more than just a root node.")
@@ -172,7 +172,7 @@ def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
         raise DuplicateNodeError("All tip names must be unique.")
 
     if np.array([branch is None for branch in branch_lengths]).any():
-        raise ValueError("All non-root nodes in ``tree`` must have a branch " "length.")
+        raise ValueError("All non-root nodes in ``tree`` must have a branch length.")
     missing_tip_names = set_taxa - set_tip_names
     if missing_tip_names != set():
         n_missing_tip_names = len(missing_tip_names)
@@ -237,11 +237,11 @@ def _get_phylogenetic_kwargs(counts, **kwargs):
     try:
         taxa = kwargs.pop("taxa")
     except KeyError:
-        raise ValueError("``taxa`` is required for phylogenetic diversity " "metrics.")
+        raise ValueError("``taxa`` is required for phylogenetic diversity metrics.")
     try:
         tree = kwargs.pop("tree")
     except KeyError:
-        raise ValueError("``tree`` is required for phylogenetic diversity " "metrics.")
+        raise ValueError("``tree`` is required for phylogenetic diversity metrics.")
 
     return taxa, tree, kwargs
 

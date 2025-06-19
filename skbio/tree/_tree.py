@@ -370,6 +370,24 @@ class TreeNode(SkbioObject):
         """
         return not self.children
 
+    def _is_rooted(self):
+        r"""Check if the current tree is rooted.
+
+        Returns
+        -------
+        bool
+            Whether the tree is rooted.
+
+        Notes
+        -----
+        This method tests whether the root node of a tree has two children (rooted)
+        or not (unrooted). The latter scenario usually involves three children (a
+        typical unrooted tree), but could also have one (tip at root position) or more
+        than three children (polytomy).
+
+        """
+        return len(self.root().children) == 2
+
     def is_root(self):
         r"""Check if the current node is the root of a tree.
 

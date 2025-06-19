@@ -26,7 +26,7 @@ Data augmentation
 -----------------
 
 Techniques for creating synthetic samples based on the current data and biological
-properties. Helpful for improving the performance and robustness of machine learning
+properties. Helpful for improving the accuracy and robustness of machine learning
 models.
 
 .. autosummary::

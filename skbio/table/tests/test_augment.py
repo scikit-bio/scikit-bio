@@ -7,9 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+
 import numpy as np
 import numpy.testing as npt
-from skbio.table import Table
+
 from skbio.tree import TreeNode
 from skbio.table._augment import (
     mixup,
@@ -24,7 +25,7 @@ from skbio.table._augment import (
 )
 
 
-class TestAugmentFunctions(TestCase):
+class AugmentationTests(TestCase):
     def setUp(self):
         samples = 40
         n_features = 100
@@ -266,81 +267,76 @@ class TestAugmentFunctions(TestCase):
             _get_all_possible_pairs(matrix, intra_class=True)
 
     def test_mixup(self):
-        augmented_matrix, augmented_label = mixup(
-            self.data, samples=10, label=self.labels, alpha=2
-        )
-
-        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 10)
-        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
-        self.assertEqual(augmented_label.shape[0], len(self.labels) + 10)
-        self.assertEqual(augmented_label.shape[1], 2)
-        self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        exp_mat, exp_lab = mixup(self.data, samples=10, label=self.labels, alpha=2)
+        self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 10)
+        self.assertEqual(exp_mat.shape[1], self.data.shape[1])
+        self.assertEqual(exp_lab.shape[0], len(self.labels) + 10)
+        self.assertEqual(exp_lab.shape[1], 2)
+        self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     def test_mixup_no_label(self):
-        augmented_matrix, augmented_label = mixup(self.data, samples=10, alpha=2)
-        self.assertTrue(augmented_label.empty)
+        _, exp_lab = mixup(self.data, samples=10, alpha=2)
+        self.assertTrue(exp_lab.empty)
 
     def test_aitchison_mixup(self):
-        augmented_matrix, augmented_label = aitchison_mixup(
+        exp_mat, exp_lab = aitchison_mixup(
             self.data, samples=20, label=self.labels, alpha=2
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
+        self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data.shape[1])
         # Check if the augmented data is compositional
-        self.assertTrue(np.allclose(np.sum(augmented_matrix, axis=1), 1.0))
-        self.assertEqual(augmented_label.shape[0], len(self.labels) + 20)
-        self.assertEqual(augmented_label.shape[1], 2)
-        self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0))
+        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+        self.assertEqual(exp_lab.shape[1], 2)
+        self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     # the previous test should be enough, but I'm not clear whether users should
-    # even be allowed to turn of normalization for this function?
+    # even be allowed to turn off normalization for this function?
     # def test_aitchison_mixup_non_compositional(self):
     #     # Test with non-compositional data (should normalize)
-    #     augmented_matrix, augmented_label = aitchison_mixup(
+    #     exp_mat, exp_lab = aitchison_mixup(
     #         self.table, samples=20, label=self.labels, alpha=2
     #     )
 
-    #     self.assertEqual(augmented_matrix.shape[0], self.table.shape[1] + 20)
-    #     self.assertEqual(augmented_matrix.shape[1], self.table.shape[0])
+    #     self.assertEqual(exp_mat.shape[0], self.table.shape[1] + 20)
+    #     self.assertEqual(exp_mat.shape[1], self.table.shape[0])
     #     # Check if the augmented data is compositional
-    #     self.assertTrue(np.allclose(np.sum(augmented_matrix, axis=1), 1.0))
-    #     self.assertEqual(augmented_label.shape[0], len(self.labels) + 20)
-    #     self.assertEqual(augmented_label.shape[1], 2)
-    #     self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+    #     self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0))
+    #     self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+    #     self.assertEqual(exp_lab.shape[1], 2)
+    #     self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     def test_aitchison_mixup_no_label(self):
-        augmented_matrix, augmented_label = aitchison_mixup(
-            self.data, samples=20, alpha=2
-        )
-        self.assertTrue(augmented_label.empty)
+        _, exp_lab = aitchison_mixup(self.data, samples=20, alpha=2)
+        self.assertTrue(exp_lab.empty)
 
     def test_compositional_cutmix(self):
-        augmented_matrix, augmented_label = compositional_cutmix(
+        exp_mat, exp_lab = compositional_cutmix(
             self.data, samples=20, label=self.labels, seed=42
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
+        self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data.shape[1])
         # Check if the augmented data is compositional
         # this rtol is really low, the data seems to be close to compositionality, but
         # not quite, it is within 0.9 - 1.1
-        self.assertTrue(np.allclose(np.sum(augmented_matrix, axis=1), 1.0, rtol=1e-01))
-        self.assertEqual(augmented_label.shape[0], len(self.labels) + 20)
+        self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0, rtol=1e-01))
+        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
         # compositional_cutmix returns a 2D output for labels
-        self.assertEqual(augmented_label.shape[1], 2)
+        self.assertEqual(exp_lab.shape[1], 2)
 
     def test_phylomix_simple(self):
-        augmented_matrix, augmented_label = phylomix(
+        exp_mat, exp_lab = phylomix(
             self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
             samples=20,
             label=self.labels_simple,
         )
-
-        self.assertEqual(augmented_matrix.shape[0], self.data_simple.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data_simple.shape[1])
+        # TODO: test label?
+        self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data_simple.shape[1])
 
     def test_phylomix_no_tree(self):
         with self.assertRaisesRegex(
@@ -370,19 +366,19 @@ class TestAugmentFunctions(TestCase):
             )
 
     def test_phylomix_no_label(self):
-        augmented_matrix, augmented_label = phylomix(
+        exp_mat, exp_lab = phylomix(
             self.data_simple,
             tree=self.simple_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
             samples=20,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.data_simple.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data_simple.shape[1])
-        self.assertTrue(augmented_label.empty)
+        self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data_simple.shape[1])
+        self.assertTrue(exp_lab.empty)
 
     def test_phylomix(self):
-        augmented_matrix, augmented_label = phylomix(
+        exp_mat, exp_lab = phylomix(
             self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
@@ -390,15 +386,15 @@ class TestAugmentFunctions(TestCase):
             label=self.labels,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
-        self.assertEqual(augmented_label.shape[0], len(self.labels) + 20)
-        self.assertEqual(augmented_label.shape[1], 2)
-        self.assertTrue(np.allclose(np.sum(augmented_label, axis=1), 1.0))
+        self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data.shape[1])
+        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+        self.assertEqual(exp_lab.shape[1], 2)
+        self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     def test_multiclass_phylomix(self):
         labels_multiclass = np.random.randint(0, 3, size=self.data.shape[0])
-        augmented_matrix, augmented_label = phylomix(
+        exp_mat, exp_lab = phylomix(
             self.data,
             tree=self.complex_tree,
             tip_to_obs_mapping=self.tips_to_feature_mapping,
@@ -406,11 +402,11 @@ class TestAugmentFunctions(TestCase):
             label=labels_multiclass,
         )
 
-        self.assertEqual(augmented_matrix.shape[0], self.data.shape[0] + 20)
-        self.assertEqual(augmented_matrix.shape[1], self.data.shape[1])
-        self.assertEqual(augmented_label.shape[0], len(labels_multiclass) + 20)
-        self.assertEqual(augmented_label.shape[1], 3)  # 3 classes
+        self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
+        self.assertEqual(exp_mat.shape[1], self.data.shape[1])
+        self.assertEqual(exp_lab.shape[0], len(labels_multiclass) + 20)
+        self.assertEqual(exp_lab.shape[1], 3)  # 3 classes
 
 
 if __name__ == "__main__":
-    main(buffer=False)
+    main()
