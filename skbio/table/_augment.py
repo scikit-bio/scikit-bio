@@ -6,19 +6,15 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import warnings
 from typing import Optional, Union, TYPE_CHECKING
-import itertools
+from itertools import chain, combinations
 
 if TYPE_CHECKING:
     from numpy.random import RandomState, Generator
     from numpy.typing import NDArray
 
 import numpy as np
-import pandas as pd
-from skbio.table import Table
 from skbio.tree import TreeNode
-from skbio._base import SkbioObject
 from skbio.stats.composition import closure
 from skbio.util import get_rng
 from skbio.util.config._dispatcher import _ingest_array, _create_table
@@ -112,7 +108,7 @@ def _validate_label(  # type: ignore[return]
         return label_1d, label
 
 
-def _aitchison_addition(x: "NDArray", v: "NDArray") -> "NDArray":
+def _aitchison_add(x: "NDArray", v: "NDArray") -> "NDArray":
     r"""Perform Aitchison addition on two samples x and v.
 
     Parameters
@@ -130,7 +126,7 @@ def _aitchison_addition(x: "NDArray", v: "NDArray") -> "NDArray":
     return (xv := x * v) / xv.sum()
 
 
-def _aitchison_scalar_multiplication(lam: float, x: "NDArray") -> "NDArray":
+def _aitchison_scalar_multiply(lam: float, x: "NDArray") -> "NDArray":
     r"""Perform Aitchison multiplication on sample x, with scalar lambda.
 
     Parameters
@@ -177,13 +173,13 @@ def _get_all_possible_pairs(
         if label is None:
             raise ValueError("Label is required for intra-class augmentation.")
         possible_pairs = list(
-            itertools.chain(
-                itertools.combinations(np.where(label == 0)[0], 2),
-                itertools.combinations(np.where(label == 1)[0], 2),
+            chain(
+                combinations(np.where(label == 0)[0], 2),
+                combinations(np.where(label == 1)[0], 2),
             )
         )
     else:
-        possible_pairs = list(itertools.combinations(np.arange(matrix.shape[0]), 2))
+        possible_pairs = list(combinations(np.arange(matrix.shape[0]), 2))
     return np.array(possible_pairs)
 
 
@@ -196,7 +192,7 @@ def mixup(
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
     output_format: Optional[str] = None,
 ) -> tuple:
-    r"""Data Augmentation by vanilla mixup.
+    r"""Data augmentation by vanilla mixup.
 
     Randomly select two samples :math:`s_1` and :math:`s_2` from the OTU table,
     and generate a new sample :math:`s` by a linear combination
@@ -263,31 +259,28 @@ def mixup(
 
     Notes
     -----
-    The mixup is based on [1]_, and shares the same core concept as PyTorch's
+    The mixup method is based on [1]_, and shares the same core concept as PyTorch's
     `MixUp <https://pytorch.org/vision/
-    main/generated/torchvision.transforms.v2.MixUp.html>`_.
-    there are key differences:
+    main/generated/torchvision.transforms.v2.MixUp.html>`_ class. There are some key
+    differences:
 
-    1. This implementation generates new samples to augment a dataset,
-        while PyTorch's MixUp is applied on-the-fly during training
-        to batches of data.
+    1. This implementation generates new samples to augment a dataset, while PyTorch's
+       MixUp is applied on-the-fly during training to batches of data.
 
-    2. This implementation randomly selects pairs of samples from the entire
-        dataset, while PyTorch's implementation typically mixes consecutive
-        samples in a batch (requiring prior shuffling).
+    2. This implementation randomly selects pairs of samples from the entire dataset,
+       while PyTorch's implementation typically mixes consecutive samples in a batch
+       (requiring prior shuffling).
 
-    3. This implementation returns an augmented dataset with both original and
-        new samples, while PyTorch's implementation transforms a batch in-place.
+    3. This implementation returns an augmented dataset with both original and new
+       new samples, while PyTorch's implementation transforms a batch in-place.
 
-    4. This implementation is designed for omic data tables,
-        while PyTorch's is primarily for image data.
-        And this implementation is mainly based on the Numpy Library.
+    4. This implementation is tailored for biological omic data tables, while PyTorch's
+       is primarily for image data.
 
     References
     ----------
-    .. [1] Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2017).
-        mixup: Beyond Empirical Risk Minimization.
-        arXiv preprint arXiv:1710.09412.
+    .. [1] Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2017). mixup: Beyond
+       Empirical Risk Minimization. arXiv preprint arXiv:1710.09412.
 
     """
     matrix, row_ids, col_ids = _ingest_array(table)
@@ -329,7 +322,7 @@ def aitchison_mixup(
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
     output_format: Optional[str] = None,
 ) -> tuple:
-    r"""Data Augmentation by Aitchison mixup.
+    r"""Data augmentation by Aitchison mixup.
 
     This function requires the data to be compositional. If the
     table is not normalized, it will be normalized first.
@@ -369,6 +362,10 @@ def aitchison_mixup(
         users can simply call ``np.argmax(aug_label, axis=1)``
         to get the discrete labels.
 
+    See Also
+    --------
+    mixup
+
     Examples
     --------
     >>> from skbio.table import aitchison_mixup
@@ -382,15 +379,14 @@ def aitchison_mixup(
 
     Notes
     -----
-    The algorithm is based on [1]_, and leverages the Aitchison geometry
-    to guide data augmentation in compositional data,
-    this is essentially the vanilla mixup in the Aitchison geometry.
-    This mixup method only works on the Compositional data.
-    where a set of datapoints are living in the simplex:
-    :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`.
-    The augmented sample is computed as the linear combination of
-    the two samples in the Aitchison geometry. In the Aitchision
-    Geometry, we define the addition and scalar multiplication as:
+    The algorithm is based on [1]_, and leverages the Aitchison geometry to guide the
+    augmentation of compositional data. It is essentially the vanilla mixup method in
+    the Aitchison space.
+
+    This method only works on compositional data, where a set of datapoints are living
+    in the simplex: :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`. The augmented
+    sample is computed as the linear combination of the two samples in the Aitchison
+    space. The Aitchison addition and scalar multiplication are defined as:
 
     .. math::
 
@@ -408,25 +404,24 @@ def aitchison_mixup(
 
         s = (\lambda \otimes  s_1) \oplus ((1 - \lambda) \otimes s_2)
 
-    The label is computed as the linear combination of
-    the two labels of the two samples
+    The label is computed as the linear combination of the labels of the two samples.
 
     .. math::
 
         y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
 
-    By mixing the counts of two samples, Aitchison mixup preserves the
-    compositional nature of the data, and the sum-to-one property.
+    By mixing the counts of two samples, Aitchison mixup preserves the compositional
+    nature of the data, and the sum-to-one property.
 
     References
     ----------
-    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
-        Data augmentation for compositional data: Advancing predictive
-        models of the microbiome. Advances in Neural Information Processing
-        Systems, 35, 20551-20565.
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022). Data
+       augmentation for compositional data: Advancing predictive models of the
+       microbiome. Advances in Neural Information Processing Systems, 35,
+       20551-20565.
 
     """
-    matrix, row_ids, col_ids = _ingest_array(table)
+    matrix, _, _ = _ingest_array(table)
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
 
@@ -442,9 +437,9 @@ def aitchison_mixup(
     augmented_label = []
     for idx1, idx2 in selected_pairs:
         _lambda = rng.beta(alpha, alpha)
-        augmented_x = _aitchison_addition(
-            _aitchison_scalar_multiplication(_lambda, matrix[idx1]),
-            _aitchison_scalar_multiplication(1 - _lambda, matrix[idx2]),
+        augmented_x = _aitchison_add(
+            _aitchison_scalar_multiply(_lambda, matrix[idx1]),
+            _aitchison_scalar_multiply(1 - _lambda, matrix[idx2]),
         )
         if label is not None:
             augmented_y = (
@@ -470,7 +465,7 @@ def compositional_cutmix(
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
     output_format: Optional[str] = None,
 ) -> tuple:
-    r"""Data Augmentation by compositional cutmix.
+    r"""Data augmentation by compositional cutmix.
 
     Parameters
     ----------
@@ -516,21 +511,16 @@ def compositional_cutmix(
 
     Notes
     -----
+    The compositional cutmix method was described in [1]_.
 
-    This algorithm currently only works with binary classification problems, as it
-    requires intra-class generation of possible sample pairs.
+    This method randomly selects counts from one of a pair of samples to generate
+    a new sample. It has four steps:
 
-    The algorithm is described in [1]_,
-    This method needs to do cutmix on compositional data in the same class.
-    by randomly selecting counts from one of two samples to generate
-    a new sample. For this method to work, the label must be provided.
-    The algorithm has 4 steps:
+    1. Draw a class :math:`c` from the class prior and draw
+    :math:`\lambda \sim Uniform(0, 1)`
 
-    1. Draw a class :math:`c` from the class prior
-    and draw :math:`\lambda \sim Uniform(0, 1)`
-
-    2. Draw two training points :math:`i_1, i_2` from the training set
-    such that :math:`y_{i_1} = y_{i_2} = c`, uniformly at random
+    2. Draw two training points :math:`i_1, i_2` from the training set such that
+    :math:`y_{i_1} = y_{i_2} = c`, uniformly at random.
 
     3. For each :math:`j \in \{1, ..., p\}`, draw :math:`I_j \sim Binomial(\lambda)`
     and set :math:`\tilde{x}_j = x_{i_1j}` if :math:`I_j = 1`,
@@ -538,18 +528,25 @@ def compositional_cutmix(
 
     4. Set :math:`\tilde{y} = c`
 
+    This method is applied separately to samples of each class. Therefore, it expects
+    class labels (``label``) as part of the input. If ``label`` is None, all samples
+    will be considered as belonging to the same class, and ``augmented_label`` will be
+    returned as None.
+
+    This algorithm currently only works with binary classification problems (i.e., two
+    classes), as it requires intra-class generation of possible sample pairs.
+
     References
     ----------
-    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
-        Data augmentation for compositional data: Advancing predictive
-        models of the microbiome. Advances in Neural Information Processing
-        Systems, 35, 20551-20565.
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022). Data
+       augmentation for compositional data: Advancing predictive models of the
+       microbiome. Advances in Neural Information Processing Systems, 35,
+       20551-20565.
 
     """
-
     rng = get_rng(seed)
 
-    matrix, row_ids, col_ids = _ingest_array(table)
+    matrix, _, _ = _ingest_array(table)
     # If label isn't provided, assume all samples have same class label
     no_out_label = False
     if label is None:
@@ -657,35 +654,34 @@ def phylomix(
 
     Notes
     -----
-    The algorithm is based on [1]_, and leverages phylogenetic
-    relationships to guide data augmentation in microbiome and other omic data.
-    By mixing the abundances of phylogenetically related
-    taxa (leaves of a selected node), Phylomix preserves the biological
-    structure while introducing new synthetic samples.
+    The Phylomix method was described in [1]_.
+    
+    This method leverages phylogenetic relationships to guide data augmentation in
+    microbiome and other omic data. By mixing the abundances of evolutionarily related
+    taxa (tips of a selected node), Phylomix preserves the biological structure while
+    introducing new synthetic samples.
 
-    The selection of nodes follows a random sampling approach,
-    where a subset of taxa is chosen based on a
-    Beta-distributed mixing coefficient. This ensures that the augmented
-    data maintains biologically meaningful compositional relationships.
+    The selection of nodes follows a random sampling approach, where a subset of taxa
+    is chosen based on a Beta-distributed mixing coefficient. This ensures that the
+    augmented data maintains biologically meaningful compositional relationships.
 
-    In the original paper, the authors assumed a bifurcated phylogenetic tree,
-    but this implementation works with any tree structure. If desired,
-    users can bifurcate their tree using ``skbio.tree.TreeNode.bifurcate()``
-    before augmentation.
+    In the original paper, the authors assumed a bifurcated phylogenetic tree, but this
+    implementation works with any tree structure. If desired, the user can bifurcate
+    the tree using :meth:`~skbio.tree.TreeNode.bifurcate` before augmentation.
 
-    Phylomix is particularly valuable for microbiome-trait association studies,
-    where preserving phylogenetic similarity between related taxa is crucial for
-    accurate downstream predictions. This approach helps address the
-    common challenge of limited sample sizes in omic data studies.
+    Phylomix is particularly valuable for microbiome-trait association studies, where
+    preserving phylogenetic similarity between related taxa is crucial for accurate
+    downstream predictions. This approach helps address the common challenge of limited
+    sample sizes in omic data studies.
 
-    The method assumes that all tips in the phylogenetic tree
-    are represented in the ``tip_to_obs_mapping`` dictionary.
+    The method assumes that all tips in the phylogenetic tree are represented in the
+    ``tip_to_obs_mapping`` dictionary.
 
     References
     ----------
-    .. [1] Jiang, Y., Liao, D., Zhu, Q., & Lu, Y. Y. (2025).
-        PhyloMix: Enhancing microbiome-trait association prediction through
-        phylogeny-mixing augmentation. Bioinformatics, btaf014.
+    .. [1] Jiang, Y., Liao, D., Zhu, Q., & Lu, Y. Y. (2025). PhyloMix: Enhancing
+       microbiome-trait association prediction through phylogeny-mixing augmentation.
+       Bioinformatics, btaf014.
 
     """
     rng = get_rng(seed)

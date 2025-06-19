@@ -3,39 +3,39 @@ r"""Data Table (:mod:`skbio.table`)
 
 .. currentmodule:: skbio.table
 
-This module provides support for interaction with data tables in the Biological
-Observation Matrix (BIOM) format.
-
-Please refer to the `BIOM documentation <https://biom-format.org/>`__ for the
-instructions on working with BIOM tables.
+This module provides support for interaction with data tables.
 
 
 BIOM table
 ----------
 
+Biological Observation Matrix (BIOM) is an efficient and versatile table format
+designed for biological "omic" data types.
+
 .. autosummary::
    :toctree: generated/
 
    Table
-
-
-Example data
-^^^^^^^^^^^^
-.. autosummary::
-   :toctree: generated/
-
    example_table
 
-Data Augmentation
+Please refer to the `BIOM documentation <https://biom-format.org/>`_ for the
+instructions on working with BIOM tables.
+
+
+Data augmentation
 -----------------
+
+Techniques for creating synthetic samples based on the current data and biological
+properties. Helpful for improving the performance and robustness of machine learning
+models.
 
 .. autosummary::
    :toctree: generated/
 
    phylomix
    compositional_cutmix
-   mixup
    aitchison_mixup
+   mixup
 
 """  # noqa: D205, D415
 

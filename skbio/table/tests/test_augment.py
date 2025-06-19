@@ -19,8 +19,8 @@ from skbio.table._augment import (
     _validate_tree,
     _validate_label,
     _get_all_possible_pairs,
-    _aitchison_addition,
-    _aitchison_scalar_multiplication,
+    _aitchison_add,
+    _aitchison_scalar_multiply,
 )
 
 
@@ -231,7 +231,7 @@ class TestAugmentFunctions(TestCase):
         # Test Aitchison addition
         x = np.array([0.2, 0.3, 0.5])
         v = np.array([0.1, 0.4, 0.5])
-        res = _aitchison_addition(x, v)
+        res = _aitchison_add(x, v)
         npt.assert_array_almost_equal(
             res, np.array([0.05128205, 0.30769231, 0.64102564])
         )
@@ -240,7 +240,7 @@ class TestAugmentFunctions(TestCase):
         # Test Aitchison scalar multiplication
         lam = 2.0
         x = np.array([0.2, 0.3, 0.5])
-        res = _aitchison_scalar_multiplication(lam, x)
+        res = _aitchison_scalar_multiply(lam, x)
         npt.assert_array_almost_equal(
             res, np.array([0.10526316, 0.23684211, 0.65789474])
         )
