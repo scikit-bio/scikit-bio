@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Testing utilities."""
+
 import inspect
 import os
 import sys

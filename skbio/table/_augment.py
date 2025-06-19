@@ -655,7 +655,7 @@ def phylomix(
     Notes
     -----
     The Phylomix method was described in [1]_.
-    
+
     This method leverages phylogenetic relationships to guide data augmentation in
     microbiome and other omic data. By mixing the abundances of evolutionarily related
     taxa (tips of a selected node), Phylomix preserves the biological structure while
