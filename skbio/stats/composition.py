@@ -485,7 +485,7 @@ def inner(x, y):
 
 
 def clr(mat: Array, axis=-1,
-        validate:bool=True, is_aitchison:bool=False) -> Array:
+        validate:bool=True) -> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -514,11 +514,8 @@ def clr(mat: Array, axis=-1,
         Ignored for the backward compactibility, as the mat
         is assumed to be a (n_compositions, n_components) matrix.
     validate: bool, default True
-        Checking of the mat is proportional.
-    is_aitchison: bool, default False
-        should be ignored for the backward compactibility, use True
-        when the input is known to be proportions. Otherwise closure
-        operation will be applied.
+        Checking of the mat is a legitimate  composition with elements
+        strictly greater than 0.
 
     Returns
     -------
@@ -542,18 +539,18 @@ def clr(mat: Array, axis=-1,
     except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
+    
 
-    # NOTE:docstringed for satifying backward compatibility
-    # assert xp.all(mat>0), 'Input must be of positive values.'
-
-    if is_aitchison:
-        # this input is known to be a composition
-        if validate:
-            # check if the input is a composition
-            _composition_check(mat, axis=axis)
-    else:
-        # if the input is not a composition, run closure
-        mat = closure(mat)
+    if validate:
+        # assert from closure() while it is removed in latest version
+        if xp.any(mat < 0):
+            raise ValueError("Cannot have negative proportions")
+        if mat.ndim > 2:
+            raise ValueError("Input matrix can only have two dimensions or less")
+        
+        # check if the input is a composition
+        _composition_check(mat, axis=axis)
+    
     original_shape = mat.shape
     # squeeze the singleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
@@ -562,7 +559,7 @@ def clr(mat: Array, axis=-1,
                       original_shape)
 
 def clr_inv(mat: Array, axis:int=-1,
-            validate:bool=True, is_normalized:bool=False) -> Array:
+            validate:bool=True) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -587,13 +584,9 @@ def clr_inv(mat: Array, axis:int=-1,
     axis: int, default -1
         Should be ignored, as the mat is assumed to be a
         (n_compositions, n_components) matrix.
-    validate: bool, defautl True
+    validate: bool, default True
         Should be ignored for backward compactibility,the flag of
         checking whether the mat is centered at 0.
-    is_normalized: bool, default False
-        Should be ignored for the backward compactibility, using True
-        when the input is known to be centered
-        otherwise the data will be shifted to have 0 as center.
 
     Returns
     -------
@@ -615,21 +608,17 @@ def clr_inv(mat: Array, axis:int=-1,
     except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-    if is_normalized:
-        if validate:
-            # assert xp.all(xp.sum(mat, axis=-1) == 0), \
-                # 'Input matrix is not in the clr range.'
-            pass
-    else:
-        # NOTE: for backward compatibility
-        # mat = mat - xp.sum(mat, axis=-1, keepdims=True)
+
+    if validate:
+        # assert xp.all(xp.sum(mat, axis=-1) == 0), \
+            # 'Input matrix is not in the clr range.'
         pass
     # for numerical stability, shitting the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=-1, keepdims=True))
     return diff / xp.sum(diff, axis=-1, keepdims=True)
 
 def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
-        validate:bool=True, is_aitchison=False) -> Array:
+        validate:bool=True) -> Array:
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -661,10 +650,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
         Should be ignored, as two-dimension mat is concerned, otherwise indicating
         which dimension of mat the ilr will be applied.
     validate : bool, default True
-        Check to see if basis is orthonormal.
-    is_aitchison: bool, default False
-        Should be ignored, True when the given mat is known to be aitchison, otherwise
-        closre will be performed.
+        Checking of the basis is orthonormal.
 
     Returns
     -------
@@ -698,18 +684,22 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
 
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-
-    if is_aitchison:
-        # this input is known to be a composition
-        if validate:
-            # check if the input is a composition
-            _composition_check(mat, axis=axis)
-    else:
-        # if the input is not a composition, run closure
-        mat = closure(mat)
-
+    if validate:
+        # assert from closure() while it is removed in latest version 
+        if xp.any(mat < 0):
+            raise ValueError("Cannot have negative proportions")
+        if mat.ndim > 2:
+            raise ValueError("Input matrix can only have two dimensions or less")
+        
+        # check if the input is a composition
+        _composition_check(mat, axis=axis)
+        
+    if axis != -1:
+        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
+        mat = mat.permute_dims(switch_tuple)
+    mat = clr(mat, validate=validate)
     if basis is None:
-        d = mat.shape[axis]
+        d = mat.shape[-1]
         basis = xp.asarray(_gram_schmidt_basis(d),
                            device=mat.device,
                            dtype=mat.dtype)  # dimension (d-1) x d
@@ -723,13 +713,11 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
                         device=mat.device,
                         dtype=mat.dtype)
 
+    # switch the wanted axis to the last one
     if axis != -1:
-        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
-        mat = mat.permute_dims(switch_tuple)
-        return xp.permute_dims(clr(mat, validate=validate, is_aitchison=True) \
-            @ basis.T,switch_tuple)
+        return xp.permute_dims(mat @ basis.T, switch_tuple)
     else:
-        return clr(mat, validate=validate, is_aitchison=True) @ basis.T
+        return mat @ basis.T
 
 
 def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
@@ -814,10 +802,10 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
         mat = mat.permute_dims(switch_tuple)
-        return xp.permute_dims(clr_inv(mat @ basis, validate=validate, \
-                                        is_normalized=True), switch_tuple)
+        return xp.permute_dims(clr_inv(mat @ basis, validate=validate),
+                               switch_tuple)
     else:
-        return clr_inv(mat @ basis, validate=validate, is_normalized=True)
+        return clr_inv(mat @ basis, validate=validate)
 
 
 def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
@@ -896,7 +884,7 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
             # for backward compactibility
         if mat.shape[axis] < 2:
             raise ValueError(
-                f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
+                f"dimension D{mat.ndim + axis} of the input matrix is singleton"
             )
         if xp.any(mat <= 0):
             raise ValueError("Input matrix must be positive")
@@ -990,7 +978,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
 
     if mat.shape[axis] < 2:
         raise ValueError(
-            f"dimesnion D{mat.ndim + axis} of the input matrix is singleton"
+            f"dimension D{mat.ndim + axis} of the input matrix is singleton"
         )
     # switch the wanted axis to the last one
     if axis != -1:

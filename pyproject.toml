@@ -58,7 +58,7 @@ test = [
     "pytest",
     "coverage",
     "responses",
-    "matplotlib",
+    "matplotlib"
 ]
 docs = [
     "sphinx",

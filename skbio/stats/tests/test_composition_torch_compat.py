@@ -307,7 +307,7 @@ class torch_cpu(TestCase):
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]],
                                        device=self.device)
-        basis = self.namespace_asarray([[0.80442968, 0.19557032]],
+        basis = self.namespace_asarray([0.80442968, 0.19557032],
                                        device=self.device)
         basis = clr(basis) # clr: has squeeze
         with self.assertRaises(ValueError):
@@ -1041,31 +1041,3 @@ class torch_cuda(TestCase):
         sbpbasis = self.namespace_asarray(sbpbasis,
                                          device=self.device)
         assert_allclose(gsbasis, sbpbasis)
-
-    # def test_sbp_basis_elementwise(self):
-    #     sbp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1],
-    #                     [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 0],
-    #                     [1, 1, 1, 1, 1, 1, -1, 0, 0, 0, 0, 0],
-    #                     [1, 1, -1, -1, -1, 1, 0, 0, 0, 0, 0, 0],
-    #                     [1, -1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-    #                     [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0],
-    #                     [0, 0, 1, -1, -1, 0, 0, 0, 0, 0, 0, 0],
-    #                     [0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0],
-    #                     [0, 0, 0, 0, 0, 0, 0, 1, -1, -1, 1, 0],
-    #                     [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0],
-    #                     [0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0]])
-    #     sbpbasis = sbp_basis(sbp)
-    #     # by hand, element-wise
-    #     r = np.apply_along_axis(func1d=lambda x: np.sum(x > 0),
-    #                             axis=1, arr=sbp)
-    #     s = np.apply_along_axis(func1d=lambda x: np.sum(x < 0),
-    #                             axis=1, arr=sbp)
-    #     psi = np.zeros(sbp.shape)
-    #     for i in range(0, sbp.shape[0]):
-    #         for j in range(0, sbp.shape[1]):
-    #             if sbp[i, j] == 1:
-    #                 psi[i, j] = np.sqrt(s[i]/(r[i]*(r[i]+s[i])))
-    #             elif sbp[i, j] == -1:
-    #                 psi[i, j] = -np.sqrt(r[i]/(s[i]*(r[i]+s[i])))
-    #     npt.assert_allclose(psi, sbpbasis)
-
