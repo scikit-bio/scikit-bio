@@ -8,11 +8,13 @@
 
 import ctypes
 import numpy as np
+from numbers import Integral
 from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll, skbb_set_random_seed)
 
 # ====================================================
 
 # perform PCoA using the FSVD method
+# Note: Seed must be either a non-negative integer or None
 def skbb_pcoa_fsvd(
     distance_matrix,
     number_of_dimensions,
@@ -21,8 +23,16 @@ def skbb_pcoa_fsvd(
 ):
     if skbb_get_api_version()>=1: # minimum version that support pcoa
         if (seed is not None):
-            # TBD: Switch from global lo local
-            skbb_set_random_seed(seed)
+            # just check it actually is a non-negative number
+            if not isinstance(seed, Integral):
+                raise TypeError("seed must be an integer")
+            elif (seed>=0):
+                int_seed = seed
+            else:
+                raise ValueError("seed must be a non-negative number")
+        else:
+            # the skbb API expects a negative number, when seed is invalid
+            int_seed = -1
         if isinstance(distance_matrix,np.ndarray):
             # already a raw matrix, jsut use
             distance_matrix_data = distance_matrix
@@ -50,19 +60,20 @@ def skbb_pcoa_fsvd(
         i_mdim = ctypes.c_uint(distance_matrix_shape0)
         i_mat = distance_matrix_data.ctypes.data_as(ctypes.c_void_p)
         i_n_eigh = ctypes.c_uint(number_of_dimensions)
+        i_seed = ctypes.c_int(int_seed)
         o_ev = eigenvalues.ctypes.data_as(ctypes.c_void_p)
         o_sp = samples.ctypes.data_as(ctypes.c_void_p)
         o_pe = proportion_explained.ctypes.data_as(ctypes.c_void_p)
         if distance_matrix_data.dtype == np.dtype('float64'):
             if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
             else:
-                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
         elif distance_matrix_data.dtype == np.dtype('float32'):
             if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
             else:
-                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
         else:
             raise TypeError("distance_matrix type must be either float32 or float64")
         # if we got here, everything went well

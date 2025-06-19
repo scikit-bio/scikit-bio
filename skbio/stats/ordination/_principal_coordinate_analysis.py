@@ -194,7 +194,9 @@ def pcoa(
                 RuntimeWarning,
             )
             num_dimensions = matrix_data.shape[0]
-        if (skbb_available()):
+        if ( ( (seed is None) or isinstance(seed, Integral)) and
+                skbb_available()):
+            # Note: seed non-numeric objects not supported
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = skbb_pcoa_fsvd(
