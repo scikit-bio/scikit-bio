@@ -539,7 +539,7 @@ def clr(mat: Array, axis=-1,
     except Exception as e:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
-    
+
 
     if validate:
         # assert from closure() while it is removed in latest version
@@ -547,10 +547,10 @@ def clr(mat: Array, axis=-1,
             raise ValueError("Cannot have negative proportions")
         if mat.ndim > 2:
             raise ValueError("Input matrix can only have two dimensions or less")
-        
+
         # check if the input is a composition
         _composition_check(mat, axis=axis)
-    
+
     original_shape = mat.shape
     # squeeze the singleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
@@ -685,15 +685,15 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
     if validate:
-        # assert from closure() while it is removed in latest version 
+        # assert from closure() while it is removed in latest version
         if xp.any(mat < 0):
             raise ValueError("Cannot have negative proportions")
         if mat.ndim > 2:
             raise ValueError("Input matrix can only have two dimensions or less")
-        
+
         # check if the input is a composition
         _composition_check(mat, axis=axis)
-        
+
     if axis != -1:
         switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
         mat = mat.permute_dims(switch_tuple)
@@ -897,7 +897,7 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
     numerator_matrix = mat[..., numerator_indexs]
     denominator_vector = mat[..., [denominator_idx]]
-    mat = xp.log(numerator_matrix / denominator_vector)
+    mat = xp.log(numerator_matrix)-xp.log(denominator_vector)
 
     # recover the permutation
     if axis != -1:
