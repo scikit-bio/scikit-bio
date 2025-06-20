@@ -36,7 +36,7 @@ def get_rng(seed=None):
     -----
     A random generator ensures reproducibility of outputs. scikit-bio utilizes NumPy's
     new random generator (``Generator``) [1]_, which was introduced in version 1.17.
-    See NEP 19 [3]_ for an introduction to this change.
+    See NEP 19 [2]_ for an introduction to this change.
 
     The following code demonstrates the recommended usage of the random generator with
     various scikit-bio functions that are stochastic. With a random generator created
@@ -61,7 +61,7 @@ def get_rng(seed=None):
        skbio_func2(..., seed=42)
        ...
 
-    Meanwhile, scikit-bio respects the legacy random generator (``RandomState``) [4]_.
+    Meanwhile, scikit-bio respects the legacy random generator (``RandomState``) [3]_.
     If ``np.random.seed`` has been called, or a ``RandomState`` instance is provided,
     scikit-bio will create a new random generator from a seed selected by the legacy
     random generator. This ensures reproducibility of legacy code and compatibility
@@ -82,11 +82,9 @@ def get_rng(seed=None):
     ----------
     .. [1] https://numpy.org/devdocs/reference/random/generator.html
 
-    .. [2] https://numpy.org/doc/stable/reference/random/legacy.html
+    .. [2] https://numpy.org/neps/nep-0019-rng-policy.html
 
-    .. [3] https://numpy.org/neps/nep-0019-rng-policy.html
-
-    .. [4] https://numpy.org/doc/stable/reference/random/legacy.html
+    .. [3] https://numpy.org/doc/stable/reference/random/legacy.html
 
     """
     # seed is new Generator: directly return it
