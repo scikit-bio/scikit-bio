@@ -20,9 +20,9 @@ Functions
    set_config
 
 
-The DataTable Type
+The TableLike Type
 ----------------------
-The :data:`~skbio.util.DataTable` type is the union of the following types of objects:
+The :data:`~skbio.util.TableLike` type is the union of the following types of objects:
 
 - Numpy :class:`~numpy.ndarray` (2D)
 - pandas :class:`~pandas.DataFrame`
@@ -30,7 +30,7 @@ The :data:`~skbio.util.DataTable` type is the union of the following types of ob
 - scikit-bio :class:`~skbio.table.Table`
 - :class:`~anndata.AnnData` object
 
-For all functions which accept a ``DataTable`` type as input, any objects from this
+For all functions which accept a ``TableLike`` type as input, any objects from this
 list are acceptable input. Input handling of supported types is handled automatically.
 No need to set a configuration variable to use whichever input type you like. When
 possible, row and column identifiers will be preserved and carried through operations
@@ -56,9 +56,9 @@ Different data formats use different terminology for these concepts:
 - ``polars``: rows (by position) and "schema" (features)
 
 
-Common DataTable Parameters
+Common TableLike Parameters
 ---------------------------
-Many functions that accept ``DataTable`` inputs share a set of common parameters that
+Many functions that accept ``TableLike`` inputs share a set of common parameters that
 control how identifiers are handled and specify output format preferences:
 
 sample_ids : list of str, optional
@@ -86,7 +86,7 @@ output_format : str, optional
 Supported Output Formats
 ------------------------
 Currently, scikit-bio functions support outputing the following types of data. Note
-that this list is not equivalent to the input types supported through the ``DataTable``
+that this list is not equivalent to the input types supported through the ``TableLike``
 type.
 
 - Numpy :class:`~numpy.ndarray` (2D and 1D)

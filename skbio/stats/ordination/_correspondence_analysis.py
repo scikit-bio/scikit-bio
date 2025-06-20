@@ -12,7 +12,7 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
 
 
 def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
@@ -36,7 +36,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     X : table_like
         Samples by features table (n, m). It can be applied to different kinds
         of data tables, but data must be non-negative and dimensionally homogeneous
-        (quantitative or binary). See the `DataTable <https://scikit.bio/
+        (quantitative or binary). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     scaling : {1, 2}
@@ -45,7 +45,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
     sample_ids, feature_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 

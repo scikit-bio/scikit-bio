@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
 
 
 def cca(
@@ -45,11 +45,11 @@ def cca(
     Parameters
     ----------
     y : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     x : table_like
-        Samples by constraints table (n, q). See the `DataTable <https://scikit.bio/
+        Samples by constraints table (n, q). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     scaling : int, {1, 2}, optional
@@ -62,7 +62,7 @@ def cca(
         implicitly by the input data structure or explicitly by the user, defaults
         to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
@@ -138,7 +138,7 @@ def cca(
     if np.any(row_max <= 0):
         # Or else the lstsq call to compute Y_hat breaks
         raise ValueError(
-            "The samples by features table 'y' cannot contain a " "row with only 0's"
+            "The samples by features table 'y' cannot contain a row with only 0's"
         )
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))

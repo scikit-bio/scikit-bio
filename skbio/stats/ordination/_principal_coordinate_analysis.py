@@ -17,7 +17,7 @@ from scipy.linalg import eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
-from skbio.util.config._dispatcher import _create_table, _create_table_1d
+from skbio.table._dispatcher import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
@@ -71,7 +71,7 @@ def pcoa(
         .. versionadded:: 0.6.3
 
     output_format : optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
@@ -460,12 +460,12 @@ def pcoa_biplot(ordination, y):
     # a name, it should be PCoA
     if ordination.short_method_name != "" and ordination.short_method_name != "PCoA":
         raise ValueError(
-            "This biplot computation can only be performed in a " "PCoA matrix."
+            "This biplot computation can only be performed in a PCoA matrix."
         )
 
     if set(y.index) != set(ordination.samples.index):
         raise ValueError(
-            "The eigenvectors and the descriptors must describe " "the same samples."
+            "The eigenvectors and the descriptors must describe the same samples."
         )
 
     eigvals = ordination.eigvals.values

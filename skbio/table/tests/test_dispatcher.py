@@ -18,7 +18,7 @@ from skbio.table import Table
 from skbio.util import get_package
 from skbio.util._testing import assert_data_frame_almost_equal
 
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
 
 
 pl = get_package("polars", raise_error=False)

@@ -16,7 +16,7 @@ from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
 from skbio.io.descriptors import Read, Write
-from skbio.util.config._dispatcher import _extract_row_ids
+from skbio.table._dispatcher import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -35,37 +35,37 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Ordination method name.
     eigvals : table_like
         The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels. See the `DataTable <https://scikit.bio/
+        axis labels. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id. See the `DataTable <https://scikit.bio/
+        sample id. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id. See the `DataTable <https://scikit.bio/
+        the feature id. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-        See the `DataTable <https://scikit.bio/
+        See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores. See the `DataTable <https://scikit.bio/
+        These are the fitted site scores. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
         The index corresponds to the ordination axis labels. See the
-        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
+        `TableLike <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
         the-datatable-type>`_ type documentation for details.
     sample_ids, feature_ids, constraint_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 

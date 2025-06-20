@@ -61,7 +61,7 @@ Types
 .. autosummary::
    :toctree: generated/
 
-   DataTable
+   TableLike
 
 
 Miscellaneous utilities
@@ -106,7 +106,7 @@ from ._decorator import (
 )
 from ._optionals import get_package
 from ._plotting import PlottableMixin
-from ._types import DataTable
+from ._types import TableLike
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -127,5 +127,5 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
-    "DataTable",
+    "TableLike",
 ]

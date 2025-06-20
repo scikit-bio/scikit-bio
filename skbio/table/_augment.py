@@ -17,7 +17,7 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.stats.composition import closure
 from skbio.util import get_rng
-from skbio.util.config._dispatcher import _ingest_array, _create_table
+from skbio.table._dispatcher import _ingest_array, _create_table
 
 
 def _validate_tree(tree: TreeNode) -> None:
@@ -214,7 +214,7 @@ def mixup(
     Parameters
     ----------
     table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     samples : int
@@ -232,7 +232,7 @@ def mixup(
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
     output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
@@ -330,7 +330,7 @@ def aitchison_mixup(
     Parameters
     ----------
     table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     samples : int
@@ -348,7 +348,7 @@ def aitchison_mixup(
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
     output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
@@ -470,7 +470,7 @@ def compositional_cutmix(
     Parameters
     ----------
     table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     samples : int
@@ -486,7 +486,7 @@ def compositional_cutmix(
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
     output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
@@ -599,7 +599,7 @@ def phylomix(
     Parameters
     ----------
     table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
+        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
     tree : skbio.tree.TreeNode
@@ -621,7 +621,7 @@ def phylomix(
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
     output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
         docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
         documentation for details.
 
