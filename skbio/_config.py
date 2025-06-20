@@ -1,7 +1,7 @@
-r"""Configuration Options (:mod:`skbio.util.config`)
-================================================
+r"""Configuration Options
+=====================
 
-.. currentmodule:: skbio.util.config
+.. currentmodule:: skbio
 
 This module provides a flexible configuration system which allows scikit-bio
 functions to accept multiple types of input data structures and return results in the
@@ -16,8 +16,8 @@ Functions
 .. autosummary::
    :toctree: generated/
 
-#    get_config
-#    set_config
+   get_config
+   set_config
 
 
 The DataTable Type
@@ -123,11 +123,69 @@ the ``output_format`` parameter.
     # numpy arrays
     res = cca(Y, X, output_format="numpy")
 
-"""
+"""  # noqa: D205, D415
 
-# from ._config import get_config, set_config
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
 
-__all__ = [
-    # "get_config",
-    # "set_config",
-]
+_SKBIO_OPTIONS = {"output": "pandas"}
+
+
+def set_config(option: str, value: str):
+    """Set a scikit-bio config option.
+
+    This function enables users to set the configuration of scikit-bio functions
+    globally.
+
+    Parameters
+    ----------
+    option : str
+        The configuration option to be modified. Currently there is only one
+        configurable option, ``"output"``.
+    value : str
+        The value to update the configuration dictionary with. For the
+        ``"output"`` option, ``value`` may be set to ``"pandas"``,
+        ``"polars"``, or ``"numpy"``. Defaults to ``"pandas"``.
+
+    Raises
+    ------
+    ValueError
+        If an unkown option is used or if an unsupported value for an option is used.
+
+    Examples
+    --------
+    >>> from skbio import set_config
+    >>> set_config("output", "numpy")  # doctest: +SKIP
+
+    """
+    if option not in _SKBIO_OPTIONS:
+        raise ValueError(f"Unknown option: '{option}'")
+    # possible options for now
+    pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
+    if value not in pos_opts:
+        raise ValueError(f"Unsupported value '{value}' for '{option}'")
+    _SKBIO_OPTIONS[option] = value
+
+
+def get_config(option: str) -> str:
+    """Get the current value of an skbio config option.
+
+    Parameters
+    ----------
+    option : str
+        The configuration option to be found.
+
+    Returns
+    -------
+    str
+        The current value of the configuration option supplied.
+
+    """
+    if option not in _SKBIO_OPTIONS:
+        raise ValueError(f"Unknown option: '{option}'")
+    return _SKBIO_OPTIONS[option]

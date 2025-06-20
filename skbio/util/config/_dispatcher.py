@@ -11,7 +11,7 @@ import pandas as pd
 
 from warnings import warn
 
-from ._config import get_config
+from skbio._config import get_config
 from skbio.table import Table
 from skbio.util import get_package
 

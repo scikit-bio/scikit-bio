@@ -1,4 +1,4 @@
-r"""Workflow construction (:mod:`skbio.workflow`)
+r"""Workflow Construction (:mod:`skbio.workflow`)
 =============================================
 
 .. currentmodule:: skbio.workflow

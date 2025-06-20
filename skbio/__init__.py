@@ -21,9 +21,10 @@ from skbio.io import read, write
 from skbio.stats.ordination import OrdinationResults
 from skbio.table import Table
 from skbio.metadata import SampleMetadata
-from skbio.util import set_config, get_config
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
+from ._config import get_config, set_config
+
 
 __all__ = [
     "Sequence",
@@ -41,8 +42,8 @@ __all__ = [
     "OrdinationResults",
     "Table",
     "SampleMetadata",
-    "set_config",
     "get_config",
+    "set_config",
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"

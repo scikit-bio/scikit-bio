@@ -13,7 +13,7 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 
-from skbio import set_config
+from skbio._config import set_config
 from skbio.table import Table
 from skbio.util import get_package
 from skbio.util._testing import assert_data_frame_almost_equal
