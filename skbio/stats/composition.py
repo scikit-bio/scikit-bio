@@ -167,7 +167,7 @@ def supports_array_api(obj):
     required_methods = ["__array_namespace__"]
     return all(hasattr(obj, method) for method in required_methods)
 
-def _composition_check(mat: Array, axis: int = 1):
+def _composition_check(mat: Array):
     """Check if the input is a valid composition.
 
     Parameters
@@ -175,14 +175,12 @@ def _composition_check(mat: Array, axis: int = 1):
     mat : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
     """
+    axis = -1
     xp = aac.array_namespace(mat)
     if xp.any(mat < 0):
         raise ValueError("Cannot have negative proportions")
     if xp.all(mat == 0, axis=axis).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
-    # assert xp.all(xp.sum(mat == 0, axis=axis) == 1), f"Input matrix is compositional\
-                            # for the given({axis}) dimension"
-
 
 def closure(mat):
     """Perform closure to ensure that all elements add up to 1.
@@ -218,6 +216,7 @@ def closure(mat):
 
     """
     # mat = np.atleast_2d(mat)
+    axis = 1
 
     if not aac.is_array_api_obj(mat):
         mat = np.array(mat)
@@ -230,8 +229,9 @@ def closure(mat):
         mat = mat.reshape(1, -1)
     if xp.all(mat == 0, axis=1).sum() > 0:
         raise ValueError("Input matrix cannot have rows with all zeros")
-    mat = mat / mat.sum(axis=1, keepdims=True)
+    mat = mat / mat.sum(axis=axis, keepdims=True)
 
+    # squeeze maybe no need
     return xp.squeeze(mat,
                       axis=tuple(i for i,m in enumerate(mat.shape) \
                                  if m==1))
@@ -484,8 +484,7 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat: Array, axis=-1,
-        validate:bool=True) -> Array:
+def clr(mat: Array, validate:bool=True) -> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -510,9 +509,6 @@ def clr(mat: Array, axis=-1,
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
-    axis: int, default -1
-        Ignored for the backward compactibility, as the mat
-        is assumed to be a (n_compositions, n_components) matrix.
     validate: bool, default True
         Checking of the mat is a legitimate  composition with elements
         strictly greater than 0.
@@ -531,6 +527,7 @@ def clr(mat: Array, axis=-1,
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
+    axis = -1
     # xp is the namespace wrapper for different array libraries
     # NOTE: the following (try:) may reduce the efficiency but to
     # keep backward compatibility when the input is a list
@@ -549,16 +546,16 @@ def clr(mat: Array, axis=-1,
             raise ValueError("Input matrix can only have two dimensions or less")
 
         # check if the input is a composition
-        _composition_check(mat, axis=axis)
+        _composition_check(mat)
 
     original_shape = mat.shape
     # squeeze the singleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
     lmat = xp.log(mat)
-    return xp.reshape(lmat-xp.mean(lmat, axis=-1, keepdims=True),
+    return xp.reshape(lmat-xp.mean(lmat, axis=axis, keepdims=True),
                       original_shape)
 
-def clr_inv(mat: Array, axis:int=-1,
+def clr_inv(mat: Array,
             validate:bool=True) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
@@ -581,9 +578,6 @@ def clr_inv(mat: Array, axis:int=-1,
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of clr-transformed data.
-    axis: int, default -1
-        Should be ignored, as the mat is assumed to be a
-        (n_compositions, n_components) matrix.
     validate: bool, default True
         Should be ignored for backward compactibility,the flag of
         checking whether the mat is centered at 0.
@@ -603,6 +597,7 @@ def clr_inv(mat: Array, axis:int=-1,
 
     """
     # for backward compatibility for list input
+    axis = -1
     try:
         xp = aac.array_namespace(mat)
     except Exception as e:
@@ -610,17 +605,17 @@ def clr_inv(mat: Array, axis:int=-1,
         xp = aac.array_namespace(mat)
 
     if validate:
-        if xp.any(xp.sum(mat, axis=-1)!= 0):
+        if xp.any(xp.sum(mat, axis=axis)!= 0):
             warnings.warn('The input matrix is not in the clr range,\
                             which require the sum of values equal to 0',
                         UserWarning
                         )
 
     # for numerical stability, shitting the values < 1
-    diff = xp.exp(mat - xp.max(mat, axis=-1, keepdims=True))
-    return diff / xp.sum(diff, axis=-1, keepdims=True)
+    diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
+    return diff / xp.sum(diff, axis=axis, keepdims=True)
 
-def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
+def ilr(mat:Array, basis:Optional[Array]=None,
         validate:bool=True) -> Array:
     r"""Perform isometric log ratio transformation.
 
@@ -649,9 +644,6 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
-    axis: int, default -1
-        Should be ignored, as two-dimension mat is concerned, otherwise indicating
-        which dimension of mat the ilr will be applied.
     validate : bool, default True
         Checking of the basis is orthonormal.
 
@@ -676,6 +668,7 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     where rows represent basis vectors, and the columns represent proportions.
 
     """
+    axis = -1
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
@@ -695,11 +688,8 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
             raise ValueError("Input matrix can only have two dimensions or less")
 
         # check if the input is a composition
-        _composition_check(mat, axis=axis)
+        _composition_check(mat)
 
-    if axis != -1:
-        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
-        mat = mat.permute_dims(switch_tuple)
     mat = clr(mat, validate=validate)
     if basis is None:
         d = mat.shape[-1]
@@ -715,15 +705,10 @@ def ilr(mat:Array, basis:Optional[Array]=None, axis:int=-1,
         basis = xp.asarray(basis,
                         device=mat.device,
                         dtype=mat.dtype)
-
-    # switch the wanted axis to the last one
-    if axis != -1:
-        return xp.permute_dims(mat @ basis.T, switch_tuple)
-    else:
-        return mat @ basis.T
+    return mat @ basis.T
 
 
-def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
+def ilr_inv(mat:Array, basis:Optional[Array]=None,
             validate:bool=True) -> Array:
     r"""Perform inverse isometric log ratio transform.
 
@@ -752,8 +737,6 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
-    axis: int, default -1
-        ignored for backward compactibility
     validate : bool, default True
         Check to see if basis is orthonormal.
 
@@ -778,6 +761,7 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     where rows represent basis vectors, and the columns represent proportions.
 
     """
+    axis = -1
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
@@ -802,13 +786,7 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None, axis:int=-1,
     basis = xp.asarray(basis,
                        device=mat.device,
                        dtype=mat.dtype)
-    if axis != -1:
-        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
-        mat = mat.permute_dims(switch_tuple)
-        return xp.permute_dims(clr_inv(mat @ basis, validate=validate),
-                               switch_tuple)
-    else:
-        return clr_inv(mat @ basis, validate=validate)
+    return clr_inv(mat @ basis, validate=validate)
 
 
 def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
@@ -840,9 +818,6 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
         The index of the column (2-D matrix) or position (vector) of ``mat``
         which should be used as the reference composition. Default is 0 which
         specifies the first column or position.
-    axis: int, default -1
-        Should be ignored for backward compactibility, the index of dimension the
-        operation will be applied.
     validate: bool, default True
         Check whether the input is positive, whether the mat is 2D.
 
@@ -861,6 +836,7 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
+    axis = -1
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
@@ -873,7 +849,6 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
 
-    # switch the wanted axis to the last one
     if validate:
         if mat.ndim > 2:
             warnings.warn(
@@ -891,24 +866,16 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
             )
         if xp.any(mat <= 0):
             raise ValueError("Input matrix must be positive")
-    if axis != -1:
-        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
-        mat = mat.permute_dims(switch_tuple)
 
     # no matter (n,) or (n, w, z), it will return n
     N = mat.shape[-1]
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
     numerator_matrix = mat[..., numerator_indexs]
     denominator_vector = mat[..., [denominator_idx]]
-    mat = xp.log(numerator_matrix)-xp.log(denominator_vector)
-
-    # recover the permutation
-    if axis != -1:
-        mat = mat.permute_dims(switch_tuple)
-    return mat
+    return xp.log(numerator_matrix)-xp.log(denominator_vector)
 
 
-def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
+def alr_inv(mat: Array, denominator_idx: int = 0):
     r"""Perform inverse additive log ratio transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -939,9 +906,6 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
         The index of the column (2-D matrix) or position (vector) of ``mat``
         which should be used as the reference composition. Default is 0 which
         specifies the first column or position.
-    axis: int, default -1
-        Should be ignored for the backward compactivity, the index of dimension
-        that the operation will be applied on.
 
     Returns
     -------
@@ -957,6 +921,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
+    axis = -1
     # for backward compatibility for list input
     try:
         xp = aac.array_namespace(mat)
@@ -983,12 +948,8 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
         raise ValueError(
             f"dimension D{mat.ndim + axis} of the input matrix is singleton"
         )
-    # switch the wanted axis to the last one
-    if axis != -1:
-        switch_tuple = tuple(i for i in range(mat.ndim) if i != axis) + (axis,)
-        mat = mat.permute_dims(switch_tuple)
 
-    # no matter (n,) or (n, w, z), it will return n
+    # a reminder for ND-PR:if axis != -1, permutation will be applied
     N = mat.shape[-1]+1
     comp = xp.ones(mat.shape[:-1]+ (N,),
                    dtype=mat.dtype,
@@ -1005,12 +966,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     else:
         # in-place item assignment
         comp[..., numerator_indexs] = xp.exp(mat)
-
-    # recover the permutation
-    if axis != -1:
-        comp = comp.permute_dims(switch_tuple)
-
-    return comp/xp.sum(comp, axis=-1, keepdims=True)
+    return comp/xp.sum(comp, axis=axis, keepdims=True)
 
 
 def centralize(mat):
