@@ -136,7 +136,7 @@ def pcoa(
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if number_of_dimensions == 0:
-        if method == "fsvd" and matrix_data.shape[0] > 10:
+        if method == "fsvd" and distance_matrix.data.shape[0] > 10:
             warn(
                 "FSVD: since no value for number_of_dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
@@ -146,7 +146,7 @@ def pcoa(
             )
 
         # distance_matrix is guaranteed to be square
-        number_of_dimensions = matrix_data.shape[0]
+        number_of_dimensions = distance_matrix.data.shape[0]
     elif number_of_dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
@@ -193,7 +193,7 @@ def pcoa(
                 "Consider specifying an integer value to optimize performance.",
                 RuntimeWarning,
             )
-            num_dimensions = matrix_data.shape[0]
+            num_dimensions = distance_matrix.data.shape[0]
         if skbb_pcoa_fsvd_available(
                         distance_matrix.data, number_of_dimensions,
                         inplace, seed):

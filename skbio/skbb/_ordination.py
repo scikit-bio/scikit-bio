@@ -9,11 +9,11 @@
 import ctypes
 import numpy as np
 from numbers import Integral
-from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll, skbb_set_random_seed)
+from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll)
 
 # ====================================================
 
-# Check if skbb_pcoa_fsvd is avaialble
+# Check if skbb_pcoa_fsvd is available
 # same inputs as the full function, in case we support only a subset
 # If it returns True, it is safe to call skbb_pcoa_fsvd
 def skbb_pcoa_fsvd_available(
@@ -23,17 +23,20 @@ def skbb_pcoa_fsvd_available(
     seed=None,
 ):
     if skbb_get_api_version()>=1: # minimum version that support pcoa, includes check for library existence
-        if seed is None:
-            # None is OK
-            return True
-        else:
+        # check it is a positive number
+        if not isinstance(number_of_dimensions, Integral):
+            return False
+        elif number_of_dimensions<1:
+            return False
+        if seed is not None: # None is OK
             # check it is a non-negative number
             if not isinstance(seed, Integral):
-                return True
-            elif (seed>=0):
-                return True
-    # anything else means it is not supported
-    return False
+                return False
+            elif (seed<0):
+                return False
+        return True
+    else:
+        return False
 
 
 # perform PCoA using the FSVD method
@@ -45,6 +48,8 @@ def skbb_pcoa_fsvd(
     seed=None,
 ):
     if skbb_get_api_version()>=1: # minimum version that support pcoa
+        if number_of_dimensions<1:
+            raise ValueError("number_of_dimensions must be a positive number")
         if (seed is not None):
             # just check it actually is a non-negative number
             if not isinstance(seed, Integral):
@@ -67,6 +72,8 @@ def skbb_pcoa_fsvd(
         if (len(distance_matrix_data.shape)!=2 or 
             distance_matrix_data.shape[1] != distance_matrix_shape0):
                raise TypeError("distance_matrix not square")
+        if number_of_dimensions>distance_matrix_shape0:
+            raise ValueError("number_of_dimensions cannot be larger that matrix size")
         # create output buffers
         eigenvalues = np.ndarray(
                 shape=(number_of_dimensions,),
@@ -102,5 +109,5 @@ def skbb_pcoa_fsvd(
         # if we got here, everything went well
         return eigenvalues, samples, proportion_explained
     else:
-        raise ImportError("skbb_pcoa_fsvd_inplace not avaialble")
+        raise ImportError("skbb_pcoa_fsvd not available")
 
