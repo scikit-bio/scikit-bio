@@ -20,7 +20,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util.config._dispatcher import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
-from skbio.skbb import skbb_available, skbb_pcoa_fsvd
+from skbio.skbb import skbb_pcoa_fsvd_available, skbb_pcoa_fsvd
 
 
 def pcoa(
@@ -194,9 +194,9 @@ def pcoa(
                 RuntimeWarning,
             )
             num_dimensions = matrix_data.shape[0]
-        if ( ( (seed is None) or isinstance(seed, Integral)) and
-                skbb_available()):
-            # Note: seed non-numeric objects not supported
+        if skbb_pcoa_fsvd_available(
+                        distance_matrix.data, number_of_dimensions,
+                        inplace, seed):
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = skbb_pcoa_fsvd(
@@ -206,7 +206,11 @@ def pcoa(
                                     eigvals, coordinates, proportion_explained,
                                     distance_matrix.ids, output_format)
             except Exception as e:
-                warn( "Failed to use skbb_pcoa_fsvd", RuntimeWarning )
+                warn(
+                    "Attempted to use skbb_pcoa_fsvd but failed, "
+                    "using regular logic instead.",
+                    RuntimeWarning,
+                )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
         matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)

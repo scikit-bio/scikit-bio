@@ -13,6 +13,29 @@ from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll, skbb_set_rando
 
 # ====================================================
 
+# Check if skbb_pcoa_fsvd is avaialble
+# same inputs as the full function, in case we support only a subset
+# If it returns True, it is safe to call skbb_pcoa_fsvd
+def skbb_pcoa_fsvd_available(
+    distance_matrix,
+    number_of_dimensions,
+    inplace=False,
+    seed=None,
+):
+    if skbb_get_api_version()>=1: # minimum version that support pcoa, includes check for library existence
+        if seed is None:
+            # None is OK
+            return True
+        else:
+            # check it is a non-negative number
+            if not isinstance(seed, Integral):
+                return True
+            elif (seed>=0):
+                return True
+    # anything else means it is not supported
+    return False
+
+
 # perform PCoA using the FSVD method
 # Note: Seed must be either a non-negative integer or None
 def skbb_pcoa_fsvd(
