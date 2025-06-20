@@ -610,9 +610,12 @@ def clr_inv(mat: Array, axis:int=-1,
         xp = aac.array_namespace(mat)
 
     if validate:
-        # assert xp.all(xp.sum(mat, axis=-1) == 0), \
-            # 'Input matrix is not in the clr range.'
-        pass
+        if xp.any(xp.sum(mat, axis=-1)!= 0):
+            warnings.warn('The input matrix is not in the clr range,\
+                            which require the sum of values equal to 0',
+                        UserWarning
+                        )
+
     # for numerical stability, shitting the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=-1, keepdims=True))
     return diff / xp.sum(diff, axis=-1, keepdims=True)
