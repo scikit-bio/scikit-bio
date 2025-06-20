@@ -17,6 +17,7 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy
+from skbio.skbb import skbb_permanova_available, skbb_permanova
 
 
 def permanova(distance_matrix, grouping, column=None, permutations=999, seed=None):
@@ -106,6 +107,30 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
         distance_matrix.ids, sample_size, grouping, column
     )
 
+    if skbb_permanova_available(
+                distance_matrix,
+                grouping,
+                permutations,
+                seed):
+            # unlikely to throw here, but just in case
+            try:
+                stat, p_value = skbb_permanova(
+                        distance_matrix,
+                        grouping,
+                        permutations,
+                        seed)
+
+                return _build_results(
+                        "PERMANOVA", "pseudo-F", sample_size, num_groups,
+                        stat, p_value, permutations
+                )
+            except Exception as e:
+                warn(
+                    "Attempted to use skbb_permanova but failed, "
+                    "using regular logic instead.",
+                    RuntimeWarning,
+                )
+    # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
     s_T = (distance_matrix[:] ** 2).sum() / sample_size

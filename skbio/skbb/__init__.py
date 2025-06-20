@@ -4,7 +4,7 @@ r"""Optimized libraries from scikit-bio-binaries
 .. currentmodule:: skbio.skbb
 
 This module provides an interface to the optimized functions
-that are avaialble in the scikit-bio-binaries package, 
+that are available in the scikit-bio-binaries package,
 via the libskbb shared library.
 
 Since scikit-bio-binaries is not guaragteed to be installed
@@ -31,10 +31,17 @@ from ._ordination import (
     skbb_pcoa_fsvd,
 )
 
+from ._distance import (
+    skbb_permanova_available,
+    skbb_permanova,
+)
+
 __all__ = [
     "skbb_available",
     "skbb_get_api_version",
     "skbb_set_random_seed",
     "skbb_pcoa_fsvd_available",
     "skbb_pcoa_fsvd",
+    "skbb_permanova_available",
+    "skbb_permanova",
 ]
