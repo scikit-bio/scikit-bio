@@ -12,16 +12,16 @@ import pandas as pd
 import numpy as np
 
 from skbio.table import Table
-from skbio.util.config import _get_package
+from skbio.util import get_package
 
 # Base types which are always available
 DataTable = Union[pd.DataFrame, np.ndarray, Table]
 
 # add other types depending on availability
-pl, has_polars = _get_package("polars", raise_error=False, no_bool=False)
-if has_polars:
+pl = get_package("polars", raise_error=False)
+if pl is not None:
     DataTable = Union[DataTable, pl.DataFrame]  # type: ignore[misc]
 
-adt, has_anndata = _get_package("anndata", raise_error=False, no_bool=False)
-if has_anndata:
+adt = get_package("anndata", raise_error=False)
+if adt is not None:
     DataTable = Union[DataTable, adt.AnnData]  # type: ignore[misc]

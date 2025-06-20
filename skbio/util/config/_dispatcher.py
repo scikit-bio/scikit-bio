@@ -11,9 +11,9 @@ import pandas as pd
 
 from warnings import warn
 
-from skbio.table import Table
 from ._config import get_config
-from ._optionals import _get_package
+from skbio.table import Table
+from skbio.util import get_package
 
 
 def _create_table(data, columns=None, index=None, backend=None):
@@ -44,7 +44,7 @@ def _create_table(data, columns=None, index=None, backend=None):
     elif backend == "numpy":
         return np.array(data)
     elif backend == "polars":
-        pl = _get_package(backend)
+        pl = get_package(backend)
         return pl.DataFrame(data, schema=columns)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")
@@ -78,7 +78,7 @@ def _create_table_1d(data, index=None, backend=None):
     elif backend == "numpy":
         return np.array(data)
     elif backend == "polars":
-        pl = _get_package(backend)
+        pl = get_package(backend)
         return pl.Series(values=data)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")
@@ -143,13 +143,13 @@ def _ingest_array(input_data, row_ids=None, col_ids=None):
     elif hasattr(input_data, "schema"):
         # Can't do an explicit check until polars is imported,
         # so check for schema first
-        pl = _get_package("polars")
+        pl = get_package("polars")
         if isinstance(input_data, pl.DataFrame):
             data_ = input_data.to_numpy()
             col_ids = list(input_data.schema) if col_ids is None else col_ids
     # anndata
     elif hasattr(input_data, "X"):
-        adt = _get_package("anndata")
+        adt = get_package("anndata")
         if isinstance(input_data, adt.AnnData):
             data_ = input_data.X
             row_ids = list(input_data.obs.index) if row_ids is None else row_ids

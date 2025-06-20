@@ -13,14 +13,20 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 
-from skbio.util.config._optionals import _get_package
-pl, has_polars = _get_package('polars', raise_error=False, no_bool=False)
-adt, has_anndata = _get_package('anndata', raise_error=False, no_bool=False)
-
+from skbio import set_config
 from skbio.table import Table
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
-from skbio.util import set_config
+from skbio.util import get_package
 from skbio.util._testing import assert_data_frame_almost_equal
+
+from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+
+
+pl = get_package("polars", raise_error=False)
+# polars.testing isn't imported along with polars. Therefore one needs to import it
+# separately.
+if pl is not None:
+    plt = get_package("polars.testing")
+adt = get_package("anndata", raise_error=False)
 
 
 class TestPandas(TestCase):
@@ -148,7 +154,7 @@ class TestNumpy(TestCase):
             _create_table_1d(self.data, backend="nonsense")
 
 
-@skipIf(not has_polars, "Polars is not available for unit tests.")
+@skipIf(pl is None, "Polars is not available for unit tests.")
 class TestPolars(TestCase):
     def setUp(self):
         set_config("output", "polars")
@@ -163,19 +169,19 @@ class TestPolars(TestCase):
     def test_create_table_no_backend(self):
         obs = _create_table(data=self.data, columns=self.columns, index=self.index)
         exp = pl.DataFrame(self.data, schema=self.columns)
-        pl.testing.assert_frame_equal(obs, exp)
+        plt.assert_frame_equal(obs, exp)
 
     def test_create_table_no_optionals(self):
         obs = _create_table(self.data)
         exp = pl.DataFrame(self.data)
-        pl.testing.assert_frame_equal(obs, exp)
+        plt.assert_frame_equal(obs, exp)
 
     def test_create_table_same_backend(self):
         obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="polars"
         )
         exp = pl.DataFrame(self.data, schema=self.columns)
-        pl.testing.assert_frame_equal(obs, exp)
+        plt.assert_frame_equal(obs, exp)
 
     def test_create_table_numpy_backend(self):
         obs = _create_table(
@@ -198,17 +204,17 @@ class TestPolars(TestCase):
     def test_create_table_1d_no_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index)
         exp = pl.Series(self.data_1d)
-        pl.testing.assert_series_equal(obs, exp)
+        plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_no_optionals(self):
         obs = _create_table_1d(self.data_1d)
         exp = pl.Series(self.data_1d)
-        pl.testing.assert_series_equal(obs, exp)
+        plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_same_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index, backend="polars")
         exp = pl.Series(self.data_1d)
-        pl.testing.assert_series_equal(obs, exp)
+        plt.assert_series_equal(obs, exp)
 
     def test_create_table_1d_pandas_backend(self):
         obs = _create_table_1d(self.data_1d, index=self.index, backend="pandas")
@@ -268,7 +274,7 @@ class TestBIOM(TestCase):
         self.assertEqual(col_ids, self.features)
 
 
-@skipIf(not has_anndata, "Anndata is not available for unit tests.")
+@skipIf(adt is None, "Anndata is not available for unit tests.")
 class TestAnndata(TestCase):
     def setUp(self):
         self.data = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])

@@ -126,10 +126,8 @@ the ``output_format`` parameter.
 """
 
 from ._config import get_config, set_config
-from ._optionals import _get_package
 
 __all__ = [
     "get_config",
     "set_config",
-    "_get_package",
 ]

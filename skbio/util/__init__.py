@@ -117,6 +117,7 @@ from ._decorator import (
     register_aliases,
     params_aliased,
 )
+from ._optionals import get_package
 from ._plotting import PlottableMixin
 from .config._config import get_config, set_config
 from ._types import DataTable
@@ -131,6 +132,7 @@ __all__ = [
     "assert_ordination_results_equal_np",
     "assert_data_frame_almost_equal",
     "pytestrunner",
+    "get_package",
     "PlottableMixin",
     "overrides",
     "classproperty",
