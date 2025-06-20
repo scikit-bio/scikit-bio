@@ -155,6 +155,10 @@ def pcoa(
             "the number_of_dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
+    elif number_of_dimensions > distance_matrix.data.shape[0]:
+        raise ValueError(
+            "Invalid operation: cannot extend distance matrix size."
+        )
     elif not isinstance(number_of_dimensions, Integral) and number_of_dimensions > 1:
         raise ValueError(
             "Invalid operation: A floating-point number greater than 1 cannot be "

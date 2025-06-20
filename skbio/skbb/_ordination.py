@@ -48,6 +48,8 @@ def skbb_pcoa_fsvd(
     seed=None,
 ):
     if skbb_get_api_version()>=1: # minimum version that support pcoa
+        if not isinstance(number_of_dimensions, Integral):
+            raise ValueError("number_of_dimensions must be an integer value")
         if number_of_dimensions<1:
             raise ValueError("number_of_dimensions must be a positive number")
         if (seed is not None):
