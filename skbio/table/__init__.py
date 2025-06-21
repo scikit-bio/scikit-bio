@@ -28,10 +28,10 @@ table, Pandas and Polars dataframes, NumPy array and AnnData objects, without th
 for explicit format conversion. Read below on the specifics, nomenclature and usage of
 supported table-like formats.
 
-.. autosummary::
-   :toctree: generated/
+.. toctree::
+   :maxdepth: 1
 
-   table_like
+   articles/table_like
 
 
 Data augmentation
@@ -61,7 +61,6 @@ models.
 
 from skbio.table._base import Table, example_table
 from skbio.table._augment import phylomix, compositional_cutmix, aitchison_mixup, mixup
-from skbio.table import _dispatcher as table_like
 
 __all__ = [
     "Table",
@@ -70,5 +69,4 @@ __all__ = [
     "compositional_cutmix",
     "aitchison_mixup",
     "mixup",
-    "table_like",  # only for documentation
 ]
