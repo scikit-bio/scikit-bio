@@ -8,7 +8,6 @@
 
 from functools import partial
 from itertools import chain
-from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,6 @@ from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,
     _quantitative_to_qualitative_counts,
-    _table_to_numpy,
     _validate_table,
 )
 from skbio.util._decorator import deprecated

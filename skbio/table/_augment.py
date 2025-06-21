@@ -17,7 +17,7 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.stats.composition import closure
 from skbio.util import get_rng
-from skbio.table._dispatcher import _ingest_array, _create_table
+from skbio.table._dispatcher import _ingest_table, _create_table
 
 
 def _validate_tree(tree: TreeNode) -> None:
@@ -220,7 +220,7 @@ def mixup(
     samples : int
         The number of new samples to generate.
     label : ndarray
-        The label of the table. The label is expected to has a shape of ``(samples,)``
+        The label of the table. The label is expected to have a shape of ``(samples,)``
         or ``(samples, n_classes)``.
     alpha : float
         The alpha parameter of the beta distribution.
@@ -283,7 +283,7 @@ def mixup(
        Empirical Risk Minimization. arXiv preprint arXiv:1710.09412.
 
     """
-    matrix, row_ids, col_ids = _ingest_array(table)
+    matrix, row_ids, col_ids = _ingest_table(table)
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):
             matrix = closure(matrix)
@@ -421,7 +421,7 @@ def aitchison_mixup(
        20551-20565.
 
     """
-    matrix, _, _ = _ingest_array(table)
+    matrix, _, _ = _ingest_table(table)
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
 
@@ -546,7 +546,7 @@ def compositional_cutmix(
     """
     rng = get_rng(seed)
 
-    matrix, _, _ = _ingest_array(table)
+    matrix, _, _ = _ingest_table(table)
     # If label isn't provided, assume all samples have same class label
     no_out_label = False
     if label is None:
@@ -685,7 +685,7 @@ def phylomix(
 
     """
     rng = get_rng(seed)
-    matrix, row_ids, col_ids = _ingest_array(table)
+    matrix, row_ids, col_ids = _ingest_table(table)
 
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):

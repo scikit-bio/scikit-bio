@@ -20,7 +20,6 @@ from skbio.diversity._util import (_validate_counts_vector,
                                    _validate_taxa_and_tree,
                                    vectorize_counts_and_tree,
                                    _quantitative_to_qualitative_counts,
-                                   _table_to_numpy,
                                    _validate_table)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
@@ -286,15 +285,6 @@ class ValidationTests(TestCase):
 
 
 class TableConversionTests(TestCase):
-    def test_table_to_numpy(self):
-        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
-        exp_ids = ['S1', 'S2', 'S3']
-        exp_feat_ids = ['O1', 'O2']
-        obs_data, obs_ids, obs_feat_ids = _table_to_numpy(example_table)
-        npt.assert_equal(obs_data, exp_data)
-        self.assertEqual(obs_ids, exp_ids)
-        self.assertEqual(obs_feat_ids, exp_feat_ids)
-
     def test_validate_table(self):
         self.assertRaises(ValueError, _validate_table, example_table, ['foo', 'bar'], {})
         self.assertRaises(ValueError, _validate_table, example_table, None,

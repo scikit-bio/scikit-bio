@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_table
 
 
 def cca(
@@ -118,11 +118,11 @@ def cca(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_sample_ids, feature_ids = _ingest_array(
-        y, row_ids=sample_ids, col_ids=feature_ids
+    Y, y_sample_ids, feature_ids = _ingest_table(
+        y, sample_ids=sample_ids, feature_ids=feature_ids
     )
-    X, x_sample_ids, constraint_ids = _ingest_array(
-        x, row_ids=sample_ids, col_ids=constraint_ids
+    X, x_sample_ids, constraint_ids = _ingest_table(
+        x, sample_ids=sample_ids, feature_ids=constraint_ids
     )
 
     # Perform parameter sanity checks

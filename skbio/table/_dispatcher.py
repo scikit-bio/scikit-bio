@@ -11,6 +11,7 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 
+from ._base import _table_to_numpy
 from skbio._config import get_config
 from skbio.util import get_package
 
@@ -20,7 +21,8 @@ def _create_table(data, columns=None, index=None, backend=None):
 
     Parameters
     ----------
-    data : TableLike
+    data : table_like
+        Input data.
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -54,7 +56,8 @@ def _create_table_1d(data, index=None, backend=None):
 
     Parameters
     ----------
-    data : TableLike
+    data : table_like
+        Input data.
     columns : array-like
         Column labels to use if data does not have them.
     index : array-like
@@ -64,7 +67,7 @@ def _create_table_1d(data, index=None, backend=None):
 
     Returns
     -------
-    pd.Series or numpy array
+    pd.Series or 1-D ndarray
         Representation of the data in the appropriate format depending on the
         underlying configuration option.
 
@@ -81,92 +84,6 @@ def _create_table_1d(data, index=None, backend=None):
         return pl.Series(values=data)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")
-
-
-def _ingest_array(input_data, row_ids=None, col_ids=None):
-    """Process an input dataframe, table, or array into individual components.
-
-    Parameters
-    ----------
-    input_data : TableLike
-        The original source of data. May be pandas or polars DataFrame, numpy array,
-        BIOM table, or anndata.AnnData.
-    row_ids : list of str
-        IDs corresponding to the rows of the input data. If ``None``, extraction from
-        input data will be attempted. In the case that IDs may not be extracted, they
-        will be assigned integer values starting at 0.
-    col_ids : list of str
-        IDs corresponding to the columns of the input data. If ``None``, extraction
-        from input data will be atttempted. In the case that IDs may not be extracted,
-        they will be assigned integer values starting at 0.
-
-    Returns
-    -------
-    data_ : ndarray
-        The raw numeric values from the input data.
-    row_ids : list of str
-        The extracted or provided row_ids.
-    col_ids : list of str
-        The extracted or provided col_ids.
-
-    """
-    # pandas DataFrame
-    if isinstance(input_data, pd.DataFrame):
-        data_ = input_data.values
-        row_ids = list(input_data.index) if row_ids is None else row_ids
-        col_ids = list(input_data.columns) if col_ids is None else col_ids
-
-    # NumPy array
-    elif isinstance(input_data, np.ndarray):
-        data_ = input_data
-
-    # BIOM (skbio) Table
-    elif hasattr(input_data, "generated_by"):
-        from skbio.table import Table
-
-        if isinstance(input_data, Table):
-            # BIOM puts samples as columns and features as rows, so need to handle
-            # accordingly
-            # Or, maybe it's better just to enforce that rows must be samples and
-            # columns must be features (observations), then we don't worry about it
-            warn(
-                "BIOM format uses samples as columns and features as rows. Most "
-                "scikit-bio functions expect samples as rows and features as columns. "
-                "Please ensure your input is in the correct orientation.\n",
-                UserWarning,
-                stacklevel=2,
-            )
-            data_ = input_data.to_dataframe().values
-            row_ids = (
-                [str(x) for x in input_data.ids(axis="observation")]
-                if row_ids is None
-                else row_ids
-            )
-            col_ids = [str(x) for x in input_data.ids()] if col_ids is None else col_ids
-
-    # polars DataFrame
-    elif hasattr(input_data, "schema"):
-        # Can't do an explicit check until polars is imported,
-        # so check for schema first
-        pl = get_package("polars")
-        if isinstance(input_data, pl.DataFrame):
-            data_ = input_data.to_numpy()
-            col_ids = list(input_data.schema) if col_ids is None else col_ids
-
-    # AnnData object
-    elif hasattr(input_data, "X"):
-        adt = get_package("anndata")
-        if isinstance(input_data, adt.AnnData):
-            data_ = input_data.X
-            row_ids = list(input_data.obs.index) if row_ids is None else row_ids
-            col_ids = list(input_data.var.index) if col_ids is None else col_ids
-    else:
-        raise TypeError(
-            "Input data must be pandas DataFrame, polars DataFrame, numpy ndarray, "
-            "skbio.Table, or anndata.AnnData."
-        )
-
-    return data_, row_ids, col_ids
 
 
 def _extract_row_ids(input_data, warn_ids=False):
@@ -188,3 +105,72 @@ def _extract_row_ids(input_data, warn_ids=False):
                 )
             )
         return list(range(input_data.shape[0]))
+
+
+def _ingest_table(table, sample_ids=None, feature_ids=None):
+    """Process an input data table into individual components.
+
+    Parameters
+    ----------
+    table : table_like
+        The input data table. May be any of the supported formats.
+    sample_ids : sequence of str, optional
+        IDs corresponding to samples (rows). If ``None``, extraction from input data
+        will be attempted. In the case that IDs may not be extracted, they will be
+        assigned integer values starting at 0.
+    feature_ids : sequence of str, optional
+        IDs corresponding to features (columns). If ``None``, extraction from input
+        data will be atttempted. In the case that IDs may not be extracted, they will
+        be assigned integer values starting at 0.
+
+    Returns
+    -------
+    data : ndarray of shape (n_samples, n_features)
+        The raw numeric values from the input data.
+    sample_ids : list of str
+        The extracted or provided sample IDs.
+    feature_ids : list of str
+        The extracted or provided feature IDs.
+
+    """
+    # pandas DataFrame
+    if isinstance(table, pd.DataFrame):
+        data = table.values
+        sample_ids = list(table.index) if sample_ids is None else sample_ids
+        feature_ids = list(table.columns) if feature_ids is None else feature_ids
+
+    # NumPy array
+    elif isinstance(table, np.ndarray):
+        data = table
+
+    # BIOM (skbio) Table
+    # Check the BIOM-specific attribute "generated_by" before lazy-loading BIOM.
+    elif hasattr(table, "generated_by"):
+        from skbio.table import Table
+
+        if isinstance(table, Table):
+            data, sample_ids, feature_ids = _table_to_numpy(table)
+
+    # Polars DataFrame
+    # Can't do an explicit check until polars is imported, so check for schema first.
+    elif hasattr(table, "schema"):
+        pl = get_package("polars")
+        if isinstance(table, pl.DataFrame):
+            data = table.to_numpy()
+            feature_ids = list(table.schema) if feature_ids is None else feature_ids
+
+    # AnnData object
+    elif hasattr(table, "X"):
+        adt = get_package("anndata")
+        if isinstance(table, adt.AnnData):
+            data = table.X
+            sample_ids = list(table.obs.index) if sample_ids is None else sample_ids
+            feature_ids = list(table.var.index) if feature_ids is None else feature_ids
+
+    else:
+        raise TypeError(
+            "Input data must be pandas DataFrame, polars DataFrame, numpy ndarray, "
+            "skbio.Table, or anndata.AnnData."
+        )
+
+    return data, sample_ids, feature_ids

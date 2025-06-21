@@ -7,12 +7,11 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pds
 from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_table
 
 
 def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
@@ -103,7 +102,9 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    X, row_ids, column_ids = _ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
+    X, row_ids, column_ids = _ingest_table(
+        X, sample_ids=sample_ids, feature_ids=feature_ids
+    )
 
     # Correspondance Analysis
     r, c = X.shape

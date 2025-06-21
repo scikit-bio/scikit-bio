@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections.abc
-
 import numpy as np
 import pandas as pd
 
@@ -250,27 +248,11 @@ def _quantitative_to_qualitative_counts(counts):
     return counts > 0.0
 
 
-def _table_to_numpy(table):
-    """Convert a skbio.table.Table to a dense representation.
-
-    This is a stop-gap solution to allow current Table objects to interoperate
-    with existing driver methods, until they transition to be "sparse" aware.
-    """
-    sample_ids = list(table.ids())
-    obs_ids = list(table.ids(axis="observation"))
-
-    if table.is_empty():
-        counts = np.array([[]] * len(sample_ids))
-    else:
-        counts = table.matrix_data.T.toarray()
-
-    return counts, sample_ids, obs_ids
-
-
 def _validate_table(counts, ids, kwargs):
     """Disallow overriding of sample and feature IDs.
 
     WARNING: this implicitly adds an entry to kwargs IF `tree` is present.
+
     """
     if ids is not None:
         raise ValueError("Cannot provide a `Table` as `counts` and `ids`.")
@@ -278,7 +260,10 @@ def _validate_table(counts, ids, kwargs):
     if "taxa" in kwargs:
         raise ValueError("Cannot provide a `Table` as `counts` and `taxa`.")
 
+    from skbio.table._base import _table_to_numpy
+
     dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
+
     if "tree" in kwargs:
         kwargs["taxa"] = feature_ids
 

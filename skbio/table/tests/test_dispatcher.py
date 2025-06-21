@@ -18,7 +18,7 @@ from skbio.table import Table
 from skbio.util import get_package
 from skbio.util._testing import assert_data_frame_almost_equal
 
-from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._dispatcher import _create_table, _create_table_1d, _ingest_table
 
 
 pl = get_package("polars", raise_error=False)
@@ -240,35 +240,21 @@ class TestBIOM(TestCase):
         self.features = ["f1", "f2", "f3"]
 
     def test_biom_input(self):
-        # need to transpose to ensure proper orientation of data
         tbl = Table(
             self.data.T, observation_ids=self.features, sample_ids=self.samples
-        ).transpose()
-        with self.assertWarnsRegex(
-            UserWarning,
-            "BIOM format uses samples as columns and features as rows. Most "
-            "scikit-bio functions expect samples as rows and features as columns. "
-            "Please ensure your input is in the correct orientation.\n",
-        ):
-            data, row_ids, col_ids = _ingest_array(tbl)
+        )
+        data, row_ids, col_ids = _ingest_table(tbl)
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, self.samples)
         self.assertEqual(col_ids, self.features)
 
     def test_biom_input_pass_ids(self):
-        # need to transpose to ensure proper orientation of data
         tbl = Table(
             self.data.T, observation_ids=self.features, sample_ids=self.samples
-        ).transpose()
-        with self.assertWarnsRegex(
-            UserWarning,
-            "BIOM format uses samples as columns and features as rows. Most "
-            "scikit-bio functions expect samples as rows and features as columns. "
-            "Please ensure your input is in the correct orientation.\n",
-        ):
-            data, row_ids, col_ids = _ingest_array(
-                tbl, row_ids=self.samples, col_ids=self.features
-            )
+        )
+        data, row_ids, col_ids = _ingest_table(
+            tbl, sample_ids=self.samples, feature_ids=self.features
+        )
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, self.samples)
         self.assertEqual(col_ids, self.features)
@@ -283,15 +269,15 @@ class TestAnndata(TestCase):
 
     def test_anndata_input(self):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
-        data, row_ids, col_ids = _ingest_array(tbl)
+        data, row_ids, col_ids = _ingest_table(tbl)
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, list(self.samples.index))
         self.assertEqual(col_ids, list(self.features.index))
 
     def test_anndata_input_pass_ids(self):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
-        data, row_ids, col_ids = _ingest_array(
-            tbl, row_ids=list(self.samples.index), col_ids=list(self.features.index)
+        data, row_ids, col_ids = _ingest_table(
+            tbl, sample_ids=list(self.samples.index), feature_ids=list(self.features.index)
         )
         npt.assert_array_equal(data, self.data)
         self.assertEqual(row_ids, list(self.samples.index))

@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.table._dispatcher import _ingest_array, _create_table, _create_table_1d
+from skbio.table._dispatcher import _ingest_table, _create_table, _create_table_1d
 
 
 def rda(
@@ -115,8 +115,8 @@ def rda(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_rows, y_cols = _ingest_array(y)
-    X, x_rows, x_cols = _ingest_array(x)
+    Y, y_rows, y_cols = _ingest_table(y)
+    X, x_rows, x_cols = _ingest_table(x)
 
     n, p = Y.shape
     n_, m = X.shape
