@@ -17,7 +17,7 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.stats.composition import closure
 from skbio.util import get_rng
-from skbio.table._dispatcher import _ingest_table, _create_table
+from skbio.table._tabular import _ingest_table, _create_table
 
 
 def _validate_tree(tree: TreeNode) -> None:

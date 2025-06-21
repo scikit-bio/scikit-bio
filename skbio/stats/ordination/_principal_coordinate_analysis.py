@@ -17,7 +17,7 @@ from scipy.linalg import eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
-from skbio.table._dispatcher import _create_table, _create_table_1d
+from skbio.table._tabular import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 
