@@ -29,6 +29,126 @@ if pl is not None:
 adt = get_package("anndata", raise_error=False)
 
 
+class TestIngest(TestCase):
+    def setUp(self):
+        self.data = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        self.data_1d = self.data[0]
+        self.samples = ["A", "B", "C"]
+        self.features = ["f1", "f2", "f3"]
+
+    def test_ingest_numpy(self):
+        table = self.data
+        obs = _ingest_table(table)
+        self.assertIs(obs[0], table)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+        obs = _ingest_table(table, self.samples, self.features)
+        self.assertIs(obs[0], table)
+        self.assertIs(obs[1], self.samples)
+        self.assertIs(obs[2], self.features)
+
+    def test_ingest_pandas(self):
+        table = pd.DataFrame(self.data, index=self.samples, columns=self.features)
+        obs = _ingest_table(table)
+        self.assertIsInstance(obs[0], np.ndarray)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], self.samples)
+        self.assertListEqual(obs[2], self.features)
+
+        # no samples / features
+        table = pd.DataFrame(self.data)
+        obs = _ingest_table(table)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], list(range(obs[0].shape[0])))
+        self.assertListEqual(obs[2], list(range(obs[0].shape[1])))
+
+        # override samples / features
+        obs = _ingest_table(table, self.samples, self.features)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], self.samples)
+        self.assertListEqual(obs[2], self.features)
+
+    @skipIf(pl is None, "Polars is not available for unit tests.")
+    def test_ingest_polars(self):
+        table = pl.DataFrame(self.data, schema=self.features)
+        obs = _ingest_table(table, sample_ids=self.samples)
+        self.assertIsInstance(obs[0], np.ndarray)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], self.samples)
+        self.assertListEqual(obs[2], self.features)
+
+        # no samples, override features
+        table = pl.DataFrame(self.data)
+        obs = _ingest_table(table, feature_ids=self.features)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertIsNone(obs[1])
+        self.assertListEqual(obs[2], self.features)
+
+    def test_ingest_biom(self):
+        table = Table(
+            self.data.T, observation_ids=self.features, sample_ids=self.samples
+        )
+        obs = _ingest_table(table)
+        self.assertIsInstance(obs[0], np.ndarray)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], self.samples)
+        self.assertListEqual(obs[2], self.features)
+
+    @skipIf(adt is None, "Anndata is not available for unit tests.")
+    def test_ingest_anndata(self):
+        table = adt.AnnData(
+            self.data,
+            obs=pd.DataFrame(index=self.samples),
+            var=pd.DataFrame(index=self.features),
+        )
+        obs = _ingest_table(table)
+        self.assertIsInstance(obs[0], np.ndarray)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertListEqual(obs[1], self.samples)
+        self.assertListEqual(obs[2], self.features)
+
+    def test_ingest_sequence(self):
+        table = self.data.tolist()
+        obs = _ingest_table(table)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+        obs = _ingest_table(tuple(table))
+        npt.assert_array_equal(obs[0], self.data)
+
+        obs = _ingest_table(tuple(tuple(x) for x in table))
+        npt.assert_array_equal(obs[0], self.data)
+
+    def test_ingest_error(self):
+        msg = "Input table format is not supported."
+        with self.assertRaises(TypeError) as cm:
+            _ingest_table(123)
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            _ingest_table("hello")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input table has less than 2 dimensions."
+        with self.assertRaises(ValueError) as cm:
+            _ingest_table(np.array([1, 2, 3]))
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            _ingest_table([1, 2, 3])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Number of samples in the table does not match provided sample IDs."
+        with self.assertRaises(ValueError) as cm:
+            _ingest_table(self.data, sample_ids=["A", "B"])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Number of samples in the table does not match provided sample IDs."
+        with self.assertRaises(ValueError):
+            _ingest_table(self.data, feature_ids=["f2", "f3"])
+        self.assertEqual(str(cm.exception), msg)
+
+
 class TestPandas(TestCase):
     def setUp(self):
         set_config("output", "pandas")

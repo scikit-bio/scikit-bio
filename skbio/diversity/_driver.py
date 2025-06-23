@@ -8,6 +8,7 @@
 
 from functools import partial
 from itertools import chain
+from inspect import signature
 
 import numpy as np
 import pandas as pd
@@ -28,6 +29,29 @@ from skbio.diversity._util import (
     _validate_table,
 )
 from skbio.util._decorator import deprecated
+from skbio.table._tabular import _ingest_table
+
+
+# set of qualitative (absence/presence-based) metrics, which require Boolean input
+_qualitative_metrics = {
+    "dice",
+    "jaccard",
+    "matching",
+    "rogerstanimoto",
+    "russellrao",
+    "sokalmichener",
+    "sokalsneath",
+    "yule",
+    "unweighted_unifrac",
+}
+
+# set of phylogenetic metrics, which require `tree` and `taxa` parameters
+_phylogenetic_metrics = {
+    "faith_pd",
+    "phydiv",
+    "unweighted_unifrac",
+    "weighted_unifrac",
+}
 
 
 def _get_alpha_diversity_metric_map():
@@ -125,7 +149,7 @@ def get_beta_diversity_metrics():
 
 
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
-    """Compute alpha diversity for one or more samples.
+    r"""Compute alpha diversity for one or more samples.
 
     Parameters
     ----------
@@ -137,8 +161,9 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
         Vector or matrix containing count/abundance data. If a matrix, each row
         should contain counts of taxa in a given sample.
     ids : iterable of strs, optional
-        Identifiers for each sample in ``counts``. By default, samples will be
-        assigned integer identifiers in the order that they were provided.
+        Identifiers for each sample in ``counts``. If not provided, will extract sample
+        IDs from ``counts``, if available, or assign integer identifiers in the order
+        that samples were provided.
     validate: bool, optional
         If ``False``, validation of the input won't be performed. This step can
         be slow, so if validation is run elsewhere it can be disabled here.
@@ -165,46 +190,45 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     See Also
     --------
-    skbio.diversity
-    skbio.diversity.alpha
-    skbio.diversity.get_alpha_diversity_metrics
-    skbio.diversity.beta_diversity
+    alpha
+    get_alpha_diversity_metrics
+    beta_diversity
 
     """
-    if isinstance(counts, skbio.Table):
-        counts, ids = _validate_table(counts, ids, kwargs)
-
-    metric_map = _get_alpha_diversity_metric_map()
-
+    taxa = kwargs.pop("taxa", None)
+    counts, ids, taxa = _ingest_table(counts, ids, taxa)
     if validate:
-        counts = _validate_counts_matrix(counts, ids=ids)
+        counts = _validate_counts_matrix(counts)
 
-    if metric == "faith_pd":
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        counts_by_node, branch_lengths = _setup_pd(
-            counts, taxa, tree, validate, rooted=True, single_sample=False
+    # phylogenetic diversity (call on entire matrix)
+    if metric in ("faith_pd", "phydiv"):
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
+        is_faith_pd = metric == "faith_pd"
+        counts, lengths = _setup_pd(
+            counts, taxa, tree, validate, rooted=is_faith_pd, single_sample=False
         )
-        counts = counts_by_node
-        metric = partial(_faith_pd, branch_lengths=branch_lengths, **kwargs)
+        if is_faith_pd:
+            func = _faith_pd
+        else:
+            func = _phydiv
+            kwargs.setdefault("rooted", tree._is_rooted())
+            kwargs.setdefault("weight", False)
+        metric = partial(func, branch_lengths=lengths, **kwargs)
 
-    elif metric == "phydiv":
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        counts_by_node, branch_lengths = _setup_pd(
-            counts, taxa, tree, validate, rooted=False, single_sample=False
-        )
-        counts = counts_by_node
-        if "rooted" not in kwargs:
-            kwargs["rooted"] = len(tree.root().children) == 2
-        if "weight" not in kwargs:
-            kwargs["weight"] = False
-        metric = partial(_phydiv, branch_lengths=branch_lengths, **kwargs)
-
-    elif callable(metric):
-        metric = partial(metric, **kwargs)
-    elif metric in metric_map:
-        metric = partial(metric_map[metric], **kwargs)
+    # other metrics (call on each sample)
     else:
-        raise ValueError("Unknown metric provided: %r." % metric)
+        if isinstance(metric, str):
+            try:
+                metric = _get_alpha_diversity_metric_map()[metric]
+            except KeyError:
+                raise ValueError(f"Unknown metric name provided: '{metric}'.")
+        elif not callable(metric):
+            raise ValueError(f"Invalid metric provided: {metric!r}.")
+
+        # add "taxa" back to parameters
+        if taxa is not None and "taxa" in signature(metric).parameters:
+            kwargs["taxa"] = taxa
+        metric = partial(metric, **kwargs)
 
     # kwargs is provided here so an error is raised on extra kwargs
     results = [metric(c, **kwargs) for c in counts]
@@ -258,12 +282,16 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
 
     See Also
     --------
-    skbio.diversity.beta_diversity
-    skbio.diversity.get_beta_diversity_metrics
+    beta_diversity
+    get_beta_diversity_metrics
 
     """
+    taxa = kwargs.pop("taxa", None)
+    counts, ids, taxa = _ingest_table(counts, ids, taxa)
     if validate:
-        counts = _validate_counts_matrix(counts, ids=ids)
+        counts = _validate_counts_matrix(counts)
+    if metric in _qualitative_metrics:
+        counts = _quantitative_to_qualitative_counts(counts)
 
     id_pairs = list(id_pairs)
     all_ids_in_pairs = set(chain.from_iterable(id_pairs))
@@ -275,21 +303,18 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         raise ValueError("A duplicate or a self-self pair was observed.")
 
     if metric == "unweighted_unifrac":
-        counts = _quantitative_to_qualitative_counts(counts)
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts_by_node = _setup_multiple_unweighted_unifrac(
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
+        metric, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
-        counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts_by_node = _setup_multiple_weighted_unifrac(
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
+        metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
-        counts = counts_by_node
     elif callable(metric):
         metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
@@ -341,22 +366,10 @@ _valid_beta_metrics = [
 ]
 
 
-_qualitative_beta_metrics = [
-    "dice",
-    "jaccard",
-    "matching",
-    "rogerstanimoto",
-    "russellrao",
-    "sokalmichener",
-    "sokalsneath",
-    "yule",
-]
-
-
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):
-    """Compute distances between all pairs of samples.
+    r"""Compute distances between all pairs of samples.
 
     Parameters
     ----------
@@ -405,46 +418,39 @@ def beta_diversity(
 
     See Also
     --------
-    skbio.diversity
-    skbio.diversity.beta
-    skbio.diversity.get_beta_diversity_metrics
-    skbio.diversity.alpha_diversity
+    beta
+    get_beta_diversity_metrics
+    alpha_diversity
     scipy.spatial.distance.pdist
     sklearn.metrics.pairwise_distances
 
     """
-    if isinstance(counts, skbio.Table):
-        counts, ids = _validate_table(counts, ids, kwargs)
-
-    if isinstance(counts, pd.DataFrame) and ids is None:
-        ids = list(counts.index)
-
-    if validate:
-        counts = _validate_counts_matrix(counts, ids=ids)
-
+    taxa = kwargs.pop("taxa", None)
+    counts, ids, taxa = _ingest_table(counts, ids, taxa)
     if 0 in counts.shape:
         # if the input counts are empty, return an empty DistanceMatrix.
         # this check is not necessary for scipy.spatial.distance.pdist but
         # it is necessary for sklearn.metrics.pairwise_distances where the
         # latter raises an exception over empty data.
         return DistanceMatrix(np.zeros((len(ids), len(ids))), ids)
+    if validate:
+        counts = _validate_counts_matrix(counts)
+    if metric in _qualitative_metrics:
+        counts = _quantitative_to_qualitative_counts(counts)
+    if metric in _phylogenetic_metrics:
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
-        counts = _quantitative_to_qualitative_counts(counts)
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts_by_node = _setup_multiple_unweighted_unifrac(
+        metric, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
-        counts = counts_by_node
     elif metric == "weighted_unifrac":
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(counts, **kwargs)
-        metric, counts_by_node = _setup_multiple_weighted_unifrac(
+        metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
-        counts = counts_by_node
     elif metric == "manhattan":
         metric = "cityblock"
     elif metric == "mahalanobis":
@@ -455,12 +461,13 @@ def beta_diversity(
                 f"The input has {nrow} samples and {ncol} features."
             )
     elif callable(metric):
+        # add "taxa" back to parameters
+        if taxa is not None and "taxa" in signature(metric).parameters:
+            kwargs["taxa"] = taxa
         metric = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
-    elif metric in _qualitative_beta_metrics:
-        counts = _quantitative_to_qualitative_counts(counts)
     elif metric not in _valid_beta_metrics:
         raise ValueError(
             "Metric %s is not available. "
@@ -470,10 +477,6 @@ def beta_diversity(
             "can be provided as functions.\n Available metrics are: %s"
             % (metric, ", ".join(_valid_beta_metrics))
         )
-    else:
-        # metric is a string that scikit-bio doesn't know about, for
-        # example one of the SciPy metrics
-        pass
 
     if pairwise_func is None:
         pairwise_func = pdist

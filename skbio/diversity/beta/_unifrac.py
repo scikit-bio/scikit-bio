@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import functools
+from functools import partial
 
 import numpy as np
 
@@ -525,7 +525,7 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
         counts, taxa, tree, validate
     )
 
-    f = functools.partial(_unweighted_unifrac, branch_lengths=branch_lengths)
+    f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node
 

@@ -7,10 +7,61 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
+
+
+def _validate_counts(counts, cast_int=False):
+    """Validate and convert input to an acceptable counts vector type.
+
+    Parameters
+    ----------
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
+    cast_int : bool, optional
+        Whether cast values into integers, if not already. Default is False.
+
+    Returns
+    -------
+    ndarray of shape (n_taxa,) or (n_samples, n_taxa)
+        Valid counts vector or matrix.
+
+    Raises
+    ------
+    ValueError
+        If input array has an invalid data type.
+    ValueError
+        If input array contains negative values.
+
+    Notes
+    -----
+    This function will return the original ``counts`` if it is already a valid counts
+    vector. Otherwise it will return an edited copy that is valid.
+
+    The data type of counts must be any subtype of ``np.integer`` (integers) or
+    ``np.floating`` (floating-point numbers; excluding complex numbers) [1]_.
+
+    References
+    ----------
+    .. [1] https://numpy.org/doc/stable/reference/arrays.scalars.html
+
+    """
+    counts = np.asarray(counts)
+
+    dtype = counts.dtype
+    if np.issubdtype(dtype, np.floating):
+        if cast_int:
+            counts = counts.astype(int)
+    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
+        raise ValueError("Counts must be integers or floating-point numbers.")
+
+    # This is more efficient that `(counts < 0).any()`, but a more efficient way is to
+    # iterate by element and exit early on the first negative value.
+    if counts.size > 0 and counts.min() < 0:
+        raise ValueError("Counts cannot contain negative values.")
+
+    return counts
 
 
 def _validate_counts_vector(counts, cast_int=False):
@@ -31,58 +82,22 @@ def _validate_counts_vector(counts, cast_int=False):
     Raises
     ------
     ValueError
-        If input array has an invalid data type.
-    ValueError
-        If input array is not 1-D.
-    ValueError
-        If there are negative values.
-
-    Notes
-    -----
-    This function will return the original ``counts`` if it is already a valid counts
-    vector. Otherwise it will return an edited copy that is valid.
-
-    The data type of counts must be any subtype of ``np.integer`` (integers) or
-    ``np.floating`` (floating-point numbers; excluding complex numbers) [1]_.
-
-    See Also
-    --------
-    _validate_counts_matrix
-
-    References
-    ----------
-    .. [1] https://numpy.org/doc/stable/reference/arrays.scalars.html
+        If counts has more than 1 dimension.
 
     """
-    counts = np.asarray(counts)
-
-    # counts must be int or float
-    if np.issubdtype(dtype := counts.dtype, np.floating):
-        # cast values into integers
-        if cast_int:
-            counts = counts.astype(int)
-
-    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
-        raise ValueError("Counts must be integers or floating-point numbers.")
-
+    counts = _validate_counts(counts, cast_int=cast_int)
     if counts.ndim != 1:
-        raise ValueError("Only 1-D vectors are supported.")
-
-    if (counts < 0).any():
-        raise ValueError("Counts vector cannot contain negative values.")
-
+        raise ValueError("`counts` must be a 1-D array (vector).")
     return counts
 
 
-def _validate_counts_matrix(counts, ids=None, cast_int=False):
+def _validate_counts_matrix(counts, cast_int=False):
     """Validate and convert input to an acceptable counts matrix type.
 
     Parameters
     ----------
     counts : array_like of shape (n_samples, n_taxa)
         Matrix of counts.
-    ids : array_like of shape (n_samples,), optional
-        Sample IDs to check against counts dimensions.
     cast_int : bool, optional
         Whether cast values into integers, if not already. Default is False.
 
@@ -91,49 +106,20 @@ def _validate_counts_matrix(counts, ids=None, cast_int=False):
     ndarray of shape (n_samples, n_taxa)
         Valid counts matrix.
 
-    See Also
-    --------
-    _validate_counts_vector
+    Raises
+    ------
+    ValueError
+        If counts has more than 2 dimensions.
 
     """
-    lenerr = "Number of rows in `counts` must be equal to number of provided `ids`."
-
-    # handle pandas data frame
-    if isinstance(counts, pd.DataFrame):
-        if ids is not None and counts.shape[0] != len(ids):
-            raise ValueError(lenerr)
-        counts = counts.to_numpy()
-
-    else:
-        # convert counts into a 2-D array
-        # will raise ValueError if row lengths are unequal
-        counts = np.atleast_2d(counts)
-
-        if counts.ndim > 2:
-            raise ValueError(
-                "Only 1-D and 2-D array-like objects can be provided as input. "
-                f"Provided object has {counts.ndim} dimensions."
-            )
-
-        if ids is not None and counts.shape[0] != len(ids):
-            raise ValueError(lenerr)
-
-    # counts must be int or float
-    if np.issubdtype(dtype := counts.dtype, np.floating):
-        # cast values into integers
-        if cast_int:
-            counts = counts.astype(int)
-
-    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
-        raise ValueError("Counts must be integers or floating-point numbers.")
-
-    # negative values are not allowed
-    # TODO: `counts < 0` creates a Boolean array of the same shape, which could be
-    # memory-inefficient if the input array is very large. Should optimize.
-    # See: https://stackoverflow.com/questions/75553212/
-    if (counts < 0).any():
-        raise ValueError("Counts cannot contain negative values.")
-
+    counts = _validate_counts(counts, cast_int=cast_int)
+    counts = np.atleast_2d(counts)
+    if counts.ndim > 2:
+        raise ValueError("`counts` have more than 2 dimensions.")
+        # raise ValueError(
+        #     "Only 1-D and 2-D array-like objects can be provided as input. "
+        #     f"Provided object has {counts.ndim} dimensions."
+        # )
     return counts
 
 
@@ -231,15 +217,13 @@ def vectorize_counts_and_tree(counts, taxa, tree):
     return counts_by_node.T, tree_index, branch_lengths
 
 
-def _get_phylogenetic_kwargs(counts, **kwargs):
-    try:
-        taxa = kwargs.pop("taxa")
-    except KeyError:
-        raise ValueError("``taxa`` is required for phylogenetic diversity metrics.")
+def _get_phylogenetic_kwargs(kwargs, taxa):
+    if taxa is None:
+        raise ValueError("`taxa` is required for phylogenetic diversity metrics.")
     try:
         tree = kwargs.pop("tree")
     except KeyError:
-        raise ValueError("``tree`` is required for phylogenetic diversity metrics.")
+        raise ValueError("`tree` is required for phylogenetic diversity metrics.")
 
     return taxa, tree, kwargs
 

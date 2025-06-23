@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
@@ -107,7 +108,7 @@ def _extract_row_ids(input_data, warn_ids=False):
         return list(range(input_data.shape[0]))
 
 
-def _ingest_table(table, sample_ids=None, feature_ids=None):
+def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
     """Process an input data table into individual components.
 
     Parameters
@@ -122,6 +123,9 @@ def _ingest_table(table, sample_ids=None, feature_ids=None):
         IDs corresponding to features (columns). If ``None``, extraction from input
         data will be atttempted. In the case that IDs may not be extracted, they will
         be assigned integer values starting at 0.
+    expand : bool, optional
+        If table has only one dimension and this parameter is True, expand the data to
+        two dimensions (i.e., a single-row matrix). Otherwise, raise an error.
 
     Returns
     -------
@@ -132,16 +136,30 @@ def _ingest_table(table, sample_ids=None, feature_ids=None):
     feature_ids : list of str
         The extracted or provided feature IDs.
 
+    Raises
+    ------
+    TypeError
+        If input table format is not supported.
+    ValueError
+        If number of provided sample/feature IDs doesn't match table dimensions.
+
     """
-    # pandas DataFrame
-    if isinstance(table, pd.DataFrame):
-        data = table.values
-        sample_ids = list(table.index) if sample_ids is None else sample_ids
-        feature_ids = list(table.columns) if feature_ids is None else feature_ids
+    data, samples, features = None, None, None
+
+    # Python (nested) list, tuple, etc.
+    if isinstance(table, Sequence) and not isinstance(table, (str, bytes)):
+        data = np.asarray(table)
 
     # NumPy array
+    # to be replaced with `aac.is_array_api_obj(table)`
     elif isinstance(table, np.ndarray):
         data = table
+
+    # pandas DataFrame
+    elif isinstance(table, pd.DataFrame):
+        data = table.to_numpy()
+        samples = table.index
+        features = table.columns
 
     # BIOM (skbio) Table
     # Check the BIOM-specific attribute "generated_by" before lazy-loading BIOM.
@@ -149,7 +167,7 @@ def _ingest_table(table, sample_ids=None, feature_ids=None):
         from skbio.table import Table
 
         if isinstance(table, Table):
-            data, sample_ids, feature_ids = _table_to_numpy(table)
+            data, samples, features = _table_to_numpy(table)
 
     # Polars DataFrame
     # Can't do an explicit check until polars is imported, so check for schema first.
@@ -157,20 +175,101 @@ def _ingest_table(table, sample_ids=None, feature_ids=None):
         pl = get_package("polars")
         if isinstance(table, pl.DataFrame):
             data = table.to_numpy()
-            feature_ids = list(table.schema) if feature_ids is None else feature_ids
+            features = table.schema
 
     # AnnData object
     elif hasattr(table, "X"):
         adt = get_package("anndata")
         if isinstance(table, adt.AnnData):
             data = table.X
-            sample_ids = list(table.obs.index) if sample_ids is None else sample_ids
-            feature_ids = list(table.var.index) if feature_ids is None else feature_ids
+            samples = table.obs.index
+            features = table.var.index
 
-    else:
-        raise TypeError(
-            "Input data must be pandas DataFrame, polars DataFrame, numpy ndarray, "
-            "skbio.Table, or anndata.AnnData."
-        )
+    if data is None:
+        raise TypeError("Input table format is not supported.")
+    if data.ndim == 1 and expand:
+        data = data.reshape(1, -1)
+    if data.ndim < 2:
+        raise ValueError("Input table has less than 2 dimensions.")
+
+    lenerr = "Number of {} in the table does not match provided {} IDs."
+    if sample_ids is None:
+        sample_ids = samples
+    elif len(sample_ids) != data.shape[0]:
+        raise ValueError(lenerr.format("samples", "sample"))
+    if feature_ids is None:
+        feature_ids = features
+    elif len(feature_ids) != data.shape[1]:
+        raise ValueError(lenerr.format("features", "feature"))
+
+    # cast to lists
+    if sample_ids is not None and not isinstance(sample_ids, list):
+        sample_ids = list(sample_ids)
+    if feature_ids is not None and not isinstance(feature_ids, list):
+        feature_ids = list(feature_ids)
 
     return data, sample_ids, feature_ids
+
+
+def _ingest_vector(vector, ids=None):
+    """Process an input vector into individual components.
+
+    Parameters
+    ----------
+    vector : vector_like
+        The input vector. May be any of the supported formats.
+    ids : sequence of str, optional
+        Positional IDs of the vector. If ``None``, extraction from input vector will
+        will be attempted.
+
+    Returns
+    -------
+    data : ndarray of shape (n,)
+        The raw numeric values from the input data.
+    ids : list of str
+        The extracted or provided IDs.
+
+    Raises
+    ------
+    TypeError
+        If input table format is not supported.
+    ValueError
+        If number of provided IDs doesn't match vector length.
+
+    See Also
+    --------
+    _ingest_table
+
+    """
+    lenerr = "Vector has a length of {} but {} IDs are provided."
+    data, index = None, None
+
+    # Python (nested) list, tuple, etc.
+    if isinstance(vector, Sequence) and not isinstance(vector, (str, bytes)):
+        data = np.asarray(vector)
+
+    # NumPy array
+    # to be replaced with `aac.is_array_api_obj(table)`
+    elif isinstance(vector, np.ndarray):
+        data = vector
+
+    # pandas Series
+    elif isinstance(vector, pd.Series):
+        data = vector.to_numpy()
+        if ids is None:
+            index = vector.index
+    else:
+        raise TypeError("Input vector format is not supported.")
+    if data.ndim < 1:
+        raise ValueError("Input vector has less than 1 dimension.")
+
+    if ids is None:
+        if index is not None:
+            ids = index.tolist()
+    else:
+        if not isinstance(ids, list):
+            ids = list(ids)
+        if len(ids) != data.shape[0]:
+            raise ValueError(lenerr.format(data.shape[0], len(ids)))
+
+    return data, ids
