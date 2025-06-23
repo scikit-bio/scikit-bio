@@ -11,8 +11,6 @@ on:
 env:
   latest_python: "3.13"
   supported_pythons: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
-  miniforge_version: "23.11.0-0"
-  miniforge_variant: "Mambaforge"
 
 jobs:
   conf:
@@ -43,8 +41,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -67,8 +63,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -112,8 +106,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -162,8 +154,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python_version }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
