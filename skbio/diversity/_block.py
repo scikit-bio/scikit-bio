@@ -11,6 +11,7 @@ import numpy as np
 from skbio.diversity._driver import partial_beta_diversity
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
+from skbio.table._tabular import _ingest_table
 
 
 def _generate_id_blocks(ids, k=64):
@@ -304,16 +305,20 @@ def block_beta_diversity(
 
     See Also
     --------
-    skbio.diversity.beta_diversity
-    skbio.diversity.partial_beta_diversity
+    beta_diversity
+    partial_beta_diversity
 
     References
     ----------
     .. [1] http://www.earthmicrobiome.org/
 
     """
+    if "taxa" in kwargs:
+        counts, ids, kwargs["taxa"] = _ingest_table(counts, ids, kwargs["taxa"])
+    else:
+        counts, ids, _ = _ingest_table(counts, ids)
     if validate:
-        counts = _validate_counts_matrix(counts, ids=ids)
+        counts = _validate_counts_matrix(counts)
 
     if reduce_f is None:
         reduce_f = _reduce
@@ -321,10 +326,8 @@ def block_beta_diversity(
     if map_f is None:
         map_f = _map
 
-    # The block method uses numeric IDs to take advantage of fancy indexing
-    # with numpy.
-    tmp_ids = np.arange(len(counts))
-    kwargs["ids"] = tmp_ids
+    # The block method uses numeric IDs to take advantage of NumPy's advanced indexing.
+    kwargs["ids"] = np.arange(counts.shape[0])
 
     kwargs["metric"] = metric
     kwargs["counts"] = counts

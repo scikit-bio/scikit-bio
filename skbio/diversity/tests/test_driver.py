@@ -28,7 +28,7 @@ from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (
     _qualitative_metrics,
-    _valid_beta_metrics,
+    _pdist_metrics,
 )
 
 
@@ -353,7 +353,7 @@ class BetaDiversityTests(TestCase):
 
     def test_available_metrics(self):
 
-        for metric in _valid_beta_metrics:
+        for metric in _pdist_metrics:
             try:
                 beta_diversity(metric, self.table3)
             except Exception as exc:
@@ -375,7 +375,7 @@ class BetaDiversityTests(TestCase):
     def test_qualitative_bug_issue_1549(self):
         as_presence_absence = np.asarray(self.table3) > 0
 
-        for metric in _valid_beta_metrics:
+        for metric in _pdist_metrics:
             obs_mat = beta_diversity(metric, self.table3)
             obs_presence_absence = beta_diversity(metric, as_presence_absence)
             if metric in _qualitative_metrics:
@@ -385,9 +385,9 @@ class BetaDiversityTests(TestCase):
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        msg = "Number of samples in the table does not match provided sample IDs."
+        msg = "Input table has 3 samples whereas 2 sample IDs were provided."
         with self.assertRaises(ValueError) as cm:
-            beta_diversity(self.table1, list('AB'), 'euclidean')
+            beta_diversity('euclidean', self.table1, list('AB'))
         self.assertEqual(str(cm.exception), msg)
 
         # unknown metric provided
@@ -396,9 +396,10 @@ class BetaDiversityTests(TestCase):
             beta_diversity('not-a-metric', self.table1)
 
         # 3-D list provided as input
-        error_msg = (r"Only 1-D and 2-D")
-        with self.assertRaisesRegex(ValueError, error_msg):
+        msg = "`counts` has 3 dimensions whereas up to 2 dimensions are allowed."
+        with self.assertRaises(ValueError) as cm:
             beta_diversity('euclidean', [[[43]]])
+        self.assertEqual(str(cm.exception), msg)
 
         # negative counts
         error_msg = r"negative values."
@@ -425,14 +426,24 @@ class BetaDiversityTests(TestCase):
                            not_a_real_kwarg=42.0, tree=self.tree1,
                            taxa=['O1', 'O2', 'O3'])
 
-        error_msg = r"`counts` and `ids`"
-        with self.assertRaisesRegex(ValueError, error_msg):
+        # non-matching id or taxon counts
+        msg = "Input table has 3 samples whereas 2 sample IDs were provided."
+        with self.assertRaises(ValueError) as cm:
             beta_diversity('euclidean', example_table, ids=['foo', 'bar'])
+        self.assertEqual(str(cm.exception), msg)
 
-        error_msg = r"`counts` and `taxa`"
-        with self.assertRaisesRegex(ValueError, error_msg):
+        msg = "Input table has 2 features whereas 3 feature IDs were provided."
+        with self.assertRaises(ValueError) as cm:
+            beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar', 'qux'],
+                           tree=self.tree1)
+        self.assertEqual(str(cm.exception), msg)
+
+        # non-matching taxa and tree
+        msg = "2 taxa are not present as tip names in tree."
+        with self.assertRaises(MissingNodeError) as cm:
             beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
                            tree=self.tree1)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_invalid_input_mahalanobis(self):
         error_msg = (r"requires more samples than features")

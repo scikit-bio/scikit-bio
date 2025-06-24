@@ -112,14 +112,11 @@ def _validate_counts_matrix(counts, cast_int=False):
         If counts has more than 2 dimensions.
 
     """
+    msg = "`counts` has {} dimensions whereas up to 2 dimensions are allowed."
     counts = _validate_counts(counts, cast_int=cast_int)
     counts = np.atleast_2d(counts)
     if counts.ndim > 2:
-        raise ValueError("`counts` have more than 2 dimensions.")
-        # raise ValueError(
-        #     "Only 1-D and 2-D array-like objects can be provided as input. "
-        #     f"Provided object has {counts.ndim} dimensions."
-        # )
+        raise ValueError(msg.format(counts.ndim))
     return counts
 
 
@@ -153,17 +150,14 @@ def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
             tip_names.append(e.name)
     set_tip_names = set(tip_names)
     if len(tip_names) != len(set_tip_names):
-        raise DuplicateNodeError("All tip names must be unique.")
+        raise DuplicateNodeError("All tip names in tree must be unique.")
 
     if np.array([branch is None for branch in branch_lengths]).any():
-        raise ValueError("All non-root nodes in ``tree`` must have a branch length.")
-    missing_tip_names = set_taxa - set_tip_names
-    if missing_tip_names != set():
-        n_missing_tip_names = len(missing_tip_names)
+        raise ValueError("All non-root nodes in tree must have a branch length.")
+
+    if n_missing := len(set_taxa - set_tip_names):
         raise MissingNodeError(
-            "All ``taxa`` must be present as tip names "
-            "in ``tree``. ``taxa`` not corresponding to "
-            "tip names (n=%d): %s" % (n_missing_tip_names, " ".join(missing_tip_names))
+            f"{n_missing} taxa are not present as tip names in tree."
         )
 
 
@@ -228,7 +222,7 @@ def _get_phylogenetic_kwargs(kwargs, taxa):
     return taxa, tree, kwargs
 
 
-def _quantitative_to_qualitative_counts(counts):
+def _qualify_counts(counts):
     return counts > 0.0
 
 

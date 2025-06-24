@@ -15,12 +15,14 @@ import numpy.testing as npt
 
 from skbio import TreeNode
 from skbio.table import example_table
-from skbio.diversity._util import (_validate_counts_vector,
-                                   _validate_counts_matrix,
-                                   _validate_taxa_and_tree,
-                                   vectorize_counts_and_tree,
-                                   _quantitative_to_qualitative_counts,
-                                   _validate_table)
+from skbio.diversity._util import (
+    _validate_counts_vector,
+    _validate_counts_matrix,
+    _validate_taxa_and_tree,
+    vectorize_counts_and_tree,
+    _qualify_counts,
+    _validate_table
+)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 
 
@@ -131,17 +133,6 @@ class ValidationTests(TestCase):
             _validate_counts_matrix([[0, 1, 1, 0, 2], [0, 0, 2, -1, 3]])
         with self.assertRaises(ValueError):
             _validate_counts_matrix([[0, 0, 2, -1, 3], [0, 1, 1, 0, 2]])
-
-    def test_validate_counts_matrix_unmatching_ids(self):
-        with self.assertRaises(ValueError):
-            _validate_counts_matrix([[0, 1, 1, 0, 2],
-                                     [0, 0, 2, 1, 3],
-                                     [1, 1, 1, 1, 1]], ids=['a', 'b'])
-        with self.assertRaises(ValueError):
-            obs = _validate_counts_matrix(pd.DataFrame(
-                [[0, 1, 1, 0, 2],
-                 [0, 0, 2, 1, 3],
-                 [1, 1, 1, 1, 1]]), ids=['a', 'b'])
 
     def test_validate_counts_matrix_unequal_lengths(self):
         # len of vectors not equal
@@ -272,15 +263,15 @@ class ValidationTests(TestCase):
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 
-    def test_quantitative_to_qualitative_counts(self):
+    def test_qualify_counts(self):
         counts = np.array([[0, 1], [1, 5], [10, 1]])
         exp = np.array([[False, True], [True, True], [True, True]])
-        obs = _quantitative_to_qualitative_counts(counts)
+        obs = _qualify_counts(counts)
         npt.assert_equal(obs, exp)
 
         counts = np.array([[0, 0, 0], [1, 0, 42]])
         exp = np.array([[False, False, False], [True, False, True]])
-        obs = _quantitative_to_qualitative_counts(counts)
+        obs = _qualify_counts(counts)
         npt.assert_equal(obs, exp)
 
 

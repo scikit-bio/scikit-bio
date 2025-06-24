@@ -8,11 +8,10 @@
 
 from functools import partial
 from itertools import chain
-from inspect import signature
+from inspect import signature, getmembers, isfunction
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist
 
 import skbio
 from skbio.diversity.alpha._pd import _faith_pd, _phydiv, _setup_pd
@@ -25,14 +24,13 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
     _validate_counts_matrix,
     _get_phylogenetic_kwargs,
-    _quantitative_to_qualitative_counts,
-    _validate_table,
+    _qualify_counts,
 )
 from skbio.util._decorator import deprecated
 from skbio.table._tabular import _ingest_table
 
 
-# set of qualitative (absence/presence-based) metrics, which require Boolean input
+# Qualitative (absence/presence-based) metrics, which require Boolean input.
 _qualitative_metrics = {
     "dice",
     "jaccard",
@@ -45,64 +43,38 @@ _qualitative_metrics = {
     "unweighted_unifrac",
 }
 
-# set of phylogenetic metrics, which require `tree` and `taxa` parameters
-_phylogenetic_metrics = {
-    "faith_pd",
-    "phydiv",
-    "unweighted_unifrac",
-    "weighted_unifrac",
+# Beta diversity metrics implemented in SciPy's pdist.
+_pdist_metrics = {
+    "euclidean",
+    "cityblock",
+    "braycurtis",
+    "canberra",
+    "chebyshev",
+    "correlation",
+    "cosine",
+    "dice",
+    "hamming",
+    "jaccard",
+    "jensenshannon",
+    "mahalanobis",
+    "manhattan",  # aliases to "cityblock" in beta_diversity
+    "matching",
+    "minkowski",
+    "rogerstanimoto",
+    "russellrao",
+    "seuclidean",
+    "sokalmichener",
+    "sokalsneath",
+    "sqeuclidean",
+    "yule",
 }
 
 
-def _get_alpha_diversity_metric_map():
-    return {
-        "ace": skbio.diversity.alpha.ace,
-        "chao1": skbio.diversity.alpha.chao1,
-        "chao1_ci": skbio.diversity.alpha.chao1_ci,
-        "berger_parker_d": skbio.diversity.alpha.berger_parker_d,
-        "brillouin_d": skbio.diversity.alpha.brillouin_d,
-        "dominance": skbio.diversity.alpha.dominance,
-        "doubles": skbio.diversity.alpha.doubles,
-        "enspie": skbio.diversity.alpha.enspie,
-        "esty_ci": skbio.diversity.alpha.esty_ci,
-        "faith_pd": skbio.diversity.alpha.faith_pd,
-        "fisher_alpha": skbio.diversity.alpha.fisher_alpha,
-        "gini_index": skbio.diversity.alpha.gini_index,
-        "goods_coverage": skbio.diversity.alpha.goods_coverage,
-        "inv_simpson": skbio.diversity.alpha.inv_simpson,
-        "hill": skbio.diversity.alpha.hill,
-        "heip_e": skbio.diversity.alpha.heip_e,
-        "kempton_taylor_q": skbio.diversity.alpha.kempton_taylor_q,
-        "lladser_ci": skbio.diversity.alpha.lladser_ci,
-        "lladser_pe": skbio.diversity.alpha.lladser_pe,
-        "margalef": skbio.diversity.alpha.margalef,
-        "mcintosh_d": skbio.diversity.alpha.mcintosh_d,
-        "mcintosh_e": skbio.diversity.alpha.mcintosh_e,
-        "menhinick": skbio.diversity.alpha.menhinick,
-        "michaelis_menten_fit": skbio.diversity.alpha.michaelis_menten_fit,
-        "observed_features": skbio.diversity.alpha.observed_features,
-        "observed_otus": skbio.diversity.alpha.observed_otus,
-        "osd": skbio.diversity.alpha.osd,
-        "phydiv": skbio.diversity.alpha.phydiv,
-        "pielou_e": skbio.diversity.alpha.pielou_e,
-        "renyi": skbio.diversity.alpha.renyi,
-        "robbins": skbio.diversity.alpha.robbins,
-        "shannon": skbio.diversity.alpha.shannon,
-        "simpson": skbio.diversity.alpha.simpson,
-        "simpson_d": skbio.diversity.alpha.simpson_d,
-        "simpson_e": skbio.diversity.alpha.simpson_e,
-        "singles": skbio.diversity.alpha.singles,
-        "sobs": skbio.diversity.alpha.sobs,
-        "strong": skbio.diversity.alpha.strong,
-        "tsallis": skbio.diversity.alpha.tsallis,
-    }
-
-
 def get_alpha_diversity_metrics():
-    """List scikit-bio's alpha diversity metrics.
+    r"""List scikit-bio's alpha diversity metrics.
 
     The alpha diversity metrics listed here can be passed as metrics to
-    ``skbio.diversity.alpha_diversity``.
+    :func:`alpha_diversity`.
 
     Returns
     -------
@@ -112,19 +84,19 @@ def get_alpha_diversity_metrics():
 
     See Also
     --------
+    alpha
     alpha_diversity
     get_beta_diversity_metrics
 
     """
-    metrics = _get_alpha_diversity_metric_map()
-    return sorted(metrics.keys())
+    return [x[0] for x in getmembers(skbio.diversity.alpha, isfunction)]
 
 
 def get_beta_diversity_metrics():
     """List scikit-bio's beta diversity metrics.
 
     The beta diversity metrics listed here can be passed as metrics to
-    ``skbio.diversity.beta_diversity``.
+    :func:`beta_diversity`.
 
     Returns
     -------
@@ -142,10 +114,10 @@ def get_beta_diversity_metrics():
     -----
     SciPy implements many additional beta diversity metrics that are not
     included in this list. See documentation for
-    ``scipy.spatial.distance.pdist`` for more details.
+    SciPy's :func:`~scipy.spatial.distance.pdist` for more details.
 
     """
-    return sorted(_valid_beta_metrics + ["unweighted_unifrac", "weighted_unifrac"])
+    return sorted(_pdist_metrics.union(["unweighted_unifrac", "weighted_unifrac"]))
 
 
 def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
@@ -153,7 +125,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
 
     Parameters
     ----------
-    metric : str, callable
+    metric : str or callable
         The alpha diversity metric to apply to the sample(s). Passing metric as
         a string is preferable as this often results in an optimized version of
         the metric being used.
@@ -218,10 +190,13 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     # other metrics (call on each sample)
     else:
         if isinstance(metric, str):
-            try:
-                metric = _get_alpha_diversity_metric_map()[metric]
-            except KeyError:
-                raise ValueError(f"Unknown metric name provided: '{metric}'.")
+            metric = getattr(skbio.diversity.alpha, metric, None)
+            if metric is None or not isfunction(metric):
+                raise ValueError(
+                    f'"{metric}" is not an available alpha diversity metric name. '
+                    "Refer to `get_alpha_diversity_metrics` for a list of available "
+                    "metrics."
+                )
         elif not callable(metric):
             raise ValueError(f"Invalid metric provided: {metric!r}.")
 
@@ -242,7 +217,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     "and therefore can be misleading.",
 )
 def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
-    """Compute distances only between specified ID pairs.
+    r"""Compute distances only between specified ID pairs.
 
     Parameters
     ----------
@@ -260,7 +235,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
         'c'), ...])``. If specified, the set of IDs described must be a subset
         of ``ids``.
     validate : bool, optional
-        See ``skbio.diversity.beta_diversity`` for details.
+        See :func:`beta_diversity` for details.
     kwargs : kwargs, optional
         Metric-specific parameters.
 
@@ -276,8 +251,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     ValueError
         If ``ids`` are not specified.
         If ``id_pairs`` are not a subset of ``ids``.
-        If ``metric`` is not a callable or is unresolvable string by
-        scikit-bio.
+        If ``metric`` is not a callable or is unresolvable string by scikit-bio.
         If duplicates are observed in ``id_pairs``.
 
     See Also
@@ -291,7 +265,7 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     if validate:
         counts = _validate_counts_matrix(counts)
     if metric in _qualitative_metrics:
-        counts = _quantitative_to_qualitative_counts(counts)
+        counts = _qualify_counts(counts)
 
     id_pairs = list(id_pairs)
     all_ids_in_pairs = set(chain.from_iterable(id_pairs))
@@ -336,36 +310,6 @@ def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwarg
     return DistanceMatrix(dm + dm.T, ids)
 
 
-# The following two lists are adapted from sklearn.metrics.pairwise. Metrics
-# that are not available in SciPy (only in sklearn) have been removed from
-# the list of _valid_beta_metrics here (those are: manhatten, wminkowski,
-# nan_euclidean, and haversine)
-_valid_beta_metrics = [
-    "euclidean",
-    "cityblock",
-    "braycurtis",
-    "canberra",
-    "chebyshev",
-    "correlation",
-    "cosine",
-    "dice",
-    "hamming",
-    "jaccard",
-    "jensenshannon",
-    "mahalanobis",
-    "manhattan",  # aliases to "cityblock" in beta_diversity
-    "matching",
-    "minkowski",
-    "rogerstanimoto",
-    "russellrao",
-    "seuclidean",
-    "sokalmichener",
-    "sokalsneath",
-    "sqeuclidean",
-    "yule",
-]
-
-
 def beta_diversity(
     metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
 ):
@@ -373,7 +317,7 @@ def beta_diversity(
 
     Parameters
     ----------
-    metric : str, callable
+    metric : str or callable
         The pairwise distance function to apply. See the scipy ``pdist`` docs
         and the scikit-bio functions linked under *See Also* for available
         metrics. Passing metrics as a strings is preferable as this often
@@ -413,7 +357,7 @@ def beta_diversity(
     ------
     ValueError, MissingNodeError, DuplicateNodeError
         If validation fails. Exact error will depend on what was invalid.
-    iTypeError
+    Any Exception
         If invalid method-specific parameters are provided.
 
     See Also
@@ -436,8 +380,8 @@ def beta_diversity(
     if validate:
         counts = _validate_counts_matrix(counts)
     if metric in _qualitative_metrics:
-        counts = _quantitative_to_qualitative_counts(counts)
-    if metric in _phylogenetic_metrics:
+        counts = _qualify_counts(counts)
+    if metric in ("unweighted_unifrac", "weighted_unifrac"):
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
@@ -468,17 +412,15 @@ def beta_diversity(
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
-    elif metric not in _valid_beta_metrics:
+    elif metric not in _pdist_metrics:
         raise ValueError(
-            "Metric %s is not available. "
-            "Only the following metrics can be passed as strings to "
-            "beta_diversity as we know whether each of these should be "
-            "treated as a qualitative or quantitative metric. Other metrics "
-            "can be provided as functions.\n Available metrics are: %s"
-            % (metric, ", ".join(_valid_beta_metrics))
+            f'"{metric}" is not an available beta diversity metric name. '
+            "Refer to `get_beta_diversity_metrics` for a list of available metrics."
         )
 
     if pairwise_func is None:
+        from scipy.spatial.distance import pdist
+
         pairwise_func = pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)

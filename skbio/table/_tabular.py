@@ -192,15 +192,15 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
     if data.ndim < 2:
         raise ValueError("Input table has less than 2 dimensions.")
 
-    lenerr = "Number of {} in the table does not match provided {} IDs."
+    lenerr = "Input table has {0} {1}s whereas {2} {1} IDs were provided."
     if sample_ids is None:
         sample_ids = samples
     elif len(sample_ids) != data.shape[0]:
-        raise ValueError(lenerr.format("samples", "sample"))
+        raise ValueError(lenerr.format(data.shape[0], "sample", len(sample_ids)))
     if feature_ids is None:
         feature_ids = features
     elif len(feature_ids) != data.shape[1]:
-        raise ValueError(lenerr.format("features", "feature"))
+        raise ValueError(lenerr.format(data.shape[1], "feature", len(feature_ids)))
 
     # cast to lists
     if sample_ids is not None and not isinstance(sample_ids, list):

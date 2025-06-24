@@ -132,19 +132,19 @@ class TestIngest(TestCase):
 
         msg = "Input table has less than 2 dimensions."
         with self.assertRaises(ValueError) as cm:
-            _ingest_table(np.array([1, 2, 3]))
+            _ingest_table(np.array([1, 2, 3]), expand=False)
         self.assertEqual(str(cm.exception), msg)
         with self.assertRaises(ValueError) as cm:
-            _ingest_table([1, 2, 3])
+            _ingest_table([1, 2, 3], expand=False)
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Number of samples in the table does not match provided sample IDs."
+        msg = "Input table has 3 samples whereas 2 sample IDs were provided."
         with self.assertRaises(ValueError) as cm:
             _ingest_table(self.data, sample_ids=["A", "B"])
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Number of samples in the table does not match provided sample IDs."
-        with self.assertRaises(ValueError):
+        msg = "Input table has 3 features whereas 2 feature IDs were provided."
+        with self.assertRaises(ValueError) as cm:
             _ingest_table(self.data, feature_ids=["f2", "f3"])
         self.assertEqual(str(cm.exception), msg)
 
