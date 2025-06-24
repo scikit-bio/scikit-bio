@@ -101,7 +101,7 @@ scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/p
    :target: https://codecov.io/gh/scikit-bio/scikit-bio
 .. |bench| image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg
    :alt: ASV Benchmarks
-   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
+   :target: https://scikit.bio/scikit-bio-benchmarks
 .. |release| image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
    :alt: Release
    :target: https://github.com/scikit-bio/scikit-bio/releases
