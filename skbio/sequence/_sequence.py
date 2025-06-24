@@ -107,7 +107,7 @@ class Sequence(
     ---------------
     0 GGUCGUGAAG GA
 
-    Create a sequence with metadata and positional metadata:
+    Create a sequence with metadata, positional metadata and interval metadata:
 
     >>> metadata = {'authors': ['Alice'], 'desc':'seq desc', 'id':'seq-id'}
     >>> positional_metadata = {'exons': [True, True, False, True],
@@ -1499,35 +1499,32 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Parameters
         ----------
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Sequence to compute the distance to. If `other` is a ``Sequence``
-            object, it must be the same type as this sequence. Other input
-            types will be converted into a ``Sequence`` object of the same type
-            as this sequence.
-        metric : function, optional
-            Function used to compute the distance between this sequence and
-            `other`. If ``None`` (the default), Hamming distance will be used
-            (:func:`skbio.sequence.distance.hamming`). `metric` should take two
-            ``skbio.Sequence`` objects and return a ``float``. The sequence
-            objects passed to `metric` will be the same type as this sequence.
-            See :mod:`skbio.sequence.distance` for other predefined metrics
-            that can be supplied via `metric`.
+            Sequence to compute the distance to. If ``other`` is a ``Sequence`` object,
+            it must be the same type as this sequence. Other input types will be
+            converted into a ``Sequence`` object of the same type as this sequence.
+        metric : callable, optional
+            Function used to compute the distance between this sequence and ``other``.
+            By default, Hamming distance will be used (see
+            :func:`~skbio.sequence.distance.hamming`). ``metric`` should be a function
+            that takes two ``Sequence`` objects and returns a ``float``. The sequence
+            objects passed to ``metric`` will be the same type as this sequence. See
+            :mod:`skbio.sequence.distance` for other predefined metrics that can be
+            supplied via ``metric``.
 
         Returns
         -------
         float
-            Distance between this sequence and `other` as defined by `metric`.
+            Distance between this and other sequences as defined by ``metric``.
 
         Raises
         ------
         TypeError
-            If `other` is a ``Sequence`` object with a different type than this
+            If ``other`` is a ``Sequence`` object with a different type than this
             sequence.
 
         See Also
         --------
         skbio.sequence.distance
-        fraction_diff
-        fraction_same
 
         Examples
         --------
@@ -2291,7 +2288,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
             else:
                 raise ValueError(
-                    "No positional metadata associated with key " "'%s'" % sliceable
+                    "No positional metadata associated with key '%s'" % sliceable
                 )
 
         if not hasattr(sliceable, "dtype") or (
@@ -2314,7 +2311,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                         % s.__class__.__name__
                     )
             if bool_mode and int_mode:
-                raise TypeError("Cannot provide iterable of both bool and" " int.")
+                raise TypeError("Cannot provide iterable of both bool and int.")
             sliceable = np.r_[sliceable]
 
         if sliceable.dtype == bool:
@@ -2404,8 +2401,6 @@ def _slices_from_iter(array, indexables):
         elif _is_single_index(i):
             i = _single_index_to_slice(i)
         else:
-            raise IndexError(
-                "Cannot slice sequence from iterable " "containing %r." % i
-            )
+            raise IndexError("Cannot slice sequence from iterable containing %r." % i)
 
         yield array[i]
