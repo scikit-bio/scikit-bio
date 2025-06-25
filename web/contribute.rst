@@ -459,3 +459,9 @@ Please read :doc:`devdoc/review` for more details on how pull requests should be
 After your code has been improved and the reviewer has approved it, they will `merge your pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/merging-a-pull-request>`__ into the ``main`` branch of the official scikit-bio repository. This will be indicated by a note: :octicon:`git-merge` "Pull request successfully merged and closed".
 
 Congratulations! Your code is now an integral part of scikit-bio, and will benefit the broader community. You have successfully completed your contribution, and we extend our appreciation to you! 🎉🎉🎉"
+
+
+Benchmarks
+----------
+
+Scikit-bio utilizes `ASV <https://github.com/airspeed-velocity/asv>`_ to run benchmarks on a selection of its functions. Benchmarks help the development team prevent performance regression, the unintentional loss of performance which may come from modified code. Scikit-bio's benchmarks are run against every release of scikit-bio, starting with version ``0.6.1``. We welcome the addition of new benchmarks or the expansion of existing benchmarks to further protect against performance regression. If you are interested in contributing to our benchmarking system please see our `benchmark repository <https://github.com/scikit-bio/scikit-bio-benchmarks>`_.
