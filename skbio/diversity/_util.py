@@ -13,7 +13,7 @@ from skbio.diversity._phylogenetic import _nodes_by_counts
 
 
 def _validate_counts(counts, cast_int=False):
-    """Validate and convert input to an acceptable counts vector type.
+    """Validate and convert input to an acceptable counts vector/matrix type.
 
     Parameters
     ----------
@@ -120,47 +120,6 @@ def _validate_counts_matrix(counts, cast_int=False):
     return counts
 
 
-def _validate_taxa_and_tree(counts, taxa, tree, rooted=True):
-    """Validate taxa and tree prior to calculating phylogenetic diversity metrics."""
-    len_taxa = len(taxa)
-    set_taxa = set(taxa)
-    if len_taxa != len(set_taxa):
-        raise ValueError("``taxa`` cannot contain duplicated ids.")
-
-    if len(counts) != len_taxa:
-        raise ValueError("``taxa`` must be the same length as ``counts`` vector(s).")
-
-    if len(tree.root().children) == 0:
-        raise ValueError("``tree`` must contain more than just a root node.")
-
-    if rooted is True and len(tree.root().children) > 2:
-        # this is an imperfect check for whether the tree is rooted or not.
-        # can this be improved?
-        raise ValueError("``tree`` must be rooted.")
-
-    # all nodes (except the root node) have corresponding branch lengths
-    # all tip names in tree are unique
-    # all taxa correspond to tip names in tree
-    branch_lengths = []
-    tip_names = []
-    for e in tree.traverse():
-        if not e.is_root():
-            branch_lengths.append(e.length)
-        if e.is_tip():
-            tip_names.append(e.name)
-    set_tip_names = set(tip_names)
-    if len(tip_names) != len(set_tip_names):
-        raise DuplicateNodeError("All tip names in tree must be unique.")
-
-    if np.array([branch is None for branch in branch_lengths]).any():
-        raise ValueError("All non-root nodes in tree must have a branch length.")
-
-    if n_missing := len(set_taxa - set_tip_names):
-        raise MissingNodeError(
-            f"{n_missing} taxa are not present as tip names in tree."
-        )
-
-
 def vectorize_counts_and_tree(counts, taxa, tree):
     """Index tree and convert counts to np.array in corresponding order.
 
@@ -224,25 +183,3 @@ def _get_phylogenetic_kwargs(kwargs, taxa):
 
 def _qualify_counts(counts):
     return counts > 0.0
-
-
-def _validate_table(counts, ids, kwargs):
-    """Disallow overriding of sample and feature IDs.
-
-    WARNING: this implicitly adds an entry to kwargs IF `tree` is present.
-
-    """
-    if ids is not None:
-        raise ValueError("Cannot provide a `Table` as `counts` and `ids`.")
-
-    if "taxa" in kwargs:
-        raise ValueError("Cannot provide a `Table` as `counts` and `taxa`.")
-
-    from skbio.table._base import _table_to_numpy
-
-    dense_counts, sample_ids, feature_ids = _table_to_numpy(counts)
-
-    if "tree" in kwargs:
-        kwargs["taxa"] = feature_ids
-
-    return dense_counts, sample_ids

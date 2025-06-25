@@ -33,7 +33,7 @@ from ._c_me import (
     _bal_all_swaps,
     _bal_avgdist_insert_p,
 )
-from ._utils import _check_dm, _check_dm_tree
+from ._utils import _validate_dm, _validate_dm_and_tree
 
 
 def gme(dm, neg_as_zero=True):
@@ -143,7 +143,7 @@ def gme(dm, neg_as_zero=True):
               \-human
 
     """
-    _check_dm(dm)
+    _validate_dm(dm)
 
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
@@ -246,7 +246,7 @@ def bme(dm, neg_as_zero=True, **kwargs):
               \-human
 
     """
-    _check_dm(dm)
+    _validate_dm(dm)
 
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data, **kwargs)
@@ -369,7 +369,7 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     0.20875
 
     """
-    _check_dm_tree(dm, tree)
+    _validate_dm_and_tree(dm, tree)
 
     # generate tree array
     taxa = dm.ids

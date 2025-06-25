@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
 from operator import ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations

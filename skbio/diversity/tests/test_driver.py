@@ -439,7 +439,7 @@ class BetaDiversityTests(TestCase):
         self.assertEqual(str(cm.exception), msg)
 
         # non-matching taxa and tree
-        msg = "2 taxa are not present as tip names in tree."
+        msg = "2 taxa are not present as tip names in the tree."
         with self.assertRaises(MissingNodeError) as cm:
             beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
                            tree=self.tree1)
