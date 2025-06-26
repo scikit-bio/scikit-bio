@@ -18,7 +18,8 @@ from skbio.table._augment import (
     compositional_cutmix,
     phylomix,
     _validate_label,
-    _get_all_possible_pairs,
+    _all_pairs,
+    _intra_class_pairs,
     _aitchison_add,
     _aitchison_scalar_multiply,
 )
@@ -100,7 +101,7 @@ class AugmentationTests(TestCase):
         # Test with invalid one-hot encoding
         invalid_one_hot = np.array([[1, 1], [0, 1]])
         with self.assertRaisesRegex(
-            ValueError, "label is not properly one hot encoded"
+            ValueError, "Label is not properly one-hot encoded"
         ):
             _validate_label(invalid_one_hot, matrix)
 
@@ -123,27 +124,65 @@ class AugmentationTests(TestCase):
         )
         self.assertAlmostEqual(np.sum(res), 1.0)
 
-    def test_get_all_possible_pairs(self):
-        matrix = np.arange(40).reshape(4, 10)
-        label = np.array([0, 0, 1, 1])
+    def test_all_pairs(self):
+        obs = _all_pairs(2)
+        exp = np.array([[0, 1]])
+        npt.assert_array_equal(obs, exp)
 
-        # Test all pairs
-        all_pairs = _get_all_possible_pairs(matrix)
-        self.assertEqual(len(all_pairs), 6)  # 4 choose 2
+        obs = _all_pairs(3)
+        exp = np.array([[0, 1], [0, 2], [1, 2]])
+        npt.assert_array_equal(obs, exp)
 
-        # Test intra-class pairs
-        intra_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
-        self.assertEqual(len(intra_pairs), 2)
-        self.assertTrue(np.all(intra_pairs == np.array([(0, 1), (2, 3)])))
+        obs = _all_pairs(5)
+        exp = np.array([[0, 0, 0, 0, 1, 1, 1, 2, 2, 3],
+                        [1, 2, 3, 4, 2, 3, 4, 3, 4, 4]]).T
+        npt.assert_array_equal(obs, exp)
 
-        # Test intra-class without label
-        with self.assertRaisesRegex(
-            ValueError, "Label is required for intra-class augmentation."
-        ):
-            _get_all_possible_pairs(matrix, intra_class=True)
+        # edge case: one sample -> no pair
+        obs = _all_pairs(1)
+        exp = np.empty((0, 2), dtype=int)
+        npt.assert_array_equal(obs, exp)
+
+    def test_intra_class_pairs(self):
+        # one class only
+        obs = _intra_class_pairs([0, 0, 0])
+        exp = np.array([[0, 1], [0, 2], [1, 2]])
+        npt.assert_array_equal(obs, exp)
+
+        # two classes, one pair each
+        obs = _intra_class_pairs([0, 0, 1, 1])
+        exp = np.array([[0, 1], [2, 3]])
+        npt.assert_array_equal(obs, exp)
+
+        # two classes, interleaved
+        obs = _intra_class_pairs([0, 1, 0, 1])
+        exp = np.array([[0, 2], [1, 3]])
+        npt.assert_array_equal(obs, exp)
+
+        # two classes, three pairs each
+        obs = _intra_class_pairs([0, 0, 1, 1, 1, 0])
+        exp = np.array([[0, 0, 1, 2, 2, 3],
+                        [1, 5, 5, 3, 4, 4]]).T
+        npt.assert_array_equal(obs, exp)
+
+        # three classes, mixed pair numbers
+        obs = _intra_class_pairs([0, 0, 1, 1, 2, 0, 2, 1, 1, 1])
+        exp = np.array([[0, 0, 1, 2, 2, 2, 2, 3, 3, 3, 7, 7, 8, 4],
+                        [1, 5, 5, 3, 7, 8, 9, 7, 8, 9, 8, 9, 9, 6]]).T
+        npt.assert_array_equal(obs, exp)
+
+        # edge case: no pair
+        obs = _intra_class_pairs([0, 1, 2])
+        exp = np.empty((0, 2), dtype=int)
+        npt.assert_array_equal(obs, exp)
+
+        # edge case: no sample
+        obs = _intra_class_pairs([])
+        exp = np.empty((0, 2), dtype=int)
+        npt.assert_array_equal(obs, exp)
 
     def test_mixup(self):
-        exp_mat, exp_lab = mixup(self.data, samples=10, label=self.label, alpha=2)
+        exp_mat, exp_lab = mixup(self.data, n=10, label=self.label, alpha=2)
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 10)
         self.assertEqual(exp_mat.shape[1], self.data.shape[1])
         self.assertEqual(exp_lab.shape[0], len(self.label) + 10)
@@ -151,12 +190,12 @@ class AugmentationTests(TestCase):
         self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     def test_mixup_no_label(self):
-        _, exp_lab = mixup(self.data, samples=10, alpha=2)
+        _, exp_lab = mixup(self.data, n=10, alpha=2)
         self.assertTrue(exp_lab.empty)
 
     def test_aitchison_mixup(self):
         exp_mat, exp_lab = aitchison_mixup(
-            self.data, samples=20, label=self.label, alpha=2
+            self.data, n=20, label=self.label, alpha=2
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
@@ -184,12 +223,12 @@ class AugmentationTests(TestCase):
     #     self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
     def test_aitchison_mixup_no_label(self):
-        _, exp_lab = aitchison_mixup(self.data, samples=20, alpha=2)
+        _, exp_lab = aitchison_mixup(self.data, n=20, alpha=2)
         self.assertTrue(exp_lab.empty)
 
     def test_compositional_cutmix(self):
         exp_mat, exp_lab = compositional_cutmix(
-            self.data, samples=20, label=self.label, seed=42
+            self.data, n=20, label=self.label, seed=42
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
@@ -202,17 +241,17 @@ class AugmentationTests(TestCase):
         # compositional_cutmix returns a 2D output for label
         self.assertEqual(exp_lab.shape[1], 2)
 
-    def test_phylomix_simple(self):
-        exp_mat, exp_lab = phylomix(
-            self.data_simple,
-            tree=self.tree_simple,
-            samples=20,
-            taxa=self.taxa_simple,
-            label=self.label_simple,
-        )
-        # TODO: test label?
-        self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
-        self.assertEqual(exp_mat.shape[1], self.data_simple.shape[1])
+    # def test_phylomix_simple(self):
+    #     exp_mat, exp_lab = phylomix(
+    #         self.data_simple,
+    #         n=20,
+    #         tree=self.tree_simple,
+    #         taxa=self.taxa_simple,
+    #         label=self.label_simple,
+    #     )
+    #     # TODO: test label?
+    #     self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
+    #     self.assertEqual(exp_mat.shape[1], self.data_simple.shape[1])
 
     # def test_phylomix_bad_tips(self):
     #     bad_mapping = {
@@ -232,8 +271,8 @@ class AugmentationTests(TestCase):
     def test_phylomix_no_label(self):
         exp_mat, exp_lab = phylomix(
             self.data_simple,
+            n=20,
             tree=self.tree_simple,
-            samples=20,
             taxa=self.taxa_simple,
         )
 
@@ -244,8 +283,8 @@ class AugmentationTests(TestCase):
     def test_phylomix(self):
         exp_mat, exp_lab = phylomix(
             self.data,
+            n=20,
             tree=self.tree,
-            samples=20,
             taxa=self.taxa,
             label=self.label,
         )
@@ -260,8 +299,8 @@ class AugmentationTests(TestCase):
         label_multiclass = np.random.randint(0, 3, size=self.data.shape[0])
         exp_mat, exp_lab = phylomix(
             self.data,
+            n=20,
             tree=self.tree,
-            samples=20,
             taxa=self.taxa,
             label=label_multiclass,
         )

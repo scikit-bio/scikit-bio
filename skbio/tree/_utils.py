@@ -36,7 +36,7 @@ def _validate_taxa_and_tree(taxa, tree, unique=True, rooted=False, lengths=False
     tree : TreeNode
         Input tree.
     unique : bool, optional
-        If True, check if all taxa are unique
+        If True, check if all taxa and tip names are unique.
     rooted : bool, optional
         If True, check if the tree is rooted.
     lengths : bool, optional
@@ -81,7 +81,7 @@ def _validate_taxa_and_tree(taxa, tree, unique=True, rooted=False, lengths=False
             tip_names_append(node.name)
 
     tip_name_set = set(tip_names)
-    if len(tip_names) != len(tip_name_set):
+    if unique and len(tip_names) != len(tip_name_set):
         raise DuplicateNodeError("All tip names in the tree must be unique.")
 
     if missing := taxon_set - tip_name_set:

@@ -41,6 +41,7 @@ class UtilsTests(TestCase):
             ":1.25):0.0)root;"])
         taxa = ["OTU1", "OTU2", "OTU3"]
         self.assertRaises(DuplicateNodeError, _validate_taxa_and_tree, taxa, tree)
+        self.assertIsNone(_validate_taxa_and_tree(taxa, tree, unique=False))
 
         # unrooted tree as input
         tree = TreeNode.read(["((OTU1:0.1,OTU2:0.2):0.3,OTU3:0.5,OTU4:0.7);"])
@@ -54,6 +55,7 @@ class UtilsTests(TestCase):
             ":1.25):0.0)root;"])
         taxa = ["OTU1", "OTU2", "OTU2"]
         self.assertRaises(ValueError, _validate_taxa_and_tree, taxa, tree)
+        self.assertIsNone(_validate_taxa_and_tree(taxa, tree, unique=False))
 
         # tree with no branch lengths
         tree = TreeNode.read(["((((OTU1,OTU2),OTU3)),(OTU4,OTU5));"])
