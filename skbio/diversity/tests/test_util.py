@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import io
 from unittest import TestCase, main
 
 import numpy as np
@@ -14,15 +13,24 @@ import pandas as pd
 import numpy.testing as npt
 
 from skbio import TreeNode
-from skbio.table import example_table
 from skbio.diversity._util import (
+    vectorize_counts_and_tree,
     _validate_counts_vector,
     _validate_counts_matrix,
-    vectorize_counts_and_tree,
     _qualify_counts,
-    _validate_table,
 )
 from skbio.tree import DuplicateNodeError, MissingNodeError
+
+
+class VectorizeTests(TestCase):
+
+    def test_vectorize_counts_and_tree(self):
+        tree = TreeNode.read(["((a:1, b:2)c:3)root;"])
+        counts = np.array([[0, 1], [1, 5], [10, 1]])
+        count_array, indexed, branch_lengths = \
+            vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
+        exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
+        npt.assert_equal(count_array, exp_counts.T)
 
 
 class ValidationTests(TestCase):
@@ -146,14 +154,6 @@ class ValidationTests(TestCase):
             _validate_counts_matrix([['a', 'b', 'c']])
         with self.assertRaises(ValueError):
             _validate_counts_matrix([[1 + 2j, 3 + 4j]])
-
-    def test_vectorize_counts_and_tree(self):
-        tree = TreeNode.read(io.StringIO("((a:1, b:2)c:3)root;"))
-        counts = np.array([[0, 1], [1, 5], [10, 1]])
-        count_array, indexed, branch_lengths = \
-            vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
-        exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
-        npt.assert_equal(count_array, exp_counts.T)
 
     def test_qualify_counts(self):
         counts = np.array([[0, 1], [1, 5], [10, 1]])

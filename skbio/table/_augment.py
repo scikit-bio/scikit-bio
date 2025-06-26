@@ -11,25 +11,19 @@ from itertools import chain, combinations
 
 if TYPE_CHECKING:
     from numpy.random import RandomState, Generator
-    from numpy.typing import NDArray
+    from numpy.typing import ArrayLike, NDArray
+    from skbio.tree import TreeNode
 
 import numpy as np
-from skbio.tree import TreeNode
 from skbio.stats.composition import closure
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table
 
 
-def _validate_tree(tree: TreeNode) -> None:
-    """Ensure that tree is a TreeNode object."""
-    if not isinstance(tree, TreeNode):
-        raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
-
-
 def _validate_label(  # type: ignore[return]
     label: "NDArray", matrix: "NDArray"
 ) -> tuple["NDArray", "NDArray"]:
-    """Ensure that the provided label is appropriate for the provided matrix.
+    r"""Ensure that the provided label is appropriate for the provided matrix.
 
     Parameters
     ----------
@@ -54,11 +48,11 @@ def _validate_label(  # type: ignore[return]
     """
     if not isinstance(label, np.ndarray):
         raise ValueError(
-            f"label must be a numpy.ndarray, but got {type(label)} instead."
+            f"Label must be a numpy.ndarray, but got {type(label)} instead."
         )
     if label.ndim not in [1, 2]:
         raise ValueError(
-            f"labels should have shape (samples,) or (samples, n_classes)"
+            f"Label should have shape (samples,) or (samples, n_classes)"
             f"but got {label.shape} instead."
         )
     if not label.shape[0] == matrix.shape[0]:
@@ -68,18 +62,18 @@ def _validate_label(  # type: ignore[return]
         )
     # make sure label is only whole numbers, then convert to int
     if not np.all(np.equal(np.mod(label, 1), 0)):
-        raise TypeError(f"label must only contain integer values.")
+        raise TypeError(f"Label must only contain integer values.")
     if label.ndim == 1:
         # check that labels is 0 indexed
         unique_labels = np.unique(label)
         if min(unique_labels) != 0:
-            raise ValueError("Labels must be zero-indexed. Minimum value must be 0.")
+            raise ValueError("Label must be zero-indexed. Minimum value must be 0.")
         num_classes = len(unique_labels)
         exp_labels = np.arange(num_classes)
         # check that label is consecutive integers starting at 0
         if not np.array_equal(unique_labels, exp_labels):
             raise ValueError(
-                "Labels must be consecutive integers from 0 to num_classes - 1."
+                "Label must be consecutive integers from 0 to num_classes - 1."
             )
         one_hot_label = np.eye(num_classes, dtype=int)[label]
         return label, one_hot_label
@@ -183,6 +177,34 @@ def _get_all_possible_pairs(
     return np.array(possible_pairs)
 
 
+def _get_node_indices(tree: "TreeNode", taxon_map: dict[str, int]) -> list[list[int]]:
+    """Generate a nested list representing feature indices descending from each node.
+
+    `taxon_map` is a mapping of taxa (tip names) to feature indices.
+
+    Only internal nodes with at least one descending feature are included.
+
+    """
+    res = []
+    res_append = res.append
+    for node in tree.postorder(include_self=True):
+        if node.children:
+            lst = []
+            for child in node.children:
+                lst.extend(child._taxa)
+                del child._taxa
+            node._taxa = lst
+            if lst:
+                res_append(lst)
+        else:
+            if node.name in taxon_map:
+                node._taxa = [taxon_map[node.name]]
+            else:
+                node._taxa = []
+    del tree._taxa
+    return res
+
+
 def mixup(
     table,
     samples: int,
@@ -238,6 +260,7 @@ def mixup(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from skbio.table import mixup
     >>> data = np.arange(40).reshape(4, 10)
     >>> label = np.array([0, 1, 0, 1])
@@ -368,6 +391,7 @@ def aitchison_mixup(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from skbio.table import aitchison_mixup
     >>> data = np.arange(40).reshape(4, 10)
     >>> label = np.array([0, 1, 0, 1])
@@ -436,14 +460,14 @@ def aitchison_mixup(
     augmented_matrix = []
     augmented_label = []
     for idx1, idx2 in selected_pairs:
-        _lambda = rng.beta(alpha, alpha)
+        lambda_ = rng.beta(alpha, alpha)
         augmented_x = _aitchison_add(
-            _aitchison_scalar_multiply(_lambda, matrix[idx1]),
-            _aitchison_scalar_multiply(1 - _lambda, matrix[idx2]),
+            _aitchison_scalar_multiply(lambda_, matrix[idx1]),
+            _aitchison_scalar_multiply(1 - lambda_, matrix[idx2]),
         )
         if label is not None:
             augmented_y = (
-                _lambda * one_hot_label[idx1] + (1 - _lambda) * one_hot_label[idx2]
+                lambda_ * one_hot_label[idx1] + (1 - lambda_) * one_hot_label[idx2]
             )
             augmented_label.append(augmented_y)
         augmented_matrix.append(augmented_x)
@@ -500,6 +524,7 @@ def compositional_cutmix(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from skbio.table import compositional_cutmix
     >>> data = np.arange(40).reshape(4, 10)
     >>> label = np.array([0, 1, 0, 1])
@@ -544,8 +569,6 @@ def compositional_cutmix(
        20551-20565.
 
     """
-    rng = get_rng(seed)
-
     matrix, _, _ = _ingest_table(table)
     # If label isn't provided, assume all samples have same class label
     no_out_label = False
@@ -557,6 +580,8 @@ def compositional_cutmix(
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):
             matrix = closure(matrix)
+
+    rng = get_rng(seed)
     possible_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
     selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
 
@@ -564,12 +589,11 @@ def compositional_cutmix(
     augmented_label = []
     for idx1, idx2 in selected_pairs:
         x1, x2 = matrix[idx1], matrix[idx2]
-        _lambda = rng.uniform(0, 1)
-        indicator_binomial = rng.binomial(1, _lambda, size=matrix.shape[1])
+        lambda_ = rng.uniform(0, 1)
+        indicator_binomial = rng.binomial(1, lambda_, size=matrix.shape[1])
         augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
         augmented_matrix.append(augmented_x)
-        label_ = one_hot_label[idx1]
-        augmented_label.append(label_)
+        augmented_label.append(one_hot_label[idx1])
 
     augmented_matrix_ = np.array(augmented_matrix)
     augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
@@ -585,29 +609,30 @@ def compositional_cutmix(
 
 def phylomix(
     table,
-    tree: TreeNode,
-    tip_to_obs_mapping: dict[str, int],
     samples: int,
+    tree: "TreeNode",
+    taxa: Optional["ArrayLike"] = None,
     label: Optional["NDArray"] = None,
     alpha: float = 2,
     normalize: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
     output_format: Optional[str] = None,
 ) -> tuple:
-    r"""Data augmentation by phylomix.
+    r"""Data augmentation by PhyloMix.
 
     Parameters
     ----------
-    table : table_like
-        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
-    tree : skbio.tree.TreeNode
-        The tree to use to augment the table.
-    tip_to_obs_mapping : dict
-        A dictionary mapping tips to feature indices.
+    table : table_like of shape (n_samples, n_features)
+        Original data table to be augmented. See :doc:`../articles/table_like` for
+        supported formats.
     samples : int
         The number of new samples to generate.
+    tree : skbio.tree.TreeNode
+        Tree structure modeling the relationships between features.
+    taxa : array_like of shape (n_features,), optional
+        Feature IDs corresponding to tip names (taxa) in ``tree``. Can be omitted if
+        ``table`` already contains relevant feature IDs. Otherwise they need to be
+        explicitly provided.
     label : ndarray
         The label of the table. The label is expected to has a shape of ``(samples,)``
         or ``(samples, n_classes)``.
@@ -637,16 +662,14 @@ def phylomix(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from skbio.table import phylomix
+    >>> from skbio.tree import TreeNode
     >>> data = np.arange(10).reshape(2, 5)
-    >>> tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
+    >>> tree = TreeNode.read(["(((a,b),c),(d,e));"])
+    >>> taxa = ['a', 'b', 'c', 'd', 'e']
     >>> label = np.array([0, 1])
-    >>> tip_to_obs_mapping = {'a': 0, 'b': 1, 'c': 2, 'x': 3, 'y': 4}
-    >>> aug_matrix, aug_label = phylomix(data,
-    ...                                  tree,
-    ...                                  tip_to_obs_mapping,
-    ...                                  label=label,
-    ...                                  samples=5)
+    >>> aug_matrix, aug_label = phylomix(data, 5, tree=tree, taxa=taxa, label=label)
     >>> print(aug_matrix.shape)
     (7, 5)
     >>> print(aug_label.shape)
@@ -684,8 +707,7 @@ def phylomix(
        Bioinformatics, btaf014.
 
     """
-    rng = get_rng(seed)
-    matrix, row_ids, col_ids = _ingest_table(table)
+    matrix, _, taxa = _ingest_table(table, feature_ids=taxa)
 
     if normalize:
         if not np.allclose(np.sum(matrix, axis=1), 1):
@@ -693,58 +715,58 @@ def phylomix(
 
     if label is not None:
         label, one_hot_label = _validate_label(label, matrix)
-    _validate_tree(tree)
 
-    leave_names = [tip.name for tip in tree.tips()]
+    # Map taxa (tip names) to feature indices.
+    from skbio.tree._utils import _validate_taxa_and_tree
 
-    if set(tip_to_obs_mapping.keys()) != set(leave_names):
-        raise ValueError("tip_to_obs_mapping must contain all tips in the tree")
+    _validate_taxa_and_tree(taxa, tree, unique=False)
+    n_taxa = len(taxa)
+    taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
 
-    # Convert nodes to indices for random selection
-    all_nodes = [node for node in tree.levelorder()]
-    node_indices = np.arange(len(all_nodes))
-    num_leaves = len(leave_names)
+    # Pre-calculate feature indices descending from each node.
+    node_indices = _get_node_indices(tree, taxon_map)
+    n_nodes = len(node_indices)
 
+    rng = get_rng(seed)
     possible_pairs = _get_all_possible_pairs(matrix)
     selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
-    feature_dict = {feature_name: idx for idx, feature_name in enumerate(tree.tips())}
+
+    selected: set[int]
     augmented_matrix = []
     augmented_label = []
     for pair in selected_pairs:
         x1, x2 = matrix[pair[0]], matrix[pair[1]]
-        _lambda = rng.beta(alpha, alpha)
-        n_leaves = int(np.ceil((1 - _lambda) * num_leaves))
-        selected_index: set[int] = set()
-        mixed_x = x1.copy()
+        lambda_ = rng.beta(alpha, alpha)
+        n_leaves = int(np.ceil((1 - lambda_) * n_taxa))
 
-        while len(selected_index) < n_leaves:
-            # Select a random node using index
-            node_idx = rng.choice(node_indices)
-            available_node = all_nodes[node_idx]
-            leaf_idx = [feature_dict[leaf] for leaf in available_node.tips()]
-            obs_idx = [tip_to_obs_mapping[leaf.name] for leaf in available_node.tips()]
-            selected_index.update(obs_idx)
-
-        selected_index = rng.choice(list(selected_index), n_leaves, replace=False)
+        # Randomly select nodes and add their descending feature indices to the
+        # selection, until it reaches a given size.
+        # Note that nodes may overlap each other, thus descending feature indices may
+        # be redundant.
+        selected = set()
+        while len(selected) < n_leaves:
+            selected.update(node_indices[rng.choice(n_nodes)])
+        selected = rng.choice(list(selected), n_leaves, replace=False)
 
         leaf_counts1, leaf_counts2 = (
-            x1[selected_index].astype(np.float32),
-            x2[selected_index].astype(np.float32),
+            x1[selected].astype(np.float32),
+            x2[selected].astype(np.float32),
         )
 
+        mixed_x = x1.copy()
         total1, total2 = leaf_counts1.sum(), leaf_counts2.sum()
         if total1 > 0 and total2 > 0:
             leaf_counts2_normalized = leaf_counts2 / total2
             # removed astype(int) so phylomix could handle compositional input
             new_counts = total1 * leaf_counts2_normalized
-            mixed_x[selected_index] = new_counts
+            mixed_x[selected] = new_counts
         else:
-            mixed_x[selected_index] = leaf_counts1
+            mixed_x[selected] = leaf_counts1
 
         if label is not None:
             augment_label = (
-                _lambda * one_hot_label[pair[0]]
-                + (1 - _lambda) * one_hot_label[pair[1]]
+                lambda_ * one_hot_label[pair[0]]
+                + (1 - lambda_) * one_hot_label[pair[1]]
             )
             augmented_label.append(augment_label)
         augmented_matrix.append(mixed_x)

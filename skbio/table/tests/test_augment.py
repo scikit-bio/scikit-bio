@@ -17,7 +17,6 @@ from skbio.table._augment import (
     aitchison_mixup,
     compositional_cutmix,
     phylomix,
-    _validate_tree,
     _validate_label,
     _get_all_possible_pairs,
     _aitchison_add,
@@ -26,160 +25,37 @@ from skbio.table._augment import (
 
 
 class AugmentationTests(TestCase):
+
     def setUp(self):
-        samples = 40
-        n_features = 100
-        self.data = np.arange(samples * n_features).reshape(samples, n_features)
-        feature_metadata = [
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "y"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "f"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "d"},
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-            {"phylogeny": "w"},
-            {"phylogeny": "z"},
-            {"phylogeny": "c"},
-            {"phylogeny": "d"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-            {"phylogeny": "e"},
-            {"phylogeny": "f"},
-        ]
-
+        # a simple example (2 x 5)
         self.data_simple = np.arange(10).reshape(2, 5)
-        feature_metadata_simple = [
-            {"phylogeny": "a"},
-            {"phylogeny": "b"},
-            {"phylogeny": "c"},
-            {"phylogeny": "x"},
-            {"phylogeny": "y"},
-        ]
-        self.simple_tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
-        self.complex_tree = TreeNode.read(
-            ["(((a,b)int1,(x,y,(w,z)int2,(c,d)int3)int4),(e,f)int5);"]
-        )
-        self.complex_tree.bifurcate()
-        self.simple_tree.bifurcate()
-        tree_tips_simple = {tip.name for tip in self.simple_tree.tips()}
-        tree_tips = {tip.name for tip in self.complex_tree.tips()}
-        self.tips_to_feature_mapping = {}
-        self.tips_to_feature_mapping_simple = {}
-        for idx, metadata in enumerate(feature_metadata):
-            if metadata and "phylogeny" in metadata:
-                phylogeny_label = metadata["phylogeny"]
-                if phylogeny_label in tree_tips:
-                    self.tips_to_feature_mapping[phylogeny_label] = idx
-        for idx, metadata in enumerate(feature_metadata_simple):
-            if metadata and "phylogeny" in metadata:
-                phylogeny_label = metadata["phylogeny"]
-                if phylogeny_label in tree_tips_simple:
-                    self.tips_to_feature_mapping_simple[phylogeny_label] = idx
-        self.labels = np.random.randint(0, 2, size=self.data.shape[0])
-        self.labels_simple = np.array([0, 1])
-        self.one_hot_labels = np.eye(2)[self.labels]
+        self.label_simple = np.array([0, 1])
+        self.taxa_simple = list("abcde")
+        self.tree_simple = TreeNode.read(["(((a,b),c),(d,e));"])
 
-    def test_validate_tree(self):
-        # Test with valid tree
-        _validate_tree(self.simple_tree)  # Should not raise
+        # a complex example (40 x 100)
+        self.data = np.arange(4000).reshape(40, 100)
+        rng = np.random.default_rng()
+        self.label = rng.integers(0, 2, size=40)
+        self.one_hot_label = np.eye(2)[self.label]
+        self.taxa = [f"O{i}" for i in range(100)]
 
-        # Test with None
-        with self.assertRaisesRegex(
-            TypeError, "`tree` must be a skbio.tree.TreeNode object."
-        ):
-            _validate_tree(None)
-
-        # Test with invalid type
-        with self.assertRaisesRegex(
-            TypeError, "`tree` must be a skbio.tree.TreeNode object."
-        ):
-            _validate_tree("not_a_tree")
+        # This is a random birth-death tree generated by DendroPy. Code:
+        # taxa = dendropy.TaxonNamespace([f"O{i}" for i in range(100)])
+        # tree = dendropy.simulate.treesim.birth_death_tree(
+        #     birth_rate=1.0, death_rate=0.0, num_extant_tips=100,
+        #     taxon_namespace=taxa, rng=random.Random(42))
+        self.tree = TreeNode.read([
+            "(((((((O59,O57),(O23,O74)),O78),(((((O43,((O35,O77),(O39,O93))),((O83,O10"
+            "),(O68,O87))),(((O61,O5),O55),O7)),(O86,O58)),((O4,((O24,((O9,O98),O52)),"
+            "O60)),O3))),(O15,(O41,O33))),(((O22,O27),(O30,(O91,O72))),(((O82,O62),(O9"
+            "7,((O21,O99),O65))),(O12,(O69,O17))))),((((((((O18,O50),(((((O47,O44),O53"
+            "),O14),((O13,O31),(O8,O88))),O90)),O38),(O26,(O56,O45))),((((O71,O19),(O8"
+            "5,(O11,O79))),((O6,O54),O29)),(O96,(O76,O46)))),(O32,(O95,O25))),((O80,(O"
+            "34,O75)),((((O49,O40),(((O63,O36),O73),O48)),(O37,O51)),(((O16,((O94,O70)"
+            ",O84)),O0),(O66,((O20,((O42,O92),O64)),(((O89,O2),O67),O28))))))),(O1,O81"
+            ")));"
+        ])
 
     def test_validate_label(self):
         # Create a simple matrix for testing
@@ -203,22 +79,22 @@ class AugmentationTests(TestCase):
             _validate_label(wrong_label, matrix)
 
         # Test with non-numpy array
-        with self.assertRaisesRegex(ValueError, "label must be a numpy.ndarray"):
+        with self.assertRaisesRegex(ValueError, "Label must be a numpy.ndarray"):
             _validate_label([0, 1], matrix)
 
         # Test with wrong dimensions
         wrong_dim_label = np.array([[[0], [1]]])
-        with self.assertRaisesRegex(ValueError, "labels should have shape"):
+        with self.assertRaisesRegex(ValueError, "Label should have shape"):
             _validate_label(wrong_dim_label, matrix)
 
-        # Test with non-zero indexed labels
+        # Test with non-zero indexed label
         non_zero_label = np.array([1, 2])
-        with self.assertRaisesRegex(ValueError, "Labels must be zero-indexed"):
+        with self.assertRaisesRegex(ValueError, "Label must be zero-indexed"):
             _validate_label(non_zero_label, matrix)
 
-        # Test with non-consecutive labels
+        # Test with non-consecutive label
         non_consecutive = np.array([0, 2])
-        with self.assertRaisesRegex(ValueError, "Labels must be consecutive integers"):
+        with self.assertRaisesRegex(ValueError, "Label must be consecutive integers"):
             _validate_label(non_consecutive, matrix)
 
         # Test with invalid one-hot encoding
@@ -249,14 +125,14 @@ class AugmentationTests(TestCase):
 
     def test_get_all_possible_pairs(self):
         matrix = np.arange(40).reshape(4, 10)
-        labels = np.array([0, 0, 1, 1])
+        label = np.array([0, 0, 1, 1])
 
         # Test all pairs
         all_pairs = _get_all_possible_pairs(matrix)
         self.assertEqual(len(all_pairs), 6)  # 4 choose 2
 
         # Test intra-class pairs
-        intra_pairs = _get_all_possible_pairs(matrix, label=labels, intra_class=True)
+        intra_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
         self.assertEqual(len(intra_pairs), 2)
         self.assertTrue(np.all(intra_pairs == np.array([(0, 1), (2, 3)])))
 
@@ -267,10 +143,10 @@ class AugmentationTests(TestCase):
             _get_all_possible_pairs(matrix, intra_class=True)
 
     def test_mixup(self):
-        exp_mat, exp_lab = mixup(self.data, samples=10, label=self.labels, alpha=2)
+        exp_mat, exp_lab = mixup(self.data, samples=10, label=self.label, alpha=2)
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 10)
         self.assertEqual(exp_mat.shape[1], self.data.shape[1])
-        self.assertEqual(exp_lab.shape[0], len(self.labels) + 10)
+        self.assertEqual(exp_lab.shape[0], len(self.label) + 10)
         self.assertEqual(exp_lab.shape[1], 2)
         self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
@@ -280,14 +156,14 @@ class AugmentationTests(TestCase):
 
     def test_aitchison_mixup(self):
         exp_mat, exp_lab = aitchison_mixup(
-            self.data, samples=20, label=self.labels, alpha=2
+            self.data, samples=20, label=self.label, alpha=2
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
         self.assertEqual(exp_mat.shape[1], self.data.shape[1])
         # Check if the augmented data is compositional
         self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0))
-        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+        self.assertEqual(exp_lab.shape[0], len(self.label) + 20)
         self.assertEqual(exp_lab.shape[1], 2)
         self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
@@ -296,14 +172,14 @@ class AugmentationTests(TestCase):
     # def test_aitchison_mixup_non_compositional(self):
     #     # Test with non-compositional data (should normalize)
     #     exp_mat, exp_lab = aitchison_mixup(
-    #         self.table, samples=20, label=self.labels, alpha=2
+    #         self.table, samples=20, label=self.label, alpha=2
     #     )
 
     #     self.assertEqual(exp_mat.shape[0], self.table.shape[1] + 20)
     #     self.assertEqual(exp_mat.shape[1], self.table.shape[0])
     #     # Check if the augmented data is compositional
     #     self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0))
-    #     self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+    #     self.assertEqual(exp_lab.shape[0], len(self.label) + 20)
     #     self.assertEqual(exp_lab.shape[1], 2)
     #     self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
@@ -313,7 +189,7 @@ class AugmentationTests(TestCase):
 
     def test_compositional_cutmix(self):
         exp_mat, exp_lab = compositional_cutmix(
-            self.data, samples=20, label=self.labels, seed=42
+            self.data, samples=20, label=self.label, seed=42
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
@@ -322,55 +198,43 @@ class AugmentationTests(TestCase):
         # this rtol is really low, the data seems to be close to compositionality, but
         # not quite, it is within 0.9 - 1.1
         self.assertTrue(np.allclose(np.sum(exp_mat, axis=1), 1.0, rtol=1e-01))
-        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
-        # compositional_cutmix returns a 2D output for labels
+        self.assertEqual(exp_lab.shape[0], len(self.label) + 20)
+        # compositional_cutmix returns a 2D output for label
         self.assertEqual(exp_lab.shape[1], 2)
 
     def test_phylomix_simple(self):
         exp_mat, exp_lab = phylomix(
             self.data_simple,
-            tree=self.simple_tree,
-            tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
+            tree=self.tree_simple,
             samples=20,
-            label=self.labels_simple,
+            taxa=self.taxa_simple,
+            label=self.label_simple,
         )
         # TODO: test label?
         self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
         self.assertEqual(exp_mat.shape[1], self.data_simple.shape[1])
 
-    def test_phylomix_no_tree(self):
-        with self.assertRaisesRegex(
-            TypeError, "`tree` must be a skbio.tree.TreeNode object."
-        ):
-            phylomix(
-                self.data_simple,
-                tree=None,
-                tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
-                samples=20,
-                label=self.labels_simple,
-            )
-
-    def test_phylomix_bad_tips(self):
-        bad_mapping = {
-            k: v for k, v in self.tips_to_feature_mapping_simple.items() if k != "a"
-        }
-        with self.assertRaisesRegex(
-            ValueError, "tip_to_obs_mapping must contain all tips in the tree"
-        ):
-            phylomix(
-                self.data_simple,
-                tree=self.simple_tree,
-                tip_to_obs_mapping=bad_mapping,
-                samples=20,
-                label=self.labels_simple,
-            )
+    # def test_phylomix_bad_tips(self):
+    #     bad_mapping = {
+    #         k: v for k, v in self.tips_to_feature_mapping_simple.items() if k != "a"
+    #     }
+    #     with self.assertRaisesRegex(
+    #         ValueError, "tip_to_obs_mapping must contain all tips in the tree"
+    #     ):
+    #         phylomix(
+    #             self.data_simple,
+    #             tree=self.tree_simple,
+    #             samples=20,
+    #             taxa=list("abcde"),
+    #             label=self.label_simple,
+    #         )
 
     def test_phylomix_no_label(self):
         exp_mat, exp_lab = phylomix(
             self.data_simple,
-            tree=self.simple_tree,
-            tip_to_obs_mapping=self.tips_to_feature_mapping_simple,
+            tree=self.tree_simple,
             samples=20,
+            taxa=self.taxa_simple,
         )
 
         self.assertEqual(exp_mat.shape[0], self.data_simple.shape[0] + 20)
@@ -380,31 +244,31 @@ class AugmentationTests(TestCase):
     def test_phylomix(self):
         exp_mat, exp_lab = phylomix(
             self.data,
-            tree=self.complex_tree,
-            tip_to_obs_mapping=self.tips_to_feature_mapping,
+            tree=self.tree,
             samples=20,
-            label=self.labels,
+            taxa=self.taxa,
+            label=self.label,
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
         self.assertEqual(exp_mat.shape[1], self.data.shape[1])
-        self.assertEqual(exp_lab.shape[0], len(self.labels) + 20)
+        self.assertEqual(exp_lab.shape[0], len(self.label) + 20)
         self.assertEqual(exp_lab.shape[1], 2)
         self.assertTrue(np.allclose(np.sum(exp_lab, axis=1), 1.0))
 
-    def test_multiclass_phylomix(self):
-        labels_multiclass = np.random.randint(0, 3, size=self.data.shape[0])
+    def test_phylomix_multiclass(self):
+        label_multiclass = np.random.randint(0, 3, size=self.data.shape[0])
         exp_mat, exp_lab = phylomix(
             self.data,
-            tree=self.complex_tree,
-            tip_to_obs_mapping=self.tips_to_feature_mapping,
+            tree=self.tree,
             samples=20,
-            label=labels_multiclass,
+            taxa=self.taxa,
+            label=label_multiclass,
         )
 
         self.assertEqual(exp_mat.shape[0], self.data.shape[0] + 20)
         self.assertEqual(exp_mat.shape[1], self.data.shape[1])
-        self.assertEqual(exp_lab.shape[0], len(labels_multiclass) + 20)
+        self.assertEqual(exp_lab.shape[0], len(label_multiclass) + 20)
         self.assertEqual(exp_lab.shape[1], 3)  # 3 classes
 
 

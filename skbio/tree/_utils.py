@@ -26,7 +26,7 @@ def _validate_dm_and_tree(dm, tree):
         raise ValueError("Inconsistent taxa between tree and distance matrix.")
 
 
-def _validate_taxa_and_tree(taxa, tree, rooted=False, lengths=False):
+def _validate_taxa_and_tree(taxa, tree, unique=True, rooted=False, lengths=False):
     """Validate taxa and tree prior to phylogenetic analyses.
 
     Parameters
@@ -35,6 +35,8 @@ def _validate_taxa_and_tree(taxa, tree, rooted=False, lengths=False):
         Input taxa.
     tree : TreeNode
         Input tree.
+    unique : bool, optional
+        If True, check if all taxa are unique
     rooted : bool, optional
         If True, check if the tree is rooted.
     lengths : bool, optional
@@ -57,7 +59,7 @@ def _validate_taxa_and_tree(taxa, tree, rooted=False, lengths=False):
     # This function was moved from skbio.diversity._util and modified.
 
     taxon_set = set(taxa)
-    if len(taxa) != len(taxon_set):
+    if unique and len(taxa) != len(taxon_set):
         raise ValueError("All taxa must be unique.")
 
     # The following code checks if the tree is rooted.

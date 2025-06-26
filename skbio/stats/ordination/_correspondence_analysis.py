@@ -32,10 +32,9 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     Parameters
     ----------
-    X : table_like
-        Data table (samples by features). It can be applied to different kinds
-        of data tables, but data must be non-negative and dimensionally homogeneous
-        (quantitative or binary). See :doc:`../articles/table_like`.
+    X : table_like of shape (n_samples, n_features)
+        Input data table. See :doc:`../articles/table_like` for supported formats.
+        Data must be non-negative and dimensionally homogeneous (numeric or binary).
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
