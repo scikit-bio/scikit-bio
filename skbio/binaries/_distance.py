@@ -9,7 +9,7 @@
 import ctypes
 import numpy as np
 from numbers import Integral
-from skbio.skbb._util import (skbb_get_api_version, get_skbb_dll)
+from skbio.binaries._util import (skbb_get_api_version, get_skbb_dll)
 
 # ====================================================
 

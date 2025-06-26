@@ -17,7 +17,7 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy
-from skbio.skbb import skbb_permanova_available, skbb_permanova
+from skbio.binaries import skbb_permanova_available, skbb_permanova
 
 
 def permanova(distance_matrix, grouping, column=None, permutations=999, seed=None):

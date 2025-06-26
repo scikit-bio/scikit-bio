@@ -20,7 +20,7 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util.config._dispatcher import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
-from skbio.skbb import skbb_pcoa_fsvd_available, skbb_pcoa_fsvd
+from skbio.binaries import skbb_pcoa_fsvd_available, skbb_pcoa_fsvd
 
 
 def pcoa(

@@ -24,7 +24,7 @@ from skbio.metadata import SampleMetadata
 from skbio.util import set_config, get_config
 import skbio.diversity  # noqa
 import skbio.stats.evolve  # noqa
-import skbio.skbb  # noqa
+import skbio.binaries  # noqa
 
 __all__ = [
     "Sequence",
