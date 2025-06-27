@@ -20,7 +20,10 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.util.config._dispatcher import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
-from skbio.binaries import skbb_pcoa_fsvd_available, skbb_pcoa_fsvd
+from skbio.binaries import (
+    pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
+    pcoa_fsvd as _skbb_pcoa_fsvd
+)
 
 
 def pcoa(
@@ -198,12 +201,12 @@ def pcoa(
                 RuntimeWarning,
             )
             num_dimensions = distance_matrix.data.shape[0]
-        if skbb_pcoa_fsvd_available(
+        if _skbb_pcoa_fsvd_available(
                         distance_matrix.data, number_of_dimensions,
                         inplace, seed):
             # unlikely to throw here, but just in case
             try:
-                eigvals, coordinates, proportion_explained = skbb_pcoa_fsvd(
+                eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
                         distance_matrix.data, number_of_dimensions,
                         inplace, seed)
                 return _encapsulate_pcoa_result(long_method_name,
@@ -211,7 +214,7 @@ def pcoa(
                                     distance_matrix.ids, output_format)
             except Exception as e:
                 warn(
-                    "Attempted to use skbb_pcoa_fsvd but failed, "
+                    "Attempted to use binaries.pcoa_fsvd but failed, "
                     "using regular logic instead.",
                     RuntimeWarning,
                 )

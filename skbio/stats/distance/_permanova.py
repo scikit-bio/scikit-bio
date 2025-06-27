@@ -17,7 +17,10 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy
-from skbio.binaries import skbb_permanova_available, skbb_permanova
+from skbio.binaries import (
+    permanova_available as _skbb_permanova_available,
+    permanova as _skbb_permanova
+)
 
 
 def permanova(distance_matrix, grouping, column=None, permutations=999, seed=None):
@@ -107,14 +110,14 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
         distance_matrix.ids, sample_size, grouping, column
     )
 
-    if skbb_permanova_available(
+    if _skbb_permanova_available(
                 distance_matrix,
                 grouping,
                 permutations,
                 seed):
             # unlikely to throw here, but just in case
             try:
-                stat, p_value = skbb_permanova(
+                stat, p_value = _skbb_permanova(
                         distance_matrix,
                         grouping,
                         permutations,
@@ -126,7 +129,7 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
                 )
             except Exception as e:
                 warn(
-                    "Attempted to use skbb_permanova but failed, "
+                    "Attempted to use binaries.permanova but failed, "
                     "using regular logic instead.",
                     RuntimeWarning,
                 )

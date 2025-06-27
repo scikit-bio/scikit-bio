@@ -9,20 +9,23 @@
 import ctypes
 import numpy as np
 from numbers import Integral
-from skbio.binaries._util import (skbb_get_api_version, get_skbb_dll)
+from ..binaries._util import (
+    get_api_version as _skbb_get_api_version,
+    get_dll as _get_skbb_dll
+)
 
 # ====================================================
 
 # Check if skbb_pcoa_fsvd is available
 # same inputs as the full function, in case we support only a subset
-# If it returns True, it is safe to call skbb_pcoa_fsvd
-def skbb_permanova_available(
+# If it returns True, it is safe to call pcoa_fsvd
+def permanova_available(
     distance_matrix,
     grouping,
     permutations,
     seed=None,
 ):
-    if skbb_get_api_version()>=1: # minimum version that support permanova, includes check for library existence
+    if _skbb_get_api_version()>=1: # minimum version that support permanova, includes check for library existence
         # check it is a positive number
         if not isinstance(permutations, Integral):
             return False
@@ -41,13 +44,13 @@ def skbb_permanova_available(
 
 # perform permanova
 # Note: Seed must be either a non-negative integer or None
-def skbb_permanova(
+def permanova(
     distance_matrix,
     grouping,
     permutations,
     seed=None,
 ):
-    if skbb_get_api_version()>=1: # minimum version that support pcoa
+    if _skbb_get_api_version()>=1: # minimum version that support pcoa
         if permutations<1:
             raise ValueError("permutations must be a positive number")
         if (seed is not None):
@@ -78,7 +81,7 @@ def skbb_permanova(
         else:
             grouping_data = grouping.astype(np.uint32)
         # ready to call the C functions
-        dll = get_skbb_dll()
+        dll = _get_skbb_dll()
         i_mdim = ctypes.c_uint(distance_matrix_shape0)
         i_mat = distance_matrix_data.ctypes.data_as(ctypes.c_void_p)
         i_grp = grouping_data.ctypes.data_as(ctypes.c_void_p)

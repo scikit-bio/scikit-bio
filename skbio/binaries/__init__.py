@@ -22,26 +22,26 @@ needed shared library.
 # ----------------------------------------------------------------------------
 
 from ._util import (
-    skbb_available,
-    skbb_get_api_version,
-    skbb_set_random_seed,
+    available,
+    get_api_version,
+    set_random_seed,
 )
 from ._ordination import (
-    skbb_pcoa_fsvd_available,
-    skbb_pcoa_fsvd,
+    pcoa_fsvd_available,
+    pcoa_fsvd,
 )
 
 from ._distance import (
-    skbb_permanova_available,
-    skbb_permanova,
+    permanova_available,
+    permanova,
 )
 
 __all__ = [
-    "skbb_available",
-    "skbb_get_api_version",
-    "skbb_set_random_seed",
-    "skbb_pcoa_fsvd_available",
-    "skbb_pcoa_fsvd",
-    "skbb_permanova_available",
-    "skbb_permanova",
+    "available",
+    "get_api_version",
+    "set_random_seed",
+    "pcoa_fsvd_available",
+    "pcoa_fsvd",
+    "permanova_available",
+    "permanova",
 ]

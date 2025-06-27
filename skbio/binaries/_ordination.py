@@ -9,20 +9,23 @@
 import ctypes
 import numpy as np
 from numbers import Integral
-from skbio.binaries._util import (skbb_get_api_version, get_skbb_dll)
+from ..binaries._util import (
+    get_api_version as _skbb_get_api_version,
+    get_dll as _get_skbb_dll
+)
 
 # ====================================================
 
 # Check if skbb_pcoa_fsvd is available
 # same inputs as the full function, in case we support only a subset
-# If it returns True, it is safe to call skbb_pcoa_fsvd
-def skbb_pcoa_fsvd_available(
+# If it returns True, it is safe to call pcoa_fsvd
+def pcoa_fsvd_available(
     distance_matrix,
     number_of_dimensions,
     inplace=False,
     seed=None,
 ):
-    if skbb_get_api_version()>=1: # minimum version that support pcoa, includes check for library existence
+    if _skbb_get_api_version()>=1: # minimum version that support pcoa, includes check for library existence
         # check it is a positive number
         if not isinstance(number_of_dimensions, Integral):
             return False
@@ -41,13 +44,13 @@ def skbb_pcoa_fsvd_available(
 
 # perform PCoA using the FSVD method
 # Note: Seed must be either a non-negative integer or None
-def skbb_pcoa_fsvd(
+def pcoa_fsvd(
     distance_matrix,
     number_of_dimensions,
     inplace=False,
     seed=None,
 ):
-    if skbb_get_api_version()>=1: # minimum version that support pcoa
+    if _skbb_get_api_version()>=1: # minimum version that support pcoa
         if not isinstance(number_of_dimensions, Integral):
             raise ValueError("number_of_dimensions must be an integer value")
         if number_of_dimensions<1:
@@ -88,7 +91,7 @@ def skbb_pcoa_fsvd(
                 dtype=distance_matrix_data.dtype ,
                 order="C")
         # ready to call the C functions
-        dll = get_skbb_dll()
+        dll = _get_skbb_dll()
         i_mdim = ctypes.c_uint(distance_matrix_shape0)
         i_mat = distance_matrix_data.ctypes.data_as(ctypes.c_void_p)
         i_n_eigh = ctypes.c_uint(number_of_dimensions)
