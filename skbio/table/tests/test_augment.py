@@ -24,6 +24,7 @@ from skbio.table._augment import (
     _intra_class_pairs,
     _aitchison_add,
     _aitchison_multiply,
+    _indices_under_nodes,
 )
 
 
@@ -51,12 +52,6 @@ class AugmentationTests(TestCase):
         self.tree = TreeNode.read([
             "((O6,((O1,O4),O7),((O5,O2),(O3,O8))),(O0,O9));"
         ])
-
-        # a simple example (2 x 5)
-        self.data_simple = np.arange(10).reshape(2, 5)
-        self.label_simple = np.array([0, 1])
-        self.taxa_simple = list("abcde")
-        self.tree_simple = TreeNode.read(["(((a,b),c),(d,e));"])
 
     def test_validate_labels(self):
         # Create a simple matrix for testing
@@ -246,6 +241,46 @@ class AugmentationTests(TestCase):
         exp = np.empty((0, 2), dtype=int)
         npt.assert_array_equal(obs, exp)
 
+    def test_indices_under_nodes(self):
+        # a tree with 10 taxa
+        tree = self.tree
+        taxa = self.taxa
+        obs = _indices_under_nodes(tree, taxa)
+        # naive method (not optimized)
+        taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
+        nodes = tree.non_tips(include_self=True)
+        exp = [[taxon_map[tip.name] for tip in node.tips()] for node in nodes]
+        self.assertEqual(len(obs), len(exp))
+        for o, e in zip(obs, exp):
+            self.assertListEqual(list(o.keys()), e)
+
+        # taxon map doesn't cover entire tree (a common scenario)
+        taxa = ["O3", "O7", "O1", "O4", "O9"]
+        obs = _indices_under_nodes(tree, taxa)
+        # manually constructed
+        exp = [[2, 3], [2, 3, 1], [0], [0], [2, 3, 1, 0], [4], [2, 3, 1, 0, 4]]
+        self.assertEqual(len(obs), len(exp))
+        for o, e in zip(obs, exp):
+            self.assertListEqual(list(o.keys()), e)
+
+        # check if temporary attributes have been cleaned up
+        for node in tree.traverse(include_self=True):
+            self.assertFalse(hasattr(node, "_taxa"))
+
+        # taxa contain duplicates
+        msg = "All taxa must be unique."
+        taxa = ["O1", "O2", "O1"]
+        with self.assertRaises(ValueError) as cm:
+            _indices_under_nodes(tree, taxa)
+        self.assertEqual(str(cm.exception), msg)
+
+        # taxa not found in the tree
+        msg = "2 taxa are not present as tip names in the tree."
+        taxa = ["O1", "X2", "O3", "X4", "O5"]
+        with self.assertRaises(ValueError) as cm:
+            _indices_under_nodes(tree, taxa)
+        self.assertEqual(str(cm.exception), msg)
+
     def test_mixup(self):
         matrix, labels_2, labels_3 = self.matrix, self.labels_2, self.labels_3
 
@@ -377,9 +412,16 @@ class AugmentationTests(TestCase):
 
     def test_mixup_errors(self):
         msg = "Cannot find a pair of samples to mix."
+
+        # Each class has only one sample. In intra-class mode there is no pair to mix.
         labels = np.arange(10)
         with self.assertRaises(ValueError) as cm:
             mixup(self.matrix, n=10, labels=labels, intra_class=True, seed=42)
+        self.assertEqual(str(cm.exception), msg)
+
+        # Entire dataset has only one sample => no pair to mix.
+        with self.assertRaises(ValueError) as cm:
+            mixup(self.matrix[:1], n=10, seed=42)
         self.assertEqual(str(cm.exception), msg)
 
     def test_aitchison_mixup(self):
@@ -675,7 +717,7 @@ class AugmentationTests(TestCase):
             matrix, n=10, tree=tree, taxa=taxa, seed=42, append=True
         )
         self.assertTupleEqual(obs_mat.shape, (20, 10))
-        npt.assert_array_equal(obs_mat[:10], self.matrix)
+        npt.assert_array_equal(obs_mat[:10], matrix)
         npt.assert_array_equal(obs_mat[10:], exp_mat)
 
         # two-class labels
@@ -719,7 +761,7 @@ class AugmentationTests(TestCase):
 
         # two-class labels, intra-class mixing
         obs_mat, obs_lab = phylomix(
-            self.matrix, n=10, tree=tree, taxa=taxa, labels=labels_2,
+            matrix, n=10, tree=tree, taxa=taxa, labels=labels_2,
             intra_class=True, seed=42
         )
         exp_mat = np.array([
@@ -751,7 +793,7 @@ class AugmentationTests(TestCase):
 
         # three-class labels
         obs_mat, obs_lab = phylomix(
-            self.matrix, n=10, tree=tree, taxa=taxa, labels=labels_3, seed=42
+            matrix, n=10, tree=tree, taxa=taxa, labels=labels_3, seed=42
         )
         exp_mat = np.array([
             [ 0,  0,  0,  0,  1,  4,  3,  0,  0,  1],
@@ -779,6 +821,17 @@ class AugmentationTests(TestCase):
         ])
         npt.assert_array_equal(obs_mat, exp_mat)
         npt.assert_array_equal(obs_lab.round(2), exp_lab)
+
+    def test_phylomix_edges(self):
+        # a simple example (2 x 5)
+        matrix = np.arange(10).reshape(2, 5)
+        labels = np.array([0, 1])
+        taxa = list("abcde")
+        tree = TreeNode.read(["(((a,b),c),(d,e));"])
+        obs_mat, obs_lab = phylomix(
+            matrix, n=5, tree=tree, taxa=taxa, labels=labels, seed=42
+        )
+        # print(obs_mat)
 
 
 if __name__ == "__main__":

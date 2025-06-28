@@ -185,12 +185,13 @@ def _format_input(table, labels, intra_class=False, normalize=False, taxa=None):
     n_samples = matrix.shape[0]
     if labels is None:
         pairs = _all_pairs(n_samples)
-        return matrix, None, pairs, taxa
-    labels_1d, labels_2d = _validate_labels(labels, n_samples)
-    if intra_class:
-        pairs = _intra_class_pairs(labels_1d)
+        labels_2d = None
     else:
-        pairs = _all_pairs(n_samples)
+        labels_1d, labels_2d = _validate_labels(labels, n_samples)
+        if intra_class:
+            pairs = _intra_class_pairs(labels_1d)
+        else:
+            pairs = _all_pairs(n_samples)
     if len(pairs) == 0:
         raise ValueError("Cannot find a pair of samples to mix.")
     return matrix, labels_2d, pairs, taxa
@@ -302,9 +303,9 @@ def mixup(
 
     Returns
     -------
-    aug_matrix : ndarray of shape (n_samples + n, n_features)
+    aug_matrix : ndarray of shape (n, n_features)
         Augmented data matrix.
-    aug_labels : ndarray of shape (n_samples + n, n_classes), optional
+    aug_labels : ndarray of shape (n, n_classes), optional
         Augmented class labels in one-hot encoded format. Available if ``labels`` are
         provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
@@ -367,10 +368,10 @@ def mixup(
     rng = get_rng(seed)
     matrix, labels, pairs, _ = _format_input(table, labels, intra_class)
 
-    # Sample pairs of samples to mix.
+    # Draw pairs of samples to mix.
     pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    # Sample mixing coefficient (lambda) from a beta distribution.
+    # Draw mixing coefficients (lambda) from a beta distribution.
     lams = rng.beta(alpha, alpha, size=(n, 1))
 
     # Collect paired sample data.
@@ -467,9 +468,9 @@ def aitchison_mixup(
 
     Returns
     -------
-    aug_matrix : ndarray of shape (n_samples + n, n_features)
+    aug_matrix : ndarray of shape (n, n_features)
         Augmented data matrix.
-    aug_labels : ndarray of shape (n_samples + n, n_classes), optional
+    aug_labels : ndarray of shape (n, n_classes), optional
         Augmented class labels in one-hot encoded format. Available if ``labels`` are
         provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
@@ -550,7 +551,7 @@ def aitchison_mixup(
     matrix, labels, pairs, _ = _format_input(table, labels, intra_class, normalize)
     pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    # Sample mixing coefficient (lambda) from a beta distribution.
+    # Draw mixing coefficients (lambda) from a beta distribution.
     lams = rng.beta(alpha, alpha, size=(n, 1))
 
     # Collect paired sample data to mix.
@@ -613,9 +614,9 @@ def compositional_cutmix(
 
     Returns
     -------
-    aug_matrix : ndarray of shape (n_samples + n, n_features)
+    aug_matrix : ndarray of shape (n, n_features)
         Augmented data matrix.
-    aug_labels : ndarray of shape (n_samples + n, n_classes), optional
+    aug_labels : ndarray of shape (n, n_classes), optional
         Augmented class labels in one-hot encoded format. Available if ``labels`` are
         provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
@@ -675,7 +676,7 @@ def compositional_cutmix(
     matrix, labels, pairs, _ = _format_input(table, labels, True, normalize)
     pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    # Sample binary gates to control the choice between samples 1 and 2 per feature.
+    # Draw binary gates to control the choice between samples 1 and 2 per feature.
     probs = rng.uniform(0, 1, size=(n, 1))
     gates = rng.binomial(1, probs, size=(n, matrix.shape[1])).astype(bool)
 
@@ -691,18 +692,54 @@ def compositional_cutmix(
     return _format_output(aug_matrix, aug_labels, matrix, labels, append)
 
 
-def _indices_under_nodes(
-    tree: "TreeNode", taxon_map: dict[str, int]
-) -> list[list[int]]:
-    """Generate a nested list representing feature indices descending from each node.
+def _indices_under_nodes(tree, taxa):
+    """Pre-compute feature indices descending from each node.
 
-    `taxon_map` is a mapping of taxa (tip names) to feature indices.
+    Parameters
+    ----------
+    tree : TreeNode
+        Reference tree.
+    taxa : sequence of str
+        Taxa (tip names) corresponding to feature indices.
 
+    Returns
+    -------
+    list of dict of {int: None}
+        Feature indices descending from each node.
+
+    Raises
+    ------
+    ValueError
+        If there are duplicate taxa.
+    ValueError
+        If some taxa are not present as tip names in the tree.
+
+    See Also
+    --------
+    skbio.tree._utils._validate_taxa_and_tree
+
+    Notes
+    -----
     Only internal nodes with at least one descending feature are included.
 
+    This function does not ensure all tip names in the tree are unique.
+
+    The output is a list of dicts instead of just list of lists. The reason is
+    explained in the inline comments of `phylomix`.
+
     """
+    n_taxa = len(taxa)
+
+    taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
+    if len(taxon_map) < n_taxa:
+        raise ValueError("All taxa must be unique.")
+
+    seen = set()
+    seen_add = seen.add
     res = []
     res_append = res.append
+    dict_fromkeys = dict.fromkeys
+
     for node in tree.postorder(include_self=True):
         if node.children:
             lst = []
@@ -711,13 +748,18 @@ def _indices_under_nodes(
                 del child._taxa
             node._taxa = lst
             if lst:
-                res_append(lst)
+                res_append(dict_fromkeys(lst))
         else:
-            if node.name in taxon_map:
-                node._taxa = [taxon_map[node.name]]
+            if (taxon := node.name) in taxon_map:
+                node._taxa = [taxon_map[taxon]]
+                seen_add(taxon)
             else:
                 node._taxa = []
     del tree._taxa
+
+    if missing := n_taxa - len(seen):
+        raise ValueError(f"{missing} taxa are not present as tip names in the tree.")
+
     return res
 
 
@@ -731,6 +773,7 @@ def phylomix(
     alpha: float = 2.0,
     append: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    validate: bool = True,
 ) -> tuple:
     r"""Data augmentation by PhyloMix.
 
@@ -745,8 +788,8 @@ def phylomix(
         Tree structure modeling the relationships between features.
     taxa : array_like of shape (n_features,), optional
         Taxa (tip names) in ``tree`` corresponding to individual features. Can be
-        omitted if ``table`` already contains feature IDs that match taxa. Otherwise
-        they need to be explicitly provided.
+        omitted if ``table`` already contains feature IDs that are taxa. Otherwise
+        they need to be explicitly provided. Should be a subset of taxa in the tree.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
         Class labels for the data. Accepts either indices (1-D) or one-hot encoded
         labels (2-D).
@@ -761,12 +804,14 @@ def phylomix(
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
+    validate : bool, optional
+        If True (default), check if the table, the taxa and the tree are compatible.
 
     Returns
     -------
-    aug_matrix : ndarray of shape (n_samples + n, n_features)
+    aug_matrix : ndarray of shape (n, n_features)
         Augmented data matrix.
-    aug_labels : ndarray of shape (n_samples + n, n_classes), optional
+    aug_labels : ndarray of shape (n, n_classes), optional
         Augmented class labels in one-hot encoded format. Available if ``labels`` are
         provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
@@ -822,19 +867,13 @@ def phylomix(
     rng = get_rng(seed)
     matrix, labels, pairs, taxa = _format_input(table, labels, intra_class, taxa=taxa)
     pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
-
-    # Map taxa (tip names) to feature indices.
-    from skbio.tree._utils import _validate_taxa_and_tree
-
-    _validate_taxa_and_tree(taxa, tree)
     n_taxa = len(taxa)
-    taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
 
     # Pre-calculate feature indices descending from each node.
-    node_indices = _indices_under_nodes(tree, taxon_map)
+    node_indices = _indices_under_nodes(tree, taxa)
     n_nodes = len(node_indices)
 
-    # Sample mixing coefficient (lambda) from a beta distribution.
+    # Draw mixing coefficients (lambda) from a beta distribution.
     lams = rng.beta(alpha, alpha, size=n)
 
     # Randomly shuffle about half of the pairs. This is because each pair of samples
@@ -845,33 +884,39 @@ def phylomix(
     pairs_sel[gates] = pairs_sel[gates][:, ::-1]
 
     aug_matrix = []
-    aug_labels = [] if labels is not None else None
     for (idx1, idx2), lam in zip(pairs_sel, lams):
         x1, x2 = matrix[idx1], matrix[idx2]
 
         # Number of features to select (ratio: 1 - lambda).
         n_selected = int(np.ceil((1.0 - lam) * n_taxa))
 
+        # Shuffle nodes.
+        it = iter(rng.permutation(n_nodes))
+
         # Randomly sample nodes and add their descending feature indices to selection,
         # until it reaches a given size.
         # Note 1: Nodes may overlap each other, thus descending feature indices may be
         # redundant.
-        # Note 2: One cannot predict how many nodes need to be sampled in order to get
+        # Note 2: Dictionary is used instead of set because the order of elements in a
+        # dictionary is stable (unlike set, which is unstable).
+        # See `_indices_under_nodes` for how it was done.
+        # Note 3: One cannot predict how many nodes need to be sampled in order to get
         # n_selected features. Otherwise one can do the following:
+        #
         #     nodes_sel = rng.choice(n_nodes, size=num_nodes_to_sample)
         #     selected = np.unique(np.fromiter(itertools.chain.from_iterable(
-        #         node_indices[i] for i in nodes_self), dtype=np.intp))
-        # Note 3: A dictionary is used because the order of elements is stable (unlike
-        # set, which is unstable and can impact reproducibility.
-        # Note 4: Permutation is used instead of sorting because we just want stable
-        # selection of indices whereas order doesn't matter. `matrix[selected]` should
-        # always be the same.
+        #         node_indices[i].keys() for i in nodes_self), dtype=np.intp))
+        #
+        # Note 4: It it guaranteed that n_selected <= n_taxa <= n_taxa_in_tree,
+        # therefore the `while` loop won't last infinitely.
         selected = {}
-        for i in rng.permutation(n_nodes):
-            selected.update(dict.fromkeys(node_indices[i]))
-            if len(selected) >= n_selected:
-                break
-        # Note: len(selected) < n_selected is impossible, therefore a check is omitted.
+        while len(selected) < n_selected:
+            selected.update(node_indices[next(it)])
+
+        # Drop out extra indices.
+        # Permutation is used instead of sorting because we just want stable selection
+        # of indices whereas order doesn't matter. `matrix[selected]` should always be
+        # the same regardless of order.
         selected = np.fromiter(selected.keys(), dtype=np.intp)
         selected = rng.permutation(selected)[:n_selected]
 
@@ -892,6 +937,7 @@ def phylomix(
         # If either is zero, just use sample 1.
         else:
             aug_matrix.append(x1)
+
     aug_matrix = np.vstack(aug_matrix)
 
     aug_labels = _make_aug_labels(labels, pairs_sel, lams.reshape(-1, 1), intra_class)
