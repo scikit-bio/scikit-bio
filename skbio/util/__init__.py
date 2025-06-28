@@ -55,8 +55,8 @@ Decorators
    params_aliased
 
 
-Types
------
+Typing
+------
 
 .. autosummary::
    :toctree: generated/
@@ -106,7 +106,7 @@ from ._decorator import (
 )
 from ._optionals import get_package
 from ._plotting import PlottableMixin
-from ._types import TableLike
+from ._typing import TableLike
 
 __all__ = [
     "cardinal_to_ordinal",
