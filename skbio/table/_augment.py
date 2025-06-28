@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.random import RandomState, Generator
@@ -40,6 +40,21 @@ def _validate_labels(  # type: ignore[return]
     labels_one_hot : ndarray of shape (n_samples, n_classes)
         The class labels in one-hot encoded format. Each row contains exactly one 1 and
         the rest 0s, indicating the class membership for that sample.
+
+    Raises
+    ------
+    ValueError
+        If labels are not 1-D or 2-D.
+    ValueError
+        If labels' sample count is not ``n``.
+    ValueError
+        If index labels contain non-integer values.
+    ValueError
+        If index labels do not start from zero.
+    ValueError
+        If index labels are not consecutive integers.
+    ValueError
+        If one-hot encoded labels are not valid.
 
     """
     labels = np.asarray(labels)
@@ -89,7 +104,7 @@ def _validate_labels(  # type: ignore[return]
         return labels_index, labels
 
 
-def _normalize_matrix(matrix):
+def _normalize_matrix(matrix: "NDArray") -> "NDArray":
     r"""Normalize a data matrix if needed such that each row sums to 1.
 
     Parameters
@@ -151,7 +166,18 @@ def _intra_class_pairs(labels: "ArrayLike") -> "NDArray":
         return np.empty((0, 2), dtype=np.intp)
 
 
-def _format_input(table, labels, intra_class=False, normalize=False, taxa=None):
+def _format_input(
+    table,
+    labels: Union[Sequence, "NDArray"],
+    intra_class: Optional[bool] = False,
+    normalize: Optional[bool] = False,
+    taxa: Optional[Union[Sequence, "NDArray"]] = None,
+) -> tuple[
+    "NDArray",
+    Optional["NDArray"],
+    "NDArray",
+    Optional[Union[Sequence, "NDArray"]],
+]:
     """Format input data for augmentation.
 
     Parameters
@@ -197,7 +223,12 @@ def _format_input(table, labels, intra_class=False, normalize=False, taxa=None):
     return matrix, labels_2d, pairs, taxa
 
 
-def _make_aug_labels(labels, pairs, lams, intra_class):
+def _make_aug_labels(
+    labels: "NDArray",
+    pairs: "NDArray",
+    lams: "NDArray",
+    intra_class: bool,
+) -> "NDArray":
     r"""Generate class labels for synthetic samples.
 
     Parameters
@@ -225,7 +256,13 @@ def _make_aug_labels(labels, pairs, lams, intra_class):
         return lams * labels[pairs[:, 0]] + (1.0 - lams) * labels[pairs[:, 1]]
 
 
-def _format_output(aug_matrix, aug_labels, matrix, labels, append=False):
+def _format_output(
+    aug_matrix: "NDArray",
+    aug_labels: Optional["NDArray"],
+    matrix: "NDArray",
+    labels: Optional["NDArray"],
+    append: bool = False,
+) -> tuple["NDArray", "NDArray"]:
     """Format output data of augmentation.
 
     Parameters
@@ -270,7 +307,7 @@ def mixup(
     alpha: float = 2.0,
     append: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-) -> tuple:
+) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by vanilla mixup.
 
     Parameters
@@ -434,7 +471,7 @@ def aitchison_mixup(
     normalize: bool = True,
     append: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-) -> tuple:
+) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by Aitchison mixup.
 
     This function requires the data to be compositional (values per sample sum to one).
@@ -576,7 +613,7 @@ def compositional_cutmix(
     normalize: bool = True,
     append: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-) -> tuple:
+) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by compositional cutmix.
 
     This function requires the data to be compositional (values per sample sum to one).
@@ -692,7 +729,9 @@ def compositional_cutmix(
     return _format_output(aug_matrix, aug_labels, matrix, labels, append)
 
 
-def _indices_under_nodes(tree, taxa):
+def _indices_under_nodes(
+    tree: "TreeNode", taxa: Union[Sequence, "NDArray"]
+) -> list[dict[int, None]]:
     """Pre-compute feature indices descending from each node.
 
     Parameters
@@ -729,14 +768,13 @@ def _indices_under_nodes(tree, taxa):
 
     """
     n_taxa = len(taxa)
-
     taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
     if len(taxon_map) < n_taxa:
         raise ValueError("All taxa must be unique.")
 
-    seen = set()
+    seen: set[str] = set()
     seen_add = seen.add
-    res = []
+    res: list[dict[int, None]] = []
     res_append = res.append
     dict_fromkeys = dict.fromkeys
 
@@ -773,8 +811,7 @@ def phylomix(
     alpha: float = 2.0,
     append: bool = False,
     seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-    validate: bool = True,
-) -> tuple:
+) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by PhyloMix.
 
     Parameters
@@ -804,8 +841,6 @@ def phylomix(
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
-    validate : bool, optional
-        If True (default), check if the table, the taxa and the tree are compatible.
 
     Returns
     -------
@@ -814,6 +849,11 @@ def phylomix(
     aug_labels : ndarray of shape (n, n_classes), optional
         Augmented class labels in one-hot encoded format. Available if ``labels`` are
         provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
+
+    Raises
+    ------
+    ValueError
+        If taxa are unavailable.
 
     See Also
     --------
@@ -866,8 +906,11 @@ def phylomix(
     """
     rng = get_rng(seed)
     matrix, labels, pairs, taxa = _format_input(table, labels, intra_class, taxa=taxa)
-    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
+    if taxa is None:
+        raise ValueError("Taxa must be included in table or explicitly provided.")
     n_taxa = len(taxa)
+
+    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
     # Pre-calculate feature indices descending from each node.
     node_indices = _indices_under_nodes(tree, taxa)
@@ -909,7 +952,7 @@ def phylomix(
         #
         # Note 4: It it guaranteed that n_selected <= n_taxa <= n_taxa_in_tree,
         # therefore the `while` loop won't last infinitely.
-        selected = {}
+        selected: dict[str, None] = {}
         while len(selected) < n_selected:
             selected.update(node_indices[next(it)])
 

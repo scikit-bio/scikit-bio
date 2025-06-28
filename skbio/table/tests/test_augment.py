@@ -10,6 +10,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
+import pandas as pd
 
 from skbio.tree import TreeNode
 from skbio.stats.composition import closure
@@ -822,16 +823,49 @@ class AugmentationTests(TestCase):
         npt.assert_array_equal(obs_mat, exp_mat)
         npt.assert_array_equal(obs_lab.round(2), exp_lab)
 
-    def test_phylomix_edges(self):
+    def test_phylomix_errors(self):
         # a simple example (2 x 5)
         matrix = np.arange(10).reshape(2, 5)
         labels = np.array([0, 1])
         taxa = list("abcde")
         tree = TreeNode.read(["(((a,b),c),(d,e));"])
+
+        # normal situation
         obs_mat, obs_lab = phylomix(
             matrix, n=5, tree=tree, taxa=taxa, labels=labels, seed=42
         )
-        # print(obs_mat)
+        exp_mat = np.array([
+            [ 0,  2,  2,  2,  3],
+            [ 0,  1,  1,  3,  4],
+            [ 0,  1,  2,  3,  3],
+            [ 0,  6,  8, 12,  9],
+            [ 5,  6,  6,  9,  9],
+        ])
+        exp_lab = np.array([
+            [0.42, 0.58],
+            [0.53, 0.47],
+            [0.64, 0.36],
+            [0.48, 0.52],
+            [0.32, 0.68],
+        ])
+        npt.assert_array_equal(obs_mat, exp_mat)
+        npt.assert_array_equal(obs_lab.round(2), exp_lab)
+
+        # taxa not provided
+        msg = "Taxa must be included in table or explicitly provided."
+        with self.assertRaises(ValueError) as cm:
+            phylomix(matrix, n=5, tree=tree, taxa=None)
+        self.assertEqual(str(cm.exception), msg)
+
+        # taxa included in table
+        df = pd.DataFrame(matrix, columns=taxa)
+        obs_mat, obs_lab = phylomix(df, n=5, tree=tree, seed=42)
+        npt.assert_array_equal(obs_mat, exp_mat)
+
+        # explicitly provided taxa override feature IDs in table
+        df = pd.DataFrame(matrix, columns=list("uvwxy"))
+        obs_mat, obs_lab = phylomix(df, n=5, tree=tree, taxa=taxa, seed=42)
+        npt.assert_array_equal(obs_mat, exp_mat)
 
 
 if __name__ == "__main__":
