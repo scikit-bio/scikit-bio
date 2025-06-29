@@ -14,6 +14,11 @@ import numpy as np
 from skbio.table import Table
 from skbio.util import get_package
 
+
+# ------------------------------------------------
+# TableLike (see: skbio.table.table_like)
+# ------------------------------------------------
+
 # Base types which are always available
 TableLike = Union[pd.DataFrame, np.ndarray, Table]
 
@@ -25,3 +30,10 @@ if pl is not None:
 adt = get_package("anndata", raise_error=False)
 if adt is not None:
     TableLike = Union[TableLike, adt.AnnData]  # type: ignore[misc]
+
+
+# ------------------------------------------------
+# SeedLike (see: skbio.util.get_rng)
+# ------------------------------------------------
+
+SeedLike = Union[int, np.random.Generator, np.random.RandomState]

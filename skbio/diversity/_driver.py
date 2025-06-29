@@ -6,6 +6,12 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Any, Optional, Union, Iterable, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import TableLike
+
 from functools import partial
 from itertools import chain
 from inspect import signature, getmembers, isfunction
@@ -13,8 +19,12 @@ from inspect import signature, getmembers, isfunction
 import numpy as np
 import pandas as pd
 
-import skbio
-from skbio.diversity.alpha._pd import _faith_pd, _phydiv, _setup_pd
+from skbio.diversity import alpha
+from skbio.diversity.alpha._pd import (
+    _setup_pd,
+    _faith_pd,
+    _phydiv,
+)
 from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac,
     _setup_multiple_weighted_unifrac,
@@ -70,7 +80,7 @@ _pdist_metrics = {
 }
 
 
-def get_alpha_diversity_metrics():
+def get_alpha_diversity_metrics() -> list[str]:
     r"""List scikit-bio's alpha diversity metrics.
 
     The alpha diversity metrics listed here can be passed as metrics to
@@ -89,10 +99,10 @@ def get_alpha_diversity_metrics():
     get_beta_diversity_metrics
 
     """
-    return [x[0] for x in getmembers(skbio.diversity.alpha, isfunction)]
+    return [x[0] for x in getmembers(alpha, isfunction)]
 
 
-def get_beta_diversity_metrics():
+def get_beta_diversity_metrics() -> list[str]:
     """List scikit-bio's beta diversity metrics.
 
     The beta diversity metrics listed here can be passed as metrics to
@@ -120,37 +130,42 @@ def get_beta_diversity_metrics():
     return sorted(_pdist_metrics.union(["unweighted_unifrac", "weighted_unifrac"]))
 
 
-def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
+def alpha_diversity(
+    metric: Union[str, Callable],
+    counts: "TableLike",
+    ids: Optional["ArrayLike"] = None,
+    validate: bool = True,
+    **kwargs: Any,
+) -> pd.Series:
     r"""Compute alpha diversity for one or more samples.
 
     Parameters
     ----------
     metric : str or callable
-        The alpha diversity metric to apply to the sample(s). Passing metric as
-        a string is preferable as this often results in an optimized version of
-        the metric being used.
-    counts : 1D or 2D array_like of ints or floats, Table
-        Vector or matrix containing count/abundance data. If a matrix, each row
-        should contain counts of taxa in a given sample.
-    ids : iterable of strs, optional
+        The alpha diversity metric to apply to the sample(s). See
+        :mod:`~skbio.diversity.alpha` for available metrics. Passing metric as a string
+        is preferable as this often results in an optimized version of the metric
+        being used.
+    counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
+        Vector or matrix containing count/abundance data of one or multiple samples.
+        See :doc:`supported formats <../reference/table_like>`.
+    ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
         that samples were provided.
     validate: bool, optional
-        If ``False``, validation of the input won't be performed. This step can
-        be slow, so if validation is run elsewhere it can be disabled here.
-        However, invalid input data can lead to invalid results or error
-        messages that are hard to interpret, so this step should not be
-        bypassed if you're not certain that your input data are valid. See
-        :mod:`skbio.diversity` for the description of what validation entails
-        so you can determine if you can safely disable validation.
-    kwargs : kwargs, optional
-        Metric-specific parameters.
+        If True (default), validate the input data before applying the alpha diversity
+        metric. See :mod:`skbio.diversity` for the details of validation.
+    kwargs : dict, optional
+        Metric-specific parameters. Refer to the documentation of the chosen metric.
+        A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
+        provided, will extract taxa (feature IDs) from ``counts``, if available, and
+        pass to the metric.
 
     Returns
     -------
     pd.Series
-        Values of ``metric`` for all vectors provided in ``counts``. The index
+        Values of ``metric`` for all samples provided in ``counts``. The index
         will be ``ids``, if provided.
 
     Raises
@@ -190,7 +205,7 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     # other metrics (call on each sample)
     else:
         if isinstance(metric, str):
-            metric = getattr(skbio.diversity.alpha, metric, None)
+            metric = getattr(alpha, metric, None)
             if metric is None or not isfunction(metric):
                 raise ValueError(
                     f'"{metric}" is not an available alpha diversity metric name. '
@@ -210,146 +225,49 @@ def alpha_diversity(metric, counts, ids=None, validate=True, **kwargs):
     return pd.Series(results, index=ids)
 
 
-@deprecated(
-    "0.5.0",
-    msg="The return type is unstable. Developer caution is advised. The resulting "
-    "DistanceMatrix object will include zeros when distance has not been calculated, "
-    "and therefore can be misleading.",
-)
-def partial_beta_diversity(metric, counts, ids, id_pairs, validate=True, **kwargs):
-    r"""Compute distances only between specified ID pairs.
-
-    Parameters
-    ----------
-    metric : str or callable
-        The pairwise distance function to apply. If ``metric`` is a string, it
-        must be resolvable by scikit-bio (e.g., UniFrac methods), or must be
-        callable.
-    counts : 2D array_like of ints or floats
-        Matrix containing count/abundance data where each row contains counts
-        of taxa in a given sample.
-    ids : iterable of strs
-        Identifiers for each sample in ``counts``.
-    id_pairs : iterable of tuple
-        An iterable of tuples of IDs to compare (e.g., ``[('a', 'b'), ('a',
-        'c'), ...])``. If specified, the set of IDs described must be a subset
-        of ``ids``.
-    validate : bool, optional
-        See :func:`beta_diversity` for details.
-    kwargs : kwargs, optional
-        Metric-specific parameters.
-
-    Returns
-    -------
-    skbio.DistanceMatrix
-        Distances between pairs of samples indicated by id_pairs. Pairwise
-        distances not defined by id_pairs will be 0.0. Use this resulting
-        DistanceMatrix with caution as 0.0 is a valid distance.
-
-    Raises
-    ------
-    ValueError
-        If ``ids`` are not specified.
-        If ``id_pairs`` are not a subset of ``ids``.
-        If ``metric`` is not a callable or is unresolvable string by scikit-bio.
-        If duplicates are observed in ``id_pairs``.
-
-    See Also
-    --------
-    beta_diversity
-    get_beta_diversity_metrics
-
-    """
-    taxa = kwargs.pop("taxa", None)
-    counts, ids, taxa = _ingest_table(counts, ids, taxa)
-    if validate:
-        counts = _validate_counts_matrix(counts)
-    if metric in _qualitative_metrics:
-        counts = _qualify_counts(counts)
-
-    id_pairs = list(id_pairs)
-    all_ids_in_pairs = set(chain.from_iterable(id_pairs))
-    if not all_ids_in_pairs.issubset(ids):
-        raise ValueError("`id_pairs` are not a subset of `ids`")
-
-    hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
-    if len(hashes) != len(id_pairs) * 2:
-        raise ValueError("A duplicate or a self-self pair was observed.")
-
-    if metric == "unweighted_unifrac":
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
-        metric, counts = _setup_multiple_unweighted_unifrac(
-            counts, taxa=taxa, tree=tree, validate=validate
-        )
-    elif metric == "weighted_unifrac":
-        # get the value for normalized. if it was not provided, it will fall
-        # back to the default value inside of _weighted_unifrac_pdist_f
-        normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
-        metric, counts = _setup_multiple_weighted_unifrac(
-            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
-        )
-    elif callable(metric):
-        metric = partial(metric, **kwargs)
-        # remove all values from kwargs, since they have already been provided
-        # through the partial
-        kwargs = {}
-    else:
-        raise ValueError(
-            "partial_beta_diversity is only compatible with "
-            "optimized unifrac methods and callable functions."
-        )
-
-    dm = np.zeros((len(ids), len(ids)), dtype=float)
-    id_index = {id_: idx for idx, id_ in enumerate(ids)}
-    id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
-
-    for u, v in id_pairs_indexed:
-        dm[u, v] = metric(counts[u], counts[v], **kwargs)
-
-    return DistanceMatrix(dm + dm.T, ids)
-
-
 def beta_diversity(
-    metric, counts, ids=None, validate=True, pairwise_func=None, **kwargs
-):
+    metric: Union[str, Callable],
+    counts: "TableLike",
+    ids: Optional["ArrayLike"] = None,
+    validate: bool = True,
+    pairwise_func: Optional[Callable] = None,
+    **kwargs: Any,
+) -> DistanceMatrix:
     r"""Compute distances between all pairs of samples.
 
     Parameters
     ----------
     metric : str or callable
-        The pairwise distance function to apply. See the scipy ``pdist`` docs
-        and the scikit-bio functions linked under *See Also* for available
-        metrics. Passing metrics as a strings is preferable as this often
-        results in an optimized version of the metric being used.
-    counts : 2D array_like of ints or floats, 2D pandas DataFrame, Table
-        Matrix containing count/abundance data where each row contains counts
-        of taxa in a given sample.
-    ids : iterable of strs, optional
-        Identifiers for each sample in ``counts``. By default, samples will be
-        assigned integer identifiers in the order that they were provided
-        (where the type of the identifiers will be ``str``).
-    validate : bool, optional
-        If ``False``, validation of the input won't be performed. This step can
-        be slow, so if validation is run elsewhere it can be disabled here.
-        However, invalid input data can lead to invalid results or error
-        messages that are hard to interpret, so this step should not be
-        bypassed if you're not certain that your input data are valid. See
-        :mod:`skbio.diversity` for the description of what validation entails
-        so you can determine if you can safely disable validation.
+        The beta diversity metric, i.e., a pairwise distance function to apply to the
+        sample(s). See :mod:`~skbio.diversity.beta` and SciPy's
+        :func:`~scipy.spatial.distance.pdist` for available metrics. Passing metric as
+        a string is preferable as this often results in an optimized version of the
+        metric being used.
+    counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
+        Vector or matrix containing count/abundance data of one or multiple samples.
+        See :doc:`supported formats <../reference/table_like>`.
+    ids : array_like of shape (n_samples,), optional
+        Identifiers for each sample in ``counts``. If not provided, will extract sample
+        IDs from ``counts``, if available, or assign integer identifiers in the order
+        that samples were provided.
+    validate: bool, optional
+        If True (default), validate the input data before applying the alpha diversity
+        metric. See :mod:`skbio.diversity` for the details of validation.
     pairwise_func : callable, optional
-        The function to use for computing pairwise distances. This function
-        must take ``counts`` and ``metric`` and return a square, hollow, 2-D
-        ``numpy.ndarray`` of dissimilarities (floats). Examples of functions
-        that can be provided are ``scipy.spatial.distance.pdist`` and
-        ``sklearn.metrics.pairwise_distances``. By default,
-        ``scipy.spatial.distance.pdist`` will be used.
-    kwargs : kwargs, optional
-        Metric-specific parameters.
+        The function to use for computing pairwise distances. Must take ``counts`` and
+        ``metric`` and return a square, hollow, 2-D float array of dissimilarities.
+        Examples of functions that can be provided are SciPy's
+        :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
+        :func:`~sklearn.metrics.pairwise_distances`.
+    kwargs : dict, optional
+        Metric-specific parameters. Refer to the documentation of the chosen metric.
+        A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
+        provided, will extract taxa (feature IDs) from ``counts``, if available, and
+        pass to the metric.
 
     Returns
     -------
-    skbio.DistanceMatrix
+    :class:`~skbio.stats.distance.DistanceMatrix`
         Distances between all pairs of samples (i.e., rows). The number of
         rows and columns will be equal to the number of rows in ``counts``.
 
@@ -425,3 +343,108 @@ def beta_diversity(
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
     return DistanceMatrix(distances, ids)
+
+
+@deprecated(
+    "0.5.0",
+    msg="The return type is unstable. Developer caution is advised. The resulting "
+    "DistanceMatrix object will include zeros when distance has not been calculated, "
+    "and therefore can be misleading.",
+)
+def partial_beta_diversity(
+    metric: Union[str, Callable],
+    counts: "TableLike",
+    ids: Optional["ArrayLike"],
+    id_pairs: Iterable[tuple[str, str]],
+    validate: bool = True,
+    **kwargs: Any,
+) -> DistanceMatrix:
+    r"""Compute distances only between specified ID pairs.
+
+    Parameters
+    ----------
+    metric : str or callable
+        The beta diversity metric to apply to the samples. See :func:`beta_diversity`
+        for details.
+    counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
+        Matrix containing count/abundance data of the samples. See
+        :doc:`supported formats <../reference/table_like>`.
+    ids : iterable of strs
+        Identifiers for each sample in ``counts``.
+    id_pairs : iterable of tuple of (str, str)
+        Pairs of sample IDs to compare (e.g., ``[('a', 'b'), ('a', 'c'), ...])``. If
+        specified, the they must be a subset of ``ids``.
+    validate : bool, optional
+        Validate the input data. See ``beta_diversity`` for details.
+    kwargs : dict, optional
+        Metric-specific parameters. See ``beta_diversity`` for details.
+
+    Returns
+    -------
+    :class:`~skbio.stats.distance.DistanceMatrix`
+        Distances between pairs of samples indicated by ``id_pairs``. Pairwise
+        distances not defined by id_pairs will be 0.0. Use this resulting
+        DistanceMatrix with caution as 0.0 is a valid distance.
+
+    Raises
+    ------
+    ValueError
+        If ``ids`` are not specified.
+        If ``id_pairs`` are not a subset of ``ids``.
+        If ``metric`` is not a callable or is unresolvable string by scikit-bio.
+        If duplicates are observed in ``id_pairs``.
+
+    See Also
+    --------
+    beta_diversity
+    get_beta_diversity_metrics
+
+    """
+    taxa = kwargs.pop("taxa", None)
+    counts, ids, taxa = _ingest_table(counts, ids, taxa)
+    if validate:
+        counts = _validate_counts_matrix(counts)
+    if metric in _qualitative_metrics:
+        counts = _qualify_counts(counts)
+
+    id_pairs = list(id_pairs)
+    all_ids_in_pairs = set(chain.from_iterable(id_pairs))
+    if not all_ids_in_pairs.issubset(ids):
+        raise ValueError("`id_pairs` are not a subset of `ids`")
+
+    hashes = {i for i in id_pairs}.union({i[::-1] for i in id_pairs})
+    if len(hashes) != len(id_pairs) * 2:
+        raise ValueError("A duplicate or a self-self pair was observed.")
+
+    if metric == "unweighted_unifrac":
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
+        metric, counts = _setup_multiple_unweighted_unifrac(
+            counts, taxa=taxa, tree=tree, validate=validate
+        )
+    elif metric == "weighted_unifrac":
+        # get the value for normalized. if it was not provided, it will fall
+        # back to the default value inside of _weighted_unifrac_pdist_f
+        normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
+        taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
+        metric, counts = _setup_multiple_weighted_unifrac(
+            counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
+        )
+    elif callable(metric):
+        metric = partial(metric, **kwargs)
+        # remove all values from kwargs, since they have already been provided
+        # through the partial
+        kwargs = {}
+    else:
+        raise ValueError(
+            "partial_beta_diversity is only compatible with "
+            "optimized unifrac methods and callable functions."
+        )
+
+    dm = np.zeros((len(ids), len(ids)), dtype=float)
+    id_index = {id_: idx for idx, id_ in enumerate(ids)}
+    id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
+
+    for u, v in id_pairs_indexed:
+        dm[u, v] = metric(counts[u], counts[v], **kwargs)
+
+    return DistanceMatrix(dm + dm.T, ids)

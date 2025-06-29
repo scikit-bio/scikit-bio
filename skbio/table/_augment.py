@@ -9,14 +9,14 @@
 from typing import Optional, Union, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.random import RandomState, Generator
     from numpy.typing import ArrayLike, NDArray
     from skbio.tree import TreeNode
+    from skbio.util._typing import TableLike, SeedLike
 
 import numpy as np
 from skbio.util import get_rng
 from skbio.stats.composition import closure
-from skbio.table._tabular import _ingest_table, _create_table
+from skbio.table._tabular import _ingest_table
 
 
 def _validate_labels(  # type: ignore[return]
@@ -300,21 +300,21 @@ def _format_output(
 
 
 def mixup(
-    table,
+    table: "TableLike",
     n: int,
     labels: Optional["NDArray"] = None,
     intra_class: bool = False,
     alpha: float = 2.0,
     append: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by vanilla mixup.
 
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See :doc:`../articles/table_like` for
-        supported formats.
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -463,14 +463,14 @@ def _aitchison_multiply(x: "NDArray", p: float) -> "NDArray":
 
 
 def aitchison_mixup(
-    table,
+    table: "TableLike",
     n: int,
     labels: Optional["NDArray"] = None,
     intra_class: bool = False,
     alpha: float = 2.0,
     normalize: bool = True,
     append: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by Aitchison mixup.
 
@@ -480,8 +480,8 @@ def aitchison_mixup(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See :doc:`../articles/table_like` for
-        supported formats.
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -607,12 +607,12 @@ def aitchison_mixup(
 
 
 def compositional_cutmix(
-    table,
+    table: "TableLike",
     n: int,
     labels: Optional["NDArray"] = None,
     normalize: bool = True,
     append: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by compositional cutmix.
 
@@ -622,8 +622,8 @@ def compositional_cutmix(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See :doc:`../articles/table_like` for
-        supported formats.
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -802,7 +802,7 @@ def _indices_under_nodes(
 
 
 def phylomix(
-    table,
+    table: "TableLike",
     n: int,
     tree: "TreeNode",
     taxa: Optional["ArrayLike"] = None,
@@ -810,15 +810,15 @@ def phylomix(
     intra_class: bool = False,
     alpha: float = 2.0,
     append: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> tuple["NDArray", Optional["NDArray"]]:
     r"""Data augmentation by PhyloMix.
 
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See :doc:`../articles/table_like` for
-        supported formats.
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
     n : int
         Number of synthetic samples to generate.
     tree : :class:`~skbio.tree.TreeNode`

@@ -55,15 +55,6 @@ Decorators
    params_aliased
 
 
-Typing
-------
-
-.. autosummary::
-   :toctree: generated/
-
-   TableLike
-
-
 Miscellaneous utilities
 -----------------------
 
@@ -106,7 +97,6 @@ from ._decorator import (
 )
 from ._optionals import get_package
 from ._plotting import PlottableMixin
-from ._typing import TableLike
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -127,5 +117,4 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
-    "TableLike",
 ]

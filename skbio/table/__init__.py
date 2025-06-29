@@ -31,7 +31,7 @@ supported table-like formats.
 .. toctree::
    :maxdepth: 1
 
-   articles/table_like
+   reference/table_like
 
 
 Data augmentation
