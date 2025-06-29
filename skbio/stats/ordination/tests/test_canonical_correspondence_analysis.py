@@ -14,7 +14,7 @@ from unittest import TestCase, main
 from skbio import OrdinationResults
 from skbio.stats.ordination import cca
 from skbio.util import get_data_path, assert_ordination_results_equal
-from skbio.util.config._config import set_config
+from skbio._config import set_config
 
 
 class TestCCAErrors(TestCase):

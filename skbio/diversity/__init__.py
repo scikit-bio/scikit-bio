@@ -96,8 +96,8 @@ Each frequency in a given vector represents the number of individuals observed
 for a particular taxon. We will refer to the frequencies associated with a
 single sample as a *counts vector* or ``counts`` throughout the documentation.
 Counts vectors are `array_like`: anything that can be converted into a 1-D
-numpy array is acceptable input. For example, you can provide a numpy array or
-a native Python list and the results will be identical.
+array is acceptable input. For example, you can provide a NumPy array or a
+native Python list and the results will be identical.
 
 The driver functions :func:`alpha_diversity` and :func:`beta_diversity` are
 designed to compute alpha diversity for one or more samples, or beta diversity
@@ -108,7 +108,7 @@ samples and columns represent taxa.
 
 Some diversity metrics incorporate relationships between the taxa in their
 computation through reference to a phylogenetic tree. These metrics
-additionally take a :class:`skbio.TreeNode` object and a list of taxa mapping
+additionally take a :class:`~skbio.TreeNode` object and a list of taxa mapping
 the values in the counts vector to tips in the tree.
 
 The driver functions are optimized so that computing a diversity metric more
@@ -186,29 +186,28 @@ Specifying a diversity metric
 The driver functions take a parameter, ``metric``, that specifies which
 diversity metric should be applied. The value that you provide for ``metric``
 can be either a string (e.g., ``"faith_pd"``) or a function (e.g.,
-``skbio.diversity.alpha.faith_pd``). The metric should generally be passed as a
-string, as this often uses an optimized version of the metric. For example,
-passing  ``metric="faith_pd"`` (a string) to ``alpha_diversity`` will be tens
-of times faster than passing ``metric=skbio.diversity.alpha.faith_pd`` (a
-function) when computing Faith's PD on about 100 samples.  Similarly, passing
-``metric="unweighted_unifrac"`` (a string) will be hundreds of times
-faster than passing ``metric=skbio.diversity.beta.unweighted_unifrac`` (a
-function) when computing unweighted UniFrac on about 100 samples. The latter
-may be faster if computing only one alpha or beta diversity value, but in
-these cases the run times will likely be so small that the difference will be
-negligible. **We therefore recommend that you always pass the metric as a
-string when possible.**
+:func:`~alpha.faith_pd`). The metric should generally be passed as a string,
+as this often uses an optimized version of the metric. For example, passing
+``metric="faith_pd"`` (a string) to ``alpha_diversity`` will be tens of times
+faster than passing ``metric=faith_pd`` (a function) when computing Faith's PD
+on about 100 samples.  Similarly, passing ``metric="unweighted_unifrac"`` (a
+string) will be hundreds of times faster than passing
+``metric=unweighted_unifrac`` (a function) when computing unweighted UniFrac
+on about 100 samples. The latter may be faster if computing only one alpha or
+beta diversity value, but in these cases the run times will likely be so small
+that the difference will be negligible. **We therefore recommend that you
+always pass the metric as a string when possible.**
 
 Passing a metric as a string will not be possible if the metric you'd like to
 run is not one that scikit-bio knows about. This might be the case, for
 example, if you're applying a custom metric that you've developed. To discover
 the metric names that scikit-bio knows about as strings that can be passed as
 ``metric`` to ``alpha_diversity`` or ``beta_diversity``, you can call
-``get_alpha_diversity_metrics`` or ``get_beta_diversity_metrics``,
+:func:`get_alpha_diversity_metrics` or :func:`get_beta_diversity_metrics`,
 respectively. These functions return lists of alpha and beta diversity metrics
 that are implemented in scikit-bio. There may be additional metrics that can be
 passed as strings which won't be listed here, such as those implemented in
-``scipy.spatial.distance.pdist``.
+SciPy's :func:`~scipy.spatial.distance.pdist`.
 
 
 Tutorial

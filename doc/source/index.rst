@@ -55,3 +55,4 @@ scikit-bio (canonically pronounced *sigh-kit-buy-oh*) is a library for working w
    metadata
    workflow
    util
+   config

@@ -564,8 +564,10 @@ class torch_cpu(TestCase):
     #     npt.assert_allclose(psi, sbpbasis)
 
 
-@skipIf(no_gpu_available() or no_torch, "Skipping all tests: no GPU available \
-                                        or no PyTorch dependency")
+@skipIf(
+    no_gpu_available() or no_torch,
+    "Skipping all tests: no GPU available or no PyTorch dependency",
+)
 class torch_cuda(TestCase):
     def setUp(self):
         # args

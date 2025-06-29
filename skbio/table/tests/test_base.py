@@ -7,8 +7,12 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from skbio.table import Table
+
 import numpy as np
+import numpy.testing as npt
+
+from skbio.table import Table, example_table
+from skbio.table._base import _table_to_numpy
 
 
 class TableTests(TestCase):
@@ -40,6 +44,17 @@ class TableTests(TestCase):
                          ['O0', 'O1', 'O2', 'O3', 'O4',
                           'O5', 'O6', 'O7', 'O8', 'O9'])
         self.assertEqual(int(table.nnz), 39)
+
+
+class TableUtilTests(TestCase):
+    def test_table_to_numpy(self):
+        exp_data = np.array([[0, 1, 2], [3, 4, 5]]).T
+        exp_ids = ['S1', 'S2', 'S3']
+        exp_feat_ids = ['O1', 'O2']
+        obs_data, obs_ids, obs_feat_ids = _table_to_numpy(example_table)
+        npt.assert_equal(obs_data, exp_data)
+        self.assertEqual(obs_ids, exp_ids)
+        self.assertEqual(obs_feat_ids, exp_feat_ids)
 
 
 if __name__ == '__main__':

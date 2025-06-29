@@ -12,9 +12,9 @@ from typing import Optional, Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from ._base import DistanceMatrix
-    from numpy.random import RandomState, Generator
     from numpy.typing import ArrayLike, NDArray
     import pandas as pd
+    from skbio.util._typing import SeedLike
 
 import numpy as np
 from scipy.stats import rankdata
@@ -27,7 +27,7 @@ def anosim(
     grouping: Union["pd.DataFrame", "ArrayLike"],
     column: Optional[str] = None,
     permutations: int = 999,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> "pd.Series":
     r"""Test for significant differences between groups using ANOSIM.
 

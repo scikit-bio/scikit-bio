@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Decorators."""
+
 from functools import wraps
 from collections import namedtuple
 from typing import Any

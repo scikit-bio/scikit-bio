@@ -136,7 +136,8 @@ class TreeTests(TestCase):
     def test_deepcopy(self):
         t = self.simple_t
         t.dummy = [1, [2, 3], 4]
-        cp = t.deepcopy()
+        with self.assertWarns(DeprecationWarning):
+            cp = t.deepcopy()
         cp.dummy[1].append(0)
         self.assertListEqual(t.dummy[1], [2, 3])
 
@@ -288,7 +289,9 @@ class TreeTests(TestCase):
 
         # parameter alias
         self.assertEqual(t1.lca(nodes=input1), exp1)
-        self.assertEqual(t1.lca(tipnames=input1), exp1)
+        with self.assertWarns(DeprecationWarning):
+            obsx = t1.lca(tipnames=input1)
+        self.assertEqual(obsx, exp1)
 
         # verify multiple calls work
         t_mul = t1.copy()
@@ -989,7 +992,8 @@ class TreeTests(TestCase):
 
         # renamed parameter
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=42)))
+        with self.assertWarns(DeprecationWarning):
+            obs = str(next(t.shuffle(shuffle_f=42)))
         self.assertEqual(obs, exp)
 
         # yield a row of 5 trees
@@ -1200,7 +1204,8 @@ class TreeTests(TestCase):
     def test_unrooted_deepcopy(self):
         t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         exp = "(b,c,(a,((f,g)h)e)d)root;\n"
-        obs = t.find("d").unrooted_deepcopy()
+        with self.assertWarns(DeprecationWarning):
+            obs = t.find("d").unrooted_deepcopy()
         self.assertEqual(str(obs), exp)
 
         t_ids = {id(n) for n in t.traverse()}
@@ -1881,7 +1886,8 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(sdbl, 2.2)
 
         # parameter alias
-        sdbl = tr.total_length(tip_subset="AE")
+        with self.assertWarns(DeprecationWarning):
+            sdbl = tr.total_length(tip_subset="AE")
         self.assertAlmostEqual(sdbl, 2.2)
 
         # missing node
@@ -2233,7 +2239,8 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t4, shared_only=True)
         self.assertEqual(result, 0)
 
-        result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
+        with self.assertWarns(DeprecationWarning):
+            result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
 
         result = t.compare_subsets(self.TreeRoot)
@@ -2292,7 +2299,8 @@ class TreeTests(TestCase):
         t2x = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,U:10):1,X:4);"])
         obs = tx.compare_cophenet(t2x, sample=3, shuffler=list.sort)
         self.assertAlmostEqual(obs, exp)
-        obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
+        with self.assertWarns(DeprecationWarning):
+            obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
         self.assertAlmostEqual(obs, exp)
 
         # sample too large
@@ -2333,7 +2341,8 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(obs, 13.7113092)
         obs = t1.compare_cophenet(t2, metric=euclidean, ignore_self=True)
         self.assertAlmostEqual(obs, 13.7113092)
-        obs = t1.compare_cophenet(t2, dist_f=euclidean, ignore_self=True)
+        with self.assertWarns(DeprecationWarning):
+            obs = t1.compare_cophenet(t2, dist_f=euclidean, ignore_self=True)
         self.assertAlmostEqual(obs, 13.7113092)
 
         # path distance (matches phangorn::path.dist)

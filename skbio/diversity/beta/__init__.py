@@ -3,10 +3,11 @@
 
 .. currentmodule:: skbio.diversity.beta
 
-This package provides implementations of beta diversity measures for computing
-sample dissimilarity. Users of this package should also explore
-``scipy.spatial.distance.pdist``, as it contains implementations of additional
-beta diversity metrics with interfaces similar to those provided here.
+This package provides implementations of beta diversity measures for computing sample
+dissimilarity. Users should also explore SciPy's :func:`~scipy.spatial.distance.pdist`,
+which provides implementations of additional beta diversity metrics with interfaces
+similar to those provided here, and can be directly used in the driver function
+:func:`~skbio.diversity.beta_diversity`.
 
 Functions
 ---------
