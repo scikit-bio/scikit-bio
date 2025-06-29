@@ -22,10 +22,19 @@ _skbb_version = 0
 
 # ====================================================
 
-# Load scikit-bio-binaries shared library object, if exists
-# Returns None if it cannot be found
-# Note: Should not be used directly, use get_dll instead
 def _get_new_skbb_dll():
+    """ Load scikit-bio-binaries shared library object, if exists.
+
+    Returns
+    -------
+    ctypes.CDLL object or None
+        Object to invoked external functions, or None, if no shared library found
+
+    Note
+    ----
+    Should not be used directly, use get_dll instead.
+
+    """
     import os
     try:
         dll = ctypes.CDLL("libskbb.so")
@@ -36,10 +45,19 @@ def _get_new_skbb_dll():
     return dll
 
 
-# Return scikit-bio-binaries shared library object, if exists
-# Returns None if it cannot be found
-# Note: Uses caching to minimize overheads
 def get_dll():
+    """ Load scikit-bio-binaries shared library object, if exists.
+
+    Returns
+    -------
+    ctypes.CDLL object or None
+        Object to invoked external functions, or None, if no shared library found
+
+    Note
+    ----
+    Internally it uses caching, to minimize overhead
+
+    """
     global _skbb_first_try
     global _skbb_dll
     if _skbb_first_try:
@@ -47,17 +65,38 @@ def get_dll():
         _skbb_first_try = False
     return _skbb_dll
 
+
 # ====================================================
 
-# Is the scikit-bio-binaries shared library available
-# Note that nother skbb function will work, if it does not
 def available():
+    """Check if the scikit-bio-binaries shared library available.
+
+    Returns
+    -------
+    boolean
+        If False, no other function in skbio.binaries will work
+
+    Note
+    ----
+    Internally it uses caching, to minimize overhead
+
+    """
     return get_dll() is not None
 
-# What API version does the scikit-bio-binaries shared library implement
-# Returns 0, if the shared library is not available
-# Note: Uses caching to minimize overheads
+
 def get_api_version():
+    """ What API version does the scikit-bio-binaries shared library implement.
+
+    Returns
+    -------
+    integer
+        API version, or 0, if the shared library is not available
+
+    Note
+    ----
+    Internally it uses caching, to minimize overhead
+
+    """
     global _skbb_version
     if _skbb_version==0:
         dll = get_dll()
@@ -65,9 +104,18 @@ def get_api_version():
             _skbb_version = dll.skbb_get_api_version()
     return _skbb_version
 
+
 # ====================================================
 
 def set_random_seed(new_seed):
+    """Set sbkio.binaries internal random seed
+
+    Parameters
+    ----------
+    new_seed : integer
+        Random seed to use
+
+    """
     dll = get_dll()
     if dll is not None:
         dll.skbb_set_random_seed(ctypes.c_uint(new_seed));

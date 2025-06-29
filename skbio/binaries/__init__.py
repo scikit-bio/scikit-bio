@@ -1,7 +1,7 @@
 r"""Optimized libraries from scikit-bio-binaries
 ============================================
 
-.. currentmodule:: skbio.skbb
+.. currentmodule:: skbio.binaries
 
 This module provides an interface to the optimized functions
 that are available in the scikit-bio-binaries package,

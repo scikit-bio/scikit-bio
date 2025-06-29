@@ -14,18 +14,40 @@ from ..binaries._util import (
     get_dll as _get_skbb_dll
 )
 
-# ====================================================
-
-# Check if skbb_pcoa_fsvd is available
-# same inputs as the full function, in case we support only a subset
-# If it returns True, it is safe to call pcoa_fsvd
 def pcoa_fsvd_available(
     distance_matrix,
     number_of_dimensions,
     inplace=False,
     seed=None,
 ):
-    if _skbb_get_api_version()>=1: # minimum version that support pcoa, includes check for library existence
+    """Check if the scikit-bio-binaries shared library provides the pcoa functionality.
+
+    Parameters
+    ----------
+    distance_matrix : DistanceMatrix
+        The input distance matrix.
+    number_of_dimensions : int
+        Dimensions to reduce the distance matrix to. This number determines how many
+        eigenvectors and eigenvalues will be returned.
+    inplace : bool
+        If True, the input distance matrix will be centered in-place to reduce memory
+        consumption, at the cost of losing the original distances. Default is False.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
+
+    Returns
+    -------
+    boolean
+        If False, the pcoa_fsvd function will raise an exception.
+
+    Note
+    ----
+    Internally it uses caching, to minimize overhead
+
+    """
+    # v1 is the minimum version that supports pcoa_fsvd
+    if _skbb_get_api_version()>=1: # includes check for library existence
+        # Do some basic sanity checks
         # check it is a positive number
         if not isinstance(number_of_dimensions, Integral):
             return False
@@ -42,14 +64,74 @@ def pcoa_fsvd_available(
         return False
 
 
-# perform PCoA using the FSVD method
-# Note: Seed must be either a non-negative integer or None
 def pcoa_fsvd(
     distance_matrix,
     number_of_dimensions,
     inplace=False,
     seed=None,
 ):
+    r"""Perform Principal Coordinate Analysis (PCoA).
+
+    PCoA is an ordination method similar to Principal Components Analysis (PCA), with
+    the difference that it operates on distance matrices, calculated using meaningful
+    and typically non-Euclidian methods.
+
+    Parameters
+    ----------
+    distance_matrix : DistanceMatrix
+        The input distance matrix.
+    number_of_dimensions : int
+        Dimensions to reduce the distance matrix to. This number determines how many
+        eigenvectors and eigenvalues will be returned.
+    inplace : bool
+        If True, the input distance matrix will be centered in-place to reduce memory
+        consumption, at the cost of losing the original distances. Default is False.
+    seed : int or np.random.Generator, optional
+        A user-provided random seed or random generator instance.
+
+    Returns
+    -------
+    tuple of 3 np.ndarray
+        eigenvalues, transformed samples and the proportion explained by each of them.
+
+
+    Notes
+    -----
+    Principal Coordinate Analysis (PCoA) was first described in [1]_.
+
+    It used the ``fsvd`` method, which performs fast
+    singular value decomposition (FSVD) [2]_, an efficient heuristic method that
+    allows a custom number of dimensions to be specified to reduce calculation at the
+    cost of losing accuracy. The degree of accuracy lost is dependent on dataset.
+
+    Eigenvalues represent the magnitude of individual principal coordinates, and
+    they are usually positive. However, negative eigenvalues can occur when the
+    distances were calculated using a non-Euclidean metric that does not satisfy
+    triangle inequality. If the negative eigenvalues are small in magnitude compared
+    to the largest positive eigenvalue, it is usually safe to ignore them. However,
+    large negative eigenvalues may indicate result inaccuracy, in which case a warning
+    message will be displayed.
+
+    PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
+    However, in ecology, the Euclidean distance preserved by PCA is often not a good
+    choice because it deals poorly with double zeros. For example, species have
+    unimodal distributions along environmental gradients. If a species is absent from
+    two sites simultaneously, it can't be known if an environmental variable is too
+    high in one of them and too low in the other, or too low in both, etc. On the other
+    hand, if a species is present in two sites, that means that the sites are similar.
+
+    Note that the returned eigenvectors are not normalized to unit length.
+
+    References
+    ----------
+    .. [1] Gower, J. C. (1966). Some distance properties of latent root and vector
+       methods used in multivariate analysis. Biometrika, 53(3-4), 325-338.
+
+    .. [2] Halko, N., Martinsson, P. G., Shkolnisky, Y., & Tygert, M. (2011). An
+       algorithm for the principal component analysis of large data sets. SIAM
+       Journal on Scientific computing, 33(5), 2580-2594.
+
+    """
     if _skbb_get_api_version()>=1: # minimum version that support pcoa
         if not isinstance(number_of_dimensions, Integral):
             raise ValueError("number_of_dimensions must be an integer value")
