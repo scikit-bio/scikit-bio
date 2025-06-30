@@ -17,6 +17,7 @@
 * Added parameter `starts` to `AlignPath.from_tabular` to specify starting positions in the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
 * Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187)).
 * Added the augmentation module to enable generation of synthetic samples ([#2214](https://github.com/scikit-bio/scikit-bio/pull/2214))
+* Added support for scikit-bio-binaries ([#2247](https://github.com/scikit-bio/scikit-bio/pull/2247))
 
 ### Performance enhancements
 
