@@ -327,7 +327,7 @@ def mixup(
         Shape parameter of the beta distribution.
     append : bool, optional
         If True, the returned data include both the original and synthetic samples. If
-        False (default) If False, only the synthetic samples are returned.
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
@@ -498,7 +498,7 @@ def aitchison_mixup(
         values for each sample add up to 1.
     append : bool, optional
         If True, the returned data include both the original and synthetic samples. If
-        False (default) If False, only the synthetic samples are returned.
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
@@ -635,7 +635,7 @@ def compositional_cutmix(
         values for each sample add up to 1.
     append : bool, optional
         If True, the returned data include both the original and synthetic samples. If
-        False (default) If False, only the synthetic samples are returned.
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
@@ -837,7 +837,7 @@ def phylomix(
         Shape parameter of the beta distribution.
     append : bool, optional
         If True, the returned data include both the original and synthetic samples. If
-        False (default) If False, only the synthetic samples are returned.
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.

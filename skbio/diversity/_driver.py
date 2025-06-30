@@ -366,7 +366,7 @@ def partial_beta_diversity(
     metric : str or callable
         The beta diversity metric to apply to the samples. See :func:`beta_diversity`
         for details.
-    counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
+    counts : table_like of shape (n_samples, n_taxa)
         Matrix containing count/abundance data of the samples. See
         :doc:`supported formats <../reference/table_like>`.
     ids : iterable of strs
