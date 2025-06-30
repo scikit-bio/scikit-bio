@@ -21,7 +21,10 @@ def permanova_available(
     permutations,
     seed=None,
 ):
-    """Check if the scikit-bio-binaries shared library provides the permanova functionality.
+    """Is binaries permanova available?
+
+    Check if the scikit-bio-binaries shared library provides
+    the permanova functionality.
 
     Parameters
     ----------
@@ -31,7 +34,8 @@ def permanova_available(
     grouping : 1-D np.ndarray
         Vector indicating the assignment of objects to groups.
         These integers denote which group an object belongs to.
-        It must be the same length and in the same order as the objects in `distance_matrix`.
+        It must be the same length and in the same order
+        as the objects in `distance_matrix`.
     permutations : int
         Number of permutations to use when assessing statistical
         significance. Must be greater than zero.
@@ -93,7 +97,8 @@ def permanova(
     grouping : 1-D np.ndarray
         Vector indicating the assignment of objects to groups.
         These integers denote which group an object belongs to.
-        It must be the same length and in the same order as the objects in `distance_matrix`.
+        It must be the same length and in the same order
+        as the objects in `distance_matrix`.
     permutations : int
         Number of permutations to use when assessing statistical
         significance. Must be greater than zero.
@@ -125,12 +130,12 @@ def permanova(
         if isinstance(distance_matrix,np.ndarray):
             # already a raw matrix, just use
             distance_matrix_data = distance_matrix
-        else: 
+        else:
             # we are assuming it is a DistanceMatrix object
             # get internal representations
             distance_matrix_data = distance_matrix.data
         distance_matrix_shape0 = distance_matrix_data.shape[0]
-        if (len(distance_matrix_data.shape)!=2 or 
+        if (len(distance_matrix_data.shape)!=2 or
             distance_matrix_data.shape[1] != distance_matrix_shape0):
                raise TypeError("distance_matrix not square")
         if not isinstance(grouping,np.ndarray):

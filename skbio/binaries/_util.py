@@ -120,7 +120,7 @@ def set_random_seed(new_seed):
     """
     dll = get_dll()
     if dll is not None:
-        dll.skbb_set_random_seed(ctypes.c_uint(new_seed));
+        dll.skbb_set_random_seed(ctypes.c_uint(new_seed))
     # since there is no colateral impact
     # just do nothing if the shared library does not exist
 

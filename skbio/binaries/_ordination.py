@@ -136,12 +136,12 @@ def pcoa_fsvd(
         if isinstance(distance_matrix,np.ndarray):
             # already a raw matrix, jsut use
             distance_matrix_data = distance_matrix
-        else: 
+        else:
             # we are assuming it is a DistanceMatrix object
             # get internal representations
             distance_matrix_data = distance_matrix.data
         distance_matrix_shape0 = distance_matrix_data.shape[0]
-        if (len(distance_matrix_data.shape)!=2 or 
+        if (len(distance_matrix_data.shape)!=2 or
             distance_matrix_data.shape[1] != distance_matrix_shape0):
                raise TypeError("distance_matrix not square")
         if number_of_dimensions>distance_matrix_shape0:
@@ -168,14 +168,18 @@ def pcoa_fsvd(
         o_pe = proportion_explained.ctypes.data_as(ctypes.c_void_p)
         if distance_matrix_data.dtype == np.dtype('float64'):
             if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, i_seed,
+                                                o_ev, o_sp, o_pe)
             else:
-                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, i_seed,
+                                        o_ev, o_sp, o_pe)
         elif distance_matrix_data.dtype == np.dtype('float32'):
             if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, i_seed,
+                                                o_ev, o_sp, o_pe)
             else:
-                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, i_seed,
+                                        o_ev, o_sp, o_pe)
         else:
             raise TypeError("distance_matrix type must be either float32 or float64")
         # if we got here, everything went well
