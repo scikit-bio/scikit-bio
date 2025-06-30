@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
+from warnings import warn
 
 import numpy as np
 

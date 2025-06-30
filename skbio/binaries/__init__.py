@@ -25,6 +25,7 @@ from ._util import (
     available,
     get_api_version,
     set_random_seed,
+    py_to_bin_random_seed,
 )
 from ._ordination import (
     pcoa_fsvd_available,
@@ -40,6 +41,7 @@ __all__ = [
     "available",
     "get_api_version",
     "set_random_seed",
+    "py_to_bin_random_seed",
     "pcoa_fsvd_available",
     "pcoa_fsvd",
     "permanova_available",

@@ -11,7 +11,8 @@ import numpy as np
 from numbers import Integral
 from ..binaries._util import (
     get_api_version as _skbb_get_api_version,
-    get_dll as _get_skbb_dll
+    get_dll as _get_skbb_dll,
+    py_to_bin_random_seed
 )
 
 def pcoa_fsvd_available(
@@ -53,12 +54,6 @@ def pcoa_fsvd_available(
             return False
         elif number_of_dimensions<1:
             return False
-        if seed is not None: # None is OK
-            # check it is a non-negative number
-            if not isinstance(seed, Integral):
-                return False
-            elif (seed<0):
-                return False
         return True
     else:
         return False
@@ -137,17 +132,7 @@ def pcoa_fsvd(
             raise ValueError("number_of_dimensions must be an integer value")
         if number_of_dimensions<1:
             raise ValueError("number_of_dimensions must be a positive number")
-        if (seed is not None):
-            # just check it actually is a non-negative number
-            if not isinstance(seed, Integral):
-                raise TypeError("seed must be an integer")
-            elif (seed>=0):
-                int_seed = seed
-            else:
-                raise ValueError("seed must be a non-negative number")
-        else:
-            # the skbb API expects a negative number, when seed is invalid
-            int_seed = -1
+        int_seed = py_to_bin_random_seed(seed)
         if isinstance(distance_matrix,np.ndarray):
             # already a raw matrix, jsut use
             distance_matrix_data = distance_matrix

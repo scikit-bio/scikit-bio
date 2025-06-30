@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 
 import ctypes
+import numpy as np
+from numbers import Integral
 
 # ====================================================
 
@@ -121,4 +123,51 @@ def set_random_seed(new_seed):
         dll.skbb_set_random_seed(ctypes.c_uint(new_seed));
     # since there is no colateral impact
     # just do nothing if the shared library does not exist
+
+# ====================================================
+
+def py_to_bin_random_seed(seed_or_generator=None):
+    r"""Get a seed from a python random generator, if needed.
+
+    Parameters
+    ----------
+    seed_or_generator : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance.
+
+    Returns
+    -------
+    int
+        Seed to use in scikit-bio-binaries internal random objects.
+        Can be the special -1 value, if the default seed should be used.
+
+    See Also
+    --------
+    numpy.random.Generator
+    numpy.random.RandomState
+
+    Notes
+    -----
+    A random generator ensures reproducibility of outputs.
+    This code provides the equivalent of scikit-bio ``get_rn``
+    but returns just a seed, instead.
+
+    """
+    if seed_or_generator is None:
+        return -1 # special value for scikit-bio-binaries
+    elif isinstance(seed_or_generator, Integral):
+        if (seed_or_generator<0):
+             raise ValueError("seed must be a non-negative number")
+        else:
+             return seed_or_generator # was already a valid seed
+    else:
+        # assume it is a generator, get a new int seed
+        maxint = np.iinfo(np.int32).max + 1
+        if isinstance(seed, np.random.Generator):
+            return seed_or_generator.integers(0, maxint)
+        elif isinstance(seed, np.random.RandomState):
+            return seed_or_generator.integers.randint(maxint)
+        else:
+            raise ValueError(
+                "Invalid seed. It must be an integer or a random generator instance."
+            )
 
