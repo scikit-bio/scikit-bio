@@ -566,8 +566,10 @@ class jnp_cpu(TestCase):
     #     npt.assert_allclose(psi, sbpbasis)
 
 
-@skipIf(no_gpu_available()&no_jax, "Skipping all tests: no GPU available \
-                                        or no jax dependency")
+@skipIf(
+    no_gpu_available() or no_jax,
+    "Skipping all tests: no GPU available or no jax dependency",
+)
 class jax_gpu(TestCase):
     def setUp(self):
         # args

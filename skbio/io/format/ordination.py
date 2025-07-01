@@ -187,11 +187,10 @@ Load the ordination results from the file:
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
-from skbio.util.config._dispatcher import _create_table, _create_table_1d
+from skbio.table._tabular import _create_table, _create_table_1d
 
 ordination = create_format("ordination")
 

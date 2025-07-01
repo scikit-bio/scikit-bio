@@ -3,39 +3,51 @@ r"""Data Table (:mod:`skbio.table`)
 
 .. currentmodule:: skbio.table
 
-This module provides support for interaction with data tables in the Biological
-Observation Matrix (BIOM) format.
-
-Please refer to the `BIOM documentation <https://biom-format.org/>`__ for the
-instructions on working with BIOM tables.
+This module provides support for interaction with data tables.
 
 
 BIOM table
 ----------
 
+`Biological Observation Matrix (BIOM) <https://biom-format.org/>`_ is an efficient and
+versatile sparse table format designed for biological "omic" data types. It is the
+native table format in scikit-bio.
+
 .. autosummary::
    :toctree: generated/
 
    Table
-
-
-Example data
-^^^^^^^^^^^^
-.. autosummary::
-   :toctree: generated/
-
    example_table
 
-Data Augmentation
+
+Table-like formats
+------------------
+
+scikit-bio functions directly operate on various "table-like" formats, such as BIOM
+table, Pandas and Polars dataframes, NumPy array and AnnData objects, without the need
+for explicit format conversion. Read below on the specifics, nomenclature and usage of
+supported table-like formats.
+
+.. toctree::
+   :maxdepth: 1
+
+   reference/table_like
+
+
+Data augmentation
 -----------------
+
+Techniques for creating synthetic samples based on the current data and biological
+properties. Helpful for improving the accuracy and robustness of machine learning
+models.
 
 .. autosummary::
    :toctree: generated/
 
    phylomix
    compositional_cutmix
-   mixup
    aitchison_mixup
+   mixup
 
 """  # noqa: D205, D415
 

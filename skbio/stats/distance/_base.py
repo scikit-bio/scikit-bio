@@ -37,9 +37,10 @@ from ._utils import is_symmetric_and_hollow
 from ._utils import distmat_reorder, distmat_reorder_condensed
 
 if TYPE_CHECKING:  # pragma: no cover
+    from numpy.random import Generator
     import matplotlib.figure
     from matplotlib.colors import Colormap
-    from numpy.random import RandomState, Generator
+    from skbio.util._typing import SeedLike
 
 
 class DissimilarityMatrixError(Exception):
@@ -1186,7 +1187,7 @@ class DistanceMatrix(DissimilarityMatrix):
     def permute(
         self,
         condensed: bool = False,
-        seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+        seed: Optional["SeedLike"] = None,
     ) -> Union["DistanceMatrix", np.ndarray]:
         """Randomly permute both rows and columns in the matrix.
 
@@ -1333,7 +1334,7 @@ def randdm(
         random distance matrix. The returned distance matrix will be of this
         type. By default, a `DistanceMatrix` instance will be returned.
     random_fn : int, np.random.Generator or callable, optional
-        Functionfor generating random values. It must accept (n_rows, n_columns) and
+        Function for generating random values. It must accept (n_rows, n_columns) and
         return a 2D array of float-like. Default is the
         :meth:`random <numpy.random.Generator.random>` method of a NumPy random
         generator. If an integer is provided, a random generator will be constructed
@@ -1503,7 +1504,7 @@ def _run_monte_carlo_stats(
     test_stat_function: Callable,
     grouping: Union[pd.DataFrame, Sequence],
     permutations: int,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> tuple:
     """Run stat test and compute significance with Monte Carlo permutations."""
     if permutations < 0:

@@ -6,29 +6,25 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from unittest import TestCase, main, skipIf
+
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from scipy.spatial.distance import pdist
-from unittest import TestCase, main, skipIf
 
-try:
-    import polars as pl
-    import polars.testing as plt
-except (ImportError, ModuleNotFoundError):
-    has_polars = False
-else:
-    has_polars = True
-
+from skbio._config import set_config
 from skbio import OrdinationResults
 from skbio.stats.ordination import ca
 from skbio.util import (
+    get_package,
     get_data_path,
     assert_ordination_results_equal,
     assert_ordination_results_equal_np,
 )
-from skbio.util.config._optionals import _get_package
-from skbio.util.config._config import set_config
+
+
+pl = get_package("polars", raise_error=False)
 
 
 def chi_square_distance(data_table, between_rows=True):
@@ -338,7 +334,7 @@ class TestCAResults_NumPy(TestCase):
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
 
-@skipIf(not has_polars, "Polars is not available for unit tests.")
+@skipIf(pl is None, "Polars is not available for unit tests.")
 class TestCAResults_Polars(TestCase):
     def setUp(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""

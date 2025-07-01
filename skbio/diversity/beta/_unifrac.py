@@ -6,17 +6,17 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import functools
+from functools import partial
 
 import numpy as np
 
 from skbio.diversity._util import (
     _validate_counts_matrix,
-    _validate_taxa_and_tree,
     vectorize_counts_and_tree,
 )
 from skbio.diversity._phylogenetic import _tip_distances
 from skbio.util._decorator import params_aliased
+from skbio.tree._utils import _validate_taxa_and_tree
 
 
 # The default value indicating whether normalization should be applied
@@ -320,33 +320,21 @@ def weighted_unifrac(
         )[0]
 
 
-def _validate(u_counts, v_counts, taxa, tree):
-    _validate_counts_matrix([u_counts, v_counts], cast_int=False)
-    _validate_taxa_and_tree(counts=u_counts, taxa=taxa, tree=tree)
-
-
 def _setup_pairwise_unifrac(
     u_counts, v_counts, taxa, tree, validate, normalized, unweighted
 ):
     if validate:
-        _validate(u_counts, v_counts, taxa, tree)
-
-    # temporarily store u_counts and v_counts in a 2-D array as that's what
-    # vectorize_counts_and_tree takes
-    u_counts = np.asarray(u_counts)
-    v_counts = np.asarray(v_counts)
-    counts = np.vstack([u_counts, v_counts])
+        counts = _validate_counts_matrix([u_counts, v_counts], cast_int=False)
+        if counts.shape[1] != len(taxa):
+            raise ValueError("`taxa` must be the same length as `counts`.")
+        _validate_taxa_and_tree(taxa, tree, rooted=True, lengths=True)
+    else:
+        counts = np.vstack([u_counts, v_counts])
     counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
     )
-    # unpack counts vectors for single pairwise UniFrac calculation
-    u_node_counts = counts_by_node[0]
-    v_node_counts = counts_by_node[1]
-
-    u_total_count = u_counts.sum()
-    v_total_count = v_counts.sum()
-
-    return (u_node_counts, v_node_counts, u_total_count, v_total_count, tree_index)
+    total_counts = counts.sum(axis=1)
+    return (*counts_by_node, *total_counts, tree_index)
 
 
 def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
@@ -485,7 +473,7 @@ def _weighted_unifrac_normalized(
 
 def _setup_multiple_unifrac(counts, taxa, tree, validate):
     if validate:
-        _validate_taxa_and_tree(counts[0], taxa, tree)
+        _validate_taxa_and_tree(taxa, tree, rooted=True, lengths=True)
 
     counts_by_node, tree_index, branch_lengths = vectorize_counts_and_tree(
         counts, taxa, tree
@@ -525,7 +513,7 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
         counts, taxa, tree, validate
     )
 
-    f = functools.partial(_unweighted_unifrac, branch_lengths=branch_lengths)
+    f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node
 

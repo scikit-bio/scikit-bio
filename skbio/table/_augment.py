@@ -6,762 +6,982 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import warnings
-from typing import Optional, Union, TYPE_CHECKING
-import itertools
+from typing import Optional, Union, Sequence, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from numpy.random import RandomState, Generator
-    from numpy.typing import NDArray
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike, NDArray
+    from skbio.tree import TreeNode
+    from skbio.util._typing import TableLike, SeedLike
 
 import numpy as np
-import pandas as pd
-from skbio.table import Table
-from skbio.tree import TreeNode
-from skbio._base import SkbioObject
-from skbio.stats.composition import closure
 from skbio.util import get_rng
-from skbio.util.config._dispatcher import _ingest_array, _create_table
+from skbio.stats.composition import closure
+from skbio.table._tabular import _ingest_table
 
 
-def _validate_tree(tree: TreeNode) -> None:
-    """Ensure that tree is a TreeNode object."""
-    if not isinstance(tree, TreeNode):
-        raise TypeError("`tree` must be a skbio.tree.TreeNode object.")
-
-
-def _validate_label(  # type: ignore[return]
-    label: "NDArray", matrix: "NDArray"
+def _validate_labels(  # type: ignore[return]
+    labels: "NDArray", n: int
 ) -> tuple["NDArray", "NDArray"]:
-    """Ensure that the provided label is appropriate for the provided matrix.
+    r"""Ensure that the provided label is appropriate for the provided matrix.
 
     Parameters
     ----------
-    label : ndarray
-        The class labels for the data. The label is expected to have shape
-        ``(samples,)`` or ``(samples, n_classes)``.
-    matrix : ndarray
-        The data matrix of shape ``(samples, n_features).``
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes)
+        Class labels for the data.
+    n : int
+        Number of samples.
 
     Returns
     -------
-    label_1d : ndarray
-        The class labels in 1D format with shape ``(samples,)``. Contains
-        integer class labels from 0 to n_classes-1. If the input was already
-        1D, this is the same as the input. If the input was one-hot encoded,
-        this is the argmax reconstruction.
-    label_one_hot : ndarray
-        The class labels in one-hot encoded format with shape
-        ``(samples, n_classes)``. Each row contains exactly one 1 and the
-        rest 0s, indicating the class membership for that sample.
+    labels_index : ndarray of shape (n_samples,)
+        The class labels in 1-D format. Contains indices from 0 to n_classes - 1. If
+        the input was already 1-D, this is the same as the input. If the input was
+        one-hot encoded, this is the argmax reconstruction.
+    labels_one_hot : ndarray of shape (n_samples, n_classes)
+        The class labels in one-hot encoded format. Each row contains exactly one 1 and
+        the rest 0s, indicating the class membership for that sample.
+
+    Raises
+    ------
+    ValueError
+        If labels are not 1-D or 2-D.
+    ValueError
+        If labels' sample count is not ``n``.
+    ValueError
+        If index labels contain non-integer values.
+    ValueError
+        If index labels do not start from zero.
+    ValueError
+        If index labels are not consecutive integers.
+    ValueError
+        If one-hot encoded labels are not valid.
 
     """
-    if not isinstance(label, np.ndarray):
+    labels = np.asarray(labels)
+
+    if labels.ndim not in (1, 2):
         raise ValueError(
-            f"label must be a numpy.ndarray, but got {type(label)} instead."
+            f"Labels should be 1-D or 2-D, but got {labels.ndim} dimensions instead."
         )
-    if label.ndim not in [1, 2]:
+
+    if labels.shape[0] != n:
         raise ValueError(
-            f"labels should have shape (samples,) or (samples, n_classes)"
-            f"but got {label.shape} instead."
+            f"Number of labels ({labels.shape[0]}) does not match number of samples "
+            f"in the data ({n})."
         )
-    if not label.shape[0] == matrix.shape[0]:
-        raise ValueError(
-            f"Number of elements in label ({label.shape[0]}) does not "
-            f"match number of samples in input data ({matrix.shape[0]})"
-        )
-    # make sure label is only whole numbers, then convert to int
-    if not np.all(np.equal(np.mod(label, 1), 0)):
-        raise TypeError(f"label must only contain integer values.")
-    if label.ndim == 1:
-        # check that labels is 0 indexed
-        unique_labels = np.unique(label)
-        if min(unique_labels) != 0:
+
+    # input as indexed labels
+    if labels.ndim == 1:
+        # if labels is not integer-type, make sure it contains only whole numbers,
+        # then convert to int
+        if not np.issubdtype(labels.dtype, np.integer):
+            if not (np.mod(labels, 1) == 0).all():
+                raise ValueError(f"Labels must only contain integer values.")
+            labels = labels.astype(int)
+
+        # check that labels are 0-indexed
+        unique_labels = np.unique(labels)
+        if unique_labels.min() != 0:
             raise ValueError("Labels must be zero-indexed. Minimum value must be 0.")
-        num_classes = len(unique_labels)
-        exp_labels = np.arange(num_classes)
+        n_classes = len(unique_labels)
+        exp_labels = np.arange(n_classes)
         # check that label is consecutive integers starting at 0
         if not np.array_equal(unique_labels, exp_labels):
             raise ValueError(
-                "Labels must be consecutive integers from 0 to num_classes - 1."
+                "Labels must be consecutive integers from 0 to n_classes - 1."
             )
-        one_hot_label = np.eye(num_classes, dtype=int)[label]
-        return label, one_hot_label
-    if label.ndim == 2:
-        # sanity checks to ensure valid one hot encoding.
-        # all rows should sum to 1
-        if not all(x == 1 for x in label.sum(axis=1)):
-            raise ValueError(
-                (
-                    "label is not properly one hot encoded. Rows "
-                    "(samples) were found with more than one label."
-                )
-            )
-        # sum of all values in label should match number of samples
-        if not (label_samples := label.sum(axis=0).sum()) == matrix.shape[0]:
-            raise ValueError(
-                (
-                    f"The number of samples represented by label "
-                    f"({label_samples}) does not match the number of "
-                    f"samples in data ({matrix.shape[0]})"
-                )
-            )
-        # do this for consistent return values whether a one hot encoded or 1D label
-        # is provided
-        label_1d = np.argmax(label, axis=1)
-        return label_1d, label
+        # perform one-hot encoding
+        labels_one_hot = np.eye(n_classes, dtype=int)[labels]
+        return labels, labels_one_hot
 
-
-def _aitchison_addition(x: "NDArray", v: "NDArray") -> "NDArray":
-    r"""Perform Aitchison addition on two samples x and v.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        The first sample.
-    v : numpy.ndarray
-        The second sample.
-
-    Returns
-    -------
-    numpy.ndarray
-        The result of Aitchison addition.
-    """
-    return (xv := x * v) / xv.sum()
-
-
-def _aitchison_scalar_multiplication(lam: float, x: "NDArray") -> "NDArray":
-    r"""Perform Aitchison multiplication on sample x, with scalar lambda.
-
-    Parameters
-    ----------
-    lam : float
-        The scalar to multiply the sample by.
-    x : numpy.ndarray
-        The sample to multiply.
-
-    Returns
-    -------
-    numpy.ndarray
-        The result of Aitchison multiplication.
-
-    """
-    return (x_to_lam := x**lam) / x_to_lam.sum()
-
-
-def _get_all_possible_pairs(
-    matrix: "NDArray", label: Optional["NDArray"] = None, intra_class: bool = False
-) -> np.ndarray:
-    r"""Get all possible pairs of samples that can be used for augmentation.
-
-    Parameters
-    ----------
-    matrix : ndarray
-        Sample by features array of the input data.
-    label : ndarray, optional
-        The 1D class labels for the data.
-    intra_class : bool
-        If ``True``, only return pairs of samples within the same class. This
-        functionality is only available for binary classification.
-        If ``False``, return all possible pairs of samples.
-
-    Returns
-    -------
-    ndarray
-        An array of all possible pairs of samples.
-
-    """
-    possible_pairs = []
-    # Intra-class pair generation is currently only possible for binary classification.
-    if intra_class:
-        if label is None:
-            raise ValueError("Label is required for intra-class augmentation.")
-        possible_pairs = list(
-            itertools.chain(
-                itertools.combinations(np.where(label == 0)[0], 2),
-                itertools.combinations(np.where(label == 1)[0], 2),
-            )
-        )
+    # input as one-hot encoded labels
     else:
-        possible_pairs = list(itertools.combinations(np.arange(matrix.shape[0]), 2))
-    return np.array(possible_pairs)
+        # all rows should sum to 1
+        if not np.allclose(labels.sum(axis=1), 1):
+            raise ValueError("Labels are not properly one-hot encoded.")
+        # generated label indices
+        labels_index = labels.argmax(axis=1)
+        return labels_index, labels
+
+
+def _normalize_matrix(matrix: "NDArray") -> "NDArray":
+    r"""Normalize a data matrix if needed such that each row sums to 1.
+
+    Parameters
+    ----------
+    matrix : ndarray of shape (n_samples, n_features)
+        Original matrix.
+
+    Returns
+    -------
+    ndarray of shape (n_samples, n_features)
+        Normalized matrix.
+
+    """
+    if np.allclose(matrix.sum(axis=1), 1):
+        return matrix
+    return closure(matrix)
+
+
+def _all_pairs(n: int) -> "NDArray":
+    r"""Get all pairs of sample indices.
+
+    Parameters
+    ----------
+    n : int
+        Number of samples.
+
+    Returns
+    -------
+    ndarray of shape (n_pairs, 2), dtype=int
+        Pairs of sample indices.
+
+    """
+    return np.column_stack(np.triu_indices(n, k=1))
+
+
+def _intra_class_pairs(labels: "ArrayLike") -> "NDArray":
+    r"""Get pairs of sample indices within each class.
+
+    Parameters
+    ----------
+    labels : array_like of shape (n_samples,), dtype=int
+        Class labels of samples.
+
+    Returns
+    -------
+    ndarray of shape (n_pairs, 2), dtype=int
+        Pairs of sample indices.
+
+    """
+    pairs = []
+    for label in np.unique(labels):
+        idx = np.where(labels == label)[0]
+        if idx.size > 1:
+            i, j = np.triu_indices(idx.size, k=1)
+            pairs.append(np.column_stack((idx[i], idx[j])))
+    if pairs:
+        return np.vstack(pairs)
+    else:
+        return np.empty((0, 2), dtype=np.intp)
+
+
+def _format_input(
+    table,
+    labels: Union[Sequence, "NDArray"],
+    intra_class: Optional[bool] = False,
+    normalize: Optional[bool] = False,
+    taxa: Optional[Union[Sequence, "NDArray"]] = None,
+) -> tuple[
+    "NDArray",
+    Optional["NDArray"],
+    "NDArray",
+    Optional[Union[Sequence, "NDArray"]],
+]:
+    """Format input data for augmentation.
+
+    Parameters
+    ----------
+    table : table_like of shape (n_samples, n_features)
+        Input data table.
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
+        Class labels for the data.
+    intra_class : bool, optional
+        If True, pair samples within each class.
+    normalize : bool, optional
+        If True, normalize the data.
+    taxa : array_like of shape (n_features,), optional
+        Feature IDs corresponding to tip names in a tree.
+
+    Returns
+    -------
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix (X).
+    labels : ndarray of shape (n_samples, n_classes), optional
+        Class labels (one-hot encoded) (Y).
+    pairs : ndarray of shape (n_pairs, 2)
+        Pairs of sample indices to be mixed up.
+    taxa : array_like of shape (n_features,), optional
+        Feature IDs corresponding to tip names in a tree.
+
+    """
+    matrix, _, taxa = _ingest_table(table, feature_ids=taxa)
+    if normalize:
+        matrix = _normalize_matrix(matrix)
+    n_samples = matrix.shape[0]
+    if labels is None:
+        pairs = _all_pairs(n_samples)
+        labels_2d = None
+    else:
+        labels_1d, labels_2d = _validate_labels(labels, n_samples)
+        if intra_class:
+            pairs = _intra_class_pairs(labels_1d)
+        else:
+            pairs = _all_pairs(n_samples)
+    if len(pairs) == 0:
+        raise ValueError("Cannot find a pair of samples to mix.")
+    return matrix, labels_2d, pairs, taxa
+
+
+def _make_aug_labels(
+    labels: "NDArray",
+    pairs: "NDArray",
+    lams: "NDArray",
+    intra_class: bool,
+) -> "NDArray":
+    r"""Generate class labels for synthetic samples.
+
+    Parameters
+    ----------
+    labels : ndarray of shape (n, n_classes), or None
+        Original class labels in one-hot encoded format.
+    pairs : ndarray of shape (n_pairs, 2)
+        Pairs of sample indices that were mixed up to create synthetic samples.
+    lams : ndarray of shape (n, 1)
+        Lambda parameters (probabilities) used during mixing-up.
+    intra_class : bool
+        If True, samples were paired within each class.
+
+    Returns
+    -------
+    aug_labels : ndarray of shape (n, n_classes), or None
+        Synthetic class labels in one-hot encoded format.
+
+    """
+    if labels is None:
+        return
+    elif intra_class:
+        return labels[pairs[:, 0]]
+    else:
+        return lams * labels[pairs[:, 0]] + (1.0 - lams) * labels[pairs[:, 1]]
+
+
+def _format_output(
+    aug_matrix: "NDArray",
+    aug_labels: Optional["NDArray"],
+    matrix: "NDArray",
+    labels: Optional["NDArray"],
+    append: bool = False,
+) -> tuple["NDArray", "NDArray"]:
+    """Format output data of augmentation.
+
+    Parameters
+    ----------
+    aug_matrix : array_like of shape (n, n_features)
+        Augmented data matrix.
+    aug_labels : array_like of shape (n, n_classes), optional
+        Augmented class labels in one-hot encoded format.
+    matrix : ndarray of shape (n_samples, n_features), optional
+        Original data matrix.
+    labels : ndarray of shape (n_samples, n_classes), optional
+        Original class labels in one-hot encoded format.
+
+    Returns
+    -------
+    aug_matrix : ndarray of shape ([n_samples + ]n, n_features)
+        Augmented data matrix.
+    aug_labels : ndarray of shape ([n_samples + ]n, n_classes), optional
+        Augmented class labels in one-hot encoded format.
+
+    """
+    # concatenate original and synthetic data
+    if append:
+        aug_matrix = np.concatenate([matrix, aug_matrix])
+        if aug_labels is not None:
+            aug_labels = np.concatenate([labels, aug_labels])
+
+    # not necessary because upstream code already enforced it; but for safety
+    else:
+        aug_matrix = np.asarray(aug_matrix)
+        if aug_labels is not None:
+            aug_labels = np.asarray(aug_labels)
+
+    return aug_matrix, aug_labels
 
 
 def mixup(
-    table,
-    samples: int,
-    label: Optional["NDArray"] = None,
-    alpha: float = 2,
-    normalize: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-    output_format: Optional[str] = None,
-) -> tuple:
-    r"""Data Augmentation by vanilla mixup.
-
-    Randomly select two samples :math:`s_1` and :math:`s_2` from the OTU table,
-    and generate a new sample :math:`s` by a linear combination
-    of :math:`s_1` and :math:`s_2`, as follows:
-
-    .. math::
-
-        s = \lambda \cdot s_1 + (1 - \lambda) \cdot s_2
-
-    where :math:`\lambda` is a random number sampled from a beta distribution
-    with parameters :math:`\alpha` and :math:`\alpha`.
-    The label is computed as the linear combination of
-    the two labels of the two samples:
-
-    .. math::
-
-        y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
+    table: "TableLike",
+    n: int,
+    labels: Optional["NDArray"] = None,
+    intra_class: bool = False,
+    alpha: float = 2.0,
+    append: bool = False,
+    seed: Optional["SeedLike"] = None,
+) -> tuple["NDArray", Optional["NDArray"]]:
+    r"""Data augmentation by vanilla mixup.
 
     Parameters
     ----------
-    table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
-    samples : int
-        The number of new samples to generate.
-    label : ndarray
-        The label of the table. The label is expected to has a shape of ``(samples,)``
-        or ``(samples, n_classes)``.
-    alpha : float
-        The alpha parameter of the beta distribution.
-    normalize : bool, optional
-        If ``True`` and the input is not already compositional, scikit-bio's
-        :func:`~skbio.stats.composition.closure` function will be called, ensuring
-        values for each sample add up to 1. Defaults to ``False``.
+    table : table_like of shape (n_samples, n_features)
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
+    n : int
+        Number of synthetic samples to generate.
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
+        Class labels for the data. Accepts either indices (1-D) or one-hot encoded
+        labels (2-D).
+    intra_class : bool, optional
+        If True, synthetic samples will be created by mixing samples within each class.
+        If False (default), any samples regardless of class can be mixed.
+    alpha : float, optional
+        Shape parameter of the beta distribution.
+    append : bool, optional
+        If True, the returned data include both the original and synthetic samples. If
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
-    output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
 
-    Examples
+    See Also
     --------
-    >>> from skbio.table import mixup
-    >>> data = np.arange(40).reshape(4, 10)
-    >>> label = np.array([0, 1, 0, 1])
-    >>> aug_matrix, aug_label = mixup(data, label=label, samples=5)
-    >>> print(aug_matrix.shape)
-    (9, 10)
-    >>> print(aug_label.shape)
-    (9, 2)
+    phylomix
+    aitchison_mixup
+    compositional_cutmix
 
     Returns
     -------
-    augmented_matrix : table_like
-        The augmented matrix.
-    augmented_label : table_like
-        The augmented label, in one-hot encoding.
-        If the user wants to use the augmented label for regression,
-        users can simply call ``np.argmax(aug_label, axis=1)``
-        to get the discrete labels.
+    aug_matrix : ndarray of shape (n, n_features)
+        Augmented data matrix.
+    aug_labels : ndarray of shape (n, n_classes), optional
+        Augmented class labels in one-hot encoded format. Available if ``labels`` are
+        provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
     Notes
     -----
-    The mixup is based on [1]_, and shares the same core concept as PyTorch's
+    The mixup method is based on [1]_. It randomly selects two samples :math:`s_1` and
+    :math:`s_2` from the data table, and generates a new sample :math:`s` by a linear
+    combination of them, as follows:
+
+    .. math::
+
+       s = \lambda \cdot s_1 + (1 - \lambda) \cdot s_2
+
+    where :math:`\lambda` is a mixing coefficient drawn from a beta distribution:
+
+    .. math::
+
+       \lambda \sim \mathrm{Beta}(\alpha, \alpha)
+
+    The label :math:`y` is computed as the linear combination of the labels of the two
+    samples (:math:`y_1` and :math:`y_2`):
+
+    .. math::
+
+       y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
+
+    This function shares the same core concept as PyTorch's
     `MixUp <https://pytorch.org/vision/
-    main/generated/torchvision.transforms.v2.MixUp.html>`_.
-    there are key differences:
+    main/generated/torchvision.transforms.v2.MixUp.html>`_ class. There are some key
+    differences:
 
-    1. This implementation generates new samples to augment a dataset,
-        while PyTorch's MixUp is applied on-the-fly during training
-        to batches of data.
+    1. This implementation returns synthetic samples and class labels from a dataset,
+       while PyTorch's MixUp is applied on-the-fly during training to batches of data.
 
-    2. This implementation randomly selects pairs of samples from the entire
-        dataset, while PyTorch's implementation typically mixes consecutive
-        samples in a batch (requiring prior shuffling).
+    2. This implementation randomly selects pairs of samples from the entire dataset,
+       while PyTorch's implementation typically mixes consecutive samples in a batch
+       (requiring prior shuffling).
 
-    3. This implementation returns an augmented dataset with both original and
-        new samples, while PyTorch's implementation transforms a batch in-place.
+    3. This implementation is tailored for biological omic data, while PyTorch's is
+       primarily for image data.
 
-    4. This implementation is designed for omic data tables,
-        while PyTorch's is primarily for image data.
-        And this implementation is mainly based on the Numpy Library.
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.table import mixup
+    >>> matrix = np.arange(40).reshape(4, 10)
+    >>> labels = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_labels = mixup(matrix, n=5, labels=labels)
+    >>> print(aug_matrix.shape)
+    (5, 10)
+    >>> print(aug_labels.shape)
+    (5, 2)
 
     References
     ----------
-    .. [1] Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2017).
-        mixup: Beyond Empirical Risk Minimization.
-        arXiv preprint arXiv:1710.09412.
+    .. [1] Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2017). mixup: Beyond
+       Empirical Risk Minimization. arXiv preprint arXiv:1710.09412.
 
     """
-    matrix, row_ids, col_ids = _ingest_array(table)
-    if normalize:
-        if not np.allclose(np.sum(matrix, axis=1), 1):
-            matrix = closure(matrix)
-    if label is not None:
-        label, one_hot_label = _validate_label(label, matrix)
     rng = get_rng(seed)
-    possible_pairs = _get_all_possible_pairs(matrix=matrix, label=label)
+    matrix, labels, pairs, _ = _format_input(table, labels, intra_class)
 
-    selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
+    # Draw pairs of samples to mix.
+    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    indices1 = selected_pairs[:, 0]
-    indices2 = selected_pairs[:, 1]
-    lambdas = rng.beta(alpha, alpha, size=(samples, 1))
-    augmented_x = lambdas * matrix[indices1] + (1 - lambdas) * matrix[indices2]
+    # Draw mixing coefficients (lambda) from a beta distribution.
+    lams = rng.beta(alpha, alpha, size=(n, 1))
 
-    augmented_matrix = np.concatenate([matrix, augmented_x], axis=0)
-    if label is not None:
-        augmented_y = (
-            lambdas * one_hot_label[indices1] + (1 - lambdas) * one_hot_label[indices2]
-        )
-        augmented_label = np.concatenate([one_hot_label, augmented_y])
-    else:
-        augmented_label = None
+    # Collect paired sample data.
+    x1 = matrix[pairs_sel[:, 0]]
+    x2 = matrix[pairs_sel[:, 1]]
 
-    return _create_table(augmented_matrix, backend=output_format), _create_table(
-        augmented_label, backend=output_format
-    )
+    # Mix paired sample data.
+    aug_matrix = lams * x1 + (1.0 - lams) * x2
+
+    # Generate synthetic class labels.
+    aug_labels = _make_aug_labels(labels, pairs_sel, lams, intra_class)
+
+    return _format_output(aug_matrix, aug_labels, matrix, labels, append)
+
+
+def _aitchison_add(x: "NDArray", y: "NDArray") -> "NDArray":
+    r"""Perform Aitchison addition on two samples or sample groups.
+
+    Parameters
+    ----------
+    x : ndarray of shape (..., n_features)
+        The first sample(s).
+    y : ndarray of shape (..., n_features)
+        The second sample(s).
+
+    Returns
+    -------
+    ndarray of shape (..., n_features)
+        The result of Aitchison addition.
+
+    """
+    return (prod := x * y) / prod.sum(axis=-1, keepdims=True)
+
+
+def _aitchison_multiply(x: "NDArray", p: float) -> "NDArray":
+    r"""Perform Aitchison multiplication on a sample (group) with a scalar.
+
+    Parameters
+    ----------
+    x : ndarray of shape (..., n_features)
+        The sample to multiply.
+    p : float or ndarray of shape (...,)
+        The scalar to multiply the sample by.
+
+    Returns
+    -------
+    ndarray of shape (..., n_features)
+        The result of Aitchison multiplication.
+
+    """
+    return (exp := x**p) / exp.sum(axis=-1, keepdims=True)
 
 
 def aitchison_mixup(
-    table,
-    samples: int,
-    label: Optional["NDArray"] = None,
-    alpha: float = 2,
+    table: "TableLike",
+    n: int,
+    labels: Optional["NDArray"] = None,
+    intra_class: bool = False,
+    alpha: float = 2.0,
     normalize: bool = True,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-    output_format: Optional[str] = None,
-) -> tuple:
-    r"""Data Augmentation by Aitchison mixup.
+    append: bool = False,
+    seed: Optional["SeedLike"] = None,
+) -> tuple["NDArray", Optional["NDArray"]]:
+    r"""Data augmentation by Aitchison mixup.
 
-    This function requires the data to be compositional. If the
-    table is not normalized, it will be normalized first.
+    This function requires the data to be compositional (values per sample sum to one).
+    If not, the function will automatically normalize them prior to augmentation.
 
     Parameters
     ----------
-    table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
-    samples : int
-        The number of new samples to generate.
-    label : ndarray
-        The label of the table. The label is expected to has a shape of ``(samples,)``
-        or ``(samples, n_classes)``.
-    alpha : float
-        The alpha parameter of the beta distribution.
+    table : table_like of shape (n_samples, n_features)
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
+    n : int
+        Number of synthetic samples to generate.
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
+        Class labels for the data. Accepts either indices (1-D) or one-hot encoded
+        labels (2-D).
+    intra_class : bool, optional
+        If ``True``, synthetic samples will be created by mixing samples within each
+        class. If ``False`` (Default), any samples regardless of class can be mixed.
+    alpha : float, optional
+        Shape parameter of the beta distribution.
     normalize : bool, optional
-        If ``True`` and the input is not already compositional, scikit-bio's
+        If True (default), and the input is not already compositional, scikit-bio's
         :func:`~skbio.stats.composition.closure` function will be called, ensuring
-        values for each sample add up to 1. Defaults to ``True``.
+        values for each sample add up to 1.
+    append : bool, optional
+        If True, the returned data include both the original and synthetic samples. If
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
-    output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
 
     Returns
     -------
-    augmented_matrix : table_like
-        The augmented matrix.
-    augmented_label : table_like
-        The augmented label, in one-hot encoding.
-        if the user want to use the augmented label for regression,
-        users can simply call ``np.argmax(aug_label, axis=1)``
-        to get the discrete labels.
+    aug_matrix : ndarray of shape (n, n_features)
+        Augmented data matrix.
+    aug_labels : ndarray of shape (n, n_classes), optional
+        Augmented class labels in one-hot encoded format. Available if ``labels`` are
+        provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
-    Examples
+    See Also
     --------
-    >>> from skbio.table import aitchison_mixup
-    >>> data = np.arange(40).reshape(4, 10)
-    >>> label = np.array([0, 1, 0, 1])
-    >>> aug_matrix, aug_label = aitchison_mixup(data, label=label, samples=5)
-    >>> print(aug_matrix.shape)
-    (9, 10)
-    >>> print(aug_label.shape)
-    (9, 2)
+    mixup
+    compositional_cutmix
 
     Notes
     -----
-    The algorithm is based on [1]_, and leverages the Aitchison geometry
-    to guide data augmentation in compositional data,
-    this is essentially the vanilla mixup in the Aitchison geometry.
-    This mixup method only works on the Compositional data.
-    where a set of datapoints are living in the simplex:
-    :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`.
-    The augmented sample is computed as the linear combination of
-    the two samples in the Aitchison geometry. In the Aitchision
-    Geometry, we define the addition and scalar multiplication as:
+    The algorithm is based on [1]_, and leverages the Aitchison geometry to guide the
+    augmentation of compositional data. It is essentially the vanilla mixup method in
+    the Aitchison space.
+
+    This method only works on compositional data, where a set of data points live in
+    the simplex: :math:`x_i > 0`, and :math:`\sum_{i=1}^{p} x_i = 1`.
+
+    An augmented sample :math:`s` is computed as the linear combination of two samples
+    :math:`s_1` and :math:`s_2` in the Aitchison space:
 
     .. math::
 
-        \lambda \otimes s =
-        \frac{1}{\sum_{j=1}^{p} s_j^{\lambda}}
-        (x_1^{\lambda}, x_2^{\lambda}, ..., x_p^{\lambda})
+       s = (\lambda \otimes  s_1) \oplus ((1 - \lambda) \otimes s_2)
+
+    where :math:`\otimes` is the Aitchison scalar multiplication, defined as:
 
     .. math::
 
-        s \oplus t =
-        \frac{1}{\sum_{j=1}^{p} s_j t_j}
-        (s_1 t_1, s_2 t_2, ..., s_p t_p)
+       \lambda \otimes s =
+       \frac{1}{\sum_{i=1}^{n} s_i^{\lambda}}
+       (s_1^{\lambda}, s_2^{\lambda}, ..., s_n^{\lambda})
+
+    :math:`\oplus` is the Aitchison addition, defined as:
 
     .. math::
 
-        s = (\lambda \otimes  s_1) \oplus ((1 - \lambda) \otimes s_2)
+       s \oplus t =
+       \frac{1}{\sum_{i=1}^{n} s_i t_i}
+       (s_1 t_1, s_2 t_2, ..., s_n t_n)
 
-    The label is computed as the linear combination of
-    the two labels of the two samples
+    :math:`\lambda` is a mixing coefficient drawn from a beta distribution:
 
     .. math::
 
-        y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
+       \lambda \sim \mathrm{Beta}(\alpha, \alpha)
 
-    By mixing the counts of two samples, Aitchison mixup preserves the
-    compositional nature of the data, and the sum-to-one property.
+    The label :math:`y` is computed as the linear combination of the labels of the two
+    samples (:math:`y_1` and :math:`y_2`):
+
+    .. math::
+
+       y = \lambda \cdot y_1 + (1 - \lambda) \cdot y_2
+
+    By mixing the counts of two samples, Aitchison mixup preserves the compositional
+    nature of the data, and the sum-to-one property.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.table import aitchison_mixup
+    >>> matrix = np.arange(40).reshape(4, 10)
+    >>> labels = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_labels = aitchison_mixup(matrix, n=5, labels=labels)
+    >>> print(aug_matrix.shape)
+    (5, 10)
+    >>> print(aug_labels.shape)
+    (5, 2)
 
     References
     ----------
-    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
-        Data augmentation for compositional data: Advancing predictive
-        models of the microbiome. Advances in Neural Information Processing
-        Systems, 35, 20551-20565.
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022). Data
+       augmentation for compositional data: Advancing predictive models of the
+       microbiome. Advances in Neural Information Processing Systems, 35,
+       20551-20565.
 
     """
-    matrix, row_ids, col_ids = _ingest_array(table)
-    if label is not None:
-        label, one_hot_label = _validate_label(label, matrix)
-
-    if normalize:
-        if not np.allclose(np.sum(matrix, axis=1), 1):
-            matrix = closure(matrix)
-
     rng = get_rng(seed)
-    possible_pairs = _get_all_possible_pairs(matrix)
-    selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
+    matrix, labels, pairs, _ = _format_input(table, labels, intra_class, normalize)
+    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    augmented_matrix = []
-    augmented_label = []
-    for idx1, idx2 in selected_pairs:
-        _lambda = rng.beta(alpha, alpha)
-        augmented_x = _aitchison_addition(
-            _aitchison_scalar_multiplication(_lambda, matrix[idx1]),
-            _aitchison_scalar_multiplication(1 - _lambda, matrix[idx2]),
-        )
-        if label is not None:
-            augmented_y = (
-                _lambda * one_hot_label[idx1] + (1 - _lambda) * one_hot_label[idx2]
-            )
-            augmented_label.append(augmented_y)
-        augmented_matrix.append(augmented_x)
-    augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
-    if label is not None:
-        augmented_label_ = np.concatenate([one_hot_label, augmented_label])
-    else:
-        augmented_label_ = None
-    return _create_table(augmented_matrix, backend=output_format), _create_table(
-        augmented_label_, backend=output_format
-    )
+    # Draw mixing coefficients (lambda) from a beta distribution.
+    lams = rng.beta(alpha, alpha, size=(n, 1))
+
+    # Collect paired sample data to mix.
+    x1 = matrix[pairs_sel[:, 0]]
+    x2 = matrix[pairs_sel[:, 1]]
+
+    # Perform Aitchison scalar multiplication on each side of mixture.
+    s1 = _aitchison_multiply(x1, lams)
+    s2 = _aitchison_multiply(x2, 1.0 - lams)
+
+    # Perform Aitchison addition to mix the two sides.
+    aug_matrix = _aitchison_add(s1, s2)
+
+    aug_labels = _make_aug_labels(labels, pairs_sel, lams, intra_class)
+    return _format_output(aug_matrix, aug_labels, matrix, labels, append)
 
 
 def compositional_cutmix(
-    table,
-    samples: int,
-    label: Optional["NDArray"] = None,
+    table: "TableLike",
+    n: int,
+    labels: Optional["NDArray"] = None,
     normalize: bool = True,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-    output_format: Optional[str] = None,
-) -> tuple:
-    r"""Data Augmentation by compositional cutmix.
+    append: bool = False,
+    seed: Optional["SeedLike"] = None,
+) -> tuple["NDArray", Optional["NDArray"]]:
+    r"""Data augmentation by compositional cutmix.
+
+    This function requires the data to be compositional (values per sample sum to one).
+    If not, the function will automatically normalize them prior to augmentation.
 
     Parameters
     ----------
-    table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
-    samples : int
-        The number of new samples to generate.
-    label : ndarray, optional
-        The label of the table. The label is expected to has a shape of
-        ``(samples,)`` or ``(samples, n_classes)``.
+    table : table_like of shape (n_samples, n_features)
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
+    n : int
+        Number of synthetic samples to generate.
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
+        Class labels for the data. Accepts either indices (1-D) or one-hot encoded
+        labels (2-D).
     normalize : bool, optional
-        If ``True`` and the input is not already compositional, scikit-bio's
+        If True (default), and the input is not already compositional, scikit-bio's
         :func:`~skbio.stats.composition.closure` function will be called, ensuring
-        values for each sample add up to 1. Defaults to ``True``.
+        values for each sample add up to 1.
+    append : bool, optional
+        If True, the returned data include both the original and synthetic samples. If
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
-    output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+
+        .. note::
+           This function does not have the ``intra_class`` parameter, as it always
+           operates in intra-class mode.
+
+    See Also
+    --------
+    mixup
+    aitchison_mixup
 
     Returns
     -------
-    augmented_matrix : table_like
-        The augmented matrix.
-    augmented_label : table_like
-        The augmented label, the label is 1D array.
-        User can use the 1D label for both classification and regression.
-
-    Examples
-    --------
-    >>> from skbio.table import compositional_cutmix
-    >>> data = np.arange(40).reshape(4, 10)
-    >>> label = np.array([0, 1, 0, 1])
-    >>> aug_matrix, aug_label = compositional_cutmix(data, label=label, samples=5)
-    >>> print(aug_matrix.shape)
-    (9, 10)
-    >>> print(aug_label.shape)
-    (9, 2)
+    aug_matrix : ndarray of shape (n, n_features)
+        Augmented data matrix.
+    aug_labels : ndarray of shape (n, n_classes), optional
+        Augmented class labels in one-hot encoded format. Available if ``labels`` are
+        provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
     Notes
     -----
+    The compositional cutmix method was described in [1]_.
 
-    This algorithm currently only works with binary classification problems, as it
-    requires intra-class generation of possible sample pairs.
+    This method randomly selects values from one of a pair of samples to generate
+    a new sample. It has four steps:
 
-    The algorithm is described in [1]_,
-    This method needs to do cutmix on compositional data in the same class.
-    by randomly selecting counts from one of two samples to generate
-    a new sample. For this method to work, the label must be provided.
-    The algorithm has 4 steps:
+    1. Draw a mixing coefficient :math:`\lambda` from a uniform distribution:
 
-    1. Draw a class :math:`c` from the class prior
-    and draw :math:`\lambda \sim Uniform(0, 1)`
+    .. math::
 
-    2. Draw two training points :math:`i_1, i_2` from the training set
-    such that :math:`y_{i_1} = y_{i_2} = c`, uniformly at random
+       \lambda \sim U(0, 1)
 
-    3. For each :math:`j \in \{1, ..., p\}`, draw :math:`I_j \sim Binomial(\lambda)`
-    and set :math:`\tilde{x}_j = x_{i_1j}` if :math:`I_j = 1`,
-    and :math:`\tilde{x}_j = x_{i_2j}` if :math:`I_j = 0`
+    2. Draw a binary selector :math:`I` for each feature from a Bernoulli distribution:
 
-    4. Set :math:`\tilde{y} = c`
+    .. math::
+
+       I \sim \mathrm{Bernoulli}(\lambda)
+
+    3. For the :math:`i`-th feature, set the augmented value :math:`x_i` as from sample
+       1 if :math:`I_i = 0` or from sample 2 if :math:`I_i = 1`.
+
+    4. Normalize the augment sample such that it is compositional (sum-to-one).
+
+    .. math::
+
+       s = \frac{1}{\sum_{i=1}^{n} x_i} (x_1, x_2, ..., x_n)
+
+    This method is applied separately to samples of each class. If ``labels`` is None,
+    all samples will be considered as the same class, and ``aug_labels`` will be
+    returned as None.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.table import compositional_cutmix
+    >>> matrix = np.arange(40).reshape(4, 10)
+    >>> labels = np.array([0, 1, 0, 1])
+    >>> aug_matrix, aug_labels = compositional_cutmix(matrix, n=5, labels=labels)
+    >>> print(aug_matrix.shape)
+    (5, 10)
+    >>> print(aug_labels.shape)
+    (5, 2)
 
     References
     ----------
-    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022).
-        Data augmentation for compositional data: Advancing predictive
-        models of the microbiome. Advances in Neural Information Processing
-        Systems, 35, 20551-20565.
+    .. [1] Gordon-Rodriguez, E., Quinn, T., & Cunningham, J. P. (2022). Data
+       augmentation for compositional data: Advancing predictive models of the
+       microbiome. Advances in Neural Information Processing Systems, 35,
+       20551-20565.
 
     """
-
     rng = get_rng(seed)
+    matrix, labels, pairs, _ = _format_input(table, labels, True, normalize)
+    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    matrix, row_ids, col_ids = _ingest_array(table)
-    # If label isn't provided, assume all samples have same class label
-    no_out_label = False
-    if label is None:
-        no_out_label = True
-        label = np.zeros(matrix.shape[0], dtype=int)
-    label, one_hot_label = _validate_label(label, matrix)
+    # Draw binary gates to control the choice between samples 1 and 2 per feature.
+    probs = rng.uniform(0, 1, size=(n, 1))
+    gates = rng.binomial(1, probs, size=(n, matrix.shape[1])).astype(bool)
 
-    if normalize:
-        if not np.allclose(np.sum(matrix, axis=1), 1):
-            matrix = closure(matrix)
-    possible_pairs = _get_all_possible_pairs(matrix, label=label, intra_class=True)
-    selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
+    # Mix sample pairs based on binary gates.
+    samples_sel = matrix[pairs_sel]
+    aug_matrix = np.where(gates, samples_sel[:, 0], samples_sel[:, 1])
 
-    augmented_matrix = []
-    augmented_label = []
-    for idx1, idx2 in selected_pairs:
-        x1, x2 = matrix[idx1], matrix[idx2]
-        _lambda = rng.uniform(0, 1)
-        indicator_binomial = rng.binomial(1, _lambda, size=matrix.shape[1])
-        augmented_x = x1 * indicator_binomial + x2 * (1 - indicator_binomial)
-        augmented_matrix.append(augmented_x)
-        label_ = one_hot_label[idx1]
-        augmented_label.append(label_)
+    # Normalize synthetic samples (although original samples are compositional,
+    # synthetic one at this point are not, so they need to be normalized)
+    aug_matrix = closure(aug_matrix)
 
-    augmented_matrix_ = np.array(augmented_matrix)
-    augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
-    if no_out_label:
-        augmented_label = None
-    else:
-        augmented_label_ = np.array(augmented_label)
-        augmented_label = np.concatenate([one_hot_label, augmented_label_])
-    return _create_table(augmented_matrix, backend=output_format), _create_table(
-        augmented_label, backend=output_format
-    )
+    aug_labels = labels[pairs_sel[:, 0]] if labels is not None else None
+    return _format_output(aug_matrix, aug_labels, matrix, labels, append)
+
+
+def _indices_under_nodes(
+    tree: "TreeNode", taxa: Union[Sequence, "NDArray"]
+) -> list[dict[int, None]]:
+    """Pre-compute feature indices descending from each node.
+
+    Parameters
+    ----------
+    tree : TreeNode
+        Reference tree.
+    taxa : sequence of str
+        Taxa (tip names) corresponding to feature indices.
+
+    Returns
+    -------
+    list of dict of {int: None}
+        Feature indices descending from each node.
+
+    Raises
+    ------
+    ValueError
+        If there are duplicate taxa.
+    ValueError
+        If some taxa are not present as tip names in the tree.
+
+    See Also
+    --------
+    skbio.tree._utils._validate_taxa_and_tree
+
+    Notes
+    -----
+    Only internal nodes with at least one descending feature are included.
+
+    This function does not ensure all tip names in the tree are unique.
+
+    The output is a list of dicts instead of just list of lists. The reason is
+    explained in the inline comments of `phylomix`.
+
+    """
+    n_taxa = len(taxa)
+    taxon_map = {taxon: i for i, taxon in enumerate(taxa)}
+    if len(taxon_map) < n_taxa:
+        raise ValueError("All taxa must be unique.")
+
+    seen: set[str] = set()
+    seen_add = seen.add
+    res: list[dict[int, None]] = []
+    res_append = res.append
+    dict_fromkeys = dict.fromkeys
+
+    for node in tree.postorder(include_self=True):
+        if node.children:
+            lst = []
+            for child in node.children:
+                lst.extend(child._taxa)
+                del child._taxa
+            node._taxa = lst
+            if lst:
+                res_append(dict_fromkeys(lst))
+        else:
+            if (taxon := node.name) in taxon_map:
+                node._taxa = [taxon_map[taxon]]
+                seen_add(taxon)
+            else:
+                node._taxa = []
+    del tree._taxa
+
+    if missing := n_taxa - len(seen):
+        raise ValueError(f"{missing} taxa are not present as tip names in the tree.")
+
+    return res
 
 
 def phylomix(
-    table,
-    tree: TreeNode,
-    tip_to_obs_mapping: dict[str, int],
-    samples: int,
-    label: Optional["NDArray"] = None,
-    alpha: float = 2,
-    normalize: bool = False,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
-    output_format: Optional[str] = None,
-) -> tuple:
-    r"""Data augmentation by phylomix.
+    table: "TableLike",
+    n: int,
+    tree: "TreeNode",
+    taxa: Optional["ArrayLike"] = None,
+    labels: Optional["NDArray"] = None,
+    intra_class: bool = False,
+    alpha: float = 2.0,
+    append: bool = False,
+    seed: Optional["SeedLike"] = None,
+) -> tuple["NDArray", Optional["NDArray"]]:
+    r"""Data augmentation by PhyloMix.
 
     Parameters
     ----------
-    table : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
-    tree : skbio.tree.TreeNode
-        The tree to use to augment the table.
-    tip_to_obs_mapping : dict
-        A dictionary mapping tips to feature indices.
-    samples : int
-        The number of new samples to generate.
-    label : ndarray
-        The label of the table. The label is expected to has a shape of ``(samples,)``
-        or ``(samples, n_classes)``.
-    alpha : float
-        The alpha parameter of the beta distribution.
-    normalize : bool, optional
-        If ``True`` and the input is not already compositional, scikit-bio's
-        :func:`~skbio.stats.composition.closure` function will be called, ensuring
-        values for each sample add up to 1. Defaults to ``False``.
+    table : table_like of shape (n_samples, n_features)
+        Input data table to be augmented. See
+        :doc:`supported formats <../reference/table_like>`.
+    n : int
+        Number of synthetic samples to generate.
+    tree : :class:`~skbio.tree.TreeNode`
+        Tree structure modeling the relationships between features.
+    taxa : array_like of shape (n_features,), optional
+        Taxa (tip names) in ``tree`` corresponding to individual features. Can be
+        omitted if ``table`` already contains feature IDs that are taxa. Otherwise
+        they need to be explicitly provided. Should be a subset of taxa in the tree.
+    labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
+        Class labels for the data. Accepts either indices (1-D) or one-hot encoded
+        labels (2-D).
+    intra_class : bool, optional
+        If ``True``, synthetic samples will be created by mixing samples within each
+        class. If ``False`` (Default), any samples regardless of class can be mixed.
+    alpha : float, optional
+        Shape parameter of the beta distribution.
+    append : bool, optional
+        If True, the returned data include both the original and synthetic samples. If
+        False (default), only the synthetic samples are returned.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
-    output_format : str, optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
 
     Returns
     -------
-    augmented_matrix : table_like
-        The augmented matrix.
-    augmented_label : table_like
-        The augmented label, in one-hot encoding.
-        if the user want to use the augmented label for regression,
-        users can simply call ``np.argmax(aug_label, axis=1)``
-        to get the discrete labels.
+    aug_matrix : ndarray of shape (n, n_features)
+        Augmented data matrix.
+    aug_labels : ndarray of shape (n, n_classes), optional
+        Augmented class labels in one-hot encoded format. Available if ``labels`` are
+        provided. One can call ``aug_labels.argmax(axis=1)`` to get class indices.
 
-    Examples
+    Raises
+    ------
+    ValueError
+        If taxa are unavailable.
+
+    See Also
     --------
-    >>> from skbio.table import phylomix
-    >>> data = np.arange(10).reshape(2, 5)
-    >>> tree = TreeNode.read(["(((a,b)int1,c)int2,(x,y)int3);"])
-    >>> label = np.array([0, 1])
-    >>> tip_to_obs_mapping = {'a': 0, 'b': 1, 'c': 2, 'x': 3, 'y': 4}
-    >>> aug_matrix, aug_label = phylomix(data,
-    ...                                  tree,
-    ...                                  tip_to_obs_mapping,
-    ...                                  label=label,
-    ...                                  samples=5)
-    >>> print(aug_matrix.shape)
-    (7, 5)
-    >>> print(aug_label.shape)
-    (7, 2)
+    mixup
 
     Notes
     -----
-    The algorithm is based on [1]_, and leverages phylogenetic
-    relationships to guide data augmentation in microbiome and other omic data.
-    By mixing the abundances of phylogenetically related
-    taxa (leaves of a selected node), Phylomix preserves the biological
-    structure while introducing new synthetic samples.
+    The Phylomix method was described in [1]_.
 
-    The selection of nodes follows a random sampling approach,
-    where a subset of taxa is chosen based on a
-    Beta-distributed mixing coefficient. This ensures that the augmented
-    data maintains biologically meaningful compositional relationships.
+    This method leverages phylogenetic relationships to guide data augmentation in
+    microbiome and other omic data. By mixing the abundances of evolutionarily related
+    taxa (tips of a selected node), Phylomix preserves the biological structure while
+    introducing new synthetic samples.
 
-    In the original paper, the authors assumed a bifurcated phylogenetic tree,
-    but this implementation works with any tree structure. If desired,
-    users can bifurcate their tree using ``skbio.tree.TreeNode.bifurcate()``
-    before augmentation.
+    The selection of nodes follows a random sampling approach, where a subset of taxa
+    is chosen based on a Beta-distributed mixing coefficient. This ensures that the
+    augmented data maintains biologically meaningful compositional relationships.
 
-    Phylomix is particularly valuable for microbiome-trait association studies,
-    where preserving phylogenetic similarity between related taxa is crucial for
-    accurate downstream predictions. This approach helps address the
-    common challenge of limited sample sizes in omic data studies.
+    In the original paper, the authors assumed a bifurcated phylogenetic tree, but this
+    implementation works with any tree structure. If desired, the user can bifurcate
+    the tree using :meth:`~skbio.tree.TreeNode.bifurcate` before augmentation.
 
-    The method assumes that all tips in the phylogenetic tree
-    are represented in the ``tip_to_obs_mapping`` dictionary.
+    Phylomix is particularly valuable for microbiome-trait association studies, where
+    preserving phylogenetic similarity between related taxa is crucial for accurate
+    downstream predictions. This approach helps address the common challenge of limited
+    sample sizes in omic data studies.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.table import phylomix
+    >>> from skbio.tree import TreeNode
+    >>> matrix = np.arange(20).reshape(4, 5)
+    >>> labels = np.array([0, 1, 0, 1])
+    >>> tree = TreeNode.read(['(((a,b),c),(d,e));'])
+    >>> taxa = ['a', 'b', 'c', 'd', 'e']
+    >>> aug_matrix, aug_labels = phylomix(
+    ...     matrix, n=5, tree=tree, taxa=taxa, labels=labels)
+    >>> print(aug_matrix.shape)
+    (5, 5)
+    >>> print(aug_labels.shape)
+    (5, 2)
 
     References
     ----------
-    .. [1] Jiang, Y., Liao, D., Zhu, Q., & Lu, Y. Y. (2025).
-        PhyloMix: Enhancing microbiome-trait association prediction through
-        phylogeny-mixing augmentation. Bioinformatics, btaf014.
+    .. [1] Jiang, Y., Liao, D., Zhu, Q., & Lu, Y. Y. (2025). PhyloMix: Enhancing
+       microbiome-trait association prediction through phylogeny-mixing augmentation.
+       Bioinformatics, btaf014.
 
     """
     rng = get_rng(seed)
-    matrix, row_ids, col_ids = _ingest_array(table)
+    matrix, labels, pairs, taxa = _format_input(table, labels, intra_class, taxa=taxa)
+    if taxa is None:
+        raise ValueError("Taxa must be included in table or explicitly provided.")
+    n_taxa = len(taxa)
 
-    if normalize:
-        if not np.allclose(np.sum(matrix, axis=1), 1):
-            matrix = closure(matrix)
+    pairs_sel = pairs[rng.integers(0, len(pairs), size=n)]
 
-    if label is not None:
-        label, one_hot_label = _validate_label(label, matrix)
-    _validate_tree(tree)
+    # Pre-calculate feature indices descending from each node.
+    node_indices = _indices_under_nodes(tree, taxa)
+    n_nodes = len(node_indices)
 
-    leave_names = [tip.name for tip in tree.tips()]
+    # Draw mixing coefficients (lambda) from a beta distribution.
+    lams = rng.beta(alpha, alpha, size=n)
 
-    if set(tip_to_obs_mapping.keys()) != set(leave_names):
-        raise ValueError("tip_to_obs_mapping must contain all tips in the tree")
+    # Randomly shuffle about half of the pairs. This is because each pair of samples
+    # are not treated symmetrically in the algorithm. Meanwhile, pairs were generated
+    # with the smaller index on the left. If shuffling isn't performed, the algorithm
+    # will bias toward one side of the list of samples.
+    gates = rng.random(n) < 0.5
+    pairs_sel[gates] = pairs_sel[gates][:, ::-1]
 
-    # Convert nodes to indices for random selection
-    all_nodes = [node for node in tree.levelorder()]
-    node_indices = np.arange(len(all_nodes))
-    num_leaves = len(leave_names)
+    aug_matrix = []
+    for (idx1, idx2), lam in zip(pairs_sel, lams):
+        x1, x2 = matrix[idx1], matrix[idx2]
 
-    possible_pairs = _get_all_possible_pairs(matrix)
-    selected_pairs = possible_pairs[rng.integers(0, len(possible_pairs), size=samples)]
-    feature_dict = {feature_name: idx for idx, feature_name in enumerate(tree.tips())}
-    augmented_matrix = []
-    augmented_label = []
-    for pair in selected_pairs:
-        x1, x2 = matrix[pair[0]], matrix[pair[1]]
-        _lambda = rng.beta(alpha, alpha)
-        n_leaves = int(np.ceil((1 - _lambda) * num_leaves))
-        selected_index: set[int] = set()
-        mixed_x = x1.copy()
+        # Number of features to select (ratio: 1 - lambda).
+        n_selected = int(np.ceil((1.0 - lam) * n_taxa))
 
-        while len(selected_index) < n_leaves:
-            # Select a random node using index
-            node_idx = rng.choice(node_indices)
-            available_node = all_nodes[node_idx]
-            leaf_idx = [feature_dict[leaf] for leaf in available_node.tips()]
-            obs_idx = [tip_to_obs_mapping[leaf.name] for leaf in available_node.tips()]
-            selected_index.update(obs_idx)
+        # Shuffle nodes.
+        it = iter(rng.permutation(n_nodes))
 
-        selected_index = rng.choice(list(selected_index), n_leaves, replace=False)
+        # Randomly sample nodes and add their descending feature indices to selection,
+        # until it reaches a given size.
+        # Note 1: Nodes may overlap each other, thus descending feature indices may be
+        # redundant.
+        # Note 2: Dictionary is used instead of set because the order of elements in a
+        # dictionary is stable (unlike set, which is unstable).
+        # See `_indices_under_nodes` for how it was done.
+        # Note 3: One cannot predict how many nodes need to be sampled in order to get
+        # n_selected features. Otherwise one can do the following:
+        #
+        #     nodes_sel = rng.choice(n_nodes, size=num_nodes_to_sample)
+        #     selected = np.unique(np.fromiter(itertools.chain.from_iterable(
+        #         node_indices[i].keys() for i in nodes_self), dtype=np.intp))
+        #
+        # Note 4: It it guaranteed that n_selected <= n_taxa <= n_taxa_in_tree,
+        # therefore the `while` loop won't last infinitely.
+        selected: dict[str, None] = {}
+        while len(selected) < n_selected:
+            selected.update(node_indices[next(it)])
 
-        leaf_counts1, leaf_counts2 = (
-            x1[selected_index].astype(np.float32),
-            x2[selected_index].astype(np.float32),
-        )
+        # Drop out extra indices.
+        # Permutation is used instead of sorting because we just want stable selection
+        # of indices whereas order doesn't matter. `matrix[selected]` should always be
+        # the same regardless of order.
+        selected = np.fromiter(selected.keys(), dtype=np.intp)
+        selected = rng.permutation(selected)[:n_selected]
 
-        total1, total2 = leaf_counts1.sum(), leaf_counts2.sum()
+        # Take selected features from sample 2, scale them to match sample 1, then
+        # replace those in sample 1.
+        # Note that samples 1 and 2 are not treated equally. The synthetic sample will
+        # will have the same scale as sample 1.
+        x1_sel, x2_sel = x1[selected], x2[selected]
+        total1, total2 = x1_sel.sum(), x2_sel.sum()
         if total1 > 0 and total2 > 0:
-            leaf_counts2_normalized = leaf_counts2 / total2
             # removed astype(int) so phylomix could handle compositional input
-            new_counts = total1 * leaf_counts2_normalized
-            mixed_x[selected_index] = new_counts
+            # (total1 / total2) is guaranteed to be float, therefore
+            # leaf_counts2 * (total1 / total2) is also guaranteed to be float
+            x_mix = x1.copy()
+            x_mix[selected] = x2_sel * (total1 / total2)
+            aug_matrix.append(x_mix)
+
+        # If either is zero, just use sample 1.
         else:
-            mixed_x[selected_index] = leaf_counts1
+            aug_matrix.append(x1)
 
-        if label is not None:
-            augment_label = (
-                _lambda * one_hot_label[pair[0]]
-                + (1 - _lambda) * one_hot_label[pair[1]]
-            )
-            augmented_label.append(augment_label)
-        augmented_matrix.append(mixed_x)
+    aug_matrix = np.vstack(aug_matrix)
 
-    if label is not None:
-        augmented_matrix_ = np.array(augmented_matrix)
-        augmented_label_ = np.array(augmented_label)
-        augmented_matrix = np.concatenate([matrix, augmented_matrix_], axis=0)
-        augmented_label = np.concatenate([one_hot_label, augmented_label_])
-    else:
-        augmented_matrix = np.concatenate([matrix, np.array(augmented_matrix)], axis=0)
-        augmented_label = None  # type: ignore[assignment]
-
-    return _create_table(augmented_matrix, backend=output_format), _create_table(
-        augmented_label, backend=output_format
-    )
+    aug_labels = _make_aug_labels(labels, pairs_sel, lams.reshape(-1, 1), intra_class)
+    return _format_output(aug_matrix, aug_labels, matrix, labels, append)
