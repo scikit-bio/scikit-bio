@@ -226,6 +226,7 @@ References
 from skbio.alignment import TabularMSA
 from skbio.io import create_format, PhylipFormatError
 from skbio.util._misc import chunk_str
+from skbio import DistanceMatrix
 
 
 phylip = create_format("phylip")
@@ -296,6 +297,48 @@ def _tabular_msa_to_phylip(obj, fh):
         chunked_seq = chunk_str(str(seq), chunk_size, " ")
         fh.write(fmt.format(label, chunked_seq))
 
+@phylip.reader(DistanceMatrix)
+def _phylip_to_distance_matrix(fh):
+    lines = [line.strip() for line in fh if line.strip()]
+    if not lines:
+        raise PhylipFormatError("File is empty or only contains whitespace.")
+
+    try:
+        n = int(lines[0])
+    except ValueError:
+        raise PhylipFormatError("First line should contain a single integer specifying number of taxa.")
+
+    if n < 1:
+        raise PhylipFormatError("Number of taxa must be at least 1.")
+
+    if len(lines) != n + 1:
+        raise PhylipFormatError(
+            f"Expected {n} taxa rows, but found {len(lines) - 1}."
+        )
+
+    ids = []
+    data = []
+
+    for line in lines[1:]:
+        parts = line.split()
+        if len(parts) < n + 1:
+            raise PhylipFormatError(
+                f"Expected at least {n + 1} columns (ID + {n} distances), but got {len(parts)} in line: {line}"
+            )
+        id_ = parts[0]
+        try:
+            row = [float(x) for x in parts[1:n+1]]
+        except ValueError:
+            raise PhylipFormatError(
+                f"Could not convert distance values to float in line: {line}"
+            )
+        ids.append(id_)
+        data.append(row)
+
+    if len(data) != n or any(len(row) != n for row in data):
+        raise PhylipFormatError("Distance matrix is not square.")
+
+    return DistanceMatrix(data, ids)
 
 def _validate_header(header):
     header_vals = header.split()
