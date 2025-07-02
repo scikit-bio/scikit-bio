@@ -126,7 +126,7 @@ skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 
 # Test command - just import the package
-test-command = "python -c \"import skbio; print(skbio.__version__)\""
+test-command = "python -m skbio.test"
 
 # Install dependencies before building
 before-build = "pip install numpy cython"
