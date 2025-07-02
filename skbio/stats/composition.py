@@ -159,7 +159,7 @@ def supports_array_api(obj):
     return all(hasattr(obj, method) for method in required_methods)
 
 
-def _composition_check(mat: Array):
+def _check_composition(mat: Array):
     """Check if the input is a valid composition.
 
     Parameters
@@ -269,7 +269,7 @@ def multi_replace(mat, delta=None):
     --------
     >>> import numpy as np
     >>> from skbio.stats.composition import multi_replace
-    >>> X = np.array([[.2, .4, .4, 0],[0, .5, .5, 0]])
+    >>> X = np.array([[.2, .4, .4, 0], [0, .5, .5, 0]])
     >>> multi_replace(X)
     array([[ 0.1875,  0.375 ,  0.375 ,  0.0625],
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
@@ -285,9 +285,9 @@ def multi_replace(mat, delta=None):
         delta = (1.0 / num_feats) ** 2
 
     zcnts = 1 - tot * delta
-    if np.any(zcnts) < 0:
+    if (zcnts < 0).any():
         raise ValueError(
-            "The multiplicative replacement created negative proportions. Consider "
+            "Multiplicative replacement created negative proportions. Consider "
             "using a smaller `delta`."
         )
     mat = np.where(z_mat, delta, zcnts * mat)
@@ -536,7 +536,7 @@ def clr(mat: Array, validate: bool = True) -> Array:
             raise ValueError("Input matrix can only have two dimensions or less.")
 
         # check if the input is a composition
-        _composition_check(mat)
+        _check_composition(mat)
 
     original_shape = mat.shape
     # squeeze the singleton dimensions
@@ -678,7 +678,7 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
             raise ValueError("Input matrix can only have two dimensions or less.")
 
         # check if the input is a composition
-        _composition_check(mat)
+        _check_composition(mat)
 
     mat = clr(mat, validate=validate)
     if basis is None:
@@ -688,9 +688,9 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
         )  # dimension (d-1) x d
     elif validate:
         _check_orthogonality(basis)
-        if len(basis.shape) != 2:
+        if basis.ndim != 2:
             raise ValueError(
-                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
+                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
         basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
     return mat @ basis.T
@@ -765,9 +765,9 @@ def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) ->
         basis = _gram_schmidt_basis(mat.shape[axis] + 1)
     elif validate:
         _check_orthogonality(basis)
-        if len(basis.shape) != 2:
+        if basis.ndim != 2:
             raise ValueError(
-                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
+                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
     # if not isinstance(basis, xp.array):
     basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)

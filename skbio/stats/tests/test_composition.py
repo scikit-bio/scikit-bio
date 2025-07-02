@@ -21,6 +21,7 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
+    _check_composition, _check_orthogonality,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _calc_p_adjust,
     ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
@@ -72,6 +73,28 @@ class CompositionTests(TestCase):
         self.bad1 = np.array([1, 2, -1])
         # zero count
         self.bad2 = np.array([[[1, 2, 3, 0, 5]]])
+
+    def test_check_composition(self):
+        self.assertIsNone(_check_composition(self.cdata1))
+
+        msg = "Input matrix cannot have negative proportions."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np.array([1, -1, 0]))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix cannot have rows with all zeros."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np.array([[0, 1, 2], [0, 0, 0], [3, 0, 4]]))
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_check_orthogonality(self):
+        basis = np.array([[0.80442968, 0.19557032]])
+        with self.assertRaises(ValueError) as cm:
+            _check_orthogonality(basis)
+        self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
+
+        basis = clr(basis)
+        self.assertIsNone(_check_orthogonality(basis))
 
     def test_closure(self):
 
@@ -203,42 +226,38 @@ class CompositionTests(TestCase):
                                       [4, 4, 2]]))
 
     def test_multi_replace(self):
-        amat = multi_replace(closure(self.cdata3))
-        npt.assert_allclose(amat,
-                            np.array([[0.087273, 0.174545, 0.261818,
-                                       0.04, 0.436364],
-                                      [0.092, 0.04, 0.04, 0.368, 0.46],
-                                      [0.066667, 0.133333, 0.2,
-                                       0.266667, 0.333333]]),
-                            rtol=1e-5, atol=1e-5)
+        obs = multi_replace(closure(self.cdata3))
+        exp = np.array([[0.087273, 0.174545, 0.261818, 0.04, 0.436364],
+                        [0.092, 0.04, 0.04, 0.368, 0.46],
+                        [0.066667, 0.133333, 0.2, 0.266667, 0.333333]])
+        npt.assert_allclose(obs, exp, rtol=1e-5, atol=1e-5)
 
-        amat = multi_replace(closure(self.cdata4))
-        npt.assert_allclose(amat,
-                            np.array([0.087273, 0.174545, 0.261818,
-                                      0.04, 0.436364]),
-                            rtol=1e-5, atol=1e-5)
+        obs = multi_replace(closure(self.cdata6))
+        npt.assert_allclose(obs, exp, rtol=1e-5, atol=1e-5)
 
-        amat = multi_replace(closure(self.cdata6))
-        npt.assert_allclose(amat,
-                            np.array([[0.087273, 0.174545, 0.261818,
-                                       0.04, 0.436364],
-                                      [0.092, 0.04, 0.04, 0.368, 0.46],
-                                      [0.066667, 0.133333, 0.2,
-                                       0.266667, 0.333333]]),
-                            rtol=1e-5, atol=1e-5)
+        obs = multi_replace(closure(self.cdata4))
+        exp = np.array([0.087273, 0.174545, 0.261818, 0.04, 0.436364])
+        npt.assert_allclose(obs, exp, rtol=1e-5, atol=1e-5)
 
-        with self.assertRaises(ValueError):
-            multi_replace(self.bad1)
-        with self.assertRaises(ValueError):
-            multi_replace(self.bad2)
+        # manually specify auto-calculated delta
+        obs = multi_replace(closure(self.cdata4), delta=0.04)
+        npt.assert_allclose(obs, exp, rtol=1e-5, atol=1e-5)
+
+        # non-default delta
+        obs = multi_replace(closure(self.cdata4), delta=0.05)
+        exp = np.array([0.086364, 0.172727, 0.259091, 0.05, 0.431818])
+        npt.assert_allclose(obs, exp, rtol=1e-5, atol=1e-5)
+
+        msg = "Consider using a smaller `delta`."
+        with self.assertRaisesRegex(ValueError, msg):
+            obs = multi_replace(closure(self.cdata4), delta=2.0)
+
+        self.assertRaises(ValueError, multi_replace, self.bad1)
+        self.assertRaises(ValueError, multi_replace, self.bad2)
 
         # make sure that inplace modification is not occurring
         multi_replace(self.cdata4)
         npt.assert_allclose(self.cdata4, np.array([1, 2, 3, 0, 5]))
-
-    def multi_replace_warning(self):
-        with self.assertRaises(ValueError):
-            multi_replace([0, 1, 2], delta=1)
 
     def test_clr(self):
         cmat = clr(closure(self.cdata1))
@@ -333,24 +352,40 @@ class CompositionTests(TestCase):
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]])
         basis = np.atleast_2d(clr([[0.80442968, 0.19557032]]))
-        res = ilr(table, basis=basis)
+        obs = ilr(table, basis=basis)
         exp = np.array([[np.log(1/10)*np.sqrt(1/2)],
                         [np.log(1.14141414 / 9.90909091)*np.sqrt(1/2)],
                         [np.log(1.28282828 / 9.81818182)*np.sqrt(1/2)],
                         [np.log(1.42424242 / 9.72727273)*np.sqrt(1/2)],
                         [np.log(1.56565657 / 9.63636364)*np.sqrt(1/2)]])
 
-        npt.assert_allclose(res, exp)
+        npt.assert_allclose(obs, exp)
 
-    def test_ilr_basis_one_dimension_error(self):
-        table = np.array([[1., 10.],
-                          [1.14141414, 9.90909091],
-                          [1.28282828, 9.81818182],
-                          [1.42424242, 9.72727273],
-                          [1.56565657, 9.63636364]])
-        basis = np.array([0.80442968, 0.19557032])
-        with self.assertRaises(ValueError):
-            ilr(table, basis=basis)
+        obs = ilr(table, basis=basis, validate=False)
+        npt.assert_allclose(obs, exp)
+
+    def test_ilr_errors(self):
+        msg = "Input matrix cannot have negative proportions."
+        with self.assertRaises(ValueError) as cm:
+            ilr(self.bad1)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix can only have two dimensions or less."
+        with self.assertRaises(ValueError) as cm:
+            ilr(np.array([[[1, 2, 3]]]))
+        self.assertEqual(str(cm.exception), msg)
+
+        basis = np.array([[0.80442968, 0.19557032]])
+        msg = "Basis is not orthonormal."
+        with self.assertRaises(ValueError) as cm:
+            ilr(self.cdata1, basis=basis)
+        self.assertEqual(str(cm.exception), msg)
+
+        basis = np.squeeze(clr(basis))
+        msg = "Basis needs to be a 2-D matrix, not a 1-D matrix."
+        with self.assertRaises(ValueError) as cm:
+            ilr(self.cdata1, basis=basis)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_ilr_inv(self):
         mat = closure(self.cdata7)
