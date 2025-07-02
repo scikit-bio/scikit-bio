@@ -128,9 +128,6 @@ build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses"]
 
-# Test command - just import the package
-test-command = "python -m skbio.test"
-
 # Install dependencies before building
 before-build = "pip install numpy cython"
 
