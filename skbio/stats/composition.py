@@ -139,33 +139,25 @@ References
 # ----------------------------------------------------------------------------
 
 from sys import modules
+from typing import Optional
 from warnings import warn, catch_warnings, simplefilter
 
 import numpy as np
 import pandas as pd
-import scipy.stats
-from scipy.sparse import coo_matrix
-from scipy.stats import t, gmean
-from statsmodels.stats.weightstats import CompareMeans
-
-from skbio.stats.distance import DistanceMatrix
-from skbio.util import find_duplicates
-from skbio.util import get_rng
-from skbio.util._decorator import aliased, register_aliases, params_aliased
-from statsmodels.stats.multitest import multipletests as sm_multipletests
-from statsmodels.regression.mixed_linear_model import MixedLM
-from statsmodels.tools.sm_exceptions import ConvergenceWarning
-from patsy import dmatrix
-
 import array_api_compat as aac
-import warnings
-from typing import Optional
+from scipy.stats import t  # not used?
+
+from skbio.util import get_rng, find_duplicates
+from skbio.util._decorator import aliased, register_aliases, params_aliased
+
 
 Array = object
+
 
 def supports_array_api(obj):
     required_methods = ["__array_namespace__"]
     return all(hasattr(obj, method) for method in required_methods)
+
 
 def _composition_check(mat: Array):
     """Check if the input is a valid composition.
@@ -178,9 +170,10 @@ def _composition_check(mat: Array):
     axis = -1
     xp = aac.array_namespace(mat)
     if xp.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
+        raise ValueError("Input matrix cannot have negative proportions.")
     if xp.all(mat == 0, axis=axis).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros")
+        raise ValueError("Input matrix cannot have rows with all zeros.")
+
 
 def closure(mat):
     """Perform closure to ensure that all elements add up to 1.
@@ -222,19 +215,17 @@ def closure(mat):
         mat = np.array(mat)
     xp = aac.array_namespace(mat)
     if xp.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
+        raise ValueError("Input matrix cannot have negative proportions.")
     if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
-    elif mat.ndim ==1:
+        raise ValueError("Input matrix can only have two dimensions or less.")
+    elif mat.ndim == 1:
         mat = mat.reshape(1, -1)
     if xp.all(mat == 0, axis=1).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros")
+        raise ValueError("Input matrix cannot have rows with all zeros.")
     mat = mat / mat.sum(axis=axis, keepdims=True)
 
     # squeeze maybe no need
-    return xp.squeeze(mat,
-                      axis=tuple(i for i,m in enumerate(mat.shape) \
-                                 if m==1))
+    return xp.squeeze(mat, axis=tuple(i for i, m in enumerate(mat.shape) if m == 1))
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -296,8 +287,8 @@ def multi_replace(mat, delta=None):
     zcnts = 1 - tot * delta
     if np.any(zcnts) < 0:
         raise ValueError(
-            "The multiplicative replacement created negative "
-            "proportions. Consider using a smaller `delta`."
+            "The multiplicative replacement created negative proportions. Consider "
+            "using a smaller `delta`."
         )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
@@ -484,7 +475,7 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat: Array, validate:bool=True) -> Array:
+def clr(mat: Array, validate: bool = True) -> Array:
     r"""Perform centre log ratio transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -537,13 +528,12 @@ def clr(mat: Array, validate:bool=True) -> Array:
         mat = np.asarray(mat)
         xp = aac.array_namespace(mat)
 
-
     if validate:
         # assert from closure() while it is removed in latest version
         if xp.any(mat < 0):
-            raise ValueError("Cannot have negative proportions")
+            raise ValueError("Input matrix cannot have negative proportions.")
         if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less")
+            raise ValueError("Input matrix can only have two dimensions or less.")
 
         # check if the input is a composition
         _composition_check(mat)
@@ -552,11 +542,10 @@ def clr(mat: Array, validate:bool=True) -> Array:
     # squeeze the singleton dimensions
     mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
     lmat = xp.log(mat)
-    return xp.reshape(lmat-xp.mean(lmat, axis=axis, keepdims=True),
-                      original_shape)
+    return xp.reshape(lmat - xp.mean(lmat, axis=axis, keepdims=True), original_shape)
 
-def clr_inv(mat: Array,
-            validate:bool=True) -> Array:
+
+def clr_inv(mat: Array, validate: bool = True) -> Array:
     r"""Perform inverse centre log ratio transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -605,18 +594,19 @@ def clr_inv(mat: Array,
         xp = aac.array_namespace(mat)
 
     if validate:
-        if xp.any(xp.sum(mat, axis=axis)!= 0):
-            warnings.warn('The input matrix is not in the clr range,\
-                            which require the sum of values equal to 0',
-                        UserWarning
-                        )
+        if xp.any(xp.sum(mat, axis=axis) != 0):
+            warn(
+                "The input matrix is not in the clr range, which require the sum of "
+                "values equal to 0.",
+                UserWarning,
+            )
 
     # for numerical stability, shitting the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
     return diff / xp.sum(diff, axis=axis, keepdims=True)
 
-def ilr(mat:Array, basis:Optional[Array]=None,
-        validate:bool=True) -> Array:
+
+def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Array:
     r"""Perform isometric log ratio transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -673,8 +663,8 @@ def ilr(mat:Array, basis:Optional[Array]=None,
     try:
         xp = aac.array_namespace(mat)
     except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
+        warn(
+            "Input is not supported by array_namespace, converting to numpy array.",
             UserWarning,
         )
 
@@ -683,9 +673,9 @@ def ilr(mat:Array, basis:Optional[Array]=None,
     if validate:
         # assert from closure() while it is removed in latest version
         if xp.any(mat < 0):
-            raise ValueError("Cannot have negative proportions")
+            raise ValueError("Input matrix cannot have negative proportions.")
         if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less")
+            raise ValueError("Input matrix can only have two dimensions or less.")
 
         # check if the input is a composition
         _composition_check(mat)
@@ -693,23 +683,20 @@ def ilr(mat:Array, basis:Optional[Array]=None,
     mat = clr(mat, validate=validate)
     if basis is None:
         d = mat.shape[-1]
-        basis = xp.asarray(_gram_schmidt_basis(d),
-                           device=mat.device,
-                           dtype=mat.dtype)  # dimension (d-1) x d
+        basis = xp.asarray(
+            _gram_schmidt_basis(d), device=mat.device, dtype=mat.dtype
+        )  # dimension (d-1) x d
     elif validate:
         _check_orthogonality(basis)
         if len(basis.shape) != 2:
             raise ValueError(
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
-        basis = xp.asarray(basis,
-                        device=mat.device,
-                        dtype=mat.dtype)
+        basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
     return mat @ basis.T
 
 
-def ilr_inv(mat:Array, basis:Optional[Array]=None,
-            validate:bool=True) -> Array:
+def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Array:
     r"""Perform inverse isometric log ratio transform.
 
     This function transforms compositions from the real space to Aitchison
@@ -766,8 +753,8 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None,
     try:
         xp = aac.array_namespace(mat)
     except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
+        warn(
+            "Input is not supported by array_namespace, converting to numpy array.",
             UserWarning,
         )
 
@@ -783,14 +770,11 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None,
                 "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
             )
     # if not isinstance(basis, xp.array):
-    basis = xp.asarray(basis,
-                       device=mat.device,
-                       dtype=mat.dtype)
+    basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
     return clr_inv(mat @ basis, validate=validate)
 
 
-def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
-        validate:bool=True):
+def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = True):
     r"""Perform additive log ratio transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -841,8 +825,8 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
     try:
         xp = aac.array_namespace(mat)
     except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
+        warn(
+            "Input is not supported by array_namespace, converting to numpy array.",
             UserWarning,
         )
 
@@ -851,28 +835,26 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
 
     if validate:
         if mat.ndim > 2:
-            warnings.warn(
-                "the input matrix has more than 2 dimensions, \
-                        high dimensional alr is new feature",
+            warn(
+                "The input matrix has more than 2 dimensions, while high dimensional "
+                "alr is new feature.",
                 UserWarning,
             )
-            raise ValueError(
-                f"matrix must be 1d or 2d"
-            )
+            raise ValueError(f"Input matrix must be 1-D or 2-D.")
             # for backward compactibility
         if mat.shape[axis] < 2:
             raise ValueError(
-                f"dimension D{mat.ndim + axis} of the input matrix is singleton"
+                f"Dimension {mat.ndim + axis} of the input matrix is singleton."
             )
         if xp.any(mat <= 0):
-            raise ValueError("Input matrix must be positive")
+            raise ValueError("Input matrix must contain only positive values.")
 
     # no matter (n,) or (n, w, z), it will return n
     N = mat.shape[-1]
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
     numerator_matrix = mat[..., numerator_indexs]
     denominator_vector = mat[..., [denominator_idx]]
-    return xp.log(numerator_matrix)-xp.log(denominator_vector)
+    return xp.log(numerator_matrix) - xp.log(denominator_vector)
 
 
 def alr_inv(mat: Array, denominator_idx: int = 0):
@@ -926,8 +908,8 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     try:
         xp = aac.array_namespace(mat)
     except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
+        warn(
+            "Input is not supported by array_namespace, converting to numpy array.",
             UserWarning,
         )
 
@@ -936,29 +918,26 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
 
     if mat.ndim > 2:
         # NOTE: backward compatibility
-        raise ValueError("mat must be either 1D or 2D")
-        # warnings.warn(
-        #     "the input matrix has more than 2 dimensions, \
-        #               high dimensional alr is new feature",
+        raise ValueError("Input matrix must be 1-D or 2-D.")
+        # warn(
+        #     "the input matrix has more than 2 dimensions, while high dimensional "
+        #     "alr is new feature.",
         #     UserWarning,
         # )
 
-
     if mat.shape[axis] < 2:
         raise ValueError(
-            f"dimension D{mat.ndim + axis} of the input matrix is singleton"
+            f"Dimension {mat.ndim + axis} of the input matrix is singleton."
         )
 
     # a reminder for ND-PR:if axis != -1, permutation will be applied
-    N = mat.shape[-1]+1
-    comp = xp.ones(mat.shape[:-1]+ (N,),
-                   dtype=mat.dtype,
-                   device=mat.device)
+    N = mat.shape[-1] + 1
+    comp = xp.ones(mat.shape[:-1] + (N,), dtype=mat.dtype, device=mat.device)
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
 
-    if xp.__name__=='jax.numpy':
+    if xp.__name__ == "jax.numpy":
         # NOTE: TypeError: JAX arrays are immutable and
         # do not support in-place item assignment.
         # Instead of x[idx] = y, use x = x.at[idx].set(y)
@@ -966,7 +945,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     else:
         # in-place item assignment
         comp[..., numerator_indexs] = xp.exp(mat)
-    return comp/xp.sum(comp, axis=axis, keepdims=True)
+    return comp / xp.sum(comp, axis=axis, keepdims=True)
 
 
 def centralize(mat):
@@ -992,6 +971,8 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
+    from scipy.stats import gmean
+
     mat = closure(mat)
     cen = gmean(mat, axis=0)
     return perturb_inv(mat, cen)
@@ -1193,6 +1174,8 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
            [ 27.,  12.,   0.]])
 
     """
+    from skbio.stats.distance import DistanceMatrix
+
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1204,7 +1187,7 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
 
     # Variance log ratio
     if robust:
-        raise NotImplementedError("Pairwise version of robust VLR not implemented.")
+        raise NotImplementedError("Pairwise version of robust VLR is not implemented.")
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
@@ -1255,6 +1238,8 @@ def tree_basis(tree):
            [-0.70710678,  0.70710678,  0.        ]])
 
     """
+    from scipy.sparse import coo_matrix
+
     # Specifies which child is numerator and denominator
     # within any given node in a tree.
     NUMERATOR = 1
@@ -1366,6 +1351,8 @@ def _calc_p_adjust(name, p):
     .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
 
     """
+    from statsmodels.stats.multitest import multipletests as sm_multipletests
+
     name_ = name.lower()
 
     # Original options are kept for backwards compatibility
@@ -1378,7 +1365,7 @@ def _calc_p_adjust(name, p):
         res = sm_multipletests(pvals=p, alpha=0.05, method=name_)
     except ValueError as e:
         if "method not recognized" in str(e):
-            raise ValueError(f"{name} is not an available FDR correction method.")
+            raise ValueError(f'"{name}" is not an available FDR correction method.')
         else:
             raise ValueError(f"Cannot perform FDR correction using the {name} method.")
     else:
@@ -1633,8 +1620,8 @@ def ancom(
 
     if np.any(table <= 0):
         raise ValueError(
-            "Cannot handle zeros or negative values in `table`. "
-            "Use pseudocounts or ``multi_replace``."
+            "Cannot handle zeros or negative values in `table`. Use pseudocounts or "
+            "`multi_replace`."
         )
 
     if not 0 < alpha < 1:
@@ -1664,8 +1651,8 @@ def ancom(
     if duplicates:
         formatted_duplicates = ", ".join(repr(e) for e in duplicates)
         raise ValueError(
-            "Percentile values must be unique. The following"
-            " value(s) were duplicated: %s." % formatted_duplicates
+            "Percentile values must be unique. The following value(s) were "
+            "duplicated: %s." % formatted_duplicates
         )
 
     groups = np.unique(grouping)
@@ -1788,6 +1775,8 @@ def _log_compare(mat, cats, test="ttest_ind"):
     cs = np.unique(cats)
 
     if isinstance(test, str):
+        import scipy.stats
+
         try:
             test = getattr(scipy.stats, test)
         except AttributeError:
@@ -1909,12 +1898,10 @@ def _check_orthogonality(basis):
 
     """
     xp = aac.array_namespace(basis)
-    if basis.ndim<2:
-        basis = basis.reshape(1,-1)
-    eyes = xp.asarray(np.identity(len(basis)),
-                      device=basis.device,
-                      dtype=basis.dtype)
-    if not xp.all(xp.abs(basis @ basis.T- eyes)<(1e-4*eyes+1e-6)):
+    if basis.ndim < 2:
+        basis = basis.reshape(1, -1)
+    eyes = xp.asarray(np.identity(len(basis)), device=basis.device, dtype=basis.dtype)
+    if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
         raise ValueError("Basis is not orthonormal.")
 
 
@@ -1946,6 +1933,7 @@ def _welch_ttest(a, b):
     """
     # See https://stats.stackexchange.com/a/475345
     # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
+    from statsmodels.stats.weightstats import CompareMeans
 
     # Creating a CompareMeans object to perform Welch's t-test
     statsmodel_cm_object = CompareMeans.from_data(
@@ -2276,6 +2264,9 @@ def _lme_call(
 ):
     """Call MixedLM of statsmodels."""
     # TODO: add documentation
+    from patsy import dmatrix
+    from statsmodels.regression.mixed_linear_model import MixedLM
+    from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
     FEATUREID = "FeatureID"
     LOG2FC = "Log2(FC)"
@@ -2429,13 +2420,13 @@ def dirmult_lme(
 
     Parameters
     ----------
-    table : array-like
+    table : array_like
         The data for the model. If data is a pd.DataFrame, it must contain the
         dependent variables in data.columns. If data is not a pd.DataFrame, it must
         contain the dependent variable in indices of data. data can be a
         a numpy structured array, or a numpy recarray, or a dictionary. It must not
         contain duplicate indices.
-    metadata: array-like
+    metadata : array_like
         The metadata for the model. If metadata is a pd.DataFrame, it must contain
         the covariates in metadata.columns. If metadata is not a pd.DataFrame,
         it must contain the covariates in indices of metadata. metadata can
@@ -2455,8 +2446,7 @@ def dirmult_lme(
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
