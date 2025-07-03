@@ -141,6 +141,7 @@ References
 from sys import modules
 from typing import Optional
 from warnings import warn, catch_warnings, simplefilter
+from functools import partial
 
 import numpy as np
 import pandas as pd
@@ -149,6 +150,7 @@ from scipy.stats import t  # not used?
 
 from skbio.util import get_rng, find_duplicates
 from skbio.util._decorator import aliased, register_aliases, params_aliased
+from skbio.table._tabular import _ingest_table
 
 
 Array = object
@@ -1320,37 +1322,24 @@ def tree_basis(tree):
     return basis, nodes
 
 
-def _calc_p_adjust(name, p):
-    """
-    Calculate the p-value adjustment for a given method.
+def _check_p_adjust(name):
+    r"""Construct a p-value correction function based on the method name.
 
     Parameters
-    -------
-        name : str
-            The name of the *p*-value correction function.
-            This should match one of the method names available
-            in `statsmodels.stats.multitest.multipletests`.
-        p : ndarray of shape (n_tests,)
-            Original *p*-values.
+    ----------
+    name : str
+        The name of the p-value correction method. This should match one of the
+        method names available in :func:`statsmodels.stats.multitest.multipletests`.
 
     Returns
     -------
-        p : ndarray of shape (n_tests,)
-            Corrected *p*-values.
-
-    Raises
-    -------
-        ValueError: If the given method name is not available.
-
-    See Also
-    --------
-    statsmodels.stats.multitest.multipletests
-
-    References
-    ----------
-    .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
+    callable, optional
+        Function to correct p-values.
 
     """
+    if name is None:
+        return
+
     from statsmodels.stats.multitest import multipletests as sm_multipletests
 
     name_ = name.lower()
@@ -1361,18 +1350,83 @@ def _calc_p_adjust(name, p):
     if name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
         name_ = "fdr_bh"
 
-    try:
-        res = sm_multipletests(pvals=p, alpha=0.05, method=name_)
-    except ValueError as e:
-        if "method not recognized" in str(e):
-            raise ValueError(f'"{name}" is not an available FDR correction method.')
+    def func(pvals):
+        r"""Correct p-values for multiple testing problems.
+
+        Parameters
+        ----------
+        pvals : ndarray of shape (n_tests,)
+            Original p-values.
+
+        Returns
+        -------
+        qvals : ndarray of shape (n_tests,)
+            Corrected p-values.
+
+        """
+        try:
+            res = sm_multipletests(pvals, alpha=0.05, method=name_)
+        except ValueError as e:
+            if "method not recognized" in str(e):
+                raise ValueError(f'"{name}" is not an available FDR correction method.')
+            else:
+                raise ValueError(
+                    f"Cannot perform FDR correction using the {name} method."
+                )
         else:
-            raise ValueError(f"Cannot perform FDR correction using the {name} method.")
+            return res[1]
+
+    return func
+
+
+def _format_da_input(table, grouping):
+    """Format input data for differential abundance analysis.
+
+    Parameters
+    ----------
+    table : table_like of shape (n_samples, n_featsures)
+        Contingency table of counts where rows are features and columns are samples.
+    grouping : 1-D array_like
+        Vector indicating the assignment of samples to groups. For example,
+        these could be strings or integers denoting which group a sample
+        belongs to. It must be the same length as the samples in ``table``.
+        The index must be the same on ``table`` and ``grouping`` but need not be
+        in the same order. The *t*-test is computed between the ``treatment``
+        group and the ``reference`` group specified in the ``grouping`` vector.
+
+    Notes
+    -----
+    If both `table` and `grouping` contain sample IDs (e.g., `table` is a pd.DataFrame
+    and `grouping` is a pd.Series).
+
+    """
+    matrix, samples, features = _ingest_table(table)
+
+    if isinstance(grouping, pd.Series):
+        if samples is not None:
+            try:
+                grouping = grouping.loc[samples]
+            except KeyError:
+                raise ValueError(
+                    "`table` contains sample IDs that are absent in `grouping`."
+                )
+        grouping = grouping.to_numpy()
     else:
-        return res[1]
+        grouping = np.asarray(grouping)
+    if matrix.shape[0] != grouping.shape[0]:
+        raise ValueError("Sample numbers in `table` and `grouping` are not consistent.")
+
+    groups, labels = np.unique(grouping, return_inverse=True)
+
+    return matrix, samples, features, groups, labels
 
 
-@params_aliased([("p_adjust", "multiple_comparisons_correction", "0.6.0", True)])
+@params_aliased(
+    [
+        ("p_adjust", "multiple_comparisons_correction", "0.6.0", True),
+        ("sig_test", "significance_test", "0.6.4", True),
+    ]
+)
 def ancom(
     table,
     grouping,
@@ -1380,10 +1434,10 @@ def ancom(
     tau=0.02,
     theta=0.1,
     p_adjust="holm",
-    significance_test="f_oneway",
-    percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
+    sig_test="f_oneway",
+    percentiles=None,
 ):
-    r"""Perform a differential abundance test using ANCOM.
+    r"""Perform differential abundance test using ANCOM.
 
     Analysis of composition of microbiomes (ANCOM) is done by calculating
     pairwise log ratios between all features and performing a significance
@@ -1432,11 +1486,17 @@ def ancom(
         by statsmodels'
         :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
         Case-insensitive. If None, no correction will be performed.
-    significance_test : str or callable, optional
+    sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
         a *p*-value. Functions under ``scipy.stats`` can be directly specified
         by name. The default is one-way ANOVA ("f_oneway").
+
+        .. versionchanged:: 0.6.4
+
+            Test funcion must accept 2-D arrays as input, perform batch testing, and
+            return 1-D arrays. SciPy functions have this capability. Custom functions
+            may need modification.
 
         .. versionchanged:: 0.6.0
 
@@ -1609,21 +1669,15 @@ def ancom(
     samples.
 
     """
-    if not isinstance(table, pd.DataFrame):
-        raise TypeError(
-            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
-        )
-    if not isinstance(grouping, pd.Series):
-        raise TypeError(
-            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
-        )
+    matrix, samples, features, groups, labels = _format_da_input(table, grouping)
 
-    if np.any(table <= 0):
+    if (matrix <= 0).any():
         raise ValueError(
             "Cannot handle zeros or negative values in `table`. Use pseudocounts or "
             "`multi_replace`."
         )
 
+    # validate parameters
     if not 0 < alpha < 1:
         raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
@@ -1633,40 +1687,40 @@ def ancom(
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
-    if (grouping.isnull()).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
-
-    if (table.isnull()).any().any():
+    if not np.issubdtype(matrix.dtype, np.number) or np.isnan(matrix).any():
         raise ValueError("Cannot handle missing values in `table`.")
 
-    percentiles = list(percentiles)
-    for percentile in percentiles:
-        if not 0.0 <= percentile <= 100.0:
-            raise ValueError(
-                "Percentiles must be in the range [0, 100], %r "
-                "was provided." % percentile
-            )
+    if pd.isnull(grouping).any():
+        raise ValueError("Cannot handle missing values in `grouping`.")
+    # if np.issubdtype(groups.dtype, np.number):
+    #     if np.isnan(groups).any():
+    #         raise ValueError("Cannot handle missing values in `grouping`.")
+    # else:
+    #     if np.equal(groups, None).any():
+    #         raise ValueError("Cannot handle missing values in `grouping`.")
 
-    duplicates = find_duplicates(percentiles)
-    if duplicates:
-        formatted_duplicates = ", ".join(repr(e) for e in duplicates)
-        raise ValueError(
-            "Percentile values must be unique. The following value(s) were "
-            "duplicated: %s." % formatted_duplicates
-        )
+    # validate percentiles
+    if percentiles is None:
+        percentiles = np.arange(0, 125, 25.0)
+    else:
+        if not isinstance(percentiles, np.ndarray):
+            percentiles = np.fromiter(percentiles, dtype=float)
+        if (percentiles < 0.0).any() or (percentiles > 100.0).any():
+            raise ValueError("Percentiles must be in the range [0, 100].")
+        n_pcts = percentiles.size
+        percentiles = np.unique(percentiles)
+        if percentiles.size != n_pcts:
+            raise ValueError("Percentile values must be unique.")
 
-    groups = np.unique(grouping)
-    num_groups = len(groups)
-
-    if num_groups == len(grouping):
+    n_groups = groups.size
+    if n_groups == labels.size:
         raise ValueError(
             "All values in `grouping` are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
             "there are no 'within' variance because each group of samples "
             "contains only a single sample)."
         )
-
-    if num_groups == 1:
+    elif n_groups == 1:
         raise ValueError(
             "All values the `grouping` are the same. This method cannot "
             "operate on a grouping vector with only a single group of samples"
@@ -1674,36 +1728,39 @@ def ancom(
             "single group)."
         )
 
-    # @deprecated
-    if significance_test is None:
-        significance_test = "f_oneway"
+    # validate significance test
+    if sig_test is None:
+        sig_test = "f_oneway"
+    if isinstance(sig_test, str):
+        import scipy.stats
 
-    table_index_len = len(table.index)
-    grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join="inner")
-    if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` index must be consistent.")
+        try:
+            sig_test = getattr(scipy.stats, sig_test)
+        except AttributeError:
+            raise ValueError(f'Function "{sig_test}" does not exist under scipy.stats.')
+    elif not callable(sig_test):
+        raise TypeError("`sig_test` must be a function or a string.")
 
-    n_feat = mat.shape[1]
+    # compare log ratios
+    pval_mat = _log_compare(matrix, labels, n_groups, sig_test)
 
-    _logratio_mat = _log_compare(mat.values, cats.values, significance_test)
-    logratio_mat = _logratio_mat + _logratio_mat.T
-
-    # Multiple comparisons
+    # correct for multiple testing problem
     if p_adjust is not None:
-        logratio_mat = np.apply_along_axis(
-            lambda arr: _calc_p_adjust(p_adjust, arr), 1, logratio_mat
-        )
+        func = _check_p_adjust(p_adjust)
+        pval_mat = np.apply_along_axis(func, 1, pval_mat)
 
-    np.fill_diagonal(logratio_mat, 1)
-    W = (logratio_mat < alpha).sum(axis=1)
-    c_start = W.max() / n_feat
+    np.fill_diagonal(pval_mat, 1)
+
+    # calculate W-statistics
+    n_feats = matrix.shape[1]
+    W = (pval_mat < alpha).sum(axis=1)
+    c_start = W.max() / n_feats
     if c_start < theta:
         reject = np.zeros_like(W, dtype=bool)
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feat * cut).mean() for cut in cutoff])
+        prop_cut = np.array([(W > n_feats * cut).mean() for cut in cutoff])
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
@@ -1715,81 +1772,79 @@ def ancom(
             nu = cutoff[3]
         else:
             nu = cutoff[4]
-        reject = W >= nu * n_feat
+        reject = W >= nu * n_feats
 
-    feat_ids = mat.columns
     ancom_df = pd.DataFrame(
         {
-            "W": pd.Series(W, index=feat_ids),
-            "Reject null hypothesis": pd.Series(reject, index=feat_ids),
+            "W": pd.Series(W, index=features),
+            "Reject null hypothesis": pd.Series(reject, index=features),
         }
     )
 
-    if len(percentiles) == 0:
+    # calculate percentiles
+    if percentiles.size == 0:
         return ancom_df, pd.DataFrame()
-    else:
-        data = []
-        columns = []
-        for group in groups:
-            feat_dists = mat[cats == group]
-            for percentile in percentiles:
-                columns.append((percentile, group))
-                data.append(np.percentile(feat_dists, percentile, axis=0))
-        columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
-        percentile_df = pd.DataFrame(
-            np.asarray(data).T, columns=columns, index=feat_ids
-        )
-        return ancom_df, percentile_df
+    data = []
+    columns = []
+    for i, group in enumerate(groups):
+        feat_dists = matrix[labels == i]
+        for percentile in percentiles:
+            columns.append((percentile, group))
+            data.append(np.percentile(feat_dists, percentile, axis=0))
+    columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
+    percentile_df = pd.DataFrame(np.asarray(data).T, columns=columns, index=features)
+    return ancom_df, percentile_df
 
 
-def _log_compare(mat, cats, test="ttest_ind"):
-    """Calculate pairwise log ratios and perform a significance test.
+def _log_compare(matrix, labels, n, test):
+    """Compare pairwise log ratios between sample groups.
 
-    Calculate pairwise log ratios between all features and perform a
-    significance test (i.e. *t*-test) to determine if there is a significant
-    difference in feature ratios with respect to the variable of interest.
+    Calculate pairwise log ratios between all features and perform a statistical test
+    to determine if there is a significant difference in feature ratios with respect
+    to the variable of interest.
 
     Parameters
     ----------
-    mat : array_like of shape (n_samples, n_features)
-        A matrix of proportions.
-    cats : array_like of shape (n_samples,)
-        A vector of categories.
-    test : str or callable
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    labels : ndarray of shape (n_samples,)
+        Group indices (0-indexed, consecutive).
+    n : int
+        Number of groups.
+    test : callable
         Statistical test to run.
 
     Returns
     -------
-    log_ratio : ndarray
-        Log ratio *p*-value matrix.
-
-    Raises
-    ------
-    ValueError
-        If specified test name is not a function under ``scipy.stats``.
+    ndarray of shape (n_features, n_features)
+        p-value matrix.
 
     """
-    c = mat.shape[1]
-    log_ratio = np.zeros((c, c))
-    log_mat = np.log(mat)
-    cs = np.unique(cats)
+    # note: `n` can be simply computed with `labels.max()`. It is supplied instead to
+    # save compute.
 
-    if isinstance(test, str):
-        import scipy.stats
+    # log-transform data
+    log_mat = np.log(matrix)
 
-        try:
-            test = getattr(scipy.stats, test)
-        except AttributeError:
-            raise ValueError(f'Function "{test}" does not exist under scipy.stats.')
+    # divide data by sample group
+    grouped = [log_mat[labels == i] for i in range(n)]
 
-    def func(x):
-        return test(*[x[cats == k] for k in cs])
+    # determine all pairs of feature indices
+    m = matrix.shape[1]
+    ii, jj = np.triu_indices(m, k=1)
 
-    for i in range(c - 1):
-        ratio = (log_mat[:, i].T - log_mat[:, i + 1 :].T).T
-        _, p = np.apply_along_axis(func, axis=0, arr=ratio)
-        log_ratio[i, i + 1 :] = np.squeeze(np.array(p.T))
-    return log_ratio
+    # calculate all log ratios (pairwise difference of log values)
+    log_ratios = [x[:, ii] - x[:, jj] for x in grouped]
+
+    # run statistical test on the 2-D arrays in a vectorized manner
+    _, pvals = test(*log_ratios)
+
+    # populate p-value matrix
+    pval_mat = np.empty((m, m))
+    pval_mat[ii, jj] = pval_mat[jj, ii] = pvals
+    np.fill_diagonal(pval_mat, 0)
+
+    return pval_mat
 
 
 def _gram_schmidt_basis(n):
@@ -1889,7 +1944,7 @@ def sbp_basis(sbp):
 
 
 def _check_orthogonality(basis):
-    r"""Check to see if basis is truly orthonormal in the Aitchison simplex.
+    r"""Check if basis is truly orthonormal in the Aitchison simplex.
 
     Parameters
     ----------
@@ -2195,7 +2250,7 @@ def dirmult_ttest(
 
     # multiple comparison
     if p_adjust is not None:
-        qval = _calc_p_adjust(p_adjust, res["pvalue"])
+        qval = _check_p_adjust(p_adjust)(res["pvalue"])
     else:
         qval = res["pvalue"].values
 
@@ -2674,7 +2729,7 @@ def dirmult_lme(
 
     # multiple comparison
     if p_adjust is not None:
-        qval = _calc_p_adjust(p_adjust, p_value_arr)
+        qval = _check_p_adjust(p_adjust)(p_value_arr)
     else:
         qval = p_value_arr
 

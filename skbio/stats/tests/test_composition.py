@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-import copy
+from copy import deepcopy
 
 import numpy as np
 import numpy.testing as npt
@@ -23,7 +23,7 @@ from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     _check_composition, _check_orthogonality,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _calc_p_adjust,
+    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_p_adjust,
     ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
 
@@ -823,9 +823,9 @@ class AncomTests(TestCase):
 
     def test_ancom_basic_counts(self):
         test_table = pd.DataFrame(self.table1)
-        original_table = copy.deepcopy(test_table)
+        original_table = deepcopy(test_table)
         test_cats = pd.Series(self.cats1)
-        original_cats = copy.deepcopy(test_cats)
+        original_cats = deepcopy(test_cats)
         result = ancom(test_table, test_cats, p_adjust=None)
         # Test to make sure that the input table hasn't be altered
         assert_data_frame_almost_equal(original_table, test_table)
@@ -836,6 +836,7 @@ class AncomTests(TestCase):
              'Reject null hypothesis': np.array([True, True, False, False,
                                                  False, False, False],
                                                 dtype=bool)})
+
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_percentiles(self):
@@ -1027,9 +1028,9 @@ class AncomTests(TestCase):
     def test_ancom_basic_proportions(self):
         # Converts from counts to proportions
         test_table = pd.DataFrame(closure(self.table1))
-        original_table = copy.deepcopy(test_table)
+        original_table = deepcopy(test_table)
         test_cats = pd.Series(self.cats1)
-        original_cats = copy.deepcopy(test_cats)
+        original_cats = deepcopy(test_cats)
         result = ancom(test_table, test_cats, p_adjust=None)
         # Test to make sure that the input table hasn't be altered
         assert_data_frame_almost_equal(original_table, test_table)
@@ -1044,9 +1045,9 @@ class AncomTests(TestCase):
 
     def test_ancom_multiple_groups(self):
         test_table = pd.DataFrame(self.table4)
-        original_table = copy.deepcopy(test_table)
+        original_table = deepcopy(test_table)
         test_cats = pd.Series(self.cats4)
-        original_cats = copy.deepcopy(test_cats)
+        original_cats = deepcopy(test_cats)
         result = ancom(test_table, test_cats)
         # Test to make sure that the input table hasn't be altered
         assert_data_frame_almost_equal(original_table, test_table)
@@ -1086,22 +1087,22 @@ class AncomTests(TestCase):
                                                 dtype=bool)})
         assert_data_frame_almost_equal(result[0], exp)
 
-    def test_ancom_significance_test_none(self):
+    def test_ancom_sig_test_none(self):
         exp = pd.DataFrame(
             {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
              'Reject null hypothesis': np.array([True, True, False, False,
                                                  False, False, False],
                                                 dtype=bool)})
-        result = ancom(self.table1, self.cats1, significance_test=None)
+        result = ancom(self.table1, self.cats1, sig_test=None)
         assert_data_frame_almost_equal(result[0], exp)
 
-    def test_ancom_significance_test_callable(self):
+    def test_ancom_sig_test_callable(self):
         exp = pd.DataFrame(
             {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
              'Reject null hypothesis': np.array([True, True, False, False,
                                                  False, False, False],
                                                 dtype=bool)})
-        result = ancom(self.table1, self.cats1, significance_test=f_oneway)
+        result = ancom(self.table1, self.cats1, sig_test=f_oneway)
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_multiple_comparisons(self):
@@ -1110,12 +1111,12 @@ class AncomTests(TestCase):
              'Reject null hypothesis': np.array([False] * 7, dtype=bool)})
         for method in 'holm', 'bh':
             result = ancom(self.table1, self.cats1, p_adjust=method,
-                           significance_test='mannwhitneyu')
+                           sig_test='mannwhitneyu')
             assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_alternative_test(self):
         result = ancom(self.table1, self.cats1, p_adjust=None,
-                       significance_test="ttest_ind")
+                       sig_test="ttest_ind")
         exp = pd.DataFrame(
             {'W': np.array([5, 5, 2, 2, 2, 2, 2]),
              'Reject null hypothesis': np.array([True,  True, False, False,
@@ -1125,13 +1126,13 @@ class AncomTests(TestCase):
 
     def test_ancom_incorrect_test(self):
         with self.assertRaises(ValueError) as cm:
-            ancom(self.table1, self.cats1, significance_test="not_a_test")
+            ancom(self.table1, self.cats1, sig_test="not_a_test")
         msg = 'Function "not_a_test" does not exist under scipy.stats.'
         self.assertEqual(str(cm.exception), msg)
 
     def test_ancom_normal_data(self):
         result = ancom(self.table2, self.cats2, p_adjust=None,
-                       significance_test="ttest_ind")
+                       sig_test="ttest_ind")
         exp = pd.DataFrame(
             {'W': np.array([8, 8, 3, 3, 8, 3, 3, 3, 3]),
              'Reject null hypothesis': np.array([True, True, False, False,
@@ -1207,12 +1208,6 @@ class AncomTests(TestCase):
                                                 dtype=bool)})
         assert_data_frame_almost_equal(result[0], exp)
 
-    def test_ancom_fail_type(self):
-        with self.assertRaises(TypeError):
-            ancom(self.table1.values, self.cats1)
-        with self.assertRaises(TypeError):
-            ancom(self.table1, self.cats1.values)
-
     def test_ancom_fail_zeros(self):
         with self.assertRaises(ValueError):
             ancom(self.bad1, self.cats2, p_adjust=None)
@@ -1269,23 +1264,23 @@ class AncomTests(TestCase):
     def test_ancom_fail_multiple_groups(self):
         # np.exceptions was introduced in NumPy 1.25, before which errors were
         # members of np. The following code is for backward compatibility.
+        # Starting from SciPy 1.17, the error message will be different.
         npe = getattr(np, 'exceptions', np)
         with self.assertRaises((TypeError, npe.AxisError)):
-            ancom(self.table4, self.cats4,
-                  significance_test="ttest_ind")
+            ancom(self.table4, self.cats4, sig_test="ttest_ind")
 
 
 class FDRTests(TestCase):
     def test_holm_bonferroni(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _calc_p_adjust("holm-bonferroni", p)
+        obs = _check_p_adjust("holm-bonferroni")(p)
         exp = p * np.arange(1, 6)[::-1]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
     def test_benjamini_hochberg(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _calc_p_adjust("benjamini-hochberg", p)
+        obs = _check_p_adjust("benjamini-hochberg")(p)
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)

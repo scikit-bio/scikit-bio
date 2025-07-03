@@ -20,6 +20,7 @@
 
 ### Performance enhancements
 
+* Improved the performance of `ancom`. This is primarily due to exploiting vectorization of the statistical testing function (such as `f_oneway`). As a consequence, a custom testing function now must accept 2-D arrays as input and return 1-D arrays. Function names available under `scipy.stats` are not impacted. Also, the parameter `significance_test` was renamed as `sig_test` for conciseness. The old name is preserved as an alias.
 * Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).

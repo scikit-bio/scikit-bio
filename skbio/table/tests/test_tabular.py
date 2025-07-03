@@ -53,15 +53,15 @@ class TestIngest(TestCase):
         obs = _ingest_table(table)
         self.assertIsInstance(obs[0], np.ndarray)
         npt.assert_array_equal(obs[0], self.data)
-        self.assertListEqual(obs[1], self.samples)
-        self.assertListEqual(obs[2], self.features)
+        self.assertListEqual(obs[1].tolist(), self.samples)
+        self.assertListEqual(obs[2].tolist(), self.features)
 
         # no samples / features
         table = pd.DataFrame(self.data)
         obs = _ingest_table(table)
         npt.assert_array_equal(obs[0], self.data)
-        self.assertListEqual(obs[1], list(range(obs[0].shape[0])))
-        self.assertListEqual(obs[2], list(range(obs[0].shape[1])))
+        self.assertListEqual(obs[1].tolist(), list(range(obs[0].shape[0])))
+        self.assertListEqual(obs[2].tolist(), list(range(obs[0].shape[1])))
 
         # override samples / features
         obs = _ingest_table(table, self.samples, self.features)
@@ -76,7 +76,7 @@ class TestIngest(TestCase):
         self.assertIsInstance(obs[0], np.ndarray)
         npt.assert_array_equal(obs[0], self.data)
         self.assertListEqual(obs[1], self.samples)
-        self.assertListEqual(obs[2], self.features)
+        self.assertListEqual(obs[2].names(), self.features)
 
         # no samples, override features
         table = pl.DataFrame(self.data)

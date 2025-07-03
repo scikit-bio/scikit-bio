@@ -22,7 +22,7 @@ from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _calc_p_adjust,
+    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize,
     ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
 import array_api_compat as aac
