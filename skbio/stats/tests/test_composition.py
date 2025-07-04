@@ -1386,6 +1386,40 @@ class DirMultTTestTests(TestCase):
         self.table2 = pd.DataFrame(self.data2)
         self.grouping2 = pd.Series(['Group1'] * n + ['Group2'] * n)
 
+    def test_dirmult_ttest_demo(self):
+        # The same example as in doctest
+        data = np.array([
+            [ 20, 110, 100, 101, 100, 103, 104],
+            [ 33, 110, 120, 100, 101, 100, 102],
+            [ 12, 110, 100, 110, 100,  50,  90],
+            [202, 201,   9,  10,  10,  11,  11],
+            [200, 202,  10,  10,  13,  10,  10],
+            [203, 201,  14,  10,  10,  13,  12],
+        ])
+        samples = ["s1", "s2", "s3", "s4", "s5", "s6"]
+        features = ["b1", "b2", "b3", "b4", "b5", "b6", "b7"]
+        table = pd.DataFrame(data, index=samples, columns=features)
+        labels = ["treatment", "treatment", "treatment",
+                  "placebo", "placebo", "placebo"]
+        grouping = pd.Series(labels, index=samples)
+
+        obs = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
+        self.assertTupleEqual(obs.shape, (7, 8))
+        self.assertListEqual(obs.index.to_list(), features)
+        exp = {
+            "T statistic": [-17.179, -16.873,  6.943,  6.523,  6.654,  3.84,   7.601],
+            "df":          [  2.233,   3.847,  2.74 ,  3.973,  3.461,  3.581,  2.483],
+            "Log2(FC)":    [ -4.992,  -2.534,  1.628,  1.707,  1.528,  1.182,  1.48 ],
+            "CI(2.5)":     [ -7.884,  -3.595, -1.048, -0.467, -1.037, -0.703, -0.601],
+            "CI(97.5)":    [ -2.293,  -1.462,  4.751,  4.165,  3.978,  3.556,  4.044],
+            "pvalue":      [  0.003,   0.001,  0.021,  0.013,  0.019,  0.045,  0.017],
+            "qvalue":      [  0.02 ,   0.007,  0.068,  0.066,  0.068,  0.068,  0.068],
+        }
+        for key, value in exp.items():
+            npt.assert_array_equal(obs[key].to_numpy().round(3), np.array(value))
+        exp = np.array([True, True, False, False, False, False, False])
+        npt.assert_array_equal(obs["Reject null hypothesis"].to_numpy(), exp)
+
     def test_dirmult_ttest_toy(self):
         p1 = np.array([5, 6, 7])
         p2 = np.array([4, 7, 7])
@@ -1483,11 +1517,6 @@ class DirMultTTestTests(TestCase):
         with self.assertRaises(TypeError):
             dirmult_ttest("invalid_table", self.grouping,\
                                 self.treatment, self.reference)
-
-    def test_dirmult_ttest_invalid_grouping_type(self):
-        with self.assertRaises(TypeError):
-            dirmult_ttest(self.table, "invalid_grouping", \
-                            self.treatment, self.reference)
 
     def test_dirmult_ttest_negative_values_in_table(self):
         self.table.iloc[0, 0] = -5  # Modify a value to be negative

@@ -1413,10 +1413,27 @@ def _format_da_input(table, grouping):
         grouping = grouping.to_numpy()
     else:
         grouping = np.asarray(grouping)
+
+    if grouping.ndim != 1:
+        raise ValueError("`grouping` must be convertible to a 1-D vector.")
+
+    if pd.isnull(grouping).any():
+        raise ValueError("Cannot handle missing values in `grouping`.")
+    # if np.issubdtype(groups.dtype, np.number):
+    #     if np.isnan(groups).any():
+    #         raise ValueError("Cannot handle missing values in `grouping`.")
+    # else:
+    #     if np.equal(groups, None).any():
+    #         raise ValueError("Cannot handle missing values in `grouping`.")
+
     if matrix.shape[0] != grouping.shape[0]:
         raise ValueError("Sample numbers in `table` and `grouping` are not consistent.")
 
     groups, labels = np.unique(grouping, return_inverse=True)
+
+    # expensive
+    if not np.issubdtype(matrix.dtype, np.number) or np.isnan(matrix).any():
+        raise ValueError("Cannot handle missing values in `table`.")
 
     return matrix, samples, features, groups, labels
 
@@ -1687,18 +1704,6 @@ def ancom(
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
-    if not np.issubdtype(matrix.dtype, np.number) or np.isnan(matrix).any():
-        raise ValueError("Cannot handle missing values in `table`.")
-
-    if pd.isnull(grouping).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
-    # if np.issubdtype(groups.dtype, np.number):
-    #     if np.isnan(groups).any():
-    #         raise ValueError("Cannot handle missing values in `grouping`.")
-    # else:
-    #     if np.equal(groups, None).any():
-    #         raise ValueError("Cannot handle missing values in `grouping`.")
-
     # validate percentiles
     if percentiles is None:
         percentiles = np.arange(0, 125, 25.0)
@@ -1960,75 +1965,38 @@ def _check_orthogonality(basis):
         raise ValueError("Basis is not orthonormal.")
 
 
-def _welch_ttest(a, b):
-    r"""Perform Welch's *t*-test on two samples of unequal variances.
-
-    Parameters
-    ----------
-    a, b : 1-D array_like
-        Samples to test.
-
-    Returns
-    -------
-    pd.DataFrame
-        Test result. Columns are: T statistic, df, pvalue, Difference, CI(2.5),
-        CI(97.5).
-
-    See Also
-    --------
-    scipy.stats.ttest_ind
-    statsmodels.stats.weightstats.CompareMeans
-
-    Notes
-    -----
-    Compared with ``scipy.stats.ttest_ind`` with ``equal_var=False``, this
-    function additionally returns confidence intervals. This implementation
-    uses the ``CompareMeans`` class from ``statsmodels.stats.weightstats``.
-
-    """
-    # See https://stats.stackexchange.com/a/475345
-    # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
-    from statsmodels.stats.weightstats import CompareMeans
-
-    # Creating a CompareMeans object to perform Welch's t-test
-    statsmodel_cm_object = CompareMeans.from_data(
-        data1=a, data2=b, weights1=None, weights2=None
-    )
-
-    # Performing Welch's t-test using the object to obtain tstat, pvalue, and df
-    ttest_cm_result = statsmodel_cm_object.ttest_ind(
-        alternative="two-sided", usevar="unequal", value=0
-    )
-
-    tstat = ttest_cm_result[0]
-    p = ttest_cm_result[1]
-    df = ttest_cm_result[2]
-
-    # Calculating difference between the two means
-    m1 = np.mean(a)
-    m2 = np.mean(b)
-
-    delta = m1 - m2
-
-    # Calculating confidence intervals using the aformentioned CompareMeans object
-    conf_int = statsmodel_cm_object.tconfint_diff(
-        alpha=0.05, alternative="two-sided", usevar="unequal"
-    )
-
-    lb = conf_int[0]
-    ub = conf_int[1]
-
-    return pd.DataFrame(
-        np.array([tstat, df, p, delta, lb, ub]).reshape(1, -1),
-        columns=["T statistic", "df", "pvalue", "Difference", "CI(2.5)", "CI(97.5)"],
-    )
-
-
 def _obtain_dir_table(table, pseudocount, rng):
+    """Resample data in a Dirichlet-multinomial distribution."""
     values = table.values + pseudocount
     values = np.apply_along_axis(rng.dirichlet, axis=1, arr=values)
     values = np.apply_along_axis(clr, axis=1, arr=values)
     return pd.DataFrame(values, index=table.index, columns=table.columns)
+
+
+def _dirmult_sample(matrix, rng):
+    """Resample data in a Dirichlet-multinomial distribution.
+
+    See Also
+    --------
+    numpy.random.Generator.gamma
+    numpy.random.Generator.dirichlet
+
+    Notes
+    -----
+    This function uses a Gamma distribution to replace a Dirichlet distribution. The
+    result is precisely identical to (and reproducible given the same seed):
+
+    .. code-block:: python
+       return clr(np.apply_along_axis(rng.dirichlet, axis=1, arr=matrix))
+
+    A Dirichlet distribution is essentially a standard Gamma distribution normalized
+    by row sums. Meanwhile, CLR is independent of scale, therefore the normalization
+    step can be omitted.
+
+    `gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
+
+    """
+    return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
 
 
 def dirmult_ttest(
@@ -2133,6 +2101,7 @@ def dirmult_ttest(
     See Also
     --------
     scipy.stats.ttest_ind
+    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
@@ -2174,9 +2143,8 @@ def dirmult_ttest(
     >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
-    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo',
-    ...                            seed=0)
-    >>> lfc_result[["Log2(FC)", "CI(2.5)", "CI(97.5)", "qvalue"]]
+    >>> result = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
+    >>> result[["Log2(FC)", "CI(2.5)", "CI(97.5)", "qvalue"]]
         Log2(FC)   CI(2.5)  CI(97.5)    qvalue
     b1 -4.991987 -7.884498 -2.293463  0.020131
     b2 -2.533729 -3.594590 -1.462339  0.007446
@@ -2187,96 +2155,106 @@ def dirmult_ttest(
     b7  1.480232 -0.601277  4.043888  0.068310
 
     """
+    from statsmodels.stats.weightstats import CompareMeans
+
     rng = get_rng(seed)
-    if not isinstance(table, pd.DataFrame):
-        raise TypeError(
-            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
-        )
-    if not isinstance(grouping, pd.Series):
-        raise TypeError(
-            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
-        )
 
-    if np.any(table < 0):
-        raise ValueError("Cannot handle negative values in `table`. ")
+    matrix, samples, features, groups, labels = _format_da_input(table, grouping)
 
-    if (grouping.isnull()).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
+    # handle zero values
+    if pseudocount:
+        matrix = matrix + pseudocount
 
-    if (table.isnull()).any().any():
-        raise ValueError("Cannot handle missing values in `table`.")
+    # get sample indices per group
+    trt_idx = np.flatnonzero(labels == np.flatnonzero(groups == treatment)[0])
+    ref_idx = np.flatnonzero(labels == np.flatnonzero(groups == reference)[0])
 
-    table_index_len = len(table.index)
-    grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join="inner")
-    if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` index must be consistent.")
+    cm_params = dict(alternative="two-sided", usevar="unequal")
 
-    trt_group = grouping.loc[grouping == treatment]
-    ref_group = grouping.loc[grouping == reference]
-    dir_table = _obtain_dir_table(table, pseudocount, rng)
+    # initiate results
+    m = matrix.shape[1]
+    delta = np.zeros(m)  # inter-group difference
+    tstat = np.zeros(m)  # t-test statistic
+    pval = np.zeros(m)  # t-test p-value
+    df = np.empty(m)  # degrees of freedom
+    lower = np.full(m, np.inf)  # 2.5% percentile of distribution
+    upper = np.full(m, -np.inf)  # 97.5% percentile of distribution
 
-    res = [
-        _welch_ttest(
-            np.array(dir_table.loc[trt_group.index, x].values),
-            np.array(dir_table.loc[ref_group.index, x].values),
-        )
-        for x in table.columns
-    ]
-    res = pd.concat(res)
-    for i in range(1, draws):
-        dir_table = _obtain_dir_table(table, pseudocount, rng)
+    for i in range(draws):
+        # Resample data in a Dirichlet-multinomial distribution.
+        dir_mat = _dirmult_sample(matrix, rng)
 
-        ires = [
-            _welch_ttest(
-                np.array(dir_table.loc[trt_group.index, x].values),
-                np.array(dir_table.loc[ref_group.index, x].values),
-            )
-            for x in table.columns
-        ]
-        ires = pd.concat(ires)
-        # online average to avoid holding all of the results in memory
-        res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
-        res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
-        res["CI(2.5)"] = np.minimum(res["CI(2.5)"], ires["CI(2.5)"])
-        res["CI(97.5)"] = np.maximum(res["CI(97.5)"], ires["CI(97.5)"])
-        res["T statistic"] = (i * res["T statistic"] + ires["T statistic"]) / (i + 1)
+        # Stratify data by group (treatment vs. reference).
+        trt_mat = dir_mat[trt_idx]
+        ref_mat = dir_mat[ref_idx]
 
-    res.index = table.columns
-    # convert all log fold changes to base 2
-    res["Difference"] = res["Difference"] / np.log(2)
-    res["CI(2.5)"] = res["CI(2.5)"] / np.log(2)
-    res["CI(97.5)"] = res["CI(97.5)"] / np.log(2)
+        # Calculate the difference between the two means.
+        delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
 
-    # multiple comparison
+        # Create a CompareMeans object for statistical testing.
+        # Note: Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_
+        # var=False`). The current function uses statsmodels' `CompareMeans` instead
+        # because it additionally returns confidence intervals.
+        cm = CompareMeans.from_data(trt_mat, ref_mat)
+
+        # Perform Welch's t-test to assess the significance of difference.
+        tstat_, pval_, df_ = cm.ttest_ind(value=0, **cm_params)
+        tstat += tstat_
+        pval += pval_
+
+        # Retain the degrees of freedom from the first trial.
+        # TODO: Revisit this decision.
+        if i == 0:
+            df = df_
+
+        # Calculate confidence intervals.
+        # The final lower and upper bounds are the minimum and maximum of all lower and
+        # and upper bounds seen during sampling, respectively.
+        lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
+        np.minimum(lower, lower_, out=lower)
+        np.maximum(upper, upper_, out=upper)
+
+    # Normalize metrics to averages over all trials.
+    delta /= draws
+    tstat /= draws
+    pval /= draws
+
+    # Correct p-values for multiple comparison.
     if p_adjust is not None:
-        qval = _check_p_adjust(p_adjust)(res["pvalue"])
+        qval = _check_p_adjust(p_adjust)(pval)
     else:
-        qval = res["pvalue"].values
+        qval = pval
+    reject = qval <= 0.05
 
-    # test to see if confidence interval includes 0.
-    sig = np.logical_or(
-        np.logical_and(res["CI(2.5)"] > 0, res["CI(97.5)"] > 0),
-        np.logical_and(res["CI(2.5)"] < 0, res["CI(97.5)"] < 0),
+    # Test if confidence interval includes 0.
+    # A significant result (i.e., reject null hypothesis) must simultaneously suffice:
+    # 1) q-value <= significance level. 2) confidence interval doesn't include 0.
+    sig = ((lower > 0) & (upper > 0)) | ((lower < 0) & (upper < 0))
+    reject &= sig
+
+    # Convert all log fold changes to base 2.
+    LOG2 = np.log(2)
+    delta /= LOG2
+    upper /= LOG2
+    lower /= LOG2
+
+    # construct report
+    res = pd.DataFrame.from_dict(
+        {
+            "T statistic": tstat,
+            "df": df,
+            "Log2(FC)": delta,
+            "CI(2.5)": lower,
+            "CI(97.5)": upper,
+            "pvalue": pval,
+            "qvalue": qval,
+            "Reject null hypothesis": reject,
+        }
     )
+    if features is not None:
+        res.index = features
 
-    reject = np.logical_and(qval[0], sig)
-
-    res = res.rename(columns={"Difference": "Log2(FC)"})
-    res["qvalue"] = qval
-    res["Reject null hypothesis"] = reject
-
-    col_order = [
-        "T statistic",
-        "df",
-        "Log2(FC)",
-        "CI(2.5)",
-        "CI(97.5)",
-        "pvalue",
-        "qvalue",
-        "Reject null hypothesis",
-    ]
-    return res[col_order]
+    return res
 
 
 def _type_cast_to_float(df):
