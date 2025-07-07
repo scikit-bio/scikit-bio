@@ -58,6 +58,14 @@ class CompositionTests(TestCase):
         self.cdata7 = [np.exp(1), 1, 1]
         self.cdata8 = [np.exp(1), 1, 1, 1]
 
+        # 3-D array (tensor) of 2 x 3 x 4
+        self.cdata9 = np.array([[[1, 2, 6, 1],
+                                 [1, 5, 3, 2],
+                                 [5, 1, 2, 2]],
+                                [[2, 4, 1, 3],
+                                 [3, 1, 3, 3],
+                                 [4, 1, 1, 4]]])
+
         # Simplicial orthonormal basis obtained from Gram-Schmidt
         self.ortho1 = [[0.44858053, 0.10905743, 0.22118102, 0.22118102],
                        [0.3379924, 0.3379924, 0.0993132, 0.22470201],
@@ -73,18 +81,43 @@ class CompositionTests(TestCase):
         self.bad1 = np.array([1, 2, -1])
         # zero count
         self.bad2 = np.array([[[1, 2, 3, 0, 5]]])
+        # all-zero rows
+        self.bad3 = np.array([[0, 1, 2], [0, 0, 0], [3, 0, 4]])
 
     def test_check_composition(self):
-        self.assertIsNone(_check_composition(self.cdata1))
+        self.assertIsNone(_check_composition(np, self.cdata1))
+        self.assertIsNone(_check_composition(np, self.cdata2))
+        self.assertIsNone(_check_composition(np, self.cdata3))
 
-        msg = "Input matrix cannot have negative proportions."
+        msg = "Input matrix cannot have negative components."
         with self.assertRaises(ValueError) as cm:
-            _check_composition(np.array([1, -1, 0]))
+            _check_composition(np, self.bad1)
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Input matrix cannot have rows with all zeros."
+        msg = "Input matrix cannot have compositions with all zeros."
         with self.assertRaises(ValueError) as cm:
-            _check_composition(np.array([[0, 1, 2], [0, 0, 0], [3, 0, 4]]))
+            _check_composition(np, self.bad3)
+        self.assertEqual(str(cm.exception), msg)
+
+        # all-zero composition in column not in row
+        mat = np.array([[1, 5, 0, 3], [2, 0, 0, 4], [3, 8, 0, 0]])
+        self.assertIsNone(_check_composition(np, mat))
+        self.assertIsNone(_check_composition(np, mat, axis=1))
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, mat, axis=0)
+        self.assertEqual(str(cm.exception), msg)
+
+        # single vector with a zero value
+        self.assertIsNone(_check_composition(np, self.cdata4))
+        self.assertIsNone(_check_composition(np, np.atleast_2d(self.cdata4)))
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, self.cdata4.reshape(-1, 1))
+        self.assertEqual(str(cm.exception), msg)
+
+        # edge case: single scalar
+        self.assertIsNone(_check_composition(np, np.array(5)))
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, np.array(0))
         self.assertEqual(str(cm.exception), msg)
 
     def test_check_orthogonality(self):
@@ -263,14 +296,24 @@ class CompositionTests(TestCase):
         cmat = clr(closure(self.cdata1))
         A = np.array([.2, .2, .6])
         B = np.array([.4, .4, .2])
+        exp = [np.log(A / np.exp(np.log(A).mean())),
+               np.log(B / np.exp(np.log(B).mean()))]
+        npt.assert_allclose(cmat, exp)
 
-        npt.assert_allclose(cmat,
-                            [np.log(A / np.exp(np.log(A).mean())),
-                             np.log(B / np.exp(np.log(B).mean()))])
+        # results are 0-centered
+        npt.assert_array_almost_equal(cmat.sum(axis=1), [0, 0])
+
+        # closure has no effect on result
+        cmat = clr(self.cdata1)
+        npt.assert_allclose(cmat, exp)
+
+        # CLR is not sensitive to scale
+        cmat = clr(np.array(self.cdata1) * 100)
+        npt.assert_allclose(cmat, exp)
+
         cmat = clr(closure(self.cdata2))
         A = np.array([.2, .2, .6])
-        npt.assert_allclose(cmat,
-                            np.log(A / np.exp(np.log(A).mean())))
+        npt.assert_allclose(cmat, np.log(A / np.exp(np.log(A).mean())))
 
         cmat = clr(closure(self.cdata5))
         A = np.array([.2, .2, .6])
@@ -279,14 +322,49 @@ class CompositionTests(TestCase):
         npt.assert_allclose(cmat,
                             [np.log(A / np.exp(np.log(A).mean())),
                              np.log(B / np.exp(np.log(B).mean()))])
-        with self.assertRaises(ValueError):
+
+        # invalid input matrix
+        msg = "Input matrix cannot have negative or zero components."
+
+        # negative value
+        with self.assertRaises(ValueError) as cm:
             clr(self.bad1)
-        with self.assertRaises(ValueError):
+        self.assertEqual(str(cm.exception), msg)
+
+        # zero value
+        with self.assertRaises(ValueError) as cm:
             clr(self.bad2)
+        self.assertEqual(str(cm.exception), msg)
+
+        # all-zero row
+        with self.assertRaises(ValueError) as cm:
+            clr(self.bad3)
+        self.assertEqual(str(cm.exception), msg)
 
         # make sure that inplace modification is not occurring
         clr(self.cdata2)
         npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
+
+        # 3-D tensor as input
+        arr3d = self.cdata9
+        obs = clr(arr3d)
+        exp = np.array([[[-0.62123,  0.07192,  1.17053, -0.62123],
+                         [-0.8503 ,  0.75914,  0.24831, -0.15715],
+                         [ 0.8605 , -0.74893, -0.05579, -0.05579]],
+                        [[-0.10137,  0.59178, -0.79451,  0.3041 ],
+                         [ 0.27465, -0.82396,  0.27465,  0.27465],
+                         [ 0.69315, -0.69315, -0.69315,  0.69315]]])
+        npt.assert_array_equal(obs.round(5), exp)
+
+        # The result should be identical to applying clr to each matrix separately,
+        for obs2d, arr2d in zip(obs, arr3d):
+            npt.assert_array_almost_equal(obs2d, clr(arr2d))
+
+        # ...and identical to applying clr to each row separately.
+        for obs2d, arr2d in zip(obs, arr3d):
+            for obs1d, arr1d in zip(obs2d, arr2d):
+                npt.assert_array_almost_equal(obs1d, clr(arr1d))
+
 
     def test_clr_inv(self):
         npt.assert_allclose(clr_inv(self.rdata1), self.ortho1)
@@ -301,6 +379,12 @@ class CompositionTests(TestCase):
                                        -0.81649658, 0.],
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
+
+        # 3-D tensor as input (see `test_clr` above)
+        arr3d = self.cdata9
+        obs = clr_inv(clr(arr3d))
+        exp = closure(arr3d)
+        npt.assert_array_almost_equal(obs, exp)
 
     def test_centralize(self):
         cmat = centralize(closure(self.cdata1))
@@ -365,15 +449,15 @@ class CompositionTests(TestCase):
         npt.assert_allclose(obs, exp)
 
     def test_ilr_errors(self):
-        msg = "Input matrix cannot have negative proportions."
+        msg = "Input matrix cannot have negative or zero components."
         with self.assertRaises(ValueError) as cm:
             ilr(self.bad1)
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Input matrix can only have two dimensions or less."
-        with self.assertRaises(ValueError) as cm:
-            ilr(np.array([[[1, 2, 3]]]))
-        self.assertEqual(str(cm.exception), msg)
+        # msg = "Input matrix can only have two dimensions or less."
+        # with self.assertRaises(ValueError) as cm:
+        #     ilr(np.array([[[1, 2, 3]]]))
+        # self.assertEqual(str(cm.exception), msg)
 
         basis = np.array([[0.80442968, 0.19557032]])
         msg = "Basis is not orthonormal."

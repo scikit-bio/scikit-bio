@@ -7,23 +7,13 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main, skipIf
-import copy
 
 import numpy as np
 import numpy.testing as npt
-from numpy.random import normal
-import pandas as pd
-import pandas.testing as pdt
-from scipy.sparse import coo_matrix
-from scipy.stats import f_oneway, ConstantInputWarning
 
-from skbio import TreeNode
-from skbio.util import assert_data_frame_almost_equal
-from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize,
-    ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
+    closure, clr, clr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis
+)
 
 
 import array_api_compat as aac
@@ -151,11 +141,6 @@ class jnp_cpu(TestCase):
             self.bad1 = self.namespace_asarray([1, 2, -1],
                                                device=self.device)
             closure(self.bad1)
-
-        with self.assertRaises(ValueError):
-            self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
-                                               device=self.device)
-            closure(self.bad2)
 
         # make sure that inplace modification is not occurring
         closure(self.cdata2)
@@ -1045,3 +1030,7 @@ class jax_gpu(TestCase):
         sbpbasis = self.namespace_asarray(sbpbasis,
                                          device=self.device)
         assert_allclose(gsbasis, sbpbasis)
+
+
+if __name__ == "__main__":
+    main()

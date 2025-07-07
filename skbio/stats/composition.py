@@ -138,67 +138,91 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Optional, Any, Tuple, TYPE_CHECKING
 from sys import modules
-from typing import Optional
 from warnings import warn, catch_warnings, simplefilter
-from functools import partial
 
 import numpy as np
 import pandas as pd
 import array_api_compat as aac
 from scipy.stats import t  # not used?
 
-from skbio.util import get_rng, find_duplicates
+from skbio.util import get_rng
 from skbio.util._decorator import aliased, register_aliases, params_aliased
+from skbio.util._array import _ingest_array
 from skbio.table._tabular import _ingest_table
 
+
+if TYPE_CHECKING:  # pragma: no cover
+    from types import ModuleType
+    from skbio.util._typing import ArrayLike, StdArray
 
 Array = object
 
 
-def supports_array_api(obj):
-    required_methods = ["__array_namespace__"]
-    return all(hasattr(obj, method) for method in required_methods)
-
-
-def _check_composition(mat: Array):
-    """Check if the input is a valid composition.
+def _check_composition(
+    xp: "ModuleType",
+    mat: "ArrayLike",
+    /,
+    *,
+    axis: int = -1,
+    nozero: bool = False,
+    maxdim: Optional[int] = None,
+):
+    r"""Check if the input matrix contain valid compositions.
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    xp : namespace
+        The array API compatible namespace corresponding ``mat``.
+    mat : array of shape (n_compositions, n_components)
         A matrix of proportions.
+    axis : int, optional
+        Axis that represents each composition. Default is the last axis (-1).
+    nozero : bool, optional
+        If True, matrix cannot have zero values.
+    maxdim : int, optional
+        Maximum number of dimensions allowed. Default is None.
+
+    Raises
+    ------
+    ValueError
+        If any values in the matrix are negative.
+    ValueError
+        If there are compositions that have all zeros.
+    ValueError
+        If the matrix has more than maximum number of dimensions.
+
     """
-    axis = -1
-    xp = aac.array_namespace(mat)
-    if xp.any(mat < 0):
-        raise ValueError("Input matrix cannot have negative proportions.")
-    if xp.all(mat == 0, axis=axis).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros.")
+    # if not xp.all(xp.isfinite(mat)):
+    #     raise ValueError("Input matrix cannot have infinite or not-a-number values.")
+    if nozero:
+        if xp.any(mat <= 0):
+            raise ValueError("Input matrix cannot have negative or zero components.")
+    else:
+        if xp.any(mat < 0):
+            raise ValueError("Input matrix cannot have negative components.")
+        if xp.any(~xp.any(mat, axis=axis)):
+            raise ValueError("Input matrix cannot have compositions with all zeros.")
+    if maxdim is not None and mat.ndim > maxdim:
+        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-def closure(mat):
-    """Perform closure to ensure that all elements add up to 1.
+def closure(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+    r"""Perform closure to ensure that all components of each composition sum to 1.
 
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
+        A matrix of compositions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
         The matrix where all of the values are non-zero and each composition
         (row) adds up to 1.
-
-    Raises
-    ------
-    ValueError
-        If any values are negative.
-    ValueError
-        If the matrix has more than two dimensions.
-    ValueError
-        If there is a row that has all zeros.
 
     Examples
     --------
@@ -210,24 +234,15 @@ def closure(mat):
            [ 0.4,  0.4,  0.2]])
 
     """
-    # mat = np.atleast_2d(mat)
-    axis = 1
+    xp, mat = _ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat)
+    return _closure(xp, mat)
 
-    if not aac.is_array_api_obj(mat):
-        mat = np.array(mat)
-    xp = aac.array_namespace(mat)
-    if xp.any(mat < 0):
-        raise ValueError("Input matrix cannot have negative proportions.")
-    if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less.")
-    elif mat.ndim == 1:
-        mat = mat.reshape(1, -1)
-    if xp.all(mat == 0, axis=1).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros.")
-    mat = mat / mat.sum(axis=axis, keepdims=True)
 
-    # squeeze maybe no need
-    return xp.squeeze(mat, axis=tuple(i for i, m in enumerate(mat.shape) if m == 1))
+def _closure(xp: "ModuleType", mat: "StdArray", /, *, axis: int = -1) -> "StdArray":
+    """Perform closure."""
+    return mat / xp.sum(mat, axis=axis, keepdims=True)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -477,8 +492,8 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat: Array, validate: bool = True) -> Array:
-    r"""Perform centre log ratio transformation.
+def clr(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+    r"""Perform centre log ratio (CLR) transformation.
 
     This function transforms compositions from Aitchison geometry to the real
     space. The :math:`clr` transform is both an isometry and an isomorphism
@@ -501,15 +516,18 @@ def clr(mat: Array, validate: bool = True) -> Array:
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
-    validate: bool, default True
-        Checking of the mat is a legitimate  composition with elements
-        strictly greater than 0.
+        A matrix of positive proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
-        Clr-transformed matrix.
+        CLR-transformed matrix.
+
+    See Also
+    --------
+    clr_inv
 
     Examples
     --------
@@ -520,35 +538,19 @@ def clr(mat: Array, validate: bool = True) -> Array:
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    axis = -1
-    # xp is the namespace wrapper for different array libraries
-    # NOTE: the following (try:) may reduce the efficiency but to
-    # keep backward compatibility when the input is a list
-    try:
-        xp = aac.array_namespace(mat)
-    except Exception as e:
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
-
+    xp, mat = _ingest_array(mat)
     if validate:
-        # assert from closure() while it is removed in latest version
-        if xp.any(mat < 0):
-            raise ValueError("Input matrix cannot have negative proportions.")
-        if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less.")
-
-        # check if the input is a composition
-        _check_composition(mat)
-
-    original_shape = mat.shape
-    # squeeze the singleton dimensions
-    mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
-    lmat = xp.log(mat)
-    return xp.reshape(lmat - xp.mean(lmat, axis=axis, keepdims=True), original_shape)
+        _check_composition(xp, mat, nozero=True)
+    return _clr(xp, mat, axis=-1)
 
 
-def clr_inv(mat: Array, validate: bool = True) -> Array:
-    r"""Perform inverse centre log ratio transformation.
+def _clr(xp: "ModuleType", mat: "StdArray", /, *, axis: int = -1) -> "StdArray":
+    """Perform CLR transform."""
+    return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
+
+
+def clr_inv(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+    r"""Perform inverse centre log ratio (CLR) transformation.
 
     This function transforms compositions from the real space to Aitchison
     geometry. The :math:`clr^{-1}` transform is both an isometry, and an
@@ -568,15 +570,26 @@ def clr_inv(mat: Array, validate: bool = True) -> Array:
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components)
-        A matrix of clr-transformed data.
+        A matrix of CLR-transformed data.
     validate: bool, default True
-        Should be ignored for backward compactibility,the flag of
-        checking whether the mat is centered at 0.
+        Check if the matrix has been centered at 0. Should be ignored for backward
+        compatibility.
 
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
-        Inverse clr-transformed matrix.
+        Inverse CLR-transformed matrix.
+
+    See Also
+    --------
+    clr
+
+    Notes
+    -----
+    The output of ``clr_inv`` is guaranteed to have each composition sum to 1. But this
+    property isn't required for the input for ``clr``. Therefore, ``clr_inv`` does not
+    completely invert ``clr``. Instead, ``clr_inv(clr(mat))`` and ``closure(mat)`` are
+    equal.
 
     Examples
     --------
@@ -587,29 +600,27 @@ def clr_inv(mat: Array, validate: bool = True) -> Array:
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
 
     """
-    # for backward compatibility for list input
+    xp, mat = _ingest_array(mat)
     axis = -1
-    try:
-        xp = aac.array_namespace(mat)
-    except Exception as e:
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
 
-    if validate:
-        if xp.any(xp.sum(mat, axis=axis) != 0):
-            warn(
-                "The input matrix is not in the clr range, which require the sum of "
-                "values equal to 0.",
-                UserWarning,
-            )
+    # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
+    # therefore it is manually written here.
+    if validate and xp.any(xp.abs(xp.sum(mat, axis=axis)) > 1e-08):
+        warn(
+            "The input matrix is not in the CLR range, which requires the sum of "
+            "values per composition equals to 0.",
+            UserWarning,
+        )
 
-    # for numerical stability, shitting the values < 1
+    # for numerical stability, shifting the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
     return diff / xp.sum(diff, axis=axis, keepdims=True)
 
 
-def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Array:
-    r"""Perform isometric log ratio transformation.
+def ilr(
+    mat: "ArrayLike", basis: Optional[Array] = None, validate: bool = True
+) -> "StdArray":
+    r"""Perform isometric log ratio (ILR) transformation.
 
     This function transforms compositions from Aitchison simplex to the real
     space. The :math:`ilr` transform is both an isometry, and an isomorphism
@@ -626,8 +637,8 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
 
     where :math:`[e_1,\ldots,e_{D-1}]` is an orthonormal basis in the simplex.
 
-    If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal
-    basis derived from Gram-Schmidt orthogonalization will be used by default.
+    If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal basis
+    derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
     Parameters
     ----------
@@ -637,12 +648,29 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
     validate : bool, default True
-        Checking of the basis is orthonormal.
+        Check if the matrix is compositional and the basis is orthonormal.
 
     Returns
     -------
     ndarray of shape (n_compositions, n_components - 1)
-        Ilr-transformed matrix.
+        ILR-transformed matrix.
+
+    See Also
+    --------
+    ilr_inv
+
+    Notes
+    -----
+    If the ``basis`` parameter is specified, it is expected to be a basis in
+    the Aitchison simplex. If there are :math:`D - 1` elements specified in
+    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
+    where rows represent basis vectors, and the columns represent proportions.
+
+    References
+    ----------
+    .. [1] Egozcue, J. J., Pawlowsky-Glahn, V., Mateu-Figueras, G., & Barcelo-Vidal,
+       C. (2003). Isometric logratio transformations for compositional data analysis.
+       Mathematical geology, 35(3), 279-300.
 
     Examples
     --------
@@ -652,44 +680,24 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
     >>> ilr(x)
     array([-0.7768362 , -0.68339802,  0.11704769])
 
-    Notes
-    -----
-    If the ``basis`` parameter is specified, it is expected to be a basis in
-    the Aitchison simplex. If there are :math:`D - 1` elements specified in
-    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
-    where rows represent basis vectors, and the columns represent proportions.
-
     """
-    axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warn(
-            "Input is not supported by array_namespace, converting to numpy array.",
-            UserWarning,
-        )
-
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
+    xp, mat = _ingest_array(mat)
     if validate:
-        # assert from closure() while it is removed in latest version
-        if xp.any(mat < 0):
-            raise ValueError("Input matrix cannot have negative proportions.")
-        if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less.")
+        _check_composition(xp, mat, nozero=True)
 
-        # check if the input is a composition
-        _check_composition(mat)
+    axis = -1
 
-    mat = clr(mat, validate=validate)
+    mat = _clr(xp, mat, axis=axis)
+
     if basis is None:
         d = mat.shape[-1]
         basis = xp.asarray(
             _gram_schmidt_basis(d), device=mat.device, dtype=mat.dtype
         )  # dimension (d-1) x d
-    elif validate:
-        _check_orthogonality(basis)
+    else:
+        xp_, basis = _ingest_array(basis)
+        if validate:
+            _check_orthogonality(xp_, basis)
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
@@ -698,8 +706,10 @@ def ilr(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Arr
     return mat @ basis.T
 
 
-def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) -> Array:
-    r"""Perform inverse isometric log ratio transform.
+def ilr_inv(
+    mat: "ArrayLike", basis: Optional[Array] = None, validate: bool = True
+) -> "StdArray":
+    r"""Perform inverse isometric log ratio (ILR) transformation.
 
     This function transforms compositions from the real space to Aitchison
     geometry. The :math:`ilr^{-1}` transform is both an isometry, and an
@@ -715,14 +725,13 @@ def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) ->
 
     where :math:`[e_1,\ldots, e_{D-1}]` is an orthonormal basis in the simplex.
 
-    If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal
-    basis derived from Gram-Schmidt orthogonalization will be used by
-    default.
+    If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal basis
+    derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components - 1)
-        A matrix of ilr-transformed data.
+        A matrix of ILR-transformed data.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
@@ -732,7 +741,24 @@ def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) ->
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
-        Inverse ilr-transformed matrix.
+        Inverse ILR-transformed matrix.
+
+    See Also
+    --------
+    ilr
+
+    Notes
+    -----
+    If the ``basis`` parameter is specified, it is expected to be a basis in
+    the Aitchison simplex. If there are :math:`D - 1` elements specified in
+    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
+    where rows represent basis vectors, and the columns represent proportions.
+
+    References
+    ----------
+    .. [1] Egozcue, J. J., Pawlowsky-Glahn, V., Mateu-Figueras, G., & Barcelo-Vidal,
+       C. (2003). Isometric logratio transformations for compositional data analysis.
+       Mathematical geology, 35(3), 279-300.
 
     Examples
     --------
@@ -742,31 +768,19 @@ def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) ->
     >>> ilr_inv(x)
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
-    Notes
-    -----
-    If the ``basis`` parameter is specified, it is expected to be a basis in
-    the Aitchison simplex. If there are :math:`D - 1` elements specified in
-    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
-    where rows represent basis vectors, and the columns represent proportions.
-
     """
     axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warn(
-            "Input is not supported by array_namespace, converting to numpy array.",
-            UserWarning,
-        )
+    xp, mat = _ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat, nozero=True)
 
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
     if basis is None:
         # dimension d-1 x d basis
         basis = _gram_schmidt_basis(mat.shape[axis] + 1)
     elif validate:
-        _check_orthogonality(basis)
+        xp_, basis = _ingest_array(basis)
+        if validate:
+            _check_orthogonality(xp_, basis)
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
@@ -777,7 +791,7 @@ def ilr_inv(mat: Array, basis: Optional[Array] = None, validate: bool = True) ->
 
 
 def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = True):
-    r"""Perform additive log ratio transformation.
+    r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
@@ -810,7 +824,7 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     Returns
     -------
     ndarray of shape (n_compositions, n_components - 1)
-        Alr-transformed data projected in a non-isometric real space of
+        ALR-transformed data projected in a non-isometric real space of
         :math:`D - 1` dimensions for a *D*-parts composition.
 
     Examples
@@ -823,17 +837,9 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
 
     """
     axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warn(
-            "Input is not supported by array_namespace, converting to numpy array.",
-            UserWarning,
-        )
-
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
+    xp, mat = _ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat, nozero=True)
 
     if validate:
         if mat.ndim > 2:
@@ -848,8 +854,6 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
             raise ValueError(
                 f"Dimension {mat.ndim + axis} of the input matrix is singleton."
             )
-        if xp.any(mat <= 0):
-            raise ValueError("Input matrix must contain only positive values.")
 
     # no matter (n,) or (n, w, z), it will return n
     N = mat.shape[-1]
@@ -860,7 +864,7 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
 
 
 def alr_inv(mat: Array, denominator_idx: int = 0):
-    r"""Perform inverse additive log ratio transform.
+    r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -885,7 +889,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components - 1)
-        A matrix of alr-transformed data.
+        A matrix of ALR-transformed data.
     denominator_idx : int, default 0
         The index of the column (2-D matrix) or position (vector) of ``mat``
         which should be used as the reference composition. Default is 0 which
@@ -894,7 +898,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
-        Inverse alr-transformed matrix or vector where rows sum to 1.
+        Inverse ALR-transformed matrix or vector where rows sum to 1.
 
     Examples
     --------
@@ -906,17 +910,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
 
     """
     axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warn(
-            "Input is not supported by array_namespace, converting to numpy array.",
-            UserWarning,
-        )
-
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
+    xp, mat = _ingest_array(mat)
 
     if mat.ndim > 2:
         # NOTE: backward compatibility
@@ -1853,7 +1847,7 @@ def _log_compare(matrix, labels, n, test):
 
 
 def _gram_schmidt_basis(n):
-    """Build clr-transformed basis derived from Gram-Schmidt orthogonalization.
+    """Build CLR-transformed basis derived from Gram-Schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1948,7 +1942,7 @@ def sbp_basis(sbp):
     return psi
 
 
-def _check_orthogonality(basis):
+def _check_orthogonality(xp, basis):
     r"""Check if basis is truly orthonormal in the Aitchison simplex.
 
     Parameters
@@ -1957,7 +1951,6 @@ def _check_orthogonality(basis):
         Basis in the Aitchison simplex of dimension :math:`(D - 1) \times D`.
 
     """
-    xp = aac.array_namespace(basis)
     if basis.ndim < 2:
         basis = basis.reshape(1, -1)
     eyes = xp.asarray(np.identity(len(basis)), device=basis.device, dtype=basis.dtype)
@@ -2100,6 +2093,7 @@ def dirmult_ttest(
 
     See Also
     --------
+    dirmult_ttest
     scipy.stats.ttest_ind
     statsmodels.stats.weightstats.CompareMeans
 
@@ -2192,9 +2186,9 @@ def dirmult_ttest(
         delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
 
         # Create a CompareMeans object for statistical testing.
-        # Note: Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_
-        # var=False`). The current function uses statsmodels' `CompareMeans` instead
-        # because it additionally returns confidence intervals.
+        # Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_var=
+        # False`). The current code uses statsmodels' `CompareMeans` instead because
+        # it additionally returns confidence intervals.
         cm = CompareMeans.from_data(trt_mat, ref_mat)
 
         # Perform Welch's t-test to assess the significance of difference.
@@ -2208,7 +2202,7 @@ def dirmult_ttest(
             df = df_
 
         # Calculate confidence intervals.
-        # The final lower and upper bounds are the minimum and maximum of all lower and
+        # The final lower and upper bounds are the minimum and maximum of all lower
         # and upper bounds seen during sampling, respectively.
         lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
         np.minimum(lower, lower_, out=lower)
@@ -2447,9 +2441,8 @@ def dirmult_lme(
     log-fold changes as well as their credible intervals, the *p*-values and
     the multiple comparison corrected *p*-values are reported.
 
-    This function uses the
-    :class:`MixedLM <statsmodels.regression.mixed_linear_model.MixedLM>` class from
-    statsmodels.
+    This function uses the :class:`~statsmodels.regression.mixed_linear_model.MixedLM`
+    class from statsmodels.
 
     Parameters
     ----------
