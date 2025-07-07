@@ -23,8 +23,8 @@ from skbio.table import Table
 from skbio.metadata import SampleMetadata
 from skbio.util import set_config, get_config
 import skbio.diversity  # noqa
-import skbio.stats.evolve  # noqa
 import skbio.binaries  # noqa
+import skbio.stats.evolve  # noqa
 
 __all__ = [
     "Sequence",
