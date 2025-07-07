@@ -162,9 +162,9 @@ def py_to_bin_random_seed(seed_or_generator=None):
     else:
         # assume it is a generator, get a new int seed
         maxint = np.iinfo(np.int32).max + 1
-        if isinstance(seed, np.random.Generator):
+        if isinstance(seed_or_generator, np.random.Generator):
             return seed_or_generator.integers(0, maxint)
-        elif isinstance(seed, np.random.RandomState):
+        elif isinstance(seed_or_generator, np.random.RandomState):
             return seed_or_generator.integers.randint(maxint)
         else:
             raise ValueError(
