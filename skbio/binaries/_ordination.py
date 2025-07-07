@@ -25,8 +25,9 @@ def pcoa_fsvd_available(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
-        The input distance matrix.
+    distance_matrix : np.ndarray or DistanceMatrix
+        Distance matrix containing distances between objects (e.g., distances
+        between samples of microbial communities).
     number_of_dimensions : int
         Dimensions to reduce the distance matrix to. This number determines how many
         eigenvectors and eigenvalues will be returned.
@@ -43,7 +44,7 @@ def pcoa_fsvd_available(
 
     Note
     ----
-    Internally it uses caching, to minimize overhead
+    Internally it uses caching, to minimize overhead.
 
     """
     # v1 is the minimum version that supports pcoa_fsvd
@@ -73,8 +74,9 @@ def pcoa_fsvd(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
-        The input distance matrix.
+    distance_matrix : np.ndarray or DistanceMatrix
+        Distance matrix containing distances between objects (e.g., distances
+        between samples of microbial communities).
     number_of_dimensions : int
         Dimensions to reduce the distance matrix to. This number determines how many
         eigenvectors and eigenvalues will be returned.
@@ -117,6 +119,9 @@ def pcoa_fsvd(
 
     Note that the returned eigenvectors are not normalized to unit length.
 
+    Finally, the result is undefined if distance_matrix is a np.ndarray
+    that does not represent a valid distance matrix.
+
     References
     ----------
     .. [1] Gower, J. C. (1966). Some distance properties of latent root and vector
@@ -134,7 +139,7 @@ def pcoa_fsvd(
             raise ValueError("number_of_dimensions must be a positive number")
         int_seed = py_to_bin_random_seed(seed)
         if isinstance(distance_matrix,np.ndarray):
-            # already a raw matrix, jsut use
+            # already a raw matrix, just use
             distance_matrix_data = distance_matrix
         else:
             # we are assuming it is a DistanceMatrix object
