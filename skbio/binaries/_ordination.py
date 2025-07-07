@@ -150,7 +150,7 @@ def pcoa_fsvd(
             distance_matrix_data.shape[1] != distance_matrix_shape0):
                raise TypeError("distance_matrix not square")
         if number_of_dimensions>distance_matrix_shape0:
-            raise ValueError("number_of_dimensions cannot be larger that matrix size")
+            raise ValueError("number_of_dimensions cannot be larger than matrix size")
         # create output buffers
         eigenvalues = np.ndarray(
                 shape=(number_of_dimensions,),
