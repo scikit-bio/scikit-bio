@@ -49,7 +49,7 @@ def permanova_available(
 
     Note
     ----
-    Internally it uses caching, to minimize overhead
+    Internally it uses caching, to minimize overhead.
 
     """
     # v1 is the minimum version that support permanova
@@ -114,6 +114,9 @@ def permanova(
     -----
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
+
+    Finally, the result is undefined if distance_matrix is a np.ndarray
+    that does not represent a valid distance matrix.
 
     References
     ----------
