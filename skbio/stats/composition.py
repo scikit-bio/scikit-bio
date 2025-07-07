@@ -492,7 +492,7 @@ def inner(x, y):
     return a.dot(b.T)
 
 
-def clr(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     r"""Perform centre log ratio (CLR) transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -515,14 +515,17 @@ def clr(mat: "ArrayLike", validate: bool = True) -> "StdArray":
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    mat : array_like of shape (..., n_components, ...)
         A matrix of positive proportions.
+    axis : int, optional
+        Axis along which CLR transformation will be performed. That is, each vector
+        along this axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Check if the compositions are legitimate.
+        Check if the matrix consists of strictly positive values.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray of shape (..., n_components, ...)
         CLR-transformed matrix.
 
     See Also
@@ -541,15 +544,15 @@ def clr(mat: "ArrayLike", validate: bool = True) -> "StdArray":
     xp, mat = _ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
-    return _clr(xp, mat, axis=-1)
+    return _clr(xp, mat, axis)
 
 
-def _clr(xp: "ModuleType", mat: "StdArray", /, *, axis: int = -1) -> "StdArray":
+def _clr(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
     """Perform CLR transform."""
     return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
 
-def clr_inv(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     r"""Perform inverse centre log ratio (CLR) transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -571,6 +574,10 @@ def clr_inv(mat: "ArrayLike", validate: bool = True) -> "StdArray":
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of CLR-transformed data.
+    axis : int, optional
+        Axis along which CLR transformation will be performed. That is, each vector
+        along this axis is considered as a CLR-transformed composition. Default is the
+        last axis (-1).
     validate: bool, default True
         Check if the matrix has been centered at 0. Should be ignored for backward
         compatibility.
@@ -601,7 +608,6 @@ def clr_inv(mat: "ArrayLike", validate: bool = True) -> "StdArray":
 
     """
     xp, mat = _ingest_array(mat)
-    axis = -1
 
     # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
     # therefore it is manually written here.
@@ -612,9 +618,14 @@ def clr_inv(mat: "ArrayLike", validate: bool = True) -> "StdArray":
             UserWarning,
         )
 
-    # for numerical stability, shifting the values < 1
+    return _clr_inv(xp, mat, axis)
+
+
+def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+    """Perform inverse CLR transform."""
+    # for numerical stability, shift the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
-    return diff / xp.sum(diff, axis=axis, keepdims=True)
+    return _closure(xp, diff, axis)
 
 
 def ilr(

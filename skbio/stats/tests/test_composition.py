@@ -136,14 +136,14 @@ class CompositionTests(TestCase):
         obs = closure(mat)
         exp = np.array([[.2, .2, .6],
                         [.4, .4, .2]])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # confirm that compositions sum to 1
         npt.assert_allclose(obs.sum(axis=-1), 1.)
 
         # custom axis
         obs = closure(mat, axis=1)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         obs = closure(mat, axis=0)
         exp = np.array([[0.333, 0.333, 0.75 ],
@@ -161,7 +161,7 @@ class CompositionTests(TestCase):
         vec = self.cdata2
         obs = closure(vec)
         exp = np.array([.2, .2, .6])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # make sure that inplace modification is not occurring
         self.assertIsNot(obs, vec)
@@ -172,12 +172,12 @@ class CompositionTests(TestCase):
         obs = closure(lst)
         exp = np.array([[.2, .2, .6],
                         [.4, .4, .2]])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # input is a dataframe
         df = pd.DataFrame(self.cdata1)
         obs = closure(df)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # negative value is prohibited
         msg = "Input matrix cannot have negative components."
@@ -212,7 +212,7 @@ class CompositionTests(TestCase):
                         [[.2, .4, .1, .3],
                          [.3, .1, .3, .3],
                          [.4, .1, .1, .4]]])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
         npt.assert_allclose(obs.sum(axis=-1), 1.)
 
         # middle axis
@@ -362,7 +362,11 @@ class CompositionTests(TestCase):
         npt.assert_allclose(self.cdata4, np.array([1, 2, 3, 0, 5]))
 
     def test_clr(self):
-        cmat = clr(closure(self.cdata1))
+        # 2-D matrix
+        mat = self.cdata1
+        cmat = clr(mat)
+
+        # calculation by hand
         A = np.array([.2, .2, .6])
         B = np.array([.4, .4, .2])
         exp = [np.log(A / np.exp(np.log(A).mean())),
@@ -370,27 +374,26 @@ class CompositionTests(TestCase):
         npt.assert_allclose(cmat, exp)
 
         # results are 0-centered
-        npt.assert_array_almost_equal(cmat.sum(axis=1), [0, 0])
+        npt.assert_allclose(cmat.sum(axis=1), 0, atol=1e-8)
 
         # closure has no effect on result
-        cmat = clr(self.cdata1)
+        cmat = clr(closure(mat))
         npt.assert_allclose(cmat, exp)
 
         # CLR is not sensitive to scale
-        cmat = clr(np.array(self.cdata1) * 100)
+        cmat = clr(mat * 100)
         npt.assert_allclose(cmat, exp)
 
+        # custom axis
+        cmat = clr(mat, axis=0)
+        exp = np.vstack([clr(x) for x in mat.T]).T
+        npt.assert_allclose(cmat, exp)
+
+        # 1-D vector
         cmat = clr(closure(self.cdata2))
         A = np.array([.2, .2, .6])
-        npt.assert_allclose(cmat, np.log(A / np.exp(np.log(A).mean())))
-
-        cmat = clr(closure(self.cdata5))
-        A = np.array([.2, .2, .6])
-        B = np.array([.4, .4, .2])
-
-        npt.assert_allclose(cmat,
-                            [np.log(A / np.exp(np.log(A).mean())),
-                             np.log(B / np.exp(np.log(B).mean()))])
+        exp = np.log(A / np.exp(np.log(A).mean()))
+        npt.assert_allclose(cmat, exp)
 
         # invalid input matrix
         msg = "Input matrix cannot have negative or zero components."
@@ -415,10 +418,10 @@ class CompositionTests(TestCase):
         npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
 
         # 3-D tensor as input
-        arr3d = self.cdata9
-        obs = clr(arr3d)
+        ten = self.cdata9
+        obs = clr(ten)
         exp = np.array([[[-0.62123,  0.07192,  1.17053, -0.62123],
-                         [-0.8503 ,  0.75914,  0.24831, -0.15715],
+                         [-0.67701,  0.93243,  0.4216 , -0.67701],
                          [ 0.8605 , -0.74893, -0.05579, -0.05579]],
                         [[-0.10137,  0.59178, -0.79451,  0.3041 ],
                          [ 0.27465, -0.82396,  0.27465,  0.27465],
@@ -426,34 +429,42 @@ class CompositionTests(TestCase):
         npt.assert_array_equal(obs.round(5), exp)
 
         # The result should be identical to applying clr to each matrix separately,
-        for obs2d, arr2d in zip(obs, arr3d):
-            npt.assert_array_almost_equal(obs2d, clr(arr2d))
+        for obs2d, mat in zip(obs, ten):
+            npt.assert_allclose(obs2d, clr(mat))
 
         # ...and identical to applying clr to each row separately.
-        for obs2d, arr2d in zip(obs, arr3d):
-            for obs1d, arr1d in zip(obs2d, arr2d):
-                npt.assert_array_almost_equal(obs1d, clr(arr1d))
+        for obs2d, mat in zip(obs, ten):
+            for obs1d, vec in zip(obs2d, mat):
+                npt.assert_allclose(obs1d, clr(vec))
 
+        # middle axis
+        obs = clr(ten, axis=1)
+        exp = np.vstack([np.expand_dims(clr(mat, axis=0), axis=0) for mat in ten])
+        npt.assert_allclose(obs, exp)
 
     def test_clr_inv(self):
-        npt.assert_allclose(clr_inv(self.rdata1), self.ortho1)
-        npt.assert_allclose(clr(clr_inv(self.rdata1)), self.rdata1,
-                            rtol=1e-4, atol=1e-5)
+        mat = self.rdata1.copy()
+        obs = clr_inv(mat)
+        npt.assert_allclose(obs, self.ortho1)
+
+        # check that clr_inv is the inverse of clr (if mat is already closure)
+        npt.assert_allclose(clr(obs), self.rdata1, rtol=1e-4, atol=1e-5)
 
         # make sure that inplace modification is not occurring
-        clr_inv(self.rdata1)
-        npt.assert_allclose(self.rdata1,
-                            np.array([[0.70710678, -0.70710678, 0., 0.],
-                                      [0.40824829, 0.40824829,
-                                       -0.81649658, 0.],
-                                      [0.28867513, 0.28867513,
-                                       0.28867513, -0.8660254]]))
+        self.assertIsNot(obs, mat)
+        npt.assert_allclose(mat, self.rdata1)
+
+        # custom axis
+        mat = self.cdata1
+        obs = clr_inv(clr(mat, axis=0), axis=0)
+        exp = closure(mat, axis=0)
+        npt.assert_allclose(obs, exp)
 
         # 3-D tensor as input (see `test_clr` above)
         arr3d = self.cdata9
         obs = clr_inv(clr(arr3d))
         exp = closure(arr3d)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_centralize(self):
         cmat = centralize(closure(self.cdata1))
@@ -478,16 +489,15 @@ class CompositionTests(TestCase):
 
     def test_ilr(self):
         mat = closure(self.cdata7)
-        npt.assert_array_almost_equal(ilr(mat),
-                                      np.array([0.70710678, 0.40824829]))
+        exp = np.array([0.70710678, 0.40824829])
+        npt.assert_allclose(ilr(mat), exp)
 
         # Should give same result as inner
         npt.assert_allclose(ilr(self.ortho1), np.identity(3),
                             rtol=1e-04, atol=1e-06)
 
         # no check
-        npt.assert_array_almost_equal(ilr(mat, validate=False),
-                                      np.array([0.70710678, 0.40824829]))
+        npt.assert_allclose(ilr(mat, validate=False), exp)
 
         with self.assertRaises(ValueError):
             ilr(self.cdata1, basis=self.cdata1)
@@ -542,13 +552,13 @@ class CompositionTests(TestCase):
 
     def test_ilr_inv(self):
         mat = closure(self.cdata7)
-        npt.assert_array_almost_equal(ilr_inv(ilr(mat)), mat)
+        npt.assert_allclose(ilr_inv(ilr(mat)), mat)
 
         npt.assert_allclose(ilr_inv(np.identity(3)), self.ortho1,
                             rtol=1e-04, atol=1e-06)
 
         # no check
-        npt.assert_array_almost_equal(ilr_inv(ilr(mat), validate=False), mat)
+        npt.assert_allclose(ilr_inv(ilr(mat), validate=False), mat)
 
         with self.assertRaises(ValueError):
             ilr_inv(self.cdata1, basis=self.cdata1)
