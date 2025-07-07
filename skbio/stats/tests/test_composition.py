@@ -11,6 +11,7 @@ from copy import deepcopy
 
 import numpy as np
 import numpy.testing as npt
+from numpy.exceptions import AxisError
 from numpy.random import normal
 import pandas as pd
 import pandas.testing as pdt
@@ -60,7 +61,7 @@ class CompositionTests(TestCase):
 
         # 3-D array (tensor) of 2 x 3 x 4
         self.cdata9 = np.array([[[1, 2, 6, 1],
-                                 [1, 5, 3, 2],
+                                 [1, 5, 3, 1],
                                  [5, 1, 2, 2]],
                                 [[2, 4, 1, 3],
                                  [3, 1, 3, 3],
@@ -130,32 +131,100 @@ class CompositionTests(TestCase):
         self.assertIsNone(_check_orthogonality(basis))
 
     def test_closure(self):
+        # 2-D matrix
+        mat = self.cdata1
+        obs = closure(mat)
+        exp = np.array([[.2, .2, .6],
+                        [.4, .4, .2]])
+        npt.assert_array_almost_equal(obs, exp)
 
-        npt.assert_allclose(closure(self.cdata1),
-                            np.array([[.2, .2, .6],
-                                      [.4, .4, .2]]))
-        npt.assert_allclose(closure(self.cdata2),
-                            np.array([.2, .2, .6]))
-        npt.assert_allclose(closure(self.cdata5),
-                            np.array([[.2, .2, .6],
-                                      [.4, .4, .2]]))
-        with self.assertRaises(ValueError):
-            closure(self.bad1)
+        # confirm that compositions sum to 1
+        npt.assert_allclose(obs.sum(axis=-1), 1.)
 
-        with self.assertRaises(ValueError):
-            closure(self.bad2)
+        # custom axis
+        obs = closure(mat, axis=1)
+        npt.assert_array_almost_equal(obs, exp)
+
+        obs = closure(mat, axis=0)
+        exp = np.array([[0.333, 0.333, 0.75 ],
+                        [0.667, 0.667, 0.25 ]])
+        npt.assert_array_equal(obs.round(3), exp)
+        npt.assert_allclose(obs.sum(axis=0), 1.)
+
+        obs = closure(mat, axis=-2)
+        npt.assert_array_equal(obs.round(3), exp)
+
+        # invalid axis
+        self.assertRaises(AxisError, closure, mat, axis=3)
+
+        # 1-D vector
+        vec = self.cdata2
+        obs = closure(vec)
+        exp = np.array([.2, .2, .6])
+        npt.assert_array_almost_equal(obs, exp)
 
         # make sure that inplace modification is not occurring
-        closure(self.cdata2)
-        npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
+        self.assertIsNot(obs, vec)
+        npt.assert_array_equal(vec, np.array([2, 2, 6]))
 
-    def test_closure_warning(self):
-        with self.assertRaises(ValueError):
-            closure([0., 0., 0.])
+        # input is a list
+        lst = self.cdata1.tolist()
+        obs = closure(lst)
+        exp = np.array([[.2, .2, .6],
+                        [.4, .4, .2]])
+        npt.assert_array_almost_equal(obs, exp)
 
-        with self.assertRaises(ValueError):
-            closure([[0., 0., 0.],
-                     [0., 5., 5.]])
+        # input is a dataframe
+        df = pd.DataFrame(self.cdata1)
+        obs = closure(df)
+        npt.assert_array_almost_equal(obs, exp)
+
+        # negative value is prohibited
+        msg = "Input matrix cannot have negative components."
+        with self.assertRaises(ValueError) as cm:
+            closure(self.bad1)
+        self.assertEqual(str(cm.exception), msg)
+
+        # zero value is allowed
+        obs = closure(self.bad2)
+        exp = np.array([[[0.091, 0.182, 0.273, 0.   , 0.455]]])
+        npt.assert_array_equal(obs.round(3), exp)
+
+        # all-zero composition
+        msg = "Input matrix cannot have compositions with all zeros."
+        with self.assertRaises(ValueError) as cm:
+            closure(self.bad3)
+        self.assertEqual(str(cm.exception), msg)
+
+        # not all-zero in another axis
+        obs = closure(self.bad3, axis=0)
+        exp = np.array([[0.   , 1.   , 0.333],
+                        [0.   , 0.   , 0.   ],
+                        [1.   , 0.   , 0.667]])
+        npt.assert_array_equal(obs.round(3), exp)
+
+        # 3-D tensor
+        ten = self.cdata9
+        obs = closure(ten)
+        exp = np.array([[[.1, .2, .6, .1],
+                         [.1, .5, .3, .1],
+                         [.5, .1, .2, .2]],
+                        [[.2, .4, .1, .3],
+                         [.3, .1, .3, .3],
+                         [.4, .1, .1, .4]]])
+        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs.sum(axis=-1), 1.)
+
+        # middle axis
+        obs = closure(ten, axis=1)
+        exp = np.array([[[0.143, 0.25 , 0.545, 0.25 ],
+                         [0.143, 0.625, 0.273, 0.25 ],
+                         [0.714, 0.125, 0.182, 0.5  ]],
+                        [[0.222, 0.667, 0.2  , 0.3  ],
+                         [0.333, 0.167, 0.6  , 0.3  ],
+                         [0.444, 0.167, 0.2  , 0.4  ]]])
+        npt.assert_array_equal(obs.round(3), exp)
+        npt.assert_allclose(obs.sum(axis=1), 1.)
 
     def test_perturb(self):
         pmat = perturb(closure(self.cdata1),
@@ -336,7 +405,7 @@ class CompositionTests(TestCase):
             clr(self.bad2)
         self.assertEqual(str(cm.exception), msg)
 
-        # all-zero row
+        # all-zero composition
         with self.assertRaises(ValueError) as cm:
             clr(self.bad3)
         self.assertEqual(str(cm.exception), msg)

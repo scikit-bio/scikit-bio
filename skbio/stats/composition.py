@@ -163,8 +163,6 @@ Array = object
 def _check_composition(
     xp: "ModuleType",
     mat: "ArrayLike",
-    /,
-    *,
     axis: int = -1,
     nozero: bool = False,
     maxdim: Optional[int] = None,
@@ -208,21 +206,23 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-def closure(mat: "ArrayLike", validate: bool = True) -> "StdArray":
+def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     r"""Perform closure to ensure that all components of each composition sum to 1.
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    mat : array_like of shape (..., n_components, ...)
         A matrix of compositions.
+    axis : int, optional
+        Axis along which closure will be performed. That is, each vector along this
+        axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
         Check if the compositions are legitimate.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
-        The matrix where all of the values are non-zero and each composition
-        (row) adds up to 1.
+    ndarray of shape (..., n_components, ...)
+        The matrix where all components of each composition sum to 1.
 
     Examples
     --------
@@ -236,11 +236,11 @@ def closure(mat: "ArrayLike", validate: bool = True) -> "StdArray":
     """
     xp, mat = _ingest_array(mat)
     if validate:
-        _check_composition(xp, mat)
-    return _closure(xp, mat)
+        _check_composition(xp, mat, axis)
+    return _closure(xp, mat, axis)
 
 
-def _closure(xp: "ModuleType", mat: "StdArray", /, *, axis: int = -1) -> "StdArray":
+def _closure(xp: "ModuleType", mat: "StdArray", axis: int = -1) -> "StdArray":
     """Perform closure."""
     return mat / xp.sum(mat, axis=axis, keepdims=True)
 
