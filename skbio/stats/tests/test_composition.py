@@ -1597,11 +1597,10 @@ class DirMultTTestTests(TestCase):
         grouping = pd.Series(labels, index=samples)
 
         obs = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
-        self.assertTupleEqual(obs.shape, (7, 8))
+        self.assertTupleEqual(obs.shape, (7, 7))
         self.assertListEqual(obs.index.to_list(), features)
         exp = {
             "T statistic": [-17.179, -16.873,  6.943,  6.523,  6.654,  3.84,   7.601],
-            "df":          [  2.233,   3.847,  2.74 ,  3.973,  3.461,  3.581,  2.483],
             "Log2(FC)":    [ -4.992,  -2.534,  1.628,  1.707,  1.528,  1.182,  1.48 ],
             "CI(2.5)":     [ -7.884,  -3.595, -1.048, -0.467, -1.037, -0.703, -0.601],
             "CI(97.5)":    [ -2.293,  -1.462,  4.751,  4.165,  3.978,  3.556,  4.044],
@@ -1696,7 +1695,7 @@ class DirMultTTestTests(TestCase):
         result = dirmult_ttest(self.table, self.grouping,\
                                 self.treatment, self.reference)
         self.assertIsInstance(result, pd.DataFrame)
-        self.assertEqual(result.shape[1], 8)  # Expected number of columns
+        self.assertEqual(result.shape[1], 7)  # Expected number of columns
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
 

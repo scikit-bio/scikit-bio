@@ -2104,6 +2104,10 @@ def dirmult_ttest(
 
     This process mirrors the approach performed by the R package "ALDEx2" [1]_.
 
+    Additionally, this function excludes hits with a 95% confidence interval of
+    fold-change crossing zero during any draw. This step further reduces false
+    positive hits, especially among low-abundance features.
+
     Parameters
     ----------
     table : pd.DataFrame
@@ -2146,8 +2150,6 @@ def dirmult_ttest(
         are generated from each posterior draw.  The reported ``T statistic`` is the
         average across all of the posterior draws.
 
-        ``df`` is the degrees of freedom from the *t*-test.
-
         ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
         the log2 fold-change is computed as the difference between the mean
         log-abundance the ``treatment`` group and the ``reference`` group. All log2
@@ -2175,6 +2177,10 @@ def dirmult_ttest(
         feature to be differentially abundant, the qvalue needs to be significant
         (i.e. <0.05) and the confidence intervals reported by ``CI(2.5)`` and
         ``CI(97.5)`` must not overlap with zero.
+
+        .. versionchanged:: 0.6.4
+            ``df`` (degrees of freedom) was removed from the report, as this metric is
+            inconsistent across draws.
 
     See Also
     --------
@@ -2238,7 +2244,7 @@ def dirmult_ttest(
 
     rng = get_rng(seed)
 
-    matrix, samples, features, groups, labels = _format_da_input(table, grouping)
+    matrix, _, features, groups, labels = _format_da_input(table, grouping)
 
     # handle zero values
     if pseudocount:
@@ -2277,14 +2283,9 @@ def dirmult_ttest(
         cm = CompareMeans.from_data(trt_mat, ref_mat)
 
         # Perform Welch's t-test to assess the significance of difference.
-        tstat_, pval_, df_ = cm.ttest_ind(value=0, **cm_params)
+        tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
         tstat += tstat_
         pval += pval_
-
-        # Retain the degrees of freedom from the first trial.
-        # TODO: Revisit this decision.
-        if i == 0:
-            df = df_
 
         # Calculate confidence intervals.
         # The final lower and upper bounds are the minimum and maximum of all lower
@@ -2308,6 +2309,8 @@ def dirmult_ttest(
     # Test if confidence interval includes 0.
     # A significant result (i.e., reject null hypothesis) must simultaneously suffice:
     # 1) q-value <= significance level. 2) confidence interval doesn't include 0.
+    # This test is in addition to the original ALDEx2 method. It helps to reduce false
+    # positive discoveries of low abundance.
     sig = ((lower > 0) & (upper > 0)) | ((lower < 0) & (upper < 0))
     reject &= sig
 
@@ -2321,7 +2324,6 @@ def dirmult_ttest(
     res = pd.DataFrame.from_dict(
         {
             "T statistic": tstat,
-            "df": df,
             "Log2(FC)": delta,
             "CI(2.5)": lower,
             "CI(97.5)": upper,
