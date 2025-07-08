@@ -466,6 +466,10 @@ class CompositionTests(TestCase):
         exp = closure(arr3d)
         npt.assert_allclose(obs, exp)
 
+        # input not centered
+        with self.assertWarns(UserWarning):
+            clr_inv(self.cdata1)
+
     def test_centralize(self):
         cmat = centralize(closure(self.cdata1))
         npt.assert_allclose(cmat,
@@ -678,9 +682,6 @@ class CompositionTests(TestCase):
                                        -0.81649658, 0.],
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
-
-        with self.assertRaises(ValueError):
-            alr_inv(self.bad2)
 
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = _gram_schmidt_basis(5)

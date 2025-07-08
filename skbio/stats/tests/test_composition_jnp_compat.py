@@ -442,12 +442,6 @@ class jnp_cpu(TestCase):
                                       device=self.device)
         assert_allclose(self.cdata2, rst_)
 
-        # matrix must be 1d or 2d
-        self.cdata2 = self.namespace_asarray([[[2, 2, 6]]],
-                                             device = self.device)
-        with self.assertRaises(ValueError):
-            alr(self.cdata2)
-
     def test_alr_inv(self):
         # 2d-composition
         self.cdata1 = self.namespace_asarray(
@@ -503,12 +497,6 @@ class jnp_cpu(TestCase):
                                             0.28867513, -0.8660254]],
                                      device=self.device)
         assert_allclose(self.rdata1, rst)
-
-        #
-        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
-                                           device=self.device)
-        with self.assertRaises(ValueError):
-            alr_inv(self.bad2)
 
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = _gram_schmidt_basis(5)
@@ -947,12 +935,6 @@ class jax_gpu(TestCase):
                                       device=self.device)
         assert_allclose(self.cdata2, rst_)
 
-        # matrix must be 1d or 2d
-        self.cdata2 = self.namespace_asarray([[[2, 2, 6]]],
-                                             device = self.device)
-        with self.assertRaises(ValueError):
-            alr(self.cdata2)
-
     def test_alr_inv(self):
         # 2d-composition
         self.cdata1 = self.namespace_asarray(
@@ -1011,12 +993,6 @@ class jax_gpu(TestCase):
                                             0.28867513, -0.8660254]],
                                      device=self.device)
         assert_allclose(self.rdata1, rst)
-
-        #
-        self.bad2 = self.namespace_asarray([[[1, 2, 3, 0, 5]]],
-                                           device=self.device)
-        with self.assertRaises(ValueError):
-            alr_inv(self.bad2)
 
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = _gram_schmidt_basis(5)

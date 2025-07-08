@@ -572,19 +572,19 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    mat : array_like of shape (..., n_components, ...)
         A matrix of CLR-transformed data.
     axis : int, optional
         Axis along which CLR transformation will be performed. That is, each vector
         along this axis is considered as a CLR-transformed composition. Default is the
         last axis (-1).
     validate: bool, default True
-        Check if the matrix has been centered at 0. Should be ignored for backward
-        compatibility.
+        Check if the matrix has been centered at 0. Violation will result in a warning
+        rather than an error, for backward compatibility.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray of shape (..., n_components, ...)
         Inverse CLR-transformed matrix.
 
     See Also
@@ -806,7 +806,7 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
-    ``denominator_col`` defines the index of the column used as the common
+    ``denominator_idx`` defines the index of the column used as the common
     denominator. The :math:`alr` transformed data are amenable to multivariate
     analysis as long as statistics don't involve distances.
 
@@ -847,34 +847,53 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    axis = -1
     xp, mat = _ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
 
-    if validate:
-        if mat.ndim > 2:
-            warn(
-                "The input matrix has more than 2 dimensions, while high dimensional "
-                "alr is new feature.",
-                UserWarning,
-            )
-            raise ValueError(f"Input matrix must be 1-D or 2-D.")
-            # for backward compactibility
-        if mat.shape[axis] < 2:
-            raise ValueError(
-                f"Dimension {mat.ndim + axis} of the input matrix is singleton."
-            )
+    # validate and normalize axis and index
+    N = mat.shape[axis]
+    if N < 2:
+        raise ValueError(f"Dimension {axis} of the input matrix is singleton.")
+    axis %= mat.ndim
+    if denominator_idx < -N or denominator_idx >= N:
+        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
+    denominator_idx %= N
 
-    # no matter (n,) or (n, w, z), it will return n
-    N = mat.shape[-1]
-    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
-    numerator_matrix = mat[..., numerator_indexs]
-    denominator_vector = mat[..., [denominator_idx]]
-    return xp.log(numerator_matrix) - xp.log(denominator_vector)
+    # old note: "no matter (n,) or (n, w, z), it will return n"
+
+    # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
+    # The following code will perform logarithm on the entire matrix, then subtract
+    # denominator from numerator. This is also for numerical stability.
+    lmat = xp.log(mat)
+
+    # get denominator (one column)
+    denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
+    # if one doesn't want `take`, the following code should also work:
+    # column = [slice(None)] * mat.ndim
+    # column[axis] = slice(denominator_idx, denominator_idx + 1)
+    # column = tuple(column)
+    # denominator_vector = lmat[column]
+
+    # get numerator (all other columns)
+    # `delete` is a useful NumPy function but it is not within the Python array API
+    # standard. For libraries that don't have `delete`, a fall-back method based on
+    # arbitrary dimension slicing is provided.
+    try:
+        numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    except AttributeError:
+        before = [slice(None)] * mat.ndim
+        before[axis] = slice(None, denominator_idx)
+        before = tuple(before)
+        after = [slice(None)] * mat.ndim
+        after[axis] = slice(denominator_idx + 1, None)
+        after = tuple(after)
+        numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
+
+    return numerator_matrix - denominator_vector
 
 
-def alr_inv(mat: Array, denominator_idx: int = 0):
+def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -920,39 +939,42 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    axis = -1
     xp, mat = _ingest_array(mat)
 
-    if mat.ndim > 2:
-        # NOTE: backward compatibility
-        raise ValueError("Input matrix must be 1-D or 2-D.")
-        # warn(
-        #     "the input matrix has more than 2 dimensions, while high dimensional "
-        #     "alr is new feature.",
-        #     UserWarning,
-        # )
+    # validate and normalize axis and index
+    N = mat.shape[axis] + 1
+    if N < 2:
+        raise ValueError(f"Dimension {axis} of the input matrix has zero length.")
+    axis %= mat.ndim
+    if denominator_idx < -N or denominator_idx >= N:
+        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
+    denominator_idx %= N
 
-    if mat.shape[axis] < 2:
-        raise ValueError(
-            f"Dimension {mat.ndim + axis} of the input matrix is singleton."
-        )
-
-    # a reminder for ND-PR:if axis != -1, permutation will be applied
-    N = mat.shape[-1] + 1
-    comp = xp.ones(mat.shape[:-1] + (N,), dtype=mat.dtype, device=mat.device)
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
-    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
+    emat = xp.exp(mat)
 
-    if xp.__name__ == "jax.numpy":
-        # NOTE: TypeError: JAX arrays are immutable and
-        # do not support in-place item assignment.
-        # Instead of x[idx] = y, use x = x.at[idx].set(y)
-        comp = comp.at[..., numerator_indexs].set(xp.exp(mat))
-    else:
-        # in-place item assignment
-        comp[..., numerator_indexs] = xp.exp(mat)
-    return comp / xp.sum(comp, axis=axis, keepdims=True)
+    # old note: "A reminder for ND-PR: if axis != -1, permutation will be applied."
+
+    # `insert` is a useful NumPy function but it is not within the Python array API
+    # standard. For libraries that don't have `insert`, a fall-back method based on
+    # arbitrary dimension slicing is provided.
+    try:
+        comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
+    except AttributeError:
+        before = [slice(None)] * mat.ndim
+        before[axis] = slice(None, denominator_idx)
+        before = tuple(before)
+        after = [slice(None)] * mat.ndim
+        after[axis] = slice(denominator_idx, None)
+        after = tuple(after)
+        shape = list(mat.shape)
+        shape[axis] = 1
+        shape = tuple(shape)
+        ones = xp.ones(shape, dtype=mat.dtype, device=mat.device)
+        comp = xp.concat((emat[before], ones, emat[after]), axis=axis)
+
+    return _closure(xp, comp, axis)
 
 
 def centralize(mat):
