@@ -814,7 +814,8 @@ def ilr_inv(
     return clr_inv(mat @ basis, validate=validate)
 
 
-def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = True):
+def alr(mat: Array, denominator_idx: int = 0,\
+    axis: int = -1, validate: bool = True) -> "StdArray":
     r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -872,7 +873,9 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
+    return _alr(xp, mat, axis)
 
+def _alr(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
     # old note: "no matter (n,) or (n, w, z), it will return n"
 
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
@@ -892,17 +895,23 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     # `delete` is a useful NumPy function but it is not within the Python array API
     # standard. For libraries that don't have `delete`, a fall-back method based on
     # arbitrary dimension slicing is provided.
-    try:
-        numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
-    except AttributeError:
-        before = [slice(None)] * mat.ndim
-        before[axis] = slice(None, denominator_idx)
-        before = tuple(before)
-        after = [slice(None)] * mat.ndim
-        after[axis] = slice(denominator_idx + 1, None)
-        after = tuple(after)
-        numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
-
+    # try:
+    #     numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    # except AttributeError:
+    #     before = [slice(None)] * mat.ndim
+    #     before[axis] = slice(None, denominator_idx)
+    #     before = tuple(before)
+    #     after = [slice(None)] * mat.ndim
+    #     after[axis] = slice(denominator_idx + 1, None)
+    #     after = tuple(after)
+    #     numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
+    N = lmat.shape[axis]
+    denominator_idx = xp.asarray(np.delete(np.arange(N),\
+                                           slice(denominator_idx,
+                                                 denominator_idx+1)
+                                           )
+                                 )
+    numerator_matrix = xp.take(lmat, denominator_idx, axis=axis)
     return numerator_matrix - denominator_vector
 
 
