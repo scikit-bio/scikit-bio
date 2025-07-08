@@ -138,14 +138,12 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Any, Tuple, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from sys import modules
 from warnings import warn, catch_warnings, simplefilter
 
 import numpy as np
 import pandas as pd
-import array_api_compat as aac
-from scipy.stats import t  # not used?
 
 from skbio.util import get_rng
 from skbio.util._decorator import aliased, register_aliases, params_aliased
@@ -156,8 +154,6 @@ from skbio.table._tabular import _ingest_table
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
     from skbio.util._typing import ArrayLike, StdArray
-
-Array = object
 
 
 def _check_composition(
@@ -192,8 +188,12 @@ def _check_composition(
         If the matrix has more than maximum number of dimensions.
 
     """
+    # The following two checks are commented out, with the assumption that the user is
+    # responsible for these.
+    # if not xp.isdtype(mat.dtype, "numeric"))
+    #     raise ValueError("Input matrix must have a numeric data type.")
     # if not xp.all(xp.isfinite(mat)):
-    #     raise ValueError("Input matrix cannot have infinite or not-a-number values.")
+    #     raise ValueError("Input matrix cannot have infinite or NaN values.")
     if nozero:
         if xp.any(mat <= 0):
             raise ValueError("Input matrix cannot have negative or zero components.")
@@ -518,8 +518,8 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     mat : array_like of shape (..., n_components, ...)
         A matrix of positive proportions.
     axis : int, optional
-        Axis along which CLR transformation will be performed. That is, each vector
-        along this axis is considered as a composition. Default is the last axis (-1).
+        Axis along which CLR transformation will be performed. Each vector on this axis
+        is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
         Check if the matrix consists of strictly positive values.
 
@@ -575,9 +575,9 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     mat : array_like of shape (..., n_components, ...)
         A matrix of CLR-transformed data.
     axis : int, optional
-        Axis along which CLR transformation will be performed. That is, each vector
-        along this axis is considered as a CLR-transformed composition. Default is the
-        last axis (-1).
+        Axis along which inverse CLR transformation will be performed. Each vector on
+        this axis is considered as a CLR-transformed composition. Default is the last
+        axis (-1).
     validate: bool, default True
         Check if the matrix has been centered at 0. Violation will result in a warning
         rather than an error, for backward compatibility.
@@ -629,7 +629,7 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 
 def ilr(
-    mat: "ArrayLike", basis: Optional[Array] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
 ) -> "StdArray":
     r"""Perform isometric log ratio (ILR) transformation.
 
@@ -718,7 +718,7 @@ def ilr(
 
 
 def ilr_inv(
-    mat: "ArrayLike", basis: Optional[Array] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
 ) -> "StdArray":
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
@@ -782,8 +782,6 @@ def ilr_inv(
     """
     axis = -1
     xp, mat = _ingest_array(mat)
-    if validate:
-        _check_composition(xp, mat, nozero=True)
 
     if basis is None:
         # dimension d-1 x d basis
@@ -801,7 +799,9 @@ def ilr_inv(
     return clr_inv(mat @ basis, validate=validate)
 
 
-def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = True):
+def alr(
+    mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1, validate: bool = True
+) -> "StdArray":
     r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -823,20 +823,26 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    mat : array_like of shape (..., n_components, ...)
         A matrix of proportions.
-    denominator_idx : int, default 0
-        The index of the column (2-D matrix) or position (vector) of ``mat``
-        which should be used as the reference composition. Default is 0 which
-        specifies the first column or position.
+    denominator_idx : int, optional
+        Index on the target axis which should be used as the denominator (reference
+        composition). Default is 0 (the first position).
+    axis : int, optional
+        Axis along which ALR transformation will be performed. Each vector along this
+        axis is considered as a composition. Default is the last axis (-1).
     validate: bool, default True
         Check whether the input is positive, whether the mat is 2D.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components - 1)
+    ndarray of shape (..., n_components - 1, ...)
         ALR-transformed data projected in a non-isometric real space of
         :math:`D - 1` dimensions for a *D*-parts composition.
+
+    See Also
+    --------
+    alr_inv
 
     Examples
     --------
@@ -859,8 +865,6 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
-
-    # old note: "no matter (n,) or (n, w, z), it will return n"
 
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
@@ -893,7 +897,7 @@ def alr(mat: Array, denominator_idx: int = 0, axis: int = -1, validate: bool = T
     return numerator_matrix - denominator_vector
 
 
-def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
+def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdArray":
     r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -918,17 +922,31 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components - 1)
+    mat : array_like of shape (..., n_components - 1, ...)
         A matrix of ALR-transformed data.
-    denominator_idx : int, default 0
-        The index of the column (2-D matrix) or position (vector) of ``mat``
-        which should be used as the reference composition. Default is 0 which
-        specifies the first column or position.
+    denominator_idx : int, optional
+        Index on the target axis where the denominator (reference composition) will be
+        inserted. Default is 0 (the first position).
+    axis : int, optional
+        Axis along which inverse ALR transformation will be performed. Each vector on
+        this axis is considered as a CLR-transformed composition. Default is the last
+        axis (-1).
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray of shape (..., n_components, ...)
         Inverse ALR-transformed matrix or vector where rows sum to 1.
+
+    See Also
+    --------
+    alr
+
+    Notes
+    -----
+    The output of ``alr_inv`` is guaranteed to have each composition sum to 1. But this
+    property isn't required for the input for ``alr``. Therefore, ``alr_inv`` does not
+    completely invert ``alr``. Instead, ``alr_inv(clr(mat))`` and ``closure(mat)`` are
+    equal.
 
     Examples
     --------
@@ -953,8 +971,6 @@ def alr_inv(mat: Array, denominator_idx: int = 0, axis: int = -1):
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     emat = xp.exp(mat)
-
-    # old note: "A reminder for ND-PR: if axis != -1, permutation will be applied."
 
     # `insert` is a useful NumPy function but it is not within the Python array API
     # standard. For libraries that don't have `insert`, a fall-back method based on
@@ -1446,7 +1462,7 @@ def _format_da_input(table, grouping):
 
     if pd.isnull(grouping).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
-    # if np.issubdtype(groups.dtype, np.number):
+    # if np.isdtype(groups.dtype, "numeric"):
     #     if np.isnan(groups).any():
     #         raise ValueError("Cannot handle missing values in `grouping`.")
     # else:
@@ -1459,7 +1475,7 @@ def _format_da_input(table, grouping):
     groups, labels = np.unique(grouping, return_inverse=True)
 
     # expensive
-    if not np.issubdtype(matrix.dtype, np.number) or np.isnan(matrix).any():
+    if not np.isdtype(matrix.dtype, "numeric") or np.isnan(matrix).any():
         raise ValueError("Cannot handle missing values in `table`.")
 
     return matrix, samples, features, groups, labels

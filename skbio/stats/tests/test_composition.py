@@ -124,11 +124,11 @@ class CompositionTests(TestCase):
     def test_check_orthogonality(self):
         basis = np.array([[0.80442968, 0.19557032]])
         with self.assertRaises(ValueError) as cm:
-            _check_orthogonality(basis)
+            _check_orthogonality(np, basis)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
 
         basis = clr(basis)
-        self.assertIsNone(_check_orthogonality(basis))
+        self.assertIsNone(_check_orthogonality(np, basis))
 
     def test_closure(self):
         # 2-D matrix
@@ -355,7 +355,6 @@ class CompositionTests(TestCase):
             obs = multi_replace(closure(self.cdata4), delta=2.0)
 
         self.assertRaises(ValueError, multi_replace, self.bad1)
-        self.assertRaises(ValueError, multi_replace, self.bad2)
 
         # make sure that inplace modification is not occurring
         multi_replace(self.cdata4)
@@ -482,8 +481,6 @@ class CompositionTests(TestCase):
 
         with self.assertRaises(ValueError):
             centralize(self.bad1)
-        with self.assertRaises(ValueError):
-            centralize(self.bad2)
 
         # make sure that inplace modification is not occurring
         centralize(self.cdata1)

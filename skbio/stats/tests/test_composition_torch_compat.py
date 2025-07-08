@@ -36,11 +36,8 @@ def no_gpu_available():
     except FileNotFoundError:
         return True
 
-# class name_space_config(TestCase)
-Array = object
 
-
-def assert_allclose(x:Array, y:Array, rtol=1e-07, atol=1e-7):
+def assert_allclose(x, y, rtol=1e-07, atol=1e-7):
     # check namespace eq
     if not isinstance(y,type(x)):
         raise TypeError("x and y different types")
