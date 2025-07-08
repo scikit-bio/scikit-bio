@@ -629,7 +629,8 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 
 def ilr(
-    mat: "ArrayLike", basis: Optional[Array] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional[Array] = None,
+    axis: int = -1, validate: bool = True
 ) -> "StdArray":
     r"""Perform isometric log ratio (ILR) transformation.
 
@@ -653,17 +654,23 @@ def ilr(
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of positive proportions.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Check if the matrix is compositional and the basis is orthonormal.
+        Check if 
+            i) the matrix is compositional
+            ii) the basis is orthonormal, 2-dimensional,and the dimensions are matched
+        
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components - 1)
+    ndarray of shape (..., n_components - 1,...)
         ILR-transformed matrix.
 
     See Also
@@ -695,26 +702,32 @@ def ilr(
     xp, mat = _ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
-
-    axis = -1
-
-    mat = _clr(xp, mat, axis=axis)
-
+    N = mat.shape[axis]
     if basis is None:
-        d = mat.shape[-1]
         basis = xp.asarray(
-            _gram_schmidt_basis(d), device=mat.device, dtype=mat.dtype
+            _gram_schmidt_basis(N), device=mat.device, dtype=mat.dtype
         )  # dimension (d-1) x d
     else:
         xp_, basis = _ingest_array(basis)
         if validate:
             _check_orthogonality(xp_, basis)
-        if basis.ndim != 2:
-            raise ValueError(
-                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
-            )
+            if basis.ndim != 2:
+                raise ValueError(
+                    f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
+                )
+            if basis.shape[1] != N:
+                raise ValueError(
+                    f"Basis needs to match {axis}d dimension's size of the input."
+                )
         basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
-    return mat @ basis.T
+    # basis or basis.T to pass through?
+    return _ilr(xp, mat, basis, axis)
+
+def _ilr(xp: "ModuleType", mat: "StdArray",
+         basis: "StdArray", axis: int) -> "StdArray":
+    """Perform ILR transform."""
+    mat = _clr(xp, mat, axis)
+    return xp.tensordot(mat, basis,(axis, 1))
 
 
 def ilr_inv(
