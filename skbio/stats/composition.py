@@ -141,6 +141,7 @@ References
 from typing import Optional, TYPE_CHECKING
 from sys import modules
 from warnings import warn, catch_warnings, simplefilter
+import inspect
 
 import numpy as np
 import pandas as pd
@@ -1481,6 +1482,49 @@ def _format_da_input(table, grouping):
     return matrix, samples, features, groups, labels
 
 
+def _check_sig_test(test, n_groups=None):
+    """Validate significance test.
+
+    Parameters
+    ----------
+    test : str or callable
+        Statistical testing function or its name.
+    n_groups : int, optional
+        Number of sample groups.
+
+    Returns
+    -------
+    callable
+        Statistical testing function.
+
+    """
+    if isinstance(test, str):
+        import scipy.stats
+
+        try:
+            func = getattr(scipy.stats, test)
+        except AttributeError:
+            raise ValueError(f'Function "{test}" does not exist under scipy.stats.')
+    else:
+        if not callable(test):
+            raise TypeError("`sig_test` must be a function or a string.")
+        func = test
+        test = test.__name__
+
+    if n_groups is not None:
+        sig = inspect.signature(func)
+        param = next(iter(sig.parameters.values()))
+
+        is_multi = param.kind is inspect.Parameter.VAR_POSITIONAL
+        if n_groups > 2 and not is_multi:
+            raise ValueError(
+                f'"{test}" is a two-way statistical test whereas {n_groups} sample '
+                "groups were provided."
+            )
+
+    return func
+
+
 @params_aliased(
     [
         ("p_adjust", "multiple_comparisons_correction", "0.6.0", True),
@@ -1729,7 +1773,7 @@ def ancom(
     samples.
 
     """
-    matrix, samples, features, groups, labels = _format_da_input(table, grouping)
+    matrix, _, features, groups, labels = _format_da_input(table, grouping)
 
     if (matrix <= 0).any():
         raise ValueError(
@@ -1779,18 +1823,10 @@ def ancom(
     # validate significance test
     if sig_test is None:
         sig_test = "f_oneway"
-    if isinstance(sig_test, str):
-        import scipy.stats
-
-        try:
-            sig_test = getattr(scipy.stats, sig_test)
-        except AttributeError:
-            raise ValueError(f'Function "{sig_test}" does not exist under scipy.stats.')
-    elif not callable(sig_test):
-        raise TypeError("`sig_test` must be a function or a string.")
+    test_f = _check_sig_test(sig_test, n_groups)
 
     # compare log ratios
-    pval_mat = _log_compare(matrix, labels, n_groups, sig_test)
+    pval_mat = _log_compare(matrix, labels, n_groups, test_f)
 
     # correct for multiple testing problem
     if p_adjust is not None:

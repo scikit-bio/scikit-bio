@@ -24,8 +24,8 @@ from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     _check_composition, _check_orthogonality,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_p_adjust,
-    ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
+    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
+    _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -1423,23 +1423,55 @@ class AncomTests(TestCase):
             ancom(self.table1, self.cats1, alpha=1.1)
 
     def test_ancom_fail_multiple_groups(self):
-        # np.exceptions was introduced in NumPy 1.25, before which errors were
-        # members of np. The following code is for backward compatibility.
-        # Starting from SciPy 1.17, the error message will be different.
-        npe = getattr(np, 'exceptions', np)
-        with self.assertRaises((TypeError, npe.AxisError)):
+        msg = ('"ttest_ind" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
             ancom(self.table4, self.cats4, sig_test="ttest_ind")
+        self.assertEqual(str(cm.exception), msg)
 
 
-class FDRTests(TestCase):
-    def test_holm_bonferroni(self):
+class StatTestingTests(TestCase):
+    def test_check_sig_test(self):
+        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
+
+        obs = _check_sig_test(ttest_ind)
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test("ttest_ind")
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test(f_oneway)
+        self.assertIs(obs, f_oneway)
+
+        obs = _check_sig_test("f_oneway")
+        self.assertIs(obs, f_oneway)
+
+        msg = 'Function "not_a_test" does not exist under scipy.stats.'
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test("not_a_test")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`sig_test` must be a function or a string."
+        with self.assertRaises(TypeError) as cm:
+            _check_sig_test(123)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test(mannwhitneyu, n_groups=3)
+        self.assertEqual(str(cm.exception), msg)
+
+        obs = _check_sig_test(mannwhitneyu, n_groups=2)
+        obs = _check_sig_test(kruskal, n_groups=5)
+
+    def test_check_p_adjust(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
         obs = _check_p_adjust("holm-bonferroni")(p)
         exp = p * np.arange(1, 6)[::-1]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
-    def test_benjamini_hochberg(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
         obs = _check_p_adjust("benjamini-hochberg")(p)
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
