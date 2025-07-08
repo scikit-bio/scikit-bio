@@ -2678,7 +2678,7 @@ def dirmult_lme(
             table = pd.DataFrame(table, index=table.dtype.names)
         except (TypeError, ValueError):
             raise TypeError(type_errmsg % "Table")
-    if table.shape[0] == 1:
+    if table.shape[1] < 2:
         raise ValueError("Table must have at least two features.")
     if table.isnull().values.any():
         raise ValueError(null_errmsg % "table")
