@@ -105,8 +105,8 @@ class TestIngest(TestCase):
         obs = _ingest_table(table)
         self.assertIsInstance(obs[0], np.ndarray)
         npt.assert_array_equal(obs[0], self.data)
-        self.assertListEqual(obs[1], self.samples)
-        self.assertListEqual(obs[2], self.features)
+        self.assertListEqual(list(obs[1]), self.samples)
+        self.assertListEqual(list(obs[2]), self.features)
 
     def test_ingest_sequence(self):
         table = self.data.tolist()
@@ -391,8 +391,8 @@ class TestAnndata(TestCase):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
         data, row_ids, col_ids = _ingest_table(tbl)
         npt.assert_array_equal(data, self.data)
-        self.assertEqual(row_ids, list(self.samples.index))
-        self.assertEqual(col_ids, list(self.features.index))
+        self.assertListEqual(list(row_ids), list(self.samples.index))
+        self.assertListEqual(list(col_ids), list(self.features.index))
 
     def test_anndata_input_pass_ids(self):
         tbl = adt.AnnData(self.data, obs=self.samples, var=self.features)
@@ -400,8 +400,8 @@ class TestAnndata(TestCase):
             tbl, sample_ids=list(self.samples.index), feature_ids=list(self.features.index)
         )
         npt.assert_array_equal(data, self.data)
-        self.assertEqual(row_ids, list(self.samples.index))
-        self.assertEqual(col_ids, list(self.features.index))
+        self.assertListEqual(list(row_ids), list(self.samples.index))
+        self.assertListEqual(list(col_ids), list(self.features.index))
 
 
 if __name__ == "__main__":

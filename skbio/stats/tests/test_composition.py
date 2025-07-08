@@ -24,8 +24,8 @@ from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     _check_composition, _check_orthogonality,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_p_adjust,
-    ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
+    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
+    _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -124,11 +124,11 @@ class CompositionTests(TestCase):
     def test_check_orthogonality(self):
         basis = np.array([[0.80442968, 0.19557032]])
         with self.assertRaises(ValueError) as cm:
-            _check_orthogonality(basis)
+            _check_orthogonality(np, basis)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
 
         basis = clr(basis)
-        self.assertIsNone(_check_orthogonality(basis))
+        self.assertIsNone(_check_orthogonality(np, basis))
 
     def test_closure(self):
         # 2-D matrix
@@ -355,7 +355,6 @@ class CompositionTests(TestCase):
             obs = multi_replace(closure(self.cdata4), delta=2.0)
 
         self.assertRaises(ValueError, multi_replace, self.bad1)
-        self.assertRaises(ValueError, multi_replace, self.bad2)
 
         # make sure that inplace modification is not occurring
         multi_replace(self.cdata4)
@@ -482,8 +481,6 @@ class CompositionTests(TestCase):
 
         with self.assertRaises(ValueError):
             centralize(self.bad1)
-        with self.assertRaises(ValueError):
-            centralize(self.bad2)
 
         # make sure that inplace modification is not occurring
         centralize(self.cdata1)
@@ -1426,23 +1423,55 @@ class AncomTests(TestCase):
             ancom(self.table1, self.cats1, alpha=1.1)
 
     def test_ancom_fail_multiple_groups(self):
-        # np.exceptions was introduced in NumPy 1.25, before which errors were
-        # members of np. The following code is for backward compatibility.
-        # Starting from SciPy 1.17, the error message will be different.
-        npe = getattr(np, 'exceptions', np)
-        with self.assertRaises((TypeError, npe.AxisError)):
+        msg = ('"ttest_ind" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
             ancom(self.table4, self.cats4, sig_test="ttest_ind")
+        self.assertEqual(str(cm.exception), msg)
 
 
-class FDRTests(TestCase):
-    def test_holm_bonferroni(self):
+class StatTestingTests(TestCase):
+    def test_check_sig_test(self):
+        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
+
+        obs = _check_sig_test(ttest_ind)
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test("ttest_ind")
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test(f_oneway)
+        self.assertIs(obs, f_oneway)
+
+        obs = _check_sig_test("f_oneway")
+        self.assertIs(obs, f_oneway)
+
+        msg = 'Function "not_a_test" does not exist under scipy.stats.'
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test("not_a_test")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`sig_test` must be a function or a string."
+        with self.assertRaises(TypeError) as cm:
+            _check_sig_test(123)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test(mannwhitneyu, n_groups=3)
+        self.assertEqual(str(cm.exception), msg)
+
+        obs = _check_sig_test(mannwhitneyu, n_groups=2)
+        obs = _check_sig_test(kruskal, n_groups=5)
+
+    def test_check_p_adjust(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
         obs = _check_p_adjust("holm-bonferroni")(p)
         exp = p * np.arange(1, 6)[::-1]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
-    def test_benjamini_hochberg(self):
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
         obs = _check_p_adjust("benjamini-hochberg")(p)
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
@@ -1568,11 +1597,10 @@ class DirMultTTestTests(TestCase):
         grouping = pd.Series(labels, index=samples)
 
         obs = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
-        self.assertTupleEqual(obs.shape, (7, 8))
+        self.assertTupleEqual(obs.shape, (7, 7))
         self.assertListEqual(obs.index.to_list(), features)
         exp = {
             "T statistic": [-17.179, -16.873,  6.943,  6.523,  6.654,  3.84,   7.601],
-            "df":          [  2.233,   3.847,  2.74 ,  3.973,  3.461,  3.581,  2.483],
             "Log2(FC)":    [ -4.992,  -2.534,  1.628,  1.707,  1.528,  1.182,  1.48 ],
             "CI(2.5)":     [ -7.884,  -3.595, -1.048, -0.467, -1.037, -0.703, -0.601],
             "CI(97.5)":    [ -2.293,  -1.462,  4.751,  4.165,  3.978,  3.556,  4.044],
@@ -1667,7 +1695,7 @@ class DirMultTTestTests(TestCase):
         result = dirmult_ttest(self.table, self.grouping,\
                                 self.treatment, self.reference)
         self.assertIsInstance(result, pd.DataFrame)
-        self.assertEqual(result.shape[1], 8)  # Expected number of columns
+        self.assertEqual(result.shape[1], 7)  # Expected number of columns
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
 

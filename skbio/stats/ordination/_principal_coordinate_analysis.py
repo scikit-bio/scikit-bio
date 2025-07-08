@@ -20,6 +20,10 @@ from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
+from skbio.binaries import (
+    pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
+    pcoa_fsvd as _skbb_pcoa_fsvd
+)
 
 
 def pcoa(
@@ -132,13 +136,10 @@ def pcoa(
     """
     distance_matrix = DistanceMatrix(distance_matrix)
 
-    # Center distance matrix, a requirement for PCoA here
-    matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
-
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if number_of_dimensions == 0:
-        if method == "fsvd" and matrix_data.shape[0] > 10:
+        if method == "fsvd" and distance_matrix.data.shape[0] > 10:
             warn(
                 "FSVD: since no value for number_of_dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
@@ -148,7 +149,7 @@ def pcoa(
             )
 
         # distance_matrix is guaranteed to be square
-        number_of_dimensions = matrix_data.shape[0]
+        number_of_dimensions = distance_matrix.data.shape[0]
     elif number_of_dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
@@ -156,6 +157,10 @@ def pcoa(
             'to specify the default value "0", which sets '
             "the number_of_dimensions equal to the "
             "dimensionality of the given distance matrix?"
+        )
+    elif number_of_dimensions > distance_matrix.data.shape[0]:
+        raise ValueError(
+            "Invalid operation: cannot extend distance matrix size."
         )
     elif not isinstance(number_of_dimensions, Integral) and number_of_dimensions > 1:
         raise ValueError(
@@ -171,6 +176,9 @@ def pcoa(
 
     # Perform eigendecomposition
     if method == "eigh":
+        # Center distance matrix, a requirement for PCoA here
+        matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
+
         # eigh does not natively support specifying number_of_dimensions, i.e.
         # there are no speed gains unlike in FSVD. Later, we slice off unwanted
         # dimensions to conform the result of eigh to the specified
@@ -179,6 +187,7 @@ def pcoa(
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
     elif method == "fsvd":
+        long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         # new parameter for num_dimensions = number of dimensions (accounting for
         # non-int values)
         num_dimensions = number_of_dimensions
@@ -191,9 +200,29 @@ def pcoa(
                 "Consider specifying an integer value to optimize performance.",
                 RuntimeWarning,
             )
-            num_dimensions = matrix_data.shape[0]
+            num_dimensions = distance_matrix.data.shape[0]
+        if _skbb_pcoa_fsvd_available(
+                        distance_matrix.data, number_of_dimensions,
+                        inplace, seed):
+            # unlikely to throw here, but just in case
+            try:
+                eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
+                        distance_matrix.data, number_of_dimensions,
+                        inplace, seed)
+                return _encapsulate_pcoa_result(long_method_name,
+                                    eigvals, coordinates, proportion_explained,
+                                    distance_matrix.ids, output_format)
+            except Exception as e:
+                warn(
+                    "Attempted to use binaries.pcoa_fsvd but failed, "
+                    "using regular logic instead.",
+                    RuntimeWarning,
+                )
+        # if we got here, we could not use skbb
+        # Center distance matrix, a requirement for PCoA here
+        matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
+
         eigvals, eigvecs = _fsvd(matrix_data, num_dimensions, seed=seed)
-        long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
@@ -279,6 +308,52 @@ def pcoa(
     # needed to represent n points in a euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
+    return _encapsulate_pcoa_result(long_method_name,
+                                    eigvals, coordinates, proportion_explained,
+                                    distance_matrix.ids, output_format)
+
+def _encapsulate_pcoa_result(
+        long_method_name,
+        eigvals,
+        coordinates,
+        proportion_explained,
+        ids,
+        output_format
+):
+    r"""Format PCoA results
+
+    Helper function for converting raw buffers of the pcoa function
+    into proper OrdinationResult object.
+
+    Parameters
+    ----------
+    distance_matrix : DistanceMatrix
+        The input distance matrix.
+    eigvals: ndarray
+        Eigenvalues
+    coordinates: ndarray
+        Sample coordinates
+    proportion_explained: ndarray
+        Proportions explained
+    ids: array
+        Distance matrix ids
+    output_format : optional
+        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
+        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
+        documentation for details.
+
+    Returns
+    -------
+    OrdinationResults
+        Object that stores the PCoA results, including eigenvalues, the proportion
+        explained by each of them, and transformed sample coordinates.
+
+    See Also
+    --------
+    OrdinationResults
+    """
+
+    number_of_dimensions = eigvals.shape[0]
     axis_labels = ["PC%d" % i for i in range(1, number_of_dimensions + 1)]
     return OrdinationResults(
         short_method_name="PCoA",
@@ -286,7 +361,7 @@ def pcoa(
         eigvals=_create_table_1d(eigvals, index=axis_labels, backend=output_format),
         samples=_create_table(
             coordinates,
-            index=distance_matrix.ids,
+            index=ids,
             columns=axis_labels,
             backend=output_format,
         ),
