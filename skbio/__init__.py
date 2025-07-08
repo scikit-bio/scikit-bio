@@ -22,6 +22,7 @@ from skbio.stats.ordination import OrdinationResults
 from skbio.table import Table
 from skbio.metadata import SampleMetadata
 import skbio.diversity  # noqa
+import skbio.binaries  # noqa
 import skbio.stats.evolve  # noqa
 from ._config import get_config, set_config
 

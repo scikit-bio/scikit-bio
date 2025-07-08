@@ -77,6 +77,12 @@ class PERMANOVATests(TestCase):
                         data=['PERMANOVA', 'pseudo-F', 4, 2, 2.0, 0.68, 999],
                         name='PERMANOVA results')
 
+        obs = permanova(self.dm_ties, self.grouping_equal, seed=42)
+        # pstat can change slightly, depending on random source used
+        self.assertAlmostEqual(obs.array[5],exp.array[5],delta=0.05)
+        # update exp accordingly for further tests
+        exp.array[5] = obs.array[5]
+
         for _ in range(2):
             obs = permanova(self.dm_ties, self.grouping_equal, seed=42)
             self.assert_series_equal(obs, exp)
@@ -90,6 +96,10 @@ class PERMANOVATests(TestCase):
                         data=['PERMANOVA', 'pseudo-F', 4, 2, 4.4, 0.345, 999],
                         name='PERMANOVA results')
         obs = permanova(self.dm_no_ties, self.grouping_equal, seed=42)
+        # pstat can change slightly, depending on random source used
+        self.assertAlmostEqual(obs.array[5],exp.array[5],delta=0.05)
+        # update exp accordingly for further tests
+        exp.array[5] = obs.array[5]
         self.assert_series_equal(obs, exp)
 
     def test_call_no_permutations(self):
@@ -106,9 +116,17 @@ class PERMANOVATests(TestCase):
             name='PERMANOVA results')
 
         obs = permanova(self.dm_unequal, self.grouping_unequal, seed=42)
+        # pstat can change slightly, depending on random source used
+        self.assertAlmostEqual(obs.array[5],exp.array[5],delta=0.05)
+        # update exp accordingly for further tests
+        exp.array[5] = obs.array[5]
         self.assert_series_equal(obs, exp)
 
         obs = permanova(self.dm_unequal, self.grouping_unequal_relabeled, seed=42)
+        # pstat can change slightly, depending on random source used
+        self.assertAlmostEqual(obs.array[5],exp.array[5],delta=0.05)
+        # update exp accordingly for further tests
+        exp.array[5] = obs.array[5]
         self.assert_series_equal(obs, exp)
 
     def test_call_via_series(self):
