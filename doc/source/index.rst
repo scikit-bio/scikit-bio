@@ -34,6 +34,7 @@
    Community <https://github.com/scikit-bio/scikit-bio/discussions>
    Releases <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md>
    About <https://scikit.bio/about.html>
+   Roadmap <https://scikit.bio/roadmap.html>
 
 
 scikit-bio |version| documentation
