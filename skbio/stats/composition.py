@@ -159,7 +159,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def _check_composition(
     xp: "ModuleType",
-    mat: "ArrayLike",
+    mat: "StdArray",
     axis: int = -1,
     nozero: bool = False,
     maxdim: Optional[int] = None,
@@ -170,7 +170,7 @@ def _check_composition(
     ----------
     xp : namespace
         The array API compatible namespace corresponding ``mat``.
-    mat : array of shape (n_compositions, n_components)
+    mat : array of shape (..., n_components, ...)
         A matrix of proportions.
     axis : int, optional
         Axis that represents each composition. Default is the last axis (-1).
@@ -630,7 +630,8 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 
 def ilr(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
+    axis: int = -1, validate: bool = True,
 ) -> "StdArray":
     r"""Perform isometric log ratio (ILR) transformation.
 
@@ -663,10 +664,9 @@ def ilr(
         Axis along which ILR transformation will be performed. That is, each vector
         along this axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Check if 
+        Check if
             i) the matrix is compositional
             ii) the basis is orthonormal, 2-dimensional,and the dimensions are matched
-        
 
     Returns
     -------
@@ -723,15 +723,17 @@ def ilr(
     # basis or basis.T to pass through?
     return _ilr(xp, mat, basis, axis)
 
-def _ilr(xp: "ModuleType", mat: "StdArray",
-         basis: "StdArray", axis: int) -> "StdArray":
+def _ilr(
+    xp: "ModuleType", mat: "StdArray",
+    basis: "StdArray", axis: int
+) -> "StdArray":
     """Perform ILR transform."""
-    mat = _clr(xp, mat, axis)
-    return xp.tensordot(mat, basis,(axis, 1))
+    return xp.tensordot(_clr(xp, mat, axis), basis,(axis, 1))
 
 
 def ilr_inv(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
+    axis: int = -1, validate: bool = True
 ) -> "StdArray":
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
@@ -759,12 +761,16 @@ def ilr_inv(
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a ILR transformed composition data.
+        Default is the last axis (-1).
     validate : bool, default True
-        Check to see if basis is orthonormal.
+        Check to see if basis is orthonormal, dimention matched.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray of shape (..., n_components, ...)
         Inverse ILR-transformed matrix.
 
     See Also
@@ -793,23 +799,32 @@ def ilr_inv(
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
     """
-    axis = -1
     xp, mat = _ingest_array(mat)
-
+    N = mat.shape[axis] + 1
     if basis is None:
-        # dimension d-1 x d basis
-        basis = _gram_schmidt_basis(mat.shape[axis] + 1)
+        # _gram_schmidt_basis generate dimension d-1 x d basis
+        basis = xp.asarray(_gram_schmidt_basis(N),
+                           device = mat.device, dtype = mat.dtype)
     elif validate:
         xp_, basis = _ingest_array(basis)
-        if validate:
-            _check_orthogonality(xp_, basis)
+        _check_orthogonality(xp_, basis)
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-    # if not isinstance(basis, xp.array):
-    basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
-    return clr_inv(mat @ basis, validate=validate)
+        if basis.shape[1] != N or basis.shape[0] != N-1:
+                raise ValueError(
+                    f"Basis needs to match {axis}d dimension's size of the input."
+                )
+        basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
+    return _ilr_inv(xp, mat, basis, axis)
+
+
+def _ilr_inv(
+    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
+) -> "StdArray":
+    """Perform ILR transform."""
+    return _clr_inv(xp, xp.tensordot(mat, basis, basis,(axis, 0)), axis)
 
 
 def alr(
@@ -878,7 +893,11 @@ def alr(
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
+    return _alr(mat, denominator_idx, axis)
 
+
+def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
@@ -986,7 +1005,11 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
+    return _alr_inv(xp, mat, denominator_idx, axis)
 
+
+def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
     # NOTE: do we need to take the same implementation as clr_inv?
     # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     emat = xp.exp(mat)
@@ -1008,7 +1031,6 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
         shape = tuple(shape)
         ones = xp.ones(shape, dtype=mat.dtype, device=mat.device)
         comp = xp.concat((emat[before], ones, emat[after]), axis=axis)
-
     return _closure(xp, comp, axis)
 
 
