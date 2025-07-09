@@ -16,14 +16,14 @@ import array_api_compat as aac
 
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
-    from ._typing import ArrayLike
+    from ._typing import ArrayLike, StdArray
 
 _ = aac.array_namespace(np.array([]))
 
 
 def _ingest_array(
     arr: "ArrayLike", /, *, to_numpy: bool = False
-) -> Tuple["ModuleType", Any]:
+) -> Tuple["ModuleType", "StdArray"]:
     r"""Convert an array-like variable into an array object and its namespace.
 
     Parameters
