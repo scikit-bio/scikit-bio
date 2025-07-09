@@ -39,16 +39,16 @@ class StdArray(Protocol):
     """
 
     def __array_namespace__(self, api_version: Optional[str] = None): ...
-    
+
     @property
     def shape(self) -> Tuple[int, ...]: ...
-    
+
     @property
     def ndim(self) -> int: ...
-    
+
     @property
     def dtype(self) -> Any: ...
-    
+
     @property
     def device(self)-> Any: ...
 

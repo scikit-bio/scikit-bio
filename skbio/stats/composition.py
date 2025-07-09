@@ -579,9 +579,9 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
         Axis along which inverse CLR transformation will be performed. Each vector on
         this axis is considered as a CLR-transformed composition. Default is the last
         axis (-1).
-    validate: bool, default True
+    validate: bool, optional
         Check if the matrix has been centered at 0. Violation will result in a warning
-        rather than an error, for backward compatibility.
+        rather than an error, for backward compatibility. Defaults to True.
 
     Returns
     -------
@@ -706,7 +706,7 @@ def ilr(
     if basis is None:
         basis = xp.asarray(
             _gram_schmidt_basis(N), device=mat.device, dtype=mat.dtype
-        )  # dimension (d-1) x d
+        )  # dimension (N-1) x N
     else:
         xp_, basis = _ingest_array(basis)
         if validate:
@@ -803,8 +803,9 @@ def ilr_inv(
     N = mat.shape[axis] + 1
     if basis is None:
         # _gram_schmidt_basis generate dimension d-1 x d basis
-        basis = xp.asarray(_gram_schmidt_basis(N),
-                           device = mat.device, dtype = mat.dtype)
+        basis = xp.asarray(
+            _gram_schmidt_basis(N), device = mat.device, dtype = mat.dtype
+            ) # dimension (N-1) x N
     elif validate:
         xp_, basis = _ingest_array(basis)
         _check_orthogonality(xp_, basis)
@@ -915,23 +916,17 @@ def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
     # `delete` is a useful NumPy function but it is not within the Python array API
     # standard. For libraries that don't have `delete`, a fall-back method based on
     # arbitrary dimension slicing is provided.
-    # try:
-    #     numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
-    # except AttributeError:
-    #     before = [slice(None)] * mat.ndim
-    #     before[axis] = slice(None, denominator_idx)
-    #     before = tuple(before)
-    #     after = [slice(None)] * mat.ndim
-    #     after[axis] = slice(denominator_idx + 1, None)
-    #     after = tuple(after)
-    #     numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
-    N = lmat.shape[axis]
-    denominator_idx = xp.asarray(np.delete(np.arange(N),\
-                                           slice(denominator_idx,
-                                                 denominator_idx+1)
-                                           )
-                                 )
-    numerator_matrix = xp.take(lmat, denominator_idx, axis=axis)
+    try:
+        numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    # Catching exceptions is slow.
+    except AttributeError:
+        before = [slice(None)] * mat.ndim
+        before[axis] = slice(None, denominator_idx)
+        before = tuple(before)
+        after = [slice(None)] * mat.ndim
+        after[axis] = slice(denominator_idx + 1, None)
+        after = tuple(after)
+        numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
     return numerator_matrix - denominator_vector
 
 
@@ -1010,8 +1005,6 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
 
 def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
 ) -> "StdArray":
-    # NOTE: do we need to take the same implementation as clr_inv?
-    # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
     emat = xp.exp(mat)
 
     # `insert` is a useful NumPy function but it is not within the Python array API
