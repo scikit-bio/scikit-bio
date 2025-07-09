@@ -2546,14 +2546,16 @@ def dirmult_lme(
         be a numpy structured array, or a numpy recarray, or a dictionary. It must
         not contain duplicate indices.
     formula : str or generic Formula object
-        The formula specifying the model.
+        The formula defining the model. Refer to `Pasty's documentation
+        <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
+        a formula.
     grouping : str
         The column name in data that identifies the grouping variable.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero. Default is 0.5.
     draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution.
+        The number of draws from the Dirichlet-multinomial posterior distribution.
         Default is 128.
     p_adjust : str or None, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
@@ -2566,13 +2568,11 @@ def dirmult_lme(
         Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
     re_formula : str, optional
         Random coefficient formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>` for details.
     vc_formula : str, optional
-        Variance component formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+        Variance component formula. See ``MixedLM.from_formula`` for details.
     model_kwargs : dict, optional
-        Additional keyword arguments to pass to :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
+        Additional keyword arguments to pass to ``MixedLM.from_formula``.
     fit_method : str or list of str, optional
         Optimization method for model fitting. Can be a single method name, or a list
         of method names to be tried sequentially. See `statsmodels.optimization
@@ -2652,10 +2652,10 @@ def dirmult_lme(
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
       FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
-    1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
-    2        Y2       time  0.210769 -1.144057  1.571095  0.411140  0.879760
-    3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
+    0        Y1       time -0.210769 -1.532142  1.122417  0.403737  0.873598
+    1        Y1  treatment -0.744093 -3.401875  1.582636  0.252057  0.687051
+    2        Y2       time  0.210769 -1.122417  1.532142  0.403737  0.873598
+    3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
 
     """
     type_errmsg = (
@@ -2691,20 +2691,16 @@ def dirmult_lme(
             raise ValueError(attr_errmsg % "metadata")
         except (TypeError, ValueError):
             raise TypeError(type_errmsg % "Metadata")
+
+    # Test if metadata contains all samples in the table, and reorder the former to
+    # match the latter.
+    try:
+        metadata = metadata.loc[table.index]
+    except KeyError:
+        raise ValueError("Metadata must contain all samples in the table.")
+
     if metadata.isnull().values.any():
         raise ValueError(null_errmsg % "metadata")
-
-    # Test if metadata and data have the same index, regardless of order
-    if not table.index.sort_values().equals(metadata.index.sort_values()):
-        raise ValueError("Table and metadata must have the same samples.")
-
-    # Modifying the indices of data and metadata to use unique integers,
-    # so that merging them will not affect the result. append "row" before the
-    # index to make it unique
-    table.index = list(range(table.shape[0]))
-    table.index = ["row" + str(i) for i in table.index]
-    metadata.index = list(range(metadata.shape[0]))
-    metadata.index = ["row" + str(i) for i in metadata.index]
 
     # Columns in the final result
     FEATUREID = "FeatureID"
