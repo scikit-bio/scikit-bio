@@ -8,7 +8,7 @@
 
 """Array-like objects and namespaces."""
 
-from typing import Any, Tuple, TYPE_CHECKING
+from typing import Union, Tuple, TYPE_CHECKING
 
 import numpy as np
 import array_api_compat as aac
@@ -23,7 +23,7 @@ _ = aac.array_namespace(np.array([]))
 
 def _ingest_array(
     arr: "ArrayLike", /, *, to_numpy: bool = False
-) -> Tuple["ModuleType", "StdArray"]:
+) -> Tuple["ModuleType", Union["StdArray","ArrayLike"]]:
     r"""Convert an array-like variable into an array object and its namespace.
 
     Parameters
@@ -75,7 +75,7 @@ def _ingest_array(
     # Cast a non-array object into a NumPy array.
     if not aac.is_array_api_obj(arr):
         arr = np.asarray(arr)
-        xp = aac.numpy
+        xp = np
 
     # Cast a non-NumPy array into a NumPy array.
     elif to_numpy and not aac.is_numpy_array(arr):
@@ -91,7 +91,7 @@ def _ingest_array(
         except (AttributeError, TypeError):
             arr = np.asarray(arr)
 
-        xp = aac.numpy
+        xp = np
 
     # Keep the native array and namespace.
     else:
