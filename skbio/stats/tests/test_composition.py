@@ -22,7 +22,7 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality,
+    _check_composition, _check_orthogonality, _check_grouping,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
     _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
@@ -38,6 +38,127 @@ def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
     exp_data = exp_data[exp_data[:, 1].argsort()]
     exp_data = exp_data[exp_data[:, 0].argsort()]
     npt.assert_allclose(res_data, exp_data, rtol=rtol, atol=atol)
+
+
+class MiscTests(TestCase):
+    def test_check_grouping(self):
+        matrix = np.array([[1, 2], [3, 4], [5, 6]])
+        grouping = [0, 0, 1]
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], [0, 1])
+        npt.assert_array_equal(obs[1], grouping)
+
+        grouping = [5, 2, 5]
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], [2, 5])
+        npt.assert_array_equal(obs[1], [1, 0, 1])
+
+        grouping = ['b', 'b', 'a']
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        grouping = pd.Series(grouping)
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        msg = "`table` contains sample IDs that are absent in `grouping`."
+        samples = ['x', 'y', 'z']
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix, samples=samples)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping.index = ['x', 'y', 'z']
+        obs = _check_grouping(grouping, matrix, samples=samples)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        msg = "Sample counts in `table` and `grouping` are not consistent."
+        grouping = ['b', 'c', 'a', 'b']
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = pd.Series(grouping)
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping.index = ['y', 'z', 'x', 'w']
+        samples = ['x', 'y', 'z']
+        obs = _check_grouping(grouping, matrix, samples=samples)
+        npt.assert_array_equal(obs[0], ['a', 'b', 'c'])
+        npt.assert_array_equal(obs[1], [0, 1, 2])
+
+        msg = "Cannot handle missing values in `grouping`."
+        grouping = np.array([1., np.nan, 3.])
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = [1, None, 3]
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`grouping` must be convertible to a 1-D vector."
+        grouping = np.array([['a', 'b'], ['c', 'g'], ['e', 'd']])
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = 123
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_check_sig_test(self):
+        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
+
+        obs = _check_sig_test(ttest_ind)
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test("ttest_ind")
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test(f_oneway)
+        self.assertIs(obs, f_oneway)
+
+        obs = _check_sig_test("f_oneway")
+        self.assertIs(obs, f_oneway)
+
+        msg = 'Function "not_a_test" does not exist under scipy.stats.'
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test("not_a_test")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`sig_test` must be a function or a string."
+        with self.assertRaises(TypeError) as cm:
+            _check_sig_test(123)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test(mannwhitneyu, n_groups=3)
+        self.assertEqual(str(cm.exception), msg)
+
+        obs = _check_sig_test(mannwhitneyu, n_groups=2)
+        obs = _check_sig_test(kruskal, n_groups=5)
+
+    def test_check_p_adjust(self):
+        p = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _check_p_adjust("holm-bonferroni")(p)
+        exp = p * np.arange(1, 6)[::-1]
+        for a, b in zip(obs, exp):
+            self.assertAlmostEqual(a, b)
+
+        p = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _check_p_adjust("benjamini-hochberg")(p)
+        exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
+        for a, b in zip(obs, exp):
+            self.assertAlmostEqual(a, b)
 
 
 class CompositionTests(TestCase):
@@ -89,6 +210,19 @@ class CompositionTests(TestCase):
         self.assertIsNone(_check_composition(np, self.cdata1))
         self.assertIsNone(_check_composition(np, self.cdata2))
         self.assertIsNone(_check_composition(np, self.cdata3))
+
+        msg = "Input matrix must have a numeric data type."
+        with self.assertRaises(TypeError) as cm:
+            _check_composition(np, np.array(['a', 'b', 'c']))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix cannot have infinite or NaN values."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, np.array([1., np.nan, 2.]))
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, np.array([1., np.inf, 2.]))
+        self.assertEqual(str(cm.exception), msg)
 
         msg = "Input matrix cannot have negative components."
         with self.assertRaises(ValueError) as cm:
@@ -1428,55 +1562,6 @@ class AncomTests(TestCase):
         with self.assertRaises(ValueError) as cm:
             ancom(self.table4, self.cats4, sig_test="ttest_ind")
         self.assertEqual(str(cm.exception), msg)
-
-
-class StatTestingTests(TestCase):
-    def test_check_sig_test(self):
-        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
-
-        obs = _check_sig_test(ttest_ind)
-        self.assertIs(obs, ttest_ind)
-
-        obs = _check_sig_test("ttest_ind")
-        self.assertIs(obs, ttest_ind)
-
-        obs = _check_sig_test(f_oneway)
-        self.assertIs(obs, f_oneway)
-
-        obs = _check_sig_test("f_oneway")
-        self.assertIs(obs, f_oneway)
-
-        msg = 'Function "not_a_test" does not exist under scipy.stats.'
-        with self.assertRaises(ValueError) as cm:
-            _check_sig_test("not_a_test")
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = "`sig_test` must be a function or a string."
-        with self.assertRaises(TypeError) as cm:
-            _check_sig_test(123)
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
-               "groups were provided.")
-        with self.assertRaises(ValueError) as cm:
-            _check_sig_test(mannwhitneyu, n_groups=3)
-        self.assertEqual(str(cm.exception), msg)
-
-        obs = _check_sig_test(mannwhitneyu, n_groups=2)
-        obs = _check_sig_test(kruskal, n_groups=5)
-
-    def test_check_p_adjust(self):
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("holm-bonferroni")(p)
-        exp = p * np.arange(1, 6)[::-1]
-        for a, b in zip(obs, exp):
-            self.assertAlmostEqual(a, b)
-
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("benjamini-hochberg")(p)
-        exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
-        for a, b in zip(obs, exp):
-            self.assertAlmostEqual(a, b)
 
 
 class VLRTests(TestCase):

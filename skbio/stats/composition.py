@@ -170,7 +170,7 @@ def _check_composition(
     ----------
     xp : namespace
         The array API compatible namespace corresponding ``mat``.
-    mat : array of shape (n_compositions, n_components)
+    mat : array of shape (..., n_components, ...)
         A matrix of proportions.
     axis : int, optional
         Axis that represents each composition. Default is the last axis (-1).
@@ -181,6 +181,10 @@ def _check_composition(
 
     Raises
     ------
+    TypeError
+        If the matrix is not numeric.
+    ValueError
+        If the matrix contains nan or infinite values.
     ValueError
         If any values in the matrix are negative.
     ValueError
@@ -189,12 +193,10 @@ def _check_composition(
         If the matrix has more than maximum number of dimensions.
 
     """
-    # The following two checks are commented out, with the assumption that the user is
-    # responsible for these.
-    # if not xp.isdtype(mat.dtype, "numeric"))
-    #     raise ValueError("Input matrix must have a numeric data type.")
-    # if not xp.all(xp.isfinite(mat)):
-    #     raise ValueError("Input matrix cannot have infinite or NaN values.")
+    if not xp.isdtype(mat.dtype, "numeric"):
+        raise TypeError("Input matrix must have a numeric data type.")
+    if not xp.all(xp.isfinite(mat)):
+        raise ValueError("Input matrix cannot have infinite or NaN values.")
     if nozero:
         if xp.any(mat <= 0):
             raise ValueError("Input matrix cannot have negative or zero components.")
@@ -1423,63 +1425,120 @@ def _check_p_adjust(name):
     return func
 
 
-def _format_da_input(table, grouping):
-    """Format input data for differential abundance analysis.
+def _check_grouping(grouping, matrix, samples=None):
+    """Format grouping for differential abundance analysis.
 
     Parameters
     ----------
-    table : table_like of shape (n_samples, n_featsures)
-        Contingency table of counts where rows are features and columns are samples.
     grouping : 1-D array_like
         Vector indicating the assignment of samples to groups. For example,
         these could be strings or integers denoting which group a sample
-        belongs to. It must be the same length as the samples in ``table``.
-        The index must be the same on ``table`` and ``grouping`` but need not be
-        in the same order. The *t*-test is computed between the ``treatment``
-        group and the ``reference`` group specified in the ``grouping`` vector.
+        belongs to.
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    samples : array_like of shape (n_samples,), optional
+        Sample IDs.
+
+    Returns
+    -------
+    groups : ndarray of (n_groups,)
+        Class names.
+    labels : ndarray of (n_samples,)
+        Class indices by sample.
 
     Notes
     -----
-    If both `table` and `grouping` contain sample IDs (e.g., `table` is a pd.DataFrame
-    and `grouping` is a pd.Series).
+    If `grouping` is indexed and `samples` is provided, `grouping` will be filtered and
+    reordered to match `samples`. Otherwise, `grouping` and `matrix` must have the same
+    length, with the assumption that samples are in the same order.
 
     """
-    matrix, samples, features = _ingest_table(table)
+    # match sample IDs
+    if samples is not None and isinstance(grouping, pd.Series):
+        try:
+            grouping = grouping.loc[samples]
+        except KeyError:
+            raise ValueError(
+                "`table` contains sample IDs that are absent in `grouping`."
+            )
+        else:
+            grouping = grouping.to_numpy()
 
-    if isinstance(grouping, pd.Series):
-        if samples is not None:
-            try:
-                grouping = grouping.loc[samples]
-            except KeyError:
-                raise ValueError(
-                    "`table` contains sample IDs that are absent in `grouping`."
-                )
-        grouping = grouping.to_numpy()
+    # match lengths
     else:
         grouping = np.asarray(grouping)
 
-    if grouping.ndim != 1:
-        raise ValueError("`grouping` must be convertible to a 1-D vector.")
+        if grouping.ndim != 1:
+            raise ValueError("`grouping` must be convertible to a 1-D vector.")
 
-    if pd.isnull(grouping).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
-    # if np.isdtype(grouping.dtype, "numeric"):
-    #     if np.isnan(grouping).any():
-    #         raise ValueError("Cannot handle missing values in `grouping`.")
-    # else:
-    #     if np.equal(grouping, None).any():
-    #         raise ValueError("Cannot handle missing values in `grouping`.")
+        if matrix.shape[0] != grouping.shape[0]:
+            raise ValueError(
+                "Sample counts in `table` and `grouping` are not consistent."
+            )
 
-    if matrix.shape[0] != grouping.shape[0]:
-        raise ValueError("Sample numbers in `table` and `grouping` are not consistent.")
+    # The following code achieves what `pd.isnull` does with NumPy.
+    null_errmsg = "Cannot handle missing values in `grouping`."
+    if np.isdtype(grouping.dtype, "numeric"):
+        if np.isnan(grouping).any():
+            raise ValueError(null_errmsg)
+    else:
+        if (grouping != grouping).any() or np.equal(grouping, None).any():
+            raise ValueError(null_errmsg)
 
-    groups, labels = np.unique(grouping, return_inverse=True)
+    return np.unique(grouping, return_inverse=True)
 
-    # expensive
-    if not np.isdtype(matrix.dtype, "numeric") or np.isnan(matrix).any():
-        raise ValueError("Cannot handle missing values in `table`.")
 
-    return matrix, samples, features, groups, labels
+def _check_metadata(metadata, matrix, samples=None):
+    """Format metadata for differential abundance analysis.
+
+    Parameters
+    ----------
+    metadata : dataframe_like
+        Metadata table.
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    samples : array_like of shape (n_samples,), optional
+        Sample IDs.
+
+    Returns
+    -------
+    pd.DataFrame
+        Validated metadata table.
+
+    Notes
+    -----
+    This function resembles `_check_grouping`.
+
+    """
+    if not isinstance(metadata, pd.DataFrame):
+        try:
+            metadata = pd.DataFrame(metadata)
+        except AttributeError:
+            raise ValueError("Please ensure metadata contains feature IDs.")
+        except (TypeError, ValueError):
+            raise TypeError(
+                "Metadata must be a pandas DataFrame, a NumPy structured or rec "
+                "array, or a dictionary."
+            )
+
+    # match lengths
+    if samples is None or isinstance(metadata.index, pd.RangeIndex):
+        if matrix.shape[0] != metadata.shape[0]:
+            raise ValueError("Sample counts in table and metadata are not consistent.")
+
+    # match sample IDs
+    else:
+        try:
+            metadata = metadata.loc[samples]
+        except KeyError:
+            raise ValueError(
+                "Metadata contains sample IDs that are absent in the table."
+            )
+
+    if metadata.isnull().values.any():
+        raise ValueError("Cannot handle missing values in metadata.")
+
+    return metadata
 
 
 def _check_sig_test(test, n_groups=None):
@@ -1773,7 +1832,11 @@ def ancom(
     samples.
 
     """
-    matrix, _, features, groups, labels = _format_da_input(table, grouping)
+    matrix, samples, features = _ingest_table(table)
+
+    groups, labels = _check_grouping(grouping, matrix, samples)
+
+    _check_composition(np, matrix, nozero=True)
 
     if (matrix <= 0).any():
         raise ValueError(
@@ -1799,13 +1862,13 @@ def ancom(
             percentiles = np.fromiter(percentiles, dtype=float)
         if (percentiles < 0.0).any() or (percentiles > 100.0).any():
             raise ValueError("Percentiles must be in the range [0, 100].")
-        n_pcts = percentiles.size
+        n_pcts = len(percentiles)
         percentiles = np.unique(percentiles)
         if percentiles.size != n_pcts:
             raise ValueError("Percentile values must be unique.")
 
-    n_groups = groups.size
-    if n_groups == labels.size:
+    n_groups = len(groups)
+    if n_groups == len(labels):
         raise ValueError(
             "All values in `grouping` are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
@@ -2244,7 +2307,11 @@ def dirmult_ttest(
 
     rng = get_rng(seed)
 
-    matrix, _, features, groups, labels = _format_da_input(table, grouping)
+    matrix, samples, features = _ingest_table(table)
+
+    _check_composition(np, matrix)
+
+    groups, labels = _check_grouping(grouping, matrix, samples)
 
     # handle zero values
     if pseudocount:
@@ -2533,7 +2600,7 @@ def dirmult_lme_0(
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    To fit the linear mixed effect model we first fit a Dirichlet-multinomial
+    To fit the linear mixed effects model we first fit a Dirichlet-multinomial
     distribution for each sample, and then we compute the fold change and
     *p*-value for each feature. The fold change is computed as the slopes
     from the resulting model. Statistical tests are then performed on the posterior
@@ -2815,9 +2882,158 @@ def dirmult_lme(
     vc_formula=None,
     model_kwargs={},
     fit_method=None,
+    fit_converge=False,
     fit_warnings=False,
     fit_kwargs={},
 ):
+    r"""Fit a Dirichlet-multinomial linear mixed effects model.
+
+    The Dirichlet-multinomial distribution is a compound distribution that
+    combines a Dirichlet distribution over the probabilities of a multinomial
+    distribution. This distribution is used to model the distribution of
+    species abundances in a community.
+
+    To fit the linear mixed effects model we first fit a Dirichlet-multinomial
+    distribution for each sample, and then we compute the fold change and
+    *p*-value for each feature. The fold change is computed as the slopes
+    from the resulting model. Statistical tests are then performed on the posterior
+    samples, drawn from each Dirichlet-multinomial distribution. The
+    log-fold changes as well as their credible intervals, the *p*-values and
+    the multiple comparison corrected *p*-values are reported.
+
+    This function uses the :class:`~statsmodels.regression.mixed_linear_model.MixedLM`
+    class from statsmodels.
+
+    Parameters
+    ----------
+    table : array_like
+        The data for the model. If data is a pd.DataFrame, it must contain the
+        dependent variables in data.columns. If data is not a pd.DataFrame, it must
+        contain the dependent variable in indices of data. data can be a
+        a numpy structured array, or a numpy recarray, or a dictionary. It must not
+        contain duplicate indices.
+    metadata : array_like
+        The metadata for the model. If metadata is a pd.DataFrame, it must contain
+        the covariates in metadata.columns. If metadata is not a pd.DataFrame,
+        it must contain the covariates in indices of metadata. metadata can
+        be a numpy structured array, or a numpy recarray, or a dictionary. It must
+        not contain duplicate indices.
+    formula : str or generic Formula object
+        The formula defining the model. Refer to `Patsy's documentation
+        <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
+        a formula.
+    grouping : str
+        The column name in data that identifies the grouping variable.
+    pseudocount : float, optional
+        A non-zero value added to the input counts to ensure that all of the
+        estimated abundances are strictly greater than zero. Default is 0.5.
+    draws : int, optional
+        The number of draws from the Dirichlet-multinomial posterior distribution.
+        Default is 128.
+    p_adjust : str or None, optional
+        Method to correct *p*-values for multiple comparisons. Options are Holm-
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Case-insensitive. If None, no correction will be performed.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance for drawing from the
+        Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
+    re_formula : str, optional
+        Random coefficient formula. See :meth:`MixedLM.from_formula
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>` for details.
+    vc_formula : str, optional
+        Variance component formula. See ``MixedLM.from_formula`` for details.
+    model_kwargs : dict, optional
+        Additional keyword arguments to pass to ``MixedLM``.
+    fit_method : str or list of str, optional
+        Optimization method for model fitting. Can be a single method name, or a list
+        of method names to be tried sequentially. See `statsmodels.optimization
+        <https://www.statsmodels.org/stable/optimization.html>`_
+        for available methods. If None, a default list of methods will be tried.
+    fit_converge : bool, optional
+        If True, LME fits that were completed but did not converge will be excluded
+        from the calculation.
+    fit_warnings : bool, optional
+        Issue warnings if any during the model fitting process. Default is False.
+        Warnings are usually issued when the optimization methods do not converge,
+        which is common in the analysis.
+    fit_kwargs : dict, optional
+        Additional keyword arguments to pass to :meth:`MixedLM.fit
+        <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
+
+    Returns
+    -------
+    pd.DataFrame
+        A table of features, their log-fold changes and other relevant statistics.
+
+        ``FeatureID`` is the feature identifier, ie: dependent variables
+
+        ``Covariate`` is the covariate name, ie: independent variables
+
+        ``Log2(FC)`` is the expected log2-fold change. The reported ``Log2(FC)``
+        is the average of all of the log2-fold changes computed from each of the
+        posterior draws.
+
+        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
+        ``CI(2.5)`` is the average of the 2.5% quantile of all of the log2-fold
+        changes computed from each of the posterior draws.
+
+        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
+        reported ``CI(97.5)`` is the average of the 97.5% quantile of all of
+        the log2-fold changes computed from each of the posterior draws.
+
+        ``pvalue`` is the *p*-value of the linear mixed effects model. The
+        reported values are the average of all of the *p*-values computed from the
+        linear mixed effects models calculated across all of the posterior draws.
+
+        ``qvalue`` is the corrected *p*-value of the linear mixed effects model
+        for multiple comparisons. The reported values are the average of all of
+        the *q*-values computed from the linear mixed effects models calculated
+        across all of the posterior draws.
+
+    See Also
+    --------
+    dirmult_ttest
+    statsmodels.formula.api.mixedlm
+    statsmodels.regression.mixed_linear_model.MixedLM
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skbio.stats.composition import dirmult_lme
+    >>> table = pd.DataFrame(
+    ...     [[1.00000053, 6.09924644],
+    ...      [0.99999843, 7.0000045],
+    ...      [1.09999884, 8.08474053],
+    ...      [1.09999758, 1.10000349],
+    ...      [0.99999902, 2.00000027],
+    ...      [1.09999862, 2.99998318],
+    ...      [1.00000084, 2.10001257],
+    ...      [0.9999991, 3.09998418],
+    ...      [0.99999899, 3.9999742],
+    ...      [1.10000124, 5.0001796],
+    ...      [1.00000053, 6.09924644],
+    ...      [1.10000173, 6.99693644]],
+    ...     index=['u1', 'u2', 'u3', 'x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1',
+    ...            'z2', 'z3'],
+    ...     columns=['Y1', 'Y2'])
+    >>> metadata = pd.DataFrame(
+    ...     {'patient': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
+    ...      'treatment': [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+    ...      'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],},
+    ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
+    ...            'u2', 'u3'])
+    >>> result = dirmult_lme(table, metadata, formula='time + treatment',
+    ...                      grouping='patient', seed=0, p_adjust='sidak')
+    >>> result
+      FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+    0        Y1       time -0.210769 -1.532142  1.122417  0.403737  0.873598
+    1        Y1  treatment -0.744093 -3.401875  1.582636  0.252057  0.687051
+    2        Y2       time  0.210769 -1.122417  1.532142  0.403737  0.873598
+    3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
+
+    """
     from patsy import dmatrix
     from scipy.optimize import OptimizeWarning
     from statsmodels.regression.mixed_linear_model import MixedLM
@@ -2825,36 +3041,18 @@ def dirmult_lme(
 
     rng = get_rng(seed)
 
-    # matrix, _, features, groups, labels = _format_da_input(table, grouping)
-
     matrix, samples, features = _ingest_table(table)
 
-    n_feats = len(features)
+    _check_composition(np, matrix)
+
+    n_feats = matrix.shape[1]
     if n_feats < 2:
         raise ValueError("Table must have at least two features.")
+    if features is None:
+        features = np.arange(n_feats)
 
-    type_errmsg = (
-        "%s must be a pandas DataFrame or a numpy structured or rec array or "
-        "a dictionary."
-    )
-    attr_errmsg = "Please ensure %s contains feature IDs."
-    null_errmsg = "Cannot handle missing values in %s."
-
-    # Validate metadata table.
-    if not isinstance(metadata, pd.DataFrame):
-        try:
-            metadata = pd.DataFrame(metadata)
-        except AttributeError:
-            raise ValueError(attr_errmsg % "metadata")
-        except (TypeError, ValueError):
-            raise TypeError(type_errmsg % "Metadata")
-
-    # Test if metadata contains all samples in the table, and reorder the former to
-    # match the latter.
-    try:
-        metadata = metadata.loc[samples]
-    except KeyError:
-        raise ValueError("Metadata must contain all samples in the table.")
+    # parse metadata
+    metadata = _check_metadata(metadata, matrix, samples)
 
     metadata = _type_cast_to_float(metadata.copy())
 
@@ -2877,11 +3075,16 @@ def dirmult_lme(
 
     exog_mat = np.asarray(dmat)
 
+    # parse grouping
     if grouping is not None:
         if isinstance(grouping, str):
-            grouping = metadata[grouping].to_numpy()
-        _, grouping = np.unique(grouping, return_inverse=True)
-        grouping += 1
+            try:
+                grouping = metadata[grouping].to_numpy()
+            except KeyError:
+                raise ValueError("Grouping is not a column in the metadata.")
+            _, grouping = np.unique(grouping, return_inverse=True)
+        else:
+            _, grouping = _check_grouping(grouping, matrix, samples)
 
     # random effects matrix
     if re_formula is not None:
@@ -2928,7 +3131,7 @@ def dirmult_lme(
             # Resample data in a Dirichlet-multinomial distribution.
             dir_mat = _dirmult_sample(matrix, rng)
 
-            # Fit LME for each feature.
+            # Fit a linear mixed effects (LME) model for each feature.
             for j in range(n_feats):
                 model = MixedLM(
                     dir_mat[:, j],
@@ -2939,14 +3142,24 @@ def dirmult_lme(
                     **model_kwargs,
                 )
 
+                # model fitting (computationally expensive)
                 try:
                     result = model.fit(method=fit_method, **fit_kwargs)
+
+                # There are many ways model fitting may fail. Examples are LinAlgError,
+                # RuntimeError, OverflowError, and ZeroDivisionError. If any error
+                # occurs, the function will still proceed but the current run will be
+                # discarded.
                 except Exception:
                     warn(fit_fail_msg.format(features[j], i), UserWarning)
                     continue
-                if not result.converged:
+
+                # It is common that model fitting successfully finished (no error) but
+                # the optimizer did not converge, making the calculated statistics less
+                # reliable. The `fit_converge` flag can discard these runs.
+                if fit_converge and not result.converged:
                     warn(fit_fail_msg.format(features[j], i), UserWarning)
-                    # continue
+                    continue
 
                 # update results
                 coef[j] += result.params[covar_range]
@@ -2959,29 +3172,29 @@ def dirmult_lme(
 
                 fitted[j] += 1
 
-    # Deal with fitting failures.
+    # deal with fitting failures
     mask = fitted > 0
-    n_fails = n_feats - mask.sum()
-    if n_fails == 0:  # all succeeded
+    n_failed = n_feats - mask.sum()
+    if n_failed == 0:  # all succeeded
         mask = slice(None)
-    elif n_fails < n_feats:  # some failed
-        warn(fit_fail_all_msg.format(n_fails), UserWarning)
+    elif n_failed < n_feats:  # some failed
+        warn(fit_fail_all_msg.format(n_failed), UserWarning)
         for x in (coef, pval, lower, upper):
             x[~mask] = np.nan
     else:  # all failed
         raise ValueError("LME fit failed for all features in all trials.")
 
-    # Normalize metrics to averages over all successful trials.
+    # normalize metrics to averages over all successful trials
     fitted_ = fitted.reshape(-1, 1)[mask]
     for x in (coef, pval):
         x[mask] /= fitted_
 
-    # Convert all log fold changes to base 2.
+    # convert all log fold changes to base 2
     log2_ = np.log(2)
     for x in (coef, lower, upper):
         x[mask] /= log2_
 
-    # Correct p-values for multiple comparison.
+    # correct p-values for multiple comparison
     if p_adjust is not None:
         func = _check_p_adjust(p_adjust)
         qval = np.full(shape, np.nan)
@@ -2989,7 +3202,7 @@ def dirmult_lme(
     else:
         qval = pval
 
-    # Construct report.
+    # construct report
     features = pd.Series(
         [x for x in features for _ in range(n_covars)], name="FeatureID"
     )
