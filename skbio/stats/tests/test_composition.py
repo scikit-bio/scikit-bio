@@ -1762,7 +1762,7 @@ class DirMultLMETests(TestCase):
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping='Covar1', draws=1, seed=0, p_adjust="sidak")
         self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape[1], 7)  # expected number of columns
+        self.assertEqual(res.shape[1], 8)  # expected number of columns
         pdt.assert_series_equal(res.iloc[:, 0], pd.Series([
             'feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3',
             'feature4', 'feature4'], name='FeatureID'))

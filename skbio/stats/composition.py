@@ -1463,11 +1463,11 @@ def _format_da_input(table, grouping):
 
     if pd.isnull(grouping).any():
         raise ValueError("Cannot handle missing values in `grouping`.")
-    # if np.isdtype(groups.dtype, "numeric"):
-    #     if np.isnan(groups).any():
+    # if np.isdtype(grouping.dtype, "numeric"):
+    #     if np.isnan(grouping).any():
     #         raise ValueError("Cannot handle missing values in `grouping`.")
     # else:
-    #     if np.equal(groups, None).any():
+    #     if np.equal(grouping, None).any():
     #         raise ValueError("Cannot handle missing values in `grouping`.")
 
     if matrix.shape[0] != grouping.shape[0]:
@@ -2261,7 +2261,6 @@ def dirmult_ttest(
     delta = np.zeros(m)  # inter-group difference
     tstat = np.zeros(m)  # t-test statistic
     pval = np.zeros(m)  # t-test p-value
-    df = np.empty(m)  # degrees of freedom
     lower = np.full(m, np.inf)  # 2.5% percentile of distribution
     upper = np.full(m, -np.inf)  # 97.5% percentile of distribution
 
@@ -2315,10 +2314,10 @@ def dirmult_ttest(
     reject &= sig
 
     # Convert all log fold changes to base 2.
-    LOG2 = np.log(2)
-    delta /= LOG2
-    upper /= LOG2
-    lower /= LOG2
+    log2_ = np.log(2)
+    delta /= log2_
+    upper /= log2_
+    lower /= log2_
 
     # construct report
     res = pd.DataFrame.from_dict(
@@ -2369,6 +2368,7 @@ def _lme_call(
     metadata,
     formula,
     grouping,
+    covars,
     re_formula=None,
     vc_formula=None,
     model_kwargs={},
@@ -2378,7 +2378,6 @@ def _lme_call(
 ):
     """Call MixedLM of statsmodels."""
     # TODO: add documentation
-    from patsy import dmatrix
     from statsmodels.regression.mixed_linear_model import MixedLM
     from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
@@ -2388,9 +2387,6 @@ def _lme_call(
     CI975 = "CI(97.5)"
     PVALUE = "pvalue"
     COVARIATE = "Covariate"
-
-    submodels = []
-    metadata = _type_cast_to_float(metadata.copy())
 
     merged_table = pd.merge(table, metadata, left_index=True, right_index=True)
     if len(merged_table) == 0:
@@ -2402,20 +2398,18 @@ def _lme_call(
             )
         )
 
-    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
-
-    # Obtain the list of covariates by selecting the relevant columns
-    _covariate_list = design_matrix.columns.tolist()
-
-    # Remove intercept since it is not a covariate, and is included by default
-    _covariate_list.remove("Intercept")
-
     fit_fail_msg = (
         "LME fit failed for covariate %s and `response_var`, outputting nans."
     )
 
-    output = []
-    for response_var in table.columns:
+    shape = (table.shape[1], len(covars))
+    coef = np.full(shape, np.nan)  # coefficient
+    pval = np.full(shape, np.nan)  # p-value
+    lower = np.full(shape, np.nan)  # 2.5% CI
+    upper = np.full(shape, np.nan)  # 97.5% CI
+
+    # output = []
+    for ii, response_var in enumerate(table.columns):
         # mixed effects code is obtained here:
         # http://stackoverflow.com/a/22439820/1167475
         stats_formula = "%s ~ %s" % (response_var, formula)
@@ -2435,69 +2429,88 @@ def _lme_call(
                 simplefilter("ignore", ConvergenceWarning)
             results = model.fit(method=fit_method, **fit_kwargs)
 
-        summary = results.summary()
+        try:
+            coef[ii] = results.params.loc[covars]
+            pval[ii] = results.pvalues.loc[covars]
+            ci = results.conf_int()
+            lower[ii] = ci.loc[covars][0]
+            upper[ii] = ci.loc[covars][1]
+        except Exception:
+            warn(fit_fail_msg % response_var, UserWarning)  ####
+            pass
 
-        for var_name in _covariate_list:
-            try:
-                _lme_coef, _lme_25, _lme_975 = np.nan, np.nan, np.nan
-                _lme_coef = float(summary.tables[1]["Coef."][var_name])
-                _lme_25 = float(summary.tables[1]["[0.025"][var_name])
-                _lme_975 = float(summary.tables[1]["0.975]"][var_name])
+        continue
 
-                individual_results = {
-                    FEATUREID: response_var,
-                    COVARIATE: var_name,
-                    LOG2FC: _lme_coef,
-                    CI25: _lme_25,
-                    CI975: _lme_975,
-                    PVALUE: results.pvalues[var_name],
-                }
-            except Exception as e:
-                if type(e) is not ValueError:
-                    warn(fit_fail_msg % var_name, UserWarning)
+        # summary = results.summary()
 
-                    individual_results = {
-                        FEATUREID: response_var,
-                        COVARIATE: var_name,
-                        LOG2FC: np.nan,
-                        CI25: np.nan,
-                        CI975: np.nan,
-                        PVALUE: np.nan,
-                    }
+        # for var_name in covars:
+        #     try:
+        #         row = table.loc[var_name]
+        #     except KeyError:
+        #         warn(fit_fail_msg % var_name, UserWarning)
+        #     coef[ii, jj] = float(row["Coef."])
+        #     coef[ii, jj] = float(row["Coef."])
+        #     coef[ii, jj] = float(row["Coef."])
 
-                else:
-                    measures = {
-                        LOG2FC: np.nan,
-                        CI25: np.nan,
-                        CI975: np.nan,
-                    }
-                    mapping = {
-                        LOG2FC: _lme_coef,
-                        CI25: _lme_25,
-                        CI975: _lme_975,
-                    }
+        #         _lme_coef, _lme_25, _lme_975 = np.nan, np.nan, np.nan
+        #         _lme_coef = float(summary.tables[1]["Coef."][var_name])
+        #         _lme_25 = float(summary.tables[1]["[0.025"][var_name])
+        #         _lme_975 = float(summary.tables[1]["0.975]"][var_name])
 
-                    if len(summary.tables) >= 2:
-                        table = summary.tables[1]
+        #         individual_results = {
+        #             FEATUREID: response_var,
+        #             COVARIATE: var_name,
+        #             LOG2FC: _lme_coef,
+        #             CI25: _lme_25,
+        #             CI975: _lme_975,
+        #             PVALUE: results.pvalues[var_name],
+        #         }
+        #     except Exception as e:
+        #         if type(e) is not ValueError:
+        #             warn(fit_fail_msg % var_name, UserWarning)
 
-                        for key_final, key_table in mapping.items():
-                            if key_table in table and var_name in table[key_table]:
-                                measures[key_final] = table[key_table][var_name]
+        #             individual_results = {
+        #                 FEATUREID: response_var,
+        #                 COVARIATE: var_name,
+        #                 LOG2FC: np.nan,
+        #                 CI25: np.nan,
+        #                 CI975: np.nan,
+        #                 PVALUE: np.nan,
+        #             }
 
-                    individual_results = {
-                        "FeatureID": response_var,
-                        "Covariate": var_name,
-                        "pvalue": results.pvalues[var_name],
-                    }
+        #         else:
+        #             measures = {
+        #                 LOG2FC: np.nan,
+        #                 CI25: np.nan,
+        #                 CI975: np.nan,
+        #             }
+        #             mapping = {
+        #                 LOG2FC: _lme_coef,
+        #                 CI25: _lme_25,
+        #                 CI975: _lme_975,
+        #             }
 
-                    individual_results.update(measures)
+        #             if len(summary.tables) >= 2:
+        #                 table = summary.tables[1]
 
-            output.append(individual_results)
+        #                 for key_final, key_table in mapping.items():
+        #                     if key_table in table and var_name in table[key_table]:
+        #                         measures[key_final] = table[key_table][var_name]
 
-    return (output, submodels, _covariate_list)
+        #             individual_results = {
+        #                 "FeatureID": response_var,
+        #                 "Covariate": var_name,
+        #                 "pvalue": results.pvalues[var_name],
+        #             }
+
+        #             individual_results.update(measures)
+
+        #     output.append(individual_results)
+
+    return coef, pval, lower, upper
 
 
-def dirmult_lme(
+def dirmult_lme_0(
     table,
     metadata,
     formula,
@@ -2546,7 +2559,7 @@ def dirmult_lme(
         be a numpy structured array, or a numpy recarray, or a dictionary. It must
         not contain duplicate indices.
     formula : str or generic Formula object
-        The formula defining the model. Refer to `Pasty's documentation
+        The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
     grouping : str
@@ -2658,6 +2671,8 @@ def dirmult_lme(
     3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
 
     """
+    from patsy import dmatrix
+
     type_errmsg = (
         "%s must be a pandas DataFrame or a numpy structured or rec array or "
         "a dictionary."
@@ -2702,6 +2717,64 @@ def dirmult_lme(
     if metadata.isnull().values.any():
         raise ValueError(null_errmsg % "metadata")
 
+    metadata = _type_cast_to_float(metadata.copy())
+
+    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
+
+    # Obtain the list of covariates by selecting the relevant columns
+    _covariate_list = design_matrix.columns.tolist()
+
+    # Remove intercept since it is not a covariate, and is included by default
+    _covariate_list.remove("Intercept")
+
+    rng = get_rng(seed)
+
+    # initiate results
+    shape = (table.shape[1], len(_covariate_list))
+    coef = np.zeros(shape)  # coefficient
+    pval = np.zeros(shape)  # p-value
+    lower = np.full(shape, np.inf)  # 2.5% CI
+    upper = np.full(shape, -np.inf)  # 97.5% CI
+
+    for i in range(draws):
+        dir_table = _obtain_dir_table(table, pseudocount, rng)
+
+        res = _lme_call(
+            table=dir_table,
+            metadata=metadata,
+            formula=formula,
+            grouping=grouping,
+            covars=_covariate_list,
+            re_formula=re_formula,
+            vc_formula=vc_formula,
+            model_kwargs=model_kwargs,
+            fit_method=fit_method,
+            fit_warnings=fit_warnings,
+            fit_kwargs=fit_kwargs,
+        )
+
+        coef += res[0]
+        pval += res[1]
+        np.minimum(lower, res[2], out=lower)
+        np.maximum(upper, res[3], out=upper)
+
+    # Normalize metrics to averages over all trials.
+    coef /= draws
+    pval /= draws
+
+    # Convert all log fold changes to base 2.
+    log2_ = np.log(2)
+    coef /= log2_
+    lower /= log2_
+    upper /= log2_
+
+    # Correct p-values for multiple comparison.
+    if p_adjust is not None:
+        func = _check_p_adjust(p_adjust)
+        qval = np.vstack([func(x) for x in pval.T]).T
+    else:
+        qval = pval
+
     # Columns in the final result
     FEATUREID = "FeatureID"
     LOG2FC = "Log2(FC)"
@@ -2711,107 +2784,224 @@ def dirmult_lme(
     COVARIATE = "Covariate"
     QVALUE = "qvalue"
 
-    rng = get_rng(seed)
-    dir_table = _obtain_dir_table(table, pseudocount, rng)
-
-    res, _submodels, _covariate_list = _lme_call(
-        table=dir_table,
-        metadata=metadata,
-        formula=formula,
-        grouping=grouping,
-        re_formula=re_formula,
-        vc_formula=vc_formula,
-        model_kwargs=model_kwargs,
-        fit_method=fit_method,
-        fit_warnings=fit_warnings,
-        fit_kwargs=fit_kwargs,
-    )
-
-    # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
-    # uses a separate array for each covariate and each feature
-    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
-    res_dict = {}
-
-    for feature in table.columns:
-        group = res_dict[feature] = {}
-        for covar in _covariate_list:
-            group[covar] = [0] * 5
-
-    for single_covar_data in res:
-        group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
-        for i, key in enumerate((PVALUE, CI25, CI975, LOG2FC)):
-            group[i] = single_covar_data[key]
-
-    for i in range(1, draws):
-        dir_table = _obtain_dir_table(table, pseudocount, rng)
-
-        ires = _lme_call(
-            table=dir_table,
-            metadata=metadata,
-            formula=formula,
-            grouping=grouping,
-            re_formula=re_formula,
-            vc_formula=vc_formula,
-            model_kwargs=model_kwargs,
-            fit_method=fit_method,
-            fit_warnings=fit_warnings,
-            fit_kwargs=fit_kwargs,
-        )[0]
-
-        if ires is None:
-            continue
-
-        # online average to avoid holding all of the results in memory
-        for single_covar_data in ires:
-            group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
-            group[0] = (i * group[0] + single_covar_data[PVALUE]) / (i + 1)
-            group[1] = np.minimum(group[1], single_covar_data[CI25])
-            group[2] = np.maximum(group[2], single_covar_data[CI975])
-            group[3] = (i * group[3] + single_covar_data[LOG2FC]) / (i + 1)
-
-    # convert all log fold changes to base 2
-    log2_ = np.log(2)
-    for feature, covar_dict in res_dict.items():
-        for covar, group in covar_dict.items():
-            group[1:4] /= log2_
-
-    p_value_arr = []
-    for feature in table.columns:
-        group = res_dict[feature]
-        for covar in _covariate_list:
-            p_value_arr.append(group[covar][0])
-
-    # multiple comparison
-    if p_adjust is not None:
-        qval = _check_p_adjust(p_adjust)(p_value_arr)
-    else:
-        qval = p_value_arr
-
-    count = 0
-    for feature in table.columns:
-        group = res_dict[feature]
-        for covar in _covariate_list:
-            group[covar][4] = qval[count]
-            count += 1
-
     final_res = []
-
-    for feature in table.columns:
-        for covar in _covariate_list:
-            group = res_dict[feature][covar]
+    for ii, feature in enumerate(table.columns):
+        for jj, covar in enumerate(_covariate_list):
             final_res.append(
                 {
                     FEATUREID: feature,
                     COVARIATE: covar,
-                    LOG2FC: group[3],
-                    CI25: group[1],
-                    CI975: group[2],
-                    PVALUE: group[0],
-                    QVALUE: group[4],
+                    LOG2FC: coef[ii, jj],
+                    CI25: lower[ii, jj],
+                    CI975: upper[ii, jj],
+                    PVALUE: pval[ii, jj],
+                    QVALUE: qval[ii, jj],
                 }
             )
 
     return pd.DataFrame(final_res)
+
+
+def dirmult_lme(
+    table,
+    metadata,
+    formula,
+    grouping=None,
+    pseudocount=0.5,
+    draws=128,
+    p_adjust="holm",
+    seed=None,
+    re_formula=None,
+    vc_formula=None,
+    model_kwargs={},
+    fit_method=None,
+    fit_warnings=False,
+    fit_kwargs={},
+):
+    from patsy import dmatrix
+    from scipy.optimize import OptimizeWarning
+    from statsmodels.regression.mixed_linear_model import MixedLM
+    from statsmodels.tools.sm_exceptions import ConvergenceWarning
+
+    rng = get_rng(seed)
+
+    # matrix, _, features, groups, labels = _format_da_input(table, grouping)
+
+    matrix, samples, features = _ingest_table(table)
+
+    n_feats = len(features)
+    if n_feats < 2:
+        raise ValueError("Table must have at least two features.")
+
+    type_errmsg = (
+        "%s must be a pandas DataFrame or a numpy structured or rec array or "
+        "a dictionary."
+    )
+    attr_errmsg = "Please ensure %s contains feature IDs."
+    null_errmsg = "Cannot handle missing values in %s."
+
+    # Validate metadata table.
+    if not isinstance(metadata, pd.DataFrame):
+        try:
+            metadata = pd.DataFrame(metadata)
+        except AttributeError:
+            raise ValueError(attr_errmsg % "metadata")
+        except (TypeError, ValueError):
+            raise TypeError(type_errmsg % "Metadata")
+
+    # Test if metadata contains all samples in the table, and reorder the former to
+    # match the latter.
+    try:
+        metadata = metadata.loc[samples]
+    except KeyError:
+        raise ValueError("Metadata must contain all samples in the table.")
+
+    metadata = _type_cast_to_float(metadata.copy())
+
+    # Create a design matrix based on metadata and formula.
+    dmat = dmatrix(formula, metadata, return_type="matrix")
+
+    # Obtain the list of covariates by selecting the relevant columns
+    covars = dmat.design_info.column_names
+
+    # Remove intercept since it is not a covariate, and is included by default.
+    # Then determine the range of rows to be extracted from the model fitting result.
+    # (See also `result.model.k_fe`, number of fixed effects.)
+    if covars[0] == "Intercept":
+        covars = covars[1:]
+        n_covars = len(covars)
+        covar_range = slice(1, n_covars + 1)
+    else:
+        n_covars = len(covars)
+        covar_range = slice(0, n_covars)
+
+    exog_mat = np.asarray(dmat)
+
+    if grouping is not None:
+        if isinstance(grouping, str):
+            grouping = metadata[grouping].to_numpy()
+        _, grouping = np.unique(grouping, return_inverse=True)
+        grouping += 1
+
+    # random effects matrix
+    if re_formula is not None:
+        exog_re = dmatrix(re_formula, metadata, return_type="matrix")
+    else:
+        exog_re = None
+
+    # variance component matrices
+    if vc_formula is not None:
+        exog_vc = {
+            name: dmatrix(formula, metadata, return_type="matrix")
+            for name, formula in vc_formula.items()
+        }
+    else:
+        exog_vc = None
+
+    # handle zero values
+    if pseudocount:
+        matrix = matrix + pseudocount
+
+    # initiate results
+    shape = (n_feats, n_covars)
+    coef = np.zeros(shape)  # coefficient (fold change)
+    pval = np.zeros(shape)  # p-value
+    lower = np.full(shape, np.inf)  # 2.5% CI
+    upper = np.full(shape, -np.inf)  # 97.5% CI
+
+    # number of trials (draws) LME fitting is successful for each feature
+    fitted = np.zeros(n_feats, dtype=int)
+
+    fit_fail_msg = "LME fit failed for feature {} in trial {}, outputting NaNs."
+    fit_fail_all_msg = "LME fit failed for {} features in all trials, reporting NaNs."
+
+    with catch_warnings():
+        if not fit_warnings:
+            simplefilter("ignore", UserWarning)
+            simplefilter("ignore", ConvergenceWarning)
+            simplefilter("ignore", OptimizeWarning)
+            # This is temporary because statsmodels calls scipy in a deprecated way as
+            # of v0.14.4.
+            simplefilter("ignore", DeprecationWarning)
+
+        for i in range(draws):
+            # Resample data in a Dirichlet-multinomial distribution.
+            dir_mat = _dirmult_sample(matrix, rng)
+
+            # Fit LME for each feature.
+            for j in range(n_feats):
+                model = MixedLM(
+                    dir_mat[:, j],
+                    exog_mat,
+                    grouping,
+                    exog_re=exog_re,
+                    exog_vc=exog_vc,
+                    **model_kwargs,
+                )
+
+                try:
+                    result = model.fit(method=fit_method, **fit_kwargs)
+                except Exception:
+                    warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    continue
+                if not result.converged:
+                    warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    # continue
+
+                # update results
+                coef[j] += result.params[covar_range]
+                pval[j] += result.pvalues[covar_range]
+
+                # calculate confidence interval and update results
+                ci = result.conf_int()
+                np.minimum(lower[j], ci[covar_range, 0], out=lower[j])
+                np.maximum(upper[j], ci[covar_range, 1], out=upper[j])
+
+                fitted[j] += 1
+
+    # Deal with fitting failures.
+    mask = fitted > 0
+    n_fails = n_feats - mask.sum()
+    if n_fails == 0:  # all succeeded
+        mask = slice(None)
+    elif n_fails < n_feats:  # some failed
+        warn(fit_fail_all_msg.format(n_fails), UserWarning)
+        for x in (coef, pval, lower, upper):
+            x[~mask] = np.nan
+    else:  # all failed
+        raise ValueError("LME fit failed for all features in all trials.")
+
+    # Normalize metrics to averages over all successful trials.
+    fitted_ = fitted.reshape(-1, 1)[mask]
+    for x in (coef, pval):
+        x[mask] /= fitted_
+
+    # Convert all log fold changes to base 2.
+    log2_ = np.log(2)
+    for x in (coef, lower, upper):
+        x[mask] /= log2_
+
+    # Correct p-values for multiple comparison.
+    if p_adjust is not None:
+        func = _check_p_adjust(p_adjust)
+        qval = np.full(shape, np.nan)
+        qval[mask] = np.apply_along_axis(func, 1, pval[mask])
+    else:
+        qval = pval
+
+    # Construct report.
+    features = pd.Series(
+        [x for x in features for _ in range(n_covars)], name="FeatureID"
+    )
+    covars = pd.Series(list(covars) * n_feats, name="Covariate")
+    fitted = pd.Series(np.repeat(fitted, n_covars), name="Trials")
+    coef = pd.Series(coef.ravel(), name="Log2(FC)")
+    lower = pd.Series(lower.ravel(), name="CI(2.5)")
+    upper = pd.Series(upper.ravel(), name="CI(97.5)")
+    pval = pd.Series(pval.ravel(), name="pvalue")
+    qval = pd.Series(qval.ravel(), name="qvalue")
+
+    return pd.concat((features, covars, fitted, coef, lower, upper, pval, qval), axis=1)
 
 
 register_aliases(modules[__name__])
