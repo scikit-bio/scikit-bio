@@ -44,6 +44,7 @@ compositions.
 
    ancom
    dirmult_ttest
+   dirmult_lme
 
 
 Arithmetic operations
@@ -1620,21 +1621,20 @@ def ancom(
 
     Parameters
     ----------
-    table : pd.DataFrame
-        A 2-D matrix of strictly positive values (i.e. counts or proportions)
-        where the rows correspond to samples and the columns correspond to
-        features.
+    table : table_like of shape (n_samples, n_features)
+        Matrix of strictly positive values (i.e. counts or proportions). See
+        :doc:`supported formats <../reference/table_like>`.
 
         .. note::
             If the table contains zero values, one should add a pseudocount or apply
             :func:`multi_replace` to convert all values into positive numbers.
 
     grouping : pd.Series or 1-D array_like
-        Vector indicating the assignment of samples to groups. For example,
-        these could be strings or integers denoting which group a sample
-        belongs to. It must be the same length as the samples in `table`.
-        The index must be the same on `table` and `grouping` but need not be
-        in the same order.
+        Vector indicating the assignment of samples to groups. These could be strings
+        or integers denoting which group a sample belongs to. If it is a pandas Series
+        and the table contains sample IDs, its index will be filtered and reordered to
+        match the sample IDs. Otherwise, it must be the same length as the samples in
+        the table.
     alpha : float, optional
         Significance level for each of the statistical tests. This can can be
         anywhere between 0 and 1 exclusive.
@@ -2163,19 +2163,20 @@ def dirmult_ttest(
 
     Parameters
     ----------
-    table : pd.DataFrame
-        Contingency table of counts where rows are features and columns are samples.
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :doc:`supported formats <../reference/table_like>`.
     grouping : pd.Series or 1-D array_like
-        Vector indicating the assignment of samples to groups. For example,
-        these could be strings or integers denoting which group a sample
-        belongs to. It must be the same length as the samples in ``table``.
-        The index must be the same on ``table`` and ``grouping`` but need not be
-        in the same order. The *t*-test is computed between the ``treatment``
-        group and the ``reference`` group specified in the ``grouping`` vector.
+        Vector indicating the assignment of samples to groups. These could be strings
+        or integers denoting which group a sample belongs to. If it is a pandas Series
+        and the table contains sample IDs, its index will be filtered and reordered to
+        match the sample IDs. Otherwise, it must be the same length as the samples in
+        the table.
     treatment : str
-        Name of the treatment group.
+        Name of the treatment group. The *t*-test is computed between the ``treatment``
+        group and the ``reference`` group specified in the ``grouping`` vector.
     reference : str
-        Name of the reference group.
+        Name of the reference group. See above.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero.
@@ -2436,6 +2437,8 @@ def dirmult_lme(
 ):
     r"""Fit a Dirichlet-multinomial linear mixed effects model.
 
+    .. versionadded:: 0.6.4
+
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
     distribution. This distribution is used to model the distribution of
@@ -2454,18 +2457,13 @@ def dirmult_lme(
 
     Parameters
     ----------
-    table : array_like
-        The data for the model. If data is a pd.DataFrame, it must contain the
-        dependent variables in data.columns. If data is not a pd.DataFrame, it must
-        contain the dependent variable in indices of data. data can be a
-        a numpy structured array, or a numpy recarray, or a dictionary. It must not
-        contain duplicate indices.
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :doc:`supported formats <../reference/table_like>`.
     metadata : pd.DataFrame or 2-D array_like
-        The metadata for the model. If metadata is a pd.DataFrame, it must contain
-        the covariates in metadata.columns. If metadata is not a pd.DataFrame,
-        it must contain the covariates in indices of metadata. metadata can
-        be a numpy structured array, or a numpy recarray, or a dictionary. It must
-        not contain duplicate indices.
+        The metadata for the model. Rows correspond to samples and columns correspond
+        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        pandas DataFrame.
     formula : str or generic Formula object
         The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
@@ -2590,7 +2588,7 @@ def dirmult_lme(
     """
     from patsy import dmatrix
     from scipy.optimize import OptimizeWarning
-    from statsmodels.regression.mixed_linear_model import MixedLM
+    from statsmodels.regression.mixed_linear_model import MixedLM, VCSpec
     from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
     rng = get_rng(seed)
@@ -2610,6 +2608,13 @@ def dirmult_lme(
 
     # cast metadata to numbers where applicable
     metadata = _type_cast_to_float(metadata)
+
+    # Instead of directly calling `MixedLM.from_formula` on merged table + metadata,
+    # the following code converts metadata into a design matrix based on the formula
+    # (as well as re_formula and vc_formula, if applicable), and calls `MixedLM`.
+    # This is because the design matrix (independent variable) is always the same
+    # whereas the table (dependent variable) is resampled in every replicate. Fixing
+    # the design matrix can save conversion overheads.
 
     # Create a design matrix based on metadata and formula.
     dmat = dmatrix(formula, metadata, return_type="matrix")
@@ -2636,22 +2641,29 @@ def dirmult_lme(
             grouping = metadata[grouping].to_numpy()
         except KeyError:
             raise ValueError("Grouping is not a column in the metadata.")
-        _, grouping = np.unique(grouping, return_inverse=True)
+        uniq, grouping = np.unique(grouping, return_inverse=True)
     else:
-        _, grouping = _check_grouping(grouping, matrix, samples)
+        uniq, grouping = _check_grouping(grouping, matrix, samples)
+    n_groups = len(uniq)
 
     # random effects matrix
     if re_formula is not None:
-        exog_re = dmatrix(re_formula, metadata, return_type="matrix")
+        exog_re = np.asarray(dmatrix(re_formula, metadata, return_type="matrix"))
     else:
         exog_re = None
 
     # variance component matrices
+    # see: https://www.statsmodels.org/v0.12.2/examples/notebooks/generated/
+    # variance_components.html
     if vc_formula is not None:
-        exog_vc = {
-            name: dmatrix(formula, metadata, return_type="matrix")
-            for name, formula in vc_formula.items()
-        }
+        metas = [metadata.iloc[grouping == x] for x in range(n_groups)]
+        names, cols, mats = [], [], []
+        for name, formula in vc_formula.items():
+            names.append(name)
+            dmats = [dmatrix(formula, x, return_type="matrix") for x in metas]
+            cols.append([x.design_info.column_names for x in dmats])
+            mats.append([np.asarray(x) for x in dmats])
+        exog_vc = VCSpec(names, cols, mats)
     else:
         exog_vc = None
 
@@ -2729,13 +2741,16 @@ def dirmult_lme(
     all_fail_msg = "LME fit failed for {} features in all replicates, reporting NaNs."
     mask = fitted > 0
     n_failed = n_feats - mask.sum()
-    if n_failed == 0:  # all succeeded
+    # all succeeded
+    if n_failed == 0:
         mask = slice(None)
-    elif n_failed < n_feats:  # some failed
+    # some failed
+    elif n_failed < n_feats:
         warn(all_fail_msg.format(n_failed), UserWarning)
         for x in (coef, pval, lower, upper):
             x[~mask] = np.nan
-    else:  # all failed
+    # all failed
+    else:
         raise ValueError("LME fit failed for all features in all replicates.")
 
     # normalize metrics to averages over all successful replicates
@@ -2749,6 +2764,7 @@ def dirmult_lme(
         x[mask] /= log2_
 
     # correct p-values for multiple comparison
+    # (only valid replicates are included)
     if p_adjust is not None:
         func = _check_p_adjust(p_adjust)
         qval = np.full(shape, np.nan)

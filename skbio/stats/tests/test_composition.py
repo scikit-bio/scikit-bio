@@ -1962,14 +1962,11 @@ class DirMultLMETests(TestCase):
             -0.8187, -1.22405, -0.73669, -0.65793, -4.36225, -2.91061, -3.88579,
             -3.20487]))
         npt.assert_array_equal(res["CI(97.5)"].round(5), np.array([
-            6.23545, 4.61759, 2.64873, 1.30884, 0.38171, 1.28483, 0.53754,
-            0.78621]))
+            6.23545, 4.61759, 2.64873, 1.30884, 0.38171, 1.28483, 0.53754, 0.78621]))
         npt.assert_array_equal(res["pvalue"].round(5), np.array([
-            0.13232, 0.25488, 0.26831, 0.51657, 0.10006, 0.44755, 0.13792,
-            0.23492]))
+            0.13232, 0.25488, 0.26831, 0.51657, 0.10006, 0.44755, 0.13792, 0.23492]))
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681,
-            0.41466]))
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
         # confirm that 2.5% < fold-change < 97.5%
         npt.assert_array_less(res["Log2(FC)"], res["CI(97.5)"])
@@ -1981,8 +1978,7 @@ class DirMultLMETests(TestCase):
             formula="Covar2 + Covar3", grouping="Covar1", draws=1, seed=0,
             p_adjust="sidak")
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681,
-            0.41466]))
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
     def test_dirmult_lme_alt_grouping(self):
         res = dirmult_lme(
@@ -1998,8 +1994,7 @@ class DirMultLMETests(TestCase):
             table=self.table + 0.5, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak", pseudocount=None)
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681,
-            0.41466]))
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
     def test_dirmult_lme_no_intercept(self):
         # "-1" at the end of formula suppresses intercept
@@ -2007,8 +2002,7 @@ class DirMultLMETests(TestCase):
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3 - 1",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak")
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.98826, 0.99755, 0.12899, 0.76065, 0.76551, 0.98847, 0.97114,
-            0.96466]))
+            0.98826, 0.99755, 0.12899, 0.76065, 0.76551, 0.98847, 0.97114, 0.96466]))
 
     def test_dirmult_lme_re_formula(self):
         # "1": random effect only in intercept (the default scenario)
@@ -2016,8 +2010,7 @@ class DirMultLMETests(TestCase):
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak", re_formula="1")
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681,
-            0.41466]))
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
         # add a random slope for Covar2
         res = dirmult_lme(
@@ -2025,8 +2018,15 @@ class DirMultLMETests(TestCase):
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
             re_formula="1 + Covar2")
         npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.27415, 0.46275, 0.64479, 0.76629, 0.25146, 0.70308, 0.40027,
-            0.41466]))
+            0.27415, 0.46275, 0.64479, 0.76629, 0.25146, 0.70308, 0.40027, 0.41466]))
+
+    def test_dirmult_lme_vc_formula(self):
+        res = dirmult_lme(
+            table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
+            vc_formula={"Covar2": "0 + C(Covar2)"})
+        npt.assert_array_equal(res["qvalue"].round(5), np.array([
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
     def test_dirmult_lme_no_p_adjust_and_reml(self):
         result = dirmult_lme(
