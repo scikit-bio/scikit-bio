@@ -1624,7 +1624,7 @@ def ancom(
         A 2-D matrix of strictly positive values (i.e. counts or proportions)
         where the rows correspond to samples and the columns correspond to
         features.
-    grouping : pd.Series
+    grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. For example,
         these could be strings or integers denoting which group a sample
         belongs to. It must be the same length as the samples in `table`.
@@ -1642,12 +1642,11 @@ def ancom(
         statistics are lower than theta, then no features will be detected to
         be significantly different. This can can be anywhere between 0 and 1
         exclusive.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
@@ -2167,7 +2166,7 @@ def dirmult_ttest(
     ----------
     table : pd.DataFrame
         Contingency table of counts where rows are features and columns are samples.
-    grouping : pd.Series
+    grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. For example,
         these could be strings or integers denoting which group a sample
         belongs to. It must be the same length as the samples in ``table``.
@@ -2185,12 +2184,11 @@ def dirmult_ttest(
         The number of draws from the Dirichilet-multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and *p*-values.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
@@ -2464,7 +2462,7 @@ def dirmult_lme(
         contain the dependent variable in indices of data. data can be a
         a numpy structured array, or a numpy recarray, or a dictionary. It must not
         contain duplicate indices.
-    metadata : array_like
+    metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. If metadata is a pd.DataFrame, it must contain
         the covariates in metadata.columns. If metadata is not a pd.DataFrame,
         it must contain the covariates in indices of metadata. metadata can
@@ -2474,15 +2472,16 @@ def dirmult_lme(
         The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    grouping : str
-        The column name in data that identifies the grouping variable.
+    grouping : str, pd.Series or 1-D array_like
+        A vector or a metadata column name indicating the assignment of samples to
+        groups. Samples are independent between groups during model fitting.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero. Default is 0.5.
     draws : int, optional
-        The number of draws from the Dirichlet-multinomial posterior distribution.
+        Number of draws from the Dirichlet-multinomial posterior distribution.
         Default is 128.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
@@ -2504,12 +2503,12 @@ def dirmult_lme(
         <https://www.statsmodels.org/stable/optimization.html>`_
         for available methods. If None, a default list of methods will be tried.
     fit_converge : bool, optional
-        If True, LME fits that were completed but did not converge will be excluded
-        from the calculation.
+        If True, model fittings that were completed but did not converge will be
+        excluded from the calculation of final statistics. Default is False.
     fit_warnings : bool, optional
         Issue warnings if any during the model fitting process. Default is False.
         Warnings are usually issued when the optimization methods do not converge,
-        which is common in the analysis.
+        which is common in the analysis. Default is False.
     fit_kwargs : dict, optional
         Additional keyword arguments to pass to :meth:`MixedLM.fit
         <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
@@ -2517,32 +2516,37 @@ def dirmult_lme(
     Returns
     -------
     pd.DataFrame
-        A table of features, their log-fold changes and other relevant statistics.
+        A table of features and covariates, their log-fold changes and other relevant
+        statistics.
 
-        ``FeatureID`` is the feature identifier, ie: dependent variables
+        ``FeatureID``: Feature identifier, i.e., dependent variable.
 
-        ``Covariate`` is the covariate name, ie: independent variables
+        ``Covariate``: Covariate name, i.e., independent variable.
 
-        ``Log2(FC)`` is the expected log2-fold change. The reported ``Log2(FC)``
-        is the average of all of the log2-fold changes computed from each of the
+        ``Reps``: Number of Dirichlet-multinomial posterior draws that supported the
+        reported statistics, i.e., the number of successful model fittings on this
+        feature. Max: ``draws`` (if none failed). Min: 0 (in which case all statistics
+        are NaN).
+
+        ``Log2(FC)``: Expected log2-fold change. The reported ``Log2(FC)`` is the
+        average of all of the log2-fold changes computed from each of the posterior
+        draws.
+
+        ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported ``CI(2.5)`` is
+        the minimum of all of the 2.5% quantiles computed from each of the posterior
+        draws.
+
+        ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported ``CI(97.5)``
+        is the maximum of all of the 97.5% quantiles computed from each of the
         posterior draws.
 
-        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
-        ``CI(2.5)`` is the average of the 2.5% quantile of all of the log2-fold
-        changes computed from each of the posterior draws.
+        ``pvalue``: *p*-value of the linear mixed effects model. The reported *p*-value
+        is the average of all of the *p*-values computed from each of the posterior
+        draws.
 
-        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
-        reported ``CI(97.5)`` is the average of the 97.5% quantile of all of
-        the log2-fold changes computed from each of the posterior draws.
-
-        ``pvalue`` is the *p*-value of the linear mixed effects model. The
-        reported values are the average of all of the *p*-values computed from the
-        linear mixed effects models calculated across all of the posterior draws.
-
-        ``qvalue`` is the corrected *p*-value of the linear mixed effects model
-        for multiple comparisons. The reported values are the average of all of
-        the *q*-values computed from the linear mixed effects models calculated
-        across all of the posterior draws.
+        ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
+        comparisons. The reported *q*-value is the average of all of the *q*-values
+        computed from each of the posterior draws.
 
     See Also
     --------
@@ -2579,11 +2583,11 @@ def dirmult_lme(
     >>> result = dirmult_lme(table, metadata, formula='time + treatment',
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
-      FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -1.532142  1.122417  0.403737  0.873598
-    1        Y1  treatment -0.744093 -3.401875  1.582636  0.252057  0.687051
-    2        Y2       time  0.210769 -1.122417  1.532142  0.403737  0.873598
-    3        Y2  treatment  0.744093 -1.582636  3.401875  0.252057  0.687051
+      FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737  0.644470
+    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057  0.440581
+    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737  0.644470
+    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057  0.440581
 
     """
     from patsy import dmatrix
@@ -2760,7 +2764,7 @@ def dirmult_lme(
         [x for x in features for _ in range(n_covars)], name="FeatureID"
     )
     covars = pd.Series(list(covars) * n_feats, name="Covariate")
-    fitted = pd.Series(np.repeat(fitted, n_covars), name="Trials")
+    fitted = pd.Series(np.repeat(fitted, n_covars), name="Reps")
     coef = pd.Series(coef.ravel(), name="Log2(FC)")
     lower = pd.Series(lower.ravel(), name="CI(2.5)")
     upper = pd.Series(upper.ravel(), name="CI(97.5)")
