@@ -22,7 +22,8 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality, _check_grouping,
+    _check_composition, _check_orthogonality, _check_grouping, _check_metadata,
+    _type_cast_to_float,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
     _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
@@ -112,6 +113,96 @@ class MiscTests(TestCase):
         with self.assertRaises(ValueError) as cm:
             _check_grouping(grouping, matrix)
         self.assertEqual(str(cm.exception), msg)
+
+    def test_check_metadata(self):
+        mat = np.empty(12).reshape(3, 4)
+        df = pd.DataFrame([("Alice", 20, 28.0),
+                           ("Bob",   32, 33.0),
+                           ("Carol", 25, 26.5)],
+                          columns=["name", "age", "bmi"])
+        obs = _check_metadata(df, mat)
+        self.assertIs(obs, df)
+
+        lst = [("Alice", 20, 28.0),
+               ("Bob",   32, 33.0),
+               ("Carol", 25, 26.5)]
+        obs = _check_metadata(lst, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        dic = {"name": ["Alice", "Bob", "Carol"],
+               "age":  [20, 32, 25],
+               "bmi":  [28.0, 33.0, 26.5]}
+        obs = _check_metadata(dic, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        arr = np.array([("Alice", 20, 28.0),
+                        ("Bob",   32, 33.0),
+                        ("Carol", 25, 26.5)],
+                       dtype=[("name", "U10"),
+                              ("age", "i4"),
+                              ("bmi", "f4")])
+        obs = _check_metadata(arr, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        msg = "Metadata must be a pandas DataFrame"
+        with self.assertRaisesRegex(TypeError, msg):
+            _check_metadata(42, mat)
+        with self.assertRaisesRegex(TypeError, msg):
+            _check_metadata("hello", mat)
+
+        msg = "Sample counts in table and metadata are not consistent."
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat.reshape(4, 3))
+        self.assertEqual(str(cm.exception), msg)
+
+        df.index = ["a", "b", "c"]
+        obs = _check_metadata(df, mat)
+        self.assertIs(obs, df)
+
+        # check sample IDs
+        samples = ["a", "b", "c"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIs(obs, df)
+
+        # reorder samples
+        samples = ["b", "c", "a"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIsNot(obs, df)
+        pdt.assert_index_equal(obs.index, pd.Index(samples))
+
+        # filter and reorder samples
+        samples = ["c", "b"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIsNot(obs, df)
+        pdt.assert_index_equal(obs.index, pd.Index(samples))
+
+        msg = "Metadata contains sample IDs that are absent in the table."
+        samples = ["a", "b", "x"]
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat, samples=samples)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Cannot handle missing values in metadata."
+        df = pd.DataFrame(np.array([1.0, np.nan, 2.0]).reshape(3, -1))
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat)
+        self.assertEqual(str(cm.exception), msg)
+        df = pd.DataFrame(np.array([1.0, None, 2.0]).reshape(3, -1))
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_type_cast_to_float(self):
+        df = pd.DataFrame([("Alice", 20, 28.0),
+                           ("Bob",   32, 33.0),
+                           ("Carol", 25, 26.5)],
+                          columns=["name", "age", "bmi"])
+        obs = _type_cast_to_float(df)
+        self.assertIsInstance(obs, pd.DataFrame)
+        self.assertIsNot(obs, df)
+        self.assertEqual(obs["name"].dtype, np.object_)
+        self.assertEqual(obs["age"].dtype, np.float64)
+        self.assertEqual(obs["bmi"].dtype, np.float64)
 
     def test_check_sig_test(self):
         from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
@@ -1146,7 +1237,7 @@ class AncomTests(TestCase):
         grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
                              index=['s1', 's2', 's3', 's4', 's5', 's6'])
 
-        percentiles = [0.0, 25.0, 50.0, 75.0, 100.0]
+        percentiles = np.array([0.0, 25.0, 50.0, 75.0, 100.0])
         groups = ['a', 'b']
         tuples = [(p, g) for g in groups for p in percentiles]
         exp_mi = pd.MultiIndex.from_tuples(tuples,
@@ -1783,6 +1874,19 @@ class DirMultTTestTests(TestCase):
         self.assertEqual(result.shape[1], 7)  # Expected number of columns
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
+
+    def test_dirmult_ttest_array_input(self):
+        result = dirmult_ttest(self.table.to_numpy(), self.grouping,\
+                                self.treatment, self.reference,
+                               pseudocount=None)
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertIsInstance(result.index, pd.RangeIndex)
+
+    def test_dirmult_ttest_no_pseudocount(self):
+        result = dirmult_ttest(self.table, self.grouping,\
+                                self.treatment, self.reference,
+                               pseudocount=None)
+        self.assertIsInstance(result, pd.DataFrame)
 
     def test_dirmult_ttest_no_p_adjust(self):
         result = dirmult_ttest(self.table, self.grouping,\

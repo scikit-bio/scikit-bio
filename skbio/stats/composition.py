@@ -1513,11 +1513,10 @@ def _check_metadata(metadata, matrix, samples=None):
     if not isinstance(metadata, pd.DataFrame):
         try:
             metadata = pd.DataFrame(metadata)
-        except AttributeError:
-            raise ValueError("Please ensure metadata contains feature IDs.")
-        except (TypeError, ValueError):
+        except Exception:
             raise TypeError(
-                "Metadata must be a pandas DataFrame, a NumPy structured or rec "
+                "Metadata must be a pandas DataFrame, or a data structure that can be "
+                "converted into a pandas DataFrame, such as a NumPy structured or rec "
                 "array, or a dictionary."
             )
 
@@ -1528,12 +1527,13 @@ def _check_metadata(metadata, matrix, samples=None):
 
     # match sample IDs
     else:
-        try:
-            metadata = metadata.loc[samples]
-        except KeyError:
-            raise ValueError(
-                "Metadata contains sample IDs that are absent in the table."
-            )
+        if not metadata.index.equals(pd.Index(samples)):
+            try:
+                metadata = metadata.loc[samples]
+            except KeyError:
+                raise ValueError(
+                    "Metadata contains sample IDs that are absent in the table."
+                )
 
     if metadata.isnull().values.any():
         raise ValueError("Cannot handle missing values in metadata.")
@@ -1624,6 +1624,11 @@ def ancom(
         A 2-D matrix of strictly positive values (i.e. counts or proportions)
         where the rows correspond to samples and the columns correspond to
         features.
+
+        .. note::
+            If the table contains zero values, one should add a pseudocount or apply
+            :func:`multi_replace` to convert all values into positive numbers.
+
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. For example,
         these could be strings or integers denoting which group a sample
@@ -1836,12 +1841,6 @@ def ancom(
     groups, labels = _check_grouping(grouping, matrix, samples)
 
     _check_composition(np, matrix, nozero=True)
-
-    if (matrix <= 0).any():
-        raise ValueError(
-            "Cannot handle zeros or negative values in `table`. Use pseudocounts or "
-            "`multi_replace`."
-        )
 
     # validate parameters
     if not 0 < alpha < 1:
@@ -2409,11 +2408,10 @@ def _type_cast_to_float(df):
     pd.DataFrame
 
     """
-    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
-    # Later modified
-    for col in df.columns:
+    df = df.copy()
+    for col in df.select_dtypes(exclude=["float64"]).columns:
         try:
-            df[col] = pd.to_numeric(df[col], errors="raise").astype("float64")
+            df[col] = df[col].astype("float64")
         except (ValueError, TypeError):
             continue
     return df
@@ -2611,7 +2609,7 @@ def dirmult_lme(
     metadata = _check_metadata(metadata, matrix, samples)
 
     # cast metadata to numbers where applicable
-    metadata = _type_cast_to_float(metadata.copy())
+    metadata = _type_cast_to_float(metadata)
 
     # Create a design matrix based on metadata and formula.
     dmat = dmatrix(formula, metadata, return_type="matrix")
