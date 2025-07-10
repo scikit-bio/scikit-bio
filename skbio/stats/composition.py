@@ -2104,8 +2104,8 @@ def _check_orthogonality(xp, basis):
         raise ValueError("Basis is not orthonormal.")
 
 
-def _dirmult_sample(matrix, rng):
-    """Resample data in a Dirichlet-multinomial distribution.
+def _dirmult_draw(matrix, rng):
+    """Resample data from a Dirichlet-multinomial posterior distribution.
 
     See Also
     --------
@@ -2322,7 +2322,7 @@ def dirmult_ttest(
 
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
-        dir_mat = _dirmult_sample(matrix, rng)
+        dir_mat = _dirmult_draw(matrix, rng)
 
         # Stratify data by group (treatment vs. reference).
         trt_mat = dir_mat[trt_idx]
@@ -2349,7 +2349,7 @@ def dirmult_ttest(
         np.minimum(lower, lower_, out=lower)
         np.maximum(upper, upper_, out=upper)
 
-    # Normalize metrics to averages over all trials.
+    # Normalize metrics to averages over all replicates.
     delta /= draws
     tstat /= draws
     pval /= draws
@@ -2421,7 +2421,7 @@ def dirmult_lme(
     table,
     metadata,
     formula,
-    grouping=None,
+    grouping,
     pseudocount=0.5,
     draws=128,
     p_adjust="holm",
@@ -2631,15 +2631,14 @@ def dirmult_lme(
     exog_mat = np.asarray(dmat)
 
     # parse grouping
-    if grouping is not None:
-        if isinstance(grouping, str):
-            try:
-                grouping = metadata[grouping].to_numpy()
-            except KeyError:
-                raise ValueError("Grouping is not a column in the metadata.")
-            _, grouping = np.unique(grouping, return_inverse=True)
-        else:
-            _, grouping = _check_grouping(grouping, matrix, samples)
+    if isinstance(grouping, str):
+        try:
+            grouping = metadata[grouping].to_numpy()
+        except KeyError:
+            raise ValueError("Grouping is not a column in the metadata.")
+        _, grouping = np.unique(grouping, return_inverse=True)
+    else:
+        _, grouping = _check_grouping(grouping, matrix, samples)
 
     # random effects matrix
     if re_formula is not None:
@@ -2667,11 +2666,10 @@ def dirmult_lme(
     lower = np.full(shape, np.inf)  # 2.5% CI
     upper = np.full(shape, -np.inf)  # 97.5% CI
 
-    # number of trials (draws) LME fitting is successful for each feature
+    # number of replicates (draws) LME fitting is successful for each feature
     fitted = np.zeros(n_feats, dtype=int)
 
-    fit_fail_msg = "LME fit failed for feature {} in trial {}, outputting NaNs."
-    fit_fail_all_msg = "LME fit failed for {} features in all trials, reporting NaNs."
+    fit_fail_msg = "LME fit failed for feature {} in replicate {}, outputting NaNs."
 
     with catch_warnings():
         if not fit_warnings:
@@ -2684,7 +2682,7 @@ def dirmult_lme(
 
         for i in range(draws):
             # Resample data in a Dirichlet-multinomial distribution.
-            dir_mat = _dirmult_sample(matrix, rng)
+            dir_mat = _dirmult_draw(matrix, rng)
 
             # Fit a linear mixed effects (LME) model for each feature.
             for j in range(n_feats):
@@ -2728,18 +2726,19 @@ def dirmult_lme(
                 fitted[j] += 1
 
     # deal with fitting failures
+    all_fail_msg = "LME fit failed for {} features in all replicates, reporting NaNs."
     mask = fitted > 0
     n_failed = n_feats - mask.sum()
     if n_failed == 0:  # all succeeded
         mask = slice(None)
     elif n_failed < n_feats:  # some failed
-        warn(fit_fail_all_msg.format(n_failed), UserWarning)
+        warn(all_fail_msg.format(n_failed), UserWarning)
         for x in (coef, pval, lower, upper):
             x[~mask] = np.nan
     else:  # all failed
-        raise ValueError("LME fit failed for all features in all trials.")
+        raise ValueError("LME fit failed for all features in all replicates.")
 
-    # normalize metrics to averages over all successful trials
+    # normalize metrics to averages over all successful replicates
     fitted_ = fitted.reshape(-1, 1)[mask]
     for x in (coef, pval):
         x[mask] /= fitted_
