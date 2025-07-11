@@ -22,7 +22,8 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality,
+    _check_composition, _check_orthogonality, _check_grouping, _check_metadata,
+    _type_cast_to_float,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
     _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
@@ -38,6 +39,217 @@ def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
     exp_data = exp_data[exp_data[:, 1].argsort()]
     exp_data = exp_data[exp_data[:, 0].argsort()]
     npt.assert_allclose(res_data, exp_data, rtol=rtol, atol=atol)
+
+
+class MiscTests(TestCase):
+    def test_check_grouping(self):
+        matrix = np.array([[1, 2], [3, 4], [5, 6]])
+        grouping = [0, 0, 1]
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], [0, 1])
+        npt.assert_array_equal(obs[1], grouping)
+
+        grouping = [5, 2, 5]
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], [2, 5])
+        npt.assert_array_equal(obs[1], [1, 0, 1])
+
+        grouping = ['b', 'b', 'a']
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        grouping = pd.Series(grouping)
+        obs = _check_grouping(grouping, matrix)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        msg = "`table` contains sample IDs that are absent in `grouping`."
+        samples = ['x', 'y', 'z']
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix, samples=samples)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping.index = ['x', 'y', 'z']
+        obs = _check_grouping(grouping, matrix, samples=samples)
+        npt.assert_array_equal(obs[0], ['a', 'b'])
+        npt.assert_array_equal(obs[1], [1, 1, 0])
+
+        msg = "Sample counts in `table` and `grouping` are not consistent."
+        grouping = ['b', 'c', 'a', 'b']
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = pd.Series(grouping)
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping.index = ['y', 'z', 'x', 'w']
+        samples = ['x', 'y', 'z']
+        obs = _check_grouping(grouping, matrix, samples=samples)
+        npt.assert_array_equal(obs[0], ['a', 'b', 'c'])
+        npt.assert_array_equal(obs[1], [0, 1, 2])
+
+        msg = "Cannot handle missing values in `grouping`."
+        grouping = np.array([1., np.nan, 3.])
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = [1, None, 3]
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`grouping` must be convertible to a 1-D vector."
+        grouping = np.array([['a', 'b'], ['c', 'g'], ['e', 'd']])
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+        grouping = 123
+        with self.assertRaises(ValueError) as cm:
+            _check_grouping(grouping, matrix)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_check_metadata(self):
+        mat = np.empty(12).reshape(3, 4)
+        df = pd.DataFrame([("Alice", 20, 28.0),
+                           ("Bob",   32, 33.0),
+                           ("Carol", 25, 26.5)],
+                          columns=["name", "age", "bmi"])
+        obs = _check_metadata(df, mat)
+        self.assertIs(obs, df)
+
+        lst = [("Alice", 20, 28.0),
+               ("Bob",   32, 33.0),
+               ("Carol", 25, 26.5)]
+        obs = _check_metadata(lst, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        dic = {"name": ["Alice", "Bob", "Carol"],
+               "age":  [20, 32, 25],
+               "bmi":  [28.0, 33.0, 26.5]}
+        obs = _check_metadata(dic, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        arr = np.array([("Alice", 20, 28.0),
+                        ("Bob",   32, 33.0),
+                        ("Carol", 25, 26.5)],
+                       dtype=[("name", "U10"),
+                              ("age", "i4"),
+                              ("bmi", "f4")])
+        obs = _check_metadata(arr, mat)
+        self.assertIsInstance(obs, pd.DataFrame)
+
+        msg = "Metadata must be a pandas DataFrame"
+        with self.assertRaisesRegex(TypeError, msg):
+            _check_metadata(42, mat)
+        with self.assertRaisesRegex(TypeError, msg):
+            _check_metadata("hello", mat)
+
+        msg = "Sample counts in table and metadata are not consistent."
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat.reshape(4, 3))
+        self.assertEqual(str(cm.exception), msg)
+
+        df.index = ["a", "b", "c"]
+        obs = _check_metadata(df, mat)
+        self.assertIs(obs, df)
+
+        # check sample IDs
+        samples = ["a", "b", "c"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIs(obs, df)
+
+        # reorder samples
+        samples = ["b", "c", "a"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIsNot(obs, df)
+        pdt.assert_index_equal(obs.index, pd.Index(samples))
+
+        # filter and reorder samples
+        samples = ["c", "b"]
+        obs = _check_metadata(df, mat, samples=samples)
+        self.assertIsNot(obs, df)
+        pdt.assert_index_equal(obs.index, pd.Index(samples))
+
+        msg = "Metadata contains sample IDs that are absent in the table."
+        samples = ["a", "b", "x"]
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat, samples=samples)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Cannot handle missing values in metadata."
+        df = pd.DataFrame(np.array([1.0, np.nan, 2.0]).reshape(3, -1))
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat)
+        self.assertEqual(str(cm.exception), msg)
+        df = pd.DataFrame(np.array([1.0, None, 2.0]).reshape(3, -1))
+        with self.assertRaises(ValueError) as cm:
+            _check_metadata(df, mat)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_type_cast_to_float(self):
+        df = pd.DataFrame([("Alice", 20, 28.0),
+                           ("Bob",   32, 33.0),
+                           ("Carol", 25, 26.5)],
+                          columns=["name", "age", "bmi"])
+        obs = _type_cast_to_float(df)
+        self.assertIsInstance(obs, pd.DataFrame)
+        self.assertIsNot(obs, df)
+        self.assertEqual(obs["name"].dtype, np.object_)
+        self.assertEqual(obs["age"].dtype, np.float64)
+        self.assertEqual(obs["bmi"].dtype, np.float64)
+
+    def test_check_sig_test(self):
+        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
+
+        obs = _check_sig_test(ttest_ind)
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test("ttest_ind")
+        self.assertIs(obs, ttest_ind)
+
+        obs = _check_sig_test(f_oneway)
+        self.assertIs(obs, f_oneway)
+
+        obs = _check_sig_test("f_oneway")
+        self.assertIs(obs, f_oneway)
+
+        msg = 'Function "not_a_test" does not exist under scipy.stats.'
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test("not_a_test")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "`sig_test` must be a function or a string."
+        with self.assertRaises(TypeError) as cm:
+            _check_sig_test(123)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
+               "groups were provided.")
+        with self.assertRaises(ValueError) as cm:
+            _check_sig_test(mannwhitneyu, n_groups=3)
+        self.assertEqual(str(cm.exception), msg)
+
+        obs = _check_sig_test(mannwhitneyu, n_groups=2)
+        obs = _check_sig_test(kruskal, n_groups=5)
+
+    def test_check_p_adjust(self):
+        p = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _check_p_adjust("holm-bonferroni")(p)
+        exp = p * np.arange(1, 6)[::-1]
+        for a, b in zip(obs, exp):
+            self.assertAlmostEqual(a, b)
+
+        p = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _check_p_adjust("benjamini-hochberg")(p)
+        exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
+        for a, b in zip(obs, exp):
+            self.assertAlmostEqual(a, b)
 
 
 class CompositionTests(TestCase):
@@ -89,6 +301,19 @@ class CompositionTests(TestCase):
         self.assertIsNone(_check_composition(np, self.cdata1))
         self.assertIsNone(_check_composition(np, self.cdata2))
         self.assertIsNone(_check_composition(np, self.cdata3))
+
+        msg = "Input matrix must have a numeric data type."
+        with self.assertRaises(TypeError) as cm:
+            _check_composition(np, np.array(['a', 'b', 'c']))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix cannot have infinite or NaN values."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, np.array([1., np.nan, 2.]))
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, np.array([1., np.inf, 2.]))
+        self.assertEqual(str(cm.exception), msg)
 
         msg = "Input matrix cannot have negative components."
         with self.assertRaises(ValueError) as cm:
@@ -1012,7 +1237,7 @@ class AncomTests(TestCase):
         grouping = pd.Series(['a', 'a', 'a', 'b', 'b', 'b'],
                              index=['s1', 's2', 's3', 's4', 's5', 's6'])
 
-        percentiles = [0.0, 25.0, 50.0, 75.0, 100.0]
+        percentiles = np.array([0.0, 25.0, 50.0, 75.0, 100.0])
         groups = ['a', 'b']
         tuples = [(p, g) for g in groups for p in percentiles]
         exp_mi = pd.MultiIndex.from_tuples(tuples,
@@ -1430,55 +1655,6 @@ class AncomTests(TestCase):
         self.assertEqual(str(cm.exception), msg)
 
 
-class StatTestingTests(TestCase):
-    def test_check_sig_test(self):
-        from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
-
-        obs = _check_sig_test(ttest_ind)
-        self.assertIs(obs, ttest_ind)
-
-        obs = _check_sig_test("ttest_ind")
-        self.assertIs(obs, ttest_ind)
-
-        obs = _check_sig_test(f_oneway)
-        self.assertIs(obs, f_oneway)
-
-        obs = _check_sig_test("f_oneway")
-        self.assertIs(obs, f_oneway)
-
-        msg = 'Function "not_a_test" does not exist under scipy.stats.'
-        with self.assertRaises(ValueError) as cm:
-            _check_sig_test("not_a_test")
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = "`sig_test` must be a function or a string."
-        with self.assertRaises(TypeError) as cm:
-            _check_sig_test(123)
-        self.assertEqual(str(cm.exception), msg)
-
-        msg = ('"mannwhitneyu" is a two-way statistical test whereas 3 sample '
-               "groups were provided.")
-        with self.assertRaises(ValueError) as cm:
-            _check_sig_test(mannwhitneyu, n_groups=3)
-        self.assertEqual(str(cm.exception), msg)
-
-        obs = _check_sig_test(mannwhitneyu, n_groups=2)
-        obs = _check_sig_test(kruskal, n_groups=5)
-
-    def test_check_p_adjust(self):
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("holm-bonferroni")(p)
-        exp = p * np.arange(1, 6)[::-1]
-        for a, b in zip(obs, exp):
-            self.assertAlmostEqual(a, b)
-
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("benjamini-hochberg")(p)
-        exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
-        for a, b in zip(obs, exp):
-            self.assertAlmostEqual(a, b)
-
-
 class VLRTests(TestCase):
     def setUp(self):
         self.mat = np.array([[1, 1, 2], [3, 5, 8], [13, 21, 55]])
@@ -1570,12 +1746,9 @@ class DirMultTTestTests(TestCase):
         p1 = np.random.lognormal(0, 1, size=d) * 10
         p2 = np.random.lognormal(0.01, 1, size=d) * 10
         self.p1, self.p2 = p1 / p1.sum(), p2 / p2.sum()
-        self.data2 = np.vstack(
-            (
-                [np.random.multinomial(depth, self.p1) for _ in range(n)],
-                [np.random.multinomial(depth, self.p2) for _ in range(n)]
-            )
-        )
+        self.data2 = np.vstack((
+            np.random.multinomial(depth, self.p1, size=n),
+            np.random.multinomial(depth, self.p2, size=n)))
         self.table2 = pd.DataFrame(self.data2)
         self.grouping2 = pd.Series(['Group1'] * n + ['Group2'] * n)
 
@@ -1618,12 +1791,9 @@ class DirMultTTestTests(TestCase):
         p1, p2 = p1 / p1.sum(), p2 / p2.sum()
         depth = 1000
         n = 100
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        data = np.vstack((
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
 
@@ -1641,12 +1811,9 @@ class DirMultTTestTests(TestCase):
         p1, p2 = p1 / p1.sum(), p2 / p2.sum()
         depth = 100
         n = 100
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        data = np.vstack((
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         grouping = pd.Series(['Group1'] * n + ['Group2'] * n)
         exp_lfc = np.log2([4/5, 7/6, 7/7, 6/8, 5/9, 7/4])
@@ -1655,18 +1822,14 @@ class DirMultTTestTests(TestCase):
 
         # increase sequencing depth by 100 fold
         depth = 10000
-        data = np.vstack(
-            (
-                [np.random.multinomial(depth, p1) for _ in range(n)],
-                [np.random.multinomial(depth, p2) for _ in range(n)]
-            )
-        )
+        data = np.vstack((
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         res_10000 = dirmult_ttest(table, grouping, self.treatment, self.reference)
 
         # when the sequencing depth increases, the confidence intervals
         # should also shrink
-
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
@@ -1692,87 +1855,178 @@ class DirMultTTestTests(TestCase):
         self.assertGreater(np.mean(res['CI(97.5)'] + eps > exp_lfc), 0.95)
 
     def test_dirmult_ttest_valid_input(self):
-        result = dirmult_ttest(self.table, self.grouping,\
-                                self.treatment, self.reference)
+        result = dirmult_ttest(self.table, self.grouping, self.treatment,
+                               self.reference)
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(result.shape[1], 7)  # Expected number of columns
         pdt.assert_index_equal(result.index,
                                pd.Index(['feature1', 'feature2', 'feature3']))
 
+    def test_dirmult_ttest_array_input(self):
+        result = dirmult_ttest(self.table.to_numpy(), self.grouping, self.treatment,
+                               self.reference)
+        self.assertIsInstance(result, pd.DataFrame)
+        self.assertIsInstance(result.index, pd.RangeIndex)
+
+    def test_dirmult_ttest_no_pseudocount(self):
+        result = dirmult_ttest(self.table, self.grouping, self.treatment,
+                               self.reference, pseudocount=None)
+        self.assertIsInstance(result, pd.DataFrame)
+
     def test_dirmult_ttest_no_p_adjust(self):
-        result = dirmult_ttest(self.table, self.grouping,\
-                                self.treatment, self.reference,
-                               p_adjust=None)
+        result = dirmult_ttest(self.table, self.grouping, self.treatment,
+                               self.reference, p_adjust=None)
         pdt.assert_series_equal(result['pvalue'], result['qvalue'], check_names=False)
 
     def test_dirmult_ttest_invalid_table_type(self):
         with self.assertRaises(TypeError):
-            dirmult_ttest("invalid_table", self.grouping,\
-                                self.treatment, self.reference)
+            dirmult_ttest("invalid_table", self.grouping, self.treatment,
+                          self.reference)
 
     def test_dirmult_ttest_negative_values_in_table(self):
         self.table.iloc[0, 0] = -5  # Modify a value to be negative
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping,\
-                            self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
     def test_dirmult_ttest_missing_values_in_grouping(self):
         self.grouping[1] = np.nan  # Introduce a missing value in grouping
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping,\
-                            self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
     def test_dirmult_ttest_missing_values_in_table(self):
         self.table.iloc[2, 1] = np.nan  # Introduce a missing value in the table
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping,\
-                            self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
     def test_dirmult_ttest_inconsistent_indexes(self):
         self.table.index = ['a', 'b', 'c', 'd', 'e']  # Change table index
         with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping,\
-                            self.treatment, self.reference)
+            dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
 class DirMultLMETests(TestCase):
     def setUp(self):
         np.random.seed(0)
         index = ["subject1", "subject2", "subject3", "subject4", "subject5", "subject6"]
-        columns=["feature1", "feature2", "feature3", "feature4"]
+        columns = ["feature1", "feature2", "feature3", "feature4"]
 
         # create sample data for testing
-        self.table = pd.DataFrame([
-            [20, 110, 100, 101],
-            [33, 110, 120, 100],
-            [12, 110, 100, 110],
-            [202, 201, 9, 10],
-            [200, 202, 10, 10],
-            [203, 201, 14, 10]],
+        self.table = pd.DataFrame(
+            [[20, 110, 100, 101],
+             [33, 110, 120, 100],
+             [12, 110, 100, 110],
+             [202, 201, 9, 10],
+             [200, 202, 10, 10],
+             [203, 201, 14, 10]],
             index=index,
             columns=columns)
 
-        self.metadata = pd.DataFrame({
-            "Covar1": [1,1,2,2,3,3],
-            "Covar2": [1,1,1,1,2,2],
-            "Covar3": [1,2,1,2,1,2]},
+        self.metadata = pd.DataFrame(
+            {"Covar1": [1,1,2,2,3,3],
+             "Covar2": [1,1,1,1,2,2],
+             "Covar3": [1,2,1,2,1,2]},
             index=index)
 
-    def test_dirmult_lme_formatting(self):
+    def test_dirmult_lme_demo(self):
+        # a regular analysis
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
-            grouping='Covar1', draws=1, seed=0, p_adjust="sidak")
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak")
+        exp = """
+  FeatureID Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
+0  feature1    Covar2     1  2.708376 -0.818699  6.235451  0.132319  0.247129
+1  feature1    Covar3     1  1.696770 -1.224053  4.617594  0.254876  0.444790
+2  feature2    Covar2     1  0.956017 -0.736692  2.648726  0.268312  0.464632
+3  feature2    Covar3     1  0.325451 -0.657935  1.308836  0.516565  0.766291
+4  feature3    Covar2     1 -1.990268 -4.362246  0.381711  0.100061  0.190110
+5  feature3    Covar3     1 -0.812892 -2.910615  1.284830  0.447548  0.694797
+6  feature4    Covar2     1 -1.674125 -3.885791  0.537540  0.137915  0.256810
+7  feature4    Covar3     1 -1.209329 -3.204871  0.786213  0.234925  0.414660
+""".strip("\n")
+        self.assertEqual(str(res), exp)
         self.assertIsInstance(res, pd.DataFrame)
-        self.assertEqual(res.shape[1], 7)  # expected number of columns
-        pdt.assert_series_equal(res.iloc[:, 0], pd.Series([
-            'feature1', 'feature1', 'feature2', 'feature2', 'feature3', 'feature3',
-            'feature4', 'feature4'], name='FeatureID'))
+        self.assertTupleEqual(res.shape, (8, 8))
+        pdt.assert_index_equal(res.columns, pd.Index([
+            "FeatureID", "Covariate", "Reps", "Log2(FC)", "CI(2.5)", "CI(97.5)",
+            "pvalue", "qvalue"]))
+        self.assertListEqual(res["FeatureID"].tolist(), [
+            "feature1", "feature1", "feature2", "feature2", "feature3", "feature3",
+            "feature4", "feature4"])
+        self.assertListEqual(res["Covariate"].tolist(), [
+            "Covar2", "Covar3", "Covar2", "Covar3", "Covar2", "Covar3", "Covar2",
+            "Covar3"])
+        self.assertTrue((res["Reps"] == 1).all())
+        npt.assert_array_equal(res["Log2(FC)"].round(5), np.array([
+            2.70838, 1.69677, 0.95602, 0.32545, -1.99027, -0.81289, -1.67413,
+            -1.20933]))
+        npt.assert_array_equal(res["CI(2.5)"].round(5), np.array([
+            -0.8187, -1.22405, -0.73669, -0.65793, -4.36225, -2.91061, -3.88579,
+            -3.20487]))
+        npt.assert_array_equal(res["CI(97.5)"].round(5), np.array([
+            6.23545, 4.61759, 2.64873, 1.30884, 0.38171, 1.28483, 0.53754, 0.78621]))
+        npt.assert_array_equal(res["pvalue"].round(5), np.array([
+            0.13232, 0.25488, 0.26831, 0.51657, 0.10006, 0.44755, 0.13792, 0.23492]))
+        npt.assert_array_equal(res["qvalue"].round(5), np.array([
+            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
 
-    def test_dirmult_lme_output(self):
+        # confirm that 2.5% < fold-change < 97.5%
+        npt.assert_array_less(res["Log2(FC)"], res["CI(97.5)"])
+        npt.assert_array_less(res["CI(2.5)"], res["Log2(FC)"])
+
+    def test_dirmult_lme_array_input(self):
+        res = dirmult_lme(
+            table=self.table.to_numpy(), metadata=self.metadata,
+            formula="Covar2 + Covar3", grouping="Covar1", draws=1, seed=0,
+            p_adjust="sidak")
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
+
+    def test_dirmult_lme_alt_grouping(self):
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
-            grouping='Covar1', draws=1, seed=0, p_adjust="sidak")
-        npt.assert_array_less(res['Log2(FC)'], res['CI(97.5)'])
-        npt.assert_array_less(res['CI(2.5)'], res['Log2(FC)'])
+            grouping=self.metadata["Covar1"].to_numpy(), draws=1, seed=0,
+            p_adjust="sidak")
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
+
+    def test_dirmult_lme_no_pseudocount(self):
+        res = dirmult_lme(
+            table=self.table + 0.5, metadata=self.metadata, formula="Covar2 + Covar3",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak", pseudocount=None)
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
+
+    def test_dirmult_lme_no_intercept(self):
+        # "-1" at the end of formula suppresses intercept
+        res = dirmult_lme(
+            table=self.table, metadata=self.metadata, formula="Covar2 + Covar3 - 1",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak")
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.988, 0.998, 0.129, 0.761, 0.766, 0.988, 0.971, 0.965]))
+
+    def test_dirmult_lme_re_formula(self):
+        # "1": random effect only in intercept (the default scenario)
+        res = dirmult_lme(
+            table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak", re_formula="1")
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
+
+        # add a random slope for Covar2
+        res = dirmult_lme(
+            table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
+            re_formula="1 + Covar2", fit_method="bfgs")
+        # reduced precision as there might be numeric instability issues
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.274, 0.463, 0.645, 0.766, 0.251, 0.703, 0.400, 0.415]))
+
+    def test_dirmult_lme_vc_formula(self):
+        res = dirmult_lme(
+            table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
+            grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
+            vc_formula={"Covar2": "0 + C(Covar2)"})
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
     def test_dirmult_lme_no_p_adjust_and_reml(self):
         result = dirmult_lme(
@@ -1790,6 +2044,41 @@ class DirMultLMETests(TestCase):
             npt.assert_allclose(result['CI(2.5)'], res_ml['CI(2.5)'])
             npt.assert_allclose(result['pvalue'], res_ml['pvalue'])
 
+    def test_dirmult_lme_fit_warnings(self):
+        # Convergence warnings are frequently raised during model fitting.
+        from statsmodels.tools.sm_exceptions import ConvergenceWarning
+
+        with self.assertWarns(ConvergenceWarning):
+            dirmult_lme(table=self.table, metadata=self.metadata,
+                        formula="Covar2 + Covar3", grouping="Covar1",
+                        draws=1, seed=0, p_adjust="sidak",
+                        fit_warnings=True)
+
+    def test_dirmult_lme_fail_all(self):
+        # Supply a non-existent optimization method to make it fail.
+        msg = "LME fit failed for all features in all replicates."
+        with self.assertRaises(ValueError) as cm:
+            dirmult_lme(table=self.table, metadata=self.metadata,
+                        formula="Covar2 + Covar3", grouping="Covar1",
+                        draws=1, seed=0, p_adjust="sidak",
+                        fit_method="not_a_method")
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_dirmult_lme_fail_some(self):
+        # With the BFGS method, LME model fitting will not converge on two features.
+        # Output will be NaN.
+        msg = "LME fit failed for 2 features in all replicates, reporting NaNs."
+        with self.assertWarns(UserWarning) as cm:
+            res = dirmult_lme(table=self.table, metadata=self.metadata,
+                              formula="Covar2 + Covar3", grouping="Covar1",
+                              draws=1, seed=0, p_adjust="sidak",
+                              fit_method="bfgs", fit_converge=True)
+        self.assertEqual(str(cm.warning), msg)
+        self.assertTrue(res.query(
+            "FeatureID == ['feature1', 'feature3']")["Log2(FC)"].isnull().all())
+        self.assertTrue(res.query(
+            "FeatureID == ['feature2', 'feature4']")["Log2(FC)"].notnull().all())
+
     def test_dirmult_lme_invalid_table_type(self):
         with self.assertRaises(TypeError):
             dirmult_lme("not a table", self.metadata, "Covar2 + Covar3", "Covar1")
@@ -1797,6 +2086,10 @@ class DirMultLMETests(TestCase):
     def test_dirmult_lme_invalid_metadata_type(self):
         with self.assertRaises(TypeError):
             dirmult_lme(self.table, "not metadata", "Covar2 + Covar3", "Covar1")
+
+    def test_dirmult_lme_invalid_grouping(self):
+        with self.assertRaises(ValueError):
+            dirmult_lme(self.table, self.metadata, "Covar2 + Covar3", "hello")
 
     def test_dirmult_lme_inconsistent_indexes(self):
         # change table index
@@ -1811,6 +2104,8 @@ class DirMultLMETests(TestCase):
             dirmult_lme(self.table, self.metadata, "Covar1", "Covar1")
 
     def test_dirmult_lme_toy_data(self):
+        # simulate a dataset of 20 samples by 3 features, with 10 repeated measurements
+        # (covar1) and 2 sample groups (covar2)
         p1 = np.array([5, 6, 7])
         p2 = np.array([4, 7, 7])
         p1, p2 = p1 / p1.sum(), p2 / p2.sum()
@@ -1818,8 +2113,8 @@ class DirMultLMETests(TestCase):
         n = 10
         index_range = range(1, n * 2 + 1)
         data = np.vstack((
-            [np.random.multinomial(depth, p1) for _ in range(n)],
-            [np.random.multinomial(depth, p2) for _ in range(n)]))
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         table.columns = ["feature1", "feature2", "feature3"]
         table.index = [f"subject{i}" for i in index_range]
@@ -1836,6 +2131,11 @@ class DirMultLMETests(TestCase):
             table=table, metadata=metadata, formula="covar2", grouping="covar1",
             draws=8, seed=0, p_adjust="sidak")
 
+        npt.assert_array_equal(res["Log2(FC)"].round(5), [-0.28051, 0.32118, -0.04067])
+        npt.assert_array_equal(res["CI(2.5)"].round(5), [-0.41639, 0.18745, -0.16542])
+        npt.assert_array_equal(res["CI(97.5)"].round(5), [-0.14359, 0.46473, 0.07706])
+
+        # confirm expected fold change is within confidence interval
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
         npt.assert_array_less(res['CI(2.5)'], exp_lfc)
 
@@ -1847,8 +2147,8 @@ class DirMultLMETests(TestCase):
         n = 10
         index_range = range(1, n * 2 + 1)
         data = np.vstack((
-            [np.random.multinomial(depth, p1) for _ in range(n)],
-            [np.random.multinomial(depth, p2) for _ in range(n)]))
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         table.columns = [
             "feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
@@ -1869,8 +2169,8 @@ class DirMultLMETests(TestCase):
         # increase sequencing depth by 100 fold
         depth = 10000
         data = np.vstack((
-            [np.random.multinomial(depth, p1) for _ in range(n)],
-            [np.random.multinomial(depth, p2) for _ in range(n)]))
+            np.random.multinomial(depth, p1, size=n),
+            np.random.multinomial(depth, p2, size=n)))
         table = pd.DataFrame(data)
         table.columns = [
             "feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]
