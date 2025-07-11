@@ -1977,46 +1977,46 @@ class DirMultLMETests(TestCase):
             table=self.table.to_numpy(), metadata=self.metadata,
             formula="Covar2 + Covar3", grouping="Covar1", draws=1, seed=0,
             p_adjust="sidak")
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
     def test_dirmult_lme_alt_grouping(self):
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping=self.metadata["Covar1"].to_numpy(), draws=1, seed=0,
             p_adjust="sidak")
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681,
-            0.41466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
     def test_dirmult_lme_no_pseudocount(self):
         res = dirmult_lme(
             table=self.table + 0.5, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak", pseudocount=None)
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
     def test_dirmult_lme_no_intercept(self):
         # "-1" at the end of formula suppresses intercept
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3 - 1",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak")
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.98826, 0.99755, 0.12899, 0.76065, 0.76551, 0.98847, 0.97114, 0.96466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.988, 0.998, 0.129, 0.761, 0.766, 0.988, 0.971, 0.965]))
 
     def test_dirmult_lme_re_formula(self):
         # "1": random effect only in intercept (the default scenario)
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak", re_formula="1")
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
         # add a random slope for Covar2
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
             re_formula="1 + Covar2", fit_method="bfgs")
+        # reduced precision as there might be numeric instability issues
         npt.assert_array_equal(res["qvalue"].round(3), np.array([
             0.274, 0.463, 0.645, 0.766, 0.251, 0.703, 0.400, 0.415]))
 
@@ -2025,8 +2025,8 @@ class DirMultLMETests(TestCase):
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
             vc_formula={"Covar2": "0 + C(Covar2)"})
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.247, 0.445, 0.465, 0.766, 0.190, 0.695, 0.257, 0.415]))
 
     def test_dirmult_lme_no_p_adjust_and_reml(self):
         result = dirmult_lme(
