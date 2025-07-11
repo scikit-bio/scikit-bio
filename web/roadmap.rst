@@ -4,11 +4,11 @@ This is a dynamic document tracking current development directions. It may be us
 
 Type annotations
 ----------------
-Progress has been made in adding type annotations to the scikit-bio codebase. Future development is encouraged to use type annotations by default, and existing modules will be updated on an individual basis. The benefits of type annotations include code readability, improved IDE autocompletion, easier bug detection, and checking correctness in downstream applications.
+We are systematically adding type annotations to the scikit-bio codebase to improve code readability, IDE autocompletion, and bug detection in both development and downstream applications. Recent progress includes type annotations for distance statistics, alignment modules, and other core functionality shipped in v0.7.0. New code development incorporates type annotations by default, while existing modules are being updated incrementally.
 
 Interoperability
 ----------------
-We are systematically adding type annotations to the scikit-bio codebase to improve code readability, IDE autocompletion, and bug detection in both development and downstream applications. Recent progress includes type annotations for distance statistics, alignment modules, and other core functionality shipped in v0.7.0. New code development incorporates type annotations by default, while existing modules are being updated incrementally. This ongoing effort will enhance the developer experience and facilitate more robust integration with downstream tools like QIIME.
+We are enhancing scikit-bio's ability to work seamlessly with diverse data formats and computing frameworks. A new dispatch system handles multiple table formats including arrays, Pandas and Polars dataframes, BIOM tables, and AnnData objects, allowing functions to operate on any supported format while preserving input types or enabling user-specified output formats. This table dispatch system shipped in v0.7.0. Additionally, we are adopting the Python array API standard to enable compatibility with GPU-accelerated libraries. The integration of these complementary systems will significantly improve scikit-bio's interoperability across the scientific Python ecosystem.
 
 GPU support
 -----------
