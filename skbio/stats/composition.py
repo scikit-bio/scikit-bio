@@ -713,7 +713,7 @@ def ilr(
     else:
         xp_, basis = _ingest_array(basis)
         if validate:
-            _check_orthogonality(xp_, basis)
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
             if basis.ndim != 2:
                 raise ValueError(
                     f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
@@ -811,7 +811,7 @@ def ilr_inv(
             ) # dimension (N-1) x N
     elif validate:
         xp_, basis = _ingest_array(basis)
-        _check_orthogonality(xp_, basis)
+        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
@@ -2121,20 +2121,46 @@ def sbp_basis(sbp):
     return psi
 
 
-def _check_orthogonality(xp, basis):
-    r"""Check if basis is truly orthonormal in the Aitchison simplex.
+def _check_basis(
+    xp: "ModuleType",
+    basis: "StdArray",
+    orthonormal: bool = False,
+    subspace_dim: Optional[int] = None,
+):
+    r"""Check if basis is a valid basis for transformation.
 
     Parameters
     ----------
-    basis : ndarray
-        Basis in the Aitchison simplex of dimension :math:`(D - 1) \times D`.
+    xp : namespace
+        The array API compatible namespace corresponding ``basis``.
+    basis : array of shape (n_basis, n_components)
+        A columns vetors for the basis.
+    orthonormal : bool, optional
+        If True, basis is required to be orthonormal. Default is False.
+    subspace_dim : int, optional
+        The dimensions of the subspace that the basis suppose to span,
+        when None is give, the n_basis will be used. Default is None.
+
+    Raises
+    ------
+    ValueError
+        If the basis is not matching to the subspace dimension.
+    ValueError
+        If the basis are not orthonormal.
 
     """
+    xp, basis = _ingest_array(basis)
     if basis.ndim < 2:
         basis = basis.reshape(1, -1)
-    eyes = xp.asarray(np.identity(len(basis)), device=basis.device, dtype=basis.dtype)
-    if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
-        raise ValueError("Basis is not orthonormal.")
+    if subspace_dim is None:
+        subspace_dim = len(basis)
+    elif len(basis)!= subspace_dim:
+        ValueError(f"Basis is not for a subspace of dim {subspace_dim}")
+    if orthonormal:
+        eyes = xp.asarray(np.identity(subspace_dim),
+                          device=basis.device, dtype=basis.dtype)
+        if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
+            raise ValueError("Basis is not orthonormal.")
 
 
 def _dirmult_draw(matrix, rng):

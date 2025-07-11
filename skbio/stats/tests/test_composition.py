@@ -22,7 +22,7 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality, _check_grouping, _check_metadata,
+    _check_composition, _check_basis, _check_grouping, _check_metadata,
     _type_cast_to_float,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
@@ -349,11 +349,11 @@ class CompositionTests(TestCase):
     def test_check_orthogonality(self):
         basis = np.array([[0.80442968, 0.19557032]])
         with self.assertRaises(ValueError) as cm:
-            _check_orthogonality(np, basis)
+            _check_basis(np, basis, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
 
         basis = clr(basis)
-        self.assertIsNone(_check_orthogonality(np, basis))
+        self.assertIsNone(_check_basis(np, basis, orthonormal=True))
 
     def test_closure(self):
         # 2-D matrix
