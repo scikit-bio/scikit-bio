@@ -66,16 +66,20 @@ However, be cautious that the new functionality may not be stable and could be c
 Verifying the Installation
 --------------------------
 
-After installing scikit-bio, verify the installation by running the following::
+After installing scikit-bio, verify the installation by running the following in a Python shell or script.::
 
     import skbio
     print(skbio.__version__)
 
 This should print the installed version of scikit-bio without errors.
 
+For a more robust verification of the installation you may run the scikit-bio's unit tests in the environment where scikit-bio is installed. This will require the `pytest <https://github.com/pytest-dev/pytest>`_ package to be installed.::
 
-scikit-bio-binaries
--------------------
+    python -m skbio.test
+
+
+Acceleration
+------------
 
 The new `scikit-bio-binaries <https://github.com/scikit-bio/scikit-bio-binaries>`_ package is a separate package from scikit-bio, written in C++, which when installed in the same environment as scikit-bio will dramatically increase performance of select functions. Installation of scikit-bio-binaries is currently available with conda.::
 
