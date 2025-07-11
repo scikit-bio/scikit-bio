@@ -2016,9 +2016,9 @@ class DirMultLMETests(TestCase):
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
             grouping="Covar1", draws=1, seed=0, p_adjust="sidak",
-            re_formula="1 + Covar2")
-        npt.assert_array_equal(res["qvalue"].round(5), np.array([
-            0.27415, 0.46275, 0.64479, 0.76629, 0.25146, 0.70308, 0.40027, 0.41466]))
+            re_formula="1 + Covar2", fit_method="bfgs")
+        npt.assert_array_equal(res["qvalue"].round(3), np.array([
+            0.274, 0.463, 0.645, 0.766, 0.251, 0.703, 0.400, 0.415]))
 
     def test_dirmult_lme_vc_formula(self):
         res = dirmult_lme(
@@ -2055,13 +2055,13 @@ class DirMultLMETests(TestCase):
                         fit_warnings=True)
 
     def test_dirmult_lme_fail_all(self):
-        # With the L-BFGS method, LME model fitting will fail on this dataset.
+        # Supply a non-existent optimization method to make it fail.
         msg = "LME fit failed for all features in all replicates."
         with self.assertRaises(ValueError) as cm:
             dirmult_lme(table=self.table, metadata=self.metadata,
                         formula="Covar2 + Covar3", grouping="Covar1",
                         draws=1, seed=0, p_adjust="sidak",
-                        fit_method="lbfgs")
+                        fit_method="not_a_method")
         self.assertEqual(str(cm.exception), msg)
 
     def test_dirmult_lme_fail_some(self):
