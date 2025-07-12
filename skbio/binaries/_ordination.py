@@ -12,8 +12,9 @@ from numbers import Integral
 from ..binaries._util import (
     get_api_version as _skbb_get_api_version,
     get_dll as _get_skbb_dll,
-    py_to_bin_random_seed
+    py_to_bin_random_seed,
 )
+
 
 def pcoa_fsvd_available(
     distance_matrix,
@@ -48,15 +49,16 @@ def pcoa_fsvd_available(
 
     """
     # v1 is the minimum version that supports pcoa_fsvd
-    if _skbb_get_api_version()>=1: # includes check for library existence
+    # includes check for library existence
+    if _skbb_get_api_version() >= 1:  # pragma: no cover
         # Do some basic sanity checks
         # check it is a positive number
         if not isinstance(number_of_dimensions, Integral):
             return False
-        elif number_of_dimensions<1:
+        elif number_of_dimensions < 1:
             return False
         return True
-    else:
+    else:  # pragma: no cover
         return False
 
 
@@ -132,13 +134,14 @@ def pcoa_fsvd(
        Journal on Scientific computing, 33(5), 2580-2594.
 
     """
-    if _skbb_get_api_version()>=1: # minimum version that support pcoa
+    # minimum version that support pcoa
+    if _skbb_get_api_version() >= 1:  # pragma: no cover
         if not isinstance(number_of_dimensions, Integral):
             raise ValueError("number_of_dimensions must be an integer value")
-        if number_of_dimensions<1:
+        if number_of_dimensions < 1:
             raise ValueError("number_of_dimensions must be a positive number")
         int_seed = py_to_bin_random_seed(seed)
-        if isinstance(distance_matrix,np.ndarray):
+        if isinstance(distance_matrix, np.ndarray):
             # already a raw matrix, just use
             distance_matrix_data = distance_matrix
         else:
@@ -146,22 +149,25 @@ def pcoa_fsvd(
             # get internal representations
             distance_matrix_data = distance_matrix.data
         distance_matrix_shape0 = distance_matrix_data.shape[0]
-        if (len(distance_matrix_data.shape)!=2 or
-            distance_matrix_data.shape[1] != distance_matrix_shape0):
-               raise TypeError("distance_matrix not square")
-        if number_of_dimensions>distance_matrix_shape0:
+        if (
+            len(distance_matrix_data.shape) != 2
+            or distance_matrix_data.shape[1] != distance_matrix_shape0
+        ):
+            raise TypeError("distance_matrix not square")
+        if number_of_dimensions > distance_matrix_shape0:
             raise ValueError("number_of_dimensions cannot be larger than matrix size")
         # create output buffers
         eigenvalues = np.ndarray(
-                shape=(number_of_dimensions,),
-                dtype=distance_matrix_data.dtype )
+            shape=(number_of_dimensions,), dtype=distance_matrix_data.dtype
+        )
         proportion_explained = np.ndarray(
-                shape=(number_of_dimensions,),
-                dtype=distance_matrix_data.dtype )
+            shape=(number_of_dimensions,), dtype=distance_matrix_data.dtype
+        )
         samples = np.ndarray(
-                shape=(distance_matrix_shape0, number_of_dimensions),
-                dtype=distance_matrix_data.dtype ,
-                order="C")
+            shape=(distance_matrix_shape0, number_of_dimensions),
+            dtype=distance_matrix_data.dtype,
+            order="C",
+        )
         # ready to call the C functions
         dll = _get_skbb_dll()
         i_mdim = ctypes.c_uint(distance_matrix_shape0)
@@ -171,24 +177,27 @@ def pcoa_fsvd(
         o_ev = eigenvalues.ctypes.data_as(ctypes.c_void_p)
         o_sp = samples.ctypes.data_as(ctypes.c_void_p)
         o_pe = proportion_explained.ctypes.data_as(ctypes.c_void_p)
-        if distance_matrix_data.dtype == np.dtype('float64'):
-            if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp64(i_mdim, i_mat, i_n_eigh, i_seed,
-                                                o_ev, o_sp, o_pe)
+        if distance_matrix_data.dtype == np.dtype("float64"):
+            if inplace:
+                dll.skbb_pcoa_fsvd_inplace_fp64(
+                    i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe
+                )
             else:
-                dll.skbb_pcoa_fsvd_fp64(i_mdim, i_mat, i_n_eigh, i_seed,
-                                        o_ev, o_sp, o_pe)
-        elif distance_matrix_data.dtype == np.dtype('float32'):
-            if (inplace):
-                dll.skbb_pcoa_fsvd_inplace_fp32(i_mdim, i_mat, i_n_eigh, i_seed,
-                                                o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp64(
+                    i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe
+                )
+        elif distance_matrix_data.dtype == np.dtype("float32"):
+            if inplace:
+                dll.skbb_pcoa_fsvd_inplace_fp32(
+                    i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe
+                )
             else:
-                dll.skbb_pcoa_fsvd_fp32(i_mdim, i_mat, i_n_eigh, i_seed,
-                                        o_ev, o_sp, o_pe)
+                dll.skbb_pcoa_fsvd_fp32(
+                    i_mdim, i_mat, i_n_eigh, i_seed, o_ev, o_sp, o_pe
+                )
         else:
             raise TypeError("distance_matrix type must be either float32 or float64")
         # if we got here, everything went well
         return eigenvalues, samples, proportion_explained
-    else:
+    else:  # pragma: no cover
         raise ImportError("skbb_pcoa_fsvd not available")
-
