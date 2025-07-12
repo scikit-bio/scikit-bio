@@ -713,15 +713,17 @@ def ilr(
     else:
         xp_, basis = _ingest_array(basis)
         if validate:
-            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+            # the following maybe redundant
             if basis.ndim != 2:
                 raise ValueError(
                     f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
                 )
-            if basis.shape[1] != N:
-                raise ValueError(
-                    f"Basis needs to match {axis}d dimension's size of the input."
-                )
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+            # this following maybe redudant, because tensordot will check the length
+            # if basis.shape[1] != N:
+            #     raise ValueError(
+            #         f"Basis needs to match {axis}d dimension's size of the input."
+            #     )
         basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
     axis %= mat.ndim
     # basis or basis.T to pass through?
@@ -819,16 +821,20 @@ def ilr_inv(
             ) # dimension (N-1) x N
     elif validate:
         xp_, basis = _ingest_array(basis)
-        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+        # the following maybe redundant as the orthonrmal implicitly check 2-d
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-        if basis.shape[1] != N or basis.shape[0] != N-1:
-                raise ValueError(
-                    f"Basis needs to match {axis}d dimension's size of the input."
-                )
-        basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
+
+        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+        # this following maybe redudant, because tensordot will check the length
+        # if basis.shape[1] != N:
+        #     raise ValueError(
+        #         f"Basis needs to match {axis}d dimension's size of the input."
+        #     )
+        # NOTE: xp.device(mat.device)?
+        basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     return _ilr_inv(xp, mat, basis, axis)
 
 
@@ -2159,7 +2165,9 @@ def _check_basis(
     if subspace_dim is None:
         subspace_dim = len(basis)
     elif len(basis)!= subspace_dim:
-        ValueError(f"Basis is not for a subspace of dim {subspace_dim}")
+        msg = f"Number of basis {len(basis)} not match \
+to the subspace dim {subspace_dim}."
+        raise ValueError(msg)
     if orthonormal:
         eyes = xp.asarray(np.identity(subspace_dim),
                           device=basis.device, dtype=basis.dtype)
