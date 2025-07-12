@@ -897,7 +897,7 @@ def alr(
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
-    return _alr(mat, denominator_idx, axis)
+    return _alr(xp, mat, denominator_idx, axis)
 
 
 def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
@@ -1007,26 +1007,19 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
 
 
 def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
-) -> "StdArray":
-    emat = xp.exp(mat)
-
-    # `insert` is a useful NumPy function but it is not within the Python array API
-    # standard. For libraries that don't have `insert`, a fall-back method based on
-    # arbitrary dimension slicing is provided.
-    try:
-        comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
-    except AttributeError:
-        before = [slice(None)] * mat.ndim
-        before[axis] = slice(None, denominator_idx)
-        before = tuple(before)
-        after = [slice(None)] * mat.ndim
-        after[axis] = slice(denominator_idx, None)
-        after = tuple(after)
-        shape = list(mat.shape)
-        shape[axis] = 1
-        shape = tuple(shape)
-        ones = xp.ones(shape, dtype=mat.dtype, device=mat.device)
-        comp = xp.concat((emat[before], ones, emat[after]), axis=axis)
+) -> "StdArray": 
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx, None)
+    after = tuple(after)
+    shape = list(mat.shape)
+    shape[axis] = 1
+    shape = tuple(shape)
+    zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
+    comp = xp.concat((mat[before], zeros, mat[after]), axis=axis)
+    comp = xp.exp(comp-xp.max(comp, axis=axis, keepdims=True))
     return _closure(xp, comp, axis)
 
 
