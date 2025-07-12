@@ -387,8 +387,8 @@ class Tests_CLR_INV(TestCase):
                         == [int(i) for i in self.expected_real.shape],  "unepected shape"
         
         # check the values
-        np.allclose(rst_int, self.expected_int)
-        np.allclose(rst_real, self.expected_real)
+        assert np.allclose(rst_int, self.expected_int), "unmatched values"
+        assert np.allclose(rst_real, self.expected_real), "unmatched values"
     
     @skipIf(no_torch, "Skipping tests: no torch dependency")
     def test_ndarray_torch(self):
@@ -566,8 +566,8 @@ class Tests_ALR(TestCase):
                         == [int(i) for i in self.expected_real.shape],  "unepected shape"
         
         # check the values
-        np.allclose(rst_int, self.expected_int)
-        np.allclose(rst_real, self.expected_real)
+        assert np.allclose(rst_int, self.expected_int), "unmatched values"
+        assert np.allclose(rst_real, self.expected_real), "unmatched values"
     
     @skipIf(no_torch, "Skipping tests: no torch dependency")
     def test_ndarray_torch(self):
@@ -752,8 +752,8 @@ class Tests_ALR_INV(TestCase):
                         == [int(i) for i in self.expected_real.shape],  "unepected shape"
         
         # check the values
-        np.allclose(rst_int, self.expected_int)
-        np.allclose(rst_real, self.expected_real)
+        assert np.allclose(rst_int, self.expected_int), "unmatched values"
+        assert np.allclose(rst_real, self.expected_real), "unmatched values"
     
     @skipIf(no_torch, "Skipping tests: no torch dependency")
     def test_ndarray_torch(self):
@@ -896,7 +896,367 @@ class Tests_ALR_INV(TestCase):
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
             warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+
+    
+class Tests_ILR_default_basis(TestCase):
+    def setUp(self):
+        axis = 1
+        self.axis = axis
+        self.random_postive_int = randint(1,100, (4,6,3))
+        self.random_postive_real = rand(4,6,3)+1e-06
+        
+        V = _gram_schmidt_basis(6)
+        x = clr(self.random_postive_int,axis)
+        x = np.moveaxis(x, axis, -1)
+        x = x @ V.T
+        self.expected_int = np.moveaxis(x, -1, axis)
+        
+        V = _gram_schmidt_basis(6)
+        x = clr(self.random_postive_real,axis)
+        x = np.moveaxis(x, axis, -1)
+        x = x @ V.T
+        self.expected_real = np.moveaxis(x, -1, axis)
+        
+        self.expected_shape_int = [d if i!=axis else d-1 for i,d in enumerate(self.random_postive_int.shape)]
+        self.expected_shape_real = [d if i!=axis else d-1 for i,d in enumerate(self.random_postive_real.shape)]
+        
+    def test_ndarray_numpy(self):
+        # Asrange
+        axis = self.axis
+        
+        # Action
+        rst_int = ilr(self.random_postive_int, axis=axis)
+        rst_real = ilr(self.random_postive_real, axis=axis)
+        
+        # Assert
+        # the shape should not be changed
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in self.expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in self.expected_real.shape],  "unepected shape"
+        
+        # check the values
+        assert np.allclose(rst_int, self.expected_int), "unmatched values"
+        assert np.allclose(rst_real, self.expected_real), "unmatched values"
+    
+    @skipIf(no_torch, "Skipping tests: no torch dependency")
+    def test_ndarray_torch(self):
+        # Asrange
+        axis = self.axis
+        random_int = torch.tensor(self.random_postive_int)
+        random_real = torch.tensor(self.random_postive_real)
+        expected_int = torch.tensor(self.expected_int)
+        expected_real = torch.tensor(self.expected_real)
+        
+        # Action
+        rst_int = ilr(random_int, axis=axis)
+        rst_real = ilr(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+        
+    
+    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    def test_ndarray_torch_cuda(self):
+        # Asrange
+        axis = self.axis
+        random_int = torch.tensor(self.random_postive_int, device='cuda')
+        random_real = torch.tensor(self.random_postive_real, device='cuda')
+        expected_int = torch.tensor(self.expected_int, device='cuda')
+        expected_real = torch.tensor(self.expected_real, device='cuda')
+        
+        # Action
+        rst_int = ilr(random_int, axis=axis)
+        rst_real = ilr(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+
+    @skipIf(no_jax, "Skipping tests: no jax dependency")
+    def test_ndarray_jnp(self):
+        # Asrange
+        axis = self.axis
+        device = jax.devices("cpu")[0]
+        
+        random_int = jnp.array(self.random_postive_int, device=device)
+        random_real = jnp.array(self.random_postive_real, device=device)
+        expected_int = jnp.array(self.expected_int, device=device)
+        expected_real = jnp.array(self.expected_real, device=device)
+        
+        # Action
+        rst_int = ilr(random_int, axis=axis)
+        rst_real = ilr(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+        
+
+    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    def test_ndarray_jnp_gpu(self):
+        # Asrange
+        axis = self.axis
+        device = jax.devices('gpu')[0]
+        random_int = jnp.array(self.random_postive_int, device=device)
+        random_real = jnp.array(self.random_postive_real, device=device)
+        expected_int = jnp.array(self.expected_int, device=device)
+        expected_real = jnp.array(self.expected_real, device=device)
+        
+        # Action
+        rst_int = ilr(random_int, axis=axis)
+        rst_real = ilr(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
             
-            
+
+class Tests_ILR_INV_default_basis(TestCase):
+    def setUp(self):
+        axis = 1
+        self.axis = axis
+        self.random_postive_int = randint(1,100, (4,6,3))
+        self.random_postive_real = rand(4,6,3)+1e-06
+        
+        V = _gram_schmidt_basis(7)
+        y = np.moveaxis(self.random_postive_int, axis, -1)
+        y = y @ V
+        y = np.exp(y)
+        y = y / np.sum(y, axis=-1, keepdims=True)
+        self.expected_int = np.moveaxis(y, -1, axis)
+        
+        V = _gram_schmidt_basis(7)
+        y = np.moveaxis(self.random_postive_real, axis, -1)
+        y = y @ V
+        y = np.exp(y)
+        y = y / np.sum(y, axis=-1, keepdims=True)
+        self.expected_real = np.moveaxis(y, -1, axis)
+        
+        self.expected_shape_int = [d if i!=axis else d+1 for i,d in enumerate(self.random_postive_int.shape)]
+        self.expected_shape_real = [d if i!=axis else d+1 for i,d in enumerate(self.random_postive_real.shape)]
+        
+    def test_ndarray_numpy(self):
+        # Asrange
+        axis = self.axis
+        
+        # Action
+        rst_int = ilr_inv(self.random_postive_int, axis=axis)
+        rst_real = ilr_inv(self.random_postive_real, axis=axis)
+        
+        # Assert
+        # the shape should not be changed
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in self.expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in self.expected_real.shape],  "unepected shape"
+        
+        # check the values
+        assert np.allclose(rst_int, self.expected_int), "unmatched values"
+        assert np.allclose(rst_real, self.expected_real), "unmatched values"
+    
+    @skipIf(no_torch, "Skipping tests: no torch dependency")
+    def test_ndarray_torch(self):
+        # Asrange
+        axis = self.axis
+        random_int = torch.tensor(self.random_postive_int)
+        random_real = torch.tensor(self.random_postive_real)
+        expected_int = torch.tensor(self.expected_int)
+        expected_real = torch.tensor(self.expected_real)
+        
+        # Action
+        rst_int = ilr_inv(random_int, axis=axis)
+        rst_real = ilr_inv(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+        
+    
+    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    def test_ndarray_torch_cuda(self):
+        # Asrange
+        axis = self.axis
+        random_int = torch.tensor(self.random_postive_int, device='cuda')
+        random_real = torch.tensor(self.random_postive_real, device='cuda')
+        expected_int = torch.tensor(self.expected_int, device='cuda')
+        expected_real = torch.tensor(self.expected_real, device='cuda')
+        
+        # Action
+        rst_int = ilr_inv(random_int, axis=axis)
+        rst_real = ilr_inv(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+
+    @skipIf(no_jax, "Skipping tests: no jax dependency")
+    def test_ndarray_jnp(self):
+        # Asrange
+        axis = self.axis
+        device = jax.devices("cpu")[0]
+        
+        random_int = jnp.array(self.random_postive_int, device=device)
+        random_real = jnp.array(self.random_postive_real, device=device)
+        expected_int = jnp.array(self.expected_int, device=device)
+        expected_real = jnp.array(self.expected_real, device=device)
+        
+        # Action
+        rst_int = ilr_inv(random_int, axis=axis)
+        rst_real = ilr_inv(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+        
+
+    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    def test_ndarray_jnp_gpu(self):
+        # Asrange
+        axis = self.axis
+        device = jax.devices('gpu')[0]
+        random_int = jnp.array(self.random_postive_int, device=device)
+        random_real = jnp.array(self.random_postive_real, device=device)
+        expected_int = jnp.array(self.expected_int, device=device)
+        expected_real = jnp.array(self.expected_real, device=device)
+        
+        # Action
+        rst_int = ilr_inv(random_int, axis=axis)
+        rst_real = ilr_inv(random_real, axis=axis)
+        
+        # Assert
+        assert type(expected_int) == type(rst_int), "type is changed"
+        assert type(rst_real) == type(rst_real), "type is changed"
+        
+        assert [int(i) for i in self.expected_shape_int] \
+                        == [int(i) for i in expected_int.shape],  "unepected shape"
+        assert [int(i) for i in self.expected_shape_real] \
+                        == [int(i) for i in expected_real.shape],  "unepected shape"
+        
+        assert expected_int.device == rst_int.device, "different device"
+        assert expected_real.device == rst_real.device, "different device"
+        
+        try:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-08, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-08, "unmatched values"
+        except:
+            assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
+            assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
+            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+
+   
 if __name__ == '__main__':
     main()
