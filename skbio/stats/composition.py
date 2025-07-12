@@ -709,6 +709,7 @@ def ilr(
         _check_composition(xp, mat, nozero=True)
     N = mat.shape[axis]
     if basis is None:
+        # NOTE: acc.device(mat) would be nicer
         basis = xp.asarray(
             _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
         )  # dimension (N-1) x N
@@ -721,15 +722,10 @@ def ilr(
                     f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
                 )
             _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
-            # this following maybe redudant, because tensordot will check the length
-            # if basis.shape[1] != N:
-            #     raise ValueError(
-            #         f"Basis needs to match {axis}d dimension's size of the input."
-            #     )
-        basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
+            basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     axis %= mat.ndim
-    # basis or basis.T to pass through?
     return _ilr(xp, mat, basis, axis)
+
 
 def _ilr(
     xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
@@ -817,7 +813,6 @@ def ilr_inv(
     N = mat.shape[axis] + 1
 
     if basis is None:
-        # _gram_schmidt_basis generate dimension d-1 x d basis
         basis = xp.asarray(
             _gram_schmidt_basis(N), device = mat.device, dtype = xp.float64
             ) # dimension (N-1) x N
@@ -828,14 +823,7 @@ def ilr_inv(
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-
         _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
-        # this following maybe redudant, because tensordot will check the length
-        # if basis.shape[1] != N:
-        #     raise ValueError(
-        #         f"Basis needs to match {axis}d dimension's size of the input."
-        #     )
-        # NOTE: xp.device(mat.device)?
         basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     return _ilr_inv(xp, mat, basis, axis)
 
@@ -925,8 +913,6 @@ def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
     lmat = xp.log(mat)
-
-    # get denominator (one column)
     denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
     # if one doesn't want `take`, the following code should also work:
     # column = [slice(None)] * mat.ndim
@@ -934,21 +920,13 @@ def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
     # column = tuple(column)
     # denominator_vector = lmat[column]
 
-    # get numerator (all other columns)
-    # `delete` is a useful NumPy function but it is not within the Python array API
-    # standard. For libraries that don't have `delete`, a fall-back method based on
-    # arbitrary dimension slicing is provided.
-    try:
-        numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
-    # Catching exceptions is slow.
-    except AttributeError:
-        before = [slice(None)] * mat.ndim
-        before[axis] = slice(None, denominator_idx)
-        before = tuple(before)
-        after = [slice(None)] * mat.ndim
-        after[axis] = slice(denominator_idx + 1, None)
-        after = tuple(after)
-        numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx + 1, None)
+    after = tuple(after)
+    numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
     return numerator_matrix - denominator_vector
 
 

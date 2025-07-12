@@ -14,20 +14,11 @@ import warnings
 import numpy as np
 import torch
 import numpy.testing as npt
-from numpy.exceptions import AxisError
-from numpy.random import normal, rand, randint
-import pandas as pd
-import pandas.testing as pdt
-from scipy.sparse import coo_matrix
-from scipy.stats import f_oneway, ConstantInputWarning
+from numpy.random import rand, randint
 
-from skbio import TreeNode
-from skbio.util import assert_data_frame_almost_equal
-from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
-    _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
+    closure, clr, clr_inv, ilr,
+    ilr_inv, alr, alr_inv, _gram_schmidt_basis)
 import inspect
 
 try:
@@ -43,6 +34,7 @@ try:
 except ImportError:
     no_torch = True
 
+# evaluate the existence of cuda
 import subprocess
 def no_cuda_available():
     try:
@@ -241,7 +233,12 @@ class Tests_CLR(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
@@ -276,7 +273,12 @@ class Tests_CLR(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -313,7 +315,12 @@ class Tests_CLR(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
         
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -350,7 +357,12 @@ class Tests_CLR(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
 
 class Tests_CLR_INV(TestCase):
@@ -421,7 +433,12 @@ class Tests_CLR_INV(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -455,7 +472,12 @@ class Tests_CLR_INV(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -490,7 +512,12 @@ class Tests_CLR_INV(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -525,7 +552,12 @@ class Tests_CLR_INV(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
 
 class Tests_ALR(TestCase):
@@ -601,7 +633,12 @@ class Tests_ALR(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -636,7 +673,12 @@ class Tests_ALR(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -672,7 +714,12 @@ class Tests_ALR(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -709,7 +756,12 @@ class Tests_ALR(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
             
 
 class Tests_ALR_INV(TestCase):
@@ -787,7 +839,12 @@ class Tests_ALR_INV(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -822,7 +879,13 @@ class Tests_ALR_INV(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
+
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -858,7 +921,12 @@ class Tests_ALR_INV(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -895,7 +963,12 @@ class Tests_ALR_INV(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     
 class Tests_ILR_default_basis(TestCase):
@@ -970,7 +1043,12 @@ class Tests_ILR_default_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -1004,7 +1082,12 @@ class Tests_ILR_default_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -1039,7 +1122,12 @@ class Tests_ILR_default_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -1074,7 +1162,12 @@ class Tests_ILR_default_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
             
 
 class Tests_ILR_INV_default_basis(TestCase):
@@ -1151,7 +1244,12 @@ class Tests_ILR_INV_default_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -1185,7 +1283,12 @@ class Tests_ILR_INV_default_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -1220,7 +1323,12 @@ class Tests_ILR_INV_default_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -1255,7 +1363,12 @@ class Tests_ILR_INV_default_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
 
 class Tests_ILR_helmert_basis(TestCase):
@@ -1337,7 +1450,12 @@ class Tests_ILR_helmert_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -1371,7 +1489,12 @@ class Tests_ILR_helmert_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -1406,7 +1529,12 @@ class Tests_ILR_helmert_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -1441,7 +1569,12 @@ class Tests_ILR_helmert_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
             
 
 class Tests_ILR_INV_helmert_basis(TestCase):
@@ -1525,7 +1658,12 @@ class Tests_ILR_INV_helmert_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
     
     @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
@@ -1559,7 +1697,12 @@ class Tests_ILR_INV_helmert_basis(TestCase):
         except:
             assert torch.sum(torch.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert torch.sum(torch.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
     @skipIf(no_jax, "Skipping tests: no jax dependency")
     def test_ndarray_jnp(self):
@@ -1594,7 +1737,12 @@ class Tests_ILR_INV_helmert_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
         
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
@@ -1629,7 +1777,12 @@ class Tests_ILR_INV_helmert_basis(TestCase):
         except:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-04, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-04, "unmatched values"
-            warnings.warn(f"{inspect.currentframe().f_code.co_name,self.__class__.__name__} tolerance is increased from 1e-8 to 1e-4.")
+            test_name = inspect.currentframe().f_code.co_name
+            class_name = self.__class__.__name__
+            warnings.warn(
+                f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
+                UserWarning
+            )
 
    
 if __name__ == '__main__':
