@@ -149,7 +149,7 @@ import pandas as pd
 
 from skbio.util import get_rng
 from skbio.util._decorator import aliased, register_aliases, params_aliased
-from skbio.util._array import _ingest_array
+from skbio.util._array import ingest_array
 from skbio.table._tabular import _ingest_table
 
 
@@ -238,7 +238,7 @@ def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
            [ 0.4,  0.4,  0.2]])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, axis)
     return _closure(xp, mat, axis)
@@ -368,7 +368,8 @@ def perturb(x, y):
 
     """
     x, y = closure(x), closure(y)
-    return closure(x * y)
+    xp, x, y = ingest_array(x, y)
+    return _closure(xp, x * y)
 
 
 def perturb_inv(x, y):
@@ -412,7 +413,8 @@ def perturb_inv(x, y):
 
     """
     x, y = closure(x), closure(y)
-    return closure(x / y)
+    xp, x, y = ingest_array(x, y)
+    return _closure(xp, x / y)
 
 
 def power(x, a):
@@ -545,7 +547,7 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
     return _clr(xp, mat, axis)
@@ -611,7 +613,7 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
 
     # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
     # therefore it is manually written here.
@@ -702,7 +704,7 @@ def ilr(
     array([-0.7768362 , -0.68339802,  0.11704769])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
     N = mat.shape[axis]
@@ -711,7 +713,7 @@ def ilr(
             _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
         )  # dimension (N-1) x N
     else:
-        xp_, basis = _ingest_array(basis)
+        xp_, basis = ingest_array(basis)
         if validate:
             # the following maybe redundant
             if basis.ndim != 2:
@@ -811,7 +813,7 @@ def ilr_inv(
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     N = mat.shape[axis] + 1
 
     if basis is None:
@@ -820,7 +822,7 @@ def ilr_inv(
             _gram_schmidt_basis(N), device = mat.device, dtype = xp.float64
             ) # dimension (N-1) x N
     elif validate:
-        xp_, basis = _ingest_array(basis)
+        xp_, basis = ingest_array(basis)
         # the following maybe redundant as the orthonrmal implicitly check 2-d
         if basis.ndim != 2:
             raise ValueError(
@@ -902,7 +904,7 @@ def alr(
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
 
@@ -1010,7 +1012,7 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
 
     # validate and normalize axis and index
     N = mat.shape[axis] + 1
@@ -2159,7 +2161,7 @@ def _check_basis(
         If the basis are not orthonormal.
 
     """
-    xp, basis = _ingest_array(basis)
+    xp, basis = ingest_array(basis)
     if basis.ndim < 2:
         basis = basis.reshape(1, -1)
     if subspace_dim is None:
