@@ -708,7 +708,7 @@ def ilr(
     N = mat.shape[axis]
     if basis is None:
         basis = xp.asarray(
-            _gram_schmidt_basis(N), device=mat.device, dtype=mat.dtype
+            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
         )  # dimension (N-1) x N
     else:
         xp_, basis = _ingest_array(basis)
@@ -723,15 +723,22 @@ def ilr(
                     f"Basis needs to match {axis}d dimension's size of the input."
                 )
         basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
+    axis %= mat.ndim
     # basis or basis.T to pass through?
     return _ilr(xp, mat, basis, axis)
 
 def _ilr(
-    xp: "ModuleType", mat: "StdArray",
-    basis: "StdArray", axis: int
+    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
 ) -> "StdArray":
     """Perform ILR transform."""
-    return xp.tensordot(_clr(xp, mat, axis), basis,(axis, 1))
+    permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
+                          +[axis]) 
+    mat = _clr(xp, mat, axis)
+    # tensordot reurn's shape consists of the non-contracted axes (dimensions) of 
+    # the first array x1, followed by the non-contracted axes (dimensions)
+    # of the second array x2
+    return xp.permute_dims(xp.tensordot(mat, basis, axes=([axis], [1])),
+                           axes = permute_order)
 
 
 def ilr_inv(
@@ -804,10 +811,11 @@ def ilr_inv(
     """
     xp, mat = _ingest_array(mat)
     N = mat.shape[axis] + 1
+    
     if basis is None:
         # _gram_schmidt_basis generate dimension d-1 x d basis
         basis = xp.asarray(
-            _gram_schmidt_basis(N), device = mat.device, dtype = mat.dtype
+            _gram_schmidt_basis(N), device = mat.device, dtype = xp.float64
             ) # dimension (N-1) x N
     elif validate:
         xp_, basis = _ingest_array(basis)
@@ -828,7 +836,10 @@ def _ilr_inv(
     xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
 ) -> "StdArray":
     """Perform ILR transform."""
-    return _clr_inv(xp, xp.tensordot(mat, basis, basis,(axis, 0)), axis)
+    permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
+                          +[axis]) 
+    mat = xp.tensordot(mat, basis, axes=([axis], [0]))
+    return _clr_inv(xp, xp.permute_dims(mat, axes=permute_order) , axis)
 
 
 def alr(
