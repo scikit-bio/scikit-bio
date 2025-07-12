@@ -732,9 +732,9 @@ def _ilr(
 ) -> "StdArray":
     """Perform ILR transform."""
     permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
-                          +[axis]) 
+                          +[axis])
     mat = _clr(xp, mat, axis)
-    # tensordot reurn's shape consists of the non-contracted axes (dimensions) of 
+    # tensordot reurn's shape consists of the non-contracted axes (dimensions) of
     # the first array x1, followed by the non-contracted axes (dimensions)
     # of the second array x2
     return xp.permute_dims(xp.tensordot(mat, basis, axes=([axis], [1])),
@@ -811,7 +811,7 @@ def ilr_inv(
     """
     xp, mat = _ingest_array(mat)
     N = mat.shape[axis] + 1
-    
+
     if basis is None:
         # _gram_schmidt_basis generate dimension d-1 x d basis
         basis = xp.asarray(
@@ -837,7 +837,7 @@ def _ilr_inv(
 ) -> "StdArray":
     """Perform ILR transform."""
     permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
-                          +[axis]) 
+                          +[axis])
     mat = xp.tensordot(mat, basis, axes=([axis], [0]))
     return _clr_inv(xp, xp.permute_dims(mat, axes=permute_order) , axis)
 
@@ -1018,7 +1018,7 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
 
 
 def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
-) -> "StdArray": 
+) -> "StdArray":
     before = [slice(None)] * mat.ndim
     before[axis] = slice(None, denominator_idx)
     before = tuple(before)
