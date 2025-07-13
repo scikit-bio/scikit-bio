@@ -149,7 +149,7 @@ import pandas as pd
 
 from skbio.util import get_rng
 from skbio.util._decorator import aliased, register_aliases, params_aliased
-from skbio.util._array import _ingest_array
+from skbio.util._array import ingest_array
 from skbio.table._tabular import _ingest_table
 
 
@@ -160,7 +160,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def _check_composition(
     xp: "ModuleType",
-    mat: "ArrayLike",
+    mat: "StdArray",
     axis: int = -1,
     nozero: bool = False,
     maxdim: Optional[int] = None,
@@ -238,7 +238,7 @@ def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
            [ 0.4,  0.4,  0.2]])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, axis)
     return _closure(xp, mat, axis)
@@ -368,7 +368,8 @@ def perturb(x, y):
 
     """
     x, y = closure(x), closure(y)
-    return closure(x * y)
+    xp, x, y = ingest_array(x, y)
+    return _closure(xp, x * y)
 
 
 def perturb_inv(x, y):
@@ -412,7 +413,8 @@ def perturb_inv(x, y):
 
     """
     x, y = closure(x), closure(y)
-    return closure(x / y)
+    xp, x, y = ingest_array(x, y)
+    return _closure(xp, x / y)
 
 
 def power(x, a):
@@ -545,7 +547,7 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
     return _clr(xp, mat, axis)
@@ -582,9 +584,9 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
         Axis along which inverse CLR transformation will be performed. Each vector on
         this axis is considered as a CLR-transformed composition. Default is the last
         axis (-1).
-    validate: bool, default True
+    validate: bool, optional
         Check if the matrix has been centered at 0. Violation will result in a warning
-        rather than an error, for backward compatibility.
+        rather than an error, for backward compatibility. Defaults to True.
 
     Returns
     -------
@@ -611,7 +613,7 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
 
     # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
     # therefore it is manually written here.
@@ -633,7 +635,8 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 
 def ilr(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
+    axis: int = -1, validate: bool = True,
 ) -> "StdArray":
     r"""Perform isometric log ratio (ILR) transformation.
 
@@ -657,17 +660,22 @@ def ilr(
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of positive proportions.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Check if the matrix is compositional and the basis is orthonormal.
+        Check if
+            i) the matrix is compositional
+            ii) the basis is orthonormal, 2-dimensional,and the dimensions are matched
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components - 1)
+    ndarray of shape (..., n_components - 1,...)
         ILR-transformed matrix.
 
     See Also
@@ -696,33 +704,46 @@ def ilr(
     array([-0.7768362 , -0.68339802,  0.11704769])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
-
-    axis = -1
-
-    mat = _clr(xp, mat, axis=axis)
-
+    N = mat.shape[axis]
     if basis is None:
-        d = mat.shape[-1]
+        # NOTE: acc.device(mat) would be nicer
         basis = xp.asarray(
-            _gram_schmidt_basis(d), device=mat.device, dtype=mat.dtype
-        )  # dimension (d-1) x d
+            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+        )  # dimension (N-1) x N
     else:
-        xp_, basis = _ingest_array(basis)
+        xp_, basis = ingest_array(basis)
         if validate:
-            _check_orthogonality(xp_, basis)
-        if basis.ndim != 2:
-            raise ValueError(
-                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
-            )
-        basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
-    return mat @ basis.T
+            # the following maybe redundant
+            if basis.ndim != 2:
+                raise ValueError(
+                    f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
+                )
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+            basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    axis %= mat.ndim
+    return _ilr(xp, mat, basis, axis)
+
+
+def _ilr(
+    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
+) -> "StdArray":
+    """Perform ILR transform."""
+    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
+                          +[axis])
+    mat = _clr(xp, mat, axis)
+    # tensordot reurn's shape consists of the non-contracted axes (dimensions) of
+    # the first array x1, followed by the non-contracted axes (dimensions)
+    # of the second array x2
+    return xp.permute_dims(xp.tensordot(mat, basis, axes=([axis], [1])),
+                           axes = permute_order)
 
 
 def ilr_inv(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None, validate: bool = True
+    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
+    axis: int = -1, validate: bool = True
 ) -> "StdArray":
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
@@ -750,12 +771,16 @@ def ilr_inv(
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a ILR transformed composition data.
+        Default is the last axis (-1).
     validate : bool, default True
-        Check to see if basis is orthonormal.
+        Check to see if basis is orthonormal and dimension matches.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray of shape (..., n_components, ...)
         Inverse ILR-transformed matrix.
 
     See Also
@@ -784,23 +809,34 @@ def ilr_inv(
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
     """
-    axis = -1
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
+    N = mat.shape[axis] + 1
 
     if basis is None:
-        # dimension d-1 x d basis
-        basis = _gram_schmidt_basis(mat.shape[axis] + 1)
+        basis = xp.asarray(
+            _gram_schmidt_basis(N), device = mat.device, dtype = xp.float64
+            ) # dimension (N-1) x N
     elif validate:
-        xp_, basis = _ingest_array(basis)
-        if validate:
-            _check_orthogonality(xp_, basis)
+        xp_, basis = ingest_array(basis)
+        # the following maybe redundant as the orthonrmal implicitly check 2-d
         if basis.ndim != 2:
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-    # if not isinstance(basis, xp.array):
-    basis = xp.asarray(basis, device=mat.device, dtype=mat.dtype)
-    return clr_inv(mat @ basis, validate=validate)
+        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+        basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    axis %= mat.ndim
+    return _ilr_inv(xp, mat, basis, axis)
+
+
+def _ilr_inv(
+    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
+) -> "StdArray":
+    """Perform ILR transform."""
+    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
+                          +[axis])
+    mat = xp.tensordot(mat, basis, axes=([axis], [0]))
+    return _clr_inv(xp, xp.permute_dims(mat, axes=permute_order) , axis)
 
 
 def alr(
@@ -857,7 +893,7 @@ def alr(
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
     if validate:
         _check_composition(xp, mat, nozero=True)
 
@@ -869,13 +905,15 @@ def alr(
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
+    return _alr(xp, mat, denominator_idx, axis)
 
+
+def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
     lmat = xp.log(mat)
-
-    # get denominator (one column)
     denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
     # if one doesn't want `take`, the following code should also work:
     # column = [slice(None)] * mat.ndim
@@ -883,21 +921,13 @@ def alr(
     # column = tuple(column)
     # denominator_vector = lmat[column]
 
-    # get numerator (all other columns)
-    # `delete` is a useful NumPy function but it is not within the Python array API
-    # standard. For libraries that don't have `delete`, a fall-back method based on
-    # arbitrary dimension slicing is provided.
-    try:
-        numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
-    except AttributeError:
-        before = [slice(None)] * mat.ndim
-        before[axis] = slice(None, denominator_idx)
-        before = tuple(before)
-        after = [slice(None)] * mat.ndim
-        after[axis] = slice(denominator_idx + 1, None)
-        after = tuple(after)
-        numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
-
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx + 1, None)
+    after = tuple(after)
+    numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
     return numerator_matrix - denominator_vector
 
 
@@ -961,7 +991,7 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    xp, mat = _ingest_array(mat)
+    xp, mat = ingest_array(mat)
 
     # validate and normalize axis and index
     N = mat.shape[axis] + 1
@@ -971,29 +1001,23 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     if denominator_idx < -N or denominator_idx >= N:
         raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
     denominator_idx %= N
+    return _alr_inv(xp, mat, denominator_idx, axis)
 
-    # NOTE: do we need to take the same implementation as clr_inv?
-    # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
-    emat = xp.exp(mat)
 
-    # `insert` is a useful NumPy function but it is not within the Python array API
-    # standard. For libraries that don't have `insert`, a fall-back method based on
-    # arbitrary dimension slicing is provided.
-    try:
-        comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
-    except AttributeError:
-        before = [slice(None)] * mat.ndim
-        before[axis] = slice(None, denominator_idx)
-        before = tuple(before)
-        after = [slice(None)] * mat.ndim
-        after[axis] = slice(denominator_idx, None)
-        after = tuple(after)
-        shape = list(mat.shape)
-        shape[axis] = 1
-        shape = tuple(shape)
-        ones = xp.ones(shape, dtype=mat.dtype, device=mat.device)
-        comp = xp.concat((emat[before], ones, emat[after]), axis=axis)
-
+def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx, None)
+    after = tuple(after)
+    shape = list(mat.shape)
+    shape[axis] = 1
+    shape = tuple(shape)
+    zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
+    comp = xp.concat((mat[before], zeros, mat[after]), axis=axis)
+    comp = xp.exp(comp-xp.max(comp, axis=axis, keepdims=True))
     return _closure(xp, comp, axis)
 
 
@@ -2145,20 +2169,47 @@ def sbp_basis(sbp):
     return psi
 
 
-def _check_orthogonality(xp, basis):
-    r"""Check if basis is truly orthonormal in the Aitchison simplex.
+def _check_basis(
+    xp: "ModuleType",
+    basis: "StdArray",
+    orthonormal: bool = False,
+    subspace_dim: Optional[int] = None,
+):
+    r"""Check if basis is a valid basis for transformation.
 
     Parameters
     ----------
-    basis : ndarray
-        Basis in the Aitchison simplex of dimension :math:`(D - 1) \times D`.
+    xp : namespace
+        The array API compatible namespace corresponding ``basis``.
+    basis : array of shape (n_basis, n_components)
+        A columns vetors for the basis.
+    orthonormal : bool, optional
+        If True, basis is required to be orthonormal. Default is False.
+    subspace_dim : int, optional
+        The dimensions of the subspace that the basis suppose to span,
+        when None is give, the n_basis will be used. Default is None.
+
+    Raises
+    ------
+    ValueError
+        If the basis is not matching to the subspace dimension.
+    ValueError
+        If the basis are not orthonormal.
 
     """
+    xp, basis = ingest_array(basis)
     if basis.ndim < 2:
         basis = basis.reshape(1, -1)
-    eyes = xp.asarray(np.identity(len(basis)), device=basis.device, dtype=basis.dtype)
-    if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
-        raise ValueError("Basis is not orthonormal.")
+    if subspace_dim is None:
+        subspace_dim = len(basis)
+    elif len(basis)!= subspace_dim:
+        n_basis = len(basis)
+        msg = f"Number of basis {n_basis} not match to the subspace dim {subspace_dim}."
+        raise ValueError(msg)
+    if orthonormal:
+        eyes = xp.eye(subspace_dim, device=basis.device)
+        if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
+            raise ValueError("Basis is not orthonormal.")
 
 
 def _dirmult_draw(matrix, rng):

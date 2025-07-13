@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, Protocol, runtime_checkable
+from typing import Optional, Union, Protocol, runtime_checkable, Tuple, Any
 
 import pandas as pd
 import numpy as np
@@ -39,6 +39,18 @@ class StdArray(Protocol):
     """
 
     def __array_namespace__(self, api_version: Optional[str] = None): ...
+
+    @property
+    def shape(self) -> Tuple[int, ...]: ...
+
+    @property
+    def ndim(self) -> int: ...
+
+    @property
+    def dtype(self) -> Any: ...
+
+    @property
+    def device(self)-> Any: ...
 
 
 ArrayLike = Union[NPArrayLike, StdArray]

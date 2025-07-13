@@ -423,14 +423,43 @@ class CompositionTests(TestCase):
             _check_composition(np, np.array(0))
         self.assertEqual(str(cm.exception), msg)
 
-    def test_check_orthogonality(self):
+    def test_check_basis(self):
+        #asrange
+        basis_non_orthongnal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
+        basis_non_orthonormal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
+        
+        basis_unmatch_subspace_dim = np.array([[1, 0, 0]])
+        
+        # generic basis, not necessarily the basis of unit ball subspace S^2
+        basis_int = np.array([[1, 0, 0], [0, 1, 0]])
+        basis_real= np.array([[1.0, 0, 0], [0, 1.0, 0]])
+        
+        # action + assert
+        with self.assertRaises(ValueError) as cm:
+            _check_basis(np, basis_non_orthongnal, orthonormal=True)
+        self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
+        
+        with self.assertRaises(ValueError) as cm:
+            _check_basis(np, basis_non_orthonormal, orthonormal=True)
+        self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
+        
+        msg = "Number of basis 1 not match to the subspace dim 2."
+        with self.assertRaises(ValueError) as cm:
+            _check_basis(np, basis_unmatch_subspace_dim, orthonormal=True,
+                         subspace_dim=2)
+        self.assertEqual(str(cm.exception), msg)
+        
+        self.assertIsNone(_check_basis(np, basis_int, orthonormal=True))
+        self.assertIsNone(_check_basis(np, basis_real, orthonormal=True))
+        
+        # old test
         basis = np.array([[0.80442968, 0.19557032]])
         with self.assertRaises(ValueError) as cm:
-            _check_orthogonality(np, basis)
+            _check_basis(np, basis, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
 
         basis = clr(basis)
-        self.assertIsNone(_check_orthogonality(np, basis))
+        self.assertIsNone(_check_basis(np, basis, orthonormal=True))
 
     def test_closure(self):
         # 2-D matrix
@@ -842,7 +871,7 @@ class CompositionTests(TestCase):
         # self.assertEqual(str(cm.exception), msg)
 
         basis = np.array([[0.80442968, 0.19557032]])
-        msg = "Basis is not orthonormal."
+        msg = "Number of basis 1 not match to the subspace dim 2."
         with self.assertRaises(ValueError) as cm:
             ilr(self.cdata1, basis=basis)
         self.assertEqual(str(cm.exception), msg)
