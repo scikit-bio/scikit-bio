@@ -731,7 +731,7 @@ def _ilr(
     xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
 ) -> "StdArray":
     """Perform ILR transform."""
-    permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
+    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
                           +[axis])
     mat = _clr(xp, mat, axis)
     # tensordot reurn's shape consists of the non-contracted axes (dimensions) of
@@ -833,7 +833,7 @@ def _ilr_inv(
     xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
 ) -> "StdArray":
     """Perform ILR transform."""
-    permute_order = tuple([i if i!=axis else -1 for i in range(mat.ndim-1)]
+    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
                           +[axis])
     mat = xp.tensordot(mat, basis, axes=([axis], [0]))
     return _clr_inv(xp, xp.permute_dims(mat, axes=permute_order) , axis)

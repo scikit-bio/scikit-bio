@@ -21,6 +21,7 @@ import warnings
 try:
     import torch
     no_torch = False
+    torch.set_default_dtype(torch.float64)
 except ImportError:
     no_torch = True
 
