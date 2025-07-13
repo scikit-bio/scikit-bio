@@ -224,11 +224,11 @@ def _format_input(
 
 
 def _make_aug_labels(
-    labels: "NDArray",
+    labels: Optional["NDArray"],
     pairs: "NDArray",
     lams: "NDArray",
     intra_class: bool,
-) -> "NDArray":
+) -> Optional["NDArray"]:
     r"""Generate class labels for synthetic samples.
 
     Parameters
@@ -642,7 +642,8 @@ def compositional_cutmix(
 
         .. note::
            This function does not have the ``intra_class`` parameter, as it always
-           operates in intra-class mode.
+           operates in intra-class mode in order to preserve the compositional
+           structure within classes.
 
     See Also
     --------
