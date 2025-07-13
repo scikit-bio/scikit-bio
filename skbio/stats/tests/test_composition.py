@@ -346,16 +346,16 @@ class CompositionTests(TestCase):
             _check_composition(np, np.array(0))
         self.assertEqual(str(cm.exception), msg)
 
-    def test_check_orthogonality(self):
+    def test_check_basis(self):
         #asrange
-        basis_non_orthongnal = np.asarray([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
-        basis_non_orthonormal = np.asarray([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
+        basis_non_orthongnal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
+        basis_non_orthonormal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
         
-        basis_unmatch_subspace_dim = np.asarray([[1, 0, 0]])
+        basis_unmatch_subspace_dim = np.array([[1, 0, 0]])
         
         # generic basis, not necessarily the basis of unit ball subspace S^2
-        basis_int = np.asarray([[1, 0, 0], [0, 1, 0]])
-        basis_real= np.asarray([[1.0, 0, 0], [0, 1.0, 0]])
+        basis_int = np.array([[1, 0, 0], [0, 1, 0]])
+        basis_real= np.array([[1.0, 0, 0], [0, 1.0, 0]])
         
         # action + assert
         with self.assertRaises(ValueError) as cm:

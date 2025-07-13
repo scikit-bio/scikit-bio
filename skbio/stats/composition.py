@@ -776,7 +776,7 @@ def ilr_inv(
         along this axis is considered as a ILR transformed composition data.
         Default is the last axis (-1).
     validate : bool, default True
-        Check to see if basis is orthonormal, dimention matched.
+        Check to see if basis is orthonormal and dimension matches.
 
     Returns
     -------
@@ -825,6 +825,7 @@ def ilr_inv(
             )
         _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
         basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    axis %= mat.ndim
     return _ilr_inv(xp, mat, basis, axis)
 
 
@@ -2145,12 +2146,11 @@ def _check_basis(
     if subspace_dim is None:
         subspace_dim = len(basis)
     elif len(basis)!= subspace_dim:
-        msg = f"Number of basis {len(basis)} not match \
-to the subspace dim {subspace_dim}."
+        n_basis = len(basis)
+        msg = f"Number of basis {n_basis} not match to the subspace dim {subspace_dim}."
         raise ValueError(msg)
     if orthonormal:
-        eyes = xp.asarray(np.identity(subspace_dim),
-                          device=basis.device, dtype=basis.dtype)
+        eyes = xp.eye(subspace_dim, device=basis.device)
         if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
             raise ValueError("Basis is not orthonormal.")
 
