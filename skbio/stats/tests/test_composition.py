@@ -22,8 +22,8 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality, _check_grouping, _check_metadata,
-    _type_cast_to_float,
+    _check_composition, _check_orthogonality, _check_grouping, _check_trt_ref_groups,
+    _check_metadata, _type_cast_to_float,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
     _check_p_adjust, ancom, vlr, pairwise_vlr, tree_basis, dirmult_ttest, dirmult_lme)
@@ -113,6 +113,83 @@ class MiscTests(TestCase):
         with self.assertRaises(ValueError) as cm:
             _check_grouping(grouping, matrix)
         self.assertEqual(str(cm.exception), msg)
+
+    def test_check_trt_ref_groups(self):
+        # two groups
+        grouping = ["B", "A", "B", "B", "A", "A", "A", "B"]
+        groups, labels = _check_grouping(grouping, np.empty((8, 1)))
+
+        obs = _check_trt_ref_groups("A", "B", groups, labels)
+        npt.assert_array_equal(obs[0], [1, 4, 5, 6])
+        npt.assert_array_equal(obs[1], [0, 2, 3, 7])
+
+        obs = _check_trt_ref_groups("B", "A", groups, labels)
+        npt.assert_array_equal(obs[0], [0, 2, 3, 7])
+        npt.assert_array_equal(obs[1], [1, 4, 5, 6])
+
+        # default groups
+        obs = _check_trt_ref_groups(None, None, groups, labels)
+        npt.assert_array_equal(obs[0], [1, 4, 5, 6])
+        npt.assert_array_equal(obs[1], [0, 2, 3, 7])
+
+        obs = _check_trt_ref_groups("A", None, groups, labels)
+        npt.assert_array_equal(obs[0], [1, 4, 5, 6])
+        npt.assert_array_equal(obs[1], [0, 2, 3, 7])
+
+        obs = _check_trt_ref_groups("B", None, groups, labels)
+        npt.assert_array_equal(obs[0], [0, 2, 3, 7])
+        npt.assert_array_equal(obs[1], [1, 4, 5, 6])
+
+        msg = "Treatment group C is not found in grouping."
+        with self.assertRaises(ValueError) as cm:
+            _check_trt_ref_groups("C", None, groups, labels)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Reference group D is not found in grouping."
+        with self.assertRaises(ValueError) as cm:
+            _check_trt_ref_groups("A", "D", groups, labels)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Treatment and reference groups must not be identical."
+        with self.assertRaises(ValueError) as cm:
+            _check_trt_ref_groups("A", "A", groups, labels)
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            _check_trt_ref_groups(None, "A", groups, labels)
+        self.assertEqual(str(cm.exception), msg)
+
+        # one group
+        grouping = ["A", "A", "A", "A"]
+        groups, labels = _check_grouping(grouping, np.empty((4, 1)))
+
+        msg = "There must be at least two groups in grouping."
+        with self.assertRaises(ValueError) as cm:
+            _check_trt_ref_groups(None, None, groups, labels)
+        self.assertEqual(str(cm.exception), msg)
+
+        # three groups
+        grouping = ["A", "C", "B", "B", "C", "A", "A", "C"]
+        groups, labels = _check_grouping(grouping, np.empty((8, 1)))
+
+        obs = _check_trt_ref_groups("A", "B", groups, labels)
+        npt.assert_array_equal(obs[0], [0, 5, 6])
+        npt.assert_array_equal(obs[1], [2, 3])
+
+        obs = _check_trt_ref_groups("C", "A", groups, labels)
+        npt.assert_array_equal(obs[0], [1, 4, 7])
+        npt.assert_array_equal(obs[1], [0, 5, 6])
+
+        obs = _check_trt_ref_groups("B", None, groups, labels)
+        npt.assert_array_equal(obs[0], [2, 3])
+        npt.assert_array_equal(obs[1], [0, 1, 4, 5, 6, 7])
+
+        obs = _check_trt_ref_groups(None, "C", groups, labels)
+        npt.assert_array_equal(obs[0], [0, 5, 6])
+        npt.assert_array_equal(obs[1], [1, 4, 7])
+
+        obs = _check_trt_ref_groups(None, None, groups, labels)
+        npt.assert_array_equal(obs[0], [0, 5, 6])
+        npt.assert_array_equal(obs[1], [1, 2, 3, 4, 7])
 
     def test_check_metadata(self):
         mat = np.empty(12).reshape(3, 4)
@@ -1867,6 +1944,14 @@ class DirMultTTestTests(TestCase):
                                self.reference)
         self.assertIsInstance(result, pd.DataFrame)
         self.assertIsInstance(result.index, pd.RangeIndex)
+
+    def test_dirmult_ttest_no_group(self):
+        result = dirmult_ttest(self.table, self.grouping)
+        self.assertIsInstance(result, pd.DataFrame)
+        result = dirmult_ttest(self.table, self.grouping, treatment=self.treatment)
+        self.assertIsInstance(result, pd.DataFrame)
+        result = dirmult_ttest(self.table, self.grouping, reference=self.treatment)
+        self.assertIsInstance(result, pd.DataFrame)
 
     def test_dirmult_ttest_no_pseudocount(self):
         result = dirmult_ttest(self.table, self.grouping, self.treatment,
