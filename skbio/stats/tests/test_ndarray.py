@@ -25,12 +25,16 @@ try:
     import jax
     import jax.numpy as jnp
     no_jax = False
+    jax.config.update('jax_enable_x64', True)
 except ImportError:
     no_jax = True
     
 try:
     import torch
     no_torch = False
+    # initially, the default is float 32 for pytorch
+    # xp will use float 32
+    torch.set_default_dtype(torch.float64)
 except ImportError:
     no_torch = True
 
