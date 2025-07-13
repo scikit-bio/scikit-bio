@@ -1513,6 +1513,63 @@ def _check_grouping(grouping, matrix, samples=None):
     return np.unique(grouping, return_inverse=True)
 
 
+def _check_trt_ref_groups(treatment, reference, groups, labels):
+    """Extract treatment and reference group indices.
+
+    Parameters
+    ----------
+    treatment : str, int or None
+        Treatment group label.
+    reference : str, int or None
+        Reference group label.
+    groups : ndarray of (n_groups,)
+        Class names.
+    labels : ndarray of (n_samples,)
+        Class indices by sample.
+
+    Returns
+    -------
+    trt_idx : ndarray of (n_samples_in_treatment,)
+        Sample indices in the treatment group.
+    ref_idx : ndarray of (n_samples_in_reference,)
+        Sample indices in the reference group.
+
+    Raises
+    ------
+    ValueError
+        If treatment or reference group is not found.
+    ValueError
+        If treatment and reference groups are the same.
+    ValueError
+        If there are less than two groups.
+
+    """
+    if len(groups) < 2:
+        raise ValueError("There must be at least two groups in grouping.")
+
+    if treatment is not None:
+        try:
+            (trt_i,) = np.flatnonzero(groups == treatment)
+        except ValueError:
+            raise ValueError(f"Treatment group {treatment} is not found in grouping.")
+    else:
+        trt_i = 0
+    trt_idx = np.flatnonzero(labels == trt_i)
+
+    if reference is not None:
+        try:
+            (ref_i,) = np.flatnonzero(groups == reference)
+        except ValueError:
+            raise ValueError(f"Reference group {reference} is not found in grouping.")
+        if trt_i == ref_i:
+            raise ValueError("Treatment and reference groups must not be identical.")
+        ref_idx = np.flatnonzero(labels == ref_i)
+    else:
+        ref_idx = np.flatnonzero(labels != trt_i)
+
+    return trt_idx, ref_idx
+
+
 def _check_metadata(metadata, matrix, samples=None):
     """Format metadata for differential abundance analysis.
 
@@ -2184,8 +2241,8 @@ def _dirmult_draw(matrix, rng):
 def dirmult_ttest(
     table,
     grouping,
-    treatment,
-    reference,
+    treatment=None,
+    reference=None,
     pseudocount=0.5,
     draws=128,
     p_adjust="holm",
@@ -2223,11 +2280,18 @@ def dirmult_ttest(
         and the table contains sample IDs, its index will be filtered and reordered to
         match the sample IDs. Otherwise, it must be the same length as the samples in
         the table.
-    treatment : str
+    treatment : str, optional
         Name of the treatment group. The *t*-test is computed between the ``treatment``
-        group and the ``reference`` group specified in the ``grouping`` vector.
-    reference : str
-        Name of the reference group. See above.
+        group and the ``reference`` group specified in the ``grouping`` vector. If
+        omitted, the first group in the sorted order of all group names will be the
+        treatment group.
+    reference : str, optional
+        Name of the reference group. See above. If omitted, all groups other than the
+        treatment group will be combined as the reference group.
+
+        .. versionchanged:: 0.6.4
+            ``treatment`` and ``reference`` are now optional.
+
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero.
@@ -2349,18 +2413,15 @@ def dirmult_ttest(
     rng = get_rng(seed)
 
     matrix, samples, features = _ingest_table(table)
-
     _check_composition(np, matrix)
-
-    groups, labels = _check_grouping(grouping, matrix, samples)
 
     # handle zero values
     if pseudocount:
         matrix = matrix + pseudocount
 
-    # get sample indices per group
-    trt_idx = np.flatnonzero(labels == np.flatnonzero(groups == treatment)[0])
-    ref_idx = np.flatnonzero(labels == np.flatnonzero(groups == reference)[0])
+    # get sample indices of treatment and reference groups
+    groups, labels = _check_grouping(grouping, matrix, samples)
+    trt_idx, ref_idx = _check_trt_ref_groups(treatment, reference, groups, labels)
 
     cm_params = dict(alternative="two-sided", usevar="unequal")
 
