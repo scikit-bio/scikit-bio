@@ -315,7 +315,15 @@ def multi_replace(mat, delta=None):
     return mat.squeeze()
 
 
-def perturb(x, y):
+def _closure_two(x, y, validate):
+    xp, x, y = ingest_array(x, y)
+    if validate:
+        _check_composition(xp, x)
+        _check_composition(xp, y)
+    return xp, _closure(xp, x), _closure(xp, y)
+
+
+def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Perform the perturbation operation.
 
     This operation is defined as:
@@ -338,6 +346,8 @@ def perturb(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -367,12 +377,11 @@ def perturb(x, y):
     array([ 0.25,  0.25,  0.5 ])
 
     """
-    x, y = closure(x), closure(y)
-    xp, x, y = ingest_array(x, y)
-    return _closure(xp, x * y)
+    xp, cx, cy = _closure_two(x, y, validate)
+    return _closure(xp, cx * cy)
 
 
-def perturb_inv(x, y):
+def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Perform the inverse perturbation operation.
 
     This operation is defined as:
@@ -395,6 +404,8 @@ def perturb_inv(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -412,12 +423,11 @@ def perturb_inv(x, y):
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
 
     """
-    x, y = closure(x), closure(y)
-    xp, x, y = ingest_array(x, y)
-    return _closure(xp, x / y)
+    xp, cx, cy = _closure_two(x, y, validate)
+    return _closure(xp, cx / cy)
 
 
-def power(x, a):
+def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     r"""Perform the power operation.
 
     This operation is defined as follows:
@@ -440,6 +450,8 @@ def power(x, a):
         A matrix of proportions.
     a : float
         A scalar exponent.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -456,11 +468,14 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
-    x = closure(x)
-    return closure(x**a).squeeze()
+    xp, x = ingest_array(x)
+    if validate:
+        _check_composition(xp, x)
+    cx = _closure(xp, x)
+    return _closure(xp, x**a).squeeze()
 
 
-def inner(x, y):
+def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows:
@@ -476,6 +491,8 @@ def inner(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -492,10 +509,9 @@ def inner(x, y):
     0.2107852473...
 
     """
-    x = closure(x)
-    y = closure(y)
-    a, b = clr(x), clr(y)
-    return a.dot(b.T)
+    xp, cx, cy = _closure_two(x, y, validate)
+    clrx, clry = _clr(xp, x, axis=-1), _clr(xp, y, axis=-1)
+    return xp.matmul(clrx, clry.T)
 
 
 def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
@@ -635,8 +651,10 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 
 def ilr(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
-    axis: int = -1, validate: bool = True,
+    mat: "ArrayLike",
+    basis: Optional["ArrayLike"] = None,
+    axis: int = -1,
+    validate: bool = True,
 ) -> "StdArray":
     r"""Perform isometric log ratio (ILR) transformation.
 
@@ -721,29 +739,35 @@ def ilr(
                 raise ValueError(
                     f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
                 )
-            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
             basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     axis %= mat.ndim
     return _ilr(xp, mat, basis, axis)
 
 
-def _ilr(
-    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
-) -> "StdArray":
+def _swap_axis(ndim, axis):
+    """Create a list of axis indices with one axis swapped with the last axis."""
+    res = list(range(ndim))
+    res[axis] = ndim - 1
+    res[ndim - 1] = axis
+    return res
+
+
+def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "StdArray":
     """Perform ILR transform."""
-    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
-                          +[axis])
     mat = _clr(xp, mat, axis)
-    # tensordot reurn's shape consists of the non-contracted axes (dimensions) of
-    # the first array x1, followed by the non-contracted axes (dimensions)
-    # of the second array x2
-    return xp.permute_dims(xp.tensordot(mat, basis, axes=([axis], [1])),
-                           axes = permute_order)
+    # tensordot return's shape consists of the non-contracted axes (dimensions) of
+    # the first array x1, followed by the non-contracted axes (dimensions) of the
+    # second array x2
+    prod = xp.tensordot(mat, basis, axes=([axis], [1]))
+    return xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
 
 
 def ilr_inv(
-    mat: "ArrayLike", basis: Optional["ArrayLike"] = None,
-    axis: int = -1, validate: bool = True
+    mat: "ArrayLike",
+    basis: Optional["ArrayLike"] = None,
+    axis: int = -1,
+    validate: bool = True,
 ) -> "StdArray":
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
@@ -766,7 +790,7 @@ def ilr_inv(
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components - 1)
+    mat : array_like of shape (..., n_components - 1, ...)
         A matrix of ILR-transformed data.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
@@ -814,8 +838,8 @@ def ilr_inv(
 
     if basis is None:
         basis = xp.asarray(
-            _gram_schmidt_basis(N), device = mat.device, dtype = xp.float64
-            ) # dimension (N-1) x N
+            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+        )  # dimension (N-1) x N
     elif validate:
         xp_, basis = ingest_array(basis)
         # the following maybe redundant as the orthonrmal implicitly check 2-d
@@ -823,7 +847,7 @@ def ilr_inv(
             raise ValueError(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N-1)
+        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
         basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     axis %= mat.ndim
     return _ilr_inv(xp, mat, basis, axis)
@@ -833,10 +857,9 @@ def _ilr_inv(
     xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
 ) -> "StdArray":
     """Perform ILR transform."""
-    permute_order = tuple([i if i!=axis else mat.ndim-1 for i in range(mat.ndim-1)]
-                          +[axis])
-    mat = xp.tensordot(mat, basis, axes=([axis], [0]))
-    return _clr_inv(xp, xp.permute_dims(mat, axes=permute_order) , axis)
+    prod = xp.tensordot(mat, basis, axes=([axis], [0]))
+    perm = xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
+    return _clr_inv(xp, perm, axis)
 
 
 def alr(
@@ -908,19 +931,19 @@ def alr(
     return _alr(xp, mat, denominator_idx, axis)
 
 
-def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+def _alr(
+    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
 ) -> "StdArray":
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
     lmat = xp.log(mat)
-    denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
-    # if one doesn't want `take`, the following code should also work:
-    # column = [slice(None)] * mat.ndim
-    # column[axis] = slice(denominator_idx, denominator_idx + 1)
-    # column = tuple(column)
-    # denominator_vector = lmat[column]
 
+    # The following code can be replaced with a single NumPy function call:
+    #     numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    # However, `delete` is not in the Python array API standard. For compatibility with
+    # libraries that don't have `delete`, an arbitrary dimension slicing method is
+    # is provided below.
     before = [slice(None)] * mat.ndim
     before[axis] = slice(None, denominator_idx)
     before = tuple(before)
@@ -928,6 +951,16 @@ def _alr(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
     after[axis] = slice(denominator_idx + 1, None)
     after = tuple(after)
     numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
+
+    # The following code can be replaced with a single NumPy function call:
+    #     denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
+    # `take` is in the Python array API standard. The following code is to keep the
+    # style consistent with the code above.
+    column = [slice(None)] * mat.ndim
+    column[axis] = slice(denominator_idx, denominator_idx + 1)
+    column = tuple(column)
+    denominator_vector = lmat[column]
+
     return numerator_matrix - denominator_vector
 
 
@@ -940,7 +973,7 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     .. math::
         alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D
 
-    The inverse alr transformation is defined as follows:
+    The inverse ALR transformation is defined as follows:
 
     .. math::
          alr^{-1}(x) = C[exp([y_1, y_2, ..., y_{D-1}, 0])]
@@ -1004,8 +1037,14 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     return _alr_inv(xp, mat, denominator_idx, axis)
 
 
-def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+def _alr_inv(
+    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
 ) -> "StdArray":
+    # The following code can be replaced with a single NumPy function call.
+    #     comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
+    # However, `insert` is not in the Python array API standard. For compatibility with
+    # libraries that don't have `insert`, an arbitrary dimension slicing method is
+    # is provided below.
     before = [slice(None)] * mat.ndim
     before[axis] = slice(None, denominator_idx)
     before = tuple(before)
@@ -1017,11 +1056,12 @@ def _alr_inv(xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
     shape = tuple(shape)
     zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
     comp = xp.concat((mat[before], zeros, mat[after]), axis=axis)
-    comp = xp.exp(comp-xp.max(comp, axis=axis, keepdims=True))
+    comp = xp.exp(comp - xp.max(comp, axis=axis, keepdims=True))
+
     return _closure(xp, comp, axis)
 
 
-def centralize(mat):
+def centralize(mat: "ArrayLike") -> "StdArray":
     r"""Center data around its geometric average.
 
     Parameters
@@ -2202,7 +2242,7 @@ def _check_basis(
         basis = basis.reshape(1, -1)
     if subspace_dim is None:
         subspace_dim = len(basis)
-    elif len(basis)!= subspace_dim:
+    elif len(basis) != subspace_dim:
         n_basis = len(basis)
         msg = f"Number of basis {n_basis} not match to the subspace dim {subspace_dim}."
         raise ValueError(msg)

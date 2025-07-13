@@ -18,59 +18,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
     from ._typing import ArrayLike, StdArray
 
-_ = aac.array_namespace(np.array([]))
 
-
-def _ingest_array(
-    arr: "ArrayLike", /, *, to_numpy: bool = False
-) -> Tuple["ModuleType", Union["StdArray","ArrayLike"]]:
-    r"""Convert an array-like variable into an array object and its namespace.
-
-    Parameters
-    ----------
-    arr : array_like
-        Input object.
-    to_numpy : bool, optional
-        If True, make sure the returned array is a NumPy array.
-
-    Returns
-    -------
-    arr : object
-        The array object that is consistent with ``xp`` .
-
-    See Also
-    --------
-    ingest_array
-    skbio.util._typing.ArrayLike
-    array_api_compat.array_namespace
-    numpy.typing.ArrayLike
-    numpy.from_dlpack
-
-    Notes
-    -----
-    A compatible array-like object must be either:
-
-    1. An array object that is compatible with the Python array API standard [1]_.
-
-        * Examples are numpy.ndarray, cupy.ndarray, torch.Tensor, jax.Array,
-          dask.array.Array, and sparse.SparseArray.
-
-    2. An object that can be casted into a NumPy array [2]_.
-
-        * Examples are numpy.ndarray, Python list, tuple, array, and scalar.
-
-    ``xp`` is the namespace wrapper for different array libraries.
-
-    If the input ``arr`` is already a compatible object, it will be returned as-is.
-    Otherwise, it will be converted into a NumPy array.
-
-    References
-    ----------
-    .. [1] https://data-apis.org/array-api/latest/
-
-    .. [2] https://numpy.org/devdocs/glossary.html#term-array_like
-
-    """
+def _ingest_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
+    r"""Convert an array-like variable into an array object."""
     # Cast a non-array object into a NumPy array.
     if not aac.is_array_api_obj(arr):
         arr = np.asarray(arr)
@@ -91,22 +41,24 @@ def _ingest_array(
 
     return arr
 
-def ingest_array(*arrays: "ArrayLike", to_numpy: bool = False
-)->Tuple["ModuleType", Union["StdArray","ArrayLike"]]:
-    r"""Convert an array-like variable into an array object and its namespace.
+
+def ingest_array(
+    *arrays: "ArrayLike", to_numpy: bool = False
+) -> Tuple["ModuleType", Union["StdArray", "ArrayLike"]]:
+    r"""Convert array-like variables into array objects and their shared namespace.
 
     Parameters
     ----------
     *arrays : array_like
-        One or more array-like inputs
+        One or more array-like variables.
     to_numpy : bool, optional
-        If True, make sure the returned array is a NumPy array.
+        If True, make sure the returned arrays are NumPy arrays.
 
     Returns
     -------
     xp : namespace
         The array API compatible namespace corresponding ``arrays``.
-    arrays : object
+    *arrays : object
         One or more array objects that are consistent with ``xp``.
 
     See Also
@@ -142,5 +94,5 @@ def ingest_array(*arrays: "ArrayLike", to_numpy: bool = False
     .. [2] https://numpy.org/devdocs/glossary.html#term-array_like
 
     """
-    arrays = tuple(_ingest_array(_, to_numpy=to_numpy) for _ in arrays)
+    arrays = tuple(_ingest_array(x, to_numpy=to_numpy) for x in arrays)
     return aac.array_namespace(*arrays), *arrays

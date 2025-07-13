@@ -22,7 +22,7 @@ from skbio import TreeNode
 from skbio.util import assert_data_frame_almost_equal
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    _check_composition, _check_orthogonality, _check_grouping, _check_trt_ref_groups,
+    _check_composition, _check_basis, _check_grouping, _check_trt_ref_groups,
     _check_metadata, _type_cast_to_float,
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, sbp_basis, _gram_schmidt_basis, centralize, _check_sig_test,
@@ -588,6 +588,8 @@ class CompositionTests(TestCase):
 
         with self.assertRaises(ValueError):
             perturb(closure(self.cdata5), self.bad1)
+        self.assertIsNotNone(perturb(
+            closure(self.cdata5), self.bad1, validate=False))
 
         # make sure that inplace modification is not occurring
         perturb(self.cdata2, [1, 2, 3])
@@ -609,6 +611,7 @@ class CompositionTests(TestCase):
 
         with self.assertRaises(ValueError):
             power(self.bad1, 2)
+        self.assertIsNotNone(power(self.bad1, 2, validate=False))
 
         # make sure that inplace modification is not occurring
         power(self.cdata2, 4)
@@ -632,6 +635,8 @@ class CompositionTests(TestCase):
 
         with self.assertRaises(ValueError):
             perturb_inv(closure(self.cdata1), self.bad1)
+        self.assertIsNotNone(perturb_inv(
+            closure(self.cdata1), self.bad1, validate=False))
 
         # make sure that inplace modification is not occurring
         perturb_inv(self.cdata2, [1, 2, 3])
@@ -649,8 +654,16 @@ class CompositionTests(TestCase):
         npt.assert_allclose(inner(self.ortho1, self.ortho1), np.identity(3),
                             rtol=1e-04, atol=1e-06)
 
+        # just for test
+        self.assertIsNotNone(inner(self.cdata7, self.cdata7, validate=False))
+
+        # dimension not match
         with self.assertRaises(ValueError):
             inner(self.cdata1, self.cdata8)
+
+        # invalid compositions
+        with self.assertRaises(ValueError):
+            inner(self.bad1, self.bad1)
 
         # make sure that inplace modification is not occurring
         inner(self.cdata1, self.cdata1)

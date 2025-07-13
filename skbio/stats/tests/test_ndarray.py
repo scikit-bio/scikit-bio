@@ -8,24 +8,24 @@
 
 from unittest import TestCase,  main, skipIf
 from copy import deepcopy
-# switched to skbio warning
 import warnings
+import inspect
+import subprocess
 
 import numpy as np
-import torch
 import numpy.testing as npt
 from numpy.random import rand, randint
 
 from skbio.stats.composition import (
     closure, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, _gram_schmidt_basis)
-import inspect
+
 
 try:
     import jax
     import jax.numpy as jnp
     no_jax = False
-    jax.config.update('jax_enable_x64', True)
+    jax.config.update("jax_enable_x64", True)
 except ImportError:
     no_jax = True
     
@@ -38,8 +38,8 @@ try:
 except ImportError:
     no_torch = True
 
+
 # evaluate the existence of cuda
-import subprocess
 def no_cuda_available():
     try:
         result = subprocess.run(
@@ -111,8 +111,8 @@ class Tests_Closure(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = 1
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
         expected_int = random_int/torch.sum(random_int, keepdims=True, dim=axis)
         expected_real = random_real/torch.sum(random_real, keepdims=True, dim=axis)
         
@@ -158,7 +158,7 @@ class Tests_Closure(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = 1
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real)
         expected_int = random_int/jnp.sum(random_int, keepdims=True, axis=axis)
@@ -248,14 +248,14 @@ class Tests_CLR(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = 1
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
         expected_int = (lmat := np.log(self.random_postive_int)) \
                                     - np.mean(lmat, axis=axis, keepdims=True)
-        expected_int = torch.tensor(expected_int, device='cuda')
+        expected_int = torch.tensor(expected_int, device="cuda")
         expected_real = (lmat := np.log(self.random_postive_real)) \
                                     - np.mean(lmat, axis=axis, keepdims=True)
-        expected_real = torch.tensor(expected_real, device='cuda')
+        expected_real = torch.tensor(expected_real, device="cuda")
         
         # Action
         rst_int = clr(random_int, axis)
@@ -331,7 +331,7 @@ class Tests_CLR(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = 1
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = (lmat := np.log(self.random_postive_int)) \
@@ -449,10 +449,10 @@ class Tests_CLR_INV(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = clr_inv(random_int, axis)
@@ -528,7 +528,7 @@ class Tests_CLR_INV(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -650,10 +650,10 @@ class Tests_ALR(TestCase):
         # Asrange
         denominator_idx = self.denominator_idx
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = alr(random_int, denominator_idx, axis)
@@ -731,7 +731,7 @@ class Tests_ALR(TestCase):
         # Asrange
         axis = self.axis
         denominator_idx = self.denominator_idx
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -856,10 +856,10 @@ class Tests_ALR_INV(TestCase):
         # Asrange
         denominator_idx = self.denominator_idx
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = alr_inv(random_int, denominator_idx, axis)
@@ -938,7 +938,7 @@ class Tests_ALR_INV(TestCase):
         # Asrange
         axis = self.axis
         denominator_idx = self.denominator_idx
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -1059,10 +1059,10 @@ class Tests_ILR_default_basis(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = ilr(random_int, axis=axis)
@@ -1138,7 +1138,7 @@ class Tests_ILR_default_basis(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -1260,10 +1260,10 @@ class Tests_ILR_INV_default_basis(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = ilr_inv(random_int, axis=axis)
@@ -1339,7 +1339,7 @@ class Tests_ILR_INV_default_basis(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -1466,10 +1466,10 @@ class Tests_ILR_helmert_basis(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = ilr(random_int, axis=axis)
@@ -1545,7 +1545,7 @@ class Tests_ILR_helmert_basis(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -1674,10 +1674,10 @@ class Tests_ILR_INV_helmert_basis(TestCase):
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
-        random_int = torch.tensor(self.random_postive_int, device='cuda')
-        random_real = torch.tensor(self.random_postive_real, device='cuda')
-        expected_int = torch.tensor(self.expected_int, device='cuda')
-        expected_real = torch.tensor(self.expected_real, device='cuda')
+        random_int = torch.tensor(self.random_postive_int, device="cuda")
+        random_real = torch.tensor(self.random_postive_real, device="cuda")
+        expected_int = torch.tensor(self.expected_int, device="cuda")
+        expected_real = torch.tensor(self.expected_real, device="cuda")
         
         # Action
         rst_int = ilr_inv(random_int, axis=axis)
@@ -1747,13 +1747,13 @@ class Tests_ILR_INV_helmert_basis(TestCase):
                 f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
                 UserWarning
             )
-        
+
 
     @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        device = jax.devices('gpu')[0]
+        device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
         expected_int = jnp.array(self.expected_int, device=device)
@@ -1774,7 +1774,7 @@ class Tests_ILR_INV_helmert_basis(TestCase):
         
         assert expected_int.device == rst_int.device, "different device"
         assert expected_real.device == rst_real.device, "different device"
-        
+
         try:
             assert jnp.sum(jnp.abs(expected_int - rst_int))<1e-08, "unmatched values"
             assert jnp.sum(jnp.abs(expected_real - rst_real))<1e-08, "unmatched values"
@@ -1789,5 +1789,5 @@ class Tests_ILR_INV_helmert_basis(TestCase):
             )
 
    
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
