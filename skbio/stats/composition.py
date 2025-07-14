@@ -1781,13 +1781,11 @@ def ancom(
         by name. The default is one-way ANOVA ("f_oneway").
 
         .. versionchanged:: 0.6.4
-
             Test funcion must accept 2-D arrays as input, perform batch testing, and
             return 1-D arrays. SciPy functions have this capability. Custom functions
             may need modification.
 
         .. versionchanged:: 0.6.0
-
             Accepts test names in addition to functions.
 
     percentiles : iterable of floats, optional
@@ -1804,8 +1802,11 @@ def ancom(
         - ``W``: *W*-statistic, or the number of features that the current
           feature is tested to be significantly different against.
 
-        - ``Reject null hypothesis``: Whether the feature is differentially
+        - ``Signif``: Whether the feature is significantly differentially
           abundant across groups (``True``) or not (``False``).
+
+        .. versionchanged:: 0.6.4
+            Renamed "Reject null hypothesis" into "Signif".
 
     pd.DataFrame
         A table of features and their percentile abundances in each group. If
@@ -1906,12 +1907,11 @@ def ancom(
     to be significantly different against. In this scenario, ``b2`` was
     detected to have significantly different abundances compared to four of the
     other features. To summarize the results from the *W*-statistic, let's take
-    a look at the results from the hypothesis test. The ``Reject null
-    hypothesis`` column in the table indicates whether the null hypothesis was
-    rejected, and that a feature was therefore observed to be differentially
-    abundant across the groups.
+    a look at the results from the hypothesis test. The ``Signif`` column in the
+    table indicates whether the null hypothesis was rejected, and that a feature
+    was therefore observed to be differentially abundant across the groups.
 
-    >>> ancom_df['Reject null hypothesis']
+    >>> ancom_df['Signif']
     b1    False
     b2     True
     b3    False
@@ -1919,7 +1919,7 @@ def ancom(
     b5    False
     b6    False
     b7    False
-    Name: Reject null hypothesis, dtype: bool
+    Name: Signif, dtype: bool
 
     From this we can conclude that only ``b2`` was significantly different in
     abundance between the treatment and the placebo. We still don't know, for
@@ -2043,7 +2043,7 @@ def ancom(
     ancom_df = pd.DataFrame(
         {
             "W": pd.Series(W, index=features),
-            "Reject null hypothesis": pd.Series(reject, index=features),
+            "Signif": pd.Series(reject, index=features),
         }
     )
 
@@ -2354,41 +2354,41 @@ def dirmult_ttest(
     pd.DataFrame
         A table of features, their log-fold changes and other relevant statistics.
 
-        ``T statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
-        are generated from each posterior draw.  The reported ``T statistic`` is the
-        average across all of the posterior draws.
+        - ``T-statistic``: *t*-statistic of Welch's *t*-test. The reported value is the
+          average across all of the posterior draws.
 
-        ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
-        the log2 fold-change is computed as the difference between the mean
-        log-abundance the ``treatment`` group and the ``reference`` group. All log2
-        fold changes are expressed in clr coordinates. The reported ``Log2(FC)``
-        is the average of all of the log2-fold changes computed from each of the
-        posterior draws.
+        - ``Log2(FC)``: Expected log2-fold change of abundance from the reference group
+          to the treatment group. The value is expressed in the center log ratio (see
+          :func:`clr`) transformed coordinates. The reported value is the average of
+          all of the log2-fold changes computed from each of the posterior draws.
 
-        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
-        ``CI(2.5)`` is the 2.5% quantile of all of the log2-fold changes computed
-        from each of the posterior draws.
+        - ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported value is the
+          minimum of all of the 2.5% quantiles computed from each of the posterior
+          draws.
 
-        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
-        reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
-        changes computed from each of the posterior draws.
+        - ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported value is
+          the maximum of all of the 97.5% quantiles computed from each of the posterior
+          draws.
 
-        ``pvalue`` is the *p*-value of the *t*-test. The reported values are the
-        average of all of the *p*-values computed from the *t*-tests calculated
-        across all of the posterior draws.
+        - ``pvalue``: *p*-value of Welch's *t*-test. The reported value is the average
+          of all of the *p*-values computed from each of the posterior draws.
 
-        ``qvalue`` is the *p*-value of the *t*-test after performing multiple
-        comparison correction.
+        - ``qvalue``: Corrected *p*-value of Welch's *t*-test for multiple comparisons.
+          The reported value is the average of all of the *q*-values computed from each
+          of the posterior draws.
 
-        ``Reject null hypothesis`` indicates if feature is differentially
-        abundant across groups (``True``) or not (``False``). In order for a
-        feature to be differentially abundant, the qvalue needs to be significant
-        (i.e. <0.05) and the confidence intervals reported by ``CI(2.5)`` and
-        ``CI(97.5)`` must not overlap with zero.
+        - ``Signif``: Whether feature is significantly differentially abundant between
+          the treatment and reference groups. A feature marked as "True" suffice: 1)
+          The *q*-value must be less than or equal to the significance level (0.05). 2)
+          The confidence interval (CI(2.5)..CI(97.5)) must not overlap with zero.
 
         .. versionchanged:: 0.6.4
             ``df`` (degrees of freedom) was removed from the report, as this metric is
             inconsistent across draws.
+
+        .. versionchanged:: 0.6.4
+            Renamed "T-statistic" as "T-statistic".
+            Renamed "Reject null hypothesis" as "Signif".
 
     See Also
     --------
@@ -2437,15 +2437,15 @@ def dirmult_ttest(
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> result = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
-    >>> result[["Log2(FC)", "CI(2.5)", "CI(97.5)", "qvalue"]]
-        Log2(FC)   CI(2.5)  CI(97.5)    qvalue
-    b1 -4.991987 -7.884498 -2.293463  0.020131
-    b2 -2.533729 -3.594590 -1.462339  0.007446
-    b3  1.627677 -1.048219  4.750792  0.068310
-    b4  1.707221 -0.467481  4.164998  0.065613
-    b5  1.528243 -1.036910  3.978387  0.068310
-    b6  1.182343 -0.702656  3.556061  0.068310
-    b7  1.480232 -0.601277  4.043888  0.068310
+    >>> result
+        T-statistic  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue  Signif
+    b1   -17.178600 -4.991987 -7.884498 -2.293463  0.003355  0.020131    True
+    b2   -16.873187 -2.533729 -3.594590 -1.462339  0.001064  0.007446    True
+    b3     6.942727  1.627677 -1.048219  4.750792  0.021130  0.068310   False
+    b4     6.522786  1.707221 -0.467481  4.164998  0.013123  0.065613   False
+    b5     6.654142  1.528243 -1.036910  3.978387  0.019360  0.068310   False
+    b6     3.839520  1.182343 -0.702656  3.556061  0.045376  0.068310   False
+    b7     7.600734  1.480232 -0.601277  4.043888  0.017077  0.068310   False
 
     """
     from statsmodels.stats.weightstats import CompareMeans
@@ -2519,8 +2519,8 @@ def dirmult_ttest(
     # 1) q-value <= significance level. 2) confidence interval doesn't include 0.
     # This test is in addition to the original ALDEx2 method. It helps to reduce false
     # positive discoveries of low abundance.
-    sig = ((lower > 0) & (upper > 0)) | ((lower < 0) & (upper < 0))
-    reject &= sig
+    outer = ((lower > 0) & (upper > 0)) | ((lower < 0) & (upper < 0))
+    reject &= outer
 
     # Convert all log fold changes to base 2.
     log2_ = np.log(2)
@@ -2531,13 +2531,13 @@ def dirmult_ttest(
     # construct report
     res = pd.DataFrame.from_dict(
         {
-            "T statistic": tstat,
+            "T-statistic": tstat,
             "Log2(FC)": delta,
             "CI(2.5)": lower,
             "CI(97.5)": upper,
             "pvalue": pval,
             "qvalue": qval,
-            "Reject null hypothesis": reject,
+            "Signif": reject,
         }
     )
     if features is not None:
@@ -2667,34 +2667,42 @@ def dirmult_lme(
         A table of features and covariates, their log-fold changes and other relevant
         statistics.
 
-        ``FeatureID``: Feature identifier, i.e., dependent variable.
+        - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
-        ``Covariate``: Covariate name, i.e., independent variable.
+        - ``Covariate``: Covariate name, i.e., independent variable.
 
-        ``Reps``: Number of Dirichlet-multinomial posterior draws that supported the
-        reported statistics, i.e., the number of successful model fittings on this
-        feature. Max: ``draws`` (if none failed). Min: 0 (in which case all statistics
-        are NaN).
+        - ``Reps``: Number of Dirichlet-multinomial posterior draws that supported the
+          reported statistics, i.e., the number of successful model fittings on this
+          feature. Max: ``draws`` (if none failed). Min: 0 (in which case all
+          statistics are NaN).
 
-        ``Log2(FC)``: Expected log2-fold change. The reported ``Log2(FC)`` is the
-        average of all of the log2-fold changes computed from each of the posterior
-        draws.
+        - ``Log2(FC)``: Expected log2-fold change of abundance from the reference
+          category to the covariate category defined in the formula. The value is
+          expressed in the center log ratio (see :func:`clr`) transformed coordinates.
+          The reported value is the average of all of the log2-fold changes computed
+          from each of the posterior draws.
 
-        ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported ``CI(2.5)`` is
-        the minimum of all of the 2.5% quantiles computed from each of the posterior
-        draws.
+        - ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported value is the
+          minimum of all of the 2.5% quantiles computed from each of the posterior
+          draws.
 
-        ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported ``CI(97.5)``
-        is the maximum of all of the 97.5% quantiles computed from each of the
-        posterior draws.
+        - ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported value is
+          the maximum of all of the 97.5% quantiles computed from each of the posterior
+          draws.
 
-        ``pvalue``: *p*-value of the linear mixed effects model. The reported *p*-value
-        is the average of all of the *p*-values computed from each of the posterior
-        draws.
+        - ``pvalue``: *p*-value of the linear mixed effects model. The reported value
+          is the average of all of the *p*-values computed from each of the posterior
+          draws.
 
-        ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
-        comparisons. The reported *q*-value is the average of all of the *q*-values
-        computed from each of the posterior draws.
+        - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
+          comparisons. The reported value is the average of all of the *q*-values
+          computed from each of the posterior draws.
+
+        - ``Signif``: Whether the covariate category is significantly differentially
+          abundant from the reference category. A feature-covariate pair marked as
+          "True" suffice: 1) The *q*-value must be less than or equal to the
+          significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
+          must not overlap with zero.
 
     See Also
     --------
@@ -2731,11 +2739,17 @@ def dirmult_lme(
     >>> result = dirmult_lme(table, metadata, formula='time + treatment',
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
-      FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737  0.644470
-    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057  0.440581
-    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737  0.644470
-    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057  0.440581
+      FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue  \
+    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737
+    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057
+    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737
+    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057
+    <BLANKLINE>
+         qvalue  Signif
+    0  0.644470   False
+    1  0.440581   False
+    2  0.644470   False
+    3  0.440581   False
 
     """
     from patsy import dmatrix
@@ -2924,19 +2938,30 @@ def dirmult_lme(
     else:
         qval = pval
 
-    # construct report
-    features = pd.Series(
-        [x for x in features for _ in range(n_covars)], name="FeatureID"
-    )
-    covars = pd.Series(list(covars) * n_feats, name="Covariate")
-    fitted = pd.Series(np.repeat(fitted, n_covars), name="Reps")
-    coef = pd.Series(coef.ravel(), name="Log2(FC)")
-    lower = pd.Series(lower.ravel(), name="CI(2.5)")
-    upper = pd.Series(upper.ravel(), name="CI(97.5)")
-    pval = pd.Series(pval.ravel(), name="pvalue")
-    qval = pd.Series(qval.ravel(), name="qvalue")
+    # get significant results (q-value <= 0.05 and CI doesn't cross 0)
+    # see `dirmult_ttest`
+    reject = np.full(shape, np.nan)
+    ii = np.where(mask)[0] if n_failed else np.arange(n_feats)
+    for i in ii:
+        outer = ((lower[i] > 0) & (upper[i] > 0)) | ((lower[i] < 0) & (upper[i] < 0))
+        reject[i] = (qval[i] <= 0.05) & outer
 
-    return pd.concat((features, covars, fitted, coef, lower, upper, pval, qval), axis=1)
+    # construct report
+    res = pd.DataFrame.from_dict(
+        {
+            "FeatureID": [x for x in features for _ in range(n_covars)],
+            "Covariate": list(covars) * n_feats,
+            "Reps": np.repeat(fitted, n_covars),
+            "Log2(FC)": coef.ravel(),
+            "CI(2.5)": lower.ravel(),
+            "CI(97.5)": upper.ravel(),
+            "pvalue": pval.ravel(),
+            "qvalue": qval.ravel(),
+        }
+    )
+    # pandas' nullable boolean type
+    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+    return res
 
 
 register_aliases(modules[__name__])
