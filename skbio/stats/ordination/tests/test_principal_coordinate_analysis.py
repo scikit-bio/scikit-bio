@@ -114,7 +114,7 @@ class TestPCoA(TestCase):
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
-                                   r"no value for number_of_dimensions"):
+                                   r"no value for dimensions"):
             pcoa(dm_big, method="fsvd", number_of_dimensions=0)
 
     def test_permutted(self):
@@ -292,7 +292,7 @@ class TestPCoA(TestCase):
             ("Invalid operation: cannot reduce distance matrix "
             "to negative dimensions using PCoA. Did you intend " 
             'to specify the default value "0", which sets ' 
-            "the number_of_dimensions equal to the " 
+            "the dimensions equal to the " 
             "dimensionality of the given distance matrix?")
             ):
             results = _fsvd(self.dm_invalid[1:4], number_of_dimensions=-1)

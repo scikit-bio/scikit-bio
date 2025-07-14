@@ -22,14 +22,16 @@ from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
 from skbio.binaries import (
     pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
-    pcoa_fsvd as _skbb_pcoa_fsvd
+    pcoa_fsvd as _skbb_pcoa_fsvd,
 )
+from skbio.util._decorator import params_aliased
 
 
+@params_aliased([("dimensions", "number_of_dimensions", "0.7.0", False)])
 def pcoa(
     distance_matrix,
     method="eigh",
-    number_of_dimensions=0,
+    dimensions=0,
     inplace=False,
     seed=None,
     warn_neg_eigval=0.01,
@@ -50,7 +52,7 @@ def pcoa(
         which computes exact eigenvectors and eigenvalues for all dimensions. The
         alternate is "fsvd" (fast singular value decomposition), a heuristic that can
         compute only a given number of dimensions.
-    number_of_dimensions : int or float, optional
+    dimensions : int or float, optional
         Dimensions to reduce the distance matrix to. This number determines how many
         eigenvectors and eigenvalues will be returned. If an integer is provided, the
         exact number of dimensions will be retained. If a float between 0 and 1, it
@@ -138,10 +140,10 @@ def pcoa(
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
-    if number_of_dimensions == 0:
+    if dimensions == 0:
         if method == "fsvd" and distance_matrix.data.shape[0] > 10:
             warn(
-                "FSVD: since no value for number_of_dimensions is specified, "
+                "FSVD: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
                 "result in long computation time if the original "
                 "distance matrix is large.",
@@ -149,20 +151,18 @@ def pcoa(
             )
 
         # distance_matrix is guaranteed to be square
-        number_of_dimensions = distance_matrix.data.shape[0]
-    elif number_of_dimensions < 0:
+        dimensions = distance_matrix.data.shape[0]
+    elif dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
             "to negative dimensions using PCoA. Did you intend "
             'to specify the default value "0", which sets '
-            "the number_of_dimensions equal to the "
+            "the dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
-    elif number_of_dimensions > distance_matrix.data.shape[0]:
-        raise ValueError(
-            "Invalid operation: cannot extend distance matrix size."
-        )
-    elif not isinstance(number_of_dimensions, Integral) and number_of_dimensions > 1:
+    elif dimensions > distance_matrix.data.shape[0]:
+        raise ValueError("Invalid operation: cannot extend distance matrix size.")
+    elif not isinstance(dimensions, Integral) and dimensions > 1:
         raise ValueError(
             "Invalid operation: A floating-point number greater than 1 cannot be "
             "supplied as the number of dimensions."
@@ -179,10 +179,10 @@ def pcoa(
         # Center distance matrix, a requirement for PCoA here
         matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
 
-        # eigh does not natively support specifying number_of_dimensions, i.e.
+        # eigh does not natively support specifying dimensions, i.e.
         # there are no speed gains unlike in FSVD. Later, we slice off unwanted
         # dimensions to conform the result of eigh to the specified
-        # number_of_dimensions.
+        # dimensions.
 
         eigvals, eigvecs = eigh(matrix_data)
         long_method_name = "Principal Coordinate Analysis"
@@ -190,10 +190,10 @@ def pcoa(
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         # new parameter for num_dimensions = number of dimensions (accounting for
         # non-int values)
-        num_dimensions = number_of_dimensions
-        if 0 < number_of_dimensions < 1:
+        num_dimensions = dimensions
+        if 0 < dimensions < 1:
             warn(
-                "FSVD: since value for number_of_dimensions is specified as float, "
+                "FSVD: since value for dimensions is specified as float, "
                 "PCoA for all dimensions will be computed, which may "
                 "result in long computation time if the original "
                 "distance matrix is large. "
@@ -201,17 +201,20 @@ def pcoa(
                 RuntimeWarning,
             )
             num_dimensions = distance_matrix.data.shape[0]
-        if _skbb_pcoa_fsvd_available(
-                        distance_matrix.data, number_of_dimensions,
-                        inplace, seed):
+        if _skbb_pcoa_fsvd_available(distance_matrix.data, dimensions, inplace, seed):
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
-                        distance_matrix.data, number_of_dimensions,
-                        inplace, seed)
-                return _encapsulate_pcoa_result(long_method_name,
-                                    eigvals, coordinates, proportion_explained,
-                                    distance_matrix.ids, output_format)
+                    distance_matrix.data, dimensions, inplace, seed
+                )
+                return _encapsulate_pcoa_result(
+                    long_method_name,
+                    eigvals,
+                    coordinates,
+                    proportion_explained,
+                    distance_matrix.ids,
+                    output_format,
+                )
             except Exception as e:
                 warn(
                     "Attempted to use binaries.pcoa_fsvd but failed, "
@@ -227,8 +230,8 @@ def pcoa(
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
         )
-    # Ensure number_of_dimensions does not exceed available dimensions
-    # number_of_dimensions = min(number_of_dimensions, eigvals.shape[0])
+    # Ensure dimensions does not exceed available dimensions
+    # dimensions = min(dimensions, eigvals.shape[0])
 
     # cogent makes eigenvalues positive by taking the
     # abs value, but that doesn't seem to be an approach accepted
@@ -283,22 +286,22 @@ def pcoa(
         sum_eigenvalues = np.sum(eigvals)
 
     proportion_explained = eigvals / sum_eigenvalues
-    if 0 < number_of_dimensions < 1:
+    if 0 < dimensions < 1:
         cumulative_variance = np.cumsum(proportion_explained)
         num_dimensions = (
-            np.searchsorted(cumulative_variance, number_of_dimensions, side="left") + 1
+            np.searchsorted(cumulative_variance, dimensions, side="left") + 1
         )
         # gives the number of dimensions needed to reach specified variance
         # updates number of dimensions to reach the requirement of variance.
-        number_of_dimensions = num_dimensions
+        dimensions = num_dimensions
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
-    # So if number_of_dimensions was specified, we manually need to ensure
+    # So if dimensions was specified, we manually need to ensure
     # only the requested number of dimensions
     # (number of eigenvectors and eigenvalues, respectively) are returned.
-    eigvecs = eigvecs[:, :number_of_dimensions]
-    eigvals = eigvals[:number_of_dimensions]
-    proportion_explained = proportion_explained[:number_of_dimensions]
+    eigvecs = eigvecs[:, :dimensions]
+    eigvals = eigvals[:dimensions]
+    proportion_explained = proportion_explained[:dimensions]
 
     # Scale eigenvalues to have length = sqrt(eigenvalue). This
     # works because np.linalg.eigh returns normalized
@@ -308,17 +311,18 @@ def pcoa(
     # needed to represent n points in a euclidean space.
     coordinates = eigvecs * np.sqrt(eigvals)
 
-    return _encapsulate_pcoa_result(long_method_name,
-                                    eigvals, coordinates, proportion_explained,
-                                    distance_matrix.ids, output_format)
-
-def _encapsulate_pcoa_result(
+    return _encapsulate_pcoa_result(
         long_method_name,
         eigvals,
         coordinates,
         proportion_explained,
-        ids,
-        output_format
+        distance_matrix.ids,
+        output_format,
+    )
+
+
+def _encapsulate_pcoa_result(
+    long_method_name, eigvals, coordinates, proportion_explained, ids, output_format
 ):
     r"""Format PCoA results
 
@@ -353,8 +357,8 @@ def _encapsulate_pcoa_result(
     OrdinationResults
     """
 
-    number_of_dimensions = eigvals.shape[0]
-    axis_labels = ["PC%d" % i for i in range(1, number_of_dimensions + 1)]
+    dimensions = eigvals.shape[0]
+    axis_labels = ["PC%d" % i for i in range(1, dimensions + 1)]
     return OrdinationResults(
         short_method_name="PCoA",
         long_method_name=long_method_name,
@@ -371,7 +375,8 @@ def _encapsulate_pcoa_result(
     )
 
 
-def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
+@params_aliased([("dimensions", "number_of_dimensions", "0.7.0", False)])
+def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     """Perform singular value decomposition.
 
     More specifically in this case eigendecomposition, using fast heuristic algorithm
@@ -383,7 +388,7 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     centered_distance_matrix : np.array
        Numpy matrix representing the distance matrix for which the
        eigenvectors and eigenvalues shall be computed
-    number_of_dimensions : int
+    dimensions : int
        Number of dimensions to keep. Must be lower than or equal to the
        rank of the given distance_matrix.
     seed : int or np.random.Generator, optional
@@ -392,9 +397,9 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     Returns
     -------
     np.array
-       Array of eigenvectors, each with number_of_dimensions length.
+       Array of eigenvectors, each with dimensions length.
     np.array
-       Array of eigenvalues, a total number of number_of_dimensions.
+       Array of eigenvalues, a total number of dimensions.
 
     Notes
     -----
@@ -425,22 +430,22 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     if m != n:
         raise ValueError("FSVD expects square distance matrix")
 
-    if number_of_dimensions > m or number_of_dimensions > n:
+    if dimensions > m or dimensions > n:
         raise ValueError(
-            "FSVD: number_of_dimensions cannot be larger than"
+            "FSVD: dimensions cannot be larger than"
             " the dimensionality of the given distance matrix."
         )
 
-    if number_of_dimensions < 0:
+    if dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
             "to negative dimensions using PCoA. Did you intend "
             'to specify the default value "0", which sets '
-            "the number_of_dimensions equal to the "
+            "the dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
 
-    k = number_of_dimensions + 2
+    k = dimensions + 2
 
     # Form a real nxl matrix G whose entries are independent, identically
     # distributed Gaussian random variables of zero mean and unit variance
@@ -486,9 +491,9 @@ def _fsvd(centered_distance_matrix, number_of_dimensions=10, seed=None):
     # Compute the m * ((i+1)l) product matrix
     Ut = dot(Q, W)
 
-    U_fsvd = Ut[:, :number_of_dimensions]
+    U_fsvd = Ut[:, :dimensions]
 
-    S = St[:number_of_dimensions]
+    S = St[:dimensions]
 
     # drop imaginary component, if we got one
     # Note:
