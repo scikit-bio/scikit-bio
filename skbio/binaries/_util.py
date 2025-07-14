@@ -24,8 +24,9 @@ _skbb_version = 0
 
 # ====================================================
 
+
 def _get_new_skbb_dll():
-    """ Load scikit-bio-binaries shared library object, if exists.
+    """Load scikit-bio-binaries shared library object, if exists.
 
     Returns
     -------
@@ -38,9 +39,10 @@ def _get_new_skbb_dll():
 
     """
     import os
+
     try:
         dll = ctypes.CDLL("libskbb.so")
-        if os.environ.get('SKBB_CPU_INFO', 'N') in ('Y','YES'):
+        if os.environ.get("SKBB_CPU_INFO", "N") in ("Y", "YES"):
             print("INFO (scikit-bio): Using shared library libskbb.so")
     except OSError:
         dll = None
@@ -48,7 +50,7 @@ def _get_new_skbb_dll():
 
 
 def get_dll():
-    """ Load scikit-bio-binaries shared library object, if exists.
+    """Load scikit-bio-binaries shared library object, if exists.
 
     Returns
     -------
@@ -70,6 +72,7 @@ def get_dll():
 
 # ====================================================
 
+
 def available():
     """Check if the scikit-bio-binaries shared library available.
 
@@ -87,7 +90,7 @@ def available():
 
 
 def get_api_version():
-    """ What API version does the scikit-bio-binaries shared library implement.
+    """What API version does the scikit-bio-binaries shared library implement.
 
     Returns
     -------
@@ -100,7 +103,7 @@ def get_api_version():
 
     """
     global _skbb_version
-    if _skbb_version==0:
+    if _skbb_version == 0:
         dll = get_dll()
         if dll is not None:
             _skbb_version = dll.skbb_get_api_version()
@@ -108,6 +111,7 @@ def get_api_version():
 
 
 # ====================================================
+
 
 def set_random_seed(new_seed):
     """Set sbkio.binaries internal random seed
@@ -124,7 +128,9 @@ def set_random_seed(new_seed):
     # since there is no colateral impact
     # just do nothing if the shared library does not exist
 
+
 # ====================================================
+
 
 def py_to_bin_random_seed(seed_or_generator=None):
     r"""Get a seed from a python random generator, if needed.
@@ -153,21 +159,20 @@ def py_to_bin_random_seed(seed_or_generator=None):
 
     """
     if seed_or_generator is None:
-        return -1 # special value for scikit-bio-binaries
+        return -1  # special value for scikit-bio-binaries
     elif isinstance(seed_or_generator, Integral):
-        if (seed_or_generator<0):
-             raise ValueError("seed must be a non-negative number")
+        if seed_or_generator < 0:
+            raise ValueError("seed must be a non-negative number")
         else:
-             return seed_or_generator # was already a valid seed
+            return seed_or_generator  # was already a valid seed
     else:
         # assume it is a generator, get a new int seed
         maxint = np.iinfo(np.int32).max + 1
         if isinstance(seed_or_generator, np.random.Generator):
             return seed_or_generator.integers(0, maxint)
         elif isinstance(seed_or_generator, np.random.RandomState):
-            return seed_or_generator.integers.randint(maxint)
+            return seed_or_generator.randint(maxint)
         else:
             raise ValueError(
                 "Invalid seed. It must be an integer or a random generator instance."
             )
-
