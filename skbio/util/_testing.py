@@ -248,30 +248,6 @@ def _assert_frame_dists_equal(
             pdt.assert_index_equal(left_df.columns, right_df.columns)
 
 
-# def _assert_frame_equal(
-#     left_df,
-#     right_df,
-#     ignore_index=False,
-#     ignore_columns=False,
-#     ignore_directionality=False,
-#     decimal=7,
-# ):
-#     # assert_frame_equal doesn't like None...
-#     if left_df is None or right_df is None:
-#         assert left_df is None and right_df is None
-#     else:
-#         left_values = left_df.values
-#         right_values = right_df.values
-#         if ignore_directionality:
-#             left_values, right_values = _normalize_signs(left_values, right_values)
-#         npt.assert_almost_equal(left_values, right_values, decimal=decimal)
-
-#         if not ignore_index:
-#             pdt.assert_index_equal(left_df.index, right_df.index)
-#         if not ignore_columns:
-#             pdt.assert_index_equal(left_df.columns, right_df.columns)
-
-
 def _normalize_signs(arr1, arr2):
     """Change column signs so that "column" and "-column" compare equal.
 
