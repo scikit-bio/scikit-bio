@@ -34,12 +34,6 @@ Scikit-bio supports a variety of table-like formats used in bioinformatics, scie
 computing and data science in general. When a function parameter is annotated as
 ``table_like``, it accepts any of the following formats:
 
-When a function parameter is annotated as ``table_like``, it accepts any of the
-formats in the table below.  Input handling is automatic—no manual conversion is
-required.  If the input supplies sample or feature IDs, scikit-bio preserves them and
-propagates them to downstream results; otherwise, integer indices starting at 0 are
-used.
-
 +--------------------------------------+---------------------+------------------------+
 | Format                               | Sample IDs          | Feature IDs            |
 +======================================+=====================+========================+
