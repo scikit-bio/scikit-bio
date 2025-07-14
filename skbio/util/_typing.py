@@ -6,17 +6,58 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Union
+from typing import Optional, Union, Protocol, runtime_checkable, Tuple, Any
 
 import pandas as pd
 import numpy as np
+from numpy.typing import ArrayLike as NPArrayLike
 
 from skbio.table import Table
 from skbio.util import get_package
 
 
 # ------------------------------------------------
-# TableLike (see: skbio.table.table_like)
+# ArrayLike (see: skbio.util._array)
+# ------------------------------------------------
+
+
+@runtime_checkable
+class StdArray(Protocol):
+    r"""Any object compliant with the Python array API standard [1]_.
+
+    Examples are numpy.ndarray, cupy.ndarray, torch.Tensor, jax.Array,
+    dask.array.Array, and sparse.SparseArray.
+
+    See Also
+    --------
+    ._array._ingest_array
+
+    References
+    ----------
+    .. [1] https://data-apis.org/array-api/latest/
+
+    """
+
+    def __array_namespace__(self, api_version: Optional[str] = None): ...
+
+    @property
+    def shape(self) -> Tuple[int, ...]: ...
+
+    @property
+    def ndim(self) -> int: ...
+
+    @property
+    def dtype(self) -> Any: ...
+
+    @property
+    def device(self)-> Any: ...
+
+
+ArrayLike = Union[NPArrayLike, StdArray]
+
+
+# ------------------------------------------------
+# TableLike (see: skbio.table._tabular)
 # ------------------------------------------------
 
 # Base types which are always available

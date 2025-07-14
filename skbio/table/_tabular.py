@@ -202,12 +202,6 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
     elif len(feature_ids) != data.shape[1]:
         raise ValueError(lenerr.format(data.shape[1], "feature", len(feature_ids)))
 
-    # cast to lists
-    if sample_ids is not None and not isinstance(sample_ids, list):
-        sample_ids = list(sample_ids)
-    if feature_ids is not None and not isinstance(feature_ids, list):
-        feature_ids = list(feature_ids)
-
     return data, sample_ids, feature_ids
 
 

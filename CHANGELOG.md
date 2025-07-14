@@ -21,6 +21,8 @@
 
 ### Performance enhancements
 
+* Improved the performance of `dirmult_ttest` ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Improved the performance of `ancom`. This is primarily due to exploiting vectorization of the statistical testing function (such as `f_oneway`). As a consequence, a custom testing function now must accept 2-D arrays as input and return 1-D arrays. Function names available under `scipy.stats` are not impacted ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
 * Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Improved the performance of `SubstitutionMatrix.identity`.
 * Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
@@ -37,6 +39,8 @@
 
 ### Miscellaneous
 
+* Renamed column "Reject null hypothesis" as "Signif" in `ancom` and `dirmult_ttest`'s report tables for conciseness ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Renmaed the parameter `significance_test` as `sig_test` in `ancom` for conciseness. The old name is preserved as an alias ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
 * Set the default data type of `SubstitutionMatrix` as `np.float32` (previous it was `float`, which is equivalent to `np.float64`). Made `dtype` an optional parameter in `from_dict` and `identity` methods.
 * Adjusted the `__repr__` of `AlignPath` and `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)).
 * Changed `AlignPath.shape`'s type from a named tuple to a normal tuple ([#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)). Let the values be native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).

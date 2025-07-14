@@ -44,6 +44,7 @@ compositions.
 
    ancom
    dirmult_ttest
+   dirmult_lme
 
 
 Arithmetic operations
@@ -138,72 +139,94 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Optional, TYPE_CHECKING
 from sys import modules
 from warnings import warn, catch_warnings, simplefilter
+import inspect
 
 import numpy as np
 import pandas as pd
-import scipy.stats
-from scipy.sparse import coo_matrix
-from scipy.stats import t, gmean
-from statsmodels.stats.weightstats import CompareMeans
 
-from skbio.stats.distance import DistanceMatrix
-from skbio.util import find_duplicates
 from skbio.util import get_rng
 from skbio.util._decorator import aliased, register_aliases, params_aliased
-from statsmodels.stats.multitest import multipletests as sm_multipletests
-from statsmodels.regression.mixed_linear_model import MixedLM
-from statsmodels.tools.sm_exceptions import ConvergenceWarning
-from patsy import dmatrix
+from skbio.util._array import ingest_array
+from skbio.table._tabular import _ingest_table
 
-import array_api_compat as aac
-import warnings
-from typing import Optional
 
-Array = object
+if TYPE_CHECKING:  # pragma: no cover
+    from types import ModuleType
+    from skbio.util._typing import ArrayLike, StdArray
 
-def supports_array_api(obj):
-    required_methods = ["__array_namespace__"]
-    return all(hasattr(obj, method) for method in required_methods)
 
-def _composition_check(mat: Array):
-    """Check if the input is a valid composition.
-
-    Parameters
-    ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
-    """
-    axis = -1
-    xp = aac.array_namespace(mat)
-    if xp.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
-    if xp.all(mat == 0, axis=axis).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros")
-
-def closure(mat):
-    """Perform closure to ensure that all elements add up to 1.
+def _check_composition(
+    xp: "ModuleType",
+    mat: "StdArray",
+    axis: int = -1,
+    nozero: bool = False,
+    maxdim: Optional[int] = None,
+):
+    r"""Check if the input matrix contain valid compositions.
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    xp : namespace
+        The array API compatible namespace corresponding ``mat``.
+    mat : array of shape (..., n_components, ...)
         A matrix of proportions.
-
-    Returns
-    -------
-    ndarray of shape (n_compositions, n_components)
-        The matrix where all of the values are non-zero and each composition
-        (row) adds up to 1.
+    axis : int, optional
+        Axis that represents each composition. Default is the last axis (-1).
+    nozero : bool, optional
+        If True, matrix cannot have zero values.
+    maxdim : int, optional
+        Maximum number of dimensions allowed. Default is None.
 
     Raises
     ------
+    TypeError
+        If the matrix is not numeric.
     ValueError
-        If any values are negative.
+        If the matrix contains nan or infinite values.
     ValueError
-        If the matrix has more than two dimensions.
+        If any values in the matrix are negative.
     ValueError
-        If there is a row that has all zeros.
+        If there are compositions that have all zeros.
+    ValueError
+        If the matrix has more than maximum number of dimensions.
+
+    """
+    if not xp.isdtype(mat.dtype, "numeric"):
+        raise TypeError("Input matrix must have a numeric data type.")
+    if not xp.all(xp.isfinite(mat)):
+        raise ValueError("Input matrix cannot have infinite or NaN values.")
+    if nozero:
+        if xp.any(mat <= 0):
+            raise ValueError("Input matrix cannot have negative or zero components.")
+    else:
+        if xp.any(mat < 0):
+            raise ValueError("Input matrix cannot have negative components.")
+        if xp.any(~xp.any(mat, axis=axis)):
+            raise ValueError("Input matrix cannot have compositions with all zeros.")
+    if maxdim is not None and mat.ndim > maxdim:
+        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
+
+
+def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+    r"""Perform closure to ensure that all components of each composition sum to 1.
+
+    Parameters
+    ----------
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of compositions.
+    axis : int, optional
+        Axis along which closure will be performed. That is, each vector along this
+        axis is considered as a composition. Default is the last axis (-1).
+    validate : bool, default True
+        Check if the compositions are legitimate.
+
+    Returns
+    -------
+    ndarray of shape (..., n_components, ...)
+        The matrix where all components of each composition sum to 1.
 
     Examples
     --------
@@ -215,26 +238,15 @@ def closure(mat):
            [ 0.4,  0.4,  0.2]])
 
     """
-    # mat = np.atleast_2d(mat)
-    axis = 1
+    xp, mat = ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat, axis)
+    return _closure(xp, mat, axis)
 
-    if not aac.is_array_api_obj(mat):
-        mat = np.array(mat)
-    xp = aac.array_namespace(mat)
-    if xp.any(mat < 0):
-        raise ValueError("Cannot have negative proportions")
-    if mat.ndim > 2:
-        raise ValueError("Input matrix can only have two dimensions or less")
-    elif mat.ndim ==1:
-        mat = mat.reshape(1, -1)
-    if xp.all(mat == 0, axis=1).sum() > 0:
-        raise ValueError("Input matrix cannot have rows with all zeros")
-    mat = mat / mat.sum(axis=axis, keepdims=True)
 
-    # squeeze maybe no need
-    return xp.squeeze(mat,
-                      axis=tuple(i for i,m in enumerate(mat.shape) \
-                                 if m==1))
+def _closure(xp: "ModuleType", mat: "StdArray", axis: int = -1) -> "StdArray":
+    """Perform closure."""
+    return mat / xp.sum(mat, axis=axis, keepdims=True)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -278,7 +290,7 @@ def multi_replace(mat, delta=None):
     --------
     >>> import numpy as np
     >>> from skbio.stats.composition import multi_replace
-    >>> X = np.array([[.2, .4, .4, 0],[0, .5, .5, 0]])
+    >>> X = np.array([[.2, .4, .4, 0], [0, .5, .5, 0]])
     >>> multi_replace(X)
     array([[ 0.1875,  0.375 ,  0.375 ,  0.0625],
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
@@ -294,16 +306,24 @@ def multi_replace(mat, delta=None):
         delta = (1.0 / num_feats) ** 2
 
     zcnts = 1 - tot * delta
-    if np.any(zcnts) < 0:
+    if (zcnts < 0).any():
         raise ValueError(
-            "The multiplicative replacement created negative "
-            "proportions. Consider using a smaller `delta`."
+            "Multiplicative replacement created negative proportions. Consider "
+            "using a smaller `delta`."
         )
     mat = np.where(z_mat, delta, zcnts * mat)
     return mat.squeeze()
 
 
-def perturb(x, y):
+def _closure_two(x, y, validate):
+    xp, x, y = ingest_array(x, y)
+    if validate:
+        _check_composition(xp, x)
+        _check_composition(xp, y)
+    return xp, _closure(xp, x), _closure(xp, y)
+
+
+def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Perform the perturbation operation.
 
     This operation is defined as:
@@ -326,6 +346,8 @@ def perturb(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -355,11 +377,11 @@ def perturb(x, y):
     array([ 0.25,  0.25,  0.5 ])
 
     """
-    x, y = closure(x), closure(y)
-    return closure(x * y)
+    xp, cx, cy = _closure_two(x, y, validate)
+    return _closure(xp, cx * cy)
 
 
-def perturb_inv(x, y):
+def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Perform the inverse perturbation operation.
 
     This operation is defined as:
@@ -382,6 +404,8 @@ def perturb_inv(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -399,11 +423,11 @@ def perturb_inv(x, y):
     array([ 0.14285714,  0.42857143,  0.28571429,  0.14285714])
 
     """
-    x, y = closure(x), closure(y)
-    return closure(x / y)
+    xp, cx, cy = _closure_two(x, y, validate)
+    return _closure(xp, cx / cy)
 
 
-def power(x, a):
+def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     r"""Perform the power operation.
 
     This operation is defined as follows:
@@ -426,6 +450,8 @@ def power(x, a):
         A matrix of proportions.
     a : float
         A scalar exponent.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -442,11 +468,14 @@ def power(x, a):
     array([ 0.23059566,  0.25737316,  0.26488486,  0.24714631])
 
     """
-    x = closure(x)
-    return closure(x**a).squeeze()
+    xp, x = ingest_array(x)
+    if validate:
+        _check_composition(xp, x)
+    cx = _closure(xp, x)
+    return _closure(xp, x**a).squeeze()
 
 
-def inner(x, y):
+def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows:
@@ -462,6 +491,8 @@ def inner(x, y):
         A matrix of proportions.
     y : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
 
     Returns
     -------
@@ -478,14 +509,13 @@ def inner(x, y):
     0.2107852473...
 
     """
-    x = closure(x)
-    y = closure(y)
-    a, b = clr(x), clr(y)
-    return a.dot(b.T)
+    xp, cx, cy = _closure_two(x, y, validate)
+    clrx, clry = _clr(xp, x, axis=-1), _clr(xp, y, axis=-1)
+    return xp.matmul(clrx, clry.T)
 
 
-def clr(mat: Array, validate:bool=True) -> Array:
-    r"""Perform centre log ratio transformation.
+def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+    r"""Perform centre log ratio (CLR) transformation.
 
     This function transforms compositions from Aitchison geometry to the real
     space. The :math:`clr` transform is both an isometry and an isomorphism
@@ -507,16 +537,22 @@ def clr(mat: Array, validate:bool=True) -> Array:
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
-    validate: bool, default True
-        Checking of the mat is a legitimate  composition with elements
-        strictly greater than 0.
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of positive proportions.
+    axis : int, optional
+        Axis along which CLR transformation will be performed. Each vector on this axis
+        is considered as a composition. Default is the last axis (-1).
+    validate : bool, default True
+        Check if the matrix consists of strictly positive values.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
-        Clr-transformed matrix.
+    ndarray of shape (..., n_components, ...)
+        CLR-transformed matrix.
+
+    See Also
+    --------
+    clr_inv
 
     Examples
     --------
@@ -527,37 +563,19 @@ def clr(mat: Array, validate:bool=True) -> Array:
     array([-0.79451346,  0.30409883,  0.5917809 , -0.10136628])
 
     """
-    axis = -1
-    # xp is the namespace wrapper for different array libraries
-    # NOTE: the following (try:) may reduce the efficiency but to
-    # keep backward compatibility when the input is a list
-    try:
-        xp = aac.array_namespace(mat)
-    except Exception as e:
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
-
-
+    xp, mat = ingest_array(mat)
     if validate:
-        # assert from closure() while it is removed in latest version
-        if xp.any(mat < 0):
-            raise ValueError("Cannot have negative proportions")
-        if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less")
+        _check_composition(xp, mat, nozero=True)
+    return _clr(xp, mat, axis)
 
-        # check if the input is a composition
-        _composition_check(mat)
 
-    original_shape = mat.shape
-    # squeeze the singleton dimensions
-    mat = xp.reshape(mat, tuple(i for i in original_shape if i > 1))
-    lmat = xp.log(mat)
-    return xp.reshape(lmat-xp.mean(lmat, axis=axis, keepdims=True),
-                      original_shape)
+def _clr(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+    """Perform CLR transform."""
+    return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
-def clr_inv(mat: Array,
-            validate:bool=True) -> Array:
-    r"""Perform inverse centre log ratio transformation.
+
+def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+    r"""Perform inverse centre log ratio (CLR) transformation.
 
     This function transforms compositions from the real space to Aitchison
     geometry. The :math:`clr^{-1}` transform is both an isometry, and an
@@ -576,16 +594,31 @@ def clr_inv(mat: Array,
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of clr-transformed data.
-    validate: bool, default True
-        Should be ignored for backward compactibility,the flag of
-        checking whether the mat is centered at 0.
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of CLR-transformed data.
+    axis : int, optional
+        Axis along which inverse CLR transformation will be performed. Each vector on
+        this axis is considered as a CLR-transformed composition. Default is the last
+        axis (-1).
+    validate: bool, optional
+        Check if the matrix has been centered at 0. Violation will result in a warning
+        rather than an error, for backward compatibility. Defaults to True.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
-        Inverse clr-transformed matrix.
+    ndarray of shape (..., n_components, ...)
+        Inverse CLR-transformed matrix.
+
+    See Also
+    --------
+    clr
+
+    Notes
+    -----
+    The output of ``clr_inv`` is guaranteed to have each composition sum to 1. But this
+    property isn't required for the input for ``clr``. Therefore, ``clr_inv`` does not
+    completely invert ``clr``. Instead, ``clr_inv(clr(mat))`` and ``closure(mat)`` are
+    equal.
 
     Examples
     --------
@@ -596,28 +629,34 @@ def clr_inv(mat: Array,
     array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
 
     """
-    # for backward compatibility for list input
-    axis = -1
-    try:
-        xp = aac.array_namespace(mat)
-    except Exception as e:
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
+    xp, mat = ingest_array(mat)
 
-    if validate:
-        if xp.any(xp.sum(mat, axis=axis)!= 0):
-            warnings.warn('The input matrix is not in the clr range,\
-                            which require the sum of values equal to 0',
-                        UserWarning
-                        )
+    # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
+    # therefore it is manually written here.
+    if validate and xp.any(xp.abs(xp.sum(mat, axis=axis)) > 1e-08):
+        warn(
+            "The input matrix is not in the CLR range, which requires the sum of "
+            "values per composition equals to 0.",
+            UserWarning,
+        )
 
-    # for numerical stability, shitting the values < 1
+    return _clr_inv(xp, mat, axis)
+
+
+def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+    """Perform inverse CLR transform."""
+    # for numerical stability, shift the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
-    return diff / xp.sum(diff, axis=axis, keepdims=True)
+    return _closure(xp, diff, axis)
 
-def ilr(mat:Array, basis:Optional[Array]=None,
-        validate:bool=True) -> Array:
-    r"""Perform isometric log ratio transformation.
+
+def ilr(
+    mat: "ArrayLike",
+    basis: Optional["ArrayLike"] = None,
+    axis: int = -1,
+    validate: bool = True,
+) -> "StdArray":
+    r"""Perform isometric log ratio (ILR) transformation.
 
     This function transforms compositions from Aitchison simplex to the real
     space. The :math:`ilr` transform is both an isometry, and an isomorphism
@@ -634,23 +673,45 @@ def ilr(mat:Array, basis:Optional[Array]=None,
 
     where :math:`[e_1,\ldots,e_{D-1}]` is an orthonormal basis in the simplex.
 
-    If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal
-    basis derived from Gram-Schmidt orthogonalization will be used by default.
+    If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal basis
+    derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
-        A matrix of proportions.
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of positive proportions.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Checking of the basis is orthonormal.
+        Check if
+            i) the matrix is compositional
+            ii) the basis is orthonormal, 2-dimensional,and the dimensions are matched
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components - 1)
-        Ilr-transformed matrix.
+    ndarray of shape (..., n_components - 1,...)
+        ILR-transformed matrix.
+
+    See Also
+    --------
+    ilr_inv
+
+    Notes
+    -----
+    If the ``basis`` parameter is specified, it is expected to be a basis in
+    the Aitchison simplex. If there are :math:`D - 1` elements specified in
+    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
+    where rows represent basis vectors, and the columns represent proportions.
+
+    References
+    ----------
+    .. [1] Egozcue, J. J., Pawlowsky-Glahn, V., Mateu-Figueras, G., & Barcelo-Vidal,
+       C. (2003). Isometric logratio transformations for compositional data analysis.
+       Mathematical geology, 35(3), 279-300.
 
     Examples
     --------
@@ -660,57 +721,55 @@ def ilr(mat:Array, basis:Optional[Array]=None,
     >>> ilr(x)
     array([-0.7768362 , -0.68339802,  0.11704769])
 
-    Notes
-    -----
-    If the ``basis`` parameter is specified, it is expected to be a basis in
-    the Aitchison simplex. If there are :math:`D - 1` elements specified in
-    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
-    where rows represent basis vectors, and the columns represent proportions.
-
     """
-    axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
-            UserWarning,
-        )
-
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
+    xp, mat = ingest_array(mat)
     if validate:
-        # assert from closure() while it is removed in latest version
-        if xp.any(mat < 0):
-            raise ValueError("Cannot have negative proportions")
-        if mat.ndim > 2:
-            raise ValueError("Input matrix can only have two dimensions or less")
-
-        # check if the input is a composition
-        _composition_check(mat)
-
-    mat = clr(mat, validate=validate)
+        _check_composition(xp, mat, nozero=True)
+    N = mat.shape[axis]
     if basis is None:
-        d = mat.shape[-1]
-        basis = xp.asarray(_gram_schmidt_basis(d),
-                           device=mat.device,
-                           dtype=mat.dtype)  # dimension (d-1) x d
-    elif validate:
-        _check_orthogonality(basis)
-        if len(basis.shape) != 2:
-            raise ValueError(
-                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
-            )
-        basis = xp.asarray(basis,
-                        device=mat.device,
-                        dtype=mat.dtype)
-    return mat @ basis.T
+        # NOTE: acc.device(mat) would be nicer
+        basis = xp.asarray(
+            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+        )  # dimension (N-1) x N
+    else:
+        xp_, basis = ingest_array(basis)
+        if validate:
+            # the following maybe redundant
+            if basis.ndim != 2:
+                raise ValueError(
+                    f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
+                )
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
+            basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    axis %= mat.ndim
+    return _ilr(xp, mat, basis, axis)
 
 
-def ilr_inv(mat:Array, basis:Optional[Array]=None,
-            validate:bool=True) -> Array:
-    r"""Perform inverse isometric log ratio transform.
+def _swap_axis(ndim, axis):
+    """Create a list of axis indices with one axis swapped with the last axis."""
+    res = list(range(ndim))
+    res[axis] = ndim - 1
+    res[ndim - 1] = axis
+    return res
+
+
+def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "StdArray":
+    """Perform ILR transform."""
+    mat = _clr(xp, mat, axis)
+    # tensordot return's shape consists of the non-contracted axes (dimensions) of
+    # the first array x1, followed by the non-contracted axes (dimensions) of the
+    # second array x2
+    prod = xp.tensordot(mat, basis, axes=([axis], [1]))
+    return xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
+
+
+def ilr_inv(
+    mat: "ArrayLike",
+    basis: Optional["ArrayLike"] = None,
+    axis: int = -1,
+    validate: bool = True,
+) -> "StdArray":
+    r"""Perform inverse isometric log ratio (ILR) transformation.
 
     This function transforms compositions from the real space to Aitchison
     geometry. The :math:`ilr^{-1}` transform is both an isometry, and an
@@ -726,24 +785,44 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None,
 
     where :math:`[e_1,\ldots, e_{D-1}]` is an orthonormal basis in the simplex.
 
-    If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal
-    basis derived from Gram-Schmidt orthogonalization will be used by
-    default.
+    If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal basis
+    derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components - 1)
-        A matrix of ilr-transformed data.
+    mat : array_like of shape (..., n_components - 1, ...)
+        A matrix of ILR-transformed data.
     basis : ndarray or sparse matrix, optional
         Orthonormal basis for Aitchison simplex. Defaults to J. J. Egozcue
         orthonormal basis.
+    axis : int, optional
+        Axis along which ILR transformation will be performed. That is, each vector
+        along this axis is considered as a ILR transformed composition data.
+        Default is the last axis (-1).
     validate : bool, default True
-        Check to see if basis is orthonormal.
+        Check to see if basis is orthonormal and dimension matches.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
-        Inverse ilr-transformed matrix.
+    ndarray of shape (..., n_components, ...)
+        Inverse ILR-transformed matrix.
+
+    See Also
+    --------
+    ilr
+
+    Notes
+    -----
+    If the ``basis`` parameter is specified, it is expected to be a basis in
+    the Aitchison simplex. If there are :math:`D - 1` elements specified in
+    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
+    where rows represent basis vectors, and the columns represent proportions.
+
+    References
+    ----------
+    .. [1] Egozcue, J. J., Pawlowsky-Glahn, V., Mateu-Figueras, G., & Barcelo-Vidal,
+       C. (2003). Isometric logratio transformations for compositional data analysis.
+       Mathematical geology, 35(3), 279-300.
 
     Examples
     --------
@@ -753,49 +832,44 @@ def ilr_inv(mat:Array, basis:Optional[Array]=None,
     >>> ilr_inv(x)
     array([ 0.34180297,  0.29672718,  0.22054469,  0.14092516])
 
-    Notes
-    -----
-    If the ``basis`` parameter is specified, it is expected to be a basis in
-    the Aitchison simplex. If there are :math:`D - 1` elements specified in
-    ``mat``, then the dimensions of the basis needs be :math:`(D-1) \times D`,
-    where rows represent basis vectors, and the columns represent proportions.
-
     """
-    axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
-            UserWarning,
-        )
+    xp, mat = ingest_array(mat)
+    N = mat.shape[axis] + 1
 
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
     if basis is None:
-        # dimension d-1 x d basis
-        basis = _gram_schmidt_basis(mat.shape[axis] + 1)
+        basis = xp.asarray(
+            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+        )  # dimension (N-1) x N
     elif validate:
-        _check_orthogonality(basis)
-        if len(basis.shape) != 2:
+        xp_, basis = ingest_array(basis)
+        # the following maybe redundant as the orthonrmal implicitly check 2-d
+        if basis.ndim != 2:
             raise ValueError(
-                "Basis needs to be a 2D matrix, not a %dD matrix." % (len(basis.shape))
+                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
-    # if not isinstance(basis, xp.array):
-    basis = xp.asarray(basis,
-                       device=mat.device,
-                       dtype=mat.dtype)
-    return clr_inv(mat @ basis, validate=validate)
+        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
+        basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    axis %= mat.ndim
+    return _ilr_inv(xp, mat, basis, axis)
 
 
-def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
-        validate:bool=True):
-    r"""Perform additive log ratio transformation.
+def _ilr_inv(
+    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
+) -> "StdArray":
+    """Perform ILR transform."""
+    prod = xp.tensordot(mat, basis, axes=([axis], [0]))
+    perm = xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
+    return _clr_inv(xp, perm, axis)
+
+
+def alr(
+    mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1, validate: bool = True
+) -> "StdArray":
+    r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
-    ``denominator_col`` defines the index of the column used as the common
+    ``denominator_idx`` defines the index of the column used as the common
     denominator. The :math:`alr` transformed data are amenable to multivariate
     analysis as long as statistics don't involve distances.
 
@@ -812,20 +886,26 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components)
+    mat : array_like of shape (..., n_components, ...)
         A matrix of proportions.
-    denominator_idx : int, default 0
-        The index of the column (2-D matrix) or position (vector) of ``mat``
-        which should be used as the reference composition. Default is 0 which
-        specifies the first column or position.
+    denominator_idx : int, optional
+        Index on the target axis which should be used as the denominator (reference
+        composition). Default is 0 (the first position).
+    axis : int, optional
+        Axis along which ALR transformation will be performed. Each vector along this
+        axis is considered as a composition. Default is the last axis (-1).
     validate: bool, default True
         Check whether the input is positive, whether the mat is 2D.
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components - 1)
-        Alr-transformed data projected in a non-isometric real space of
+    ndarray of shape (..., n_components - 1, ...)
+        ALR-transformed data projected in a non-isometric real space of
         :math:`D - 1` dimensions for a *D*-parts composition.
+
+    See Also
+    --------
+    alr_inv
 
     Examples
     --------
@@ -836,47 +916,56 @@ def alr(mat:Array, denominator_idx:int=0, axis:int=-1,
     array([ 1.09861229,  1.38629436,  0.69314718])
 
     """
-    axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
-            UserWarning,
-        )
-
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
-
+    xp, mat = ingest_array(mat)
     if validate:
-        if mat.ndim > 2:
-            warnings.warn(
-                "the input matrix has more than 2 dimensions, \
-                        high dimensional alr is new feature",
-                UserWarning,
-            )
-            raise ValueError(
-                f"matrix must be 1d or 2d"
-            )
-            # for backward compactibility
-        if mat.shape[axis] < 2:
-            raise ValueError(
-                f"dimension D{mat.ndim + axis} of the input matrix is singleton"
-            )
-        if xp.any(mat <= 0):
-            raise ValueError("Input matrix must be positive")
+        _check_composition(xp, mat, nozero=True)
 
-    # no matter (n,) or (n, w, z), it will return n
-    N = mat.shape[-1]
-    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
-    numerator_matrix = mat[..., numerator_indexs]
-    denominator_vector = mat[..., [denominator_idx]]
-    return xp.log(numerator_matrix)-xp.log(denominator_vector)
+    # validate and normalize axis and index
+    N = mat.shape[axis]
+    if N < 2:
+        raise ValueError(f"Dimension {axis} of the input matrix is singleton.")
+    axis %= mat.ndim
+    if denominator_idx < -N or denominator_idx >= N:
+        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
+    denominator_idx %= N
+    return _alr(xp, mat, denominator_idx, axis)
 
 
-def alr_inv(mat: Array, denominator_idx: int = 0):
-    r"""Perform inverse additive log ratio transform.
+def _alr(
+    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
+    # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
+    # The following code will perform logarithm on the entire matrix, then subtract
+    # denominator from numerator. This is also for numerical stability.
+    lmat = xp.log(mat)
+
+    # The following code can be replaced with a single NumPy function call:
+    #     numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    # However, `delete` is not in the Python array API standard. For compatibility with
+    # libraries that don't have `delete`, an arbitrary dimension slicing method is
+    # is provided below.
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx + 1, None)
+    after = tuple(after)
+    numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
+
+    # The following code can be replaced with a single NumPy function call:
+    #     denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
+    # `take` is in the Python array API standard. The following code is to keep the
+    # style consistent with the code above.
+    column = [slice(None)] * mat.ndim
+    column[axis] = slice(denominator_idx, denominator_idx + 1)
+    column = tuple(column)
+    denominator_vector = lmat[column]
+
+    return numerator_matrix - denominator_vector
+
+
+def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdArray":
+    r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
     alrs to Aitchison geometry.
@@ -884,7 +973,7 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     .. math::
         alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D
 
-    The inverse alr transformation is defined as follows:
+    The inverse ALR transformation is defined as follows:
 
     .. math::
          alr^{-1}(x) = C[exp([y_1, y_2, ..., y_{D-1}, 0])]
@@ -900,17 +989,31 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
 
     Parameters
     ----------
-    mat : array_like of shape (n_compositions, n_components - 1)
-        A matrix of alr-transformed data.
-    denominator_idx : int, default 0
-        The index of the column (2-D matrix) or position (vector) of ``mat``
-        which should be used as the reference composition. Default is 0 which
-        specifies the first column or position.
+    mat : array_like of shape (..., n_components - 1, ...)
+        A matrix of ALR-transformed data.
+    denominator_idx : int, optional
+        Index on the target axis where the denominator (reference composition) will be
+        inserted. Default is 0 (the first position).
+    axis : int, optional
+        Axis along which inverse ALR transformation will be performed. Each vector on
+        this axis is considered as a CLR-transformed composition. Default is the last
+        axis (-1).
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
-        Inverse alr-transformed matrix or vector where rows sum to 1.
+    ndarray of shape (..., n_components, ...)
+        Inverse ALR-transformed matrix or vector where rows sum to 1.
+
+    See Also
+    --------
+    alr
+
+    Notes
+    -----
+    The output of ``alr_inv`` is guaranteed to have each composition sum to 1. But this
+    property isn't required for the input for ``alr``. Therefore, ``alr_inv`` does not
+    completely invert ``alr``. Instead, ``alr_inv(clr(mat))`` and ``closure(mat)`` are
+    equal.
 
     Examples
     --------
@@ -921,55 +1024,44 @@ def alr_inv(mat: Array, denominator_idx: int = 0):
     array([ 0.1,  0.3,  0.4,  0.2])
 
     """
-    axis = -1
-    # for backward compatibility for list input
-    try:
-        xp = aac.array_namespace(mat)
-    except TypeError as e:
-        warnings.warn(
-            "Input is not supported by array_namespace, converting to numpy array. ",
-            UserWarning,
-        )
+    xp, mat = ingest_array(mat)
 
-        mat = np.asarray(mat)
-        xp = aac.array_namespace(mat)
-
-    if mat.ndim > 2:
-        # NOTE: backward compatibility
-        raise ValueError("mat must be either 1D or 2D")
-        # warnings.warn(
-        #     "the input matrix has more than 2 dimensions, \
-        #               high dimensional alr is new feature",
-        #     UserWarning,
-        # )
+    # validate and normalize axis and index
+    N = mat.shape[axis] + 1
+    if N < 2:
+        raise ValueError(f"Dimension {axis} of the input matrix has zero length.")
+    axis %= mat.ndim
+    if denominator_idx < -N or denominator_idx >= N:
+        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
+    denominator_idx %= N
+    return _alr_inv(xp, mat, denominator_idx, axis)
 
 
-    if mat.shape[axis] < 2:
-        raise ValueError(
-            f"dimension D{mat.ndim + axis} of the input matrix is singleton"
-        )
+def _alr_inv(
+    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
+) -> "StdArray":
+    # The following code can be replaced with a single NumPy function call.
+    #     comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
+    # However, `insert` is not in the Python array API standard. For compatibility with
+    # libraries that don't have `insert`, an arbitrary dimension slicing method is
+    # is provided below.
+    before = [slice(None)] * mat.ndim
+    before[axis] = slice(None, denominator_idx)
+    before = tuple(before)
+    after = [slice(None)] * mat.ndim
+    after[axis] = slice(denominator_idx, None)
+    after = tuple(after)
+    shape = list(mat.shape)
+    shape[axis] = 1
+    shape = tuple(shape)
+    zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
+    comp = xp.concat((mat[before], zeros, mat[after]), axis=axis)
+    comp = xp.exp(comp - xp.max(comp, axis=axis, keepdims=True))
 
-    # a reminder for ND-PR:if axis != -1, permutation will be applied
-    N = mat.shape[-1]+1
-    comp = xp.ones(mat.shape[:-1]+ (N,),
-                   dtype=mat.dtype,
-                   device=mat.device)
-    # NOTE: do we need to take the same implementation as clr_inv?
-    # that is, mat-max(mat, axis=-1, keepdims=True) before exp?
-    numerator_indexs = tuple(i for i in range(N) if i != denominator_idx)
-
-    if xp.__name__=='jax.numpy':
-        # NOTE: TypeError: JAX arrays are immutable and
-        # do not support in-place item assignment.
-        # Instead of x[idx] = y, use x = x.at[idx].set(y)
-        comp = comp.at[..., numerator_indexs].set(xp.exp(mat))
-    else:
-        # in-place item assignment
-        comp[..., numerator_indexs] = xp.exp(mat)
-    return comp/xp.sum(comp, axis=axis, keepdims=True)
+    return _closure(xp, comp, axis)
 
 
-def centralize(mat):
+def centralize(mat: "ArrayLike") -> "StdArray":
     r"""Center data around its geometric average.
 
     Parameters
@@ -992,6 +1084,8 @@ def centralize(mat):
            [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
     """
+    from scipy.stats import gmean
+
     mat = closure(mat)
     cen = gmean(mat, axis=0)
     return perturb_inv(mat, cen)
@@ -1193,6 +1287,8 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
            [ 27.,  12.,   0.]])
 
     """
+    from skbio.stats.distance import DistanceMatrix
+
     # Mask zeros
     mat = closure(mat.astype(np.float64))
 
@@ -1204,7 +1300,7 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
 
     # Variance log ratio
     if robust:
-        raise NotImplementedError("Pairwise version of robust VLR not implemented.")
+        raise NotImplementedError("Pairwise version of robust VLR is not implemented.")
     else:
         vlr_data = _pairwise_vlr(**kwargs)
 
@@ -1255,6 +1351,8 @@ def tree_basis(tree):
            [-0.70710678,  0.70710678,  0.        ]])
 
     """
+    from scipy.sparse import coo_matrix
+
     # Specifies which child is numerator and denominator
     # within any given node in a tree.
     NUMERATOR = 1
@@ -1335,37 +1433,26 @@ def tree_basis(tree):
     return basis, nodes
 
 
-def _calc_p_adjust(name, p):
-    """
-    Calculate the p-value adjustment for a given method.
+def _check_p_adjust(name):
+    r"""Construct a p-value correction function based on the method name.
 
     Parameters
-    -------
-        name : str
-            The name of the *p*-value correction function.
-            This should match one of the method names available
-            in `statsmodels.stats.multitest.multipletests`.
-        p : ndarray of shape (n_tests,)
-            Original *p*-values.
+    ----------
+    name : str
+        The name of the p-value correction method. This should match one of the
+        method names available in :func:`statsmodels.stats.multitest.multipletests`.
 
     Returns
     -------
-        p : ndarray of shape (n_tests,)
-            Corrected *p*-values.
-
-    Raises
-    -------
-        ValueError: If the given method name is not available.
-
-    See Also
-    --------
-    statsmodels.stats.multitest.multipletests
-
-    References
-    ----------
-    .. [1] https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html
+    callable, optional
+        Function to correct p-values.
 
     """
+    if name is None:
+        return
+
+    from statsmodels.stats.multitest import multipletests as sm_multipletests
+
     name_ = name.lower()
 
     # Original options are kept for backwards compatibility
@@ -1374,18 +1461,257 @@ def _calc_p_adjust(name, p):
     if name_ in ("bh", "fdr_bh", "benjamini-hochberg"):
         name_ = "fdr_bh"
 
-    try:
-        res = sm_multipletests(pvals=p, alpha=0.05, method=name_)
-    except ValueError as e:
-        if "method not recognized" in str(e):
-            raise ValueError(f"{name} is not an available FDR correction method.")
+    def func(pvals):
+        r"""Correct p-values for multiple testing problems.
+
+        Parameters
+        ----------
+        pvals : ndarray of shape (n_tests,)
+            Original p-values.
+
+        Returns
+        -------
+        qvals : ndarray of shape (n_tests,)
+            Corrected p-values.
+
+        """
+        try:
+            res = sm_multipletests(pvals, alpha=0.05, method=name_)
+        except ValueError as e:
+            if "method not recognized" in str(e):
+                raise ValueError(f'"{name}" is not an available FDR correction method.')
+            else:
+                raise ValueError(
+                    f"Cannot perform FDR correction using the {name} method."
+                )
         else:
-            raise ValueError(f"Cannot perform FDR correction using the {name} method.")
+            return res[1]
+
+    return func
+
+
+def _check_grouping(grouping, matrix, samples=None):
+    """Format grouping for differential abundance analysis.
+
+    Parameters
+    ----------
+    grouping : 1-D array_like
+        Vector indicating the assignment of samples to groups. For example,
+        these could be strings or integers denoting which group a sample
+        belongs to.
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    samples : array_like of shape (n_samples,), optional
+        Sample IDs.
+
+    Returns
+    -------
+    groups : ndarray of (n_groups,)
+        Class names.
+    labels : ndarray of (n_samples,)
+        Class indices by sample.
+
+    Notes
+    -----
+    If `grouping` is indexed and `samples` is provided, `grouping` will be filtered and
+    reordered to match `samples`. Otherwise, `grouping` and `matrix` must have the same
+    length, with the assumption that samples are in the same order.
+
+    """
+    # match sample IDs
+    if samples is not None and isinstance(grouping, pd.Series):
+        try:
+            grouping = grouping.loc[samples]
+        except KeyError:
+            raise ValueError(
+                "`table` contains sample IDs that are absent in `grouping`."
+            )
+        else:
+            grouping = grouping.to_numpy()
+
+    # match lengths
     else:
-        return res[1]
+        grouping = np.asarray(grouping)
+
+        if grouping.ndim != 1:
+            raise ValueError("`grouping` must be convertible to a 1-D vector.")
+
+        if matrix.shape[0] != grouping.shape[0]:
+            raise ValueError(
+                "Sample counts in `table` and `grouping` are not consistent."
+            )
+
+    # The following code achieves what `pd.isnull` does with NumPy.
+    null_errmsg = "Cannot handle missing values in `grouping`."
+    if np.isdtype(grouping.dtype, "numeric"):
+        if np.isnan(grouping).any():
+            raise ValueError(null_errmsg)
+    else:
+        if (grouping != grouping).any() or np.equal(grouping, None).any():
+            raise ValueError(null_errmsg)
+
+    return np.unique(grouping, return_inverse=True)
 
 
-@params_aliased([("p_adjust", "multiple_comparisons_correction", "0.6.0", True)])
+def _check_trt_ref_groups(treatment, reference, groups, labels):
+    """Extract treatment and reference group indices.
+
+    Parameters
+    ----------
+    treatment : str, int or None
+        Treatment group label.
+    reference : str, int or None
+        Reference group label.
+    groups : ndarray of (n_groups,)
+        Class names.
+    labels : ndarray of (n_samples,)
+        Class indices by sample.
+
+    Returns
+    -------
+    trt_idx : ndarray of (n_samples_in_treatment,)
+        Sample indices in the treatment group.
+    ref_idx : ndarray of (n_samples_in_reference,)
+        Sample indices in the reference group.
+
+    Raises
+    ------
+    ValueError
+        If treatment or reference group is not found.
+    ValueError
+        If treatment and reference groups are the same.
+    ValueError
+        If there are less than two groups.
+
+    """
+    if len(groups) < 2:
+        raise ValueError("There must be at least two groups in grouping.")
+
+    if treatment is not None:
+        try:
+            (trt_i,) = np.flatnonzero(groups == treatment)
+        except ValueError:
+            raise ValueError(f"Treatment group {treatment} is not found in grouping.")
+    else:
+        trt_i = 0
+    trt_idx = np.flatnonzero(labels == trt_i)
+
+    if reference is not None:
+        try:
+            (ref_i,) = np.flatnonzero(groups == reference)
+        except ValueError:
+            raise ValueError(f"Reference group {reference} is not found in grouping.")
+        if trt_i == ref_i:
+            raise ValueError("Treatment and reference groups must not be identical.")
+        ref_idx = np.flatnonzero(labels == ref_i)
+    else:
+        ref_idx = np.flatnonzero(labels != trt_i)
+
+    return trt_idx, ref_idx
+
+
+def _check_metadata(metadata, matrix, samples=None):
+    """Format metadata for differential abundance analysis.
+
+    Parameters
+    ----------
+    metadata : dataframe_like
+        Metadata table.
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    samples : array_like of shape (n_samples,), optional
+        Sample IDs.
+
+    Returns
+    -------
+    pd.DataFrame
+        Validated metadata table.
+
+    Notes
+    -----
+    This function resembles `_check_grouping`.
+
+    """
+    if not isinstance(metadata, pd.DataFrame):
+        try:
+            metadata = pd.DataFrame(metadata)
+        except Exception:
+            raise TypeError(
+                "Metadata must be a pandas DataFrame, or a data structure that can be "
+                "converted into a pandas DataFrame, such as a NumPy structured or rec "
+                "array, or a dictionary."
+            )
+
+    # match lengths
+    if samples is None or isinstance(metadata.index, pd.RangeIndex):
+        if matrix.shape[0] != metadata.shape[0]:
+            raise ValueError("Sample counts in table and metadata are not consistent.")
+
+    # match sample IDs
+    else:
+        if not metadata.index.equals(pd.Index(samples)):
+            try:
+                metadata = metadata.loc[samples]
+            except KeyError:
+                raise ValueError(
+                    "Metadata contains sample IDs that are absent in the table."
+                )
+
+    if metadata.isnull().values.any():
+        raise ValueError("Cannot handle missing values in metadata.")
+
+    return metadata
+
+
+def _check_sig_test(test, n_groups=None):
+    """Validate significance test.
+
+    Parameters
+    ----------
+    test : str or callable
+        Statistical testing function or its name.
+    n_groups : int, optional
+        Number of sample groups.
+
+    Returns
+    -------
+    callable
+        Statistical testing function.
+
+    """
+    if isinstance(test, str):
+        import scipy.stats
+
+        try:
+            func = getattr(scipy.stats, test)
+        except AttributeError:
+            raise ValueError(f'Function "{test}" does not exist under scipy.stats.')
+    else:
+        if not callable(test):
+            raise TypeError("`sig_test` must be a function or a string.")
+        func = test
+        test = test.__name__
+
+    if n_groups is not None:
+        sig = inspect.signature(func)
+        param = next(iter(sig.parameters.values()))
+
+        is_multi = param.kind is inspect.Parameter.VAR_POSITIONAL
+        if n_groups > 2 and not is_multi:
+            raise ValueError(
+                f'"{test}" is a two-way statistical test whereas {n_groups} sample '
+                "groups were provided."
+            )
+
+    return func
+
+
+@params_aliased(
+    [
+        ("p_adjust", "multiple_comparisons_correction", "0.6.0", True),
+        ("sig_test", "significance_test", "0.6.4", True),
+    ]
+)
 def ancom(
     table,
     grouping,
@@ -1393,10 +1719,10 @@ def ancom(
     tau=0.02,
     theta=0.1,
     p_adjust="holm",
-    significance_test="f_oneway",
-    percentiles=(0.0, 25.0, 50.0, 75.0, 100.0),
+    sig_test="f_oneway",
+    percentiles=None,
 ):
-    r"""Perform a differential abundance test using ANCOM.
+    r"""Perform differential abundance test using ANCOM.
 
     Analysis of composition of microbiomes (ANCOM) is done by calculating
     pairwise log ratios between all features and performing a significance
@@ -1416,16 +1742,20 @@ def ancom(
 
     Parameters
     ----------
-    table : pd.DataFrame
-        A 2-D matrix of strictly positive values (i.e. counts or proportions)
-        where the rows correspond to samples and the columns correspond to
-        features.
-    grouping : pd.Series
-        Vector indicating the assignment of samples to groups. For example,
-        these could be strings or integers denoting which group a sample
-        belongs to. It must be the same length as the samples in `table`.
-        The index must be the same on `table` and `grouping` but need not be
-        in the same order.
+    table : table_like of shape (n_samples, n_features)
+        Matrix of strictly positive values (i.e. counts or proportions). See
+        :doc:`supported formats <../reference/table_like>`.
+
+        .. note::
+            If the table contains zero values, one should add a pseudocount or apply
+            :func:`multi_replace` to convert all values into positive numbers.
+
+    grouping : pd.Series or 1-D array_like
+        Vector indicating the assignment of samples to groups. These could be strings
+        or integers denoting which group a sample belongs to. If it is a pandas Series
+        and the table contains sample IDs, its index will be filtered and reordered to
+        match the sample IDs. Otherwise, it must be the same length as the samples in
+        the table.
     alpha : float, optional
         Significance level for each of the statistical tests. This can can be
         anywhere between 0 and 1 exclusive.
@@ -1438,21 +1768,24 @@ def ancom(
         statistics are lower than theta, then no features will be detected to
         be significantly different. This can can be anywhere between 0 and 1
         exclusive.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
-    significance_test : str or callable, optional
+    sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
         a *p*-value. Functions under ``scipy.stats`` can be directly specified
         by name. The default is one-way ANOVA ("f_oneway").
 
-        .. versionchanged:: 0.6.0
+        .. versionchanged:: 0.6.4
+            Test funcion must accept 2-D arrays as input, perform batch testing, and
+            return 1-D arrays. SciPy functions have this capability. Custom functions
+            may need modification.
 
+        .. versionchanged:: 0.6.0
             Accepts test names in addition to functions.
 
     percentiles : iterable of floats, optional
@@ -1469,8 +1802,11 @@ def ancom(
         - ``W``: *W*-statistic, or the number of features that the current
           feature is tested to be significantly different against.
 
-        - ``Reject null hypothesis``: Whether the feature is differentially
+        - ``Signif``: Whether the feature is significantly differentially
           abundant across groups (``True``) or not (``False``).
+
+        .. versionchanged:: 0.6.4
+            Renamed "Reject null hypothesis" into "Signif".
 
     pd.DataFrame
         A table of features and their percentile abundances in each group. If
@@ -1571,12 +1907,11 @@ def ancom(
     to be significantly different against. In this scenario, ``b2`` was
     detected to have significantly different abundances compared to four of the
     other features. To summarize the results from the *W*-statistic, let's take
-    a look at the results from the hypothesis test. The ``Reject null
-    hypothesis`` column in the table indicates whether the null hypothesis was
-    rejected, and that a feature was therefore observed to be differentially
-    abundant across the groups.
+    a look at the results from the hypothesis test. The ``Signif`` column in the
+    table indicates whether the null hypothesis was rejected, and that a feature
+    was therefore observed to be differentially abundant across the groups.
 
-    >>> ancom_df['Reject null hypothesis']
+    >>> ancom_df['Signif']
     b1    False
     b2     True
     b3    False
@@ -1584,7 +1919,7 @@ def ancom(
     b5    False
     b6    False
     b7    False
-    Name: Reject null hypothesis, dtype: bool
+    Name: Signif, dtype: bool
 
     From this we can conclude that only ``b2`` was significantly different in
     abundance between the treatment and the placebo. We still don't know, for
@@ -1622,21 +1957,13 @@ def ancom(
     samples.
 
     """
-    if not isinstance(table, pd.DataFrame):
-        raise TypeError(
-            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
-        )
-    if not isinstance(grouping, pd.Series):
-        raise TypeError(
-            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
-        )
+    matrix, samples, features = _ingest_table(table)
 
-    if np.any(table <= 0):
-        raise ValueError(
-            "Cannot handle zeros or negative values in `table`. "
-            "Use pseudocounts or ``multi_replace``."
-        )
+    groups, labels = _check_grouping(grouping, matrix, samples)
 
+    _check_composition(np, matrix, nozero=True)
+
+    # validate parameters
     if not 0 < alpha < 1:
         raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
@@ -1646,40 +1973,28 @@ def ancom(
     if not 0 < theta < 1:
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
-    if (grouping.isnull()).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
+    # validate percentiles
+    if percentiles is None:
+        percentiles = np.arange(0, 125, 25.0)
+    else:
+        if not isinstance(percentiles, np.ndarray):
+            percentiles = np.fromiter(percentiles, dtype=float)
+        if (percentiles < 0.0).any() or (percentiles > 100.0).any():
+            raise ValueError("Percentiles must be in the range [0, 100].")
+        n_pcts = len(percentiles)
+        percentiles = np.unique(percentiles)
+        if percentiles.size != n_pcts:
+            raise ValueError("Percentile values must be unique.")
 
-    if (table.isnull()).any().any():
-        raise ValueError("Cannot handle missing values in `table`.")
-
-    percentiles = list(percentiles)
-    for percentile in percentiles:
-        if not 0.0 <= percentile <= 100.0:
-            raise ValueError(
-                "Percentiles must be in the range [0, 100], %r "
-                "was provided." % percentile
-            )
-
-    duplicates = find_duplicates(percentiles)
-    if duplicates:
-        formatted_duplicates = ", ".join(repr(e) for e in duplicates)
-        raise ValueError(
-            "Percentile values must be unique. The following"
-            " value(s) were duplicated: %s." % formatted_duplicates
-        )
-
-    groups = np.unique(grouping)
-    num_groups = len(groups)
-
-    if num_groups == len(grouping):
+    n_groups = len(groups)
+    if n_groups == len(labels):
         raise ValueError(
             "All values in `grouping` are unique. This method cannot "
             "operate on a grouping vector with only unique values (e.g., "
             "there are no 'within' variance because each group of samples "
             "contains only a single sample)."
         )
-
-    if num_groups == 1:
+    elif n_groups == 1:
         raise ValueError(
             "All values the `grouping` are the same. This method cannot "
             "operate on a grouping vector with only a single group of samples"
@@ -1687,36 +2002,31 @@ def ancom(
             "single group)."
         )
 
-    # @deprecated
-    if significance_test is None:
-        significance_test = "f_oneway"
+    # validate significance test
+    if sig_test is None:
+        sig_test = "f_oneway"
+    test_f = _check_sig_test(sig_test, n_groups)
 
-    table_index_len = len(table.index)
-    grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join="inner")
-    if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` index must be consistent.")
+    # compare log ratios
+    pval_mat = _log_compare(matrix, labels, n_groups, test_f)
 
-    n_feat = mat.shape[1]
-
-    _logratio_mat = _log_compare(mat.values, cats.values, significance_test)
-    logratio_mat = _logratio_mat + _logratio_mat.T
-
-    # Multiple comparisons
+    # correct for multiple testing problem
     if p_adjust is not None:
-        logratio_mat = np.apply_along_axis(
-            lambda arr: _calc_p_adjust(p_adjust, arr), 1, logratio_mat
-        )
+        func = _check_p_adjust(p_adjust)
+        pval_mat = np.apply_along_axis(func, 1, pval_mat)
 
-    np.fill_diagonal(logratio_mat, 1)
-    W = (logratio_mat < alpha).sum(axis=1)
-    c_start = W.max() / n_feat
+    np.fill_diagonal(pval_mat, 1)
+
+    # calculate W-statistics
+    n_feats = matrix.shape[1]
+    W = (pval_mat < alpha).sum(axis=1)
+    c_start = W.max() / n_feats
     if c_start < theta:
         reject = np.zeros_like(W, dtype=bool)
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feat * cut).mean() for cut in cutoff])
+        prop_cut = np.array([(W > n_feats * cut).mean() for cut in cutoff])
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
@@ -1728,83 +2038,83 @@ def ancom(
             nu = cutoff[3]
         else:
             nu = cutoff[4]
-        reject = W >= nu * n_feat
+        reject = W >= nu * n_feats
 
-    feat_ids = mat.columns
     ancom_df = pd.DataFrame(
         {
-            "W": pd.Series(W, index=feat_ids),
-            "Reject null hypothesis": pd.Series(reject, index=feat_ids),
+            "W": pd.Series(W, index=features),
+            "Signif": pd.Series(reject, index=features),
         }
     )
 
-    if len(percentiles) == 0:
+    # calculate percentiles
+    if percentiles.size == 0:
         return ancom_df, pd.DataFrame()
-    else:
-        data = []
-        columns = []
-        for group in groups:
-            feat_dists = mat[cats == group]
-            for percentile in percentiles:
-                columns.append((percentile, group))
-                data.append(np.percentile(feat_dists, percentile, axis=0))
-        columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
-        percentile_df = pd.DataFrame(
-            np.asarray(data).T, columns=columns, index=feat_ids
-        )
-        return ancom_df, percentile_df
+    data = []
+    columns = []
+    for i, group in enumerate(groups):
+        feat_dists = matrix[labels == i]
+        for percentile in percentiles:
+            columns.append((percentile, group))
+            data.append(np.percentile(feat_dists, percentile, axis=0))
+    columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
+    percentile_df = pd.DataFrame(np.asarray(data).T, columns=columns, index=features)
+    return ancom_df, percentile_df
 
 
-def _log_compare(mat, cats, test="ttest_ind"):
-    """Calculate pairwise log ratios and perform a significance test.
+def _log_compare(matrix, labels, n, test):
+    """Compare pairwise log ratios between sample groups.
 
-    Calculate pairwise log ratios between all features and perform a
-    significance test (i.e. *t*-test) to determine if there is a significant
-    difference in feature ratios with respect to the variable of interest.
+    Calculate pairwise log ratios between all features and perform a statistical test
+    to determine if there is a significant difference in feature ratios with respect
+    to the variable of interest.
 
     Parameters
     ----------
-    mat : array_like of shape (n_samples, n_features)
-        A matrix of proportions.
-    cats : array_like of shape (n_samples,)
-        A vector of categories.
-    test : str or callable
+    matrix : ndarray of shape (n_samples, n_features)
+        Data matrix.
+    labels : ndarray of shape (n_samples,)
+        Group indices (0-indexed, consecutive).
+    n : int
+        Number of groups.
+    test : callable
         Statistical test to run.
 
     Returns
     -------
-    log_ratio : ndarray
-        Log ratio *p*-value matrix.
-
-    Raises
-    ------
-    ValueError
-        If specified test name is not a function under ``scipy.stats``.
+    ndarray of shape (n_features, n_features)
+        p-value matrix.
 
     """
-    c = mat.shape[1]
-    log_ratio = np.zeros((c, c))
-    log_mat = np.log(mat)
-    cs = np.unique(cats)
+    # note: `n` can be simply computed with `labels.max()`. It is supplied instead to
+    # save compute.
 
-    if isinstance(test, str):
-        try:
-            test = getattr(scipy.stats, test)
-        except AttributeError:
-            raise ValueError(f'Function "{test}" does not exist under scipy.stats.')
+    # log-transform data
+    log_mat = np.log(matrix)
 
-    def func(x):
-        return test(*[x[cats == k] for k in cs])
+    # divide data by sample group
+    grouped = [log_mat[labels == i] for i in range(n)]
 
-    for i in range(c - 1):
-        ratio = (log_mat[:, i].T - log_mat[:, i + 1 :].T).T
-        _, p = np.apply_along_axis(func, axis=0, arr=ratio)
-        log_ratio[i, i + 1 :] = np.squeeze(np.array(p.T))
-    return log_ratio
+    # determine all pairs of feature indices
+    m = matrix.shape[1]
+    ii, jj = np.triu_indices(m, k=1)
+
+    # calculate all log ratios (pairwise difference of log values)
+    log_ratios = [x[:, ii] - x[:, jj] for x in grouped]
+
+    # run statistical test on the 2-D arrays in a vectorized manner
+    _, pvals = test(*log_ratios)
+
+    # populate p-value matrix
+    pval_mat = np.empty((m, m))
+    pval_mat[ii, jj] = pval_mat[jj, ii] = pvals
+    np.fill_diagonal(pval_mat, 0)
+
+    return pval_mat
 
 
 def _gram_schmidt_basis(n):
-    """Build clr-transformed basis derived from Gram-Schmidt orthogonalization.
+    """Build CLR-transformed basis derived from Gram-Schmidt orthogonalization.
 
     Parameters
     ----------
@@ -1899,100 +2209,80 @@ def sbp_basis(sbp):
     return psi
 
 
-def _check_orthogonality(basis):
-    r"""Check to see if basis is truly orthonormal in the Aitchison simplex.
+def _check_basis(
+    xp: "ModuleType",
+    basis: "StdArray",
+    orthonormal: bool = False,
+    subspace_dim: Optional[int] = None,
+):
+    r"""Check if basis is a valid basis for transformation.
 
     Parameters
     ----------
-    basis : ndarray
-        Basis in the Aitchison simplex of dimension :math:`(D - 1) \times D`.
+    xp : namespace
+        The array API compatible namespace corresponding ``basis``.
+    basis : array of shape (n_basis, n_components)
+        A columns vetors for the basis.
+    orthonormal : bool, optional
+        If True, basis is required to be orthonormal. Default is False.
+    subspace_dim : int, optional
+        The dimensions of the subspace that the basis suppose to span,
+        when None is give, the n_basis will be used. Default is None.
+
+    Raises
+    ------
+    ValueError
+        If the basis is not matching to the subspace dimension.
+    ValueError
+        If the basis are not orthonormal.
 
     """
-    xp = aac.array_namespace(basis)
-    if basis.ndim<2:
-        basis = basis.reshape(1,-1)
-    eyes = xp.asarray(np.identity(len(basis)),
-                      device=basis.device,
-                      dtype=basis.dtype)
-    if not xp.all(xp.abs(basis @ basis.T- eyes)<(1e-4*eyes+1e-6)):
-        raise ValueError("Basis is not orthonormal.")
+    xp, basis = ingest_array(basis)
+    if basis.ndim < 2:
+        basis = basis.reshape(1, -1)
+    if subspace_dim is None:
+        subspace_dim = len(basis)
+    elif len(basis) != subspace_dim:
+        n_basis = len(basis)
+        msg = f"Number of basis {n_basis} not match to the subspace dim {subspace_dim}."
+        raise ValueError(msg)
+    if orthonormal:
+        eyes = xp.eye(subspace_dim, device=basis.device)
+        if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
+            raise ValueError("Basis is not orthonormal.")
 
 
-def _welch_ttest(a, b):
-    r"""Perform Welch's *t*-test on two samples of unequal variances.
-
-    Parameters
-    ----------
-    a, b : 1-D array_like
-        Samples to test.
-
-    Returns
-    -------
-    pd.DataFrame
-        Test result. Columns are: T statistic, df, pvalue, Difference, CI(2.5),
-        CI(97.5).
+def _dirmult_draw(matrix, rng):
+    """Resample data from a Dirichlet-multinomial posterior distribution.
 
     See Also
     --------
-    scipy.stats.ttest_ind
-    statsmodels.stats.weightstats.CompareMeans
+    numpy.random.Generator.gamma
+    numpy.random.Generator.dirichlet
 
     Notes
     -----
-    Compared with ``scipy.stats.ttest_ind`` with ``equal_var=False``, this
-    function additionally returns confidence intervals. This implementation
-    uses the ``CompareMeans`` class from ``statsmodels.stats.weightstats``.
+    This function uses a Gamma distribution to replace a Dirichlet distribution. The
+    result is precisely identical to (and reproducible given the same seed):
+
+    .. code-block:: python
+       return clr(np.apply_along_axis(rng.dirichlet, axis=1, arr=matrix))
+
+    A Dirichlet distribution is essentially a standard Gamma distribution normalized
+    by row sums. Meanwhile, CLR is independent of scale, therefore the normalization
+    step can be omitted.
+
+    `gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
 
     """
-    # See https://stats.stackexchange.com/a/475345
-    # See https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
-
-    # Creating a CompareMeans object to perform Welch's t-test
-    statsmodel_cm_object = CompareMeans.from_data(
-        data1=a, data2=b, weights1=None, weights2=None
-    )
-
-    # Performing Welch's t-test using the object to obtain tstat, pvalue, and df
-    ttest_cm_result = statsmodel_cm_object.ttest_ind(
-        alternative="two-sided", usevar="unequal", value=0
-    )
-
-    tstat = ttest_cm_result[0]
-    p = ttest_cm_result[1]
-    df = ttest_cm_result[2]
-
-    # Calculating difference between the two means
-    m1 = np.mean(a)
-    m2 = np.mean(b)
-
-    delta = m1 - m2
-
-    # Calculating confidence intervals using the aformentioned CompareMeans object
-    conf_int = statsmodel_cm_object.tconfint_diff(
-        alpha=0.05, alternative="two-sided", usevar="unequal"
-    )
-
-    lb = conf_int[0]
-    ub = conf_int[1]
-
-    return pd.DataFrame(
-        np.array([tstat, df, p, delta, lb, ub]).reshape(1, -1),
-        columns=["T statistic", "df", "pvalue", "Difference", "CI(2.5)", "CI(97.5)"],
-    )
-
-
-def _obtain_dir_table(table, pseudocount, rng):
-    values = table.values + pseudocount
-    values = np.apply_along_axis(rng.dirichlet, axis=1, arr=values)
-    values = np.apply_along_axis(clr, axis=1, arr=values)
-    return pd.DataFrame(values, index=table.index, columns=table.columns)
+    return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
 
 
 def dirmult_ttest(
     table,
     grouping,
-    treatment,
-    reference,
+    treatment=None,
+    reference=None,
     pseudocount=0.5,
     draws=128,
     p_adjust="holm",
@@ -2015,21 +2305,33 @@ def dirmult_ttest(
 
     This process mirrors the approach performed by the R package "ALDEx2" [1]_.
 
+    Additionally, this function excludes hits with a 95% confidence interval of
+    fold-change crossing zero during any draw. This step further reduces false
+    positive hits, especially among low-abundance features.
+
     Parameters
     ----------
-    table : pd.DataFrame
-        Contingency table of counts where rows are features and columns are samples.
-    grouping : pd.Series
-        Vector indicating the assignment of samples to groups. For example,
-        these could be strings or integers denoting which group a sample
-        belongs to. It must be the same length as the samples in ``table``.
-        The index must be the same on ``table`` and ``grouping`` but need not be
-        in the same order. The *t*-test is computed between the ``treatment``
-        group and the ``reference`` group specified in the ``grouping`` vector.
-    treatment : str
-        Name of the treatment group.
-    reference : str
-        Name of the reference group.
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :doc:`supported formats <../reference/table_like>`.
+    grouping : pd.Series or 1-D array_like
+        Vector indicating the assignment of samples to groups. These could be strings
+        or integers denoting which group a sample belongs to. If it is a pandas Series
+        and the table contains sample IDs, its index will be filtered and reordered to
+        match the sample IDs. Otherwise, it must be the same length as the samples in
+        the table.
+    treatment : str, optional
+        Name of the treatment group. The *t*-test is computed between the ``treatment``
+        group and the ``reference`` group specified in the ``grouping`` vector. If
+        omitted, the first group in the sorted order of all group names will be the
+        treatment group.
+    reference : str, optional
+        Name of the reference group. See above. If omitted, all groups other than the
+        treatment group will be combined as the reference group.
+
+        .. versionchanged:: 0.6.4
+            ``treatment`` and ``reference`` are now optional.
+
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero.
@@ -2037,12 +2339,11 @@ def dirmult_ttest(
         The number of draws from the Dirichilet-multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and *p*-values.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
@@ -2053,43 +2354,47 @@ def dirmult_ttest(
     pd.DataFrame
         A table of features, their log-fold changes and other relevant statistics.
 
-        ``T statistic`` is the *t*-statistic outputted from the *t*-test. *t*-statistics
-        are generated from each posterior draw.  The reported ``T statistic`` is the
-        average across all of the posterior draws.
+        - ``T-statistic``: *t*-statistic of Welch's *t*-test. The reported value is the
+          average across all of the posterior draws.
 
-        ``df`` is the degrees of freedom from the *t*-test.
+        - ``Log2(FC)``: Expected log2-fold change of abundance from the reference group
+          to the treatment group. The value is expressed in the center log ratio (see
+          :func:`clr`) transformed coordinates. The reported value is the average of
+          all of the log2-fold changes computed from each of the posterior draws.
 
-        ``Log2(FC)`` is the expected log2-fold change. Within each posterior draw
-        the log2 fold-change is computed as the difference between the mean
-        log-abundance the ``treatment`` group and the ``reference`` group. All log2
-        fold changes are expressed in clr coordinates. The reported ``Log2(FC)``
-        is the average of all of the log2-fold changes computed from each of the
-        posterior draws.
+        - ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported value is the
+          minimum of all of the 2.5% quantiles computed from each of the posterior
+          draws.
 
-        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
-        ``CI(2.5)`` is the 2.5% quantile of all of the log2-fold changes computed
-        from each of the posterior draws.
+        - ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported value is
+          the maximum of all of the 97.5% quantiles computed from each of the posterior
+          draws.
 
-        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
-        reported ``CI(97.5)`` is the 97.5% quantile of all of the log2-fold
-        changes computed from each of the posterior draws.
+        - ``pvalue``: *p*-value of Welch's *t*-test. The reported value is the average
+          of all of the *p*-values computed from each of the posterior draws.
 
-        ``pvalue`` is the *p*-value of the *t*-test. The reported values are the
-        average of all of the *p*-values computed from the *t*-tests calculated
-        across all of the posterior draws.
+        - ``qvalue``: Corrected *p*-value of Welch's *t*-test for multiple comparisons.
+          The reported value is the average of all of the *q*-values computed from each
+          of the posterior draws.
 
-        ``qvalue`` is the *p*-value of the *t*-test after performing multiple
-        comparison correction.
+        - ``Signif``: Whether feature is significantly differentially abundant between
+          the treatment and reference groups. A feature marked as "True" suffice: 1)
+          The *q*-value must be less than or equal to the significance level (0.05). 2)
+          The confidence interval (CI(2.5)..CI(97.5)) must not overlap with zero.
 
-        ``Reject null hypothesis`` indicates if feature is differentially
-        abundant across groups (``True``) or not (``False``). In order for a
-        feature to be differentially abundant, the qvalue needs to be significant
-        (i.e. <0.05) and the confidence intervals reported by ``CI(2.5)`` and
-        ``CI(97.5)`` must not overlap with zero.
+        .. versionchanged:: 0.6.4
+            ``df`` (degrees of freedom) was removed from the report, as this metric is
+            inconsistent across draws.
+
+        .. versionchanged:: 0.6.4
+            Renamed "T-statistic" as "T-statistic".
+            Renamed "Reject null hypothesis" as "Signif".
 
     See Also
     --------
+    dirmult_ttest
     scipy.stats.ttest_ind
+    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
@@ -2131,109 +2436,114 @@ def dirmult_ttest(
     >>> grouping = pd.Series(['treatment', 'treatment', 'treatment',
     ...                       'placebo', 'placebo', 'placebo'],
     ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'])
-    >>> lfc_result = dirmult_ttest(table, grouping, 'treatment', 'placebo',
-    ...                            seed=0)
-    >>> lfc_result[["Log2(FC)", "CI(2.5)", "CI(97.5)", "qvalue"]]
-        Log2(FC)   CI(2.5)  CI(97.5)    qvalue
-    b1 -4.991987 -7.884498 -2.293463  0.020131
-    b2 -2.533729 -3.594590 -1.462339  0.007446
-    b3  1.627677 -1.048219  4.750792  0.068310
-    b4  1.707221 -0.467481  4.164998  0.065613
-    b5  1.528243 -1.036910  3.978387  0.068310
-    b6  1.182343 -0.702656  3.556061  0.068310
-    b7  1.480232 -0.601277  4.043888  0.068310
+    >>> result = dirmult_ttest(table, grouping, 'treatment', 'placebo', seed=0)
+    >>> result
+        T-statistic  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue  Signif
+    b1   -17.178600 -4.991987 -7.884498 -2.293463  0.003355  0.020131    True
+    b2   -16.873187 -2.533729 -3.594590 -1.462339  0.001064  0.007446    True
+    b3     6.942727  1.627677 -1.048219  4.750792  0.021130  0.068310   False
+    b4     6.522786  1.707221 -0.467481  4.164998  0.013123  0.065613   False
+    b5     6.654142  1.528243 -1.036910  3.978387  0.019360  0.068310   False
+    b6     3.839520  1.182343 -0.702656  3.556061  0.045376  0.068310   False
+    b7     7.600734  1.480232 -0.601277  4.043888  0.017077  0.068310   False
 
     """
+    from statsmodels.stats.weightstats import CompareMeans
+
     rng = get_rng(seed)
-    if not isinstance(table, pd.DataFrame):
-        raise TypeError(
-            "`table` must be a `pd.DataFrame`, not %r." % type(table).__name__
-        )
-    if not isinstance(grouping, pd.Series):
-        raise TypeError(
-            "`grouping` must be a `pd.Series`, not %r." % type(grouping).__name__
-        )
 
-    if np.any(table < 0):
-        raise ValueError("Cannot handle negative values in `table`. ")
+    matrix, samples, features = _ingest_table(table)
+    _check_composition(np, matrix)
 
-    if (grouping.isnull()).any():
-        raise ValueError("Cannot handle missing values in `grouping`.")
+    # handle zero values
+    if pseudocount:
+        matrix = matrix + pseudocount
 
-    if (table.isnull()).any().any():
-        raise ValueError("Cannot handle missing values in `table`.")
+    # get sample indices of treatment and reference groups
+    groups, labels = _check_grouping(grouping, matrix, samples)
+    trt_idx, ref_idx = _check_trt_ref_groups(treatment, reference, groups, labels)
 
-    table_index_len = len(table.index)
-    grouping_index_len = len(grouping.index)
-    mat, cats = table.align(grouping, axis=0, join="inner")
-    if len(mat) != table_index_len or len(cats) != grouping_index_len:
-        raise ValueError("`table` index and `grouping` index must be consistent.")
+    cm_params = dict(alternative="two-sided", usevar="unequal")
 
-    trt_group = grouping.loc[grouping == treatment]
-    ref_group = grouping.loc[grouping == reference]
-    dir_table = _obtain_dir_table(table, pseudocount, rng)
+    # initiate results
+    m = matrix.shape[1]
+    delta = np.zeros(m)  # inter-group difference
+    tstat = np.zeros(m)  # t-test statistic
+    pval = np.zeros(m)  # t-test p-value
+    lower = np.full(m, np.inf)  # 2.5% percentile of distribution
+    upper = np.full(m, -np.inf)  # 97.5% percentile of distribution
 
-    res = [
-        _welch_ttest(
-            np.array(dir_table.loc[trt_group.index, x].values),
-            np.array(dir_table.loc[ref_group.index, x].values),
-        )
-        for x in table.columns
-    ]
-    res = pd.concat(res)
-    for i in range(1, draws):
-        dir_table = _obtain_dir_table(table, pseudocount, rng)
+    for i in range(draws):
+        # Resample data in a Dirichlet-multinomial distribution.
+        dir_mat = _dirmult_draw(matrix, rng)
 
-        ires = [
-            _welch_ttest(
-                np.array(dir_table.loc[trt_group.index, x].values),
-                np.array(dir_table.loc[ref_group.index, x].values),
-            )
-            for x in table.columns
-        ]
-        ires = pd.concat(ires)
-        # online average to avoid holding all of the results in memory
-        res["Difference"] = (i * res["Difference"] + ires["Difference"]) / (i + 1)
-        res["pvalue"] = (i * res["pvalue"] + ires["pvalue"]) / (i + 1)
-        res["CI(2.5)"] = np.minimum(res["CI(2.5)"], ires["CI(2.5)"])
-        res["CI(97.5)"] = np.maximum(res["CI(97.5)"], ires["CI(97.5)"])
-        res["T statistic"] = (i * res["T statistic"] + ires["T statistic"]) / (i + 1)
+        # Stratify data by group (treatment vs. reference).
+        trt_mat = dir_mat[trt_idx]
+        ref_mat = dir_mat[ref_idx]
 
-    res.index = table.columns
-    # convert all log fold changes to base 2
-    res["Difference"] = res["Difference"] / np.log(2)
-    res["CI(2.5)"] = res["CI(2.5)"] / np.log(2)
-    res["CI(97.5)"] = res["CI(97.5)"] / np.log(2)
+        # Calculate the difference between the two means.
+        delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
 
-    # multiple comparison
+        # Create a CompareMeans object for statistical testing.
+        # Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_var=
+        # False`). The current code uses statsmodels' `CompareMeans` instead because
+        # it additionally returns confidence intervals.
+        cm = CompareMeans.from_data(trt_mat, ref_mat)
+
+        # Perform Welch's t-test to assess the significance of difference.
+        tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
+        tstat += tstat_
+        pval += pval_
+
+        # Calculate confidence intervals.
+        # The final lower and upper bounds are the minimum and maximum of all lower
+        # and upper bounds seen during sampling, respectively.
+        lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
+        np.minimum(lower, lower_, out=lower)
+        np.maximum(upper, upper_, out=upper)
+
+    # Normalize metrics to averages over all replicates.
+    delta /= draws
+    tstat /= draws
+    pval /= draws
+
+    # Correct p-values for multiple comparison.
     if p_adjust is not None:
-        qval = _calc_p_adjust(p_adjust, res["pvalue"])
+        qval = _check_p_adjust(p_adjust)(pval)
     else:
-        qval = res["pvalue"].values
+        qval = pval
+    reject = qval <= 0.05
 
-    # test to see if confidence interval includes 0.
-    sig = np.logical_or(
-        np.logical_and(res["CI(2.5)"] > 0, res["CI(97.5)"] > 0),
-        np.logical_and(res["CI(2.5)"] < 0, res["CI(97.5)"] < 0),
+    # Test if confidence interval includes 0.
+    # A significant result (i.e., reject null hypothesis) must simultaneously suffice:
+    # 1) q-value <= significance level. 2) confidence interval doesn't include 0.
+    # This test is in addition to the original ALDEx2 method. It helps to reduce false
+    # positive discoveries of low abundance.
+    outer = ((lower > 0) & (upper > 0)) | ((lower < 0) & (upper < 0))
+    reject &= outer
+
+    # Convert all log fold changes to base 2.
+    log2_ = np.log(2)
+    delta /= log2_
+    upper /= log2_
+    lower /= log2_
+
+    # construct report
+    res = pd.DataFrame.from_dict(
+        {
+            "T-statistic": tstat,
+            "Log2(FC)": delta,
+            "CI(2.5)": lower,
+            "CI(97.5)": upper,
+            "pvalue": pval,
+            "qvalue": qval,
+            "Signif": reject,
+        }
     )
+    if features is not None:
+        res.index = features
 
-    reject = np.logical_and(qval[0], sig)
-
-    res = res.rename(columns={"Difference": "Log2(FC)"})
-    res["qvalue"] = qval
-    res["Reject null hypothesis"] = reject
-
-    col_order = [
-        "T statistic",
-        "df",
-        "Log2(FC)",
-        "CI(2.5)",
-        "CI(97.5)",
-        "pvalue",
-        "qvalue",
-        "Reject null hypothesis",
-    ]
-    return res[col_order]
+    return res
 
 
 def _type_cast_to_float(df):
@@ -2251,152 +2561,20 @@ def _type_cast_to_float(df):
     pd.DataFrame
 
     """
-    # Implementation based on https://github.com/mortonjt/differential/blob/65752567ef4cf303471405b0a9be503eb10a0bbb/differential/util.py#L4
-    # TODO: Will need to improve this, as this is a very hacky solution.
-    for c in df.columns:
-        s = df[c]
+    df = df.copy()
+    for col in df.select_dtypes(exclude=["float64"]).columns:
         try:
-            df[c] = s.astype(np.float64)
-        except Exception:
+            df[col] = df[col].astype("float64")
+        except (ValueError, TypeError):
             continue
     return df
-
-
-def _lme_call(
-    table,
-    metadata,
-    formula,
-    grouping,
-    re_formula=None,
-    vc_formula=None,
-    model_kwargs={},
-    fit_method=None,
-    fit_kwargs={},
-    fit_warnings=False,
-):
-    """Call MixedLM of statsmodels."""
-    # TODO: add documentation
-
-    FEATUREID = "FeatureID"
-    LOG2FC = "Log2(FC)"
-    CI25 = "CI(2.5)"
-    CI975 = "CI(97.5)"
-    PVALUE = "pvalue"
-    COVARIATE = "Covariate"
-
-    submodels = []
-    metadata = _type_cast_to_float(metadata.copy())
-
-    merged_table = pd.merge(table, metadata, left_index=True, right_index=True)
-    if len(merged_table) == 0:
-        raise ValueError(
-            (
-                "No more samples left. Check to make sure that "
-                "the sample names between `metadata` and `data` "
-                "are consistent."
-            )
-        )
-
-    design_matrix = dmatrix(formula, metadata, return_type="dataframe")
-
-    # Obtain the list of covariates by selecting the relevant columns
-    _covariate_list = design_matrix.columns.tolist()
-
-    # Remove intercept since it is not a covariate, and is included by default
-    _covariate_list.remove("Intercept")
-
-    fit_fail_msg = (
-        "LME fit failed for covariate %s and `response_var`, outputting nans."
-    )
-
-    output = []
-    for response_var in table.columns:
-        # mixed effects code is obtained here:
-        # http://stackoverflow.com/a/22439820/1167475
-        stats_formula = "%s ~ %s" % (response_var, formula)
-        model = MixedLM.from_formula(
-            formula=stats_formula,
-            data=merged_table,
-            groups=grouping,
-            re_formula=re_formula,
-            vc_formula=vc_formula,
-            **model_kwargs,
-        )
-
-        # mute warnings during the fitting process
-        with catch_warnings():
-            if not fit_warnings:
-                simplefilter("ignore", UserWarning)
-                simplefilter("ignore", ConvergenceWarning)
-            results = model.fit(method=fit_method, **fit_kwargs)
-
-        summary = results.summary()
-
-        for var_name in _covariate_list:
-            try:
-                _lme_coef, _lme_25, _lme_975 = np.nan, np.nan, np.nan
-                _lme_coef = float(summary.tables[1]["Coef."][var_name])
-                _lme_25 = float(summary.tables[1]["[0.025"][var_name])
-                _lme_975 = float(summary.tables[1]["0.975]"][var_name])
-
-                individual_results = {
-                    FEATUREID: response_var,
-                    COVARIATE: var_name,
-                    LOG2FC: _lme_coef,
-                    CI25: _lme_25,
-                    CI975: _lme_975,
-                    PVALUE: results.pvalues[var_name],
-                }
-            except Exception as e:
-                if type(e) is not ValueError:
-                    warn(fit_fail_msg % var_name, UserWarning)
-
-                    individual_results = {
-                        FEATUREID: response_var,
-                        COVARIATE: var_name,
-                        LOG2FC: np.nan,
-                        CI25: np.nan,
-                        CI975: np.nan,
-                        PVALUE: np.nan,
-                    }
-
-                else:
-                    measures = {
-                        LOG2FC: np.nan,
-                        CI25: np.nan,
-                        CI975: np.nan,
-                    }
-                    mapping = {
-                        LOG2FC: _lme_coef,
-                        CI25: _lme_25,
-                        CI975: _lme_975,
-                    }
-
-                    if len(summary.tables) >= 2:
-                        table = summary.tables[1]
-
-                        for key_final, key_table in mapping.items():
-                            if key_table in table and var_name in table[key_table]:
-                                measures[key_final] = table[key_table][var_name]
-
-                    individual_results = {
-                        "FeatureID": response_var,
-                        "Covariate": var_name,
-                        "pvalue": results.pvalues[var_name],
-                    }
-
-                    individual_results.update(measures)
-
-            output.append(individual_results)
-
-    return (output, submodels, _covariate_list)
 
 
 def dirmult_lme(
     table,
     metadata,
     formula,
-    grouping=None,
+    grouping,
     pseudocount=0.5,
     draws=128,
     p_adjust="holm",
@@ -2405,17 +2583,20 @@ def dirmult_lme(
     vc_formula=None,
     model_kwargs={},
     fit_method=None,
+    fit_converge=False,
     fit_warnings=False,
     fit_kwargs={},
 ):
     r"""Fit a Dirichlet-multinomial linear mixed effects model.
+
+    .. versionadded:: 0.6.4
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
     distribution. This distribution is used to model the distribution of
     species abundances in a community.
 
-    To fit the linear mixed effect model we first fit a Dirichlet-multinomial
+    To fit the linear mixed effects model we first fit a Dirichlet-multinomial
     distribution for each sample, and then we compute the fold change and
     *p*-value for each feature. The fold change is computed as the slopes
     from the resulting model. Statistical tests are then performed on the posterior
@@ -2423,62 +2604,59 @@ def dirmult_lme(
     log-fold changes as well as their credible intervals, the *p*-values and
     the multiple comparison corrected *p*-values are reported.
 
-    This function uses the
-    :class:`MixedLM <statsmodels.regression.mixed_linear_model.MixedLM>` class from
-    statsmodels.
+    This function uses the :class:`~statsmodels.regression.mixed_linear_model.MixedLM`
+    class from statsmodels.
 
     Parameters
     ----------
-    table : array-like
-        The data for the model. If data is a pd.DataFrame, it must contain the
-        dependent variables in data.columns. If data is not a pd.DataFrame, it must
-        contain the dependent variable in indices of data. data can be a
-        a numpy structured array, or a numpy recarray, or a dictionary. It must not
-        contain duplicate indices.
-    metadata: array-like
-        The metadata for the model. If metadata is a pd.DataFrame, it must contain
-        the covariates in metadata.columns. If metadata is not a pd.DataFrame,
-        it must contain the covariates in indices of metadata. metadata can
-        be a numpy structured array, or a numpy recarray, or a dictionary. It must
-        not contain duplicate indices.
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :doc:`supported formats <../reference/table_like>`.
+    metadata : pd.DataFrame or 2-D array_like
+        The metadata for the model. Rows correspond to samples and columns correspond
+        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        pandas DataFrame.
     formula : str or generic Formula object
-        The formula specifying the model.
-    grouping : str
-        The column name in data that identifies the grouping variable.
+        The formula defining the model. Refer to `Patsy's documentation
+        <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
+        a formula.
+    grouping : str, pd.Series or 1-D array_like
+        A vector or a metadata column name indicating the assignment of samples to
+        groups. Samples are independent between groups during model fitting.
     pseudocount : float, optional
         A non-zero value added to the input counts to ensure that all of the
         estimated abundances are strictly greater than zero. Default is 0.5.
     draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution.
+        Number of draws from the Dirichlet-multinomial posterior distribution.
         Default is 128.
-    p_adjust : str or None, optional
+    p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are Holm-
         Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels'
-        :func:`multipletests <statsmodels.stats.multitest.multipletests>` function.
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
         Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
     re_formula : str, optional
         Random coefficient formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>` for details.
     vc_formula : str, optional
-        Variance component formula. See :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`.
+        Variance component formula. See ``MixedLM.from_formula`` for details.
     model_kwargs : dict, optional
-        Additional keyword arguments to pass to :meth:`MixedLM.from_formula
-        <statsmodels.regression.mixed_linear_model.MixedLM.from_formula>`
+        Additional keyword arguments to pass to ``MixedLM``.
     fit_method : str or list of str, optional
         Optimization method for model fitting. Can be a single method name, or a list
         of method names to be tried sequentially. See `statsmodels.optimization
         <https://www.statsmodels.org/stable/optimization.html>`_
         for available methods. If None, a default list of methods will be tried.
+    fit_converge : bool, optional
+        If True, model fittings that were completed but did not converge will be
+        excluded from the calculation of final statistics. Default is False.
     fit_warnings : bool, optional
         Issue warnings if any during the model fitting process. Default is False.
         Warnings are usually issued when the optimization methods do not converge,
-        which is common in the analysis.
+        which is common in the analysis. Default is False.
     fit_kwargs : dict, optional
         Additional keyword arguments to pass to :meth:`MixedLM.fit
         <statsmodels.regression.mixed_linear_model.MixedLM.fit>`.
@@ -2486,32 +2664,45 @@ def dirmult_lme(
     Returns
     -------
     pd.DataFrame
-        A table of features, their log-fold changes and other relevant statistics.
+        A table of features and covariates, their log-fold changes and other relevant
+        statistics.
 
-        ``FeatureID`` is the feature identifier, ie: dependent variables
+        - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
-        ``Covariate`` is the covariate name, ie: independent variables
+        - ``Covariate``: Covariate name, i.e., independent variable.
 
-        ``Log2(FC)`` is the expected log2-fold change. The reported ``Log2(FC)``
-        is the average of all of the log2-fold changes computed from each of the
-        posterior draws.
+        - ``Reps``: Number of Dirichlet-multinomial posterior draws that supported the
+          reported statistics, i.e., the number of successful model fittings on this
+          feature. Max: ``draws`` (if none failed). Min: 0 (in which case all
+          statistics are NaN).
 
-        ``CI(2.5)`` is the 2.5% quantile of the log2-fold change. The reported
-        ``CI(2.5)`` is the average of the 2.5% quantile of all of the log2-fold
-        changes computed from each of the posterior draws.
+        - ``Log2(FC)``: Expected log2-fold change of abundance from the reference
+          category to the covariate category defined in the formula. The value is
+          expressed in the center log ratio (see :func:`clr`) transformed coordinates.
+          The reported value is the average of all of the log2-fold changes computed
+          from each of the posterior draws.
 
-        ``CI(97.5)`` is the 97.5% quantile of the log2-fold change. The
-        reported ``CI(97.5)`` is the average of the 97.5% quantile of all of
-        the log2-fold changes computed from each of the posterior draws.
+        - ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported value is the
+          minimum of all of the 2.5% quantiles computed from each of the posterior
+          draws.
 
-        ``pvalue`` is the *p*-value of the linear mixed effects model. The
-        reported values are the average of all of the *p*-values computed from the
-        linear mixed effects models calculated across all of the posterior draws.
+        - ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported value is
+          the maximum of all of the 97.5% quantiles computed from each of the posterior
+          draws.
 
-        ``qvalue`` is the corrected *p*-value of the linear mixed effects model
-        for multiple comparisons. The reported values are the average of all of
-        the *q*-values computed from the linear mixed effects models calculated
-        across all of the posterior draws.
+        - ``pvalue``: *p*-value of the linear mixed effects model. The reported value
+          is the average of all of the *p*-values computed from each of the posterior
+          draws.
+
+        - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
+          comparisons. The reported value is the average of all of the *q*-values
+          computed from each of the posterior draws.
+
+        - ``Signif``: Whether the covariate category is significantly differentially
+          abundant from the reference category. A feature-covariate pair marked as
+          "True" suffice: 1) The *q*-value must be less than or equal to the
+          significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
+          must not overlap with zero.
 
     See Also
     --------
@@ -2548,171 +2739,229 @@ def dirmult_lme(
     >>> result = dirmult_lme(table, metadata, formula='time + treatment',
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
-      FeatureID  Covariate  Log2(FC)   CI(2.5)  CI(97.5)    pvalue    qvalue
-    0        Y1       time -0.210769 -1.571095  1.144057  0.411140  0.879760
-    1        Y1  treatment -0.164704 -3.456697  3.384563  0.593769  0.972767
-    2        Y2       time  0.210769 -1.144057  1.571095  0.411140  0.879760
-    3        Y2  treatment  0.164704 -3.384563  3.456697  0.593769  0.972767
+      FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue  \
+    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737
+    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057
+    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737
+    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057
+    <BLANKLINE>
+         qvalue  Signif
+    0  0.644470   False
+    1  0.440581   False
+    2  0.644470   False
+    3  0.440581   False
 
     """
-    type_errmsg = (
-        "%s must be a pandas DataFrame or a numpy structured or rec array or "
-        "a dictionary."
-    )
-    attr_errmsg = "Please ensure %s contains feature IDs."
-    null_errmsg = "Cannot handle missing values in %s."
-
-    # Validate data table.
-    if not isinstance(table, pd.DataFrame):
-        try:
-            table = pd.DataFrame(table)
-        except AttributeError:
-            raise AttributeError(attr_errmsg % "table")
-        except (TypeError, ValueError):
-            raise TypeError(type_errmsg % "Table")
-    if table.ndim != 2:
-        try:
-            table = pd.DataFrame(table, index=table.dtype.names)
-        except (TypeError, ValueError):
-            raise TypeError(type_errmsg % "Table")
-    if table.shape[0] == 1:
-        raise ValueError("Table must have at least two features.")
-    if table.isnull().values.any():
-        raise ValueError(null_errmsg % "table")
-
-    # Validate metadata table.
-    if not isinstance(metadata, pd.DataFrame):
-        try:
-            metadata = pd.DataFrame(metadata)
-        except AttributeError:
-            raise ValueError(attr_errmsg % "metadata")
-        except (TypeError, ValueError):
-            raise TypeError(type_errmsg % "Metadata")
-    if metadata.isnull().values.any():
-        raise ValueError(null_errmsg % "metadata")
-
-    # Test if metadata and data have the same index, regardless of order
-    if not table.index.sort_values().equals(metadata.index.sort_values()):
-        raise ValueError("Table and metadata must have the same samples.")
-
-    # Modifying the indices of data and metadata to use unique integers,
-    # so that merging them will not affect the result. append "row" before the
-    # index to make it unique
-    table.index = list(range(table.shape[0]))
-    table.index = ["row" + str(i) for i in table.index]
-    metadata.index = list(range(metadata.shape[0]))
-    metadata.index = ["row" + str(i) for i in metadata.index]
-
-    # Columns in the final result
-    FEATUREID = "FeatureID"
-    LOG2FC = "Log2(FC)"
-    CI25 = "CI(2.5)"
-    CI975 = "CI(97.5)"
-    PVALUE = "pvalue"
-    COVARIATE = "Covariate"
-    QVALUE = "qvalue"
+    from patsy import dmatrix
+    from scipy.optimize import OptimizeWarning
+    from statsmodels.regression.mixed_linear_model import MixedLM, VCSpec
+    from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
     rng = get_rng(seed)
-    dir_table = _obtain_dir_table(table, pseudocount, rng)
 
-    res, _submodels, _covariate_list = _lme_call(
-        table=dir_table,
-        metadata=metadata,
-        formula=formula,
-        grouping=grouping,
-        re_formula=re_formula,
-        vc_formula=vc_formula,
-        model_kwargs=model_kwargs,
-        fit_method=fit_method,
-        fit_warnings=fit_warnings,
-        fit_kwargs=fit_kwargs,
-    )
+    matrix, samples, features = _ingest_table(table)
 
-    # Creating an empty dict to store sum of values (Using a DataFrame throws errors)
-    # uses a separate array for each covariate and each feature
-    # array index: 0: pvalue, 1: CI(2.5), 2: CI(97.5), 3: log2fc, 4: qvalue
-    res_dict = {}
+    _check_composition(np, matrix)
 
-    for feature in table.columns:
-        group = res_dict[feature] = {}
-        for covar in _covariate_list:
-            group[covar] = [0] * 5
+    n_feats = matrix.shape[1]
+    if n_feats < 2:
+        raise ValueError("Table must have at least two features.")
+    if features is None:
+        features = np.arange(n_feats)
 
-    for single_covar_data in res:
-        group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
-        for i, key in enumerate((PVALUE, CI25, CI975, LOG2FC)):
-            group[i] = single_covar_data[key]
+    # validate metadata
+    metadata = _check_metadata(metadata, matrix, samples)
 
-    for i in range(1, draws):
-        dir_table = _obtain_dir_table(table, pseudocount, rng)
+    # cast metadata to numbers where applicable
+    metadata = _type_cast_to_float(metadata)
 
-        ires = _lme_call(
-            table=dir_table,
-            metadata=metadata,
-            formula=formula,
-            grouping=grouping,
-            re_formula=re_formula,
-            vc_formula=vc_formula,
-            model_kwargs=model_kwargs,
-            fit_method=fit_method,
-            fit_warnings=fit_warnings,
-            fit_kwargs=fit_kwargs,
-        )[0]
+    # Instead of directly calling `MixedLM.from_formula` on merged table + metadata,
+    # the following code converts metadata into a design matrix based on the formula
+    # (as well as re_formula and vc_formula, if applicable), and calls `MixedLM`.
+    # This is because the design matrix (independent variable) is always the same
+    # whereas the table (dependent variable) is resampled in every replicate. Fixing
+    # the design matrix can save conversion overheads.
 
-        if ires is None:
-            continue
+    # Create a design matrix based on metadata and formula.
+    dmat = dmatrix(formula, metadata, return_type="matrix")
 
-        # online average to avoid holding all of the results in memory
-        for single_covar_data in ires:
-            group = res_dict[single_covar_data[FEATUREID]][single_covar_data[COVARIATE]]
-            group[0] = (i * group[0] + single_covar_data[PVALUE]) / (i + 1)
-            group[1] = np.minimum(group[1], single_covar_data[CI25])
-            group[2] = np.maximum(group[2], single_covar_data[CI975])
-            group[3] = (i * group[3] + single_covar_data[LOG2FC]) / (i + 1)
+    # Obtain the list of covariates by selecting the relevant columns
+    covars = dmat.design_info.column_names
+
+    # Remove intercept since it is not a covariate, and is included by default.
+    # Then determine the range of rows to be extracted from the model fitting result.
+    # (See also `result.model.k_fe`, number of fixed effects.)
+    if covars[0] == "Intercept":
+        covars = covars[1:]
+        n_covars = len(covars)
+        covar_range = slice(1, n_covars + 1)
+    else:
+        n_covars = len(covars)
+        covar_range = slice(0, n_covars)
+
+    exog_mat = np.asarray(dmat)
+
+    # parse grouping
+    if isinstance(grouping, str):
+        try:
+            grouping = metadata[grouping].to_numpy()
+        except KeyError:
+            raise ValueError("Grouping is not a column in the metadata.")
+        uniq, grouping = np.unique(grouping, return_inverse=True)
+    else:
+        uniq, grouping = _check_grouping(grouping, matrix, samples)
+    n_groups = len(uniq)
+
+    # random effects matrix
+    if re_formula is not None:
+        exog_re = np.asarray(dmatrix(re_formula, metadata, return_type="matrix"))
+    else:
+        exog_re = None
+
+    # variance component matrices
+    # see: https://www.statsmodels.org/v0.12.2/examples/notebooks/generated/
+    # variance_components.html
+    if vc_formula is not None:
+        metas = [metadata.iloc[grouping == x] for x in range(n_groups)]
+        names, cols, mats = [], [], []
+        for name, formula in vc_formula.items():
+            names.append(name)
+            dmats = [dmatrix(formula, x, return_type="matrix") for x in metas]
+            cols.append([x.design_info.column_names for x in dmats])
+            mats.append([np.asarray(x) for x in dmats])
+        exog_vc = VCSpec(names, cols, mats)
+    else:
+        exog_vc = None
+
+    # handle zero values
+    if pseudocount:
+        matrix = matrix + pseudocount
+
+    # initiate results
+    shape = (n_feats, n_covars)
+    coef = np.zeros(shape)  # coefficient (fold change)
+    pval = np.zeros(shape)  # p-value
+    lower = np.full(shape, np.inf)  # 2.5% CI
+    upper = np.full(shape, -np.inf)  # 97.5% CI
+
+    # number of replicates (draws) LME fitting is successful for each feature
+    fitted = np.zeros(n_feats, dtype=int)
+
+    fit_fail_msg = "LME fit failed for feature {} in replicate {}, outputting NaNs."
+
+    with catch_warnings():
+        if not fit_warnings:
+            simplefilter("ignore", UserWarning)
+            simplefilter("ignore", ConvergenceWarning)
+            simplefilter("ignore", OptimizeWarning)
+            # This is temporary because statsmodels calls scipy in a deprecated way as
+            # of v0.14.4.
+            simplefilter("ignore", DeprecationWarning)
+
+        for i in range(draws):
+            # Resample data in a Dirichlet-multinomial distribution.
+            dir_mat = _dirmult_draw(matrix, rng)
+
+            # Fit a linear mixed effects (LME) model for each feature.
+            for j in range(n_feats):
+                model = MixedLM(
+                    dir_mat[:, j],
+                    exog_mat,
+                    grouping,
+                    exog_re=exog_re,
+                    exog_vc=exog_vc,
+                    **model_kwargs,
+                )
+
+                # model fitting (computationally expensive)
+                try:
+                    result = model.fit(method=fit_method, **fit_kwargs)
+
+                # There are many ways model fitting may fail. Examples are LinAlgError,
+                # RuntimeError, OverflowError, and ZeroDivisionError. If any error
+                # occurs, the function will still proceed but the current run will be
+                # discarded.
+                except Exception:
+                    warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    continue
+
+                # It is common that model fitting successfully finished (no error) but
+                # the optimizer did not converge, making the calculated statistics less
+                # reliable. The `fit_converge` flag can discard these runs.
+                if fit_converge and not result.converged:
+                    warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    continue
+
+                # update results
+                coef[j] += result.params[covar_range]
+                pval[j] += result.pvalues[covar_range]
+
+                # calculate confidence interval and update results
+                ci = result.conf_int()
+                np.minimum(lower[j], ci[covar_range, 0], out=lower[j])
+                np.maximum(upper[j], ci[covar_range, 1], out=upper[j])
+
+                fitted[j] += 1
+
+    # deal with fitting failures
+    all_fail_msg = "LME fit failed for {} features in all replicates, reporting NaNs."
+    mask = fitted > 0
+    n_failed = n_feats - mask.sum()
+    # all succeeded
+    if n_failed == 0:
+        mask = slice(None)
+    # some failed
+    elif n_failed < n_feats:
+        warn(all_fail_msg.format(n_failed), UserWarning)
+        for x in (coef, pval, lower, upper):
+            x[~mask] = np.nan
+    # all failed
+    else:
+        raise ValueError("LME fit failed for all features in all replicates.")
+
+    # normalize metrics to averages over all successful replicates
+    fitted_ = fitted.reshape(-1, 1)[mask]
+    for x in (coef, pval):
+        x[mask] /= fitted_
 
     # convert all log fold changes to base 2
     log2_ = np.log(2)
-    for feature, covar_dict in res_dict.items():
-        for covar, group in covar_dict.items():
-            group[1:4] /= log2_
+    for x in (coef, lower, upper):
+        x[mask] /= log2_
 
-    p_value_arr = []
-    for feature in table.columns:
-        group = res_dict[feature]
-        for covar in _covariate_list:
-            p_value_arr.append(group[covar][0])
-
-    # multiple comparison
+    # correct p-values for multiple comparison
+    # (only valid replicates are included)
     if p_adjust is not None:
-        qval = _calc_p_adjust(p_adjust, p_value_arr)
+        func = _check_p_adjust(p_adjust)
+        qval = np.full(shape, np.nan)
+        qval[mask] = np.apply_along_axis(func, 1, pval[mask])
     else:
-        qval = p_value_arr
+        qval = pval
 
-    count = 0
-    for feature in table.columns:
-        group = res_dict[feature]
-        for covar in _covariate_list:
-            group[covar][4] = qval[count]
-            count += 1
+    # get significant results (q-value <= 0.05 and CI doesn't cross 0)
+    # see `dirmult_ttest`
+    reject = np.full(shape, np.nan)
+    ii = np.where(mask)[0] if n_failed else np.arange(n_feats)
+    for i in ii:
+        outer = ((lower[i] > 0) & (upper[i] > 0)) | ((lower[i] < 0) & (upper[i] < 0))
+        reject[i] = (qval[i] <= 0.05) & outer
 
-    final_res = []
-
-    for feature in table.columns:
-        for covar in _covariate_list:
-            group = res_dict[feature][covar]
-            final_res.append(
-                {
-                    FEATUREID: feature,
-                    COVARIATE: covar,
-                    LOG2FC: group[3],
-                    CI25: group[1],
-                    CI975: group[2],
-                    PVALUE: group[0],
-                    QVALUE: group[4],
-                }
-            )
-
-    return pd.DataFrame(final_res)
+    # construct report
+    res = pd.DataFrame.from_dict(
+        {
+            "FeatureID": [x for x in features for _ in range(n_covars)],
+            "Covariate": list(covars) * n_feats,
+            "Reps": np.repeat(fitted, n_covars),
+            "Log2(FC)": coef.ravel(),
+            "CI(2.5)": lower.ravel(),
+            "CI(97.5)": upper.ravel(),
+            "pvalue": pval.ravel(),
+            "qvalue": qval.ravel(),
+        }
+    )
+    # pandas' nullable boolean type
+    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+    return res
 
 
 register_aliases(modules[__name__])
