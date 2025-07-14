@@ -24,7 +24,7 @@ torch = get_package("torch", raise_error=False)
 xr = get_package("xarray", raise_error=False)
 dask = get_package("dask", raise_error=False)
 if dask is not None:
-    da = get_package("dask.array", raise_error=False)
+    da = get_package("dask.array")
 
 
 class TestIngestArray(TestCase):

@@ -9,45 +9,41 @@
 from unittest import TestCase,  main, skipIf
 import warnings
 import inspect
-import subprocess
 
 import numpy as np
 import numpy.testing as npt
 from numpy.random import rand, randint
+
+from skbio.util import get_package
+from skbio.util._gpu import cuda_avail
 
 from skbio.stats.composition import (
     closure, clr, clr_inv, ilr,
     ilr_inv, alr, alr_inv, _gram_schmidt_basis)
 
 
+# import optional dependencies
 try:
-    import jax
-    import jax.numpy as jnp
-    no_jax = False
-    jax.config.update("jax_enable_x64", True)
+    jax = get_package("jax")
 except ImportError:
     no_jax = True
+else:
+    no_jax = False
+    jnp = get_package("jax.numpy")
+    jax.config.update("jax_enable_x64", True)
 
 try:
-    import torch
+    torch = get_package("torch")
+except ImportError:
+    no_torch = True
+else:
     no_torch = False
     # initially, the default is float32, but this test will use float64
     torch.set_default_dtype(torch.float64)
-except ImportError:
-    no_torch = True
 
 
-# evaluate the existence of cuda
-def no_cuda_available():
-    try:
-        result = subprocess.run(
-            ["nvidia-smi"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return not result.returncode == 0
-    except FileNotFoundError:
-        return True
+# check the existence of cuda
+no_cuda = not cuda_avail()
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -107,7 +103,7 @@ class Tests_Closure(TestCase):
         assert torch.sum(torch.abs(expected_real - rst_real)
                          ) < 1e-08, "unmatched values"
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = 1
@@ -155,7 +151,7 @@ class Tests_Closure(TestCase):
         assert jnp.sum(jnp.abs(expected_int - rst_int)) < 1e-08, "unmatched values"
         assert jnp.sum(jnp.abs(expected_real - rst_real)) < 1e-08, "unmatched values"
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = 1
@@ -249,7 +245,7 @@ class Tests_CLR(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = 1
@@ -337,7 +333,7 @@ class Tests_CLR(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = 1
@@ -460,7 +456,7 @@ class Tests_CLR_INV(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
@@ -544,7 +540,7 @@ class Tests_CLR_INV(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -671,7 +667,7 @@ class Tests_ALR(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         denominator_idx = self.denominator_idx
@@ -757,7 +753,7 @@ class Tests_ALR(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -888,7 +884,7 @@ class Tests_ALR_INV(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         denominator_idx = self.denominator_idx
@@ -974,7 +970,7 @@ class Tests_ALR_INV(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -1102,7 +1098,7 @@ class Tests_ILR_default_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
@@ -1186,7 +1182,7 @@ class Tests_ILR_default_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -1315,7 +1311,7 @@ class Tests_ILR_INV_default_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
@@ -1399,7 +1395,7 @@ class Tests_ILR_INV_default_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -1533,7 +1529,7 @@ class Tests_ILR_helmert_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
@@ -1617,7 +1613,7 @@ class Tests_ILR_helmert_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
@@ -1753,7 +1749,7 @@ class Tests_ILR_INV_helmert_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_torch or no_cuda_available(), "Skipping tests: no torch dependency or no cuda")
+    @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
         axis = self.axis
@@ -1837,7 +1833,7 @@ class Tests_ILR_INV_helmert_basis(TestCase):
                 UserWarning
             )
 
-    @skipIf(no_jax or no_cuda_available(), "Skipping tests: no jax dependency or no cuda")
+    @skipIf(no_jax or no_cuda, "Skipping tests: no jax dependency or no cuda")
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
