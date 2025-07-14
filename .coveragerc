@@ -18,3 +18,4 @@ exclude_lines =
 omit =
     */tests/*
     */__init__.py
+    util/typing.py

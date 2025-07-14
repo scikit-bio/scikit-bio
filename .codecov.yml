@@ -10,4 +10,5 @@ coverage:
 ignore:
  - "*/tests/*"
  - "test_*.py"
+ - "util/_typing.py"
  
