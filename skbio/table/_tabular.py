@@ -15,6 +15,7 @@ import pandas as pd
 from ._base import _table_to_numpy
 from skbio._config import get_config
 from skbio.util import get_package
+from skbio.util._array import _ingest_array
 
 
 def _create_table(data, columns=None, index=None, backend=None):
@@ -185,8 +186,19 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
             samples = table.obs.index
             features = table.var.index
 
+    # array-like object
+    # this will generate a NumPy array, regardless of input type
     if data is None:
-        raise TypeError("Input table format is not supported.")
+        data = _ingest_array(table, to_numpy=True)
+
+    # zero-dimensional arrays are considered as invalid (such as scalars, non-
+    # convertible objects)
+    if data.ndim == 0:
+        raise TypeError(
+            f"'{table.__class__.__name__}' is not a supported table format."
+        )
+
+    # convert a 1-D vector into a 2-D array
     if data.ndim == 1 and expand:
         data = data.reshape(1, -1)
     if data.ndim < 2:
@@ -203,67 +215,3 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
         raise ValueError(lenerr.format(data.shape[1], "feature", len(feature_ids)))
 
     return data, sample_ids, feature_ids
-
-
-def _ingest_vector(vector, ids=None):
-    """Process an input vector into individual components.
-
-    Parameters
-    ----------
-    vector : vector_like
-        The input vector. May be any of the supported formats.
-    ids : sequence of str, optional
-        Positional IDs of the vector. If ``None``, extraction from input vector will
-        will be attempted.
-
-    Returns
-    -------
-    data : ndarray of shape (n,)
-        The raw numeric values from the input data.
-    ids : list of str
-        The extracted or provided IDs.
-
-    Raises
-    ------
-    TypeError
-        If input table format is not supported.
-    ValueError
-        If number of provided IDs doesn't match vector length.
-
-    See Also
-    --------
-    _ingest_table
-
-    """
-    lenerr = "Vector has a length of {} but {} IDs are provided."
-    data, index = None, None
-
-    # Python (nested) list, tuple, etc.
-    if isinstance(vector, Sequence) and not isinstance(vector, (str, bytes)):
-        data = np.asarray(vector)
-
-    # NumPy array
-    # to be replaced with `aac.is_array_api_obj(table)`
-    elif isinstance(vector, np.ndarray):
-        data = vector
-
-    # pandas Series
-    elif isinstance(vector, pd.Series):
-        data = vector.to_numpy()
-        if ids is None:
-            index = vector.index
-    else:
-        raise TypeError("Input vector format is not supported.")
-    if data.ndim < 1:
-        raise ValueError("Input vector has less than 1 dimension.")
-
-    if ids is None:
-        if index is not None:
-            ids = index.tolist()
-    else:
-        if not isinstance(ids, list):
-            ids = list(ids)
-        if len(ids) != data.shape[0]:
-            raise ValueError(lenerr.format(data.shape[0], len(ids)))
-
-    return data, ids

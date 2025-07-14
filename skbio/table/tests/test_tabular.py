@@ -21,12 +21,15 @@ from skbio.util._testing import assert_data_frame_almost_equal
 from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
+# import optional dependencies
 pl = get_package("polars", raise_error=False)
 # polars.testing isn't imported along with polars. Therefore one needs to import it
 # separately.
 if pl is not None:
     plt = get_package("polars.testing")
 adt = get_package("anndata", raise_error=False)
+torch = get_package("torch", raise_error=False)
+jnp = get_package("jax.numpy", raise_error=False)
 
 
 class TestIngest(TestCase):
@@ -121,13 +124,36 @@ class TestIngest(TestCase):
         obs = _ingest_table(tuple(tuple(x) for x in table))
         npt.assert_array_equal(obs[0], self.data)
 
+    @skipIf(torch is None, "PyTorch is not available for unit tests.")
+    def test_ingest_torch(self):
+        table = torch.tensor(self.data)
+        obs = _ingest_table(table)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+    @skipIf(jnp is None, "JAX is not available for unit tests.")
+    def test_ingest_jax(self):
+        table = jnp.asarray(self.data)
+        obs = _ingest_table(table)
+        npt.assert_array_equal(obs[0], self.data)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
     def test_ingest_error(self):
-        msg = "Input table format is not supported."
+        msg = "'int' is not a supported table format."
         with self.assertRaises(TypeError) as cm:
             _ingest_table(123)
         self.assertEqual(str(cm.exception), msg)
+
+        msg = "'str' is not a supported table format."
         with self.assertRaises(TypeError) as cm:
             _ingest_table("hello")
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "'type' is not a supported table format."
+        with self.assertRaises(TypeError) as cm:
+            _ingest_table(TypeError)
         self.assertEqual(str(cm.exception), msg)
 
         msg = "Input table has less than 2 dimensions."

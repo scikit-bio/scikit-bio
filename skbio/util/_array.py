@@ -30,13 +30,15 @@ def _ingest_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
         # The Python array API standard requires any compliant array objects have a
         # `__dlpack__` protocol, which guarantees that they can be converted into a
         # NumPy array via `np.from_dlpack`.
+        # See: https://numpy.org/devdocs//user/basics.interoperability.html
         try:
             arr = np.from_dlpack(arr)
 
         # For array objects that doesn't have the `__dlpack__` protocol (e.g., Dask,
-        # at the time of coding), `np.asarray` is called as a fallback, which should
-        # work for objects that have an `__array__` protocol.
-        except (AttributeError, TypeError):
+        # at the time of coding), or array objects that are not on the same device
+        # (e.g., cuda), `np.asarray` is called as a fallback, which should work for
+        # objects that have an `__array__` protocol.
+        except (AttributeError, TypeError, RuntimeError):
             arr = np.asarray(arr)
 
     return arr
