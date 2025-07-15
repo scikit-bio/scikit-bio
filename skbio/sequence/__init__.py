@@ -13,7 +13,7 @@ immutable object that translates DNA or RNA sequences into protein sequences, an
 the :class:`SubstitutionMatrix` class, which stores scores of substitutions between
 sequence characters.
 
-See the :ref:`sequence_tutorial` section for working with biological sequences using
+See the |sequence_tutorial|_ section for working with biological sequences using
 scikit-bio.
 
 
@@ -58,6 +58,7 @@ Abstract classes
    NucleotideMixin
 
 
+.. |sequence_tutorial| replace:: **Tutorial**
 .. _sequence_tutorial:
 
 Tutorial

@@ -9,7 +9,7 @@ that are multifurcating and nodes that have single descendants. Functionality is
 provided for constructing trees, for traversing in multiple ways, comparisons, fetching
 subtrees, and more.
 
-See the :ref:`tree_tutorial` section for working with trees using scikit-bio.
+See the |tree_tutorial|_ section for working with trees using scikit-bio.
 
 
 Tree structure and operations
@@ -86,6 +86,7 @@ Exceptions
    NoParentError
 
 
+.. |tree_tutorial| replace:: **Tutorial**
 .. _tree_tutorial:
 
 Tutorial

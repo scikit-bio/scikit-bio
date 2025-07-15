@@ -19,7 +19,7 @@ measurements of a given feature within a given sample. The entire table must be 
 a homogeneous data type.
 
 Internally, a table is decomposed into a 2-D data matrix, and lists of sample IDs and
-feature IDs (:ref:`explained below <terminology>`).
+feature IDs (:ref:`explained below <samples_and_features>`).
 
 IDs are optional. When they are absent, scikit-bio uses integer indices to refer to
 samples and features. When IDs are present, however, scikit-bio uses them to bridge
@@ -27,6 +27,8 @@ structured biological knowledge with numeric data, enabling convenient ID-based 
 addition to index-based operations (e.g., :func:`~skbio.diversity.alpha_diversity` and
 :class:`~skbio.stats.distance.DistanceMatrix`).
 
+
+.. _table_like:
 
 Supported table-like formats
 ----------------------------
@@ -78,7 +80,7 @@ parameter annotated as ``array_like`` accepts any of the following formats:
    through NumPy and significantly accelerating computation.
 
 
-.. _terminology:
+.. _samples_and_features:
 
 Samples and features
 --------------------

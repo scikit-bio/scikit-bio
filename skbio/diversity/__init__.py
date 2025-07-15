@@ -3,14 +3,16 @@ r"""Community Diversity (:mod:`skbio.diversity`)
 
 .. currentmodule:: skbio.diversity
 
-This module provides functionality for analyzing biodiversity of communities
--- groups of organisms living in the same area. It implements various metrics
-of alpha (within-community) and beta (between-community) diversity, and
-provides "driver functions" for computing alpha and beta diversity for an
-entire data table. Additional utilities are provided to support discovery of
-available diversity metrics. While diversity metrics were originally designed
-to study biological communities, they can be generalized to the analysis of
-various biological data types.
+This module provides functionality for analyzing biodiversity of communities -- groups
+of organisms living in the same area. It implements various metrics of **alpha**
+(*within*-community) and **beta** (*between*-community) diversity, and provides "driver
+functions" for computing alpha and beta diversity for an entire data table. Additional
+utilities are provided to support discovery of available diversity metrics. While
+diversity metrics were originally designed to study biological communities, they can be
+generalized to the analysis of various biological data types.
+
+See an |diversity_intro|_ to community data and diversity metrics and a
+|diversity_tutorial|_ for performing community diversity analyses using scikit-bio.
 
 
 Alpha diversity
@@ -61,6 +63,9 @@ Utility functions
 
    vectorize_counts_and_tree
 
+
+.. |diversity_intro| replace:: **Introduction**
+.. _diversity_intro:
 
 Introduction
 ------------
@@ -209,6 +214,9 @@ that are implemented in scikit-bio. There may be additional metrics that can be
 passed as strings which won't be listed here, such as those implemented in
 SciPy's :func:`~scipy.spatial.distance.pdist`.
 
+
+.. |diversity_tutorial| replace:: **Tutorial**
+.. _diversity_tutorial:
 
 Tutorial
 --------
