@@ -240,7 +240,7 @@ class TestCAResults(TestCase):
 class TestCAResults_NumPy(TestCase):
     def setUp(self):
         """Data from table 9.11 in Legendre & Legendre 1998."""
-        set_config("output", "numpy")
+        set_config("table_output", "numpy")
         self.X = np.loadtxt(get_data_path("L&L_CA_data"))
         self.sample_ids = ["Site1", "Site2", "Site3"]
         self.feature_ids = ["Species1", "Species2", "Species3"]
@@ -248,7 +248,7 @@ class TestCAResults_NumPy(TestCase):
 
     def tearDown(self):
         # set backend back to default
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
 
     def test_scaling2(self):
         eigvals = np.array([0.09613302, 0.04094181])

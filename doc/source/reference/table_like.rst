@@ -134,10 +134,10 @@ Some functions that *produce* tables can return the result in one of three forma
 - pandas :class:`~pandas.DataFrame` and :class:`~pandas.Series` (default)
 - Polars :class:`~polars.DataFrame` and :class:`~polars.Series`
 
-There are two ways to control the output format.
+There are two ways to control the output format:
 
-The first option is to set the desired output format on a per-function basis, using
-the ``output_format`` parameter.
+1. Set the desired output format on a per-function basis, using the ``output_format``
+   parameter.
 
 .. code-block:: python
 
@@ -147,8 +147,8 @@ the ``output_format`` parameter.
     # NumPy arrays.
     res = cca(Y, X, output_format="numpy")
 
-The second option is to use the :func:`skbio.set_config` function. It will change the
-global behavior of scikit-bio functions.
+2. Set the ``table_output`` configuration option using :func:`skbio.set_config`. It
+   will change the global behavior of all scikit-bio functions.
 
 .. code-block:: python
 
@@ -156,7 +156,7 @@ global behavior of scikit-bio functions.
     from skbio import set_config
 
     # Set output format to NumPy arrays, or
-    set_config("output", "numpy")
+    set_config("table_output", "numpy")
 
     # Return to default pandas output
-    set_config("output", "pandas")
+    set_config("table_output", "pandas")

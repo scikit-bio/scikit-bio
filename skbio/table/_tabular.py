@@ -39,7 +39,7 @@ def _create_table(data, columns=None, index=None, backend=None):
 
     """
     if backend is None:
-        backend = get_config("output")
+        backend = get_config("table_output")
 
     if backend == "pandas":
         return pd.DataFrame(data, index=index, columns=columns)
@@ -74,7 +74,7 @@ def _create_table_1d(data, index=None, backend=None):
 
     """
     if backend is None:
-        backend = get_config("output")
+        backend = get_config("table_output")
 
     if backend in ("pandas"):  # , "biom"):
         return pd.Series(data, index=index)
