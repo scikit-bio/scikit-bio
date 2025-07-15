@@ -1871,7 +1871,7 @@ def ancom(
           abundant across groups (``True``) or not (``False``).
 
         .. versionchanged:: 0.7.0
-            Renamed "Reject null hypothesis" into "Signif".
+            Renamed ``Reject null hypothesis`` as ``Signif``.
 
     pd.DataFrame
         A table of features and their percentile abundances in each group. If
@@ -2455,8 +2455,8 @@ def dirmult_ttest(
             inconsistent across draws.
 
         .. versionchanged:: 0.7.0
-            Renamed "T-statistic" as "T-statistic".
-            Renamed "Reject null hypothesis" as "Signif".
+            Renamed ``T statistic`` as ``T-statistic``.
+            Renamed ``Reject null hypothesis`` as ``Signif``.
 
     See Also
     --------

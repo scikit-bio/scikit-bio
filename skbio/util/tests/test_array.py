@@ -165,7 +165,7 @@ class TestIngestArray(TestCase):
 
     def test_ingest_array_pandas(self):
         # Pandas Series' are not API-compatible arrays, but they can be casted into
-        # Numpy arrays.
+        # NumPy arrays.
         s = pd.Series(range(5), index=list("abcde"))
         xp, obs = ingest_array(s)
         self.assertIs(xp, aac.numpy)

@@ -22,7 +22,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     ----------
     alphabet : iterable
         Characters that constitute the alphabet.
-    scores : 2D array-like
+    scores : array_like of shape (n_alphabet, n_alphabet)
         Scores of substitutions from one character (row, or axis=0) to another
         character (column, or axis=1).
     kwargs : dict

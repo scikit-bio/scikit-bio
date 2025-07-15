@@ -66,14 +66,14 @@ parameter annotated as ``array_like`` accepts any of the following formats:
   functions are optimized for (e.g., utilizing vectorization if possible).
 - Any array object compliant with the `Python array API standard
   <https://data-apis.org/array-api/latest/>`_. Examples are PyTorch ``Tensor``,
-  CuPy ``ndarray``, JAX ``Array``, Dask ``Array``, and ``SparseArray``.
-- Any object convertible to a ≥1-D NumPy array via :func:`~numpy.asarray`. Examples
-  are plain Python lists and tuples.
+  CuPy ``ndarray``, JAX ``Array``, Dask ``Array``, and sparse ``SparseArray``.
+- Any object convertible to a ≥1-dimensional NumPy array via :func:`~numpy.asarray`.
+  Examples are plain Python lists and tuples.
 
 .. note::
-   Starting with **scikit-bio 0.7.0**, multiple functions offer *native* support for
-   alternative array libraries. For instance, log-ratio transformations like
-   :func:`~skbio.stats.composition.clr` can now consume and return GPU-resident
+   A proportion of scikit-bio functions offer *native* support for alternative array
+   libraries. For instance, log-ratio transformations like
+   :func:`~skbio.stats.composition.clr` can consume and return GPU-resident
    tensors with arbitrary dimensions, eliminating the overhead of round-tripping
    through NumPy and significantly accelerating computation.
 

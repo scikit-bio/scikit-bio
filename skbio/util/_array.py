@@ -19,8 +19,47 @@ if TYPE_CHECKING:  # pragma: no cover
     from ._typing import ArrayLike, StdArray
 
 
-def _ingest_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
-    r"""Convert an array-like variable into an array object."""
+# -------------------------------------------------------------------------------------
+# Important note: This script provides support for array-like objects. Two notions are
+# currently used interchangeably in scikit-bio:
+#
+# 1. `np.typing.ArrayLike`: Used in most legacy code. It is usually converted into a
+#    NumPy array via `np.asarray`.
+#
+# 2. `skbio.util._array.StdArray`: Used in some new code that focuses on GPU support.
+#    It is essentially a union of NumPy array-like and array objects compliant with the
+#    Python array API standard. It is parsed using the `_get_array` function below.
+#
+# The two types and the two functions can be used interchangeably, but with certain
+# considerations, as detailed below.
+# -------------------------------------------------------------------------------------
+
+
+def _get_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
+    r"""Convert an array-like variable into an array object.
+
+    Parameters
+    ----------
+    arr : array_like
+        An array-like variable.
+    to_numpy : bool, optional
+        If True, make sure the returned array is a NumPy array.
+
+    Returns
+    -------
+    arr : ndarray
+        An array object.
+
+    Notes
+    -----
+    When ``to_numpy=True``, this function's behavior is very similar to ``np.asarray``.
+    Therefore, in most legacy code, a simple ``np.asarray`` call can replace the
+    current function. However, there is a subtle difference that makes the current
+    function more suitable for GPU-oriented code: ``np.asarray`` forces a device-to-
+    host copy, whereas ``np.from_dlpack`` attempts to share the buffer without making
+    a copy, thereby improving performance.
+
+    """
     # Cast a non-array object into a NumPy array.
     if not aac.is_array_api_obj(arr):
         arr = np.asarray(arr)
@@ -65,7 +104,7 @@ def ingest_array(
 
     See Also
     --------
-    _ingest_array
+    _get_array
     skbio.util._typing.ArrayLike
     array_api_compat.array_namespace
     numpy.typing.ArrayLike
@@ -96,5 +135,5 @@ def ingest_array(
     .. [2] https://numpy.org/devdocs/glossary.html#term-array_like
 
     """
-    arrays = tuple(_ingest_array(x, to_numpy=to_numpy) for x in arrays)
+    arrays = tuple(_get_array(x, to_numpy=to_numpy) for x in arrays)
     return aac.array_namespace(*arrays), *arrays

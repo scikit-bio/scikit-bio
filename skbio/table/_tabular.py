@@ -15,7 +15,6 @@ import pandas as pd
 from ._base import _table_to_numpy
 from skbio._config import get_config
 from skbio.util import get_package
-from skbio.util._array import _ingest_array
 
 
 def _create_table(data, columns=None, index=None, backend=None):
@@ -25,9 +24,9 @@ def _create_table(data, columns=None, index=None, backend=None):
     ----------
     data : table_like
         Input data.
-    columns : array-like
+    columns : array_like
         Column labels to use if data does not have them.
-    index : array-like
+    index : array_like
         Index labels to use if data does not have them.
     backend : str
         The desired data structure to be used within scikit-bio functions.
@@ -60,9 +59,9 @@ def _create_table_1d(data, index=None, backend=None):
     ----------
     data : table_like
         Input data.
-    columns : array-like
+    columns : array_like
         Column labels to use if data does not have them.
-    index : array-like
+    index : array_like
         Index labels to use if data does not have them.
     backend : str
         The desired data structure to be used within scikit-bio functions.
@@ -189,7 +188,7 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
     # array-like object
     # this will generate a NumPy array, regardless of input type
     if data is None:
-        data = _ingest_array(table, to_numpy=True)
+        data = np.asarray(table)
 
     # zero-dimensional arrays are considered as invalid (such as scalars, non-
     # convertible objects)
