@@ -27,9 +27,14 @@ from skbio.binaries import (
 from skbio.util._decorator import params_aliased
 
 
-@params_aliased([("dimensions", "number_of_dimensions", "0.7.0", False)])
+@params_aliased(
+    [
+        ("dimensions", "number_of_dimensions", "0.7.0", False),
+        ("distmat", "distance_matrix", "0.7.0", False),
+    ]
+)
 def pcoa(
-    distance_matrix,
+    distmat,
     method="eigh",
     dimensions=0,
     inplace=False,
@@ -45,7 +50,7 @@ def pcoa(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distmat : DistanceMatrix
         The input distance matrix.
     method : str, optional
         Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
@@ -136,12 +141,12 @@ def pcoa(
        Journal on Scientific computing, 33(5), 2580-2594.
 
     """
-    distance_matrix = DistanceMatrix(distance_matrix)
+    distmat = DistanceMatrix(distmat)
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if dimensions == 0:
-        if method == "fsvd" and distance_matrix.data.shape[0] > 10:
+        if method == "fsvd" and distmat.data.shape[0] > 10:
             warn(
                 "FSVD: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
@@ -150,8 +155,8 @@ def pcoa(
                 RuntimeWarning,
             )
 
-        # distance_matrix is guaranteed to be square
-        dimensions = distance_matrix.data.shape[0]
+        # distmat is guaranteed to be square
+        dimensions = distmat.data.shape[0]
     elif dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
@@ -160,7 +165,7 @@ def pcoa(
             "the dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
-    elif dimensions > distance_matrix.data.shape[0]:
+    elif dimensions > distmat.data.shape[0]:
         raise ValueError("Invalid operation: cannot extend distance matrix size.")
     elif not isinstance(dimensions, Integral) and dimensions > 1:
         raise ValueError(
@@ -177,7 +182,7 @@ def pcoa(
     # Perform eigendecomposition
     if method == "eigh":
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
+        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
 
         # eigh does not natively support specifying dimensions, i.e.
         # there are no speed gains unlike in FSVD. Later, we slice off unwanted
@@ -200,21 +205,21 @@ def pcoa(
                 "Consider specifying an integer value to optimize performance.",
                 RuntimeWarning,
             )
-            ndim = distance_matrix.data.shape[0]
+            ndim = distmat.data.shape[0]
         if _skbb_pcoa_fsvd_available(
-            distance_matrix.data, dimensions, inplace, seed
+            distmat.data, dimensions, inplace, seed
         ):  # pragma: no cover
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
-                    distance_matrix.data, dimensions, inplace, seed
+                    distmat.data, dimensions, inplace, seed
                 )
                 return _encapsulate_pcoa_result(
                     long_method_name,
                     eigvals,
                     coordinates,
                     proportion_explained,
-                    distance_matrix.ids,
+                    distmat.ids,
                     output_format,
                 )
             except Exception as e:
@@ -225,7 +230,7 @@ def pcoa(
                 )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
+        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
 
         eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:
@@ -316,7 +321,7 @@ def pcoa(
         eigvals,
         coordinates,
         proportion_explained,
-        distance_matrix.ids,
+        distmat.ids,
         output_format,
     )
 
@@ -331,8 +336,8 @@ def _encapsulate_pcoa_result(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
-        The input distance matrix.
+    long_method_name: str
+        The verbose name of the method used.
     eigvals: ndarray
         Eigenvalues
     coordinates: ndarray

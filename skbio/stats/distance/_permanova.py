@@ -22,9 +22,11 @@ from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
 )
+from skbio.util._decorator import params_aliased
 
 
-def permanova(distance_matrix, grouping, column=None, permutations=999, seed=None):
+@params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
+def permanova(distmat, grouping, column=None, permutations=999, seed=None):
     r"""Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
@@ -43,18 +45,18 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distmat : DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
     grouping : 1-D array_like or pandas.DataFrame
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
         belongs to. If `grouping` is 1-D ``array_like``, it must be the same
-        length and in the same order as the objects in `distance_matrix`. If
+        length and in the same order as the objects in `distmat`. If
         `grouping` is a ``DataFrame``, the column specified by `column` will be
         used as the grouping vector. The ``DataFrame`` must be indexed by the
-        IDs in `distance_matrix` (i.e., the row labels must be distance matrix
-        IDs), but the order of IDs between `distance_matrix` and the
+        IDs in `distmat` (i.e., the row labels must be distance matrix
+        IDs), but the order of IDs between `distmat` and the
         ``DataFrame`` need not be the same. All IDs in the distance matrix must
         be present in the ``DataFrame``. Extra IDs in the ``DataFrame`` are
         allowed (they are ignored in the calculations).
@@ -103,22 +105,20 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
     provide similar interfaces).
 
     """
-    if not isinstance(distance_matrix, DistanceMatrix):
+    if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
-    sample_size = distance_matrix.shape[0]
+    sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
-        distance_matrix.ids, sample_size, grouping, column
+        distmat.ids, sample_size, grouping, column
     )
 
     if _skbb_permanova_available(
-        distance_matrix, grouping, permutations, seed
+        distmat, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
         try:
-            stat, p_value = _skbb_permanova(
-                distance_matrix, grouping, permutations, seed
-            )
+            stat, p_value = _skbb_permanova(distmat, grouping, permutations, seed)
             return _build_results(
                 "PERMANOVA",
                 "pseudo-F",
@@ -137,13 +137,13 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distance_matrix[:] ** 2).sum() / sample_size
+    s_T = (distmat[:] ** 2).sum() / sample_size
     # we are going over the whole matrix, instead of just upper triangle
     # so cut in half
     s_T /= 2.0
 
     test_stat_function = partial(
-        _compute_f_stat, sample_size, num_groups, distance_matrix, group_sizes, s_T
+        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
     )
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -154,12 +154,10 @@ def permanova(distance_matrix, grouping, column=None, permutations=999, seed=Non
     )
 
 
-def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
-):
+def _compute_f_stat(sample_size, num_groups, distmat, group_sizes, s_T, grouping):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+    s_W = permanova_f_stat_sW_cy(distmat.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
