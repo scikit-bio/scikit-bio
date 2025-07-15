@@ -450,7 +450,7 @@ that places the root at the midpoint between the two most distant tips in the tr
 >>> print(rooted.ascii_art())
           /-chicken
          |
--root----|                    /-mouse
+---------|                    /-mouse
          |          /--------|
          |         |          \-rat
           \--------|
@@ -573,14 +573,14 @@ using :meth:`~TreeNode.cophenet`, which returns a distance matrix.
 The evolutionary distances reflected by two trees can be compared. First, let's create
 two trees with the same taxa but different branch lengths.
 
->>> tree1 = TreeNode.read(["((A:0.1,B:0.2):0.3,C:0.4,D:0.5);"])
->>> tree2 = TreeNode.read(["((A:0.4,B:0.8):0.3,C:0.1,D:0.5);"])
+>>> tree1 = TreeNode.read(["((A:0.1,B:0.3):0.3,C:0.4,D:0.5);"])
+>>> tree2 = TreeNode.read(["((A:0.4,B:0.7):0.3,C:0.1,D:0.5);"])
 
-Calculate the distance between the cophenetic distance matrics using
+Calculate the distance between the cophenetic distance matrices using
 (:meth:`~TreeNode.compare_cophenet`):
 
 >>> tree1.compare_cophenet(tree2).round(3)
-0.12
+0.376
 
 Likewise, we can calculate this metric between multiple trees using :func:`path_dists`.
 

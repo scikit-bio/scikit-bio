@@ -467,7 +467,7 @@ class MeTests(TestCase):
 
         # Root the tree at an internal branch and test to recover the same result.
         obj = obj.find("e").parent
-        obj = obj.root_at(above=True, branch_attrs=[])
+        obj = obj.root_at(above=True)
         self.assertEqual(len(obj.children), 2)
         obs = _root_from_treenode(obj, self.taxa1)
         _check_tree(*obs)
@@ -493,7 +493,7 @@ class MeTests(TestCase):
             _check_tree(*obs)
 
             # root the TreeNode object instead (slower) and generate the array
-            obj_ = obj.root_at(taxon_, branch_attrs=[])
+            obj_ = obj.root_at(taxon_)
             obj_.prune()
 
             taxmap = {x: i for i, x in enumerate(taxa_)}
