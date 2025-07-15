@@ -154,10 +154,12 @@ def permanova(distmat, grouping, column=None, permutations=999, seed=None):
     )
 
 
-def _compute_f_stat(sample_size, num_groups, distmat, group_sizes, s_T, grouping):
+def _compute_f_stat(
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
+):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distmat.data, group_sizes, grouping)
+    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
