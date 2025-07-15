@@ -2091,7 +2091,7 @@ def ancom(
     else:
         # Select appropriate cutoff
         cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = np.array([(W > n_feats * cut).mean() for cut in cutoff])
+        prop_cut = (W[:, None] > n_feats * cutoff).mean(axis=0)
         dels = np.abs(prop_cut - np.roll(prop_cut, -1))
         dels[-1] = 0
 
