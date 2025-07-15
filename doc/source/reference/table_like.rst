@@ -80,8 +80,8 @@ parameter annotated as ``array_like`` accepts any of the following formats:
 
 .. _terminology:
 
-Sample and features
--------------------
+Samples and features
+--------------------
 Typically, the two table dimensions represent:
 
 - **Sample IDs** (row labels): biological samples, or any other experimental units
@@ -143,9 +143,8 @@ the ``output_format`` parameter.
 
     from skbio.stats.ordination import cca
 
-    # This specific call will return an
-    # :class:`~skbio.stats.ordination.OrdinationResults` object whose attributes are
-    # numpy arrays
+    # This specific call will return an `OrdinationResults` object whose attributes are
+    # NumPy arrays.
     res = cca(Y, X, output_format="numpy")
 
 The second option is to use the :func:`skbio.set_config` function. It will change the
@@ -153,10 +152,10 @@ global behavior of scikit-bio functions.
 
 .. code-block:: python
 
-    # set_config is available as a top level import from skbio
+    # `set_config` is available as a top level import from skbio
     from skbio import set_config
 
-    # Set output format to NumPy arrays
+    # Set output format to NumPy arrays, or
     set_config("output", "numpy")
 
     # Return to default pandas output
