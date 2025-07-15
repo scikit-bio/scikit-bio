@@ -26,9 +26,14 @@ from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import params_aliased
 
 
-@params_aliased([("dimensions", "number_of_dimensions", "0.7.0", False)])
+@params_aliased(
+    [
+        ("dimensions", "number_of_dimensions", "0.7.0", False),
+        ("distmat", "distance_matrix", "0.7.0", False),
+    ]
+)
 def permdisp(
-    distance_matrix,
+    distmat,
     grouping,
     column=None,
     test="median",
@@ -47,7 +52,7 @@ def permdisp(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix or OrdinationResults
+    distmat : DistanceMatrix or OrdinationResults
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities) or
         result of pcoa on such a matrix.
@@ -55,11 +60,11 @@ def permdisp(
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
         belongs to. If `grouping` is 1-D ``array_like``, it must be the same
-        length and in the same order as the objects in `distance_matrix`. If
+        length and in the same order as the objects in `distmat`. If
         `grouping` is a ``DataFrame``, the column specified by `column` will be
         used as the grouping vector. The ``DataFrame`` must be indexed by the
-        IDs in `distance_matrix` (i.e., the row labels must be distance matrix
-        IDs), but the order of IDs between `distance_matrix` and the
+        IDs in `distmat` (i.e., the row labels must be distance matrix
+        IDs), but the order of IDs between `distmat` and the
         ``DataFrame`` need not be the same. All IDs in the distance matrix must
         be present in the ``DataFrame``. Extra IDs in the ``DataFrame`` are
         allowed (they are ignored in the calculations).
@@ -79,7 +84,7 @@ def permdisp(
         Matrix decomposition method to use. Options are "eigh" (eigendecomposition,
         default) and "fsvd" (fast singular value decomposition). See
         :func:`skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
-        distance_matrix is a OrdinationResults object.
+        distmat is a OrdinationResults object.
     dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
@@ -119,11 +124,11 @@ def permdisp(
         If a list and a column name are both provided
     ValueError
         If a list is provided for `grouping` and it's length does not match
-        the number of ids in distance_matrix
+        the number of ids in distmat
     ValueError
         If all of the values in the grouping vector are unique
     KeyError
-        If there are ids in grouping that are not in distance_matrix
+        If there are ids in grouping that are not in distmat
 
     See Also
     --------
@@ -254,12 +259,12 @@ def permdisp(
     if test not in ("centroid", "median"):
         raise ValueError("Test must be centroid or median.")
 
-    if isinstance(distance_matrix, OrdinationResults):
-        ordination = distance_matrix
+    if isinstance(distmat, OrdinationResults):
+        ordination = distmat
         ids = ordination.samples.axes[0].to_list()
         sample_size = len(ids)
-        distance_matrix = None  # not used anymore, avoid using by mistake
-    elif isinstance(distance_matrix, DistanceMatrix):
+        distmat = None  # not used anymore, avoid using by mistake
+    elif isinstance(distmat, DistanceMatrix):
         if method == "eigh":
             # eigh does not natively support specifying dimensions
             # and pcoa expects it to be 0
@@ -267,11 +272,11 @@ def permdisp(
         elif method != "fsvd":
             raise ValueError("Method must be eigh or fsvd.")
 
-        ids = distance_matrix.ids
-        sample_size = distance_matrix.shape[0]
+        ids = distmat.ids
+        sample_size = distmat.shape[0]
 
         ordination = pcoa(
-            distance_matrix,
+            distmat,
             method=method,
             dimensions=dimensions,
             warn_neg_eigval=warn_neg_eigval,

@@ -58,6 +58,7 @@
 * Initiated efforts to add type annotations to scikit-bio's codebase, starting with the `stats.distance` module ([2219](https://github.com/scikit-bio/scikit-bio/pull/2219))
 * Restored functionality to scikit-bio's benchmarking system and introduced a new repository for storing, running, and hosting benchmarks to prevent performance regression ([#2245](https://github.com/scikit-bio/scikit-bio/pull/2245))
 * Renamed the parameter `number_of_dimensions` to `dimensions` for the `pcoa` and `permdisp` functions. `number_of_dimensions` will remain a valid alias of the parameter, such that either option may be used. ([#2257](https://github.com/scikit-bio/scikit-bio/pull/2257)).
+* Renamed the parameter `distance_matrix` to `distmat` in `pcoa`, `bioenv`, `anosim`, `permanova`, and `permdisp`. `distance_matrix` will remain a valid alias of the parameter, such that either option may be used. ([#2261](https://github.com/scikit-bio/scikit-bio/pull/2261))
 
 ### Backward-incompatible changes
 
