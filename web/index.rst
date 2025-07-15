@@ -79,6 +79,7 @@
    Community <https://github.com/scikit-bio/scikit-bio/discussions>
    Releases <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md>
    About <about>
+   Roadmap <roadmap>
 
 
 .. grid:: 1 1 1 3
