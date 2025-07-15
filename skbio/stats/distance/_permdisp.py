@@ -23,8 +23,10 @@ from ._base import (
 )
 
 from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio.util._decorator import params_aliased
 
 
+@params_aliased([("dimensions", "number_of_dimensions", "0.7.0", False)])
 def permdisp(
     distance_matrix,
     grouping,
@@ -32,7 +34,7 @@ def permdisp(
     test="median",
     permutations=999,
     method="eigh",
-    number_of_dimensions=10,
+    dimensions=10,
     seed=None,
     warn_neg_eigval=0.01,
 ):
@@ -78,7 +80,7 @@ def permdisp(
         default) and "fsvd" (fast singular value decomposition). See
         :func:`skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
         distance_matrix is a OrdinationResults object.
-    number_of_dimensions : int, optional
+    dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
         Not used if the `eigh` method is being selected.
     seed : int, Generator or RandomState, optional
@@ -259,9 +261,9 @@ def permdisp(
         distance_matrix = None  # not used anymore, avoid using by mistake
     elif isinstance(distance_matrix, DistanceMatrix):
         if method == "eigh":
-            # eigh does not natively support specifying number_of_dimensions
+            # eigh does not natively support specifying dimensions
             # and pcoa expects it to be 0
-            number_of_dimensions = 0
+            dimensions = 0
         elif method != "fsvd":
             raise ValueError("Method must be eigh or fsvd.")
 
@@ -271,7 +273,7 @@ def permdisp(
         ordination = pcoa(
             distance_matrix,
             method=method,
-            number_of_dimensions=number_of_dimensions,
+            dimensions=dimensions,
             warn_neg_eigval=warn_neg_eigval,
         )
     else:
