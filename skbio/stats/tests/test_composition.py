@@ -967,14 +967,14 @@ class CompositionTests(TestCase):
         comp1 = closure(self.cdata1)
         alr2d_byhand = np.array([np.log(comp1[:, 0]/comp1[:, 1]),
                                  np.log(comp1[:, 2]/comp1[:, 1])]).T
-        alr2d_method = alr(comp1, denominator_idx=1)
+        alr2d_method = alr(comp1, ref_idx=1)
         npt.assert_allclose(alr2d_byhand, alr2d_method)
 
         # 1d-composition
         comp2 = closure(self.cdata2)
         alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]),
                                  np.log(comp2[2]/comp2[1])]).T
-        alr1d_method = alr(comp2, denominator_idx=1)
+        alr1d_method = alr(comp2, ref_idx=1)
         npt.assert_allclose(alr1d_byhand, alr1d_method)
 
         with self.assertRaises(ValueError):
@@ -995,24 +995,24 @@ class CompositionTests(TestCase):
         comp1 = closure(self.cdata1)
         alr2d_byhand = np.array([np.log(comp1[:, 0]/comp1[:, 1]),
                                  np.log(comp1[:, 2]/comp1[:, 1])]).T
-        alr2d_method = alr(comp1, denominator_idx=1)
+        alr2d_method = alr(comp1, ref_idx=1)
         B = 1/(1 + np.exp(alr2d_byhand[:, 0]) + np.exp(alr2d_byhand[:, 1]))
         A = B * np.exp(alr2d_byhand[:, 0])
         C = B * np.exp(alr2d_byhand[:, 1])
         alrinv2d_byhand = np.column_stack((A, B, C))
-        alrinv2d_method = alr_inv(alr2d_method, denominator_idx=1)
+        alrinv2d_method = alr_inv(alr2d_method, ref_idx=1)
         npt.assert_allclose(alrinv2d_byhand, alrinv2d_method)
 
         # 1d-composition
         comp2 = closure(self.cdata2)
         alr1d_byhand = np.array([np.log(comp2[0]/comp2[1]),
                                  np.log(comp2[2]/comp2[1])]).T
-        alr1d_method = alr(comp2, denominator_idx=1)
+        alr1d_method = alr(comp2, ref_idx=1)
         B = 1/(1 + np.exp(alr1d_byhand[0]) + np.exp(alr1d_byhand[1]))
         A = B * np.exp(alr1d_byhand[0])
         C = B * np.exp(alr1d_byhand[1])
         alrinv1d_byhand = np.column_stack((A, B, C))[0, :]
-        alrinv1d_method = alr_inv(alr1d_method, denominator_idx=1)
+        alrinv1d_method = alr_inv(alr1d_method, ref_idx=1)
         npt.assert_allclose(alrinv1d_byhand, alrinv1d_method)
 
         # make sure that inplace modification is not occurring
@@ -1824,8 +1824,7 @@ class VLRTests(TestCase):
             pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False)
 
         # no validation
-        dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False,
-                            validate=False)
+        dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False, validate=False)
         output = dism.data.sum() / 2
         self.assertAlmostEqual(output, 0.2857382286903922)
 

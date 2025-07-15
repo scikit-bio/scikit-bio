@@ -584,8 +584,8 @@ class Tests_CLR_INV(TestCase):
 
 class Tests_ALR(TestCase):
     def setUp(self):
-        denominator_idx = 2
-        self.denominator_idx = denominator_idx
+        ref_idx = 2
+        self.ref_idx = ref_idx
         axis = 1
         self.axis = axis
         self.random_postive_int = randint(1, 100, (4, 6, 3))
@@ -607,11 +607,11 @@ class Tests_ALR(TestCase):
     def test_ndarray_numpy(self):
         # Asrange
         axis = self.axis
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
 
         # Action
-        rst_int = alr(self.random_postive_int, denominator_idx, axis)
-        rst_real = alr(self.random_postive_real, denominator_idx, axis)
+        rst_int = alr(self.random_postive_int, ref_idx, axis)
+        rst_real = alr(self.random_postive_real, ref_idx, axis)
 
         # Assert
         # the shape should not be changed
@@ -627,7 +627,7 @@ class Tests_ALR(TestCase):
     @skipIf(no_torch, "Skipping tests: no torch dependency")
     def test_ndarray_torch(self):
         # Asrange
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         axis = self.axis
         random_int = torch.tensor(self.random_postive_int)
         random_real = torch.tensor(self.random_postive_real)
@@ -635,8 +635,8 @@ class Tests_ALR(TestCase):
         expected_real = torch.tensor(self.expected_real)
 
         # Action
-        rst_int = alr(random_int, denominator_idx, axis)
-        rst_real = alr(random_real, denominator_idx, axis)
+        rst_int = alr(random_int, ref_idx, axis)
+        rst_real = alr(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -670,7 +670,7 @@ class Tests_ALR(TestCase):
     @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         axis = self.axis
         random_int = torch.tensor(self.random_postive_int, device="cuda")
         random_real = torch.tensor(self.random_postive_real, device="cuda")
@@ -678,8 +678,8 @@ class Tests_ALR(TestCase):
         expected_real = torch.tensor(self.expected_real, device="cuda")
 
         # Action
-        rst_int = alr(random_int, denominator_idx, axis)
-        rst_real = alr(random_real, denominator_idx, axis)
+        rst_int = alr(random_int, ref_idx, axis)
+        rst_real = alr(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -715,7 +715,7 @@ class Tests_ALR(TestCase):
         # Asrange
         axis = self.axis
         device = jax.devices("cpu")[0]
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
 
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
@@ -723,8 +723,8 @@ class Tests_ALR(TestCase):
         expected_real = jnp.array(self.expected_real, device=device)
 
         # Action
-        rst_int = alr(random_int, denominator_idx, axis)
-        rst_real = alr(random_real, denominator_idx, axis)
+        rst_int = alr(random_int, ref_idx, axis)
+        rst_real = alr(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -757,7 +757,7 @@ class Tests_ALR(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
@@ -766,8 +766,8 @@ class Tests_ALR(TestCase):
 
         # Action
 
-        rst_int = alr(random_int, denominator_idx, axis)
-        rst_real = alr(random_real, denominator_idx, axis)
+        rst_int = alr(random_int, ref_idx, axis)
+        rst_real = alr(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -799,8 +799,8 @@ class Tests_ALR(TestCase):
 
 class Tests_ALR_INV(TestCase):
     def setUp(self):
-        denominator_idx = 2
-        self.denominator_idx = denominator_idx
+        ref_idx = 2
+        self.ref_idx = ref_idx
         axis = 1
         self.axis = axis
         self.random_postive_int = randint(1, 100, (4, 6, 3))
@@ -824,11 +824,11 @@ class Tests_ALR_INV(TestCase):
     def test_ndarray_numpy(self):
         # Asrange
         axis = self.axis
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
 
         # Action
-        rst_int = alr_inv(self.random_postive_int, denominator_idx, axis)
-        rst_real = alr_inv(self.random_postive_real, denominator_idx, axis)
+        rst_int = alr_inv(self.random_postive_int, ref_idx, axis)
+        rst_real = alr_inv(self.random_postive_real, ref_idx, axis)
 
         # Assert
         # the shape should not be changed
@@ -844,7 +844,7 @@ class Tests_ALR_INV(TestCase):
     @skipIf(no_torch, "Skipping tests: no torch dependency")
     def test_ndarray_torch(self):
         # Asrange
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         axis = self.axis
         random_int = torch.tensor(self.random_postive_int)
         random_real = torch.tensor(self.random_postive_real)
@@ -852,8 +852,8 @@ class Tests_ALR_INV(TestCase):
         expected_real = torch.tensor(self.expected_real)
 
         # Action
-        rst_int = alr_inv(random_int, denominator_idx, axis)
-        rst_real = alr_inv(random_real, denominator_idx, axis)
+        rst_int = alr_inv(random_int, ref_idx, axis)
+        rst_real = alr_inv(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -887,7 +887,7 @@ class Tests_ALR_INV(TestCase):
     @skipIf(no_torch or no_cuda, "Skipping tests: no torch dependency or no cuda")
     def test_ndarray_torch_cuda(self):
         # Asrange
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         axis = self.axis
         random_int = torch.tensor(self.random_postive_int, device="cuda")
         random_real = torch.tensor(self.random_postive_real, device="cuda")
@@ -895,8 +895,8 @@ class Tests_ALR_INV(TestCase):
         expected_real = torch.tensor(self.expected_real, device="cuda")
 
         # Action
-        rst_int = alr_inv(random_int, denominator_idx, axis)
-        rst_real = alr_inv(random_real, denominator_idx, axis)
+        rst_int = alr_inv(random_int, ref_idx, axis)
+        rst_real = alr_inv(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -932,7 +932,7 @@ class Tests_ALR_INV(TestCase):
         # Asrange
         axis = self.axis
         device = jax.devices("cpu")[0]
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
 
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
@@ -940,8 +940,8 @@ class Tests_ALR_INV(TestCase):
         expected_real = jnp.array(self.expected_real, device=device)
 
         # Action
-        rst_int = alr_inv(random_int, denominator_idx, axis)
-        rst_real = alr_inv(random_real, denominator_idx, axis)
+        rst_int = alr_inv(random_int, ref_idx, axis)
+        rst_real = alr_inv(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"
@@ -974,7 +974,7 @@ class Tests_ALR_INV(TestCase):
     def test_ndarray_jnp_gpu(self):
         # Asrange
         axis = self.axis
-        denominator_idx = self.denominator_idx
+        ref_idx = self.ref_idx
         device = jax.devices("gpu")[0]
         random_int = jnp.array(self.random_postive_int, device=device)
         random_real = jnp.array(self.random_postive_real, device=device)
@@ -982,8 +982,8 @@ class Tests_ALR_INV(TestCase):
         expected_real = jnp.array(self.expected_real, device=device)
 
         # Action
-        rst_int = alr_inv(random_int, denominator_idx, axis)
-        rst_real = alr_inv(random_real, denominator_idx, axis)
+        rst_int = alr_inv(random_int, ref_idx, axis)
+        rst_real = alr_inv(random_real, ref_idx, axis)
 
         # Assert
         assert type(expected_int) == type(rst_int), "type is changed"

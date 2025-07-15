@@ -56,7 +56,7 @@ def pair_align(
     * Integer, decimal and infinite scores.
     * Returning one, multiple or all optimal alignment paths.
 
-    .. versionadded:: 0.6.4
+    .. versionadded:: 0.7.0
 
     Parameters
     ----------
@@ -280,7 +280,7 @@ def pair_align(
     :math:`o` when adopting its parameters. For example, EMBOSS' default parameters
     ``o=10, e=0.5`` will become ``o=9.5, e=0.5`` in scikit-bio. Vice versa.
 
-    .. versionchanged:: 0.6.4
+    .. versionchanged:: 0.7.0
         Previous alignment algorithms in scikit-bio used Eq. 2. These functions were
         deprecated in 0.5.x and will be removed in 0.6.x. Future functions will
         uniformly use Eq. 1.

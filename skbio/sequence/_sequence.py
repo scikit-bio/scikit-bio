@@ -2134,7 +2134,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         1D np.ndarray or np.ma.ndarray of intp
             Vector of character indices representing the sequence
 
-            .. versionchanged:: 0.6.4
+            .. versionchanged:: 0.7.0
                 The array data type was changed from ``uint8`` to ``intp``, which is
                 the native NumPy indexing type without the need of casting.
 
