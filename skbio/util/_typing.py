@@ -30,7 +30,7 @@ class StdArray(Protocol):
 
     See Also
     --------
-    ._array._ingest_array
+    ._array._get_array
 
     References
     ----------
@@ -50,7 +50,7 @@ class StdArray(Protocol):
     def dtype(self) -> Any: ...
 
     @property
-    def device(self)-> Any: ...
+    def device(self) -> Any: ...
 
 
 ArrayLike = Union[NPArrayLike, StdArray]

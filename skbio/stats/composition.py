@@ -79,6 +79,12 @@ and statistical analysis.
    ilr
    ilr_inv
 
+.. note::
+   Arithmetic operations and log-ratio transformations support array formats compliant
+   with the `Python array API standard <https://data-apis.org/array-api/latest/>`_
+   without transition through NumPy. For example, they can directly consume and return
+   GPU-resident PyTorch tensors.
+
 
 Correlation analysis
 --------------------
@@ -213,6 +219,9 @@ def _check_composition(
 def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     r"""Perform closure to ensure that all components of each composition sum to 1.
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
@@ -220,8 +229,13 @@ def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     axis : int, optional
         Axis along which closure will be performed. That is, each vector along this
         axis is considered as a composition. Default is the last axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate : bool, default True
         Check if the compositions are legitimate.
+
+        .. versionadded:: 0.7.0
 
     Returns
     -------
@@ -349,6 +363,8 @@ def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray"
     validate : bool, default True
         Check if the compositions are legitimate.
 
+        .. versionadded:: 0.7.0
+
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
@@ -407,6 +423,8 @@ def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdAr
     validate : bool, default True
         Check if the compositions are legitimate.
 
+        .. versionadded:: 0.7.0
+
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
@@ -453,6 +471,8 @@ def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     validate : bool, default True
         Check if the compositions are legitimate.
 
+        .. versionadded:: 0.7.0
+
     Returns
     -------
     ndarray of shape (n_compositions, n_components)
@@ -472,7 +492,7 @@ def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     if validate:
         _check_composition(xp, x)
     cx = _closure(xp, x)
-    return _closure(xp, x**a).squeeze()
+    return _closure(xp, cx**a).squeeze()
 
 
 def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
@@ -494,6 +514,8 @@ def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     validate : bool, default True
         Check if the compositions are legitimate.
 
+        .. versionadded:: 0.7.0
+
     Returns
     -------
     ndarray or scalar of shape (n_compositions, n_compositions)
@@ -510,7 +532,7 @@ def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
 
     """
     xp, cx, cy = _closure_two(x, y, validate)
-    clrx, clry = _clr(xp, x, axis=-1), _clr(xp, y, axis=-1)
+    clrx, clry = _clr(xp, cx, axis=-1), _clr(xp, cy, axis=-1)
     return xp.matmul(clrx, clry.T)
 
 
@@ -535,6 +557,9 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     where :math:`g_m(x) = (\prod\limits_{i=1}^{D} x_i)^{1/D}` is the geometric
     mean of :math:`x`.
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
@@ -542,8 +567,13 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     axis : int, optional
         Axis along which CLR transformation will be performed. Each vector on this axis
         is considered as a composition. Default is the last axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate : bool, default True
         Check if the matrix consists of strictly positive values.
+
+        .. versionadded:: 0.7.0
 
     Returns
     -------
@@ -592,6 +622,9 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     .. math::
         clr^{-1}(x) = C[\exp( x_1, \ldots, x_D)]
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
@@ -600,9 +633,14 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
         Axis along which inverse CLR transformation will be performed. Each vector on
         this axis is considered as a CLR-transformed composition. Default is the last
         axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate: bool, optional
         Check if the matrix has been centered at 0. Violation will result in a warning
         rather than an error, for backward compatibility. Defaults to True.
+
+        .. versionadded:: 0.7.0
 
     Returns
     -------
@@ -650,6 +688,7 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
     return _closure(xp, diff, axis)
 
 
+@params_aliased([("validate", "check", "0.7.0", True)])
 def ilr(
     mat: "ArrayLike",
     basis: Optional["ArrayLike"] = None,
@@ -676,6 +715,9 @@ def ilr(
     If an orthornormal basis isn't specified, the J. J. Egozcue orthonormal basis
     derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
@@ -686,10 +728,12 @@ def ilr(
     axis : int, optional
         Axis along which ILR transformation will be performed. That is, each vector
         along this axis is considered as a composition. Default is the last axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate : bool, default True
-        Check if
-            i) the matrix is compositional
-            ii) the basis is orthonormal, 2-dimensional,and the dimensions are matched
+        Check if i) the matrix is compositional, ii) the basis is orthonormal,
+        2-dimensional, and the dimensions are matched.
 
     Returns
     -------
@@ -763,6 +807,7 @@ def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "St
     return xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
 
 
+@params_aliased([("validate", "check", "0.7.0", True)])
 def ilr_inv(
     mat: "ArrayLike",
     basis: Optional["ArrayLike"] = None,
@@ -788,6 +833,9 @@ def ilr_inv(
     If an orthonormal basis isn't specified, the J. J. Egozcue orthonormal basis
     derived from Gram-Schmidt orthogonalization [1]_ will be used by default.
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components - 1, ...)
@@ -799,6 +847,9 @@ def ilr_inv(
         Axis along which ILR transformation will be performed. That is, each vector
         along this axis is considered as a ILR transformed composition data.
         Default is the last axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate : bool, default True
         Check to see if basis is orthonormal and dimension matches.
 
@@ -862,15 +913,16 @@ def _ilr_inv(
     return _clr_inv(xp, perm, axis)
 
 
+@params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
 def alr(
-    mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1, validate: bool = True
+    mat: "ArrayLike", ref_idx: int = 0, axis: int = -1, validate: bool = True
 ) -> "StdArray":
     r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
     a non-isometric real space of D-1 dimensions. The argument
-    ``denominator_idx`` defines the index of the column used as the common
-    denominator. The :math:`alr` transformed data are amenable to multivariate
+    ``ref_idx`` defines the index of the column used as the reference (a common
+    denominator). The :math:`alr` transformed data are amenable to multivariate
     analysis as long as statistics don't involve distances.
 
     .. math::
@@ -882,20 +934,28 @@ def alr(
         alr(x) = \left[ \ln \frac{x_1}{x_D}, \ldots,
         \ln \frac{x_{D-1}}{x_D} \right]
 
-    where :math:`D` is the index of the part used as common denominator.
+    where :math:`D` is the index of the part used as the reference.
+
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
 
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
         A matrix of proportions.
-    denominator_idx : int, optional
-        Index on the target axis which should be used as the denominator (reference
-        composition). Default is 0 (the first position).
+    ref_idx : int, optional
+        Index on the target axis which should be used as the reference composition
+        (denominator). Default is 0 (the first position).
     axis : int, optional
         Axis along which ALR transformation will be performed. Each vector along this
         axis is considered as a composition. Default is the last axis (-1).
+
+        .. versionadded:: 0.7.0
+
     validate: bool, default True
         Check whether the input is positive, whether the mat is 2D.
+
+        .. versionadded:: 0.7.0
 
     Returns
     -------
@@ -925,50 +985,49 @@ def alr(
     if N < 2:
         raise ValueError(f"Dimension {axis} of the input matrix is singleton.")
     axis %= mat.ndim
-    if denominator_idx < -N or denominator_idx >= N:
-        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
-    denominator_idx %= N
-    return _alr(xp, mat, denominator_idx, axis)
+    if ref_idx < -N or ref_idx >= N:
+        raise IndexError(f"Invalid index {ref_idx} on dimension {axis}.")
+    ref_idx %= N
+    return _alr(xp, mat, ref_idx, axis)
 
 
-def _alr(
-    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
-) -> "StdArray":
+def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
     lmat = xp.log(mat)
 
     # The following code can be replaced with a single NumPy function call:
-    #     numerator_matrix = xp.delete(lmat, denominator_idx, axis=axis)
+    #     numerator_matrix = xp.delete(lmat, ref_idx, axis=axis)
     # However, `delete` is not in the Python array API standard. For compatibility with
     # libraries that don't have `delete`, an arbitrary dimension slicing method is
     # is provided below.
     before = [slice(None)] * mat.ndim
-    before[axis] = slice(None, denominator_idx)
+    before[axis] = slice(None, ref_idx)
     before = tuple(before)
     after = [slice(None)] * mat.ndim
-    after[axis] = slice(denominator_idx + 1, None)
+    after[axis] = slice(ref_idx + 1, None)
     after = tuple(after)
     numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
 
     # The following code can be replaced with a single NumPy function call:
-    #     denominator_vector = xp.take(lmat, xp.asarray([denominator_idx]), axis=axis)
+    #     denominator_vector = xp.take(lmat, xp.asarray([ref_idx]), axis=axis)
     # `take` is in the Python array API standard. The following code is to keep the
     # style consistent with the code above.
     column = [slice(None)] * mat.ndim
-    column[axis] = slice(denominator_idx, denominator_idx + 1)
+    column[axis] = slice(ref_idx, ref_idx + 1)
     column = tuple(column)
     denominator_vector = lmat[column]
 
     return numerator_matrix - denominator_vector
 
 
-def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdArray":
+@params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
+def alr_inv(mat: "ArrayLike", ref_idx: int = 0, axis: int = -1) -> "StdArray":
     r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
-    alrs to Aitchison geometry.
+    ALRs to Aitchison geometry.
 
     .. math::
         alr^{-1}: \mathbb{R}^{D-1} \rightarrow S^D
@@ -987,17 +1046,22 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     for some :math:`D` dimensional real vector :math:`x` and
     :math:`D` is the number of components for every composition.
 
+    .. versionchanged:: 0.7.0
+        The function now works on any dimension in arrays of any number of dimensions.
+
     Parameters
     ----------
     mat : array_like of shape (..., n_components - 1, ...)
         A matrix of ALR-transformed data.
-    denominator_idx : int, optional
-        Index on the target axis where the denominator (reference composition) will be
+    ref_idx : int, optional
+        Index on the target axis where the reference composition (denominator) will be
         inserted. Default is 0 (the first position).
     axis : int, optional
         Axis along which inverse ALR transformation will be performed. Each vector on
         this axis is considered as a CLR-transformed composition. Default is the last
         axis (-1).
+
+        .. versionadded:: 0.7.0
 
     Returns
     -------
@@ -1031,25 +1095,23 @@ def alr_inv(mat: "ArrayLike", denominator_idx: int = 0, axis: int = -1) -> "StdA
     if N < 2:
         raise ValueError(f"Dimension {axis} of the input matrix has zero length.")
     axis %= mat.ndim
-    if denominator_idx < -N or denominator_idx >= N:
-        raise IndexError(f"Invalid index {denominator_idx} on dimension {axis}.")
-    denominator_idx %= N
-    return _alr_inv(xp, mat, denominator_idx, axis)
+    if ref_idx < -N or ref_idx >= N:
+        raise IndexError(f"Invalid index {ref_idx} on dimension {axis}.")
+    ref_idx %= N
+    return _alr_inv(xp, mat, ref_idx, axis)
 
 
-def _alr_inv(
-    xp: "ModuleType", mat: "StdArray", denominator_idx: int, axis: int
-) -> "StdArray":
+def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
     # The following code can be replaced with a single NumPy function call.
-    #     comp = xp.insert(emat, denominator_idx, 1.0, axis=axis)
+    #     comp = xp.insert(emat, ref_idx, 1.0, axis=axis)
     # However, `insert` is not in the Python array API standard. For compatibility with
     # libraries that don't have `insert`, an arbitrary dimension slicing method is
     # is provided below.
     before = [slice(None)] * mat.ndim
-    before[axis] = slice(None, denominator_idx)
+    before[axis] = slice(None, ref_idx)
     before = tuple(before)
     after = [slice(None)] * mat.ndim
-    after[axis] = slice(denominator_idx, None)
+    after[axis] = slice(ref_idx, None)
     after = tuple(after)
     shape = list(mat.shape)
     shape[axis] = 1
@@ -1740,6 +1802,9 @@ def ancom(
     first group and :math:`u_i^{(2)}` is the mean abundance for feature
     :math:`i` in the second group.
 
+    .. versionchanged:: 0.7.0
+        Computational efficiency significantly improved.
+
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
@@ -1780,7 +1845,7 @@ def ancom(
         a *p*-value. Functions under ``scipy.stats`` can be directly specified
         by name. The default is one-way ANOVA ("f_oneway").
 
-        .. versionchanged:: 0.6.4
+        .. versionchanged:: 0.7.0
             Test funcion must accept 2-D arrays as input, perform batch testing, and
             return 1-D arrays. SciPy functions have this capability. Custom functions
             may need modification.
@@ -1805,8 +1870,8 @@ def ancom(
         - ``Signif``: Whether the feature is significantly differentially
           abundant across groups (``True``) or not (``False``).
 
-        .. versionchanged:: 0.6.4
-            Renamed "Reject null hypothesis" into "Signif".
+        .. versionchanged:: 0.7.0
+            Renamed ``Reject null hypothesis`` as ``Signif``.
 
     pd.DataFrame
         A table of features and their percentile abundances in each group. If
@@ -2309,6 +2374,9 @@ def dirmult_ttest(
     fold-change crossing zero during any draw. This step further reduces false
     positive hits, especially among low-abundance features.
 
+    .. versionchanged:: 0.7.0
+        Computational efficiency significantly improved.
+
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
@@ -2329,7 +2397,7 @@ def dirmult_ttest(
         Name of the reference group. See above. If omitted, all groups other than the
         treatment group will be combined as the reference group.
 
-        .. versionchanged:: 0.6.4
+        .. versionchanged:: 0.7.0
             ``treatment`` and ``reference`` are now optional.
 
     pseudocount : float, optional
@@ -2382,13 +2450,13 @@ def dirmult_ttest(
           The *q*-value must be less than or equal to the significance level (0.05). 2)
           The confidence interval (CI(2.5)..CI(97.5)) must not overlap with zero.
 
-        .. versionchanged:: 0.6.4
+        .. versionchanged:: 0.7.0
             ``df`` (degrees of freedom) was removed from the report, as this metric is
             inconsistent across draws.
 
-        .. versionchanged:: 0.6.4
-            Renamed "T-statistic" as "T-statistic".
-            Renamed "Reject null hypothesis" as "Signif".
+        .. versionchanged:: 0.7.0
+            Renamed ``T statistic`` as ``T-statistic``.
+            Renamed ``Reject null hypothesis`` as ``Signif``.
 
     See Also
     --------
@@ -2589,7 +2657,7 @@ def dirmult_lme(
 ):
     r"""Fit a Dirichlet-multinomial linear mixed effects model.
 
-    .. versionadded:: 0.6.4
+    .. versionadded:: 0.7.0
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -2606,6 +2674,10 @@ def dirmult_lme(
 
     This function uses the :class:`~statsmodels.regression.mixed_linear_model.MixedLM`
     class from statsmodels.
+
+    .. note::
+        Because the analysis iteratively runs many numeric optimizations, it can take
+        longer than usual to finish. Please allow extra time for completion.
 
     Parameters
     ----------

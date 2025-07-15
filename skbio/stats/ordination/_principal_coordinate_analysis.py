@@ -190,7 +190,7 @@ def pcoa(
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         # new parameter for num_dimensions = number of dimensions (accounting for
         # non-int values)
-        num_dimensions = dimensions
+        ndim = dimensions
         if 0 < dimensions < 1:
             warn(
                 "FSVD: since value for dimensions is specified as float, "
@@ -200,7 +200,7 @@ def pcoa(
                 "Consider specifying an integer value to optimize performance.",
                 RuntimeWarning,
             )
-            num_dimensions = distance_matrix.data.shape[0]
+            ndim = distance_matrix.data.shape[0]
         if _skbb_pcoa_fsvd_available(distance_matrix.data, dimensions, inplace, seed):
             # unlikely to throw here, but just in case
             try:
@@ -225,7 +225,7 @@ def pcoa(
         # Center distance matrix, a requirement for PCoA here
         matrix_data = center_distance_matrix(distance_matrix.data, inplace=inplace)
 
-        eigvals, eigvecs = _fsvd(matrix_data, num_dimensions, seed=seed)
+        eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:
         raise ValueError(
             "PCoA eigendecomposition method {} not supported.".format(method)
@@ -288,12 +288,10 @@ def pcoa(
     proportion_explained = eigvals / sum_eigenvalues
     if 0 < dimensions < 1:
         cumulative_variance = np.cumsum(proportion_explained)
-        num_dimensions = (
-            np.searchsorted(cumulative_variance, dimensions, side="left") + 1
-        )
+        ndim = np.searchsorted(cumulative_variance, dimensions, side="left") + 1
         # gives the number of dimensions needed to reach specified variance
         # updates number of dimensions to reach the requirement of variance.
-        dimensions = num_dimensions
+        dimensions = ndim
 
     # In case eigh is used, eigh computes all eigenvectors and -values.
     # So if dimensions was specified, we manually need to ensure

@@ -24,7 +24,7 @@ torch = get_package("torch", raise_error=False)
 xr = get_package("xarray", raise_error=False)
 dask = get_package("dask", raise_error=False)
 if dask is not None:
-    da = get_package("dask.array", raise_error=False)
+    da = get_package("dask.array")
 
 
 class TestIngestArray(TestCase):
@@ -165,7 +165,7 @@ class TestIngestArray(TestCase):
 
     def test_ingest_array_pandas(self):
         # Pandas Series' are not API-compatible arrays, but they can be casted into
-        # Numpy arrays.
+        # NumPy arrays.
         s = pd.Series(range(5), index=list("abcde"))
         xp, obs = ingest_array(s)
         self.assertIs(xp, aac.numpy)

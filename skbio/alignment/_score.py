@@ -30,7 +30,7 @@ def align_score(
     For two sequences, their pairwise alignment score will be calculated. For three or
     more sequences, the sum-of-pairs (SP) alignment score will be returned.
 
-    .. versionadded:: 0.6.4
+    .. versionadded:: 0.7.0
 
     Parameters
     ----------

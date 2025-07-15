@@ -194,6 +194,7 @@ intersphinx_mapping = {
     # 'biom-format': ('https://biom-format.org/', None),
     'polars': ('https://docs.pola.rs/api/python/stable/', None),
     'anndata': ('https://anndata.readthedocs.io/en/stable/', None),
+    'array_api': ('https://data-apis.org/array-api/latest/', None),
 }
 
 

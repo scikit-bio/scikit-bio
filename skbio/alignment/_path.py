@@ -283,7 +283,7 @@ class AlignPath(SkbioObject):
     def to_bits(self, expand: bool = True) -> NDArray[np.uint8]:
         r"""Unpack the alignment path into an array of bits.
 
-        .. versionchanged:: 0.6.4
+        .. versionchanged:: 0.7.0
             The default behavior now returns positions.
 
         Parameters
@@ -293,7 +293,7 @@ class AlignPath(SkbioObject):
             in the original alignment. If False, each column represents a segment in
             the alignment path.
 
-            .. versionadded:: 0.6.4
+            .. versionadded:: 0.7.0
 
         Returns
         -------
@@ -383,7 +383,7 @@ class AlignPath(SkbioObject):
     def to_aligned(self, seqs, gap_char="-", flanking=None):
         r"""Extract aligned regions from original sequences.
 
-        .. versionadded:: 0.6.4
+        .. versionadded:: 0.7.0
 
         Parameters
         ----------
