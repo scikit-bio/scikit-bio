@@ -12,7 +12,8 @@ and feature metadata.
 .. note::
 
    Internally, BIOM describes features as observations, whereas scikit-bio uses the
-   term features.
+   term features. For more details see the :ref:`terminology <terminology>` section
+   of the table-like documentation.
 
 Format Support
 --------------
