@@ -42,9 +42,9 @@ computing and data science in general. When a function parameter is annotated as
 +--------------------------------------+---------------------+------------------------+
 | anndata :class:`~anndata.AnnData`    | "obs" (observation) | "var" (variable)       |
 +--------------------------------------+---------------------+------------------------+
-| pandas :class:`~pandas.DataFrame`    | "index" (rows)      | "columns"              |
+| Pandas :class:`~pandas.DataFrame`    | "index" (rows)      | "columns"              |
 +--------------------------------------+---------------------+------------------------+
-| Polars :class:`~polars.DataFrame`    | N/A (rows)          | "schema"               |
+| Polars |pl_df|_                      | N/A (rows)          | "schema"               |
 +--------------------------------------+---------------------+------------------------+
 | array-like objects \                 | N/A                 | N/A                    |
 | (:ref:`detailed below <array_like>`) |                     |                        |
@@ -130,14 +130,14 @@ Output formats
 --------------
 Some functions that *produce* tables can return the result in one of three formats:
 
+- Pandas :class:`~pandas.DataFrame` and :class:`~pandas.Series` (default)
+- Polars |pl_df|_ and |pl_s|_
 - NumPy :class:`~numpy.ndarray` (2-D and 1-D)
-- pandas :class:`~pandas.DataFrame` and :class:`~pandas.Series` (default)
-- Polars :class:`~polars.DataFrame` and :class:`~polars.Series`
 
-There are two ways to control the output format.
+There are two ways to control the output format:
 
-The first option is to set the desired output format on a per-function basis, using
-the ``output_format`` parameter.
+1. Set the desired output format on a per-function basis, using the ``output_format``
+   parameter.
 
 .. code-block:: python
 
@@ -147,8 +147,8 @@ the ``output_format`` parameter.
     # NumPy arrays.
     res = cca(Y, X, output_format="numpy")
 
-The second option is to use the :func:`skbio.set_config` function. It will change the
-global behavior of scikit-bio functions.
+2. Set the ``table_output`` configuration option using :func:`skbio.set_config`. It
+   will change the global behavior of all scikit-bio functions.
 
 .. code-block:: python
 
@@ -156,7 +156,18 @@ global behavior of scikit-bio functions.
     from skbio import set_config
 
     # Set output format to NumPy arrays, or
-    set_config("output", "numpy")
+    set_config("table_output", "numpy")
 
-    # Return to default pandas output
-    set_config("output", "pandas")
+    # Return to default Pandas output
+    set_config("table_output", "pandas")
+
+
+..
+   Polars DataFrame and Series cannot be cross-linked therefore the following
+   workaround is used. See: https://github.com/pola-rs/polars/issues/7027
+
+.. |pl_df| replace:: ``DataFrame``
+.. _pl_df: https://docs.pola.rs/api/python/stable/reference/dataframe/index.html
+
+.. |pl_s| replace:: ``Series``
+.. _pl_s: https://docs.pola.rs/api/python/stable/reference/series/index.html

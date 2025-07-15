@@ -201,7 +201,9 @@ def pcoa(
                 RuntimeWarning,
             )
             ndim = distance_matrix.data.shape[0]
-        if _skbb_pcoa_fsvd_available(distance_matrix.data, dimensions, inplace, seed):
+        if _skbb_pcoa_fsvd_available(
+            distance_matrix.data, dimensions, inplace, seed
+        ):  # pragma: no cover
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
@@ -450,7 +452,8 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     rng = get_rng(seed)
     G = rng.standard_normal(size=(n, k))
 
-    if use_power_method:
+    # `use_power_method` is constantly False, so `if` won't start.
+    if use_power_method:  # pragma: no cover
         # use only the given exponent
         H = dot(centered_distance_matrix, G)
 
@@ -467,7 +470,9 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
         H = dot(centered_distance_matrix, G)
         # to enhance performance
         H = hstack((H, dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
-        for x in range(3, num_levels + 2):
+
+        # `num_levels` is constantly 1, so `for` loop won't start
+        for x in range(3, num_levels + 2):  # pragma: no cover
             tmp = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
 
             H = hstack(

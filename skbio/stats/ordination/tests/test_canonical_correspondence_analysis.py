@@ -72,7 +72,7 @@ class TestCCAResults1(TestCase):
             columns=self.env_ids,
             index=self.sample_ids
             )
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
 
     def test_scaling1(self):
         scores = cca(self.Y, self.X, scaling=1)

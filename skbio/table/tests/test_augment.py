@@ -17,7 +17,7 @@ from skbio.stats.composition import closure
 from skbio.table._augment import (
     mixup,
     aitchison_mixup,
-    compositional_cutmix,
+    compos_cutmix,
     phylomix,
     _validate_labels,
     _normalize_matrix,
@@ -575,11 +575,11 @@ class AugmentationTests(TestCase):
         npt.assert_array_equal(obs_lab.round(2), exp_lab)
         self.assertTrue(np.allclose(obs_mat.sum(axis=1), 1))
 
-    def test_compositional_cutmix(self):
+    def test_compos_cutmix(self):
         matrix, labels_2, labels_3 = self.matrix, self.labels_2, self.labels_3
 
         # no labels
-        obs_mat, obs_lab = compositional_cutmix(matrix, n=10, seed=42)
+        obs_mat, obs_lab = compos_cutmix(matrix, n=10, seed=42)
         exp_mat = np.array([
             [0.03, 0.  , 0.05, 0.  , 0.15, 0.53, 0.05, 0.02, 0.05, 0.12],
             [0.  , 0.  , 0.06, 0.27, 0.01, 0.12, 0.1 , 0.2 , 0.23, 0.  ],
@@ -599,7 +599,7 @@ class AugmentationTests(TestCase):
         self.assertTrue(np.allclose(obs_mat.sum(axis=1), 1))
 
         # append mode
-        obs_mat, obs_lab = compositional_cutmix(matrix, n=10, seed=42, append=True)
+        obs_mat, obs_lab = compos_cutmix(matrix, n=10, seed=42, append=True)
         self.assertTupleEqual(obs_mat.shape, (20, 10))
         npt.assert_array_equal(obs_mat.round(2)[10:], exp_mat)
 
@@ -608,11 +608,11 @@ class AugmentationTests(TestCase):
 
         # feed pre-normalized data
         normed = closure(matrix)
-        obs_mat, obs_lab = compositional_cutmix(normed, n=10, seed=42, normalize=False)
+        obs_mat, obs_lab = compos_cutmix(normed, n=10, seed=42, normalize=False)
         npt.assert_array_equal(obs_mat.round(2), exp_mat)
 
         # skip normalization
-        obs_mat, obs_lab = compositional_cutmix(matrix, n=10, seed=42, normalize=False)
+        obs_mat, obs_lab = compos_cutmix(matrix, n=10, seed=42, normalize=False)
         exp_mat = np.array([
             [0.03, 0.  , 0.05, 0.  , 0.15, 0.53, 0.05, 0.02, 0.05, 0.12],
             [0.  , 0.  , 0.07, 0.29, 0.01, 0.13, 0.03, 0.21, 0.25, 0.  ],
@@ -632,8 +632,8 @@ class AugmentationTests(TestCase):
         self.assertTrue(np.allclose(obs_mat.sum(axis=1), 1))
 
         # two-class labels
-        # Note that compositional_cutmix is always intra-class.
-        obs_mat, obs_lab = compositional_cutmix(matrix, n=10, labels=labels_2, seed=42)
+        # Note that compos_cutmix is always intra-class.
+        obs_mat, obs_lab = compos_cutmix(matrix, n=10, labels=labels_2, seed=42)
         exp_mat = np.array([
             [0.03, 0.  , 0.05, 0.  , 0.15, 0.53, 0.05, 0.02, 0.05, 0.12],
             [0.  , 0.26, 0.  , 0.05, 0.37, 0.  , 0.  , 0.11, 0.21, 0.  ],
@@ -663,7 +663,7 @@ class AugmentationTests(TestCase):
         self.assertTrue(np.allclose(obs_mat.sum(axis=1), 1))
 
         # three-class labels
-        obs_mat, obs_lab = compositional_cutmix(matrix, n=10, labels=labels_3, seed=42)
+        obs_mat, obs_lab = compos_cutmix(matrix, n=10, labels=labels_3, seed=42)
         exp_mat = np.array([
             [0.  , 0.  , 0.17, 0.  , 0.  , 0.17, 0.33, 0.17, 0.  , 0.17],
             [0.  , 0.25, 0.  , 0.05, 0.35, 0.  , 0.04, 0.1 , 0.2 , 0.  ],

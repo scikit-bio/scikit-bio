@@ -177,7 +177,7 @@ class TestIngest(TestCase):
 
 class TestPandas(TestCase):
     def setUp(self):
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
@@ -238,14 +238,14 @@ class TestPandas(TestCase):
 
 class TestNumpy(TestCase):
     def setUp(self):
-        set_config("output", "numpy")
+        set_config("table_output", "numpy")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
         self.columns = ["f1", "f2", "f3"]
 
     def tearDown(self):
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
 
     def test_create_table_no_backend(self):
         obs = _create_table(data=self.data, columns=self.columns, index=self.index)
@@ -303,14 +303,14 @@ class TestNumpy(TestCase):
 @skipIf(pl is None, "Polars is not available for unit tests.")
 class TestPolars(TestCase):
     def setUp(self):
-        set_config("output", "polars")
+        set_config("table_output", "polars")
         self.data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         self.data_1d = self.data[0]
         self.index = ["A", "B", "C"]
         self.columns = ["f1", "f2", "f3"]
 
     def tearDown(self):
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
 
     def test_create_table_no_backend(self):
         obs = _create_table(data=self.data, columns=self.columns, index=self.index)
