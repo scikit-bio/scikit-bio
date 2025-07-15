@@ -18,7 +18,7 @@ from ..binaries._util import (
 
 def pcoa_fsvd_available(
     distance_matrix,
-    number_of_dimensions,
+    dimensions,
     inplace=False,
     seed=None,
 ):
@@ -29,7 +29,7 @@ def pcoa_fsvd_available(
     distance_matrix : np.ndarray or DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
-    number_of_dimensions : int
+    dimensions : int
         Dimensions to reduce the distance matrix to. This number determines how many
         eigenvectors and eigenvalues will be returned.
     inplace : bool
@@ -53,9 +53,9 @@ def pcoa_fsvd_available(
     if _skbb_get_api_version() >= 1:  # pragma: no cover
         # Do some basic sanity checks
         # check it is a positive number
-        if not isinstance(number_of_dimensions, Integral):
+        if not isinstance(dimensions, Integral):
             return False
-        elif number_of_dimensions < 1:
+        elif dimensions < 1:
             return False
         return True
     else:  # pragma: no cover
@@ -64,7 +64,7 @@ def pcoa_fsvd_available(
 
 def pcoa_fsvd(
     distance_matrix,
-    number_of_dimensions,
+    dimensions,
     inplace=False,
     seed=None,
 ):
@@ -79,7 +79,7 @@ def pcoa_fsvd(
     distance_matrix : np.ndarray or DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
-    number_of_dimensions : int
+    dimensions : int
         Dimensions to reduce the distance matrix to. This number determines how many
         eigenvectors and eigenvalues will be returned.
     inplace : bool
@@ -136,10 +136,10 @@ def pcoa_fsvd(
     """
     # minimum version that support pcoa
     if _skbb_get_api_version() >= 1:  # pragma: no cover
-        if not isinstance(number_of_dimensions, Integral):
-            raise ValueError("number_of_dimensions must be an integer value")
-        if number_of_dimensions < 1:
-            raise ValueError("number_of_dimensions must be a positive number")
+        if not isinstance(dimensions, Integral):
+            raise ValueError("dimensions must be an integer value")
+        if dimensions < 1:
+            raise ValueError("dimensions must be a positive number")
         int_seed = py_to_bin_random_seed(seed)
         if isinstance(distance_matrix, np.ndarray):
             # already a raw matrix, just use
@@ -154,17 +154,15 @@ def pcoa_fsvd(
             or distance_matrix_data.shape[1] != distance_matrix_shape0
         ):
             raise TypeError("distance_matrix not square")
-        if number_of_dimensions > distance_matrix_shape0:
-            raise ValueError("number_of_dimensions cannot be larger than matrix size")
+        if dimensions > distance_matrix_shape0:
+            raise ValueError("dimensions cannot be larger than matrix size")
         # create output buffers
-        eigenvalues = np.ndarray(
-            shape=(number_of_dimensions,), dtype=distance_matrix_data.dtype
-        )
+        eigenvalues = np.ndarray(shape=(dimensions,), dtype=distance_matrix_data.dtype)
         proportion_explained = np.ndarray(
-            shape=(number_of_dimensions,), dtype=distance_matrix_data.dtype
+            shape=(dimensions,), dtype=distance_matrix_data.dtype
         )
         samples = np.ndarray(
-            shape=(distance_matrix_shape0, number_of_dimensions),
+            shape=(distance_matrix_shape0, dimensions),
             dtype=distance_matrix_data.dtype,
             order="C",
         )
@@ -172,7 +170,7 @@ def pcoa_fsvd(
         dll = _get_skbb_dll()
         i_mdim = ctypes.c_uint(distance_matrix_shape0)
         i_mat = distance_matrix_data.ctypes.data_as(ctypes.c_void_p)
-        i_n_eigh = ctypes.c_uint(number_of_dimensions)
+        i_n_eigh = ctypes.c_uint(dimensions)
         i_seed = ctypes.c_int(int_seed)
         o_ev = eigenvalues.ctypes.data_as(ctypes.c_void_p)
         o_sp = samples.ctypes.data_as(ctypes.c_void_p)

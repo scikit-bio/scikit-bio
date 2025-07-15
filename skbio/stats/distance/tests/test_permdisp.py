@@ -208,11 +208,11 @@ class PERMDISPTests(TestCase):
 
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
                        permutations=99,
-                       method='fsvd', number_of_dimensions=3, seed=42)
+                       method='fsvd', dimensions=3, seed=42)
 
         self.assert_series_equal(obs, exp)
 
-        po = pcoa(self.unifrac_dm, method='fsvd', number_of_dimensions=3)
+        po = pcoa(self.unifrac_dm, method='fsvd', dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
