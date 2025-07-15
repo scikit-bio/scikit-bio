@@ -67,6 +67,7 @@
 * Added a development roadmap for scikit-bio to the website ([#2251](https://github.com/scikit-bio/scikit-bio/pull/2251)).
 * Improved documentation for conversion between scikit-bio sequence alignments and Biopython and Biotite alignments ([#2229](https://github.com/scikit-bio/scikit-bio/pull/2229), [#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 * Rewrote the `install` page for the website to reflect availability of wheels and to explicitly state scikit-bio's version support windows ([#2254](https://github.com/scikit-bio/scikit-bio/pull/2254)).
+* Renamed the parameter `distance_matrix` to `distmat` in `pcoa`, `bioenv`, `anosim`, `permanova`, and `permdisp`. `distance_matrix` will remain a valid alias of the parameter, such that either option may be used. ([#2261](https://github.com/scikit-bio/scikit-bio/pull/2261))
 
 ### Backward-incompatible changes
 
