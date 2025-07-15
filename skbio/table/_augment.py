@@ -336,7 +336,7 @@ def mixup(
     --------
     phylomix
     aitchison_mixup
-    compositional_cutmix
+    compos_cutmix
 
     Returns
     -------
@@ -514,7 +514,7 @@ def aitchison_mixup(
     See Also
     --------
     mixup
-    compositional_cutmix
+    compos_cutmix
 
     Notes
     -----
@@ -606,7 +606,7 @@ def aitchison_mixup(
     return _format_output(aug_matrix, aug_labels, matrix, labels, append)
 
 
-def compositional_cutmix(
+def compos_cutmix(
     table: "TableLike",
     n: int,
     labels: Optional["NDArray"] = None,
@@ -693,10 +693,10 @@ def compositional_cutmix(
     Examples
     --------
     >>> import numpy as np
-    >>> from skbio.table import compositional_cutmix
+    >>> from skbio.table import compos_cutmix
     >>> matrix = np.arange(40).reshape(4, 10)
     >>> labels = np.array([0, 1, 0, 1])
-    >>> aug_matrix, aug_labels = compositional_cutmix(matrix, n=5, labels=labels)
+    >>> aug_matrix, aug_labels = compos_cutmix(matrix, n=5, labels=labels)
     >>> print(aug_matrix.shape)
     (5, 10)
     >>> print(aug_labels.shape)
