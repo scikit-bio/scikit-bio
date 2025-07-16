@@ -139,14 +139,15 @@
       .. code-block:: python
 
          from skbio.alignment import pair_align_prot
+         from skbio.alignment import TabularMSA
          from skbio.sequence.distance import hamming
          from skbio.stats.distance import DistanceMatrix
          from skbio.tree import nj
 
          def align_dist(seq1, seq2):
-             path = pair_align_prot(seq1, seq2)[1]
-             aln1, aln2 = path.to_aligned((seq1, seq2))
-             return hamming(aln1, aln2)
+             score, (path,), _ = pair_align_prot(seq1, seq2)
+             msa = TabularMSA.from_path_seqs(path, (seq1, seq2))
+             return hamming(*msa)
 
          dm = DistanceMatrix.from_iterable(
             seqs, align_dist, keys=ids, validate=False
