@@ -21,8 +21,7 @@ Configuraton options
 At present, only one configuration option is available:
 
 **table_output** : *{"pandas", "numpy", "polars"}, default="pandas"*
-    The preferred output format of tables. See :doc:`details
-    <../reference/table_like>`.
+    The preferred output format of tables. See :ref:`details <table_output>`.
 
 """  # noqa: D205, D415
 

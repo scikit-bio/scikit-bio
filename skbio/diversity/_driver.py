@@ -148,7 +148,7 @@ def alpha_diversity(
         being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :doc:`supported formats <../reference/table_like>`.
+        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -245,7 +245,7 @@ def beta_diversity(
         metric being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :doc:`supported formats <../reference/table_like>`.
+        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -368,7 +368,7 @@ def partial_beta_diversity(
         for details.
     counts : table_like of shape (n_samples, n_taxa)
         Matrix containing count/abundance data of the samples. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     id_pairs : iterable of tuple of (str, str)
