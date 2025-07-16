@@ -517,10 +517,10 @@ def pcoa_biplot(ordination, y):
 
     Parameters
     ----------
-    ordination: OrdinationResults
+    ordination : OrdinationResults
         The computed principal coordinates analysis of dimensions (n, c) where
         the matrix ``y`` will be projected onto.
-    y: DataFrame
+    y : DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
         normalized in cases of dimensionally heterogenous physical variables.

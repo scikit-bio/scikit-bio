@@ -1,6 +1,8 @@
 Contribute to scikit-bio
 ========================
 
+:bdg-info:`New` :doc:`Roadmap of scikit-bio <roadmap>`
+
 **Scikit-bio** is a community-driven open-source software project, and we warmly welcome your contributions!
 
 We are interested in many types of contributions, including feature additions, bug fixes, continuous integration improvements, and documentation/website updates, additions, and fixes. Whether you are a researcher, educator, or developer; whether your interest lies in biology, mathematics, statistics, or computer science; your input is invaluable. You can help making scikit-bio a better software package for our entire community.

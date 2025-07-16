@@ -207,7 +207,7 @@ same outcome.
 106.0
 
 Pairwise alignment is often taught in bioinformatics courses. By adding
-``keep_matrices=True` to the function, the alignment matrix calculated during the DP
+``keep_matrices=True`` to the function, the alignment matrix calculated during the DP
 process will be retained. This can be particularly useful for educational purposes.
 
 >>> score, (path,), (matrix,) = pair_align(
