@@ -138,14 +138,15 @@
 
       .. code-block:: python
 
-         from skbio.alignment import global_pairwise_align_protein
+         from skbio.alignment import pair_align_prot
          from skbio.sequence.distance import hamming
          from skbio.stats.distance import DistanceMatrix
          from skbio.tree import nj
 
          def align_dist(seq1, seq2):
-             aln = global_pairwise_align_protein(seq1, seq2)[0]
-             return hamming(aln[0], aln[1])
+             path = pair_align_prot(seq1, seq2)[1]
+             aln1, aln2 = path.to_aligned((seq1, seq2))
+             return hamming(aln1, aln2)
 
          dm = DistanceMatrix.from_iterable(
             seqs, align_dist, keys=ids, validate=False
@@ -191,7 +192,7 @@
 
       .. code-block:: python
 
-         def centralize(mat):
+         def centralize(mat: "ArrayLike") -> "StdArray":
              r"""Center data around its geometric average.
 
              Parameters
@@ -202,7 +203,7 @@
              Returns
              -------
              ndarray of shape (n_compositions, n_components)
-                 centered composition matrix.
+                 Centered composition matrix.
 
              Examples
              --------
@@ -214,6 +215,8 @@
                     [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
              """
+             from scipy.stats import gmean
+
              mat = closure(mat)
              cen = gmean(mat, axis=0)
              return perturb_inv(mat, cen)
@@ -272,13 +275,13 @@
 
          .. card::
 
-            Latest release (2025-01-13):
+            Latest release (2025-07-16):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.3
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.0
                :color: success
                :shadow:
 
-               scikit-bio 0.6.3
+               scikit-bio 0.7.0
 
          .. card::
 
