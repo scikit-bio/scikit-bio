@@ -34,40 +34,27 @@ class OrdinationResults(SkbioObject, PlottableMixin):
     long_method_name : str
         Ordination method name.
     eigvals : table_like
-        The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        The resulting eigenvalues. The index corresponds to the ordination
+        axis labels. See :ref:`table_output` for details.
     samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        sample id. See :ref:`table_output` for details.
     features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        the feature id. See :ref:`table_output` for details.
     biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-        See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        See :ref:`table_output` for details.
     sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        These are the fitted site scores. See :ref:`table_output` for details.
     proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels. See the
-        `TableLike <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
-        the-datatable-type>`_ type documentation for details.
+        The index corresponds to the ordination axis labels. See
+        :ref:`table_output` for details.
     sample_ids, feature_ids, constraint_ids, output_format : optional
-        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     See Also
     --------

@@ -42,17 +42,14 @@ def rda(
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances. See the
-        `TableLike <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
-        the-datatable-type>`_ type documentation for details.
+        commonly stores information about species abundances. See
+        :ref:`supported formats <table_like>`.
     x : table_like
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients. See the
-        `TableLike <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
-        the-datatable-type>`_ type documentation for details.
+        coefficients into standard regression coefficients. See above.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
@@ -75,9 +72,7 @@ def rda(
         constrained ordination methods). If not provided implicitly by the input data
         structure or explicitly by the user, defaults to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------

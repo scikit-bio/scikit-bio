@@ -159,6 +159,8 @@ Depending on the research task, you are free to transpose a table to swap sample
 features.
 
 
+.. _table_params:
+
 Common parameters
 ^^^^^^^^^^^^^^^^^
 

@@ -41,9 +41,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
     sample_ids, feature_ids, output_format : optional
-        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
