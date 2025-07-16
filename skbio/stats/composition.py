@@ -1771,7 +1771,7 @@ def _check_sig_test(test, n_groups=None):
 @params_aliased(
     [
         ("p_adjust", "multiple_comparisons_correction", "0.6.0", True),
-        ("sig_test", "significance_test", "0.6.4", True),
+        ("sig_test", "significance_test", "0.7.0", True),
     ]
 )
 def ancom(
