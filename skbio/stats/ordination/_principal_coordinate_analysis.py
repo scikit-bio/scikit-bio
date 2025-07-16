@@ -82,9 +82,7 @@ def pcoa(
         .. versionadded:: 0.6.3
 
     output_format : optional
-        Standard ``TableLike`` parameter. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -347,9 +345,7 @@ def _encapsulate_pcoa_result(
     ids: array
         Distance matrix ids
     output_format : optional
-        Standard ``DataTable`` parameter. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -521,10 +517,10 @@ def pcoa_biplot(ordination, y):
 
     Parameters
     ----------
-    ordination: OrdinationResults
+    ordination : OrdinationResults
         The computed principal coordinates analysis of dimensions (n, c) where
         the matrix ``y`` will be projected onto.
-    y: DataFrame
+    y : DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
         normalized in cases of dimensionally heterogenous physical variables.

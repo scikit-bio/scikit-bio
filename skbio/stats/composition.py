@@ -1809,7 +1809,7 @@ def ancom(
     ----------
     table : table_like of shape (n_samples, n_features)
         Matrix of strictly positive values (i.e. counts or proportions). See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
 
         .. note::
             If the table contains zero values, one should add a pseudocount or apply
@@ -2381,7 +2381,7 @@ def dirmult_ttest(
     ----------
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. These could be strings
         or integers denoting which group a sample belongs to. If it is a pandas Series
@@ -2683,7 +2683,7 @@ def dirmult_lme(
     ----------
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a

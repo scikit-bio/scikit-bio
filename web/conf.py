@@ -99,7 +99,7 @@ html_theme_options = {
     'navbar_persistent': [],
 
     # display all header links
-    'header_links_before_dropdown': 7,
+    'header_links_before_dropdown': 8,
 
     # footer layout
     'footer_start': ['copyright'],

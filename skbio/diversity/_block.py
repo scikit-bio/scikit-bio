@@ -276,7 +276,7 @@ def block_beta_diversity(
         :func:`~skbio.diversity.beta_diversity` for details.
     counts : table_like of shape (n_samples, n_taxa)
         Matrix containing count/abundance data of the samples. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``.
     validate : bool, optional

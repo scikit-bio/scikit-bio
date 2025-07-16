@@ -314,7 +314,7 @@ def mixup(
     ----------
     table : table_like of shape (n_samples, n_features)
         Input data table to be augmented. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -481,7 +481,7 @@ def aitchison_mixup(
     ----------
     table : table_like of shape (n_samples, n_features)
         Input data table to be augmented. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -623,7 +623,7 @@ def compos_cutmix(
     ----------
     table : table_like of shape (n_samples, n_features)
         Input data table to be augmented. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -819,7 +819,7 @@ def phylomix(
     ----------
     table : table_like of shape (n_samples, n_features)
         Input data table to be augmented. See
-        :doc:`supported formats <../reference/table_like>`.
+        :ref:`supported formats <table_like>`.
     n : int
         Number of synthetic samples to generate.
     tree : :class:`~skbio.tree.TreeNode`

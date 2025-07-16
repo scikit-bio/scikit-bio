@@ -45,13 +45,9 @@ def cca(
     Parameters
     ----------
     y : table_like
-        Samples by features table (n, m). See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Samples by features table (n, m). See :ref:`supported formats <table_like>`.
     x : table_like
-        Samples by constraints table (n, q). See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Samples by constraints table (n, q). See above.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
@@ -62,9 +58,7 @@ def cca(
         implicitly by the input data structure or explicitly by the user, defaults
         to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``TableLike`` parameters. See the `TableLike <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
