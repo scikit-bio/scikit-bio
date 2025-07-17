@@ -88,6 +88,12 @@ html_theme_options = {
       'image_dark': '_static/img/logo_inv.svg',
     },
 
+    # announcement banner on top of the screen
+    'announcement': (
+        f"{project} 0.7.0 has been released! <a href='"
+        f"{github_url}/releases/tag/0.7.0'>Check it out</a>."
+    ),
+
     # social media links displayed as icons
     'github_url': github_url,
     'twitter_url': twitter_url,
