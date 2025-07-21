@@ -8,7 +8,8 @@ dynamic = ["version"]
 description = "Data structures, algorithms and educational resources for bioinformatics."
 readme = "README.rst"
 requires-python = ">=3.9"
-license = {file = "LICENSE"}
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
 authors = [
     {name = "scikit-bio development team", email = "qiyunzhu@gmail.com"}
 ]
@@ -17,7 +18,6 @@ maintainers = [
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: BSD License",
     "Topic :: Software Development :: Libraries",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
