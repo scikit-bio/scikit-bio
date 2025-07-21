@@ -496,7 +496,7 @@ class AlignPath(SkbioObject):
         return res
 
     @classonlymethod
-    def from_aligned(cls, aln, gap_chars="-", starts=None):
+    def from_aligned(cls, aln, gap_chars="-", starts=None) -> "AlignPath":
         r"""Create an alignment path from aligned sequences.
 
         Parameters
@@ -616,7 +616,7 @@ class AlignPath(SkbioObject):
         return chars, gaps, bits, lens
 
     @classonlymethod
-    def from_tabular(cls, msa, starts=None):
+    def from_tabular(cls, msa, starts=None) -> "AlignPath":
         r"""Create an alignment path from a `TabularMSA` object.
 
         Parameters
@@ -734,7 +734,7 @@ class AlignPath(SkbioObject):
             return np.where(pos, idx, gap)
 
     @classonlymethod
-    def from_indices(cls, indices, gap=-1):
+    def from_indices(cls, indices, gap=-1) -> "AlignPath":
         r"""Create an alignment path from character indices in the original sequences.
 
         Parameters
@@ -892,7 +892,7 @@ class AlignPath(SkbioObject):
             return lens.cumsum(axis=1)
 
     @classonlymethod
-    def from_coordinates(cls, coords):
+    def from_coordinates(cls, coords) -> "AlignPath":
         r"""Create an alignment path from an array of segment coordinates.
 
         Parameters
@@ -1122,7 +1122,7 @@ class PairAlignPath(AlignPath):
         return f"<{repr_}, CIGAR: '{cigar}'>"
 
     @classonlymethod
-    def from_bits(cls, bits, starts=None):
+    def from_bits(cls, bits, starts=None) -> "PairAlignPath":
         r"""Create a pairwise alignment path from a bit array.
 
         Refer to :meth:`AlignPath.from_bits` for usage.

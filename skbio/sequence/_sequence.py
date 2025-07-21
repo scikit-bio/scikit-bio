@@ -441,7 +441,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    def concat(cls, sequences, how="strict"):
+    def concat(cls, sequences, how="strict") -> "Sequence":
         r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters

@@ -5657,7 +5657,7 @@ class TreeNode(SkbioObject):
         return distance
 
     @classonlymethod
-    def from_linkage_matrix(cls, linkage_matrix, id_list):
+    def from_linkage_matrix(cls, linkage_matrix, id_list) -> "TreeNode":
         r"""Return tree from SciPy linkage matrix.
 
         Parameters
@@ -5706,7 +5706,7 @@ class TreeNode(SkbioObject):
         return node_lookup[-1]
 
     @classonlymethod
-    def from_taxonomy(cls, lineage_map):
+    def from_taxonomy(cls, lineage_map) -> "TreeNode":
         r"""Construct a tree from a taxonomy.
 
         Parameters
@@ -5876,7 +5876,7 @@ class TreeNode(SkbioObject):
                     seen_add(node.id)
 
     @classonlymethod
-    def from_taxdump(cls, nodes, names=None):
+    def from_taxdump(cls, nodes, names=None) -> "TreeNode":
         r"""Construct a tree from the NCBI taxonomy database.
 
         Parameters

@@ -330,11 +330,11 @@ class SampleMetadata(_MetadataBase):
     @classmethod
     def load(
         cls,
-        filepath,
-        column_types=None,
-        column_missing_schemes=None,
-        default_missing_scheme=DEFAULT_MISSING,
-    ):
+        filepath: str,
+        column_types: Optional[dict[str, str]] = None,
+        column_missing_schemes: Optional[dict[str, str]] = None,
+        default_missing_scheme: str = DEFAULT_MISSING,
+    ) -> "SampleMetadata":
         """Load a TSV metadata file.
 
         The TSV metadata file format is described at https://docs.qiime2.org in
