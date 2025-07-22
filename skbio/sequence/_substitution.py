@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from copy import deepcopy
+from typing import Optional, Union, Iterable
 
 import numpy as np
 
@@ -278,7 +279,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
         }
 
     @classonlymethod
-    def from_dict(cls, dictionary, dtype="float32"):
+    def from_dict(
+        cls, dictionary: dict[dict], dtype: str = "float32"
+    ) -> "SubstitutionMatrix":
         """Create a substitution matrix from a 2D dictionary.
 
         Parameters
@@ -286,13 +289,13 @@ class SubstitutionMatrix(DissimilarityMatrix):
         dictionary : dict of dict
             2D dictionary of substitution scores from outer characters to inner
             characters.
+        dtype : {'float32', 'float64'}, optional
+            Floating-point data type of the matrix. Default is "float32".
 
         Returns
         -------
         SubstitutionMatrix
             Substitution matrix constructed from the dictionary.
-        dtype : {'float32', 'float64'}, optional
-            Floating-point data type of the matrix. Default is "float32".
 
         Raises
         ------
@@ -332,7 +335,13 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    def identity(cls, alphabet, match, mismatch, dtype="float32"):
+    def identity(
+        cls,
+        alphabet: Iterable,
+        match: Union[int, float],
+        mismatch: Union[int, float],
+        dtype: str = "float32",
+    ) -> "SubstitutionMatrix":
         f"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
@@ -374,7 +383,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    def by_name(cls, name):
+    def by_name(cls, name: str) -> "SubstitutionMatrix":
         """Load a pre-defined substitution matrix by its name.
 
         Parameters
@@ -443,7 +452,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
     @classonlymethod
-    def get_names(cls):
+    def get_names(cls) -> list[str]:
         """List names of pre-defined substitution matrices.
 
         Returns

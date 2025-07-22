@@ -140,7 +140,7 @@ class GeneticCode(SkbioObject):
         return cls.__offset_table
 
     @classonlymethod
-    def from_ncbi(cls, table_id=1):
+    def from_ncbi(cls, table_id=1) -> "GeneticCode":
         r"""Return NCBI genetic code specified by table ID.
 
         Parameters
