@@ -181,7 +181,7 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
     elif hasattr(table, "X"):
         adt = get_package("anndata")
         if isinstance(table, adt.AnnData):
-            data = table.X
+            data = np.asarray(table.X)
             samples = table.obs.index
             features = table.var.index
 
