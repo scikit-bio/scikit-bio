@@ -10,7 +10,7 @@ System requirements
 Platform
 ^^^^^^^^
 
-Scikit-bio runs on Linux, macOS, and Windows. It is currently available for the x86_64 and ARM64 architectures, although ARM64 support is not yet available for the Windows operating system.
+Scikit-bio runs on Linux, macOS, and Windows. It is currently available for the x86_64 and ARM64 architectures.
 
 Python
 ^^^^^^
