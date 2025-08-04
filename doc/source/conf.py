@@ -51,6 +51,8 @@ extensions = [
 root_doc = 'index'
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# set to none to avoid overly complicated function signatures
+autodoc_typehints = 'none'
 
 
 # -- Options for manual page output ------------------------------------------
@@ -192,6 +194,7 @@ intersphinx_mapping = {
     # 'biom-format': ('https://biom-format.org/', None),
     'polars': ('https://docs.pola.rs/api/python/stable/', None),
     'anndata': ('https://anndata.readthedocs.io/en/stable/', None),
+    'array_api': ('https://data-apis.org/array-api/latest/', None),
 }
 
 

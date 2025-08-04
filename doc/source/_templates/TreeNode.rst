@@ -46,8 +46,6 @@
       :toctree:
 
       ~{{ name }}.copy
-      ~{{ name }}.deepcopy
-      ~{{ name }}.subtree
 
    .. rubric:: Tree manipulation
 
@@ -78,7 +76,6 @@
       ~{{ name }}.root_by_outgroup
       ~{{ name }}.unroot
       ~{{ name }}.unrooted_copy
-      ~{{ name }}.unrooted_deepcopy
       ~{{ name }}.unrooted_move
 
    .. rubric:: Tree searching

@@ -13,8 +13,6 @@ The full license is in the file LICENSE.txt, distributed with this software.
 
 import os
 import platform
-import re
-import ast
 import sys
 import sysconfig
 import subprocess
@@ -108,91 +106,40 @@ if gcc:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
-# version parsing from __init__ pulled from Flask's setup.py
-# https://github.com/mitsuhiko/flask/blob/master/setup.py
-_version_re = re.compile(r"__version__\s+=\s+(.*)")
 
-with open("skbio/__init__.py", "rb") as f:
-    hit = _version_re.search(f.read().decode("utf-8")).group(1)
-    version = str(ast.literal_eval(hit))
+# Compiler flags
+extra_compile_args = ["-I."]  # search current directory
+extra_link_args = []
 
-classes = """
-    Development Status :: 4 - Beta
-    License :: OSI Approved :: BSD License
-    Topic :: Software Development :: Libraries
-    Topic :: Scientific/Engineering
-    Topic :: Scientific/Engineering :: Bio-Informatics
-    Programming Language :: Python :: 3
-    Programming Language :: Python :: 3 :: Only
-    Programming Language :: Python :: 3.9
-    Programming Language :: Python :: 3.10
-    Programming Language :: Python :: 3.11
-    Programming Language :: Python :: 3.12
-    Programming Language :: Python :: 3.13
-    Operating System :: Unix
-    Operating System :: POSIX
-    Operating System :: MacOS :: MacOS X
-    Operating System :: Microsoft :: Windows
-"""
-classifiers = [s.strip() for s in classes.split("\n") if s]
-
-description = (
-    "Data structures, algorithms and educational " "resources for bioinformatics."
-)
-
-with open("README.rst") as f:
-    long_description = f.read()
-
-
-# Compile SSW module
-ssw_extra_compile_args = ["-I."]
-
-if platform.system() != "Windows":
-    if icc:
-        ssw_extra_compile_args.extend(["-qopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
-    elif not clang:
-        ssw_extra_compile_args.extend(["-fopenmp-simd", "-DSIMDE_ENABLE_OPENMP"])
-elif platform.system() == "Windows":
-    ssw_extra_compile_args.extend(["-openmp:experimental"])
-
-stats_extra_compile_args = [] + ssw_extra_compile_args
-stats_extra_link_args = []
-if platform.system() != "Windows":
-    if icc:
-        stats_extra_compile_args.extend(["-qopenmp"])
-        stats_extra_link_args.extend(["-qopenmp"])
-    elif not clang:
-        stats_extra_compile_args.extend(["-fopenmp"])
-        stats_extra_link_args.extend(["-fopenmp"])
-
-# Users with i686 architectures have reported that adding this flag allows
-# SSW to be compiled. See https://github.com/scikit-bio/scikit-bio/issues/409
-# and http://stackoverflow.com/q/26211814/3776794 for details.
-if platform.machine() == "i686":
-    ssw_extra_compile_args.append("-msse2")
+# Enable OpenMP for parallelism.
+if platform.system() == "Windows":
+    extra_compile_args.append("/openmp")
+elif icc:
+    extra_compile_args.append("-qopenmp")
+    extra_link_args.append("-qopenmp")
+elif not clang:
+    extra_compile_args.append("-fopenmp")
+    extra_link_args.append("-fopenmp")
 
 
 # Cython modules (*.pyx). They will be compiled into C code (*.c) during build.
 ext = ".pyx"
 extensions = [
-    Extension("skbio.metadata._intersection", ["skbio/metadata/_intersection" + ext]),
     Extension(
-        "skbio.alignment._ssw_wrapper",
-        ["skbio/alignment/_ssw_wrapper" + ext, "skbio/alignment/_lib/ssw.c"],
-        extra_compile_args=ssw_extra_compile_args,
-        include_dirs=[np.get_include()],
+        "skbio.metadata._intersection",
+        ["skbio/metadata/_intersection" + ext],
     ),
     Extension(
         "skbio.tree._c_nj",
         ["skbio/tree/_c_nj" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.tree._c_me",
         ["skbio/tree/_c_me" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.diversity._phylogenetic",
@@ -202,14 +149,21 @@ extensions = [
     Extension(
         "skbio.stats.ordination._cutils",
         ["skbio/stats/ordination/_cutils" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.stats.distance._cutils",
         ["skbio/stats/distance/_cutils" + ext],
-        extra_compile_args=stats_extra_compile_args,
-        extra_link_args=stats_extra_link_args,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    ),
+    Extension(
+        "skbio.alignment._cutils",
+        ["skbio/alignment/_cutils" + ext],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        include_dirs=[np.get_include()],
     ),
 ]
 
@@ -217,42 +171,7 @@ extensions = cythonize(extensions, force=True)
 
 
 setup(
-    name="scikit-bio",
-    version=version,
-    license="BSD-3-Clause",
-    description=description,
-    long_description=long_description,
-    author="scikit-bio development team",
-    author_email="qiyunzhu@gmail.com",
-    maintainer="scikit-bio development team",
-    maintainer_email="qiyunzhu@gmail.com",
-    url="https://scikit.bio",
     packages=find_packages(),
     ext_modules=extensions,
     include_dirs=[np.get_include()],
-    tests_require=["pytest", "coverage"],
-    install_requires=[
-        "requests >= 2.20.0",
-        "decorator >= 3.4.2",
-        "natsort >= 4.0.3",
-        "numpy >= 1.17.0",
-        "pandas >= 1.5.0",
-        "scipy >= 1.9.0",
-        "h5py >= 3.6.0",
-        "biom-format >= 2.1.16",
-        "statsmodels >= 0.14.0",
-        "patsy >= 0.5.0",
-    ],
-    classifiers=classifiers,
-    package_data={
-        "skbio.diversity.alpha.tests": ["data/qiime-191-tt/*"],
-        "skbio.diversity.beta.tests": ["data/qiime-191-tt/*"],
-        "skbio.io.tests": ["data/*"],
-        "skbio.io.format.tests": ["data/*"],
-        "skbio.stats.tests": ["data/*"],
-        "skbio.stats.distance.tests": ["data/*"],
-        "skbio.stats.ordination.tests": ["data/*"],
-        "skbio.metadata.tests": ["data/invalid/*", "data/valid/*"],
-        "skbio.embedding.tests": ["data/*"],
-    },
 )

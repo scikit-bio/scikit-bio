@@ -167,15 +167,12 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
 
         """
         if self.dropped:
-            s = "{}(dropped=True, bounds={!r}, " "fuzzy={!r}, metadata={!r})"
+            s = "{}(dropped=True, bounds={!r}, fuzzy={!r}, metadata={!r})"
             return s.format(
                 self.__class__.__name__, self.bounds, self.fuzzy, self.metadata
             )
         else:
-            s = (
-                "{}(interval_metadata=<{!r}>, bounds={!r}, "
-                "fuzzy={!r}, metadata={!r})"
-            )
+            s = "{}(interval_metadata=<{!r}>, bounds={!r}, fuzzy={!r}, metadata={!r})"
             return s.format(
                 self.__class__.__name__,
                 id(self._interval_metadata),
@@ -202,7 +199,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
     def _bounds_fuzzy_setter(self, bounds=None, fuzzy=None):
         if self.dropped:
             raise RuntimeError(
-                "Cannot change `bounds` or `fuzzy` " "on a dropped Interval object."
+                "Cannot change `bounds` or `fuzzy` on a dropped Interval object."
             )
         # Casts to `list`, validation, sorting, and setting of `bounds`
         # and `fuzzy` happen here.
@@ -213,7 +210,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
                 bounds = list(bounds)
             except TypeError:
                 raise TypeError(
-                    "Cannot give an non-iterable (%r) " "to `bounds`." % bounds
+                    "Cannot give an non-iterable (%r) to `bounds`." % bounds
                 )
 
             # check it is not empty
@@ -231,13 +228,11 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
             try:
                 fuzzy = list(fuzzy)
             except TypeError:
-                raise TypeError(
-                    "Cannot give a non-iterable (%r) " "to `fuzzy`." % fuzzy
-                )
+                raise TypeError("Cannot give a non-iterable (%r) to `fuzzy`." % fuzzy)
 
             if len(fuzzy) != spans:
                 raise ValueError(
-                    "The length of fuzzy must " "be equal to the length of bounds."
+                    "The length of fuzzy must be equal to the length of bounds."
                 )
 
             for fuzzy_i in fuzzy:
@@ -246,7 +241,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         if bounds is None:
             # `bounds` and `fuzzy` cannot both be omitted.
             if fuzzy is None:
-                raise ValueError("Cannot give `None` to both `bounds` " "and `fuzzy`.")
+                raise ValueError("Cannot give `None` to both `bounds` and `fuzzy`.")
             # If only `fuzzy` is provided, set `self.fuzzy` and don't
             # change `self.bounds`.
             else:
@@ -318,7 +313,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         This set all fuzzy to be ``False``.
         """
         if self.dropped:
-            raise RuntimeError("Cannot change fuzzy on dropped " "Interval object.")
+            raise RuntimeError("Cannot change fuzzy on dropped Interval object.")
         self._fuzzy = [(False, False)] * len(self.bounds)
 
     @property
@@ -354,7 +349,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
     @metadata.setter
     def metadata(self, value):
         if self.dropped:
-            raise RuntimeError("Cannot change metadata on dropped " "Interval object.")
+            raise RuntimeError("Cannot change metadata on dropped Interval object.")
         if not isinstance(value, dict):
             raise TypeError("metadata must be a dict, not %r" % value)
         self._metadata = value
@@ -366,7 +361,7 @@ fuzzy=[(False, False), (False, False)], metadata={'name': 'genA'})
         This sets metadata to be empty dict.
         """
         if self.dropped:
-            raise RuntimeError("Cannot change metadata to dropped " "Interval object.")
+            raise RuntimeError("Cannot change metadata to dropped Interval object.")
         self._metadata = {}
 
     @property
@@ -586,8 +581,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
                 ]
             except TypeError:
                 raise TypeError(
-                    "You cannot reverse the coordinates "
-                    "when the upper bound is `None`"
+                    "You cannot reverse the coordinates when the upper bound is `None`"
                 )
             f.bounds = intvls
 
@@ -595,7 +589,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         self._is_stale_tree = True
 
     @classonlymethod
-    def concat(cls, interval_metadata):
+    def concat(cls, interval_metadata) -> "IntervalMetadata":
         """Concatenate an iterable of ``IntervalMetadata`` objects.
 
         It concatenates the multiple ``IntervalMetadata`` objects into
@@ -697,8 +691,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         if self.upper_bound is not None:
             if other.upper_bound is None:
                 raise ValueError(
-                    "Cannot merge an unbound IntervalMetadata object "
-                    "to a bounded one"
+                    "Cannot merge an unbound IntervalMetadata object to a bounded one"
                 )
             elif self.upper_bound != other.upper_bound:
                 raise ValueError(
@@ -765,7 +758,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             interval_metadata=self, bounds=bounds, fuzzy=fuzzy, metadata=metadata
         )
 
-    @_rebuild_tree
+    @_rebuild_tree  # type: ignore[arg-type]
     def _query_interval(self, bound):
         """Yield ``Interval`` objects that overlap with the bound."""
         _assert_valid_bound(bound)
@@ -808,7 +801,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
             else:
                 yield intvl
 
-    @_rebuild_tree
+    @_rebuild_tree  # type: ignore[arg-type]
     def query(self, bounds=None, metadata=None):
         """Yield ``Interval`` object with the bounds and attributes.
 
@@ -1015,12 +1008,13 @@ def _assert_valid_bound(bound):
             start, end = bound
         except ValueError:
             raise ValueError(
-                "A `bound` must be a tuple of exactly "
-                "two coordinates, not {!r}".format(bound)
+                "A `bound` must be a tuple of exactly two coordinates, not {!r}".format(
+                    bound
+                )
             )
         if not (isinstance(start, int) and isinstance(end, int)) or start > end:
             raise ValueError(
-                "`start` (%r) cannot be a larger int " "than `end` (%r)." % (start, end)
+                "`start` (%r) cannot be a larger int than `end` (%r)." % (start, end)
             )
     else:
         raise TypeError("Each `bound` must be a tuple, not {!r}".format(bound))
@@ -1032,7 +1026,7 @@ def _assert_valid_fuzzy(fuzzy):
             start, end = fuzzy
         except ValueError:
             raise ValueError(
-                "A `fuzzy` must be a tuple of exactly " "two, not {!r}".format(fuzzy)
+                "A `fuzzy` must be a tuple of exactly two, not {!r}".format(fuzzy)
             )
         if not (isinstance(start, bool) and isinstance(end, bool)):
             raise TypeError("A `fuzzy` must be a tuple of two booleans")

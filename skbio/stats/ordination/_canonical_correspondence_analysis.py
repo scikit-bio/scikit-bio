@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import create_table, create_table_1d, ingest_array
+from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
 def cca(
@@ -44,33 +44,21 @@ def cca(
 
     Parameters
     ----------
-    y : DataFrame or ndarray
-        Samples by features table (n, m). Can be numpy, pandas, polars, AnnData,
-        or BIOM (skbio.Table).
-    x : DataFrame or ndarray
-        Samples by constraints table (n, q). Can be numpy, pandas, polars, AnnData,
-        or BIOM (skbio.Table).
+    y : table_like
+        Samples by features table (n, m). See :ref:`supported formats <table_like>`.
+    x : table_like
+        Samples by constraints table (n, q). See above.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation, check Legendre &
         Legendre 1998, section 9.4.3.
-    sample_ids : list of str, optional
-        List of ids of samples. If not provided implicitly by the input DataFrame or
-        explicitly by the user, sample_ids will default to a list of integers starting
-        at zero.
-    feature_ids : list of str, optional
-        List of ids of features. If not provided implicitly by y or explicitly by the
-        user, it will default to a list of integers starting at zero.
     constraint_ids : list of str, optional
-        List of ids of constraints. If not provided implicitly by y or explicitly by
-        the user, it will default to a list of integers starting at zero.
-    output_format : str, optional
-        The desired format of the output object. Can be ``pandas``, ``polars``, or
-        ``numpy``. Note that all scikit-bio ordination functions return an
-        ``OrdinationResults`` object. In this case the attributes of the
-        ``OrdinationResults`` object will be in the specified format. Default is
-        ``pandas``.
+        List of identifiers for metadata variables or constraints. If not provided
+        implicitly by the input data structure or explicitly by the user, defaults
+        to integers starting at zero.
+    sample_ids, feature_ids, output_format : optional
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -124,11 +112,11 @@ def cca(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_sample_ids, feature_ids = ingest_array(
-        y, row_ids=sample_ids, col_ids=feature_ids
+    Y, y_sample_ids, feature_ids = _ingest_table(
+        y, sample_ids=sample_ids, feature_ids=feature_ids
     )
-    X, x_sample_ids, constraint_ids = ingest_array(
-        x, row_ids=sample_ids, col_ids=constraint_ids
+    X, x_sample_ids, constraint_ids = _ingest_table(
+        x, sample_ids=sample_ids, feature_ids=constraint_ids
     )
 
     # Perform parameter sanity checks
@@ -144,7 +132,7 @@ def cca(
     if np.any(row_max <= 0):
         # Or else the lstsq call to compute Y_hat breaks
         raise ValueError(
-            "The samples by features table 'y' cannot contain a " "row with only 0's"
+            "The samples by features table 'y' cannot contain a row with only 0's"
         )
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
@@ -240,20 +228,20 @@ def cca(
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    eigvals = create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
-    samples = create_table(
+    eigvals = _create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
+    samples = _create_table(
         sample_scores, columns=pc_ids, index=y_sample_ids, backend=output_format
     )
-    features = create_table(
+    features = _create_table(
         features_scores, columns=pc_ids, index=feature_ids, backend=output_format
     )
-    biplot_scores = create_table(
+    biplot_scores = _create_table(
         biplot_scores,
         index=constraint_ids,
         columns=pc_ids[: biplot_scores.shape[1]],
         backend=output_format,
     )
-    sample_constraints = create_table(
+    sample_constraints = _create_table(
         sample_constraints, index=y_sample_ids, columns=pc_ids, backend=output_format
     )
 

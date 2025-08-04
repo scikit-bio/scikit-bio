@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Decorators."""
+
 from functools import wraps
 from collections import namedtuple
+from typing import Any
 
 from ._exception import OverrideError
 from ._docstring import (
@@ -102,6 +105,13 @@ class classproperty(property):
 
 class classonlymethod(classmethod):
     """Just like `classmethod`, but it can't be called on an instance."""
+
+    def __init__(self, func):
+        # Need to inform mypy that function's first argument is a type
+        if hasattr(func, "__annotations__") and "cls" in func.__annotations__:
+            # Remove the specific class type annotation
+            func.__annotations__["cls"] = Any
+        super().__init__(func)
 
     def __get__(self, obj, cls=None):
         if obj is not None:

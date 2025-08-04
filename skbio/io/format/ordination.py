@@ -187,11 +187,10 @@ Load the ordination results from the file:
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 
 from skbio.stats.ordination import OrdinationResults
 from skbio.io import create_format, OrdinationFormatError
-from skbio.util.config._dispatcher import create_table, create_table_1d
+from skbio.table._tabular import _create_table, _create_table_1d
 
 ordination = create_format("ordination")
 
@@ -318,7 +317,7 @@ def _parse_vector_section(fh, header_id):
                 "Reached end of file while looking for line containing values "
                 "for %s section." % header_id
             )
-        vals = create_table_1d(
+        vals = _create_table_1d(
             data=np.asarray(line.strip().split("\t"), dtype=np.float64)
         )
         if len(vals) != num_vals:
@@ -376,7 +375,7 @@ def _parse_array_section(fh, header_id, has_ids=True):
                 )
             data[i, :] = np.asarray(vals, dtype=np.float64)
 
-        data = create_table(data=data, index=ids)
+        data = _create_table(data=data, index=ids)
 
     if has_ids:
         return data, ids

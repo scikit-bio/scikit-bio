@@ -97,6 +97,7 @@ Control
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
+from typing import Optional
 
 import numpy as np
 from natsort import realsorted
@@ -403,7 +404,7 @@ class GradientANOVA:
     """
 
     # Should be defined by the derived classes
-    _alg_name = None
+    _alg_name: Optional[str] = None
 
     def __init__(
         self,
