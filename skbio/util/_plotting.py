@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Plotting utilities."""
+
 import importlib
 from io import StringIO, BytesIO
 
@@ -64,35 +66,3 @@ class PlottableMixin:
         self.plt.close(fig)
 
         return f.getvalue()
-
-    def _repr_png_(self):
-        """Generate a PNG format figure for display in IPython."""
-        return self._figure_data("png")
-
-    def _repr_svg_(self):
-        """Generate an SVG format figure for display in IPython."""
-        return self._figure_data("svg")
-
-    @property
-    def png(self):
-        """Get figure data in PNG format.
-
-        Returns
-        -------
-        bytes
-            Figure data in PNG format.
-
-        """
-        return self._repr_png_()
-
-    @property
-    def svg(self):
-        """Get figure data in SVG format.
-
-        Returns
-        -------
-        str
-            Figure data in SVG format.
-
-        """
-        return self._repr_svg_()

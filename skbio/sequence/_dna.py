@@ -10,7 +10,7 @@ import skbio
 from skbio.util._decorator import classproperty, overrides
 from ._nucleotide_mixin import NucleotideMixin, _motifs as _parent_motifs
 from ._grammared_sequence import GrammaredSequence
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 
 class DNA(GrammaredSequence, NucleotideMixin):
@@ -113,10 +113,8 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     References
     ----------
-    .. [1] Nomenclature for incompletely specified bases in nucleic acid
-       sequences: recommendations 1984.
-       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-       A Cornish-Bowden
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
+       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
 
     Examples
     --------

@@ -14,7 +14,7 @@ import skbio.io  # noqa
 # imports included for convenience
 from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode, SubstitutionMatrix
 from skbio.stats.distance import DistanceMatrix
-from skbio.alignment import local_pairwise_align_ssw, TabularMSA
+from skbio.alignment import TabularMSA
 from skbio.tree import TreeNode, nj
 from skbio.embedding import ProteinEmbedding
 from skbio.io import read, write
@@ -22,7 +22,10 @@ from skbio.stats.ordination import OrdinationResults
 from skbio.table import Table
 from skbio.metadata import SampleMetadata
 import skbio.diversity  # noqa
+import skbio.binaries  # noqa
 import skbio.stats.evolve  # noqa
+from ._config import get_config, set_config
+
 
 __all__ = [
     "Sequence",
@@ -33,7 +36,6 @@ __all__ = [
     "SubstitutionMatrix",
     "DistanceMatrix",
     "TabularMSA",
-    "local_pairwise_align_ssw",
     "TreeNode",
     "nj",
     "read",
@@ -41,10 +43,12 @@ __all__ = [
     "OrdinationResults",
     "Table",
     "SampleMetadata",
+    "get_config",
+    "set_config",
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"
-__version__ = "0.6.4-dev"
+__version__ = "0.7.1-dev"
 
 
 mottos = [

@@ -18,6 +18,7 @@ Common functionality to support testing in skbio.
 
    get_data_path
    assert_ordination_results_equal
+   assert_ordination_results_equal_np
    assert_data_frame_almost_equal
 
 
@@ -28,6 +29,15 @@ Plotting utilities
    :toctree: generated/
 
    PlottableMixin
+
+
+Randomization
+-------------
+
+.. autosummary::
+   :toctree: generated/
+
+   get_rng
 
 
 Decorators
@@ -53,7 +63,6 @@ Generally useful functionality that doesn't fit in more specific locations.
 .. autosummary::
    :toctree: generated/
 
-   get_rng
    cardinal_to_ordinal
    find_duplicates
    safe_md5
@@ -68,10 +77,12 @@ Generally useful functionality that doesn't fit in more specific locations.
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
+from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5
+from ._random import get_rng
 from ._testing import (
     get_data_path,
     assert_ordination_results_equal,
+    assert_ordination_results_equal_np,
     assert_data_frame_almost_equal,
     pytestrunner,
 )
@@ -84,6 +95,7 @@ from ._decorator import (
     register_aliases,
     params_aliased,
 )
+from ._optionals import get_package
 from ._plotting import PlottableMixin
 
 __all__ = [
@@ -93,8 +105,10 @@ __all__ = [
     "get_rng",
     "get_data_path",
     "assert_ordination_results_equal",
+    "assert_ordination_results_equal_np",
     "assert_data_frame_almost_equal",
     "pytestrunner",
+    "get_package",
     "PlottableMixin",
     "overrides",
     "classproperty",

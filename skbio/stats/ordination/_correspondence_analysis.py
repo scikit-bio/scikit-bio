@@ -7,14 +7,14 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
+from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
-def ca(X, scaling=1):
+def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     r"""Compute correspondence analysis.
 
     Correspondence analysis is a multivariate statistical technique for ordination.
@@ -32,16 +32,16 @@ def ca(X, scaling=1):
 
     Parameters
     ----------
-    X : pd.DataFrame
-        Samples by features table (n, m). It can be applied to different kinds
-        of data tables but data must be non-negative and dimensionally
-        homogeneous (quantitative or binary). The rows correspond to the
-        samples and the columns correspond to the features.
+    X : table_like of shape (n_samples, n_features)
+        Input data table. See :ref:`supported formats <table_like>`.
+        Data must be non-negative and dimensionally homogeneous (numeric or binary).
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
+    sample_ids, feature_ids, output_format : optional
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -99,9 +99,9 @@ def ca(X, scaling=1):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    row_ids = X.index
-    column_ids = X.columns
-    X = np.asarray(X.values, dtype=np.float64)
+    X, row_ids, column_ids = _ingest_table(
+        X, sample_ids=sample_ids, feature_ids=feature_ids
+    )
 
     # Correspondance Analysis
     r, c = X.shape
@@ -176,18 +176,28 @@ def ca(X, scaling=1):
     feature_columns = [
         "%s%d" % (short_method_name, i + 1) for i in range(features_scores.shape[1])
     ]
-
-    eigvals = pd.Series(
-        eigvals, ["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])]
+    eigvals = _create_table_1d(
+        eigvals,
+        index=["%s%d" % (short_method_name, i + 1) for i in range(eigvals.shape[0])],
+        backend=output_format,
     )
-    samples = pd.DataFrame(sample_scores, row_ids, sample_columns)
-    features = pd.DataFrame(features_scores, column_ids, feature_columns)
-    proportion_explained = eigvals / eigvals.sum()
+    samples = _create_table(
+        sample_scores, index=row_ids, columns=sample_columns, backend=output_format
+    )
+    features = _create_table(
+        features_scores,
+        index=column_ids,
+        columns=feature_columns,
+        backend=output_format,
+    )
+
     return OrdinationResults(
         short_method_name,
         long_method_name,
         eigvals,
         samples=samples,
+        sample_ids=row_ids,
         features=features,
-        proportion_explained=proportion_explained,
+        feature_ids=column_ids,
+        proportion_explained=eigvals / eigvals.sum(),
     )

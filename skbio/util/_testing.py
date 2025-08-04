@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Testing utilities."""
+
 import inspect
 import os
 import sys
@@ -166,6 +168,53 @@ def assert_ordination_results_equal(
     )
 
 
+def assert_ordination_results_equal_np(obs, exp, ignore_method_names=False, decimal=7):
+    """NumPy version of testing ordination results."""
+    if not ignore_method_names:
+        npt.assert_equal(obs.short_method_name, exp.short_method_name)
+        npt.assert_equal(obs.long_method_name, exp.long_method_name)
+
+    # do this for samples, features, biplot_scores, sample_constraints
+    obs_dists_samp = pdist(obs.samples)
+    exp_dists_samp = pdist(exp.samples)
+    npt.assert_almost_equal(obs_dists_samp, exp_dists_samp, decimal=decimal)
+
+    # test features
+    if exp.features is None:
+        assert obs.features is None
+    else:
+        obs_dists_feat = pdist(obs.features)
+        exp_dists_feat = pdist(exp.features)
+        npt.assert_almost_equal(obs_dists_feat, exp_dists_feat, decimal=decimal)
+
+    # test biplot_scores
+    if exp.biplot_scores is None:
+        assert obs.biplot_scores is None
+    else:
+        obs_dists_biplot = pdist(obs.biplot_scores)
+        exp_dists_biplot = pdist(exp.biplot_scores)
+        npt.assert_almost_equal(obs_dists_biplot, exp_dists_biplot, decimal=decimal)
+
+    # test sample_constraints
+    if exp.sample_constraints is None:
+        assert obs.sample_constraints is None
+    else:
+        obs_dists_cons = pdist(obs.sample_constraints)
+        exp_dists_cons = pdist(exp.sample_constraints)
+        npt.assert_almost_equal(obs_dists_cons, exp_dists_cons, decimal=decimal)
+
+    # test eigvals
+    npt.assert_almost_equal(obs.eigvals, exp.eigvals, decimal=decimal)
+
+    # test proportion_explained
+    if exp.proportion_explained is None:
+        assert obs.proportion_explained is None
+    else:
+        npt.assert_almost_equal(
+            obs.proportion_explained, exp.proportion_explained, decimal=decimal
+        )
+
+
 def _assert_series_equal(left_s, right_s, ignore_index=False, decimal=7):
     # assert_series_equal doesn't like None...
     if left_s is None or right_s is None:
@@ -192,30 +241,6 @@ def _assert_frame_dists_equal(
         left_dists = pdist(left_values)
         right_dists = pdist(right_values)
         npt.assert_almost_equal(left_dists, right_dists, decimal=decimal)
-
-        if not ignore_index:
-            pdt.assert_index_equal(left_df.index, right_df.index)
-        if not ignore_columns:
-            pdt.assert_index_equal(left_df.columns, right_df.columns)
-
-
-def _assert_frame_equal(
-    left_df,
-    right_df,
-    ignore_index=False,
-    ignore_columns=False,
-    ignore_directionality=False,
-    decimal=7,
-):
-    # assert_frame_equal doesn't like None...
-    if left_df is None or right_df is None:
-        assert left_df is None and right_df is None
-    else:
-        left_values = left_df.values
-        right_values = right_df.values
-        if ignore_directionality:
-            left_values, right_values = _normalize_signs(left_values, right_values)
-        npt.assert_almost_equal(left_values, right_values, decimal=decimal)
 
         if not ignore_index:
             pdt.assert_index_equal(left_df.index, right_df.index)

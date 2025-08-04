@@ -10,7 +10,7 @@ import numpy as np
 
 from skbio.util._decorator import classproperty, overrides
 from ._grammared_sequence import GrammaredSequence, _motifs as parent_motifs
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 
 class Protein(GrammaredSequence):
@@ -130,10 +130,8 @@ class Protein(GrammaredSequence):
 
     References
     ----------
-    .. [1] Nomenclature for incompletely specified bases in nucleic acid
-       sequences: recommendations 1984.
-       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-       A Cornish-Bowden
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
+       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
 
     Examples
     --------

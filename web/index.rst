@@ -79,6 +79,7 @@
    Community <https://github.com/scikit-bio/scikit-bio/discussions>
    Releases <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md>
    About <about>
+   Roadmap <roadmap>
 
 
 .. grid:: 1 1 1 3
@@ -105,15 +106,13 @@
          from skbio.diversity import beta_diversity
          from skbio.stats.ordination import pcoa
 
-         data = pd.read_table('data.tsv', index_col=0)
+         table = pd.read_table('data.tsv', index_col=0)
          metadata = pd.read_table('metadata.tsv', index_col=0)
          tree = TreeNode.read('tree.nwk')
 
-         bdiv = beta_diversity(
-             'weighted_unifrac', data, ids=data.index, otu_ids=data.columns, tree=tree
-         )
+         bdiv = beta_diversity('weighted_unifrac', table, tree=tree)
 
-         ordi = pcoa(bdiv, number_of_dimensions=3)
+         ordi = pcoa(bdiv, dimensions=3)
          ordi.plot(metadata, column='bodysite')
 
       .. image:: _static/img/hmp1_pcoa.png
@@ -139,14 +138,16 @@
 
       .. code-block:: python
 
-         from skbio.alignment import global_pairwise_align_protein
+         from skbio.alignment import pair_align_prot
+         from skbio.alignment import TabularMSA
          from skbio.sequence.distance import hamming
          from skbio.stats.distance import DistanceMatrix
          from skbio.tree import nj
 
          def align_dist(seq1, seq2):
-             aln = global_pairwise_align_protein(seq1, seq2)[0]
-             return hamming(aln[0], aln[1])
+             score, (path,), _ = pair_align_prot(seq1, seq2)
+             msa = TabularMSA.from_path_seqs(path, (seq1, seq2))
+             return hamming(*msa)
 
          dm = DistanceMatrix.from_iterable(
             seqs, align_dist, keys=ids, validate=False
@@ -159,7 +160,7 @@
 
                    /-chicken
                   |
-         -root----|                    /-rat
+         ---------|                    /-rat
                   |          /--------|
                   |         |          \-mouse
                    \--------|
@@ -192,7 +193,7 @@
 
       .. code-block:: python
 
-         def centralize(mat):
+         def centralize(mat: "ArrayLike") -> "StdArray":
              r"""Center data around its geometric average.
 
              Parameters
@@ -203,7 +204,7 @@
              Returns
              -------
              ndarray of shape (n_compositions, n_components)
-                 centered composition matrix.
+                 Centered composition matrix.
 
              Examples
              --------
@@ -215,6 +216,8 @@
                     [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
 
              """
+             from scipy.stats import gmean
+
              mat = closure(mat)
              cen = gmean(mat, axis=0)
              return perturb_inv(mat, cen)
@@ -273,13 +276,13 @@
 
          .. card::
 
-            Latest release (2025-01-13):
+            Latest release (2025-07-16):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.3
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.0
                :color: success
                :shadow:
 
-               scikit-bio 0.6.3
+               scikit-bio 0.7.0
 
          .. card::
 

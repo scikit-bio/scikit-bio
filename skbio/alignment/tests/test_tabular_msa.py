@@ -875,17 +875,46 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         self.assertIs(d1[42], d2[42])
     
     def test_from_path_seqs(self):
+        # whole sequences
         path = AlignPath(lengths=[3, 2, 5, 1, 4, 3, 2],
                          states=[0, 2, 0, 6, 0, 1, 0],
                          starts=[0, 0, 0])
-        seqs = [DNA("CGGTCGTAACGCGTACA"),
-                DNA("CAGGTAAGCATACCTCA"),
-                DNA("CGGTCGTCACTGTACACTA")]
-        obj = TabularMSA.from_path_seqs(path=path, seqs=seqs)
-        self.assertEqual(str(obj[0]), "CGGTCGTAACGCGTA---CA")
-        self.assertEqual(str(obj[1]), "CAG--GTAAG-CATACCTCA")
-        self.assertEqual(str(obj[2]), "CGGTCGTCAC-TGTACACTA")
+        seqs = list(map(DNA, [
+            "CGGTCGTAACGCGTACA",
+            "CAGGTAAGCATACCTCA",
+            "CGGTCGTCACTGTACACTA",
+        ]))
+        obs = TabularMSA.from_path_seqs(path=path, seqs=seqs)
+        exp = [
+            "CGGTCGTAACGCGTA---CA",
+            "CAG--GTAAG-CATACCTCA",
+            "CGGTCGTCAC-TGTACACTA",
+        ]
+        for o, e in zip(obs, exp):
+            self.assertEqual(str(o), e)
 
+        # middle of the sequences
+        path._ranges[0] += 1
+        path._ranges[1] += 3
+        path._ranges[2] += 5
+        seqs = list(map(DNA, [
+            "ACGGTCGTAACGCGTACATTT",
+            "AAACAGGTAAGCATACCTCATTTTT",
+            "AAAAACGGTCGTCACTGTACACTAT",
+        ]))
+        obs = TabularMSA.from_path_seqs(path=path, seqs=seqs)
+        for o, e in zip(obs, exp):
+            self.assertEqual(str(o), e)
+
+        msg = "`seqs` must be of skbio.Sequence type."
+        with self.assertRaises(ValueError) as cm:
+            TabularMSA.from_path_seqs(path=path, seqs=[1, 2, 3])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence counts in `path` and `seqs` do not match."
+        with self.assertRaises(ValueError) as cm:
+            TabularMSA.from_path_seqs(path=path, seqs=seqs[:-1])
+        self.assertEqual(str(cm.exception), msg)
 
 class TestContains(unittest.TestCase):
     def test_no_sequences(self):
@@ -3021,7 +3050,7 @@ class TestConsensus(unittest.TestCase):
             DNA('A-T', positional_metadata={'foo': [42, 43, 42],
                                             'bar': ['a', 'b', 'c']}))
 
-    def test_mixed_gap_characters_as_majority(self):
+    def test_mixed_gap_chars_as_majority(self):
         seqs = [
             DNA('A'),
             DNA('A'),
@@ -3539,7 +3568,7 @@ class TestGapFrequencies(unittest.TestCase):
 
         npt.assert_array_equal(np.array([1.0]), freqs)
 
-    def test_custom_gap_characters(self):
+    def test_custom_gap_chars(self):
         class CustomSequence(GrammaredSequence):
             @classproperty
             @overrides(GrammaredSequence)

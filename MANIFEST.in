@@ -3,7 +3,6 @@ include LICENSE.txt
 include Makefile
 include pyproject.toml
 include README.rst
-include simde-sse2.h
 
 graft ci
 graft doc

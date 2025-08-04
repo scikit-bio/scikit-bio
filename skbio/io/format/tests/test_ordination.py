@@ -18,7 +18,8 @@ from skbio.io import OrdinationFormatError
 from skbio.io.format.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,
     _ordination_sniffer)
-from skbio.util import get_data_path, assert_ordination_results_equal
+from skbio.util import get_data_path, assert_ordination_results_equal, assert_ordination_results_equal_np
+from skbio._config import set_config
 
 
 class OrdinationTestData(TestCase):
@@ -98,6 +99,27 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
             sample_constraints=site_constraints,
             proportion_explained=prop_explained)
 
+        # CA results, numpy backend
+        axes_ids = ['CA1', 'CA2']
+        species_ids = ['Species1', 'Species2', 'Species3']
+        site_ids = ['Site1', 'Site2', 'Site3']
+        eigvals = np.array([0.0961330159181, 0.0409418140138])
+        species = np.array([[0.408869425742, 0.0695518116298],
+                            [-0.1153860437, -0.299767683538],
+                            [-0.309967102571, 0.187391917117]])
+        site = np.array([[-0.848956053187, 0.882764759014],
+                         [-0.220458650578, -1.34482000302],
+                         [1.66697179591, 0.470324389808]])
+        biplot = None
+        site_constraints = None
+        prop_explained = None
+        ca_scores_np = OrdinationResults(
+            'CA', 'Correspondence Analysis', eigvals=eigvals, features=species,
+            feature_ids=species_ids,
+            samples=site, sample_ids=site_ids, biplot_scores=biplot,
+            sample_constraints=site_constraints,
+            proportion_explained=prop_explained)
+
         # CCA results
         axes_ids = ['CCA%d' % i for i in range(1, 10)]
         species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
@@ -128,6 +150,38 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
         cca_scores = OrdinationResults('CCA',
                                        'Canonical Correspondence Analysis',
                                        eigvals=eigvals, features=species,
+                                       samples=site, biplot_scores=biplot,
+                                       sample_constraints=site_constraints,
+                                       proportion_explained=prop_explained)
+
+        # CCA results, numpy backend
+        axes_ids = ['CCA%d' % i for i in range(1, 10)]
+        species_ids = ['Species0', 'Species1', 'Species2', 'Species3',
+                       'Species4', 'Species5', 'Species6', 'Species7',
+                       'Species8']
+        site_ids = ['Site0', 'Site1', 'Site2', 'Site3', 'Site4', 'Site5',
+                    'Site6', 'Site7', 'Site8', 'Site9']
+
+        eigvals = np.array([0.366135830393, 0.186887643052, 0.0788466514249,
+                             0.082287840501, 0.0351348475787, 0.0233265839374,
+                             0.0099048981912, 0.00122461669234,
+                             0.000417454724117])
+        species = np.array(np.loadtxt(
+            get_data_path('ordination_exp_Ordination_CCA_species')))
+        site = np.array(
+            np.loadtxt(get_data_path('ordination_exp_Ordination_CCA_site')))
+        biplot = np.array(
+            [[-0.169746767979, 0.63069090084, 0.760769036049],
+             [-0.994016563505, 0.0609533148724, -0.0449369418179],
+             [0.184352565909, -0.974867543612, 0.0309865007541]])
+        site_constraints = np.array(np.loadtxt(
+            get_data_path('ordination_exp_Ordination_CCA_site_constraints')))
+        prop_explained = None
+        cca_scores_np = OrdinationResults('CCA',
+                                       'Canonical Correspondence Analysis',
+                                       eigvals=eigvals, features=species,
+                                       feature_ids=species_ids,
+                                       sample_ids=site_ids,
                                        samples=site, biplot_scores=biplot,
                                        sample_constraints=site_constraints,
                                        proportion_explained=prop_explained)
@@ -191,6 +245,7 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
 
         self.ordination_results_objs = [ca_scores, cca_scores, pcoa_scores,
                                         rda_scores]
+        self.ordination_results_objs_np = [ca_scores_np, cca_scores_np]
 
     def test_read_valid_files(self):
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs):
@@ -198,6 +253,15 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
             assert_ordination_results_equal(
                 obs, obj, ignore_method_names=True,
                 ignore_axis_labels=True)
+
+    def test_read_valid_files_np(self):
+        set_config("table_output", "numpy")
+        for fp, obj in zip(self.valid_fps, self.ordination_results_objs_np):
+            obs = _ordination_to_ordination_results(fp)
+            assert_ordination_results_equal_np(
+                obs, obj, ignore_method_names=True
+            )
+        set_config("table_output", "pandas")
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:

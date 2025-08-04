@@ -12,9 +12,18 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
+from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
-def cca(y, x, scaling=1):
+def cca(
+    y,
+    x,
+    scaling=1,
+    sample_ids=None,
+    feature_ids=None,
+    constraint_ids=None,
+    output_format=None,
+):
     r"""Compute canonical (also known as constrained) correspondence analysis.
 
     Canonical (or constrained) correspondence analysis is a
@@ -35,15 +44,21 @@ def cca(y, x, scaling=1):
 
     Parameters
     ----------
-    y : DataFrame
-        Samples by features table (n, m)
-    x : DataFrame
-        Samples by constraints table (n, q)
+    y : table_like
+        Samples by features table (n, m). See :ref:`supported formats <table_like>`.
+    x : table_like
+        Samples by constraints table (n, q). See above.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation, check Legendre &
         Legendre 1998, section 9.4.3.
+    constraint_ids : list of str, optional
+        List of identifiers for metadata variables or constraints. If not provided
+        implicitly by the input data structure or explicitly by the user, defaults
+        to integers starting at zero.
+    sample_ids, feature_ids, output_format : optional
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -97,8 +112,12 @@ def cca(y, x, scaling=1):
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y = y.values
-    X = x.values
+    Y, y_sample_ids, feature_ids = _ingest_table(
+        y, sample_ids=sample_ids, feature_ids=feature_ids
+    )
+    X, x_sample_ids, constraint_ids = _ingest_table(
+        x, sample_ids=sample_ids, feature_ids=constraint_ids
+    )
 
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
@@ -113,7 +132,7 @@ def cca(y, x, scaling=1):
     if np.any(row_max <= 0):
         # Or else the lstsq call to compute Y_hat breaks
         raise ValueError(
-            "The samples by features table 'y' cannot contain a " "row with only 0's"
+            "The samples by features table 'y' cannot contain a row with only 0's"
         )
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
@@ -209,17 +228,21 @@ def cca(y, x, scaling=1):
     biplot_scores = corr(X_weighted, u)
 
     pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    sample_ids = y.index
-    feature_ids = y.columns
-    eigvals = pd.Series(eigenvalues, index=pc_ids)
-    samples = pd.DataFrame(sample_scores, columns=pc_ids, index=sample_ids)
-    features = pd.DataFrame(features_scores, columns=pc_ids, index=feature_ids)
-
-    biplot_scores = pd.DataFrame(
-        biplot_scores, index=x.columns, columns=pc_ids[: biplot_scores.shape[1]]
+    eigvals = _create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
+    samples = _create_table(
+        sample_scores, columns=pc_ids, index=y_sample_ids, backend=output_format
     )
-    sample_constraints = pd.DataFrame(
-        sample_constraints, index=sample_ids, columns=pc_ids
+    features = _create_table(
+        features_scores, columns=pc_ids, index=feature_ids, backend=output_format
+    )
+    biplot_scores = _create_table(
+        biplot_scores,
+        index=constraint_ids,
+        columns=pc_ids[: biplot_scores.shape[1]],
+        backend=output_format,
+    )
+    sample_constraints = _create_table(
+        sample_constraints, index=y_sample_ids, columns=pc_ids, backend=output_format
     )
 
     return OrdinationResults(
@@ -227,8 +250,11 @@ def cca(y, x, scaling=1):
         "Canonical Correspondence Analysis",
         eigvals,
         samples,
+        sample_ids=y_sample_ids,
         features=features,
+        feature_ids=feature_ids,
         biplot_scores=biplot_scores,
         sample_constraints=sample_constraints,
+        constraint_ids=constraint_ids,
         proportion_explained=eigvals / eigvals.sum(),
     )
