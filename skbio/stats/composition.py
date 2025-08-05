@@ -158,6 +158,7 @@ from skbio.util._decorator import aliased, register_aliases, params_aliased
 from skbio.util._array import ingest_array
 from skbio.table._tabular import _ingest_table
 
+import array_api_compat as aac
 
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
@@ -773,7 +774,7 @@ def ilr(
     if basis is None:
         # NOTE: acc.device(mat) would be nicer
         basis = xp.asarray(
-            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+            _gram_schmidt_basis(N), device=aac.device(mat), dtype=xp.float64
         )  # dimension (N-1) x N
     else:
         xp_, basis = ingest_array(basis)
@@ -784,7 +785,7 @@ def ilr(
                     f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
                 )
             _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
-            basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+            basis = xp.asarray(basis, device=aac.device(mat), dtype=xp.float64)
     axis %= mat.ndim
     return _ilr(xp, mat, basis, axis)
 
@@ -889,7 +890,7 @@ def ilr_inv(
 
     if basis is None:
         basis = xp.asarray(
-            _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
+            _gram_schmidt_basis(N), device=aac.device(mat), dtype=xp.float64
         )  # dimension (N-1) x N
     elif validate:
         xp_, basis = ingest_array(basis)
@@ -899,7 +900,7 @@ def ilr_inv(
                 f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
             )
         _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
-        basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+        basis = xp.asarray(basis, device=aac.device(mat), dtype=xp.float64)
     axis %= mat.ndim
     return _ilr_inv(xp, mat, basis, axis)
 
@@ -1116,7 +1117,7 @@ def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "Std
     shape = list(mat.shape)
     shape[axis] = 1
     shape = tuple(shape)
-    zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
+    zeros = xp.zeros(shape, dtype=mat.dtype, device=aac.device(mat))
     comp = xp.concat((mat[before], zeros, mat[after]), axis=axis)
     comp = xp.exp(comp - xp.max(comp, axis=axis, keepdims=True))
 
