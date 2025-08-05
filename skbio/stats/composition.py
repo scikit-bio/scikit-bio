@@ -2313,7 +2313,7 @@ def _check_basis(
         msg = f"Number of basis {n_basis} not match to the subspace dim {subspace_dim}."
         raise ValueError(msg)
     if orthonormal:
-        eyes = xp.eye(subspace_dim, device=basis.device)
+        eyes = xp.eye(subspace_dim, device=aac.device(basis))
         if not xp.all(xp.abs(basis @ basis.T - eyes) < (1e-4 * eyes + 1e-6)):
             raise ValueError("Basis is not orthonormal.")
 
