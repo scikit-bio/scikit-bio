@@ -112,12 +112,12 @@ def _binary_dm_sniffer(fh):
 
 @binary_dm.reader(DissimilarityMatrix)
 def _binary_dm_to_dissimilarity(fh):
-    return _h5py_mat_to_skbio_mat(DissimilarityMatrix,fh)
+    return _h5py_mat_to_skbio_mat_stream(DissimilarityMatrix,fh)
 
 
 @binary_dm.reader(DistanceMatrix)
 def _binary_dm_to_distance(fh):
-    return _h5py_mat_to_skbio_mat(DistanceMatrix,fh)
+    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix,fh)
 
 
 @binary_dm.writer(DissimilarityMatrix)
@@ -130,9 +130,13 @@ def _distance_to_binary_dm(obj, fh):
     return _skbio_mat_to_h5py_mat(DistanceMatrix,fh)
 
 
-def _h5py_mat_to_skbio_mat(cls, fh):
+def _h5py_mat_to_skbio_mat_stream(cls, fh):
     with h5py.File(fh, "r") as f:
-      dm = cls(f["matrix"], _parse_ids(f["order"]))
+      dm = _h5py_mat_to_skbio_mat(cls,f)
+    return dm
+
+def _h5py_mat_to_skbio_mat(cls, f):
+    dm = cls(f["matrix"], _parse_ids(f["order"]))
     return dm
 
 
