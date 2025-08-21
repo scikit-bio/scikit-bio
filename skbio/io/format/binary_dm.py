@@ -201,5 +201,5 @@ def _passthrough_decoder(x):
 
 def _set_header(f):
     """Set format spec header information."""
-    f.create_dataset("format", data=np_array([b"BDSM"]));
-    f.create_dataset("version", data=np_array([b"2020.12"]));
+    f.create_dataset("format", data=np_array([b"BDSM"]))
+    f.create_dataset("version", data=np_array([b"2020.12"]))
