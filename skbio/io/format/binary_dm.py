@@ -75,13 +75,13 @@ References
 # ----------------------------------------------------------------------------
 
 import h5py
+from numpy import array as np_array
 
 from skbio.io import create_format
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")
-_vlen_dtype = h5py.special_dtype(vlen=str)
 
 
 @binary_dm.sniffer()
@@ -122,12 +122,12 @@ def _binary_dm_to_distance(fh):
 
 @binary_dm.writer(DissimilarityMatrix)
 def _dissimilarity_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat(DissimilarityMatrix,fh)
+    return _skbio_mat_to_h5py_mat_stream(obj,fh)
 
 
 @binary_dm.writer(DistanceMatrix)
 def _distance_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat(DistanceMatrix,fh)
+    return _skbio_mat_to_h5py_mat_stream(obj,fh)
 
 
 def _h5py_mat_to_skbio_mat_stream(cls, fh):
@@ -140,12 +140,17 @@ def _h5py_mat_to_skbio_mat(cls, f):
     return dm
 
 
-def _skbio_mat_to_h5py_mat(obj, fh):
-    _set_header(fh)
+def _skbio_mat_to_h5py_mat_stream(obj, fh):
+    with h5py.File(fh, "w") as f:
+      _skbio_mat_to_h5py_mat(obj, f)
 
-    ids = fh.create_dataset("order", shape=(len(obj.ids),), dtype=_vlen_dtype)
-    ids[:] = obj.ids
-    fh.create_dataset("matrix", data=obj.data)
+def _skbio_mat_to_h5py_mat(obj, f):
+    _set_header(f)
+
+    b_ids = [ x.encode("utf-8") for x in obj.ids]
+    np_ids = np_array(b_ids)
+    f.create_dataset("order", data=np_ids)
+    f.create_dataset("matrix", data=obj.data)
 
 
 def _get_header(fh):
@@ -179,11 +184,7 @@ def _passthrough_decoder(x):
     return x
 
 
-def _set_header(h5grp):
+def _set_header(f):
     """Set format spec header information."""
-    h5grp["format"] = [
-        b"BDSM",
-    ]
-    h5grp["version"] = [
-        b"2020.06",
-    ]
+    f.create_dataset("format", data=np_array([b"BDSM"]));
+    f.create_dataset("version", data=np_array([b"2020.06"]));
