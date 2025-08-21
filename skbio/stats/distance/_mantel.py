@@ -8,6 +8,13 @@
 
 from itertools import combinations
 
+from typing import Optional, Union, Tuple, Dict, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ._base import DistanceMatrix
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import SeedLike
+
 import warnings
 import numpy as np
 import pandas as pd
@@ -23,15 +30,15 @@ from ._cutils import mantel_perm_pearsonr_cy
 
 
 def mantel(
-    x,
-    y,
-    method="pearson",
+    x: Union["DistanceMatrix", "ArrayLike"],
+    y: Union["DistanceMatrix", "ArrayLike"],
+    method: str = "pearson",
     permutations: int = 999,
-    alternative="two-sided",
-    strict=True,
-    lookup=None,
-    seed=None,
-):
+    alternative: str = "two-sided",
+    strict: bool = True,
+    lookup: Optional[Dict[str, str]] = None,
+    seed: Optional["SeedLike"] = None,
+) -> Tuple[float, float, int]:
     r"""Compute correlation between distance matrices using the Mantel test.
 
     The Mantel test compares two distance matrices by computing the correlation
@@ -510,15 +517,15 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
 
 
 def pwmantel(
-    dms,
-    labels=None,
-    method="pearson",
-    permutations=999,
-    alternative="two-sided",
-    strict=True,
-    lookup=None,
-    seed=None,
-):
+    dms: Sequence[Union["DistanceMatrix", "ArrayLike"]],
+    labels: Optional[Sequence[Union[str, int]]] = None,
+    method: str = "pearson",
+    permutations: int = 999,
+    alternative: str = "two-sided",
+    strict: bool = True,
+    lookup: Optional[Dict[str, str]] = None,
+    seed: Optional["SeedLike"] = None,
+) -> pd.DataFrame:
     """Run Mantel tests for every pair of given distance matrices.
 
     Runs a Mantel test for each pair of distance matrices and collates the
