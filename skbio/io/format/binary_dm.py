@@ -32,10 +32,10 @@ HDF5 [1]_ file. Both datatypes are represented by their own datasets. The
 The dissimilarity between `ids[i]` and `ids[j]` is interpreted
 to be the value at `matrix[i, j]`. `i` and `j` are integer indices.
 
-Required attributes:
+Required datasets:
 
 +-----------+---------------------+------------------------------+
-|Attribute  |Value                |Description                   |
+|Datasets   |Value                |Description                   |
 |           |type                 |                              |
 +===========+=====================+==============================+
 |format     |string               |A string identifying the file |
@@ -52,6 +52,10 @@ Required attributes:
 |           |                     |IDs, where N is the total     |
 |           |                     |number of IDs                 |
 +-----------+---------------------+------------------------------+
+
+Optionally, the file can contain several matrices.
+In such a case, the 'matrix' dataset will not exist and we will use
+'matrix:0' instead.
 
 .. note:: This file format is most useful for storing large matrices that do
    not need to be represented in a human-readable format. This format is
@@ -101,6 +105,8 @@ def _binary_dm_sniffer(fh):
 
     mat = f.get("matrix")
     if mat is None:
+        mat = f.get("matrix:0")
+    if mat is None:
         return False, {}
 
     n = len(ids)
@@ -136,7 +142,10 @@ def _h5py_mat_to_skbio_mat_stream(cls, fh):
     return dm
 
 def _h5py_mat_to_skbio_mat(cls, f):
-    dm = cls(f["matrix"], _parse_ids(f["order"]))
+    mat = f.get("matrix")
+    if mat is None:
+        mat = f.get("matrix:0")
+    dm = cls(mat, _parse_ids(f["order"]))
     return dm
 
 
@@ -169,11 +178,17 @@ def _parse_ids(ids):
         return _passthrough_decoder(ids)
 
 
-def _verify_dimensions(fh):
-    if "order" not in fh or "matrix" not in fh:
+def _verify_dimensions(f):
+    ids = f.get("order")
+
+    mat = f.get("matrix")
+    if mat is None:
+        mat = f.get("matrix:0")
+
+    if (ids is None) or (mat is None):
         return False
-    n = len(fh["order"])
-    return fh["matrix"].shape == (n, n)
+    n = len(ids)
+    return mat.shape == (n, n)
 
 
 def _bytes_decoder(x):
@@ -187,4 +202,4 @@ def _passthrough_decoder(x):
 def _set_header(f):
     """Set format spec header information."""
     f.create_dataset("format", data=np_array([b"BDSM"]));
-    f.create_dataset("version", data=np_array([b"2020.06"]));
+    f.create_dataset("version", data=np_array([b"2020.12"]));

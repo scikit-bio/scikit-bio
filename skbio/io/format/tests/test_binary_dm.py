@@ -101,7 +101,7 @@ class BinaryMatrixTests(unittest.TestCase):
 
     def test_get_header(self):
         self.assertEqual(_get_header(h5py.File(self.basic_fname, 'r')),
-                         {'format': b'BDSM', 'version': b'2020.06'})
+                         {'format': b'BDSM', 'version': b'2020.12'})
         self.assertEqual(_get_header(h5py.File(self.noheader_fname, 'r')),
                          None)
 
