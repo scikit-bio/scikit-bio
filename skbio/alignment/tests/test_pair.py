@@ -577,6 +577,10 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.to_cigar(), "5I5D")
         self.assertLessEqual(obs.lengths.sum(), len(seq1) + len(seq2))
 
+        # complete misalignment becomes empty after trimming ends
+        obs = pair_align(seq1, seq2, trim_ends=True).paths[0]
+        self.assertEqual(obs.to_cigar(), "")
+
     def test_pair_align_inf(self):
         """Infinite scores."""
         # infinite match score (returned score is also infinite)
