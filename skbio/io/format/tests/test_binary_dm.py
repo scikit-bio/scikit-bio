@@ -16,6 +16,7 @@ import numpy.testing as npt
 import h5py
 
 from skbio import DistanceMatrix
+from skbio.io import read as io_read
 from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _skbio_mat_to_h5py_mat, _get_header,
                                        _parse_ids, _verify_dimensions,
@@ -77,6 +78,11 @@ class BinaryMatrixTests(unittest.TestCase):
                                      h5py.File(self.basic_fname, 'r'))
         self.assertEqual(obs, exp)
 
+    def test_io_h5py_mat_to_skbio_mat(self):
+        exp = DistanceMatrix(self.mat, self.ids)
+        obs = io_read(self.basic_fname,into=DistanceMatrix)
+        self.assertEqual(obs, exp)
+
     def test_skbio_mat_to_h5py_mat(self):
         fh1 = h5py.File('f1', 'a', driver='core', backing_store=False)
 
@@ -84,6 +90,11 @@ class BinaryMatrixTests(unittest.TestCase):
         _skbio_mat_to_h5py_mat(mat, fh1)
         npt.assert_equal(np.asarray(fh1['order'][:], dtype=str), mat.ids)
         npt.assert_equal(fh1['matrix'], mat.data)
+
+    # TODO: The handling of general IO is known to be broken 
+    #def test_io_mat_to_h5py_mat(self):
+    #    mat = DistanceMatrix(self.mat, self.ids)
+    #    mat.write('f1b',format='binary_dm')
 
     def test_get_header(self):
         self.assertEqual(_get_header(h5py.File(self.basic_fname, 'r')),
