@@ -580,6 +580,7 @@ class PairAlignTests(unittest.TestCase):
         # complete misalignment becomes empty after trimming ends
         obs = pair_align(seq1, seq2, trim_ends=True).paths[0]
         self.assertEqual(obs.to_cigar(), "")
+        self.assertListEqual(obs.ranges.tolist(), [[0, 0], [5, 5]])
 
     def test_pair_align_inf(self):
         """Infinite scores."""
