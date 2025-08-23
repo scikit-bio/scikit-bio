@@ -2,8 +2,10 @@
 
 ## Version 0.7.1-dev
 
-* Bug fix: The IO format `binary_dm` is now functional ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+### Bug Fixes
 
+* Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
+* Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
 
 ## Version 0.7.0
 
