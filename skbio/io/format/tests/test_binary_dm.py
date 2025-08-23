@@ -61,6 +61,8 @@ class BinaryMatrixTests(unittest.TestCase):
         self.noheader.create_dataset('matrix', data=self.mat)
         self.noheader.close()
 
+        self.rw_fname = os.path.join(self.tempdir.name, 'rw')
+
     def tearDown(self):
         shutil.rmtree(self.tempdir.name)
 
@@ -93,9 +95,9 @@ class BinaryMatrixTests(unittest.TestCase):
 
     def test_io_mat_to_h5py_mat(self):
         mat = DistanceMatrix(self.mat, self.ids)
-        mat.write('f1b',format='binary_dm')
+        mat.write(self.rw_fname,format='binary_dm')
         exp = mat
-        obs = io_read('f1b',into=DistanceMatrix)
+        obs = io_read(self.rw_fname,into=DistanceMatrix)
         self.assertEqual(obs, exp)
 
 
