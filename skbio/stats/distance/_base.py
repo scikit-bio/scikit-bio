@@ -116,6 +116,7 @@ class DissimilarityMatrix(SkbioObject, PlottableMixin):
     """
 
     default_write_format: ClassVar[str] = "lsmat"
+    """Default write format for this object: ``lsmat``."""
     # Used in __str__
     _matrix_element_name: ClassVar[str] = "dissimilarity"
 
