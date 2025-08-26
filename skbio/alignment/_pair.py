@@ -892,10 +892,15 @@ def _encode_path(path, i0, i1, j0, j1):
     skbio.alignment.AlignPath.from_bits
 
     """
-    segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
-    lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
+    if L := path.size:
+        segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+        lens = np.append(segs[1:] - segs[:-1], L - segs[-1])
+        ints = path[segs]
+    else:
+        lens = np.array([], dtype=np.intp)
+        ints = path
     ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
-    return PairAlignPath(lens, path[segs], ranges=ranges)
+    return PairAlignPath(lens, ints, ranges=ranges)
 
 
 def _trailing_gaps(path, pos, i, j, m, n, fill1, fill2):
