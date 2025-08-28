@@ -2,6 +2,10 @@
 
 ## Version 0.7.1-dev
 
+### Performance enhancements
+
+* Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+
 ### Bug Fixes
 
 * Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
