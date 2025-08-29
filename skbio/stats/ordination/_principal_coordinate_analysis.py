@@ -154,7 +154,7 @@ def pcoa(
             )
         elif method == "eigh" and distmat.data.shape[0] > 10:
             warn(
-                "EIGH: since no value for number_of_dimensions is specified, "
+                "EIGH: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
                 "result in long computation time if the original "
                 "distance matrix is large.",
@@ -197,7 +197,7 @@ def pcoa(
         if 0 < dimensions < 1:
             if matrix_data.shape[0] > 10:
                  warn(
-                     "EIGH: since value for number_of_dimensions is specified as float,"
+                     "EIGH: since value for dimensions is specified as float,"
                      " PCoA for all dimensions will be computed, which may"
                      " result in long computation time if the original"
                      " distance matrix is large."
@@ -212,7 +212,7 @@ def pcoa(
         if 0 < dimensions < 1:
             if distmat.data.shape[0] > 10:
                  warn(
-                     "FSVD: since value for number_of_dimensions is specified as float,"
+                     "FSVD: since value for dimensions is specified as float,"
                      " PCoA for all dimensions will be computed, which may"
                      " result in long computation time if the original"
                      " distance matrix is large."
