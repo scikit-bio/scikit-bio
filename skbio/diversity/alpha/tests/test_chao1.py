@@ -41,16 +41,16 @@ class Chao1Tests(TestCase):
         npt.assert_allclose(obs, (9.17, 21.89), rtol=0.01)
 
         obs = chao1_ci(self.no_singles)
-        npt.assert_allclose(obs, (4, 4.95), decimal=2)
+        npt.assert_allclose(obs, (4, 4.95), rtol=0.01)
 
         obs = chao1_ci(self.no_singles, bias_corrected=False)
-        npt.assert_allclose(obs, (4, 4.95), decimal=2)
+        npt.assert_allclose(obs, (4, 4.95), rtol=0.01)
 
         obs = chao1_ci(self.no_doubles)
-        npt.assert_allclose(obs, (4.08, 17.27), decimal=2)
+        npt.assert_allclose(obs, (4.08, 17.27), rtol=0.01)
 
         obs = chao1_ci(self.no_doubles, bias_corrected=False)
-        npt.assert_allclose(obs, (4.08, 17.27), decimal=2)
+        npt.assert_allclose(obs, (4.08, 17.27), rtol=0.01)
 
         # edge case (sobs == chao1)
         obs = chao1_ci([1, 2, 3])
