@@ -159,6 +159,13 @@ extensions = [
         extra_link_args=extra_link_args,
     ),
     Extension(
+        "skbio.stats.distance._cutils_opt",
+        ["skbio/stats/distance/_cutils_opt" + ext],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        include_dirs=[np.get_include()],
+    ),
+    Extension(
         "skbio.alignment._cutils",
         ["skbio/alignment/_cutils" + ext],
         extra_compile_args=extra_compile_args,

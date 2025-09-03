@@ -18,6 +18,14 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy
+
+# Import optimized version if available
+try:
+    from ._cutils_opt import permanova_f_stat_sW_opt_cy as permanova_f_stat_sW_cy_opt
+    _OPT_AVAILABLE = True
+except ImportError:
+    permanova_f_stat_sW_cy_opt = permanova_f_stat_sW_cy
+    _OPT_AVAILABLE = False
 from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
@@ -159,7 +167,8 @@ def _compute_f_stat(
 ):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+    # Use optimized version if available
+    s_W = permanova_f_stat_sW_cy_opt(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
