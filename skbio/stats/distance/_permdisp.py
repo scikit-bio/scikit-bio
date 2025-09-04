@@ -268,7 +268,6 @@ def permdisp(
         ordination = distmat
         ids = ordination.samples.axes[0].to_list()
         sample_size = len(ids)
-        distmat = None  # not used anymore, avoid using by mistake
     elif isinstance(distmat, DistanceMatrix):
         if method == "eigh":
             # eigh does not natively support specifying dimensions

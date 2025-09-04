@@ -150,7 +150,7 @@ def permanova(
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distmat[:] ** 2).sum() / sample_size
+    s_T = (distmat.data**2).sum() / sample_size
     # we are going over the whole matrix, instead of just upper triangle
     # so cut in half
     s_T /= 2.0
