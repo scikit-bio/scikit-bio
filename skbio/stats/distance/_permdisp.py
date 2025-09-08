@@ -8,12 +8,17 @@
 
 from functools import partial
 
+from typing import Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import SeedLike
+
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
 from ._cutils import geomedian_axis_one
-
 
 from ._base import (
     _preprocess_input_sng,
@@ -33,16 +38,16 @@ from skbio.util._decorator import params_aliased
     ]
 )
 def permdisp(
-    distmat,
-    grouping,
-    column=None,
-    test="median",
-    permutations=999,
-    method="eigh",
-    dimensions=10,
-    seed=None,
-    warn_neg_eigval=0.01,
-):
+    distmat: Union["DistanceMatrix", "OrdinationResults"],
+    grouping: Union["pd.DataFrame", "ArrayLike"],
+    column: Optional[str] = None,
+    test: str = "median",
+    permutations: int = 999,
+    method: str = "eigh",
+    dimensions: int = 10,
+    seed: Optional["SeedLike"] = None,
+    warn_neg_eigval: Union[bool, float] = 0.01,
+) -> "pd.Series":
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analogue of Levene's test for homogeneity of
@@ -73,7 +78,7 @@ def permdisp(
         ``DataFrame``. Must be provided if `grouping` is a ``DataFrame``.
         Cannot be provided if `grouping` is 1-D ``array_like``.
     test : {'centroid', 'median'}
-        determines whether the analysis is done using centroid or spaitial
+        Determines whether the analysis is done using centroid or spatial
         median.
     permutations : int, optional
         Number of permutations to use when assessing statistical
@@ -263,7 +268,6 @@ def permdisp(
         ordination = distmat
         ids = ordination.samples.axes[0].to_list()
         sample_size = len(ids)
-        distmat = None  # not used anymore, avoid using by mistake
     elif isinstance(distmat, DistanceMatrix):
         if method == "eigh":
             # eigh does not natively support specifying dimensions
