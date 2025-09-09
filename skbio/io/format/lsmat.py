@@ -17,7 +17,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -79,7 +79,7 @@ import csv
 
 import numpy as np
 
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrix
 from skbio.io import create_format, LSMatFormatError
 
 
@@ -106,9 +106,9 @@ def _lsmat_sniffer(fh):
     return False, {}
 
 
-@lsmat.reader(DissimilarityMatrix)
+@lsmat.reader(PairwiseMatrix)
 def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
+    return _lsmat_to_matrix(PairwiseMatrix, fh, delimiter)
 
 
 @lsmat.reader(DistanceMatrix)
@@ -116,7 +116,7 @@ def _lsmat_to_distance_matrix(fh, delimiter="\t"):
     return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
 
 
-@lsmat.writer(DissimilarityMatrix)
+@lsmat.writer(PairwiseMatrix)
 def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
@@ -156,7 +156,7 @@ def _lsmat_to_matrix(cls, fh, delimiter):
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in " "the header."
+                "Encountered extra row(s) without corresponding IDs in the header."
             )
 
         num_vals = len(row_data)
