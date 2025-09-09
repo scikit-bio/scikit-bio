@@ -261,7 +261,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         elif keys is not None:
             keys_ = list(keys)
 
-        if validate is True:
+        if validate:
             dm = np.empty((len(iterable),) * 2)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1098,6 +1098,61 @@ class SymmetricMatrix(PairwiseMatrix):
         if not data_sym:
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
 
+    def permute(
+        self,
+        condensed: bool = False,
+        seed: Optional["SeedLike"] = None,
+    ) -> Union["SymmetricMatrix", np.ndarray]:
+        """Randomly permute both rows and columns in the matrix.
+
+        Randomly permutes the ordering of rows and columns in the matrix. The
+        same permutation is applied to both rows and columns in order to
+        maintain symmetry and, if applicable, hollowness. Only the rows/columns in the
+        distance matrix are permuted; the IDs are *not* permuted.
+
+        Parameters
+        ----------
+        condensed : bool, optional
+            If ``True``, return the permuted distance matrix in condensed
+            format. Otherwise, return the permuted distance matrix as a new
+            ``SymmetricMatrix`` instance. Can only be ``True`` if operating on a
+            ``DistanceMatrix``.
+        seed : int, Generator or RandomState, optional
+            A user-provided random seed or random generator instance. See
+            :func:`details <skbio.util.get_rng>`.
+
+            .. versionadded:: 0.6.3
+
+        Returns
+        -------
+        SymmetricMatrix or ndarray
+            Permuted values as a new ``DistanceMatrix`` or as a ``ndarray``
+            in condensed format.
+
+        See Also
+        --------
+        condensed_form
+
+        Notes
+        -----
+        This method does not modify the distance matrix that it is called on.
+        It is more efficient to pass ``condensed=True`` than permuting the
+        distance matrix and then converting to condensed format.
+
+        """
+        rng = get_rng(seed)
+        order = rng.permutation(self.shape[0])
+
+        if condensed:
+            if self.__class__ != DistanceMatrix:
+                raise TypeError("Only distance matrices can return condensed.")
+            permuted_condensed = distmat_reorder_condensed(self._data, order)
+            return permuted_condensed
+        else:
+            # Note: Skip validation, since we assume self was already validated
+            permuted = distmat_reorder(self._data, order)
+            return self.__class__(permuted, self.ids, validate=False)
+
 
 class DistanceMatrix(SymmetricMatrix):
     """Store distances between objects.
@@ -1177,58 +1232,6 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         return squareform(self._data, force="tovector", checks=False)
-
-    def permute(
-        self,
-        condensed: bool = False,
-        seed: Optional["SeedLike"] = None,
-    ) -> Union["DistanceMatrix", np.ndarray]:
-        """Randomly permute both rows and columns in the matrix.
-
-        Randomly permutes the ordering of rows and columns in the matrix. The
-        same permutation is applied to both rows and columns in order to
-        maintain symmetry and hollowness. Only the rows/columns in the distance
-        matrix are permuted; the IDs are *not* permuted.
-
-        Parameters
-        ----------
-        condensed : bool, optional
-            If ``True``, return the permuted distance matrix in condensed
-            format. Otherwise, return the permuted distance matrix as a new
-            ``DistanceMatrix`` instance.
-        seed : int, Generator or RandomState, optional
-            A user-provided random seed or random generator instance. See
-            :func:`details <skbio.util.get_rng>`.
-
-            .. versionadded:: 0.6.3
-
-        Returns
-        -------
-        DistanceMatrix or ndarray
-            Permuted distances as a new ``DistanceMatrix`` or as a ``ndarray``
-            in condensed format.
-
-        See Also
-        --------
-        condensed_form
-
-        Notes
-        -----
-        This method does not modify the distance matrix that it is called on.
-        It is more efficient to pass ``condensed=True`` than permuting the
-        distance matrix and then converting to condensed format.
-
-        """
-        rng = get_rng(seed)
-        order = rng.permutation(self.shape[0])
-
-        if condensed:
-            permuted_condensed = distmat_reorder_condensed(self._data, order)
-            return permuted_condensed
-        else:
-            # Note: Skip validation, since we assume self was already validated
-            permuted = distmat_reorder(self._data, order)
-            return self.__class__(permuted, self.ids, validate=False)
 
     def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the data array and IDs.

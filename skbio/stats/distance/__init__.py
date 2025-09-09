@@ -199,6 +199,7 @@ from ._base import (
     MissingIDError,
     PairwiseMatrix,
     DissimilarityMatrix,
+    SymmetricMatrix,
     DistanceMatrix,
     randdm,
 )
@@ -210,10 +211,13 @@ from ._permdisp import permdisp
 
 __all__ = [
     "PairwiseMatrixError",
-    "DissimilarityMatrixErrorDistanceMatrixError",
+    "DissimilarityMatrixError",
+    "DistanceMatrixError",
     "MissingIDError",
     "PairwiseMatrix",
-    "DissimilarityMatrixDistanceMatrix",
+    "DissimilarityMatrix",
+    "SymmetricMatrix",
+    "DistanceMatrix",
     "randdm",
     "anosim",
     "permanova",
