@@ -132,6 +132,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ],
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
+        redundant: bool = True,
     ) -> None:
         validate_full = validate
         validate_shape = False
@@ -201,7 +202,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             if validate_ids:
                 self._validate_ids(data_, ids)
 
-        self._data = data_
+        if redundant:
+            self._data = data_
+        else:
+            self._data = squareform(data_)
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
@@ -1231,7 +1235,11 @@ class DistanceMatrix(SymmetricMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return squareform(self._data, force="tovector", checks=False)
+        # should probably raise a warning, but doing this for now to test things out
+        if self.data.ndim == 1:
+            return self.data
+        else:
+            return squareform(self._data, force="tovector", checks=False)
 
     def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the data array and IDs.
@@ -1448,7 +1456,13 @@ def _preprocess_input(
     """
     if not isinstance(distance_matrix, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
-    sample_size = distance_matrix.shape[0]
+    # handle redundant form
+    if distance_matrix.data.ndim == 2:
+        sample_size = distance_matrix.shape[0]
+    # handle condensed form
+    if distance_matrix.data.ndim == 1:
+        sample_size = _vec_to_size(len(distance_matrix.data))
+    # print('\n\n\n', sample_size, '\n\n\n')
 
     num_groups, grouping = _preprocess_input_sng(
         distance_matrix.ids, sample_size, grouping, column
@@ -1555,6 +1569,11 @@ def _build_results(
         ],
         name="%s results" % method_name,
     )
+
+
+def _vec_to_size(vec_length: int) -> float:
+    """Calculate the redundant size of a matrix given its condensed vector."""
+    return (1 + np.sqrt(1 + 8 * vec_length)) / 2
 
 
 # Alias `DissimilarityMatrix` for backward compatibility

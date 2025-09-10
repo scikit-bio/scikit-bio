@@ -39,6 +39,11 @@ class TestANOSIM(TestCase):
                                           [1, 0, 3, 2],
                                           [5, 3, 0, 3],
                                           [4, 2, 3, 0]], dm_ids)
+        
+        self.dm_condensed = DistanceMatrix([[0, 1, 5, 4],
+                                            [1, 0, 3, 2],
+                                            [5, 3, 0, 3],
+                                            [4, 2, 3, 0]], dm_ids, redundant=False)
 
         # Test with 3 groups of unequal size. This data also generates a
         # negative R statistic.
@@ -91,6 +96,13 @@ class TestANOSIM(TestCase):
         obs = anosim(self.dm_no_ties, self.grouping_equal, seed=42)
         self.assert_series_equal(obs, exp)
 
+    def test_no_ties_condensed(self):
+        exp = pd.Series(index=self.exp_index,
+                        data=['ANOSIM', 'R', 4, 2, 0.625, 0.345, 999],
+                        name='ANOSIM results')
+        obs = anosim(self.dm_condensed, self.grouping_equal, seed=42)
+        self.assert_series_equal(obs, exp)
+
     def test_no_permutations(self):
         exp = pd.Series(index=self.exp_index,
                         data=['ANOSIM', 'R', 4, 2, 0.625, np.nan, 0],
@@ -111,4 +123,4 @@ class TestANOSIM(TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    main(buffer=False)
