@@ -1157,9 +1157,9 @@ class SymmetricMatrix(PairwiseMatrix):
 class DistanceMatrix(SymmetricMatrix):
     """Store distances between objects.
 
-    A `DistanceMatrix` is a `PairwiseMatrix` with the additional
-    requirement that the matrix data is symmetric. There are additional methods
-    made available that take advantage of this symmetry. The
+    A `DistanceMatrix` is a `SymmetricMatrix` with the additional
+    requirement that the matrix data is hollow. There are additional methods
+    made available that take advantage of this hollowness. The
     :func:`~skbio.stats.distance.PairwiseMatrix.plot` method provides
     convenient built-in plotting functionality.
 
