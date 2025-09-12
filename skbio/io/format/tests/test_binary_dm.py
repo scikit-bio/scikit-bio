@@ -16,17 +16,18 @@ import numpy.testing as npt
 import h5py
 
 from skbio import DistanceMatrix
+from skbio.io import read as io_read
 from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _skbio_mat_to_h5py_mat, _get_header,
                                        _parse_ids, _verify_dimensions,
                                        _bytes_decoder, _passthrough_decoder,
                                        _set_header,
-                                       _vlen_dtype,
                                        _binary_dm_sniffer)
 
 
 class BinaryMatrixTests(unittest.TestCase):
     def setUp(self):
+        _vlen_dtype = h5py.special_dtype(vlen=str)
         self.mat = np.array([[0, 0.1, 0.2],
                              [0.1, 0, 0.3],
                              [0.2, 0.3, 0]])
@@ -60,6 +61,8 @@ class BinaryMatrixTests(unittest.TestCase):
         self.noheader.create_dataset('matrix', data=self.mat)
         self.noheader.close()
 
+        self.rw_fname = os.path.join(self.tempdir.name, 'rw')
+
     def tearDown(self):
         shutil.rmtree(self.tempdir.name)
 
@@ -77,6 +80,11 @@ class BinaryMatrixTests(unittest.TestCase):
                                      h5py.File(self.basic_fname, 'r'))
         self.assertEqual(obs, exp)
 
+    def test_io_h5py_mat_to_skbio_mat(self):
+        exp = DistanceMatrix(self.mat, self.ids)
+        obs = io_read(self.basic_fname,into=DistanceMatrix)
+        self.assertEqual(obs, exp)
+
     def test_skbio_mat_to_h5py_mat(self):
         fh1 = h5py.File('f1', 'a', driver='core', backing_store=False)
 
@@ -85,9 +93,17 @@ class BinaryMatrixTests(unittest.TestCase):
         npt.assert_equal(np.asarray(fh1['order'][:], dtype=str), mat.ids)
         npt.assert_equal(fh1['matrix'], mat.data)
 
+    def test_io_mat_to_h5py_mat(self):
+        mat = DistanceMatrix(self.mat, self.ids)
+        mat.write(self.rw_fname,format='binary_dm')
+        exp = mat
+        obs = io_read(self.rw_fname,into=DistanceMatrix)
+        self.assertEqual(obs, exp)
+
+
     def test_get_header(self):
         self.assertEqual(_get_header(h5py.File(self.basic_fname, 'r')),
-                         {'format': b'BDSM', 'version': b'2020.06'})
+                         {'format': b'BDSM', 'version': b'2020.12'})
         self.assertEqual(_get_header(h5py.File(self.noheader_fname, 'r')),
                          None)
 

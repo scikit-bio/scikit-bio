@@ -762,7 +762,7 @@ class MeTests(TestCase):
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
         ])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # alternative tree
         obs = np.zeros((n, n), dtype=float)
@@ -787,39 +787,39 @@ class MeTests(TestCase):
         _avgdist_matrix(obs, dm, tree, preodr, postodr)
         exp = np.zeros((n, n), dtype=float)
         _avgdist_matrix_naive(exp, dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # make sure all cells are populated
         _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr, postodr)
         np.fill_diagonal(obs, 0)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # incomplete tree
         tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
         _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 1 v2
         tree, preodr, postodr = self.tree1v2, self.preodr1v2, self.postodr1v2
         _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 2 (complete)
         dm, tree, preodr, postodr = self.dm2, self.tree2, self.preodr2, self.postodr2
         n = tree.shape[0]
         _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 3 (incomplete)
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
         n = tree.shape[0]
         _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_matrix(self):
         """Calculate a balanced average distance matrix."""
@@ -835,11 +835,11 @@ class MeTests(TestCase):
             [ 8.  ,  9.  ,  8.5 ,  7.  ,  7.75,  0.  ,  3.  ],
             [ 9.  , 10.  ,  9.5 ,  8.  ,  8.75,  3.  ,  0.  ],
         ])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         _bal_avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr, postodr)
         np.fill_diagonal(obs, 0)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
         n = tree[0, 4] * 2 - 1
@@ -884,7 +884,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         _avgdist_taxon(obs := np.zeros((n, 2)), taxon, dm, tree, preodr, postodr)
         _avgdist_taxon_naive(exp := np.zeros((n, 2)), taxon, dm, tree, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_taxon(self):
         """Calculate taxon-to-subtree balanced average distances."""
@@ -902,7 +902,7 @@ class MeTests(TestCase):
             [0.  , 0.  ],
             [0.  , 0.  ],
         ])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         dm = self.dm3
         taxon = dm.shape[0] - 1
@@ -982,7 +982,7 @@ class MeTests(TestCase):
             exp = np.ascontiguousarray(
                 np.vstack([adm[ran_, tree_[ran_, 2]], adm[ran_, tree_[ran_, 3]]]).T)
 
-            npt.assert_array_almost_equal(obs, exp)
+            npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_insert(self):
         """Update balanced average distance matrix after taxon insertion."""
@@ -1023,7 +1023,7 @@ class MeTests(TestCase):
             [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
             [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
         ])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # another example: all possible insertions
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -1045,7 +1045,7 @@ class MeTests(TestCase):
             _insert_taxon(m, i, tree_, pre_, post_)
             _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
 
-            npt.assert_array_almost_equal(obs, exp)
+            npt.assert_allclose(obs, exp)
 
     def test_ols_lengths(self):
         """Calculate tree branch lengths using an OLS framework."""
@@ -1055,7 +1055,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         _ols_lengths(obs := np.zeros(n), adm, tree)
-        npt.assert_array_almost_equal(obs, self.lens1)
+        npt.assert_allclose(obs, self.lens1)
 
         # Example 2: The output is close but not precisely identical to those in the
         # original tree.
@@ -1066,7 +1066,7 @@ class MeTests(TestCase):
         exp = np.array([
             0.91769, 0.76891, 0.42026875, 0.35793125, 0.04316597, 0.28054444,
             0.03137847, 0.15226875, 0.04148125, 0.12214, 0.14706])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_ols_lengths_d2(self):
         """Calculate tree branch lengths using an OLS framework."""
@@ -1080,7 +1080,7 @@ class MeTests(TestCase):
             np.vstack([adm[ran_, tree[ran_, 2]], adm[ran_, tree[ran_, 3]]]).T)
         _ols_lengths_d2(obs := np.zeros(n), ad2, tree)
         _ols_lengths(exp := np.zeros(n), adm, tree)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 2
         dm, tree, preodr, postodr = self.dm2, self.tree2, self.preodr2, self.postodr2
@@ -1091,7 +1091,7 @@ class MeTests(TestCase):
             np.vstack([adm[ran_, tree[ran_, 2]], adm[ran_, tree[ran_, 3]]]).T)
         _ols_lengths_d2(obs := np.zeros(n), ad2, tree)
         _ols_lengths(exp := np.zeros(n), adm, tree)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_bal_lengths(self):
         """Calculate tree branch lengths using a balanced framework."""
@@ -1101,7 +1101,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         _bal_lengths(obs := np.zeros(n), adm, tree)
-        npt.assert_array_almost_equal(obs, self.lens1)
+        npt.assert_allclose(obs, self.lens1)
 
         # Example 2: Also slightly different from the original branch lengths.
         dm, tree, preodr, postodr = self.dm2, self.tree2, self.preodr2, self.postodr2
@@ -1111,7 +1111,7 @@ class MeTests(TestCase):
         exp = np.array([
             0.92853125, 0.75806875, 0.41086875, 0.36733125, 0.04648125, 0.28469375,
             0.02695625, 0.15393125, 0.03981875, 0.11678125, 0.15241875])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_ols_min_branch_d2(self):
         """Find the branch with minimum length change using an OLS framework."""
@@ -1129,7 +1129,7 @@ class MeTests(TestCase):
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
         # The algorithm omits factor 0.5, therefore we need to x2 here.
-        npt.assert_array_almost_equal(obs, 2 * exp)
+        npt.assert_allclose(obs, 2 * exp)
 
         # Test if result matches that calculated from the entire tree.
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -1153,7 +1153,7 @@ class MeTests(TestCase):
             exp[i] = lens.sum()
         exp[:n - 2] -= exp[0]
 
-        npt.assert_array_almost_equal(obs, exp * 2)
+        npt.assert_allclose(obs, exp * 2)
         self.assertEqual(res, exp[:n - 2].argmin())
 
     def test_bal_min_branch(self):
@@ -1169,7 +1169,7 @@ class MeTests(TestCase):
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
         # The algorithm omits factor 0.25, therefore we need to x4 here.
-        npt.assert_array_almost_equal(obs, 4 * exp)
+        npt.assert_allclose(obs, 4 * exp)
 
         # Test if result matches that calculated from the entire tree.
         dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
@@ -1187,7 +1187,7 @@ class MeTests(TestCase):
             exp[i] = lens.sum()
         exp[:n - 2] -= exp[0]
 
-        npt.assert_array_almost_equal(obs, 4 * exp)
+        npt.assert_allclose(obs, 4 * exp)
         self.assertEqual(res, exp[:n - 2].argmin())
 
     def test_swap_branches(self):
@@ -1253,7 +1253,7 @@ class MeTests(TestCase):
         _postorder(postodr, tree, stack)
         tree[:, 7] = np.argsort(postodr)
         _avgdist_matrix(exp := np.zeros((n, n)), dm, tree, preodr, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 4: all possible swaps
         dm, tree, preodr, postodr = self.dm4, self.tree4, self.preodr4, self.postodr4
@@ -1270,7 +1270,7 @@ class MeTests(TestCase):
                 _postorder(post_, tree_, stack)
                 tree_[:, 7] = np.argsort(post_)
                 _avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
-                npt.assert_array_almost_equal(obs, exp)
+                npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_swap(self):
         """Update balanced average distance matrix after branch swapping."""
@@ -1289,7 +1289,7 @@ class MeTests(TestCase):
         _postorder(postodr, tree, stack)
         tree[:, 7] = np.argsort(postodr)
         _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree, preodr, postodr)
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
         # example 4: all possible swaps
         dm, tree, preodr, postodr = self.dm4, self.tree4, self.preodr4, self.postodr4
@@ -1310,7 +1310,7 @@ class MeTests(TestCase):
                 _postorder(post_, tree_, stack)
                 tree_[:, 7] = np.argsort(post_)
                 _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
-                npt.assert_array_almost_equal(obs, exp)
+                npt.assert_allclose(obs, exp)
 
     def test_init_swaps(self):
         """Initialize branch swapping information."""
@@ -1331,7 +1331,7 @@ class MeTests(TestCase):
         # Nodes 2 and 3 will have length reduction.
         _ols_all_swaps(lens, tree, adm)
         exp = np.array([0, 0, -0.47035, -0.03426528, 0, 0, 0, 0, 0, 0, 0])
-        npt.assert_array_almost_equal(lens, exp)
+        npt.assert_allclose(lens, exp)
 
         # For each of those two branches, perform branch swapping, update average
         # distance matrix, calculate total tree length, and check if the actual
@@ -1368,7 +1368,7 @@ class MeTests(TestCase):
             _ols_all_swaps(exp := np.empty(n), tree_, adm_)
             _ols_corner_swaps(node, heap, obs := lens.copy(), tree_, adm_)
             obs[node] = 0
-            npt.assert_array_almost_equal(obs, exp)
+            npt.assert_allclose(obs, exp)
 
     def test_bal_all_swaps(self):
         """Evaluate possible swaps at all branches of a tree."""
@@ -1384,7 +1384,7 @@ class MeTests(TestCase):
         gains, sides, nodes = _init_swaps(tree)
         _bal_all_swaps(gains, sides, nodes, adm, tree)
         exp = np.array([0, 0.9407, 0.06885, 0])
-        npt.assert_array_almost_equal(gains, exp)
+        npt.assert_allclose(gains, exp)
 
         stack = np.full(n, 0)
         for branch in range(nodes.shape[0]):

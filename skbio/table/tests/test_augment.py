@@ -142,7 +142,7 @@ class AugmentationTests(TestCase):
         matrix = np.array([[2, 5, 3], [3, 6, 1]], dtype=float)
         obs = _normalize_matrix(matrix)
         exp = np.array([[0.2, 0.5, 0.3], [0.3, 0.6, 0.1]])
-        npt.assert_array_almost_equal(obs, exp)
+        npt.assert_allclose(obs, exp)
 
     def test_aitchison_add(self):
         """Test Aitchison addition."""
