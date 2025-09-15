@@ -276,17 +276,19 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         elif keys is not None:
             keys_ = list(keys)
 
+        dm = np.empty((len(iterable),) * 2)
         if validate:
-            dm = np.empty((len(iterable),) * 2)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
                     dm[i, j] = metric(a, b)
             return cls(dm, keys_)  # type: ignore[operator]
         else:
-            dm = np.zeros((len(iterable),) * 2)
+            # This assumes that metric will return a symmetric matrix. That is, that
+            # metric(a, b) is the same as metric(b, a)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
+            np.fill_diagonal(dm, 0)
             return cls(dm, keys_)  # type: ignore[operator]
 
     @property
@@ -1126,7 +1128,7 @@ class SymmetricMatrix(PairwiseMatrix):
         condensed: bool = False,
         seed: Optional["SeedLike"] = None,
     ) -> Union["SymmetricMatrix", np.ndarray]:
-        """Randomly permute both rows and columns in the matrix.
+        r"""Randomly permute both rows and columns in the matrix.
 
         Randomly permutes the ordering of rows and columns in the matrix. The
         same permutation is applied to both rows and columns in order to
