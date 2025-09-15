@@ -63,6 +63,10 @@ class MissingIDError(PairwiseMatrixError):
         self.args = ("The ID '%s' is not in the dissimilarity matrix." % missing_id,)
 
 
+class BaseMatrix(SkbioObject, PlottableMixin):
+    pass
+
+
 class PairwiseMatrix(SkbioObject, PlottableMixin):
     """Store pairwise relationships between objects.
 
@@ -205,7 +209,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if redundant:
             self._data = data_
         else:
-            self._data = squareform(data_)
+            if np.trace(data_) != 0:
+                self._diagonal = np.diag(data_)
+            else:
+                self._diagonal = 0
+            self._data = squareform(data_, checks=False)
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
