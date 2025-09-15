@@ -141,6 +141,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         validate_full = validate
         validate_shape = False
         validate_ids = False
+        self.flags = {}
 
         if isinstance(data, PairwiseMatrix):
             if isinstance(data, self.__class__):
@@ -208,12 +209,14 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         if redundant:
             self._data = data_
+            self.flags["VECTOR"] = False
         else:
             if np.trace(data_) != 0:
                 self._diagonal = np.diag(data_)
             else:
                 self._diagonal = 0
             self._data = squareform(data_, checks=False)
+            self.flags["VECTOR"] = True
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
@@ -288,10 +291,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def data(self) -> np.ndarray:
-        """Array of dissimilarities.
+        """Array of pairwise relationships.
 
-        A square, hollow, two-dimensional ``numpy.ndarray`` of dissimilarities
-        (floats). A copy is *not* returned.
+        A ``numpy.ndarray`` of values (floats). A copy is *not* returned.
 
         Notes
         -----
@@ -304,7 +306,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def ids(self) -> tuple:
         """Tuple of object IDs.
 
-        A tuple of strings, one for each object in the dissimilarity matrix.
+        A tuple of strings, one for each object in the pairwise matrix.
 
         Notes
         -----
@@ -323,35 +325,42 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def dtype(self) -> np.dtype:
-        """Data type of the dissimilarities."""
+        """Data type of the matrix values."""
         return self.data.dtype
 
     @property
     def shape(self) -> tuple:
-        """Two-element tuple containing the dissimilarity matrix dimensions.
+        """Two-element tuple containing the redundant form matrix dimensions.
 
         Notes
         -----
-        As the dissimilarity matrix is guaranteed to be square, both tuple
-        entries will always be equal.
+        As the matrix is guaranteed to be square, both tuple entries will always be
+        equal. The shape of the redundant form matrix is returned.
 
         """
+        if self.flags["VECTOR"]:
+            m = _vec_to_size(len(self.data))
+            return (m, m)
         return self.data.shape
 
     @property
     def size(self) -> int:
-        """Total number of elements in the dissimilarity matrix.
+        """Total number of elements in the redundant form matrix.
 
         Notes
         -----
         Equivalent to ``self.shape[0] * self.shape[1]``.
 
         """
+        if self.flags["VECTOR"]:
+            return self.shape[0] * self.shape[1]
         return self.data.size
 
     @property
     def T(self) -> "PairwiseMatrix":
-        """Transpose of the dissimilarity matrix.
+        """Transpose of the matrix.
+
+        If the matrix is in condensed form, a redundant form matrix will be returned.
 
         See Also
         --------
@@ -361,7 +370,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self.transpose()
 
     def transpose(self) -> "PairwiseMatrix":
-        """Return the transpose of the dissimilarity matrix.
+        """Return the transpose of the matrix.
+
+        If the matrix is in condensed form, a redundant form matrix will be returned.
 
         Notes
         -----
@@ -370,7 +381,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         PairwiseMatrix
-            Transpose of the dissimilarity matrix. Will be the same type as
+            Transpose of the matrix. Will be the same type as
             `self`.
 
         """
@@ -1581,7 +1592,7 @@ def _build_results(
 
 def _vec_to_size(vec_length: int) -> float:
     """Calculate the redundant size of a matrix given its condensed vector."""
-    return (1 + np.sqrt(1 + 8 * vec_length)) / 2
+    return int((1 + np.sqrt(1 + 8 * vec_length)) / 2)
 
 
 # Alias `DissimilarityMatrix` for backward compatibility
