@@ -233,6 +233,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
         diagonal=None,
+        redundant=True,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
 
@@ -286,7 +287,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
                     dm[i, j] = metric(a, b)
-            return cls(dm, keys_)  # type: ignore[operator]
+            return cls(dm, keys_, redundant=redundant)  # type: ignore[operator]
         else:
             # This assumes that metric will return a symmetric matrix. That is, that
             # metric(a, b) is the same as metric(b, a)
@@ -294,7 +295,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
             np.fill_diagonal(dm, 0.0)
-            return cls(dm, keys_)  # type: ignore[operator]
+            return cls(dm, keys_, redundant=redundant)  # type: ignore[operator]
 
     @property
     def data(self) -> np.ndarray:
