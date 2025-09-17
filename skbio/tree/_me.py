@@ -571,7 +571,7 @@ def _bme(dm, parallel=False):
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, preodr, postodr, powers, stack)
+        func(adm, target, adk, tree, postodr, powers, stack)
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)

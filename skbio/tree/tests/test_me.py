@@ -1030,7 +1030,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
-            obs := adm.copy(), target, adk, tree, preodr, postodr, powers, stack
+            obs := adm.copy(), target, adk, tree, postodr, powers, stack
         )
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -1055,7 +1055,7 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                obs := adm.copy(), i, adk, tree, preodr, postodr, powers, stack
+                obs := adm.copy(), i, adk, tree, postodr, powers, stack
             )
 
             # insert taxon and calculate full matrix

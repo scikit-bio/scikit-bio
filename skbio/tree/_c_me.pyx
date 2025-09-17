@@ -821,7 +821,6 @@ def _bal_avgdist_insert(
     Py_ssize_t target,
     floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
     floating[::1] powers,
     Py_ssize_t[::1] stack,
@@ -989,7 +988,6 @@ def _bal_avgdist_insert_p(
     Py_ssize_t target,
     floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
     floating[::1] powers,
     Py_ssize_t[::1] stack,
@@ -1223,7 +1221,7 @@ def _insert_taxon(
     #
     # There might be a chance to re-consider NumPy (or even CuPy) API in the future.
     cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i
-    cdef Py_ssize_t i, k, side, clade_n, pre_i_after, curr
+    cdef Py_ssize_t i, k, side, pre_i_after, curr
 
     # determine tree dimensions
     # typically n = 2 * taxon - 3, but this function doesn't enforce this
@@ -1728,9 +1726,7 @@ def _ols_corner_swaps(
 
     """
     cdef Py_ssize_t m = tree[0, 4] + 1
-    cdef Py_ssize_t i, side
-    cdef floating gain
-    cdef Py_ssize_t left, right, parent, sibling
+    cdef Py_ssize_t i, left, right, parent, sibling
 
     # update four corner branches if they are internal
     # 0: left, 1: right, 2: parent, 3: sibling
