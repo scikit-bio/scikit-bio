@@ -137,11 +137,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
         redundant: bool = True,
+        diagonal=None,
     ) -> None:
         validate_full = validate
         validate_shape = False
         validate_ids = False
-        self.flags = {}
+        self.__flags = {}
 
         if isinstance(data, PairwiseMatrix):
             if isinstance(data, self.__class__):
@@ -209,14 +210,17 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         if redundant:
             self._data = data_
-            self.flags["VECTOR"] = False
+            self.__flags["VECTOR"] = False
         else:
-            if np.trace(data_) != 0:
-                self._diagonal = np.diag(data_)
+            if diagonal is None:
+                if np.trace(data_) != 0:
+                    self._diagonal = np.diag(data_)
+                else:
+                    self._diagonal = 0.0
             else:
-                self._diagonal = 0
+                self._diagonal = diagonal
             self._data = squareform(data_, checks=False)
-            self.flags["VECTOR"] = True
+            self.__flags["VECTOR"] = True
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
@@ -228,6 +232,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
+        diagonal=None,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
 
@@ -288,7 +293,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-            np.fill_diagonal(dm, 0)
+            np.fill_diagonal(dm, self._diagonal)
             return cls(dm, keys_)  # type: ignore[operator]
 
     @property
@@ -340,27 +345,27 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         equal. The shape of the redundant form matrix is returned.
 
         """
-        if self.flags["VECTOR"]:
+        if self.__flags["VECTOR"]:
             m = _vec_to_size(len(self.data))
             return (m, m)
         return self.data.shape
 
     @property
     def size(self) -> int:
-        """Total number of elements in the redundant form matrix.
+        r"""Total number of elements in the redundant form matrix.
 
         Notes
         -----
         Equivalent to ``self.shape[0] * self.shape[1]``.
 
         """
-        if self.flags["VECTOR"]:
+        if self.__flags["VECTOR"]:
             return self.shape[0] * self.shape[1]
         return self.data.size
 
     @property
     def T(self) -> "PairwiseMatrix":
-        """Transpose of the matrix.
+        r"""Transpose of the matrix.
 
         If the matrix is in condensed form, a redundant form matrix will be returned.
 
@@ -372,7 +377,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self.transpose()
 
     def transpose(self) -> "PairwiseMatrix":
-        """Return the transpose of the matrix.
+        r"""Return the transpose of the matrix.
 
         If the matrix is in condensed form, a redundant form matrix will be returned.
 
@@ -383,15 +388,14 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         PairwiseMatrix
-            Transpose of the matrix. Will be the same type as
-            `self`.
+            Transpose of the matrix. Will be the same type as ``self``.
 
         """
         # Note: Skip validation, since we assume self was already validated
         return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
 
     def index(self, lookup_id: str) -> int:
-        """Return the index of the specified ID.
+        r"""Return the index of the specified ID.
 
         Parameters
         ----------
@@ -401,12 +405,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         int
-            Row/column index of `lookup_id`.
+            Row/column index of ``lookup_id``.
 
         Raises
         ------
         MissingIDError
-            If `lookup_id` is not in the dissimilarity matrix.
+            If ``lookup_id`` is not in the dissimilarity matrix.
 
         """
         if lookup_id in self:
@@ -415,15 +419,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise MissingIDError(lookup_id)
 
     def redundant_form(self) -> np.ndarray:
-        """Return an array of dissimilarities in redundant format.
+        r"""Return an array of values in redundant format.
 
-        As this is the native format that the dissimilarities are stored in,
-        this is simply an alias for `data`.
+        As this is the native format that the values are stored in,
+        this is simply an alias for ``data``.
 
         Returns
         -------
         ndarray
-            Two-dimensional ``numpy.ndarray`` of dissimilarities in redundant
+            Two-dimensional ``numpy.ndarray`` of values in redundant
             format.
 
         Notes
@@ -440,13 +444,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self.data
 
     def copy(self) -> "PairwiseMatrix":
-        """Return a deep copy of the dissimilarity matrix.
+        r"""Return a deep copy of the dissimilarity matrix.
 
         Returns
         -------
         PairwiseMatrix
             Deep copy of the dissimilarity matrix. Will be the same type as
-            `self`.
+            ``self``.
 
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -455,15 +459,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
-        """Rename IDs in the dissimilarity matrix.
+        r"""Rename IDs in the dissimilarity matrix.
 
         Parameters
         ----------
         mapper : dict or callable
             A dictionary or function that maps current IDs to new IDs.
         strict : bool, optional
-           If ``True`` (default), every ID in the matrix must be included in
-           ``mapper``. If ``False``, only the specified IDs will be renamed.
+           If True (default), every ID in the matrix must be included in
+           ``mapper``. If False, only the specified IDs will be renamed.
 
         Raises
         ------
@@ -473,8 +477,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         Examples
         --------
-        >>> from skbio import DistanceMatrix
-        >>> dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        >>> from skbio import PairwiseMatrix
+        >>> dm = PairwiseMatrix([[0, 1], [2, 3]], ids=['a', 'b'])
         >>> dm.rename({'a': 'x', 'b': 'y'})
         >>> print(dm.ids)
         ('x', 'y')
@@ -491,7 +495,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self.ids = new_ids
 
     def filter(self, ids: Sequence[str], strict: bool = True) -> "PairwiseMatrix":
-        """Filter the dissimilarity matrix by IDs.
+        r"""Filter the dissimilarity matrix by IDs.
 
         Parameters
         ----------
@@ -499,20 +503,20 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             IDs to retain. May not contain duplicates or be empty. Each ID must
             be present in the dissimilarity matrix.
         strict : bool, optional
-            If `strict` is ``True`` and an ID that is not found in the distance
-            matrix is found in `ids`, a ``MissingIDError`` exception will be
+            If ``strict`` is True and an ID that is not found in the distance
+            matrix is found in ``ids``, a ``MissingIDError`` exception will be
             raised, otherwise the ID will be ignored.
 
         Returns
         -------
         PairwiseMatrix
             Filtered dissimilarity matrix containing only the IDs specified in
-            `ids`. IDs will be in the same order as they appear in `ids`.
+            ``ids``. IDs will be in the same order as they appear in ``ids``.
 
         Raises
         ------
         MissingIDError
-            If an ID in `ids` is not in the object's list of IDs.
+            If an ID in ``ids`` is not in the object's list of IDs.
 
         """
         if tuple(self._ids) == tuple(ids):
@@ -557,11 +561,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return np.array(id_order, dtype=int)
 
     def within(self, ids: Iterable[str]) -> pd.DataFrame:
-        """Obtain all the distances among the set of IDs.
+        r"""Obtain all the distances among the set of IDs.
 
         Parameters
         ----------
-        ids : Iterable of str
+        ids : iterable of str
             The IDs to obtain distances for. All pairs of distances are
             returned such that, if provided ['a', 'b', 'c'], the distances
             for [('a', 'a'), ('a', 'b'), ('a', 'c'), ('b', 'a'), ('b', 'b'),
@@ -982,13 +986,26 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if isinstance(index, str):
-            return self.data[self.index(index)]
+            row_idx = self.index(index)
+            if self.__flags["VECTOR"]:
+                return _get_row_from_condensed(self.data, row_idx, self.shape[0])
+            else:
+                return self.data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
-            return self.data[self.index(index[0]), self.index(index[1])]
+            i, j = self.index(index[0]), self.index(index[1])
+            if self.__flags["VECTOR"]:
+                return _get_element_from_condensed(self.data, i, j, self.shape[0])
+            else:
+                return self.data[i, j]
         else:
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
-            return self.data.__getitem__(index)  # type: ignore[index]
+            # revert to redundant form to handle numpy style indexing
+            if self.__flags["VECTOR"]:
+                redundant_data = squareform(self.data, checks=False)
+                return redundant_data.__getitem__(index)
+            else:
+                return self.data.__getitem__(index)  # type: ignore[index]
 
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
@@ -1477,12 +1494,14 @@ def _preprocess_input(
     """
     if not isinstance(distance_matrix, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
+    # The if statements are redundant here if I keep the modifications I've made to
+    # self.shape, which take advantage of the self.__flags dictionary
     # handle redundant form
-    if distance_matrix.data.ndim == 2:
-        sample_size = distance_matrix.shape[0]
+    # if distance_matrix.data.ndim == 2:
+    sample_size = distance_matrix.shape[0]
     # handle condensed form
-    if distance_matrix.data.ndim == 1:
-        sample_size = _vec_to_size(len(distance_matrix.data))
+    # if distance_matrix.data.ndim == 1:
+    #     sample_size = _vec_to_size(len(distance_matrix.data))
     # print('\n\n\n', sample_size, '\n\n\n')
 
     num_groups, grouping = _preprocess_input_sng(
@@ -1595,6 +1614,88 @@ def _build_results(
 def _vec_to_size(vec_length: int) -> float:
     """Calculate the redundant size of a matrix given its condensed vector."""
     return int((1 + np.sqrt(1 + 8 * vec_length)) / 2)
+
+
+def _condensed_index(i: int, j: int, n: int) -> int:
+    """Get a index for the condensed form from redundant form indices.
+
+    Parameters
+    ----------
+    i, j : int
+        Matrix coordinates.
+    n : int
+        Sample size of the square matrix.
+
+    Returns
+    -------
+    int
+        Index in the condensed form vector.
+    """
+    # can do this because of symmetry
+    if i > j:
+        i, j = j, i
+    return i * n + j - ((i + 2) * (i + 1)) // 2
+
+
+def _get_element_from_condensed(
+    condensed_data: np.ndarray, i: int, j: int, n: int
+) -> float:
+    """Get a single element from condensed storage.
+
+    Parameters
+    ----------
+    condensed_data : np.ndarray
+        1-dimensional vector form of the matrix.
+    i : int
+        Row index
+    j : int
+        Column index
+    n : int
+        Sample size of the square matrix.
+
+    Returns
+    -------
+    float
+        The value at position (i, j)
+    """
+    # need to implement handling for where diagonal is not 0 here
+    if i == j:
+        return 0.0
+
+    condensed_idx = _condensed_index(i, j, n)
+    return condensed_data[condensed_idx]
+
+
+def _get_row_from_condensed(
+    condensed_data: np.ndarray, row_idx: int, n: int
+) -> np.ndarray:
+    """Extract a full row from condensed storage.
+
+    Parameters
+    ----------
+    condensed_data : np.ndarray
+        Condensed vector form of the matrix.
+    row_idx : int
+        Row index of the desired row.
+    n : int
+        Sample size of the square matrix.
+
+    Returns
+    -------
+    np.ndarray
+        The row data for the desired index.
+    """
+    row = np.zeros(n, dtype=condensed_data.dtype)
+
+    # fill in elements before diagonal
+    for j in range(row_idx):
+        row[j] = condensed_data[_condensed_index(j, row_idx, n)]
+
+    # fill in elements after diagonal
+    for j in range(row_idx + 1, n):
+        row[j] = condensed_data[_condensed_index(row_idx, j, n)]
+
+    return row
 
 
 # Alias `DissimilarityMatrix` for backward compatibility
