@@ -816,7 +816,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
-        heatmap = ax.pcolormesh(self._data, cmap=cmap)
+        if self.__flags["VECTOR"]:
+            data = squareform(self._data)
+        else:
+            data = self._data
+        heatmap = ax.pcolormesh(data, cmap=cmap)
         fig.colorbar(heatmap)
 
         # center labels within each cell
