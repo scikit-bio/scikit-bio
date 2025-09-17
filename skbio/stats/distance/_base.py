@@ -293,7 +293,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-            np.fill_diagonal(dm, self._diagonal)
+            np.fill_diagonal(dm, 0.0)
             return cls(dm, keys_)  # type: ignore[operator]
 
     @property
@@ -326,14 +326,14 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     @ids.setter
     def ids(self, ids_: Sequence[str]) -> None:
         ids_ = tuple(ids_)
-        self._validate_ids(self.data, ids_)
+        self._validate_ids(self._data, ids_)
         self._ids = ids_
         self._id_index = self._index_list(self._ids)
 
     @property
     def dtype(self) -> np.dtype:
         """Data type of the matrix values."""
-        return self.data.dtype
+        return self._data.dtype
 
     @property
     def shape(self) -> tuple:
@@ -346,9 +346,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if self.__flags["VECTOR"]:
-            m = _vec_to_size(len(self.data))
+            m = _vec_to_size(len(self._data))
             return (m, m)
-        return self.data.shape
+        return self._data.shape
 
     @property
     def size(self) -> int:
@@ -361,7 +361,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if self.__flags["VECTOR"]:
             return self.shape[0] * self.shape[1]
-        return self.data.size
+        return self._data.size
 
     @property
     def T(self) -> "PairwiseMatrix":
@@ -392,7 +392,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.T.copy(), deepcopy(self.ids), validate=False)
+        return self.__class__(self._data.T.copy(), deepcopy(self.ids), validate=False)
 
     def index(self, lookup_id: str) -> int:
         r"""Return the index of the specified ID.
@@ -441,7 +441,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return self.data
+        return self._data
 
     def copy(self) -> "PairwiseMatrix":
         r"""Return a deep copy of the dissimilarity matrix.
@@ -456,7 +456,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self.data.copy(), deepcopy(self.ids), validate=False)
+        return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
         r"""Rename IDs in the dissimilarity matrix.
@@ -477,7 +477,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         Examples
         --------
-        >>> from skbio import PairwiseMatrix
+        >>> from skbio.stats.distance import PairwiseMatrix
         >>> dm = PairwiseMatrix([[0, 1], [2, 3]], ids=['a', 'b'])
         >>> dm.rename({'a': 'x', 'b': 'y'})
         >>> print(dm.ids)
@@ -727,12 +727,43 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # included here so that np.hstack works in the event that either i_ids
         # or j_ids is empty.
         values = [np.array([])]
-        for i_idx in i_indices:
-            i.extend([self.ids[i_idx]] * j_length)
-            j.extend(j_labels)
+        if self.__flags["VECTOR"]:
+            # don't know if this line is needed
+            diagonal_val = getattr(self, "_diagonal", 0.0)
+            n = self.shape[0]
 
-            subset = self._data[i_idx, j_indices]
-            values.append(subset)
+            # precompute to avoid repeated calculations
+            condensed_indices = {}
+            for i_idx in i_indices:
+                for j_idx in j_indices:
+                    if i_idx == j_idx:
+                        continue
+                    key = (min(i_idx, j_idx), max(i_idx, j_idx))
+                    if key not in condensed_indices:
+                        condensed_indices[key] = _condensed_index(key[0], key[1], n)
+
+            for i_idx in i_indices:
+                i.extend([self.ids[i_idx]] * j_length)
+                j.extend(j_labels)
+                subset_values = np.zeros(j_length, dtype=self._data.dtype)
+                for idx, j_idx in enumerate(j_indices):
+                    if i_idx == j_idx:
+                        if np.isscalar(diagonal_val):
+                            subset_values[idx] = diagonal_val
+                        else:
+                            subset_values[idx] = diagonal_val[i_idx]
+                    else:
+                        key = (min(i_idx, j_idx), max(i_idx, j_idx))
+                        subset_values[idx] = self._data[condensed_indices[key]]
+                values.append(subset_values)
+        # redundant form
+        else:
+            for i_idx in i_indices:
+                i.extend([self.ids[i_idx]] * j_length)
+                j.extend(j_labels)
+
+                subset = self._data[i_idx, j_indices]
+                values.append(subset)
 
         i = pd.Series(i, name="i", dtype=str)
         j = pd.Series(j, name="j", dtype=str)
@@ -785,7 +816,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
-        heatmap = ax.pcolormesh(self.data, cmap=cmap)
+        heatmap = ax.pcolormesh(self._data, cmap=cmap)
         fig.colorbar(heatmap)
 
         # center labels within each cell
@@ -831,7 +862,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         c  2.0  3.0  0.0
 
         """
-        return pd.DataFrame(data=self.data, index=self.ids, columns=self.ids)
+        return pd.DataFrame(data=self._data, index=self.ids, columns=self.ids)
 
     def __str__(self) -> str:
         """Return a string representation of the dissimilarity matrix.
@@ -850,7 +881,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             self.shape[1],
             self._matrix_element_name,
             _pprint_strs(self.ids),
-        ) + str(self.data)
+        ) + str(self._data)
 
     def __eq__(self, other: object) -> bool:
         """Compare this dissimilarity matrix to another for equality.
@@ -888,7 +919,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                 equal = False
             elif self.ids != other.ids:
                 equal = False
-            elif not np.array_equal(self.data, other.data):
+            elif not np.array_equal(self._data, other.data):
                 equal = False
         except AttributeError:
             equal = False
@@ -988,24 +1019,24 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if isinstance(index, str):
             row_idx = self.index(index)
             if self.__flags["VECTOR"]:
-                return _get_row_from_condensed(self.data, row_idx, self.shape[0])
+                return _get_row_from_condensed(self._data, row_idx, self.shape[0])
             else:
-                return self.data[row_idx]
+                return self._data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
             i, j = self.index(index[0]), self.index(index[1])
             if self.__flags["VECTOR"]:
-                return _get_element_from_condensed(self.data, i, j, self.shape[0])
+                return _get_element_from_condensed(self._data, i, j, self.shape[0])
             else:
-                return self.data[i, j]
+                return self._data[i, j]
         else:
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
             # revert to redundant form to handle numpy style indexing
             if self.__flags["VECTOR"]:
-                redundant_data = squareform(self.data, checks=False)
+                redundant_data = squareform(self._data, checks=False)
                 return redundant_data.__getitem__(index)
             else:
-                return self.data.__getitem__(index)  # type: ignore[index]
+                return self._data.__getitem__(index)  # type: ignore[index]
 
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
@@ -1274,8 +1305,8 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # should probably raise a warning, but doing this for now to test things out
-        if self.data.ndim == 1:
-            return self.data
+        if self._data.ndim == 1:
+            return self._data
         else:
             return squareform(self._data, force="tovector", checks=False)
 
