@@ -39,9 +39,12 @@ from skbio.util._testing import assert_series_almost_equal
 class PairwiseMatrixTestData:
     def setUp(self):
         self.dm_1x1_data = [[0.0]]
-        self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
-        self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
-        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
+        self.dm_2x2_data = [[0.0, 0.123],
+                            [0.123, 0.0]]
+        self.dm_2x2_asym_data = [[0.0, 1.0],
+                                 [-2.0, 0.0]]
+        self.dm_3x3_data = [[0.0, 0.01, 4.2],
+                            [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
         self.dm_5x5_data = [[0, 1, 2, 3, 4],
                             [5, 0, 6, 7, 8],
@@ -756,7 +759,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
         self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], redundant=False)
         self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
-        self.dm_3x3_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
+        self.dm_3x3_cond = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'], redundant=False)
 
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3, self.dm_1x1_cond, self.dm_2x2_cond, self.dm_3x3_cond]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
@@ -1113,6 +1116,28 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         # times.
         self.assertEqual(self.dm_3x3, dm_copy)
 
+    def test_permute_condensed_on_condensed(self):
+        # Can't really permute a 1x1 or 2x2...
+        for _ in range(2):
+            obs = self.dm_1x1_cond.permute(condensed=True)
+            npt.assert_equal(obs, np.array([]))
+
+        for _ in range(2):
+            obs = self.dm_2x2_cond.permute(condensed=True)
+            npt.assert_equal(obs, np.array([0.123]))
+
+        dm_copy = self.dm_3x3_cond.copy()
+
+        obs = self.dm_3x3_cond.permute(condensed=True, seed=3)
+        npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
+
+        obs = self.dm_3x3_cond.permute(condensed=True, seed=2)
+        npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
+
+        # Ensure dm hasn't changed after calling permute() on it a couple of
+        # times.
+        self.assertEqual(self.dm_3x3_cond, dm_copy)
+
     def test_permute_not_condensed(self):
         obs = self.dm_1x1.permute()
         self.assertEqual(obs, self.dm_1x1)
@@ -1134,6 +1159,28 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         obs = self.dm_3x3.permute(seed=2)
         self.assertEqual(obs, exp)
 
+    def test_permute_not_condensed_on_condensed(self):
+        obs = self.dm_1x1_cond.permute(old_output=False)
+        self.assertEqual(obs, self.dm_1x1_cond)
+        self.assertFalse(obs is self.dm_1x1_cond)
+
+        obs = self.dm_2x2_cond.permute()
+        self.assertEqual(obs, self.dm_2x2_cond)
+        self.assertFalse(obs is self.dm_2x2_cond)
+
+        exp = self.matobj([[0, 12, 4.2],
+                           [12, 0, 0.01],
+                           [4.2, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+        obs = self.dm_3x3_cond.permute(seed=3)
+        self.assertEqual(obs, exp)
+
+        exp = self.matobj([[0, 4.2, 12],
+                           [4.2, 0, 0.01],
+                           [12, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+        obs = self.dm_3x3_cond.permute(seed=2)
+        self.assertEqual(obs, exp)
+
+    # TODO: need to test this with SymmetricMatrix vs DistanceMatrix for condensed form
     def test_eq(self):
         # Compare DistanceMatrix to PairwiseMatrix, where both have the
         # same data and IDs.
@@ -1147,8 +1194,20 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = pd.Series([], index=[], dtype='float64')
         assert_series_almost_equal(series, exp)
 
+    def test_to_series_1x1_condensed(self):
+        series = self.dm_1x1_cond.to_series()
+
+        exp = pd.Series([], index=[], dtype='float64')
+        assert_series_almost_equal(series, exp)
+
     def test_to_series_2x2(self):
         series = self.dm_2x2.to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('a', 'b')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_2x2_condensed(self):
+        series = self.dm_2x2_cond.to_series()
 
         exp = pd.Series([0.123], index=pd.Index([('a', 'b')]))
         assert_series_almost_equal(series, exp)
@@ -1167,8 +1226,28 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
                                         ('b', 'c'), ('b', 'd'), ('c', 'd')]))
         assert_series_almost_equal(series, exp)
 
+    def test_to_series_4x4_condensed(self):
+        dm = self.matobj([
+            [0.0, 0.2, 0.3, 0.4],
+            [0.2, 0.0, 0.5, 0.6],
+            [0.3, 0.5, 0.0, 0.7],
+            [0.4, 0.6, 0.7, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+
+        series = dm.to_series()
+
+        exp = pd.Series([0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+                        index=pd.Index([('a', 'b'), ('a', 'c'), ('a', 'd'),
+                                        ('b', 'c'), ('b', 'd'), ('c', 'd')]))
+        assert_series_almost_equal(series, exp)
+
     def test_to_series_default_ids(self):
         series = self.matobj(self.dm_2x2_data).to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_default_ids_condensed(self):
+        series = self.matobj(self.dm_2x2_data, redundant=False).to_series()
 
         exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
         assert_series_almost_equal(series, exp)
@@ -1188,6 +1267,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(data_good)
+        self.dm_3x3_cond._validate_shape(data_good)
         del data_good
 
         # _validate_shap checks just the shape, not the content
@@ -1204,6 +1284,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(data_hollow, False)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
+        self.dm_3x3_cond._validate_shape(bad_data)
         del bad_data
 
         # re-try with partially bad data
@@ -1220,6 +1301,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
+        self.dm_3x3_cond._validate_shape(bad_data)
         del bad_data
     
     def test_rename(self):
@@ -1246,6 +1328,34 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
         # Test that renaming with strict=True raises an error if not all IDs are included
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_dict = {'a': 'x'}  # Missing 'b'
+        with self.assertRaises(ValueError):
+            dm.rename(rename_dict, strict=True)
+
+    def test_rename_condensed(self):
+        # Test successful renaming with a dictionary in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_dict = {'a': 'x', 'b': 'y'}
+        dm.rename(rename_dict)
+        exp = ('x', 'y')
+        self.assertEqual(dm.ids, exp)
+
+        # Test successful renaming with a function in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_func = lambda x: x + '_1'
+        dm.rename(rename_func)
+        exp = ('a_1', 'b_1')
+        self.assertEqual(dm.ids, exp)
+
+        # Test renaming in non-strict mode where one ID is not included in the dictionary
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_dict = {'a': 'x'}  # 'b' will retain its original ID
+        dm.rename(rename_dict, strict=False)
+        exp = ('x', 'b')
+        self.assertEqual(dm.ids, exp)
+
+        # Test that renaming with strict=True raises an error if not all IDs are included
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
         rename_dict = {'a': 'x'}  # Missing 'b'
         with self.assertRaises(ValueError):
             dm.rename(rename_dict, strict=True)

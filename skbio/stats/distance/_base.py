@@ -347,7 +347,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if self._flags["VECTOR"]:
-            m = _vec_to_size(len(self._data))
+            m = _vec_to_size(self._data)
             return (m, m)
         return self._data.shape
 
@@ -361,7 +361,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if self._flags["VECTOR"]:
-            return self.shape[0] * self.shape[1]
+            return self.shape[0] ** 2
         return self._data.size
 
     @property
@@ -457,7 +457,21 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        # Note: Skip validation, since we assume self was already validated
+        if self._flags["VECTOR"]:
+            new_instance = self.__class__(
+                self._data.copy(), deepcopy(self.ids), validate=False, redundant=False
+            )
+            if hasattr(self, "_diagonal"):
+                if np.isscalar(self._diagonal):
+                    new_instance._diagonal = self._diagonal
+                else:
+                    new_instance._diagonal = self._diagonal.copy()
+            return new_instance
+        else:
+            return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
         r"""Rename IDs in the dissimilarity matrix.
@@ -1076,12 +1090,23 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             )
         if 0 == len(ids):
             raise PairwiseMatrixError("IDs must be at least 1 in size.")
-        if len(ids) != data.shape[0]:
-            raise PairwiseMatrixError(
-                "The number of IDs (%d) must match "
-                "the number of rows/columns in the "
-                "data (%d)." % (len(ids), data.shape[0])
-            )
+        # handle condensed form data
+        if data.ndim == 1:
+            n = _vec_to_size(data)
+            if len(ids) != n:
+                raise PairwiseMatrixError(
+                    "The number of IDs (%d) must match "
+                    "the number of rows/columns in the "
+                    "data (%d)." % (len(ids), n)
+                )
+        # handle redundant form data
+        else:
+            if len(ids) != data.shape[0]:
+                raise PairwiseMatrixError(
+                    "The number of IDs (%d) must match "
+                    "the number of rows/columns in the "
+                    "data (%d)." % (len(ids), data.shape[0])
+                )
 
     def _validate_shape(self, data: np.ndarray) -> None:
         """Validate the data array shape.
@@ -1187,6 +1212,7 @@ class SymmetricMatrix(PairwiseMatrix):
         self,
         condensed: bool = False,
         seed: Optional["SeedLike"] = None,
+        old_output=True,
     ) -> Union["SymmetricMatrix", np.ndarray]:
         r"""Randomly permute both rows and columns in the matrix.
 
@@ -1240,9 +1266,12 @@ class SymmetricMatrix(PairwiseMatrix):
             # Note: Skip validation, since we assume self was already validated
             if self._flags["VECTOR"]:
                 permuted = distmat_reorder_condensed_python(self._data, order)
+                return self.__class__(
+                    permuted, self.ids, validate=False, redundant=False
+                )
             else:
                 permuted = distmat_reorder(self._data, order)
-            return self.__class__(permuted, self.ids, validate=False)
+                return self.__class__(permuted, self.ids, validate=False)
 
 
 class DistanceMatrix(SymmetricMatrix):
@@ -1550,7 +1579,7 @@ def _preprocess_input(
     sample_size = distance_matrix.shape[0]
     # handle condensed form
     # if distance_matrix.data.ndim == 1:
-    #     sample_size = _vec_to_size(len(distance_matrix.data))
+    #     sample_size = _vec_to_size(distance_matrix.data)
     # print('\n\n\n', sample_size, '\n\n\n')
 
     num_groups, grouping = _preprocess_input_sng(
@@ -1660,9 +1689,9 @@ def _build_results(
     )
 
 
-def _vec_to_size(vec_length: int) -> float:
+def _vec_to_size(vec: int) -> float:
     """Calculate the redundant size of a matrix given its condensed vector."""
-    return int((1 + np.sqrt(1 + 8 * vec_length)) / 2)
+    return int((1 + np.sqrt(1 + 8 * len(vec))) / 2)
 
 
 def _condensed_index(i: int, j: int, n: int) -> int:
@@ -1701,7 +1730,7 @@ def distmat_reorder_condensed_python(in_mat, reorder_vec):
     np.ndarray
         Condensed matrix.
     """
-    n_original = _vec_to_size(len(in_mat))
+    n_original = _vec_to_size(in_mat)
     n_filtered = len(reorder_vec)
 
     out_size = n_filtered * (n_filtered - 1) // 2
