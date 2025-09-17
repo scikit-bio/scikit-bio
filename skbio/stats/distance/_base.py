@@ -142,7 +142,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         validate_full = validate
         validate_shape = False
         validate_ids = False
-        self.__flags = {}
+        self._flags = {}
 
         if isinstance(data, PairwiseMatrix):
             if isinstance(data, self.__class__):
@@ -210,7 +210,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         if redundant:
             self._data = data_
-            self.__flags["VECTOR"] = False
+            self._flags["VECTOR"] = False
         else:
             if diagonal is None:
                 if np.trace(data_) != 0:
@@ -220,7 +220,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             else:
                 self._diagonal = diagonal
             self._data = squareform(data_, checks=False)
-            self.__flags["VECTOR"] = True
+            self._flags["VECTOR"] = True
         self._ids = ids
         self._id_index = self._index_list(self._ids)
 
@@ -345,7 +345,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         equal. The shape of the redundant form matrix is returned.
 
         """
-        if self.__flags["VECTOR"]:
+        if self._flags["VECTOR"]:
             m = _vec_to_size(len(self._data))
             return (m, m)
         return self._data.shape
@@ -359,7 +359,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Equivalent to ``self.shape[0] * self.shape[1]``.
 
         """
-        if self.__flags["VECTOR"]:
+        if self._flags["VECTOR"]:
             return self.shape[0] * self.shape[1]
         return self._data.size
 
@@ -421,9 +421,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def redundant_form(self) -> np.ndarray:
         r"""Return an array of values in redundant format.
 
-        As this is the native format that the values are stored in,
-        this is simply an alias for ``data``.
-
         Returns
         -------
         ndarray
@@ -441,7 +438,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        return self._data
+        if self._flags["VECTOR"]:
+            return squareform(self._data, force="tomatrix", checks=False)
+        else:
+            return self._data
 
     def copy(self) -> "PairwiseMatrix":
         r"""Return a deep copy of the dissimilarity matrix.
@@ -494,7 +494,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             new_ids = tuple(mapper(x) for x in self.ids)
         self.ids = new_ids
 
-    def filter(self, ids: Sequence[str], strict: bool = True) -> "PairwiseMatrix":
+    def filter(
+        self, ids: Sequence[str], strict: bool = True, preserve_condensed=True
+    ) -> "PairwiseMatrix":
         r"""Filter the dissimilarity matrix by IDs.
 
         Parameters
@@ -539,9 +541,16 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
-        filtered_data = distmat_reorder(self._data, idxs)
-        self._validate_ids(filtered_data, ids)
-        return self.__class__(filtered_data, ids, validate=False)
+        if self._flags["VECTOR"] and preserve_condensed:
+            filtered_data = distmat_reorder_condensed_python(
+                self.condensed_form(), idxs
+            )
+            self._validate_ids(filtered_data, ids)
+            return self.__class__(filtered_data, ids, validate=False, redundant=False)
+        else:
+            filtered_data = distmat_reorder(self.redundant_form(), idxs)
+            self._validate_ids(filtered_data, ids)
+            return self.__class__(filtered_data, ids, validate=False)
 
     def _stable_order(self, ids: Iterable[str]) -> np.ndarray:
         """Obtain a stable ID order with respect to self.
@@ -727,7 +736,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # included here so that np.hstack works in the event that either i_ids
         # or j_ids is empty.
         values = [np.array([])]
-        if self.__flags["VECTOR"]:
+        if self._flags["VECTOR"]:
             # don't know if this line is needed
             diagonal_val = getattr(self, "_diagonal", 0.0)
             n = self.shape[0]
@@ -816,11 +825,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
-        if self.__flags["VECTOR"]:
-            data = squareform(self._data)
-        else:
-            data = self._data
-        heatmap = ax.pcolormesh(data, cmap=cmap)
+        heatmap = ax.pcolormesh(self.redundant_form(), cmap=cmap)
         fig.colorbar(heatmap)
 
         # center labels within each cell
@@ -866,7 +871,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         c  2.0  3.0  0.0
 
         """
-        return pd.DataFrame(data=self._data, index=self.ids, columns=self.ids)
+        return pd.DataFrame(
+            data=self.redundant_form(), index=self.ids, columns=self.ids
+        )
 
     def __str__(self) -> str:
         """Return a string representation of the dissimilarity matrix.
@@ -1022,13 +1029,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if isinstance(index, str):
             row_idx = self.index(index)
-            if self.__flags["VECTOR"]:
+            if self._flags["VECTOR"]:
                 return _get_row_from_condensed(self._data, row_idx, self.shape[0])
             else:
                 return self._data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
             i, j = self.index(index[0]), self.index(index[1])
-            if self.__flags["VECTOR"]:
+            if self._flags["VECTOR"]:
                 return _get_element_from_condensed(self._data, i, j, self.shape[0])
             else:
                 return self._data[i, j]
@@ -1036,7 +1043,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
             # revert to redundant form to handle numpy style indexing
-            if self.__flags["VECTOR"]:
+            if self._flags["VECTOR"]:
                 redundant_data = squareform(self._data, checks=False)
                 return redundant_data.__getitem__(index)
             else:
@@ -1309,7 +1316,7 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # should probably raise a warning, but doing this for now to test things out
-        if self._data.ndim == 1:
+        if self._flags["VECTOR"]:
             return self._data
         else:
             return squareform(self._data, force="tovector", checks=False)
@@ -1530,7 +1537,7 @@ def _preprocess_input(
     if not isinstance(distance_matrix, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
     # The if statements are redundant here if I keep the modifications I've made to
-    # self.shape, which take advantage of the self.__flags dictionary
+    # self.shape, which take advantage of the self._flags dictionary
     # handle redundant form
     # if distance_matrix.data.ndim == 2:
     sample_size = distance_matrix.shape[0]
@@ -1670,6 +1677,41 @@ def _condensed_index(i: int, j: int, n: int) -> int:
     if i > j:
         i, j = j, i
     return i * n + j - ((i + 2) * (i + 1)) // 2
+
+
+def distmat_reorder_condensed_python(in_mat, reorder_vec):
+    """Pure Python implementation of distmat_reorder for condensed matrices.
+
+    Parameters
+    ----------
+    in_mat : np.ndarray
+        1D condensed form of the matrix.
+    reorder_vec : np.ndarray
+        1D list of permutation indexes
+
+    Returns
+    -------
+    np.ndarray
+        Condensed matrix.
+    """
+    n_original = _vec_to_size(len(in_mat))
+    n_filtered = len(reorder_vec)
+
+    out_size = n_filtered * (n_filtered - 1) // 2
+    if out_size == 0:
+        return np.array([], dtype=in_mat.dtype)
+
+    old_indices = np.zeros(out_size, dtype=np.intp)
+    out_idx = 0
+
+    for i in range(n_filtered - 1):
+        for j in range(i + 1, n_filtered):
+            old_i, old_j = reorder_vec[i], reorder_vec[j]
+            condensed_idx = _condensed_index(old_i, old_j, n_original)
+            old_indices[out_idx] = condensed_idx
+            out_idx += 1
+
+    return in_mat[old_indices]
 
 
 def _get_element_from_condensed(
