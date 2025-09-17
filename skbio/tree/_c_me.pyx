@@ -7,12 +7,7 @@
 # ----------------------------------------------------------------------------
 
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
-# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
-cimport cython
-import numpy as np
-cimport numpy as cnp
-cnp.import_array()
 from cython cimport floating
 from cython.parallel import prange
 from heapq import heappush
