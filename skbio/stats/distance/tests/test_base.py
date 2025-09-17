@@ -754,8 +754,11 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
         self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], redundant=False)
+        self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
+        self.dm_3x3_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
 
-        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3, self.dm_1x1_cond, self.dm_2x2_cond, self.dm_3x3_cond]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
                                    np.array([0.01, 4.2, 12.0])]
 
@@ -765,6 +768,14 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
                            [1, 0, 3],
                            [2, 3, 0]], ['0', '1', '2'])
         res = self.matobj(data)
+        self.assertEqual(exp, res)
+
+    def test_init_from_condensed_to_condensed(self):
+        data = [1, 2, 3]
+        exp = self.matobj([[0, 1, 2],
+                           [1, 0, 3],
+                           [2, 3, 0]], ['0', '1', '2'], redundant=False)
+        res = self.matobj(data, redundant=False)
         self.assertEqual(exp, res)
 
     def test_init_invalid_input(self):
@@ -782,9 +793,28 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.matobj([[1, 2, 3]], ['a'])
 
+    def test_init_invalid_input_condensed(self):
+        # Asymmetric.
+        data = [[0.0, 2.0], [1.0, 0.0]]
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj(data, ['a', 'b'], redundant=False)
+
+        # Non-hollow
+        data = [[1.0, 2.0], [2.0, 1.0]]
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj(data, ['a', 'b'], redundant=False)
+
+        # Ensure that the superclass validation is still being performed.
+        with self.assertRaises(PairwiseMatrixError):
+            self.matobj([[1, 2, 3]], ['a'], redundant=False)
+
     def test_init_nans(self):
         with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
             self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
+
+    def test_init_nans_condensed(self):
+        with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
+            self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'], redundant=False)
 
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
@@ -793,6 +823,16 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
                            [3, 2, 1, 0]])
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a))
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_no_key_condensed(self):
+        iterable = (x for x in range(4))
+
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], redundant=False)
         res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a))
         self.assertEqual(res, exp)
 

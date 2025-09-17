@@ -1230,11 +1230,17 @@ class SymmetricMatrix(PairwiseMatrix):
         if condensed:
             if self.__class__ != DistanceMatrix:
                 raise TypeError("Only distance matrices can return condensed.")
-            permuted_condensed = distmat_reorder_condensed(self._data, order)
+            if self._flags["VECTOR"]:
+                permuted_condensed = distmat_reorder_condensed_python(self._data, order)
+            else:
+                permuted_condensed = distmat_reorder_condensed(self._data, order)
             return permuted_condensed
         else:
             # Note: Skip validation, since we assume self was already validated
-            permuted = distmat_reorder(self._data, order)
+            if self._flags["VECTOR"]:
+                permuted = distmat_reorder_condensed_python(self._data, order)
+            else:
+                permuted = distmat_reorder(self._data, order)
             return self.__class__(permuted, self.ids, validate=False)
 
 
