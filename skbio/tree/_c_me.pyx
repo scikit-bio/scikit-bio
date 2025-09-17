@@ -1028,7 +1028,8 @@ def _bal_avgdist_insert_p(
 
         # Iterate over all nodes but the root.
         for i in prange(
-            n - 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // n)
+            n - 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // n),
+            use_threads_if=n > 2
         ):
             a = postodr[i]
 
@@ -1076,7 +1077,8 @@ def _bal_avgdist_insert_p(
     ii = tree[target, 7]
     ops = tree[target, 4] * 2 - 1
     for i in prange(
-        ii - ops + 1, ii, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops)
+        ii - ops + 1, ii, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops),
+        use_threads_if=ops > 2
     ):
         a = postodr[i]
 
@@ -1133,7 +1135,8 @@ def _bal_avgdist_insert_p(
         ii = tree[cousin, 7]
         ops = tree[cousin, 4] * 2 - 1
         for i in prange(
-            ii - ops + 1, ii + 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops)
+            ii - ops + 1, ii + 1, nogil=True, schedule="dynamic", chunksize=max(1, CHUNKSIZE // ops),
+            use_threads_if=ops > 1
         ):
             a = postodr[i]
 
