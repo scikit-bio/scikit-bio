@@ -1392,10 +1392,7 @@ def _bal_avgdist_insert_guided(
         adm[0, link] = adm[link, 0] = 0.5 * (adm[a1, 0] + adm[a2, 0])
 
         # Iterate over all nodes but the root.
-        # for i in prange(n - 1, nogil=True, schedule="guided"):
-        for i in prange(
-            n - 1, nogil=True, schedule="guided", use_threads_if=n > MINCLADE + 1
-        ):
+        for i in prange(n - 1, nogil=True, schedule="guided"):
             a = postodr[i]
 
             # Transfer distances between the node (lower) and k.
@@ -1441,10 +1438,7 @@ def _bal_avgdist_insert_guided(
     # Locate the clade below target (excluding target)
     ii = tree[target, 7]
     ops = tree[target, 4] * 2 - 1
-    # for i in prange(ii - ops + 1, ii, nogil=True, schedule="guided"):
-    for i in prange(
-        ii - ops + 1, ii, nogil=True, schedule="guided", use_threads_if=ops > MINCLADE + 1
-    ):
+    for i in prange(ii - ops + 1, ii, nogil=True, schedule="guided"):
         a = postodr[i]
 
         # Transfer pre-calculated distance between k (lower) and any node within the
@@ -1499,10 +1493,7 @@ def _bal_avgdist_insert_guided(
         cousin = tree[curr, 3]
         ii = tree[cousin, 7]
         ops = tree[cousin, 4] * 2 - 1
-        # for i in prange(ii - ops + 1, ii + 1, nogil=True, schedule="guided"):
-        for i in prange(
-            ii - ops + 1, ii + 1, nogil=True, schedule="guided", use_threads_if=ops > MINCLADE
-        ):
+        for i in prange(ii - ops + 1, ii + 1, nogil=True, schedule="guided"):
             a = postodr[i]
 
             # Transfer the pre-calculated distances between k and each descendant
