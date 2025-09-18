@@ -509,7 +509,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=None):
+def _bme(dm, parallel=None, chunksize=10000, minclade=100):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -537,16 +537,16 @@ def _bme(dm, parallel=None):
     """
     dtype = dm.dtype
 
-    if parallel is None:
+    if parallel is False:
         func = _bal_avgdist_insert
-    elif parallel == "dynamic":
-        func = _bal_avgdist_insert_dynamic
-    elif parallel == "dynamic_use":
-        func = _bal_avgdist_insert_dynamic_use
-    elif parallel == "guided":
-        func = _bal_avgdist_insert_guided
-    elif parallel == "guided_use":
-        func = _bal_avgdist_insert_guided_use
+    elif chunksize:
+        func = (
+            _bal_avgdist_insert_dynamic_use if minclade else _bal_avgdist_insert_dynamic
+        )
+    else:
+        func = (
+            _bal_avgdist_insert_guided_use if minclade else _bal_avgdist_insert_guided
+        )
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
@@ -584,7 +584,7 @@ def _bme(dm, parallel=None):
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack)
+        func(adm, target, adk, tree, postodr, powers, stack, chunksize, minclade)
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
