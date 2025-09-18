@@ -31,7 +31,10 @@ from ._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
-    _bal_avgdist_insert_p,
+    _bal_avgdist_insert_dynamic,
+    _bal_avgdist_insert_dynamic_use,
+    _bal_avgdist_insert_guided,
+    _bal_avgdist_insert_guided_use,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 
@@ -506,7 +509,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=False):
+def _bme(dm, parallel=None):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -533,7 +536,17 @@ def _bme(dm, parallel=False):
 
     """
     dtype = dm.dtype
-    func = _bal_avgdist_insert_p if parallel else _bal_avgdist_insert
+
+    if parallel is None:
+        func = _bal_avgdist_insert
+    elif parallel == "dynamic":
+        func = _bal_avgdist_insert_dynamic
+    elif parallel == "dynamic_use":
+        func = _bal_avgdist_insert_dynamic_use
+    elif parallel == "guided":
+        func = _bal_avgdist_insert_guided
+    elif parallel == "guided_use":
+        func = _bal_avgdist_insert_guided_use
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
