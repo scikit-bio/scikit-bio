@@ -10,25 +10,35 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from scipy.optimize import minimize
-from statsmodels.stats.multitest import multipletests
+from patsy import dmatrix
+from skbio.table._tabular import _ingest_table
+from skbio.stats.composition import (
+    _check_composition,
+    _check_metadata,
+    _check_p_adjust,
+    _type_cast_to_float,
+)
 
 
-def _est_params(data, dmat):
-    """Estimate parameters.
+def _estimate_params(data, dmat):
+    """Estimate initial model parameters.
+
+    Perform initial estimation of model parameters (coefficients, variances and
+    residuals) based on the observed data prior to bias correction.
 
     Parameters
     ----------
     data : ndarray of shape (n_samples, n_features)
-        Data table. Zero-handled. Log-transformed.
+        Data table. Must be zero-handled and log-transformed.
     dmat : ndarray of shape (n_samples, n_covariates)
         Design matrix.
 
     Returns
     -------
     var_hat : ndarray of shape (n_features, n_covariates)
-        Estimated variances.
-    beta_hat : ndarray of shape (n_features, n_covariates)
-        Estimated coefficients.
+        Estimated variances of regression coefficients.
+    beta : ndarray of shape (n_features, n_covariates)
+        Estimated coefficients (log-fold change before correction).
     theta : ndarray of shape (n_samples,)
         Residuals of estimated data.
 
@@ -36,56 +46,82 @@ def _est_params(data, dmat):
     n_samples, n_features = data.shape
     n_covariates = dmat.shape[1]
 
-    beta_hat = np.empty((n_covariates, n_features))
+    beta = np.empty((n_covariates, n_features))
     y_crt_hat = np.empty((n_samples, n_features))
     var_hat = np.empty((n_features, n_covariates))
 
-    for i in range(n_features):
-        try:
-            beta = np.linalg.lstsq(dmat, data[:, i], rcond=None)[0]
-        except np.linalg.LinAlgError:  # try case to generate the error
-            continue
+    # Estimate parameters using pseudo inverse.
+    # The original R code uses an iterative maximum likelihood estimation.
+    beta = np.linalg.pinv(dmat) @ data
+    y_crt_hat = dmat @ beta
 
-        beta_hat[:, i] = beta[:n_covariates]
-        y_crt_hat[:, i] = dmat.dot(beta)
-
-    XtX = dmat.T.dot(dmat)
-    try:
-        XtX_inv = np.linalg.inv(XtX)
-    except np.linalg.LinAlgError:
-        XtX_inv = np.linalg.pinv(XtX)
+    # Calculate the inverse of the Gram matrix. The original R code uses MASS:ginv,
+    # which performs Moore-Penrose inverse. NumPy's `pinv` matches this method.
+    # Note that the Gram matrix may be singular, if there are colinear covariates in
+    # the design matrix. In such cases, a direct `inv` will raise an error, and `pinv`
+    # is the robust choice.
+    gmat = dmat.T @ dmat
+    gmat_inv = np.linalg.pinv(gmat)
 
     # calculate residual
     diff = data - y_crt_hat
-    theta = np.mean(diff, axis=1, keepdims=True)
+    theta = np.nanmean(diff, axis=1, keepdims=True)
     eps = diff - theta
 
-    for i in range(n_features):  # need to optimize
+    # The following nested for loops mimicks the R code. However, it isn't efficient.
+    # See below for an optimized solution.
+    for i in range(n_features):
         sigma2_xxT = np.zeros((n_covariates, n_covariates))
         for j in range(n_samples):
             sigma2_xxT_j = np.outer(eps[j, i] ** 2 * dmat[j], dmat[j])
-            # sigma2_xxT_j[is.na(sigma2_xxT_j)] = 0.1
+            # The replacement of NaN with 0.1 needs more consideration.
+            sigma2_xxT_j[np.isnan(sigma2_xxT_j)] = 0.1
             sigma2_xxT += sigma2_xxT_j
 
         # estimated variance is the diagonal of the covariance matrix
-        var_hat[i] = np.diagonal(XtX_inv @ sigma2_xxT @ XtX_inv)
+        var_hat[i] = np.diagonal(gmat_inv @ sigma2_xxT @ gmat_inv)
 
-    return var_hat, beta_hat, theta.reshape(-1)
+    # Below is a fully vectorized solution. More considerations are needed if we want
+    # to ship this code.
+    # # Step 1: Calculate the stack of sigma2_xxT matrices for all features.
+    # # 'si,sf,sj->fij' means:
+    # # - Take dmat (si), eps_sq (sf), and dmat again (sj).
+    # # - Multiply them element-wise.
+    # # - Sum along the 's' (n_samples) dimension.
+    # # - The result is a tensor of shape (f, i, j) -> (n_features, n_covariates,
+    # n_covariates)
+    # sigma2_xxT_stack = np.einsum('si,sf,sj->fij', dmat, eps ** 2, dmat)
+
+    # # Step 2: Perform the sandwich product for all matrices in the stack at once.
+    # # 'ij,fjm,ml->fil' means:
+    # # - Take gmat_inv (ij), the stack (fjm), and gmat_inv again (ml).
+    # # - Perform the two matrix multiplications.
+    # # - The result is a tensor of shape (f, i, l) -> (n_features, n_covariates,
+    # n_covariates)
+    # sandwich_product_stack = np.einsum('ij,fjm,ml->fil', gmat_inv, sigma2_xxT_stack,
+    # gmat_inv)
+
+    # # Step 3: Extract the diagonal from each matrix in the stack.
+    # # The result is the final variance matrix of shape (n_features, n_covariates).
+    # var_hat = np.diagonal(sandwich_product_stack, axis1=1, axis2=2)
+
+    # note: theta is needed for ancom-bc 2
+    return var_hat, beta, theta.reshape(-1)
 
 
-def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
-    """Estimate bias.
+def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
+    """Estimate sampling bias through an expectation-maximization algorithm.
 
     Parameters
     ----------
-    beta : ndarray of shape (n_features,)
-        Data table. Zero-handled. Log-transformed.
-    var_hat : ndarray of shape (n_features,)
-        Design matrix.
-    tol : float, optional
-        Tolerance of EM iteration.
+    beta : ndarray of shape (n_features, n_covariates)
+        Estimated coefficients (log-fold change before correction).
+    var_hat : ndarray of shape (n_features, n_covariates)
+        Estimated variances of regression coefficients.
+    atol : float, optional
+        Absolute tolerance of EM iteration. Default is 1e-5.
     max_iter : int
-        Max number of iteration of EM iteration.
+        Max number of iteration of EM iteration. Default is 100.
 
     Returns
     -------
@@ -101,64 +137,47 @@ def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     nu = var_hat.copy()
 
     # Initialization
-    pi0_0 = 0.75
-    pi1_0 = 0.125
-    pi2_0 = 0.125
+    pi0 = 0.75
+    pi1 = 0.125
+    pi2 = 0.125
 
     # Extract valid numbers (not NaN) from beta.
     beta_ = beta[~np.isnan(beta)]
 
-    # keep round temporarily and check results of em after more iterations
-    quantiles = np.quantile(beta_, [0.125, 0.25, 0.75, 0.875]).round(6)
+    edges = np.quantile(beta_, [0.125, 0.25, 0.75, 0.875])
 
-    if np.any(mask := (beta_ >= quantiles[1]) & (beta_ <= quantiles[2])):
-        delta_0 = np.mean(beta_[mask])
+    if np.any(mask := (beta_ >= edges[1]) & (beta_ <= edges[2])):
+        delta = np.mean(beta_[mask])
     else:
-        delta_0 = np.mean(beta_)
+        delta = np.mean(beta_)
 
-    if np.any(mask := beta_ < quantiles[0]):
-        l1_0 = np.mean(beta_[mask])
-        kappa1_0 = np.var(beta_[mask], ddof=1)
-        if np.isnan(kappa1_0) or kappa1_0 == 0.0:
-            kappa1_0 = 1.0
+    if np.any(mask := beta_ < edges[0]):
+        l1 = np.mean(beta_[mask])
+        kappa1 = np.var(beta_[mask], ddof=1)
+        if np.isnan(kappa1) or kappa1 == 0.0:
+            kappa1 = 1.0
     else:
-        l1_0 = np.min(beta_)
-        kappa1_0 = 1.0
+        l1 = np.min(beta_)
+        kappa1 = 1.0
 
-    if np.any(mask := beta_ > quantiles[3]):
-        l2_0 = np.mean(beta_[mask])
-        kappa2_0 = np.var(beta_[mask], ddof=1)
-        if np.isnan(kappa2_0) or kappa2_0 == 0.0:
-            kappa2_0 = 1.0
+    # warning is raised when nan is involved; needs to fix
+    if np.any(mask := beta_ > edges[3]):
+        l2 = np.mean(beta_[mask])
+        kappa2 = np.var(beta_[mask], ddof=1)
+        if np.isnan(kappa2) or kappa2 == 0.0:
+            kappa2 = 1.0
     else:
-        l2_0 = np.max(beta_)
-        kappa2_0 = 1.0
+        l2 = np.max(beta_)
+        kappa2 = 1.0
 
     # E-M algorithm
-    pi0_vec = [pi0_0]
-    pi1_vec = [pi1_0]
-    pi2_vec = [pi2_0]
-    delta_vec = [delta_0]
-    l1_vec = [l1_0]
-    l2_vec = [l2_0]
-    kappa1_vec = [kappa1_0]
-    kappa2_vec = [kappa2_0]
+    params = [[pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]]
 
     # E-M iteration
     epoch = 0
     loss = 100
     beta_nu = beta / nu
-    while loss > tol and epoch < max_iter:
-        # Current value of paras
-        pi0 = pi0_vec[-1]
-        pi1 = pi1_vec[-1]
-        pi2 = pi2_vec[-1]
-        delta = delta_vec[-1]
-        l1 = l1_vec[-1]
-        l2 = l2_vec[-1]
-        kappa1 = kappa1_vec[-1]
-        kappa2 = kappa2_vec[-1]
-
+    while loss > atol and epoch < max_iter:
         # E-step
         pdf0 = norm.pdf(beta, delta, nu**0.5)
         pdf1 = norm.pdf(beta, delta + l1, (nu + kappa1) ** 0.5)
@@ -173,22 +192,22 @@ def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         pi1_new = np.nanmean(r1i)
         pi2_new = np.nanmean(r2i)
 
-        nu0_kappa1 = nu + kappa1
-        nu0_kappa2 = nu + kappa2
+        nu_kappa1 = nu + kappa1
+        nu_kappa2 = nu + kappa2
         beta_delta = beta - delta
         delta_new = np.nansum(
             r0i * beta_nu
-            + r1i * (beta - l1) / nu0_kappa1
-            + r2i * (beta - l2) / nu0_kappa2
-        ) / np.nansum(r0i / nu + r1i / nu0_kappa1 + r2i / nu0_kappa2)
+            + r1i * (beta - l1) / nu_kappa1
+            + r2i * (beta - l2) / nu_kappa2
+        ) / np.nansum(r0i / nu + r1i / nu_kappa1 + r2i / nu_kappa2)
         l1_new = np.nanmin(
-            [np.nansum(r1i * beta_delta / nu0_kappa1) / np.nansum(r1i / nu0_kappa1), 0]
+            [np.nansum(r1i * beta_delta / nu_kappa1) / np.nansum(r1i / nu_kappa1), 0]
         )
         l2_new = np.nanmax(
-            [np.nansum(r2i * beta_delta / nu0_kappa2) / np.nansum(r2i / nu0_kappa2), 0]
+            [np.nansum(r2i * beta_delta / nu_kappa2) / np.nansum(r2i / nu_kappa2), 0]
         )
 
-        # Nelder-Mead simplex algorithm for kappa1 and kappa2
+        # Nelder-Mead simplex algorithm for kappa1 and kappa2 estimation
         def obj_kappa(x, ll, ri):
             log_pdf = norm.logpdf(beta, loc=delta + ll, scale=(nu + x) ** 0.5)
             return -np.sum(ri * log_pdf)
@@ -208,16 +227,6 @@ def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
             bounds=[(0, None)],
         ).x[0]
 
-        # Merge to the paras vectors/matrices
-        pi0_vec.append(pi0_new)
-        pi1_vec.append(pi1_new)
-        pi2_vec.append(pi2_new)
-        delta_vec.append(delta_new)
-        l1_vec.append(l1_new)
-        l2_vec.append(l2_new)
-        kappa1_vec.append(kappa1_new)
-        kappa2_vec.append(kappa2_new)
-
         # Calculate the new epsilon (loss)
         loss = (
             (pi0_new - pi0) ** 2
@@ -231,26 +240,24 @@ def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         ) ** 0.5
         epoch += 1
 
+        # Update parameters
+        pi0, pi1, pi2, delta = pi0_new, pi1_new, pi2_new, delta_new
+        l1, l2, kappa1, kappa2 = l1_new, l2_new, kappa1_new, kappa2_new
+        params.append([pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2])
+
     # The EM estimator of bias
-    delta_em = delta_new
+    delta_em = delta
 
     # The weighted least squares (WLS) estimator of bias
-    pi1 = pi1_new
-    pi2 = pi2_new
-    l1 = l1_new
-    l2 = l2_new
-    kappa1 = kappa1_new
-    kappa2 = kappa2_new
-
-    q1, q2 = np.quantile(beta, [pi1, 1 - pi2]).round(6)
+    q1, q2 = np.quantile(beta, [pi1, 1.0 - pi2])
     C0 = np.where((beta >= q1) & (beta < q2))[0]
-    C1 = np.where(beta < q1)[0]  # add round to make the results exactly the same with r
+    C1 = np.where(beta < q1)[0]
     C2 = np.where(beta >= q2)[0]
 
     # Numerator of the WLS estimator
     nu[C1] += kappa1
     nu[C2] += kappa2
-    nu_inv = 1 / nu
+    nu_inv = 1.0 / nu
     wls_deno = np.sum(nu_inv)
 
     # Denominator of the WLS estimator
@@ -261,44 +268,251 @@ def _bias_em(beta, var_hat, tol=1e-5, max_iter=100):
 
     # Estimate the variance of bias
     with np.errstate(divide="ignore", invalid="ignore"):
-        wls_deno_inv = 1 / wls_deno
+        wls_deno_inv = 1.0 / wls_deno
 
     delta_wls = wls_nume * wls_deno_inv
     var_delta = np.nan_to_num(wls_deno_inv)
 
+    # TODO: var_delta will be used if conserve=True to account for the variance of
+    # delta_hat
     return delta_em, delta_wls, var_delta
 
 
-def _correct_coefficients(beta, delta_em):
-    beta_hat = beta.copy().T
-    beta_hat = beta_hat - delta_em
-    return beta_hat
+def _sample_fractions(data, dmat, beta_hat):
+    """Estimate sampling fractions.
+
+    Parameters
+    ----------
+    data : ndarray of shape (n_samples, n_features)
+        Data table. Zero-handled. Log-transformed.
+    dmat : ndarray of shape (n_samples, n_covariates)
+        Design matrix.
+    beta_hat : ndarray of shape (n_features, n_covariates)
+        Corrected coefficients.
+
+    Returns
+    -------
+    theta_hat : ndarray of shape (n_samples,)
+        Sampling fractions.
+
+    """
+    return np.mean(data - dmat @ beta_hat.T, axis=1)
 
 
-def _sample_fractions(data, dmat, beta, delta_em):
-    n_samples, n_features = data.shape
-    beta_hat = beta.copy().T
-    beta_hat = beta_hat - delta_em
-    theta_hat = np.empty((n_samples, n_features))
+def _calc_statistics(beta_hat, var_hat, method="holm"):
+    """Calculate statistical significance while correcting for multiple testing.
 
-    for i in range(n_features):
-        theta_hat[:, i] = data[:, i] - dmat @ beta_hat[i]
-    theta_hat = np.mean(theta_hat, axis=1)
+    Parameters
+    ----------
+    beta_hat : ndarray of shape (n_features, n_covariates)
+        Estimated coefficients post correction.
+    var_hat : ndarray of shape (n_features, n_covariates)
+        Estimated variances.
 
-    return theta_hat
+    Returns
+    -------
+    se_hat : ndarray of shape (n_features, n_covariates)
+        Estimated standard errors.
+    W : ndarray of shape (n_features, n_covariates)
+        Test statistics.
+    p : ndarray of shape (n_features, n_covariates)
+        p-values.
+    q : ndarray of shape (n_features, n_covariates)
+        Adjusted p-values.
 
-
-def _multi_test(dmat, beta_hat, var_hat, alpha=0.5):
-    n_covariates = dmat.shape[1]
+    """
     se_hat = var_hat**0.5
-
     W = beta_hat / se_hat
-    p = 2.0 * norm.sf(abs(W), loc=0, scale=1)
-    q = np.empty(p.shape)
-    diff_abn = np.empty(p.shape)
-    for i in range(n_covariates):
-        res = multipletests(p[:, i], method="holm", alpha=alpha)
-        q[:, i] = res[1]
-        diff_abn[:, i] = res[0]
+    pval = 2.0 * norm.sf(abs(W), loc=0, scale=1)
+    func = _check_p_adjust(method)
+    qval = np.apply_along_axis(func, 0, pval)
+    return se_hat, W, pval, qval
 
-    return se_hat, W, p, q, diff_abn
+
+def ancombc(
+    table,
+    metadata,
+    formula,
+    max_iter=100,
+    atol=1e-5,
+    alpha=0.05,
+    p_adjust="holm",
+):
+    r"""Perform differential abundance test using ANCOM-BC.
+
+    Analysis of compositions of microbiomes with bias correction (ANCOM-BC) [1]_ is a
+    differential abundance testing method featuring the estimation and correction for
+    the bias of differential sampling fractions.
+
+    .. versionadded:: 0.7.1
+
+    Parameters
+    ----------
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :ref:`supported formats <table_like>`.
+    metadata : pd.DataFrame or 2-D array_like
+        The metadata for the model. Rows correspond to samples and columns correspond
+        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        pandas DataFrame.
+    formula : str or generic Formula object
+        The formula defining the model. Refer to `Patsy's documentation
+        <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
+        a formula.
+    max_iter : int, optional
+        Maximum number of iterations for the bias estimation process. Default is 100.
+    atol : float, optional
+        Absolute convergence tolerance for the bias estimation process. Default is
+        1e-5.
+    alpha : float, optional
+        Significance level for the statistical tests. Must be in the range of (0, 1).
+        Default is 0.05.
+    p_adjust : str, optional
+        Method to correct *p*-values for multiple comparisons. Options are Holm-
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Case-insensitive. If None, no correction will be performed.
+
+    Returns
+    -------
+    pd.DataFrame
+        A table of features and covariates, their log-fold changes and other relevant
+        statistics.
+
+        - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+        - ``Covariate``: Covariate name, i.e., independent variable.
+
+        - ``Log2(FC)``: Expected log2-fold change of abundance from the reference
+          category to the covariate category defined in the formula. The value is
+          expressed in the center log ratio (see :func:`clr`) transformed coordinates.
+
+        - ``SE``: Standard error of the estimated Log2(FC).
+
+        - ``W``: *W*-statistic, or the number of features that the current feature is
+          tested to be significantly different against.
+
+        - ``pvalue``: *p*-value of the linear mixed effects model. The reported value
+          is the average of all of the *p*-values computed from each of the posterior
+          draws.
+
+        - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
+          comparisons. The reported value is the average of all of the *q*-values
+          computed from each of the posterior draws.
+
+        - ``Signif``: Whether the covariate category is significantly differentially
+          abundant from the reference category. A feature-covariate pair marked as
+          "True" suffice: 1) The *q*-value must be less than or equal to the
+          significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
+          must not overlap with zero.
+
+    See Also
+    --------
+    ancom
+
+    Notes
+    -----
+    The input data table for ANCOM-BC must contain only positive numbers. One needs to
+    remove zero values by, e.g., adding a pseudocount of 1.0.
+
+    References
+    ----------
+    .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
+       with bias correction. Nature communications, 11(1), p.3514.
+
+    Examples
+    --------
+    >>> from skbio.stats._ancombc import ancombc
+    >>> import pandas as pd
+
+    Let's load in a DataFrame with six samples and seven features (e.g., these
+    may be bacterial taxa):
+
+    >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
+    ...                       [9,  11, 12, 10, 10, 10, 10],
+    ...                       [1,  11, 10, 11, 10, 5,  9],
+    ...                       [22, 21, 9,  10, 10, 10, 10],
+    ...                       [20, 22, 10, 10, 13, 10, 10],
+    ...                       [23, 21, 14, 10, 10, 10, 10]],
+    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
+    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
+    ...                               'b7'])
+
+    Then create a grouping vector. In this example, there is a treatment group
+    and a placebo group.
+
+    >>> metadata = pd.DataFrame(
+    ...     {'grouping': ['treatment', 'treatment', 'treatment',
+    ...                   'placebo', 'placebo', 'placebo']},
+    ...     index=['s1', 's2', 's3', 's4', 's5', 's6'])
+
+    Now run ``ancom`` to determine if there are any features that are
+    significantly different in abundance between the treatment and the placebo
+    groups. The first DataFrame that is returned contains the ANCOM test
+    results, and the second contains the percentile abundance data for each
+    feature in each group.
+
+    >>> result = ancombc(table + 1, metadata, 'grouping')
+
+    """
+    # Note: A pseudocount should have been added to the table by the user prior to
+    # calling this function.
+    matrix, samples, features = _ingest_table(table)
+    _check_composition(np, matrix, nozero=True)  # TODO
+    n_feats = matrix.shape[1]
+
+    # log-transform count matrix
+    matrix = np.log(matrix)
+
+    # validate metadata
+    metadata = _check_metadata(metadata, matrix, samples)
+
+    # cast metadata to numbers where applicable
+    metadata = _type_cast_to_float(metadata)
+
+    # Create a design matrix based on metadata and formula.
+    dmat = dmatrix(formula, metadata)
+
+    # Obtain the list of covariates by selecting the relevant columns
+    covars = dmat.design_info.column_names
+    n_covars = len(covars)
+
+    # validate parameters
+    if not 0 < alpha < 1:
+        raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
+
+    # Estimate initial model parameters.
+    var_hat, beta, _ = _estimate_params(matrix, dmat)
+
+    # Estimate and correct for sampling bias via expectation-maximization (EM).
+    bias = np.empty((n_covars, 3))
+    for i in range(n_covars):
+        res = _estimate_bias_em(beta[i], var_hat[:, i], atol=atol, max_iter=max_iter)
+        bias[i] = res
+    delta_em = bias[:, 0]
+
+    # Correct coefficients (logFC) according to estimated bias.
+    beta_hat = beta.T - delta_em
+
+    # Calculate statistics while performing multiple testing correction.
+    se_hat, W, pval, qval = _calc_statistics(beta_hat, var_hat, method=p_adjust)
+
+    # Identify significantly differentially abundance feature-covariate pairs.
+    reject = qval <= alpha
+
+    # Output the primary results.
+    res = pd.DataFrame.from_dict(
+        {
+            "FeatureID": [x for x in features for _ in range(n_covars)],
+            "Covariate": list(covars) * n_feats,
+            "Log2(FC)": beta_hat.ravel(),
+            "SE": se_hat.ravel(),
+            "W": W.ravel(),
+            "pvalue": pval.ravel(),
+            "qvalue": qval.ravel(),
+        }
+    )
+    # pandas' nullable boolean type
+    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+    return res

@@ -13,7 +13,14 @@ import numpy.testing as npt
 import pandas as pd
 from patsy import dmatrix
 
-from skbio.stats._ancombc import _est_params, _bias_em, _correct_coefficients
+from skbio.util import get_data_path
+from skbio.stats._ancombc import (
+    _estimate_params,
+    _estimate_bias_em,
+    _sample_fractions,
+    _calc_statistics,
+    ancombc,
+)
 
 
 class AncombcTests(TestCase):
@@ -29,15 +36,13 @@ class AncombcTests(TestCase):
                                            'b7'])
         self.grouping = pd.Series(['treatment', 'treatment', 'treatment',
                                    'placebo', 'placebo', 'placebo'],
-                                  index=['s1', 's2', 's3', 's4', 's5', 's6'])
+                                  index=['s1', 's2', 's3', 's4', 's5', 's6'],
+                                  name="grouping")
 
-    def test_est_params(self):
-        data = np.log1p(self.table)
-        meta = self.grouping.to_frame()
-        meta.columns = ["X0"]
-        formula = "X0"
-        dmat = dmatrix(formula, data=meta, return_type="dataframe")
-        obs = _est_params(data.to_numpy(), dmat.to_numpy())
+    def test_estimate_params(self):
+        data = np.log1p(self.table.to_numpy())
+        dmat = dmatrix("grouping", self.grouping.to_frame())
+        obs = _estimate_params(data, dmat)
 
         exp_var_hat = [
             [0.00112214, 0.14814216],
@@ -49,59 +54,161 @@ class AncombcTests(TestCase):
             [0.00023415, 0.00498806]
         ]
 
-        exp_beta_hat = [
+        exp_beta = [
             [ 3.11935683,  3.10585971,  2.46951019,  2.39789527,  2.47828263, 2.39789527,  2.39789527],
             [-1.26579628, -0.62095306, -0.01593022,  0.02900379, -0.08038735, -0.20204527, -0.03177006]
         ]
 
-        exp_theta = [ 0.12293081,  0.10931507, -0.23224588, -0.03514176,  0.00627999, 0.02886177]
+        exp_theta = [0.12293081,  0.10931507, -0.23224588, -0.03514176,  0.00627999, 0.02886177]
 
         for o, e in zip(obs[0], exp_var_hat):
-            npt.assert_array_equal(o.round(8), e)
+            npt.assert_allclose(o, e, atol=1e-5)
 
-        for o, e in zip(obs[1], exp_beta_hat):
-            npt.assert_array_equal(o.round(8), e)
+        for o, e in zip(obs[1], exp_beta):
+            npt.assert_allclose(o, e, atol=1e-5)
 
         for o, e in zip(obs[2], exp_theta):
-            npt.assert_array_equal(o.round(8), e)
+            npt.assert_allclose(o, e, atol=1e-5)
 
-    def test_bias_em(self):
-        data = np.log1p(self.table)
-        meta = self.grouping.to_frame()
-        meta.columns = ["X0"]
-        formula = "X0"
-        dmat = dmatrix(formula, data=meta, return_type="dataframe")
-        var_hat, beta_hat, _ = _est_params(data.to_numpy(), dmat.to_numpy())
+    def test_estimate_bias_em(self):
+        data = np.log1p(self.table.to_numpy())
+        dmat = dmatrix("grouping", self.grouping.to_frame())
+        var_hat, beta, _ = _estimate_params(data, dmat)
 
-        obs = _bias_em(beta_hat[0], var_hat[:, 0], max_iter=1)
-        exp_bias = np.array([2.39979368e+00,  2.53583125e+00,  6.12616582e-05])
+        obs_0 = _estimate_bias_em(beta[0], var_hat[:, 0], max_iter=100)
+        obs_1 = _estimate_bias_em(beta[1], var_hat[:, 1], max_iter=100)
+        exp_0 = np.array([2.40007051,  2.4000710,  5.809086e-05])
+        exp_1 = np.array([-0.08410937,  -0.0847577,  1.395714e-03])
 
-        npt.assert_array_equal(np.array(obs).round(8), exp_bias.round(8))
+        npt.assert_allclose(obs_0, exp_0, atol=1e-5)
+        npt.assert_allclose(obs_1, exp_1, atol=1e-3)
 
-    def test_correct_coefficients(self):
-        data = np.log1p(self.table)
-        meta = self.grouping.to_frame()
-        meta.columns = ["X0"]
-        formula = "X0"
-        dmat = dmatrix(formula, data=meta, return_type="dataframe")
-
-        var_hat, beta_hat, _ = _est_params(data.to_numpy(), dmat.to_numpy())
+    def test_sample_bias(self):
+        data = np.log1p(self.table.to_numpy())
+        dmat = dmatrix("grouping", self.grouping.to_frame())
+        var_hat, beta, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
-            res = _bias_em(beta_hat[i], var_hat[:, i], max_iter=1)
+            res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
             bias[i] = res
         delta_em = bias[:, 0]
-        obs = _correct_coefficients(beta_hat, delta_em)
-        exp_beta = np.array([[ 0.71956315, -1.18116807],
-                             [ 0.70606603, -0.53632484],
-                             [ 0.06971651,  0.068698  ],
-                             [-0.0018984 ,  0.11363201],
-                             [ 0.07848895,  0.00424087],
-                             [-0.0018984 , -0.11741705],
-                             [-0.0018984 ,  0.05285816]])
+        beta_hat = beta.T - delta_em
 
-        for o, e in zip(obs, exp_beta):
-            npt.assert_array_equal(o.round(8), e)
+        obs = _sample_fractions(data, dmat, beta_hat)
+        exp = np.array([2.43809627, 2.42448053, 2.08291958, 2.36465192, 2.40607366, 2.42865545])
+
+        npt.assert_allclose(obs, exp, atol=1e-5)
+
+    def test_calc_statistics(self):
+        data = np.log1p(self.table.to_numpy())
+        dmat = dmatrix("grouping", self.grouping.to_frame())
+        var_hat, beta, _ = _estimate_params(data, dmat)
+        bias = np.empty((2, 3))
+        for i in range(2):
+            res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
+            bias[i] = res
+        delta_em = bias[:, 0]
+        beta_hat = beta.T - delta_em
+
+        obs = _calc_statistics(beta_hat, var_hat)
+        exp_se_hat = np.array([[0.03349832, 0.38489241],
+                               [0.01784618, 0.09653226],
+                               [0.086538  , 0.12040718],
+                               [0.01530208, 0.11952252],
+                               [0.06485124, 0.11491594],
+                               [0.01530208, 0.07187641],
+                               [0.01530208, 0.07062619]])
+        
+        exp_W = np.array([[21.4805775, -3.06882664],
+                          [39.5639779, -5.55591315],
+                          [0.8056173, 0.57054735],
+                          [-0.1240618, 0.95071636],
+                          [1.2102921, 0.03690407],
+                          [-0.1240618, -1.63359659],
+                          [-0.1240618, 0.74842151]])
+        
+        exp_p = np.array([[2.36547636e-102, 2.14901260e-003],
+                          [0.00000000e+000, 2.76164163e-008],
+                          [4.20463527e-001, 5.68306514e-001],
+                          [9.01266346e-001, 3.41748381e-001],
+                          [2.26166816e-001, 9.70561497e-001],
+                          [9.01266346e-001, 1.02343585e-001],
+                          [9.01266346e-001, 4.54205953e-001]])
+        
+        exp_q = np.array([[1.41928582e-101, 1.28940756e-002],
+                          [0.00000000e+000, 1.93314914e-007],
+                          [1.00000000e+000, 1.00000000e+000],
+                          [1.00000000e+000, 1.00000000e+000],
+                          [1.00000000e+000, 1.00000000e+000],
+                          [1.00000000e+000, 5.11717926e-001],
+                          [1.00000000e+000, 1.00000000e+000]])
+
+        for o, e in zip(obs[0], exp_se_hat):
+            npt.assert_allclose(o, e, atol=1e-3)
+
+        for o, e in zip(obs[1], exp_W):
+            npt.assert_allclose(o, e, atol=1e-3)
+
+        for o, e in zip(obs[2], exp_p):
+            npt.assert_allclose(o, e, atol=1e-3)
+
+        for o, e in zip(obs[3], exp_q):
+            npt.assert_allclose(o, e, atol=1e-3)
+
+    def test_ancombc_fail_alpha(self):
+        with self.assertRaises(ValueError):
+            ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=-1)
+        with self.assertRaises(ValueError):
+            ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=1.1)
+
+    def test_ancombc(self):
+        # ancom-bc results of test dataset
+        res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
+        obs = res['Signif'].to_numpy()
+
+        # expected differential abundance of intercept and grouping
+        exp = np.array([[1., 1.],
+                        [1., 1.],
+                        [0., 0.],
+                        [0., 0.],
+                        [0., 0.],
+                        [0., 0.],
+                        [0., 0.]]).flatten()
+        npt.assert_array_equal(obs, exp)
+
+        # Load the HITChip Atlas dataset: Tipping elements in the human intestinal
+        # ecosystem.
+        # This dataset was reported in:
+        #   Lahti, Leo, et al. "Tipping elements in the human intestinal ecosystem."
+        #   Nature communications 5.1 (2014): 4344.
+        # It was included in the R package "microbiome":
+        #   https://github.com/microbiome/microbiome
+        # It was used for demonstration in the official ANCOM-BC2 tutorial:
+        #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/
+        #   doc/ANCOMBC2.html
+        table = pd.read_csv(get_data_path('pseq_feature_table.csv.gz'), index_col=0).T
+        meta_data = pd.read_csv(get_data_path('pseq_meta_data.csv.gz'), index_col=0)
+        meta_data = meta_data.dropna(axis=1, how='any')
+        meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
+
+        # run ancom-bc reimplemented in python for the HITChip Atlas dataset
+        res = ancombc(table+1, meta_data, "age + region + bmi")
+
+        # format multi-index dataframe
+        obs = res[['FeatureID', 'Covariate', 'Signif']]
+        obs = obs.pivot(index='FeatureID', columns='Covariate', values='Signif')
+        obs.columns.name = None
+        obs.index.name = "taxon"
+        obs = obs.rename(columns={"Intercept":"(Intercept)"})
+        for c in obs.columns:
+            obs = obs.rename(columns={c:c.replace("[T.", "").replace("]", "")})
+
+        # load ancom-bc results generated by the R package ANCOMBC
+        exp = pd.read_csv(get_data_path('pseq_out_res_diff_abn.csv'), index_col='taxon').drop('Unnamed: 0', axis=1)
+
+        similarity = exp.eq(obs).sum().sum() / exp.size
+        npt.assert_equal(similarity, 1.0)
+
 
 if __name__ == '__main__':
     main()
