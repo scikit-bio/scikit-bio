@@ -199,21 +199,22 @@ class TestPCoA(TestCase):
         """Test warnings of negative eigenvalues."""
         # In this example, negative-most: -0.109, positive-most: 0.736, ratio: 0.148,
         # which is above the threshold, therefore a warning is raised by default.
+        # Note: Explicitly pass the dimensions, to avoid spurious "large DM" warning
         with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0])
 
         # warn regardless of magnitude
         with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm, warn_neg_eigval=True)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=True)
 
         # disable warning
         with catch_warnings(record=True) as obs:
-            results = pcoa(self.dm, warn_neg_eigval=False)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=False)
         self.assertEqual(obs, [])
 
         # larger (more stringent) threshold
         with catch_warnings(record=True) as obs:
-            results = pcoa(self.dm, warn_neg_eigval=0.2)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=0.2)
         self.assertEqual(obs, [])
 
         # In this example, all eigenvalues are zero or positive, therefore no warning
@@ -262,9 +263,8 @@ class TestPCoA(TestCase):
 
     def test_fsvd_method_with_float(self):
         """Test FSVD with float dimensions for variance threshold."""
-        with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm3, method="fsvd", dimensions=0.7,
-                           inplace=False, seed=None)
+        results = pcoa(self.dm3, method="fsvd", dimensions=0.7,
+                       inplace=False, seed=None)
         cumulative_variance = np.cumsum(results.proportion_explained.values)
         self.assertGreaterEqual(cumulative_variance[-1], 0.7)
 

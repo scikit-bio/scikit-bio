@@ -11,6 +11,13 @@ from warnings import warn
 
 import numpy as np
 
+from typing import Optional, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    import pandas as pd
+    from skbio.util._typing import SeedLike
+
 from ._base import (
     _preprocess_input_sng,
     _run_monte_carlo_stats,
@@ -26,7 +33,13 @@ from skbio.util._decorator import params_aliased
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
-def permanova(distmat, grouping, column=None, permutations=999, seed=None):
+def permanova(
+    distmat: "DistanceMatrix",
+    grouping: Union["pd.DataFrame", "ArrayLike"],
+    column: Optional[str] = None,
+    permutations: int = 999,
+    seed: Optional["SeedLike"] = None,
+) -> "pd.Series":
     r"""Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a
@@ -137,7 +150,7 @@ def permanova(distmat, grouping, column=None, permutations=999, seed=None):
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distmat[:] ** 2).sum() / sample_size
+    s_T = (distmat.data**2).sum() / sample_size
     # we are going over the whole matrix, instead of just upper triangle
     # so cut in half
     s_T /= 2.0
