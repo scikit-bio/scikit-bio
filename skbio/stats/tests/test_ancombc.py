@@ -19,6 +19,7 @@ from skbio.stats._ancombc import (
     _estimate_bias_em,
     _sample_fractions,
     _calc_statistics,
+    _bias_em_params_init,
     ancombc,
 )
 
@@ -69,6 +70,18 @@ class AncombcTests(TestCase):
 
         for o, e in zip(obs[2], exp_theta):
             npt.assert_allclose(o, e, atol=1e-5)
+
+    def test_bias_em_params_init(self):
+        beta = np.array([0, 1])
+        npt.assert_equal(_bias_em_params_init(beta)[3], 0.5)
+
+        beta = np.array([0, 0, 0, 0, 1])
+        res = _bias_em_params_init(beta)
+        npt.assert_equal(res[3], 0.0)
+        npt.assert_equal(res[4], 0.0)
+        npt.assert_equal(res[6], 1.0)
+
+        #beta = np.array([0,0,0,0,1])
 
     def test_estimate_bias_em(self):
         data = np.log1p(self.table.to_numpy())

@@ -109,6 +109,35 @@ def _estimate_params(data, dmat):
     return var_hat, beta, theta.reshape(-1)
 
 
+def _bias_em_params_init(beta, pi0=0.75, pi1=0.125, pi2=0.125):
+    edges = np.quantile(beta, [0.125, 0.25, 0.75, 0.875])
+
+    if np.any(mask := (beta >= edges[1]) & (beta <= edges[2])):
+        delta = np.mean(beta[mask])
+    else:
+        delta = np.mean(beta)
+
+    if np.any(mask := beta < edges[0]):
+        l1 = np.mean(beta[mask])
+        kappa1 = np.var(beta[mask], ddof=1)
+        if np.isnan(kappa1) or kappa1 == 0.0:
+            kappa1 = 1.0
+    else:
+        l1 = np.min(beta)
+        kappa1 = 1.0
+
+    if np.any(mask := beta > edges[3]):
+        l2 = np.mean(beta[mask])
+        kappa2 = np.var(beta[mask], ddof=1)
+        if np.isnan(kappa2) or kappa2 == 0.0:
+            kappa2 = 1.0
+    else:
+        l2 = np.max(beta)
+        kappa2 = 1.0
+
+    return pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2
+
+
 def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     """Estimate sampling bias through an expectation-maximization algorithm.
 
@@ -136,42 +165,45 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     beta = beta.copy()
     nu = var_hat.copy()
 
-    # Initialization
-    pi0 = 0.75
-    pi1 = 0.125
-    pi2 = 0.125
+    # # Initialization
+    # pi0 = 0.75
+    # pi1 = 0.125
+    # pi2 = 0.125
 
-    # Extract valid numbers (not NaN) from beta.
+    # # Extract valid numbers (not NaN) from beta.
+    # beta_ = beta[~np.isnan(beta)]
+
+    # edges = np.quantile(beta_, [0.125, 0.25, 0.75, 0.875])
+
+    # if np.any(mask := (beta_ >= edges[1]) & (beta_ <= edges[2])):
+    #     delta = np.mean(beta_[mask])
+    # else:
+    #     delta = np.mean(beta_)
+
+    # if np.any(mask := beta_ < edges[0]):
+    #     l1 = np.mean(beta_[mask])
+    #     kappa1 = np.var(beta_[mask], ddof=1)
+    #     if np.isnan(kappa1) or kappa1 == 0.0:
+    #         kappa1 = 1.0
+    # else:
+    #     l1 = np.min(beta_)
+    #     kappa1 = 1.0
+
+    # # warning is raised when nan is involved; needs to fix
+    # if np.any(mask := beta_ > edges[3]):
+    #     l2 = np.mean(beta_[mask])
+    #     kappa2 = np.var(beta_[mask], ddof=1)
+    #     if np.isnan(kappa2) or kappa2 == 0.0:
+    #         kappa2 = 1.0
+    # else:
+    #     l2 = np.max(beta_)
+    #     kappa2 = 1.0
+
+    # # E-M algorithm
+    # params = [[pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]]
     beta_ = beta[~np.isnan(beta)]
-
-    edges = np.quantile(beta_, [0.125, 0.25, 0.75, 0.875])
-
-    if np.any(mask := (beta_ >= edges[1]) & (beta_ <= edges[2])):
-        delta = np.mean(beta_[mask])
-    else:
-        delta = np.mean(beta_)
-
-    if np.any(mask := beta_ < edges[0]):
-        l1 = np.mean(beta_[mask])
-        kappa1 = np.var(beta_[mask], ddof=1)
-        if np.isnan(kappa1) or kappa1 == 0.0:
-            kappa1 = 1.0
-    else:
-        l1 = np.min(beta_)
-        kappa1 = 1.0
-
-    # warning is raised when nan is involved; needs to fix
-    if np.any(mask := beta_ > edges[3]):
-        l2 = np.mean(beta_[mask])
-        kappa2 = np.var(beta_[mask], ddof=1)
-        if np.isnan(kappa2) or kappa2 == 0.0:
-            kappa2 = 1.0
-    else:
-        l2 = np.max(beta_)
-        kappa2 = 1.0
-
-    # E-M algorithm
-    params = [[pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]]
+    pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = _bias_em_params_init(beta_)
+    params = [pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]
 
     # E-M iteration
     epoch = 0
