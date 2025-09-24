@@ -213,9 +213,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
-        validate: bool = True,
-        diagonal=None,
-        redundant=True,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
 
@@ -235,13 +232,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         keys : iterable, optional
             An iterable of the same length as `iterable`. Each element will be
             used as the respective key.
-        validate : boolean, optional
-            If ``True``, all pairwise relationships are computed, including upper
-            and lower triangles and the diagonal. If ``False``, `metric` is
-            assumed to be hollow and symmetric and only the lower triangle
-            (excluding the diagonal) is computed. Pass ``validate=False`` if
-            you are sure `metric` is hollow and symmetric for improved
-            performance.
 
         Returns
         -------
@@ -265,19 +255,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             keys_ = list(keys)
 
         dm = np.empty((len(iterable),) * 2)
-        if validate:
-            for i, a in enumerate(iterable):
-                for j, b in enumerate(iterable):
-                    dm[i, j] = metric(a, b)
-            return cls(dm, keys_, redundant=redundant)  # type: ignore[operator]
-        else:
-            # This assumes that metric will return a symmetric matrix. That is, that
-            # metric(a, b) is the same as metric(b, a)
-            for i, a in enumerate(iterable):
-                for j, b in enumerate(iterable[:i]):
-                    dm[i, j] = dm[j, i] = metric(a, b)
-            np.fill_diagonal(dm, 0.0)
-            return cls(dm, keys_, redundant=redundant)  # type: ignore[operator]
+        for i, a in enumerate(iterable):
+            for j, b in enumerate(iterable):
+                dm[i, j] = metric(a, b)
+
+        return cls(dm, keys_)  # type: ignore[operator]
 
     @property
     def data(self) -> np.ndarray:
@@ -1261,6 +1243,86 @@ class SymmetricMatrix(PairwiseMatrix):
                 )
         if data.dtype not in (np.float32, np.float64):
             raise PairwiseMatrixError("Data must contain only floating point values.")
+
+    @classonlymethod
+    def from_iterable(
+        cls,
+        iterable: Iterable[Any],
+        metric: Callable,
+        key: Optional[Any] = None,
+        keys: Optional[Iterable[Any]] = None,
+        validate: bool = True,
+        diagonal=0.0,
+        redundant=True,
+    ) -> "PairwiseMatrix":
+        """Create PairwiseMatrix from an iterable given a metric.
+
+        Parameters
+        ----------
+        iterable : iterable
+            Iterable containing objects to compute pairwise dissimilarities on.
+        metric : callable
+            A function that takes two arguments and returns a float
+            representing the dissimilarity between the two arguments.
+        key : callable or metadata key, optional
+            A function that takes one argument and returns a string
+            representing the id of the element in the dissimilarity matrix.
+            Alternatively, a key to a `metadata` property if it exists for
+            each element in the `iterable`. If None, then default ids will be
+            used.
+        keys : iterable, optional
+            An iterable of the same length as `iterable`. Each element will be
+            used as the respective key.
+        validate : boolean, optional
+            If ``True``, all pairwise relationships are computed, including upper
+            and lower triangles and the diagonal. If ``False``, `metric` is
+            assumed to be hollow and symmetric and only the lower triangle
+            (excluding the diagonal) is computed. Pass ``validate=False`` if
+            you are sure `metric` is hollow and symmetric for improved
+            performance.
+        diagonal : float or np.ndarray, optional
+            If float, this value will be used to fill the diagonal of the matrix.
+            If array, this array will be used to fill the diagonal of the matrix.
+            Defaults to 0.0.
+        redundant : bool, optional
+            If True, the underlying data structure will be the redundant form (2D) of
+            the matrix. If False, the underlying data structure will be the condensed
+            form (1D) of the matrix.
+
+        Returns
+        -------
+        PairwiseMatrix
+            The `metric` applied to all pairwise elements in the `iterable`.
+
+        Raises
+        ------
+        ValueError
+            If `key` and `keys` are both provided.
+
+        """
+        iterable = list(iterable)
+        if key is not None and keys is not None:
+            raise ValueError("Cannot use both `key` and `keys` at the same time.")
+
+        keys_ = None
+        if key is not None:
+            keys_ = [resolve_key(e, key) for e in iterable]
+        elif keys is not None:
+            keys_ = list(keys)
+
+        dm = np.empty((len(iterable),) * 2)
+        if validate:
+            for i, a in enumerate(iterable):
+                for j, b in enumerate(iterable):
+                    dm[i, j] = metric(a, b)
+            return cls(dm, keys_, diagonal=diagonal, redundant=redundant)  # type: ignore[operator]
+        else:
+            # This assumes that metric will return a symmetric matrix. That is, that
+            # metric(a, b) is the same as metric(b, a)
+            for i, a in enumerate(iterable):
+                for j, b in enumerate(iterable[:i]):
+                    dm[i, j] = dm[j, i] = metric(a, b)
+            return cls(dm, keys_, diagonal=diagonal, redundant=redundant)  # type: ignore[operator]
 
     def redundant_form(self):
         if self._flags["VECTOR"]:
