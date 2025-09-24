@@ -24,7 +24,7 @@ def _estimate_params(data, dmat):
     """Estimate initial model parameters.
 
     Perform initial estimation of model parameters (coefficients, variances and
-    residuals) based on the observed data prior to bias correction.
+    mean residuals) based on the observed data prior to bias correction.
 
     Parameters
     ----------
@@ -38,74 +38,54 @@ def _estimate_params(data, dmat):
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances of regression coefficients.
     beta : ndarray of shape (n_features, n_covariates)
-        Estimated coefficients (log-fold change before correction).
+        Estimated coefficients (log-fold changes before correction).
     theta : ndarray of shape (n_samples,)
-        Residuals of estimated data.
+        Per-sample mean residuals of estimated data.
 
     """
-    n_samples, n_features = data.shape
-    n_covariates = dmat.shape[1]
+    # The original R code performs iterative maximum likelihood estimation to calculate
+    # the coefficients, and calls MASS:ginv to calculate the pseudo inverse Gram matrix
+    # using the Moore-Penrose method. We noticed that the former can be replaced with
+    # ordinary least squares by NumPy's `lstsq`; and the latter matches the method by
+    # NumPy's `pinv`. We further noticed that both functions perform singular value
+    # decomposition (SVD). Therefore, the following code only performs SVD once, and
+    # uses the intermediates to calculate coefficients and inverse Gram matrix.
 
-    beta = np.empty((n_covariates, n_features))
-    y_crt_hat = np.empty((n_samples, n_features))
-    var_hat = np.empty((n_features, n_covariates))
+    # Perform thin SVD and set small singular values to zero. The process and threshold
+    # (1e-15) are consistent with the underlying algorithm of `pinv`.
+    # Note: the Gram matrix may be singular, if there are colinear covariates in the
+    # design matrix. In such cases, a direct `inv` will raise an error, and `pinv` is
+    # the robust choice.
+    U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
+    S_inv = np.where(S > 1e-15 * np.max(S), 1.0 / S, 0.0)
 
-    # Estimate parameters using pseudo inverse.
-    # The original R code uses an iterative maximum likelihood estimation.
-    beta = np.linalg.pinv(dmat) @ data
-    y_crt_hat = dmat @ beta
+    # regression coefficients
+    V = Vh.T
+    dmat_inv = (V * S_inv) @ U.T
+    beta = dmat_inv @ data
 
-    # Calculate the inverse of the Gram matrix. The original R code uses MASS:ginv,
-    # which performs Moore-Penrose inverse. NumPy's `pinv` matches this method.
-    # Note that the Gram matrix may be singular, if there are colinear covariates in
-    # the design matrix. In such cases, a direct `inv` will raise an error, and `pinv`
-    # is the robust choice.
-    gmat = dmat.T @ dmat
-    gmat_inv = np.linalg.pinv(gmat)
+    # inverse Gram matrix
+    gmat_inv = (V * S_inv**2) @ Vh
 
-    # calculate residual
-    diff = data - y_crt_hat
-    theta = np.nanmean(diff, axis=1, keepdims=True)
+    # per-sample mean residuals (theta)
+    diff = data - dmat @ beta
+    theta = np.mean(diff, axis=1, keepdims=True)
+
+    # centered residuals
     eps = diff - theta
 
-    # The following nested for loops mimicks the R code. However, it isn't efficient.
-    # See below for an optimized solution.
-    for i in range(n_features):
-        sigma2_xxT = np.zeros((n_covariates, n_covariates))
-        for j in range(n_samples):
-            sigma2_xxT_j = np.outer(eps[j, i] ** 2 * dmat[j], dmat[j])
-            # The replacement of NaN with 0.1 needs more consideration.
-            sigma2_xxT_j[np.isnan(sigma2_xxT_j)] = 0.1
-            sigma2_xxT += sigma2_xxT_j
+    # Calculate the covariance matrix of the coefficients. The estimated variances are
+    # the diagonal of the covariance matrix.
+    # Note: The original R code uses nested `for` loops over samples and features. The
+    # current implementation is fully vectorized.
+    # Note: The original R code patches NaN with 0.1 when calculating covariances. This
+    # is not needed in the current implementation, as the input data are guaranteed to
+    # contain only finite real numbers.
+    intm_mat = np.einsum("ji,jp,jq->ipq", eps**2, dmat, dmat)
+    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
+    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
 
-        # estimated variance is the diagonal of the covariance matrix
-        var_hat[i] = np.diagonal(gmat_inv @ sigma2_xxT @ gmat_inv)
-
-    # Below is a fully vectorized solution. More considerations are needed if we want
-    # to ship this code.
-    # # Step 1: Calculate the stack of sigma2_xxT matrices for all features.
-    # # 'si,sf,sj->fij' means:
-    # # - Take dmat (si), eps_sq (sf), and dmat again (sj).
-    # # - Multiply them element-wise.
-    # # - Sum along the 's' (n_samples) dimension.
-    # # - The result is a tensor of shape (f, i, j) -> (n_features, n_covariates,
-    # n_covariates)
-    # sigma2_xxT_stack = np.einsum('si,sf,sj->fij', dmat, eps ** 2, dmat)
-
-    # # Step 2: Perform the sandwich product for all matrices in the stack at once.
-    # # 'ij,fjm,ml->fil' means:
-    # # - Take gmat_inv (ij), the stack (fjm), and gmat_inv again (ml).
-    # # - Perform the two matrix multiplications.
-    # # - The result is a tensor of shape (f, i, l) -> (n_features, n_covariates,
-    # n_covariates)
-    # sandwich_product_stack = np.einsum('ij,fjm,ml->fil', gmat_inv, sigma2_xxT_stack,
-    # gmat_inv)
-
-    # # Step 3: Extract the diagonal from each matrix in the stack.
-    # # The result is the final variance matrix of shape (n_features, n_covariates).
-    # var_hat = np.diagonal(sandwich_product_stack, axis1=1, axis2=2)
-
-    # note: theta is needed for ancom-bc 2
+    # Note: Residuals are needed for ANCOM-BC2.
     return var_hat, beta, theta.reshape(-1)
 
 
