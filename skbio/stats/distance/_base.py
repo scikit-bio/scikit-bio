@@ -49,7 +49,13 @@ class PairwiseMatrixError(Exception):
     pass
 
 
-class DistanceMatrixError(PairwiseMatrixError):
+class SymmetricMatrixError(PairwiseMatrixError):
+    """General error for symmetric matrix validation failures."""
+
+    pass
+
+
+class DistanceMatrixError(SymmetricMatrixError):
     """General error for distance matrix validation failures."""
 
     pass
@@ -136,27 +142,29 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ],
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
-        redundant: bool = True,
-        diagonal=None,
     ) -> None:
-        validate_full = validate
-        validate_shape = False
-        validate_ids = False
-        self._flags = {}
+        data, ids = self._normalize_input(data, ids)
 
+        if ids is None:
+            ids = self._generate_ids(data)
+        else:
+            ids = tuple(ids)
+
+        # validation
+        if validate:
+            self._validate_shape(data)
+            self._validate_ids(data, ids)
+
+        self._ids = ids
+        self._id_index = self._index_list(self._ids)
+        self._data = self._init_data(data)
+        self._flags = self._init_flags()
+
+    def _normalize_input(self, data, ids):
+        """Get input into standard numpy array format."""
         if isinstance(data, PairwiseMatrix):
-            if isinstance(data, self.__class__):
-                # Never validate when copying from an object
-                # of the same type
-                # We should be able to assume it is already
-                # in a good state.
-                validate_full = False
-                validate_shape = False
-                # but do validate ids, if redefining them
-                validate_ids = False if ids is None else True
             ids = data.ids if ids is None else ids
             data = data.data
-
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
         # np.array, or possibly some other object type. Generally, this
@@ -183,46 +191,20 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # ndarray.
         assert isinstance(data, np.ndarray)
         data_: np.ndarray = data
+        return data_, ids
 
-        if data_.ndim == 1:
-            # We can assume squareform will return a symmetric square matrix
-            # so no need for full validation.
-            # Still do basic checks (e.g. zero length)
-            # and id validation
-            data_ = squareform(data_, force="tomatrix", checks=False)
-            validate_full = False
-            validate_shape = True
-            validate_ids = True
-
-        if ids is None:
-            ids = tuple(str(i) for i in range(data_.shape[0]))
-            # I just created the ids, so no need to re-validate them
-            validate_ids = False
-        ids = tuple(ids)
-
-        if validate_full:
-            self._validate(data_, ids)
+    def _generate_ids(self, data):
+        if data.ndim != 1:
+            return tuple(str(i) for i in range(data.shape[0]))
         else:
-            if validate_shape:
-                self._validate_shape(data_)
-            if validate_ids:
-                self._validate_ids(data_, ids)
+            return tuple(str(i) for i in range(_vec_to_size(data)))
 
-        if redundant:
-            self._data = data_
-            self._flags["VECTOR"] = False
-        else:
-            if diagonal is None:
-                if np.trace(data_) != 0:
-                    self._diagonal = np.diag(data_)
-                else:
-                    self._diagonal = 0.0
-            else:
-                self._diagonal = diagonal
-            self._data = squareform(data_, checks=False)
-            self._flags["VECTOR"] = True
-        self._ids = ids
-        self._id_index = self._index_list(self._ids)
+    def _init_flags(self):
+        # This is the default value. PairwiseMatrix doesn't really need flags.
+        return {"VECTOR": False}
+
+    def _init_data(self, data):
+        return data
 
     @classonlymethod
     def from_iterable(
@@ -439,10 +421,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        if self._flags["VECTOR"]:
-            return squareform(self._data, force="tomatrix", checks=False)
-        else:
-            return self._data
+        return self._data
 
     def copy(self) -> "PairwiseMatrix":
         r"""Return a deep copy of the dissimilarity matrix.
@@ -460,18 +439,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        if self._flags["VECTOR"]:
-            new_instance = self.__class__(
-                self._data.copy(), deepcopy(self.ids), validate=False, redundant=False
-            )
-            if hasattr(self, "_diagonal"):
-                if np.isscalar(self._diagonal):
-                    new_instance._diagonal = self._diagonal
-                else:
-                    new_instance._diagonal = self._diagonal.copy()
-            return new_instance
-        else:
-            return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
+        return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
         r"""Rename IDs in the dissimilarity matrix.
@@ -1064,6 +1032,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             else:
                 return self._data.__getitem__(index)  # type: ignore[index]
 
+    # I believe this one should work for all three classes, so I shouldn't need
+    # to override this method in SymmetricMatrix or DistanceMatrix
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
 
@@ -1108,6 +1078,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                     "data (%d)." % (len(ids), data.shape[0])
                 )
 
+    # this one will need to be overriden for the DistanceMatrix and SymmetricMatrix
+    # classes so that it can handle condensed form
     def _validate_shape(self, data: np.ndarray) -> None:
         """Validate the data array shape.
 
@@ -1132,27 +1104,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             )
         if data.dtype not in (np.float32, np.float64):
             raise PairwiseMatrixError("Data must contain only floating point values.")
-
-    def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
-        """Validate the data array and IDs.
-
-        Checks that the data is at least 1x1 in size, 2D, square, and
-        contains only floats. Also checks that IDs are unique and that the
-        number of IDs matches the number of rows/cols in the data array.
-
-        Subclasses can override this method to perform different/more specific
-        validation (e.g., see `DistanceMatrix`).
-
-        Notes
-        -----
-        Accepts arguments instead of inspecting instance attributes to avoid
-        creating an invalid dissimilarity matrix before raising an error.
-        Otherwise, the invalid dissimilarity matrix could be used after the
-        exception is caught and handled.
-
-        """
-        self._validate_shape(data)
-        self._validate_ids(data, ids)
 
     def _index_list(self, list_: Sequence[str]) -> dict:
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -1194,19 +1145,158 @@ class SymmetricMatrix(PairwiseMatrix):
     SymmetricMatrix
     """
 
-    def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
-        """Validate the data array and IDs.
+    def __init__(
+        self,
+        data: Union[
+            np.ndarray,
+            Sequence[float],
+            Sequence[Sequence[float]],
+            "PairwiseMatrix",
+        ],
+        ids: Optional[Sequence[str]] = None,
+        validate: bool = True,
+        redundant: bool = True,
+        diagonal: Union[float, np.ndarray] = 0.0,
+    ):
+        data, ids = self._normalize_input(data, ids)
 
-        Extends the superclass `_validate`. Performs a check for symmetry in
+        if ids is None:
+            ids = self._generate_ids(data)
+        else:
+            ids = tuple(ids)
+
+        if validate:
+            self._validate_data(data)
+            self._validate_diagonal(data, diagonal)
+            self._validate_ids(data, ids)
+            self._validate_shape(data)
+
+        self._ids = ids
+        self._id_index = self._index_list(self._ids)
+        self._data = self._init_data(data, redundant)
+        self._flags = self._init_flags(redundant)
+        self._diagonal = self._init_diagonal(diagonal, data)
+        # self._validate_ids()
+        # self._validate_shape()
+
+        # self._data = self._init_data(data, redundant)
+        # self._flags = self._init_flags(redundant)
+
+    def _init_diagonal(self, diagonal: np.ndarray, data: np.ndarray):
+        """Initialize the diagonal attribute."""
+        # This needs work
+        if diagonal is None:
+            if data.ndim == 2:
+                if np.trace(data) != 0:
+                    return np.diag(data)
+            else:
+                return 0.0
+        else:
+            return diagonal
+            # np.fill_diagonal(data_, diagonal)
+
+    def _init_flags(self, redundant: bool) -> dict:
+        """Init flags for symmetric matrix"""
+        if redundant:
+            return {"VECTOR": False}
+        else:
+            return {"VECTOR": True}
+
+    def _init_data(self, data: np.ndarray, redundant: bool) -> None:
+        """Initialize data for symmetric matrix."""
+        if not redundant:
+            # case where input is 1d and stays 1d
+            if data.ndim == 1:
+                return data
+            # case where input is 2d and is converted to 1d
+            else:
+                return squareform(data, force="tovector", checks=False)
+        else:
+            # case where input is 1d and is converted to 2d,
+            # information may be lost here, if the diagonal is not supposed
+            # to be zeros
+            if data.ndim == 1:
+                return squareform(data, force="tomatrix", checks=False)
+            # case where input is 2d and stays 2d
+            else:
+                return data
+
+    def _validate_data(self, data: np.ndarray) -> None:
+        """Validate the data array.
+
+        Performs a check for symmetry in
         addition to the checks performed in the superclass.
+        """
+        if (data.ndim != 1) and (not is_symmetric(data)):
+            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
+
+    def _validate_diagonal(
+        self, data: np.ndarray, diagonal: Optional[Union[float, int, np.ndarray]] = None
+    ) -> None:
+        """Validate the diagonal of the matrix."""
+        if isinstance(diagonal, np.ndarray):
+            # if it's a nd.array it needs to be 1d
+            if diagonal.ndim != 1:
+                raise SymmetricMatrixError(
+                    f"Diagonal must be 1 dimensional if it is array. Found "
+                    f"{diagonal.ndim} dimensions."
+                )
+            # it also needs to match the size of the matrix
+            if len(diagonal) != data.shape[0]:
+                raise SymmetricMatrixError(
+                    f"Length of diagonal does not match size of the array."
+                )
+            # do we need to check for non-negativity?
+
+    def _validate_shape(self, data: np.ndarray):
+        if data.ndim == 2:
+            if 0 in data.shape:
+                raise PairwiseMatrixError("Data must be at least 1x1 in size.")
+            # if len(data.shape) != 2:
+            #     raise PairwiseMatrixError("Data must have exactly two dimensions.")
+            if data.shape[0] != data.shape[1]:
+                raise PairwiseMatrixError(
+                    "Data must be square (i.e., have the same number of rows and "
+                    "columns)."
+                )
+        if data.dtype not in (np.float32, np.float64):
+            raise PairwiseMatrixError("Data must contain only floating point values.")
+
+    def redundant_form(self):
+        if self._flags["VECTOR"]:
+            # if self.__class__ == SymmetricMatrix:
+            mat = squareform(self._data, force="tomatrix", checks=False)
+            np.fill_diagonal(mat, self._diagonal)
+            return mat
+            # else:
+            #     return squareform(self._data, force="tomatrix", checks=False)
+        else:
+            return self._data
+
+    def condensed_form(self) -> np.ndarray:
+        """Return an array of distances in condensed format.
+
+        Returns
+        -------
+        ndarray
+            One-dimensional ``numpy.ndarray`` of distances in condensed format.
+
+        Notes
+        -----
+        Condensed format is described in [1]_.
+
+        The conversion is not a constant-time operation, though it should be
+        relatively quick to perform.
+
+        References
+        ----------
+        .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        super(SymmetricMatrix, self)._validate(data, ids)
-
-        data_sym = is_symmetric(data)
-
-        if not data_sym:
-            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
+        if self._flags["VECTOR"]:
+            return self._data, self._diagonal
+        else:
+            return squareform(self._data, force="tovector", checks=False)
 
     def permute(
         self,
@@ -1255,8 +1345,8 @@ class SymmetricMatrix(PairwiseMatrix):
         order = rng.permutation(self.shape[0])
 
         if condensed:
-            if self.__class__ != DistanceMatrix:
-                raise TypeError("Only distance matrices can return condensed.")
+            # if self.__class__ != DistanceMatrix:
+            #     raise TypeError("Only distance matrices can return condensed.")
             if self._flags["VECTOR"]:
                 permuted_condensed = distmat_reorder_condensed_python(self._data, order)
             else:
@@ -1272,6 +1362,38 @@ class SymmetricMatrix(PairwiseMatrix):
             else:
                 permuted = distmat_reorder(self._data, order)
                 return self.__class__(permuted, self.ids, validate=False)
+
+    def copy(self) -> "SymmetricMatrix":
+        r"""Return a deep copy of the symmetric matrix.
+
+        Returns
+        -------
+        PairwiseMatrix
+            Deep copy of the dissimilarity matrix. Will be the same type as
+            ``self``.
+
+        """
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        # Note: Skip validation, since we assume self was already validated
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        # Note: Skip validation, since we assume self was already validated
+        if self._flags["VECTOR"]:
+            return self.__class__(
+                self._data.copy(),
+                deepcopy(self.ids),
+                diagonal=deepcopy(self._diagonal),
+                validate=False,
+                redundant=False,
+            )
+        else:
+            return self.__class__(
+                self._data.copy(),
+                deepcopy(self.ids),
+                diagonal=deepcopy(self._diagonal),
+                validate=False,
+            )
 
 
 class DistanceMatrix(SymmetricMatrix):
@@ -1330,6 +1452,16 @@ class DistanceMatrix(SymmetricMatrix):
 
     # Override here, used in superclass __str__
     _matrix_element_name: ClassVar[str] = "distance"
+
+    # def __init__(self, data, ids=None, validate=True, redundant=True, diagonal=None):
+    #     if diagonal is not None and diagonal != 0.0:
+    #         raise ValueError("DistanceMatrix objects must be hollow (diagonal=0.0)")
+    #     if redundant:
+    #         self._data = data
+    #         self._flags["VECTOR"] = False
+    #     else:
+
+    #     super().__init__(data, ids, validate, redundant, diagonal=0.0)
 
     def condensed_form(self) -> np.ndarray:
         """Return an array of distances in condensed format.
