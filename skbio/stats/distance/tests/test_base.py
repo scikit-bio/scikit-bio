@@ -715,7 +715,7 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
 
     def test_validate_invalid_dtype(self):
         with self.assertRaises(PairwiseMatrixError):
-            self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
+            self.dm_3x3._validate_shape(np.array([[0, 42], [42, 0]]))
 
     def test_validate_invalid_shape(self):
         # first check it actually likes good matrices

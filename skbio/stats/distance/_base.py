@@ -144,6 +144,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         validate: bool = True,
     ) -> None:
         data, ids = self._normalize_input(data, ids)
+        # convert data to redundant if 1D input
+        if data.ndim == 1:
+            data = squareform(data, force="tomatrix", checks=False)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1148,21 +1151,16 @@ class SymmetricMatrix(PairwiseMatrix):
             ids = tuple(ids)
 
         if validate:
+            self._validate_shape(data)
+            self._validate_ids(data, ids)
             self._validate_data(data)
             self._validate_diagonal(data, diagonal)
-            self._validate_ids(data, ids)
-            self._validate_shape(data)
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
         self._data = self._init_data(data, redundant)
         self._flags = self._init_flags(redundant)
         self._diagonal = self._init_diagonal(diagonal, data)
-        # self._validate_ids()
-        # self._validate_shape()
-
-        # self._data = self._init_data(data, redundant)
-        # self._flags = self._init_flags(redundant)
 
     def _init_diagonal(self, diagonal: np.ndarray, data: np.ndarray):
         """Initialize the diagonal attribute."""
@@ -1234,8 +1232,6 @@ class SymmetricMatrix(PairwiseMatrix):
         if data.ndim == 2:
             if 0 in data.shape:
                 raise PairwiseMatrixError("Data must be at least 1x1 in size.")
-            # if len(data.shape) != 2:
-            #     raise PairwiseMatrixError("Data must have exactly two dimensions.")
             if data.shape[0] != data.shape[1]:
                 raise PairwiseMatrixError(
                     "Data must be square (i.e., have the same number of rows and "
@@ -1551,24 +1547,22 @@ class DistanceMatrix(SymmetricMatrix):
         else:
             return squareform(self._data, force="tovector", checks=False)
 
-    def _validate(self, data: np.ndarray, ids: Collection[str]) -> None:
-        """Validate the data array and IDs.
+    def _validate_data(self, data: np.ndarray) -> None:
+        """Validate the data array.
 
-        Extends the superclass `_validate`. Performs a check for symmetry in
-        addition to the checks performed in the superclass.
-
+        Performs a check for symmetry and hollowness.
         """
-        super(DistanceMatrix, self)._validate(data, ids)
-
-        data_sym, data_hol = is_symmetric_and_hollow(data)
-
-        if not data_sym:
-            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
-
-        if not data_hol:
-            raise DistanceMatrixError(
-                "Data must be hollow (i.e., the diagonal can only contain zeros)."
-            )
+        # if the input data is 1D, we don't need to check for hollowness or symmetry
+        if data.ndim == 2:
+            data_sym, data_hol = is_symmetric_and_hollow(data)
+            if not data_sym:
+                raise DistanceMatrixError(
+                    "Data must be symmetric and cannot contain NaNs."
+                )
+            if not data_hol:
+                raise DistanceMatrixError(
+                    "Data must  be hollow (i.e., the diagonal can only contain zeros)."
+                )
 
     def to_series(self) -> pd.Series:
         """Create a ``pandas.Series`` from this ``DistanceMatrix``.
