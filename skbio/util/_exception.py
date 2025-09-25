@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Exceptions."""
+
 
 class TestingUtilError(Exception):
     """Raised when an exception is needed to test exception handling."""

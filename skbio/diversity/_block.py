@@ -6,11 +6,18 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Any, Optional, Union, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import TableLike
+
 import numpy as np
 
 from skbio.diversity._driver import partial_beta_diversity
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
+from skbio.table._tabular import _ingest_table
 
 
 def _generate_id_blocks(ids, k=64):
@@ -251,31 +258,38 @@ def _reduce(blocks):
 
 
 def block_beta_diversity(
-    metric, counts, ids, validate=True, k=64, reduce_f=None, map_f=None, **kwargs
-):
+    metric: Union[str, Callable],
+    counts: "TableLike",
+    ids: Optional["ArrayLike"] = None,
+    validate: bool = True,
+    k: int = 64,
+    reduce_f: Optional[Callable] = None,
+    map_f: Optional[Callable] = None,
+    **kwargs: Any,
+) -> DistanceMatrix:
     """Perform a block-decomposition beta diversity calculation.
 
     Parameters
     ----------
     metric : str or callable
-        The pairwise distance function to apply. If ``metric`` is a string, it
-        must be resolvable by scikit-bio (e.g., UniFrac methods), or must be
-        callable.
-    counts : 2D array_like of ints or floats
-        Matrix containing count/abundance data where each row contains counts
-        of taxa in a given sample.
-    ids : iterable of strs
+        The beta diversity metric to apply to the samples. See
+        :func:`~skbio.diversity.beta_diversity` for details.
+    counts : table_like of shape (n_samples, n_taxa)
+        Matrix containing count/abundance data of the samples. See
+        :ref:`supported formats <table_like>`.
+    ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``.
     validate : bool, optional
-        See ``skbio.diversity.beta_diversity`` for details.
-    reduce_f : function, optional
+        If True (default), validate the input data. See ``beta_diversity`` for
+        details.
+    reduce_f : callable, optional
         A method to reduce `PartialDistanceMatrix` objects into a single
         `DistanceMatrix`. The expected signature is:
 
             `f(Iterable of DistanceMatrix) -> DistanceMatrix`
 
         Note, this is the reduce within a map/reduce.
-    map_f: function, optional
+    map_f: callable, optional
         A method that accepts a `_block_compute`. The expected signature is:
 
             `f(**kwargs) -> DistanceMatrix`
@@ -283,15 +297,15 @@ def block_beta_diversity(
         NOTE: ipyparallel's `map_async` will not work here as we need to be
         able to pass around `**kwargs``.
     k : int, optional
-        The blocksize used when computing distances
+        The blocksize used when computing distances. Default is 64.
     kwargs : kwargs, optional
-        Metric-specific parameters.
+        Metric-specific parameters. See ``beta_diversity`` for details.
 
     Returns
     -------
     DistanceMatrix
-        A distance matrix relating all samples represented by counts to each
-        other.
+        Distances between all pairs of samples (i.e., rows). The number of
+        rows and columns will be equal to the number of rows in ``counts``.
 
     Notes
     -----
@@ -304,16 +318,20 @@ def block_beta_diversity(
 
     See Also
     --------
-    skbio.diversity.beta_diversity
-    skbio.diversity.partial_beta_diversity
+    beta_diversity
+    partial_beta_diversity
 
     References
     ----------
     .. [1] http://www.earthmicrobiome.org/
 
     """
+    if "taxa" in kwargs:
+        counts, ids, kwargs["taxa"] = _ingest_table(counts, ids, kwargs["taxa"])
+    else:
+        counts, ids, _ = _ingest_table(counts, ids)
     if validate:
-        counts = _validate_counts_matrix(counts, ids=ids)
+        counts = _validate_counts_matrix(counts)
 
     if reduce_f is None:
         reduce_f = _reduce
@@ -321,10 +339,8 @@ def block_beta_diversity(
     if map_f is None:
         map_f = _map
 
-    # The block method uses numeric IDs to take advantage of fancy indexing
-    # with numpy.
-    tmp_ids = np.arange(len(counts))
-    kwargs["ids"] = tmp_ids
+    # The block method uses numeric IDs to take advantage of NumPy's advanced indexing.
+    kwargs["ids"] = np.arange(counts.shape[0])
 
     kwargs["metric"] = metric
     kwargs["counts"] = counts

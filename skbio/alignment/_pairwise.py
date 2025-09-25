@@ -12,7 +12,6 @@ from itertools import product
 import numpy as np
 
 from skbio.alignment import TabularMSA
-from skbio.alignment._ssw_wrapper import StripedSmithWaterman
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence import GrammaredSequence
 from skbio.sequence import SubstitutionMatrix
@@ -66,10 +65,9 @@ def local_pairwise_align_nucleotide(
     --------
     local_pairwise_align
     local_pairwise_align_protein
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -133,10 +131,9 @@ def local_pairwise_align_protein(
     --------
     local_pairwise_align
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -201,10 +198,9 @@ def local_pairwise_align(
     --------
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -220,9 +216,9 @@ def local_pairwise_align(
 
     """
     warn(
-        "You're using skbio's python implementation of Smith-Waterman "
-        "alignment. This will be very slow (e.g., thousands of times slower) "
-        "than skbio.alignment.local_pairwise_align_ssw.",
+        "You're using skbio's pure Python implementation of local pairwise "
+        "alignment. This is known to be very slow. We recommend using the "
+        "efficient `skbio.alignment.pair_align` function instead.",
         PendingDeprecationWarning,
     )
 
@@ -325,7 +321,6 @@ def global_pairwise_align_nucleotide(
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
     global_pairwise_align_protein
 
@@ -358,9 +353,9 @@ def global_pairwise_align_nucleotide(
     # use the substitution matrix provided by the user, or compute from
     # match_score and mismatch_score if a substitution matrix was not provided
     if substitution_matrix is None:
-        substitution_matrix = make_identity_substitution_matrix(
-            match_score, mismatch_score
-        )
+        substitution_matrix = SubstitutionMatrix.identity(
+            "ACGTU", match_score, mismatch_score
+        ).to_dict()
 
     return global_pairwise_align(
         seq1,
@@ -418,9 +413,8 @@ def global_pairwise_align_protein(
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -512,9 +506,8 @@ def global_pairwise_align(
     local_pairwise_align
     local_pairwise_align_protein
     local_pairwise_align_nucleotide
-    skbio.alignment.local_pairwise_align_ssw
     global_pairwise_align_protein
-    global_pairwise_align_nucelotide
+    global_pairwise_align_nucleotide
 
     Notes
     -----
@@ -535,11 +528,9 @@ def global_pairwise_align(
 
     """
     warn(
-        "You're using skbio's python implementation of Needleman-Wunsch "
-        "alignment. This is known to be very slow (e.g., thousands of times "
-        "slower than a native C implementation). We'll be adding a faster "
-        "version soon (see https://github.com/scikit-bio/scikit-bio/issues/"
-        "254 to track progress on this).",
+        "You're using skbio's pure Python implementation of global pairwise "
+        "alignment. This is known to be very slow. We recommend using the "
+        "efficient `skbio.alignment.pair_align` function instead.",
         PendingDeprecationWarning,
     )
 
@@ -592,151 +583,6 @@ def global_pairwise_align(
     msa = TabularMSA(aligned1 + aligned2)
 
     return msa, score, start_end_positions
-
-
-@deprecated(
-    "0.5.8",
-    msg="It will be removed in favor of more general purpose and performant aligners. "
-    "Additional details at https://github.com/scikit-bio/scikit-bio/issues/1814.",
-)
-def local_pairwise_align_ssw(sequence1, sequence2, **kwargs):
-    """Align query and target sequences with Striped Smith-Waterman.
-
-    Parameters
-    ----------
-    sequence1 : DNA, RNA, or Protein
-        The first unaligned sequence
-    sequence2 : DNA, RNA, or Protein
-        The second unaligned sequence
-    kwargs : dict
-        Additional keyword arguments to pass to ``StripedSmithWaterman``.
-
-    Returns
-    -------
-    tuple
-        ``TabularMSA`` object containing the aligned sequences, alignment score
-        (float), and start/end positions of each input sequence (iterable
-        of two-item tuples). Note that start/end positions are indexes into the
-        unaligned sequences.
-
-    Notes
-    -----
-    This is a wrapper for the SSW package [1]_.
-
-    For a complete list of optional keyword-arguments that can be provided,
-    see ``skbio.alignment.StripedSmithWaterman``.
-
-    The following kwargs will not have any effect: `suppress_sequences`,
-    `zero_index`, and `protein`
-
-    If an alignment does not meet a provided filter, `None` will be returned.
-
-    References
-    ----------
-    .. [1] Zhao, Mengyao, Wan-Ping Lee, Erik P. Garrison, & Gabor T.
-       Marth. "SSW Library: An SIMD Smith-Waterman C/C++ Library for
-       Applications". PLOS ONE (2013). Web. 11 July 2014.
-       http://www.plosone.org/article/info:doi/10.1371/journal.pone.0082138
-
-    See Also
-    --------
-    skbio.alignment.StripedSmithWaterman
-
-    """
-    for seq in sequence1, sequence2:
-        if not isinstance(seq, (DNA, RNA, Protein)):
-            raise TypeError(
-                "`sequence1` and `sequence2` must be DNA, RNA, or Protein, "
-                "not type %r" % type(seq).__name__
-            )
-
-    if type(sequence1) is not type(sequence2):
-        raise TypeError(
-            "`sequence1` and `sequence2` must be the same type: %r != %r"
-            % (type(sequence1).__name__, type(sequence2).__name__)
-        )
-
-    # We need the sequences for `TabularMSA` to make sense, so don't let the
-    # user suppress them.
-    kwargs["suppress_sequences"] = False
-    kwargs["zero_index"] = True
-
-    kwargs["protein"] = False
-    if isinstance(sequence1, Protein):
-        kwargs["protein"] = True
-
-    query = StripedSmithWaterman(str(sequence1), **kwargs)
-    alignment = query(str(sequence2))
-
-    # If there is no cigar, then it has failed a filter. Return None.
-    if not alignment.cigar:
-        return None
-
-    start_end = None
-    if alignment.query_begin != -1:
-        start_end = [
-            (alignment.query_begin, alignment.query_end),
-            (alignment.target_begin, alignment.target_end_optimal),
-        ]
-
-    metadata1 = metadata2 = None
-    if sequence1.has_metadata():
-        metadata1 = sequence1.metadata
-    if sequence2.has_metadata():
-        metadata2 = sequence2.metadata
-
-    constructor = type(sequence1)
-    msa = TabularMSA(
-        [
-            constructor(
-                alignment.aligned_query_sequence, metadata=metadata1, validate=False
-            ),
-            constructor(
-                alignment.aligned_target_sequence, metadata=metadata2, validate=False
-            ),
-        ]
-    )
-
-    return msa, alignment.optimal_alignment_score, start_end
-
-
-@deprecated(
-    "0.4.0",
-    msg="It has been replaced by the SubstitutionMatrix class. Additional details at: "
-    "https://github.com/scikit-bio/scikit-bio/pull/1913.",
-)
-def make_identity_substitution_matrix(match_score, mismatch_score, alphabet="ACGTU"):
-    """Generate substitution matrix where all matches are scored equally.
-
-    Parameters
-    ----------
-    match_score : int, float
-        The score that should be assigned for all matches. This value is
-        typically positive.
-    mismatch_score : int, float
-        The score that should be assigned for all mismatches. This value is
-        typically negative.
-    alphabet : iterable of str, optional
-        The characters that should be included in the substitution matrix.
-
-    Returns
-    -------
-    dict of dicts
-        All characters in alphabet are keys in both dictionaries, so that any
-        pair of characters can be looked up to get their match or mismatch
-        score.
-
-    """
-    result = {}
-    for c1 in alphabet:
-        row = {}
-        for c2 in alphabet:
-            if c1 == c2:
-                row[c2] = match_score
-            else:
-                row[c2] = mismatch_score
-        result[c1] = row
-    return result
 
 
 # Functions from here allow for generalized (global or local) alignment. I

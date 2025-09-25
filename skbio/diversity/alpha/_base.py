@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
 import functools
 
 import numpy as np
@@ -156,7 +155,7 @@ def dominance(counts, finite=False):
     where :math:`S` is the number of taxa and :math:`p_i` is the proportion
     of the sample represented by taxon :math:`i`.
 
-    Simpson's :math:`D` ranges from 0 (infinite diversity; no dominance) and 1
+    Simpson's :math:`D` ranges from 0 (infinite diversity; no dominance) to 1
     (complete dominance, no diversity).
 
     Simpson's :math:`D` can be interpreted as the probability that two randomly

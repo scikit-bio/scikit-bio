@@ -10,8 +10,6 @@ on:
 
 env:
   latest_python: "3.13"
-  miniforge_version: "23.11.0-0"
-  miniforge_variant: "Mambaforge"
 
 jobs:
 
@@ -30,8 +28,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
 
       - name: Install dependencies
         run: pip install -r ci/requirements.doc.txt

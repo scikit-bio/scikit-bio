@@ -18,7 +18,7 @@ from skbio.diversity._block import (_block_party, _generate_id_blocks,
                                     _block_kwargs, _map, _reduce)
 
 
-class ParallelBetaDiversity(TestCase):
+class BlockBetaDiversityTests(TestCase):
     def setUp(self):
         self.table1 = [[1, 5],
                        [2, 3],
@@ -27,6 +27,15 @@ class ParallelBetaDiversity(TestCase):
         self.tree1 = TreeNode.read([
             '((O1:0.25, O2:0.50):0.25, O3:0.75)root;'])
         self.oids1 = ['O1', 'O2']
+
+    def test_block_beta_diversity(self):
+        exp = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
+                             tree=self.tree1, taxa=self.oids1)
+        obs = block_beta_diversity('unweighted_unifrac', self.table1,
+                                   self.sids1, taxa=self.oids1,
+                                   tree=self.tree1, k=2)
+        npt.assert_equal(obs.data, exp.data)
+        self.assertEqual(obs.ids, exp.ids)
 
     def test_block_kwargs(self):
         kws = {'ids': [1, 2, 3, 4, 5], 'foo': 'bar', 'k': 2}
@@ -111,15 +120,6 @@ class ParallelBetaDiversity(TestCase):
                                        [3, 123, 0, 5, 6, 0]]), list(range(6)))
 
         obs = _reduce([dm1, dm2, dm3])
-        npt.assert_equal(obs.data, exp.data)
-        self.assertEqual(obs.ids, exp.ids)
-
-    def test_block_beta_diversity(self):
-        exp = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
-                             tree=self.tree1, taxa=self.oids1)
-        obs = block_beta_diversity('unweighted_unifrac', self.table1,
-                                   self.sids1, taxa=self.oids1,
-                                   tree=self.tree1, k=2)
         npt.assert_equal(obs.data, exp.data)
         self.assertEqual(obs.ids, exp.ids)
 

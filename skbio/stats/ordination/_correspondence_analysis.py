@@ -7,12 +7,11 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pds
 from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
 def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
@@ -33,21 +32,16 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     Parameters
     ----------
-    X : table_like
-        Samples by features table (n, m). It can be applied to different kinds
-        of data tables, but data must be non-negative and dimensionally homogeneous
-        (quantitative or binary). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+    X : table_like of shape (n_samples, n_features)
+        Input data table. See :ref:`supported formats <table_like>`.
+        Data must be non-negative and dimensionally homogeneous (numeric or binary).
     scaling : {1, 2}
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
         For a more detailed explanation of the interpretation,
         check notes below and Legendre & Legendre 1998, section 9.4.3.
     sample_ids, feature_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -105,7 +99,9 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
-    X, row_ids, column_ids = _ingest_array(X, row_ids=sample_ids, col_ids=feature_ids)
+    X, row_ids, column_ids = _ingest_table(
+        X, sample_ids=sample_ids, feature_ids=feature_ids
+    )
 
     # Correspondance Analysis
     r, c = X.shape

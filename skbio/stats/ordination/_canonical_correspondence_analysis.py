@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import _create_table, _create_table_1d, _ingest_array
+from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
 def cca(
@@ -45,13 +45,9 @@ def cca(
     Parameters
     ----------
     y : table_like
-        Samples by features table (n, m). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Samples by features table (n, m). See :ref:`supported formats <table_like>`.
     x : table_like
-        Samples by constraints table (n, q). See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Samples by constraints table (n, q). See above.
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.
@@ -62,9 +58,7 @@ def cca(
         implicitly by the input data structure or explicitly by the user, defaults
         to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -118,11 +112,11 @@ def cca(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_sample_ids, feature_ids = _ingest_array(
-        y, row_ids=sample_ids, col_ids=feature_ids
+    Y, y_sample_ids, feature_ids = _ingest_table(
+        y, sample_ids=sample_ids, feature_ids=feature_ids
     )
-    X, x_sample_ids, constraint_ids = _ingest_array(
-        x, row_ids=sample_ids, col_ids=constraint_ids
+    X, x_sample_ids, constraint_ids = _ingest_table(
+        x, sample_ids=sample_ids, feature_ids=constraint_ids
     )
 
     # Perform parameter sanity checks
@@ -138,7 +132,7 @@ def cca(
     if np.any(row_max <= 0):
         # Or else the lstsq call to compute Y_hat breaks
         raise ValueError(
-            "The samples by features table 'y' cannot contain a " "row with only 0's"
+            "The samples by features table 'y' cannot contain a row with only 0's"
         )
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))

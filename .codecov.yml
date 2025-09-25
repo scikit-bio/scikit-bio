@@ -6,3 +6,9 @@ coverage:
     project:
       default:
         target: 80%
+
+ignore:
+  - "*/tests/*"
+  - "test_*.py"
+  - "util/_typing.py"
+  - "util/_testing.py"

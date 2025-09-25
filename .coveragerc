@@ -16,5 +16,7 @@ exclude_lines =
     raise NotImplementedError
     if __name__ == .__main__.:
 omit =
-    */tests*
+    */tests/*
     */__init__.py
+    util/_typing.py
+    util/_testing.py

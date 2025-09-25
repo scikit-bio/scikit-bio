@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import unittest
-import warnings
 
 from skbio.util._warning import _warn_once, _warn_deprecated, _warn_param_deprecated
 

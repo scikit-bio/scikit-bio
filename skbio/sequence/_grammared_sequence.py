@@ -98,10 +98,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     References
     ----------
-    .. [1] Nomenclature for incompletely specified bases in nucleic acid
-       sequences: recommendations 1984.
-       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-       A Cornish-Bowden
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
+       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
 
     Examples
     --------

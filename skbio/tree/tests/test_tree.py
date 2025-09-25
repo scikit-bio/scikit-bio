@@ -8,6 +8,7 @@
 
 from unittest import TestCase, main
 from collections import defaultdict
+from warnings import catch_warnings, simplefilter
 
 import numpy as np
 import numpy.testing as npt
@@ -121,7 +122,7 @@ class TreeTests(TestCase):
 
         # deep vs shallow copy
         t.dummy = [1, [2, 3], 4]
-        cp = t.copy()
+        cp = t.copy(deep=True)
         cp.dummy[1].append(0)
         self.assertListEqual(t.dummy[1], [2, 3])
         cp = t.copy(deep=False)
@@ -132,13 +133,6 @@ class TreeTests(TestCase):
         t.cache_attr(lambda n: 1, "node_count", sum)
         cp = t.copy()
         self.assertFalse(hasattr(cp, "node_count"))
-
-    def test_deepcopy(self):
-        t = self.simple_t
-        t.dummy = [1, [2, 3], 4]
-        cp = t.deepcopy()
-        cp.dummy[1].append(0)
-        self.assertListEqual(t.dummy[1], [2, 3])
 
     def test__copy__(self):
         t = self.simple_t
@@ -161,11 +155,6 @@ class TreeTests(TestCase):
             self.assertEqual(obs.length, exp.length)
         cp.dummy[1].append(0)
         self.assertListEqual(t.dummy[1], [2, 3])
-
-    def test_subtree(self):
-        """Make a copy of a subtree."""
-        with self.assertRaises(NotImplementedError):
-            self.simple_t.children[0].subtree()
 
     # ------------------------------------------------
     # Tree navigation
@@ -288,7 +277,9 @@ class TreeTests(TestCase):
 
         # parameter alias
         self.assertEqual(t1.lca(nodes=input1), exp1)
-        self.assertEqual(t1.lca(tipnames=input1), exp1)
+        with self.assertWarns(DeprecationWarning):
+            obsx = t1.lca(tipnames=input1)
+        self.assertEqual(obsx, exp1)
 
         # verify multiple calls work
         t_mul = t1.copy()
@@ -989,7 +980,8 @@ class TreeTests(TestCase):
 
         # renamed parameter
         t = self.simple_t.copy()
-        obs = str(next(t.shuffle(shuffle_f=42)))
+        with self.assertWarns(DeprecationWarning):
+            obs = str(next(t.shuffle(shuffle_f=42)))
         self.assertEqual(obs, exp)
 
         # yield a row of 5 trees
@@ -1137,9 +1129,15 @@ class TreeTests(TestCase):
         tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         node = tree.find("d")
 
-        # name as branch label (default behavior, but will change in the
-        # future)
+        # default behavior
         obs = node.unrooted_copy()
+        exp = "(b,c,(a,((f,g)h)i)e)d;\n"
+        self.assertEqual(str(obs), exp)
+
+        # name as branch label, root name as "root" (old default behavior; changed in
+        # 0.7.0)
+        obs = node.unrooted_copy(branch_attrs={"name", "length", "support"},
+                                 root_name="root")
         exp = "(b,c,(a,((f,g)h)e)d)root;\n"
         self.assertEqual(str(obs), exp)
 
@@ -1149,7 +1147,7 @@ class TreeTests(TestCase):
         self.assertEqual(str(obs), exp)
 
         # name the new root node (only when it doesn't have one)
-        obs = node.unrooted_copy(root_name="hello")
+        obs = node.unrooted_copy(branch_attrs={"name", "length"}, root_name="hello")
         exp = "(b,c,(a,((f,g)h)e)d)hello;\n"
         self.assertEqual(str(obs), exp)
 
@@ -1197,17 +1195,6 @@ class TreeTests(TestCase):
         tcopy.find("c").dummy[1].append(0)
         self.assertListEqual(tree.find("c").dummy[1], [2, 3, 0])
 
-    def test_unrooted_deepcopy(self):
-        t = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
-        exp = "(b,c,(a,((f,g)h)e)d)root;\n"
-        obs = t.find("d").unrooted_deepcopy()
-        self.assertEqual(str(obs), exp)
-
-        t_ids = {id(n) for n in t.traverse()}
-        obs_ids = {id(n) for n in obs.traverse()}
-
-        self.assertEqual(t_ids.intersection(obs_ids), set())
-
     def test_unrooted_move(self):
         t = TreeNode.read(["(((a:1,b:1)c:1,(d:1,e:1)f:2)g:0.5,(h:1,i:1)j:0.5)k;"])
         tcopy = t.copy()
@@ -1234,93 +1221,95 @@ class TreeTests(TestCase):
         """Root tree at a given node."""
         t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
 
-        # original behavior (name as branch label); deprecated
+        # root at an internal node
         obs = str(t.root_at("c"))
-        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
-        self.assertEqual(obs, exp)
-
-        # root at internal node
-        obs = str(t.root_at("c", branch_attrs=[]))
-        exp = "(a,b,((d,e)f,(h)i)g)c;\n"
+        exp = "(a,b,((d,e)f,h)g)c;\n"
         self.assertEqual(obs, exp)
 
         # root at self
-        obs = str(t.find("c").root_at(branch_attrs=[]))
+        obs = str(t.find("c").root_at())
         self.assertEqual(obs, exp)
 
+        # root at a basal node (which will be avoided during unrooting)
+        obs = str(t.root_at("g"))
+        exp = "((a,b)c,(d,e)f,h)g;\n"
+        self.assertEqual(obs, exp)
+
+        # in-place rooting
+        n = t.copy().find("g")
+        obs = n.root_at(inplace=True)
+        self.assertIs(n, obs)
+        self.assertEqual(str(obs), exp)
+
         # root at tip (and input node instead of name)
-        obs = str(t.root_at(t.find("h"), branch_attrs=[]))
+        obs = str(t.root_at(t.find("h")))
+        exp = "(((a,b)c,(d,e)f)g)h;\n"
+        self.assertEqual(obs, exp)
+
+        # root at root (no change)
+        obs = str(t.root_at("i"))
+        self.assertEqual(obs, str(t))
+
+        # tree is already unrooted
+        t = TreeNode.read(["((a,b)c,d,e)f;"])
+        obs = str(t.root_at("c"))
+        exp = str(t.root_at("c", reset=False))
+        self.assertEqual(obs, exp)
+
+    def test_root_at_keep(self):
+        """Root tree while keeping original root."""
+        t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
+
+        # old default behavior (changed since 0.7.0)
+        obs = str(t.root_at("c", reset=False, branch_attrs=["name"], root_name="root"))
+        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
+        self.assertEqual(obs, exp)
+
+        # root at an internal node
+        obs = str(t.root_at("c", reset=False))
+        exp = "(a,b,((d,e)f,(h)i)g)c;\n"
+        self.assertEqual(obs, exp)
+
+        # root at a tip
+        obs = str(t.root_at(t.find("h"), reset=False))
         exp = "((((a,b)c,(d,e)f)g)i)h;\n"
         self.assertEqual(obs, exp)
 
         # root at root (no change)
-        obs = str(t.root_at("i", branch_attrs=[]))
+        obs = str(t.root_at("i", reset=False))
         self.assertEqual(obs, str(t))
-
-        # in-place rooting
-        n = t.copy().find("c")
-        obs = n.root_at(inplace=True)
-        exp = "(a,b,((d,e)f,(h)g)c)root;\n"
-        self.assertIs(n, obs)
-        self.assertEqual(str(obs), exp)
 
     def test_root_at_above(self):
         """Root tree at the branch above a given node."""
         # no branch length
         t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
-        obs = str(t.root_at("c", above=True, branch_attrs=[]))
-        exp = "((a,b)c,((d,e)f,(h)i)g)root;\n"
+        obs = str(t.root_at("c", above=True))
+        exp = "((a,b)c,((d,e)f,h)g);\n"
         self.assertEqual(obs, exp)
 
         # in-place rooting
         n = t.find("c")
-        obs = t.root_at(n, above=True, branch_attrs=[], inplace=True)
+        obs = t.root_at(n, above=True, inplace=True)
         self.assertIs(n.parent, obs)
         self.assertEqual(str(obs), exp)
 
         # root at midpoint of branch
         t = TreeNode.read(["(((a,b)c:1.0,(d,e)f)g,h)i;"])
-        obs = str(t.root_at("c", above=True, branch_attrs=[]))
-        exp = "((a,b)c:0.5,((d,e)f,(h)i)g:0.5)root;\n"
+        obs = str(t.root_at("c", above=True))
+        exp = "((a,b)c:0.5,((d,e)f,h)g:0.5);\n"
         self.assertEqual(obs, exp)
 
         # root at specific position
         t = TreeNode.read(["(((a,b)c:1.0,(d,e)f)g,h)i;"])
-        obs = str(t.root_at("c", above=0.4, branch_attrs=[]))
-        exp = "((a,b)c:0.4,((d,e)f,(h)i)g:0.6)root;\n"
+        obs = str(t.root_at("c", above=0.4))
+        exp = "((a,b)c:0.4,((d,e)f,h)g:0.6);\n"
         self.assertEqual(obs, exp)
 
         # with branch support
         t = TreeNode.read(["(((a,b)'90:c',(d,e)'80:f')g,h)i;"])
         t.assign_supports()
-        obs = str(t.root_at("c", above=True, branch_attrs=[]))
-        exp = "((a,b)'90:c',((d,e)'80:f',(h)i)'90:g')root;\n"
-        self.assertEqual(obs, exp)
-
-    def test_root_at_reset(self):
-        """Root tree while resetting original root."""
-        t = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
-
-        # unroot tree prior to rerooting
-        obs = str(t.root_at("c", reset=True, branch_attrs=[]))
-        exp = "(a,b,((d,e)f,h)g)c;\n"
-        self.assertEqual(obs, exp)
-
-        # root at a basal node (which will be avoided during unrooting)
-        obs = str(t.root_at("g", reset=True, branch_attrs=[]))
-        exp = "((a,b)c,(d,e)f,h)g;\n"
-        self.assertEqual(obs, exp)
-
-        # in-place rooting
-        n = t.find("g")
-        obs = t.root_at(n, reset=True, branch_attrs=[], inplace=True)
-        self.assertIs(n, obs)
-        self.assertEqual(str(obs), exp)
-
-        # tree is already unrooted
-        t = TreeNode.read(["((a,b)c,d,e)f;"])
-        obs = str(t.root_at("c", branch_attrs=[], reset=True))
-        exp = str(t.root_at("c", branch_attrs=[]))
+        obs = str(t.root_at("c", above=True))
+        exp = "((a,b)'90:c',((d,e)'80:f',h)'90:g');\n"
         self.assertEqual(obs, exp)
 
     def test_root_at_midpoint(self):
@@ -1340,7 +1329,7 @@ class TreeTests(TestCase):
 
         # in-place rerooting
         b = t.find("b")
-        result = t.root_at_midpoint(inplace=True)
+        result = t.root_at_midpoint(inplace=True, reset=False)
         self.assertIs(b.parent, result)
         self.assertEqual(result.cophenet(), exp_dist)
 
@@ -1348,14 +1337,13 @@ class TreeTests(TestCase):
         # should get same tree back (a copy)
         nwk = "(a,b)c;\n"
         t = TreeNode.read([nwk])
-        obs = t.root_at_midpoint()
+        obs = t.root_at_midpoint(reset=False)
         self.assertEqual(str(obs), nwk)
 
     def test_root_at_midpoint_tie(self):
-        # original behavior (name as branch label); deprecated
-        t = TreeNode.read(["(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1)root;"])
+        t = TreeNode.read(["(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1);"])
         obs = t.root_at_midpoint()
-        exp = TreeNode.read(["((d:3,e:4)f:2,((a:1,b:1)c:2,(g:1)):3)root;"])
+        exp = TreeNode.read(["((d:3,e:4)f:2,((a:1,b:1)c:2,g:1):3);"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
@@ -1363,21 +1351,21 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
         # farthest tip-to-tip distance is 12 (a or b to e)
         # therefore new root should be 2 above f
-        obs = t.root_at_midpoint(branch_attrs=[])
-        exp = TreeNode.read(["((d:3,e:4)f:2,((a:1,b:1)c:2,g:1)h:3)root;"])
+        obs = t.root_at_midpoint()
+        exp = TreeNode.read(["((d:3,e:4)f:2,((a:1,b:1)c:2,g:1)h:3);"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
 
-        # no root name
-        obs = t.root_at_midpoint(branch_attrs=[], root_name=None)
-        self.assertIsNone(obs.name)
+        # with root name
+        obs = t.root_at_midpoint(root_name="root")
+        self.assertEqual(obs.name, "root")
 
         # with branch support
         t = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)'80:f':5,g:1)h;"])
         t.assign_supports()
-        obs = t.root_at_midpoint(branch_attrs=[])
-        exp = TreeNode.read(["((d:3,e:4)'80:f':2,((a:1,b:1)c:2,g:1)'80:h':3)root;"])
+        obs = t.root_at_midpoint()
+        exp = TreeNode.read(["((d:3,e:4)'80:f':2,((a:1,b:1)c:2,g:1)'80:h':3);"])
         exp.assign_supports()
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
@@ -1388,14 +1376,14 @@ class TreeTests(TestCase):
         t = TreeNode.read(["(((a:2,b:3)c:1,d:1)e:1,f:3)g;"])
         # farthest tip-to-tip distance is 8 (b - c - e - f)
         # therefore new root should be at e
-        obs = t.root_at_midpoint(branch_attrs=[])
+        obs = t.root_at_midpoint(reset=False)
         exp = TreeNode.read(["((a:2.0,b:3.0)c:1.0,d:1.0,(f:3.0)g:1.0)e;"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
 
         # remove original root
-        obs = t.root_at_midpoint(branch_attrs=[], reset=True)
+        obs = t.root_at_midpoint()
         exp = TreeNode.read(["((a:2.0,b:3.0)c:1.0,d:1.0,f:4.0)e;"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
@@ -1881,7 +1869,8 @@ class TreeTests(TestCase):
         self.assertAlmostEqual(sdbl, 2.2)
 
         # parameter alias
-        sdbl = tr.total_length(tip_subset="AE")
+        with self.assertWarns(DeprecationWarning):
+            sdbl = tr.total_length(tip_subset="AE")
         self.assertAlmostEqual(sdbl, 2.2)
 
         # missing node
@@ -2233,7 +2222,8 @@ class TreeTests(TestCase):
         result = t.compare_subsets(t4, shared_only=True)
         self.assertEqual(result, 0)
 
-        result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
+        with self.assertWarns(DeprecationWarning):
+            result = t.compare_subsets(self.TreeRoot, exclude_absent_taxa=True)
         self.assertEqual(result, 1)
 
         result = t.compare_subsets(self.TreeRoot)
@@ -2266,7 +2256,7 @@ class TreeTests(TestCase):
         result = TreeNode('x').compare_biparts(TreeNode('y'))
         self.assertEqual(result, 1)
 
-    def test_compare_cophenet(self):
+    def test_compare_cophenet_old(self):
         """Return distance between two trees based on tip distances."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
         t2 = TreeNode.read(["(((H:1,G:1,O:1):2,R:3):1,X:4);"])
@@ -2274,7 +2264,7 @@ class TreeTests(TestCase):
         # default behavior (half correlation, use length, include self)
         # note: common taxa are H, G, R (only)
         # note: version 0.7.0 will ignore self by default (see below)
-        obs = t.compare_cophenet(t2)
+        obs = t.compare_cophenet(t2, ignore_self=False)
         m1 = np.array([[0, 2, 6.5], [2, 0, 6.5], [6.5, 6.5, 0]])
         m2 = np.array([[0, 2, 6], [2, 0, 6], [6, 6, 0]])
         r = pearsonr(m1.flat, m2.flat)[0]
@@ -2284,34 +2274,40 @@ class TreeTests(TestCase):
         # sample a subset of taxa
         # note: all common taxa are selected, despite that the default
         # shuffler function is stochastic.
-        obs = t.compare_cophenet(t2, sample=3)
+        obs = t.compare_cophenet(t2, sample=3, ignore_self=False)
         self.assertAlmostEqual(obs, exp)
 
         # 4 common taxa, custom shuffler, still picking H, G, R
         tx = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7,U:5):3);"])
         t2x = TreeNode.read(["(((H:1,G:1,O:1):2,R:3,U:10):1,X:4);"])
-        obs = tx.compare_cophenet(t2x, sample=3, shuffler=list.sort)
+        obs = tx.compare_cophenet(t2x, sample=3, shuffler=list.sort, ignore_self=False)
         self.assertAlmostEqual(obs, exp)
-        obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort)
+        with self.assertWarns(DeprecationWarning):
+            obs = tx.compare_cophenet(t2x, sample=3, shuffle_f=list.sort,
+                                      ignore_self=False)
         self.assertAlmostEqual(obs, exp)
 
         # sample too large
         with self.assertRaises(ValueError):
-            tx.compare_cophenet(t2x, sample=10)
+            tx.compare_cophenet(t2x, sample=10, ignore_self=False)
 
         # no common taxa
         t3 = TreeNode.read(["(((Z:1,Y:1,X:1):2,W:3):1,V:4);"])
         with self.assertRaises(ValueError):
-            t.compare_cophenet(t3)
+            t.compare_cophenet(t3, ignore_self=False)
 
         # single common taxon
         t4 = TreeNode.read(["(((R:1,Y:1,X:1):2,W:3):1,V:4);"])
-        self.assertTrue(np.isnan(t.compare_cophenet(t4)))
+        with catch_warnings():
+            simplefilter("ignore", category=RuntimeWarning)
+            self.assertTrue(np.isnan(t.compare_cophenet(t4, ignore_self=False)))
 
         # two common taxa
         t5 = TreeNode.read(["(((R:1,Y:1,X:1):2,M:3):1,V:4);"])
-        self.assertAlmostEqual(t.compare_cophenet(t5), 0)
-        self.assertTrue(np.isnan(t.compare_cophenet(t5, ignore_self=True)))
+        self.assertAlmostEqual(t.compare_cophenet(t5, ignore_self=False), 0)
+        with catch_warnings():
+            simplefilter("ignore", category=RuntimeWarning)
+            self.assertTrue(np.isnan(t.compare_cophenet(t5, ignore_self=True)))
 
     def test_compare_cophenet_new(self):
         """Return distance between two trees based on tip distances."""
@@ -2320,31 +2316,32 @@ class TreeTests(TestCase):
         t1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
         t2 = TreeNode.read(["((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);"])
 
-        # default behavior (old, will change in version 0.7.0)
-        obs = t1.compare_cophenet(t2)
+        # default behavior (old, changed in version 0.7.0)
+        obs = t1.compare_cophenet(t2, ignore_self=False)
         self.assertAlmostEqual(obs, 0.0453512)
 
         # new default behavior
-        obs = t1.compare_cophenet(t2, ignore_self=True)
+        obs = t1.compare_cophenet(t2)
         self.assertAlmostEqual(obs, 0.1413090)
 
         # path length distance (matches phangorn::path.dist(use.weight=TRUE))
-        obs = t1.compare_cophenet(t2, metric="euclidean", ignore_self=True)
+        obs = t1.compare_cophenet(t2, metric="euclidean")
         self.assertAlmostEqual(obs, 13.7113092)
-        obs = t1.compare_cophenet(t2, metric=euclidean, ignore_self=True)
+        obs = t1.compare_cophenet(t2, metric=euclidean)
         self.assertAlmostEqual(obs, 13.7113092)
-        obs = t1.compare_cophenet(t2, dist_f=euclidean, ignore_self=True)
+        with self.assertWarns(DeprecationWarning):
+            obs = t1.compare_cophenet(t2, dist_f=euclidean)
         self.assertAlmostEqual(obs, 13.7113092)
 
         # path distance (matches phangorn::path.dist)
         obs = t1.compare_cophenet(
-            t2, metric="euclidean", use_length=False, ignore_self=True)
+            t2, metric="euclidean", use_length=False)
         self.assertAlmostEqual(obs, 4.0)
 
         # unit correlation distance is independent of tree scale
         for node in t2.traverse(include_self=False):
             node.length *= 3
-        obs = t1.compare_cophenet(t2, ignore_self=True)
+        obs = t1.compare_cophenet(t2)
         self.assertAlmostEqual(obs, 0.1413090)
 
     # ------------------------------------------------

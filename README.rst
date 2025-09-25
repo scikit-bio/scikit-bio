@@ -13,7 +13,7 @@ Visit the scikit-bio website: https://scikit.bio to learn more about this projec
 Releases
 --------
 
-Latest release: `0.6.3 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.6.3>`_ (`documentation <https://scikit.bio/docs/0.6.3/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-063>`_). Compatible with Python 3.9 and above.
+Latest release: `0.7.0 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.0>`_ (`documentation <https://scikit.bio/docs/0.7.0/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-070>`_). Compatible with Python 3.9 and above.
 
 
 Installation
@@ -101,7 +101,7 @@ scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/p
    :target: https://codecov.io/gh/scikit-bio/scikit-bio
 .. |bench| image:: https://img.shields.io/badge/benchmarked%20by-asv-green.svg
    :alt: ASV Benchmarks
-   :target: https://s3-us-west-2.amazonaws.com/scikit-bio.org/benchmarks/main/index.html
+   :target: https://scikit.bio/scikit-bio-benchmarks
 .. |release| image:: https://img.shields.io/github/v/release/scikit-bio/scikit-bio.svg
    :alt: Release
    :target: https://github.com/scikit-bio/scikit-bio/releases

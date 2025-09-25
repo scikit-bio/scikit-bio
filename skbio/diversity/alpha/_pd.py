@@ -10,21 +10,21 @@ import numpy as np
 
 from skbio.diversity._util import (
     _validate_counts_vector,
-    _validate_taxa_and_tree,
     vectorize_counts_and_tree,
 )
+from skbio.tree._utils import _validate_taxa_and_tree
 from skbio.util._decorator import params_aliased
 
 
 def _setup_pd(counts, taxa, tree, validate, rooted, single_sample):
     if validate:
+        # Only validate count if operating in single sample mode, as they will have
+        # already been validated otherwise.
         if single_sample:
-            # only validate count if operating in single sample mode, they
-            # will have already been validated otherwise
             counts = _validate_counts_vector(counts)
-            _validate_taxa_and_tree(counts, taxa, tree, rooted)
-        else:
-            _validate_taxa_and_tree(counts[0], taxa, tree, rooted)
+            if counts.size != len(taxa):
+                raise ValueError("`taxa` must be the same length as `counts`.")
+        _validate_taxa_and_tree(taxa, tree, rooted=rooted, lengths=True)
 
     counts_by_node, _, branch_lengths = vectorize_counts_and_tree(counts, taxa, tree)
 
@@ -115,8 +115,8 @@ def faith_pd(counts, taxa, tree, validate=True):
     Several other metrics, such as evolutionary history (EH) [3]_ and functional
     diversity (FD) [4]_, are equivalent to PD in calculation.
 
-    If computing Faith's PD for multiple samples, using
-    :func:`skbio.diversity.alpha_diversity` will be much faster than calling this
+    When computing Faith's PD for multiple samples, using
+    :func:`~skbio.diversity.alpha_diversity` will be much faster than calling this
     function individually on each sample.
 
     This implementation of Faith's PD is based on the array-based implementation of
@@ -181,12 +181,9 @@ def faith_pd(counts, taxa, tree, validate=True):
     6.95
 
     """
-    # TODO: Remove `otu_ids` and make `taxa` and `tree` required in a future version.
-
     counts_by_node, branch_lengths = _setup_pd(
         counts, taxa, tree, validate, rooted=True, single_sample=True
     )
-
     return _faith_pd(counts_by_node, branch_lengths)
 
 

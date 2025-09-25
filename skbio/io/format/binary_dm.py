@@ -32,10 +32,10 @@ HDF5 [1]_ file. Both datatypes are represented by their own datasets. The
 The dissimilarity between `ids[i]` and `ids[j]` is interpreted
 to be the value at `matrix[i, j]`. `i` and `j` are integer indices.
 
-Required attributes:
+Required datasets:
 
 +-----------+---------------------+------------------------------+
-|Attribute  |Value                |Description                   |
+|Datasets   |Value                |Description                   |
 |           |type                 |                              |
 +===========+=====================+==============================+
 |format     |string               |A string identifying the file |
@@ -52,6 +52,10 @@ Required attributes:
 |           |                     |IDs, where N is the total     |
 |           |                     |number of IDs                 |
 +-----------+---------------------+------------------------------+
+
+Optionally, the file can contain several matrices.
+In such a case, the 'matrix' dataset will not exist and we will use
+'matrix:0' instead.
 
 .. note:: This file format is most useful for storing large matrices that do
    not need to be represented in a human-readable format. This format is
@@ -75,13 +79,13 @@ References
 # ----------------------------------------------------------------------------
 
 import h5py
+from numpy import array as np_array
 
 from skbio.io import create_format
 from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")
-_vlen_dtype = h5py.special_dtype(vlen=str)
 
 
 @binary_dm.sniffer()
@@ -101,6 +105,8 @@ def _binary_dm_sniffer(fh):
 
     mat = f.get("matrix")
     if mat is None:
+        mat = f.get("matrix:0")
+    if mat is None:
         return False, {}
 
     n = len(ids)
@@ -112,34 +118,48 @@ def _binary_dm_sniffer(fh):
 
 @binary_dm.reader(DissimilarityMatrix)
 def _binary_dm_to_dissimilarity(fh):
-    return _h5py_mat_to_skbio_mat(fh)
+    return _h5py_mat_to_skbio_mat_stream(DissimilarityMatrix,fh)
 
 
 @binary_dm.reader(DistanceMatrix)
 def _binary_dm_to_distance(fh):
-    return _h5py_mat_to_skbio_mat(fh)
+    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix,fh)
 
 
 @binary_dm.writer(DissimilarityMatrix)
 def _dissimilarity_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat(fh)
+    return _skbio_mat_to_h5py_mat_stream(obj,fh)
 
 
 @binary_dm.writer(DistanceMatrix)
 def _distance_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat(fh)
+    return _skbio_mat_to_h5py_mat_stream(obj,fh)
 
 
-def _h5py_mat_to_skbio_mat(cls, fh):
-    return cls(fh["matrix"], _parse_ids(fh["order"]))
+def _h5py_mat_to_skbio_mat_stream(cls, fh):
+    with h5py.File(fh, "r") as f:
+      dm = _h5py_mat_to_skbio_mat(cls,f)
+    return dm
+
+def _h5py_mat_to_skbio_mat(cls, f):
+    mat = f.get("matrix")
+    if mat is None:
+        mat = f.get("matrix:0")
+    dm = cls(mat, _parse_ids(f["order"]))
+    return dm
 
 
-def _skbio_mat_to_h5py_mat(obj, fh):
-    _set_header(fh)
+def _skbio_mat_to_h5py_mat_stream(obj, fh):
+    with h5py.File(fh, "w") as f:
+      _skbio_mat_to_h5py_mat(obj, f)
 
-    ids = fh.create_dataset("order", shape=(len(obj.ids),), dtype=_vlen_dtype)
-    ids[:] = obj.ids
-    fh.create_dataset("matrix", data=obj.data)
+def _skbio_mat_to_h5py_mat(obj, f):
+    _set_header(f)
+
+    b_ids = [ x.encode("utf-8") for x in obj.ids]
+    np_ids = np_array(b_ids)
+    f.create_dataset("order", data=np_ids)
+    f.create_dataset("matrix", data=obj.data)
 
 
 def _get_header(fh):
@@ -158,11 +178,17 @@ def _parse_ids(ids):
         return _passthrough_decoder(ids)
 
 
-def _verify_dimensions(fh):
-    if "order" not in fh or "matrix" not in fh:
+def _verify_dimensions(f):
+    ids = f.get("order")
+
+    mat = f.get("matrix")
+    if mat is None:
+        mat = f.get("matrix:0")
+
+    if (ids is None) or (mat is None):
         return False
-    n = len(fh["order"])
-    return fh["matrix"].shape == (n, n)
+    n = len(ids)
+    return mat.shape == (n, n)
 
 
 def _bytes_decoder(x):
@@ -173,11 +199,7 @@ def _passthrough_decoder(x):
     return x
 
 
-def _set_header(h5grp):
+def _set_header(f):
     """Set format spec header information."""
-    h5grp["format"] = [
-        b"BDSM",
-    ]
-    h5grp["version"] = [
-        b"2020.06",
-    ]
+    f.create_dataset("format", data=np_array([b"BDSM"]))
+    f.create_dataset("version", data=np_array([b"2020.12"]))

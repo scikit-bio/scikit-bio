@@ -102,6 +102,19 @@ class NjTests(TestCase):
         with self.assertRaises(AssertionError):
             npt.assert_almost_equal(dm.data, self.dm3.data)
 
+    def test_nj_floating(self):
+        dm = self.dm3.copy()
+        exp = nj(dm)
+        dm._data = dm._data.astype("float64")
+        obs = nj(dm)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        dm._data = dm._data.astype("float32")
+        obs = nj(dm)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        dm._data = dm._data.astype("int32")
+        with self.assertRaises(TypeError):
+            _ = nj(dm)
+
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative
         # branch length. self is excluded as branch length is None
@@ -119,7 +132,8 @@ class NjTests(TestCase):
         self.assertTrue(tree.find('e').length > 0)
 
         # deprecated functionality
-        t2 = nj(self.dm4, disallow_negative_branch_length=False)
+        with self.assertWarns(DeprecationWarning):
+            t2 = nj(self.dm4, disallow_negative_branch_length=False)
         self.assertAlmostEqual(tree.compare_cophenet(t2), 0.0)
 
     def test_nj_trivial(self):
@@ -131,7 +145,8 @@ class NjTests(TestCase):
         self.assertAlmostEqual(nj(dm).compare_cophenet(exp), 0.0)
 
         # deprecated functionality
-        self.assertEqual(nj(dm, result_constructor=str), "(a:1.0,b:2.0,c:1.0);\n")
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(nj(dm, result_constructor=str), "(a:1.0,b:2.0,c:1.0);\n")
 
     def test_nj_error(self):
         data = [[0, 3],

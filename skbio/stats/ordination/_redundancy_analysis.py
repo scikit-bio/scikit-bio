@@ -12,7 +12,7 @@ from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
-from skbio.util.config._dispatcher import _ingest_array, _create_table, _create_table_1d
+from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
 
 def rda(
@@ -42,17 +42,14 @@ def rda(
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances. See the
-        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
-        the-datatable-type>`_ type documentation for details.
+        commonly stores information about species abundances. See
+        :ref:`supported formats <table_like>`.
     x : table_like
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients. See the
-        `DataTable <https://scikit.bio/docs/dev/generated/skbio.util.config.html#
-        the-datatable-type>`_ type documentation for details.
+        coefficients into standard regression coefficients. See above.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to
         have unit standard deviation. Defaults to `False`.
@@ -75,9 +72,7 @@ def rda(
         constrained ordination methods). If not provided implicitly by the input data
         structure or explicitly by the user, defaults to integers starting at zero.
     sample_ids, feature_ids, output_format : optional
-        Standard ``DataTable`` parameters. See the `DataTable <https://scikit.bio/
-        docs/dev/generated/skbio.util.config.html#the-datatable-type>`_ type
-        documentation for details.
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -115,8 +110,8 @@ def rda(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_rows, y_cols = _ingest_array(y)
-    X, x_rows, x_cols = _ingest_array(x)
+    Y, y_rows, y_cols = _ingest_table(y)
+    X, x_rows, x_cols = _ingest_table(x)
 
     n, p = Y.shape
     n_, m = X.shape
