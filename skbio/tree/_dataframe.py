@@ -1,7 +1,7 @@
 import pandas as pd
 import skbio
 from skbio import TreeNode
-import cProfile
+
 
 
 def treenode_to_dataframe(tree_node):
@@ -28,10 +28,10 @@ def dataframe_to_treenode(dataframe):
 
 
    # Convert DataFrame to dictionary for fast lookup
-   node_dict = {row["node"]: row for _, row in dataframe.iterrows()}
+   node_dict = dataframe.set_index("node").to_dict(orient="index")
 
 
-   # Create dictionary to store TreeNodes
+   # Create dictionary to store TreeNodes.
    tree_nodes = {root.id: root}
 
 
