@@ -145,7 +145,7 @@ References
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, List, Tuple, Any, TYPE_CHECKING
 from sys import modules
 from warnings import warn, catch_warnings, simplefilter
 import inspect
@@ -1002,10 +1002,10 @@ def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArra
     # However, `delete` is not in the Python array API standard. For compatibility with
     # libraries that don't have `delete`, an arbitrary dimension slicing method is
     # is provided below.
-    before = [slice(None)] * mat.ndim
+    before: Any = [slice(None)] * mat.ndim
     before[axis] = slice(None, ref_idx)
     before = tuple(before)
-    after = [slice(None)] * mat.ndim
+    after: Any = [slice(None)] * mat.ndim
     after[axis] = slice(ref_idx + 1, None)
     after = tuple(after)
     numerator_matrix = xp.concat((lmat[before], lmat[after]), axis=axis)
@@ -1014,7 +1014,7 @@ def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArra
     #     denominator_vector = xp.take(lmat, xp.asarray([ref_idx]), axis=axis)
     # `take` is in the Python array API standard. The following code is to keep the
     # style consistent with the code above.
-    column = [slice(None)] * mat.ndim
+    column: Any = [slice(None)] * mat.ndim
     column[axis] = slice(ref_idx, ref_idx + 1)
     column = tuple(column)
     denominator_vector = lmat[column]
@@ -1107,13 +1107,13 @@ def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "Std
     # However, `insert` is not in the Python array API standard. For compatibility with
     # libraries that don't have `insert`, an arbitrary dimension slicing method is
     # is provided below.
-    before = [slice(None)] * mat.ndim
+    before: Any = [slice(None)] * mat.ndim
     before[axis] = slice(None, ref_idx)
     before = tuple(before)
-    after = [slice(None)] * mat.ndim
+    after: Any = [slice(None)] * mat.ndim
     after[axis] = slice(ref_idx, None)
     after = tuple(after)
-    shape = list(mat.shape)
+    shape: Any = list(mat.shape)
     shape[axis] = 1
     shape = tuple(shape)
     zeros = xp.zeros(shape, dtype=mat.dtype, device=mat.device)
