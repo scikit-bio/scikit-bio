@@ -15,7 +15,7 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -82,7 +82,7 @@ import h5py
 from numpy import array as np_array
 
 from skbio.io import create_format
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")
@@ -116,30 +116,31 @@ def _binary_dm_sniffer(fh):
     return True, {}
 
 
-@binary_dm.reader(DissimilarityMatrix)
+@binary_dm.reader(PairwiseMatrix)
 def _binary_dm_to_dissimilarity(fh):
-    return _h5py_mat_to_skbio_mat_stream(DissimilarityMatrix,fh)
+    return _h5py_mat_to_skbio_mat_stream(PairwiseMatrix, fh)
 
 
 @binary_dm.reader(DistanceMatrix)
 def _binary_dm_to_distance(fh):
-    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix,fh)
+    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix, fh)
 
 
-@binary_dm.writer(DissimilarityMatrix)
+@binary_dm.writer(PairwiseMatrix)
 def _dissimilarity_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat_stream(obj,fh)
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
 
 
 @binary_dm.writer(DistanceMatrix)
 def _distance_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat_stream(obj,fh)
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
 
 
 def _h5py_mat_to_skbio_mat_stream(cls, fh):
     with h5py.File(fh, "r") as f:
-      dm = _h5py_mat_to_skbio_mat(cls,f)
+        dm = _h5py_mat_to_skbio_mat(cls, f)
     return dm
+
 
 def _h5py_mat_to_skbio_mat(cls, f):
     mat = f.get("matrix")
@@ -151,12 +152,13 @@ def _h5py_mat_to_skbio_mat(cls, f):
 
 def _skbio_mat_to_h5py_mat_stream(obj, fh):
     with h5py.File(fh, "w") as f:
-      _skbio_mat_to_h5py_mat(obj, f)
+        _skbio_mat_to_h5py_mat(obj, f)
+
 
 def _skbio_mat_to_h5py_mat(obj, f):
     _set_header(f)
 
-    b_ids = [ x.encode("utf-8") for x in obj.ids]
+    b_ids = [x.encode("utf-8") for x in obj.ids]
     np_ids = np_array(b_ids)
     f.create_dataset("order", data=np_ids)
     f.create_dataset("matrix", data=obj.data)

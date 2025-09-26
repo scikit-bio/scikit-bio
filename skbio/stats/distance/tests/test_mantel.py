@@ -17,7 +17,7 @@ from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantInputWarning
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import (DissimilarityMatrixError,
+from skbio.stats.distance import (PairwiseMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
@@ -458,7 +458,7 @@ class MantelTests(MantelTestData):
 
     def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             mantel([[1, 2], [3, 4]], [[0, 0], [0, 0]])
 
         # Two asymmetric distance matrices.

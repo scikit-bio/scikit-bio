@@ -14,7 +14,7 @@ from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
     _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix,
     _dissimilarity_matrix_to_lsmat, _distance_matrix_to_lsmat, _lsmat_sniffer)
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrixError
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrixError
 
 
 class LSMatTestData(TestCase):
@@ -69,11 +69,11 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
         # should be read into an equivalent object and written to an equivalent
         # format though, which is why we duplicate the 3x3 objects and strings.
         self.dissim_objs = [
-            DissimilarityMatrix(self.lsmat_1x1_data, ['a']),
-            DissimilarityMatrix(self.lsmat_2x2_data, ['a', 'b']),
-            DissimilarityMatrix(self.lsmat_2x2_asym_data, ['a', 'b']),
-            DissimilarityMatrix(self.lsmat_3x3_data, ['a', 'b', 'c']),
-            DissimilarityMatrix(self.lsmat_3x3_data, ['a', 'b', 'c'])
+            PairwiseMatrix(self.lsmat_1x1_data, ['a']),
+            PairwiseMatrix(self.lsmat_2x2_data, ['a', 'b']),
+            PairwiseMatrix(self.lsmat_2x2_asym_data, ['a', 'b']),
+            PairwiseMatrix(self.lsmat_3x3_data, ['a', 'b', 'c']),
+            PairwiseMatrix(self.lsmat_3x3_data, ['a', 'b', 'c'])
         ]
 
         self.dissim_strs = [LSMat_1x1, LSMat_2x2, LSMat_2x2_ASYM, LSMat_3x3,
@@ -97,7 +97,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
 
     def test_read_valid_files(self):
         for fn, cls, objs, fhs in ((_lsmat_to_dissimilarity_matrix,
-                                    DissimilarityMatrix, self.dissim_objs,
+                                    PairwiseMatrix, self.dissim_objs,
                                     self.dissim_fhs),
                                    (_lsmat_to_distance_matrix, DistanceMatrix,
                                     self.dist_objs, self.dist_fhs)):
@@ -108,7 +108,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
                 self.assertIsInstance(obs, cls)
 
         # Above files are TSV (default delimiter). Test that CSV works too.
-        for fn, cls in ((_lsmat_to_dissimilarity_matrix, DissimilarityMatrix),
+        for fn, cls in ((_lsmat_to_dissimilarity_matrix, PairwiseMatrix),
                         (_lsmat_to_distance_matrix, DistanceMatrix)):
             exp = cls(self.lsmat_3x3_data, ['a', 'b', 'c'])
             self.lsmat_3x3_csv_fh.seek(0)
@@ -117,7 +117,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
             self.assertIsInstance(obs, cls)
 
         # Test that fixed-width works too.
-        for fn, cls in ((_lsmat_to_dissimilarity_matrix, DissimilarityMatrix),
+        for fn, cls in ((_lsmat_to_dissimilarity_matrix, PairwiseMatrix),
                         (_lsmat_to_distance_matrix, DistanceMatrix)):
             exp = cls(self.lsmat_3x3_data, ['a', 'b', 'c'])
             self.lsmat_3x3_fw_fh.seek(0)
@@ -150,7 +150,7 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
                 self.assertEqual(obs, str_)
 
         # Test writing CSV (TSV is written above).
-        for fn, cls in ((_dissimilarity_matrix_to_lsmat, DissimilarityMatrix),
+        for fn, cls in ((_dissimilarity_matrix_to_lsmat, PairwiseMatrix),
                         (_distance_matrix_to_lsmat, DistanceMatrix)):
             obj = cls(self.lsmat_3x3_data, ['a', 'b', 'c'])
             fh = io.StringIO()

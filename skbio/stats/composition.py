@@ -1317,7 +1317,7 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
     -------
     skbio.DistanceMatrix if validate=True
         Distance matrix of variance log ratio values.
-    skbio.DissimilarityMatrix if validate=False
+    skbio.PairwiseMatrix if validate=False
         Dissimilarity matrix of variance log ratio values.
 
     Notes

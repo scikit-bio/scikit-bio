@@ -27,8 +27,8 @@ else:
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
 from skbio.stats.distance import (
-    DissimilarityMatrixError, DistanceMatrixError, MissingIDError,
-    DissimilarityMatrix, randdm)
+    PairwiseMatrixError, DistanceMatrixError, MissingIDError,
+    PairwiseMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from skbio.stats.distance._utils import is_symmetric_and_hollow
@@ -36,12 +36,15 @@ from skbio.util import assert_data_frame_almost_equal
 from skbio.util._testing import assert_series_almost_equal
 
 
-class DissimilarityMatrixTestData:
+class PairwiseMatrixTestData:
     def setUp(self):
         self.dm_1x1_data = [[0.0]]
-        self.dm_2x2_data = [[0.0, 0.123], [0.123, 0.0]]
-        self.dm_2x2_asym_data = [[0.0, 1.0], [-2.0, 0.0]]
-        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0],
+        self.dm_2x2_data = [[0.0, 0.123],
+                            [0.123, 0.0]]
+        self.dm_2x2_asym_data = [[0.0, 1.0],
+                                 [-2.0, 0.0]]
+        self.dm_3x3_data = [[0.0, 0.01, 4.2],
+                            [0.01, 0.0, 12.0],
                             [4.2, 12.0, 0.0]]
         self.dm_5x5_data = [[0, 1, 2, 3, 4],
                             [5, 0, 6, 7, 8],
@@ -50,13 +53,13 @@ class DissimilarityMatrixTestData:
                             [8, 9, 1, 2, 0]]
 
 
-class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
+class PairwiseMatrixTestBase(PairwiseMatrixTestData):
     @classmethod
     def get_matrix_class(cls):
         return None
 
     def setUp(self):
-        super(DissimilarityMatrixTestBase, self).setUp()
+        super(PairwiseMatrixTestBase, self).setUp()
         self.matobj = self.get_matrix_class()
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
@@ -88,7 +91,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
                  (np.array([[0, 1], [1, 0]], dtype='double'), False))
 
         for data, expect in tests:
-            obj = DissimilarityMatrix(data)
+            obj = PairwiseMatrix(data)
             self.assertEqual(id(obj.data) != id(data), expect)
 
     def test_within(self):
@@ -217,7 +220,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
     def test_init_from_dm(self):
         ids = ['foo', 'bar', 'baz']
 
-        # DissimilarityMatrix -> DissimilarityMatrix
+        # PairwiseMatrix -> PairwiseMatrix
         exp = self.matobj(self.dm_3x3_data, ids)
         obs = self.matobj(self.dm_3x3, ids)
         self.assertEqual(obs, exp)
@@ -226,13 +229,13 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         obs.data[0, 1] = 424242
         self.assertTrue(np.array_equal(obs.data, self.dm_3x3.data))
 
-        # DistanceMatrix -> DissimilarityMatrix
+        # DistanceMatrix -> PairwiseMatrix
         exp = self.matobj(self.dm_3x3_data, ids)
         obs = self.matobj(
             self.matobj(self.dm_3x3_data, ('a', 'b', 'c')), ids)
         self.assertEqual(obs, exp)
 
-        # DissimilarityMatrix -> DistanceMatrix
+        # PairwiseMatrix -> DistanceMatrix
         with self.assertRaises(DistanceMatrixError):
             DistanceMatrix(self.dm_2x2_asym, ['foo', 'bar'])
 
@@ -251,31 +254,31 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
 
     def test_init_invalid_input(self):
         # Empty data.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj([], [])
 
         # Another type of empty data.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj(np.empty((0, 0)), [])
 
         # Invalid number of dimensions.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj([1, 2, 3], ['a'])
 
         # Dimensions don't match.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj([[1, 2, 3]], ['a'])
 
         data = [[0, 1], [1, 0]]
 
         # Duplicate IDs.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj(data, ['a', 'a'])
 
         # Number of IDs don't match dimensions.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj(data, ['a', 'b', 'c'])
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj(data, [])
 
     def test_from_iterable_non_hollow_data(self):
@@ -322,7 +325,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(res, exp)
 
     def test_from_iterable_empty(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj.from_iterable([], lambda x: x)
 
     def test_from_iterable_single(self):
@@ -419,7 +422,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
             self.dm_3x3['b']
 
     def test_ids_invalid_input(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.ids = ['foo', 'bar']
         # Make sure that we can still use the dissimilarity matrix after trying
         # to be evil.
@@ -534,7 +537,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(obs, exp)
 
     def test_filter_duplicate_ids(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.filter(['c', 'a', 'c'])
 
     def test_filter_missing_ids(self):
@@ -549,7 +552,7 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(obs, exp)
 
     def test_filter_empty_ids(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.filter([])
 
     @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
@@ -711,8 +714,8 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
             self.dm_3x3[:, 3]
 
     def test_validate_invalid_dtype(self):
-        with self.assertRaises(DissimilarityMatrixError):
-            self.dm_3x3._validate(np.array([[0, 42], [42, 0]]), ['a', 'b'])
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3._validate_shape(np.array([[0, 42], [42, 0]]))
 
     def test_validate_invalid_shape(self):
         # first check it actually likes good matrices
@@ -720,30 +723,30 @@ class DissimilarityMatrixTestBase(DissimilarityMatrixTestData):
         # it checks just the shape, not the content
         self.dm_3x3._validate_shape(np.array([[1., 2.], [3., 4.]]))
         # empty array
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_shape(np.array([]))
         # invalid shape
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_shape(np.array([[0., 42.],
                                                   [42., 0.],
                                                   [22., 22.]]))
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_shape(np.array([[[0., 42.], [42., 0.]],
                                                   [[0., 24.], [24., 0.]]]))
 
     def test_validate_invalid_ids(self):
         # repeated ids
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'a'])
         # empty ids
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, [])
         # invalid shape
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'b', 'c', 'd'])
 
 
-class DistanceMatrixTestBase(DissimilarityMatrixTestData):
+class DistanceMatrixTestBase(PairwiseMatrixTestData):
     @classmethod
     def get_matrix_class(cls):
         return None
@@ -754,10 +757,13 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
         self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], redundant=False)
+        self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
+        self.dm_3x3_cond = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'], redundant=False)
 
-        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3]
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3, self.dm_1x1_cond, self.dm_2x2_cond, self.dm_3x3_cond]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
-                                   np.array([0.01, 4.2, 12.0])]
+                                   np.array([0.01, 4.2, 12.0])]*2
 
     def test_init_from_condensed_form(self):
         data = [1, 2, 3]
@@ -765,6 +771,14 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                            [1, 0, 3],
                            [2, 3, 0]], ['0', '1', '2'])
         res = self.matobj(data)
+        self.assertEqual(exp, res)
+
+    def test_init_from_condensed_to_condensed(self):
+        data = [1, 2, 3]
+        exp = self.matobj([[0, 1, 2],
+                           [1, 0, 3],
+                           [2, 3, 0]], ['0', '1', '2'], redundant=False)
+        res = self.matobj(data, redundant=False)
         self.assertEqual(exp, res)
 
     def test_init_invalid_input(self):
@@ -779,12 +793,31 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
             self.matobj(data, ['a', 'b'])
 
         # Ensure that the superclass validation is still being performed.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj([[1, 2, 3]], ['a'])
+
+    def test_init_invalid_input_condensed(self):
+        # Asymmetric.
+        data = [[0.0, 2.0], [1.0, 0.0]]
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj(data, ['a', 'b'], redundant=False)
+
+        # Non-hollow
+        data = [[1.0, 2.0], [2.0, 1.0]]
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj(data, ['a', 'b'], redundant=False)
+
+        # Ensure that the superclass validation is still being performed.
+        with self.assertRaises(PairwiseMatrixError):
+            self.matobj([[1, 2, 3]], ['a'], redundant=False)
 
     def test_init_nans(self):
         with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
             self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'])
+
+    def test_init_nans_condensed(self):
+        with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
+            self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'], redundant=False)
 
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
@@ -796,6 +829,16 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a))
         self.assertEqual(res, exp)
 
+    def test_from_iterable_no_key_condensed(self):
+        iterable = (x for x in range(4))
+
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], redundant=False)
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a), redundant=False)
+        self.assertEqual(res, exp)
+
     def test_from_iterable_validate_equal_valid_data(self):
         validate_true = self.matobj.from_iterable((x for x in range(4)),
                                                   lambda a, b: abs(b - a),
@@ -803,6 +846,17 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         validate_false = self.matobj.from_iterable((x for x in range(4)),
                                                    lambda a, b: abs(b - a),
                                                    validate=False)
+        self.assertEqual(validate_true, validate_false)
+
+    def test_from_iterable_validate_equal_valid_data_condensed(self):
+        validate_true = self.matobj.from_iterable((x for x in range(4)),
+                                                  lambda a, b: abs(b - a),
+                                                  validate=True,
+                                                  redundant=False)
+        validate_false = self.matobj.from_iterable((x for x in range(4)),
+                                                   lambda a, b: abs(b - a),
+                                                   validate=False,
+                                                   redundant=False)
         self.assertEqual(validate_true, validate_false)
 
     def test_from_iterable_validate_false(self):
@@ -816,10 +870,27 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                                         validate=False)
         self.assertEqual(res, exp)
 
+    def test_from_iterable_validate_false_condensed(self):
+        iterable = (x for x in range(4))
+
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], redundant=False)
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
+                                        validate=False,
+                                        redundant=False)
+        self.assertEqual(res, exp)
+
     def test_from_iterable_validate_non_hollow(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError):
             self.matobj.from_iterable(iterable, lambda a, b: 1)
+
+    def test_from_iterable_validate_non_hollow_condensed(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj.from_iterable(iterable, lambda a, b: 1, redundant=False)
 
     def test_from_iterable_validate_false_non_symmetric(self):
         exp = self.matobj([[0, 1, 2, 3],
@@ -831,10 +902,26 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                                         validate=False)
         self.assertEqual(res, exp)
 
+    def test_from_iterable_validate_false_non_symmetric_condensed(self):
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], redundant=False)
+        res = self.matobj.from_iterable((x for x in range(4)),
+                                        lambda a, b: a - b,
+                                        validate=False,
+                                        redundant=False)
+        self.assertEqual(res, exp)
+
     def test_from_iterable_validate_asym(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError):
             self.matobj.from_iterable(iterable, lambda a, b: b - a)
+
+    def test_from_iterable_validate_asym_condensed(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError):
+            self.matobj.from_iterable(iterable, lambda a, b: b - a, redundant=False)
 
     def test_from_iterable_with_key(self):
         iterable = (x for x in range(4))
@@ -847,13 +934,34 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                                         key=lambda x: str(x**2))
         self.assertEqual(res, exp)
 
+    def test_from_iterable_with_key_condensed(self):
+        iterable = (x for x in range(4))
+
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], ['0', '1', '4', '9'], redundant=False)
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
+                                        key=lambda x: str(x**2),
+                                        redundant=False)
+        self.assertEqual(res, exp)
+
     def test_from_iterable_empty(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             self.matobj.from_iterable([], lambda x: x)
+
+    def test_from_iterable_empty_condensed(self):
+        with self.assertRaises(PairwiseMatrixError):
+            self.matobj.from_iterable([], lambda x: x, redundant=False)
 
     def test_from_iterable_single(self):
         exp = self.matobj([[0]])
         res = self.matobj.from_iterable(["boo"], lambda a, b: 0)
+        self.assertEqual(res, exp)
+
+    def test_from_iterable_single_condensed(self):
+        exp = self.matobj([[0]], redundant=False)
+        res = self.matobj.from_iterable(["boo"], lambda a, b: 0, redundant=False)
         self.assertEqual(res, exp)
 
     def test_from_iterable_with_keys(self):
@@ -867,11 +975,29 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                                         keys=iter(['0', '1', '4', '9']))
         self.assertEqual(res, exp)
 
+    def test_from_iterable_with_keys_condensed(self):
+        iterable = (x for x in range(4))
+
+        exp = self.matobj([[0, 1, 2, 3],
+                           [1, 0, 1, 2],
+                           [2, 1, 0, 1],
+                           [3, 2, 1, 0]], ['0', '1', '4', '9'], redundant=False)
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
+                                        keys=iter(['0', '1', '4', '9']), redundant=False)
+        self.assertEqual(res, exp)
+
     def test_from_iterable_with_key_and_keys(self):
         iterable = (x for x in range(4))
         with self.assertRaises(ValueError):
             self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
                                       key=str, keys=['1', '2', '3', '4'])
+
+    def test_from_iterable_with_key_and_keys(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(ValueError):
+            self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
+                                      key=str, keys=['1', '2', '3', '4'],
+                                      redundant=False)
 
     def test_from_iterable_scipy_hamming_metric_with_metadata(self):
         # test for #1254
@@ -895,6 +1021,29 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
 
         self.assertEqual(dm, exp)
 
+    def test_from_iterable_scipy_hamming_metric_with_metadata_condensed(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = self.matobj([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+
+        dm = self.matobj.from_iterable(
+            seqs,
+            metric=scipy.spatial.distance.hamming,
+            keys=['a', 'b', 'c', 'd'],
+            redundant=False)
+
+        self.assertEqual(dm, exp)
+
     def test_from_iterable_skbio_hamming_metric_with_metadata(self):
         # test for #1254
         seqs = [
@@ -914,6 +1063,29 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
             seqs,
             metric=skbio.sequence.distance.hamming,
             keys=['a', 'b', 'c', 'd'])
+
+        self.assertEqual(dm, exp)
+
+    def test_from_iterable_skbio_hamming_metric_with_metadata_condensed(self):
+        # test for #1254
+        seqs = [
+            Sequence('ACGT'),
+            Sequence('ACGA', metadata={'id': 'seq1'}),
+            Sequence('AAAA', metadata={'id': 'seq2'}),
+            Sequence('AAAA', positional_metadata={'qual': range(4)})
+        ]
+
+        exp = self.matobj([
+            [0, 0.25, 0.75, 0.75],
+            [0.25, 0.0, 0.5, 0.5],
+            [0.75, 0.5, 0.0, 0.0],
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+
+        dm = self.matobj.from_iterable(
+            seqs,
+            metric=skbio.sequence.distance.hamming,
+            keys=['a', 'b', 'c', 'd'],
+            redundant=False)
 
         self.assertEqual(dm, exp)
 
@@ -944,6 +1116,28 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         # times.
         self.assertEqual(self.dm_3x3, dm_copy)
 
+    def test_permute_condensed_on_condensed(self):
+        # Can't really permute a 1x1 or 2x2...
+        for _ in range(2):
+            obs = self.dm_1x1_cond.permute(condensed=True)
+            npt.assert_equal(obs, np.array([]))
+
+        for _ in range(2):
+            obs = self.dm_2x2_cond.permute(condensed=True)
+            npt.assert_equal(obs, np.array([0.123]))
+
+        dm_copy = self.dm_3x3_cond.copy()
+
+        obs = self.dm_3x3_cond.permute(condensed=True, seed=3)
+        npt.assert_equal(obs, np.array([12.0, 4.2, 0.01]))
+
+        obs = self.dm_3x3_cond.permute(condensed=True, seed=2)
+        npt.assert_equal(obs, np.array([4.2, 12.0, 0.01]))
+
+        # Ensure dm hasn't changed after calling permute() on it a couple of
+        # times.
+        self.assertEqual(self.dm_3x3_cond, dm_copy)
+
     def test_permute_not_condensed(self):
         obs = self.dm_1x1.permute()
         self.assertEqual(obs, self.dm_1x1)
@@ -965,10 +1159,32 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         obs = self.dm_3x3.permute(seed=2)
         self.assertEqual(obs, exp)
 
+    def test_permute_not_condensed_on_condensed(self):
+        obs = self.dm_1x1_cond.permute(old_output=False)
+        self.assertEqual(obs, self.dm_1x1_cond)
+        self.assertFalse(obs is self.dm_1x1_cond)
+
+        obs = self.dm_2x2_cond.permute()
+        self.assertEqual(obs, self.dm_2x2_cond)
+        self.assertFalse(obs is self.dm_2x2_cond)
+
+        exp = self.matobj([[0, 12, 4.2],
+                           [12, 0, 0.01],
+                           [4.2, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+        obs = self.dm_3x3_cond.permute(seed=3)
+        self.assertEqual(obs, exp)
+
+        exp = self.matobj([[0, 4.2, 12],
+                           [4.2, 0, 0.01],
+                           [12, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+        obs = self.dm_3x3_cond.permute(seed=2)
+        self.assertEqual(obs, exp)
+
+    # TODO: need to test this with SymmetricMatrix vs DistanceMatrix for condensed form
     def test_eq(self):
-        # Compare DistanceMatrix to DissimilarityMatrix, where both have the
+        # Compare DistanceMatrix to PairwiseMatrix, where both have the
         # same data and IDs.
-        eq_dm = DissimilarityMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
+        eq_dm = PairwiseMatrix(self.dm_3x3_data, ['a', 'b', 'c'])
         self.assertTrue(self.dm_3x3 == eq_dm)
         self.assertTrue(eq_dm == self.dm_3x3)
 
@@ -978,8 +1194,20 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         exp = pd.Series([], index=[], dtype='float64')
         assert_series_almost_equal(series, exp)
 
+    def test_to_series_1x1_condensed(self):
+        series = self.dm_1x1_cond.to_series()
+
+        exp = pd.Series([], index=[], dtype='float64')
+        assert_series_almost_equal(series, exp)
+
     def test_to_series_2x2(self):
         series = self.dm_2x2.to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('a', 'b')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_2x2_condensed(self):
+        series = self.dm_2x2_cond.to_series()
 
         exp = pd.Series([0.123], index=pd.Index([('a', 'b')]))
         assert_series_almost_equal(series, exp)
@@ -998,8 +1226,28 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
                                         ('b', 'c'), ('b', 'd'), ('c', 'd')]))
         assert_series_almost_equal(series, exp)
 
+    def test_to_series_4x4_condensed(self):
+        dm = self.matobj([
+            [0.0, 0.2, 0.3, 0.4],
+            [0.2, 0.0, 0.5, 0.6],
+            [0.3, 0.5, 0.0, 0.7],
+            [0.4, 0.6, 0.7, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+
+        series = dm.to_series()
+
+        exp = pd.Series([0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
+                        index=pd.Index([('a', 'b'), ('a', 'c'), ('a', 'd'),
+                                        ('b', 'c'), ('b', 'd'), ('c', 'd')]))
+        assert_series_almost_equal(series, exp)
+
     def test_to_series_default_ids(self):
         series = self.matobj(self.dm_2x2_data).to_series()
+
+        exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
+        assert_series_almost_equal(series, exp)
+
+    def test_to_series_default_ids_condensed(self):
+        series = self.matobj(self.dm_2x2_data, redundant=False).to_series()
 
         exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
         assert_series_almost_equal(series, exp)
@@ -1019,6 +1267,7 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(data_good)
+        self.dm_3x3_cond._validate_shape(data_good)
         del data_good
 
         # _validate_shap checks just the shape, not the content
@@ -1035,6 +1284,7 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(data_hollow, False)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
+        self.dm_3x3_cond._validate_shape(bad_data)
         del bad_data
 
         # re-try with partially bad data
@@ -1051,6 +1301,7 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
         self.assertEqual(data_hollow, True)
         del data_hollow
         self.dm_3x3._validate_shape(bad_data)
+        self.dm_3x3_cond._validate_shape(bad_data)
         del bad_data
     
     def test_rename(self):
@@ -1077,6 +1328,34 @@ class DistanceMatrixTestBase(DissimilarityMatrixTestData):
 
         # Test that renaming with strict=True raises an error if not all IDs are included
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'])
+        rename_dict = {'a': 'x'}  # Missing 'b'
+        with self.assertRaises(ValueError):
+            dm.rename(rename_dict, strict=True)
+
+    def test_rename_condensed(self):
+        # Test successful renaming with a dictionary in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_dict = {'a': 'x', 'b': 'y'}
+        dm.rename(rename_dict)
+        exp = ('x', 'y')
+        self.assertEqual(dm.ids, exp)
+
+        # Test successful renaming with a function in strict mode (default)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_func = lambda x: x + '_1'
+        dm.rename(rename_func)
+        exp = ('a_1', 'b_1')
+        self.assertEqual(dm.ids, exp)
+
+        # Test renaming in non-strict mode where one ID is not included in the dictionary
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        rename_dict = {'a': 'x'}  # 'b' will retain its original ID
+        dm.rename(rename_dict, strict=False)
+        exp = ('x', 'b')
+        self.assertEqual(dm.ids, exp)
+
+        # Test that renaming with strict=True raises an error if not all IDs are included
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
         rename_dict = {'a': 'x'}  # Missing 'b'
         with self.assertRaises(ValueError):
             dm.rename(rename_dict, strict=True)
@@ -1115,10 +1394,10 @@ class RandomDistanceMatrixTests(TestCase):
         self.assertEqual(obs.ids, tuple(ids))
 
     def test_constructor(self):
-        exp = DissimilarityMatrix(np.asarray([[0.0]]), ['1'])
-        obs = randdm(1, constructor=DissimilarityMatrix)
+        exp = PairwiseMatrix(np.asarray([[0.0]]), ['1'])
+        obs = randdm(1, constructor=PairwiseMatrix)
         self.assertEqual(obs, exp)
-        self.assertEqual(type(obs), DissimilarityMatrix)
+        self.assertEqual(type(obs), PairwiseMatrix)
 
     def test_random_fn(self):
         def myrand(size):
@@ -1143,7 +1422,7 @@ class RandomDistanceMatrixTests(TestCase):
 
     def test_invalid_input(self):
         # Invalid dimensions.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             randdm(0)
 
         # Invalid dimensions.
@@ -1151,7 +1430,7 @@ class RandomDistanceMatrixTests(TestCase):
             randdm(-1)
 
         # Invalid number of IDs.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             randdm(2, ids=['foo'])
 
 
@@ -1184,7 +1463,7 @@ class CategoricalStatsHelperFunctionTests(TestCase):
         # Requires a DistanceMatrix.
         with self.assertRaises(TypeError):
             _preprocess_input(
-                DissimilarityMatrix([[0, 2], [3, 0]], ['a', 'b']),
+                PairwiseMatrix([[0, 2], [3, 0]], ['a', 'b']),
                 [1, 2], None)
 
         # Requires column if DataFrame.
@@ -1228,13 +1507,13 @@ class CategoricalStatsHelperFunctionTests(TestCase):
             _run_monte_carlo_stats(lambda e: 42, self.grouping, -1)
 
 
-class DissimilarityMatrixTests(DissimilarityMatrixTestBase, TestCase):
+class PairwiseMatrixTests(PairwiseMatrixTestBase, TestCase):
     @classmethod
     def get_matrix_class(cls):
-        return DissimilarityMatrix
+        return PairwiseMatrix
 
     def setUp(self):
-        super(DissimilarityMatrixTests, self).setUp()
+        super(PairwiseMatrixTests, self).setUp()
 
 
 class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
@@ -1247,4 +1526,4 @@ class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
 
 
 if __name__ == '__main__':
-    main()
+    main(buffer=False)
