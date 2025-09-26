@@ -5,6 +5,7 @@
 ### Performance enhancements
 
 * Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Added float32 support for minimum evolution phylogenetic tree building algorithms (`gme`, `bme` and `nni`) ([#2291](https://github.com/scikit-bio/scikit-bio/pull/2291)).
 
 ### Bug Fixes
 
