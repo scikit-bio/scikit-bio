@@ -167,7 +167,6 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     # The original R code has `na.rm = TRUE` in many commands. This is not necessary
     # in the current implementation, because the pre-correction coefficients (beta)
     # is guaranteed to not contain NaN values.
-    nu = var_hat.copy()
 
     # mask NaN values (deemed unnecessary; left here for future examination)
     # beta = beta[~np.isnan(beta)]
@@ -178,38 +177,53 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     # initialize parameters
     delta, l1, l2, kappa1, kappa2 = _bias_params_init(beta)
 
-    params = [pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]
+    # model parameters
+    # params = [pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]
+    curr = np.array([pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2])
+    params = [curr]
 
-    # E-M iteration
-    epoch = 0
-    loss = 100
-    beta_nu = beta / nu
+    # pre-calculate constant values
+    cv_hat = beta / var_hat
+    se_hat = var_hat**0.5
+
+    # pre-allocate memory
+    n_feats = beta.shape[0]
+    pdf = np.empty((3, n_feats))
+    ri = np.empty((3, n_feats))
+
+    # Nelder-Mead simplex algorithm for kappa1 and kappa2 estimation
+    def obj_kappa(x, ll, ri):
+        log_pdf = norm.logpdf(beta, loc=ll, scale=(var_hat + x) ** 0.5)
+        return -np.sum(ri * log_pdf)
+
+    # optimizer arguments
+    opt_args = dict(method="Nelder-Mead", bounds=[(0, None)])
+
+    # expectation-maximization (E-M) iterations
+    loss, epoch = np.inf, 0
     while loss > atol and epoch < max_iter:
-        # E-step
-        pdf0 = norm.pdf(beta, delta, nu**0.5)
-        pdf1 = norm.pdf(beta, delta + l1, (nu + kappa1) ** 0.5)
-        pdf2 = norm.pdf(beta, delta + l2, (nu + kappa2) ** 0.5)
+        prev = params[-1]
+        pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = prev
 
-        prod0, prod1, prod2 = pi0 * pdf0, pi1 * pdf1, pi2 * pdf2
-        deno = prod0 + prod1 + prod2
-        r0i, r1i, r2i = prod0 / deno, prod1 / deno, prod2 / deno
-
-        # M-step
-        # Note: NaN-handling is omitted in the update of pi parameters.
-        pi0_new = np.mean(r0i)
-        pi1_new = np.mean(r1i)
-        pi2_new = np.mean(r2i)
-
-        nu_kappa1 = nu + kappa1
-        nu_kappa2 = nu + kappa2
+        delta1, delta2 = delta + l1, delta + l2
+        nu_kappa1, nu_kappa2 = var_hat + kappa1, var_hat + kappa2
         beta_delta = beta - delta
 
-        # Note: NaN-handling is omitted in the update of delta and l parameters.
+        # E-step
+        pdf[0, :] = norm.pdf(beta, delta, se_hat)
+        pdf[1, :] = norm.pdf(beta, delta1, nu_kappa1**0.5)
+        pdf[2, :] = norm.pdf(beta, delta2, nu_kappa2**0.5)
+
+        prods = prev[:3][:, None] * pdf
+        ri[:] = prods / np.sum(prods, axis=0, keepdims=True)
+        r0i, r1i, r2i = ri
+
+        # M-step
+        # Note: NaN-handling is omitted in the update of pi, delta and l parameters.
+        pi0_new, pi1_new, pi2_new = np.mean(ri, axis=1)
         delta_new = np.sum(
-            r0i * beta_nu
-            + r1i * (beta - l1) / nu_kappa1
-            + r2i * (beta - l2) / nu_kappa2
-        ) / np.sum(r0i / nu + r1i / nu_kappa1 + r2i / nu_kappa2)
+            r0i * cv_hat + r1i * (beta - l1) / nu_kappa1 + r2i * (beta - l2) / nu_kappa2
+        ) / np.sum(r0i / var_hat + r1i / nu_kappa1 + r2i / nu_kappa2)
         l1_new = np.min(
             [np.sum(r1i * beta_delta / nu_kappa1) / np.sum(r1i / nu_kappa1), 0]
         )
@@ -217,43 +231,38 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
             [np.sum(r2i * beta_delta / nu_kappa2) / np.sum(r2i / nu_kappa2), 0]
         )
 
-        # Nelder-Mead simplex algorithm for kappa1 and kappa2 estimation
-        def obj_kappa(x, ll, ri):
-            log_pdf = norm.logpdf(beta, loc=delta + ll, scale=(nu + x) ** 0.5)
-            return -np.sum(ri * log_pdf)
+        # Perform numeric optimization to minimum kappa's.
+        # TODO: Consider scenarios where optimization won't converge.
+        kappa1_new = minimize(obj_kappa, kappa1, args=(delta1, r1i), **opt_args).x[0]
+        kappa2_new = minimize(obj_kappa, kappa2, args=(delta2, r2i), **opt_args).x[0]
 
-        kappa1_new = minimize(
-            fun=obj_kappa,
-            x0=kappa1,
-            args=(l1, r1i),
-            method="Nelder-Mead",
-            bounds=[(0, None)],
-        ).x[0]
-        kappa2_new = minimize(
-            fun=obj_kappa,
-            x0=kappa2,
-            args=(l2, r2i),
-            method="Nelder-Mead",
-            bounds=[(0, None)],
-        ).x[0]
+        # update parameters
+        curr = np.array(
+            [
+                pi0_new,
+                pi1_new,
+                pi2_new,
+                delta_new,
+                l1_new,
+                l2_new,
+                kappa1_new,
+                kappa2_new,
+            ]
+        )
 
-        # Calculate the new epsilon (loss)
-        loss = (
-            (pi0_new - pi0) ** 2
-            + (pi1_new - pi1) ** 2
-            + (pi2_new - pi2) ** 2
-            + (delta_new - delta) ** 2
-            + (l1_new - l1) ** 2
-            + (l2_new - l2) ** 2
-            + (kappa1_new - kappa1) ** 2
-            + (kappa2_new - kappa2) ** 2
-        ) ** 0.5
+        # calculate loss (epsilon)
+        loss = np.linalg.norm(curr - prev)
+
+        params.append(curr)
         epoch += 1
 
-        # Update parameters
-        pi0, pi1, pi2, delta = pi0_new, pi1_new, pi2_new, delta_new
-        l1, l2, kappa1, kappa2 = l1_new, l2_new, kappa1_new, kappa2_new
-        params.append([pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2])
+    return _post_estimate_bias(beta, var_hat, params[-1])
+
+
+def _post_estimate_bias(beta, var_hat, params):
+    """Estimate sample bias according to EM-inferred parameters."""
+    pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = params
+    nu = var_hat.copy()
 
     # The EM estimator of bias
     delta_em = delta
