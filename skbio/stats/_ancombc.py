@@ -89,33 +89,55 @@ def _estimate_params(data, dmat):
     return var_hat, beta, theta.reshape(-1)
 
 
-def _bias_em_params_init(beta, pi0=0.75, pi1=0.125, pi2=0.125):
+def _bias_params_init(beta):
+    """Initialize parameters for bias estimation.
+
+    Parameters
+    ----------
+    beta : ndarray of shape (n_features, n_covariates)
+        Estimated coefficients before correction.
+
+    Returns
+    -------
+    delta : float
+        Parameter delta.
+    l1, l2 : float
+        Parameters l1 and l2.
+    kappa1, kappa2 : float
+        Parameters kappa1 and kappa2.
+
+    """
     edges = np.quantile(beta, [0.125, 0.25, 0.75, 0.875])
 
+    # estimate delta (mean of values between q1 and q3)
     if np.any(mask := (beta >= edges[1]) & (beta <= edges[2])):
         delta = np.mean(beta[mask])
     else:
         delta = np.mean(beta)
 
+    # estimate l1
     if np.any(mask := beta < edges[0]):
-        l1 = np.mean(beta[mask])
-        kappa1 = np.var(beta[mask], ddof=1)
-        if np.isnan(kappa1) or kappa1 == 0.0:
+        l1 = np.mean(beta_ := beta[mask])
+        if beta_.size > 1:
+            kappa1 = np.var(beta_, ddof=1, mean=l1) or 1.0
+        else:
             kappa1 = 1.0
     else:
         l1 = np.min(beta)
         kappa1 = 1.0
 
+    # estimate l2
     if np.any(mask := beta > edges[3]):
-        l2 = np.mean(beta[mask])
-        kappa2 = np.var(beta[mask], ddof=1)
-        if np.isnan(kappa2) or kappa2 == 0.0:
+        l2 = np.mean(beta_ := beta[mask])
+        if beta_.size > 1:
+            kappa2 = np.var(beta_, ddof=1, mean=l2) or 1.0
+        else:
             kappa2 = 1.0
     else:
         l2 = np.max(beta)
         kappa2 = 1.0
 
-    return pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2
+    return delta, l1, l2, kappa1, kappa2
 
 
 def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
@@ -142,47 +164,20 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
         Estimated variances of bias.
 
     """
-    beta = beta.copy()
+    # The original R code has `na.rm = TRUE` in many commands. This is not necessary
+    # in the current implementation, because the pre-correction coefficients (beta)
+    # is guaranteed to not contain NaN values.
     nu = var_hat.copy()
 
-    # # Initialization
-    # pi0 = 0.75
-    # pi1 = 0.125
-    # pi2 = 0.125
+    # mask NaN values (deemed unnecessary; left here for future examination)
+    # beta = beta[~np.isnan(beta)]
 
-    # # Extract valid numbers (not NaN) from beta.
-    # beta_ = beta[~np.isnan(beta)]
+    # something
+    pi0, pi1, pi2 = 0.75, 0.125, 0.125
 
-    # edges = np.quantile(beta_, [0.125, 0.25, 0.75, 0.875])
+    # initialize parameters
+    delta, l1, l2, kappa1, kappa2 = _bias_params_init(beta)
 
-    # if np.any(mask := (beta_ >= edges[1]) & (beta_ <= edges[2])):
-    #     delta = np.mean(beta_[mask])
-    # else:
-    #     delta = np.mean(beta_)
-
-    # if np.any(mask := beta_ < edges[0]):
-    #     l1 = np.mean(beta_[mask])
-    #     kappa1 = np.var(beta_[mask], ddof=1)
-    #     if np.isnan(kappa1) or kappa1 == 0.0:
-    #         kappa1 = 1.0
-    # else:
-    #     l1 = np.min(beta_)
-    #     kappa1 = 1.0
-
-    # # warning is raised when nan is involved; needs to fix
-    # if np.any(mask := beta_ > edges[3]):
-    #     l2 = np.mean(beta_[mask])
-    #     kappa2 = np.var(beta_[mask], ddof=1)
-    #     if np.isnan(kappa2) or kappa2 == 0.0:
-    #         kappa2 = 1.0
-    # else:
-    #     l2 = np.max(beta_)
-    #     kappa2 = 1.0
-
-    # # E-M algorithm
-    # params = [[pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]]
-    beta_ = beta[~np.isnan(beta)]
-    pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = _bias_em_params_init(beta_)
     params = [pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]
 
     # E-M iteration
@@ -200,23 +195,26 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
         r0i, r1i, r2i = prod0 / deno, prod1 / deno, prod2 / deno
 
         # M-step
-        pi0_new = np.nanmean(r0i)
-        pi1_new = np.nanmean(r1i)
-        pi2_new = np.nanmean(r2i)
+        # Note: NaN-handling is omitted in the update of pi parameters.
+        pi0_new = np.mean(r0i)
+        pi1_new = np.mean(r1i)
+        pi2_new = np.mean(r2i)
 
         nu_kappa1 = nu + kappa1
         nu_kappa2 = nu + kappa2
         beta_delta = beta - delta
-        delta_new = np.nansum(
+
+        # Note: NaN-handling is omitted in the update of delta and l parameters.
+        delta_new = np.sum(
             r0i * beta_nu
             + r1i * (beta - l1) / nu_kappa1
             + r2i * (beta - l2) / nu_kappa2
-        ) / np.nansum(r0i / nu + r1i / nu_kappa1 + r2i / nu_kappa2)
-        l1_new = np.nanmin(
-            [np.nansum(r1i * beta_delta / nu_kappa1) / np.nansum(r1i / nu_kappa1), 0]
+        ) / np.sum(r0i / nu + r1i / nu_kappa1 + r2i / nu_kappa2)
+        l1_new = np.min(
+            [np.sum(r1i * beta_delta / nu_kappa1) / np.sum(r1i / nu_kappa1), 0]
         )
-        l2_new = np.nanmax(
-            [np.nansum(r2i * beta_delta / nu_kappa2) / np.nansum(r2i / nu_kappa2), 0]
+        l2_new = np.max(
+            [np.sum(r2i * beta_delta / nu_kappa2) / np.sum(r2i / nu_kappa2), 0]
         )
 
         # Nelder-Mead simplex algorithm for kappa1 and kappa2 estimation
@@ -279,8 +277,7 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     wls_nume = np.sum(nu_inv)
 
     # Estimate the variance of bias
-    with np.errstate(divide="ignore", invalid="ignore"):
-        wls_deno_inv = 1.0 / wls_deno
+    wls_deno_inv = 1.0 / wls_deno
 
     delta_wls = wls_nume * wls_deno_inv
     var_delta = np.nan_to_num(wls_deno_inv)

@@ -19,7 +19,7 @@ from skbio.stats._ancombc import (
     _estimate_bias_em,
     _sample_fractions,
     _calc_statistics,
-    _bias_em_params_init,
+    _bias_params_init,
     ancombc,
 )
 
@@ -71,17 +71,31 @@ class AncombcTests(TestCase):
         for o, e in zip(obs[2], exp_theta):
             npt.assert_allclose(o, e, atol=1e-5)
 
-    def test_bias_em_params_init(self):
+    def test_bias_params_init(self):
+        # regular case
+        beta = np.array([0.2, 0.75, 1.15, 1.4, 1.85, 2.05, 2.3, 3.2])
+        obs = _bias_params_init(beta)
+        self.assertTupleEqual(obs, (1.6125, 0.2, 3.2, 1.0, 1.0))
+
+        # no data point is between q1 and q3
         beta = np.array([0, 1])
-        npt.assert_equal(_bias_em_params_init(beta)[3], 0.5)
+        obs = _bias_params_init(beta)
+        self.assertTupleEqual(obs, (0.5, 0, 1, 1, 1))
 
+        # no data point falls below quantile=0.125
         beta = np.array([0, 0, 0, 0, 1])
-        res = _bias_em_params_init(beta)
-        npt.assert_equal(res[3], 0.0)
-        npt.assert_equal(res[4], 0.0)
-        npt.assert_equal(res[6], 1.0)
+        obs = _bias_params_init(beta)
+        self.assertTupleEqual(obs, (0, 0, 1, 1, 1))
 
-        #beta = np.array([0,0,0,0,1])
+        # no data point falls above quantile=0.875
+        beta = np.array([0, 1, 1, 1, 1])
+        obs = _bias_params_init(beta)
+        self.assertTupleEqual(obs, (1, 0, 1, 1, 1))
+
+        # variance of data above quantile=0.75 is 0
+        beta = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10])
+        obs = _bias_params_init(beta)
+        self.assertTupleEqual(obs, (0, 0, 10, 1, 1))
 
     def test_estimate_bias_em(self):
         data = np.log1p(self.table.to_numpy())
