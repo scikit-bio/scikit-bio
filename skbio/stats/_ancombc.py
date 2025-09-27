@@ -90,7 +90,7 @@ def _estimate_params(data, dmat):
 
 
 def _bias_params_init(beta):
-    """Initialize parameters for bias estimation.
+    """Initialize parameters for iterative bias estimation.
 
     Parameters
     ----------
@@ -100,11 +100,11 @@ def _bias_params_init(beta):
     Returns
     -------
     delta : float
-        Parameter delta.
+        Initial global bias term.
     l1, l2 : float
-        Parameters l1 and l2.
+        Initial means of negative and positive components, respectively.
     kappa1, kappa2 : float
-        Parameters kappa1 and kappa2.
+        Initial variances of negative and positive components, respectively.
 
     """
     edges = np.quantile(beta, [0.125, 0.25, 0.75, 0.875])
@@ -140,8 +140,13 @@ def _bias_params_init(beta):
     return delta, l1, l2, kappa1, kappa2
 
 
-def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
-    """Estimate sampling bias through an expectation-maximization algorithm.
+def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
+    """Estimate sampling bias through an expectation-maximization (EM) algorithm.
+
+    This function models the observed coefficients (log-fold changes) for a given
+    covariate as a Gaussian mixture distribution with three components: 0) null,
+    1) negative, 2) positive. It aims to estimate a global bias term (delta) that
+    affects all features.
 
     Parameters
     ----------
@@ -149,7 +154,7 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
         Estimated coefficients (log-fold change before correction).
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances of regression coefficients.
-    atol : float, optional
+    tol : float, optional
         Absolute tolerance of EM iteration. Default is 1e-5.
     max_iter : int
         Max number of iteration of EM iteration. Default is 100.
@@ -168,99 +173,102 @@ def _estimate_bias_em(beta, var_hat, atol=1e-5, max_iter=100):
     # in the current implementation, because the pre-correction coefficients (beta)
     # is guaranteed to not contain NaN values.
 
-    # mask NaN values (deemed unnecessary; left here for future examination)
+    # Mask NaN values (deemed unnecessary; left here for future examination).
     # beta = beta[~np.isnan(beta)]
 
-    # something
-    pi0, pi1, pi2 = 0.75, 0.125, 0.125
-
-    # initialize parameters
+    # Initial model parameters
+    pi0, pi1, pi2 = 0.75, 0.125, 0.125  # proportions of components (pi)
     delta, l1, l2, kappa1, kappa2 = _bias_params_init(beta)
+    params = np.array([pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2])
+    updated = np.empty(8)
 
-    # model parameters
-    # params = [pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2]
-    curr = np.array([pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2])
-    params = [curr]
-
-    # pre-calculate constant values
-    cv_hat = beta / var_hat
-    se_hat = var_hat**0.5
-
-    # pre-allocate memory
+    # Pre-allocate memory for intermediates. Each array has three rows, representing
+    # the three components (0, 1, 2), and columns representing individual features.
     n_feats = beta.shape[0]
-    pdf = np.empty((3, n_feats))
-    ri = np.empty((3, n_feats))
+    shape = (3, n_feats)
+    nu_inv = np.empty(shape)  # inverse of variances
+    stdevs = np.empty(shape)  # standard deviations
+    ratios = np.empty(shape)  # coefficients / variances
 
-    # Nelder-Mead simplex algorithm for kappa1 and kappa2 estimation
-    def obj_kappa(x, ll, ri):
-        log_pdf = norm.logpdf(beta, loc=ll, scale=(var_hat + x) ** 0.5)
-        return -np.sum(ri * log_pdf)
+    # mean coefficients
+    means = np.empty(3)
+
+    # posterior probabilities of feature-component assignments (EM's responsibilities)
+    resp = np.empty(shape)
+
+    # just a 2-row array to store random data
+    intm = np.empty((2, n_feats))
+
+    # Initialize intermediates. The 1st row is constant, representing pre-correction
+    # estimates, whereas the 2nd and 3rd rows are to be modified during iteration.
+    nu_inv[0] = 1.0 / var_hat
+    stdevs[0] = var_hat**0.5
+    ratios[0] = beta / var_hat
+
+    # Nelder-Mead simplex algorithm for variance estimation
+    def func(x, loc, resp):
+        log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
+        return -np.sum(resp * log_pdf)
 
     # optimizer arguments
-    opt_args = dict(method="Nelder-Mead", bounds=[(0, None)])
+    args = dict(method="Nelder-Mead", bounds=[(0, None)])
 
     # expectation-maximization (E-M) iterations
     loss, epoch = np.inf, 0
-    while loss > atol and epoch < max_iter:
-        prev = params[-1]
-        pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = prev
+    while loss > tol and epoch < max_iter:
+        # update intermediates (2nd and 3rd rows only)
+        intm[:] = var_hat + params[6:8][:, None]  # variances (kappa)
+        nu_inv[1:] = 1.0 / intm
+        stdevs[1:] = intm**0.5
+        ratios[1:] = (beta - params[4:6][:, None]) * nu_inv[1:]  # means (l)
 
-        delta1, delta2 = delta + l1, delta + l2
-        nu_kappa1, nu_kappa2 = var_hat + kappa1, var_hat + kappa2
-        beta_delta = beta - delta
+        ### E-step ###
+        # mean coefficients
+        delta = means[0] = params[3]  # global error (delta)
+        means[1:] = delta + params[4:6]
 
-        # E-step
-        pdf[0, :] = norm.pdf(beta, delta, se_hat)
-        pdf[1, :] = norm.pdf(beta, delta1, nu_kappa1**0.5)
-        pdf[2, :] = norm.pdf(beta, delta2, nu_kappa2**0.5)
+        # posterior probabilities = mean probability density functions weighted by
+        # component fractions
+        resp[:] = norm.pdf(beta, means[:, None], stdevs)
+        resp *= params[:3][:, None]
+        resp /= np.sum(resp, axis=0, keepdims=True)
 
-        prods = prev[:3][:, None] * pdf
-        ri[:] = prods / np.sum(prods, axis=0, keepdims=True)
-        r0i, r1i, r2i = ri
+        ### M-step ###
+        # proportions of components (pi)
+        np.mean(resp, axis=1, out=updated[:3])
 
-        # M-step
-        # Note: NaN-handling is omitted in the update of pi, delta and l parameters.
-        pi0_new, pi1_new, pi2_new = np.mean(ri, axis=1)
-        delta_new = np.sum(
-            r0i * cv_hat + r1i * (beta - l1) / nu_kappa1 + r2i * (beta - l2) / nu_kappa2
-        ) / np.sum(r0i / var_hat + r1i / nu_kappa1 + r2i / nu_kappa2)
-        l1_new = np.min(
-            [np.sum(r1i * beta_delta / nu_kappa1) / np.sum(r1i / nu_kappa1), 0]
-        )
-        l2_new = np.max(
-            [np.sum(r2i * beta_delta / nu_kappa2) / np.sum(r2i / nu_kappa2), 0]
-        )
+        # Gaussian mixture modeling of global error (delta)
+        # The following code produces the same result as:
+        #   updated[3] = np.sum(resp * ratios) / np.sum(resp * nu_inv)
+        # But it avoids creating intermediate arrays.
+        updated[3] = np.tensordot(resp, ratios) / np.tensordot(resp, nu_inv)
 
-        # Perform numeric optimization to minimum kappa's.
+        # negative and positive components relative to delta (l)
+        intm[:] = resp[1:] * nu_inv[1:]
+        denom = np.sum(intm, axis=1)
+        intm *= beta - delta
+        numer = np.sum(intm, axis=1)
+        l1_new, l2_new = numer / denom
+        updated[4] = np.minimum(l1_new, 0)
+        updated[5] = np.maximum(l2_new, 0)
+
+        # Perform numeric optimization to minimize variances of negative and positive
+        # components (kappa).
         # TODO: Consider scenarios where optimization won't converge.
-        kappa1_new = minimize(obj_kappa, kappa1, args=(delta1, r1i), **opt_args).x[0]
-        kappa2_new = minimize(obj_kappa, kappa2, args=(delta2, r2i), **opt_args).x[0]
+        updated[6] = minimize(func, params[6], args=(means[1], resp[1]), **args).x[0]
+        updated[7] = minimize(func, params[7], args=(means[2], resp[2]), **args).x[0]
 
-        # update parameters
-        curr = np.array(
-            [
-                pi0_new,
-                pi1_new,
-                pi2_new,
-                delta_new,
-                l1_new,
-                l2_new,
-                kappa1_new,
-                kappa2_new,
-            ]
-        )
+        # loss (epsilon)
+        loss = np.linalg.norm(updated - params)
 
-        # calculate loss (epsilon)
-        loss = np.linalg.norm(curr - prev)
-
-        params.append(curr)
+        params[:] = updated
         epoch += 1
 
-    return _post_estimate_bias(beta, var_hat, params[-1])
+    return _post_estimate_bias(beta, var_hat, params)
 
 
 def _post_estimate_bias(beta, var_hat, params):
-    """Estimate sample bias according to EM-inferred parameters."""
+    """Estimate sample bias according to EM-optimized parameters."""
     pi0, pi1, pi2, delta, l1, l2, kappa1, kappa2 = params
     nu = var_hat.copy()
 
@@ -277,7 +285,7 @@ def _post_estimate_bias(beta, var_hat, params):
     nu[C1] += kappa1
     nu[C2] += kappa2
     nu_inv = 1.0 / nu
-    wls_deno = np.sum(nu_inv)
+    wls_denom = np.sum(nu_inv)
 
     # Denominator of the WLS estimator
     nu_inv[C0] *= beta[C0]
@@ -286,10 +294,9 @@ def _post_estimate_bias(beta, var_hat, params):
     wls_nume = np.sum(nu_inv)
 
     # Estimate the variance of bias
-    wls_deno_inv = 1.0 / wls_deno
-
-    delta_wls = wls_nume * wls_deno_inv
-    var_delta = np.nan_to_num(wls_deno_inv)
+    wls_denom_inv = 1.0 / wls_denom
+    delta_wls = wls_nume * wls_denom_inv
+    var_delta = np.nan_to_num(wls_denom_inv)
 
     # TODO: var_delta will be used if conserve=True to account for the variance of
     # delta_hat
@@ -352,7 +359,7 @@ def ancombc(
     metadata,
     formula,
     max_iter=100,
-    atol=1e-5,
+    tol=1e-5,
     alpha=0.05,
     p_adjust="holm",
 ):
@@ -379,7 +386,7 @@ def ancombc(
         a formula.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
-    atol : float, optional
+    tol : float, optional
         Absolute convergence tolerance for the bias estimation process. Default is
         1e-5.
     alpha : float, optional
@@ -506,8 +513,7 @@ def ancombc(
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     bias = np.empty((n_covars, 3))
     for i in range(n_covars):
-        res = _estimate_bias_em(beta[i], var_hat[:, i], atol=atol, max_iter=max_iter)
-        bias[i] = res
+        bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
     delta_em = bias[:, 0]
 
     # Correct coefficients (logFC) according to estimated bias.
