@@ -208,7 +208,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     # Nelder-Mead simplex algorithm for variance estimation
     def func(x, loc, resp):
         log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
-        return -np.sum(resp * log_pdf)
+        return -np.dot(resp, log_pdf)
 
     # optimizer arguments
     args = dict(method="Nelder-Mead", bounds=[(0, None)])
