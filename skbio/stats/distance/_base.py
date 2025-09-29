@@ -62,11 +62,11 @@ class DistanceMatrixError(SymmetricMatrixError):
 
 
 class MissingIDError(PairwiseMatrixError):
-    """Error for ID lookup that doesn't exist in the dissimilarity matrix."""
+    """Error for ID lookup that doesn't exist in the pairwise matrix."""
 
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
-        self.args = ("The ID '%s' is not in the dissimilarity matrix." % missing_id,)
+        self.args = ("The ID '%s' is not in the matrix." % missing_id,)
 
 
 class BaseMatrix(SkbioObject, PlottableMixin):
@@ -74,7 +74,7 @@ class BaseMatrix(SkbioObject, PlottableMixin):
 
 
 class PairwiseMatrix(SkbioObject, PlottableMixin):
-    """Store pairwise relationships between objects.
+    r"""Store pairwise relationships between objects.
 
     A `PairwiseMatrix` instance stores a square, two-dimensional
     matrix of relationships between objects. Objects could be, for example,
@@ -90,25 +90,26 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     Parameters
     ----------
     data : array_like or PairwiseMatrix
-        Square, two-dimensional ``numpy.ndarray`` of pairwise relationships
-        (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray`` or a one-dimensional vector of pairwise relationships
+        Square, two-dimensional `numpy.ndarray` of pairwise relationships
+        (floats), or a structure that can be converted to a `numpy.ndarray`
+        using `numpy.asarray` or a one-dimensional vector of pairwise relationships
         (floats), as defined by `scipy.spatial.distance.squareform`. Can
         instead be a `PairwiseMatrix` (or subclass) instance,
         in which case the instance's data will be used.
-        Data will be converted to a float ``dtype`` if necessary. A copy will
-        *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
+        Data will be converted to a float `dtype` if necessary. A copy will
+        *not* be made if already a `numpy.ndarray` with a float `dtype`.
     ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`. If ``None`` (the default), IDs will be
+        rows/cols in `data`. If `None` (the default), IDs will be
         monotonically-increasing integers cast as strings, with numbering
-        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+        starting from zero, e.g., `('0', '1', '2', '3', ...)`.
     validate : bool, optional
-        If `validate` is ``True`` (the default) and data is not a
-        PairwiseMatrix object, the input data will be validated.
+        If `validate` is `True` (the default) and data is not a
+        `PairwiseMatrix` object, the input data will be validated.
 
     See Also
     --------
+    SymmetricMatrix
     DistanceMatrix
     scipy.spatial.distance.squareform
 
@@ -116,8 +117,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     -----
     The values are stored in redundant (square-form) format [1]_.
 
-    The data are not checked for symmetry, hollowness, nor guaranteed/assumed to be
-    symmetric.
+    The data are not checked for symmetry or hollowness, nor guaranteed/assumed to be
+    symmetric or hollow.
 
     References
     ----------
@@ -127,6 +128,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     default_write_format: ClassVar[str] = "lsmat"
     # Used in __str__
+    # TODO: decide on what to call a matrix element here
     _matrix_element_name: ClassVar[str] = "dissimilarity"
 
     read = Read()
@@ -144,7 +146,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         validate: bool = True,
     ) -> None:
         data, ids = self._normalize_input(data, ids)
-        # convert data to redundant if 1D input
+        # convert data to redundant if 1D input.
+        # should do this for PairwiseMatrix only.
         if data.ndim == 1:
             data = squareform(data, force="tomatrix", checks=False)
 
@@ -200,7 +203,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if data.ndim != 1:
             return tuple(str(i) for i in range(data.shape[0]))
         else:
-            return tuple(str(i) for i in range(_vec_to_size(data)))
+            return tuple(str(i) for i in range(_vec_to_shape(data)))
 
     def _init_flags(self):
         # This is the default value. PairwiseMatrix doesn't really need flags.
@@ -217,18 +220,18 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
     ) -> "PairwiseMatrix":
-        """Create PairwiseMatrix from an iterable given a metric.
+        r"""Create PairwiseMatrix from an iterable given a metric.
 
         Parameters
         ----------
         iterable : iterable
-            Iterable containing objects to compute pairwise dissimilarities on.
+            Iterable containing objects to compute pairwise relationships on.
         metric : callable
             A function that takes two arguments and returns a float
-            representing the dissimilarity between the two arguments.
+            representing the relationship between the two arguments.
         key : callable or metadata key, optional
             A function that takes one argument and returns a string
-            representing the id of the element in the dissimilarity matrix.
+            representing the id of the element in the pairwise matrix.
             Alternatively, a key to a `metadata` property if it exists for
             each element in the `iterable`. If None, then default ids will be
             used.
@@ -266,9 +269,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def data(self) -> np.ndarray:
-        """Array of pairwise relationships.
+        r"""Array of pairwise relationships.
 
-        A ``numpy.ndarray`` of values (floats). A copy is *not* returned.
+        A `numpy.ndarray` of values (floats). A copy is *not* returned.
 
         Notes
         -----
@@ -279,7 +282,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def ids(self) -> tuple:
-        """Tuple of object IDs.
+        r"""Tuple of object IDs.
 
         A tuple of strings, one for each object in the pairwise matrix.
 
@@ -305,7 +308,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def shape(self) -> tuple:
-        """Two-element tuple containing the redundant form matrix dimensions.
+        r"""Two-element tuple containing the redundant form matrix dimensions.
 
         Notes
         -----
@@ -314,7 +317,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if self._flags["VECTOR"]:
-            m = _vec_to_size(self._data)
+            m = _vec_to_shape(self._data)
             return (m, m)
         return self._data.shape
 
@@ -392,7 +395,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         ndarray
-            Two-dimensional ``numpy.ndarray`` of values in redundant
+            Two-dimensional `numpy.ndarray` of values in redundant
             format.
 
         Notes
@@ -409,13 +412,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self._data
 
     def copy(self) -> "PairwiseMatrix":
-        r"""Return a deep copy of the dissimilarity matrix.
+        r"""Return a deep copy of the matrix.
 
         Returns
         -------
         PairwiseMatrix
-            Deep copy of the dissimilarity matrix. Will be the same type as
-            ``self``.
+            Deep copy of the matrix. Will be the same type as
+            `self`.
 
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -427,7 +430,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
-        r"""Rename IDs in the dissimilarity matrix.
+        r"""Rename IDs in the matrix.
 
         Parameters
         ----------
@@ -435,12 +438,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             A dictionary or function that maps current IDs to new IDs.
         strict : bool, optional
            If True (default), every ID in the matrix must be included in
-           ``mapper``. If False, only the specified IDs will be renamed.
+           `mapper`. If False, only the specified IDs will be renamed.
 
         Raises
         ------
         ValueError
-            If ``mapper`` does not contain all of the same IDs in the matrix
+            If `mapper` does not contain all of the same IDs in the matrix
             whereas in strict mode.
 
         Examples
@@ -463,30 +466,32 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self.ids = new_ids
 
     def filter(
-        self, ids: Sequence[str], strict: bool = True, preserve_condensed=True
+        self,
+        ids: Sequence[str],
+        strict: bool = True,  # , preserve_condensed=True
     ) -> "PairwiseMatrix":
-        r"""Filter the dissimilarity matrix by IDs.
+        r"""Filter the matrix by IDs.
 
         Parameters
         ----------
         ids : sequence of str
             IDs to retain. May not contain duplicates or be empty. Each ID must
-            be present in the dissimilarity matrix.
+            be present in the matrix.
         strict : bool, optional
-            If ``strict`` is True and an ID that is not found in the distance
-            matrix is found in ``ids``, a ``MissingIDError`` exception will be
+            If `strict` is True and an ID that is not found in the distance
+            matrix is found in `ids`, a `MissingIDError` exception will be
             raised, otherwise the ID will be ignored.
 
         Returns
         -------
         PairwiseMatrix
-            Filtered dissimilarity matrix containing only the IDs specified in
-            ``ids``. IDs will be in the same order as they appear in ``ids``.
+            Filtered matrix containing only the IDs specified in
+            `ids`. IDs will be in the same order as they appear in `ids`.
 
         Raises
         ------
         MissingIDError
-            If an ID in ``ids`` is not in the object's list of IDs.
+            If an ID in `ids` is not in the object's list of IDs.
 
         """
         if tuple(self._ids) == tuple(ids):
@@ -509,10 +514,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
-        if self._flags["VECTOR"] and preserve_condensed:
-            filtered_data = distmat_reorder_condensed_python(
-                self.condensed_form(), idxs
-            )
+        if self._flags["VECTOR"]:
+            filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
             return self.__class__(filtered_data, ids, validate=False, redundant=False)
         else:
@@ -538,7 +541,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return np.array(id_order, dtype=int)
 
     def within(self, ids: Iterable[str]) -> pd.DataFrame:
-        r"""Obtain all the distances among the set of IDs.
+        r"""Obtain all the pairwise values among the set of IDs.
 
         Parameters
         ----------
@@ -557,7 +560,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Raises
         ------
         MissingIDError
-            If an ID(s) specified is not in the dissimilarity matrix.
+            If an ID(s) specified is not in the matrix.
 
         Notes
         -----
@@ -597,17 +600,16 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def between(
         self, from_: Iterable[str], to_: Iterable[str], allow_overlap: bool = False
     ) -> pd.DataFrame:
-        """Obtain the distances between the two groups of IDs.
+        """Obtain the pairwise values between the two groups of IDs.
 
         Parameters
         ----------
         from_ : Iterable of str
-            The IDs to obtain distances from. Distances from all pairs of IDs
+            The IDs to obtain values from. Values from all pairs of IDs
             in from and to will be obtained.
         to_ : Iterable of str
-            The IDs to obtain distances to. Distances from all pairs of IDs
+            The IDs to obtain values to. Values from all pairs of IDs
             in to and from will be obtained.
-
         allow_overlap : bool, optional
             If True, allow overlap in the IDs of from and to (which would in
             effect be collecting the within distances). Default is False.
@@ -616,12 +618,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         -------
         pd.DataFrame
             (i, j, value) representing the source ID ("i"), the target ID ("j")
-            and the distance ("value").
+            and the value between them ("value").
 
         Raises
         ------
         MissingIDError
-            If an ID(s) specified is not in the dissimilarity matrix.
+            If an ID(s) specified is not in the matrix.
 
         Notes
         -----
@@ -705,7 +707,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # or j_ids is empty.
         values = [np.array([])]
         if self._flags["VECTOR"]:
-            # don't know if this line is needed
             diagonal_val = getattr(self, "_diagonal", 0.0)
             n = self.shape[0]
 
@@ -751,7 +752,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def plot(
         self, cmap: Optional[Union[str, "Colormap"]] = None, title: str = ""
     ) -> "matplotlib.figure.Figure":
-        """Create a heatmap of the dissimilarity matrix.
+        """Create a heatmap of the matrix.
 
         Parameters
         ----------
@@ -759,7 +760,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             Sets the color scheme of the heatmap
             If ``None``, defaults to the colormap specified in the matplotlib
             rc file.
-
         title: str, optional
             Sets the title label of the heatmap
             (Default is blank)
@@ -767,8 +767,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         matplotlib.figure.Figure
-            Figure containing the heatmap and colorbar of the plotted
-            dissimilarity matrix.
+            Figure containing the heatmap and colorbar of the plotted matrix.
 
         Examples
         --------
@@ -844,15 +843,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         )
 
     def __str__(self) -> str:
-        """Return a string representation of the dissimilarity matrix.
+        """Return a string representation of the matrix.
 
         Summary includes matrix dimensions, a (truncated) list of IDs, and
-        (truncated) array of dissimilarities.
+        (truncated) array of values.
 
         Returns
         -------
         str
-            String representation of the dissimilarity matrix.
+            String representation of the matrix.
 
         """
         return "%dx%d %s matrix\nIDs:\n%s\nData:\n" % (
@@ -863,9 +862,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ) + str(self._data)
 
     def __eq__(self, other: object) -> bool:
-        """Compare this dissimilarity matrix to another for equality.
+        r"""Compare this matrix to another for equality.
 
-        Two dissimilarity matrices are equal if they have the same shape, IDs
+        Two matrices are equal if they have the same shape, IDs
         (in the same order!), and have data arrays that are equal.
 
         Checks are *not* performed to ensure that `other` is a
@@ -874,12 +873,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Parameters
         ----------
         other : PairwiseMatrix
-            Dissimilarity matrix to compare to for equality.
+            Matrix to compare to for equality.
 
         Returns
         -------
         bool
-            ``True`` if `self` is equal to `other`, ``False`` otherwise.
+            `True` if `self` is equal to `other`, `False` otherwise.
 
         """
         if not isinstance(other, PairwiseMatrix):
@@ -906,12 +905,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return equal
 
     def __ne__(self, other: object) -> bool:
-        """Determine whether two dissimilarity matrices are not equal.
+        """Determine whether two matrices are not equal.
 
         Parameters
         ----------
         other : PairwiseMatrix
-            Dissimilarity matrix to compare to.
+            Matrix to compare to.
 
         Returns
         -------
@@ -926,7 +925,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return not self == other
 
     def __contains__(self, lookup_id: str) -> bool:
-        """Check if the specified ID is in the dissimilarity matrix.
+        r"""Check if the specified ID is in the matrix.
 
         Parameters
         ----------
@@ -936,8 +935,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         bool
-            ``True`` if `lookup_id` is in the dissimilarity matrix, ``False``
-            otherwise.
+            `True` if `lookup_id` is in the matrix, `False` otherwise.
 
         See Also
         --------
@@ -949,9 +947,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def __getitem__(
         self, index: Union[str, tuple[str, str], Any]
     ) -> Union[np.ndarray, float]:
-        """Slice into dissimilarity data by object ID or numpy indexing.
+        r"""Slice into data by object ID or numpy indexing.
 
-        Extracts data from the dissimilarity matrix by object ID, a pair of
+        Extracts data from the matrix by object ID, a pair of
         IDs, or numpy indexing/slicing.
 
         Parameters
@@ -961,22 +959,22 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             a numpy index.
 
             If `index` is a string, it is assumed to be an ID and a
-            ``numpy.ndarray`` row vector is returned for the corresponding ID.
-            Note that the ID's row of dissimilarities is returned, *not* its
+            `numpy.ndarray` row vector is returned for the corresponding ID.
+            Note that the ID's row of values is returned, *not* its
             column. If the matrix is symmetric, the two will be identical, but
             this makes a difference if the matrix is asymmetric.
 
             If `index` is a two-tuple of strings, each string is assumed to be
             an ID and the corresponding matrix element is returned that
-            represents the dissimilarity between the two IDs. Note that the
+            represents the value between the two IDs. Note that the
             order of lookup by ID pair matters if the matrix is asymmetric: the
             first ID will be used to look up the row, and the second ID will be
-            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
-            same as ``dm['b', 'a']`` if the matrix is asymmetric.
+            used to look up the column. Thus, `dm['a', 'b']` may not be the
+            same as `dm['b', 'a']` if the matrix is asymmetric.
 
             Otherwise, `index` will be passed through to
-            ``PairwiseMatrix.data.__getitem__``, allowing for standard
-            indexing of a ``numpy.ndarray`` (e.g., slicing).
+            `PairwiseMatrix.data.__getitem__`, allowing for standard
+            indexing of a `numpy.ndarray` (e.g., slicing).
 
         Returns
         -------
@@ -987,12 +985,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Raises
         ------
         MissingIDError
-            If the ID(s) specified in `index` are not in the dissimilarity
-            matrix.
+            If the ID(s) specified in `index` are not in the matrix.
 
         Notes
         -----
-        The lookup based on ID(s) is quick.
+        The lookup based on ID(s) is quick. NumPy indexing (slicing) on condensed
+        form matrices will convert them to redundant, roughly doubling their memory
+        requirement.
 
         """
         if isinstance(index, str):
@@ -1012,13 +1011,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             # ignore them in type checking.
             # revert to redundant form to handle numpy style indexing
             if self._flags["VECTOR"]:
-                redundant_data = squareform(self._data, checks=False)
-                return redundant_data.__getitem__(index)
+                return self.redundant_form().__getitem__(index)
             else:
                 return self._data.__getitem__(index)  # type: ignore[index]
 
-    # I believe this one should work for all three classes, so I shouldn't need
-    # to override this method in SymmetricMatrix or DistanceMatrix
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
 
@@ -1031,9 +1027,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Notes
         -----
         Accepts arguments instead of inspecting instance attributes to avoid
-        creating an invalid dissimilarity matrix before raising an error.
-        Otherwise, the invalid dissimilarity matrix could be used after the
-        exception is caught and handled.
+        creating an invalid matrix before raising an error. Otherwise, the invalid
+        matrix could be used after the exception is caught and handled.
 
         """
         duplicates = find_duplicates(ids)
@@ -1047,7 +1042,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise PairwiseMatrixError("IDs must be at least 1 in size.")
         # handle condensed form data
         if data.ndim == 1:
-            n = _vec_to_size(data)
+            n = _vec_to_shape(data)
             if len(ids) != n:
                 raise PairwiseMatrixError(
                     "The number of IDs (%d) must match "
@@ -1063,8 +1058,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                     "data (%d)." % (len(ids), data.shape[0])
                 )
 
-    # this one will need to be overriden for the DistanceMatrix and SymmetricMatrix
-    # classes so that it can handle condensed form
     def _validate_shape(self, data: np.ndarray) -> None:
         """Validate the data array shape.
 
@@ -1074,9 +1067,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Notes
         -----
         Accepts arguments instead of inspecting instance attributes to avoid
-        creating an invalid dissimilarity matrix before raising an error.
-        Otherwise, the invalid dissimilarity matrix could be used after the
-        exception is caught and handled.
+        creating an invalid matrix before raising an error. Otherwise, the invalid
+        matrix could be used after the exception is caught and handled.
 
         """
         if 0 in data.shape:
@@ -1123,11 +1115,22 @@ class SymmetricMatrix(PairwiseMatrix):
     validate : bool, optional
         If `validate` is ``True`` (the default) and data is not a
         DistanceMatrix object, the input data will be validated.
+    redundant : bool, optional
+        If `True` (default) the data will be stored in a 2-dimensional redundant form.
+        If `False`, the data will be stored in a 1-dimensional condensed form.
+    diagonal : np.ndarray or float, optional
+        If the matrix is to be stored in condensed form, diagonal stores the
+        information contained in the matrix's diagonal. If it is a float, this value
+        will represent all values in the diagonal. For example, if diagonal is set to
+        0.0 (default), then it represents that all values along the diagonal are 0.0.
+        If diagonal is an array, it's values represent the values along the diagonal
+        of the original matrix.
 
     See Also
     --------
     PairwiseMatrix
     SymmetricMatrix
+    squareform
     """
 
     def __init__(
@@ -1141,9 +1144,11 @@ class SymmetricMatrix(PairwiseMatrix):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
         redundant: bool = True,
-        diagonal: Union[float, np.ndarray] = 0.0,
+        diagonal: Union[float, np.ndarray] = None,
     ):
         data, ids = self._normalize_input(data, ids)
+        if diagonal:
+            diagonal = self._normalize_input(diagonal, None)[0]
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1158,25 +1163,28 @@ class SymmetricMatrix(PairwiseMatrix):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
+        self._diagonal = self._init_diagonal(diagonal, data)
         self._data = self._init_data(data, redundant)
         self._flags = self._init_flags(redundant)
-        self._diagonal = self._init_diagonal(diagonal, data)
 
-    def _init_diagonal(self, diagonal: np.ndarray, data: np.ndarray):
+    def _init_diagonal(self, diagonal: Union[float, np.ndarray], data: np.ndarray):
         """Initialize the diagonal attribute."""
-        # This needs work
         if diagonal is None:
-            if data.ndim == 2:
-                if np.trace(data) != 0:
-                    return np.diag(data)
-            else:
-                return 0.0
+            if data.ndim == 1:
+                diag = 0.0
+            elif data.ndim == 2:
+                diag = np.diagonal(data)
+                if np.allclose(diag, 0):
+                    diag = 0.0
+                else:
+                    diag = diag
         else:
-            return diagonal
-            # np.fill_diagonal(data_, diagonal)
+            diag = diagonal
+        # want it to be consistent type regardless of how it's initialized
+        return np.asarray(diag)
 
     def _init_flags(self, redundant: bool) -> dict:
-        """Init flags for symmetric matrix"""
+        """Initialize flags for symmetric matrix."""
         if redundant:
             return {"VECTOR": False}
         else:
@@ -1193,10 +1201,10 @@ class SymmetricMatrix(PairwiseMatrix):
                 return squareform(data, force="tovector", checks=False)
         else:
             # case where input is 1d and is converted to 2d,
-            # information may be lost here, if the diagonal is not supposed
-            # to be zeros
             if data.ndim == 1:
-                return squareform(data, force="tomatrix", checks=False)
+                mat = squareform(data, force="tomatrix", checks=False)
+                np.fill_diagonal(mat, self._diagonal)
+                return mat
             # case where input is 2d and stays 2d
             else:
                 return data
@@ -1211,32 +1219,63 @@ class SymmetricMatrix(PairwiseMatrix):
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
 
     def _validate_diagonal(
-        self, data: np.ndarray, diagonal: Optional[Union[float, int, np.ndarray]] = None
+        self, data: np.ndarray, diagonal: Optional[np.ndarray] = None
     ) -> None:
         """Validate the diagonal of the matrix."""
-        if isinstance(diagonal, np.ndarray):
-            # if it's a nd.array it needs to be 1d
-            if diagonal.ndim != 1:
-                raise SymmetricMatrixError(
-                    f"Diagonal must be 1 dimensional if it is array. Found "
-                    f"{diagonal.ndim} dimensions."
-                )
-            # it also needs to match the size of the matrix
-            if len(diagonal) != data.shape[0]:
-                raise SymmetricMatrixError(
-                    f"Length of diagonal does not match size of the array."
-                )
-            # do we need to check for non-negativity?
+        if diagonal is not None:
+            # if it's a single value, it doesn't need to be validated
+            if diagonal.ndim != 0:
+                # if it's a nd.array it needs to be 1d
+                if diagonal.ndim != 1:
+                    raise SymmetricMatrixError(
+                        f"Diagonal must be 1 dimensional if it is array. Found "
+                        f"{diagonal.ndim} dimensions."
+                    )
+                # it also needs to match the size of the matrix
+                length = diagonal.size
+                if data.ndim == 2:
+                    if length != data.shape[0]:
+                        raise SymmetricMatrixError(
+                            f"Length of diagonal ({length}) does not match the shape "
+                            f"of the matrix {data.shape}."
+                        )
+                else:
+                    shape = _vec_to_shape(data)
+                    if length != shape:
+                        raise SymmetricMatrixError(
+                            f"Length of diagonal ({length}) does not match the shape "
+                            f"of the matrix {(shape, shape)}."
+                        )
 
     def _validate_shape(self, data: np.ndarray):
         if data.ndim == 2:
             if 0 in data.shape:
-                raise PairwiseMatrixError("Data must be at least 1x1 in size.")
+                raise SymmetricMatrixError("Data must be at least 1x1 in size.")
             if data.shape[0] != data.shape[1]:
-                raise PairwiseMatrixError(
+                raise SymmetricMatrixError(
                     "Data must be square (i.e., have the same number of rows and "
                     "columns)."
                 )
+        # check that the length of the array is a valid length if 1D
+        elif data.ndim == 1:
+            # pulled from scipy squareform
+            s = data.shape
+            # Grab the closest value to the square root of the number
+            # of elements times 2 to see if the number of elements
+            # is indeed a binomial coefficient.
+            d = int(np.ceil(np.sqrt(s[0] * 2)))
+            # Check that v is of valid dimensions.
+            if d * (d - 1) != s[0] * 2:
+                raise SymmetricMatrixError(
+                    "Incompatible vector size. It must be a binomial "
+                    "coefficient n choose 2 for some integer n >= 2."
+                )
+        else:
+            raise SymmetricMatrixError(
+                f"Data must be have either 1 or 2 dimensions. "
+                f"Found {data.ndim} dimensions."
+            )
+
         if data.dtype not in (np.float32, np.float64):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
@@ -1321,23 +1360,33 @@ class SymmetricMatrix(PairwiseMatrix):
             return cls(dm, keys_, diagonal=diagonal, redundant=redundant)  # type: ignore[operator]
 
     def redundant_form(self):
-        if self._flags["VECTOR"]:
-            # if self.__class__ == SymmetricMatrix:
-            mat = squareform(self._data, force="tomatrix", checks=False)
-            np.fill_diagonal(mat, self._diagonal)
-            return mat
-            # else:
-            #     return squareform(self._data, force="tomatrix", checks=False)
-        else:
-            return self._data
-
-    def condensed_form(self) -> np.ndarray:
-        """Return an array of distances in condensed format.
+        r"""Return an array of values in redundant format.
 
         Returns
         -------
         ndarray
-            One-dimensional ``numpy.ndarray`` of distances in condensed format.
+            Two-dimensional `numpy.ndarray` of values in redundant format.
+
+        See Also
+        --------
+        condensed_form
+        """
+        if self._flags["VECTOR"]:
+            mat = squareform(self._data, force="tomatrix", checks=False)
+            np.fill_diagonal(mat, self._diagonal)
+            return mat
+        else:
+            return self._data
+
+    def condensed_form(self) -> np.ndarray:
+        r"""Return an array of distances in condensed format.
+
+        Returns
+        -------
+        data : ndarray
+            One-dimensional `numpy.ndarray` of values in condensed format.
+        diagonal : ndarray
+            One-dimensional `numpy.ndarray` of diagonal values.
 
         Notes
         -----
@@ -1354,7 +1403,9 @@ class SymmetricMatrix(PairwiseMatrix):
         if self._flags["VECTOR"]:
             return self._data, self._diagonal
         else:
-            return squareform(self._data, force="tovector", checks=False)
+            return squareform(
+                self._data, force="tovector", checks=False
+            ), self._diagonal
 
     def permute(
         self,
@@ -1367,7 +1418,7 @@ class SymmetricMatrix(PairwiseMatrix):
         Randomly permutes the ordering of rows and columns in the matrix. The
         same permutation is applied to both rows and columns in order to
         maintain symmetry and, if applicable, hollowness. Only the rows/columns in the
-        distance matrix are permuted; the IDs are *not* permuted.
+        matrix are permuted; the IDs are *not* permuted.
 
         Parameters
         ----------
@@ -1406,14 +1457,14 @@ class SymmetricMatrix(PairwiseMatrix):
             # if self.__class__ != DistanceMatrix:
             #     raise TypeError("Only distance matrices can return condensed.")
             if self._flags["VECTOR"]:
-                permuted_condensed = distmat_reorder_condensed_python(self._data, order)
+                permuted_condensed = distmat_reorder_condensed_py(self._data, order)
             else:
                 permuted_condensed = distmat_reorder_condensed(self._data, order)
             return permuted_condensed
         else:
             # Note: Skip validation, since we assume self was already validated
             if self._flags["VECTOR"]:
-                permuted = distmat_reorder_condensed_python(self._data, order)
+                permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
                     permuted, self.ids, validate=False, redundant=False
                 )
@@ -1522,12 +1573,12 @@ class DistanceMatrix(SymmetricMatrix):
     #     super().__init__(data, ids, validate, redundant, diagonal=0.0)
 
     def condensed_form(self) -> np.ndarray:
-        """Return an array of distances in condensed format.
+        r"""Return an array of distances in condensed format.
 
         Returns
         -------
         ndarray
-            One-dimensional ``numpy.ndarray`` of distances in condensed format.
+            One-dimensional `numpy.ndarray` of distances in condensed format.
 
         Notes
         -----
@@ -1541,7 +1592,6 @@ class DistanceMatrix(SymmetricMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        # should probably raise a warning, but doing this for now to test things out
         if self._flags["VECTOR"]:
             return self._data
         else:
@@ -1767,8 +1817,7 @@ def _preprocess_input(
     sample_size = distance_matrix.shape[0]
     # handle condensed form
     # if distance_matrix.data.ndim == 1:
-    #     sample_size = _vec_to_size(distance_matrix.data)
-    # print('\n\n\n', sample_size, '\n\n\n')
+    #     sample_size = _vec_to_shape(distance_matrix.data)
 
     num_groups, grouping = _preprocess_input_sng(
         distance_matrix.ids, sample_size, grouping, column
@@ -1877,8 +1926,8 @@ def _build_results(
     )
 
 
-def _vec_to_size(vec: int) -> float:
-    """Calculate the redundant size of a matrix given its condensed vector."""
+def _vec_to_shape(vec: int) -> float:
+    """Calculate the redundant shape of a matrix given its condensed vector."""
     return int((1 + np.sqrt(1 + 8 * len(vec))) / 2)
 
 
@@ -1903,7 +1952,7 @@ def _condensed_index(i: int, j: int, n: int) -> int:
     return i * n + j - ((i + 2) * (i + 1)) // 2
 
 
-def distmat_reorder_condensed_python(in_mat, reorder_vec):
+def distmat_reorder_condensed_py(in_mat, reorder_vec):
     """Pure Python implementation of distmat_reorder for condensed matrices.
 
     Parameters
@@ -1918,7 +1967,7 @@ def distmat_reorder_condensed_python(in_mat, reorder_vec):
     np.ndarray
         Condensed matrix.
     """
-    n_original = _vec_to_size(in_mat)
+    n_original = _vec_to_shape(in_mat)
     n_filtered = len(reorder_vec)
 
     out_size = n_filtered * (n_filtered - 1) // 2
