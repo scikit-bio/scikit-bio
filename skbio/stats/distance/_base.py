@@ -219,6 +219,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
+        # validate: bool = True,
     ) -> "PairwiseMatrix":
         r"""Create PairwiseMatrix from an iterable given a metric.
 
@@ -1163,12 +1164,16 @@ class SymmetricMatrix(PairwiseMatrix):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal(diagonal, data)
+        self._diagonal = self._init_diagonal(diagonal, data, redundant)
         self._data = self._init_data(data, redundant)
         self._flags = self._init_flags(redundant)
 
-    def _init_diagonal(self, diagonal: Union[float, np.ndarray], data: np.ndarray):
+    def _init_diagonal(
+        self, diagonal: Union[float, np.ndarray], data: np.ndarray, redundant
+    ):
         """Initialize the diagonal attribute."""
+        if redundant:
+            return None
         if diagonal is None:
             if data.ndim == 1:
                 diag = 0.0
@@ -1346,6 +1351,10 @@ class SymmetricMatrix(PairwiseMatrix):
             keys_ = list(keys)
 
         dm = np.empty((len(iterable),) * 2)
+        if diagonal is not None:
+            np.fill_diagonal(dm, diagonal)
+        else:
+            np.fill_diagonal(dm, 0.0)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1357,7 +1366,9 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-            return cls(dm, keys_, diagonal=diagonal, redundant=redundant)  # type: ignore[operator]
+            return cls(
+                dm, keys_, diagonal=diagonal, redundant=redundant, validate=False
+            )  # type: ignore[operator]
 
     def redundant_form(self):
         r"""Return an array of values in redundant format.
