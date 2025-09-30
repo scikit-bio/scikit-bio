@@ -1287,7 +1287,7 @@ class SymmetricMatrix(PairwiseMatrix):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
-        diagonal=0.0,
+        diagonal=None,
         redundant=True,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
@@ -1561,16 +1561,6 @@ class DistanceMatrix(SymmetricMatrix):
 
     # Override here, used in superclass __str__
     _matrix_element_name: ClassVar[str] = "distance"
-
-    # def __init__(self, data, ids=None, validate=True, redundant=True, diagonal=None):
-    #     if diagonal is not None and diagonal != 0.0:
-    #         raise ValueError("DistanceMatrix objects must be hollow (diagonal=0.0)")
-    #     if redundant:
-    #         self._data = data
-    #         self._flags["VECTOR"] = False
-    #     else:
-
-    #     super().__init__(data, ids, validate, redundant, diagonal=0.0)
 
     def condensed_form(self) -> np.ndarray:
         r"""Return an array of distances in condensed format.

@@ -269,6 +269,12 @@ def mantel(
     """
     rng = get_rng(seed)
 
+    # convert to redundant form for now
+    if isinstance(x, DistanceMatrix) and x._flags["VECTOR"]:
+        x = DistanceMatrix(x)
+    if isinstance(y, DistanceMatrix) and y._flags["VECTOR"]:
+        y = DistanceMatrix(y)
+
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -279,7 +285,7 @@ def mantel(
 
     if permutations < 0:
         raise ValueError(
-            "Number of permutations must be greater than or " "equal to zero."
+            "Number of permutations must be greater than or equal to zero."
         )
     if alternative not in ("two-sided", "greater", "less"):
         raise ValueError("Invalid alternative hypothesis '%s'." % alternative)
@@ -621,7 +627,7 @@ def pwmantel(
     else:
         if num_dms != len(labels):
             raise ValueError(
-                "Number of labels must match the number of " "distance matrices."
+                "Number of labels must match the number of distance matrices."
             )
         if len(set(labels)) != len(labels):
             raise ValueError("Labels must be unique.")
@@ -685,18 +691,17 @@ def _order_dms(x, y, strict=True, lookup=None):
         num_matches = len(id_order)
 
         if strict and ((num_matches != len(x.ids)) or (num_matches != len(y.ids))):
-            raise ValueError("IDs exist that are not in both distance " "matrices.")
+            raise ValueError("IDs exist that are not in both distance matrices.")
 
         if num_matches < 1:
-            raise ValueError("No matching IDs exist between the distance " "matrices.")
+            raise ValueError("No matching IDs exist between the distance matrices.")
 
         return x.filter(id_order), y.filter(id_order)
     else:
         # Both x and y aren't DistanceMatrix instances.
         if lookup is not None:
             raise ValueError(
-                "ID lookup can only be provided if inputs are "
-                "DistanceMatrix instances."
+                "ID lookup can only be provided if inputs are DistanceMatrix instances."
             )
 
         x = DistanceMatrix(x)

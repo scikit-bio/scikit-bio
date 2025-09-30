@@ -110,6 +110,13 @@ class TestANOSIM(TestCase):
         obs = anosim(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
 
+    def test_no_permutations_condensed(self):
+        exp = pd.Series(index=self.exp_index,
+                data=['ANOSIM', 'R', 4, 2, 0.625, np.nan, 0],
+                name='ANOSIM results')
+        obs = anosim(self.dm_condensed, self.grouping_equal, permutations=0)
+        self.assert_series_equal(obs, exp)
+
     def test_unequal_group_sizes(self):
         exp = pd.Series(index=self.exp_index,
                         data=['ANOSIM', 'R', 6, 3, -0.363636, 0.87, 999],
@@ -123,4 +130,4 @@ class TestANOSIM(TestCase):
 
 
 if __name__ == '__main__':
-    main(buffer=False)
+    main()

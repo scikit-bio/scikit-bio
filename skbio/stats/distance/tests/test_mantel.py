@@ -32,9 +32,15 @@ class MantelTestData(TestCase):
     def setUp(self):
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
-        self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
-        self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
-        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
+        self.minx = [[0, 1, 2],
+                     [1, 0, 3],
+                     [2, 3, 0]]
+        self.miny = [[0, 2, 7],
+                     [2, 0, 6],
+                     [7, 6, 0]]
+        self.minz = [[0, 0.5, 0.25],
+                     [0.5, 0, 0.1],
+                     [0.25, 0.1, 0]]
 
         # Version of the above dataset stored as DistanceMatrix instances.
         self.minx_dm = DistanceMatrix(self.minx)
