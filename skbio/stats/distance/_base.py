@@ -219,7 +219,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
-        # validate: bool = True,
+        validate: bool = True,
     ) -> "PairwiseMatrix":
         r"""Create PairwiseMatrix from an iterable given a metric.
 
@@ -1145,11 +1145,11 @@ class SymmetricMatrix(PairwiseMatrix):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
         condensed: bool = False,
-        diagonal: Union[float, np.ndarray] = None,
+        diagonal: Union[float, np.ndarray] = 0.0,
     ):
         data, ids = self._normalize_input(data, ids)
-        if diagonal:
-            diagonal = self._normalize_input(diagonal, None)[0]
+        # if diagonal:
+        #     diagonal = self._normalize_input(diagonal, None)[0]
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1173,21 +1173,20 @@ class SymmetricMatrix(PairwiseMatrix):
     ):
         """Initialize the diagonal attribute."""
         # don't need to store a diagonal if the underlying data struct is 2D
-        if not condensed:
-            return 0.0
+        # if not condensed:
+        #     return 0.0
         if diagonal is None:
             if data.ndim == 1:
-                diag = 0.0
+                return 0.0
             elif data.ndim == 2:
-                diag = np.diagonal(data)
-                if np.allclose(diag, 0):
-                    diag = 0.0
-                else:
-                    diag = diag
+                diagonal = np.diagonal(data)
+                if np.allclose(diagonal, 0):
+                    diagonal = 0.0
+                return diagonal
+        if np.isscalar(diagonal):
+            return float(diagonal)
         else:
-            diag = diagonal
-        # want it to be consistent type regardless of how it's initialized
-        return np.asarray(diag)
+            return np.asarray(diagonal)
 
     def _init_flags(self, condensed: bool) -> dict:
         """Initialize flags for symmetric matrix."""
@@ -1206,7 +1205,7 @@ class SymmetricMatrix(PairwiseMatrix):
             else:
                 return squareform(data, force="tovector", checks=False)
         else:
-            # case where input is 1d and is converted to 2d,
+            # case where input is 1d and is converted to 2d.
             if data.ndim == 1:
                 mat = squareform(data, force="tomatrix", checks=False)
                 np.fill_diagonal(mat, self._diagonal)
@@ -1230,7 +1229,8 @@ class SymmetricMatrix(PairwiseMatrix):
         """Validate the diagonal of the matrix."""
         if diagonal is not None:
             # if it's a single value, it doesn't need to be validated
-            if diagonal.ndim != 0:
+            if not np.isscalar(diagonal):
+                diagonal = np.asarray(diagonal)
                 # if it's a nd.array it needs to be 1d
                 if diagonal.ndim != 1:
                     raise SymmetricMatrixError(
@@ -1285,6 +1285,15 @@ class SymmetricMatrix(PairwiseMatrix):
         if data.dtype not in (np.float32, np.float64):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
+    @property
+    def diagonal(self) -> Union[float, np.ndarray]:
+        """Diagonal values of the matrix.
+
+        If diagonal is a float, this value is repeated along the diagonal of the
+        matrix. If diagonal is an array, it represents the full diagonal of the
+        matrix."""
+        return self._diagonal
+
     @classonlymethod
     def from_iterable(
         cls,
@@ -1293,7 +1302,7 @@ class SymmetricMatrix(PairwiseMatrix):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
-        diagonal=None,
+        diagonal=0.0,
         condensed=False,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
@@ -1352,24 +1361,21 @@ class SymmetricMatrix(PairwiseMatrix):
             keys_ = list(keys)
 
         dm = np.empty((len(iterable),) * 2)
-        if diagonal is not None:
-            np.fill_diagonal(dm, diagonal)
-        else:
-            np.fill_diagonal(dm, 0.0)
+        # this allows for diagonals which do not match the exact shape of the matrix,
+        # np.fill_diagonal will just repeat the array to fill. Not sure if this is
+        # what we want here.
+        np.fill_diagonal(dm, diagonal)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
                     dm[i, j] = metric(a, b)
-            return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
         else:
             # This assumes that metric will return a symmetric matrix. That is, that
             # metric(a, b) is the same as metric(b, a)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-            return cls(
-                dm, keys_, diagonal=diagonal, condensed=condensed, validate=False
-            )  # type: ignore[operator]
+        return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
 
     def redundant_form(self):
         r"""Return an array of values in redundant format.
@@ -1615,6 +1621,30 @@ class DistanceMatrix(SymmetricMatrix):
                 raise DistanceMatrixError(
                     "Data must  be hollow (i.e., the diagonal can only contain zeros)."
                 )
+
+    def _validate_diagonal(
+        self, data: np.ndarray, diagonal: Union[float, np.ndarray]
+    ) -> None:
+        """Validate the diagonal of the matrix."""
+        if np.isscalar(diagonal):
+            if diagonal != 0:
+                raise DistanceMatrixError(
+                    "The diagonal of a DistanceMatrix may only contain zeros."
+                )
+        else:
+            diagonal = np.asarray(diagonal)
+            if np.any(diagonal != 0):
+                print("\n\n", diagonal, "\n\n")
+                raise DistanceMatrixError(
+                    "The diagonal of a DistanceMatrix may only contain zeros."
+                )
+        super()._validate_diagonal(data, diagonal)
+
+    def _init_diagonal(self, diagonal, data, condensed):
+        """Initialize the diagonal attribut for a DistanceMatrix.
+
+        It will always be 0."""
+        return 0.0
 
     def to_series(self) -> pd.Series:
         """Create a ``pandas.Series`` from this ``DistanceMatrix``.
