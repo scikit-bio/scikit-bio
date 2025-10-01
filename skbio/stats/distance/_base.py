@@ -1958,7 +1958,7 @@ def _build_results(
     )
 
 
-def _vec_to_shape(vec: int) -> float:
+def _vec_to_shape(vec: np.ndarray) -> int:
     """Calculate the redundant shape of a matrix given its condensed vector."""
     return int((1 + np.sqrt(1 + 8 * len(vec))) / 2)
 
