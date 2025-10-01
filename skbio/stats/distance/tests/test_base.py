@@ -757,9 +757,9 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
         self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
         self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
-        self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], redundant=False)
-        self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], redundant=False)
-        self.dm_3x3_cond = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'], redundant=False)
+        self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], condensed=True)
+        self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], condensed=True)
+        self.dm_3x3_cond = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'], condensed=True)
 
         self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3, self.dm_1x1_cond, self.dm_2x2_cond, self.dm_3x3_cond]
         self.dm_condensed_forms = [np.array([]), np.array([0.123]),
@@ -777,8 +777,8 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         data = [1, 2, 3]
         exp = self.matobj([[0, 1, 2],
                            [1, 0, 3],
-                           [2, 3, 0]], ['0', '1', '2'], redundant=False)
-        res = self.matobj(data, redundant=False)
+                           [2, 3, 0]], ['0', '1', '2'], condensed=True)
+        res = self.matobj(data, condensed=True)
         self.assertEqual(exp, res)
 
     def test_init_invalid_input(self):
@@ -800,16 +800,16 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         # Asymmetric.
         data = [[0.0, 2.0], [1.0, 0.0]]
         with self.assertRaises(DistanceMatrixError):
-            self.matobj(data, ['a', 'b'], redundant=False)
+            self.matobj(data, ['a', 'b'], condensed=True)
 
         # Non-hollow
         data = [[1.0, 2.0], [2.0, 1.0]]
         with self.assertRaises(DistanceMatrixError):
-            self.matobj(data, ['a', 'b'], redundant=False)
+            self.matobj(data, ['a', 'b'], condensed=True)
 
         # Ensure that the superclass validation is still being performed.
         with self.assertRaises(PairwiseMatrixError):
-            self.matobj([[1, 2, 3]], ['a'], redundant=False)
+            self.matobj([[1, 2, 3]], ['a'], condensed=True)
 
     def test_init_nans(self):
         with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
@@ -817,7 +817,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
     def test_init_nans_condensed(self):
         with self.assertRaisesRegex(DistanceMatrixError, r'NaNs'):
-            self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'], redundant=False)
+            self.matobj([[0.0, np.nan], [np.nan, 0.0]], ['a', 'b'], condensed=True)
 
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
@@ -835,8 +835,8 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj([[0, 1, 2, 3],
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
-                           [3, 2, 1, 0]], redundant=False)
-        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a), redundant=False)
+                           [3, 2, 1, 0]], condensed=True)
+        res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a), condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_validate_equal_valid_data(self):
@@ -852,11 +852,11 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         validate_true = self.matobj.from_iterable((x for x in range(4)),
                                                   lambda a, b: abs(b - a),
                                                   validate=True,
-                                                  redundant=False)
+                                                  condensed=True)
         validate_false = self.matobj.from_iterable((x for x in range(4)),
                                                    lambda a, b: abs(b - a),
                                                    validate=False,
-                                                   redundant=False)
+                                                   condensed=True)
         self.assertEqual(validate_true, validate_false)
 
     def test_from_iterable_validate_false(self):
@@ -876,10 +876,10 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj([[0, 1, 2, 3],
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
-                           [3, 2, 1, 0]], redundant=False)
+                           [3, 2, 1, 0]], condensed=True)
         res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
                                         validate=False,
-                                        redundant=False)
+                                        condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_validate_non_hollow(self):
@@ -890,7 +890,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
     def test_from_iterable_validate_non_hollow_condensed(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError):
-            self.matobj.from_iterable(iterable, lambda a, b: 1, redundant=False)
+            self.matobj.from_iterable(iterable, lambda a, b: 1, condensed=True)
 
     def test_from_iterable_validate_false_non_symmetric(self):
         exp = self.matobj([[0, 1, 2, 3],
@@ -906,11 +906,11 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj([[0, 1, 2, 3],
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
-                           [3, 2, 1, 0]], redundant=False)
+                           [3, 2, 1, 0]], condensed=True)
         res = self.matobj.from_iterable((x for x in range(4)),
                                         lambda a, b: a - b,
                                         validate=False,
-                                        redundant=False)
+                                        condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_validate_asym(self):
@@ -921,7 +921,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
     def test_from_iterable_validate_asym_condensed(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError):
-            self.matobj.from_iterable(iterable, lambda a, b: b - a, redundant=False)
+            self.matobj.from_iterable(iterable, lambda a, b: b - a, condensed=True)
 
     def test_from_iterable_with_key(self):
         iterable = (x for x in range(4))
@@ -940,10 +940,10 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj([[0, 1, 2, 3],
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
-                           [3, 2, 1, 0]], ['0', '1', '4', '9'], redundant=False)
+                           [3, 2, 1, 0]], ['0', '1', '4', '9'], condensed=True)
         res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
                                         key=lambda x: str(x**2),
-                                        redundant=False)
+                                        condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_empty(self):
@@ -952,7 +952,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
     def test_from_iterable_empty_condensed(self):
         with self.assertRaises(PairwiseMatrixError):
-            self.matobj.from_iterable([], lambda x: x, redundant=False)
+            self.matobj.from_iterable([], lambda x: x, condensed=True)
 
     def test_from_iterable_single(self):
         exp = self.matobj([[0]])
@@ -960,8 +960,8 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(res, exp)
 
     def test_from_iterable_single_condensed(self):
-        exp = self.matobj([[0]], redundant=False)
-        res = self.matobj.from_iterable(["boo"], lambda a, b: 0, redundant=False)
+        exp = self.matobj([[0]], condensed=True)
+        res = self.matobj.from_iterable(["boo"], lambda a, b: 0, condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_with_keys(self):
@@ -981,9 +981,9 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj([[0, 1, 2, 3],
                            [1, 0, 1, 2],
                            [2, 1, 0, 1],
-                           [3, 2, 1, 0]], ['0', '1', '4', '9'], redundant=False)
+                           [3, 2, 1, 0]], ['0', '1', '4', '9'], condensed=True)
         res = self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
-                                        keys=iter(['0', '1', '4', '9']), redundant=False)
+                                        keys=iter(['0', '1', '4', '9']), condensed=True)
         self.assertEqual(res, exp)
 
     def test_from_iterable_with_key_and_keys(self):
@@ -997,7 +997,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(ValueError):
             self.matobj.from_iterable(iterable, lambda a, b: abs(b - a),
                                       key=str, keys=['1', '2', '3', '4'],
-                                      redundant=False)
+                                      condensed=True)
 
     def test_from_iterable_scipy_hamming_metric_with_metadata(self):
         # test for #1254
@@ -1034,13 +1034,13 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             [0, 0.25, 0.75, 0.75],
             [0.25, 0.0, 0.5, 0.5],
             [0.75, 0.5, 0.0, 0.0],
-            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], condensed=True)
 
         dm = self.matobj.from_iterable(
             seqs,
             metric=scipy.spatial.distance.hamming,
             keys=['a', 'b', 'c', 'd'],
-            redundant=False)
+            condensed=True)
 
         self.assertEqual(dm, exp)
 
@@ -1079,13 +1079,13 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             [0, 0.25, 0.75, 0.75],
             [0.25, 0.0, 0.5, 0.5],
             [0.75, 0.5, 0.0, 0.0],
-            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+            [0.75, 0.5, 0.0, 0.0]], ['a', 'b', 'c', 'd'], condensed=True)
 
         dm = self.matobj.from_iterable(
             seqs,
             metric=skbio.sequence.distance.hamming,
             keys=['a', 'b', 'c', 'd'],
-            redundant=False)
+            condensed=True)
 
         self.assertEqual(dm, exp)
 
@@ -1170,13 +1170,13 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
         exp = self.matobj([[0, 12, 4.2],
                            [12, 0, 0.01],
-                           [4.2, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+                           [4.2, 0.01, 0]], self.dm_3x3_cond.ids, condensed=True)
         obs = self.dm_3x3_cond.permute(seed=3)
         self.assertEqual(obs, exp)
 
         exp = self.matobj([[0, 4.2, 12],
                            [4.2, 0, 0.01],
-                           [12, 0.01, 0]], self.dm_3x3_cond.ids, redundant=False)
+                           [12, 0.01, 0]], self.dm_3x3_cond.ids, condensed=True)
         obs = self.dm_3x3_cond.permute(seed=2)
         self.assertEqual(obs, exp)
 
@@ -1231,7 +1231,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             [0.0, 0.2, 0.3, 0.4],
             [0.2, 0.0, 0.5, 0.6],
             [0.3, 0.5, 0.0, 0.7],
-            [0.4, 0.6, 0.7, 0.0]], ['a', 'b', 'c', 'd'], redundant=False)
+            [0.4, 0.6, 0.7, 0.0]], ['a', 'b', 'c', 'd'], condensed=True)
 
         series = dm.to_series()
 
@@ -1247,7 +1247,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         assert_series_almost_equal(series, exp)
 
     def test_to_series_default_ids_condensed(self):
-        series = self.matobj(self.dm_2x2_data, redundant=False).to_series()
+        series = self.matobj(self.dm_2x2_data, condensed=True).to_series()
 
         exp = pd.Series([0.123], index=pd.Index([('0', '1')]))
         assert_series_almost_equal(series, exp)
@@ -1334,28 +1334,28 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
     def test_rename_condensed(self):
         # Test successful renaming with a dictionary in strict mode (default)
-        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], condensed=True)
         rename_dict = {'a': 'x', 'b': 'y'}
         dm.rename(rename_dict)
         exp = ('x', 'y')
         self.assertEqual(dm.ids, exp)
 
         # Test successful renaming with a function in strict mode (default)
-        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], condensed=True)
         rename_func = lambda x: x + '_1'
         dm.rename(rename_func)
         exp = ('a_1', 'b_1')
         self.assertEqual(dm.ids, exp)
 
         # Test renaming in non-strict mode where one ID is not included in the dictionary
-        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], condensed=True)
         rename_dict = {'a': 'x'}  # 'b' will retain its original ID
         dm.rename(rename_dict, strict=False)
         exp = ('x', 'b')
         self.assertEqual(dm.ids, exp)
 
         # Test that renaming with strict=True raises an error if not all IDs are included
-        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], redundant=False)
+        dm = DistanceMatrix([[0, 1], [1, 0]], ids=['a', 'b'], condensed=True)
         rename_dict = {'a': 'x'}  # Missing 'b'
         with self.assertRaises(ValueError):
             dm.rename(rename_dict, strict=True)

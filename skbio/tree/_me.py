@@ -147,7 +147,7 @@ def gme(dm, neg_as_zero=True):
     _validate_dm(dm)
 
     # convert to redundant form for now
-    if dm._flags["VECTOR"]:
+    if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using GME
@@ -254,7 +254,7 @@ def bme(dm, neg_as_zero=True, **kwargs):
     _validate_dm(dm)
 
     # convert to redundant form for now
-    if dm._flags["VECTOR"]:
+    if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
@@ -381,7 +381,7 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     _validate_dm_and_tree(dm, tree)
 
     # convert to redundant form for now
-    if dm._flags["VECTOR"]:
+    if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
     # generate tree array

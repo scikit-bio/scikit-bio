@@ -18,7 +18,7 @@ class UpgmaTests(TestCase):
                 [8,  9,  7,  3,  0]]
         ids = list('abcde')
         self.dm = DistanceMatrix(data, ids)
-        self.dm_condensed = DistanceMatrix(self.dm, redundant=False)
+        self.dm_condensed = DistanceMatrix(self.dm, condensed=True)
         # Note that upgma and wpgma have different edge
         # estimations, even with small examples.
         self.expected_str_upgma = (

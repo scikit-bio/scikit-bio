@@ -207,7 +207,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     def _init_flags(self):
         # This is the default value. PairwiseMatrix doesn't really need flags.
-        return {"VECTOR": False}
+        return {"CONDENSED": False}
 
     def _init_data(self, data):
         return data
@@ -317,7 +317,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         equal. The shape of the redundant form matrix is returned.
 
         """
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             m = _vec_to_shape(self._data)
             return (m, m)
         return self._data.shape
@@ -331,7 +331,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Equivalent to ``self.shape[0] * self.shape[1]``.
 
         """
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             return self.shape[0] ** 2
         return self._data.size
 
@@ -515,10 +515,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
-            return self.__class__(filtered_data, ids, validate=False, redundant=False)
+            return self.__class__(filtered_data, ids, validate=False, condensed=True)
         else:
             filtered_data = distmat_reorder(self.redundant_form(), idxs)
             self._validate_ids(filtered_data, ids)
@@ -707,7 +707,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # included here so that np.hstack works in the event that either i_ids
         # or j_ids is empty.
         values = [np.array([])]
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             diagonal_val = getattr(self, "_diagonal", 0.0)
             n = self.shape[0]
 
@@ -997,13 +997,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if isinstance(index, str):
             row_idx = self.index(index)
-            if self._flags["VECTOR"]:
+            if self._flags["CONDENSED"]:
                 return _get_row_from_condensed(self._data, row_idx, self.shape[0])
             else:
                 return self._data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
             i, j = self.index(index[0]), self.index(index[1])
-            if self._flags["VECTOR"]:
+            if self._flags["CONDENSED"]:
                 return _get_element_from_condensed(self._data, i, j, self.shape[0])
             else:
                 return self._data[i, j]
@@ -1011,7 +1011,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
             # revert to redundant form to handle numpy style indexing
-            if self._flags["VECTOR"]:
+            if self._flags["CONDENSED"]:
                 return self.redundant_form().__getitem__(index)
             else:
                 return self._data.__getitem__(index)  # type: ignore[index]
@@ -1116,9 +1116,9 @@ class SymmetricMatrix(PairwiseMatrix):
     validate : bool, optional
         If `validate` is ``True`` (the default) and data is not a
         DistanceMatrix object, the input data will be validated.
-    redundant : bool, optional
-        If `True` (default) the data will be stored in a 2-dimensional redundant form.
-        If `False`, the data will be stored in a 1-dimensional condensed form.
+    condensed : bool, optional
+        If `False` (default) the data will be stored in a 2-dimensional redundant form.
+        If `True`, the data will be stored in a 1-dimensional condensed form.
     diagonal : np.ndarray or float, optional
         If the matrix is to be stored in condensed form, diagonal stores the
         information contained in the matrix's diagonal. If it is a float, this value
@@ -1144,7 +1144,7 @@ class SymmetricMatrix(PairwiseMatrix):
         ],
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
-        redundant: bool = True,
+        condensed: bool = False,
         diagonal: Union[float, np.ndarray] = None,
     ):
         data, ids = self._normalize_input(data, ids)
@@ -1164,16 +1164,17 @@ class SymmetricMatrix(PairwiseMatrix):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal(diagonal, data, redundant)
-        self._data = self._init_data(data, redundant)
-        self._flags = self._init_flags(redundant)
+        self._diagonal = self._init_diagonal(diagonal, data, condensed)
+        self._data = self._init_data(data, condensed)
+        self._flags = self._init_flags(condensed)
 
     def _init_diagonal(
-        self, diagonal: Union[float, np.ndarray], data: np.ndarray, redundant
+        self, diagonal: Union[float, np.ndarray], data: np.ndarray, condensed
     ):
         """Initialize the diagonal attribute."""
-        if redundant:
-            return None
+        # don't need to store a diagonal if the underlying data struct is 2D
+        if not condensed:
+            return 0.0
         if diagonal is None:
             if data.ndim == 1:
                 diag = 0.0
@@ -1188,16 +1189,16 @@ class SymmetricMatrix(PairwiseMatrix):
         # want it to be consistent type regardless of how it's initialized
         return np.asarray(diag)
 
-    def _init_flags(self, redundant: bool) -> dict:
+    def _init_flags(self, condensed: bool) -> dict:
         """Initialize flags for symmetric matrix."""
-        if redundant:
-            return {"VECTOR": False}
+        if condensed:
+            return {"CONDENSED": True}
         else:
-            return {"VECTOR": True}
+            return {"CONDENSED": False}
 
-    def _init_data(self, data: np.ndarray, redundant: bool) -> None:
+    def _init_data(self, data: np.ndarray, condensed: bool) -> None:
         """Initialize data for symmetric matrix."""
-        if not redundant:
+        if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
                 return data
@@ -1293,7 +1294,7 @@ class SymmetricMatrix(PairwiseMatrix):
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
         diagonal=None,
-        redundant=True,
+        condensed=False,
     ) -> "PairwiseMatrix":
         """Create PairwiseMatrix from an iterable given a metric.
 
@@ -1324,10 +1325,10 @@ class SymmetricMatrix(PairwiseMatrix):
             If float, this value will be used to fill the diagonal of the matrix.
             If array, this array will be used to fill the diagonal of the matrix.
             Defaults to 0.0.
-        redundant : bool, optional
-            If True, the underlying data structure will be the redundant form (2D) of
-            the matrix. If False, the underlying data structure will be the condensed
-            form (1D) of the matrix.
+        condensed : bool, optional
+            If False (default), the underlying data structure will be the redundant
+            form (2D) of the matrix. If True, the underlying data structure will be the
+            condensed form (1D) of the matrix.
 
         Returns
         -------
@@ -1359,7 +1360,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
                     dm[i, j] = metric(a, b)
-            return cls(dm, keys_, diagonal=diagonal, redundant=redundant)  # type: ignore[operator]
+            return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
         else:
             # This assumes that metric will return a symmetric matrix. That is, that
             # metric(a, b) is the same as metric(b, a)
@@ -1367,7 +1368,7 @@ class SymmetricMatrix(PairwiseMatrix):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
             return cls(
-                dm, keys_, diagonal=diagonal, redundant=redundant, validate=False
+                dm, keys_, diagonal=diagonal, condensed=condensed, validate=False
             )  # type: ignore[operator]
 
     def redundant_form(self):
@@ -1382,7 +1383,7 @@ class SymmetricMatrix(PairwiseMatrix):
         --------
         condensed_form
         """
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             mat = squareform(self._data, force="tomatrix", checks=False)
             np.fill_diagonal(mat, self._diagonal)
             return mat
@@ -1411,7 +1412,7 @@ class SymmetricMatrix(PairwiseMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             return self._data, self._diagonal
         else:
             return squareform(
@@ -1467,17 +1468,17 @@ class SymmetricMatrix(PairwiseMatrix):
         if condensed:
             # if self.__class__ != DistanceMatrix:
             #     raise TypeError("Only distance matrices can return condensed.")
-            if self._flags["VECTOR"]:
+            if self._flags["CONDENSED"]:
                 permuted_condensed = distmat_reorder_condensed_py(self._data, order)
             else:
                 permuted_condensed = distmat_reorder_condensed(self._data, order)
             return permuted_condensed
         else:
             # Note: Skip validation, since we assume self was already validated
-            if self._flags["VECTOR"]:
+            if self._flags["CONDENSED"]:
                 permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
-                    permuted, self.ids, validate=False, redundant=False
+                    permuted, self.ids, validate=False, condensed=True
                 )
             else:
                 permuted = distmat_reorder(self._data, order)
@@ -1499,13 +1500,13 @@ class SymmetricMatrix(PairwiseMatrix):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             return self.__class__(
                 self._data.copy(),
                 deepcopy(self.ids),
                 diagonal=deepcopy(self._diagonal),
                 validate=False,
-                redundant=False,
+                condensed=True,
             )
         else:
             return self.__class__(
@@ -1593,7 +1594,7 @@ class DistanceMatrix(SymmetricMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        if self._flags["VECTOR"]:
+        if self._flags["CONDENSED"]:
             return self._data
         else:
             return squareform(self._data, force="tovector", checks=False)

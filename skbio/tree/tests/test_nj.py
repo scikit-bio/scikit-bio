@@ -25,7 +25,7 @@ class NjTests(TestCase):
                  [8,  9,  7,  3,  0]]
         ids1 = list('abcde')
         self.dm1 = DistanceMatrix(data1, ids1)
-        self.dm1_condensed = DistanceMatrix(self.dm1, redundant=False)
+        self.dm1_condensed = DistanceMatrix(self.dm1, condensed=True)
         # this newick string was confirmed against http://www.trex.uqam.ca/
         # which generated the following (isomorphic) newick string:
         # (d:2.0000,e:1.0000,(c:4.0000,(a:2.0000,b:3.0000):3.0000):2.0000);

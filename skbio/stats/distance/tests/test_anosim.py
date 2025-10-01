@@ -43,7 +43,7 @@ class TestANOSIM(TestCase):
         self.dm_condensed = DistanceMatrix([[0, 1, 5, 4],
                                             [1, 0, 3, 2],
                                             [5, 3, 0, 3],
-                                            [4, 2, 3, 0]], dm_ids, redundant=False)
+                                            [4, 2, 3, 0]], dm_ids, condensed=True)
 
         # Test with 3 groups of unequal size. This data also generates a
         # negative R statistic.

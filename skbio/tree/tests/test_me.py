@@ -281,17 +281,17 @@ class MeTests(TestCase):
 
     def test_gme_condensed(self):
         """The entire tree building workflow."""
-        obs = gme(DistanceMatrix(self.dm1, self.taxa1, redundant=False))
+        obs = gme(DistanceMatrix(self.dm1, self.taxa1, condensed=True))
         exp = TreeNode.read([self.nwk1])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
-        obs = gme(DistanceMatrix(self.dm2, self.taxa2, redundant=False))
+        obs = gme(DistanceMatrix(self.dm2, self.taxa2, condensed=True))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
         # clip to zero
-        dm = DistanceMatrix(self.dm5, self.taxa5, redundant=False)
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
         obs = gme(dm, neg_as_zero=False)
         exp = TreeNode.read([self.nwk5])
         self.assertEqual(obs.compare_rfd(exp), 0)
@@ -324,17 +324,17 @@ class MeTests(TestCase):
 
     def test_bme_condensed(self):
         """The entire tree building workflow."""
-        obs = bme(DistanceMatrix(self.dm1, self.taxa1, redundant=False))
+        obs = bme(DistanceMatrix(self.dm1, self.taxa1, condensed=True))
         exp = TreeNode.read([self.nwk1])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
-        obs = bme(DistanceMatrix(self.dm2, self.taxa2, redundant=False))
+        obs = bme(DistanceMatrix(self.dm2, self.taxa2, condensed=True))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
         # clip to zero
-        dm = DistanceMatrix(self.dm5, self.taxa5, redundant=False)
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
         obs = bme(dm, neg_as_zero=False)
         for taxon in ("b", "c", "d"):
             self.assertTrue(obs.find(taxon).length < 0)
@@ -409,7 +409,7 @@ class MeTests(TestCase):
         tree.append(TreeNode(tree.name, tree.length))
         tree.name, tree.length = None, None
 
-        dm = DistanceMatrix(self.dm1, self.taxa1, redundant=False)
+        dm = DistanceMatrix(self.dm1, self.taxa1, condensed=True)
 
         exp = TreeNode.read([self.nwk1])
         exp.append(TreeNode(exp.name, exp.length))
@@ -428,7 +428,7 @@ class MeTests(TestCase):
         tree.append(TreeNode(tree.name, tree.length))
         tree.name, tree.length = None, None
 
-        dm = DistanceMatrix(self.dm4, self.taxa4, redundant=False)
+        dm = DistanceMatrix(self.dm4, self.taxa4, condensed=True)
 
         exp = TreeNode.read([self.nwk2])
         exp.append(TreeNode(exp.name, exp.length))
@@ -444,7 +444,7 @@ class MeTests(TestCase):
         self.assertEqual(obs.compare_rfd(exp), 0)
 
         # clip to zero
-        dm = DistanceMatrix(self.dm5, self.taxa5, redundant=False)
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
         tree = TreeNode.read(["(((a,b),d),(c,e));"])
         obs = nni(tree, dm, balanced=False, neg_as_zero=False)
         exp = TreeNode.read([self.nwk5])

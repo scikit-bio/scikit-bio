@@ -42,13 +42,13 @@ class BIOENVTests(TestCase):
         self.dm = DistanceMatrix.read(get_data_path('dm.txt'))
 
         # add condensed for testing
-        self.dm_condensed = DistanceMatrix(self.dm, redundant=False)
+        self.dm_condensed = DistanceMatrix(self.dm, condensed=True)
 
         # Reordered rows and columns (i.e., different ID order). Still
         # conceptually the same distance matrix.
         self.dm_reordered = DistanceMatrix.read(
             get_data_path('dm_reordered.txt'))
-        self.dm_reordered_condensed = DistanceMatrix(self.dm_reordered, redundant=False)
+        self.dm_reordered_condensed = DistanceMatrix(self.dm_reordered, condensed=True)
 
         self.df = pd.read_csv(get_data_path('df.txt'), sep='\t', index_col=0)
 

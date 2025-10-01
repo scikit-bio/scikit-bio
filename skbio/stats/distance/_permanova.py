@@ -109,7 +109,7 @@ def permanova(distmat, grouping, column=None, permutations=999, seed=None):
         raise TypeError("Input must be a DistanceMatrix.")
 
     # convert to redundant form for now
-    if distmat._flags["VECTOR"]:
+    if distmat._flags["CONDENSED"]:
         distmat = DistanceMatrix(distmat)
 
     sample_size = distmat.shape[0]

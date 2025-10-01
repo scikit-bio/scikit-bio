@@ -146,7 +146,7 @@ def nj(
     taxa = list(dm.ids)
 
     # convert to redundant form for now
-    if dm._flags["VECTOR"]:
+    if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
     dm_ = dm.data

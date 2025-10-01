@@ -270,9 +270,9 @@ def mantel(
     rng = get_rng(seed)
 
     # convert to redundant form for now
-    if isinstance(x, DistanceMatrix) and x._flags["VECTOR"]:
+    if isinstance(x, DistanceMatrix) and x._flags["CONDENSED"]:
         x = DistanceMatrix(x)
-    if isinstance(y, DistanceMatrix) and y._flags["VECTOR"]:
+    if isinstance(y, DistanceMatrix) and y._flags["CONDENSED"]:
         y = DistanceMatrix(y)
 
     if method in ("pearson", "spearman"):
