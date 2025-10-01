@@ -324,15 +324,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def size(self) -> int:
-        r"""Total number of elements in the redundant form matrix.
+        r"""Total number of elements in the underlying data structure.
 
         Notes
         -----
-        Equivalent to ``self.shape[0] * self.shape[1]``.
+        If the matrix is stored in redundant form, size is equivalent to
+        ``self.shape[0] * self.shape[1]``. If the matrix is stored in condensed form,
+        size is equal to the number of elements in the condensed array.
 
         """
-        if self._flags["CONDENSED"]:
-            return self.shape[0] ** 2
         return self._data.size
 
     @property
