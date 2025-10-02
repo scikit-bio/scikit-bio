@@ -39,6 +39,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          channels: conda-forge
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
@@ -63,6 +64,7 @@ jobs:
           fetch-depth: 0  # to prevent a "Git clone too shallow" warning by Sphinx
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          channels: conda-forge
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
@@ -106,6 +108,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          channels: conda-forge
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
@@ -154,6 +157,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          channels: conda-forge
           auto-update-conda: true
           python-version: ${{ matrix.python_version }}
           environment-file: ci/conda_host_env.yml
