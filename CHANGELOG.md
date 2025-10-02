@@ -2,6 +2,10 @@
 
 ## Version 0.7.1-dev
 
+### Features
+
+* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2272]https://github.com/scikit-bio/scikit-bio/pull/2272).
+
 ### Performance enhancements
 
 * Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
