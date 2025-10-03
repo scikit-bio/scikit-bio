@@ -22,7 +22,7 @@ from skbio.util import get_package
 
 
 @runtime_checkable
-class StdArray(Protocol):
+class StdArray(Protocol):  # pragma: no cover
     r"""Any object compliant with the Python array API standard [1]_.
 
     Examples are numpy.ndarray, cupy.ndarray, torch.Tensor, jax.Array,
@@ -190,11 +190,11 @@ TableLike = Union[pd.DataFrame, np.ndarray, Table]
 
 # add other types depending on availability
 pl = get_package("polars", raise_error=False)
-if pl is not None:
+if pl is not None:  # pragma: no cover
     TableLike = Union[TableLike, pl.DataFrame]  # type: ignore[misc]
 
 adt = get_package("anndata", raise_error=False)
-if adt is not None:
+if adt is not None:  # pragma: no cover
     TableLike = Union[TableLike, adt.AnnData]  # type: ignore[misc]
 
 
