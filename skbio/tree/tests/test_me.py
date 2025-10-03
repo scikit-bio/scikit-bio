@@ -267,6 +267,11 @@ class MeTests(TestCase):
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
+        # float32
+        obs = gme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
         obs = gme(dm, neg_as_zero=False)
@@ -281,12 +286,19 @@ class MeTests(TestCase):
 
     def test_bme(self):
         """The entire tree building workflow."""
+        # simple integer example
         obs = bme(DistanceMatrix(self.dm1, self.taxa1))
         exp = TreeNode.read([self.nwk1])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
+        # simple float example
         obs = bme(DistanceMatrix(self.dm2, self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # float32
+        obs = bme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
@@ -322,6 +334,12 @@ class MeTests(TestCase):
         obs = nni(tree, dm, balanced=True)
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        dm = DistanceMatrix(self.dm1.astype("float32"), self.taxa1)
+        for balanced in True, False:
+            obs = nni(tree, dm, balanced=balanced)
+            self.assertEqual(obs.compare_rfd(exp), 0)
+            self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
         # Example 4: The same, except for branch lengths.
         tree = TreeNode.read([self.nwk4])
@@ -1012,7 +1030,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
-            obs := adm.copy(), target, adk, tree, preodr, postodr, powers, stack
+            obs := adm.copy(), target, adk, tree, postodr, powers, stack
         )
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -1037,7 +1055,7 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                obs := adm.copy(), i, adk, tree, preodr, postodr, powers, stack
+                obs := adm.copy(), i, adk, tree, postodr, powers, stack
             )
 
             # insert taxon and calculate full matrix
@@ -1317,7 +1335,7 @@ class MeTests(TestCase):
         # There are four internal branches in the tree:
         # 1: ((d,c),(e,g)), 2: (b,f), 3: (d,c), 9: (e,g)
         tree = self.tree4
-        _, _, nodes = _init_swaps(tree)
+        _, _, nodes = _init_swaps(tree, np.float64)
         npt.assert_array_equal(nodes, np.array([1, 2, 3, 9]))
 
     def test_ols_all_swaps(self):
@@ -1381,7 +1399,7 @@ class MeTests(TestCase):
         _bal_lengths(lens := np.empty(n), adm, tree)
         lensum = lens.sum()
 
-        gains, sides, nodes = _init_swaps(tree)
+        gains, sides, nodes = _init_swaps(tree, np.float64)
         _bal_all_swaps(gains, sides, nodes, adm, tree)
         exp = np.array([0, 0.9407, 0.06885, 0])
         npt.assert_allclose(gains, exp)

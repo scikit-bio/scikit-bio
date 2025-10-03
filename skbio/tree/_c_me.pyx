@@ -7,12 +7,8 @@
 # ----------------------------------------------------------------------------
 
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
-# distutils: define_macros=NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION
 
-cimport cython
-import numpy as np
-cimport numpy as cnp
-cnp.import_array()
+from cython cimport floating
 from cython.parallel import prange
 from heapq import heappush
 
@@ -122,8 +118,8 @@ def _postorder(
 
 
 def _avgdist_matrix(
-    double[:, ::1] adm,
-    double[:, :] dm,
+    floating[:, ::1] adm,
+    floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
@@ -274,8 +270,8 @@ def _avgdist_matrix(
 
 
 def _bal_avgdist_matrix(
-    double[:, ::1] adm,
-    double[:, :] dm,
+    floating[:, ::1] adm,
+    floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
@@ -344,9 +340,9 @@ def _bal_avgdist_matrix(
 
 
 def _avgdist_taxon(
-    double[:, ::1] adk,
+    floating[:, ::1] adk,
     Py_ssize_t taxon,
-    double[:, :] dm,
+    floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
@@ -393,9 +389,9 @@ def _avgdist_taxon(
 
 
 def _bal_avgdist_taxon(
-    double[:, ::1] adk,
+    floating[:, ::1] adk,
     Py_ssize_t taxon,
-    double[:, :] dm,
+    floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
@@ -422,8 +418,8 @@ def _bal_avgdist_taxon(
 
 
 def _ols_lengths(
-    double[::1] lens,
-    double[:, ::1] adm,
+    floating[::1] lens,
+    floating[:, ::1] adm,
     Py_ssize_t[:, ::1] tree,
 ):
     r"""Calculate branch lengths of a tree based on the OLS framework.
@@ -437,7 +433,7 @@ def _ols_lengths(
     """
     cdef Py_ssize_t node, left, right, parent, sibling
     cdef Py_ssize_t l_size, r_size, p_size, s_size
-    cdef double lambda_
+    cdef floating lambda_
     cdef Py_ssize_t m = tree[0, 4] + 1
 
     for node in range(1, 2 * m - 3):
@@ -460,7 +456,7 @@ def _ols_lengths(
             r_size = tree[right, 4]
             p_size = m - tree[parent, 4]
             s_size = tree[sibling, 4]
-            lambda_ = <double>(p_size * r_size + s_size * l_size) / (
+            lambda_ = <floating>(p_size * r_size + s_size * l_size) / (
                 (p_size + s_size) * (l_size + r_size)
             )
             lens[node] = 0.5 * (
@@ -475,8 +471,8 @@ def _ols_lengths(
 
 
 def _ols_lengths_d2(
-    double[::1] lens,
-    double[:, ::1] ad2,
+    floating[::1] lens,
+    floating[:, ::1] ad2,
     Py_ssize_t[:, ::1] tree,
 ):
     r"""Calculate branch lengths of a tree based on an OLS framework.
@@ -555,8 +551,8 @@ def _ols_lengths_d2(
 
 
 def _bal_lengths(
-    double[::1] lens,
-    double[:, ::1] adm,
+    floating[::1] lens,
+    floating[:, ::1] adm,
     Py_ssize_t[:, ::1] tree,
 ):
     r"""Calculate branch lengths of a tree based on the balanced framework.
@@ -592,9 +588,9 @@ def _bal_lengths(
 
 
 def _ols_min_branch_d2(
-    double[::1] lens,
-    double[:, ::1] ad2,
-    double[:, ::1] adk,
+    floating[::1] lens,
+    floating[:, ::1] ad2,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
 ):
@@ -614,10 +610,10 @@ def _ols_min_branch_d2(
     """
     cdef Py_ssize_t i
     cdef Py_ssize_t node, parent, sibling, size, p_size, s_size
-    cdef double L, numerator, lambda_0, lambda_1
+    cdef floating L, numerator, lambda_0, lambda_1
 
     cdef Py_ssize_t min_node = 0
-    cdef double min_len = 0
+    cdef floating min_len = 0
     cdef Py_ssize_t m = tree[0, 4] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
@@ -651,9 +647,9 @@ def _ols_min_branch_d2(
 
 
 def _bal_min_branch(
-    double[::1] lens,
-    double[:, ::1] adm,
-    double[:, ::1] adk,
+    floating[::1] lens,
+    floating[:, ::1] adm,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
 ):
@@ -668,10 +664,10 @@ def _bal_min_branch(
     """
     cdef Py_ssize_t i
     cdef Py_ssize_t node, parent, sibling
-    cdef double L
+    cdef floating L
 
     cdef Py_ssize_t min_node = 0
-    cdef double min_len = 0
+    cdef floating min_len = 0
 
     lens[min_node] = min_len
     for i in range(1, 2 * tree[0, 4] - 1):
@@ -689,9 +685,9 @@ def _bal_min_branch(
 
 
 def _avgdist_d2_insert(
-    double[:, ::1] ad2,
+    floating[:, ::1] ad2,
     Py_ssize_t target,
-    double[:, ::1] adk,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
 ):
@@ -816,13 +812,12 @@ def _avgdist_d2_insert(
 
 
 def _bal_avgdist_insert(
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
     Py_ssize_t target,
-    double[:, ::1] adk,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
-    double[::1] powers,
+    floating[::1] powers,
     Py_ssize_t[::1] stack,
 ):
     r"""Update balanced average distance matrix after taxon insertion.
@@ -840,7 +835,7 @@ def _bal_avgdist_insert(
     cdef Py_ssize_t parent, sibling, depth
     cdef Py_ssize_t curr, anc, cousin, depth_1, depth_diff
     cdef Py_ssize_t a, b
-    cdef double power, diff
+    cdef floating power, diff
 
     # dimensions and positions
     cdef Py_ssize_t m = tree[0, 4] + 1
@@ -984,13 +979,12 @@ def _bal_avgdist_insert(
 
 
 def _bal_avgdist_insert_p(
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
     Py_ssize_t target,
-    double[:, ::1] adk,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
-    double[::1] powers,
+    floating[::1] powers,
     Py_ssize_t[::1] stack,
 ):
     r"""Update balanced average distance matrix after taxon insertion.
@@ -1002,7 +996,7 @@ def _bal_avgdist_insert_p(
     cdef Py_ssize_t parent, sibling, depth
     cdef Py_ssize_t curr, anc, cousin, depth_1, depth_diff
     cdef Py_ssize_t a, b
-    cdef double power, diff
+    cdef floating power, diff
 
     # number of operations per iteration
     cdef int ops
@@ -1222,7 +1216,7 @@ def _insert_taxon(
     #
     # There might be a chance to re-consider NumPy (or even CuPy) API in the future.
     cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i
-    cdef Py_ssize_t i, k, side, clade_n, pre_i_after, curr
+    cdef Py_ssize_t i, k, side, pre_i_after, curr
 
     # determine tree dimensions
     # typically n = 2 * taxon - 3, but this function doesn't enforce this
@@ -1358,7 +1352,7 @@ def _insert_taxon(
 
 
 def _avgdist_swap(
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
     Py_ssize_t target,
     Py_ssize_t side,
     Py_ssize_t[:, ::1] tree,
@@ -1434,7 +1428,7 @@ def _avgdist_swap(
     #         s_size * adm[node, sibling] + o_size * adm[node, other]
     #     ) / (s_size + o_size)
 
-    cdef double temp_val = adm[target, target]
+    cdef floating temp_val = adm[target, target]
 
     for node in range(n):
         # subtrees within (sibling, other) vs parent (upper) + child (lower)
@@ -1454,12 +1448,12 @@ def _avgdist_swap(
 
 
 def _bal_avgdist_swap(
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
     Py_ssize_t target,
     Py_ssize_t side,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
-    double[::1] powers,
+    floating[::1] powers,
     Py_ssize_t[::1] stack,
 ):
     r"""Update balanced average distance matrix after branch swapping.
@@ -1473,7 +1467,7 @@ def _bal_avgdist_swap(
     cdef Py_ssize_t node, curr, before, after, cousin, a, b
     cdef Py_ssize_t i, j, ii, jj, anc_i, start, end
     cdef Py_ssize_t depth, depth_2, depth_diff
-    cdef double power, diff
+    cdef floating power, diff
 
     cdef Py_ssize_t m = tree[0, 4] + 1
     cdef Py_ssize_t n = 2 * m - 3
@@ -1595,15 +1589,15 @@ def _bal_avgdist_swap(
 
 
 cdef void _ols_swap(
-    double* L,
+    floating* L,
     Py_ssize_t* side,
     Py_ssize_t p_size,
     Py_ssize_t s_size,
     Py_ssize_t l_size,
     Py_ssize_t r_size,
-    double ad_before,
-    double ad_left,
-    double ad_right,
+    floating ad_before,
+    floating ad_left,
+    floating ad_right,
 ) noexcept nogil:
     r"""Calculate the change in overall tree length after a given swap.
 
@@ -1634,13 +1628,13 @@ cdef void _ols_swap(
     cdef Py_ssize_t size_1 = p_size * r_size + s_size * l_size
     cdef Py_ssize_t size_2 = p_size * l_size + s_size * r_size
 
-    cdef double ad_bl = ad_before - ad_left
-    cdef double ad_br = ad_before - ad_right
+    cdef floating ad_bl = ad_before - ad_left
+    cdef floating ad_br = ad_before - ad_right
 
-    cdef double ad_lr_size = (ad_left - ad_right) / (size_1 + size_2)
+    cdef floating ad_lr_size = (ad_left - ad_right) / (size_1 + size_2)
 
-    cdef double L1 = size_1 * (ad_br / (size_0 + size_1) - ad_lr_size) - ad_bl
-    cdef double L2 = size_2 * (ad_bl / (size_0 + size_2) + ad_lr_size) - ad_br
+    cdef floating L1 = size_1 * (ad_br / (size_0 + size_1) - ad_lr_size) - ad_bl
+    cdef floating L2 = size_2 * (ad_bl / (size_0 + size_2) + ad_lr_size) - ad_br
 
     if L1 >= 0 and L2 >= 0:
         L[0] = 0
@@ -1653,9 +1647,9 @@ cdef void _ols_swap(
 
 
 def _ols_all_swaps(
-    double[::1] lens,
+    floating[::1] lens,
     Py_ssize_t[:, ::1] tree,
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
 ):
     r"""Evaluate all possible swaps at all internal branches of a tree.
 
@@ -1702,9 +1696,9 @@ def _ols_all_swaps(
 def _ols_corner_swaps(
     Py_ssize_t target,
     list heap,
-    double[::1] lens,
+    floating[::1] lens,
     Py_ssize_t[:, ::1] tree,
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
 ):
     r"""Update swaps of the four corner branches of a swapped branch.
 
@@ -1727,9 +1721,7 @@ def _ols_corner_swaps(
 
     """
     cdef Py_ssize_t m = tree[0, 4] + 1
-    cdef Py_ssize_t i, side
-    cdef double gain
-    cdef Py_ssize_t left, right, parent, sibling
+    cdef Py_ssize_t i, left, right, parent, sibling
 
     # update four corner branches if they are internal
     # 0: left, 1: right, 2: parent, 3: sibling
@@ -1761,10 +1753,10 @@ def _ols_corner_swaps(
 
 
 def _bal_all_swaps(
-    double[::1] gains,
+    floating[::1] gains,
     Py_ssize_t[::1] sides,
     Py_ssize_t[::1] nodes,
-    double[:, ::1] adm,
+    floating[:, ::1] adm,
     Py_ssize_t[:, ::1] tree,
 ):
     r"""Evaluate possible swaps at all internal branches of a tree.
@@ -1784,7 +1776,7 @@ def _bal_all_swaps(
 
     """
     cdef Py_ssize_t branch, node, left, right, parent, sibling
-    cdef double L1, L2, Lcomm
+    cdef floating L1, L2, Lcomm
     for branch in range(nodes.shape[0]):
         node = nodes[branch]
         left = tree[node, 0]
