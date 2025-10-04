@@ -146,7 +146,10 @@ def permanova(
     outputs using the following formula:
 
     .. math::
-        R^2 = \frac{1}{(n - g)/(g - 1)F + 1}
+        R^2 = \frac{1}{1 + \frac{n - g}{(g - 1)F}}
+
+    where :math:`F` is the pseudo-`F` statistic, :math:`n` is the number of
+    objects, and :math:`g` is the number of groups.
 
     References
     ----------
