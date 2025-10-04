@@ -10,7 +10,7 @@ on:
 
 env:
   latest_python: "3.13"
-  supported_pythons: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
+  supported_pythons: '["3.10", "3.11", "3.12", "3.13"]'
 
 jobs:
   conf:

@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  earliest_python: "3.9"
+  earliest_python: "3.10"
   latest_python: "3.13"
 
 jobs:
