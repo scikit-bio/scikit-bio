@@ -6,18 +6,23 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# This implementation of ANCOM-BC is based on an analysis of the source code
+# from the R package ANCOMBC (https://github.com/FrederickHuangLin/ANCOMBC),
+# which is licensed under Artistic-2.0 (https://www.bioconductor.org/packages/
+# release/bioc/html/ANCOMBC.html). We thank Dr. Huang Lin (@FrederickHuangLin)
+# for his helpful advice.
+# ----------------------------------------------------------------------------
+
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from scipy.optimize import minimize
 from patsy import dmatrix
+
 from skbio.table._tabular import _ingest_table
-from skbio.stats.composition import (
-    _check_composition,
-    _check_metadata,
-    _check_p_adjust,
-    _type_cast_to_float,
-)
+from ._base import _check_composition
+from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
 
 
 def ancombc(
@@ -101,6 +106,7 @@ def ancombc(
     See Also
     --------
     ancom
+    multi_replace
 
     Notes
     -----
@@ -114,7 +120,7 @@ def ancombc(
 
     Examples
     --------
-    >>> from skbio.stats._ancombc import ancombc
+    >>> from skbio.stats.composition import ancombc
     >>> import pandas as pd
 
     Let's load in a DataFrame with six samples and seven features (e.g., these
