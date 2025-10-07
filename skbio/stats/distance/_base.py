@@ -364,7 +364,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self._data.T.copy(), deepcopy(self.ids), validate=False)
+        return self._copy(transpose=True)
 
     def index(self, lookup_id: str) -> int:
         r"""Return the index of the specified ID.
@@ -428,7 +428,25 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
-        return self.__class__(self._data.copy(), deepcopy(self.ids), validate=False)
+        return self._copy()
+
+    def _copy(self, transpose: bool = False) -> "PairwiseMatrix":
+        """Copy support.
+
+        Parameters
+        ----------
+        transpose : bool
+            Transpose the data on copy.
+
+        Returns
+        -------
+        PairwiseMatrix
+            Deep copy of the matrix. Will be the same type as `self`.
+        """
+        data = self._data.copy()
+        if transpose:
+            data = data.T
+        return self.__class__(data, deepcopy(self.ids), validate=False)
 
     def rename(self, mapper: Union[dict, Callable], strict: bool = True) -> None:
         r"""Rename IDs in the matrix.
@@ -1500,27 +1518,33 @@ class SymmetricMatrix(PairwiseMatrix):
             ``self``.
 
         """
-        # We deepcopy IDs in case the tuple contains mutable objects at some
-        # point in the future.
-        # Note: Skip validation, since we assume self was already validated
-        # We deepcopy IDs in case the tuple contains mutable objects at some
-        # point in the future.
-        # Note: Skip validation, since we assume self was already validated
         if self._flags["CONDENSED"]:
-            return self.__class__(
-                self._data.copy(),
-                deepcopy(self.ids),
-                diagonal=deepcopy(self._diagonal),
-                validate=False,
-                condensed=True,
-            )
+            return self._copy(condensed=True)
         else:
-            return self.__class__(
-                self._data.copy(),
-                deepcopy(self.ids),
-                diagonal=deepcopy(self._diagonal),
-                validate=False,
-            )
+            return self._copy()
+
+    def _copy(self, condensed: bool = False) -> "SymmetricMatrix":
+        """Copy support.
+
+        Parameters
+        ----------
+        condensed : bool
+            Whether the matrix is in condensed form or not.
+
+        Returns
+        -------
+        SymmetricMatrix
+        """
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(
+            self._data.copy(),
+            deepcopy(self.ids),
+            diagonal=deepcopy(self._diagonal),
+            validate=False,
+            condensed=condensed,
+        )
 
 
 class DistanceMatrix(SymmetricMatrix):
