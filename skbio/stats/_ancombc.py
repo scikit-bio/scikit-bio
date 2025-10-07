@@ -150,7 +150,7 @@ def ancombc(
     # Note: A pseudocount should have been added to the table by the user prior to
     # calling this function.
     matrix, samples, features = _ingest_table(table)
-    _check_composition(np, matrix, nozero=True)  # TODO
+    _check_composition(np, matrix, nozero=True)
     n_feats = matrix.shape[1]
 
     # Log-transform count matrix.
