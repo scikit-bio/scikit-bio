@@ -725,42 +725,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # included here so that np.hstack works in the event that either i_ids
         # or j_ids is empty.
         values = [np.array([])]
-        if self._flags["CONDENSED"]:
-            diagonal_val = getattr(self, "_diagonal", 0.0)
-            n = self.shape[0]
+        for i_idx in i_indices:
+            i.extend([self.ids[i_idx]] * j_length)
+            j.extend(j_labels)
 
-            # precompute to avoid repeated calculations
-            condensed_indices = {}
-            for i_idx in i_indices:
-                for j_idx in j_indices:
-                    if i_idx == j_idx:
-                        continue
-                    key = (min(i_idx, j_idx), max(i_idx, j_idx))
-                    if key not in condensed_indices:
-                        condensed_indices[key] = _condensed_index(key[0], key[1], n)
-
-            for i_idx in i_indices:
-                i.extend([self.ids[i_idx]] * j_length)
-                j.extend(j_labels)
-                subset_values = np.zeros(j_length, dtype=self._data.dtype)
-                for idx, j_idx in enumerate(j_indices):
-                    if i_idx == j_idx:
-                        if np.isscalar(diagonal_val):
-                            subset_values[idx] = diagonal_val
-                        else:
-                            subset_values[idx] = diagonal_val[i_idx]
-                    else:
-                        key = (min(i_idx, j_idx), max(i_idx, j_idx))
-                        subset_values[idx] = self._data[condensed_indices[key]]
-                values.append(subset_values)
-        # redundant form
-        else:
-            for i_idx in i_indices:
-                i.extend([self.ids[i_idx]] * j_length)
-                j.extend(j_labels)
-
-                subset = self._data[i_idx, j_indices]
-                values.append(subset)
+            subset = self._data[i_idx, j_indices]
+            values.append(subset)
 
         i = pd.Series(i, name="i", dtype=str)
         j = pd.Series(j, name="j", dtype=str)
@@ -1523,7 +1493,9 @@ class SymmetricMatrix(PairwiseMatrix):
         else:
             return self._copy()
 
-    def _copy(self, condensed: bool = False) -> "SymmetricMatrix":
+    def _copy(
+        self, transpose: bool = False, condensed: bool = False
+    ) -> "SymmetricMatrix":
         """Copy support.
 
         Parameters
@@ -1535,16 +1507,101 @@ class SymmetricMatrix(PairwiseMatrix):
         -------
         SymmetricMatrix
         """
+        # adding for backward compatibility
+        data = self._data.copy()
+        if transpose:
+            data = data.T
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
         return self.__class__(
-            self._data.copy(),
+            data,
             deepcopy(self.ids),
             diagonal=deepcopy(self._diagonal),
             validate=False,
             condensed=condensed,
         )
+
+    def _subset_to_dataframe(
+        self, i_ids: Iterable[str], j_ids: Iterable[str]
+    ) -> pd.DataFrame:
+        """Extract a subset of self and express as a DataFrame.
+
+        Parameters
+        ----------
+        i_ids : Iterable of str
+            The "from" IDs.
+        j_ids : Iterable of str
+            The "to" IDs.
+
+        Notes
+        -----
+        ID membership is not tested by this private method, and it is assumed
+        the caller has asserted the IDs are present.
+
+        Returns
+        -------
+        pd.DataFrame
+            (i, j, value) representing the source ID ("i"), the target ID ("j")
+            and the distance ("value").
+
+        """
+        i_indices = self._stable_order(i_ids)
+        j_indices = self._stable_order(j_ids)
+
+        j_length = len(j_indices)
+        j_labels = tuple(self.ids[j] for j in j_indices)
+
+        i: list[str] = []
+        j: list[str] = []
+
+        # np.hstack([]) throws a ValueError. However, np.hstack([np.array([])])
+        # is valid and returns an empty array. Accordingly, an empty array is
+        # included here so that np.hstack works in the event that either i_ids
+        # or j_ids is empty.
+        values = [np.array([])]
+        if self._flags["CONDENSED"]:
+            diagonal_val = getattr(self, "_diagonal", 0.0)
+            n = self.shape[0]
+
+            # precompute to avoid repeated calculations
+            condensed_indices = {}
+            for i_idx in i_indices:
+                for j_idx in j_indices:
+                    if i_idx == j_idx:
+                        continue
+                    key = (min(i_idx, j_idx), max(i_idx, j_idx))
+                    if key not in condensed_indices:
+                        condensed_indices[key] = _condensed_index(key[0], key[1], n)
+
+            for i_idx in i_indices:
+                i.extend([self.ids[i_idx]] * j_length)
+                j.extend(j_labels)
+                subset_values = np.zeros(j_length, dtype=self._data.dtype)
+                for idx, j_idx in enumerate(j_indices):
+                    if i_idx == j_idx:
+                        if np.isscalar(diagonal_val):
+                            subset_values[idx] = diagonal_val
+                        else:
+                            subset_values[idx] = diagonal_val[i_idx]
+                    else:
+                        key = (min(i_idx, j_idx), max(i_idx, j_idx))
+                        subset_values[idx] = self._data[condensed_indices[key]]
+                values.append(subset_values)
+        # redundant form
+        else:
+            for i_idx in i_indices:
+                i.extend([self.ids[i_idx]] * j_length)
+                j.extend(j_labels)
+
+                subset = self._data[i_idx, j_indices]
+                values.append(subset)
+
+        i = pd.Series(i, name="i", dtype=str)
+        j = pd.Series(j, name="j", dtype=str)
+        values = pd.Series(np.hstack(values), name="value")
+
+        return pd.concat([i, j, values], axis=1)
 
 
 class DistanceMatrix(SymmetricMatrix):
