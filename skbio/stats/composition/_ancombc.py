@@ -151,38 +151,38 @@ def ancombc(
     different in abundance between the treatment and the placebo groups.
 
     >>> result = ancombc(table + 1, metadata, 'grouping')
-    >>> result.round(6)
-       FeatureID              Covariate  Log2(FC)        SE          W  \
-    0         b1              Intercept  0.719286  0.033498  21.472309
-    1         b1  grouping[T.treatment] -1.181710  0.384892  -3.070236
-    2         b2              Intercept  0.705789  0.017846  39.548457
-    3         b2  grouping[T.treatment] -0.536867  0.096532  -5.561532
-    4         b3              Intercept  0.069440  0.086538   0.802417
-    5         b3  grouping[T.treatment]  0.068156  0.120407   0.566042
-    6         b4              Intercept -0.002175  0.015302  -0.142163
-    7         b4  grouping[T.treatment]  0.113090  0.119523   0.946178
-    8         b5              Intercept  0.078212  0.064851   1.206021
-    9         b5  grouping[T.treatment]  0.003698  0.114916   0.032184
-    10        b6              Intercept -0.002175  0.015302  -0.142163
-    11        b6  grouping[T.treatment] -0.117959  0.071876  -1.641143
-    12        b7              Intercept -0.002175  0.015302  -0.142163
-    13        b7  grouping[T.treatment]  0.052316  0.070626   0.740741
+    >>> result.round(5)
+       FeatureID              Covariate  Log2(FC)       SE         W   pvalue  \
+    0         b1              Intercept   0.71929  0.03350  21.47231  0.00000
+    1         b1  grouping[T.treatment]  -1.18171  0.38489  -3.07024  0.00214
+    2         b2              Intercept   0.70579  0.01785  39.54846  0.00000
+    3         b2  grouping[T.treatment]  -0.53687  0.09653  -5.56153  0.00000
+    4         b3              Intercept   0.06944  0.08654   0.80242  0.42231
+    5         b3  grouping[T.treatment]   0.06816  0.12041   0.56604  0.57136
+    6         b4              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    7         b4  grouping[T.treatment]   0.11309  0.11952   0.94618  0.34406
+    8         b5              Intercept   0.07821  0.06485   1.20602  0.22781
+    9         b5  grouping[T.treatment]   0.00370  0.11492   0.03218  0.97433
+    10        b6              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    11        b6  grouping[T.treatment]  -0.11796  0.07188  -1.64114  0.10077
+    12        b7              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    13        b7  grouping[T.treatment]   0.05232  0.07063   0.74074  0.45885
     <BLANKLINE>
-          pvalue    qvalue  Signif
-    0   0.000000  0.000000    True
-    1   0.002139  0.012833    True
-    2   0.000000  0.000000    True
-    3   0.000000  0.000000    True
-    4   0.422312  1.000000   False
-    5   0.571365  1.000000   False
-    6   0.886951  1.000000   False
-    7   0.344058  1.000000   False
-    8   0.227809  1.000000   False
-    9   0.974325  1.000000   False
-    10  0.886951  1.000000   False
-    11  0.100768  0.503838   False
-    12  0.886951  1.000000   False
-    13  0.458850  1.000000   False
+         qvalue  Signif
+    0   0.00000    True
+    1   0.01283    True
+    2   0.00000    True
+    3   0.00000    True
+    4   1.00000   False
+    5   1.00000   False
+    6   1.00000   False
+    7   1.00000   False
+    8   1.00000   False
+    9   1.00000   False
+    10  1.00000   False
+    11  0.50384   False
+    12  1.00000   False
+    13  1.00000   False
 
     """
     # Note: A pseudocount should have been added to the table by the user prior to
