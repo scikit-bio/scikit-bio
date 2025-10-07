@@ -151,7 +151,7 @@ def ancombc(
     different in abundance between the treatment and the placebo groups.
 
     >>> result = ancombc(table + 1, metadata, 'grouping')
-    >>> result
+    >>> result.round(6)
        FeatureID              Covariate  Log2(FC)        SE          W  \
     0         b1              Intercept  0.719286  0.033498  21.472309
     1         b1  grouping[T.treatment] -1.181710  0.384892  -3.070236
@@ -168,21 +168,21 @@ def ancombc(
     12        b7              Intercept -0.002175  0.015302  -0.142163
     13        b7  grouping[T.treatment]  0.052316  0.070626   0.740741
     <BLANKLINE>
-               pvalue         qvalue  Signif
-    0   2.826239e-102  1.695743e-101    True
-    1    2.138897e-03   1.283338e-02    True
-    2    0.000000e+00   0.000000e+00    True
-    3    2.674163e-08   1.871914e-07    True
-    4    4.223120e-01   1.000000e+00   False
-    5    5.713649e-01   1.000000e+00   False
-    6    8.869510e-01   1.000000e+00   False
-    7    3.440578e-01   1.000000e+00   False
-    8    2.278094e-01   1.000000e+00   False
-    9    9.743254e-01   1.000000e+00   False
-    10   8.869510e-01   1.000000e+00   False
-    11   1.007677e-01   5.038385e-01   False
-    12   8.869510e-01   1.000000e+00   False
-    13   4.588503e-01   1.000000e+00   False
+          pvalue    qvalue  Signif
+    0   0.000000  0.000000    True
+    1   0.002139  0.012833    True
+    2   0.000000  0.000000    True
+    3   0.000000  0.000000    True
+    4   0.422312  1.000000   False
+    5   0.571365  1.000000   False
+    6   0.886951  1.000000   False
+    7   0.344058  1.000000   False
+    8   0.227809  1.000000   False
+    9   0.974325  1.000000   False
+    10  0.886951  1.000000   False
+    11  0.100768  0.503838   False
+    12  0.886951  1.000000   False
+    13  0.458850  1.000000   False
 
     """
     # Note: A pseudocount should have been added to the table by the user prior to
