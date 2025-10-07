@@ -382,7 +382,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
 
         # Posterior probabilities = mean probability density functions weighted by
         # component fractions
-        # Note: `norm.pdf` doesn't have an `out` parameter. To furhter optimize this,
+        # Note: `norm.pdf` doesn't have an `out` parameter. To further optimize this,
         # one needs to manually implement the under-the-hood algorithm.
         resp[:] = norm.pdf(beta, means[:, None], stdevs)
         resp *= params[:3, None]  # weights (pi)
