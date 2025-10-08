@@ -195,6 +195,7 @@ References
 from ._base import (
     PairwiseMatrixError,
     DissimilarityMatrixError,
+    SymmetricMatrixError,
     DistanceMatrixError,
     MissingIDError,
     PairwiseMatrix,
@@ -212,6 +213,7 @@ from ._permdisp import permdisp
 __all__ = [
     "PairwiseMatrixError",
     "DissimilarityMatrixError",
+    "SymmetricMatrixError",
     "DistanceMatrixError",
     "MissingIDError",
     "PairwiseMatrix",

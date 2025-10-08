@@ -514,7 +514,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if tuple(self._ids) == tuple(ids):
-            return self.__class__(self._data, self._ids)
+            if self._flags["CONDENSED"]:
+                return self.__class__(self._data, self._ids, condensed=True)
+            else:
+                return self.__class__(self._data, self._ids)
 
         if strict:
             idxs = [self.index(id_) for id_ in ids]
@@ -1407,17 +1410,14 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if self._flags["CONDENSED"]:
-            return self._data, self._diagonal
+            return self._data
         else:
-            return squareform(
-                self._data, force="tovector", checks=False
-            ), self._diagonal
+            return squareform(self._data, force="tovector", checks=False)
 
     def permute(
         self,
         condensed: bool = False,
         seed: Optional["SeedLike"] = None,
-        old_output=True,
     ) -> Union["SymmetricMatrix", np.ndarray]:
         r"""Randomly permute both rows and columns in the matrix.
 
@@ -2097,6 +2097,8 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     np.ndarray
         Condensed matrix.
     """
+    reorder_vec = np.asarray(reorder_vec)
+    in_mat = np.asarray(in_mat)
     n_original = _vec_to_shape(in_mat)
     n_filtered = len(reorder_vec)
 

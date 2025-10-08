@@ -27,8 +27,8 @@ else:
 import skbio.sequence.distance
 from skbio import DistanceMatrix, Sequence
 from skbio.stats.distance import (
-    PairwiseMatrixError, DistanceMatrixError, MissingIDError,
-    PairwiseMatrix, randdm)
+    PairwiseMatrixError, DistanceMatrixError, SymmetricMatrixError, MissingIDError,
+    PairwiseMatrix, SymmetricMatrix, randdm)
 from skbio.stats.distance._base import (_preprocess_input,
                                         _run_monte_carlo_stats)
 from skbio.stats.distance._utils import is_symmetric_and_hollow
@@ -745,6 +745,142 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ['a', 'b', 'c', 'd'])
 
+class SymmetricMatrixTestBase(PairwiseMatrixTestData):
+    @classmethod
+    def get_matrix_class(cls):
+        return None
+
+    def setUp(self):
+        super(SymmetricMatrixTestBase, self).setUp()
+        self.matobj = self.get_matrix_class()
+        self.dm_1x1 = self.matobj(self.dm_1x1_data, ['a'])
+        self.dm_2x2 = self.matobj(self.dm_2x2_data, ['a', 'b'])
+        self.dm_3x3 = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'])
+        self.dm_1x1_cond = self.matobj(self.dm_1x1_data, ['a'], condensed=True)
+        self.dm_2x2_cond = self.matobj(self.dm_2x2_data, ['a', 'b'], condensed=True)
+        self.dm_3x3_cond = self.matobj(self.dm_3x3_data, ['a', 'b', 'c'], condensed=True)
+
+        self.dms = [self.dm_1x1, self.dm_2x2, self.dm_3x3, self.dm_1x1_cond, self.dm_2x2_cond, self.dm_3x3_cond]
+        self.dm_condensed_forms = [np.array([]), np.array([0.123]),
+                                   np.array([0.01, 4.2, 12.0])]*2
+
+    # test filtering on condensed forms
+    def test_filter_no_filtering(self):
+        # Don't actually filter anything -- ensure we get back a different
+        # object.
+        obs = self.dm_3x3_cond.filter(['a', 'b', 'c'])
+        self.assertEqual(obs, self.dm_3x3_cond)
+        self.assertFalse(obs is self.dm_3x3_cond)
+
+    def test_filter_reorder(self):
+        # Don't filter anything, but reorder the distance matrix.
+        order = ['c', 'a', 'b']
+        exp = self.matobj(
+            [[0, 4.2, 12], [4.2, 0, 0.01], [12, 0.01, 0]], order, condensed=True)
+        obs = self.dm_3x3_cond.filter(order)
+        self.assertEqual(obs, exp)
+
+    def test_filter_single_id(self):
+        ids = ['b']
+        exp = self.matobj([[0]], ids, condensed=True)
+        obs = self.dm_2x2_cond.filter(ids)
+        self.assertEqual(obs, exp)
+
+    def test_filter_subset(self):
+        ids = ('c', 'a')
+        exp = self.matobj([[0, 4.2], [4.2, 0]], ids, condensed=True)
+        obs = self.dm_3x3_cond.filter(ids)
+        self.assertEqual(obs, exp)
+
+        ids = ('b', 'a')
+        exp = self.matobj([[0, 0.01], [0.01, 0]], ids, condensed=True)
+        obs = self.dm_3x3_cond.filter(ids)
+        self.assertEqual(obs, exp)
+
+        # 4x4
+        dm = self.matobj([[0, 1, 55, 7], [1, 0, 16, 1],
+                         [55, 16, 0, 23], [7, 1, 23, 0]], condensed=True)
+        ids = np.asarray(['3', '0', '1'])
+        exp = self.matobj([[0, 7, 1], [7, 0, 1], [1, 1, 0]], ids, condensed=True)
+        obs = dm.filter(ids)
+        self.assertEqual(obs, exp)
+
+    def test_filter_duplicate_ids(self):
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3_cond.filter(['c', 'a', 'c'])
+
+    def test_filter_missing_ids(self):
+        with self.assertRaises(MissingIDError):
+            self.dm_3x3_cond.filter(['c', 'bro'])
+
+    def test_filter_missing_ids_strict_false(self):
+        # no exception should be raised
+        ids = ('c', 'a')
+        exp = self.matobj([[0, 4.2], [4.2, 0]], ids, condensed=True)
+        obs = self.dm_3x3_cond.filter(['c', 'a', 'not found'], strict=False)
+        self.assertEqual(obs, exp)
+
+    def test_filter_empty_ids(self):
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3_cond.filter([])
+
+    def test_getslice(self):
+        # Slice of first dimension only. Test that __getslice__ defers to
+        # __getitem__.
+        obs = self.dm_2x2_cond[1:]
+        self.assertTrue(np.array_equal(obs, np.array([[0.123, 0.0]])))
+        self.assertEqual(type(obs), np.ndarray)
+
+    def test_getitem_by_id(self):
+        obs = self.dm_1x1_cond['a']
+        self.assertTrue(np.array_equal(obs, np.array([0.0])))
+
+        obs = self.dm_2x2_cond['b']
+        self.assertTrue(np.array_equal(obs, np.array([0.123, 0.0])))
+
+        obs = self.dm_3x3_cond['c']
+        self.assertTrue(np.array_equal(obs, np.array([4.2, 12.0, 0.0])))
+
+        with self.assertRaises(MissingIDError):
+            self.dm_2x2_cond['c']
+
+    def test_getitem_by_id_pair(self):
+        # Same object.
+        self.assertEqual(self.dm_1x1_cond['a', 'a'], 0.0)
+
+        # Different objects (symmetric).
+        self.assertEqual(self.dm_3x3_cond['b', 'c'], 12.0)
+        self.assertEqual(self.dm_3x3_cond['c', 'b'], 12.0)
+
+        # Different objects.
+        self.assertEqual(self.dm_2x2_cond['a', 'b'], 0.123)
+        self.assertEqual(self.dm_2x2_cond['b', 'a'], 0.123)
+
+        with self.assertRaises(MissingIDError):
+            self.dm_2x2_cond['a', 'c']
+
+    def test_getitem_ndarray_indexing(self):
+        # Single element access.
+        obs = self.dm_3x3_cond[0, 1]
+        self.assertEqual(obs, 0.01)
+
+        # Single element access (via two __getitem__ calls).
+        obs = self.dm_3x3_cond[0][1]
+        self.assertEqual(obs, 0.01)
+
+        # Row access.
+        obs = self.dm_3x3_cond[1]
+        self.assertTrue(np.array_equal(obs, np.array([0.01, 0.0, 12.0])))
+        self.assertEqual(type(obs), np.ndarray)
+
+        # Grab all data.
+        obs = self.dm_3x3_cond[:, :]
+        self.assertTrue(np.array_equal(obs, self.dm_3x3.data))
+        self.assertEqual(type(obs), np.ndarray)
+
+        with self.assertRaises(IndexError):
+            self.dm_3x3_cond[:, 3]
+
 
 class DistanceMatrixTestBase(PairwiseMatrixTestData):
     @classmethod
@@ -1160,7 +1296,7 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(obs, exp)
 
     def test_permute_not_condensed_on_condensed(self):
-        obs = self.dm_1x1_cond.permute(old_output=False)
+        obs = self.dm_1x1_cond.permute()
         self.assertEqual(obs, self.dm_1x1_cond)
         self.assertFalse(obs is self.dm_1x1_cond)
 
@@ -1514,6 +1650,15 @@ class PairwiseMatrixTests(PairwiseMatrixTestBase, TestCase):
 
     def setUp(self):
         super(PairwiseMatrixTests, self).setUp()
+
+
+class SymmetricMatrixTests(SymmetricMatrixTestBase, TestCase):
+    @classmethod
+    def get_matrix_class(cls):
+        return SymmetricMatrix
+
+    def setUp(self):
+        super(SymmetricMatrixTests, self).setUp()
 
 
 class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
