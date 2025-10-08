@@ -2044,25 +2044,42 @@ def _vec_to_shape(vec: np.ndarray) -> int:
     return int((1 + np.sqrt(1 + 8 * len(vec))) / 2)
 
 
-def _condensed_index(i: int, j: int, n: int) -> int:
-    """Get a index for the condensed form from redundant form indices.
+def _condensed_index(
+    i: Union[int, np.ndarray], j: Union[int, np.ndarray], n: int
+) -> Union[int, np.ndarray]:
+    """Get indices for condensed form from redundant form indices.
 
     Parameters
     ----------
-    i, j : int
-        Matrix coordinates.
+    i, j : int or np.ndarray
+        Matrix coordinates. Can be scalars or arrays.
     n : int
         Sample size of the square matrix.
 
     Returns
     -------
-    int
-        Index in the condensed form vector.
+    int or np.ndarray
+        Index/indices in the condensed form vector.
     """
-    # can do this because of symmetry
-    if i > j:
-        i, j = j, i
-    return i * n + j - ((i + 2) * (i + 1)) // 2
+    is_scalar = np.isscalar(i) and np.isscalar(j)
+
+    i_arr = np.asarray(i)
+    j_arr = np.asarray(j)
+
+    swap_mask = i_arr > j_arr
+    if np.any(swap_mask):
+        i_min = np.where(swap_mask, j_arr, i_arr)
+        j_max = np.where(swap_mask, i_arr, j_arr)
+    else:
+        i_min = i_arr
+        j_max = j_arr
+
+    result = i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
+
+    if is_scalar:
+        return int(result)
+
+    return result
 
 
 def distmat_reorder_condensed_py(in_mat, reorder_vec):
@@ -2083,19 +2100,16 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     n_original = _vec_to_shape(in_mat)
     n_filtered = len(reorder_vec)
 
+    # -1 here to exclude the diagonal
     out_size = n_filtered * (n_filtered - 1) // 2
     if out_size == 0:
         return np.array([], dtype=in_mat.dtype)
 
-    old_indices = np.zeros(out_size, dtype=np.intp)
-    out_idx = 0
+    i_indices, j_indices = np.triu_indices(n_filtered, k=1)
+    old_i = reorder_vec[i_indices]
+    old_j = reorder_vec[j_indices]
 
-    for i in range(n_filtered - 1):
-        for j in range(i + 1, n_filtered):
-            old_i, old_j = reorder_vec[i], reorder_vec[j]
-            condensed_idx = _condensed_index(old_i, old_j, n_original)
-            old_indices[out_idx] = condensed_idx
-            out_idx += 1
+    old_indices = _condensed_index(old_i, old_j, n_original)
 
     return in_mat[old_indices]
 
@@ -2150,13 +2164,15 @@ def _get_row_from_condensed(
     """
     row = np.zeros(n, dtype=condensed_data.dtype)
 
-    # fill in elements before diagonal
-    for j in range(row_idx):
-        row[j] = condensed_data[_condensed_index(j, row_idx, n)]
+    # elements before diagonal: j < row_idx
+    j_before = np.arange(row_idx)
+    if len(j_before) > 0:
+        row[j_before] = condensed_data[_condensed_index(j_before, row_idx, n)]
 
-    # fill in elements after diagonal
-    for j in range(row_idx + 1, n):
-        row[j] = condensed_data[_condensed_index(row_idx, j, n)]
+    # elements after diagonal: j > row_idx
+    j_after = np.arange(row_idx + 1, n)
+    if len(j_after) > 0:
+        row[j_after] = condensed_data[_condensed_index(row_idx, j_after, n)]
 
     return row
 
