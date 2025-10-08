@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase,  main, skipIf
+from unittest import TestCase, main, skipIf
 import warnings
 import inspect
 
@@ -19,7 +19,8 @@ from skbio.util._gpu import cuda_avail
 
 from skbio.stats.composition import (
     closure, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, _gram_schmidt_basis)
+    ilr_inv, alr, alr_inv)
+from skbio.stats.composition._base import _gram_schmidt_basis
 
 
 # import optional dependencies

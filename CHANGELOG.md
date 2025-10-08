@@ -2,6 +2,10 @@
 
 ## Version 0.7.1-dev
 
+### Features
+
+* Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293)).
+
 ### Performance enhancements
 
 * Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
