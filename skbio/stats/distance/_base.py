@@ -1136,11 +1136,9 @@ class SymmetricMatrix(PairwiseMatrix):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
         condensed: bool = False,
-        diagonal: Union[float, np.ndarray] = 0.0,
+        diagonal: Union[float, np.ndarray] = None,
     ):
         data, ids = self._normalize_input(data, ids)
-        # if diagonal:
-        #     diagonal = self._normalize_input(diagonal, None)[0]
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1163,13 +1161,10 @@ class SymmetricMatrix(PairwiseMatrix):
         self, diagonal: Union[float, np.ndarray], data: np.ndarray, condensed
     ):
         """Initialize the diagonal attribute."""
-        # don't need to store a diagonal if the underlying data struct is 2D
-        # if not condensed:
-        #     return 0.0
         if diagonal is None:
             if data.ndim == 1:
                 return 0.0
-            elif data.ndim == 2:
+            if data.ndim == 2:
                 diagonal = np.diagonal(data)
                 if np.allclose(diagonal, 0):
                     diagonal = 0.0
@@ -1225,7 +1220,7 @@ class SymmetricMatrix(PairwiseMatrix):
                 # if it's a nd.array it needs to be 1d
                 if diagonal.ndim != 1:
                     raise SymmetricMatrixError(
-                        f"Diagonal must be 1 dimensional if it is array. Found "
+                        f"Diagonal must be 1 dimensional if it is an array. Found "
                         f"{diagonal.ndim} dimensions."
                     )
                 # it also needs to match the size of the matrix
@@ -1707,18 +1702,18 @@ class DistanceMatrix(SymmetricMatrix):
         self, data: np.ndarray, diagonal: Union[float, np.ndarray]
     ) -> None:
         """Validate the diagonal of the matrix."""
-        if np.isscalar(diagonal):
-            if diagonal != 0:
-                raise DistanceMatrixError(
-                    "The diagonal of a DistanceMatrix may only contain zeros."
-                )
-        else:
-            diagonal = np.asarray(diagonal)
-            if np.any(diagonal != 0):
-                print("\n\n", diagonal, "\n\n")
-                raise DistanceMatrixError(
-                    "The diagonal of a DistanceMatrix may only contain zeros."
-                )
+        if diagonal is not None:
+            if np.isscalar(diagonal):
+                if diagonal != 0:
+                    raise DistanceMatrixError(
+                        "The diagonal of a DistanceMatrix may only contain zeros."
+                    )
+            else:
+                diagonal = np.asarray(diagonal)
+                if np.any(diagonal != 0):
+                    raise DistanceMatrixError(
+                        "The diagonal of a DistanceMatrix may only contain zeros."
+                    )
         super()._validate_diagonal(data, diagonal)
 
     def _init_diagonal(self, diagonal, data, condensed):
