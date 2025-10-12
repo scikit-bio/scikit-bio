@@ -224,15 +224,9 @@ def _parse_header(header, delimiter):
 
 def _parse_data(fh, delimiter):
     for line in fh:
-        stripped_line = line.strip()
-
-        if not stripped_line:
-            continue
-
-        tokens = line.rstrip().split(delimiter)
-        id_ = tokens[0].strip()
-
-        yield id_, tokens[1:]
+        if line := line.rstrip():
+            tokens = line.split(delimiter)
+            yield tokens[0].strip(), tokens[1:]
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):
