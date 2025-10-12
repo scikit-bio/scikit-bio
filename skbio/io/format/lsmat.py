@@ -54,16 +54,20 @@ IDs will have any leading/trailing whitespace removed when they are parsed.
 
 Format Parameters
 -----------------
-The only supported format parameter is ``delimiter``, which defaults to the tab
-character (``'\t'``). ``delimiter`` is used to separate elements in the file
-format. Examples include tab (``'\t'``) for TSV format and comma (``','``) for
-CSV format. ``delimiter`` can be specified as a keyword argument when reading
-from or writing to a file.
+delimiter : str, optional
+    A string used to separate elements in the file format. Can be specified when
+    reading from or writing to a file. Default is the tab character (``'\t'``), and
+    the format is usually referred to as tab-separated values (TSV). Another common
+    choice is comma (``','``), used in the comma-separated values (CSV) format. A
+    special ``delimiter`` is ``None``, which represents a whitespace of arbitrary
+    length. This value is useful for reading a fixed-width text file. However, it
+    cannot be automatically determined, nor can it be specified when writing to a
+    file.
 
-A special ``delimiter`` is ``None``, which represents a whitespace of arbitrary
-length. This value is useful for reading a fixed-width text file. However, it
-cannot be automatically determined, nor can it be specified when writing to a
-file.
+dtype : str or dtype, optional
+    The data type of the underlying matrix data. Only relevant when reading from a
+    file. Default is "float64", which maps to ``np.float64``. The only other available
+    option is "float32" (or ``np.float32``).
 
 """  # noqa: D205, D415
 
@@ -107,13 +111,13 @@ def _lsmat_sniffer(fh):
 
 
 @lsmat.reader(DissimilarityMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
+def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t", dtype="float64"):
+    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter, dtype)
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
+def _lsmat_to_distance_matrix(fh, delimiter="\t", dtype="float64"):
+    return _lsmat_to_matrix(DistanceMatrix, fh, delimiter, dtype)
 
 
 @lsmat.writer(DissimilarityMatrix)
@@ -126,7 +130,7 @@ def _distance_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
-def _lsmat_to_matrix(cls, fh, delimiter):
+def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     # We aren't using np.loadtxt because it uses *way* too much memory
     # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
     # has finished). See:
@@ -138,6 +142,10 @@ def _lsmat_to_matrix(cls, fh, delimiter):
     #   - for each row of data in the input file:
     #     - populate the corresponding row in the ndarray with floats
 
+    dtype = np.dtype(dtype)
+    if dtype not in (np.float64, np.float32):
+        raise TypeError(f"{dtype} is not a supported data type.")
+
     header = _find_header(fh)
     if header is None:
         raise LSMatFormatError(
@@ -148,7 +156,7 @@ def _lsmat_to_matrix(cls, fh, delimiter):
 
     ids = _parse_header(header, delimiter)
     num_ids = len(ids)
-    data = np.empty((num_ids, num_ids), dtype=np.float64)
+    data = np.empty((num_ids, num_ids), dtype=dtype)
 
     row_idx = -1
     for row_idx, (row_id, row_data) in enumerate(_parse_data(fh, delimiter)):
@@ -156,7 +164,7 @@ def _lsmat_to_matrix(cls, fh, delimiter):
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in " "the header."
+                "Encountered extra row(s) without corresponding IDs in the header."
             )
 
         num_vals = len(row_data)
@@ -168,7 +176,7 @@ def _lsmat_to_matrix(cls, fh, delimiter):
 
         expected_id = ids[row_idx]
         if row_id == expected_id:
-            data[row_idx, :] = np.asarray(row_data, dtype=float)
+            data[row_idx, :] = np.asarray(row_data, dtype=dtype)
         else:
             raise LSMatFormatError(
                 "Encountered mismatched IDs while parsing the "

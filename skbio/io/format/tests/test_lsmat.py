@@ -9,6 +9,8 @@
 import io
 from unittest import TestCase, main
 
+import numpy as np
+
 from skbio import DistanceMatrix
 from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
@@ -124,6 +126,37 @@ class DissimilarityAndDistanceMatrixReaderWriterTests(LSMatTestData):
             obs = fn(self.lsmat_3x3_fw_fh, delimiter=None)
             self.assertEqual(obs, exp)
             self.assertIsInstance(obs, cls)
+
+    def test_read_dtype(self):
+        fn = _lsmat_to_distance_matrix
+        fh = self.lsmat_3x3_fw_fh
+        data = self.lsmat_3x3_data
+
+        # float64 (default)
+        exp = DistanceMatrix(data, ['a', 'b', 'c'])
+        fh.seek(0)
+        obs = fn(fh, delimiter=None)
+        self.assertEqual(obs.dtype, np.float64)
+        self.assertEqual(obs, exp)
+
+        for dtype in (None, float, np.float64, "float64"):
+            fh.seek(0)
+            obs = fn(fh, delimiter=None, dtype=dtype)
+            self.assertEqual(obs.dtype, np.float64)
+            self.assertEqual(obs, exp)
+
+        # float32
+        exp = DistanceMatrix(np.asarray(data, dtype="float32"), ['a', 'b', 'c'])
+        for dtype in (np.float32, "float32"):
+            fh.seek(0)
+            obs = fn(fh, delimiter=None, dtype=dtype)
+            self.assertEqual(obs.dtype, np.float32)
+            self.assertEqual(obs, exp)
+
+        # invalid data type
+        for dtype in ("xyz", int, "float16", "uint8", np.float16):
+            fh.seek(0)
+            self.assertRaises(TypeError, fn, fh, delimiter=None, dtype=dtype)
 
     def test_read_invalid_files(self):
         for fn in _lsmat_to_dissimilarity_matrix, _lsmat_to_distance_matrix:
