@@ -25,7 +25,7 @@ pairwise relationships/distances (floats) between objects, as well as unique IDs
 objects, and does not require that the relationships are symmetric (e.g.,
 dissimilarities obtained using the *Gain in PD* measure [1]_).
 `PairwiseMatrix` is a more general container to store differences than
-`DistanceMatrix`.
+`SymmetricMatrix` or `DistanceMatrix`.
 
 `DistanceMatrix` has the additional requirement that the differences it
 stores are symmetric (e.g., Euclidean or Hamming distances).
@@ -60,6 +60,7 @@ Exceptions
 .. autosummary::
 
    PairwiseMatrixError
+   SymmetricMatrixError
    DistanceMatrixError
    MissingIDError
 
@@ -168,7 +169,7 @@ Data:
 >>> dm_from_np == dm
 True
 
-IDs may be omitted when constructing a dissimilarity/distance matrix.
+IDs may be omitted when constructing a pairwise/symmetric/distance matrix.
 Monotonically-increasing integers (cast as strings) will be automatically used:
 
 >>> dm = DistanceMatrix(data)

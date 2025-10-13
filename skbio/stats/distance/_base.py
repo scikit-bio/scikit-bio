@@ -75,7 +75,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     A `PairwiseMatrix` instance stores a square, two-dimensional
     matrix of relationships between objects. Objects could be, for example,
     samples or DNA sequences. A sequence of IDs accompanies the
-    relationships.
+    data.
 
     Methods are provided to load and save pairwise matrices from/to disk,
     as well as perform common operations such as extracting values
@@ -86,21 +86,22 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     Parameters
     ----------
     data : array_like or PairwiseMatrix
-        Square, two-dimensional `numpy.ndarray` of pairwise relationships
-        (floats), or a structure that can be converted to a `numpy.ndarray`
-        using `numpy.asarray` or a one-dimensional vector of pairwise relationships
-        (floats), as defined by `scipy.spatial.distance.squareform`. Can
-        instead be a `PairwiseMatrix` (or subclass) instance,
-        in which case the instance's data will be used.
-        Data will be converted to a float `dtype` if necessary. A copy will
-        *not* be made if already a `numpy.ndarray` with a float `dtype`.
+        Square, two-dimensional ``numpy.ndarray`` of pairwise relationships
+        (floats), or a structure that can be converted to a ``numpy.ndarray``
+        using ``numpy.asarray`` or a one-dimensional vector of pairwise relationships
+        (floats), as defined by `scipy.spatial.distance.squareform
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squareform.html>`_.
+        Can instead be a `PairwiseMatrix` (or subclass) instance, in which case the
+        instance's data will be used. Data will be converted to a float ``dtype`` if
+        necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
+        float ``dtype``.
     ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`. If `None` (the default), IDs will be
+        rows/cols in `data`. If ``None`` (default), IDs will be
         monotonically-increasing integers cast as strings, with numbering
-        starting from zero, e.g., `('0', '1', '2', '3', ...)`.
+        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
     validate : bool, optional
-        If `validate` is `True` (the default) and data is not a
+        If `validate` is ``True`` (default) and data is not a
         `PairwiseMatrix` object, the input data will be validated.
 
     See Also
@@ -196,16 +197,19 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return data_, ids
 
     def _generate_ids(self, data):
+        """Generate ids if none provided."""
         if data.ndim != 1:
             return tuple(str(i) for i in range(data.shape[0]))
         else:
             return tuple(str(i) for i in range(_vec_to_shape(data)))
 
     def _init_flags(self):
+        """Initialize boolean flags for matrix forms."""
         # This is the default value. PairwiseMatrix doesn't really need flags.
         return {"CONDENSED": False}
 
     def _init_data(self, data):
+        """Initialize underlying data structure."""
         return data
 
     @classonlymethod
@@ -267,7 +271,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def data(self) -> np.ndarray:
         r"""Array of pairwise relationships.
 
-        A `numpy.ndarray` of values (floats). A copy is *not* returned.
+        A square, two-dimensional ``numpy.ndarray`` of values (floats). A copy is *not*
+        returned.
 
         Notes
         -----
@@ -334,8 +339,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def T(self) -> "PairwiseMatrix":
         r"""Transpose of the matrix.
 
-        If the matrix is in condensed form, a redundant form matrix will be returned.
-
         See Also
         --------
         transpose
@@ -345,8 +348,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     def transpose(self) -> "PairwiseMatrix":
         r"""Return the transpose of the matrix.
-
-        If the matrix is in condensed form, a redundant form matrix will be returned.
 
         Notes
         -----
@@ -372,12 +373,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         int
-            Row/column index of ``lookup_id``.
+            Row/column index of `lookup_id`.
 
         Raises
         ------
         MissingIDError
-            If ``lookup_id`` is not in the dissimilarity matrix.
+            If `lookup_id` is not in the matrix.
 
         """
         if lookup_id in self:
@@ -386,17 +387,17 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise MissingIDError(lookup_id)
 
     def redundant_form(self) -> np.ndarray:
-        r"""Return an array of values in redundant format.
+        r"""Return an array of values in redundant form.
 
         Returns
         -------
         ndarray
             Two-dimensional `numpy.ndarray` of values in redundant
-            format.
+            form.
 
         Notes
         -----
-        Redundant format is described in [1]_.
+        Redundant form is described in [1]_.
 
         Does *not* return a copy of the data.
 
@@ -451,13 +452,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         mapper : dict or callable
             A dictionary or function that maps current IDs to new IDs.
         strict : bool, optional
-           If True (default), every ID in the matrix must be included in
-           `mapper`. If False, only the specified IDs will be renamed.
+           If ``True`` (default), every ID in the matrix must be included in
+           ``mapper``. If ``False``, only the specified IDs will be renamed.
 
         Raises
         ------
         ValueError
-            If `mapper` does not contain all of the same IDs in the matrix
+            If ``mapper`` does not contain all of the same IDs in the matrix
             whereas in strict mode.
 
         Examples
@@ -492,8 +493,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             IDs to retain. May not contain duplicates or be empty. Each ID must
             be present in the matrix.
         strict : bool, optional
-            If `strict` is True and an ID that is not found in the distance
-            matrix is found in `ids`, a `MissingIDError` exception will be
+            If `strict` is ``True`` and an ID that is not found in the distance
+            matrix is found in `ids`, a ``MissingIDError`` exception will be
             raised, otherwise the ID will be ignored.
 
         Returns
@@ -760,7 +761,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         --------
         .. plot::
 
-           Define a dissimilarity matrix with five objects labeled A-E:
+           Define a matrix with five objects labeled A-E:
 
            >>> from skbio.stats.distance import PairwiseMatrix
            >>> dm = PairwiseMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
@@ -768,7 +769,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
            ...                           [4, 3, 2, 1, 0]],
            ...                          ['A', 'B', 'C', 'D', 'E'])
 
-           Plot the dissimilarity matrix as a heatmap:
+           Plot the matrix as a heatmap:
 
            >>> fig = dm.plot(cmap='Reds', title='Example heatmap')  # doctest: +SKIP
 
@@ -865,7 +866,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         bool
-            `True` if `self` is equal to `other`, `False` otherwise.
+            ``True`` if `self` is equal to `other`, ``False`` otherwise.
 
         """
         if not isinstance(other, PairwiseMatrix):
@@ -946,7 +947,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             a numpy index.
 
             If `index` is a string, it is assumed to be an ID and a
-            `numpy.ndarray` row vector is returned for the corresponding ID.
+            ``numpy.ndarray`` row vector is returned for the corresponding ID.
             Note that the ID's row of values is returned, *not* its
             column. If the matrix is symmetric, the two will be identical, but
             this makes a difference if the matrix is asymmetric.
@@ -956,12 +957,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             represents the value between the two IDs. Note that the
             order of lookup by ID pair matters if the matrix is asymmetric: the
             first ID will be used to look up the row, and the second ID will be
-            used to look up the column. Thus, `dm['a', 'b']` may not be the
-            same as `dm['b', 'a']` if the matrix is asymmetric.
+            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
+            same as ``dm['b', 'a']`` if the matrix is asymmetric.
 
             Otherwise, `index` will be passed through to
-            `PairwiseMatrix.data.__getitem__`, allowing for standard
-            indexing of a `numpy.ndarray` (e.g., slicing).
+            ``PairwiseMatrix.data.__getitem__``, allowing for standard
+            indexing of a ``numpy.ndarray`` (e.g., slicing).
 
         Returns
         -------
@@ -983,24 +984,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if isinstance(index, str):
             row_idx = self.index(index)
-            if self._flags["CONDENSED"]:
-                return _get_row_from_condensed(self._data, row_idx, self.shape[0])
-            else:
-                return self._data[row_idx]
+
+            return self._data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
             i, j = self.index(index[0]), self.index(index[1])
-            if self._flags["CONDENSED"]:
-                return _get_element_from_condensed(self._data, i, j, self.shape[0])
-            else:
-                return self._data[i, j]
+            return self._data[i, j]
         else:
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
-            # revert to redundant form to handle numpy style indexing
-            if self._flags["CONDENSED"]:
-                return self.redundant_form().__getitem__(index)
-            else:
-                return self._data.__getitem__(index)  # type: ignore[index]
+            return self._data.__getitem__(index)  # type: ignore[index]
 
     def _validate_ids(self, data: np.ndarray, ids: Collection[str]) -> None:
         """Validate the IDs.
@@ -1089,11 +1081,13 @@ class SymmetricMatrix(PairwiseMatrix):
     data : array_like or SymmetricMatrix
         Square, symmetric, two-dimensional ``numpy.ndarray`` values (floats), or a
         structure that can be converted to a ``numpy.ndarray`` using ``numpy.asarray``
-        or a one-dimensional vector of values (floats), as devined by
-        `scipy.spatial.distance.squareform`. Can instead be a `PairwiseMatrix`
-        (or `SymmetricMatrix`) instance, in which the instance's data will be used.
-        Data will be converted to a float ``dtype`` if necessary. A copy will *not*
-        be made if already a ``numpy.ndarray`` with a float ``dtype``.
+        or a one-dimensional vector of values (floats), as defined by
+        `scipy.spatial.distance.squareform
+        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squaref>`_.
+        Can instead be a `PairwiseMatrix` (or `SymmetricMatrix`) instance, in which the
+        instance's data will be used. Data will be converted to a float ``dtype`` if
+        necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
+        float ``dtype``.
     ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
         rows/cols in `data`. If ``None`` (the default), IDs will be
@@ -1103,15 +1097,14 @@ class SymmetricMatrix(PairwiseMatrix):
         If `validate` is ``True`` (the default) and data is not a
         DistanceMatrix object, the input data will be validated.
     condensed : bool, optional
-        If `False` (default) the data will be stored in a 2-dimensional redundant form.
-        If `True`, the data will be stored in a 1-dimensional condensed form.
+        If ``False`` (default) the data will be stored in a 2-dimensional redundant
+        form. If ``True``, the data will be stored in a 1-dimensional condensed form.
     diagonal : np.ndarray or float, optional
-        If the matrix is to be stored in condensed form, diagonal stores the
-        information contained in the matrix's diagonal. If it is a float, this value
-        will represent all values in the diagonal. For example, if diagonal is set to
-        0.0 (default), then it represents that all values along the diagonal are 0.0.
-        If diagonal is an array, it's values represent the values along the diagonal
-        of the original matrix.
+        If the matrix is to be stored in condensed form, `diagonal` stores the
+        information contained in the matrix's diagonal. If `diagonal` is a float, this
+        value represents all values in the diagonal of the matrix. If `diagonal` is an
+        array, it's values represent the values along the diagonal of the original
+        matrix.
 
     See Also
     --------
@@ -1148,14 +1141,25 @@ class SymmetricMatrix(PairwiseMatrix):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal(diagonal, data, condensed)
+        self._diagonal = self._init_diagonal(diagonal, data)
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
 
-    def _init_diagonal(
-        self, diagonal: Union[float, np.ndarray], data: np.ndarray, condensed
-    ):
-        """Initialize the diagonal attribute."""
+    def _init_diagonal(self, diagonal: Union[float, np.ndarray], data: np.ndarray):
+        """Initialize the diagonal attribute.
+
+        Parameters
+        ----------
+        diagonal : float or np.ndarray
+            The value or values defined along the diagonal of the matrix.
+        data : np.ndarray
+            1 or 2-dimensional array of the data of the matrix.
+
+        Returns
+        -------
+        float or np.ndarray
+            The diagonal values of the matrix.
+        """
         if diagonal is None:
             if data.ndim == 1:
                 return 0.0
@@ -1170,14 +1174,35 @@ class SymmetricMatrix(PairwiseMatrix):
             return np.asarray(diagonal)
 
     def _init_flags(self, condensed: bool) -> dict:
-        """Initialize flags for symmetric matrix."""
+        """Initialize flags for symmetric matrix.
+
+        Parameters
+        ----------
+        condensed : bool
+            Whether the matrix is in condensed form or not.
+
+        Returns
+        -------
+        dict
+            Dictionary containing information on the form of the matrix."""
         if condensed:
             return {"CONDENSED": True}
         else:
             return {"CONDENSED": False}
 
     def _init_data(self, data: np.ndarray, condensed: bool) -> None:
-        """Initialize data for symmetric matrix."""
+        """Initialize data for symmetric matrix.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            1 or 2-dimensional array representing the data of the matrix.
+        condensed : bool
+            Whether or not to store the data in condensed form.
+
+        Returns
+        np.ndarray
+            1 or 2-dimensional array containing the values of the matrix."""
         if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
@@ -1198,8 +1223,8 @@ class SymmetricMatrix(PairwiseMatrix):
     def _validate_data(self, data: np.ndarray) -> None:
         """Validate the data array.
 
-        Performs a check for symmetry in
-        addition to the checks performed in the superclass.
+        Performs a check for symmetry if data is 2D. If data is 1D it is assumed to
+        be symmetric.
         """
         if (data.ndim != 1) and (not is_symmetric(data)):
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
@@ -1207,7 +1232,12 @@ class SymmetricMatrix(PairwiseMatrix):
     def _validate_diagonal(
         self, data: np.ndarray, diagonal: Optional[np.ndarray] = None
     ) -> None:
-        """Validate the diagonal of the matrix."""
+        """Validate the diagonal of the matrix.
+
+        Checks that the length of the diagonal matches the shape of the matrix, and
+        that the diagonal is 1D if passed as an array.
+
+        """
         if diagonal is not None:
             # if it's a single value, it doesn't need to be validated
             if not np.isscalar(diagonal):
@@ -1235,6 +1265,12 @@ class SymmetricMatrix(PairwiseMatrix):
                         )
 
     def _validate_shape(self, data: np.ndarray):
+        """Validate the shape of the input data.
+
+        If the input is 2D, it checks that it is at least 1x1, and that it is square.
+        If the input is 1D, it checks that it is a correct length to represent a
+        symmetric matrix. If input is not 1D or 2D, it raises an error.
+        """
         if data.ndim == 2:
             if 0 in data.shape:
                 raise SymmetricMatrixError("Data must be at least 1x1 in size.")
@@ -1267,8 +1303,39 @@ class SymmetricMatrix(PairwiseMatrix):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     @property
+    def T(self) -> "SymmetricMatrix":
+        r"""Transpose of the matrix.
+
+        If the matrix is in condensed form, a redundant form matrix will be returned.
+
+        See Also
+        --------
+        transpose
+
+        """
+        return self.transpose()
+
+    def transpose(self) -> "SymmetricMatrix":
+        r"""Return the transpose of the matrix.
+
+        If the matrix is in condensed form, a redundant form matrix will be returned.
+
+        Notes
+        -----
+        A deep copy is returned.
+
+        Returns
+        -------
+        SymmetricMatrix
+            Transpose of the matrix. Will be the same type as `self`.
+
+        """
+        # Note: Skip validation, since we assume self was already validated
+        return self._copy(transpose=True)
+
+    @property
     def diagonal(self) -> Union[float, np.ndarray]:
-        """Diagonal values of the matrix.
+        """Diagonal value(s) of the matrix.
 
         If diagonal is a float, this value is repeated along the diagonal of the
         matrix. If diagonal is an array, it represents the full diagonal of the
@@ -1316,9 +1383,9 @@ class SymmetricMatrix(PairwiseMatrix):
             If array, this array will be used to fill the diagonal of the matrix.
             Defaults to 0.0.
         condensed : bool, optional
-            If False (default), the underlying data structure will be the redundant
-            form (2D) of the matrix. If True, the underlying data structure will be the
-            condensed form (1D) of the matrix.
+            If ``False`` (default), the underlying data structure will be the redundant
+            form (2D) of the matrix. If ``True``, the underlying data structure will be
+            the condensed form (1D) of the matrix.
 
         Returns
         -------
@@ -1358,6 +1425,81 @@ class SymmetricMatrix(PairwiseMatrix):
                     dm[i, j] = dm[j, i] = metric(a, b)
         return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
 
+    def __getitem__(
+        self, index: Union[str, tuple[str, str], Any]
+    ) -> Union[np.ndarray, float]:
+        r"""Slice into data by object ID or numpy indexing.
+
+        Extracts data from the matrix by object ID, a pair of
+        IDs, or numpy indexing/slicing.
+
+        Parameters
+        ----------
+        index : str, two-tuple of str, or numpy index
+            `index` can be one of the following forms: an ID, a pair of IDs, or
+            a numpy index.
+
+            If `index` is a string, it is assumed to be an ID and a
+            ``numpy.ndarray`` row vector is returned for the corresponding ID.
+            Note that the ID's row of values is returned, *not* its
+            column. If the matrix is symmetric, the two will be identical, but
+            this makes a difference if the matrix is asymmetric.
+
+            If `index` is a two-tuple of strings, each string is assumed to be
+            an ID and the corresponding matrix element is returned that
+            represents the value between the two IDs. Note that the
+            order of lookup by ID pair matters if the matrix is asymmetric: the
+            first ID will be used to look up the row, and the second ID will be
+            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
+            same as ``dm['b', 'a']`` if the matrix is asymmetric.
+
+            Otherwise, `index` will be passed through to
+            ``PairwiseMatrix.data.__getitem__``, allowing for standard
+            indexing of a ``numpy.ndarray`` (e.g., slicing).
+
+        Returns
+        -------
+        ndarray or scalar
+            Indexed data, where return type depends on the form of `index` (see
+            description of `index` for more details).
+
+        Raises
+        ------
+        MissingIDError
+            If the ID(s) specified in `index` are not in the matrix.
+
+        Notes
+        -----
+        The lookup based on ID(s) is quick. NumPy indexing (slicing) on condensed
+        form matrices will convert them to redundant, roughly doubling their memory
+        requirement.
+
+        """
+        if isinstance(index, str):
+            row_idx = self.index(index)
+            if self._flags["CONDENSED"]:
+                return _get_row_from_condensed(
+                    self._data, row_idx, self.shape[0], self._diagonal
+                )
+            else:
+                return self._data[row_idx]
+        elif isinstance(index, tuple) and self._is_id_pair(index):
+            i, j = self.index(index[0]), self.index(index[1])
+            if self._flags["CONDENSED"]:
+                return _get_element_from_condensed(
+                    self._data, i, j, self.shape[0], self._diagonal
+                )
+            else:
+                return self._data[i, j]
+        else:
+            # NumPy index types are numerous and complex, easier to just
+            # ignore them in type checking.
+            # revert to redundant form to handle numpy style indexing
+            if self._flags["CONDENSED"]:
+                return self.redundant_form().__getitem__(index)
+            else:
+                return self._data.__getitem__(index)  # type: ignore[index]
+
     def redundant_form(self):
         r"""Return an array of values in redundant format.
 
@@ -1384,8 +1526,6 @@ class SymmetricMatrix(PairwiseMatrix):
         -------
         data : ndarray
             One-dimensional `numpy.ndarray` of values in condensed format.
-        diagonal : ndarray
-            One-dimensional `numpy.ndarray` of diagonal values.
 
         Notes
         -----
@@ -1609,11 +1749,11 @@ class DistanceMatrix(SymmetricMatrix):
         Square, hollow, two-dimensional ``numpy.ndarray`` of distances
         (floats), or a structure that can be converted to a ``numpy.ndarray``
         using ``numpy.asarray`` or a one-dimensional vector of distances
-        (floats), as defined by `scipy.spatial.distance.squareform`. Can
-        instead be a `PairwiseMatrix` (or `DistanceMatrix`) instance,
-        in which case the instance's data will be used.
-        Data will be converted to a float ``dtype`` if necessary. A copy will
-        *not* be made if already a ``numpy.ndarray`` with a float ``dtype``.
+        (floats), as defined by `scipy.spatial.distance.squareform <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squareform.html>`_.
+        Can instead be a `PairwiseMatrix` (or `DistanceMatrix`) instance, in which case
+        the instance's data will be used. Data will be converted to a float ``dtype``
+        if necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
+        float ``dtype``.
     ids : sequence of str, optional
         Sequence of strings to be used as object IDs. Must match the number of
         rows/cols in `data`. If ``None`` (the default), IDs will be
@@ -1650,6 +1790,38 @@ class DistanceMatrix(SymmetricMatrix):
 
     # Override here, used in superclass __str__
     _matrix_element_name: ClassVar[str] = "distance"
+
+    def __init__(
+        self,
+        data: Union[
+            np.ndarray,
+            Sequence[float],
+            Sequence[Sequence[float]],
+            "PairwiseMatrix",
+        ],
+        ids: Optional[Sequence[str]] = None,
+        validate: bool = True,
+        condensed: bool = False,
+        diagonal: Union[float, np.ndarray] = None,
+    ):
+        data, ids = self._normalize_input(data, ids)
+
+        if ids is None:
+            ids = self._generate_ids(data)
+        else:
+            ids = tuple(ids)
+
+        if validate:
+            self._validate_shape(data)
+            self._validate_ids(data, ids)
+            self._validate_data(data)
+            self._validate_diagonal(data, diagonal)
+
+        self._ids = ids
+        self._id_index = self._index_list(self._ids)
+        self._diagonal = self._init_diagonal()
+        self._data = self._init_data(data, condensed)
+        self._flags = self._init_flags(condensed)
 
     def condensed_form(self) -> np.ndarray:
         r"""Return an array of distances in condensed format.
@@ -1696,7 +1868,11 @@ class DistanceMatrix(SymmetricMatrix):
     def _validate_diagonal(
         self, data: np.ndarray, diagonal: Union[float, np.ndarray]
     ) -> None:
-        """Validate the diagonal of the matrix."""
+        """Validate the diagonal of the matrix.
+
+        In addition to the checks performed in the superclass, it also chacks that the
+        diagonal only contains zeros.
+        """
         if diagonal is not None:
             if np.isscalar(diagonal):
                 if diagonal != 0:
@@ -1711,10 +1887,11 @@ class DistanceMatrix(SymmetricMatrix):
                     )
         super()._validate_diagonal(data, diagonal)
 
-    def _init_diagonal(self, diagonal, data, condensed):
-        """Initialize the diagonal attribut for a DistanceMatrix.
+    def _init_diagonal(self):
+        """Initialize the diagonal attribute for a DistanceMatrix.
 
-        It will always be 0."""
+        A DistanceMatrix must by definition have only 0's on its diagonal, so the most
+        efficient storage will always be 0.0."""
         return 0.0
 
     def to_series(self) -> pd.Series:
@@ -2030,7 +2207,26 @@ def _build_results(
 
 
 def _vec_to_shape(vec: np.ndarray) -> int:
-    """Calculate the redundant shape of a matrix given its condensed vector."""
+    r"""Calculate the redundant shape of a matrix given its condensed vector.
+
+    For an :math:`n \times n` symmetric matrix stored in condensed form
+    (upper triangular, excluding diagonal), this function recovers the
+    dimension :math:`n` from the number of elements :math:`k` in the
+    condensed vector.
+
+    The mathematical relationship is:
+
+    .. math::
+
+        k = \frac{n(n-1)}{2}
+
+    Solving for :math:`n` using the quadratic formula:
+
+    .. math::
+
+        n = \frac{1 + \sqrt{1 + 8k}}{2}
+
+    """
     return int((1 + np.sqrt(1 + 8 * len(vec))) / 2)
 
 
@@ -2107,7 +2303,7 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
 
 
 def _get_element_from_condensed(
-    condensed_data: np.ndarray, i: int, j: int, n: int
+    condensed_data: np.ndarray, i: int, j: int, n: int, diagonal: np.ndarray
 ) -> float:
     """Get a single element from condensed storage.
 
@@ -2121,22 +2317,27 @@ def _get_element_from_condensed(
         Column index
     n : int
         Sample size of the square matrix.
+    diagonal : float or np.ndarray
+        If float, this value is repeated along the diagonal of the matrix.
+        If array, this array represents the diagonal of the matrix.
 
     Returns
     -------
     float
         The value at position (i, j)
     """
-    # need to implement handling for where diagonal is not 0 here
     if i == j:
-        return 0.0
+        if np.isscalar(diagonal):
+            return diagonal
+        else:
+            return diagonal[i]
 
     condensed_idx = _condensed_index(i, j, n)
     return condensed_data[condensed_idx]
 
 
 def _get_row_from_condensed(
-    condensed_data: np.ndarray, row_idx: int, n: int
+    condensed_data: np.ndarray, row_idx: int, n: int, diagonal: np.ndarray
 ) -> np.ndarray:
     """Extract a full row from condensed storage.
 
@@ -2148,13 +2349,21 @@ def _get_row_from_condensed(
         Row index of the desired row.
     n : int
         Sample size of the square matrix.
+    diagonal : np.ndarray
+        Array of values found on the diagonal of the matrix.
 
     Returns
     -------
     np.ndarray
         The row data for the desired index.
     """
-    row = np.zeros(n, dtype=condensed_data.dtype)
+    row = np.empty(n, dtype=condensed_data.dtype)
+
+    # fill in diagonal value
+    if np.isscalar(diagonal):
+        row[row_idx] = diagonal
+    else:
+        row[row_idx] = diagonal[row_idx]
 
     # elements before diagonal: j < row_idx
     j_before = np.arange(row_idx)

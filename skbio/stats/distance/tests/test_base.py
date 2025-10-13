@@ -806,6 +806,30 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.01, 4.2, 12.0]),
         ] * 2
 
+    def test_get_element_from_condensed(self):
+        # check that it gets diagonal values correct
+        exp = 70
+        obs = self.dm_5x5_cond_diag["c", "c"]
+        self.assertEqual(obs, exp)
+
+        # check non diagonal values
+        exp = 1
+        obs = self.dm_5x5_cond_diag["a", "b"]
+
+    def test_get_row_from_condensed(self):
+        # print('\n', self.dm_5x5_cond_diag.redundant_form(), '\n')
+        exp = np.array([90, 1, 2, 3, 4])
+        obs = self.dm_5x5_cond_diag["a"]
+        npt.assert_equal(obs, exp)
+
+        exp = np.array([1, 80, 5, 6, 7])
+        obs = self.dm_5x5_cond_diag["b"]
+        npt.assert_equal(obs, exp)
+
+        exp = np.array([4, 7, 9, 10, 50])
+        obs = self.dm_5x5_cond_diag["e"]
+        npt.assert_equal(obs, exp)
+
     def test_validate_ids_1d(self):
         with self.assertRaises(PairwiseMatrixError) as e:
             SymmetricMatrix([1, 2, 3], ['a'], condensed=True)
