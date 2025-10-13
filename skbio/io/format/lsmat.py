@@ -17,7 +17,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                     |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.stats.distance.SymmetricMatrix`                    |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -79,7 +81,7 @@ import csv
 
 import numpy as np
 
-from skbio.stats.distance import PairwiseMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrix, SymmetricMatrix
 from skbio.io import create_format, LSMatFormatError
 
 
@@ -107,8 +109,13 @@ def _lsmat_sniffer(fh):
 
 
 @lsmat.reader(PairwiseMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
+def _lsmat_to_pairwise_matrix(fh, delimiter="\t"):
     return _lsmat_to_matrix(PairwiseMatrix, fh, delimiter)
+
+
+@lsmat.reader(SymmetricMatrix)
+def _lsmat_to_symmetric_matrix(fh, delimiter="\t"):
+    return _lsmat_to_matrix(SymmetricMatrix, fh, delimiter)
 
 
 @lsmat.reader(DistanceMatrix)
@@ -117,7 +124,12 @@ def _lsmat_to_distance_matrix(fh, delimiter="\t"):
 
 
 @lsmat.writer(PairwiseMatrix)
-def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter="\t"):
+def _pairwise_matrix_to_lsmat(obj, fh, delimiter="\t"):
+    _matrix_to_lsmat(obj, fh, delimiter)
+
+
+@lsmat.writer(SymmetricMatrix)
+def _symmetric_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
