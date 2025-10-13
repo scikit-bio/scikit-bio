@@ -99,6 +99,10 @@ def _lsmat_sniffer(fh):
             dialect = csv.Sniffer().sniff(header)
             delimiter = dialect.delimiter
 
+            # csv delimiter " " is equivalent to Python's str.split(sep=None)
+            if delimiter == " ":
+                delimiter = None
+
             ids = _parse_header(header, delimiter)
             first_id, _ = next(_parse_data(fh, delimiter), (None, None))
 
