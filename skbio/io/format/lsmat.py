@@ -176,7 +176,8 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
 
         expected_id = ids[row_idx]
         if row_id == expected_id:
-            data[row_idx, :] = np.asarray(row_data, dtype=dtype)
+            data[row_idx, :] = row_data
+            # data[row_idx, :] = np.asarray(row_data, dtype=dtype)
         else:
             raise LSMatFormatError(
                 "Encountered mismatched IDs while parsing the "
