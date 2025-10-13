@@ -69,10 +69,6 @@ class MissingIDError(PairwiseMatrixError):
         self.args = ("The ID '%s' is not in the matrix." % missing_id,)
 
 
-class BaseMatrix(SkbioObject, PlottableMixin):
-    pass
-
-
 class PairwiseMatrix(SkbioObject, PlottableMixin):
     r"""Store pairwise relationships between objects.
 
@@ -219,7 +215,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
-        validate: bool = True,
     ) -> "PairwiseMatrix":
         r"""Create PairwiseMatrix from an iterable given a metric.
 

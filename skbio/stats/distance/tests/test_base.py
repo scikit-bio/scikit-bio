@@ -789,6 +789,8 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             self.dm_3x3_data, ["a", "b", "c"], condensed=True
         )
         self.dm_5x5 = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"))
+        self.dm_5x5_cond = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"), condensed=True)
+        self.dm_5x5_cond_diag = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"), condensed=True, diagonal=[90, 80, 70, 60, 50])
 
         self.dms = [
             self.dm_1x1,
@@ -803,6 +805,11 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.123]),
             np.array([0.01, 4.2, 12.0]),
         ] * 2
+
+    def test_validate_ids_1d(self):
+        with self.assertRaises(PairwiseMatrixError) as e:
+            SymmetricMatrix([1, 2, 3], ['a'], condensed=True)
+        self.assertEqual(str(e.exception), "The number of IDs (1) must match the number of rows/columns in the data (3).")
 
     def test_init_diagonal_1d_none(self):
         # diagonal=None and 1d input should return 0.0
@@ -900,33 +907,90 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         exp = np.array([1, 2, 3])
         npt.assert_equal(obs, exp)
 
-    # def test_subset_to_dataframe(self):
-    #     exp = pd.DataFrame(
-    #         [
-    #             ["b", "a", 5.0],
-    #             ["b", "d", 7.0],
-    #             ["b", "e", 8.0],
-    #             ["d", "a", 4.0],
-    #             ["d", "d", 0.0],
-    #             ["d", "e", 7.0],
-    #         ],
-    #         columns=["i", "j", "value"],
-    #     )
+    def test_subset_to_dataframe(self):
+        exp = pd.DataFrame(
+            [
+                ["b", "a", 1.0],
+                ["b", "d", 6.0],
+                ["b", "e", 7.0],
+                ["d", "a", 3.0],
+                ["d", "d", 0.0],
+                ["d", "e", 10.0],
+            ],
+            columns=["i", "j", "value"],
+        )
 
-    #     obs = self.dm_5x5._subset_to_dataframe(["b", "d"], ["a", "d", "e"])
-    #     pdt.assert_frame_equal(obs, exp)
+        obs = self.dm_5x5._subset_to_dataframe(["b", "d"], ["a", "d", "e"])
+        pdt.assert_frame_equal(obs, exp)
 
-    #     # and the empty edge cases
-    #     exp = pd.DataFrame(
-    #         [], columns=["i", "j", "value"], index=pd.RangeIndex(start=0, stop=0)
-    #     )
+        # and the empty edge cases
+        exp = pd.DataFrame(
+            [], columns=["i", "j", "value"], index=pd.RangeIndex(start=0, stop=0)
+        )
 
-    #     obs = self.dm_5x5._subset_to_dataframe([], ["a", "d", "e"])
-    #     pdt.assert_frame_equal(obs, exp, check_dtype=False)
-    #     obs = self.dm_5x5._subset_to_dataframe(["b", "d"], [])
-    #     pdt.assert_frame_equal(obs, exp, check_dtype=False)
-    #     obs = self.dm_5x5._subset_to_dataframe([], [])
-    #     pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5._subset_to_dataframe([], ["a", "d", "e"])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5._subset_to_dataframe(["b", "d"], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5._subset_to_dataframe([], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+
+    def test_subset_to_dataframe_condensed(self):
+        exp = pd.DataFrame(
+            [
+                ["b", "a", 1.0],
+                ["b", "d", 6.0],
+                ["b", "e", 7.0],
+                ["d", "a", 3.0],
+                ["d", "d", 0.0],
+                ["d", "e", 10.0],
+            ],
+            columns=["i", "j", "value"],
+        )
+
+        obs = self.dm_5x5_cond._subset_to_dataframe(["b", "d"], ["a", "d", "e"])
+        pdt.assert_frame_equal(obs, exp)
+
+        # and the empty edge cases
+        exp = pd.DataFrame(
+            [], columns=["i", "j", "value"], index=pd.RangeIndex(start=0, stop=0)
+        )
+
+        obs = self.dm_5x5_cond._subset_to_dataframe([], ["a", "d", "e"])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5_cond._subset_to_dataframe(["b", "d"], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5_cond._subset_to_dataframe([], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+
+    def test_subset_to_dataframe_condensed_diagonal(self):
+        exp = pd.DataFrame(
+            [
+                ["b", "a", 1.0],
+                ["b", "d", 6.0],
+                ["b", "e", 7.0],
+                ["d", "a", 3.0],
+                ["d", "d", 60.0],
+                ["d", "e", 10.0],
+            ],
+            columns=["i", "j", "value"],
+        )
+
+        obs = self.dm_5x5_cond_diag._subset_to_dataframe(["b", "d"], ["a", "d", "e"])
+
+        pdt.assert_frame_equal(obs, exp)
+
+        # and the empty edge cases
+        exp = pd.DataFrame(
+            [], columns=["i", "j", "value"], index=pd.RangeIndex(start=0, stop=0)
+        )
+
+        obs = self.dm_5x5_cond_diag._subset_to_dataframe([], ["a", "d", "e"])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5_cond_diag._subset_to_dataframe(["b", "d"], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
+        obs = self.dm_5x5_cond_diag._subset_to_dataframe([], [])
+        pdt.assert_frame_equal(obs, exp, check_dtype=False)
 
     # test filtering on condensed forms
     def test_filter_no_filtering(self):
@@ -1090,6 +1154,19 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.123]),
             np.array([0.01, 4.2, 12.0]),
         ] * 2
+
+    def test_validate_diagonal_nonzero(self):
+        with self.assertRaises(DistanceMatrixError) as e:
+            DistanceMatrix([1, 2, 3], diagonal=1)
+        self.assertEqual(str(e.exception), "The diagonal of a DistanceMatrix may only contain zeros.")
+
+    def test_validate_diagonal_list(self):
+        with self.assertRaises(DistanceMatrixError) as e:
+            DistanceMatrix([1, 2, 3], diagonal=[0, 2, 0])
+        self.assertEqual(str(e.exception), "The diagonal of a DistanceMatrix may only contain zeros.")
+
+    def validate_diagonal_good_input(self):
+        dm = DistanceMatrix([1, 2, 3], diagonal=[0, 0, 0])
 
     def test_init_from_condensed_form(self):
         data = [1, 2, 3]
