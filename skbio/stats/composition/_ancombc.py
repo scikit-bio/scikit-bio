@@ -6,18 +6,26 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# This implementation of ANCOM-BC is based on an analysis of the source code
+# from the R package ANCOMBC:
+# - https://github.com/FrederickHuangLin/ANCOMBC
+#
+# Which is licensed under Artistic-2.0:
+# - https://www.bioconductor.org/packages/release/bioc/html/ANCOMBC.html
+#
+# We thank Dr. Huang Lin (@FrederickHuangLin) for his helpful advice.
+# ----------------------------------------------------------------------------
+
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from scipy.optimize import minimize
 from patsy import dmatrix
+
 from skbio.table._tabular import _ingest_table
-from skbio.stats.composition import (
-    _check_composition,
-    _check_metadata,
-    _check_p_adjust,
-    _type_cast_to_float,
-)
+from ._base import _check_composition
+from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
 
 
 def ancombc(
@@ -101,6 +109,7 @@ def ancombc(
     See Also
     --------
     ancom
+    multi_replace
 
     Notes
     -----
@@ -114,7 +123,7 @@ def ancombc(
 
     Examples
     --------
-    >>> from skbio.stats._ancombc import ancombc
+    >>> from skbio.stats.composition import ancombc
     >>> import pandas as pd
 
     Let's load in a DataFrame with six samples and seven features (e.g., these
@@ -138,13 +147,42 @@ def ancombc(
     ...                   'placebo', 'placebo', 'placebo']},
     ...     index=['s1', 's2', 's3', 's4', 's5', 's6'])
 
-    Now run ``ancom`` to determine if there are any features that are
-    significantly different in abundance between the treatment and the placebo
-    groups. The first DataFrame that is returned contains the ANCOM test
-    results, and the second contains the percentile abundance data for each
-    feature in each group.
+    Now run ``ancombc`` to determine if there are any features that are significantly
+    different in abundance between the treatment and the placebo groups.
 
     >>> result = ancombc(table + 1, metadata, 'grouping')
+    >>> result.round(5)
+       FeatureID              Covariate  Log2(FC)       SE         W   pvalue  \
+    0         b1              Intercept   0.71929  0.03350  21.47231  0.00000
+    1         b1  grouping[T.treatment]  -1.18171  0.38489  -3.07024  0.00214
+    2         b2              Intercept   0.70579  0.01785  39.54846  0.00000
+    3         b2  grouping[T.treatment]  -0.53687  0.09653  -5.56153  0.00000
+    4         b3              Intercept   0.06944  0.08654   0.80242  0.42231
+    5         b3  grouping[T.treatment]   0.06816  0.12041   0.56604  0.57136
+    6         b4              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    7         b4  grouping[T.treatment]   0.11309  0.11952   0.94618  0.34406
+    8         b5              Intercept   0.07821  0.06485   1.20602  0.22781
+    9         b5  grouping[T.treatment]   0.00370  0.11492   0.03218  0.97433
+    10        b6              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    11        b6  grouping[T.treatment]  -0.11796  0.07188  -1.64114  0.10077
+    12        b7              Intercept  -0.00218  0.01530  -0.14216  0.88695
+    13        b7  grouping[T.treatment]   0.05232  0.07063   0.74074  0.45885
+    <BLANKLINE>
+         qvalue  Signif
+    0   0.00000    True
+    1   0.01283    True
+    2   0.00000    True
+    3   0.00000    True
+    4   1.00000   False
+    5   1.00000   False
+    6   1.00000   False
+    7   1.00000   False
+    8   1.00000   False
+    9   1.00000   False
+    10  1.00000   False
+    11  0.50384   False
+    12  1.00000   False
+    13  1.00000   False
 
     """
     # Note: A pseudocount should have been added to the table by the user prior to

@@ -14,7 +14,7 @@ import pandas as pd
 from patsy import dmatrix
 
 from skbio.util import get_data_path
-from skbio.stats._ancombc import (
+from skbio.stats.composition._ancombc import (
     _estimate_params,
     _estimate_bias_em,
     _sample_fractions,
