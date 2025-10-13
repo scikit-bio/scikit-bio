@@ -1241,7 +1241,7 @@ class SymmetricMatrix(PairwiseMatrix):
         if diagonal is not None:
             # if it's a single value, it doesn't need to be validated
             if not np.isscalar(diagonal):
-                diagonal = np.asarray(diagonal)
+                diagonal = np.array(diagonal)
                 # if it's a nd.array it needs to be 1d
                 if diagonal.ndim != 1:
                     raise SymmetricMatrixError(
@@ -2276,7 +2276,7 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     in_mat : np.ndarray
         1D condensed form of the matrix.
     reorder_vec : np.ndarray
-        1D list of permutation indexes
+        1D list of permutation indexes.
 
     Returns
     -------
@@ -2312,9 +2312,9 @@ def _get_element_from_condensed(
     condensed_data : np.ndarray
         1-dimensional vector form of the matrix.
     i : int
-        Row index
+        Row index.
     j : int
-        Column index
+        Column index.
     n : int
         Sample size of the square matrix.
     diagonal : float or np.ndarray
