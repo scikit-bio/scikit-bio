@@ -15,7 +15,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                     |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.stats.distance.SymmetricMatrix`                    |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -82,7 +84,7 @@ import h5py
 import numpy as np
 
 from skbio.io import create_format
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")
@@ -116,9 +118,14 @@ def _binary_dm_sniffer(fh):
     return True, {}
 
 
-@binary_dm.reader(DissimilarityMatrix)
-def _binary_dm_to_dissimilarity(fh):
-    return _h5py_mat_to_skbio_mat_stream(DissimilarityMatrix, fh)
+@binary_dm.reader(PairwiseMatrix)
+def _binary_dm_to_pairwise(fh):
+    return _h5py_mat_to_skbio_mat_stream(PairwiseMatrix, fh)
+
+
+@binary_dm.reader(SymmetricMatrix)
+def _binary_dm_to_symmetric(fh):
+    return _h5py_mat_to_skbio_mat_stream(SymmetricMatrix, fh)
 
 
 @binary_dm.reader(DistanceMatrix)
@@ -126,8 +133,13 @@ def _binary_dm_to_distance(fh):
     return _h5py_mat_to_skbio_mat_stream(DistanceMatrix, fh)
 
 
-@binary_dm.writer(DissimilarityMatrix)
-def _dissimilarity_to_binary_dm(obj, fh):
+@binary_dm.writer(PairwiseMatrix)
+def _pairwise_to_binary_dm(obj, fh):
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
+
+
+@binary_dm.writer(SymmetricMatrix)
+def _symmetric_to_binary_dm(obj, fh):
     return _skbio_mat_to_h5py_mat_stream(obj, fh)
 
 

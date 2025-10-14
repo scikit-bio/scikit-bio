@@ -34,6 +34,7 @@ from ._c_me import (
     _bal_avgdist_insert_p,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
+from skbio.stats.distance import DistanceMatrix
 
 
 def gme(dm, neg_as_zero=True):
@@ -145,6 +146,10 @@ def gme(dm, neg_as_zero=True):
     """
     _validate_dm(dm)
 
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
+
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
 
@@ -247,6 +252,10 @@ def bme(dm, neg_as_zero=True, **kwargs):
 
     """
     _validate_dm(dm)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data, **kwargs)
@@ -370,6 +379,10 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     """
     _validate_dm_and_tree(dm, tree)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # generate tree array
     taxa = dm.ids

@@ -14,7 +14,7 @@ from warnings import catch_warnings
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.distance import DissimilarityMatrixError
+from skbio.stats.distance import PairwiseMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.stats.ordination._principal_coordinate_analysis import _fsvd
 from skbio.util import (get_data_path, assert_ordination_results_equal,
@@ -192,7 +192,7 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True)
 
     def test_invalid_input(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             pcoa([[1, 2], [3, 4]])
 
     def test_warn_neg_eigval(self):

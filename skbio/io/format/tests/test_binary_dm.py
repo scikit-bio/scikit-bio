@@ -16,6 +16,7 @@ import numpy.testing as npt
 import h5py
 
 from skbio import DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix
 from skbio.io import read as io_read
 from skbio.io.format.binary_dm import (_h5py_mat_to_skbio_mat,
                                        _skbio_mat_to_h5py_mat, _get_header,
@@ -81,8 +82,21 @@ class BinaryMatrixTests(unittest.TestCase):
         self.assertEqual(obs, exp)
 
     def test_io_h5py_mat_to_skbio_mat(self):
+        # test DistanceMatrix
         exp = DistanceMatrix(self.mat, self.ids)
         obs = io_read(self.basic_fname,into=DistanceMatrix)
+        self.assertEqual(obs, exp)
+
+    def test_io_h5py_mat_to_skbio_mat_pairwise(self):
+        # test PairwiseMatrix
+        exp = PairwiseMatrix(self.mat, self.ids)
+        obs = io_read(self.basic_fname,into=PairwiseMatrix)
+        self.assertEqual(obs, exp)
+
+    def test_io_h5py_mat_to_skbio_mat_symmetric(self):
+        # test SymmetricMatrix
+        exp = SymmetricMatrix(self.mat, self.ids)
+        obs = io_read(self.basic_fname,into=SymmetricMatrix)
         self.assertEqual(obs, exp)
 
     def test_skbio_mat_to_h5py_mat(self):
@@ -98,6 +112,22 @@ class BinaryMatrixTests(unittest.TestCase):
         mat.write(self.rw_fname,format='binary_dm')
         exp = mat
         obs = io_read(self.rw_fname,into=DistanceMatrix)
+        self.assertEqual(obs, exp)
+
+    def test_io_mat_to_h5py_mat_symmetric(self):
+        # SymmetricMatrix
+        mat = SymmetricMatrix(self.mat, self.ids)
+        mat.write(self.rw_fname,format='binary_dm')
+        exp = mat
+        obs = io_read(self.rw_fname,into=SymmetricMatrix)
+        self.assertEqual(obs, exp)
+
+    def test_io_mat_to_h5py_mat_pairwise(self):
+        # PairwiseMatrix
+        mat = PairwiseMatrix(self.mat, self.ids)
+        mat.write(self.rw_fname,format='binary_dm')
+        exp = mat
+        obs = io_read(self.rw_fname,into=PairwiseMatrix)
         self.assertEqual(obs, exp)
 
 
