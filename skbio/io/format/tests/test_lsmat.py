@@ -34,7 +34,7 @@ class LSMatTestData(TestCase):
             self.lsmat_2x2_fh,
             self.lsmat_2x2_asym_fh,
             self.lsmat_3x3_fh,
-            self.lsmat_3x3_whitespace_fh
+            self.lsmat_3x3_whitespace_fh,
         ]
 
         self.empty_fh = io.StringIO()
@@ -231,6 +231,10 @@ class SnifferTests(LSMatTestData):
     def test_match_csv(self):
         self.assertEqual(_lsmat_sniffer(self.lsmat_3x3_csv_fh),
                          (True, {'delimiter': ','}))
+
+    def test_match_fw(self):
+        self.assertEqual(_lsmat_sniffer(self.lsmat_3x3_fw_fh),
+                         (True, {'delimiter': None}))
 
     def test_no_match(self):
         for fh in (self.empty_fh, self.invalid_2_fh, self.invalid_5_fh,

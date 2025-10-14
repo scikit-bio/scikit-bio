@@ -153,17 +153,25 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     header = _find_header(fh)
     if header is None:
         raise LSMatFormatError(
-            "Could not find a header line containing IDs in the "
-            "dissimilarity matrix file. Please verify that the file is "
-            "not empty."
+            "Could not find a header line containing IDs in the matrix file. Please "
+            "verify that the file is not empty."
         )
 
     ids = _parse_header(header, delimiter)
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=dtype)
 
+    # The default separator of `str.split` (consecutive whitespaces) is equivalent to
+    # " " in np.fromstring.
+    sep = delimiter if delimiter else " "
+
     row_idx = -1
-    for row_idx, (row_id, row_data) in enumerate(_parse_data(fh, delimiter)):
+    for line in fh:
+        line = line.strip()
+        if not line:
+            continue
+
+        row_idx += 1
         if row_idx >= num_ids:
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
@@ -171,25 +179,28 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
                 "Encountered extra row(s) without corresponding IDs in the header."
             )
 
-        num_vals = len(row_data)
-        if num_vals != num_ids:
+        row_id, row_data = line.split(delimiter, 1)
+        if row_id.rstrip() != ids[row_idx]:
             raise LSMatFormatError(
-                "There are %d value(s) in row %d, which is not equal to the "
-                "number of ID(s) in the header (%d)." % (num_vals, row_idx + 1, num_ids)
+                "Encountered mismatched IDs while parsing the matrix file. Found %r "
+                "but expected %r. Please ensure that the IDs match between the matrix "
+                "header (first row) and the row labels (first column)."
+                % (row_id.rstrip(), ids[row_idx])
             )
 
-        expected_id = ids[row_idx]
-        if row_id == expected_id:
-            # TODO: np.fromstring may be more efficient
-            data[row_idx, :] = row_data
-        else:
+        # np.fromstring is more efficient that str.split then float
+        row_data = np.fromstring(row_data, dtype=dtype, sep=sep)
+
+        # The code `data[row_idx, :] = row_data` will raise a ValueError if length
+        # doesn't match. However there is an exception: when row_data contains only one
+        # element, it will be broadcasted to the entire data[row_idx, :]. Therefore, an
+        # explicit check appears to be necessary.
+        if row_data.size != num_ids:
             raise LSMatFormatError(
-                "Encountered mismatched IDs while parsing the "
-                "dissimilarity matrix file. Found %r but expected "
-                "%r. Please ensure that the IDs match between the "
-                "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (str(row_id), str(expected_id))
+                "There are %d value(s) in row %d, which is not equal to the number of "
+                "ID(s) in the header (%d)." % (row_data.size, row_idx + 1, num_ids)
             )
+        data[row_idx, :] = row_data
 
     if row_idx != num_ids - 1:
         raise LSMatFormatError(
