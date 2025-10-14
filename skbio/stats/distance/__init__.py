@@ -15,26 +15,26 @@ more distance matrices using the Mantel test).
 Data structures
 ---------------
 
-This package provides two matrix classes, `DissimilarityMatrix` and
-`DistanceMatrix`. Both classes can store measures of difference/distinction
-between objects. A dissimilarity/distance matrix includes both a matrix of
-dissimilarities/distances (floats) between objects, as well as unique IDs
+This package provides three matrix classes, `PairwiseMatrix`, `SymmetricMatrix`, and
+`DistanceMatrix`. All three classes can store measures of difference/distinction
+between objects. A pairwise/symmetric/distance matrix includes both a matrix of
+pairwise relationships/distances (floats) between objects, as well as unique IDs
 (object labels; strings) identifying each object in the matrix.
 
-`DissimilarityMatrix` can be used to store measures of dissimilarity between
-objects, and does not require that the dissimilarities are symmetric (e.g.,
+`PairwiseMatrix` can be used to store measures of relationships between
+objects, and does not require that the relationships are symmetric (e.g.,
 dissimilarities obtained using the *Gain in PD* measure [1]_).
-`DissimilarityMatrix` is a more general container to store differences than
-`DistanceMatrix`.
+`PairwiseMatrix` is a more general container to store differences than
+`SymmetricMatrix` or `DistanceMatrix`.
 
 `DistanceMatrix` has the additional requirement that the differences it
 stores are symmetric (e.g., Euclidean or Hamming distances).
 
-.. note:: `DissimilarityMatrix` can be used to store distances, but it is
+.. note:: `PairwiseMatrix` can be used to store distances, but it is
    recommended to use `DistanceMatrix` to store this type of data as it
-   provides an additional check for symmetry. A distance matrix *is a*
-   dissimilarity matrix; this is modeled in the class design by having
-   `DistanceMatrix` subclass `DissimilarityMatrix`.
+   provides additional checks for symmetry and hollowness. A distance matrix *is a*
+   pairwise matrix; this is modeled in the class design by having
+   `DistanceMatrix` subclass `PairwiseMatrix`.
 
 Classes
 ^^^^^^^
@@ -42,7 +42,8 @@ Classes
 .. autosummary::
    :toctree:
 
-   DissimilarityMatrix
+   PairwiseMatrix
+   SymmetricMatrix
    DistanceMatrix
 
 Functions
@@ -58,7 +59,8 @@ Exceptions
 
 .. autosummary::
 
-   DissimilarityMatrixError
+   PairwiseMatrixError
+   SymmetricMatrixError
    DistanceMatrixError
    MissingIDError
 
@@ -167,7 +169,7 @@ Data:
 >>> dm_from_np == dm
 True
 
-IDs may be omitted when constructing a dissimilarity/distance matrix.
+IDs may be omitted when constructing a pairwise/symmetric/distance matrix.
 Monotonically-increasing integers (cast as strings) will be automatically used:
 
 >>> dm = DistanceMatrix(data)
@@ -192,10 +194,14 @@ References
 # ----------------------------------------------------------------------------
 
 from ._base import (
+    PairwiseMatrixError,
     DissimilarityMatrixError,
+    SymmetricMatrixError,
     DistanceMatrixError,
     MissingIDError,
+    PairwiseMatrix,
     DissimilarityMatrix,
+    SymmetricMatrix,
     DistanceMatrix,
     randdm,
 )
@@ -206,10 +212,14 @@ from ._mantel import mantel, pwmantel
 from ._permdisp import permdisp
 
 __all__ = [
+    "PairwiseMatrixError",
     "DissimilarityMatrixError",
+    "SymmetricMatrixError",
     "DistanceMatrixError",
     "MissingIDError",
+    "PairwiseMatrix",
     "DissimilarityMatrix",
+    "SymmetricMatrix",
     "DistanceMatrix",
     "randdm",
     "anosim",

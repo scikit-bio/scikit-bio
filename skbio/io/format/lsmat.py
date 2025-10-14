@@ -17,7 +17,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                     |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.stats.distance.SymmetricMatrix`                    |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -79,7 +81,7 @@ import csv
 
 import numpy as np
 
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrix, SymmetricMatrix
 from skbio.io import create_format, LSMatFormatError
 
 
@@ -106,22 +108,34 @@ def _lsmat_sniffer(fh):
     return False, {}
 
 
-@lsmat.reader(DissimilarityMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t", cls=None):
+@lsmat.reader(PairwiseMatrix)
+def _lsmat_to_pairwise_matrix(fh, cls=None, delimiter="\t"):
     if cls is None:
-        cls = DissimilarityMatrix
+        cls = PairwiseMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter)
+
+
+@lsmat.reader(SymmetricMatrix)
+def _lsmat_to_symmetric_matrix(fh, cls=None, delimiter="\t"):
+    if cls is None:
+        cls = SymmetricMatrix
     return _lsmat_to_matrix(cls, fh, delimiter)
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, delimiter="\t", cls=None):
+def _lsmat_to_distance_matrix(fh, cls=None, delimiter="\t"):
     if cls is None:
         cls = DistanceMatrix
     return _lsmat_to_matrix(cls, fh, delimiter)
 
 
-@lsmat.writer(DissimilarityMatrix)
-def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter="\t"):
+@lsmat.writer(PairwiseMatrix)
+def _pairwise_matrix_to_lsmat(obj, fh, delimiter="\t"):
+    _matrix_to_lsmat(obj, fh, delimiter)
+
+
+@lsmat.writer(SymmetricMatrix)
+def _symmetric_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 

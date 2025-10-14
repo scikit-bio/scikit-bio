@@ -166,6 +166,11 @@ def permanova(
     """
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
+
+    # convert to redundant form for now
+    if distmat._flags["CONDENSED"]:
+        distmat = DistanceMatrix(distmat)
+
     sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
