@@ -15,7 +15,8 @@ from skbio import DistanceMatrix
 from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
     _lsmat_to_pairwise_matrix, _lsmat_to_distance_matrix, _lsmat_to_symmetric_matrix,
-    _pairwise_matrix_to_lsmat, _distance_matrix_to_lsmat, _symmetric_matrix_to_lsmat, _lsmat_sniffer)
+    _pairwise_matrix_to_lsmat, _distance_matrix_to_lsmat, _symmetric_matrix_to_lsmat,
+    _lsmat_sniffer)
 from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix, DistanceMatrixError
 
 

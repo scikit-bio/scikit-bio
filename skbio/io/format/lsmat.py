@@ -117,12 +117,12 @@ def _lsmat_sniffer(fh):
 
 
 @lsmat.reader(PairwiseMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t", dtype="float64"):
+def _lsmat_to_pairwise_matrix(fh, delimiter="\t", dtype="float64"):
     return _lsmat_to_matrix(PairwiseMatrix, fh, delimiter, dtype)
 
 
 @lsmat.reader(SymmetricMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t", dtype="float64"):
+def _lsmat_to_symmetric_matrix(fh, delimiter="\t", dtype="float64"):
     return _lsmat_to_matrix(SymmetricMatrix, fh, delimiter, dtype)
 
 
