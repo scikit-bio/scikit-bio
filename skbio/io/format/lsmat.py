@@ -107,13 +107,17 @@ def _lsmat_sniffer(fh):
 
 
 @lsmat.reader(DissimilarityMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
+def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t", cls=None):
+    if cls is None:
+        cls = DissimilarityMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter)
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
+def _lsmat_to_distance_matrix(fh, delimiter="\t", cls=None):
+    if cls is None:
+        cls = DistanceMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter)
 
 
 @lsmat.writer(DissimilarityMatrix)
@@ -156,7 +160,7 @@ def _lsmat_to_matrix(cls, fh, delimiter):
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in " "the header."
+                "Encountered extra row(s) without corresponding IDs in the header."
             )
 
         num_vals = len(row_data)
