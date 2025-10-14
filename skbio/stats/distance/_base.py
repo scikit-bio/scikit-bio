@@ -163,10 +163,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self._data = self._init_data(data)
         self._flags = self._init_flags()
 
-    def _normalize_input(self, data, ids):
+    def _normalize_input(self, data, ids, diagonal=None):
         """Get input into standard numpy array format."""
         if isinstance(data, PairwiseMatrix):
             ids = data.ids if ids is None else ids
+            diagonal = data.diagonal if diagonal is None else diagonal
             data = data.data
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
@@ -194,7 +195,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # ndarray.
         assert isinstance(data, np.ndarray)
         data_: np.ndarray = data
-        return data_, ids
+        return data_, ids, diagonal
 
     def _generate_ids(self, data):
         """Generate ids if none provided."""
@@ -1126,7 +1127,7 @@ class SymmetricMatrix(PairwiseMatrix):
         condensed: bool = False,
         diagonal: Union[float, np.ndarray] = None,
     ):
-        data, ids = self._normalize_input(data, ids)
+        data, ids, diagonal = self._normalize_input(data, ids, diagonal)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1804,7 +1805,7 @@ class DistanceMatrix(SymmetricMatrix):
         condensed: bool = False,
         diagonal: Union[float, np.ndarray] = None,
     ):
-        data, ids = self._normalize_input(data, ids)
+        data, ids, diagonal = self._normalize_input(data, ids, diagonal)
 
         if ids is None:
             ids = self._generate_ids(data)
