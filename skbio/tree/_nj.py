@@ -11,6 +11,7 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
+from skbio.stats.distance import DistanceMatrix
 from ._c_nj import nj_minq_cy
 from ._utils import _validate_dm
 
@@ -143,6 +144,10 @@ def nj(
 
     _validate_dm(dm)
     taxa = list(dm.ids)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     dm_ = dm.data
     if not inplace:

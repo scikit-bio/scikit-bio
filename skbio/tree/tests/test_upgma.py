@@ -18,6 +18,7 @@ class UpgmaTests(TestCase):
                 [8,  9,  7,  3,  0]]
         ids = list('abcde')
         self.dm = DistanceMatrix(data, ids)
+        self.dm_condensed = DistanceMatrix(self.dm, condensed=True)
         # Note that upgma and wpgma have different edge
         # estimations, even with small examples.
         self.expected_str_upgma = (
@@ -31,6 +32,11 @@ class UpgmaTests(TestCase):
 
     def test_upgma_dm(self):
         actual_TreeNode = upgma(self.dm)
+        self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
+            self.expected_TreeNode_upgma), 0.0, places=10)
+
+    def test_upgma_dm_condensed(self):
+        actual_TreeNode = upgma(self.dm_condensed)
         self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected_TreeNode_upgma), 0.0, places=10)
 
