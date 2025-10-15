@@ -3,38 +3,30 @@ r"""Distance matrix-based statistics (:mod:`skbio.stats.distance`)
 
 .. currentmodule:: skbio.stats.distance
 
-This module provides functionality for serializing, deserializing, and
-manipulating dissimilarity and distance matrices in memory. It also contains
-various statistical methods that operate on distance matrices, often relating
-distances (e.g., community distances) to categorical and/or continuous
-variables of interest (e.g., gender or age). Methods are also provided for
-comparing distance matrices (e.g., computing the correlation between two or
-more distance matrices using the Mantel test).
+This module provides functionality for storing, manipulating, and analyzing pairwise
+relationships, especially distances, between biological objects. It contains various
+statistical methods that operate on distance matrices, often relating distances to
+categorical and/or numeric variables of interest (e.g., gender and/or age). Methods
+are also provided for comparing distance matrices (e.g., computing the correlation
+between two or more distance matrices using the Mantel test).
 
 
 Data structures
 ---------------
 
-This package provides three matrix classes, `PairwiseMatrix`, `SymmetricMatrix`, and
-`DistanceMatrix`. All three classes can store measures of difference/distinction
-between objects. A pairwise/symmetric/distance matrix includes both a matrix of
-pairwise relationships/distances (floats) between objects, as well as unique IDs
-(object labels; strings) identifying each object in the matrix.
+This package provides three hierarchical matrix classes: ``PairwiseMatrix`` >
+``SymmetricMatrix`` > ``DistanceMatrix``, to store measures of pairwise relationships
+between objects. A matrix object stores a 2-D float array of pairwise measures and a
+tuple of unique string labels identifying each object in the matrix.
 
-`PairwiseMatrix` can be used to store measures of relationships between
-objects, and does not require that the relationships are symmetric (e.g.,
-dissimilarities obtained using the *Gain in PD* measure [1]_).
-`PairwiseMatrix` is a more general container to store differences than
-`SymmetricMatrix` or `DistanceMatrix`.
-
-`DistanceMatrix` has the additional requirement that the differences it
-stores are symmetric (e.g., Euclidean or Hamming distances).
-
-.. note:: `PairwiseMatrix` can be used to store distances, but it is
-   recommended to use `DistanceMatrix` to store this type of data as it
-   provides additional checks for symmetry and hollowness. A distance matrix *is a*
-   pairwise matrix; this is modeled in the class design by having
-   `DistanceMatrix` subclass `PairwiseMatrix`.
+``PairwiseMatrix`` can be used to store any measures of pairwise relationships. Its
+subclass ``SymmetricMatrix`` requires that the relationships are **symmetric** (i.e.,
+:math:`D(i, j) = D(j, i)`). ``DistanceMatrix``, the most specific class of the three,
+further requires that the matrix is **hollow** (i.e., :math:`D(i, i) = 0`), usually
+representing the difference/distinction between objects (e.g., Euclidean or Hamming
+distances). However, ``DistanceMatrix`` does not enforce non-negativity or triangle
+inequality, two properties of a metric distance, therefore it is suitable for more
+general measures (e.g., Bray-Curtis dissimilarity).
 
 Classes
 ^^^^^^^
@@ -67,9 +59,6 @@ Exceptions
 
 Distance-based statistics
 -------------------------
-
-In addition to the data structures described above, this package provides the
-following distance-based statistical methods.
 
 Categorical Variable Stats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,13 +164,6 @@ Monotonically-increasing integers (cast as strings) will be automatically used:
 >>> dm = DistanceMatrix(data)
 >>> dm.ids
 ('0', '1', '2')
-
-
-References
-----------
-.. [1] Faith, D. P. (1992). "Conservation evaluation and phylogenetic
-   diversity".
-
 
 """  # noqa: D407, D205, D415
 
