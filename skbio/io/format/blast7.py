@@ -340,7 +340,7 @@ def _blast7_sniffer(fh):
 
 
 @blast7.reader(pd.DataFrame)
-def _blast7_to_data_frame(fh):
+def _blast7_to_data_frame(fh, cls=None):
     line_num = 0
     columns = None
     skiprows = []
@@ -380,7 +380,7 @@ def _blast7_to_data_frame(fh):
         fh,
         columns,
         BLAST7FormatError,
-        "Number of fields (%r) does not equal number" " of data columns (%r).",
+        "Number of fields (%r) does not equal number of data columns (%r).",
         comment="#",
         skiprows=skiprows,
     )

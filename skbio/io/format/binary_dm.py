@@ -119,18 +119,24 @@ def _binary_dm_sniffer(fh):
 
 
 @binary_dm.reader(PairwiseMatrix)
-def _binary_dm_to_pairwise(fh):
-    return _h5py_mat_to_skbio_mat_stream(PairwiseMatrix, fh)
+def _binary_dm_to_pairwise(fh, cls=None):
+    if cls is None:
+        cls = PairwiseMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
 
 
 @binary_dm.reader(SymmetricMatrix)
-def _binary_dm_to_symmetric(fh):
-    return _h5py_mat_to_skbio_mat_stream(SymmetricMatrix, fh)
+def _binary_dm_to_symmetric(fh, cls=None):
+    if cls is None:
+        cls = SymmetricMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
 
 
 @binary_dm.reader(DistanceMatrix)
-def _binary_dm_to_distance(fh):
-    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix, fh)
+def _binary_dm_to_distance(fh, cls=None):
+    if cls is None:
+        cls = DistanceMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
 
 
 @binary_dm.writer(PairwiseMatrix)
