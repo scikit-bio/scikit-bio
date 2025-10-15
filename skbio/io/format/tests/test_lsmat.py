@@ -9,11 +9,14 @@
 import io
 from unittest import TestCase, main
 
+import numpy as np
+
 from skbio import DistanceMatrix
 from skbio.io import LSMatFormatError
 from skbio.io.format.lsmat import (
     _lsmat_to_pairwise_matrix, _lsmat_to_distance_matrix, _lsmat_to_symmetric_matrix,
-    _pairwise_matrix_to_lsmat, _distance_matrix_to_lsmat, _symmetric_matrix_to_lsmat, _lsmat_sniffer)
+    _pairwise_matrix_to_lsmat, _distance_matrix_to_lsmat, _symmetric_matrix_to_lsmat,
+    _lsmat_sniffer)
 from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix, DistanceMatrixError
 
 
@@ -32,7 +35,7 @@ class LSMatTestData(TestCase):
             self.lsmat_2x2_fh,
             self.lsmat_2x2_asym_fh,
             self.lsmat_3x3_fh,
-            self.lsmat_3x3_whitespace_fh
+            self.lsmat_3x3_whitespace_fh,
         ]
 
         self.empty_fh = io.StringIO()
@@ -135,6 +138,37 @@ class PairwiseAndDistanceMatrixReaderWriterTests(LSMatTestData):
             self.assertEqual(obs, exp)
             self.assertIsInstance(obs, cls)
 
+    def test_read_dtype(self):
+        fn = _lsmat_to_distance_matrix
+        fh = self.lsmat_3x3_fw_fh
+        data = self.lsmat_3x3_data
+
+        # float64 (default)
+        exp = DistanceMatrix(data, ['a', 'b', 'c'])
+        fh.seek(0)
+        obs = fn(fh, delimiter=None)
+        self.assertEqual(obs.dtype, np.float64)
+        self.assertEqual(obs, exp)
+
+        for dtype in (None, float, np.float64, "float64"):
+            fh.seek(0)
+            obs = fn(fh, delimiter=None, dtype=dtype)
+            self.assertEqual(obs.dtype, np.float64)
+            self.assertEqual(obs, exp)
+
+        # float32
+        exp = DistanceMatrix(np.asarray(data, dtype="float32"), ['a', 'b', 'c'])
+        for dtype in (np.float32, "float32"):
+            fh.seek(0)
+            obs = fn(fh, delimiter=None, dtype=dtype)
+            self.assertEqual(obs.dtype, np.float32)
+            self.assertEqual(obs, exp)
+
+        # invalid data type
+        for dtype in ("xyz", int, "float16", "uint8", np.float16):
+            fh.seek(0)
+            self.assertRaises(TypeError, fn, fh, delimiter=None, dtype=dtype)
+
     def test_read_invalid_files(self):
         for fn in _lsmat_to_pairwise_matrix, _lsmat_to_distance_matrix, _lsmat_to_symmetric_matrix:
             for invalid_fh, error_msg_regexp in self.invalid_fhs:
@@ -214,6 +248,10 @@ class SnifferTests(LSMatTestData):
     def test_match_csv(self):
         self.assertEqual(_lsmat_sniffer(self.lsmat_3x3_csv_fh),
                          (True, {'delimiter': ','}))
+
+    def test_match_fw(self):
+        self.assertEqual(_lsmat_sniffer(self.lsmat_3x3_fw_fh),
+                         (True, {'delimiter': None}))
 
     def test_no_match(self):
         for fh in (self.empty_fh, self.invalid_2_fh, self.invalid_5_fh,

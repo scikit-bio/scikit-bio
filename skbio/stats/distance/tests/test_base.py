@@ -836,24 +836,30 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(str(e.exception), "The number of IDs (1) must match the number of rows/columns in the data (3).")
 
     def test_init_diagonal_1d_none(self):
-        # diagonal=None and 1d input should return 0.0
+        # diagonal=None and 1d input should return None, because the underlying data structure is redundant
         sm = SymmetricMatrix([1, 2, 3])
         obs = sm.diagonal
-        exp = 0.0
+        exp = None
         self.assertEqual(obs, exp)
 
     def test_init_diagonal_2d_zero_trace(self):
-        # diagonal=None and 2d input should return 0.0 if diagonal of input is all 0's
+        # diagonal=None and 2d input should return None because it is redundant
         sm = SymmetricMatrix([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
         obs = sm.diagonal
-        exp = 0.0
+        exp = None
         self.assertEqual(obs, exp)
 
     def test_init_diagonal_2d_nonzero_trace(self):
-        # diagonal=None and 2d input should return the diagonal if it contains non-zeros
+        # diagonal=None and 2d input should return None if it contains non-zeros, because the underlying data structure is redundant
         sm = SymmetricMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
         obs = sm.diagonal
+        exp = None
+        self.assertEqual(obs, exp)
+
+    def test_init_diagonal_condensed(self):
+        sm = SymmetricMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]], condensed=True)
         exp = np.array([1, 3, 5])
+        obs = sm.diagonal
         npt.assert_equal(obs, exp)
 
     def test_init_diagonal_given_scalar(self):

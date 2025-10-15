@@ -81,7 +81,7 @@ References
 # ----------------------------------------------------------------------------
 
 import h5py
-from numpy import array as np_array
+import numpy as np
 
 from skbio.io import create_format
 from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix, DistanceMatrix
@@ -158,6 +158,7 @@ def _h5py_mat_to_skbio_mat(cls, f):
     mat = f.get("matrix")
     if mat is None:
         mat = f.get("matrix:0")
+    mat = np.asarray(mat)
     dm = cls(mat, _parse_ids(f["order"]))
     return dm
 
@@ -171,7 +172,7 @@ def _skbio_mat_to_h5py_mat(obj, f):
     _set_header(f)
 
     b_ids = [x.encode("utf-8") for x in obj.ids]
-    np_ids = np_array(b_ids)
+    np_ids = np.array(b_ids)
     f.create_dataset("order", data=np_ids)
     f.create_dataset("matrix", data=obj.data)
 
@@ -215,5 +216,5 @@ def _passthrough_decoder(x):
 
 def _set_header(f):
     """Set format spec header information."""
-    f.create_dataset("format", data=np_array([b"BDSM"]))
-    f.create_dataset("version", data=np_array([b"2020.12"]))
+    f.create_dataset("format", data=np.array([b"BDSM"]))
+    f.create_dataset("version", data=np.array([b"2020.12"]))

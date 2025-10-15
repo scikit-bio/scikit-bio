@@ -44,25 +44,30 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PairwiseMatrixError(Exception):
-    """General error for dissimilarity matrix validation failures."""
+    r"""General error for pairwise matrix validation failures.
+
+    .. versionchanged:: 0.7.1
+        Renamed from ``DissimilarityMatrixError``. The old name is kept as an alias.
+
+    """
 
     pass
 
 
 class SymmetricMatrixError(PairwiseMatrixError):
-    """General error for symmetric matrix validation failures."""
+    r"""General error for symmetric matrix validation failures."""
 
     pass
 
 
 class DistanceMatrixError(SymmetricMatrixError):
-    """General error for distance matrix validation failures."""
+    r"""General error for distance matrix validation failures."""
 
     pass
 
 
 class MissingIDError(PairwiseMatrixError):
-    """Error for ID lookup that doesn't exist in the pairwise matrix."""
+    r"""Error for ID lookup that doesn't exist in the pairwise matrix."""
 
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
@@ -72,37 +77,34 @@ class MissingIDError(PairwiseMatrixError):
 class PairwiseMatrix(SkbioObject, PlottableMixin):
     r"""Store pairwise relationships between objects.
 
-    A `PairwiseMatrix` instance stores a square, two-dimensional
-    matrix of relationships between objects. Objects could be, for example,
-    samples or DNA sequences. A sequence of IDs accompanies the
-    data.
+    A ``PairwiseMatrix`` object stores a square, two-dimensional matrix of
+    relationships between objects. Objects could be, for example, biological samples
+    or DNA sequences. A sequence of IDs accompanies the data.
 
-    Methods are provided to load and save pairwise matrices from/to disk,
-    as well as perform common operations such as extracting values
-    based on object ID. Additionally, the
-    :meth:`plot` method provides
-    convenient built-in plotting functionality.
+    Methods are provided to load and save pairwise matrices from/to disk, as well as
+    perform common operations such as extracting values based on object ID.
+    Additionally, the :meth:`plot` method provides convenient built-in plotting
+    functionality.
+
+    .. versionchanged:: 0.7.1
+        Renamed from ``DissimilarityMatrix`` to better reflect the nature of the matrix
+        data. The old name ``DissimilarityMatrix`` is kept as an alias.
 
     Parameters
     ----------
-    data : array_like or PairwiseMatrix
-        Square, two-dimensional ``numpy.ndarray`` of pairwise relationships
-        (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray`` or a one-dimensional vector of pairwise relationships
-        (floats), as defined by `scipy.spatial.distance.squareform
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squareform.html>`_.
-        Can instead be a `PairwiseMatrix` (or subclass) instance, in which case the
-        instance's data will be used. Data will be converted to a float ``dtype`` if
-        necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
-        float ``dtype``.
+    data : 1-D or 2-D array_like, or PairwiseMatrix
+        A square 2-D array of pairwise relationships between objects, or a 1-D array
+        representing its condensed form, with the diagonal defaulting to zero. Can
+        instead be an instance of ``PairwiseMatrix`` or its subclass, in which case its
+        data and IDs will be directly used.
     ids : sequence of str, optional
-        Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`. If ``None`` (default), IDs will be
-        monotonically-increasing integers cast as strings, with numbering
-        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+        IDs of the objects. Must match the number of rows/columns in ``data``. If None
+        (default) and ``data`` does not contain IDs, IDs will be
+        monotonically-increasing integers cast as strings, starting from zero (i.e.,
+        '0', '1', '2', '3', ...).
     validate : bool, optional
-        If `validate` is ``True`` (default) and data is not a
-        `PairwiseMatrix` object, the input data will be validated.
+        If True (default) and ``data`` is not a ``PairwiseMatrix`` object, the input
+        data will be validated.
 
     See Also
     --------
@@ -112,21 +114,22 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     Notes
     -----
-    The values are stored in redundant (square-form) format [1]_.
+    The matrix data are stored in redundant (square-form) format. If the input ``data``
+    is already a square NumPy array of float32 or float64 type, it will be directly
+    used without making a copy. If ``data`` is in condensed (vector-form) format, the
+    diagonal will be set as zero. The definitions of redundant/condensed formats follow
+    SciPy's :func:`~scipy.spatial.distance.squareform`.
 
     The data are not checked for symmetry or hollowness, nor guaranteed/assumed to be
-    symmetric or hollow.
-
-    References
-    ----------
-    .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+    symmetric or hollow. Refer to ``SymmetricMatrix`` or ``DistanceMatrix`` instead if
+    such checks are expected.
 
     """
 
     default_write_format: ClassVar[str] = "lsmat"
     # Used in __str__
     # TODO: decide on what to call a matrix element here
-    _matrix_element_name: ClassVar[str] = "dissimilarity"
+    _matrix_element_name: ClassVar[str] = "relationship"
 
     read = Read()
     write = Write()
@@ -142,7 +145,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
     ) -> None:
-        data, ids = self._normalize_input(data, ids)
+        data, ids, _ = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
@@ -165,9 +168,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     def _normalize_input(self, data, ids, diagonal=None):
         """Get input into standard numpy array format."""
-        if isinstance(data, PairwiseMatrix):
+        if isinstance(data, SymmetricMatrix):
             ids = data.ids if ids is None else ids
             diagonal = data.diagonal if diagonal is None else diagonal
+            data = data.data
+        elif isinstance(data, PairwiseMatrix):
+            ids = data.ids if ids is None else ids
             data = data.data
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
@@ -221,34 +227,31 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
     ) -> "PairwiseMatrix":
-        r"""Create PairwiseMatrix from an iterable given a metric.
+        r"""Create a pairwise matrix from an iterable of objects given a metric.
 
         Parameters
         ----------
         iterable : iterable
-            Iterable containing objects to compute pairwise relationships on.
+            Objects to compute pairwise relationships on.
         metric : callable
-            A function that takes two arguments and returns a float
-            representing the relationship between the two arguments.
-        key : callable or metadata key, optional
-            A function that takes one argument and returns a string
-            representing the id of the element in the pairwise matrix.
-            Alternatively, a key to a `metadata` property if it exists for
-            each element in the `iterable`. If None, then default ids will be
-            used.
-        keys : iterable, optional
-            An iterable of the same length as `iterable`. Each element will be
-            used as the respective key.
+            A function that takes two arguments and returns a float representing the
+            relationship between the two objects.
+        key : callable or str, optional
+            A function that takes one argument and returns a string representing the ID
+            of the object. Alternatively, a key to the ``metadata`` property if exists
+            for each object in the ``iterable``. If None, the default IDs will be used.
+        keys : iterable of str, optional
+            IDs of the objects. Must be the same length as ``iterable``.
 
         Returns
         -------
         PairwiseMatrix
-            The `metric` applied to all pairwise elements in the `iterable`.
+            The ``metric`` applied to all pairwise elements in the ``iterable``.
 
         Raises
         ------
         ValueError
-            If `key` and `keys` are both provided.
+            If ``key`` and ``keys`` are both provided.
 
         """
         iterable = list(iterable)
@@ -291,7 +294,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Notes
         -----
         This property is writeable, but the number of new IDs must match the
-        number of objects in `data`.
+        number of objects in ``data``.
 
         """
         return self._ids
@@ -305,7 +308,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
     @property
     def dtype(self) -> np.dtype:
-        """Data type of the matrix values."""
+        r"""Data type of the matrix values."""
         return self._data.dtype
 
     @property
@@ -374,12 +377,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         int
-            Row/column index of `lookup_id`.
+            Row/column index of ``lookup_id``.
 
         Raises
         ------
         MissingIDError
-            If `lookup_id` is not in the matrix.
+            If ``lookup_id`` is not in the matrix.
 
         """
         if lookup_id in self:
@@ -393,8 +396,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         ndarray
-            Two-dimensional `numpy.ndarray` of values in redundant
-            form.
+            Two-dimensional `numpy.ndarray` of values in redundant form.
 
         Notes
         -----
@@ -415,8 +417,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         PairwiseMatrix
-            Deep copy of the matrix. Will be the same type as
-            `self`.
+            Deep copy of the matrix. Will be the same type as ``self``.
 
         """
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -428,7 +429,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return self._copy()
 
     def _copy(self, transpose: bool = False) -> "PairwiseMatrix":
-        """Copy support.
+        r"""Copy support.
 
         Parameters
         ----------
@@ -438,7 +439,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         PairwiseMatrix
-            Deep copy of the matrix. Will be the same type as `self`.
+            Deep copy of the matrix. Will be the same type as ``self``.
+
         """
         data = self._data.copy()
         if transpose:
@@ -453,14 +455,14 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         mapper : dict or callable
             A dictionary or function that maps current IDs to new IDs.
         strict : bool, optional
-           If ``True`` (default), every ID in the matrix must be included in
-           ``mapper``. If ``False``, only the specified IDs will be renamed.
+           If True (default), every ID in the matrix must be included in ``mapper``. If
+           False, only the specified IDs will be renamed.
 
         Raises
         ------
         ValueError
-            If ``mapper`` does not contain all of the same IDs in the matrix
-            whereas in strict mode.
+            If ``mapper`` does not contain all of the same IDs in the matrix whereas in
+            strict mode.
 
         Examples
         --------
@@ -494,20 +496,20 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             IDs to retain. May not contain duplicates or be empty. Each ID must
             be present in the matrix.
         strict : bool, optional
-            If `strict` is ``True`` and an ID that is not found in the distance
-            matrix is found in `ids`, a ``MissingIDError`` exception will be
-            raised, otherwise the ID will be ignored.
+            If True (default) and an ID that is not found in the distance matrix but is
+            found in ``ids``, a ``MissingIDError`` exception will be raised, otherwise
+            the ID will be ignored.
 
         Returns
         -------
         PairwiseMatrix
-            Filtered matrix containing only the IDs specified in
-            `ids`. IDs will be in the same order as they appear in `ids`.
+            Filtered matrix containing only the IDs specified in ``ids``. IDs will be
+            in the same order as they appear in ``ids``.
 
         Raises
         ------
         MissingIDError
-            If an ID in `ids` is not in the object's list of IDs.
+            If an ID in ``ids`` is not in the object's list of IDs.
 
         """
         if tuple(self._ids) == tuple(ids):
@@ -553,7 +555,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         np.array, dtype=int
-            The corresponding index values
+            The corresponding index values.
 
         """
         id_order = sorted(self._id_index[i] for i in ids)
@@ -591,9 +593,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         --------
         >>> from skbio.stats.distance import PairwiseMatrix
         >>> dm = PairwiseMatrix([[0, 1, 2, 3, 4], [1, 0, 1, 2, 3],
-        ...                           [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
-        ...                           [4, 3, 2, 1, 0]],
-        ...                          ['A', 'B', 'C', 'D', 'E'])
+        ...                      [2, 1, 0, 1, 2], [3, 2, 1, 0, 1],
+        ...                      [4, 3, 2, 1, 0]],
+        ...                     ['A', 'B', 'C', 'D', 'E'])
         >>> dm.within(['A', 'B', 'C'])
            i  j  value
         0  A  A    0.0
@@ -619,19 +621,17 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def between(
         self, from_: Iterable[str], to_: Iterable[str], allow_overlap: bool = False
     ) -> pd.DataFrame:
-        """Obtain the pairwise values between the two groups of IDs.
+        r"""Obtain the pairwise values between the two groups of IDs.
 
         Parameters
         ----------
         from_ : Iterable of str
-            The IDs to obtain values from. Values from all pairs of IDs
-            in from and to will be obtained.
+            The IDs to obtain values from.
         to_ : Iterable of str
-            The IDs to obtain values to. Values from all pairs of IDs
-            in to and from will be obtained.
+            The IDs to obtain values to.
         allow_overlap : bool, optional
-            If True, allow overlap in the IDs of from and to (which would in
-            effect be collecting the within distances). Default is False.
+            If True, allow overlap in the IDs of from and to (which would in effect be
+            collecting the within distances). Default is False.
 
         Returns
         -------
@@ -741,17 +741,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def plot(
         self, cmap: Optional[Union[str, "Colormap"]] = None, title: str = ""
     ) -> "matplotlib.figure.Figure":
-        """Create a heatmap of the matrix.
+        r"""Create a heatmap of the matrix.
 
         Parameters
         ----------
         cmap: str or matplotlib.colors.Colormap, optional
-            Sets the color scheme of the heatmap
-            If ``None``, defaults to the colormap specified in the matplotlib
-            rc file.
+            Sets the color scheme of the heatmap. If None, defaults to the colormap
+            specified in the matplotlib rc file.
         title: str, optional
-            Sets the title label of the heatmap
-            (Default is blank)
+            Sets the title label of the heatmap. Default is blank.
 
         Returns
         -------
@@ -794,7 +792,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ax.set_ylim(0, len(self.ids))
         ax.set_xlim(0, len(self.ids))
 
-        # display data as it is stored in the dissimilarity matrix
+        # display data as it is stored in the pairwise matrix
         # (default is to have y-axis inverted)
         ax.invert_yaxis()
 
@@ -806,12 +804,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return fig
 
     def to_data_frame(self) -> pd.DataFrame:
-        """Create a ``pandas.DataFrame`` from this ``PairwiseMatrix``.
+        r"""Create a pandas DataFrame from this matrix.
 
         Returns
         -------
         pd.DataFrame
-            ``pd.DataFrame`` with IDs on index and columns.
+            DataFrame with IDs on index and columns.
 
         Examples
         --------
@@ -832,7 +830,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         )
 
     def __str__(self) -> str:
-        """Return a string representation of the matrix.
+        r"""Return a string representation of the matrix.
 
         Summary includes matrix dimensions, a (truncated) list of IDs, and
         (truncated) array of values.
@@ -853,11 +851,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def __eq__(self, other: object) -> bool:
         r"""Compare this matrix to another for equality.
 
-        Two matrices are equal if they have the same shape, IDs
-        (in the same order!), and have data arrays that are equal.
+        Two matrices are equal if they have the same shape and IDs (in the same
+        order!), and have data arrays that are equal.
 
-        Checks are *not* performed to ensure that `other` is a
-        `PairwiseMatrix` instance.
+        Checks are *not* performed to ensure that ``other`` is a ``PairwiseMatrix``
+        instance.
 
         Parameters
         ----------
@@ -867,7 +865,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         bool
-            ``True`` if `self` is equal to `other`, ``False`` otherwise.
+            True if ``self`` is equal to ``other``, False otherwise.
 
         """
         if not isinstance(other, PairwiseMatrix):
@@ -894,7 +892,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         return equal
 
     def __ne__(self, other: object) -> bool:
-        """Determine whether two matrices are not equal.
+        r"""Determine whether two matrices are not equal.
 
         Parameters
         ----------
@@ -904,7 +902,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         bool
-            ``True`` if `self` is not equal to `other`, ``False`` otherwise.
+            True if ``self`` is not equal to ``other``, False otherwise.
 
         See Also
         --------
@@ -924,7 +922,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Returns
         -------
         bool
-            `True` if `lookup_id` is in the matrix, `False` otherwise.
+            True if ``lookup_id`` is in the matrix, False otherwise.
 
         See Also
         --------
@@ -938,36 +936,30 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     ) -> Union[np.ndarray, float]:
         r"""Slice into data by object ID or numpy indexing.
 
-        Extracts data from the matrix by object ID, a pair of
-        IDs, or numpy indexing/slicing.
+        Extracts data from the matrix by object ID, a pair of IDs, or NumPy
+        indexing/slicing.
 
         Parameters
         ----------
         index : str, two-tuple of str, or numpy index
-            `index` can be one of the following forms: an ID, a pair of IDs, or
-            a numpy index.
+            Can be one of the following:
 
-            If `index` is a string, it is assumed to be an ID and a
-            ``numpy.ndarray`` row vector is returned for the corresponding ID.
-            Note that the ID's row of values is returned, *not* its
-            column. If the matrix is symmetric, the two will be identical, but
-            this makes a difference if the matrix is asymmetric.
+            - A string: Returns the row vector of this ID.
 
-            If `index` is a two-tuple of strings, each string is assumed to be
-            an ID and the corresponding matrix element is returned that
-            represents the value between the two IDs. Note that the
-            order of lookup by ID pair matters if the matrix is asymmetric: the
-            first ID will be used to look up the row, and the second ID will be
-            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
-            same as ``dm['b', 'a']`` if the matrix is asymmetric.
+            - A tuple of two strings: Returns the value between the first ID (row) and
+              the second ID (column).
 
-            Otherwise, `index` will be passed through to
-            ``PairwiseMatrix.data.__getitem__``, allowing for standard
-            indexing of a ``numpy.ndarray`` (e.g., slicing).
+            - Otherwise, ``index`` will be passed through to ``.data.__getitem__``,
+              allowing for standard indexing of a NumPy array (e.g., slicing).
+
+            .. note::
+                The first ID is the row and the second ID (if provided) is the column.
+                This order matters when the matrix is asymmetric (i.e.,
+                ``mat['a', 'b']`` may not be the same as ``mat['b', 'a']``).
 
         Returns
         -------
-        ndarray or scalar
+        1-D ndarray or scalar
             Indexed data, where return type depends on the form of `index` (see
             description of `index` for more details).
 
@@ -1072,46 +1064,42 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 class SymmetricMatrix(PairwiseMatrix):
     """Store symmetric pairwise relationships between objects.
 
-    A `SymmetricMatrix` is a `PairwiseMatrix` with the additional requirement that the
-    matrix data is symmetric. There are additional methods made available that take
-    advantage of this symmetry. The :func:`~skbio.stats.distance.PairwiseMatrix.plot`
-    method provides convenient built-in plotting functionality.
+    A ``SymmetricMatrix`` is a ``PairwiseMatrix`` with the additional requirement that
+    the matrix data is symmetric (i.e., upper and lower triangles mirror each other).
+    There are additional methods made available that take advantage of this symmetry.
+
+    .. versionadded:: 0.7.1
 
     Parameters
     ----------
-    data : array_like or SymmetricMatrix
-        Square, symmetric, two-dimensional ``numpy.ndarray`` values (floats), or a
-        structure that can be converted to a ``numpy.ndarray`` using ``numpy.asarray``
-        or a one-dimensional vector of values (floats), as defined by
-        `scipy.spatial.distance.squareform
-        <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squaref>`_.
-        Can instead be a `PairwiseMatrix` (or `SymmetricMatrix`) instance, in which the
-        instance's data will be used. Data will be converted to a float ``dtype`` if
-        necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
-        float ``dtype``.
+    data : 1-D or 2-D array_like, or PairwiseMatrix
+        A square 2-D array of pairwise relationships between objects, or a 1-D array
+        representing its condensed form. Can instead be an instance of
+        ``PairwiseMatrix`` or its subclass, in which case its data and IDs will be
+        directly used.
     ids : sequence of str, optional
-        Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`. If ``None`` (the default), IDs will be
-        monotonically-increasing integers cast as strings, with numbering
-        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+        IDs of the objects. Must match the number of objects in ``data``. If None
+        (default) and ``data`` does not contain IDs, IDs will be
+        monotonically-increasing integers cast as strings, starting from zero (i.e.,
+        '0', '1', '2', '3', ...).
     validate : bool, optional
-        If `validate` is ``True`` (the default) and data is not a
-        DistanceMatrix object, the input data will be validated.
+        If True (default) and ``data`` is not a ``SymmetricMatrix`` object, the input
+        data will be validated.
     condensed : bool, optional
-        If ``False`` (default) the data will be stored in a 2-dimensional redundant
-        form. If ``True``, the data will be stored in a 1-dimensional condensed form.
-    diagonal : np.ndarray or float, optional
-        If the matrix is to be stored in condensed form, `diagonal` stores the
-        information contained in the matrix's diagonal. If `diagonal` is a float, this
-        value represents all values in the diagonal of the matrix. If `diagonal` is an
-        array, it's values represent the values along the diagonal of the original
-        matrix.
+        Store the data in a 2-D redundant form (False, default) or a 1-D condensed form
+        (True).
+    diagonal : 1-D array_like or float, optional
+        Values along the diagonal of the matrix. Can be a vector matching the number of
+        objects in ``data``, or a single number representing a uniform diagonal.
+        Default is zero. Can be provided when ``data`` is in condensed form. Otherwise,
+        an error will be raised.
 
     See Also
     --------
     PairwiseMatrix
     SymmetricMatrix
     squareform
+
     """
 
     def __init__(
@@ -1142,11 +1130,13 @@ class SymmetricMatrix(PairwiseMatrix):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal(diagonal, data)
+        self._diagonal = self._init_diagonal(diagonal, data, condensed)
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
 
-    def _init_diagonal(self, diagonal: Union[float, np.ndarray], data: np.ndarray):
+    def _init_diagonal(
+        self, diagonal: Union[float, np.ndarray], data: np.ndarray, condensed
+    ):
         """Initialize the diagonal attribute.
 
         Parameters
@@ -1162,13 +1152,16 @@ class SymmetricMatrix(PairwiseMatrix):
             The diagonal values of the matrix.
         """
         if diagonal is None:
-            if data.ndim == 1:
-                return 0.0
-            if data.ndim == 2:
-                diagonal = np.diagonal(data)
-                if np.allclose(diagonal, 0):
-                    diagonal = 0.0
-                return diagonal
+            if condensed:
+                if data.ndim == 1:
+                    return 0.0
+                if data.ndim == 2:
+                    diagonal = np.diagonal(data)
+                    if np.allclose(diagonal, 0):
+                        diagonal = 0.0
+                    return diagonal
+            else:
+                return None
         if np.isscalar(diagonal):
             return float(diagonal)
         else:
@@ -1185,7 +1178,9 @@ class SymmetricMatrix(PairwiseMatrix):
         Returns
         -------
         dict
-            Dictionary containing information on the form of the matrix."""
+            Dictionary containing information on the form of the matrix.
+
+        """
         if condensed:
             return {"CONDENSED": True}
         else:
@@ -1197,13 +1192,16 @@ class SymmetricMatrix(PairwiseMatrix):
         Parameters
         ----------
         data : np.ndarray
-            1 or 2-dimensional array representing the data of the matrix.
+            1-D or 2-D array representing the data of the matrix.
         condensed : bool
             Whether or not to store the data in condensed form.
 
         Returns
+        -------
         np.ndarray
-            1 or 2-dimensional array containing the values of the matrix."""
+            1-D or 2-D array containing the values of the matrix.
+
+        """
         if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
@@ -1226,6 +1224,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         Performs a check for symmetry if data is 2D. If data is 1D it is assumed to
         be symmetric.
+
         """
         if (data.ndim != 1) and (not is_symmetric(data)):
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
@@ -1271,6 +1270,7 @@ class SymmetricMatrix(PairwiseMatrix):
         If the input is 2D, it checks that it is at least 1x1, and that it is square.
         If the input is 1D, it checks that it is a correct length to represent a
         symmetric matrix. If input is not 1D or 2D, it raises an error.
+
         """
         if data.ndim == 2:
             if 0 in data.shape:
@@ -1340,7 +1340,9 @@ class SymmetricMatrix(PairwiseMatrix):
 
         If diagonal is a float, this value is repeated along the diagonal of the
         matrix. If diagonal is an array, it represents the full diagonal of the
-        matrix."""
+        matrix.
+
+        """
         return self._diagonal
 
     @classonlymethod
@@ -1351,52 +1353,45 @@ class SymmetricMatrix(PairwiseMatrix):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
-        diagonal=0.0,
-        condensed=False,
-    ) -> "PairwiseMatrix":
-        """Create PairwiseMatrix from an iterable given a metric.
+        diagonal: Union[float, np.ndarray] = 0.0,
+        condensed: bool = False,
+    ) -> "SymmetricMatrix":
+        r"""Create a symmetric matrix from an iterable given a metric.
 
         Parameters
         ----------
         iterable : iterable
-            Iterable containing objects to compute pairwise dissimilarities on.
+            Objects to compute pairwise relationships on.
         metric : callable
-            A function that takes two arguments and returns a float
-            representing the dissimilarity between the two arguments.
-        key : callable or metadata key, optional
-            A function that takes one argument and returns a string
-            representing the id of the element in the dissimilarity matrix.
-            Alternatively, a key to a `metadata` property if it exists for
-            each element in the `iterable`. If None, then default ids will be
-            used.
-        keys : iterable, optional
-            An iterable of the same length as `iterable`. Each element will be
-            used as the respective key.
+            A function that takes two arguments and returns a float representing the
+            relationship between the two objects.
+        key : callable or str, optional
+            A function that takes one argument and returns a string representing the ID
+            of the object. Alternatively, a key to the ``metadata`` property if exists
+            for each object in the ``iterable``. If None, the default IDs will be used.
+        keys : iterable of str, optional
+            IDs of the objects. Must be the same length as ``iterable``.
         validate : boolean, optional
-            If ``True``, all pairwise relationships are computed, including upper
-            and lower triangles and the diagonal. If ``False``, `metric` is
-            assumed to be hollow and symmetric and only the lower triangle
-            (excluding the diagonal) is computed. Pass ``validate=False`` if
-            you are sure `metric` is hollow and symmetric for improved
-            performance.
-        diagonal : float or np.ndarray, optional
-            If float, this value will be used to fill the diagonal of the matrix.
-            If array, this array will be used to fill the diagonal of the matrix.
-            Defaults to 0.0.
+            If True, all pairwise relationships are computed, including upper
+            and lower triangles and the diagonal. If False, ``metric`` is
+            assumed to be symmetric and only the lower triangle (excluding the
+            diagonal) is computed, thereby saving compute.
+        diagonal : 1-D array_like or float, optional
+            Fill the matrix diagonal with this number or vector when ``validate``
+            is False. Default is zero.
         condensed : bool, optional
-            If ``False`` (default), the underlying data structure will be the redundant
-            form (2D) of the matrix. If ``True``, the underlying data structure will be
-            the condensed form (1D) of the matrix.
+            Store the data in a 2-D redundant form (False, default) or a 1-D condensed
+            form (True).
 
         Returns
         -------
         PairwiseMatrix
-            The `metric` applied to all pairwise elements in the `iterable`.
+            The ``metric`` applied to all pairwise elements in the ``iterable``.
 
         Raises
         ------
         ValueError
-            If `key` and `keys` are both provided.
+            If ``key`` and ``keys`` are both provided.
 
         """
         iterable = list(iterable)
@@ -1413,7 +1408,7 @@ class SymmetricMatrix(PairwiseMatrix):
         # this allows for diagonals which do not match the exact shape of the matrix,
         # np.fill_diagonal will just repeat the array to fill. Not sure if this is
         # what we want here.
-        np.fill_diagonal(dm, diagonal)
+        # np.fill_diagonal(dm, diagonal)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1424,50 +1419,41 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
+        diagonal = dm.diagonal()
+        # print(diagonal)
         return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
         self, index: Union[str, tuple[str, str], Any]
     ) -> Union[np.ndarray, float]:
-        r"""Slice into data by object ID or numpy indexing.
+        r"""Slice into data by object ID or NumPy indexing.
 
-        Extracts data from the matrix by object ID, a pair of
-        IDs, or numpy indexing/slicing.
+        Extracts data from the matrix by object ID, a pair of IDs, or NumPy
+        indexing/slicing.
 
         Parameters
         ----------
-        index : str, two-tuple of str, or numpy index
-            `index` can be one of the following forms: an ID, a pair of IDs, or
-            a numpy index.
+        index : str, two-tuple of str, or NumPy index
+            Can be one of the following:
 
-            If `index` is a string, it is assumed to be an ID and a
-            ``numpy.ndarray`` row vector is returned for the corresponding ID.
-            Note that the ID's row of values is returned, *not* its
-            column. If the matrix is symmetric, the two will be identical, but
-            this makes a difference if the matrix is asymmetric.
+            - A string: Returns the row vector of this ID.
 
-            If `index` is a two-tuple of strings, each string is assumed to be
-            an ID and the corresponding matrix element is returned that
-            represents the value between the two IDs. Note that the
-            order of lookup by ID pair matters if the matrix is asymmetric: the
-            first ID will be used to look up the row, and the second ID will be
-            used to look up the column. Thus, ``dm['a', 'b']`` may not be the
-            same as ``dm['b', 'a']`` if the matrix is asymmetric.
+            - A tuple of two strings: Returns the value between the first ID (row) and
+              the second ID (column).
 
-            Otherwise, `index` will be passed through to
-            ``PairwiseMatrix.data.__getitem__``, allowing for standard
-            indexing of a ``numpy.ndarray`` (e.g., slicing).
+            - Otherwise, ``index`` will be passed through to ``.data.__getitem__``,
+              allowing for standard indexing of a NumPy array (e.g., slicing).
 
         Returns
         -------
         ndarray or scalar
-            Indexed data, where return type depends on the form of `index` (see
-            description of `index` for more details).
+            Indexed data, where return type depends on the form of ``index`` (see
+            description of ``index`` for more details).
 
         Raises
         ------
         MissingIDError
-            If the ID(s) specified in `index` are not in the matrix.
+            If the ID(s) specified in ``index`` are not in the matrix.
 
         Notes
         -----
@@ -1507,11 +1493,12 @@ class SymmetricMatrix(PairwiseMatrix):
         Returns
         -------
         ndarray
-            Two-dimensional `numpy.ndarray` of values in redundant format.
+            Two-dimensional array of values in redundant format.
 
         See Also
         --------
         condensed_form
+
         """
         if self._flags["CONDENSED"]:
             mat = squareform(self._data, force="tomatrix", checks=False)
@@ -1614,9 +1601,8 @@ class SymmetricMatrix(PairwiseMatrix):
 
         Returns
         -------
-        PairwiseMatrix
-            Deep copy of the dissimilarity matrix. Will be the same type as
-            ``self``.
+        SymmetricMatrix
+            Deep copy of the matrix. Will be the same type as ``self``.
 
         """
         if self._flags["CONDENSED"]:
@@ -1637,6 +1623,7 @@ class SymmetricMatrix(PairwiseMatrix):
         Returns
         -------
         SymmetricMatrix
+
         """
         # adding for backward compatibility
         data = self._data.copy()
@@ -1736,33 +1723,33 @@ class SymmetricMatrix(PairwiseMatrix):
 
 
 class DistanceMatrix(SymmetricMatrix):
-    """Store distances between objects.
+    r"""Store distances between objects.
 
-    A `DistanceMatrix` is a `SymmetricMatrix` with the additional
-    requirement that the matrix data is hollow. There are additional methods
-    made available that take advantage of this hollowness. The
-    :func:`~skbio.stats.distance.PairwiseMatrix.plot` method provides
-    convenient built-in plotting functionality.
+    A ``DistanceMatrix`` is a ``SymmetricMatrix`` with the additional requirement that
+    the matrix data is hollow (i.e., diagonal is zero). There are additional methods
+    made available that take advantage of this hollowness.
 
     Parameters
     ----------
-    data : array_like or PairwiseMatrix
-        Square, hollow, two-dimensional ``numpy.ndarray`` of distances
-        (floats), or a structure that can be converted to a ``numpy.ndarray``
-        using ``numpy.asarray`` or a one-dimensional vector of distances
-        (floats), as defined by `scipy.spatial.distance.squareform <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.squareform.html>`_.
-        Can instead be a `PairwiseMatrix` (or `DistanceMatrix`) instance, in which case
-        the instance's data will be used. Data will be converted to a float ``dtype``
-        if necessary. A copy will *not* be made if already a ``numpy.ndarray`` with a
-        float ``dtype``.
+    data : 1-D or 2-D array_like, or PairwiseMatrix
+        A square 2-D array of pairwise distances between objects, or a 1-D array
+        representing its condensed form. Can instead be an instance of
+        ``PairwiseMatrix`` or its subclass, in which case its data and IDs will be
+        directly used.
     ids : sequence of str, optional
-        Sequence of strings to be used as object IDs. Must match the number of
-        rows/cols in `data`. If ``None`` (the default), IDs will be
-        monotonically-increasing integers cast as strings, with numbering
-        starting from zero, e.g., ``('0', '1', '2', '3', ...)``.
+        IDs of the objects. Must match the number of rows/columns in ``data``. If None
+        (default) and ``data`` does not contain IDs, IDs will be
+        monotonically-increasing integers cast as strings, starting from zero (i.e.,
+        '0', '1', '2', '3', ...).
     validate : bool, optional
-        If `validate` is ``True`` (the default) and data is not a
-        DistanceMatrix object, the input data will be validated.
+        If True (default) and ``data`` is not a ``DistanceMatrix`` object, the input
+        data will be validated.
+    condensed : bool, optional
+        Store the data in a 2-D redundant form (False, default) or a 1-D condensed form
+        (True).
+    diagonal : 1-D array_like or float, optional
+        Values along the diagonal of the matrix. Must be zero. This parameter is a
+        placeholder for interface compatibility with ``SymmetricMatrix``.
 
     See Also
     --------
@@ -1774,12 +1761,12 @@ class DistanceMatrix(SymmetricMatrix):
     The distances are stored in redundant (square-form) format [1]_. To
     facilitate use with other scientific Python routines (e.g., scipy), the
     distances can be retrieved in condensed (vector-form) format using
-    `condensed_form`.
+    ``condensed_form``.
 
-    `DistanceMatrix` only requires that the distances it stores are symmetric and
+    ``DistanceMatrix`` only requires that the distances it stores are symmetric and
     hollow. Checks are *not* performed to ensure the other three metric properties
     hold (non-negativity, identity of indiscernibles, and triangle inequality)
-    [2]_. Thus, a `DistanceMatrix` instance can store distances that are not
+    [2]_. Thus, a ``DistanceMatrix`` instance can store distances that are not
     metric.
 
     References
@@ -1853,6 +1840,7 @@ class DistanceMatrix(SymmetricMatrix):
         """Validate the data array.
 
         Performs a check for symmetry and hollowness.
+
         """
         # if the input data is 1D, we don't need to check for hollowness or symmetry
         if data.ndim == 2:
@@ -1873,6 +1861,7 @@ class DistanceMatrix(SymmetricMatrix):
 
         In addition to the checks performed in the superclass, it also chacks that the
         diagonal only contains zeros.
+
         """
         if diagonal is not None:
             if np.isscalar(diagonal):
@@ -1891,28 +1880,27 @@ class DistanceMatrix(SymmetricMatrix):
     def _init_diagonal(self):
         """Initialize the diagonal attribute for a DistanceMatrix.
 
-        A DistanceMatrix must by definition have only 0's on its diagonal, so the most
-        efficient storage will always be 0.0."""
-        return 0.0
+        A DistanceMatrix must by definition have only 0's on its diagonal, it doesn't
+        need to store anything."""
+        return None
 
     def to_series(self) -> pd.Series:
-        """Create a ``pandas.Series`` from this ``DistanceMatrix``.
+        """Create a pandas Series from this ``DistanceMatrix``.
 
-        The series will contain distances in condensed form: only distances
-        from one matrix triangle are included, and the diagonal is excluded.
-        The series' index will be a ``pd.MultiIndex`` relating pairs of IDs to
-        distances. The pairs of IDs will be in row-major order with respect to
-        the upper matrix triangle.
+        The series will contain distances in condensed form: only distances from one
+        matrix triangle are included, and the diagonal is excluded. The series' index
+        will be a :class:`pandas.MultiIndex` relating pairs of IDs to distances. The
+        pairs of IDs will be in row-major order with respect to the upper matrix
+        triangle.
 
-        To obtain all distances (i.e. both upper and lower matrix triangles and
-        the diagonal), use ``DistanceMatrix.to_data_frame``. To obtain *only*
-        the distances in condensed form (e.g. for use with SciPy), use
-        ``DistanceMatrix.condensed_form``.
+        To obtain all distances (i.e. both upper and lower matrix triangles and the
+        diagonal), use :meth:`to_data_frame`. To obtain *only* the distances in
+        condensed form (e.g. for use with SciPy), use :meth:`condensed_form`.
 
         Returns
         -------
         pd.Series
-            ``pd.Series`` with pairs of IDs on the index.
+            Series with pairs of IDs on the index.
 
         See Also
         --------
@@ -1954,10 +1942,8 @@ def randdm(
     r"""Generate a distance matrix populated with random distances.
 
     Using the default ``random_fn``, distances are randomly drawn from a uniform
-    distribution over ``[0, 1)``.
-
-    Regardless of ``random_fn``, the resulting distance matrix is guaranteed to
-    be symmetric and hollow.
+    distribution over ``[0, 1)``. Regardless of ``random_fn``, the resulting distance
+    matrix is guaranteed to be symmetric and hollow.
 
     Parameters
     ----------
@@ -1970,13 +1956,13 @@ def randdm(
         integers cast as strings (numbering starts at 1). For example,
         ``('1', '2', '3')``.
     constructor : type, optional
-        `PairwiseMatrix` or subclass constructor to use when creating the
-        random distance matrix. The returned distance matrix will be of this
-        type. By default, a `DistanceMatrix` instance will be returned.
+        ``PairwiseMatrix`` or its subclass to use when creating the random distance
+        matrix. The returned matrix will be of this type. By default, a
+        ``DistanceMatrix`` instance will be returned.
     random_fn : int, np.random.Generator or callable, optional
         Function for generating random values. It must accept (n_rows, n_columns) and
         return a 2D array of float-like. Default is the
-        :meth:`random <numpy.random.Generator.random>` method of a NumPy random
+        :meth:`~numpy.random.Generator.random` method of a NumPy random
         generator. If an integer is provided, a random generator will be constructed
         using this number as the seed.
 
@@ -1988,7 +1974,7 @@ def randdm(
     Returns
     -------
     PairwiseMatrix
-        `PairwiseMatrix` (or subclass) instance of random distances. Type
+        ``PairwiseMatrix`` (or subclass) instance of random distances. Type
         depends on ``constructor``.
 
     See Also
@@ -2118,7 +2104,7 @@ def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:
     ids : Sequence
         IDs that will be mapped to group labels.
     df : pandas.DataFrame
-        ``DataFrame`` (indexed by distance matrix ID).
+        DataFrame (indexed by distance matrix ID).
     column : str
         Column name in `df` containing group labels.
 
@@ -2247,6 +2233,7 @@ def _condensed_index(
     -------
     int or np.ndarray
         Index/indices in the condensed form vector.
+
     """
     is_scalar = np.isscalar(i) and np.isscalar(j)
 
@@ -2283,6 +2270,7 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     -------
     np.ndarray
         Condensed matrix.
+
     """
     reorder_vec = np.asarray(reorder_vec)
     in_mat = np.asarray(in_mat)
@@ -2325,7 +2313,8 @@ def _get_element_from_condensed(
     Returns
     -------
     float
-        The value at position (i, j)
+        The value at position (i, j).
+
     """
     if i == j:
         if np.isscalar(diagonal):
@@ -2357,6 +2346,7 @@ def _get_row_from_condensed(
     -------
     np.ndarray
         The row data for the desired index.
+
     """
     row = np.empty(n, dtype=condensed_data.dtype)
 
