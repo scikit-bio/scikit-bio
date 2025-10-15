@@ -385,7 +385,7 @@ class IORegistry:
     def _iter_rw_formats(self, cls, lookup_name):
         for lookup in self._lookups:
             for format in lookup.values():
-                if cls in getattr(format, lookup_name):
+                if self._get_rw(format.name, cls, lookup_name) is not None:
                     yield format.name
 
     def sniff(self, file, into=None, **kwargs):

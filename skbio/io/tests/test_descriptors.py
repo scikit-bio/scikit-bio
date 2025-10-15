@@ -10,6 +10,7 @@ import unittest
 from io import StringIO
 from skbio.io.descriptors import Read, Write, _docstring_vars
 from skbio.io.registry import create_format, io_registry
+from skbio.io._exception import UnrecognizedFormatError
 
 
 class TestRead(unittest.TestCase):
@@ -314,6 +315,11 @@ class TestInheritanceIntegration(unittest.TestCase):
         @self.test_format.writer(ParentClass)
         def _writer(obj, fh):
             fh.write(f"[{obj.__class__.__name__}:{obj.data}]")
+
+        @self.test_format.sniffer()
+        def _sniffer(fh):
+            content = fh.read(10)
+            return content.startswith("TESTDATA:"), {}
     
     def tearDown(self):
         """Clean up."""
@@ -358,6 +364,213 @@ class TestInheritanceIntegration(unittest.TestCase):
         self.assertIsNot(child_read, grandchild_read)
         self.assertIsNot(parent_read, grandchild_read)
 
+    def test_list_read_formats_parent(self):
+        """Test that parent class lists its read formats."""
+        formats = io_registry.list_read_formats(self.ParentClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_list_read_formats_child(self):
+        """Test that child class inherits parent's read formats."""
+        formats = io_registry.list_read_formats(self.ChildClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_list_read_formats_grandchild(self):
+        """Test that grandchild class inherits parent's read formats."""
+        formats = io_registry.list_read_formats(self.GrandchildClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_list_write_formats_parent(self):
+        """Test that parent class lists its write formats."""
+        formats = io_registry.list_write_formats(self.ParentClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_list_write_formats_child(self):
+        """Test that child class inherits parent's write formats."""
+        formats = io_registry.list_write_formats(self.ChildClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_list_write_formats_grandchild(self):
+        """Test that grandchild class inherits parent's write formats."""
+        formats = io_registry.list_write_formats(self.GrandchildClass)
+        self.assertIn('inheritance_test_format', formats)
+    
+    def test_sniff_with_parent_into(self):
+        """Test that sniffing works when into is parent class."""
+        fh = StringIO("TESTDATA:some content")
+        format_name, kwargs = io_registry.sniff(fh, into=self.ParentClass)
+        self.assertEqual(format_name, 'inheritance_test_format')
+    
+    def test_sniff_with_child_into(self):
+        """Test that sniffing works when into is child class."""
+        fh = StringIO("TESTDATA:some content")
+        format_name, kwargs = io_registry.sniff(fh, into=self.ChildClass)
+        self.assertEqual(format_name, 'inheritance_test_format')
+    
+    def test_sniff_with_grandchild_into(self):
+        """Test that sniffing works when into is grandchild class."""
+        fh = StringIO("TESTDATA:some content")
+        format_name, kwargs = io_registry.sniff(fh, into=self.GrandchildClass)
+        self.assertEqual(format_name, 'inheritance_test_format')
+    
+    def test_read_with_format_inference_child(self):
+        """Test that child class can read with format inference."""
+        fh = StringIO("TESTDATA:child data")
+        obj = self.ChildClass.read(fh)  # No format specified
+        self.assertIsInstance(obj, self.ChildClass)
+        self.assertEqual(obj.data, "TESTDATA:child data")
+    
+    def test_read_with_format_inference_grandchild(self):
+        """Test that grandchild class can read with format inference."""
+        fh = StringIO("TESTDATA:grandchild data")
+        obj = self.GrandchildClass.read(fh)  # No format specified
+        self.assertIsInstance(obj, self.GrandchildClass)
+        self.assertEqual(obj.data, "TESTDATA:grandchild data")
+    
+    def test_format_listing_no_duplicates(self):
+        """Test that format listing doesn't return duplicates for inherited formats."""
+        formats = io_registry.list_read_formats(self.ChildClass)
+        # Count occurrences of the format
+        count = formats.count('inheritance_test_format')
+        self.assertEqual(count, 1, "Format should appear only once in the list")
+    
+    def test_multiple_inheritance_format_listing(self):
+        """Test format listing with multiple inheritance."""
+        # Create another format and parent class
+        other_format = create_format('other_test_format')
+        
+        class OtherParent:
+            read = Read()
+            write = Write()
+            
+            def __init__(self, data):
+                self.data = data
+        
+        @other_format.reader(OtherParent)
+        def _other_reader(fh, cls=None):
+            if cls is None:
+                cls = OtherParent
+            return cls(fh.read())
+        
+        # Create a class with multiple inheritance
+        class MultiChild(self.ParentClass, OtherParent):
+            pass
+        
+        try:
+            formats = io_registry.list_read_formats(MultiChild)
+            # Should inherit formats from both parents
+            self.assertIn('inheritance_test_format', formats)
+            self.assertIn('other_test_format', formats)
+        finally:
+            io_registry.remove_format('other_test_format')
+    
+    def test_sniff_filters_by_child_class(self):
+        """Test that sniff only considers formats appropriate for the child class."""
+        # Create a format that's only for a different class
+        unrelated_format = create_format('unrelated_format')
+        
+        class UnrelatedClass:
+            read = Read()
+            
+            def __init__(self, data):
+                self.data = data
+        
+        @unrelated_format.reader(UnrelatedClass)
+        def _unrelated_reader(fh, cls=None):
+            if cls is None:
+                cls = UnrelatedClass
+            return cls(fh.read())
+        
+        @unrelated_format.sniffer()
+        def _unrelated_sniffer(fh):
+            # This sniffer would match, but shouldn't be considered
+            return True, {}
+        
+        try:
+            # Even though unrelated_sniffer always returns True,
+            # it shouldn't match because ChildClass can't use it
+            fh = StringIO("some data")
+            with self.assertRaises(UnrecognizedFormatError):
+                io_registry.sniff(fh, into=self.ChildClass)
+        finally:
+            io_registry.remove_format('unrelated_format')
+
+
+class TestInheritanceEdgeCases(unittest.TestCase):
+    """Test edge cases in inheritance behavior."""
+    
+    def setUp(self):
+        """Set up test formats."""
+        self.format1 = create_format('format1_edge')
+        self.format2 = create_format('format2_edge')
+        
+        class GrandParent:
+            read = Read()
+            write = Write()
+            
+            def __init__(self, data):
+                self.data = data
+        
+        class Parent(GrandParent):
+            pass
+        
+        class Child(Parent):
+            pass
+        
+        self.GrandParent = GrandParent
+        self.Parent = Parent
+        self.Child = Child
+        
+        # Register reader only for GrandParent in format1
+        @self.format1.reader(GrandParent)
+        def _format1_reader(fh, cls=None):
+            if cls is None:
+                cls = GrandParent
+            return cls("format1:" + fh.read())
+        
+        # Register reader only for Parent in format2
+        @self.format2.reader(Parent)
+        def _format2_reader(fh, cls=None):
+            if cls is None:
+                cls = Parent
+            return cls("format2:" + fh.read())
+    
+    def tearDown(self):
+        """Clean up."""
+        io_registry.remove_format('format1_edge')
+        io_registry.remove_format('format2_edge')
+    
+    def test_child_inherits_from_grandparent(self):
+        """Test that Child can use GrandParent's reader."""
+        fh = StringIO("data")
+        obj = self.Child.read(fh, format='format1_edge')
+        self.assertIsInstance(obj, self.Child)
+        self.assertEqual(obj.data, "format1:data")
+    
+    def test_child_inherits_from_parent(self):
+        """Test that Child can use Parent's reader."""
+        fh = StringIO("data")
+        obj = self.Child.read(fh, format='format2_edge')
+        self.assertIsInstance(obj, self.Child)
+        self.assertEqual(obj.data, "format2:data")
+    
+    def test_child_lists_both_formats(self):
+        """Test that Child lists formats from both Parent and GrandParent."""
+        formats = io_registry.list_read_formats(self.Child)
+        self.assertIn('format1_edge', formats)
+        self.assertIn('format2_edge', formats)
+    
+    def test_parent_has_both_formats(self):
+        """Test that Parent has both its own and inherited formats."""
+        formats = io_registry.list_read_formats(self.Parent)
+        self.assertIn('format1_edge', formats)
+        self.assertIn('format2_edge', formats)
+    
+    def test_grandparent_has_only_own_format(self):
+        """Test that GrandParent only has its own format."""
+        formats = io_registry.list_read_formats(self.GrandParent)
+        self.assertIn('format1_edge', formats)
+        self.assertNotIn('format2_edge', formats)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(buffer=False)
