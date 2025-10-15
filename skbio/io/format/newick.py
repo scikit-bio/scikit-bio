@@ -268,7 +268,7 @@ def _newick_sniffer(fh):
 
 
 @newick.reader(TreeNode)
-def _newick_to_tree_node(fh, convert_underscores=True, cls=None):
+def _newick_to_tree_node(fh, cls=None, convert_underscores=True):
     if cls is None:
         cls = TreeNode
     tree_stack = []
