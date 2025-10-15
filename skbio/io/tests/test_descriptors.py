@@ -1,7 +1,13 @@
-# test_descriptors.py
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
 import unittest
 from io import StringIO
-from unittest.mock import Mock, patch, MagicMock
 from skbio.io.descriptors import Read, Write, _docstring_vars
 from skbio.io.registry import create_format, io_registry
 

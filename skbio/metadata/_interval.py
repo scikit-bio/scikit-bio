@@ -13,7 +13,7 @@ import functools
 from ._intersection import IntervalTree
 from skbio.util._decorator import classonlymethod
 from skbio.io.descriptors import Read, Write
-from _base import SkbioObject
+from .._base import SkbioObject
 
 
 class Interval:
@@ -953,7 +953,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
 
         return "\n".join([l1, l2] + items)
 
-    def __repr__(self):
+    def __str__(self):
         """Return a string representation of this object.
 
         Required to inherit from SkbioObject.

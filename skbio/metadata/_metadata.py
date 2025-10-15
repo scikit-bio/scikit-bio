@@ -21,7 +21,7 @@ import skbio.metadata.missing as _missing
 from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 from skbio.io.descriptors import Read, Write
-from _base import SkbioObject
+from .._base import SkbioObject
 
 
 DEFAULT_MISSING = _missing.DEFAULT_MISSING
