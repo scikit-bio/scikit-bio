@@ -120,21 +120,21 @@ def _lsmat_sniffer(fh):
 def _lsmat_to_pairwise_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
     if cls is None:
         cls = PairwiseMatrix
-    return _lsmat_to_matrix(cls, fh, delimiter)
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
 
 
 @lsmat.reader(SymmetricMatrix)
 def _lsmat_to_symmetric_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
     if cls is None:
         cls = SymmetricMatrix
-    return _lsmat_to_matrix(cls, fh, delimiter)
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
 
 
 @lsmat.reader(DistanceMatrix)
 def _lsmat_to_distance_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
     if cls is None:
         cls = DistanceMatrix
-    return _lsmat_to_matrix(cls, fh, delimiter)
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
 
 
 @lsmat.writer(PairwiseMatrix)
