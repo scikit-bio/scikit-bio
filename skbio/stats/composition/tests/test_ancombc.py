@@ -280,6 +280,19 @@ class AncombcTests(TestCase):
         similarity = exp.eq(obs).sum().sum() / exp.size
         npt.assert_equal(similarity, 1.0)
 
+    def test_ancombc_global(self):
+        table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
+        meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
+        meta_data = meta_data.dropna(axis=1, how='any')
+        meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
+
+        # run ancom-bc reimplemented in python for the HITChip Atlas dataset
+        obs = ancombc(table+1, meta_data, "age + region + bmi", "bmi")[1]['Signif'].to_numpy()
+        exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
+                        False, False, False, False, False, False,  True, False, False,
+                        False, False,  True])
+        npt.assert_array_equal(obs, exp)
+
 
 if __name__ == '__main__':
     main()

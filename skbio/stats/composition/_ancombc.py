@@ -32,6 +32,7 @@ def ancombc(
     table,
     metadata,
     formula,
+    group=None,
     max_iter=100,
     tol=1e-5,
     alpha=0.05,
@@ -58,6 +59,8 @@ def ancombc(
         The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
+    group : str
+        The group variable of interest in global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -210,7 +213,7 @@ def ancombc(
         raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
     # Estimate initial model parameters.
-    var_hat, beta, _, _ = _estimate_params(matrix, dmat)
+    var_hat, beta, _, vcov_hat = _estimate_params(matrix, dmat)
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     bias = np.empty((n_covars, 3))
@@ -241,7 +244,21 @@ def ancombc(
     )
     # pandas' nullable boolean type
     res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
-    return res
+
+    # global test results
+    if group is not None and len(metadata[group].unique()) >= 3:
+        res_global = _global_F(dmat, group, beta_hat, vcov_hat, alpha, p_adjust)
+        res_global_df = pd.DataFrame.from_dict(
+            {
+                "FeatureID": features,
+                "W": res_global[0],
+                "pvalue": res_global[1],
+                "qvalue": res_global[2],
+                "Signif": res_global[3],
+            }
+        )
+        return res, res_global_df
+    return res  # , None
 
 
 def _estimate_params(data, dmat):
@@ -653,8 +670,8 @@ def _get_struc_zero(table, metadata, group, nlb=False):
     -------
     zero_mask : ndarray of shape (n_features, n_group)
         Mask of struc zeros.
-    """
 
+    """
     tmp = np.nan_to_num(table.to_numpy()) != 0
     tmp_table = pd.DataFrame(tmp, columns=table.columns, index=table.index)
 
@@ -700,8 +717,8 @@ def _global_F(dmat, group, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
         adjusted p value of global test.
     reject : ndarray of shape (n_features, n_group)
         if the variable is differentially abundant
-    """
 
+    """
     group_ind = np.nonzero(np.char.find(dmat.design_info.column_names, group) >= 0)[0]
     beta_hat_sub = beta_hat[:, group_ind]
     vcov_hat_sub = vcov_hat[:, group_ind][:, :, group_ind]
