@@ -20,6 +20,8 @@ from skbio.stats.composition._ancombc import (
     _sample_fractions,
     _calc_statistics,
     _init_bias_params,
+    _get_struc_zero,
+    _global_F,
     ancombc,
 )
 
@@ -100,7 +102,7 @@ class AncombcTests(TestCase):
     def test_estimate_bias_em(self):
         data = np.log1p(self.table.to_numpy())
         dmat = dmatrix("grouping", self.grouping.to_frame())
-        var_hat, beta, _ = _estimate_params(data, dmat)
+        var_hat, beta, _, _ = _estimate_params(data, dmat)
 
         obs_0 = _estimate_bias_em(beta[0], var_hat[:, 0], max_iter=100)
         obs_1 = _estimate_bias_em(beta[1], var_hat[:, 1], max_iter=100)
@@ -113,7 +115,7 @@ class AncombcTests(TestCase):
     def test_sample_bias(self):
         data = np.log1p(self.table.to_numpy())
         dmat = dmatrix("grouping", self.grouping.to_frame())
-        var_hat, beta, _ = _estimate_params(data, dmat)
+        var_hat, beta, _, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
             res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
@@ -129,7 +131,7 @@ class AncombcTests(TestCase):
     def test_calc_statistics(self):
         data = np.log1p(self.table.to_numpy())
         dmat = dmatrix("grouping", self.grouping.to_frame())
-        var_hat, beta, _ = _estimate_params(data, dmat)
+        var_hat, beta, _, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
             res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
@@ -188,6 +190,47 @@ class AncombcTests(TestCase):
         with self.assertRaises(ValueError):
             ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=1.1)
 
+    def test_get_struc_zero(self):
+        table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
+        meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
+        meta_data = meta_data.dropna(axis=1, how='any')
+        meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
+
+        obs = _get_struc_zero(table, meta_data, 'bmi', False)
+        exp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        npt.assert_array_equal(obs, exp)
+
+        obs = _get_struc_zero(table, meta_data, 'bmi', True)
+        exp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        npt.assert_array_equal(obs, exp)
+
+    def test_global_F(self):
+        table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
+        meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
+        meta_data = meta_data.dropna(axis=1, how='any')
+        meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
+        feature_table = np.log1p(table.to_numpy())
+        dmat = dmatrix('age + region + bmi', meta_data)
+        covars = dmat.design_info.column_names
+        n_covars = len(covars)
+
+        var_hat, beta, _, vcov_hat = _estimate_params(feature_table, dmat)
+
+        bias = np.empty((n_covars, 3))
+        for i in range(n_covars):
+            bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=1e-5, max_iter=100)
+        delta_em = bias[:, 0]
+
+        beta_hat = beta.T - delta_em
+
+        obs = _global_F(dmat, 'bmi', beta_hat, vcov_hat, 0.05, 'holm')[-1]
+        exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
+                        False, False, False, False, False, False,  True, False, False,
+                        False, False,  True])
+        npt.assert_array_equal(obs, exp)
+
     def test_ancombc(self):
         # ancom-bc results of test dataset
         res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
@@ -213,8 +256,9 @@ class AncombcTests(TestCase):
         # It was used for demonstration in the official ANCOM-BC2 tutorial:
         #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/
         #   doc/ANCOMBC2.html
-        table = pd.read_csv(get_data_path('pseq_feature_table.csv.gz'), index_col=0).T
-        meta_data = pd.read_csv(get_data_path('pseq_meta_data.csv.gz'), index_col=0)
+        # The subset of the dataset is used in testing for simplicity
+        table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
+        meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
         meta_data = meta_data.dropna(axis=1, how='any')
         meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
 
@@ -231,7 +275,7 @@ class AncombcTests(TestCase):
             obs = obs.rename(columns={c:c.replace("[T.", "").replace("]", "")})
 
         # load ancom-bc results generated by the R package ANCOMBC
-        exp = pd.read_csv(get_data_path('pseq_out_res_diff_abn.csv'), index_col='taxon').drop('Unnamed: 0', axis=1)
+        exp = pd.read_csv(get_data_path('pseq_subset_out_res_diff_abn.csv'), index_col='taxon').drop('Unnamed: 0', axis=1)
 
         similarity = exp.eq(obs).sum().sum() / exp.size
         npt.assert_equal(similarity, 1.0)

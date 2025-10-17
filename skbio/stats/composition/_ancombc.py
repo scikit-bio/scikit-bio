@@ -19,7 +19,7 @@
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
+from scipy.stats import norm, chi2
 from scipy.optimize import minimize
 from patsy import dmatrix
 
@@ -210,7 +210,7 @@ def ancombc(
         raise ValueError("`alpha`=%f is not within 0 and 1." % alpha)
 
     # Estimate initial model parameters.
-    var_hat, beta, _ = _estimate_params(matrix, dmat)
+    var_hat, beta, _, _ = _estimate_params(matrix, dmat)
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     bias = np.empty((n_covars, 3))
@@ -265,6 +265,8 @@ def _estimate_params(data, dmat):
         Estimated coefficients (log-fold changes before correction).
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
+    beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
+        Estimated covariance matrices.
 
     """
     # The original R code performs iterative maximum likelihood estimation to calculate
@@ -310,7 +312,7 @@ def _estimate_params(data, dmat):
     var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
 
     # Note: Residuals are needed for ANCOM-BC2.
-    return var_hat, beta, theta.reshape(-1)
+    return var_hat, beta, theta.reshape(-1), beta_covmat
 
 
 def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
@@ -627,3 +629,92 @@ def _calc_statistics(beta_hat, var_hat, method="holm"):
     func = _check_p_adjust(method)
     qval = np.apply_along_axis(func, 0, pval)
     return se_hat, W, pval, qval
+
+
+def _get_struc_zero(table, metadata, group, nlb=False):
+    """Return zero mask for features with structural zero (taxa that are systematically
+    absent in an ecosystem and therefore show observed zeros)
+
+    Parameters
+    ----------
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :ref:`supported formats <table_like>`.
+    metadata : pd.DataFrame or 2-D array_like
+        The metadata for the model. Rows correspond to samples and columns correspond
+        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        pandas DataFrame.
+    group : str
+        The group variable of interests in metadata.
+    nlb : boolean
+        Determine whether to use negative lower bound when calculating p-values.
+
+    Returns
+    -------
+    zero_mask : ndarray of shape (n_features, n_group)
+        Mask of struc zeros.
+    """
+
+    tmp = np.nan_to_num(table.to_numpy()) != 0
+    tmp_table = pd.DataFrame(tmp, columns=table.columns, index=table.index)
+
+    p_hat = tmp_table.groupby(metadata[group], observed=True).mean()
+    sample_size = metadata[group].value_counts(sort=False).to_numpy()[:, np.newaxis]
+    if nlb:
+        p_hat = p_hat - 1.96 * (p_hat * (1 - p_hat) / sample_size) ** 0.5
+    zero_idx = (p_hat <= 0).to_numpy()
+    return 1 - zero_idx[1:] ^ zero_idx[0]
+
+
+def _global_F(dmat, group, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
+    """Output results from ANCOM-BC global test to determine feature that are
+    differentially abundant between at least 2 groups across >3 different groups
+
+    Parameters
+    ----------
+    dmat : ndarray of shape (n_samples, n_covariates)
+        Design matrix.
+    group : str
+        The group variable of interests in metadata.
+    beta_hat : ndarray of shape (n_features, n_covariates)
+        Corrected coefficients.
+    vcov_hat : ndarray of shape (n_features, n_covariates, n_covariates)
+        Estimated covariance matrices.
+    alpha : float, optional
+        Significance level for the statistical tests. Must be in the range of (0, 1).
+        Default is 0.05.
+    p_adjust : str, optional
+        Method to correct *p*-values for multiple comparisons. Options are Holm-
+        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
+        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
+        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Case-insensitive. If None, no correction will be performed.
+
+    Returns
+    -------
+    res_W : ndarray of shape (n_features, n_group)
+        W of global test.
+    res_p : ndarray of shape (n_features, n_group)
+        p values of global test.
+    qval : ndarray of shape (n_features, n_group)
+        adjusted p value of global test.
+    reject : ndarray of shape (n_features, n_group)
+        if the variable is differentially abundant
+    """
+
+    group_ind = np.nonzero(np.char.find(dmat.design_info.column_names, group) >= 0)[0]
+    beta_hat_sub = beta_hat[:, group_ind]
+    vcov_hat_sub = vcov_hat[:, group_ind][:, :, group_ind]
+    vcov_hat_sub_inv = np.linalg.pinv(vcov_hat_sub)
+    dof = group_ind.size
+    A = np.identity(dof)
+    term = np.einsum("cf,nf->nc", A, beta_hat_sub)
+    W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)
+    p_lower = chi2.cdf(W_global, dof)
+    p_upper = chi2.sf(W_global, dof)
+    pval = 2 * np.minimum(p_lower, p_upper)
+    func = _check_p_adjust(p_adjust)
+    qval = np.apply_along_axis(func, 0, pval)
+    reject = qval <= alpha
+
+    return W_global, pval, qval, reject
