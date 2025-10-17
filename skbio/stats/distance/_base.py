@@ -145,7 +145,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
     ) -> None:
-        data, ids = self._normalize_input(data, ids)
+        data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
@@ -156,10 +156,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         else:
             ids = tuple(ids)
 
-        # validation
         if validate:
-            self._validate_shape(data)
-            self._validate_ids(data, ids)
+            if validate_shape:
+                self._validate_shape(data)
+            if validate_ids:
+                self._validate_ids(data, ids)
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
@@ -167,10 +168,16 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self._flags = self._init_flags()
 
     def _normalize_input(self, data, ids):
-        """Get input into standard NumPy array format."""
+        """Get input into standard numpy array format."""
+        validate_shape = True
+        validate_ids = True
         if isinstance(data, PairwiseMatrix):
-            ids = data.ids if ids is None else ids
+            validate_shape = False
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
             data = data.data
+
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
         # np.array, or possibly some other object type. Generally, this
@@ -197,7 +204,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # ndarray.
         assert isinstance(data, np.ndarray)
         data_: np.ndarray = data
-        return data_, ids
+        return (data_, ids, validate_shape, validate_ids)
 
     def _generate_ids(self, data):
         """Generate ids if none provided."""
@@ -1111,7 +1118,15 @@ class SymmetricMatrix(PairwiseMatrix):
         condensed: bool = False,
         diagonal: Union[float, np.ndarray] = None,
     ):
-        data, ids = self._normalize_input(data, ids)
+        (
+            data,
+            ids,
+            diagonal,
+            validate_data,
+            validate_ids,
+            validate_shape,
+            validate_diagonal,
+        ) = self._normalize_input(data, ids, diagonal)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1119,18 +1134,99 @@ class SymmetricMatrix(PairwiseMatrix):
             ids = tuple(ids)
 
         if validate:
-            self._validate_shape(data)
-            self._validate_ids(data, ids)
-            self._validate_data(data)
-            self._validate_diagonal(data, diagonal)
+            if validate_shape:
+                self._validate_shape(data)
+            if validate_ids:
+                self._validate_ids(data, ids)
+            if validate_diagonal:
+                self._validate_diagonal(data, diagonal)
+            if validate_data:
+                self._validate_data(data)
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal(diagonal, data)
+        self._diagonal = self._init_diagonal(diagonal, data, condensed)
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
 
-    def _init_diagonal(self, diagonal: Union[float, np.ndarray], data: np.ndarray):
+    def _normalize_input(self, data, ids, diagonal=None):
+        """Get input into standard numpy array format."""
+        validate_data = True
+        validate_ids = True
+        validate_shape = True
+        validate_diagonal = True
+        if isinstance(data, DistanceMatrix):
+            validate_data = False
+            validate_shape = False
+            # if no new ids then no validation
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
+            # if no new diagonal then no validation
+            if diagonal is None:
+                validate_diagonal = False
+            data = data.data
+        # if it is a symmetric matrix then data doesn't need validation
+        if isinstance(data, SymmetricMatrix):
+            validate_data = False
+            validate_shape = False
+            # if no new ids then no validation
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
+            # if no new diagonal then no validation
+            if diagonal is None:
+                validate_diagonal = False
+                diagonal = data.diagonal
+            data = data.data
+        elif isinstance(data, PairwiseMatrix):
+            validate_shape = False
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
+            if diagonal is None:
+                validate_diagonal = False
+            data = data.data
+
+        # It is necessary to standardize the representation of the .data
+        # attribute of this object. The input types might be list, tuple,
+        # np.array, or possibly some other object type. Generally, this
+        # normalization of type will require a copy of data. For example,
+        # moving from a Python type representation (e.g., [[0, 1], [1, 0]])
+        # requires casting all of the values to numpy types, which is handled
+        # as an implicit copy via np.asarray. However, these copies are
+        # unnecessary if the data object is already a numpy array. np.asarray
+        # is smart enough to not copy the data, however if a dtype change is
+        # requested it will. The following block of code limits the use of
+        # np.asarray to situations where the data are (a) not already a numpy
+        # array or (b) the data are not a single or double precision numpy
+        # data type.
+        _issue_copy = True
+        if isinstance(data, np.ndarray):
+            if data.dtype in (np.float32, np.float64):
+                _issue_copy = False
+
+        if _issue_copy:
+            data = np.asarray(data, dtype="float")
+
+        # Make data_ explicitly an ndarray to help with type checking.
+        # At this point in the code we can be certain that data is an
+        # ndarray.
+        assert isinstance(data, np.ndarray)
+        data_: np.ndarray = data
+        return (
+            data_,
+            ids,
+            diagonal,
+            validate_data,
+            validate_ids,
+            validate_shape,
+            validate_diagonal,
+        )
+
+    def _init_diagonal(
+        self, diagonal: Union[float, np.ndarray], data: np.ndarray, condensed
+    ):
         """Initialize the diagonal attribute.
 
         Parameters
@@ -1145,18 +1241,27 @@ class SymmetricMatrix(PairwiseMatrix):
         float or np.ndarray
             The diagonal values of the matrix.
         """
-        if diagonal is None:
-            if data.ndim == 1:
-                return 0.0
-            if data.ndim == 2:
-                diagonal = np.diagonal(data)
-                if np.allclose(diagonal, 0):
-                    diagonal = 0.0
-                return diagonal
-        if np.isscalar(diagonal):
-            return float(diagonal)
+        if condensed:
+            if diagonal is None:
+                if data.ndim == 1:
+                    return 0.0
+                if data.ndim == 2:
+                    # do we want to store 0.0 if diagonal is all zeros?
+                    # or what about if diagonal is all the same value?
+                    # if all(np.diagonal(data) == np.diagonal(data)[0]):
+                    #     return float(np.diagonal(data)[0])
+                    return np.diagonal(data)
+            if np.isscalar(diagonal):
+                return float(diagonal)
+            else:
+                return np.asarray(diagonal)
         else:
-            return np.asarray(diagonal)
+            if diagonal is not None:
+                if np.isscalar(diagonal):
+                    return float(diagonal)
+                else:
+                    return np.asarray(diagonal)
+            return None
 
     def _init_flags(self, condensed: bool) -> dict:
         """Initialize flags for symmetric matrix.
@@ -1204,7 +1309,10 @@ class SymmetricMatrix(PairwiseMatrix):
             # case where input is 1d and is converted to 2d.
             if data.ndim == 1:
                 mat = squareform(data, force="tomatrix", checks=False)
-                np.fill_diagonal(mat, self._diagonal)
+                if self._diagonal is not None:
+                    np.fill_diagonal(mat, self._diagonal)
+                else:
+                    np.fill_diagonal(mat, 0.0)
                 return mat
             # case where input is 2d and stays 2d
             else:
@@ -1230,6 +1338,13 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if diagonal is not None:
+            # if data is 2D and diagonal is provided, raise error because unsure
+            # which diagonal to use
+            if data.ndim == 2:
+                raise SymmetricMatrixError(
+                    "Cannot provide diagonal when data matrix is 2D. Information "
+                    "contained along diagonal is ambiguous."
+                )
             # if it's a single value, it doesn't need to be validated
             if not np.isscalar(diagonal):
                 diagonal = np.array(diagonal)
@@ -1241,19 +1356,12 @@ class SymmetricMatrix(PairwiseMatrix):
                     )
                 # it also needs to match the size of the matrix
                 length = diagonal.size
-                if data.ndim == 2:
-                    if length != data.shape[0]:
-                        raise SymmetricMatrixError(
-                            f"Length of diagonal ({length}) does not match the shape "
-                            f"of the matrix {data.shape}."
-                        )
-                else:
-                    shape = _vec_to_shape(data)
-                    if length != shape:
-                        raise SymmetricMatrixError(
-                            f"Length of diagonal ({length}) does not match the shape "
-                            f"of the matrix {(shape, shape)}."
-                        )
+                shape = _vec_to_shape(data)
+                if length != shape:
+                    raise SymmetricMatrixError(
+                        f"Length of diagonal ({length}) does not match the shape "
+                        f"of the matrix {(shape, shape)}."
+                    )
 
     def _validate_shape(self, data: np.ndarray):
         """Validate the shape of the input data.
@@ -1344,7 +1452,6 @@ class SymmetricMatrix(PairwiseMatrix):
         key: Optional[Any] = None,
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
-        diagonal: Union[float, np.ndarray] = 0.0,
         condensed: bool = False,
     ) -> "SymmetricMatrix":
         r"""Create a symmetric matrix from an iterable given a metric.
@@ -1399,7 +1506,7 @@ class SymmetricMatrix(PairwiseMatrix):
         # this allows for diagonals which do not match the exact shape of the matrix,
         # np.fill_diagonal will just repeat the array to fill. Not sure if this is
         # what we want here.
-        np.fill_diagonal(dm, diagonal)
+        # np.fill_diagonal(dm, diagonal)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1410,7 +1517,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-        return cls(dm, keys_, diagonal=diagonal, condensed=condensed)  # type: ignore[operator]
+        return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
         self, index: Union[str, tuple[str, str], Any]
@@ -1779,9 +1886,10 @@ class DistanceMatrix(SymmetricMatrix):
         ids: Optional[Sequence[str]] = None,
         validate: bool = True,
         condensed: bool = False,
-        diagonal: Union[float, np.ndarray] = None,
     ):
-        data, ids = self._normalize_input(data, ids)
+        data, ids, _, validate_data, validate_ids, validate_shape = (
+            self._normalize_input(data, ids)
+        )
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1789,16 +1897,71 @@ class DistanceMatrix(SymmetricMatrix):
             ids = tuple(ids)
 
         if validate:
-            self._validate_shape(data)
-            self._validate_ids(data, ids)
-            self._validate_data(data)
-            self._validate_diagonal(data, diagonal)
+            if validate_shape:
+                self._validate_shape(data)
+            if validate_ids:
+                self._validate_ids(data, ids)
+            if validate_data:
+                self._validate_data(data)
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._diagonal = self._init_diagonal()
+        self._diagonal = 0.0
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
+
+    def _normalize_input(self, data, ids, diagonal=None):
+        """Get input into standard numpy array format."""
+        validate_data = True
+        validate_ids = True
+        validate_shape = True
+        # ids = data.ids if ids is None else ids
+        # if it's a distance matrix we can assume it's already been checked for symmetry
+        # and hollowness
+        if isinstance(data, DistanceMatrix):
+            validate_data = False
+            validate_shape = False
+            # but if new ids are provided then we need to validate them
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
+            data = data.data
+        # need to validate data if it's coming from a SymmetricMatrix or PairwiseMatrix
+        elif isinstance(data, PairwiseMatrix):
+            validate_shape = False
+            # validate new ids if they are provided
+            if ids is None:
+                validate_ids = False
+                ids = data.ids
+            data = data.data
+
+        # It is necessary to standardize the representation of the .data
+        # attribute of this object. The input types might be list, tuple,
+        # np.array, or possibly some other object type. Generally, this
+        # normalization of type will require a copy of data. For example,
+        # moving from a Python type representation (e.g., [[0, 1], [1, 0]])
+        # requires casting all of the values to numpy types, which is handled
+        # as an implicit copy via np.asarray. However, these copies are
+        # unnecessary if the data object is already a numpy array. np.asarray
+        # is smart enough to not copy the data, however if a dtype change is
+        # requested it will. The following block of code limits the use of
+        # np.asarray to situations where the data are (a) not already a numpy
+        # array or (b) the data are not a single or double precision numpy
+        # data type.
+        _issue_copy = True
+        if isinstance(data, np.ndarray):
+            if data.dtype in (np.float32, np.float64):
+                _issue_copy = False
+
+        if _issue_copy:
+            data = np.asarray(data, dtype="float")
+
+        # Make data_ explicitly an ndarray to help with type checking.
+        # At this point in the code we can be certain that data is an
+        # ndarray.
+        assert isinstance(data, np.ndarray)
+        data_: np.ndarray = data
+        return data_, ids, diagonal, validate_data, validate_ids, validate_shape
 
     def condensed_form(self) -> np.ndarray:
         r"""Return an array of distances in condensed format.
@@ -1843,37 +2006,34 @@ class DistanceMatrix(SymmetricMatrix):
                     "Data must  be hollow (i.e., the diagonal can only contain zeros)."
                 )
 
-    def _validate_diagonal(
-        self, data: np.ndarray, diagonal: Union[float, np.ndarray]
-    ) -> None:
-        """Validate the diagonal of the matrix.
+    def _copy(
+        self, transpose: bool = False, condensed: bool = False
+    ) -> "SymmetricMatrix":
+        """Copy support.
 
-        In addition to the checks performed in the superclass, it also chacks that the
-        diagonal only contains zeros.
+        Parameters
+        ----------
+        condensed : bool
+            Whether the matrix is in condensed form or not.
 
-        """
-        if diagonal is not None:
-            if np.isscalar(diagonal):
-                if diagonal != 0:
-                    raise DistanceMatrixError(
-                        "The diagonal of a DistanceMatrix may only contain zeros."
-                    )
-            else:
-                diagonal = np.asarray(diagonal)
-                if np.any(diagonal != 0):
-                    raise DistanceMatrixError(
-                        "The diagonal of a DistanceMatrix may only contain zeros."
-                    )
-        super()._validate_diagonal(data, diagonal)
-
-    def _init_diagonal(self):
-        """Initialize the diagonal attribute for a DistanceMatrix.
-
-        A DistanceMatrix must by definition have only 0's on its diagonal, so the most
-        efficient storage will always be 0.0.
+        Returns
+        -------
+        SymmetricMatrix
 
         """
-        return 0.0
+        # adding for backward compatibility
+        data = self._data.copy()
+        if transpose:
+            data = data.T
+        # We deepcopy IDs in case the tuple contains mutable objects at some
+        # point in the future.
+        # Note: Skip validation, since we assume self was already validated
+        return self.__class__(
+            data,
+            deepcopy(self.ids),
+            validate=False,
+            condensed=condensed,
+        )
 
     def to_series(self) -> pd.Series:
         """Create a pandas Series from this ``DistanceMatrix``.
