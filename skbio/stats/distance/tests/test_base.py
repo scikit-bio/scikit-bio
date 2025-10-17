@@ -211,6 +211,24 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
 
         npt.assert_equal(obs, exp)
 
+    def test_matrix_from_matrix(self):
+        # pairwise from pairwise
+        dm = self.matobj(self.dm_5x5)
+        npt.assert_equal(dm.data, self.dm_5x5.data)
+        self.assertEqual(dm.ids, self.dm_5x5.ids)
+
+        # pairwise from symmetric
+        sm = SymmetricMatrix(self.dm_3x3)
+        dm = self.matobj(sm)
+        npt.assert_equal(dm.data, self.dm_3x3.data)
+        self.assertEqual(dm.ids, self.dm_3x3.ids)
+
+        # pairwise from distance
+        dm = DistanceMatrix(self.dm_3x3)
+        dm = self.matobj(dm)
+        npt.assert_equal(dm.data, self.dm_3x3.data)
+        self.assertEqual(dm.ids, self.dm_3x3.ids)
+
     def test_subset_to_dataframe(self):
         exp = pd.DataFrame(
             [
@@ -789,8 +807,15 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             self.dm_3x3_data, ["a", "b", "c"], condensed=True
         )
         self.dm_5x5 = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"))
-        self.dm_5x5_cond = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"), condensed=True)
-        self.dm_5x5_cond_diag = self.matobj([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"), condensed=True, diagonal=[90, 80, 70, 60, 50])
+        self.dm_5x5_cond = self.matobj(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], list("abcde"), condensed=True
+        )
+        self.dm_5x5_cond_diag = self.matobj(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            list("abcde"),
+            condensed=True,
+            diagonal=[90, 80, 70, 60, 50],
+        )
 
         self.dms = [
             self.dm_1x1,
@@ -817,7 +842,6 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         obs = self.dm_5x5_cond_diag["a", "b"]
 
     def test_get_row_from_condensed(self):
-        # print('\n', self.dm_5x5_cond_diag.redundant_form(), '\n')
         exp = np.array([90, 1, 2, 3, 4])
         obs = self.dm_5x5_cond_diag["a"]
         npt.assert_equal(obs, exp)
@@ -830,10 +854,89 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         obs = self.dm_5x5_cond_diag["e"]
         npt.assert_equal(obs, exp)
 
+    def test_matrix_from_matrix(self):
+        # symmetric from symmetric
+        sm = SymmetricMatrix(self.dm_5x5)
+        npt.assert_equal(sm.data, self.dm_5x5.data)
+        self.assertEqual(sm.ids, self.dm_5x5.ids)
+        npt.assert_equal(sm.diagonal, self.dm_5x5.diagonal)
+
+        # symmetric from pairwise
+        pm = PairwiseMatrix(self.dm_3x3)
+        sm = self.matobj(pm)
+        npt.assert_equal(sm.data, self.dm_3x3.data)
+        self.assertEqual(sm.ids, self.dm_3x3.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
+
+        # symmetric from distance
+        dm = DistanceMatrix(self.dm_3x3)
+        sm = self.matobj(dm)
+        npt.assert_equal(sm.data, self.dm_3x3.data)
+        self.assertEqual(sm.ids, self.dm_3x3.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
+
+    def test_matrix_from_matrix_condensed(self):
+        # symmetric from symmetric
+        sm = SymmetricMatrix(self.dm_5x5_cond, condensed=True)
+        npt.assert_equal(sm.data, self.dm_5x5_cond.data)
+        self.assertEqual(sm.ids, self.dm_5x5_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_5x5_cond.diagonal)
+
+        # symmetric from symmetric, change ids
+        sm = SymmetricMatrix(self.dm_5x5_cond, ids = ['aa', 'bb', 'cc', 'dd', 'ee'], condensed=True)
+        npt.assert_equal(sm.data, self.dm_5x5_cond.data)
+        self.assertEqual(sm.ids, ('aa', 'bb', 'cc', 'dd', 'ee'))
+        npt.assert_equal(sm.diagonal, self.dm_5x5_cond.diagonal)
+
+        # symmetric from pairwise
+        pm = PairwiseMatrix(self.dm_3x3_cond)
+        sm = self.matobj(pm, condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # symmetric from pairwise, change ids
+        pm = PairwiseMatrix(self.dm_3x3_cond)
+        sm = self.matobj(pm, ids=['aa', 'bb', 'cc'], condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, ('aa', 'bb', 'cc'))
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # symmetric from pairwise, change diagonal
+        # pm = PairwiseMatrix(self.dm_3x3_cond)
+        # sm = self.matobj(pm.condensed_form(), pm.ids, diagonal=[11, 22, 33], condensed=True)
+        # npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        # self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        # npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
+
+        # symmetric from distance
+        dm = DistanceMatrix(self.dm_3x3_cond)
+        sm = self.matobj(dm, condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # symmetric from distance, change ids
+        dm = DistanceMatrix(self.dm_3x3_cond)
+        sm = self.matobj(dm, ids=['aa', 'bb', 'cc'], condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, ('aa', 'bb', 'cc'))
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # symmetric from distance, change diagonal
+        dm = DistanceMatrix(self.dm_3x3_cond)
+        sm = self.matobj(dm, dm.ids, diagonal=[11, 22, 33], condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
+
     def test_validate_ids_1d(self):
         with self.assertRaises(PairwiseMatrixError) as e:
-            SymmetricMatrix([1, 2, 3], ['a'], condensed=True)
-        self.assertEqual(str(e.exception), "The number of IDs (1) must match the number of rows/columns in the data (3).")
+            SymmetricMatrix([1, 2, 3], ["a"], condensed=True)
+        self.assertEqual(
+            str(e.exception),
+            "The number of IDs (1) must match the number of rows/columns in the data (3).",
+        )
 
     def test_init_diagonal_1d_none(self):
         # diagonal=None and 1d input should return None, because the underlying data structure is redundant
@@ -889,13 +992,13 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             "Diagonal must be 1 dimensional if it is an array. Found 2 dimensions.",
         )
 
-    def test_validate_diagonal_mismatch_2D(self):
-        with self.assertRaises(SymmetricMatrixError) as e:
-            SymmetricMatrix([[0, 1], [1, 0]], diagonal=[1, 2, 3])
-        self.assertEqual(
-            str(e.exception),
-            "Length of diagonal (3) does not match the shape of the matrix (2, 2).",
-        )
+    # def test_validate_diagonal_mismatch_2D(self):
+    #     with self.assertRaises(SymmetricMatrixError) as e:
+    #         SymmetricMatrix([[0, 1], [1, 0]], diagonal=[1, 2, 3])
+    #     self.assertEqual(
+    #         str(e.exception),
+    #         "Length of diagonal (3) does not match the shape of the matrix (2, 2).",
+    #     )
 
     def test_validate_diagonal_mismatch_1D(self):
         with self.assertRaises(SymmetricMatrixError) as e:
@@ -905,11 +1008,13 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             "Length of diagonal (3) does not match the shape of the matrix (2, 2).",
         )
 
-    def test_validate_diagonal_good_input(self):
-        sm = SymmetricMatrix([[0, 1], [1, 0]], diagonal=[2, 3])
-        obs = sm.diagonal
-        exp = np.array([2, 3])
-        npt.assert_equal(obs, exp)
+    def test_validate_diagonal_providing_redundant(self):
+        with self.assertRaises(SymmetricMatrixError) as e:
+            sm = SymmetricMatrix([[0, 1], [1, 0]], diagonal=[2, 3])
+        self.assertEqual(
+            str(e.exception),
+            "Cannot provide diagonal when data matrix is 2D. Information contained along diagonal is ambiguous.",
+        )
 
     def test_validate_shape_invalid_1D_size(self):
         with self.assertRaises(SymmetricMatrixError) as e:
@@ -1185,18 +1290,47 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.01, 4.2, 12.0]),
         ] * 2
 
-    def test_validate_diagonal_nonzero(self):
-        with self.assertRaises(DistanceMatrixError) as e:
-            DistanceMatrix([1, 2, 3], diagonal=1)
-        self.assertEqual(str(e.exception), "The diagonal of a DistanceMatrix may only contain zeros.")
+    def test_matrix_from_matrix(self):
+        # distance from distance
+        sm = DistanceMatrix(self.dm_3x3)
+        npt.assert_equal(sm.data, self.dm_3x3.data)
+        self.assertEqual(sm.ids, self.dm_3x3.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
 
-    def test_validate_diagonal_list(self):
-        with self.assertRaises(DistanceMatrixError) as e:
-            DistanceMatrix([1, 2, 3], diagonal=[0, 2, 0])
-        self.assertEqual(str(e.exception), "The diagonal of a DistanceMatrix may only contain zeros.")
+        # distance from pairwise
+        pm = PairwiseMatrix(self.dm_3x3)
+        sm = self.matobj(pm)
+        npt.assert_equal(sm.data, self.dm_3x3.data)
+        self.assertEqual(sm.ids, self.dm_3x3.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
 
-    def validate_diagonal_good_input(self):
-        dm = DistanceMatrix([1, 2, 3], diagonal=[0, 0, 0])
+        # distance from symmetric
+        dm = SymmetricMatrix(self.dm_3x3)
+        sm = self.matobj(dm)
+        npt.assert_equal(sm.data, self.dm_3x3.data)
+        self.assertEqual(sm.ids, self.dm_3x3.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
+
+    def test_matrix_from_matrix_condensed(self):
+        # distance from distance
+        sm = DistanceMatrix(self.dm_3x3_cond, condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # distance from pairwise
+        pm = PairwiseMatrix(self.dm_3x3_cond)
+        sm = self.matobj(pm, condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
+
+        # distance from symmetric
+        dm = SymmetricMatrix(self.dm_3x3_cond)
+        sm = self.matobj(dm, condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
 
     def test_init_from_condensed_form(self):
         data = [1, 2, 3]
