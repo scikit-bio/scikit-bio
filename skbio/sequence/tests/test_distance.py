@@ -20,83 +20,65 @@ class TestHamming(unittest.TestCase):
     def test_non_sequence(self):
         seq1 = Sequence('abc')
         seq2 = 'abc'
-
         with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
             hamming(seq1, seq2)
-
         with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
             hamming(seq2, seq1)
 
     def test_type_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ACG')
-
-        with self.assertRaisesRegex(TypeError,
-                                    r'Sequence.*does not match.*DNA'):
+        with self.assertRaisesRegex(TypeError, r'Sequence.*does not match.*DNA'):
             hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABCD')
-
         with self.assertRaisesRegex(ValueError, r'equal length.*3 != 4'):
             hamming(seq1, seq2)
 
     def test_return_type(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABC')
-
-        distance = hamming(seq1, seq2)
-
-        self.assertIsInstance(distance, float)
-        self.assertEqual(distance, 0.0)
+        obs = hamming(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(obs, 0.0)
 
     def test_minimum_distance(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABC')
-
-        distance = hamming(seq1, seq2)
-
-        self.assertEqual(distance, 0.0)
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.0)
 
     def test_mid_range_distance(self):
         seq1 = Sequence("abcdefgh")
         seq2 = Sequence("1b23ef45")
-
-        distance = hamming(seq1, seq2)
-
-        self.assertEqual(distance, 5.0/8.0)
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 5.0/8.0)
 
     def test_maximum_distance(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('CAB')
-
-        distance = hamming(seq1, seq2)
-
-        self.assertEqual(distance, 1.0)
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 1.0)
 
     def test_empty_sequences(self):
         seq1 = Sequence('')
         seq2 = Sequence('')
+        obs = hamming(seq1, seq2)
+        self.assertTrue(np.isnan(obs))
 
-        distance = hamming(seq1, seq2)
-
-        npt.assert_equal(distance, np.nan)
-
-    def test_single_character_sequences(self):
+    def test_single_characters(self):
         seq1 = Sequence('a')
         seq2 = Sequence('b')
-
         self.assertEqual(hamming(seq1, seq1), 0.0)
         self.assertEqual(hamming(seq1, seq2), 1.0)
 
     def test_sequence_subclass(self):
         seq1 = DNA('ACG-T')
         seq2 = DNA('ACCTT')
-
-        distance = hamming(seq1, seq2)
-
-        self.assertEqual(distance, 2.0/5.0)
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 2.0/5.0)
 
     def test_sequences_with_metadata(self):
         # test for #1254
@@ -113,12 +95,73 @@ class TestHamming(unittest.TestCase):
 
         for seqs in seqs1, seqs2:
             for seq1, seq2 in itertools.product(seqs, repeat=2):
-                distance = hamming(seq1, seq2)
-                self.assertEqual(distance, 0.0)
+                obs = hamming(seq1, seq2)
+                self.assertEqual(obs, 0.0)
 
         for seq1, seq2 in itertools.product(seqs1, seqs2):
-            distance = hamming(seq1, seq2)
-            self.assertEqual(distance, 0.75)
+            obs = hamming(seq1, seq2)
+            self.assertEqual(obs, 0.75)
+
+    def test_raw_count(self):
+        seq1 = DNA("AAGTC")
+        seq2 = DNA("ACGAC")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.4)
+        obs = hamming(seq1, seq2, proportion=False)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(obs, 2.0)
+
+    def test_ignore_gap_degen(self):
+        seq1 = DNA("ACGT")
+        seq2 = DNA("TCGA")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.5)
+        obs = hamming(seq1, seq2, gap_policy="ignore")
+        self.assertEqual(obs, 0.5)
+
+        seq1 = DNA("AGCGT")
+        seq2 = DNA("CG-AT")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.6)
+        obs = hamming(seq1, seq2, gap_policy="ignore")
+        self.assertEqual(obs, 0.5)
+
+        seq1 = DNA("AGCGT")
+        seq2 = DNA("CGNAT")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.6)
+        obs = hamming(seq1, seq2, degenerate_policy="ignore")
+        self.assertEqual(obs, 0.5)
+
+        seq1 = DNA("CARGT")
+        seq2 = DNA("BAAGD")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.6)
+        obs = hamming(seq1, seq2, degenerate_policy="ignore")
+        self.assertEqual(obs, 0.0)
+
+        seq1 = DNA("TARSTG-G")
+        seq2 = DNA("C--ATNAG")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 0.75)
+        obs = hamming(seq1, seq2, gap_policy="ignore", degenerate_policy="ignore")
+        self.assertAlmostEqual(obs, 1 / 3)
+
+    def test_non_left(self):
+        seq1 = DNA("AAA---")
+        seq2 = DNA("---TTT")
+        obs = hamming(seq1, seq2)
+        self.assertEqual(obs, 1.0)
+        obs = hamming(seq1, seq2, gap_policy="ignore")
+        self.assertTrue(np.isnan(obs))
+
+    def test_gap_degen_undefined(self):
+        seq1 = Sequence("AGCNT")
+        seq2 = Sequence("CG-AT")
+        with self.assertRaisesRegex(AttributeError, r"has no attribute 'gaps'"):
+            hamming(seq1, seq2, gap_policy="ignore")
+        with self.assertRaisesRegex(AttributeError, r"has no attribute 'degenerates'"):
+            hamming(seq1, seq2, degenerate_policy="ignore")
 
 
 class TestKmerDistance(unittest.TestCase):
@@ -196,7 +239,7 @@ class TestKmerDistance(unittest.TestCase):
         seq1 = Sequence('')
         seq2 = Sequence('')
         obs = kmer_distance(seq1, seq2, 3)
-        npt.assert_equal(obs, np.nan)
+        self.assertTrue(np.isnan(obs))
 
     def test_one_empty_sequence(self):
         seq1 = Sequence('')
@@ -209,7 +252,7 @@ class TestKmerDistance(unittest.TestCase):
         seq1 = Sequence('ATCG')
         seq2 = Sequence('ACGT')
         obs = kmer_distance(seq1, seq2, 5)
-        npt.assert_equal(obs, np.nan)
+        self.assertTrue(np.isnan(obs))
 
     def test_k_less_than_one_error(self):
         seq1 = Sequence('ATCG')

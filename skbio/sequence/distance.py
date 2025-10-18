@@ -29,35 +29,54 @@ Functions
 # ----------------------------------------------------------------------------
 
 import numpy as np
-import scipy.spatial.distance
 
 import skbio
 
 
-def hamming(seq1, seq2):
-    """Compute Hamming distance between two sequences.
+def hamming(
+    seq1,
+    seq2,
+    proportion=True,
+    gap_policy="unique",
+    degenerate_policy="unique",
+):
+    """Compute the Hamming distance between two sequences.
 
-    The Hamming distance between two equal-length sequences is the proportion
-    of differing characters.
+    The Hamming distance [1]_ between two equal-length sequences is the number of
+    differing characters. It is often normalized to a proportion of total sequence
+    length. This proportion is usually referred to as the *p*-distance in
+    bioinformatics.
 
     Parameters
     ----------
     seq1, seq2 : Sequence
-        Sequences to compute Hamming distance between.
+        Sequences to compute the Hamming distance between.
+    proportion : bool, optional
+        If True (default), normalize to a proportion of total sequence length.
+    gap_policy : {'unique', 'ignore'}, optional.
+        How to handle gaps in the sequences. "unique" (default) treats gaps as unique
+        characters in the calculation. "ignore" excludes positions with either or both
+        gaps from the calculation.
+    degenerate_policy : {'unique', 'ignore'}, optional.
+        How to handle degenerate characters in the sequences. "unique" (default) treats
+        them as unique characters. "ignore" excludes positions with degenerate
+        characters from the calculation.
 
     Returns
     -------
     float
-        Hamming distance between `seq1` and `seq2`.
+        Hamming distance between ``seq1`` and ``seq2``.
 
     Raises
     ------
     TypeError
-        If `seq1` and `seq2` are not ``Sequence`` instances.
+        If the sequences are not ``Sequence`` instances.
     TypeError
-        If `seq1` and `seq2` are not the same type.
+        If the sequences are not the same type.
     ValueError
-        If `seq1` and `seq2` are not the same length.
+        If the sequences are not the same length.
+    AttributeError
+        If gap or degenerate characters are not defined for the sequences.
 
     See Also
     --------
@@ -67,15 +86,20 @@ def hamming(seq1, seq2):
     -----
     ``np.nan`` will be returned if the sequences do not contain any characters.
 
-    This function does not make assumptions about the sequence alphabet in use.
-    Each sequence object's underlying sequence of characters are used to
-    compute Hamming distance. Characters that may be considered equivalent in
-    certain contexts (e.g., `-` and `.` as gap characters) are treated as
-    distinct characters when computing Hamming distance.
+    This function does not make assumptions about the sequence alphabet in use. Each
+    sequence object's underlying sequence of characters are used to compute Hamming
+    distance. Characters that may be considered equivalent in certain contexts (e.g.,
+    `-` and `.` as gap characters) are treated as distinct characters when computing
+    Hamming distance.
+
+    References
+    ----------
+    .. [1] Hamming, R. W. (1950). Error detecting and error correcting codes. The Bell
+       system technical journal, 29(2), 147-160.
 
     Examples
     --------
-    >>> from skbio import Sequence
+    >>> from skbio.sequence import Sequence
     >>> from skbio.sequence.distance import hamming
     >>> seq1 = Sequence('AGGGTA')
     >>> seq2 = Sequence('CGTTTA')
@@ -85,22 +109,46 @@ def hamming(seq1, seq2):
     """
     _check_seqs(seq1, seq2)
 
+    L = len(seq1)
+
     # Hamming requires equal length sequences. We are checking this here
     # because the error you would get otherwise is cryptic.
-    if len(seq1) != len(seq2):
+    if len(seq2) != L:
         raise ValueError(
             "Hamming distance can only be computed between sequences of equal "
             "length (%d != %d)" % (len(seq1), len(seq2))
         )
 
-    # scipy throws a RuntimeWarning when computing Hamming distance on length 0
-    # input.
-    if not seq1:
-        distance = np.nan
-    else:
-        distance = scipy.spatial.distance.hamming(seq1.values, seq2.values)
+    if L == 0:
+        return np.nan
 
-    return float(distance)
+    # Create a Boolean mask of gap and/or degenerate characters.
+    if gap_policy == "ignore":
+        mask = seq1.gaps() | seq2.gaps()
+        if degenerate_policy == "ignore":
+            mask |= seq1.degenerates() | seq2.degenerates()
+    elif degenerate_policy == "ignore":
+        mask = seq1.degenerates() | seq2.degenerates()
+    else:
+        mask = None
+
+    # Reduce sequences to valid positions, if necessary.
+    if mask is not None:
+        valid = ~mask
+        L_valid = np.sum(valid)
+        if L_valid == 0:
+            return np.nan
+        elif L_valid < L:
+            seq1 = seq1[valid]
+            seq2 = seq2[valid]
+            L = L_valid
+
+    # Count different positions
+    dist = np.sum(seq1.values != seq2.values)
+    if proportion:
+        dist /= L
+
+    return float(dist)
 
 
 def kmer_distance(seq1, seq2, k, overlap=True):
@@ -141,7 +189,7 @@ def kmer_distance(seq1, seq2, k, overlap=True):
 
     Examples
     --------
-    >>> from skbio import Sequence
+    >>> from skbio.sequence import Sequence
     >>> seq1 = Sequence('ATCGGCGAT')
     >>> seq2 = Sequence('GCAGATGTG')
     >>> kmer_distance(seq1, seq2, 3) # doctest: +ELLIPSIS
