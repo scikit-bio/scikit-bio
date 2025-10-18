@@ -13,7 +13,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import Sequence, DNA
-from skbio.sequence.distance import hamming, kmer_distance
+from skbio.sequence.distance import hamming, kmer_distance, jc69_correct
 
 
 class TestHamming(unittest.TestCase):
@@ -271,6 +271,20 @@ class TestKmerDistance(unittest.TestCase):
         seq2 = 'ATCG'
         with self.assertRaisesRegex(TypeError, r"not 'str'"):
             kmer_distance(seq1, seq2, 3)
+
+
+class TestJC69Correct(unittest.TestCase):
+    def test_jc69_correct(self):
+        self.assertEqual(jc69_correct(0.1).round(3), 0.107)
+        self.assertEqual(jc69_correct(0.2).round(3), 0.233)
+        self.assertEqual(jc69_correct(0.5).round(3), 0.824)
+        self.assertEqual(jc69_correct(0.7).round(3), 2.031)
+        self.assertEqual(jc69_correct(0.0), 0.0)
+        self.assertTrue(np.isnan(jc69_correct(0.8)))
+        self.assertEqual(jc69_correct(0.5, chars=5).round(3), 0.785)
+        self.assertEqual(jc69_correct(0.8, chars=9).round(3), 2.047)
+        with self.assertRaisesRegex(ValueError, r"`chars` must be at least 2."):
+            jc69_correct(0.5, chars=1)
 
 
 if __name__ == "__main__":

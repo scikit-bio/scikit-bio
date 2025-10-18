@@ -17,6 +17,7 @@ Functions
 
    hamming
    kmer_distance
+   jc69_correct
 
 """  # noqa: D205, D415
 
@@ -40,24 +41,23 @@ def hamming(
     gap_policy="unique",
     degenerate_policy="unique",
 ):
-    """Compute the Hamming distance between two sequences.
+    r"""Compute the Hamming distance between two sequences.
 
     The Hamming distance [1]_ between two equal-length sequences is the number of
-    differing characters. It is often normalized to a proportion of total sequence
-    length. This proportion is usually referred to as the *p*-distance in
-    bioinformatics.
+    differing characters. It is often normalized to a proportion of the sequence
+    length. This proportion is usually referred to as *p*-distance in bioinformatics.
 
     Parameters
     ----------
     seq1, seq2 : Sequence
         Sequences to compute the Hamming distance between.
     proportion : bool, optional
-        If True (default), normalize to a proportion of total sequence length.
-    gap_policy : {'unique', 'ignore'}, optional.
+        If True (default), normalize to a proportion of the sequence length.
+    gap_policy : {'unique', 'ignore'}, optional
         How to handle gaps in the sequences. "unique" (default) treats gaps as unique
         characters in the calculation. "ignore" excludes positions with either or both
         gaps from the calculation.
-    degenerate_policy : {'unique', 'ignore'}, optional.
+    degenerate_policy : {'unique', 'ignore'}, optional
         How to handle degenerate characters in the sequences. "unique" (default) treats
         them as unique characters. "ignore" excludes positions with degenerate
         characters from the calculation.
@@ -80,6 +80,7 @@ def hamming(
 
     See Also
     --------
+    jc69_correct
     scipy.spatial.distance.hamming
 
     Notes
@@ -151,38 +152,112 @@ def hamming(
     return float(dist)
 
 
-def kmer_distance(seq1, seq2, k, overlap=True):
-    """Compute the kmer distance between a pair of sequences.
+def jc69_correct(dist, chars=4):
+    r"""Perform Jukes-Cantor (JC69) correction of a raw Hamming distance.
 
-    The kmer distance between two sequences is the fraction of kmers that are
+    The JC69 model [1]_ estimates the true sequence distance (number of substitutions
+    per site) by correcting the observed sequence distance (*p*-distance) to account
+    for repeated substitutions at the same site (a.k.a., saturation). For nucleotide
+    sequences (4 characters), the JC69-corrected distance :math:`D` is calculated as:
+
+    .. math::
+        D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
+
+    Parameters
+    ----------
+    dist : float
+        Uncorrected normalized Hamming distance (a.k.a., *p*-distance) between two
+        sequences.
+    chars : int, optional
+        Number of definite characters in the alphabet. Default is 4, which is for
+        nucleotide sequences (``A``, ``C``, ``G`` and ``T``/``U``).
+
+    Returns
+    -------
+    float
+        JC69-corrected distance.
+
+    Raises
+    ------
+    ValueError
+        If ``chars`` is less than 2.
+
+    See Also
+    --------
+    hamming
+
+    Notes
+    -----
+    JC69 is the most basic evolutionary model, assuming equal character frequencies and
+    equal substitution rates between characters.
+
+    The functions returns ``nan`` if ``dist >= (chars - 1) / chars``. This happens when
+    the two sequences are too divergent and subsitutions are over-saturated for the
+    meaningful estimation of the true evolutionary distance.
+
+    References
+    ----------
+    .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
+       Mammalian protein metabolism, 3(21), 132.
+
+    Examples
+    --------
+    >>> from skbio.sequence import DNA
+    >>> from skbio.sequence.distance import hamming, jc69_correct
+    >>> seq1 = DNA('AGGGTA')
+    >>> seq2 = DNA('CGTTTA')
+    >>> p_dist = hamming(seq1, seq2)
+    >>> p_dist
+    0.5
+
+    >>> jc69_dist = jc69_correct(p_dist)
+    >>> jc69_dist  # doctest: +ELLIPSIS
+    0.823959...
+
+    """
+    if chars < 2:
+        raise ValueError("`chars` must be at least 2.")
+    frac = (chars - 1) / chars
+    if dist >= frac:
+        return np.nan
+    elif dist == 0:
+        return 0.0
+    else:
+        return -frac * np.log(1.0 - dist / frac)
+
+
+def kmer_distance(seq1, seq2, k, overlap=True):
+    r"""Compute the *k*-mer distance between a pair of sequences.
+
+    The *k*-mer distance between two sequences is the fraction of *k*-mer that are
     unique to either sequence.
 
     Parameters
     ----------
     seq1, seq2 : Sequence
-        Sequences to compute kmer distance between.
+        Sequences to compute *k*-mer distance between.
     k : int
-        The kmer length.
+        The *k*-mer length.
     overlap : bool, optional
-        Defines whether the kmers should be overlapping or not.
+        Defines whether the *k*-mers should be overlapping or not.
 
     Returns
     -------
     float
-        kmer distance between `seq1` and `seq2`.
+        *k*-mer distance between ``seq1`` and ``seq2``.
 
     Raises
     ------
     ValueError
-        If `k` is less than 1.
+        If ``k`` is less than 1.
     TypeError
-        If `seq1` and `seq2` are not ``Sequence`` instances.
+        If the sequences are not ``Sequence`` instances.
     TypeError
-        If `seq1` and `seq2` are not the same type.
+        If the sequences are not the same type.
 
     Notes
     -----
-    kmer counts are not incorporated in this distance metric.
+    *k*-mers counts are not incorporated in this distance metric.
 
     ``np.nan`` will be returned if there are no kmers defined for the
     sequences.
@@ -192,7 +267,7 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     >>> from skbio.sequence import Sequence
     >>> seq1 = Sequence('ATCGGCGAT')
     >>> seq2 = Sequence('GCAGATGTG')
-    >>> kmer_distance(seq1, seq2, 3) # doctest: +ELLIPSIS
+    >>> kmer_distance(seq1, seq2, 3)  # doctest: +ELLIPSIS
     0.9230769230...
 
     """
