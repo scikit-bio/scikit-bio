@@ -1599,6 +1599,20 @@ class SymmetricMatrix(PairwiseMatrix):
         This method always returns a new object, even if the matrix is already
         in redundant form.
 
+        Examples
+        --------
+        Convert from condensed form back to redundant form:
+
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> sm_cond = SymmetricMatrix([1, 2, 3], ids=['a', 'b', 'c'], condensed=True)
+        >>> sm_cond.data
+        array([ 1., 2., 3.])
+        >>> sm_square = sm_cond.as_redundant()
+        >>> sm_square.data
+        array([[ 0., 1., 2.],
+               [ 1., 0., 3.],
+               [ 2., 3., 0.]])
+
         """
         return self._copy(condensed=False)
 
@@ -1613,6 +1627,19 @@ class SymmetricMatrix(PairwiseMatrix):
         See Also
         --------
         condensed_form
+
+        Examples
+        --------
+        Create a symmetric matrix in condensed form and expand to square form:
+
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> sm = SymmetricMatrix([1, 2, 3], ids=['a', 'b', 'c'], condensed=True)
+        >>> sm.data
+        array([ 1., 2., 3.])
+        >>> sm.redundant_form()
+        array([[ 0., 1., 2.],
+               [ 1., 0., 3.],
+               [ 2., 3., 0.]])
 
         """
         if self._flags["CONDENSED"]:
@@ -1633,7 +1660,18 @@ class SymmetricMatrix(PairwiseMatrix):
         Notes
         -----
         This method always returns a new object, even if the matrix is already
-        in condensed form.
+        in condensed form. This format is compatible with
+        SciPy’s :func:`scipy.spatial.distance.squareform`.
+
+        Examples
+        --------
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> sm = SymmetricMatrix([[0, 1, 2],
+        ...                       [1, 0, 3],
+        ...                       [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> sm_cond = sm.as_condensed()
+        >>> sm_cond.data
+        array([ 1., 2., 3.])
 
         """
         return self._copy(condensed=True)
@@ -1652,6 +1690,15 @@ class SymmetricMatrix(PairwiseMatrix):
 
         The conversion is not a constant-time operation, though it should be
         relatively quick to perform.
+
+        Examples
+        --------
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> sm = SymmetricMatrix([[0, 1, 2],
+        ...                       [1, 0, 3],
+        ...                       [2, 3, 0]], ids=['a', 'b', 'c'])
+        >>> sm.condensed_form()
+        array([ 1., 2., 3.])
 
         References
         ----------
@@ -1993,31 +2040,6 @@ class DistanceMatrix(SymmetricMatrix):
         assert isinstance(data, np.ndarray)
         data_: np.ndarray = data
         return data_, ids, validate_data, validate_ids, validate_shape
-
-    def condensed_form(self) -> np.ndarray:
-        r"""Return an array of distances in condensed format.
-
-        Returns
-        -------
-        ndarray
-            One-dimensional `numpy.ndarray` of distances in condensed format.
-
-        Notes
-        -----
-        Condensed format is described in [1]_.
-
-        The conversion is not a constant-time operation, though it should be
-        relatively quick to perform.
-
-        References
-        ----------
-        .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
-
-        """
-        if self._flags["CONDENSED"]:
-            return self._data
-        else:
-            return squareform(self._data, force="tovector", checks=False)
 
     def _validate_data(self, data: np.ndarray) -> None:
         """Validate the data array.
