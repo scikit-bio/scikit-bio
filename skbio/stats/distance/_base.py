@@ -1149,7 +1149,7 @@ class SymmetricMatrix(PairwiseMatrix):
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
 
-    def _normalize_input(self, data, ids, diagonal=None):
+    def _normalize_input(self, data, ids, diagonal):
         """Get input into standard numpy array format."""
         validate_data = True
         validate_ids = True
@@ -1167,7 +1167,7 @@ class SymmetricMatrix(PairwiseMatrix):
                 validate_diagonal = False
             data = data.data
         # if it is a symmetric matrix then data doesn't need validation
-        if isinstance(data, SymmetricMatrix):
+        elif isinstance(data, SymmetricMatrix):
             validate_data = False
             validate_shape = False
             # if no new ids then no validation
@@ -1181,6 +1181,9 @@ class SymmetricMatrix(PairwiseMatrix):
             data = data.data
         elif isinstance(data, PairwiseMatrix):
             validate_shape = False
+            # PairwiseMatrix will always be 2D, meaning that passing a diagonal will
+            # raise an error, so we can skip validation
+            # validate_diagonal = False
             if ids is None:
                 validate_ids = False
                 ids = data.ids
@@ -1583,6 +1586,22 @@ class SymmetricMatrix(PairwiseMatrix):
             else:
                 return self._data.__getitem__(index)  # type: ignore[index]
 
+    def as_redundant(self) -> "SymmetricMatrix":
+        """Return a redundant form copy of the matrix.
+
+        Returns
+        -------
+        SymmetricMatrix
+            A new matrix object with the same data stored in redundant form.
+
+        Notes
+        -----
+        This method always returns a new object, even if the matrix is already
+        in redundant form.
+
+        """
+        return self._copy(condensed=False)
+
     def redundant_form(self):
         r"""Return an array of values in redundant format.
 
@@ -1602,6 +1621,22 @@ class SymmetricMatrix(PairwiseMatrix):
             return mat
         else:
             return self._data
+
+    def as_condensed(self) -> "SymmetricMatrix":
+        """Return a condensed form copy of the matrix.
+
+        Returns
+        -------
+        SymmetricMatrix
+            A new matrix object with the same data stored in condensed form.
+
+        Notes
+        -----
+        This method always returns a new object, even if the matrix is already
+        in condensed form.
+
+        """
+        return self._copy(condensed=True)
 
     def condensed_form(self) -> np.ndarray:
         r"""Return an array of distances in condensed format.
@@ -1706,9 +1741,7 @@ class SymmetricMatrix(PairwiseMatrix):
         else:
             return self._copy()
 
-    def _copy(
-        self, transpose: bool = False, condensed: bool = False
-    ) -> "SymmetricMatrix":
+    def _copy(self, condensed: bool = False) -> "SymmetricMatrix":
         """Copy support.
 
         Parameters
@@ -1723,8 +1756,6 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         # adding for backward compatibility
         data = self._data.copy()
-        if transpose:
-            data = data.T
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
@@ -1887,8 +1918,8 @@ class DistanceMatrix(SymmetricMatrix):
         validate: bool = True,
         condensed: bool = False,
     ):
-        data, ids, _, validate_data, validate_ids, validate_shape = (
-            self._normalize_input(data, ids)
+        data, ids, validate_data, validate_ids, validate_shape = self._normalize_input(
+            data, ids
         )
 
         if ids is None:
@@ -1910,7 +1941,7 @@ class DistanceMatrix(SymmetricMatrix):
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
 
-    def _normalize_input(self, data, ids, diagonal=None):
+    def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
         validate_data = True
         validate_ids = True
@@ -1961,7 +1992,7 @@ class DistanceMatrix(SymmetricMatrix):
         # ndarray.
         assert isinstance(data, np.ndarray)
         data_: np.ndarray = data
-        return data_, ids, diagonal, validate_data, validate_ids, validate_shape
+        return data_, ids, validate_data, validate_ids, validate_shape
 
     def condensed_form(self) -> np.ndarray:
         r"""Return an array of distances in condensed format.

@@ -831,6 +831,10 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.01, 4.2, 12.0]),
         ] * 2
 
+    def tearDown(self):
+        self.dm_3x3 = None
+        self.dm_3x3_cond = None
+
     def test_get_element_from_condensed(self):
         # check that it gets diagonal values correct
         exp = 70
@@ -902,13 +906,6 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(sm.ids, ('aa', 'bb', 'cc'))
         npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
 
-        # symmetric from pairwise, change diagonal
-        # pm = PairwiseMatrix(self.dm_3x3_cond)
-        # sm = self.matobj(pm.condensed_form(), pm.ids, diagonal=[11, 22, 33], condensed=True)
-        # npt.assert_equal(sm.data, self.dm_3x3_cond.data)
-        # self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
-        # npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
-
         # symmetric from distance
         dm = DistanceMatrix(self.dm_3x3_cond)
         sm = self.matobj(dm, condensed=True)
@@ -923,12 +920,44 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(sm.ids, ('aa', 'bb', 'cc'))
         npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
 
-        # symmetric from distance, change diagonal
-        dm = DistanceMatrix(self.dm_3x3_cond)
+        # symmetric from distance, change diagonal, only possible when the 
+        # original matrix is condensed, because we can't provide diagonal with a 2D
+        # matrix as input
+        dm = DistanceMatrix(self.dm_3x3_cond, condensed=True)
         sm = self.matobj(dm, dm.ids, diagonal=[11, 22, 33], condensed=True)
         npt.assert_equal(sm.data, self.dm_3x3_cond.data)
         self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
         npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
+
+        # 
+        dm = SymmetricMatrix(self.dm_3x3_cond, condensed=True)
+        sm = self.matobj(dm, dm.ids, diagonal=[11, 22, 33], condensed=True)
+        npt.assert_equal(sm.data, self.dm_3x3_cond.data)
+        self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
+        npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
+
+        # this should raise error because can't pass diagonal with 2D input
+        with self.assertRaises(SymmetricMatrixError) as e:
+            pm = PairwiseMatrix(self.dm_3x3_cond)
+            sm = self.matobj(pm, pm.ids, diagonal=[11, 22, 33], condensed=True)
+        self.assertEqual(str(e.exception), "Cannot provide diagonal when data matrix is 2D. Information contained along diagonal is ambiguous.")
+
+    def test_as_condensed(self):
+        sm = self.dm_3x3.as_condensed()
+        # data should be the same, but copied
+        self.assertEqual(sm, self.dm_3x3_cond)
+        self.assertFalse(sm.data is self.dm_3x3.data)
+        # ids aren't copied because they are immutable
+        self.assertTrue(sm.ids is self.dm_3x3.ids)
+        self.assertFalse(sm.diagonal is self.dm_3x3.diagonal)
+
+    def test_as_redundant(self):
+        sm_ = self.dm_3x3_cond.as_redundant()
+        self.assertEqual(sm_, self.dm_3x3)
+        self.assertFalse(sm_.data is self.dm_3x3_cond.data)
+        # ids aren't copied because they are immutable
+        self.assertTrue(sm_.ids is self.dm_3x3_cond.ids)
+        self.assertFalse(sm_.diagonal is self.dm_3x3_cond.diagonal)
 
     def test_validate_ids_1d(self):
         with self.assertRaises(PairwiseMatrixError) as e:
@@ -1216,6 +1245,18 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(MissingIDError) as e:
             self.dm_2x2_cond["c"]
         self.assertEqual(str(e.exception), "The ID 'c' is not in the matrix.")
+
+    def test_getitem_by_id_with_scalar_diag(self):
+        # get row
+        sm = self.matobj([1, 2, 3], ['a', 'b', 'c'], diagonal=8, condensed=True)
+        obs = sm["a"]
+        exp = np.array([8, 1, 2])
+        npt.assert_equal(obs, exp)
+
+        # get single value
+        obs = sm["a", "a"]
+        exp = 8.0
+        npt.assert_equal(obs, exp)
 
     def test_getitem_by_id_pair(self):
         # Same object.
