@@ -831,10 +831,6 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.01, 4.2, 12.0]),
         ] * 2
 
-    def tearDown(self):
-        self.dm_3x3 = None
-        self.dm_3x3_cond = None
-
     def test_get_element_from_condensed(self):
         # check that it gets diagonal values correct
         exp = 70
