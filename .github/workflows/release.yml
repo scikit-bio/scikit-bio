@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r ci/requirements.doc.txt
+          pip install --prefer-binary -r ci/requirements.doc.txt
           pip install .
           conda list
 
