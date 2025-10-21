@@ -71,7 +71,7 @@ jobs:
       # 3.14 which hasn't been addressed in their latest release. When a new release
       # of sphinx is out, this pin should be removed.
         run: |
-          pip install --prefer-binary --python-version 3.13 -r ci/requirements.doc.txt
+          pip install --only-binary=:all: --python-version 3.13 -r ci/requirements.doc.txt
           pip install .
           conda list
       - name: Make documentation
