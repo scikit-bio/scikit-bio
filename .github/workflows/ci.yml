@@ -44,7 +44,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          pip install -r ci/requirements.lint.txt
+          pip install --prefer-binary -r ci/requirements.lint.txt
           conda list
       - name: Run Ruff
         run: |
@@ -111,7 +111,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          pip install .
+          pip install --prefer-binary .
           conda list
       # install anndata and polars here to test as optional dependencies.
       # encountered errors when installing using conda
@@ -161,12 +161,12 @@ jobs:
         if: ${{ matrix.use_conda }}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
-          pip install . --no-deps
+          pip install --prefer-binary . --no-deps
           conda list
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
-          pip install .
+          pip install --prefer-binary .
           conda list
       - name: Run unit tests
         env:
