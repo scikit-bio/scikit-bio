@@ -356,8 +356,10 @@ def _sample_metadata_sniffer(fh):
 
 
 @sample_metadata.reader(SampleMetadata)
-def _sample_metadata_read(fh, **kwargs):
-    return MetadataReader(fh).read(SampleMetadata, **kwargs)
+def _sample_metadata_read(fh, cls=None, **kwargs):
+    if cls is None:
+        cls = SampleMetadata
+    return MetadataReader(fh).read(cls, **kwargs)
 
 
 @sample_metadata.writer(SampleMetadata)

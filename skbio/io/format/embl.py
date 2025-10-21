@@ -537,35 +537,41 @@ def _embl_sniffer(fh):
 
 
 @embl.reader(None)
-def _embl_to_generator(fh, constructor=None, **kwargs):
+def _embl_to_generator(fh, cls=None, constructor=None, **kwargs):
     for record in _parse_embls(fh):
         yield _construct(record, constructor, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(Sequence)
-def _embl_to_sequence(fh, seq_num=1, **kwargs):
+def _embl_to_sequence(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Sequence
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, Sequence, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(DNA)
-def _embl_to_dna(fh, seq_num=1, **kwargs):
+def _embl_to_dna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, DNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(RNA)
-def _embl_to_rna(fh, seq_num=1, **kwargs):
+def _embl_to_rna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, RNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # No protein support at the moment
 @embl.reader(Protein)
-def _embl_to_protein(fh, seq_num=1, **kwargs):
+def _embl_to_protein(fh, cls=None, seq_num=1, **kwargs):
     # no protein support, at the moment
     raise EMBLFormatError(
         "There's no protein support for EMBL record. "

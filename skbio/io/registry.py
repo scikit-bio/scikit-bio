@@ -182,6 +182,7 @@ from . import (
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
 from skbio.util._decorator import classonlymethod
+from skbio._base import SkbioObject
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -237,7 +238,7 @@ class IORegistry:
         name = format_object.name
         if name in self._binary_formats or name in self._text_formats:
             raise DuplicateRegistrationError(
-                "A format already exists with" " that name: %s" % name
+                "A format already exists with that name: %s" % name
             )
 
         if format_object.is_binary_format:
@@ -326,11 +327,23 @@ class IORegistry:
         return self._get_rw(format_name, cls, "writers")
 
     def _get_rw(self, format_name, cls, lookup_name):
-        for lookup in self._lookups:
-            if format_name in lookup:
-                format_lookup = getattr(lookup[format_name], lookup_name)
-                if cls in format_lookup:
-                    return format_lookup[cls]
+        if cls is None:
+            # Handle generator case (cls=None)
+            for lookup in self._lookups:
+                if format_name in lookup:
+                    format_lookup = getattr(lookup[format_name], lookup_name)
+                    if cls in format_lookup:
+                        return format_lookup[cls]
+            return None
+        for parent in cls.__mro__:
+            # stop iteration at base class
+            if parent is SkbioObject:
+                break
+            for lookup in self._lookups:
+                if format_name in lookup:
+                    format_lookup = getattr(lookup[format_name], lookup_name)
+                    if parent in format_lookup:
+                        return format_lookup[parent]
         return None
 
     def list_read_formats(self, cls):
@@ -372,7 +385,7 @@ class IORegistry:
     def _iter_rw_formats(self, cls, lookup_name):
         for lookup in self._lookups:
             for format in lookup.values():
-                if cls in getattr(format, lookup_name):
+                if self._get_rw(format.name, cls, lookup_name) is not None:
                     yield format.name
 
     def sniff(self, file, into=None, **kwargs):
@@ -540,7 +553,7 @@ class IORegistry:
             reader, kwargs = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
-            return reader(file, **kwargs)
+            return reader(file, cls=into, **kwargs)
 
     def _read_gen(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
@@ -552,7 +565,7 @@ class IORegistry:
             reader, kwargs = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
-            yield from reader(file, **kwargs)
+            yield from reader(file, cls=into, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
@@ -772,7 +785,7 @@ class Format:
 
         if not override and self._sniffer_function is not None:
             raise DuplicateRegistrationError(
-                "A sniffer is already registered" " to format: %s" % self._name
+                "A sniffer is already registered to format: %s" % self._name
             )
 
         def decorator(sniffer):
@@ -863,8 +876,11 @@ class Format:
         ...         self.content = content
         ...
         >>> @myformat.reader(MyObject)
-        ... def myformat_reader(fh):
-        ...     return MyObject(fh.readlines()[1:])
+        ... def myformat_reader(fh, cls=None):
+        ...     # These lines enable any subclass on your class to inherit this reader!
+        ...     if cls is None:
+        ...         cls = MyObject
+        ...     return cls(fh.readlines()[1:])
         ...
         >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
@@ -989,7 +1005,7 @@ class Format:
     def _check_registration(self, cls):
         if cls is not None and not inspect.isclass(cls):
             raise InvalidRegistrationError(
-                "`cls` must be a class or None, not" " %r" % cls
+                "`cls` must be a class or None, not %r" % cls
             )
 
     def _setup_locals(self, file_params, file, encoding, newline, kwargs):

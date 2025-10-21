@@ -42,19 +42,39 @@ def permanova(
 ) -> "pd.Series":
     r"""Test for significant differences between groups using PERMANOVA.
 
-    Permutational Multivariate Analysis of Variance (PERMANOVA) is a
-    non-parametric method that tests whether two or more groups of objects
-    (e.g., samples) are significantly different based on a categorical factor.
-    It is conceptually similar to ANOVA except that it operates on a distance
-    matrix, which allows for multivariate analysis. PERMANOVA computes a
-    pseudo-F statistic.
+    Permutational Multivariate Analysis of Variance (PERMANOVA) is a non-parametric
+    method that tests whether two or more groups of objects (e.g., samples) are
+    significantly different based on a categorical factor. It is conceptually
+    similar to ANOVA except that it operates on distances between objects via a
+    distance matrix, which allows for multivariate analysis. Unlike classical
+    Multivariate Analysis of Variance (MANOVA), PERMANOVA makes no assumptions
+    about the distribution of the underlying data. As such, rather than computing
+    a true `F` statistic based in known distributions of variables, it computes a
+    pseudo-`F` statistic whose significance can be assessed by a permutation test.
 
-    Statistical significance is assessed via a permutation test. The assignment
-    of objects to groups (`grouping`) is randomly permuted a number of times
-    (controlled via `permutations`). A pseudo-F statistic is computed for each
-    permutation and the p-value is the proportion of permuted pseudo-F
-    statisics that are equal to or greater than the original (unpermuted)
-    pseudo-F statistic.
+    The pseudo-`F` statistic is the ratio of between-group variance to within-group
+    variance, defined in [1]_ analogously to the `F` statistic in ANOVA:
+
+    .. math::
+        F = \frac{{SS}_{between}/(g - 1)}{{SS}_{within}/(n - g)}
+
+    It is computed from the sums of squares :math:`{SS}_{between}` and
+    :math:`{SS}_{within}` divided by their corresponding degrees of freedom, where
+    :math:`n` is the number of distinct objects and :math:`g` is the number of groups.
+
+    Statistical significance is assessed via a permutation test. Objects in the distance
+    matrix are assigned to groups (`grouping`) based on a categorical factor. This
+    assignment of groups is permuted a number of times (controlled via `permutations`),
+    and a pseudo-`F` statistic is computed for each permutation. Under the null
+    hypothesis that the groupings of objects have no effect on the distribution of
+    the underlying data, the pseudo-`F` statistics of these permutations should be
+    identically distributed for a given distance matrix. The probability of a given
+    pseudo-`F` statistic being at least as extreme as an observed one is then the
+    proportion of permuted pseudo-`F` statistics (:math:`F^{\pi}`) that are greater
+    than or equal to the observed (unpermuted) one (:math:`F`):
+
+    .. math::
+        p = \frac{1 + \text{no. of } F^{\pi} \geq F}{1 + \text{no. of permutations}}
 
     Parameters
     ----------
@@ -80,7 +100,7 @@ def permanova(
     permutations : int, optional
         Number of permutations to use when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
-        statistical significance calculations will be skipped and the p-value
+        statistical significance calculations will be skipped and the `p`-value
         will be ``np.nan``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
@@ -97,13 +117,39 @@ def permanova(
     See Also
     --------
     anosim
+    statsmodels.multivariate.manova.MANOVA
+    scipy.stats.permutation_test
 
     Notes
     -----
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
 
-    The p-value will be ``np.nan`` if `permutations` is zero.
+    The precision of the `p`-value is dependent on the number of permutations. The
+    default precision is :math:`0.001=1/(1+999)` from the default value
+    ``permutations=999``. The unpermuted grouping always contributes the first
+    permutation to the numerator and denominator of the `p`-value, so 1 is added
+    to both. This circumvents the risk of the probability being zero by chance
+    even when it is nonzero. It is suggested in [1]_ that at least 1000
+    permutations should be performed for a confidence level of 0.05, and
+    5000 permutations should be performed for a confidence level of 0.01. The
+    `p`-value will be ``np.nan`` if ``permutations`` is zero.
+
+    A related statistic reported by some implementations (such as
+    ``vegan::adonis``) is the :math:`R^2` value, which describes the proportion
+    of variance in the data explained by the grouping:
+
+    .. math::
+        R^2 = \frac{{SS}_{between}}{{SS}_{total}}
+
+    This is not currently computed by this function, but it may be derived from the
+    outputs using the following formula:
+
+    .. math::
+        R^2 = \frac{1}{1 + \frac{n - g}{(g - 1)F}}
+
+    where :math:`F` is the pseudo-`F` statistic, :math:`n` is the number of
+    objects, and :math:`g` is the number of groups.
 
     References
     ----------
@@ -120,6 +166,11 @@ def permanova(
     """
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
+
+    # convert to redundant form for now
+    if distmat._flags["CONDENSED"]:
+        distmat = DistanceMatrix(distmat)
+
     sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(

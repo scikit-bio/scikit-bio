@@ -105,12 +105,12 @@ def _biom_sniffer(fh):
 
 
 @biom.reader(Table)
-def _biom_to_table_into(fh):
+def _biom_to_table_into(fh, cls=None):
     return _biom_to_table(fh)
 
 
 @biom.reader(None)
-def _biom_to_table_default(fh):
+def _biom_to_table_default(fh, cls=None):
     # skbio.read('foo.biom', format='biom')
     # will return a generator, that subsequently iterates the table.
     # returning a single item tuple yields expected behavior such that:

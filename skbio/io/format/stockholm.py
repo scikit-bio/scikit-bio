@@ -427,7 +427,7 @@ def _stockholm_sniffer(fh):
 
 
 @stockholm.reader(TabularMSA)
-def _stockholm_to_tabular_msa(fh, constructor=None):
+def _stockholm_to_tabular_msa(fh, cls=None, constructor=None):
     # Checks that user has passed required constructor parameter
     if constructor is None:
         raise ValueError(
@@ -438,7 +438,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
         )
     # Checks that contructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
-        raise TypeError("`constructor` must be a subclass of " "`GrammaredSequence`.")
+        raise TypeError("`constructor` must be a subclass of `GrammaredSequence`.")
 
     # Checks that the file isn't empty
     try:
@@ -447,7 +447,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
         raise StockholmFormatError("File is empty.")
     # Checks that the file follows basic format (includes the required header)
     if not _is_header(line):
-        raise StockholmFormatError("File missing required Stockholm header " "line.")
+        raise StockholmFormatError("File missing required Stockholm header line.")
     msa_data = _MSAData()
     for line in fh:
         if line.isspace():
@@ -477,8 +477,7 @@ def _stockholm_to_tabular_msa(fh, constructor=None):
 
     if not _is_footer(line):
         raise StockholmFormatError(
-            "Final line does not conform to Stockholm "
-            'format. Must contain only "//".'
+            'Final line does not conform to Stockholm format. Must contain only "//".'
         )
 
     return msa_data.build_tabular_msa(constructor)
@@ -507,7 +506,7 @@ class _MSAData:
         elif feature_name == "TN" and "NH" in self._metadata:
             if feature_data in self._metadata["NH"]:
                 raise StockholmFormatError(
-                    "Tree name %r used multiple times " "in file." % feature_data
+                    "Tree name %r used multiple times in file." % feature_data
                 )
             self._metadata["NH"][feature_data] = ""
         # Handles extra line(s) of an already created tree
@@ -528,7 +527,7 @@ class _MSAData:
         elif feature_name in _REFERENCE_TAGS:
             if "RN" not in self._metadata:
                 raise StockholmFormatError(
-                    "Expected 'RN' tag to precede " "'%s' tag." % feature_name
+                    "Expected 'RN' tag to precede '%s' tag." % feature_name
                 )
             reference_dict = self._metadata["RN"][-1]
             if feature_name not in reference_dict:
@@ -700,7 +699,7 @@ def _check_for_malformed_line(line, expected_len):
 @stockholm.writer(TabularMSA)
 def _tabular_msa_to_stockholm(obj, fh):
     if not obj.index.is_unique:
-        raise StockholmFormatError("The TabularMSA's index labels must be" " unique.")
+        raise StockholmFormatError("The TabularMSA's index labels must be unique.")
     # Writes header
     fh.write("# STOCKHOLM 1.0\n")
 
@@ -754,7 +753,7 @@ def _tabular_msa_to_stockholm(obj, fh):
         unpadded_data.append((seq_name, str(seq)))
         if seq.has_positional_metadata():
             df = _format_positional_metadata(
-                seq.positional_metadata, "Sequence-specific positional " "metadata (GR)"
+                seq.positional_metadata, "Sequence-specific positional metadata (GR)"
             )
             for gr_feature in df.columns:
                 gr_feature_data = "".join(df[gr_feature])
@@ -765,7 +764,7 @@ def _tabular_msa_to_stockholm(obj, fh):
     if obj.has_positional_metadata():
         df = _format_positional_metadata(
             obj.positional_metadata,
-            "Multiple sequence alignment " "positional metadata (GC)",
+            "Multiple sequence alignment positional metadata (GC)",
         )
         for gc_feature in df.columns:
             gc_feature_data = "".join(df[gc_feature])

@@ -15,7 +15,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                     |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.stats.distance.SymmetricMatrix`                    |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -79,10 +81,10 @@ References
 # ----------------------------------------------------------------------------
 
 import h5py
-from numpy import array as np_array
+import numpy as np
 
 from skbio.io import create_format
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, SymmetricMatrix, DistanceMatrix
 
 
 binary_dm = create_format("binary_dm", encoding="binary")
@@ -116,48 +118,67 @@ def _binary_dm_sniffer(fh):
     return True, {}
 
 
-@binary_dm.reader(DissimilarityMatrix)
-def _binary_dm_to_dissimilarity(fh):
-    return _h5py_mat_to_skbio_mat_stream(DissimilarityMatrix,fh)
+@binary_dm.reader(PairwiseMatrix)
+def _binary_dm_to_pairwise(fh, cls=None):
+    if cls is None:
+        cls = PairwiseMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
+
+
+@binary_dm.reader(SymmetricMatrix)
+def _binary_dm_to_symmetric(fh, cls=None):
+    if cls is None:
+        cls = SymmetricMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
 
 
 @binary_dm.reader(DistanceMatrix)
-def _binary_dm_to_distance(fh):
-    return _h5py_mat_to_skbio_mat_stream(DistanceMatrix,fh)
+def _binary_dm_to_distance(fh, cls=None):
+    if cls is None:
+        cls = DistanceMatrix
+    return _h5py_mat_to_skbio_mat_stream(cls, fh)
 
 
-@binary_dm.writer(DissimilarityMatrix)
-def _dissimilarity_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat_stream(obj,fh)
+@binary_dm.writer(PairwiseMatrix)
+def _pairwise_to_binary_dm(obj, fh):
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
+
+
+@binary_dm.writer(SymmetricMatrix)
+def _symmetric_to_binary_dm(obj, fh):
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
 
 
 @binary_dm.writer(DistanceMatrix)
 def _distance_to_binary_dm(obj, fh):
-    return _skbio_mat_to_h5py_mat_stream(obj,fh)
+    return _skbio_mat_to_h5py_mat_stream(obj, fh)
 
 
 def _h5py_mat_to_skbio_mat_stream(cls, fh):
     with h5py.File(fh, "r") as f:
-      dm = _h5py_mat_to_skbio_mat(cls,f)
+        dm = _h5py_mat_to_skbio_mat(cls, f)
     return dm
+
 
 def _h5py_mat_to_skbio_mat(cls, f):
     mat = f.get("matrix")
     if mat is None:
         mat = f.get("matrix:0")
+    mat = np.asarray(mat)
     dm = cls(mat, _parse_ids(f["order"]))
     return dm
 
 
 def _skbio_mat_to_h5py_mat_stream(obj, fh):
     with h5py.File(fh, "w") as f:
-      _skbio_mat_to_h5py_mat(obj, f)
+        _skbio_mat_to_h5py_mat(obj, f)
+
 
 def _skbio_mat_to_h5py_mat(obj, f):
     _set_header(f)
 
-    b_ids = [ x.encode("utf-8") for x in obj.ids]
-    np_ids = np_array(b_ids)
+    b_ids = [x.encode("utf-8") for x in obj.ids]
+    np_ids = np.array(b_ids)
     f.create_dataset("order", data=np_ids)
     f.create_dataset("matrix", data=obj.data)
 
@@ -201,5 +222,5 @@ def _passthrough_decoder(x):
 
 def _set_header(f):
     """Set format spec header information."""
-    f.create_dataset("format", data=np_array([b"BDSM"]))
-    f.create_dataset("version", data=np_array([b"2020.12"]))
+    f.create_dataset("format", data=np.array([b"BDSM"]))
+    f.create_dataset("version", data=np.array([b"2020.12"]))
