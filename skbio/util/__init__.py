@@ -48,7 +48,7 @@ Decorators
 
    overrides
    classproperty
-   classonlymethod
+   classmethod
    deprecated
    aliased
    register_aliases
@@ -89,7 +89,7 @@ from ._testing import (
 from ._decorator import (
     overrides,
     classproperty,
-    classonlymethod,
+    classmethod,
     deprecated,
     aliased,
     register_aliases,
@@ -112,7 +112,7 @@ __all__ = [
     "PlottableMixin",
     "overrides",
     "classproperty",
-    "classonlymethod",
+    "classmethod",
     "deprecated",
     "aliased",
     "register_aliases",

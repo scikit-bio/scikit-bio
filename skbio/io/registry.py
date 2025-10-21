@@ -181,7 +181,7 @@ from . import (
 )
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
-from skbio.util._decorator import classonlymethod
+from skbio.util._decorator import classmethod
 from skbio._base import SkbioObject
 
 FileSentinel = make_sentinel("FileSentinel")

@@ -17,7 +17,7 @@ from skbio._base import SkbioObject
 from skbio.metadata._mixin import MetadataMixin, PositionalMetadataMixin
 from skbio.sequence import Sequence
 from skbio.sequence._grammared_sequence import GrammaredSequence
-from skbio.util._decorator import classonlymethod, overrides
+from skbio.util._decorator import overrides  # classmethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 from skbio.io.descriptors import Read, Write
@@ -717,7 +717,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         return self._iloc
 
-    @classonlymethod
+    @classmethod
     def from_dict(cls, dictionary: dict) -> "TabularMSA":
         """Create a ``TabularMSA`` from a ``dict``.
 
@@ -2482,7 +2482,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def _positional_metadata_axis_len_(self):
         return self.shape.position
 
-    @classonlymethod
+    @classmethod
     def from_path_seqs(cls, path, seqs) -> "TabularMSA":
         """Create a tabular MSA from an alignment path and the original sequences.
 

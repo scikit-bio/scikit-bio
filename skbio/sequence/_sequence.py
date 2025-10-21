@@ -29,7 +29,7 @@ from skbio.sequence._alphabet import (
     _indices_in_observed,
 )
 from skbio.util import find_duplicates
-from skbio.util._decorator import classonlymethod, overrides
+from skbio.util._decorator import overrides  # classmethod, overrides
 from skbio.io.descriptors import Read, Write
 
 
@@ -440,7 +440,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     def _string(self):
         return self._bytes.tobytes()
 
-    @classonlymethod
+    @classmethod
     def concat(cls, sequences, how="strict") -> "Sequence":
         r"""Concatenate an iterable of ``Sequence`` objects.
 

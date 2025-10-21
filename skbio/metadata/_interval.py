@@ -11,7 +11,8 @@ import copy
 import functools
 
 from ._intersection import IntervalTree
-from skbio.util._decorator import classonlymethod
+
+# from skbio.util._decorator import classmethod
 from skbio.io.descriptors import Read, Write
 from .._base import SkbioObject
 
@@ -589,7 +590,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         # DON'T forget this!!!
         self._is_stale_tree = True
 
-    @classonlymethod
+    @classmethod
     def concat(cls, interval_metadata) -> "IntervalMetadata":
         """Concatenate an iterable of ``IntervalMetadata`` objects.
 
