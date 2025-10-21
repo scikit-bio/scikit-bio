@@ -609,7 +609,7 @@ class TreeNode(SkbioObject):
 
         # Keep a record of visited nodes, such that the temporary attribute assigned
         # to each node can be cleared after getting LCA.
-        visited = [self]
+        visited: list["TreeNode"] = []
         visited_append = visited.append
 
         # Path of the first node to root. LCA must be in this path.
@@ -1661,7 +1661,7 @@ class TreeNode(SkbioObject):
 
         # build up the list of nodes to remove so the topology is not altered
         # while traversing
-        nodes_to_remove = [self]
+        nodes_to_remove: list["TreeNode"] = []
         nodes_to_remove_append = nodes_to_remove.append
         for node in self.traverse(include_self=False):
             if len(node.children) == 1:
@@ -1922,7 +1922,7 @@ class TreeNode(SkbioObject):
         """
         if uncache:
             self.clear_caches()
-        nodes_to_unpack = [self]
+        nodes_to_unpack: list["TreeNode"] = []
         nodes_to_unpack_append = nodes_to_unpack.append
         for node in self.non_tips(include_self=False):
             if func(node):
@@ -5811,7 +5811,6 @@ class TreeNode(SkbioObject):
             child_b.length = path_length - child_b._balanced_distance_to_tip()
 
             new_cluster = node_lookup[newest_cluster_index]
-
             new_cluster.append(child_a, uncache=False)
             new_cluster.append(child_b, uncache=False)
 
