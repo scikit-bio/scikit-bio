@@ -11,8 +11,6 @@ on:
 env:
   latest_python: "3.13"
   supported_pythons: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
-  miniforge_version: "23.11.0-0"
-  miniforge_variant: "Mambaforge"
 
 jobs:
   conf:
@@ -43,8 +41,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -63,12 +59,12 @@ jobs:
         shell: bash -l {0}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # to prevent a "Git clone too shallow" warning by Sphinx
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -101,21 +97,17 @@ jobs:
         shell: bash -l {0}
     strategy:
       fail-fast: true
-      # macos-14 and on uses Apple silicon chips (ARM-based).
-      # macos-13 is the last version that uses Intel chips. See:
       # https://docs.github.com/en/actions/using-github-hosted-runners/
       # about-github-hosted-runners/about-github-hosted-runners#standard-
       # github-hosted-runners-for-public-repositories
       matrix:
-        os: ["ubuntu-latest", "macos-13", "macos-14", "windows-latest"]
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, macos-13]
     steps:
       - uses: actions/checkout@v4
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -132,43 +124,17 @@ jobs:
           WITH_COVERAGE: "TRUE"
         run: make test
 
-        # upload coverage reports to Codecov (only under Linux)
+        # upload coverage reports to Codecov (only under ubuntu-latest)
       - name: Generate coverage reports
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && runner.arch == 'X64'
         run: |
           cd ci && coverage lcov --rcfile ../.coveragerc
       - name: Upload coverage reports to Codecov
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && runner.arch == 'X64'
         uses: codecov/codecov-action@v4.2.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
-
-  # test under AArch64 (ARM64) architecture
-  test-aarch64:
-    name: Test (${{ needs.conf.outputs.latest_python }}, qemu::aarch64-centos)
-    needs: conf
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        # setup-buildx-action uses the git context directly
-        # but checklist wants the .git directory
-      - name: Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build and test for linux-aarch64
-        id: docker_build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          # ^ to use the local checkout, not the git context
-          file: aarch64.Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            PYTHON_VERSION=${{ env.latest_python }}
 
   # test under all combinations of environments (Python versions, operating systems, PyPI vs Conda)
   test-all:
@@ -181,7 +147,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python_version: ${{ fromJSON(needs.conf.outputs.supported_pythons) }}
         use_conda: [true, false]
     steps:
@@ -190,8 +156,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python_version }}
-          miniforge-version: ${{ env.miniforge_version }}
-          miniforge-variant: ${{ env.miniforge_variant }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
@@ -214,7 +178,7 @@ jobs:
   deploy-doc:
     name: Deploy documentation
     if: github.event_name == 'push'
-    needs: ["doc", "test-all", "test-aarch64"]
+    needs: ["doc", "test-all"]
     runs-on: ubuntu-latest
     defaults:
       run:

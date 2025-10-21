@@ -15,11 +15,11 @@ Tutorials
 
 Also check out the classical `scikit-bio-cookbook <https://github.com/scikit-bio/scikit-bio-cookbook>`_: A series of Jupyter Notebooks containing executable "recipes" for bioinformatics workflows using scikit-bio.
 
-.. button-link:: https://nbviewer.org/github/biocore/scikit-bio-cookbook/blob/main/Index.ipynb
+.. button-link:: https://github.com/scikit-bio/scikit-bio-cookbook
    :color: primary
    :shadow:
 
-   Cookbook frontpage
+   Cookbook repository
 
 
 Workshops

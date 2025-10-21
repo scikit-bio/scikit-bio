@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""Plotting utilities."""
+
 import importlib
 from io import StringIO, BytesIO
 

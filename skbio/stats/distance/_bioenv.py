@@ -14,9 +14,11 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.util._decorator import params_aliased
 
 
-def bioenv(distance_matrix, data_frame, columns=None):
+@params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
+def bioenv(distmat, data_frame, columns=None):
     r"""Find subset of variables maximally correlated with distances.
 
     Finds subsets of variables whose Euclidean distances (after scaling the
@@ -38,14 +40,14 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distmat : DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
     data_frame : pandas.DataFrame
         Contains columns of variables (e.g., numeric environmental variables
-        such as pH) associated with the objects in `distance_matrix`. Must be
-        indexed by the IDs in `distance_matrix` (i.e., the row labels must be
-        distance matrix IDs), but the order of IDs between `distance_matrix`
+        such as pH) associated with the objects in `distmat`. Must be
+        indexed by the IDs in `distmat` (i.e., the row labels must be
+        distance matrix IDs), but the order of IDs between `distmat`
         and `data_frame` need not be the same. All IDs in the distance matrix
         must be present in `data_frame`. Extra IDs in `data_frame` are allowed
         (they are ignored in the calculations).
@@ -67,7 +69,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
         If invalid input types are provided, or if one or more specified
         columns in `data_frame` are not numeric.
     ValueError
-        If column name(s) or `distance_matrix` IDs cannot be found in
+        If column name(s) or `distmat` IDs cannot be found in
         `data_frame`, if there is missing data (``NaN``) in the environmental
         variables, or if the environmental variables cannot be scaled (e.g.,
         due to zero variance).
@@ -145,7 +147,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
     with the community distances (:math:`\rho=0.771517`).
 
     """
-    if not isinstance(distance_matrix, DistanceMatrix):
+    if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Must provide a DistanceMatrix as input.")
     if not isinstance(data_frame, pd.DataFrame):
         raise TypeError("Must provide a pandas.DataFrame as input.")
@@ -165,7 +167,7 @@ def bioenv(distance_matrix, data_frame, columns=None):
 
     # Subset and order the vars data frame to match the IDs in the distance
     # matrix, only keeping the specified columns.
-    vars_df = data_frame.reindex(distance_matrix.ids, axis=0).loc[:, columns]
+    vars_df = data_frame.reindex(distmat.ids, axis=0).loc[:, columns]
 
     if vars_df.isnull().any().any():
         raise ValueError(
@@ -177,14 +179,14 @@ def bioenv(distance_matrix, data_frame, columns=None):
     try:
         vars_df = vars_df.astype(float)
     except ValueError:
-        raise TypeError("All specified columns in the data frame must be " "numeric.")
+        raise TypeError("All specified columns in the data frame must be numeric.")
 
     # Scale the vars and extract the underlying numpy array from the data
     # frame. We mainly do this for performance as we'll be taking subsets of
     # columns within a tight loop and using a numpy array ends up being ~2x
     # faster.
     vars_array = _scale(vars_df).values
-    dm_flat = distance_matrix.condensed_form()
+    dm_flat = distmat.condensed_form()
 
     num_vars = len(columns)
     var_idxs = np.arange(num_vars)

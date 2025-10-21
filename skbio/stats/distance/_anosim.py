@@ -10,24 +10,26 @@ from functools import partial
 
 from typing import Optional, Tuple, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from ._base import DistanceMatrix
-    from numpy.random import RandomState, Generator
     from numpy.typing import ArrayLike, NDArray
     import pandas as pd
+    from skbio.util._typing import SeedLike
 
 import numpy as np
 from scipy.stats import rankdata
 
 from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
+from skbio.util._decorator import params_aliased
 
 
+@params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
 def anosim(
-    distance_matrix: "DistanceMatrix",
+    distmat: "DistanceMatrix",
     grouping: Union["pd.DataFrame", "ArrayLike"],
     column: Optional[str] = None,
     permutations: int = 999,
-    seed: Optional[Union[int, "Generator", "RandomState"]] = None,
+    seed: Optional["SeedLike"] = None,
 ) -> "pd.Series":
     r"""Test for significant differences between groups using ANOSIM.
 
@@ -46,18 +48,18 @@ def anosim(
 
     Parameters
     ----------
-    distance_matrix : DistanceMatrix
+    distmat : DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
     grouping : 1-D array_like or pandas.DataFrame
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
         belongs to. If `grouping` is 1-D ``array_like``, it must be the same
-        length and in the same order as the objects in `distance_matrix`. If
+        length and in the same order as the objects in `distmat`. If
         `grouping` is a ``DataFrame``, the column specified by `column` will be
         used as the grouping vector. The ``DataFrame`` must be indexed by the
-        IDs in `distance_matrix` (i.e., the row labels must be distance matrix
-        IDs), but the order of IDs between `distance_matrix` and the
+        IDs in `distmat` (i.e., the row labels must be distance matrix
+        IDs), but the order of IDs between `distmat` and the
         ``DataFrame`` need not be the same. All IDs in the distance matrix must
         be present in the ``DataFrame``. Extra IDs in the ``DataFrame`` are
         allowed (they are ignored in the calculations).
@@ -182,7 +184,7 @@ def anosim(
 
     """
     sample_size, num_groups, grouping, tri_idxs, distances = _preprocess_input(
-        distance_matrix, grouping, column
+        distmat, grouping, column
     )
 
     divisor = sample_size * ((sample_size - 1) / 4)

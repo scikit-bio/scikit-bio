@@ -718,7 +718,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._iloc
 
     @classonlymethod
-    def from_dict(cls, dictionary):
+    def from_dict(cls, dictionary: dict) -> "TabularMSA":
         """Create a ``TabularMSA`` from a ``dict``.
 
         Parameters
@@ -2239,7 +2239,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         if how not in {"strict", "inner", "outer", "left", "right"}:
             raise ValueError(
-                "`how` must be 'strict', 'inner', 'outer', 'left', or " "'right'."
+                "`how` must be 'strict', 'inner', 'outer', 'left', or 'right'."
             )
 
         self._assert_joinable(other)
@@ -2340,7 +2340,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             if len(diff) > 0:
                 raise ValueError(
-                    "Positional metadata columns must all match with " "`how='strict'`"
+                    "Positional metadata columns must all match with `how='strict'`"
                 )
 
             join_index = self.index
@@ -2466,7 +2466,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if self.index.is_unique:
             return self._seqs.to_dict()
         else:
-            raise ValueError("Cannot convert to dict. Index labels are not" " unique.")
+            raise ValueError("Cannot convert to dict. Index labels are not unique.")
 
     def _is_sequence_axis(self, axis):
         if axis == "sequence" or axis == 0:
@@ -2483,7 +2483,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self.shape.position
 
     @classonlymethod
-    def from_path_seqs(cls, path, seqs):
+    def from_path_seqs(cls, path, seqs) -> "TabularMSA":
         """Create a tabular MSA from an alignment path and the original sequences.
 
         Parameters

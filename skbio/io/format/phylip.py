@@ -249,7 +249,9 @@ def _phylip_sniffer(fh):
 
 
 @phylip.reader(TabularMSA)
-def _phylip_to_tabular_msa(fh, constructor=None):
+def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
+    if cls is None:
+        cls = TabularMSA
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
@@ -258,7 +260,7 @@ def _phylip_to_tabular_msa(fh, constructor=None):
     for seq, ID in _parse_phylip_raw(fh):
         seqs.append(constructor(seq))
         index.append(ID)
-    return TabularMSA(seqs, index=index)
+    return cls(seqs, index=index)
 
 
 @phylip.writer(TabularMSA)

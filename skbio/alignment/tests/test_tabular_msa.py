@@ -894,9 +894,9 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
             self.assertEqual(str(o), e)
 
         # middle of the sequences
-        path._starts[0] = 1
-        path._starts[1] = 3
-        path._starts[2] = 5
+        path._ranges[0] += 1
+        path._ranges[1] += 3
+        path._ranges[2] += 5
         seqs = list(map(DNA, [
             "ACGGTCGTAACGCGTACATTT",
             "AAACAGGTAAGCATACCTCATTTTT",

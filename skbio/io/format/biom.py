@@ -11,8 +11,11 @@ and feature metadata.
 
 .. note::
 
-   Internally, BIOM describes features as observations, whereas scikit-bio uses the
-   term features.
+   Internally, BIOM describes features as "observations," which differs from
+   scikit-bio's standard terminology. Throughout scikit-bio documentation and APIs,
+   these are consistently referred to as "features." For more details about terminology
+   differences across formats, see the :ref:`samples_and_features` section of the
+   "Table-like formats" document.
 
 Format Support
 --------------
@@ -102,12 +105,12 @@ def _biom_sniffer(fh):
 
 
 @biom.reader(Table)
-def _biom_to_table_into(fh):
+def _biom_to_table_into(fh, cls=None):
     return _biom_to_table(fh)
 
 
 @biom.reader(None)
-def _biom_to_table_default(fh):
+def _biom_to_table_default(fh, cls=None):
     # skbio.read('foo.biom', format='biom')
     # will return a generator, that subsequently iterates the table.
     # returning a single item tuple yields expected behavior such that:

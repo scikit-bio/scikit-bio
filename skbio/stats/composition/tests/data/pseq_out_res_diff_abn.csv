@@ -1,0 +1,131 @@
+"","taxon","(Intercept)","age","regionNE","regionSE","regionUS","bmioverweight","bmilean"
+"1","Actinomycetaceae",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"2","Aerococcus",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"3","Aeromonas",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"4","Akkermansia",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE
+"5","Alcaligenes faecalis et rel.",TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE
+"6","Allistipes et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,TRUE,FALSE
+"7","Anaerobiospirillum",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"8","Anaerofustis",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"9","Anaerostipes caccae et rel.",TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE
+"10","Anaerotruncus colihominis et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"11","Anaerovorax odorimutans et rel.",TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE
+"12","Aneurinibacillus",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"13","Aquabacterium",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"14","Asteroleplasma et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"15","Atopobium",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"16","Bacillus",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"17","Bacteroides fragilis et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"18","Bacteroides intestinalis et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"19","Bacteroides ovatus et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"20","Bacteroides plebeius et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"21","Bacteroides splachnicus et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"22","Bacteroides stercoris et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"23","Bacteroides uniformis et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"24","Bacteroides vulgatus et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"25","Bifidobacterium",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE
+"26","Bilophila et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"27","Brachyspira",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"28","Bryantella formatexigens et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"29","Bulleidia moorei et rel.",TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE
+"30","Burkholderia",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,TRUE
+"31","Butyrivibrio crossotus et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE
+"32","Campylobacter",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"33","Catenibacterium mitsuokai et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"34","Clostridium (sensu stricto)",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE
+"35","Clostridium cellulosi et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"36","Clostridium colinum et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"37","Clostridium difficile et rel.",TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,TRUE
+"38","Clostridium felsineum et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"39","Clostridium leptum et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"40","Clostridium nexile et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"41","Clostridium orbiscindens et rel.",TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE
+"42","Clostridium ramosum et rel.",FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE
+"43","Clostridium sphenoides et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"44","Clostridium stercorarium et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"45","Clostridium symbiosum et rel.",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE
+"46","Clostridium thermocellum et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"47","Collinsella",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"48","Coprobacillus catenaformis et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"49","Coprococcus eutactus et rel.",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE
+"50","Corynebacterium",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"51","Desulfovibrio et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"52","Dialister",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"53","Dorea formicigenerans et rel.",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE
+"54","Eggerthella lenta et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"55","Enterobacter aerogenes et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"56","Enterococcus",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"57","Escherichia coli et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"58","Eubacterium biforme et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"59","Eubacterium cylindroides et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"60","Eubacterium hallii et rel.",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,TRUE
+"61","Eubacterium limosum et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"62","Eubacterium rectale et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"63","Eubacterium siraeum et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE
+"64","Eubacterium ventriosum et rel.",TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE
+"65","Faecalibacterium prausnitzii et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"66","Fusobacteria",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"67","Gemella",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"68","Granulicatella",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"69","Haemophilus",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"70","Helicobacter",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"71","Klebisiella pneumoniae et rel.",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"72","Lachnobacillus bovis et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"73","Lachnospira pectinoschiza et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"74","Lactobacillus catenaformis et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"75","Lactobacillus gasseri et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"76","Lactobacillus plantarum et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"77","Lactobacillus salivarius et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"78","Lactococcus",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"79","Leminorella",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,TRUE
+"80","Megamonas hypermegale et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"81","Megasphaera elsdenii et rel.",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"82","Methylobacterium",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"83","Micrococcaceae",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"84","Mitsuokella multiacida et rel.",FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE
+"85","Moraxellaceae",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"86","Novosphingobium",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"87","Oceanospirillum",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE
+"88","Oscillospira guillermondii et rel.",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE
+"89","Outgrouping clostridium cluster XIVa",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"90","Oxalobacter formigenes et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"91","Papillibacter cinnamivorans et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE
+"92","Parabacteroides distasonis et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"93","Peptococcus niger et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"94","Peptostreptococcus anaerobius et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"95","Peptostreptococcus micros et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"96","Phascolarctobacterium faecium et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"97","Prevotella melaninogenica et rel.",TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE
+"98","Prevotella oralis et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"99","Prevotella ruminicola et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"100","Prevotella tannerae et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"101","Propionibacterium",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"102","Proteus et rel.",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"103","Pseudomonas",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"104","Roseburia intestinalis et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"105","Ruminococcus bromii et rel.",TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE
+"106","Ruminococcus callidus et rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"107","Ruminococcus gnavus et rel.",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE
+"108","Ruminococcus lactaris et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE
+"109","Ruminococcus obeum et rel.",TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE
+"110","Serratia",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"111","Sporobacter termitidis et rel.",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE
+"112","Staphylococcus",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"113","Streptococcus bovis et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE
+"114","Streptococcus intermedius et rel.",FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"115","Streptococcus mitis et rel.",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"116","Subdoligranulum variable at rel.",TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE
+"117","Sutterella wadsworthia et rel.",TRUE,FALSE,TRUE,FALSE,FALSE,TRUE,TRUE
+"118","Tannerella et rel.",TRUE,TRUE,TRUE,FALSE,FALSE,TRUE,FALSE
+"119","Uncultured Bacteroidetes",TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE
+"120","Uncultured Chroococcales",TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE
+"121","Uncultured Clostridiales I",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE
+"122","Uncultured Clostridiales II",TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE
+"123","Uncultured Mollicutes",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"124","Uncultured Selenomonadaceae",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"125","Veillonella",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+"126","Vibrio",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"127","Weissella et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"128","Wissella et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE
+"129","Xanthomonadaceae",TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE
+"130","Yersinia et rel.",TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE

@@ -14,7 +14,7 @@ from warnings import catch_warnings
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.distance import DissimilarityMatrixError
+from skbio.stats.distance import PairwiseMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.stats.ordination._principal_coordinate_analysis import _fsvd
 from skbio.util import (get_data_path, assert_ordination_results_equal,
@@ -58,11 +58,9 @@ class TestPCoA(TestCase):
 
     def test_fsvd_inplace(self):
         expected_results = pcoa(
-            self.dm3.copy(), method="eigh", number_of_dimensions=3,
-            inplace=True)
+            self.dm3.copy(), method="eigh", dimensions=3, inplace=True)
 
-        results = pcoa(self.dm3.copy(), method="fsvd", number_of_dimensions=3,
-                       inplace=True)
+        results = pcoa(self.dm3.copy(), method="fsvd", dimensions=3, inplace=True)
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True,
@@ -70,13 +68,11 @@ class TestPCoA(TestCase):
 
     def test_fsvd(self):
         # Test eigh vs. fsvd pcoa and inplace parameter
-        expected_results = pcoa(self.dm3, method="eigh", number_of_dimensions=3,
-                                inplace=False)
+        expected_results = pcoa(self.dm3, method="eigh", dimensions=3, inplace=False)
 
-        results = pcoa(self.dm3, method="fsvd", number_of_dimensions=3,
-                       inplace=False)
+        results = pcoa(self.dm3, method="fsvd", dimensions=3, inplace=False)
 
-        results_inplace = pcoa(self.dm3.copy(), method="fsvd", number_of_dimensions=3,
+        results_inplace = pcoa(self.dm3.copy(), method="fsvd", dimensions=3,
                                inplace=True)
 
         assert_ordination_results_equal(results, expected_results,
@@ -87,11 +83,9 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True,
                                         ignore_method_names=True)
 
-        # Test number_of_dimensions edge cases
-        results2 = pcoa(self.dm3, method="fsvd", number_of_dimensions=0,
-                        inplace=False)
-        expected_results2 = pcoa(self.dm3, method="fsvd",
-                                 number_of_dimensions=self.dm3.shape[0],
+        # Test dimensions edge cases
+        results2 = pcoa(self.dm3, method="fsvd", dimensions=0, inplace=False)
+        expected_results2 = pcoa(self.dm3, method="fsvd", dimensions=self.dm3.shape[0],
                                  inplace=False)
 
         assert_ordination_results_equal(results2, expected_results2,
@@ -100,32 +94,32 @@ class TestPCoA(TestCase):
 
         with self.assertRaises(ValueError):
             dim_too_large = self.dm3.shape[0] + 10
-            pcoa(self.dm3, method="fsvd", number_of_dimensions=dim_too_large)
+            pcoa(self.dm3, method="fsvd", dimensions=dim_too_large)
 
         with self.assertRaises(ValueError):
-            pcoa(self.dm3, method="fsvd", number_of_dimensions=-1)
+            pcoa(self.dm3, method="fsvd", dimensions=-1)
 
         with self.assertRaises(ValueError):
             dim_too_large = self.dm3.shape[0] + 10
-            pcoa(self.dm3, method="eigh", number_of_dimensions=dim_too_large)
+            pcoa(self.dm3, method="eigh", dimensions=dim_too_large)
 
         with self.assertRaises(ValueError):
-            pcoa(self.dm3, method="eigh", number_of_dimensions=-1)
+            pcoa(self.dm3, method="eigh", dimensions=-1)
 
         dm_big = DistanceMatrix.read(get_data_path('PCoA_sample_data_12dim'))
         with self.assertWarnsRegex(RuntimeWarning,
-                                   r"no value for number_of_dimensions"):
-            pcoa(dm_big, method="fsvd", number_of_dimensions=0)
+                                   r"no value for dimensions"):
+            pcoa(dm_big, method="fsvd", dimensions=0)
 
     def test_permutted(self):
         # this should not throw
-        pcoa(self.dm3, method="fsvd", number_of_dimensions=3, inplace=False)
+        pcoa(self.dm3, method="fsvd", dimensions=3, inplace=False)
 
         # some operations, like permute, will change memory structure
         # we want to test that this does not break pcoa
         permutted = self.dm3.permute()
         # we just want to assure it does not throw
-        pcoa(permutted, method="fsvd", number_of_dimensions=3, inplace=False)
+        pcoa(permutted, method="fsvd", dimensions=3, inplace=False)
 
     def test_extensive(self):
         eigvals = [0.3984635, 0.36405689, 0.28804535, 0.27479983,
@@ -198,28 +192,29 @@ class TestPCoA(TestCase):
                                         ignore_directionality=True)
 
     def test_invalid_input(self):
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             pcoa([[1, 2], [3, 4]])
 
     def test_warn_neg_eigval(self):
         """Test warnings of negative eigenvalues."""
         # In this example, negative-most: -0.109, positive-most: 0.736, ratio: 0.148,
         # which is above the threshold, therefore a warning is raised by default.
+        # Note: Explicitly pass the dimensions, to avoid spurious "large DM" warning
         with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0])
 
         # warn regardless of magnitude
         with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm, warn_neg_eigval=True)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=True)
 
         # disable warning
         with catch_warnings(record=True) as obs:
-            results = pcoa(self.dm, warn_neg_eigval=False)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=False)
         self.assertEqual(obs, [])
 
         # larger (more stringent) threshold
         with catch_warnings(record=True) as obs:
-            results = pcoa(self.dm, warn_neg_eigval=0.2)
+            results = pcoa(self.dm, dimensions=self.dm.data.shape[0], warn_neg_eigval=0.2)
         self.assertEqual(obs, [])
 
         # In this example, all eigenvalues are zero or positive, therefore no warning
@@ -241,36 +236,35 @@ class TestPCoA(TestCase):
             pcoa(self.dm3, warn_neg_eigval=-2.5)
 
     def test_integer_dimensions(self):
-        """Test with an integer number_of_dimensions."""
-        results = pcoa(self.dm3, number_of_dimensions=3)
+        """Test with an integer dimensions."""
+        results = pcoa(self.dm3, dimensions=3)
         self.assertEqual(results.samples.shape[1], 3)
 
     def test_large_float(self):
-        """Test with a float number_of_dimensions > 1."""
+        """Test with a float dimensions > 1."""
         msg = "A floating-point number greater than 1 cannot be"
         with self.assertRaisesRegex(ValueError, msg):
-            pcoa(self.dm3, number_of_dimensions=2.5)
+            pcoa(self.dm3, dimensions=2.5)
 
     def test_eigh_method_with_float(self):
-        """Test with a float number_of_dimensions with eigh method to retain 80%
+        """Test with a float dimensions with eigh method to retain 80%
         variance."""
-        results = pcoa(self.dm3, method="eigh", number_of_dimensions=0.8,
+        results = pcoa(self.dm3, method="eigh", dimensions=0.8,
                        inplace=False, seed=None)
         cumulative_variance = np.cumsum(results.proportion_explained.values)
         self.assertGreaterEqual(cumulative_variance[-1], 0.8)
 
     def test_edge_case_for_all_variance(self):
-        """Test with a number_of_dimensions close to 1 to retain nearly all variance.
+        """Test with a dimensions close to 1 to retain nearly all variance.
         """
-        results = pcoa(self.dm3, number_of_dimensions=0.9999)
+        results = pcoa(self.dm3, dimensions=0.9999)
         cumulative_variance = np.cumsum(results.proportion_explained.values)
         self.assertGreaterEqual(cumulative_variance[-1], 0.9999)
 
     def test_fsvd_method_with_float(self):
-        """Test FSVD with float number_of_dimensions for variance threshold."""
-        with self.assertWarns(RuntimeWarning):
-            results = pcoa(self.dm3, method="fsvd", number_of_dimensions=0.7,
-                           inplace=False, seed=None)
+        """Test FSVD with float dimensions for variance threshold."""
+        results = pcoa(self.dm3, method="fsvd", dimensions=0.7,
+                       inplace=False, seed=None)
         cumulative_variance = np.cumsum(results.proportion_explained.values)
         self.assertGreaterEqual(cumulative_variance[-1], 0.7)
 
@@ -292,10 +286,10 @@ class TestPCoA(TestCase):
             ("Invalid operation: cannot reduce distance matrix "
             "to negative dimensions using PCoA. Did you intend " 
             'to specify the default value "0", which sets ' 
-            "the number_of_dimensions equal to the " 
+            "the dimensions equal to the " 
             "dimensionality of the given distance matrix?")
             ):
-            results = _fsvd(self.dm_invalid[1:4], number_of_dimensions=-1)
+            results = _fsvd(self.dm_invalid[1:4], dimensions=-1)
 
 
 class TestPCoABiplot(TestCase):
