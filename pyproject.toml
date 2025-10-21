@@ -27,6 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: Unix",
     "Operating System :: POSIX",
     "Operating System :: MacOS :: MacOS X",
@@ -39,7 +40,7 @@ dependencies = [
     "numpy >= 1.17.0",
     "pandas >= 1.5.0",
     "scipy >= 1.9.0",
-    "h5py >= 3.6.0",
+    "h5py>=3.6.0,<3.15.0",
     "biom-format >= 2.1.16",
     "statsmodels >= 0.14.0",
     "patsy >= 0.5.0",
@@ -122,7 +123,7 @@ packages = ["skbio"]
 skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 
 # Python versions to build
-build = "cp310-* cp311-* cp312-* cp313-*"
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses"]
@@ -159,7 +160,7 @@ ignore = [
 # Basic configurations for Ruff.
 # See https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
-target-version = "py310"
+target-version = "py38"
 exclude = [
     "skbio/**/tests/*",  # ignoring to be able to implement pydocstyle
     "doc/**",  # documentation

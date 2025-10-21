@@ -7,7 +7,7 @@ on:
 
 env:
   earliest_python: "3.10"
-  latest_python: "3.13"
+  latest_python: "3.14"
 
 jobs:
   # Trigger wheel building workflow

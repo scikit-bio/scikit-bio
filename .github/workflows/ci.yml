@@ -9,8 +9,8 @@ on:
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
-  latest_python: "3.13"
-  supported_pythons: '["3.10", "3.11", "3.12", "3.13"]'
+  latest_python: "3.14"
+  supported_pythons: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
 
 jobs:
   conf:
