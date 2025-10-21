@@ -1243,27 +1243,19 @@ class SymmetricMatrix(PairwiseMatrix):
         -------
         float or np.ndarray
             The diagonal values of the matrix.
+
         """
-        if condensed:
-            if diagonal is None:
-                if data.ndim == 1:
-                    return 0.0
-                if data.ndim == 2:
-                    # do we want to store 0.0 if diagonal is all zeros?
-                    # or what about if diagonal is all the same value?
-                    # if all(np.diagonal(data) == np.diagonal(data)[0]):
-                    #     return float(np.diagonal(data)[0])
-                    return np.diagonal(data)
+        if diagonal is not None:
             if np.isscalar(diagonal):
                 return float(diagonal)
             else:
                 return np.asarray(diagonal)
+        if condensed:
+            if data.ndim == 1:
+                return 0.0
+            if data.ndim == 2:
+                return np.diagonal(data)
         else:
-            if diagonal is not None:
-                if np.isscalar(diagonal):
-                    return float(diagonal)
-                else:
-                    return np.asarray(diagonal)
             return None
 
     def _init_flags(self, condensed: bool) -> dict:
@@ -1587,27 +1579,35 @@ class SymmetricMatrix(PairwiseMatrix):
                 return self._data.__getitem__(index)  # type: ignore[index]
 
     def as_redundant(self) -> "SymmetricMatrix":
-        """Return a redundant form copy of the matrix.
+        """Return a redundant form deep copy of the matrix.
 
         Returns
         -------
         SymmetricMatrix
             A new matrix object with the same data stored in redundant form.
 
+        See Also
+        --------
+        redundant_form
+        condensed_form
+        as_condensed
+
         Notes
         -----
-        This method always returns a new object, even if the matrix is already
-        in redundant form.
+        This method always returns a new matrix object, even if the matrix is already
+        in redundant form. The new matrix object is a deep copy of the original matrix.
 
         Examples
         --------
-        Convert from condensed form back to redundant form:
+        Convert from condensed form to redundant form:
 
         >>> from skbio.stats.distance import SymmetricMatrix
-        >>> sm_cond = SymmetricMatrix([1, 2, 3], ids=['a', 'b', 'c'], condensed=True)
-        >>> sm_cond.data
+        >>> sm_condensed = SymmetricMatrix([1, 2, 3],
+        ...                                ids=['a', 'b', 'c'],
+        ...                                condensed=True)
+        >>> sm_condensed.data
         array([ 1., 2., 3.])
-        >>> sm_square = sm_cond.as_redundant()
+        >>> sm_square = sm_condensed.as_redundant()
         >>> sm_square.data
         array([[ 0., 1., 2.],
                [ 1., 0., 3.],
@@ -1626,7 +1626,9 @@ class SymmetricMatrix(PairwiseMatrix):
 
         See Also
         --------
+        as_redundant
         condensed_form
+        as_condensed
 
         Examples
         --------
@@ -1650,17 +1652,24 @@ class SymmetricMatrix(PairwiseMatrix):
             return self._data
 
     def as_condensed(self) -> "SymmetricMatrix":
-        """Return a condensed form copy of the matrix.
+        """Return a condensed form deep copy of the matrix.
 
         Returns
         -------
         SymmetricMatrix
             A new matrix object with the same data stored in condensed form.
 
+        See Also
+        --------
+        condensed_form
+        redundant_form
+        as_redundant
+
         Notes
         -----
-        This method always returns a new object, even if the matrix is already
-        in condensed form. This format is compatible with
+        This method always returns a new matrix object, even if the matrix is already
+        in condensed form. The new matrix object is a deep copy of the original matrix.
+        This format is compatible with
         SciPy’s :func:`scipy.spatial.distance.squareform`.
 
         Examples
@@ -1669,8 +1678,8 @@ class SymmetricMatrix(PairwiseMatrix):
         >>> sm = SymmetricMatrix([[0, 1, 2],
         ...                       [1, 0, 3],
         ...                       [2, 3, 0]], ids=['a', 'b', 'c'])
-        >>> sm_cond = sm.as_condensed()
-        >>> sm_cond.data
+        >>> sm_condensed = sm.as_condensed()
+        >>> sm_condensed.data
         array([ 1., 2., 3.])
 
         """
@@ -1683,6 +1692,12 @@ class SymmetricMatrix(PairwiseMatrix):
         -------
         data : ndarray
             One-dimensional `numpy.ndarray` of values in condensed format.
+
+        See Also
+        --------
+        as_condensed
+        redundant_form
+        as_redundant
 
         Notes
         -----
