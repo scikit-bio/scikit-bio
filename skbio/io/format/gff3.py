@@ -248,7 +248,7 @@ def _gff3_sniffer(fh):
 
 
 @gff3.reader(None)
-def _gff3_to_generator(fh):
+def _gff3_to_generator(fh, cls=None):
     """Parse the GFF3 into the existing IntervalMetadata.
 
     Parameters
@@ -294,8 +294,10 @@ def _generator_to_gff3(obj, fh, skip_subregion=True):
 
 
 @gff3.reader(Sequence)
-def _gff3_to_sequence(fh, seq_num=1):
-    return _construct_seq(fh, Sequence, seq_num)
+def _gff3_to_sequence(fh, cls=None, seq_num=1):
+    if cls is None:
+        cls = Sequence
+    return _construct_seq(fh, cls, seq_num)
 
 
 @gff3.writer(Sequence)
@@ -306,8 +308,10 @@ def _sequence_to_gff3(obj, fh, skip_subregion=True):
 
 
 @gff3.reader(DNA)
-def _gff3_to_dna(fh, seq_num=1):
-    return _construct_seq(fh, DNA, seq_num)
+def _gff3_to_dna(fh, cls=None, seq_num=1):
+    if cls is None:
+        cls = DNA
+    return _construct_seq(fh, cls, seq_num)
 
 
 @gff3.writer(DNA)
@@ -318,7 +322,7 @@ def _dna_to_gff3(obj, fh, skip_subregion=True):
 
 
 @gff3.reader(IntervalMetadata)
-def _gff3_to_interval_metadata(fh, seq_id):
+def _gff3_to_interval_metadata(fh, seq_id, cls=None):
     """Read a GFF3 record into the specified interval metadata.
 
     Parameters
@@ -329,6 +333,8 @@ def _gff3_to_interval_metadata(fh, seq_id):
         Sequence ID which the interval metadata is associated with.
 
     """
+    if cls is None:
+        cls = IntervalMetadata
     length = None
     for data_type, sid, data in _yield_record(fh):
         if seq_id == sid:
@@ -343,7 +349,7 @@ def _gff3_to_interval_metadata(fh, seq_id):
                     "%r %r %r" % (data_type, sid, data)
                 )
     # return an empty instead of None
-    return IntervalMetadata(None)
+    return cls(None)
 
 
 @gff3.writer(IntervalMetadata)

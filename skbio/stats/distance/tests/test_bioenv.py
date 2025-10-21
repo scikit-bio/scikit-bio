@@ -41,10 +41,14 @@ class BIOENVTests(TestCase):
         # floats and integers in the data frame.
         self.dm = DistanceMatrix.read(get_data_path('dm.txt'))
 
+        # add condensed for testing
+        self.dm_condensed = DistanceMatrix(self.dm, condensed=True)
+
         # Reordered rows and columns (i.e., different ID order). Still
         # conceptually the same distance matrix.
         self.dm_reordered = DistanceMatrix.read(
             get_data_path('dm_reordered.txt'))
+        self.dm_reordered_condensed = DistanceMatrix(self.dm_reordered, condensed=True)
 
         self.df = pd.read_csv(get_data_path('df.txt'), sep='\t', index_col=0)
 
@@ -111,6 +115,16 @@ class BIOENVTests(TestCase):
         obs = bioenv(self.dm_reordered, self.df)
         assert_data_frame_almost_equal(obs, self.exp_results)
 
+    def test_bioenv_all_columns_implicit_condensed(self):
+        # Test with all columns in data frame (implicitly).
+        obs = bioenv(self.dm_condensed, self.df)
+        assert_data_frame_almost_equal(obs, self.exp_results)
+
+        # Should get the same results if order of rows/cols in distance matrix
+        # is changed.
+        obs = bioenv(self.dm_reordered_condensed, self.df)
+        assert_data_frame_almost_equal(obs, self.exp_results)
+
     def test_bioenv_all_columns_explicit(self):
         # Test with all columns being specified.
         obs = bioenv(self.dm, self.df, columns=self.cols)
@@ -120,6 +134,17 @@ class BIOENVTests(TestCase):
         # some of the rows and columns reordered (we should get the same
         # result since we're specifying the same columns in the same order).
         obs = bioenv(self.dm, self.df_extra_column, columns=self.cols)
+        assert_data_frame_almost_equal(obs, self.exp_results)
+
+    def test_bioenv_all_columns_explicit_condensed(self):
+        # Test with all columns being specified.
+        obs = bioenv(self.dm_condensed, self.df, columns=self.cols)
+        assert_data_frame_almost_equal(obs, self.exp_results)
+
+        # Test against a data frame that has an extra non-numeric column and
+        # some of the rows and columns reordered (we should get the same
+        # result since we're specifying the same columns in the same order).
+        obs = bioenv(self.dm_condensed, self.df_extra_column, columns=self.cols)
         assert_data_frame_almost_equal(obs, self.exp_results)
 
     def test_bioenv_single_column(self):

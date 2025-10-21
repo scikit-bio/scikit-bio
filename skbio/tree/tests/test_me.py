@@ -267,6 +267,11 @@ class MeTests(TestCase):
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
+        # float32
+        obs = gme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
         obs = gme(dm, neg_as_zero=False)
@@ -279,19 +284,69 @@ class MeTests(TestCase):
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 
+    def test_gme_condensed(self):
+        """The entire tree building workflow."""
+        obs = gme(DistanceMatrix(self.dm1, self.taxa1, condensed=True))
+        exp = TreeNode.read([self.nwk1])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = gme(DistanceMatrix(self.dm2, self.taxa2, condensed=True))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
+        obs = gme(dm, neg_as_zero=False)
+        exp = TreeNode.read([self.nwk5])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = gme(dm, neg_as_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
+
     def test_bme(self):
         """The entire tree building workflow."""
+        # simple integer example
         obs = bme(DistanceMatrix(self.dm1, self.taxa1))
         exp = TreeNode.read([self.nwk1])
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
+        # simple float example
         obs = bme(DistanceMatrix(self.dm2, self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # float32
+        obs = bme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
+        obs = bme(dm, neg_as_zero=False)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = bme(dm, neg_as_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
+
+    def test_bme_condensed(self):
+        """The entire tree building workflow."""
+        obs = bme(DistanceMatrix(self.dm1, self.taxa1, condensed=True))
+        exp = TreeNode.read([self.nwk1])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = bme(DistanceMatrix(self.dm2, self.taxa2, condensed=True))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
         obs = bme(dm, neg_as_zero=False)
         for taxon in ("b", "c", "d"):
             self.assertTrue(obs.find(taxon).length < 0)
@@ -323,6 +378,12 @@ class MeTests(TestCase):
         self.assertEqual(obs.compare_rfd(exp), 0)
         self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
 
+        dm = DistanceMatrix(self.dm1.astype("float32"), self.taxa1)
+        for balanced in True, False:
+            obs = nni(tree, dm, balanced=balanced)
+            self.assertEqual(obs.compare_rfd(exp), 0)
+            self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
         # Example 4: The same, except for branch lengths.
         tree = TreeNode.read([self.nwk4])
         tree.append(TreeNode(tree.name, tree.length))
@@ -345,6 +406,63 @@ class MeTests(TestCase):
 
         # clip to zero
         dm = DistanceMatrix(self.dm5, self.taxa5)
+        tree = TreeNode.read(["(((a,b),d),(c,e));"])
+        obs = nni(tree, dm, balanced=False, neg_as_zero=False)
+        exp = TreeNode.read([self.nwk5])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+        for taxon in ("b", "c", "d"):
+            self.assertTrue(obs.find(taxon).length < 0)
+        obs = nni(tree, dm, balanced=False, neg_as_zero=True)
+        for taxon in ("b", "c", "d"):
+            self.assertEqual(obs.find(taxon).length, 0)
+
+    def test_nni_condensed(self):
+        """The entire tree rearrangement workflow."""
+        # Test if NNI can convert an incorrect tree into the groud truth tree.
+
+        # Example 1: In this simple example, FastNNI and BNNI should produce the same
+        # topology and branch lengths.
+        tree = TreeNode.read([self.nwk1v2])
+        tree.append(TreeNode(tree.name, tree.length))
+        tree.name, tree.length = None, None
+
+        dm = DistanceMatrix(self.dm1, self.taxa1, condensed=True)
+
+        exp = TreeNode.read([self.nwk1])
+        exp.append(TreeNode(exp.name, exp.length))
+        exp.name, exp.length = None, None
+
+        obs = nni(tree, dm, balanced=False)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = nni(tree, dm, balanced=True)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        # Example 4: The same, except for branch lengths.
+        tree = TreeNode.read([self.nwk4])
+        tree.append(TreeNode(tree.name, tree.length))
+        tree.name, tree.length = None, None
+
+        dm = DistanceMatrix(self.dm4, self.taxa4, condensed=True)
+
+        exp = TreeNode.read([self.nwk2])
+        exp.append(TreeNode(exp.name, exp.length))
+        exp.name, exp.length = None, None
+        taxonmap = dict(zip(self.taxa2, self.taxa4))
+        for tip in exp.tips():
+            tip.name = taxonmap[tip.name]
+
+        obs = nni(tree, dm, balanced=False)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        obs = nni(tree, dm, balanced=True)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # clip to zero
+        dm = DistanceMatrix(self.dm5, self.taxa5, condensed=True)
         tree = TreeNode.read(["(((a,b),d),(c,e));"])
         obs = nni(tree, dm, balanced=False, neg_as_zero=False)
         exp = TreeNode.read([self.nwk5])
@@ -1012,7 +1130,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
-            obs := adm.copy(), target, adk, tree, preodr, postodr, powers, stack
+            obs := adm.copy(), target, adk, tree, postodr, powers, stack
         )
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -1037,7 +1155,7 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                obs := adm.copy(), i, adk, tree, preodr, postodr, powers, stack
+                obs := adm.copy(), i, adk, tree, postodr, powers, stack
             )
 
             # insert taxon and calculate full matrix
@@ -1317,7 +1435,7 @@ class MeTests(TestCase):
         # There are four internal branches in the tree:
         # 1: ((d,c),(e,g)), 2: (b,f), 3: (d,c), 9: (e,g)
         tree = self.tree4
-        _, _, nodes = _init_swaps(tree)
+        _, _, nodes = _init_swaps(tree, np.float64)
         npt.assert_array_equal(nodes, np.array([1, 2, 3, 9]))
 
     def test_ols_all_swaps(self):
@@ -1381,7 +1499,7 @@ class MeTests(TestCase):
         _bal_lengths(lens := np.empty(n), adm, tree)
         lensum = lens.sum()
 
-        gains, sides, nodes = _init_swaps(tree)
+        gains, sides, nodes = _init_swaps(tree, np.float64)
         _bal_all_swaps(gains, sides, nodes, adm, tree)
         exp = np.array([0, 0.9407, 0.06885, 0])
         npt.assert_allclose(gains, exp)

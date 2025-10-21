@@ -733,7 +733,9 @@ def _sniffer_data_parser(chunks):
 
 
 @fasta.reader(None)
-def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+def _fasta_to_generator(
+    fh, cls=None, qual=FileSentinel, constructor=Sequence, **kwargs
+):
     kwargs = kwargs.copy()
     if "keep_spaces" in kwargs:
         kwarg = {"keep_spaces": kwargs.pop("keep_spaces")}
@@ -784,41 +786,50 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
 
 
 @fasta.reader(Sequence)
-def _fasta_to_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_sequence(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Sequence
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Sequence, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(DNA)
-def _fasta_to_dna(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_dna(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=DNA, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(RNA)
-def _fasta_to_rna(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_rna(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=RNA, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(Protein)
-def _fasta_to_protein(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_protein(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Protein
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Protein, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(TabularMSA)
-def _fasta_to_tabular_msa(fh, qual=FileSentinel, constructor=None, **kwargs):
+def _fasta_to_tabular_msa(fh, cls=None, qual=FileSentinel, constructor=None, **kwargs):
+    if cls is None:
+        cls = TabularMSA
+
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    return TabularMSA(
-        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs)
-    )
+    return cls(_fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs))
 
 
 @fasta.writer(None)

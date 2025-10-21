@@ -17,7 +17,7 @@ from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantInputWarning
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import (DissimilarityMatrixError,
+from skbio.stats.distance import (PairwiseMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
@@ -32,9 +32,15 @@ class MantelTestData(TestCase):
     def setUp(self):
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
-        self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
-        self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
-        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
+        self.minx = [[0, 1, 2],
+                     [1, 0, 3],
+                     [2, 3, 0]]
+        self.miny = [[0, 2, 7],
+                     [2, 0, 6],
+                     [7, 6, 0]]
+        self.minz = [[0, 0.5, 0.25],
+                     [0.5, 0, 0.1],
+                     [0.25, 0.1, 0]]
 
         # Version of the above dataset stored as DistanceMatrix instances.
         self.minx_dm = DistanceMatrix(self.minx)
@@ -458,7 +464,7 @@ class MantelTests(MantelTestData):
 
     def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             mantel([[1, 2], [3, 4]], [[0, 0], [0, 0]])
 
         # Two asymmetric distance matrices.
