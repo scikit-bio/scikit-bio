@@ -251,17 +251,19 @@ class AncombcTests(TestCase):
                         [0., 0.]]).flatten()
         npt.assert_array_equal(obs, exp)
 
-        # Load the HITChip Atlas dataset: Tipping elements in the human intestinal
-        # ecosystem.
-        # This dataset was reported in:
+        # Load the HITChip Atlas dataset.
+        # This dataset is adopted from the official ANCOM-BC tutorial:
+        #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/
+        #   inst/doc/ANCOMBC.html
+        # The original dataset was described in:
         #   Lahti, Leo, et al. "Tipping elements in the human intestinal ecosystem."
         #   Nature communications 5.1 (2014): 4344.
-        # It was included in the R package "microbiome":
-        #   https://github.com/microbiome/microbiome
-        # It was used for demonstration in the official ANCOM-BC2 tutorial:
-        #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/
-        #   doc/ANCOMBC2.html
-        # The subset of the dataset with aggregated features is used in testing for simplicity
+        # A subset of the dataset with aggregated features is used in testing for
+        # simplicity. We followed the ANCOM-BC tutorial to preprocess the data and 
+        # aggregate features at the family level. The metadata was filtered to retain
+        # attributes of interests, including a continuous covariate of age, and two
+        # categorical covariates of region and bmi according to the formula used in
+        # the ANCOM-BC tutorial.
         table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
         meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
         meta_data = meta_data.dropna(axis=1, how='any')
