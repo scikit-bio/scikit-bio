@@ -109,13 +109,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
-      # - name: Upgrade pip tooling
-      #   run: |
-      #     python -m pip install --upgrade pip setuptools wheel
-      # - name: Debug pip tags (optional)
-      #   run: |
-      #     python -VV
-      #     python -m pip debug --verbose | find "compatible tags"
       - name: Install dependencies
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
@@ -160,23 +153,34 @@ jobs:
         use_conda: [true, false]
     steps:
       - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
+      # set up conda environment
+      - name: Setup conda environment
+        if: ${{ matrix.use_conda }}
+        uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python_version }}
           environment-file: ci/conda_host_env.yml
+      # set up CPython environment (pip)
+      - name: Setup CPython environment
+        if: ${{ !matrix.use_conda }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+      # conda installation
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
-          pip install --prefer-binary . --no-deps
+          pip install --no-deps .
           conda list
+      # pip installation
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
-          pip install --only-binary=:all: h5py
-          pip install --prefer-binary .
-          conda list
+          pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
+          pip install --no-deps .
+          pip list
       - name: Run unit tests
         env:
           WITH_COVERAGE: "TRUE"
