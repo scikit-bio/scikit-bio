@@ -8,7 +8,7 @@
 
 import numpy as np
 
-from skbio.util._decorator import classproperty, classmethod
+from skbio.util._decorator import classproperty, classonlymethod
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
 from skbio._base import ElasticLines
@@ -139,7 +139,7 @@ class GeneticCode(SkbioObject):
             cls.__offset_table = table
         return cls.__offset_table
 
-    @classmethod
+    @classonlymethod
     def from_ncbi(cls, table_id=1) -> "GeneticCode":
         r"""Return NCBI genetic code specified by table ID.
 

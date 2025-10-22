@@ -15,7 +15,7 @@ from skbio.util import classproperty
 from skbio.util._decorator import (
     overrides,
     classproperty,
-    classmethod,
+    classonlymethod,
     deprecated,
     aliased,
     register_aliases,
@@ -24,10 +24,10 @@ from skbio.util._decorator import (
 from skbio.util._exception import OverrideError
 
 
-class Testclassmethod(unittest.TestCase):
+class TestClassOnlyMethod(unittest.TestCase):
     def test_works_on_class(self):
         class A:
-            @classmethod
+            @classonlymethod
             def example(cls):
                 return cls
 
@@ -35,7 +35,7 @@ class Testclassmethod(unittest.TestCase):
 
     def test_fails_on_instance(self):
         class A:
-            @classmethod
+            @classonlymethod
             def example(cls):
                 pass
 
@@ -53,7 +53,7 @@ class Testclassmethod(unittest.TestCase):
             """doc"""
 
         A.example1 = classmethod(example)
-        A.example2 = classmethod(example)
+        A.example2 = classonlymethod(example)
 
         self.assertEqual(A.__dict__['example1'].__func__, example)
         self.assertEqual(A.__dict__['example2'].__func__, example)
@@ -68,7 +68,7 @@ class Testclassmethod(unittest.TestCase):
         self.ran_test = False
 
         class A:
-            @classmethod
+            @classonlymethod
             def example(cls, arg1, arg2, kwarg1=None, kwarg2=None,
                         default=5):
                 self.assertEqual(arg1, 1)

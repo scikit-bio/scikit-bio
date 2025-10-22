@@ -11,7 +11,7 @@ from typing import Optional, Union, Iterable
 
 import numpy as np
 
-# from skbio.util._decorator import classmethod
+from skbio.util._decorator import classonlymethod
 from skbio.stats.distance import PairwiseMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 
@@ -278,7 +278,7 @@ class SubstitutionMatrix(PairwiseMatrix):
             id_: dict(zip(self._ids, row)) for id_, row in zip(self._ids, self._data)
         }
 
-    @classmethod
+    @classonlymethod
     def from_dict(
         cls, dictionary: dict[dict], dtype: str = "float32"
     ) -> "SubstitutionMatrix":
@@ -334,7 +334,7 @@ class SubstitutionMatrix(PairwiseMatrix):
                 scores[i][idmap[key]] = value
         return cls(alphabet, scores)
 
-    @classmethod
+    @classonlymethod
     def identity(
         cls,
         alphabet: Iterable,
@@ -382,7 +382,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 
-    @classmethod
+    @classonlymethod
     def by_name(cls, name: str) -> "SubstitutionMatrix":
         """Load a pre-defined substitution matrix by its name.
 
@@ -451,7 +451,7 @@ class SubstitutionMatrix(PairwiseMatrix):
                     return value
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
-    @classmethod
+    @classonlymethod
     def get_names(cls) -> list[str]:
         """List names of pre-defined substitution matrices.
 

@@ -28,8 +28,7 @@ from scipy.spatial.distance import squareform
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util import find_duplicates, get_rng
-
-# from skbio.util._decorator import classmethod
+from skbio.util._decorator import classonlymethod
 from skbio.util._misc import resolve_key
 from skbio.util._plotting import PlottableMixin
 from skbio.io.descriptors import Read, Write
@@ -216,7 +215,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """Initialize underlying data structure."""
         return data
 
-    @classmethod
+    @classonlymethod
     def from_iterable(
         cls,
         iterable: Iterable[Any],
@@ -1337,7 +1336,7 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         return self._diagonal
 
-    @classmethod
+    @classonlymethod
     def from_iterable(
         cls,
         iterable: Iterable[Any],

@@ -13,7 +13,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from skbio._base import SkbioObject
-# from skbio.util._decorator import classmethod
+from skbio.util._decorator import classonlymethod
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.sequence import Sequence
@@ -330,7 +330,7 @@ class AlignPath(SkbioObject):
         bits = self._to_bits()
         return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
-    @classmethod
+    @classonlymethod
     def from_bits(
         cls, bits: ArrayLike, starts: Optional[ArrayLike] = None
     ) -> "AlignPath":
@@ -495,7 +495,7 @@ class AlignPath(SkbioObject):
             res.append(aln)
         return res
 
-    @classmethod
+    @classonlymethod
     def from_aligned(cls, aln, gap_chars="-", starts=None) -> "AlignPath":
         r"""Create an alignment path from aligned sequences.
 
@@ -615,7 +615,7 @@ class AlignPath(SkbioObject):
 
         return chars, gaps, bits, lens
 
-    @classmethod
+    @classonlymethod
     def from_tabular(cls, msa, starts=None) -> "AlignPath":
         r"""Create an alignment path from a `TabularMSA` object.
 
@@ -733,7 +733,7 @@ class AlignPath(SkbioObject):
         else:
             return np.where(pos, idx, gap)
 
-    @classmethod
+    @classonlymethod
     def from_indices(cls, indices, gap=-1) -> "AlignPath":
         r"""Create an alignment path from character indices in the original sequences.
 
@@ -891,7 +891,7 @@ class AlignPath(SkbioObject):
         else:
             return lens.cumsum(axis=1)
 
-    @classmethod
+    @classonlymethod
     def from_coordinates(cls, coords) -> "AlignPath":
         r"""Create an alignment path from an array of segment coordinates.
 
@@ -1121,7 +1121,7 @@ class PairAlignPath(AlignPath):
             cigar = cigar[: max(width - 3, 0)] + "..."
         return f"<{repr_}, CIGAR: '{cigar}'>"
 
-    @classmethod
+    @classonlymethod
     def from_bits(cls, bits, starts=None) -> "PairAlignPath":
         r"""Create a pairwise alignment path from a bit array.
 
@@ -1228,7 +1228,7 @@ class PairAlignPath(AlignPath):
                 f"{L}{C}" for L, C in zip(self._lengths, _cigar_codes[states])
             )
 
-    @classmethod
+    @classonlymethod
     def from_cigar(
         cls, cigar: Union[str, bytes], starts: Optional[ArrayLike] = None
     ) -> "PairAlignPath":

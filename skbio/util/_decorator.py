@@ -103,7 +103,7 @@ class classproperty(property):
         raise AttributeError("can't set attribute")
 
 
-class classmethod(classmethod):
+class classonlymethod(classmethod):
     """Just like `classmethod`, but it can't be called on an instance."""
 
     def __init__(self, func):

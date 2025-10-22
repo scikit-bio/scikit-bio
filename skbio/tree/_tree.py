@@ -24,7 +24,7 @@ from skbio.tree._exception import (
     TreeError,
 )
 from skbio.util._decorator import (
-    classmethod,
+    classonlymethod,
     register_aliases,
     aliased,
     params_aliased,
@@ -5656,7 +5656,7 @@ class TreeNode(SkbioObject):
             node = node.children[0]
         return distance
 
-    @classmethod
+    @classonlymethod
     def from_linkage_matrix(cls, linkage_matrix, id_list) -> "TreeNode":
         r"""Return tree from SciPy linkage matrix.
 
@@ -5705,7 +5705,7 @@ class TreeNode(SkbioObject):
 
         return node_lookup[-1]
 
-    @classmethod
+    @classonlymethod
     def from_taxonomy(cls, lineage_map) -> "TreeNode":
         r"""Construct a tree from a taxonomy.
 
@@ -5875,7 +5875,7 @@ class TreeNode(SkbioObject):
                     lineage_append(node.name)
                     seen_add(node.id)
 
-    @classmethod
+    @classonlymethod
     def from_taxdump(cls, nodes, names=None) -> "TreeNode":
         r"""Construct a tree from the NCBI taxonomy database.
 
