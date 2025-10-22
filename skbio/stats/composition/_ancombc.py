@@ -437,6 +437,17 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
 
     # Pre-allocate memory for intermediates. Each array has three rows, representing
     # the three components (0, 1, 2), and columns representing individual features.
+    # Let delta_i = mu_i1_hat - mu_i2_hat
+    # The distribution of delta_i is modeled by Gaussian mixture:
+    # f(delta_i) = pi0 * phi((delta_i - delta) / nu_i0) +
+    #              pi1 * phi((delta_i - (delta + l1)) / nu_i1) +
+    #              pi2 * phi((delta_i - (delta + l2)) / nu_i2)
+    # where phi is the normal density function,
+    # (delta + l1) and (delta + l2) are means for delta_i | C1 and delta_i | C2
+    # nu_i0, nu_i1, and nu_i2 are variances of delta_i | C0, delta_i | C1, and
+    # delta_i | C2 respectively.
+    # We assume nu_i1 = nu_i0 + kappa1 and nu_i2 = nu_i0 + kappa2 for computational
+    # simplicity.
     n_feats = beta.shape[0]
     shape = (3, n_feats)
     nu_inv = np.empty(shape)  # inverse of variances
@@ -475,7 +486,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     loss, epoch = np.inf, 0
     while loss > tol and epoch < max_iter:
         # Update intermediates (2nd and 3rd rows only)
-        np.add(var_hat, params[6:8, None], out=intm)  # variances (kappa)
+        np.add(var_hat, params[6:8, None], out=intm)  # kappa1, kappa2
         np.reciprocal(intm, out=nu_inv[1:])
         np.sqrt(intm, out=stdevs[1:])
         np.subtract(beta, params[4:6, None], out=ratios[1:])  # means (l)
@@ -490,12 +501,17 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         # component fractions
         # Note: `norm.pdf` doesn't have an `out` parameter. To further optimize this,
         # one needs to manually implement the under-the-hood algorithm.
+        # p_r,i = (pi_r * phi(delta_i - (delta + l_r) / nu_ir)) /
+        #         sum_r(pi_r * phi((delta_i - (dleta + l_r)) / nu_ir)),
+        # where r = 0, 1, 2; i = 1, ..., n_features
         resp[:] = norm.pdf(beta, means[:, None], stdevs)
         resp *= params[:3, None]  # weights (pi)
         resp /= np.sum(resp, axis=0, keepdims=True)
 
         ### M-step ###
         # Weights of components (pi)
+        # pi_r_new = mean(pi_r * pdf_r / (pi0 * pdf0 + pi1 * pdf1 + pi2 * pdf2)),
+        # where r = 0, 1, 2
         np.mean(resp, axis=1, out=updated[:3])
 
         # Avoid zero weights.
@@ -506,6 +522,10 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         # The following code produces the same result as:
         #   updated[3] = np.sum(resp * ratios) / np.sum(resp * nu_inv)
         # But it avoids creating intermediate arrays.
+        # delta_new = sum(r_0i * beta / nu0 +
+        #                 r_1i * (beta - l1) / (nu0 + kappa1) +
+        #                 r_2i * (beta - l2) / (nu0 + kappa2)) /
+        #             sum(r0i / nu0 + r1i / (nu0 + kappa1) + r2i / (nu0 + kappa2))
         updated[3] = np.vdot(resp, ratios) / np.vdot(resp, nu_inv)
 
         # Negative and positive components relative to delta (l)
@@ -515,7 +535,11 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         intm *= resp[0]
         numer = np.sum(intm, axis=1)
         l1, l2 = numer / denom
+        # l1_new = min(sum(r1i * (beta - delta) / (nu0 + kappa1)) /
+        #              sum(r1i / (nu0 + kappa1)), 0)
         updated[4] = np.minimum(l1, 0)
+        # l2_new = min(sum(r2i * (beta - delta) / (nu0 + kappa2)) /
+        #              sum(r2i / (nu0 + kappa2)), 0)
         updated[5] = np.maximum(l2, 0)
 
         # Perform numeric optimization to minimize variances of negative and positive
@@ -529,6 +553,9 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         # updated[7] = max(updated[7], eps)
 
         # Loss (epsilon)
+        # epsilon = sqrt((pi0_new - pi0)^2 + (pi1_new - pi1)^2 + (pi2_new - pi2)^2 +
+        #                (delta_new - delta)^2 + (l1_new - l1)^2 + (l2_new - l2)^2 +
+        #                (kappa1_new - kappa1)^2 + (kappa2_new - kappa2)^2)
         loss = np.linalg.norm(updated - params)
 
         params[:] = updated
