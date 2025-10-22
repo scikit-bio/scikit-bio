@@ -284,7 +284,9 @@ from autoinherit import InheritedAutosummary
 # Let autosummary skip members that have a "skipdoc" attribute that is True.
 
 def skip_member(app, what, name, obj, skip, options):
-    return getattr(obj, "_skipdoc", None)
+    if name == '__annotate_func__':
+        return True  # Skip this phantom attribute
+    return getattr(obj, "_skipdoc", None) or skip
 
 
 def setup(app):
