@@ -111,7 +111,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          pip install h5py==3.14
+          pip install --only-binary=:all: h5py==3.14
           pip install --prefer-binary .
           conda list
       # install anndata and polars here to test as optional dependencies.
@@ -167,7 +167,7 @@ jobs:
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
-          pip install h5py==3.14
+          pip install --only-binary=:all: h5py==3.14
           pip install --prefer-binary .
           conda list
       - name: Run unit tests
