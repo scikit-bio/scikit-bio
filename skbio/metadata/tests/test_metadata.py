@@ -862,5 +862,112 @@ class TestGetIDs(unittest.TestCase):
             self.assertFalse(w)
 
 
+class TestFilterIDs(unittest.TestCase):
+    def test_default(self):
+        df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
+                           'SampleType': ['gut', 'tongue', 'gut']},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        metadata = SampleMetadata(df)
+
+        actual = metadata.filter_ids(['S1', 'S2'])
+        self.assertSetEqual(actual.get_ids(), {'S1', 'S2'})
+
+        with self.assertRaisesRegex(ValueError, 'must contain at least one ID.'):
+            metadata.filter_ids([])
+
+        with self.assertRaisesRegex(ValueError, 'must contain unique IDs.'):
+            metadata.filter_ids(['S2', 'S2'])
+
+        with self.assertRaisesRegex(ValueError, 'IDs are not present'):
+            metadata.filter_ids(['S1', 'S4'])
+
+
+class TestGetColumn(unittest.TestCase):
+    def test_default(self):
+        df = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
+                           'SampleType': ['gut', 'tongue', 'gut']},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        metadata = SampleMetadata(df)
+
+        actual = metadata.get_column('Subject')
+        self.assertIsInstance(actual, CategoricalMetadataColumn)
+
+        with self.assertRaisesRegex(ValueError, 'not a column in the metadata.'):
+            metadata.get_column('not_a_column')
+
+
+class TestFilterColumns(unittest.TestCase):
+    def test_default(self):
+        df = pd.DataFrame({'Subject': ['subject-1', 'subject-2', 'subject-3'],
+                           'SampleType': ['gut', 'tongue', 'gut'],
+                           'Height': [187, 165, 174],
+                           'Weight': [75, 75, 75],
+                           'Species': ['Human', 'Human', 'Human']},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        metadata = SampleMetadata(df)
+
+        with self.assertRaisesRegex(ValueError, 'Unknown column type'):
+            metadata.filter_columns(column_type='hello')
+
+        actual = metadata.filter_columns(column_type='numeric')
+        self.assertEqual(actual.column_count, 2)
+        self.assertListEqual(list(actual.columns.keys()), ['Height', 'Weight'])
+
+        actual = metadata.filter_columns(drop_all_unique=True)
+        self.assertEqual(actual.column_count, 3)
+        self.assertListEqual(list(actual.columns.keys()),
+                             ['SampleType', 'Weight', 'Species'])
+
+        actual = metadata.filter_columns(drop_zero_variance=True)
+        self.assertEqual(actual.column_count, 3)
+        self.assertListEqual(list(actual.columns.keys()),
+                             ['Subject', 'SampleType', 'Height'])
+
+        df = pd.DataFrame({'Subject': ['subject-1', 'subject-2', 'subject-3'],
+                           'SampleType': [np.nan, np.nan, np.nan]},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        metadata = SampleMetadata(df)
+
+        actual = metadata.filter_columns(drop_all_missing=True)
+        self.assertEqual(actual.column_count, 1)
+        self.assertListEqual(list(actual.columns.keys()), ['Subject'])
+
+
+class TestMerge(unittest.TestCase):
+    def assertEqualColumns(self, obs_columns, exp):
+        obs = [(name, props.type) for name, props in obs_columns.items()]
+        self.assertEqual(obs, exp)
+
+    def test_default(self):
+        df1 = pd.DataFrame({'Subject': ['subject-1', 'subject-1', 'subject-2'],
+                           'SampleType': ['gut', 'tongue', 'gut']},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        md1 = SampleMetadata(df1)
+
+        df2 = pd.DataFrame({'Height': [187, 165, 174]},
+                          index=pd.Index(['S1', 'S2', 'S3'], name='id'))
+        md2 = SampleMetadata(df2)
+
+        actual = md1.merge(md2)
+
+        self.assertIsInstance(actual, SampleMetadata)
+        self.assertEqual(actual.id_count, 3)
+        self.assertEqual(actual.ids, ('S1', 'S2', 'S3'))
+        self.assertEqual(actual.column_count, 3)
+        self.assertEqualColumns(actual.columns, [
+            ('Subject', 'categorical'), ('SampleType', 'categorical'),
+            ('Height', 'numeric')])
+
+        with self.assertRaisesRegex(ValueError, 'metadata with overlapping columns'):
+            md1.merge(md1)
+
+        df3 = pd.DataFrame({'Weight': [78, 56, 63]},
+                          index=pd.Index(['S4', 'S5', 'S6'], name='id'))
+        md3 = SampleMetadata(df3)
+
+        with self.assertRaisesRegex(ValueError, 'no IDs shared across metadata'):
+            md1.merge(md3)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -8,7 +8,7 @@
 
 from scipy.cluster.hierarchy import linkage
 from skbio.tree import TreeNode
-from ._utils import _check_dm
+from ._utils import _validate_dm
 
 
 def upgma(dm, weighted=False):
@@ -80,7 +80,7 @@ def upgma(dm, weighted=False):
     (c:1.25,(a:0.5,b:0.5):0.75);
     <BLANKLINE>
     """
-    _check_dm(dm)
+    _validate_dm(dm)
 
     # If weighted is set to 'False', UPGMA is performed
     if weighted is False:

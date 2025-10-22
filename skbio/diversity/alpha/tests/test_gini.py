@@ -45,7 +45,7 @@ class GiniTests(TestCase):
             gini_index([1.0, -3.1, 4.5])
 
     def test_lorenz_curve(self):
-        npt.assert_array_almost_equal(_lorenz_curve(self.data),
+        npt.assert_allclose(_lorenz_curve(self.data),
                                       self.lorenz_curve_points)
 
     def test_lorenz_curve_integrator(self):

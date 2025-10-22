@@ -6,12 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import abc
-import collections
-import itertools
+from abc import ABCMeta, abstractmethod
+from collections import namedtuple, OrderedDict
+from itertools import chain
+from types import MappingProxyType
+from warnings import catch_warnings, filterwarnings
+from typing import Optional
 import sqlite3
-import types
-import warnings
 
 import pandas as pd
 import numpy as np
@@ -19,7 +20,8 @@ import numpy as np
 import skbio.metadata.missing as _missing
 from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
+from .._base import SkbioObject
 
 
 DEFAULT_MISSING = _missing.DEFAULT_MISSING
@@ -233,12 +235,10 @@ class _MetadataBase:
 
 
 # Other properties such as units can be included here in the future!
-ColumnProperties = collections.namedtuple(
-    "ColumnProperties", ["type", "missing_scheme"]
-)
+ColumnProperties = namedtuple("ColumnProperties", ["type", "missing_scheme"])
 
 
-class SampleMetadata(_MetadataBase):
+class SampleMetadata(_MetadataBase, SkbioObject):
     """Store metadata associated with identifiers in a study.
 
     Metadata is tabular in nature, mapping study identifiers (e.g. sample or
@@ -331,11 +331,11 @@ class SampleMetadata(_MetadataBase):
     @classmethod
     def load(
         cls,
-        filepath,
-        column_types=None,
-        column_missing_schemes=None,
-        default_missing_scheme=DEFAULT_MISSING,
-    ):
+        filepath: str,
+        column_types: Optional[dict[str, str]] = None,
+        column_missing_schemes: Optional[dict[str, str]] = None,
+        default_missing_scheme: str = DEFAULT_MISSING,
+    ) -> "SampleMetadata":
         """Load a TSV metadata file.
 
         The TSV metadata file format is described at https://docs.qiime2.org in
@@ -400,7 +400,7 @@ class SampleMetadata(_MetadataBase):
         """
         # Read-only proxy to the OrderedDict mapping column names to
         # ColumnProperties.
-        return types.MappingProxyType(self._columns)
+        return MappingProxyType(self._columns)
 
     @property
     def column_count(self):
@@ -457,7 +457,7 @@ class SampleMetadata(_MetadataBase):
 
         norm_df.index = norm_df.index.str.strip()
 
-        columns = collections.OrderedDict()
+        columns = OrderedDict()
         for column_name, series in norm_df.items():
             missing_scheme = column_missing_schemes.get(
                 column_name, default_missing_scheme
@@ -522,6 +522,14 @@ class SampleMetadata(_MetadataBase):
         lines.append("Call to_dataframe() for a tabular representation.")
 
         return "\n".join(lines)
+
+    def __str__(self):
+        """Return the string summary of the metadata and its columns.
+
+        Required to inherit from SkbioObject.
+
+        """
+        return self.__repr__()
 
     def __eq__(self, other):
         """Determine if this metadata is equal to another.
@@ -675,10 +683,8 @@ class SampleMetadata(_MetadataBase):
 
         # https://github.com/pandas-dev/pandas/blob/
         # 7c7bd569ce8e0f117c618d068e3d2798134dbc73/pandas/io/sql.py#L1306
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", "The spaces in these column names will not.*"
-            )
+        with catch_warnings():
+            filterwarnings("ignore", "The spaces in these column names will not.*")
             self._dataframe.to_sql(
                 "metadata", conn, index=True, index_label=self.id_header
             )
@@ -773,7 +779,7 @@ class SampleMetadata(_MetadataBase):
 
         dfs = []
         columns = []
-        for md in itertools.chain([self], others):
+        for md in chain([self], others):
             df = md._dataframe
             dfs.append(df)
             columns.extend(df.columns.tolist())
@@ -792,8 +798,7 @@ class SampleMetadata(_MetadataBase):
         # Metadata.
         if merged_df.index.empty:
             raise ValueError(
-                "Cannot merge because there are no IDs shared across metadata "
-                "objects."
+                "Cannot merge because there are no IDs shared across metadata objects."
             )
 
         merged_df.index.name = "id"
@@ -909,7 +914,7 @@ class SampleMetadata(_MetadataBase):
         return filtered_md
 
 
-class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
+class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
     """Abstract base class representing a single metadata column.
 
     Concrete subclasses represent specific metadata column types, e.g.
@@ -935,10 +940,10 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
     """
 
     # Abstract, must be defined by subclasses.
-    type = None
+    type: Optional[str] = None
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def _is_supported_dtype(cls, dtype):
         """Return True if dtype is supported False otherwise.
 
@@ -949,7 +954,7 @@ class MetadataColumn(_MetadataBase, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    @abc.abstractmethod
+    @abstractmethod
     def _normalize_(cls, series):
         """Return a normalized copy of series.
 

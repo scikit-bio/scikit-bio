@@ -140,7 +140,7 @@ class GeneticCode(SkbioObject):
         return cls.__offset_table
 
     @classonlymethod
-    def from_ncbi(cls, table_id=1):
+    def from_ncbi(cls, table_id=1) -> "GeneticCode":
         r"""Return NCBI genetic code specified by table ID.
 
         Parameters
@@ -232,7 +232,7 @@ class GeneticCode(SkbioObject):
         indices = (amino_acids.values == b"M").nonzero()[0]
         if indices.size < 1:
             raise ValueError(
-                "`amino_acids` must contain at least one M " "(methionine) character"
+                "`amino_acids` must contain at least one M (methionine) character"
             )
         self._amino_acids = amino_acids
         self._m_character_codon = self._index_to_codon(indices[0])
@@ -604,7 +604,7 @@ class GeneticCode(SkbioObject):
 
         if sequence.has_gaps():
             raise ValueError(
-                "scikit-bio does not support translation of " "gapped sequences."
+                "scikit-bio does not support translation of gapped sequences."
             )
 
         if sequence.has_degenerates():
@@ -761,7 +761,7 @@ class GeneticCode(SkbioObject):
             )
 
 
-# defined at http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+# defined at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
 _ncbi_genetic_codes = {
     1: GeneticCode(
         "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
@@ -781,8 +781,7 @@ _ncbi_genetic_codes = {
     4: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "--MM---------------M------------MMMM---------------M------------",
-        "Mold, Protozoan, and Coelenterate Mitochondrial, and "
-        "Mycoplasma/Spiroplasma",
+        "Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/Spiroplasma",
     ),
     5: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG",

@@ -2056,6 +2056,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         exp_idx, exp_alp = np.array([1, 0, 2, 2, 3]), 'ehlo'
         npt.assert_equal(obs_idx, exp_idx)
         self.assertEqual(obs_alp, exp_alp)
+        self.assertTrue(obs_idx.dtype.type is np.intp)
 
         # return ASCII code points
         obs_idx, obs_alp = seq.to_indices(return_codes=True)
@@ -2074,6 +2075,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         obs = seq.to_indices('oleh')
         exp = np.array([3, 2, 1, 1, 0])
         npt.assert_equal(obs, exp)
+        self.assertTrue(obs.dtype.type is np.intp)
 
         # grammared sequence
         seq = DNA('GAGCTC')
@@ -2138,7 +2140,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # gaps are automatically identified and masked
         obs_idx, obs_alp = DNA('GAG-CTC').to_indices()
         self.assertTrue(isinstance(obs_idx, np.ma.MaskedArray))
-        npt.assert_equal(obs_idx.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs_idx.data, [2, 0, 2, -1, 1, 3, 1])
         npt.assert_equal(obs_idx.mask, [0, 0, 0, 1, 0, 0, 0])
         self.assertEqual(obs_alp, 'ACGT')
 
@@ -2163,7 +2165,7 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # with alphabet
         obs = DNA('GAG-CTC').to_indices('ACGT')
         self.assertTrue(isinstance(obs, np.ma.MaskedArray))
-        npt.assert_equal(obs.data, [2, 0, 2, 255, 1, 3, 1])
+        npt.assert_equal(obs.data, [2, 0, 2, -1, 1, 3, 1])
         npt.assert_equal(obs.mask, [0, 0, 0, 1, 0, 0, 0])
 
     def test_copy_without_metadata(self):

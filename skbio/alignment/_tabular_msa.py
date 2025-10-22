@@ -20,12 +20,12 @@ from skbio.sequence._grammared_sequence import GrammaredSequence
 from skbio.util._decorator import classonlymethod, overrides
 from skbio.util._misc import resolve_key
 from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])
+_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -142,7 +142,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """
 
     default_write_format = "fasta"
-    __hash__ = None
+    __hash__ = None  # type: ignore[assignment]
 
     read = Read()
     write = Write()
@@ -718,7 +718,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._iloc
 
     @classonlymethod
-    def from_dict(cls, dictionary):
+    def from_dict(cls, dictionary: dict) -> "TabularMSA":
         """Create a ``TabularMSA`` from a ``dict``.
 
         Parameters
@@ -2239,7 +2239,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         """
         if how not in {"strict", "inner", "outer", "left", "right"}:
             raise ValueError(
-                "`how` must be 'strict', 'inner', 'outer', 'left', or " "'right'."
+                "`how` must be 'strict', 'inner', 'outer', 'left', or 'right'."
             )
 
         self._assert_joinable(other)
@@ -2340,7 +2340,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
             if len(diff) > 0:
                 raise ValueError(
-                    "Positional metadata columns must all match with " "`how='strict'`"
+                    "Positional metadata columns must all match with `how='strict'`"
                 )
 
             join_index = self.index
@@ -2466,7 +2466,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if self.index.is_unique:
             return self._seqs.to_dict()
         else:
-            raise ValueError("Cannot convert to dict. Index labels are not" " unique.")
+            raise ValueError("Cannot convert to dict. Index labels are not unique.")
 
     def _is_sequence_axis(self, axis):
         if axis == "sequence" or axis == 0:
@@ -2483,17 +2483,59 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self.shape.position
 
     @classonlymethod
-    def from_path_seqs(cls, path, seqs):
-        """Create a tabular MSA from an alignment path and sequences."""
+    def from_path_seqs(cls, path, seqs) -> "TabularMSA":
+        """Create a tabular MSA from an alignment path and the original sequences.
+
+        Parameters
+        ----------
+        path : AlignPath
+            Alignment path.
+        seqs : iterable of GrammaredSequence
+            Original sequences.
+
+        Returns
+        -------
+        TabularMSA
+            The created tabular MSA object.
+
+        See Also
+        --------
+        skbio.alignment.AlignPath.from_tabular
+
+        Examples
+        --------
+        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.alignment import AlignPath
+        >>> seqs = [
+        ...    DNA('CGTCGTGC'),
+        ...    DNA('CAGTC'),
+        ...    DNA('CGTCGTT'),
+        ... ]
+        >>> path = AlignPath(
+        ...    lengths=[2, 2, 2, 1, 1],
+        ...    states=[0, 2, 0, 6, 0],
+        ...    starts=[0, 0, 0],
+        ... )
+        >>> msa = TabularMSA.from_path_seqs(path, seqs)
+        >>> msa
+        TabularMSA[DNA]
+        ---------------------
+        Stats:
+            sequence count: 3
+            position count: 8
+        ---------------------
+        CGTCGTGC
+        CA--GT-C
+        CGTCGT-T
+
+        """
+        # TODO: add `minter` and `index` support
         if not all(isinstance(x, GrammaredSequence) for x in seqs):
             raise ValueError("`seqs` must be of skbio.Sequence type.")
-        else:
-            seqtype = seqs[0].__class__
-            bits = path.to_bits()
-            gaps = np.repeat(bits, path.lengths, axis=1)
-            gap_char = ord(seqtype.default_gap_char)
-            byte_arr = np.full(path.shape, gap_char, dtype=np.uint8)
-            byte_arr[gaps == 0] = np.concatenate(
-                [x._bytes[x._bytes != gap_char] for x in seqs]
-            )
-            return cls([seqtype(x) for x in byte_arr])
+        if len(seqs) != path._shape[0]:
+            raise ValueError("Sequence counts in `path` and `seqs` do not match.")
+        seqtype = seqs[0].__class__
+        gap_code = ord(seqtype.default_gap_char)
+        byte_lst = [x._bytes for x in seqs]
+        byte_arr = path._to_matrices(byte_lst, gap_code)[0]
+        return cls([seqtype(x) for x in byte_arr])

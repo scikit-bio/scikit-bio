@@ -8,19 +8,6 @@ scikit-bio, as well as various utility functionality, including I/O and
 unit-testing convenience functions.
 
 
-User configuration utilities
-----------------------------
-
-Configuration options for functional input and output.
-
-.. autosummary::
-   :toctree: generated/
-
-   config
-   get_config
-   set_config
-
-
 Testing utilities
 -----------------
 
@@ -42,6 +29,15 @@ Plotting utilities
    :toctree: generated/
 
    PlottableMixin
+
+
+Randomization
+-------------
+
+.. autosummary::
+   :toctree: generated/
+
+   get_rng
 
 
 Decorators
@@ -67,7 +63,6 @@ Generally useful functionality that doesn't fit in more specific locations.
 .. autosummary::
    :toctree: generated/
 
-   get_rng
    cardinal_to_ordinal
    find_duplicates
    safe_md5
@@ -82,7 +77,8 @@ Generally useful functionality that doesn't fit in more specific locations.
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5, get_rng
+from ._misc import cardinal_to_ordinal, find_duplicates, safe_md5
+from ._random import get_rng
 from ._testing import (
     get_data_path,
     assert_ordination_results_equal,
@@ -99,8 +95,8 @@ from ._decorator import (
     register_aliases,
     params_aliased,
 )
+from ._optionals import get_package
 from ._plotting import PlottableMixin
-from .config._config import get_config, set_config
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -112,6 +108,7 @@ __all__ = [
     "assert_ordination_results_equal_np",
     "assert_data_frame_almost_equal",
     "pytestrunner",
+    "get_package",
     "PlottableMixin",
     "overrides",
     "classproperty",
@@ -120,6 +117,4 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
-    "get_config",
-    "set_config",
 ]

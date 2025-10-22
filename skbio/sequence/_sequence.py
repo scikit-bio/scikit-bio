@@ -30,7 +30,7 @@ from skbio.sequence._alphabet import (
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 
 
 class Sequence(
@@ -86,10 +86,8 @@ class Sequence(
 
     References
     ----------
-    .. [1] Nomenclature for incompletely specified bases in nucleic acid
-       sequences: recommendations 1984.
-       Nucleic Acids Res. May 10, 1985; 13(9): 3021-3030.
-       A Cornish-Bowden
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
+       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
 
     Examples
     --------
@@ -109,7 +107,7 @@ class Sequence(
     ---------------
     0 GGUCGUGAAG GA
 
-    Create a sequence with metadata and positional metadata:
+    Create a sequence with metadata, positional metadata and interval metadata:
 
     >>> metadata = {'authors': ['Alice'], 'desc':'seq desc', 'id':'seq-id'}
     >>> positional_metadata = {'exons': [True, True, False, True],
@@ -376,7 +374,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     _ascii_invert_case_bit_offset = 32
     _ascii_lowercase_boundary = 90
     default_write_format = "fasta"
-    __hash__ = None
+    __hash__ = None  # type: ignore[assignment]
 
     @property
     def values(self):
@@ -443,7 +441,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    def concat(cls, sequences, how="strict"):
+    def concat(cls, sequences, how="strict") -> "Sequence":
         r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters
@@ -1501,35 +1499,32 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Parameters
         ----------
         other : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-            Sequence to compute the distance to. If `other` is a ``Sequence``
-            object, it must be the same type as this sequence. Other input
-            types will be converted into a ``Sequence`` object of the same type
-            as this sequence.
-        metric : function, optional
-            Function used to compute the distance between this sequence and
-            `other`. If ``None`` (the default), Hamming distance will be used
-            (:func:`skbio.sequence.distance.hamming`). `metric` should take two
-            ``skbio.Sequence`` objects and return a ``float``. The sequence
-            objects passed to `metric` will be the same type as this sequence.
-            See :mod:`skbio.sequence.distance` for other predefined metrics
-            that can be supplied via `metric`.
+            Sequence to compute the distance to. If ``other`` is a ``Sequence`` object,
+            it must be the same type as this sequence. Other input types will be
+            converted into a ``Sequence`` object of the same type as this sequence.
+        metric : callable, optional
+            Function used to compute the distance between this sequence and ``other``.
+            By default, Hamming distance will be used (see
+            :func:`~skbio.sequence.distance.hamming`). ``metric`` should be a function
+            that takes two ``Sequence`` objects and returns a ``float``. The sequence
+            objects passed to ``metric`` will be the same type as this sequence. See
+            :mod:`skbio.sequence.distance` for other predefined metrics that can be
+            supplied via ``metric``.
 
         Returns
         -------
         float
-            Distance between this sequence and `other` as defined by `metric`.
+            Distance between this and other sequences as defined by ``metric``.
 
         Raises
         ------
         TypeError
-            If `other` is a ``Sequence`` object with a different type than this
+            If ``other`` is a ``Sequence`` object with a different type than this
             sequence.
 
         See Also
         --------
         skbio.sequence.distance
-        fraction_diff
-        fraction_same
 
         Examples
         --------
@@ -2118,11 +2113,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         alphabet : iterable of scalar or skbio.SubstitutionMatrix, optional
             Explicitly provided alphabet. The returned indices will be indices
             of characters in this alphabet. If `None`, will return indices of
-            unique characters observed in the sequence.s
+            unique characters observed in the sequence.
         mask_gaps : 'auto' or bool, optional
             Mask gap characters in the sequence, and return a masked array
             instead of a standard array. The gap characters are defined by the
-            sequence's `gap_characters` attribute. If `'auto'` (default), will
+            sequence's `gap_chars` attribute. If `'auto'` (default), will
             return a standard array if no gap character is found, or a masked
             array if gap character(s) are found.
         wildcard : 'auto', str of length 1 or None, optional
@@ -2136,9 +2131,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Returns
         -------
-        1D np.ndarray or np.ma.ndarray of uint8
+        1D np.ndarray or np.ma.ndarray of intp
             Vector of character indices representing the sequence
-        str or 1D np.array of uint8, optional
+
+            .. versionchanged:: 0.7.0
+                The array data type was changed from ``uint8`` to ``intp``, which is
+                the native NumPy indexing type without the need of casting.
+
+        str or 1D np.ndarray of uint8, optional
             Sorted unique characters observed in the sequence.
 
         Raises
@@ -2159,7 +2159,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = Protein('MEEPQSDPSV')
         >>> idx, uniq = seq.to_indices()
         >>> idx
-        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6], dtype=uint8)
+        array([2, 1, 1, 3, 4, 5, 0, 3, 5, 6])
         >>> uniq
         'DEMPQSV'
 
@@ -2170,7 +2170,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('CTCAAAAGTC')
         >>> idx = seq.to_indices(alphabet='TCGA')
         >>> idx
-        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1], dtype=uint8)
+        array([1, 0, 1, 3, 3, 3, 3, 2, 0, 1])
 
         Use the alphabet included in a substitution matrix.
 
@@ -2178,7 +2178,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
         >>> idx = seq.to_indices(alphabet=sm)
         >>> idx
-        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3], dtype=uint8)
+        array([3, 1, 3, 0, 0, 0, 0, 2, 1, 3])
 
         Gap characters ("-" and ".") in the sequence will be masked
         (`mask_gaps='auto'` is the default behavior).
@@ -2197,7 +2197,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> seq = DNA('GAGRCTC')
         >>> idx = seq.to_indices(alphabet='ACGTN', wildcard='auto')
         >>> idx
-        array([2, 0, 2, 4, 1, 3, 1], dtype=uint8)
+        array([2, 0, 2, 4, 1, 3, 1])
 
         """
         seq = self._bytes
@@ -2216,9 +2216,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     mask, seq = gaps, seq[~gaps]
 
             elif mask_gaps is True:
-                raise ValueError(
-                    "Gap character(s) are not defined for the " "sequence."
-                )
+                raise ValueError("Gap character(s) are not defined for the sequence.")
 
         # according to an alphabet
         if alphabet is not None:
@@ -2231,7 +2229,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 try:
                     assert (wildcard := ord(wildcard)) < 128
                 except (TypeError, AssertionError):
-                    raise ValueError("Wildcard must be a single ASCII " "character.")
+                    raise ValueError("Wildcard must be a single ASCII character.")
 
             # extract alphabet from a substitution matrix
             if hasattr(alphabet, "_is_ascii"):
@@ -2241,32 +2239,31 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
                 else:
                     raise ValueError(
-                        "Alphabet in the substitution matrix "
-                        "are not single ASCII characters."
+                        "Alphabet in the substitution matrix are not single ASCII "
+                        "characters."
                     )
 
             # process alphabet from scratch
             else:
                 if find_duplicates(alphabet):
-                    raise ValueError("Alphabet contains duplicated " "characters.")
+                    raise ValueError("Alphabet contains duplicated characters.")
                 try:
                     alphabet = _alphabet_to_hashes(alphabet)
                 except (TypeError, ValueError, UnicodeEncodeError):
                     raise ValueError(
-                        "Alphabet cannot be encoded as single " "ASCII characters."
+                        "Alphabet cannot be encoded as single ASCII characters."
                     )
                 indices = _indices_in_alphabet_ascii(seq, alphabet, wildcard=wildcard)
 
         # according to observed characters
         else:
             (indices,), observed = _indices_in_observed([seq])
-            indices = indices.astype(np.uint8)
             if return_codes is False:
                 observed = observed.tobytes().decode("ascii")
 
         # construct masked array
         if mask is not None:
-            indices_ = np.full(mask.size, 255, dtype=np.uint8)
+            indices_ = np.full(mask.size, -1, dtype=np.intp)
             indices_[~mask] = indices
             indices = np.ma.array(indices_, mask=mask)
 
@@ -2291,7 +2288,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
             else:
                 raise ValueError(
-                    "No positional metadata associated with key " "'%s'" % sliceable
+                    "No positional metadata associated with key '%s'" % sliceable
                 )
 
         if not hasattr(sliceable, "dtype") or (
@@ -2314,7 +2311,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                         % s.__class__.__name__
                     )
             if bool_mode and int_mode:
-                raise TypeError("Cannot provide iterable of both bool and" " int.")
+                raise TypeError("Cannot provide iterable of both bool and int.")
             sliceable = np.r_[sliceable]
 
         if sliceable.dtype == bool:
@@ -2404,8 +2401,6 @@ def _slices_from_iter(array, indexables):
         elif _is_single_index(i):
             i = _single_index_to_slice(i)
         else:
-            raise IndexError(
-                "Cannot slice sequence from iterable " "containing %r." % i
-            )
+            raise IndexError("Cannot slice sequence from iterable containing %r." % i)
 
         yield array[i]

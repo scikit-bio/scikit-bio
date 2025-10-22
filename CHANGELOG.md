@@ -1,18 +1,102 @@
 # scikit-bio changelog
 
-## Version 0.6.4-dev
+## Version 0.7.1-dev
 
 ### Features
 
-* Started implementation of a configuration system which will allow users to provide data types beyond pandas Dataframes as input to scikit-bio functions, as well as choosing which data type will be used as output. Newly supported types include NumPy ndarrays, Polars DataFrames, AnnData objects, and scikit-bio Table objects ([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187))
+* Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293)).
+* Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
+* Added new `PairwiseMatrix` and `SymmetricMatrix` classes and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+
+### Performance enhancements
+
+* Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Added float32 support for minimum evolution phylogenetic tree building algorithms (`gme`, `bme` and `nni`) ([#2291](https://github.com/scikit-bio/scikit-bio/pull/2291)).
+* Added float32 support for reading labeled square matrix (lsmat) file format (`io.format.lsmat`) ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 
 ### Bug Fixes
 
+* Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
+* Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+* Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
+
+## Version 0.7.0
+
+### Features
+
+* Added a development roadmap for scikit-bio to the website ([#2251](https://github.com/scikit-bio/scikit-bio/pull/2251)).
+* Added function `dirmult_lme`, a differential abundance test for longitudinal data through fitting a Dirichlet-multinomial linear mixed effects model ([#2080](https://github.com/scikit-bio/scikit-bio/pull/2080) and [#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Added function `pair_align`, a re-designed pairwise sequence alignment engine that is versatile, efficient, and generalizable ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2196](https://github.com/scikit-bio/scikit-bio/pull/2196)). It is meant to replace the old slow Python engine and the SSW wrapper. It supports:
+  - Global, local and semi-global alignments (with all four ends customizable).
+  - Nucleotide, protein, and un-grammared sequences, plain strings (ASCII and Unicode), words/tokens, and numbers.
+  - Match/mismatch scores or substitution matrix.
+  - Linear and affine gap penalties.
+  - Integer, decimal and infinite scores.
+  - Returning one, multiple or all optimal alignment paths.
+* Added wrapper functions `pair_align_prot` and `pair_align_nucl` which are preloaded with scoring schemes consistent with BLASTP and BLASTN, respectively ([#2234](https://github.com/scikit-bio/scikit-bio/pull/2234)).
+* Added function `align_score` to calculate the score of a pairwise or multiple sequence alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201), [#2192](https://github.com/scikit-bio/scikit-bio/pull/2192)).
+* Implemented a dispatch system in scikit-bio to handle a variety of table formats. Currently, it handles arrays, Pandas and Polars dataframes, BIOM tables, and AnnData. Scikit-bio functions can now operate on any of these table formats and outputs an object of the same format, or a format designated by the user
+([#2187](https://github.com/scikit-bio/scikit-bio/pull/2187), [#2203](https://github.com/scikit-bio/scikit-bio/pull/2203), [#2246](https://github.com/scikit-bio/scikit-bio/pull/2246), [#2258](https://github.com/scikit-bio/scikit-bio/pull/2258), [#2260](https://github.com/scikit-bio/scikit-bio/pull/2260)).
+* Added four augmentation methods: `phylomix`, `compos_cutmix`, `aitchison_mixup` and `mixup` to enable generation of synthetic samples ([#2214](https://github.com/scikit-bio/scikit-bio/pull/2214), [#2190](https://github.com/scikit-bio/scikit-bio/pull/2190), [#2253](https://github.com/scikit-bio/scikit-bio/pull/2253)).
+* Added support for scikit-bio-binaries, a separate package which currently increases performance of the `pcoa` and `permanova` functions within scikit-bio ([#2247](https://github.com/scikit-bio/scikit-bio/pull/2247)).
+* Added pre-built wheels of scikit-bio to PyPI for easier installation across platforms ([#2233](https://github.com/scikit-bio/scikit-bio/pull/2233), [#2232](https://github.com/scikit-bio/scikit-bio/pull/2232), [#2228](https://github.com/scikit-bio/scikit-bio/pull/2228), [#2252](https://github.com/scikit-bio/scikit-bio/pull/2252)).
+* Adopting the Python array API standard in scikit-bio to enable GPU support for select functions. Further expansion of GPU support within scikit-bio is expected ([#2239](https://github.com/scikit-bio/scikit-bio/pull/2239) and [#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Added `AlignPath.to_aligned` and `AlignPath.from_aligned` to extract aligned regions of the original sequences, and to reconstruct a path from aligned sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Added parameter `starts` to `AlignPath.from_tabular` to specify starting positions in the original sequences ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+
+### Performance enhancements
+
+* Enriched the tutorials of modules `sequence`, `alignment`, and `table` ([#2263](https://github.com/scikit-bio/scikit-bio/pull/2263)).
+* Improved the performance of `dirmult_ttest` ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Improved the performance of `ancom`. This is primarily due to exploiting vectorization of the statistical testing function (such as `f_oneway`). As a consequence, a custom testing function now must accept 2-D arrays as input and return 1-D arrays. Function names available under `scipy.stats` are not impacted ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Added attributes `ranges` and `stops` to `AlignPath`. They facilitate locating the aligned part of each sequence as `seq[start:stop]` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Improved the performance of `SubstitutionMatrix.identity`.
+* Enhanced `TabularMSA.from_path_seqs`. It now can extract the aligned region from the middle of a sequence. Also added docstring and doctests ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Enhanced and changed the default behavior of `AlignPath.to_bits`, which now returns a bit array representing positions instead of segments. This is desired because with the old default behavior, `to_bits` and `from_bits` are not consistent with each other ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+
+### Bug Fixes
+
+* Fixed a bug that `PairAlignPath.from_cigar` would ignore the first insertion (`I`) of a CIGAR string ([#2236](https://github.com/scikit-bio/scikit-bio/pull/2236)).
+* Fixed an inaccurate statement that one can specify `gap` as np.inf or np.nan in `AlignPath.to_indices`. These cases are impossible because the output is integer type.
+* Fixed an inaccurate statement in the documentation of `SubstitutionMatrix.is_ascii`. This attribute is True when all characters in the alphabet are ASCII codes (0 to 127), not extended ASCII codes (0 to 255) ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Fixed a bug that a `SubstitutionMatrix` cannot be copied ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Fixed a bug in `AlignPath.to_indices` which would throw an error if the alignment path has only one segment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
 * Fixed a bug in the documentation in which the `source` button would link to decorator code, instead of the relevant function ([#2184](https://github.com/scikit-bio/scikit-bio/pull/2184)).
 
 ### Miscellaneous
 
-* Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([2185](https://github.com/scikit-bio/scikit-bio/pull/2185))
+* In `TreeNode.root_at` and `TreeNode.root_at_midpoint`, the default value of `branch_attrs` was changed to an empty list; that of `root_name` was changed to None; that of `reset` was changed to True ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* In `TreeNode.unrooted_copy`, the default value of `branch_attrs` was changed to `{"length", "support"}`. Specifically, "name" was removed from this set, as a node label is often an attribute of the node instead of the branch. The default value of `root_name` was changed to None ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* In `TreeNode.copy`, the default value of `deep` was set to False. Now `tree.copy()` returns a shallow copy instead of a deep copy ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* In `TreeNode.compare_cophenet`, the default value of `ignore_self` was set to True. Therefore the estimated cophenetic distance between trees better correlates with their discrepancy ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* Renamed column "Reject null hypothesis" as "Signif" in `ancom` and `dirmult_ttest`'s report tables for conciseness ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Renamed the parameter `significance_test` as `sig_test` in `ancom` for conciseness. The old name is preserved as an alias ([#2250](https://github.com/scikit-bio/scikit-bio/pull/2250)).
+* Set the default data type of `SubstitutionMatrix` as `np.float32` (previous it was `float`, which is equivalent to `np.float64`). Made `dtype` an optional parameter in `from_dict` and `identity` methods.
+* Adjusted the `__repr__` of `AlignPath` and `PairAlignPath` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226) and [#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)).
+* Changed `AlignPath.shape`'s type from a named tuple to a normal tuple ([#2235](https://github.com/scikit-bio/scikit-bio/pull/2235)). Let the values be native Python `int` rather than `np.int64` ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Changed `AlignPath.lengths` and `AlignPath.starts`'s dtype from `int64` to `intp`, as these attributes are to facilitate indexing ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Changed `Sequence.to_indices`'s output index array dtype from `uint8` to `intp`, which is the native NumPy indexing type ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Enriched the documentation of `SubstitutionMatrix` ([#2226](https://github.com/scikit-bio/scikit-bio/pull/2226)).
+* Let `AlignPath.states` be uniformly 2-D, even if there are 8 or less sequences in the alignment ([#2201](https://github.com/scikit-bio/scikit-bio/pull/2201)).
+* Updated documentation to include description of how to stream data through stdin with scikit-bio's `read` function ([#2185](https://github.com/scikit-bio/scikit-bio/pull/2185)).
+* Improved documentation for the `DistanceMatrix` object ([#2204](https://github.com/scikit-bio/scikit-bio/pull/2204)).
+* Remove autoplotting functionality to enable inplace operations on large in-memory objects, and improve documentation of existing plotting methods ([#2216](https://github.com/scikit-bio/scikit-bio/pull/2216), [#2223](https://github.com/scikit-bio/scikit-bio/pull/2223)).
+* Initiated efforts to add type annotations to scikit-bio's codebase, starting with the `stats.distance` module ([#2219](https://github.com/scikit-bio/scikit-bio/pull/2219))
+* Restored functionality to scikit-bio's benchmarking system and introduced a new repository for storing, running, and hosting benchmarks to prevent performance regression ([#2245](https://github.com/scikit-bio/scikit-bio/pull/2245)).
+* Renamed the parameter `number_of_dimensions` to `dimensions` for the `pcoa` and `permdisp` functions. `number_of_dimensions` will remain a valid alias of the parameter, such that either option may be used. ([#2257](https://github.com/scikit-bio/scikit-bio/pull/2257)).
+* Enriched the tutorial for `skbio.Sequence` ([#2243](https://github.com/scikit-bio/scikit-bio/pull/2243)).
+* The `tree.nj` function can now operate on `DistanceMatrix` objects containing float32 or float64 values ([#2217](https://github.com/scikit-bio/scikit-bio/pull/2217)).
+* Improved documentation for conversion between scikit-bio sequence alignments and Biopython and Biotite alignments ([#2229](https://github.com/scikit-bio/scikit-bio/pull/2229), [#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
+* Rewrote the `install` page for the website to reflect availability of wheels and to explicitly state scikit-bio's version support windows ([#2254](https://github.com/scikit-bio/scikit-bio/pull/2254)).
+* Renamed the parameter `distance_matrix` to `distmat` in `pcoa`, `bioenv`, `anosim`, `permanova`, and `permdisp`. `distance_matrix` will remain a valid alias of the parameter, such that either option may be used. ([#2261](https://github.com/scikit-bio/scikit-bio/pull/2261))
+
+### Backward-incompatible changes
+
+* Removed `TreeNode.unrooted_deepcopy`. Use `TreeNode.unrooted_copy(deep=True)` instead ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* Removed `TreeNode.deepcopy`. Use `TreeNode.copy(deep=True)` instead ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* Removed `TreeNode.subtree`. It was a placehold but never implemented ([#2259](https://github.com/scikit-bio/scikit-bio/pull/2259)).
+* Removed the wrapper for the Striped Smith Waterman (SSW) library ([#2240](https://github.com/scikit-bio/scikit-bio/pull/2240), [#2241](https://github.com/scikit-bio/scikit-bio/pull/2241)). Specifically, this removes `local_pairwise_align_ssw`, `StripedSmithWaterman`, and `AlignmentStructure` under `skbio.alignment`. We recommend using the new `skbio.alignment.pair_align` function for pairwise sequence alignment, or other packages that provide production-ready alignment algorithms. See [#1814](https://github.com/biocore/scikit-bio/issues/1814) for discussions.
+* Removed `skbio.alignment.make_identity_substitution_matrix`. This has been replaced with `skbio.sequence.SubstitutionMatrix.identity`.
 
 
 ## Version 0.6.3
@@ -289,6 +373,7 @@
 
 ### Bug fixes
 * Use `oldest-supported-numpy` as build dependency. This fixes problems with environments that use an older version of numpy than the one used to build scikit-bio ([#1813](https://github.com/scikit-bio/scikit-bio/pull/1813)).
+
 
 ## Version 0.5.7
 

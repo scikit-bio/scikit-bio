@@ -39,8 +39,8 @@ class TestSubstitutionMatrix(TestCase):
         self.assertTupleEqual(obs.shape, (5, 5))
         assert_array_equal(obs.scores, self.scores)
 
-        # data type becomes float
-        self.assertEqual(obs.dtype, np.float64)
+        # data type becomes float32
+        self.assertEqual(obs.dtype, np.float32)
 
         # scores is an alias of data
         assert_array_equal(obs.scores, obs.data)
@@ -54,9 +54,14 @@ class TestSubstitutionMatrix(TestCase):
 
         # hash table of ASCII characters
         self.assertTrue(isinstance(obs._char_hash, np.ndarray))
-        self.assertTrue(obs._char_hash.dtype.type is np.uint8)
+        self.assertTrue(obs._char_hash.dtype.type is np.intp)
         for i, char in enumerate(alphabet):
             self.assertEqual(i, obs._char_hash[ord(char)])
+
+        # matrix is guaranteed to be C-contiguous
+        obs = SubstitutionMatrix(self.alphabet, np.asfortranarray(self.scores))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertTrue(obs.scores.flags.c_contiguous)
 
     def test_init_alt_alphabet(self):
         # alternative formats of alphabet: list, dictionary (only keys matter),
@@ -68,6 +73,23 @@ class TestSubstitutionMatrix(TestCase):
             obs = SubstitutionMatrix(alp, self.scores)
             self.assertTupleEqual(obs.alphabet, alphabet)
 
+    def test_init_non_ascii(self):
+        # non-ASCII characters in the alphabet
+        obs = SubstitutionMatrix("äëïöü", self.scores)
+        self.assertTupleEqual(obs.alphabet, ("ä", "ë", "ï", "ö", "ü"))
+        self.assertEqual(obs["ï", "ë"], -2)
+        self.assertFalse(obs.is_ascii)
+        self.assertIsNone(obs._char_hash)
+
+    def test_init_words(self):
+        # words in the alphabet
+        words = "lorem ipsum dolor sit amet".split()
+        obs = SubstitutionMatrix(words, self.scores)
+        self.assertTupleEqual(obs.alphabet, tuple(words))
+        self.assertEqual(obs["dolor", "ipsum"], -2)
+        self.assertFalse(obs.is_ascii)
+        self.assertIsNone(obs._char_hash)
+
     def test_init_alt_scores(self):
         # alternative format of scores: nested list
         obs = SubstitutionMatrix(self.alphabet, self.scores.tolist())
@@ -76,6 +98,21 @@ class TestSubstitutionMatrix(TestCase):
         # condensed matrix (less likely because diagonal is zero)
         obs = SubstitutionMatrix('ACGT', [-1] * 6)
         assert_array_equal(obs.scores, np.identity(4) - 1)
+
+    def test_init_alt_float(self):
+        # alternative floating-point precision (64-bit)
+        obs = SubstitutionMatrix(self.alphabet, self.scores.astype(np.float32))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertEqual(obs.dtype, np.float32)
+        obs = SubstitutionMatrix(self.alphabet, self.scores.astype(np.float64))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertEqual(obs.dtype, np.float64)
+        obs = SubstitutionMatrix(self.alphabet, self.scores.astype(np.float16))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertEqual(obs.dtype, np.float32)
+        obs = SubstitutionMatrix(self.alphabet, self.scores.astype(np.int16))
+        assert_array_equal(obs.scores, self.scores)
+        self.assertEqual(obs.dtype, np.float32)
 
     def test_to_dict(self):
         mat = SubstitutionMatrix(self.alphabet, self.scores)
@@ -98,6 +135,13 @@ class TestSubstitutionMatrix(TestCase):
                         [0., 1., 0.],
                         [0., 0., 1.]])
         assert_array_equal(obs.data, exp)
+        self.assertEqual(obs._data.dtype, np.float32)
+
+        # data type
+        obs = SubstitutionMatrix.from_dict(d, dtype="float32")
+        self.assertEqual(obs._data.dtype, np.float32)
+        obs = SubstitutionMatrix.from_dict(d, dtype="float64")
+        self.assertEqual(obs._data.dtype, np.float64)
 
         # alphabet is inconsistent
         msg = ('The outer and inner layers of the dictionary must have the '
@@ -115,9 +159,6 @@ class TestSubstitutionMatrix(TestCase):
         d['a']['b'] = 'hello'
         with self.assertRaises(ValueError):
             SubstitutionMatrix.from_dict(d)
-        d['a']['b'] = None
-        with self.assertRaises(TypeError):
-            SubstitutionMatrix.from_dict(d)
 
     def test_identity(self):
         obs = SubstitutionMatrix.identity('ACGT', 1, -2)
@@ -128,11 +169,24 @@ class TestSubstitutionMatrix(TestCase):
                         [-2., -2., 1., -2.],
                         [-2., -2., -2., 1.]])
         assert_array_equal(obs.scores, exp)
+        self.assertEqual(obs._data.dtype, np.float32)
+
+        obs = SubstitutionMatrix.identity('ACGT', 1, -2, dtype="float64")
+        assert_array_equal(obs.scores, exp)
+        self.assertEqual(obs._data.dtype, np.float64)
+
+        obs = SubstitutionMatrix.identity('ACGT', 1, -2, dtype="int16")
+        assert_array_equal(obs.scores, exp)
+        self.assertEqual(obs._data.dtype, np.float32)
+
+        with self.assertRaises(TypeError):
+            _ = SubstitutionMatrix.identity('ACGT', 1, -2, dtype="hello")
 
     def test_by_name(self):
         obs = SubstitutionMatrix.by_name('NUC.4.4')
         self.assertEqual(len(obs.alphabet), 15)
         self.assertEqual(obs['A', 'T'], -4)
+        self.assertEqual(obs._data.dtype, np.float32)
         obs = SubstitutionMatrix.by_name('BLOSUM50')
         self.assertEqual(len(obs.alphabet), 24)
         self.assertEqual(obs['M', 'K'], -2)

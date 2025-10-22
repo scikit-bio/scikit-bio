@@ -6,29 +6,32 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from copy import deepcopy
+from typing import Optional, Union, Iterable
+
 import numpy as np
 
 from skbio.util._decorator import classonlymethod
-from skbio.stats.distance import DissimilarityMatrix
+from skbio.stats.distance import PairwiseMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 
 
-class SubstitutionMatrix(DissimilarityMatrix):
-    """Scoring matrix between characters in biological sequences.
+class SubstitutionMatrix(PairwiseMatrix):
+    r"""Scoring matrix between characters in biological sequences.
 
     Parameters
     ----------
     alphabet : iterable
         Characters that constitute the alphabet.
-    scores : 2D array-like
+    scores : array_like of shape (n_alphabet, n_alphabet)
         Scores of substitutions from one character (row, or axis=0) to another
         character (column, or axis=1).
     kwargs : dict
-        Additional arguments for the ``DissimilarityMatrix`` constructor.
+        Additional arguments for the ``PairwiseMatrix`` constructor.
 
     See Also
     --------
-    skbio.stats.distance.DissimilarityMatrix
+    skbio.stats.distance.PairwiseMatrix
 
     Notes
     -----
@@ -55,29 +58,109 @@ class SubstitutionMatrix(DissimilarityMatrix):
     pre-defined and can be referred to by name. Examples include NUC.4.4 for
     nucleotides, and variants of BLOSUM and PAM matrices for amino acids.
 
-    ``SubstitutionMatrix`` is a subclass of ``DissimilarityMatrix``. Therefore,
+    ``SubstitutionMatrix`` is a subclass of ``PairwiseMatrix``. Therefore,
     all attributes and methods of the latter also apply to the former.
+
+    The default floating-point data type of ``SubstitutionMatrix`` is float32. If you
+    create with an integer array or nested lists, it will be automatically casted into
+    float32. However, if the input array is already in float64 type, the type will be
+    preserved.
+
+    The underlying array of an ``SubstitutionMatrix`` object is guaranteed to be
+    C-contiguous, which facilitates row-major operations.
 
     Examples
     --------
+    Create a simple substitution matrix between the four nucleotide bases "A", "C", "G"
+    and "T". The value 2 in the main diagonal represents a match between two identical
+    bases. The value -1 in the upper-right and lower-left triangles represents a
+    mismatch between two different bases.
+
     >>> from skbio import SubstitutionMatrix
-    >>> mat = SubstitutionMatrix('ACGT', np.array([
+    >>> sm = SubstitutionMatrix('ACGT', np.array([
     ...     [2, -1, -1, -1],
     ...     [-1, 2, -1, -1],
     ...     [-1, -1, 2, -1],
     ...     [-1, -1, -1, 2]]))
-    >>> mat.alphabet
+    >>> sm.alphabet
     ('A', 'C', 'G', 'T')
-    >>> mat.scores
+    >>> sm.scores
     array([[ 2., -1., -1., -1.],
            [-1.,  2., -1., -1.],
            [-1., -1.,  2., -1.],
-           [-1., -1., -1.,  2.]])
-    >>> mat['A', 'T']
+           [-1., -1., -1.,  2.]], dtype=float32)
+
+    Look up the substitution score between a pair of bases.
+
+    >>> sm['A', 'T']
     -1.0
-    >>> mat['G', 'G']
+    >>> sm['G', 'G']
     2.0
-    >>> blosum62 = SubstitutionMatrix.by_name('BLOSUM62')
+
+    This matrix can also be created using the ``identity`` method.
+
+    >>> sm = SubstitutionMatrix.identity('ACGT', 2, -1)
+
+    Load the pre-defined substitution matrix "NUC.4.4", which covers the four bases plus
+    degenerate codes.
+
+    >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
+    >>> sm.alphabet
+    ('A', 'T', 'G', 'C', 'S', 'W', 'R', 'Y', 'K', 'M', 'B', 'V', 'H', 'D', 'N')
+
+    With a :class:`~skbio.sequence.Sequence` object, one can efficiently map all
+    characters to their indices in the substitution matrix.
+
+    >>> from skbio import DNA
+    >>> seq = DNA('GGATCC')
+    >>> seq.to_indices(sm)
+    array([2, 2, 0, 1, 3, 3])
+
+    This approach enables various subsequent operations. For example, one can
+    efficiently create a position-to-position scoring matrix between two sequences.
+
+    >>> seq1, seq2 = DNA('GGATCC'), DNA('AGATCT')
+    >>> idx1, idx2 = seq1.to_indices(sm), seq2.to_indices(sm)
+    >>> sm.scores[idx1[:, None], idx2[None, :]]
+    array([[-4.,  5., -4., -4., -4., -4.],
+           [-4.,  5., -4., -4., -4., -4.],
+           [ 5., -4.,  5., -4., -4., -4.],
+           [-4., -4., -4.,  5., -4.,  5.],
+           [-4., -4., -4., -4.,  5., -4.],
+           [-4., -4., -4., -4.,  5., -4.]], dtype=float32)
+
+    Finding indices of sequence characters is most efficient when the alphabet consists
+    of only ASCII codes (0 to 127). This can be determined by the ``is_ascii`` flag of
+    a substitution matrix. Most common nucleotide and amino acid substitution matrices
+    only contain ASCII codes.
+
+    However, one is not limited to ASCII characters. Using Unicode characters beyond
+    code point 127 is valid.
+
+    >>> sm = SubstitutionMatrix('äëïöü', np.array([
+    ...     [0, 1, 2, 3, 4],
+    ...     [1, 0, 5, 6, 7],
+    ...     [2, 5, 0, 8, 9],
+    ...     [3, 6, 8, 0, 0],
+    ...     [4, 7, 9, 0, 1]]))
+    >>> sm.alphabet
+    ('ä', 'ë', 'ï', 'ö', 'ü')
+
+    Any iterables of scalars are valid alphabets, granting flexibility in working with
+    non-character data types. For example, one can include words or tokens in a
+    substitution matrix.
+
+    >>> tokens = 'lorem ipsum dolor sit amet'.split()
+    >>> sm = SubstitutionMatrix(tokens, np.array([
+    ...     [3, 1, 2, 0, 0],
+    ...     [1, 3, 1, 2, 0],
+    ...     [2, 1, 3, 1, 2],
+    ...     [0, 2, 1, 3, 1],
+    ...     [0, 0, 2, 1, 3]]))
+    >>> sm.alphabet
+    ('lorem', 'ipsum', 'dolor', 'sit', 'amet')
+    >>> sm['lorem', 'ipsum']
+    1.0
 
     """
 
@@ -123,7 +206,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """Whether alphabet consists of single ASCII characters.
 
         `True` if every character in the alphabet can be represented by a
-        single ASCII character within code point range 0 to 255.
+        single ASCII character within code point range 0 to 127.
 
         Returns
         -------
@@ -135,6 +218,18 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     def __init__(self, alphabet, scores, **kwargs):
         """Initialize a substitution matrix object."""
+        # cast to float32 (see PairwiseMatrix.__init__)
+        _issue_copy = True
+        if isinstance(scores, np.ndarray):
+            if scores.dtype in (np.float32, np.float64):
+                _issue_copy = False
+        if _issue_copy:
+            scores = np.asarray(scores, dtype=np.float32)
+
+        # make sure matrix is C-contiguous (row-major) in memory
+        if not scores.flags.c_contiguous:
+            scores = np.ascontiguousarray(scores)
+
         super().__init__(scores, alphabet, **kwargs)
 
         # `_char_map`: dictionary of characters to indices in the alphabet.
@@ -150,9 +245,25 @@ class SubstitutionMatrix(DissimilarityMatrix):
             hash_ = _alphabet_to_hashes(alphabet)
         except (TypeError, ValueError, UnicodeEncodeError):
             self._is_ascii = False
+            self._char_hash = None
         else:
             self._is_ascii = True
             self._char_hash = hash_
+
+    def copy(self):
+        """Return a deep copy of the substitution matrix.
+
+        Returns
+        -------
+        SubstitutionMatrix
+            Named substitution matrix.
+
+        """
+        return self.__class__(
+            deepcopy(self.alphabet),
+            self.scores.copy(),
+            validate=False,
+        )
 
     def to_dict(self):
         """Create a 2D dictionary from the substitution matrix.
@@ -168,7 +279,9 @@ class SubstitutionMatrix(DissimilarityMatrix):
         }
 
     @classonlymethod
-    def from_dict(cls, dictionary):
+    def from_dict(
+        cls, dictionary: dict[dict], dtype: str = "float32"
+    ) -> "SubstitutionMatrix":
         """Create a substitution matrix from a 2D dictionary.
 
         Parameters
@@ -176,6 +289,8 @@ class SubstitutionMatrix(DissimilarityMatrix):
         dictionary : dict of dict
             2D dictionary of substitution scores from outer characters to inner
             characters.
+        dtype : {'float32', 'float64'}, optional
+            Floating-point data type of the matrix. Default is "float32".
 
         Returns
         -------
@@ -201,13 +316,14 @@ class SubstitutionMatrix(DissimilarityMatrix):
         >>> mat.scores
         array([[ 1.,  0.,  0.],
                [ 0.,  1.,  0.],
-               [ 0.,  0.,  1.]])
+               [ 0.,  0.,  1.]], dtype=float32)
 
         """
         alphabet, rows = zip(*dictionary.items())
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
-        scores = np.zeros((n := len(alphabet), n))
+        n = len(alphabet)
+        scores = np.full((n, n), np.nan, dtype=dtype)
         for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError(
@@ -215,13 +331,18 @@ class SubstitutionMatrix(DissimilarityMatrix):
                     " must have the same set of keys."
                 )
             for key, value in row.items():
-                scores[i][idmap[key]] = float(value)
-
+                scores[i][idmap[key]] = value
         return cls(alphabet, scores)
 
     @classonlymethod
-    def identity(cls, alphabet, match, mismatch):
-        """Create an identity substitution matrix.
+    def identity(
+        cls,
+        alphabet: Iterable,
+        match: Union[int, float],
+        mismatch: Union[int, float],
+        dtype: str = "float32",
+    ) -> "SubstitutionMatrix":
+        f"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
         respectively, regardless of the character.
@@ -234,6 +355,8 @@ class SubstitutionMatrix(DissimilarityMatrix):
             Score assigned to all matches.
         mismatch : int or float
             Score assigned to all mismatches.
+        dtype : {"float32", "float64"}, optional
+            Floating-point data type of the matrix. Default is "float32".
 
         Returns
         -------
@@ -250,15 +373,17 @@ class SubstitutionMatrix(DissimilarityMatrix):
         array([[ 1., -2., -2., -2.],
                [-2.,  1., -2., -2.],
                [-2., -2.,  1., -2.],
-               [-2., -2., -2.,  1.]])
+               [-2., -2., -2.,  1.]], dtype=float32)
 
         """
         alphabet = tuple(alphabet)
-        scores = np.identity(len(alphabet)) * (match - mismatch) + mismatch
+        n = len(alphabet)
+        scores = np.full((n, n), mismatch, dtype=dtype)
+        np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 
     @classonlymethod
-    def by_name(cls, name):
+    def by_name(cls, name: str) -> "SubstitutionMatrix":
         """Load a pre-defined substitution matrix by its name.
 
         Parameters
@@ -327,7 +452,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
             raise ValueError(f'Substitution matrix "{name}" does not exist.')
 
     @classonlymethod
-    def get_names(cls):
+    def get_names(cls) -> list[str]:
         """List names of pre-defined substitution matrices.
 
         Returns
@@ -350,7 +475,7 @@ def _matrix_to_vector(mat):
     return mat[np.triu_indices(len(mat))]
 
 
-def _vector_to_matrix(vec):
+def _vector_to_matrix(vec, dtype="float32"):
     """Revert a vector representing a flattened matrix to square form."""
     assert len(vec.shape) == 1
     # a square matrix of shape (n, n) will have n * (n + 1) / 2 elements in the
@@ -358,13 +483,20 @@ def _vector_to_matrix(vec):
     # original shape of the matrix
     n = (np.sqrt(1 + 8 * len(vec)) - 1) / 2
     assert n == (n := int(n))
-    mat = np.zeros((n, n))
+    mat = np.zeros((n, n), dtype=dtype)
     mat[np.triu_indices(n)] = vec
     return mat + np.triu(mat, k=1).T
 
 
 # Defined according to the matrices hosted at the NCBI FTP server:
 # https://ftp.ncbi.nlm.nih.gov/blast/matrices/
+
+# Note: "N" is the wildcard for nucleotide bases and "X" is the wildcard for amino
+# acids. They can be automatically recognized by `Sequence.to_indices`.
+
+# Note: "*" is the stop codon and it usually has the lowest score in the matrix.
+# See: https://bioinformatics.stackexchange.com/questions/21705/
+
 # fmt: off
 _named_substitution_matrices = {
     # NUC.4.4, a.k.a. DNAfull

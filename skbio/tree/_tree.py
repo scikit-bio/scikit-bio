@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn, simplefilter
 from operator import ne, gt, itemgetter
 from copy import copy, deepcopy
 from itertools import chain, combinations
@@ -26,13 +25,11 @@ from skbio.tree._exception import (
 )
 from skbio.util._decorator import (
     classonlymethod,
-    deprecated,
     register_aliases,
     aliased,
     params_aliased,
 )
-from skbio.util._warning import _warn_once
-from skbio.io.registry import Read, Write
+from skbio.io.descriptors import Read, Write
 from ._compare import (
     _check_dist_metric,
     _check_shuffler,
@@ -262,18 +259,19 @@ class TreeNode(SkbioObject):
         """Return a deep copy."""
         return self._copy(True, memo)
 
-    def copy(self, deep=True):
+    def copy(self, deep=False):
         r"""Return a copy of self using an iterative approach.
 
         Parameters
         ----------
         deep : bool, optional
-            Whether to perform a deep (True, default) or shallow (False) copy of node
+            Whether to perform a deep (True) or shallow (False, default) copy of node
             attributes.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be changed to False in 0.7.0.
+            .. versionchanged:: 0.7.0
+                The default value has been changed to False.
 
         Returns
         -------
@@ -310,37 +308,6 @@ class TreeNode(SkbioObject):
         """
         return self._copy(deep, {})
 
-    @deprecated("0.6.2", msg="Use `copy` instead.")
-    def deepcopy(self):
-        r"""Return a deep copy of self using an iterative approach.
-
-        Returns
-        -------
-        TreeNode
-            A new deep copy of self.
-
-        See Also
-        --------
-        copy
-
-        Notes
-        -----
-        ``deepcopy`` is equivalent to ``copy`` with ``deep=True``, which is
-        currently the default behavior of the latter.
-
-        """
-        return self._copy(True, {})
-
-    def subtree(self, tip_list=None):
-        r"""Make a copy of the subtree.
-
-        .. deprecated:: 0.6.3
-            This method will be removed in version 0.7.0. It was never implemented, and
-            its goal can be achieved by :meth:`copy`.
-
-        """
-        raise NotImplementedError()
-
     # ------------------------------------------------
     # Tree navigation
     # ------------------------------------------------
@@ -369,6 +336,24 @@ class TreeNode(SkbioObject):
 
         """
         return not self.children
+
+    def _is_rooted(self):
+        r"""Check if the current tree is rooted.
+
+        Returns
+        -------
+        bool
+            Whether the tree is rooted.
+
+        Notes
+        -----
+        This method tests whether the root node of a tree has two children (rooted)
+        or not (unrooted). The latter scenario usually involves three children (a
+        typical unrooted tree), but could also have one (tip at root position) or more
+        than three children (polytomy).
+
+        """
+        return len(self.root().children) == 2
 
     def is_root(self):
         r"""Check if the current node is the root of a tree.
@@ -2217,8 +2202,8 @@ class TreeNode(SkbioObject):
     def unrooted_copy(
         self,
         parent=None,
-        branch_attrs={"name", "length", "support"},
-        root_name="root",
+        branch_attrs={"length", "support"},
+        root_name=None,
         deep=False,
         exclude_attrs=None,
     ):
@@ -2236,16 +2221,16 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.2
 
-            .. note:: ``name`` will be removed from the default in 0.7.0, as it is
-                usually considered as an attribute of the node instead of the branch.
+            .. versionchanged:: 0.7.0
+                Removed ``name`` from the default values.
 
         root_name : str or None, optional
             Name for the new root node, if it doesn't have one.
 
             .. versionadded:: 0.6.2
 
-            .. note:: This parameter will be removed in 0.7.0, and the root node will
-                not be renamed.
+            .. versionchanged:: 0.7.0
+                Set the default value to None.
 
         deep : bool, optional
             Whether to perform a shallow (False, default) or deep (True) copy of node
@@ -2270,12 +2255,6 @@ class TreeNode(SkbioObject):
 
                 Node attributes other than name and length will also be copied.
 
-        Warnings
-        --------
-        The default behavior of ``unrooted_copy`` is subject to change in 0.7.0. The
-        new default behavior can be achieved by specifying
-        ``branch_attrs={"length", "support"}, root_name=None``.
-
         See Also
         --------
         copy
@@ -2299,20 +2278,10 @@ class TreeNode(SkbioObject):
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
-        (b,c,(a,((f,g)h)e)d)root;
+        (b,c,(a,((f,g)h)i)e)d;
         <BLANKLINE>
 
         """
-        # future warning
-        if branch_attrs == {"name", "length", "support"} and root_name == "root":
-            _warn_once(
-                self.__class__.unrooted_copy,
-                FutureWarning,
-                "The default behavior of `unrooted_copy` is subject to change in "
-                "0.7.0. The new default behavior can be achieved by specifying "
-                '`branch_attrs={"length", "support"}, root_name=None`.',
-            )
-
         # determine copy mode
         _copy = deepcopy if deep else copy
 
@@ -2371,48 +2340,6 @@ class TreeNode(SkbioObject):
             result.name = root_name
 
         return result
-
-    @deprecated(
-        "0.6.2",
-        msg="Because it generates a redundant copy of the tree. Use `unrooted_copy` "
-        "instead.",
-    )
-    def unrooted_deepcopy(self, parent=None):
-        r"""Walk the tree unrooted-style and returns a new deepcopy.
-
-        Parameters
-        ----------
-        parent : TreeNode or None
-            Direction of walking (from parent to self). If specified, walking
-            to the parent will be prohibited.
-
-        Returns
-        -------
-        TreeNode
-            A new copy of the tree rooted at the given node.
-
-        See Also
-        --------
-        copy
-        unrooted_copy
-        root_at
-
-        Notes
-        -----
-        Perform a deepcopy of self and return a new copy of the tree as an
-        unrooted copy. This is useful for defining a new root of the tree.
-
-        This method calls :meth:`unrooted_copy` which is recursive.
-
-        """
-        root = self.root()
-        root.assign_ids()
-
-        new_tree = root.copy()
-        new_tree.assign_ids()
-
-        new_tree_self = new_tree.find_by_id(self.id)
-        return new_tree_self.unrooted_copy(parent, deep=True)
 
     def unrooted_move(
         self,
@@ -2508,9 +2435,9 @@ class TreeNode(SkbioObject):
         self,
         node=None,
         above=False,
-        reset=False,
-        branch_attrs=["name"],
-        root_name="root",
+        reset=True,
+        branch_attrs=[],
+        root_name=None,
         inplace=False,
     ):
         r"""Reroot the tree at the provided node.
@@ -2540,11 +2467,12 @@ class TreeNode(SkbioObject):
 
         reset : bool, optional
             Whether to remove the original root of a rooted tree before performing the
-            rerooting operation. Default is False.
+            rerooting operation. Default is True.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as True in 0.7.0.
+            .. versionchanged:: 0.7.0
+                Set the default value to True.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of the
@@ -2554,15 +2482,16 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.2
 
-            .. note:: ``name`` will be removed from the default in 0.7.0, as it is
-                usually considered as an attribute of the node instead of the branch.
+            .. versionchanged:: 0.7.0
+                Removed ``name`` from the default values.
 
         root_name : str or None, optional
             Name for the root node, if it doesn't already have one.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``None`` in 0.7.0.
+            .. versionchanged:: 0.7.0
+                Set the default value to None.
 
         inplace : bool, optional
             Whether to reroot the tree in place (True) or to create a rerooted copy of
@@ -2574,12 +2503,6 @@ class TreeNode(SkbioObject):
         -------
         TreeNode
             A tree rooted at the give node.
-
-        Warnings
-        --------
-        The default behavior of ``root_at`` is subject to change in 0.7.0. The
-        new default behavior can be achieved by specifying ``reset=True,
-        branch_attrs=[], root_name=None``.
 
         See Also
         --------
@@ -2613,9 +2536,9 @@ class TreeNode(SkbioObject):
         Use the given node as the root node. This will typically create an
         unrooted tree (i.e., root node has three children).
 
-        >>> t1 = tree.root_at("c", branch_attrs=[])
+        >>> t1 = tree.root_at("c")
         >>> print(t1)
-        (a,b,((d,e)f,(h)i)g)c;
+        (a,b,((d,e)f,h)g)c;
         <BLANKLINE>
         >>> print(t1.ascii_art())
                   /-a
@@ -2626,37 +2549,27 @@ class TreeNode(SkbioObject):
                  |          /f-------|
                   \g-------|          \-e
                            |
-                            \i------- /-h
+                            \-h
 
         Insert a new root node into the branch above the given node. This will
         create a rooted tree (i.e., root node has two children).
 
-        >>> t2 = tree.root_at("c", above=True, branch_attrs=[])
+        >>> t2 = tree.root_at("c", above=True)
         >>> print(t2)
-        ((a,b)c,((d,e)f,(h)i)g)root;
+        ((a,b)c,((d,e)f,h)g);
         <BLANKLINE>
         >>> print(t2.ascii_art())
                             /-a
                   /c-------|
                  |          \-b
-        -root----|
+        ---------|
                  |                    /-d
                  |          /f-------|
                   \g-------|          \-e
                            |
-                            \i------- /-h
+                            \-h
 
         """
-        # future warning
-        if reset is False and branch_attrs == ["name"] and root_name == "root":
-            _warn_once(
-                self.__class__.root_at,
-                FutureWarning,
-                "The default behavior of `root_at` is subject to change in 0.7.0. "
-                "The new default behavior can be achieved by specifying "
-                "`reset=True, branch_attrs=[], root_name=None`.",
-            )
-
         # locate to-be root node
         tree = self.root()
         if node is None:
@@ -2730,7 +2643,7 @@ class TreeNode(SkbioObject):
             return node
 
     def root_at_midpoint(
-        self, reset=False, branch_attrs=["name"], root_name="root", inplace=False
+        self, reset=True, branch_attrs=[], root_name=None, inplace=False
     ):
         r"""Reroot the tree at the midpoint of the two tips farthest apart.
 
@@ -2738,11 +2651,12 @@ class TreeNode(SkbioObject):
         ----------
         reset : bool, optional
             Whether to remove the original root of a rooted tree before performing
-            the rerooting operation. Default is False.
+            the rerooting operation. Default is True.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as True in 0.7.0.
+            .. versionchanged:: 0.7.0
+                Set the default value to True.
 
         branch_attrs : iterable of str, optional
             Attributes of each node that should be considered as attributes of
@@ -2752,16 +2666,16 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.2
 
-            .. note:: ``name`` will be removed from the default in 0.7.0, as
-                it is usually considered as an attribute of the node instead of
-                the branch.
+            .. versionchanged:: 0.7.0
+                Removed ``name`` from the default values.
 
         root_name : str or None, optional
             Name for the new root node, if it doesn't have one.
 
             .. versionadded:: 0.6.2
 
-            .. note:: The default value will be set as ``None`` in 0.7.0.
+            .. versionchanged:: 0.7.0
+                Set the default value to None.
 
         inplace : bool, optional
             Whether to reroot the tree in place (True) or to create a rerooted copy of
@@ -2781,12 +2695,6 @@ class TreeNode(SkbioObject):
         LengthError
             Midpoint rooting requires `length` and will raise (indirectly) if
             evaluated nodes don't have length.
-
-        Warnings
-        --------
-        The default behavior of ``root_at_midpoint`` is subject to change in
-        0.7.0. The new default behavior can be achieved by specifying
-        ``reset=True, branch_attrs=[], root_name=None``.
 
         See Also
         --------
@@ -2821,15 +2729,15 @@ class TreeNode(SkbioObject):
                  |
                   \-g
 
-        >>> t = tree.root_at_midpoint(branch_attrs=[])
+        >>> t = tree.root_at_midpoint()
         >>> print(t)
-        ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0)root;
+        ((d:3.0,e:4.0)f:2.0,((a:1.0,b:1.0)c:2.0,g:1.0)h:3.0);
         <BLANKLINE>
         >>> print(t.ascii_art())
                             /-d
                   /f-------|
                  |          \-e
-        -root----|
+        ---------|
                  |                    /-a
                  |          /c-------|
                   \h-------|          \-b
@@ -2837,16 +2745,6 @@ class TreeNode(SkbioObject):
                             \-g
 
         """
-        # future warning
-        if reset is False and branch_attrs == ["name"] and root_name == "root":
-            _warn_once(
-                self.__class__.root_at_midpoint,
-                FutureWarning,
-                "The default behavior of `root_at_midpoint` is subject to change in "
-                "0.7.0. The new default behavior can be achieved by specifying "
-                "`reset=True, branch_attrs=[], root_name=None`.",
-            )
-
         tree = self.root()
         if inplace:
             tree.clear_caches()
@@ -2885,11 +2783,9 @@ class TreeNode(SkbioObject):
         # insert a new root node into the branch
         else:
             new_root = tree.__class__()
-            climb_node.insert(new_root, half_max_dist - dist_climbed, uncache=False)
-            # TODO: Here, `branch_attrs` should be added to `insert`. However, this
-            # will cause a backward-incompatible behavior. This change will be made
-            # in version 0.7.0, along with the removal of `name` from the default of
-            # `branch_attrs`.
+            climb_node.insert(
+                new_root, half_max_dist - dist_climbed, branch_attrs, uncache=False
+            )
 
         branch_attrs = set(branch_attrs)
         branch_attrs.update(["length", "support"])
@@ -4857,7 +4753,7 @@ class TreeNode(SkbioObject):
         metric="unitcorr",
         shuffler=None,
         use_length=True,
-        ignore_self=False,
+        ignore_self=True,
     ):
         r"""Calculate the distance between two trees based on cophenetic distances.
 
@@ -4904,11 +4800,12 @@ class TreeNode(SkbioObject):
 
         ignore_self : bool, optional
             Whether to ignore the distance between each tip and itself (which must be
-            0). Default is False.
+            0). Default is True.
 
             .. versionadded:: 0.6.3
 
-            .. note:: The default value will be set as True in 0.7.0.
+            .. versionchanged:: 0.7.0
+                The default value has been changed to True.
 
         Returns
         -------
@@ -5011,34 +4908,22 @@ class TreeNode(SkbioObject):
 
         Calculate the unit correlation distance between the two trees.
 
-        >>> d = tree1.compare_cophenet(tree2, ignore_self=True)
+        >>> d = tree1.compare_cophenet(tree2)
         >>> print(round(d, 5))
         0.14131
 
         Calculate the path-length distance between the two trees.
 
-        >>> d = tree1.compare_cophenet(tree2, metric="euclidean",
-        ...                                 ignore_self=True)
+        >>> d = tree1.compare_cophenet(tree2, metric="euclidean")
         >>> print(round(d, 5))
         13.71131
 
         Calculate the path distance between the two trees.
 
-        >>> tree1.compare_cophenet(
-        ...     tree2, metric="euclidean", use_length=False, ignore_self=True)
+        >>> tree1.compare_cophenet(tree2, metric="euclidean", use_length=False)
         4.0
 
         """
-        # future warning
-        if ignore_self is False:
-            _warn_once(
-                self.__class__.compare_cophenet,
-                FutureWarning,
-                "The default behavior of `compare_cophenet` is subject to change in "
-                "0.7.0. The new default behavior can be achieved by specifying "
-                "`ignore_self=True`.",
-            )
-
         metric = _check_dist_metric(metric)
         if sample is not None:
             shuffler = _check_shuffler(shuffler)
@@ -5772,7 +5657,7 @@ class TreeNode(SkbioObject):
         return distance
 
     @classonlymethod
-    def from_linkage_matrix(cls, linkage_matrix, id_list):
+    def from_linkage_matrix(cls, linkage_matrix, id_list) -> "TreeNode":
         r"""Return tree from SciPy linkage matrix.
 
         Parameters
@@ -5821,7 +5706,7 @@ class TreeNode(SkbioObject):
         return node_lookup[-1]
 
     @classonlymethod
-    def from_taxonomy(cls, lineage_map):
+    def from_taxonomy(cls, lineage_map) -> "TreeNode":
         r"""Construct a tree from a taxonomy.
 
         Parameters
@@ -5991,7 +5876,7 @@ class TreeNode(SkbioObject):
                     seen_add(node.id)
 
     @classonlymethod
-    def from_taxdump(cls, nodes, names=None):
+    def from_taxdump(cls, nodes, names=None) -> "TreeNode":
         r"""Construct a tree from the NCBI taxonomy database.
 
         Parameters

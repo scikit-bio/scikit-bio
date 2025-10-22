@@ -291,7 +291,7 @@ def _tabular_msa_to_clustal(obj, fh):
 
 
 @clustal.reader(TabularMSA)
-def _clustal_to_tabular_msa(fh, constructor=None):
+def _clustal_to_tabular_msa(fh, cls=None, constructor=None):
     r"""Yield labels and sequences from msa (multiple sequence alignment).
 
     Parameters
@@ -336,6 +336,8 @@ def _clustal_to_tabular_msa(fh, constructor=None):
         Thompson", Nucleic Acids Res. 1994 Nov 11;22(22):4673-80.
 
     """
+    if cls is None:
+        cls = TabularMSA
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
@@ -348,4 +350,4 @@ def _clustal_to_tabular_msa(fh, constructor=None):
     seqs = []
     for label in labels:
         seqs.append(constructor("".join(data[label])))
-    return TabularMSA(seqs, index=labels)
+    return cls(seqs, index=labels)

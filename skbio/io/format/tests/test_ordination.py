@@ -8,7 +8,6 @@
 
 import io
 from unittest import TestCase, main
-import itertools
 
 import numpy as np
 import pandas as pd
@@ -20,7 +19,7 @@ from skbio.io.format.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,
     _ordination_sniffer)
 from skbio.util import get_data_path, assert_ordination_results_equal, assert_ordination_results_equal_np
-from skbio.util.config._config import set_config
+from skbio._config import set_config
 
 
 class OrdinationTestData(TestCase):
@@ -256,13 +255,13 @@ class OrdinationResultsReaderWriterTests(OrdinationTestData):
                 ignore_axis_labels=True)
 
     def test_read_valid_files_np(self):
-        set_config("output", "numpy")
+        set_config("table_output", "numpy")
         for fp, obj in zip(self.valid_fps, self.ordination_results_objs_np):
             obs = _ordination_to_ordination_results(fp)
             assert_ordination_results_equal_np(
                 obs, obj, ignore_method_names=True
             )
-        set_config("output", "pandas")
+        set_config("table_output", "pandas")
 
     def test_read_invalid_files(self):
         for invalid_fp, error_msg_regexp, _ in self.invalid_fps:

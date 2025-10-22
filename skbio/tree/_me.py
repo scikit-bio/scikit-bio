@@ -33,7 +33,8 @@ from ._c_me import (
     _bal_all_swaps,
     _bal_avgdist_insert_p,
 )
-from ._utils import _check_dm, _check_dm_tree
+from ._utils import _validate_dm, _validate_dm_and_tree
+from skbio.stats.distance import DistanceMatrix
 
 
 def gme(dm, neg_as_zero=True):
@@ -143,7 +144,11 @@ def gme(dm, neg_as_zero=True):
               \-human
 
     """
-    _check_dm(dm)
+    _validate_dm(dm)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
@@ -246,7 +251,11 @@ def bme(dm, neg_as_zero=True, **kwargs):
               \-human
 
     """
-    _check_dm(dm)
+    _validate_dm(dm)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data, **kwargs)
@@ -369,14 +378,18 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     0.20875
 
     """
-    _check_dm_tree(dm, tree)
+    _validate_dm_and_tree(dm, tree)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # generate tree array
     taxa = dm.ids
     tree, preodr, postodr = _root_from_treenode(tree, taxa)
 
     # allocate lengths
-    lens = np.empty(len(tree), dtype=float)
+    lens = np.empty(len(tree), dtype=dm.dtype)
 
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
@@ -458,10 +471,12 @@ def _gme(dm):
     occupied, while the remaining positions are disregarded. There is no need to reset
     array values after each iteration.
 
-    Since they are created de novo, all arrays are C-continuous. This permits further
+    Since they are created de novo, all arrays are C-contiguous. This permits further
     optimization in the Cython code.
 
     """
+    dtype = dm.dtype
+
     # number of taxa
     m = dm.shape[0]
 
@@ -473,13 +488,13 @@ def _gme(dm):
     tree, preodr, postodr = _allocate_tree(n)
 
     # average distances between distant-2 subtrees
-    ad2 = np.empty((n, 2), dtype=float)
+    ad2 = np.empty((n, 2), dtype=dtype)
 
     # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=float)
+    adk = np.empty((n, 2), dtype=dtype)
 
     # branch lengths or length changes
-    lens = np.empty((n,), dtype=float)
+    lens = np.empty((n,), dtype=dtype)
 
     # Initialize 3-taxon tree.
     _init_tree(dm, tree, preodr, postodr, ad2, matrix=False)
@@ -530,6 +545,7 @@ def _bme(dm, parallel=False):
     calculations (but this cannot compensate for the former).
 
     """
+    dtype = dm.dtype
     func = _bal_avgdist_insert_p if parallel else _bal_avgdist_insert
 
     # numbers of taxa and nodes in the tree
@@ -542,13 +558,13 @@ def _bme(dm, parallel=False):
 
     # average distances between all subtrees
     # (This is the dominant factor in BME, and what makes it more expensive than GME.)
-    adm = np.empty((n, n), dtype=float)
+    adm = np.empty((n, n), dtype=dtype)
 
     # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=float)
+    adk = np.empty((n, 2), dtype=dtype)
 
     # branch lengths or length changes
-    lens = np.empty((n,), dtype=float)
+    lens = np.empty((n,), dtype=dtype)
 
     # a stack for traversal operations
     stack = np.empty((n,), dtype=int)
@@ -557,7 +573,7 @@ def _bme(dm, parallel=False):
     _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
 
     # Pre-calculate negative powers of 2.
-    powers = np.ldexp(1.0, -np.arange(m))
+    powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     # Iteratively add taxa to the tree.
     for k in range(3, m):
@@ -568,7 +584,7 @@ def _bme(dm, parallel=False):
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, preodr, postodr, powers, stack)
+        func(adm, target, adk, tree, postodr, powers, stack)
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
@@ -625,11 +641,12 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     Consider optimization.
 
     """
+    dtype = dm.dtype
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
 
     # Calculate average distances between all pairs of subtrees.
-    adm = np.empty((n, n))
+    adm = np.empty((n, n), dtype=dtype)
     _avgdist_matrix(adm, dm, tree, preodr, postodr)
 
     # Calculate length changes of all possible swaps.
@@ -684,18 +701,19 @@ def _bnni(dm, tree, preodr, postodr, lens):
     `np.argmax` on all of them during each iteration.
 
     """
+    dtype = dm.dtype
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
 
     # Calculate balanced average distances between all pairs of subtrees.
-    adm = np.empty((n, n))
+    adm = np.empty((n, n), dtype=dtype)
     _bal_avgdist_matrix(adm, dm, tree, preodr, postodr)
 
     # Pre-calculate negative powers of 2.
-    powers = np.ldexp(1.0, -np.arange(dm.shape[0]))
+    powers = np.ldexp(dtype.type(1.0), -np.arange(dm.shape[0]))
 
     # Initialize branch swapping information.
-    gains, sides, nodes = _init_swaps(tree)
+    gains, sides, nodes = _init_swaps(tree, dtype=dtype)
 
     # Iteratively swap branches until there is no more beneficial swap.
     while True:
@@ -704,7 +722,7 @@ def _bnni(dm, tree, preodr, postodr, lens):
 
         # Find the swap with the maximum length reduction, and stop if non-positive.
         branch = gains.argmax()
-        if (gain := gains[branch]) <= 0:
+        if gains[branch] <= 0:
             break
         side = sides[branch]
         target = nodes[branch]
@@ -1293,7 +1311,7 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
         adk[node, 1] = dk[list(taxa_upper)].mean()
 
 
-def _init_swaps(tree):
+def _init_swaps(tree, dtype):
     """Initialize branch swapping information.
 
     It will create three 1-D arrays to store information of all internal branches of
@@ -1313,7 +1331,7 @@ def _init_swaps(tree):
     """
     # number of internal branches
     n = tree[0, 4] - 2
-    gains = np.zeros((n,), dtype=float)
+    gains = np.zeros((n,), dtype=dtype)
     sides = np.empty((n,), dtype=int)
     nodes = np.empty((n,), dtype=int)
 

@@ -11,8 +11,9 @@ import numpy as np
 from skbio.tree import TreeNode
 from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
+from skbio.stats.distance import DistanceMatrix
 from ._c_nj import nj_minq_cy
-from ._utils import _check_dm
+from ._utils import _validate_dm
 
 
 @params_aliased([("neg_as_zero", "disallow_negative_branch_length", "0.6.3", True)])
@@ -141,8 +142,12 @@ def nj(
         )
         _warn_deprecated(nj, "0.6.3", msg)
 
-    _check_dm(dm)
+    _validate_dm(dm)
     taxa = list(dm.ids)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     dm_ = dm.data
     if not inplace:
@@ -188,7 +193,7 @@ def _nj(dm):
     N = n = dm.shape[0]  # dimension
     sums = dm.sum(axis=0)  # distance sums
     idxs = np.arange(N)  # cluster indices
-    lm = np.empty((N - 1, 4))  # linkage matrix
+    lm = np.empty((N - 1, 4), dtype=dm.dtype)  # linkage matrix
 
     # Iteratively merge taxa until there are three left.
     while n > 3:

@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import functools
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -14,8 +15,8 @@ import pandas as pd
 from skbio._base import SkbioObject
 from skbio.stats._misc import _pprint_strs
 from skbio.util._plotting import PlottableMixin
-from skbio.io.registry import Read, Write
-from skbio.util.config._dispatcher import extract_row_ids
+from skbio.io.descriptors import Read, Write
+from skbio.table._tabular import _extract_row_ids
 
 
 class OrdinationResults(SkbioObject, PlottableMixin):
@@ -23,8 +24,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
     Stores various components of ordination results. Provides methods for
     serializing/deserializing results, as well as generation of basic
-    matplotlib 3-D scatterplots. Will automatically display PNG/SVG
-    representations of itself within the IPython Notebook.
+    matplotlib 3-D scatterplots using the
+    :meth:`plot` method.
 
     Attributes
     ----------
@@ -32,28 +33,28 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         Abbreviated ordination method name.
     long_method_name : str
         Ordination method name.
-    eigvals : ndarray
-        The resulting eigenvalues.  The index corresponds to the ordination
-        axis labels
-    samples : ndarray
+    eigvals : table_like
+        The resulting eigenvalues. The index corresponds to the ordination
+        axis labels. See :ref:`table_output` for details.
+    samples : table_like
         The position of the samples in the ordination space, row-indexed by the
-        sample id.
-    sample_ids : list of str, or should it be pd.Index?
-        The names of the samples. Must be provided if samples is an array.
-    features : ndarray
+        sample id. See :ref:`table_output` for details.
+    features : table_like
         The position of the features in the ordination space, row-indexed by
-        the feature id.
-    feature_ids : array-like of str
-        The names of the features. Must be provided if features is an array.
-    biplot_scores : ndarray
+        the feature id. See :ref:`table_output` for details.
+    biplot_scores : table_like
         Correlation coefficients of the samples with respect to the features.
-    sample_constraints : ndarray
+        See :ref:`table_output` for details.
+    sample_constraints : table_like
         Site constraints (linear combinations of constraining variables):
         coordinates of the sites in the space of the explanatory variables X.
-        These are the fitted site scores
-    proportion_explained : ndarray
+        These are the fitted site scores. See :ref:`table_output` for details.
+    proportion_explained : table_like
         Proportion explained by each of the dimensions in the ordination space.
-        The index corresponds to the ordination axis labels
+        The index corresponds to the ordination axis labels. See
+        :ref:`table_output` for details.
+    sample_ids, feature_ids, constraint_ids, output_format : optional
+        Standard table parameters. See :ref:`table_params` for details.
 
     See Also
     --------
@@ -89,13 +90,15 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self.samples = samples
         if sample_ids is None:
-            self.sample_ids = extract_row_ids(samples)
+            no_samp_ids = True
+            self.sample_ids = _extract_row_ids(samples)
         else:
+            no_samp_ids = False
             self.sample_ids = sample_ids
 
         self.features = features
         if feature_ids is None and features is not None:
-            self.feature_ids = extract_row_ids(features)
+            self.feature_ids = _extract_row_ids(features, warn_ids=no_samp_ids)
         else:
             self.feature_ids = feature_ids
 
@@ -156,7 +159,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             return "\t%s: %s" % (attr_name, _pprint_strs(ids))
         elif data is not None:
             return self._format_attribute(
-                data, attr_name, _pprint_strs(extract_row_ids)
+                data, attr_name, _pprint_strs(_extract_row_ids)
             )
         else:
             return "\t%s: N/A" % attr_name
@@ -318,9 +321,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         # This handles any input, numpy/pandas/polars
         coord_matrix = np.atleast_2d(self.samples).T
-        # if get_config("output") == "pandas":
+        # if get_config("table_output") == "pandas":
         #     coord_matrix = self.samples.values.T
-        # elif get_config("output") == "numpy":
+        # elif get_config("table_output") == "numpy":
         #     coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(

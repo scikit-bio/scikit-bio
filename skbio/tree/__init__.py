@@ -9,7 +9,7 @@ that are multifurcating and nodes that have single descendants. Functionality is
 provided for constructing trees, for traversing in multiple ways, comparisons, fetching
 subtrees, and more.
 
-See the :ref:`tree_tutorial` section for working with trees using scikit-bio.
+See the |tree_tutorial|_ section for working with trees using scikit-bio.
 
 
 Tree structure and operations
@@ -86,6 +86,7 @@ Exceptions
    NoParentError
 
 
+.. |tree_tutorial| replace:: **Tutorial**
 .. _tree_tutorial:
 
 Tutorial
@@ -374,7 +375,7 @@ among organisms are inferred using genetic data.
 :wiki:`Distance-based methods <Distance_matrices_in_phylogeny>` are a common category
 of methods for such purpose. The distances are usually computed from sequence alignment
 (see :mod:`skbio.alignment`), but they can also be inferred using alternative methods
-such as _k_-mer frequency (see :func:`~skbio.sequence.Sequence.kmer_frequencies`) and
+such as *k*-mer frequency (see :func:`~skbio.sequence.Sequence.kmer_frequencies`) and
 community diversity (see :mod:`skbio.diversity.beta`), and the applications of
 distance-based tree building are not limited to evolutionary biology, but can be
 extended to other fields (e.g., :wiki:`hierarchical clustering
@@ -450,7 +451,7 @@ that places the root at the midpoint between the two most distant tips in the tr
 >>> print(rooted.ascii_art())
           /-chicken
          |
--root----|                    /-mouse
+---------|                    /-mouse
          |          /--------|
          |         |          \-rat
           \--------|
@@ -573,14 +574,14 @@ using :meth:`~TreeNode.cophenet`, which returns a distance matrix.
 The evolutionary distances reflected by two trees can be compared. First, let's create
 two trees with the same taxa but different branch lengths.
 
->>> tree1 = TreeNode.read(["((A:0.1,B:0.2):0.3,C:0.4,D:0.5);"])
->>> tree2 = TreeNode.read(["((A:0.4,B:0.8):0.3,C:0.1,D:0.5);"])
+>>> tree1 = TreeNode.read(["((A:0.1,B:0.3):0.3,C:0.4,D:0.5);"])
+>>> tree2 = TreeNode.read(["((A:0.4,B:0.7):0.3,C:0.1,D:0.5);"])
 
-Calculate the distance between the cophenetic distance matrics using
+Calculate the distance between the cophenetic distance matrices using
 (:meth:`~TreeNode.compare_cophenet`):
 
 >>> tree1.compare_cophenet(tree2).round(3)
-0.12
+0.376
 
 Likewise, we can calculate this metric between multiple trees using :func:`path_dists`.
 

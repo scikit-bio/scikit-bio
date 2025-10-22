@@ -16,15 +16,20 @@ import numpy.testing as npt
 from skbio import DistanceMatrix, TreeNode
 from skbio.table import Table, example_table
 from skbio.util._testing import assert_series_almost_equal
-from skbio.diversity import (alpha_diversity, beta_diversity,
-                             partial_beta_diversity,
-                             get_alpha_diversity_metrics,
-                             get_beta_diversity_metrics)
+from skbio.diversity import (
+    alpha_diversity,
+    beta_diversity,
+    partial_beta_diversity,
+    get_alpha_diversity_metrics,
+    get_beta_diversity_metrics,
+)
 from skbio.diversity.alpha import faith_pd, phydiv, sobs
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.tree import DuplicateNodeError, MissingNodeError
-from skbio.diversity._driver import (_qualitative_beta_metrics,
-                                     _valid_beta_metrics)
+from skbio.diversity._driver import (
+    _qualitative_metrics,
+    _pdist_metrics,
+)
 
 
 class AlphaDiversityTests(TestCase):
@@ -74,9 +79,6 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(TypeError, alpha_diversity, faith_pd,
                           [0, 1], tree=self.tree1, taxa=['OTU1', 'OTU2'],
                           not_a_real_kwarg=42.0)
-
-        self.assertRaises(ValueError, alpha_diversity, 'sobs',
-                          example_table, ids=['A', 'B', 'C'])
 
     def test_invalid_input_phylogenetic(self):
         # taxa not provided
@@ -159,12 +161,11 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
                           counts, taxa=taxa, tree=t)
 
-        # table and taxa are provided
-        test_table = Table(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
-                           ['O1', 'O2', 'O3'],
-                           ['S1', 'S2', 'S3'])
-        self.assertRaises(ValueError, alpha_diversity, 'faith_pd',
-                          test_table, taxa=taxa, tree=t)
+        # table has correct taxa but are overriden by wrong ones
+        table = Table(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
+                      ['OTU1', 'OTU2', 'OTU3'], ['S1', 'S2', 'S3'])
+        self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
+                          table, taxa=taxa, tree=t)
 
     def test_empty(self):
         # empty vector
@@ -219,12 +220,9 @@ class AlphaDiversityTests(TestCase):
 
     def test_input_types(self):
         list_result = alpha_diversity('sobs', [1, 3, 0, 1, 0])
-        array_result = alpha_diversity('sobs',
-                                       np.array([1, 3, 0, 1, 0]))
-        table_result = alpha_diversity('sobs',
-                                       Table(np.array([[1, 3, 0, 1, 0], ]).T,
-                                             list('ABCDE'),
-                                             ['S1', ]))
+        array_result = alpha_diversity('sobs', np.array([1, 3, 0, 1, 0]))
+        table_result = alpha_diversity(
+            'sobs', Table(np.array([[1, 3, 0, 1, 0], ]).T, list('ABCDE'), ['S1', ]))
 
         # using a table we get sample IDs for free, drop them for the test
         table_result.index = pd.RangeIndex(len(table_result))
@@ -355,7 +353,7 @@ class BetaDiversityTests(TestCase):
 
     def test_available_metrics(self):
 
-        for metric in _valid_beta_metrics:
+        for metric in _pdist_metrics:
             try:
                 beta_diversity(metric, self.table3)
             except Exception as exc:
@@ -377,19 +375,20 @@ class BetaDiversityTests(TestCase):
     def test_qualitative_bug_issue_1549(self):
         as_presence_absence = np.asarray(self.table3) > 0
 
-        for metric in _valid_beta_metrics:
+        for metric in _pdist_metrics:
             obs_mat = beta_diversity(metric, self.table3)
             obs_presence_absence = beta_diversity(metric, as_presence_absence)
-            if metric in _qualitative_beta_metrics:
+            if metric in _qualitative_metrics:
                 self.assertEqual(obs_mat, obs_presence_absence)
             else:
                 self.assertNotEqual(obs_mat, obs_presence_absence)
 
     def test_invalid_input(self):
         # number of ids doesn't match the number of samples
-        error_msg = (r"Number of rows")
-        with self.assertRaisesRegex(ValueError, error_msg):
-            beta_diversity(self.table1, list('AB'), 'euclidean')
+        msg = "Input table has 3 samples whereas 2 sample IDs were provided."
+        with self.assertRaises(ValueError) as cm:
+            beta_diversity('euclidean', self.table1, list('AB'))
+        self.assertEqual(str(cm.exception), msg)
 
         # unknown metric provided
         error_msg = r"not-a-metric"
@@ -397,9 +396,10 @@ class BetaDiversityTests(TestCase):
             beta_diversity('not-a-metric', self.table1)
 
         # 3-D list provided as input
-        error_msg = (r"Only 1-D and 2-D")
-        with self.assertRaisesRegex(ValueError, error_msg):
+        msg = "`counts` has 3 dimensions whereas up to 2 dimensions are allowed."
+        with self.assertRaises(ValueError) as cm:
             beta_diversity('euclidean', [[[43]]])
+        self.assertEqual(str(cm.exception), msg)
 
         # negative counts
         error_msg = r"negative values."
@@ -426,14 +426,24 @@ class BetaDiversityTests(TestCase):
                            not_a_real_kwarg=42.0, tree=self.tree1,
                            taxa=['O1', 'O2', 'O3'])
 
-        error_msg = r"`counts` and `ids`"
-        with self.assertRaisesRegex(ValueError, error_msg):
+        # non-matching id or taxon counts
+        msg = "Input table has 3 samples whereas 2 sample IDs were provided."
+        with self.assertRaises(ValueError) as cm:
             beta_diversity('euclidean', example_table, ids=['foo', 'bar'])
+        self.assertEqual(str(cm.exception), msg)
 
-        error_msg = r"`counts` and `taxa`"
-        with self.assertRaisesRegex(ValueError, error_msg):
+        msg = "Input table has 2 features whereas 3 feature IDs were provided."
+        with self.assertRaises(ValueError) as cm:
+            beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar', 'qux'],
+                           tree=self.tree1)
+        self.assertEqual(str(cm.exception), msg)
+
+        # non-matching taxa and tree
+        msg = "2 taxa are not present as tip names in the tree."
+        with self.assertRaises(MissingNodeError) as cm:
             beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
                            tree=self.tree1)
+        self.assertEqual(str(cm.exception), msg)
 
     def test_invalid_input_mahalanobis(self):
         error_msg = (r"requires more samples than features")

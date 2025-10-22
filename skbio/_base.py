@@ -6,10 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import abc
+from abc import ABCMeta, abstractmethod
 
 
-class SkbioObject(metaclass=abc.ABCMeta):
+class SkbioObject(metaclass=ABCMeta):
     """Abstract base class defining core API common to all scikit-bio objects.
 
     Public scikit-bio classes should subclass this class to ensure a common,
@@ -18,7 +18,7 @@ class SkbioObject(metaclass=abc.ABCMeta):
 
     """
 
-    @abc.abstractmethod
+    @abstractmethod
     def __str__(self):
         raise NotImplementedError
 

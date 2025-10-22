@@ -6,15 +6,15 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import abc
-import copy
+from abc import ABCMeta, abstractmethod
+from copy import copy, deepcopy
 
 import pandas as pd
 
 from skbio.metadata import IntervalMetadata
 
 
-class MetadataMixin(metaclass=abc.ABCMeta):
+class MetadataMixin(metaclass=ABCMeta):
     @property
     def metadata(self):
         """``dict`` containing metadata which applies to the entire object.
@@ -85,7 +85,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
     def metadata(self):
         self._metadata = None
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(self, metadata=None):
         raise NotImplementedError
 
@@ -97,7 +97,7 @@ class MetadataMixin(metaclass=abc.ABCMeta):
             # Use setter for validation and copy.
             self.metadata = metadata
 
-    @abc.abstractmethod
+    @abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
@@ -114,14 +114,14 @@ class MetadataMixin(metaclass=abc.ABCMeta):
             # One has metadata while the other does not.
             return False
 
-    @abc.abstractmethod
+    @abstractmethod
     def __ne__(self, other):
         raise NotImplementedError
 
     def _ne_(self, other):
         return not (self == other)
 
-    @abc.abstractmethod
+    @abstractmethod
     def __copy__(self):
         raise NotImplementedError
 
@@ -131,13 +131,13 @@ class MetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @abc.abstractmethod
+    @abstractmethod
     def __deepcopy__(self, memo):
         raise NotImplementedError
 
     def _deepcopy_(self, memo):
         if self.has_metadata():
-            return copy.deepcopy(self.metadata, memo)
+            return deepcopy(self.metadata, memo)
         else:
             return None
 
@@ -175,8 +175,8 @@ class MetadataMixin(metaclass=abc.ABCMeta):
         return self._metadata is not None and bool(self.metadata)
 
 
-class PositionalMetadataMixin(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+class PositionalMetadataMixin(metaclass=ABCMeta):
+    @abstractmethod
     def _positional_metadata_axis_len_(self):
         """Return length of axis that positional metadata applies to.
 
@@ -313,7 +313,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
             start=0, stop=self._positional_metadata_axis_len_(), step=1
         )
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(self, positional_metadata=None):
         raise NotImplementedError
 
@@ -325,7 +325,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
             # Use setter for validation and copy.
             self.positional_metadata = positional_metadata
 
-    @abc.abstractmethod
+    @abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
@@ -346,14 +346,14 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
             # One has positional metadata while the other does not.
             return False
 
-    @abc.abstractmethod
+    @abstractmethod
     def __ne__(self, other):
         raise NotImplementedError
 
     def _ne_(self, other):
         return not (self == other)
 
-    @abc.abstractmethod
+    @abstractmethod
     def __copy__(self):
         raise NotImplementedError
 
@@ -364,7 +364,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         else:
             return None
 
-    @abc.abstractmethod
+    @abstractmethod
     def __deepcopy__(self, memo):
         raise NotImplementedError
 
@@ -374,7 +374,7 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
             # DataFrame, so we must handle the deep copy ourselves.
             # Reference: https://github.com/pandas-dev/pandas/issues/17406
             df = self.positional_metadata
-            data_cp = copy.deepcopy(df.values.tolist(), memo)
+            data_cp = deepcopy(df.values.tolist(), memo)
             return pd.DataFrame(
                 data_cp,
                 index=df.index.copy(deep=True),
@@ -422,8 +422,8 @@ class PositionalMetadataMixin(metaclass=abc.ABCMeta):
         )
 
 
-class IntervalMetadataMixin(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+class IntervalMetadataMixin(metaclass=ABCMeta):
+    @abstractmethod
     def _interval_metadata_axis_len_(self):
         """Return length of axis that interval metadata applies to.
 
@@ -435,7 +435,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(self, interval_metadata=None):
         raise NotImplementedError
 
@@ -513,7 +513,7 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             and self.interval_metadata.num_interval_features > 0
         )
 
-    @abc.abstractmethod
+    @abstractmethod
     def __eq__(self, other):
         raise NotImplementedError
 
@@ -534,29 +534,29 @@ class IntervalMetadataMixin(metaclass=abc.ABCMeta):
             # One has interval metadata while the other does not.
             return False
 
-    @abc.abstractmethod
+    @abstractmethod
     def __ne__(self, other):
         raise NotImplementedError
 
     def _ne_(self, other):
         return not (self == other)
 
-    @abc.abstractmethod
+    @abstractmethod
     def __copy__(self):
         raise NotImplementedError
 
     def _copy_(self):
         if self.has_interval_metadata():
-            return copy.copy(self.interval_metadata)
+            return copy(self.interval_metadata)
         else:
             return None
 
-    @abc.abstractmethod
+    @abstractmethod
     def __deepcopy__(self, memo):
         raise NotImplementedError
 
     def _deepcopy_(self, memo):
         if self.has_interval_metadata():
-            return copy.deepcopy(self.interval_metadata, memo)
+            return deepcopy(self.interval_metadata, memo)
         else:
             return None

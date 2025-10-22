@@ -15,8 +15,7 @@ from skbio import Sequence, Protein, DNA, RNA, TabularMSA, SubstitutionMatrix
 from skbio.alignment import (
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
-    make_identity_substitution_matrix, local_pairwise_align,
-    global_pairwise_align)
+    local_pairwise_align, global_pairwise_align)
 from skbio.alignment._pairwise import (
     _init_matrices_sw, _init_matrices_nw,
     _compute_score_and_traceback_matrices, _traceback, _first_largest,
@@ -72,26 +71,12 @@ class PairwiseAlignmentTests(TestCase):
         """Clear the list of warning filters, so that no filters are active."""
         warnings.resetwarnings()
 
-    def test_make_identity_substitution_matrix(self):
-        expected = {'A': {'A':  1, 'C': -2, 'G': -2, 'T': -2, 'U': -2},
-                    'C': {'A': -2, 'C':  1, 'G': -2, 'T': -2, 'U': -2},
-                    'G': {'A': -2, 'C': -2, 'G':  1, 'T': -2, 'U': -2},
-                    'T': {'A': -2, 'C': -2, 'G': -2, 'T':  1, 'U': -2},
-                    'U': {'A': -2, 'C': -2, 'G': -2, 'T': -2, 'U':  1}}
-        self.assertEqual(make_identity_substitution_matrix(1, -2), expected)
-
-        expected = {'A': {'A':  5, 'C': -4, 'G': -4, 'T': -4, 'U': -4},
-                    'C': {'A': -4, 'C':  5, 'G': -4, 'T': -4, 'U': -4},
-                    'G': {'A': -4, 'C': -4, 'G':  5, 'T': -4, 'U': -4},
-                    'T': {'A': -4, 'C': -4, 'G': -4, 'T':  5, 'U': -4},
-                    'U': {'A': -4, 'C': -4, 'G': -4, 'T': -4, 'U':  5}}
-        self.assertEqual(make_identity_substitution_matrix(5, -4), expected)
-
     # TODO: duplicate of test_global_pairwise_align_custom_alphabet, remove
     # when nondegenerate_chars is removed
     def test_global_pairwise_align_custom_alphabet_nondegenerate_chars(self):
-        custom_substitution_matrix = make_identity_substitution_matrix(
-            1, -1, alphabet=CustomSequence.nondegenerate_chars)
+        custom_substitution_matrix = SubstitutionMatrix.identity(
+            sorted(CustomSequence.nondegenerate_chars), 1, -1
+        ).to_dict()
 
         custom_msa, custom_score, custom_start_end = global_pairwise_align(
             CustomSequence("WXYZ"), CustomSequence("WXYYZZ"),
@@ -110,8 +95,9 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
 
     def test_global_pairwise_align_custom_alphabet(self):
-        custom_substitution_matrix = make_identity_substitution_matrix(
-            1, -1, alphabet=CustomSequence.definite_chars)
+        custom_substitution_matrix = SubstitutionMatrix.identity(
+            sorted(CustomSequence.definite_chars), 1, -1
+        ).to_dict()
 
         custom_msa, custom_score, custom_start_end = global_pairwise_align(
             CustomSequence("WXYZ"), CustomSequence("WXYYZZ"),
@@ -132,8 +118,9 @@ class PairwiseAlignmentTests(TestCase):
     # TODO: duplicate of test_local_pairwise_align_custom_alphabet, remove
     # when nondegenerate_chars is removed.
     def test_local_pairwise_align_custom_alphabet_nondegenerate_chars(self):
-        custom_substitution_matrix = make_identity_substitution_matrix(
-            5, -4, alphabet=CustomSequence.nondegenerate_chars)
+        custom_substitution_matrix = SubstitutionMatrix.identity(
+            sorted(CustomSequence.nondegenerate_chars), 5, -4
+        ).to_dict()
 
         custom_msa, custom_score, custom_start_end = local_pairwise_align(
             CustomSequence("YWXXZZYWXXWYYZWXX"),
@@ -155,8 +142,9 @@ class PairwiseAlignmentTests(TestCase):
         self.assertEqual(custom_start_end, [(1, 16), (2, 14)])
 
     def test_local_pairwise_align_custom_alphabet(self):
-        custom_substitution_matrix = make_identity_substitution_matrix(
-            5, -4, alphabet=CustomSequence.definite_chars)
+        custom_substitution_matrix = SubstitutionMatrix.identity(
+            sorted(CustomSequence.definite_chars), 5, -4
+        ).to_dict()
 
         custom_msa, custom_score, custom_start_end = local_pairwise_align(
             CustomSequence("YWXXZZYWXXWYYZWXX"),
@@ -512,7 +500,7 @@ class PairwiseAlignmentTests(TestCase):
                           DNA("ACGT"), 42)
 
     def test_nucleotide_aligners_use_substitution_matrices(self):
-        alt_sub = make_identity_substitution_matrix(10, -10)
+        alt_sub = SubstitutionMatrix.identity("ACGTU", 10, -10).to_dict()
         # alternate substitution matrix yields different alignment (the
         # aligned sequences and the scores are different) with local alignment
         msa_no_sub, score_no_sub, start_end_no_sub = \
@@ -591,7 +579,7 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_compute_substitution_score(self):
         # these results were computed manually
-        subs_m = make_identity_substitution_matrix(5, -4)
+        subs_m = SubstitutionMatrix.identity("ACGTU", 5, -4).to_dict()
         gap_chars = set('-.')
 
         self.assertEqual(
@@ -619,8 +607,7 @@ class PairwiseAlignmentTests(TestCase):
             3)
 
         # alt subs_m
-        subs_m = make_identity_substitution_matrix(1, -2)
-
+        subs_m = SubstitutionMatrix.identity("ACGTU", 1, -2).to_dict()
         self.assertEqual(
             _compute_substitution_score(['A', 'A'], ['A', '-'], subs_m, 0,
                                         gap_chars),
@@ -638,7 +625,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 2]]
-        m = make_identity_substitution_matrix(2, -1)
+        m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACG', metadata={'id': 'id'})]),
             TabularMSA([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
@@ -657,7 +644,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 1]]
-        m = make_identity_substitution_matrix(2, -1)
+        m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACC', metadata={'id': 'id'})]),
             TabularMSA([DNA('ACGT', metadata={'id': 'id'})]), 5, 2, m)
@@ -676,7 +663,7 @@ class PairwiseAlignmentTests(TestCase):
                             [2, 2, 1, 3],
                             [2, 2, 2, 1],
                             [2, 2, 2, 1]]
-        m = make_identity_substitution_matrix(2, -1)
+        m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACC', metadata={'id': 's1'}),
                         DNA('ACC', metadata={'id': 's2'})]),
@@ -688,7 +675,7 @@ class PairwiseAlignmentTests(TestCase):
     def test_compute_score_and_traceback_matrices_invalid(self):
         # if the sequence contains a character that is not in the
         # substitution matrix, an informative error should be raised
-        m = make_identity_substitution_matrix(2, -1)
+        m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         self.assertRaises(ValueError, _compute_score_and_traceback_matrices,
                           TabularMSA([DNA('AWG', metadata={'id': 'id'})]),
                           TabularMSA([DNA('ACGT', metadata={'id': 'id'})]),

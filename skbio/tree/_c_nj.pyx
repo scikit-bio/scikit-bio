@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-cimport cython
-from libc.float cimport DBL_MAX
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+
+from cython cimport floating
+from libc.math cimport INFINITY
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def nj_minq_cy(double[:, :] dm, double[:] sums):
+def nj_minq_cy(floating[:, :] dm, floating[:] sums):
     r"""Find the minimum value in a Q-matrix during the NJ algorithm.
 
     Parameters
@@ -47,14 +47,14 @@ def nj_minq_cy(double[:, :] dm, double[:] sums):
     """
     cdef Py_ssize_t n = dm.shape[0]
     cdef Py_ssize_t i, j
-    cdef int n_2 = n - 2
+    cdef floating n_2 = n - 2.0
 
     # current minimum q value and its location
     cdef Py_ssize_t min_i, min_j
-    cdef double min_q = DBL_MAX
+    cdef floating min_q = <floating>INFINITY
 
     # current q value and minimum q value plus \sum d(i)
-    cdef double q_plus, min_q_plus
+    cdef floating q_plus, min_q_plus
 
     # loop the upper-right triangle of the distance matrix
     # i < j is guaranteed

@@ -268,12 +268,14 @@ def _newick_sniffer(fh):
 
 
 @newick.reader(TreeNode)
-def _newick_to_tree_node(fh, convert_underscores=True):
+def _newick_to_tree_node(fh, cls=None, convert_underscores=True):
+    if cls is None:
+        cls = TreeNode
     tree_stack = []
     current_depth = 0
     last_token = ""
     next_is_distance = False
-    root = TreeNode()
+    root = cls()
     tree_stack.append((root, current_depth))
     for token in _tokenize_newick(fh, convert_underscores=convert_underscores):
         # Check for a label
@@ -290,18 +292,18 @@ def _newick_to_tree_node(fh, convert_underscores=True):
                 tree_stack[-1][0].length = float(token)
             except ValueError:
                 raise NewickFormatError(
-                    "Could not read length as numeric type" ": %s." % token
+                    "Could not read length as numeric type: %s." % token
                 )
 
         elif token == "(":
             current_depth += 1
-            tree_stack.append((TreeNode(), current_depth))
+            tree_stack.append((cls(), current_depth))
         elif token == ",":
-            tree_stack.append((TreeNode(), current_depth))
+            tree_stack.append((cls(), current_depth))
         elif token == ")":
             if len(tree_stack) < 2:
                 raise NewickFormatError(
-                    "Could not parse file as newick." " Parenthesis are unbalanced."
+                    "Could not parse file as newick. Parenthesis are unbalanced."
                 )
             children = []
             # Pop all nodes at this depth as they belong to the remaining
@@ -312,7 +314,7 @@ def _newick_to_tree_node(fh, convert_underscores=True):
             parent = tree_stack[-1][0]
             if parent.children:
                 raise NewickFormatError(
-                    "Could not parse file as newick." " Contains unnested children."
+                    "Could not parse file as newick. Contains unnested children."
                 )
             # This is much faster than TreeNode.extend
             for child in children:
@@ -465,9 +467,7 @@ def _tokenize_newick(fh, convert_underscores=True):
             elif not character.isspace() or not not_escaped:
                 if label_start and last_char.isspace() and not_escaped:
                     raise NewickFormatError(
-                        "Newick files cannot have"
-                        " unescaped whitespace in their"
-                        " labels."
+                        "Newick files cannot have unescaped whitespace in their labels."
                     )
                 metadata_buffer.append(character)
                 label_start = True
