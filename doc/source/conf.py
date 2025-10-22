@@ -282,11 +282,13 @@ from autoinherit import InheritedAutosummary
 
 
 # Let autosummary skip members that have a "skipdoc" attribute that is True.
+# Skip __annotate_func__ because sphinx has an issue with Python 3.14 that they haven't
+# released a fix for yet.
 
 def skip_member(app, what, name, obj, skip, options):
     if name == '__annotate_func__':
-        return True  # Skip this phantom attribute
-    return getattr(obj, "_skipdoc", None) or skip
+        return True
+    return getattr(obj, "_skipdoc", None)
 
 
 def setup(app):
