@@ -69,10 +69,11 @@ def set_config(option: str, value: Any):
         raise KeyError(f"Unknown option: '{option}'.")
 
     # Validate option-specific values.
-    if option == "table_output":
-        pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
-        if value not in pos_opts:
-            raise ValueError(f"Unsupported value '{value}' for '{option}'.")
+    match option:
+        case "table_output":
+            pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
+            if value not in pos_opts:
+                raise ValueError(f"Unsupported value '{value}' for '{option}'.")
 
     _SKBIO_OPTIONS[option] = value
 
