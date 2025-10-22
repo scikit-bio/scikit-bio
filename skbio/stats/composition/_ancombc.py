@@ -59,8 +59,10 @@ def ancombc(
         The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    group : str
-        The group variable of interest in global test.
+    group : str, optional
+        The attribute of interest in global test, which is used to identify the
+        features that are differentially abundant between at least two groups across
+        different groups in that attribute. Default is None to skip global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -118,6 +120,8 @@ def ancombc(
     -----
     The input data table for ANCOM-BC must contain only positive numbers. One needs to
     remove zero values by, e.g., adding a pseudocount of 1.0.
+    The categorical data in metadata is sorted alphabetically by default. The reference
+    level for each attribute need to be changed manually.
 
     References
     ----------
@@ -154,38 +158,83 @@ def ancombc(
     different in abundance between the treatment and the placebo groups.
 
     >>> result = ancombc(table + 1, metadata, 'grouping')
-    >>> result.round(5)
-       FeatureID              Covariate  Log2(FC)       SE         W   pvalue  \
-    0         b1              Intercept   0.71929  0.03350  21.47231  0.00000
-    1         b1  grouping[T.treatment]  -1.18171  0.38489  -3.07024  0.00214
-    2         b2              Intercept   0.70579  0.01785  39.54846  0.00000
-    3         b2  grouping[T.treatment]  -0.53687  0.09653  -5.56153  0.00000
-    4         b3              Intercept   0.06944  0.08654   0.80242  0.42231
-    5         b3  grouping[T.treatment]   0.06816  0.12041   0.56604  0.57136
-    6         b4              Intercept  -0.00218  0.01530  -0.14216  0.88695
-    7         b4  grouping[T.treatment]   0.11309  0.11952   0.94618  0.34406
-    8         b5              Intercept   0.07821  0.06485   1.20602  0.22781
-    9         b5  grouping[T.treatment]   0.00370  0.11492   0.03218  0.97433
-    10        b6              Intercept  -0.00218  0.01530  -0.14216  0.88695
-    11        b6  grouping[T.treatment]  -0.11796  0.07188  -1.64114  0.10077
-    12        b7              Intercept  -0.00218  0.01530  -0.14216  0.88695
-    13        b7  grouping[T.treatment]   0.05232  0.07063   0.74074  0.45885
+    >>> result.round(3)
+       FeatureID              Covariate  Log2(FC)     SE       W  pvalue  qvalue  \
+    0         b1              Intercept     0.719  0.033  21.472   0.000   0.000
+    1         b1  grouping[T.treatment]    -1.182  0.385  -3.070   0.002   0.013
+    2         b2              Intercept     0.706  0.018  39.548   0.000   0.000
+    3         b2  grouping[T.treatment]    -0.537  0.097  -5.562   0.000   0.000
+    4         b3              Intercept     0.069  0.087   0.802   0.422   1.000
+    5         b3  grouping[T.treatment]     0.068  0.120   0.566   0.571   1.000
+    6         b4              Intercept    -0.002  0.015  -0.142   0.887   1.000
+    7         b4  grouping[T.treatment]     0.113  0.120   0.946   0.344   1.000
+    8         b5              Intercept     0.078  0.065   1.206   0.228   1.000
+    9         b5  grouping[T.treatment]     0.004  0.115   0.032   0.974   1.000
+    10        b6              Intercept    -0.002  0.015  -0.142   0.887   1.000
+    11        b6  grouping[T.treatment]    -0.118  0.072  -1.641   0.101   0.504
+    12        b7              Intercept    -0.002  0.015  -0.142   0.887   1.000
+    13        b7  grouping[T.treatment]     0.052  0.071   0.741   0.459   1.000
     <BLANKLINE>
-         qvalue  Signif
-    0   0.00000    True
-    1   0.01283    True
-    2   0.00000    True
-    3   0.00000    True
-    4   1.00000   False
-    5   1.00000   False
-    6   1.00000   False
-    7   1.00000   False
-    8   1.00000   False
-    9   1.00000   False
-    10  1.00000   False
-    11  0.50384   False
-    12  1.00000   False
-    13  1.00000   False
+        Signif
+    0     True
+    1     True
+    2     True
+    3     True
+    4    False
+    5    False
+    6    False
+    7    False
+    8    False
+    9    False
+    10   False
+    11   False
+    12   False
+    13   False
+
+    The following example shows how to perform global test using ANCOM-BC to identify
+    features that are differentially abundant in more than one time point.
+
+    >>> table = pd.DataFrame(
+    ...     [[1.00000053, 6.09924644],
+    ...      [0.99999843, 7.0000045],
+    ...      [1.09999884, 8.08474053],
+    ...      [1.09999758, 1.10000349],
+    ...      [0.99999902, 2.00000027],
+    ...      [1.09999862, 2.99998318],
+    ...      [1.00000084, 2.10001257],
+    ...      [0.9999991, 3.09998418],
+    ...      [0.99999899, 3.9999742],
+    ...      [1.10000124, 5.0001796],
+    ...      [1.00000053, 6.09924644],
+    ...      [1.10000173, 6.99693644]],
+    ...     index=['u1', 'u2', 'u3', 'x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1',
+    ...            'z2', 'z3'],
+    ...     columns=['Y1', 'Y2'])
+    >>> metadata = pd.DataFrame(
+    ...     {'patient': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
+    ...      'treatment': [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+    ...      'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],},
+    ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
+    ...            'u2', 'u3'])
+
+    The first DataFrame contains the ANCOM-BC test results that identifies
+    differentially abundant in treatment as well as in time. The second DataFrame
+    contains the ANCOM-BC global test results that indicates whether the features
+    are differentially abundant across multiple time points.
+
+    >>> result = ancombc(table+1, metadata, formula="time + treatment", group="time")
+    >>> result[0][['FeatureID', 'Covariate', 'Signif']]
+          FeatureID  Covariate  Signif
+        0        Y1  Intercept    True
+        1        Y1       time    True
+        2        Y1  treatment    True
+        3        Y2  Intercept    True
+        4        Y2       time    True
+        5        Y2  treatment    True
+    >>> result[1].round(3)
+          FeatureID       W  pvalue  qvalue  Signif
+        0        Y1  11.625   0.001   0.002    True
+        1        Y2  12.069   0.001   0.002    True
 
     """
     # Note: A pseudocount should have been added to the table by the user prior to
@@ -648,7 +697,7 @@ def _calc_statistics(beta_hat, var_hat, method="holm"):
     return se_hat, W, pval, qval
 
 
-def _get_struc_zero(table, metadata, group, nlb=False):
+def get_struc_zero(table, metadata, group, neg_lb=False):
     """Return zero mask for features with structural zero (taxa that are systematically
     absent in an ecosystem and therefore show observed zeros)
 
@@ -663,21 +712,24 @@ def _get_struc_zero(table, metadata, group, nlb=False):
         pandas DataFrame.
     group : str
         The group variable of interests in metadata.
-    nlb : boolean
-        Determine whether to use negative lower bound when calculating p-values.
+    neg_lb : bool, optional
+        Determine whether to use negative lower bound when calculating p-values. Default
+        is False.
 
     Returns
     -------
     zero_mask : ndarray of shape (n_features, n_group)
-        Mask of struc zeros.
+        Mask of structural zeros.
 
     """
+    # matrix, samples, features = _ingest_table(table)
+    # _check_composition(np, matrix, nozero=True)
     tmp = np.nan_to_num(table.to_numpy()) != 0
     tmp_table = pd.DataFrame(tmp, columns=table.columns, index=table.index)
 
     p_hat = tmp_table.groupby(metadata[group], observed=True).mean()
     sample_size = metadata[group].value_counts(sort=False).to_numpy()[:, np.newaxis]
-    if nlb:
+    if neg_lb:
         p_hat = p_hat - 1.96 * (p_hat * (1 - p_hat) / sample_size) ** 0.5
     zero_idx = (p_hat <= 0).to_numpy()
     return 1 - zero_idx[1:] ^ zero_idx[0]
@@ -719,7 +771,9 @@ def _global_F(dmat, group, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
         if the variable is differentially abundant
 
     """
-    group_ind = np.nonzero(np.char.find(dmat.design_info.column_names, group) >= 0)[0]
+    # slices of columns in the dmat that the term of group is mapped to
+    s = dmat.design_info.term_name_slices[group]
+    group_ind = np.array(range(*s.indices(s.stop)))
     beta_hat_sub = beta_hat[:, group_ind]
     vcov_hat_sub = vcov_hat[:, group_ind][:, :, group_ind]
     vcov_hat_sub_inv = np.linalg.pinv(vcov_hat_sub)
