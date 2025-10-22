@@ -118,7 +118,7 @@ jobs:
       #     python -m pip debug --verbose | find "compatible tags"
       - name: Install dependencies
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
           pip install --no-deps .
           conda list
       # install anndata and polars here to test as optional dependencies.
@@ -168,7 +168,7 @@ jobs:
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
           pip install --prefer-binary . --no-deps
           conda list
       - name: Install dependencies
