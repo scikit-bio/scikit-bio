@@ -44,7 +44,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.lint.txt
+          pip install -r ci/requirements.lint.txt
           conda list
       - name: Run Ruff
         run: |
@@ -118,7 +118,7 @@ jobs:
       # encountered errors when installing using conda
       - name: Install optional dependencies
         run: |
-          pip install --prefer-binary anndata polars
+          pip install anndata polars
           conda list
       - name: Run unit tests
         env:

@@ -29,18 +29,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Python environment
+        uses: actions/setup-python@v5
         with:
-          auto-update-conda: true
           python-version: ${{ env.latest_python }}
-          environment-file: ci/conda_host_env.yml
 
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.doc.txt
-          pip install .
-          conda list
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements
+          pip install --no-deps .
+          pip list
 
       - name: Build documentation
         run: make doc
