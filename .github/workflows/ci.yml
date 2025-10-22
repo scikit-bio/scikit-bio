@@ -67,12 +67,8 @@ jobs:
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
-      # Upgrading sphinx to its development version because there is a bug in the
-      # stable release. Once a new release is out we can remove the sphinx specific
-      # line.
         run: |
           pip install -r ci/requirements.doc.txt
-          pip install -U --pre sphinx
           pip install .
           conda list
       - name: Make documentation
@@ -115,6 +111,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
+          pip install h5py
           pip install --prefer-binary .
           conda list
       # install anndata and polars here to test as optional dependencies.
@@ -170,6 +167,7 @@ jobs:
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
+          pip install h5py
           pip install --prefer-binary .
           conda list
       - name: Run unit tests
