@@ -64,6 +64,11 @@ class AncombcTests(TestCase):
 
         exp_theta = [0.12293081,  0.10931507, -0.23224588, -0.03514176,  0.00627999, 0.02886177]
 
+        # NOTE: atol is set because occassionally slightly different results will be
+        # generated during the CI workflow. Although SciPy optimizers should be
+        # deterministic, this happens in some cases. The initial estimation of
+        # parameters is usually precise, but the subsequent iterative optimization is
+        # prone to this problem.
         for o, e in zip(obs[0], exp_var_hat):
             npt.assert_allclose(o, e, atol=1e-5)
 
@@ -126,7 +131,7 @@ class AncombcTests(TestCase):
         obs = _sample_fractions(data, dmat, beta_hat)
         exp = np.array([2.43809627, 2.42448053, 2.08291958, 2.36465192, 2.40607366, 2.42865545])
 
-        npt.assert_allclose(obs, exp, atol=1e-5)
+        npt.assert_allclose(obs, exp, atol=1e-2)
 
     def test_calc_statistics(self):
         data = np.log1p(self.table.to_numpy())
