@@ -152,15 +152,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     """
 
+    # pre-cached Boolean mask (256,) of valid characters (False)
     __validation_mask = None
-    __degenerate_codes = None
-    __definite_char_codes = None
-    __gap_codes = None
-    __noncanonical_codes = None
-    __degenerate_hash = None
-    __degen_nonca_hash = None
-    __gap_hash = None
-    __definite_hash = None
 
     @classproperty
     def _validation_mask(cls):
@@ -176,6 +169,12 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             )
         return cls.__validation_mask
 
+    # pre-cached ASCII codes of alphabets
+    __degenerate_codes = None
+    __definite_codes = None
+    __gap_codes = None
+    __noncanonical_codes = None
+
     @classproperty
     def _degenerate_codes(cls):
         if cls.__degenerate_codes is None:
@@ -184,11 +183,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__degenerate_codes
 
     @classproperty
-    def _definite_char_codes(cls):
-        if cls.__definite_char_codes is None:
+    def _definite_codes(cls):
+        if cls.__definite_codes is None:
             definite_chars = cls.definite_chars
-            cls.__definite_char_codes = np.asarray([ord(d) for d in definite_chars])
-        return cls.__definite_char_codes
+            cls.__definite_codes = np.asarray([ord(d) for d in definite_chars])
+        return cls.__definite_codes
 
     @classproperty
     def _gap_codes(cls):
@@ -204,19 +203,27 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             cls.__noncanonical_codes = np.asarray([ord(c) for c in noncanonical_chars])
         return cls.__noncanonical_codes
 
+    # pre-cached Boolean masks (128,) of certain character sets (True)
+    __definite_hash = None
+    __degenerate_hash = None
+    __gap_hash = None
+    __nongap_hash = None
+    __canonical_hash = None
+    __degen_nonca_hash = None
+
+    @classproperty
+    def _definite_hash(cls):
+        if cls.__definite_hash is None:
+            cls.__definite_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+            cls.__definite_hash[cls._definite_codes] = True
+        return cls.__definite_hash
+
     @classproperty
     def _degenerate_hash(cls):
         if cls.__degenerate_hash is None:
             cls.__degenerate_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
             cls.__degenerate_hash[cls._degenerate_codes] = True
         return cls.__degenerate_hash
-
-    @classproperty
-    def _degen_nonca_hash(cls):
-        if cls.__degen_nonca_hash is None:
-            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
-            cls.__degen_nonca_hash[cls._noncanonical_codes] = True
-        return cls.__degen_nonca_hash
 
     @classproperty
     def _gap_hash(cls):
@@ -226,11 +233,24 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return cls.__gap_hash
 
     @classproperty
-    def _definite_hash(cls):
-        if cls.__definite_hash is None:
-            cls.__definite_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-            cls.__definite_hash[cls._definite_char_codes] = True
-        return cls.__definite_hash
+    def _nongap_hash(cls):
+        if cls.__nongap_hash is None:
+            cls.__nongap_hash = cls._definite_hash | cls._degenerate_hash
+        return cls.__nongap_hash
+
+    @classproperty
+    def _canonical_hash(cls):
+        if cls.__canonical_hash is None:
+            cls.__canonical_hash = cls._definite_hash.copy()
+            cls.__canonical_hash[cls._noncanonical_codes] = False
+        return cls.__canonical_hash
+
+    @classproperty
+    def _degen_nonca_hash(cls):
+        if cls.__degen_nonca_hash is None:
+            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
+            cls.__degen_nonca_hash[cls._noncanonical_codes] = True
+        return cls.__degen_nonca_hash
 
     @classproperty
     def alphabet(cls):

@@ -40,7 +40,7 @@ Utility functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Any
+from typing import Optional, Union, Any, TYPE_CHECKING
 
 import functools
 
@@ -48,6 +48,10 @@ import numpy as np
 from scipy.spatial.distance import pdist
 
 from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
+from skbio.sequence._alphabet import _encode_alphabet
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
 
 # ----------------------------------------------------------------------------
 # Functions of this module are organized in the following structure: Each
@@ -55,11 +59,11 @@ from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
 #
 # - `xyz` is a public-facing function that takes a pair of sequences as input
 #   and outputs a single number.
-# - `_xyz` is a private function that takes a 2-D array representing the ASCII
-#   codes of multiple aligned sequences as input, and generates a 1-D array
-#   representing a condensed distance matrix between them.
-# - `_xyz_pair` resembles `_xyz` but additionally consumes a Boolean mask of
-#   the ASCII code array representing valid sites.
+# - `_xyz_full` is a private function that takes a 2-D array representing the
+#   ASCII codes of multiple aligned sequences as input, and generates a 1-D
+#   array representing a condensed distance matrix between the sequences.
+# - `_xyz_pair` resembles `_xyz_full` but additionally consumes a Boolean mask
+#   of the ASCII code array representing valid sites.
 #
 # The two private functions are called by `skbio.alignment.align_dists` and
 # this is more efficient than calling the public function between each pair of
@@ -70,8 +74,7 @@ from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
 def _metric_specs(
     seqtype: Optional[type] = None,
     equal: bool = False,
-    canonical: bool = False,
-    empty: Optional[Any] = None,
+    alphabet: Optional[Union[str, "ArrayLike"]] = None,
 ):
     r"""Specifications of a sequence distance metric.
 
@@ -86,15 +89,20 @@ def _metric_specs(
         objects, grammared or not, are valid.
 
     equal : bool, optional
-        If True, sequences must have the equal length. Default is False.
+        If True, the two sequences must have the same length. Default is False.
 
-    canonical : bool, optional
-        If True, sequences will be filtered to canonical characters only. Default is
-        False.
+    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}, optional
+        An alphabet of valid characters to be considered by the metric. Can be a string
+        or array-like of characters or their ASCII codes. Three special keywords are
+        recognized: "nongap" (excluding gap characters such as "-" and "*"), "definite"
+        (definite characters, i.e., non-degenerate and non-gap characters), and
+        "canonical" (canonical characters, such as the four nucleobases and the 20
+        basic amino acids). Keywords can be used only when sequences are grammared.
+        If None (default), all characters are valid.
 
-    empty : any, optional
-        Return this value if set instead of calling the function when the input
-        sequences have zero length (only valid when ``equal=True``).
+        Invalid characters will be removed from the sequences prior to calculation. If
+        ``equal=True`` is set, positions with either or both invalid characters in the
+        two sequences will be removed.
 
     Returns
     -------
@@ -127,13 +135,6 @@ def _metric_specs(
                     f"does not match {type(seq2).__name__!r}."
                 )
 
-            # check if sequences have the same length
-            if equal and len(seq1) != len(seq2):
-                raise ValueError(
-                    f"{func.__name__!r} can only be calculated between equal-length "
-                    f"sequences. {len(seq1)} != {len(seq2)}."
-                )
-
             # check if sequences have the expected type
             if seqtype is not None:
                 for seq in seq1, seq2:
@@ -147,6 +148,28 @@ def _metric_specs(
                             f"{type(seq).__name__!r}."
                         )
 
+            # check if sequences have the same length
+            if equal and len(seq1) != len(seq2):
+                raise ValueError(
+                    f"{func.__name__!r} can only be calculated between equal-length "
+                    f"sequences. {len(seq1)} != {len(seq2)}."
+                )
+
+            # filter sequences by a given alphabet
+            if alphabet is not None:
+                if alphabet in ("nongap", "definite", "canonical"):
+                    valid = getattr(seq1, f"_{alphabet}_hash")
+                else:
+                    encoded = _encode_alphabet(alphabet)
+                    valid = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+                    valid[encoded] = True
+
+                if equal:
+                    pos = valid[seq1._bytes] & valid[seq2._bytes]
+                    seq1, seq2 = seq1[pos], seq2[pos]
+                else:
+                    seq1, seq2 = seq1[valid[seq1._bytes]], seq2[valid[seq2._bytes]]
+
             # call function to calculate sequence distance
             return func(seq1, seq2, *args, **kwargs)
 
@@ -154,8 +177,7 @@ def _metric_specs(
         wrapper._is_metric = True
         wrapper._seqtype = seqtype
         wrapper._equal = equal
-        wrapper._canonical = canonical
-        wrapper._empty = empty
+        wrapper._alphabet = alphabet
 
         return wrapper
 
@@ -283,7 +305,7 @@ def _get_valid(seq1, seq2):
         return L, seq1, seq2
 
 
-@_metric_specs(equal=True)
+@_metric_specs(equal=True, seqtype=GrammaredSequence)
 def p_dist(seq1, seq2):
     """Calculate p-distance between two aligned sequences."""
     L, seq1, seq2 = _get_valid(seq1, seq2)
@@ -315,7 +337,7 @@ def _p_dist_pair(seqs, mask):
     return dm
 
 
-@_metric_specs()
+@_metric_specs(equal=True, seqtype=(DNA, RNA))
 def jc69(seq1, seq2):
     """Compute the JC69 distance between two sequences."""
     return jc69_correct(p_dist(seq1, seq2))

@@ -62,28 +62,6 @@ class TestMetricSpecs(TestCase):
         msg = "Sequences must have matching type. 'DNA' does not match 'Protein'."
         self.assertEqual(str(cm.exception), msg)
 
-    def test_equal(self):
-        """Test if input sequences are of equal length."""
-        seq1, seq2 = DNA("ACGT"), DNA("GATGC")
-
-        @_metric_specs()
-        def metric1(seq1, seq2):
-            return 1
-
-        self.assertFalse(metric1._equal)
-        self.assertEqual(metric1(seq1, seq2), 1)
-
-        @_metric_specs(equal=True)
-        def metric2(seq1, seq2):
-            return 1
-
-        self.assertTrue(metric2._equal)
-        with self.assertRaises(ValueError) as cm:
-            metric2(seq1, seq2)
-        msg = ("'metric2' can only be calculated between equal-length sequences. "
-               "4 != 5.")
-        self.assertEqual(str(cm.exception), msg)
-
     def test_seqtype(self):
         """Test if input sequences are of expected sequence types."""
 
@@ -145,6 +123,89 @@ class TestMetricSpecs(TestCase):
             metric3(Sequence("hello"), Sequence("there"))
         msg = "Sequences must be 'GrammaredSequence' instances, not 'Sequence'."
         self.assertEqual(str(cm.exception), msg)
+
+    def test_equal(self):
+        """Test if input sequences are of equal length."""
+        seq1, seq2 = DNA("ACGT"), DNA("GATGC")
+
+        @_metric_specs()
+        def metric1(seq1, seq2):
+            return 1
+
+        self.assertFalse(metric1._equal)
+        self.assertEqual(metric1(seq1, seq2), 1)
+
+        @_metric_specs(equal=True)
+        def metric2(seq1, seq2):
+            return 1
+
+        self.assertTrue(metric2._equal)
+        with self.assertRaises(ValueError) as cm:
+            metric2(seq1, seq2)
+        msg = ("'metric2' can only be calculated between equal-length sequences. "
+               "4 != 5.")
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_alphabet(self):
+        """Filter input sequences by a given alphabet."""
+        seq1, seq2 = Sequence("X.,123Y"), Sequence("?'ZmYY0")
+
+        @_metric_specs()
+        def metric1(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertIsNone(metric1._alphabet)
+        self.assertEqual(metric1(seq1, seq2), 49)
+
+        @_metric_specs(alphabet="XYZ")
+        def metric2(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric2._alphabet, "XYZ")
+        self.assertEqual(metric2(seq1, seq2), 6)
+
+        # DNA sequences with gaps and degenerate characters ("N" and "R")
+        seq1, seq2 = DNA("ACCR--GT"), DNA("A-CGCANT")
+
+        @_metric_specs(seqtype=(DNA, RNA), alphabet="nongap")
+        def metric3(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric3(seq1, seq2), 42)
+
+        @_metric_specs(seqtype=(DNA, RNA), equal=True, alphabet="nongap")
+        def metric4(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric4(seq1, seq2), 25)
+
+        @_metric_specs(seqtype=(DNA, RNA), equal=True, alphabet="definite")
+        def metric5(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric5(seq1, seq2), 9)
+
+        # protein sequences with degenerate ("X") and non-canonical characters ("O")
+        seq1, seq2 = Protein("MNXSQ"), Protein("MKPWO")
+
+        @_metric_specs(seqtype=Protein, equal=True, alphabet="definite")
+        def metric6(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric6(seq1, seq2), 16)
+
+        @_metric_specs(seqtype=Protein, equal=True, alphabet="canonical")
+        def metric7(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertEqual(metric7(seq1, seq2), 9)
+
+        # alphabet only works with grammared sequence
+        @_metric_specs(alphabet="nongap")
+        def metric8(seq1, seq2):
+            return len(seq1) * len(seq2)
+
+        self.assertRaises(AttributeError, metric8, Sequence("X"), Sequence("Y"))
 
 
 class TestHamming(TestCase):
