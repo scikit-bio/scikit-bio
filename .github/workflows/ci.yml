@@ -9,8 +9,8 @@ on:
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
-  latest_python: "3.13"
-  supported_pythons: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
+  latest_python: "3.14"
+  supported_pythons: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
 
 jobs:
   conf:
@@ -111,7 +111,8 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          pip install .
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          pip install --no-deps .
           conda list
       # install anndata and polars here to test as optional dependencies.
       # encountered errors when installing using conda
@@ -152,22 +153,34 @@ jobs:
         use_conda: [true, false]
     steps:
       - uses: actions/checkout@v4
-      - uses: conda-incubator/setup-miniconda@v3
+      # set up conda environment
+      - name: Setup conda environment
+        if: ${{ matrix.use_conda }}
+        uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python_version }}
           environment-file: ci/conda_host_env.yml
+      # set up CPython environment (pip)
+      - name: Setup CPython environment
+        if: ${{ !matrix.use_conda }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+      # conda installation
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt
-          pip install . --no-deps
+          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          pip install --no-deps .
           conda list
+      # pip installation
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
-          pip install .
-          conda list
+          pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
+          pip install --no-deps .
+          pip list
       - name: Run unit tests
         env:
           WITH_COVERAGE: "TRUE"
