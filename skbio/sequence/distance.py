@@ -9,14 +9,25 @@ parts of the scikit-bio API that accept a sequence distance metric as input,
 such as :meth:`skbio.sequence.Sequence.distance` and
 :meth:`skbio.stats.distance.DistanceMatrix.from_iterable`.
 
-Functions
----------
+Generic distance metrics
+------------------------
 
 .. autosummary::
    :toctree:
 
    hamming
    kmer_distance
+
+
+Distance metrics for nucleotide sequences
+-----------------------------------------
+
+   jc69
+
+
+Utility functions
+-----------------
+
    jc69_correct
 
 """  # noqa: D205, D415
@@ -29,11 +40,129 @@ Functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from typing import Optional, Any
+
+import functools
+
 import numpy as np
+from scipy.spatial.distance import pdist
 
-import skbio
+from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
+
+# ----------------------------------------------------------------------------
+# Functions of this module are organized in the following structure: Each
+# distance metric "xyz" has three functions:
+#
+# - `xyz` is a public-facing function that takes a pair of sequences as input
+#   and outputs a single number.
+# - `_xyz` is a private function that takes a 2-D array representing the ASCII
+#   codes of multiple aligned sequences as input, and generates a 1-D array
+#   representing a condensed distance matrix between them.
+# - `_xyz_pair` resembles `_xyz` but additionally consumes a Boolean mask of
+#   the ASCII code array representing valid sites.
+#
+# The two private functions are called by `skbio.alignment.align_dists` and
+# this is more efficient than calling the public function between each pair of
+# sequences.
+# ----------------------------------------------------------------------------
 
 
+def _metric_specs(
+    seqtype: Optional[type] = None,
+    equal: bool = False,
+    canonical: bool = False,
+    empty: Optional[Any] = None,
+):
+    r"""Specifications of a sequence distance metric.
+
+    Parameters
+    ----------
+    func : callable
+        Function that calculates a sequence distance metric.
+
+    seqtype : type or tuple of types, optional
+        Valid sequence types. Can be a single type (such as ``Protein``) or a tuple of
+        multiple types (such as ``(DNA, RNA)``). If None (default), any ``Sequence``
+        objects, grammared or not, are valid.
+
+    equal : bool, optional
+        If True, sequences must have the equal length. Default is False.
+
+    canonical : bool, optional
+        If True, sequences will be filtered to canonical characters only. Default is
+        False.
+
+    empty : any, optional
+        Return this value if set instead of calling the function when the input
+        sequences have zero length (only valid when ``equal=True``).
+
+    Returns
+    -------
+    callable
+        Decorated function.
+
+    Notes
+    -----
+    This function serves as a decorator for individual functions that calculate
+    sequence distance metrics. The two positional arguments of a decorated
+    function must be two ``Sequence`` objects. Additional arguments may follow.
+
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(seq1, seq2, *args, **kwargs):
+            # check if sequences are skbio.sequence objects
+            for seq in seq1, seq2:
+                if not isinstance(seq, Sequence):
+                    raise TypeError(
+                        "Sequences must be skbio.sequence.Sequence instances, not "
+                        f"{type(seq).__name__!r}."
+                    )
+
+            # check if sequences have the same type
+            if type(seq1) is not type(seq2):
+                raise TypeError(
+                    f"Sequences must have matching type. {type(seq1).__name__!r} "
+                    f"does not match {type(seq2).__name__!r}."
+                )
+
+            # check if sequences have the same length
+            if equal and len(seq1) != len(seq2):
+                raise ValueError(
+                    f"{func.__name__!r} can only be calculated between equal-length "
+                    f"sequences. {len(seq1)} != {len(seq2)}."
+                )
+
+            # check if sequences have the expected type
+            if seqtype is not None:
+                for seq in seq1, seq2:
+                    if not isinstance(seq, seqtype):
+                        if isinstance(seqtype, tuple):
+                            names_ = tuple(x.__name__ for x in seqtype)
+                        else:
+                            names_ = seqtype.__name__
+                        raise TypeError(
+                            f"Sequences must be {names_!r} instances, not "
+                            f"{type(seq).__name__!r}."
+                        )
+
+            # call function to calculate sequence distance
+            return func(seq1, seq2, *args, **kwargs)
+
+        # transfer parameters to function attributes
+        wrapper._is_metric = True
+        wrapper._seqtype = seqtype
+        wrapper._equal = equal
+        wrapper._canonical = canonical
+        wrapper._empty = empty
+
+        return wrapper
+
+    return decorator
+
+
+@_metric_specs(equal=True)
 def hamming(
     seq1,
     seq2,
@@ -108,19 +237,7 @@ def hamming(
     0.5
 
     """
-    _check_seqs(seq1, seq2)
-
-    L = len(seq1)
-
-    # Hamming requires equal length sequences. We are checking this here
-    # because the error you would get otherwise is cryptic.
-    if len(seq2) != L:
-        raise ValueError(
-            "Hamming distance can only be computed between sequences of equal "
-            "length (%d != %d)" % (len(seq1), len(seq2))
-        )
-
-    if L == 0:
+    if (L := len(seq1)) == 0:
         return np.nan
 
     # Create a Boolean mask of gap and/or degenerate characters.
@@ -152,30 +269,93 @@ def hamming(
     return float(dist)
 
 
-def jc69_correct(dist, chars=4):
-    r"""Perform Jukes-Cantor (JC69) correction of a raw Hamming distance.
+def _get_valid(seq1, seq2):
+    L = len(seq1)
+    if L == 0:
+        return 0, None, None
+    valid = seq1.definites() | seq2.definites()
+    L_valid = np.sum(valid)
+    if L_valid == 0:
+        return 0, None, None
+    elif L_valid < L:
+        return L_valid, seq1[valid], seq2[valid]
+    else:
+        return L, seq1, seq2
 
-    The JC69 model [1]_ estimates the true sequence distance (number of substitutions
-    per site) by correcting the observed sequence distance (*p*-distance) to account
-    for repeated substitutions at the same site (a.k.a., saturation). For nucleotide
-    sequences (4 characters), the JC69-corrected distance :math:`D` is calculated as:
+
+@_metric_specs(equal=True)
+def p_dist(seq1, seq2):
+    """Calculate p-distance between two aligned sequences."""
+    L, seq1, seq2 = _get_valid(seq1, seq2)
+    return np.count_nonzero(seq1 != seq2) / L
+
+
+def _p_dist(seqs):
+    """Compute pairwise p-distances between multiple sequences."""
+    return pdist(seqs, metric="hamming")
+
+
+def _p_dist_pair(seqs, mask):
+    n = seqs.shape[0]
+    n_1 = n - 1
+    dm = np.empty((n * n_1 // 2,))
+    start = 0
+    for i in range(n_1):
+        end = start + n_1 - i
+        target = dm[start:end]
+
+        mask_ = mask[i] & mask[i + 1 :]  ##
+        diff = (seqs[i] != seqs[i + 1 :]) & mask_  ##, ##
+        p = np.count_nonzero(diff, axis=1)  ## faster than np.sum, no out=.
+
+        L = np.sum(mask_, axis=1)
+        np.divide(p, L, out=target, where=L > 0)
+
+        start = end
+    return dm
+
+
+@_metric_specs()
+def jc69(seq1, seq2):
+    """Compute the JC69 distance between two sequences."""
+    return jc69_correct(p_dist(seq1, seq2))
+
+
+def _jc69(seqs, chars=4):
+    """Compute pairwise JC69 distances between sequences."""
+    return jc69_correct(_p_dist(seqs), chars)
+
+
+def _jc69_pair(seqs, mask, chars=4):
+    """Compute pairwise JC69 distances between sequences."""
+    return jc69_correct(_p_dist_pair(seqs, mask), chars)
+
+
+def jc69_correct(dists, chars=4):
+    r"""Perform Jukes-Cantor (JC69) correction of raw Hamming distances.
+
+    The JC69 model [1]_ estimates the true evolutionary distance (number of
+    substitutions per site) between two sequences by correcting the observed sequence
+    distance (*p*-distance) to account for repeated substitutions at the same site
+    (i.e., saturation). For nucleotide sequences (4 characters), the JC69-corrected
+    distance :math:`D` is calculated as:
 
     .. math::
         D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
 
     Parameters
     ----------
-    dist : float
-        Uncorrected normalized Hamming distance (a.k.a., *p*-distance) between two
-        sequences.
+    dists : float or array_like
+        Uncorrected normalized Hamming distances (a.k.a., *p*-distance) between pairs
+        of sequences.
     chars : int, optional
         Number of definite characters in the alphabet. Default is 4, which is for
-        nucleotide sequences (``A``, ``C``, ``G`` and ``T``/``U``).
+        nucleotide sequences ("A", "C", "G" and "T"/"U").
 
     Returns
     -------
-    float
-        JC69-corrected distance.
+    float or ndarray
+        JC69-corrected distances.
 
     Raises
     ------
@@ -193,7 +373,7 @@ def jc69_correct(dist, chars=4):
 
     The functions returns ``nan`` if ``dist >= (chars - 1) / chars``. This happens when
     the two sequences are too divergent and subsitutions are over-saturated for the
-    meaningful estimation of the true evolutionary distance.
+    estimation of the true evolutionary distance.
 
     References
     ----------
@@ -218,14 +398,30 @@ def jc69_correct(dist, chars=4):
     if chars < 2:
         raise ValueError("`chars` must be at least 2.")
     frac = (chars - 1) / chars
-    if dist >= frac:
-        return np.nan
-    elif dist == 0:
-        return 0.0
-    else:
-        return -frac * np.log(1.0 - dist / frac)
+    is_scalar = np.isscalar(dists)
+    arr = np.asarray(dists)
+
+    # copy of array?
+    mask = arr < frac
+    vals = arr[mask]
+    vals /= -frac
+    vals += 1.0
+    np.log(vals, out=vals)
+    vals *= -frac
+    res = np.full(arr.shape, np.nan)
+    res[mask] = vals
+
+    if is_scalar:
+        return res.item()
+    return res
 
 
+@_metric_specs(equal=True)
+def transitions(seq1, seq2, proportion=True):
+    L, seq1, seq2 = _get_valid(seq1, seq2)
+
+
+@_metric_specs()
 def kmer_distance(seq1, seq2, k, overlap=True):
     r"""Compute the *k*-mer distance between a pair of sequences.
 
@@ -271,7 +467,6 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     0.9230769230...
 
     """
-    _check_seqs(seq1, seq2)
     seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap=overlap)))
     seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap=overlap)))
     all_kmers = seq1_kmers | seq2_kmers
@@ -281,20 +476,3 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     number_unique = len(all_kmers) - len(shared_kmers)
     fraction_unique = number_unique / len(all_kmers)
     return fraction_unique
-
-
-def _check_seqs(seq1, seq2):
-    # Asserts both sequences are skbio.sequence objects
-    for seq in seq1, seq2:
-        if not isinstance(seq, skbio.Sequence):
-            raise TypeError(
-                "`seq1` and `seq2` must be Sequence instances, not %r"
-                % type(seq).__name__
-            )
-
-    # Asserts sequences have the same type
-    if type(seq1) is not type(seq2):
-        raise TypeError(
-            "Sequences must have matching type. Type %r does not match type %r"
-            % (type(seq1).__name__, type(seq2).__name__)
-        )

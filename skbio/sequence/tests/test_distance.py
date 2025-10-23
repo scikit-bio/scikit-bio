@@ -7,34 +7,165 @@
 # ----------------------------------------------------------------------------
 
 import itertools
-import unittest
+from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
 
-from skbio import Sequence, DNA
-from skbio.sequence.distance import hamming, kmer_distance, jc69_correct
+from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
+from skbio.util import classproperty
+from skbio.util._decorator import overrides
+
+from skbio.sequence.distance import (
+    _metric_specs, hamming, kmer_distance, jc69_correct
+)
 
 
-class TestHamming(unittest.TestCase):
+class TestMetricSpecs(TestCase):
+    def test_is_metric(self):
+        """Test if the wrapped function is marked as a metric."""
+
+        def metric1(seq1, seq2):
+            return 1
+
+        self.assertFalse(hasattr(metric1, "_is_metric"))
+
+        @_metric_specs()
+        def metric2(seq1, seq2):
+            return 1
+
+        self.assertTrue(hasattr(metric2, "_is_metric"))
+        self.assertTrue(metric2._is_metric)
+
+    def test_instance(self):
+        """Test if input sequences are of matching Sequence objects."""
+
+        @_metric_specs()
+        def metric1(seq1, seq2):
+            return 1
+        
+        seq1, seq2 = DNA("ACGT"), DNA("AGTC")
+        self.assertEqual(metric1(seq1, seq2), 1)
+
+        seq1, seq2 = Sequence("Hello"), Sequence("There")
+        self.assertEqual(metric1(seq1, seq2), 1)
+
+        seq1, seq2 = "Hello", "There"
+        with self.assertRaises(TypeError) as cm:
+            metric1(seq1, seq2)
+        msg = "Sequences must be skbio.sequence.Sequence instances, not 'str'."
+        self.assertEqual(str(cm.exception), msg)
+
+        seq1, seq2 = DNA("ACGT"), Protein("MKVS")
+        with self.assertRaises(TypeError) as cm:
+            metric1(seq1, seq2)
+        msg = "Sequences must have matching type. 'DNA' does not match 'Protein'."
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_equal(self):
+        """Test if input sequences are of equal length."""
+        seq1, seq2 = DNA("ACGT"), DNA("GATGC")
+
+        @_metric_specs()
+        def metric1(seq1, seq2):
+            return 1
+
+        self.assertFalse(metric1._equal)
+        self.assertEqual(metric1(seq1, seq2), 1)
+
+        @_metric_specs(equal=True)
+        def metric2(seq1, seq2):
+            return 1
+
+        self.assertTrue(metric2._equal)
+        with self.assertRaises(ValueError) as cm:
+            metric2(seq1, seq2)
+        msg = ("'metric2' can only be calculated between equal-length sequences. "
+               "4 != 5.")
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_seqtype(self):
+        """Test if input sequences are of expected sequence types."""
+
+        @_metric_specs(seqtype=Protein)
+        def metric1(seq1, seq2):
+            return 1
+
+        self.assertIs(metric1._seqtype, Protein)
+        self.assertEqual(metric1(Protein("MVR"), Protein("TPD")), 1)
+
+        with self.assertRaises(TypeError) as cm:
+            metric1(DNA("GGC"), DNA("CAT"))
+        msg = "Sequences must be 'Protein' instances, not 'DNA'."
+        self.assertEqual(str(cm.exception), msg)
+
+        @_metric_specs(seqtype=(DNA, RNA))
+        def metric2(seq1, seq2):
+            return 1
+
+        self.assertTupleEqual(metric2._seqtype, (DNA, RNA))
+        self.assertEqual(metric2(RNA("AUCG"), RNA("UAAC")), 1)
+
+        with self.assertRaises(TypeError) as cm:
+            metric2(Protein("MVR"), Protein("TPD"))
+        msg = "Sequences must be ('DNA', 'RNA') instances, not 'Protein'."
+        self.assertEqual(str(cm.exception), msg)
+
+        @_metric_specs(seqtype=GrammaredSequence)
+        def metric3(seq1, seq2):
+            return 1
+
+        class CustomSequence(GrammaredSequence):
+            @classproperty
+            @overrides(GrammaredSequence)
+            def gap_chars(cls):
+                return set('^$')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '^'
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def definite_chars(cls):
+                return set('WXYZ')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def degenerate_map(cls):
+                return {}
+
+        self.assertEqual(metric3(DNA("GGC"), DNA("CAT")), 1)
+        self.assertEqual(metric3(RNA("AUCG"), RNA("UAAC")), 1)
+        self.assertEqual(metric3(Protein("MVR"), Protein("TPD")), 1)
+        self.assertEqual(metric3(CustomSequence("XXY"), CustomSequence("WWZ")), 1)
+
+        with self.assertRaises(TypeError) as cm:
+            metric3(Sequence("hello"), Sequence("there"))
+        msg = "Sequences must be 'GrammaredSequence' instances, not 'Sequence'."
+        self.assertEqual(str(cm.exception), msg)
+
+
+class TestHamming(TestCase):
     def test_non_sequence(self):
         seq1 = Sequence('abc')
         seq2 = 'abc'
-        with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, "Sequence instances, not 'str'."):
             hamming(seq1, seq2)
-        with self.assertRaisesRegex(TypeError, r'seq1.*seq2.*Sequence.*str'):
+        with self.assertRaisesRegex(TypeError, "Sequence instances, not 'str'."):
             hamming(seq2, seq1)
 
     def test_type_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ACG')
-        with self.assertRaisesRegex(TypeError, r'Sequence.*does not match.*DNA'):
+        with self.assertRaisesRegex(TypeError, "'Sequence' does not match 'DNA'."):
             hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
         seq2 = Sequence('ABCD')
-        with self.assertRaisesRegex(ValueError, r'equal length.*3 != 4'):
+        with self.assertRaisesRegex(ValueError, "equal-length sequences. 3 != 4."):
             hamming(seq1, seq2)
 
     def test_return_type(self):
@@ -164,7 +295,7 @@ class TestHamming(unittest.TestCase):
             hamming(seq1, seq2, degenerate_policy="ignore")
 
 
-class TestKmerDistance(unittest.TestCase):
+class TestKmerDistance(TestCase):
     def test_default_kwargs(self):
         seq1 = Sequence('AACCTAGCAATGGAT')
         seq2 = Sequence('CAGGCAGTTCTCACC')
@@ -263,7 +394,7 @@ class TestKmerDistance(unittest.TestCase):
     def test_type_mismatch_error(self):
         seq1 = Sequence('ABC')
         seq2 = DNA('ATC')
-        with self.assertRaisesRegex(TypeError, r"Type 'Sequence'.*type 'DNA'"):
+        with self.assertRaisesRegex(TypeError, r"'Sequence' does not match 'DNA'"):
             kmer_distance(seq1, seq2, 3)
 
     def test_non_sequence_error(self):
@@ -273,19 +404,40 @@ class TestKmerDistance(unittest.TestCase):
             kmer_distance(seq1, seq2, 3)
 
 
-class TestJC69Correct(unittest.TestCase):
-    def test_jc69_correct(self):
-        self.assertEqual(jc69_correct(0.1).round(3), 0.107)
-        self.assertEqual(jc69_correct(0.2).round(3), 0.233)
-        self.assertEqual(jc69_correct(0.5).round(3), 0.824)
-        self.assertEqual(jc69_correct(0.7).round(3), 2.031)
+class TestJC69(TestCase):
+    def test_jc69_correct_scalar(self):
+        obs = jc69_correct(0.1)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 3), 0.107)
+        self.assertEqual(round(jc69_correct(0.2), 3), 0.233)
+        self.assertEqual(round(jc69_correct(0.5), 3), 0.824)
+        self.assertEqual(round(jc69_correct(0.7), 3), 2.031)
         self.assertEqual(jc69_correct(0.0), 0.0)
         self.assertTrue(np.isnan(jc69_correct(0.8)))
-        self.assertEqual(jc69_correct(0.5, chars=5).round(3), 0.785)
-        self.assertEqual(jc69_correct(0.8, chars=9).round(3), 2.047)
+
+    def test_jc69_correct_array(self):
+        lst = [0.0, 0.1, 0.2, 0.5, 0.7, 1.0]
+        obs = jc69_correct(lst)
+        self.assertIsInstance(obs, np.ndarray)
+        self.assertTupleEqual(obs.shape, (6,))
+        exp = np.array([0.0, 0.107, 0.233, 0.824, 2.031, np.nan])
+        npt.assert_array_equal(obs.round(3), exp)
+
+        shape = (2, 3)
+        arr = np.reshape(lst, shape)
+        obs = jc69_correct(arr)
+        self.assertTupleEqual(obs.shape, shape)
+        exp = np.reshape(exp, shape)
+        npt.assert_array_equal(obs.round(3), exp)
+
+    def test_jc69_correct_alt_chars(self):
+        self.assertEqual(round(jc69_correct(0.5, chars=5), 3), 0.785)
+        self.assertEqual(round(jc69_correct(0.8, chars=9), 3), 2.047)
+
+    def test_jc69_correct_error(self):
         with self.assertRaisesRegex(ValueError, r"`chars` must be at least 2."):
             jc69_correct(0.5, chars=1)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
