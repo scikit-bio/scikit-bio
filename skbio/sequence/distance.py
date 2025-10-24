@@ -156,6 +156,7 @@ def _metric_specs(
                 )
 
             # filter sequences by a given alphabet
+            bytes1, bytes2 = seq1._bytes, seq2._bytes
             if alphabet is not None:
                 if alphabet in ("nongap", "definite", "canonical"):
                     valid = getattr(seq1, f"_{alphabet}_hash")
@@ -165,10 +166,13 @@ def _metric_specs(
                     valid[encoded] = True
 
                 if equal:
-                    pos = valid[seq1._bytes] & valid[seq2._bytes]
-                    seq1, seq2 = seq1[pos], seq2[pos]
+                    pos = valid[bytes1] & valid[bytes2]
+                    seq1, seq2 = bytes1[pos], bytes2[pos]
                 else:
-                    seq1, seq2 = seq1[valid[seq1._bytes]], seq2[valid[seq2._bytes]]
+                    seq1, seq2 = bytes1[valid[bytes1]], bytes2[valid[bytes2]]
+
+            else:
+                seq1, seq2 = bytes1, bytes2
 
             # call function to calculate sequence distance
             return func(seq1, seq2, *args, **kwargs)
@@ -291,24 +295,47 @@ def hamming(
     return float(dist)
 
 
-def _get_valid(seq1, seq2):
-    L = len(seq1)
-    if L == 0:
-        return 0, None, None
-    valid = seq1.definites() | seq2.definites()
-    L_valid = np.sum(valid)
-    if L_valid == 0:
-        return 0, None, None
-    elif L_valid < L:
-        return L_valid, seq1[valid], seq2[valid]
-    else:
-        return L, seq1, seq2
-
-
-@_metric_specs(equal=True, seqtype=GrammaredSequence)
+@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
 def p_dist(seq1, seq2):
-    """Calculate p-distance between two aligned sequences."""
-    L, seq1, seq2 = _get_valid(seq1, seq2)
+    """Calculate the *p*-distance between two aligned sequences.
+
+    The proportion of mutations, a.k.a., p-distance, measures the
+    rate of mutation.
+
+    The Hamming distance [1]_ between two equal-length sequences is the number of
+    differing characters. It is often normalized to a proportion of the sequence
+    length. This proportion is usually referred to as *p*-distance in bioinformatics.
+
+    Parameters
+    ----------
+    seq1, seq2 : GrammaredSequence
+        Sequences to compute the *p*-distance between.
+
+    Returns
+    -------
+    float
+        *p*-distance between ``seq1`` and ``seq2``.
+
+    Raises
+    ------
+    (see ``hamming``.)
+
+    See Also
+    --------
+    hamming
+
+    Examples
+    --------
+    >>> from skbio.sequence import Sequence
+    >>> from skbio.sequence.distance import p_dist
+    >>> seq1 = Sequence('AGGGTA')
+    >>> seq2 = Sequence('CGTTTA')
+    >>> p_dist(seq1, seq2)
+    0.5
+
+    """
+    if (L := len(seq1)) == 0:
+        return np.nan
     return np.count_nonzero(seq1 != seq2) / L
 
 
@@ -340,7 +367,10 @@ def _p_dist_pair(seqs, mask):
 @_metric_specs(equal=True, seqtype=(DNA, RNA))
 def jc69(seq1, seq2):
     """Compute the JC69 distance between two sequences."""
-    return jc69_correct(p_dist(seq1, seq2))
+    if (L := len(seq1)) == 0:
+        return np.nan
+    p = np.count_nonzero(seq1 != seq2) / L
+    return jc69_correct(p)
 
 
 def _jc69(seqs, chars=4):
