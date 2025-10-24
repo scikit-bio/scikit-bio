@@ -20,6 +20,11 @@
 * Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
 * Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 
+### Miscellaneous
+
+* Dropped support for Python 3.9 and added support for Python 3.14 ([#2311](https://github.com/scikit-bio/scikit-bio/pull/2311)).
+* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314))
+
 ## Version 0.7.0
 
 ### Features
