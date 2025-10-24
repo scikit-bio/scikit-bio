@@ -32,7 +32,7 @@ def ancombc(
     table,
     metadata,
     formula,
-    group=None,
+    grouping=None,
     max_iter=100,
     tol=1e-5,
     alpha=0.05,
@@ -59,10 +59,11 @@ def ancombc(
         The formula defining the model. Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    group : str, optional
-        The attribute of interest in global test, which is used to identify the
-        features that are differentially abundant between at least two groups across
-        different groups in that attribute. Default is None to skip global test.
+    grouping : str, optional
+        A metadata column name of interests for global test, which is used to identify
+        the features that are differentially abundant between at least two groups across
+        three or more groups in that attribute. The group must be one of the factors in
+        the formula. Default is None to skip global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -80,9 +81,9 @@ def ancombc(
 
     Returns
     -------
-    pd.DataFrame
+    res : pd.DataFrame
         A table of features and covariates, their log-fold changes and other relevant
-        statistics.
+        statistics of the primary ANCOM-BC analysis.
 
         - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
@@ -111,9 +112,26 @@ def ancombc(
           significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
           must not overlap with zero.
 
+    res_global : pd.DataFrame
+        A table of features and statistics of ANCOM-BC global test.
+
+        - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+        - ``W``: *W*-statistic of Chi-squared statistic that quantifies the overall
+          evidence against null hypothesis (the mean abundance of the feature is the
+          same across all groups).
+
+        - ``pvalue``: *p*-value of the *W*-statistic in global test.
+
+        - ``qvalue``: Corrected *p*-value in global test.
+
+        - ``Signif``: Whether at least one group mean is different from other
+          in grouping variable.
+
     See Also
     --------
     ancom
+    struc_zero
     multi_replace
 
     Notes
@@ -218,11 +236,11 @@ def ancombc(
     ...            'u2', 'u3'])
 
     The first DataFrame contains the ANCOM-BC test results that identifies
-    differentially abundant in treatment as well as in time. The second DataFrame
-    contains the ANCOM-BC global test results that indicates whether the features
-    are differentially abundant across multiple time points.
+    differentially abundant feature in treatment as well as in time. The second
+    DataFrame contains the ANCOM-BC global test results that indicates whether the
+    features are differentially abundant across multiple time points.
 
-    >>> result = ancombc(table+1, metadata, formula="time + treatment", group="time")
+    >>> result = ancombc(table+1, metadata, formula="time+treatment", grouping="time")
     >>> result[0][['FeatureID', 'Covariate', 'Signif']]
           FeatureID  Covariate  Signif
         0        Y1  Intercept    True
@@ -291,12 +309,12 @@ def ancombc(
             "qvalue": qval.ravel(),
         }
     )
-    # pandas' nullable boolean type
+    # Pandas' nullable boolean type
     res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
 
-    # global test results
-    if group is not None and len(metadata[group].unique()) >= 3:
-        res_global = _global_F(dmat, group, beta_hat, vcov_hat, alpha, p_adjust)
+    # Output global test results
+    if grouping is not None and len(metadata[grouping].unique()) >= 3:
+        res_global = _global_test(dmat, grouping, beta_hat, vcov_hat, alpha, p_adjust)
         res_global_df = pd.DataFrame.from_dict(
             {
                 "FeatureID": features,
@@ -351,19 +369,19 @@ def _estimate_params(data, dmat):
     U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
     S_inv = np.where(S > 1e-15 * np.max(S), 1.0 / S, 0.0)
 
-    # regression coefficients
+    # Regression coefficients
     V = Vh.T
     dmat_inv = (V * S_inv) @ U.T
     beta = dmat_inv @ data
 
-    # inverse Gram matrix
+    # Inverse Gram matrix
     gmat_inv = (V * S_inv**2) @ Vh
 
-    # per-sample mean residuals (theta)
+    # Per-sample mean residuals (theta)
     diff = data - dmat @ beta
     theta = np.mean(diff, axis=1, keepdims=True)
 
-    # centered residuals
+    # Centered residuals
     eps = diff - theta
 
     # Calculate the covariance matrix of the coefficients. The estimated variances are
@@ -584,13 +602,13 @@ def _init_bias_params(beta):
     """
     edges = np.quantile(beta, (0.125, 0.25, 0.75, 0.875))
 
-    # estimate delta (mean of values between q1 and q3)
+    # Estimate delta (mean of values between q1 and q3)
     if np.any(mask := (beta >= edges[1]) & (beta <= edges[2])):
         delta = np.mean(beta[mask])
     else:
         delta = np.mean(beta)
 
-    # estimate l1
+    # Estimate l1
     if np.any(mask := beta < edges[0]):
         l1 = np.mean(beta_ := beta[mask])
         if beta_.size > 1:
@@ -601,7 +619,7 @@ def _init_bias_params(beta):
         l1 = np.min(beta)
         kappa1 = 1.0
 
-    # estimate l2
+    # Estimate l2
     if np.any(mask := beta > edges[3]):
         l2 = np.mean(beta_ := beta[mask])
         if beta_.size > 1:
@@ -724,9 +742,11 @@ def _calc_statistics(beta_hat, var_hat, method="holm"):
     return se_hat, W, pval, qval
 
 
-def get_struc_zero(table, metadata, group, neg_lb=False):
-    """Return zero mask for features with structural zero (taxa that are systematically
-    absent in an ecosystem and therefore show observed zeros)
+def struc_zero(table, metadata, grouping, neg_lb=False):
+    """Identify features with structural zeros.
+
+    The function returns a boolean matrix of features with structural zeros, i.e.,
+    observerd zeros due to systematical absence.
 
     Parameters
     ----------
@@ -737,40 +757,110 @@ def get_struc_zero(table, metadata, group, neg_lb=False):
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a
         pandas DataFrame.
-    group : str
-        The group variable of interests in metadata.
+    grouping : str
+        A metadata column name indicating the assignment of samples to groups.
     neg_lb : bool, optional
-        Determine whether to use negative lower bound when calculating p-values. Default
-        is False.
+        Determine whether to use negative lower bound when calculating sample
+        proportion. Default is False. Generally, it is recommended to set `neg_lb=True`
+        when the sample size per group is relatively large.
 
     Returns
     -------
-    zero_mask : ndarray of shape (n_features, n_group)
-        Mask of structural zeros.
+    pd.DataFrame
+        A table of whether the features are structural zeros in groups (True: structural
+        zero, False: not structural zero).
+
+    References
+    ----------
+    .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
+       with bias correction. Nature communications, 11(1), p.3514.
+
+    Examples
+    --------
+    >>> from skbio.stats.composition import ancombc
+    >>> import pandas as pd
+
+    Generate a DataFrame with 10 samples and 6 features with 0's in specific groups:
+
+    >>> table = pd.DataFrame([[ 7,  1,  0, 11,  3,  1],
+    ...                       [ 1,  1,  0, 13, 13,  0],
+    ...                       [11,  5,  0,  1,  4,  1],
+    ...                       [ 2,  2,  0, 16,  4,  0],
+    ...                       [ 0,  1,  0,  0,  6,  0],
+    ...                       [14,  8,  7,  9,  0,  5],
+    ...                       [ 0,  7,  4,  1,  0, 26],
+    ...                       [ 8,  1,  4, 28,  0, 10],
+    ...                       [ 2,  2,  2,  4,  0,  5],
+    ...                       [ 6,  4, 10,  1,  0,  9]],
+    ...                      index=[f's{i}' for i in range(10)],
+    ...                      columns=[f'f{i}' for i in range(6)])
+
+    Then create a grouping vector. In this example, there is a treatment group
+    and a placebo group.
+
+    >>> metadata = pd.DataFrame(
+    ...     {'grouping': ['treatment'] * 5 + ['placebo'] * 5},
+    ...     index=[f's{i}' for i in range(10)])
+
+    ``struc_zero`` function will detect features with structural zero. Features that
+    are identified as structural zeros in given group are not used in furthur
+    analysis such as ``ancombc`` and  ``dirmult_ttest``.
+    Setting `neg_lb=True` declares that the true prevalence of a feature in a group is
+    not significantly different from zero.
+
+    >>> result = struc_zero(table, metadata, grouping="grouping", neg_lb=True)
+    >>> result
+                  f0     f1     f2     f3     f4     f5
+    placebo    False  False  False  False   True  False
+    treatment  False  False   True  False  False   True
 
     """
-    # matrix, samples, features = _ingest_table(table)
-    # _check_composition(np, matrix, nozero=True)
-    tmp = np.nan_to_num(table.to_numpy()) != 0
-    tmp_table = pd.DataFrame(tmp, columns=table.columns, index=table.index)
+    # Validate feature table and metadata
+    matrix, samples, features = _ingest_table(table)
+    metadata = _check_metadata(metadata, matrix, samples)
+    metadata = _type_cast_to_float(metadata)
 
-    p_hat = tmp_table.groupby(metadata[group], observed=True).mean()
-    sample_size = metadata[group].value_counts(sort=False).to_numpy()[:, np.newaxis]
+    unique_groups, group_indices, group_counts = np.unique(
+        metadata[grouping], return_inverse=True, return_counts=True
+    )
+
+    # Create a boolean matrix to indicate whether the value in table is 0 or not
+    tmp = np.nan_to_num(matrix) != 0
+
+    n_groups = len(unique_groups)
+    n_features = tmp.shape[1]
+
+    # Initialize group sum matrix
+    group_sums = np.zeros((n_groups, n_features))
+    np.add.at(group_sums, group_indices, tmp.astype(int))
+
+    # Calculate sample sizes of the groups for each feature
+    sample_size = group_counts[:, np.newaxis]
+
+    # Calculate sample proportions of the groups for each feature
+    p_hat = group_sums / sample_size
+
+    # Calculate the lower bound of a 95% confidence interval for sample proportion
     if neg_lb:
         p_hat = p_hat - 1.96 * (p_hat * (1 - p_hat) / sample_size) ** 0.5
-    zero_idx = (p_hat <= 0).to_numpy()
-    return 1 - zero_idx[1:] ^ zero_idx[0]
+
+    zero_idx = p_hat <= 0
+
+    # Output structural zero as a DataFrame
+    res = pd.DataFrame(zero_idx, columns=features, index=unique_groups)
+    return res
 
 
-def _global_F(dmat, group, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
+def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
     """Output results from ANCOM-BC global test to determine feature that are
-    differentially abundant between at least 2 groups across >3 different groups
+    differentially abundant between at least 2 groups across 3 or more different
+    groups.
 
     Parameters
     ----------
     dmat : ndarray of shape (n_samples, n_covariates)
         Design matrix.
-    group : str
+    grouping : str
         The group variable of interests in metadata.
     beta_hat : ndarray of shape (n_features, n_covariates)
         Corrected coefficients.
@@ -788,29 +878,43 @@ def _global_F(dmat, group, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
 
     Returns
     -------
-    res_W : ndarray of shape (n_features, n_group)
+    res_W : ndarray of shape (n_features,)
         W of global test.
-    res_p : ndarray of shape (n_features, n_group)
+    res_p : ndarray of shape (n_features,)
         p values of global test.
-    qval : ndarray of shape (n_features, n_group)
+    qval : ndarray of shape (n_features,)
         adjusted p value of global test.
-    reject : ndarray of shape (n_features, n_group)
-        if the variable is differentially abundant
+    reject : ndarray of shape (n_features,)
+        if the variable is differentially abundant.
 
     """
-    # slices of columns in the dmat that the term of group is mapped to
-    s = dmat.design_info.term_name_slices[group]
+    # Slices of columns in the dmat that the terms in the grouping is mapped to
+    s = dmat.design_info.term_name_slices[grouping]
+
+    # Get the index of the terms in the grouping
     group_ind = np.array(range(*s.indices(s.stop)))
+
+    # Subset beta_hat and vcov_hat by grouping indices
     beta_hat_sub = beta_hat[:, group_ind]
     vcov_hat_sub = vcov_hat[:, group_ind][:, :, group_ind]
+
+    # Inverse the subset of vcov_hat
     vcov_hat_sub_inv = np.linalg.pinv(vcov_hat_sub)
+
     dof = group_ind.size
     A = np.identity(dof)
-    term = np.einsum("cf,nf->nc", A, beta_hat_sub)
+
+    # for each feature, calcualte test statistics W by the following formula:
+    # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
+    term = np.einsum("ik,jk->ji", A, beta_hat_sub)
     W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)
+
+    # Derive p-values from W statistics
     p_lower = chi2.cdf(W_global, dof)
     p_upper = chi2.sf(W_global, dof)
     pval = 2 * np.minimum(p_lower, p_upper)
+
+    # Correct p-values
     func = _check_p_adjust(p_adjust)
     qval = np.apply_along_axis(func, 0, pval)
     reject = qval <= alpha

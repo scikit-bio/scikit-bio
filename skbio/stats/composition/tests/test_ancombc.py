@@ -20,8 +20,8 @@ from skbio.stats.composition._ancombc import (
     _sample_fractions,
     _calc_statistics,
     _init_bias_params,
-    get_struc_zero,
-    _global_F,
+    _global_test,
+    struc_zero,
     ancombc,
 )
 
@@ -195,23 +195,37 @@ class AncombcTests(TestCase):
         with self.assertRaises(ValueError):
             ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=1.1)
 
-    def test_get_struc_zero(self):
+    def test_struc_zero(self):
         table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
         meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
         meta_data = meta_data.dropna(axis=1, how='any')
         meta_data['bmi'] = pd.Categorical(meta_data['bmi'], categories=['obese', 'overweight', 'lean'])
 
-        obs = get_struc_zero(table, meta_data, 'bmi', False)
-        exp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        obs = struc_zero(table, meta_data, 'bmi', False)
+        exp = np.array([[False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False],
+                        [False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False],
+                        [False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False]])
         npt.assert_array_equal(obs, exp)
 
-        obs = get_struc_zero(table, meta_data, 'bmi', True)
-        exp = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+        obs = struc_zero(table, meta_data, 'bmi', True)
+        exp = np.array([[False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False],
+                        [False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False],
+                        [False, False, False, False, False, False, False, False, False,
+                         False, False, False, False, False, False, False, False, False,
+                         False, False, False]])
         npt.assert_array_equal(obs, exp)
 
-    def test_global_F(self):
+    def test_global_test(self):
         table = pd.read_csv(get_data_path('pseq_feature_table_subset.csv.gz'), index_col=0)
         meta_data = pd.read_csv(get_data_path('pseq_meta_data_subset.csv.gz'), index_col=0)
         meta_data = meta_data.dropna(axis=1, how='any')
@@ -230,7 +244,7 @@ class AncombcTests(TestCase):
 
         beta_hat = beta.T - delta_em
 
-        obs = _global_F(dmat, 'bmi', beta_hat, vcov_hat, 0.05, 'holm')[-1]
+        obs = _global_test(dmat, 'bmi', beta_hat, vcov_hat, 0.05, 'holm')[-1]
         exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
                         False, False, False, False, False, False,  True, False, False,
                         False, False,  True])
