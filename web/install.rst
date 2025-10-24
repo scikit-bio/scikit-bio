@@ -15,7 +15,7 @@ Scikit-bio runs on Linux, macOS, and Windows. It is currently available for the 
 Python
 ^^^^^^
 
-scikit-bio requires `Python <https://www.python.org/>`_ 3.9 or later installed in your system. See the `Python version support`_ section for more details.
+scikit-bio requires `Python <https://www.python.org/>`_ 3.10 or later installed in your system. See the `Python version support`_ section for more details.
 
 
 Environment based

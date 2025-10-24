@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+env:
+  latest_python: "3.14"
+
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
@@ -60,7 +63,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.latest_python }}
 
       - name: Install build dependencies
         run: |
