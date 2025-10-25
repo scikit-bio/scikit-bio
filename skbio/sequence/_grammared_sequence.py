@@ -241,15 +241,21 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _canonical_hash(cls):
         if cls.__canonical_hash is None:
-            cls.__canonical_hash = cls._definite_hash.copy()
-            cls.__canonical_hash[cls._noncanonical_codes] = False
+            if cls._noncanonical_codes.size > 0:
+                cls.__canonical_hash = cls._definite_hash.copy()
+                cls.__canonical_hash[cls._noncanonical_codes] = False
+            else:
+                cls.__canonical_hash = cls._definite_hash
         return cls.__canonical_hash
 
     @classproperty
     def _degen_nonca_hash(cls):
         if cls.__degen_nonca_hash is None:
-            cls.__degen_nonca_hash = cls._degenerate_hash.copy()
-            cls.__degen_nonca_hash[cls._noncanonical_codes] = True
+            if cls._noncanonical_codes.size > 0:
+                cls.__degen_nonca_hash = cls._degenerate_hash.copy()
+                cls.__degen_nonca_hash[cls._noncanonical_codes] = True
+            else:
+                cls.__canonical_hash = cls._degenerate_hash
         return cls.__degen_nonca_hash
 
     @classproperty

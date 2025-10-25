@@ -6,8 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import itertools
 from unittest import TestCase, main
+from itertools import product
 
 import numpy as np
 import numpy.testing as npt
@@ -17,7 +17,7 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, hamming, kmer_distance, jc69_correct
+    _metric_specs, hamming, p_dist, kmer_distance, jc69_correct
 )
 
 
@@ -286,11 +286,11 @@ class TestHamming(TestCase):
         ]
 
         for seqs in seqs1, seqs2:
-            for seq1, seq2 in itertools.product(seqs, repeat=2):
+            for seq1, seq2 in product(seqs, repeat=2):
                 obs = hamming(seq1, seq2)
                 self.assertEqual(obs, 0.0)
 
-        for seq1, seq2 in itertools.product(seqs1, seqs2):
+        for seq1, seq2 in product(seqs1, seqs2):
             obs = hamming(seq1, seq2)
             self.assertEqual(obs, 0.75)
 
@@ -308,35 +308,35 @@ class TestHamming(TestCase):
         seq2 = DNA("TCGA")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 0.5)
-        obs = hamming(seq1, seq2, gap_policy="ignore")
+        obs = hamming(seq1, seq2, gaps=False)
         self.assertEqual(obs, 0.5)
 
         seq1 = DNA("AGCGT")
         seq2 = DNA("CG-AT")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 0.6)
-        obs = hamming(seq1, seq2, gap_policy="ignore")
+        obs = hamming(seq1, seq2, gaps=False)
         self.assertEqual(obs, 0.5)
 
         seq1 = DNA("AGCGT")
         seq2 = DNA("CGNAT")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 0.6)
-        obs = hamming(seq1, seq2, degenerate_policy="ignore")
+        obs = hamming(seq1, seq2, degenerates=False)
         self.assertEqual(obs, 0.5)
 
         seq1 = DNA("CARGT")
         seq2 = DNA("BAAGD")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 0.6)
-        obs = hamming(seq1, seq2, degenerate_policy="ignore")
+        obs = hamming(seq1, seq2, degenerates=False)
         self.assertEqual(obs, 0.0)
 
         seq1 = DNA("TARSTG-G")
         seq2 = DNA("C--ATNAG")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 0.75)
-        obs = hamming(seq1, seq2, gap_policy="ignore", degenerate_policy="ignore")
+        obs = hamming(seq1, seq2, gaps=False, degenerates=False)
         self.assertAlmostEqual(obs, 1 / 3)
 
     def test_non_left(self):
@@ -344,16 +344,90 @@ class TestHamming(TestCase):
         seq2 = DNA("---TTT")
         obs = hamming(seq1, seq2)
         self.assertEqual(obs, 1.0)
-        obs = hamming(seq1, seq2, gap_policy="ignore")
+        obs = hamming(seq1, seq2, gaps=False)
         self.assertTrue(np.isnan(obs))
 
     def test_gap_degen_undefined(self):
         seq1 = Sequence("AGCNT")
         seq2 = Sequence("CG-AT")
         with self.assertRaisesRegex(AttributeError, r"has no attribute 'gaps'"):
-            hamming(seq1, seq2, gap_policy="ignore")
+            hamming(seq1, seq2, gaps=False)
         with self.assertRaisesRegex(AttributeError, r"has no attribute 'degenerates'"):
-            hamming(seq1, seq2, degenerate_policy="ignore")
+            hamming(seq1, seq2, degenerates=False)
+
+
+class TestPDist(TestCase):
+    def test_p_dist(self):
+        # sequences of canonical characters
+        seq1 = DNA("AGATC")
+        seq2 = DNA("AGATG")
+        self.assertEqual(p_dist(seq1, seq2), 0.2)
+
+        seq1 = RNA("AUCG")
+        seq2 = RNA("UACG")
+        self.assertEqual(p_dist(seq1, seq2), 0.5)
+
+        seq1 = Protein("RCKMAF")
+        seq2 = Protein("SCPTAA")
+        self.assertAlmostEqual(p_dist(seq1, seq2), 2 / 3)
+
+        # sequences with gaps
+        seq1 = DNA("A--ACGG")
+        seq2 = DNA("AGAAT-G")
+        self.assertEqual(p_dist(seq1, seq2), 0.25)
+
+        seq1 = Protein("-PYCRNG")
+        seq2 = Protein("MPYAKC-")
+        self.assertEqual(p_dist(seq1, seq2), 0.6)
+
+        # sequences with degenerate characters
+        seq1 = DNA("ANGCRT")
+        seq2 = DNA("CCSMTT")
+        self.assertEqual(p_dist(seq1, seq2), 0.5)
+
+        seq1 = Protein("NBMKK")
+        seq2 = Protein("HEMYX")
+        self.assertAlmostEqual(p_dist(seq1, seq2), 2 / 3)
+
+        # sequences with non-canonical characters
+        seq1 = Protein("NKOC")
+        seq2 = Protein("UKPA")
+        self.assertAlmostEqual(p_dist(seq1, seq2), 0.5)
+
+        # identical sequences
+        seq1 = DNA("ACGT")
+        seq2 = DNA("ACGT")
+        self.assertEqual(p_dist(seq1, seq2), 0.0)
+
+        # distinct sequences
+        seq1 = DNA("ACGT")
+        seq2 = DNA("TGCA")
+        self.assertEqual(p_dist(seq1, seq2), 1.0)
+
+        # single-character sequences
+        seq1 = RNA("U")
+        seq2 = RNA("G")
+        self.assertEqual(p_dist(seq1, seq2), 1.0)
+
+        # empty sequences
+        seq1 = RNA("")
+        seq2 = RNA("")
+        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+
+        # empty sequences after trimming
+        seq1 = DNA("AAA---")
+        seq2 = DNA("---TTT")
+        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+
+        seq1 = Protein("MGCPS")
+        seq2 = Protein("XXXXX")
+        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+
+        # non-grammared sequences
+        seq1 = Sequence("AGCNT")
+        seq2 = Sequence("CG-AT")
+        with self.assertRaises(TypeError):
+            p_dist(seq1, seq2)
 
 
 class TestKmerDistance(TestCase):

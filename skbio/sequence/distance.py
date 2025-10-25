@@ -156,7 +156,6 @@ def _metric_specs(
                 )
 
             # filter sequences by a given alphabet
-            bytes1, bytes2 = seq1._bytes, seq2._bytes
             if alphabet is not None:
                 if alphabet in ("nongap", "definite", "canonical"):
                     valid = getattr(seq1, f"_{alphabet}_hash")
@@ -166,13 +165,10 @@ def _metric_specs(
                     valid[encoded] = True
 
                 if equal:
-                    pos = valid[bytes1] & valid[bytes2]
-                    seq1, seq2 = bytes1[pos], bytes2[pos]
+                    pos = valid[seq1._bytes] & valid[seq2._bytes]
+                    seq1, seq2 = seq1[pos], seq2[pos]
                 else:
-                    seq1, seq2 = bytes1[valid[bytes1]], bytes2[valid[bytes2]]
-
-            else:
-                seq1, seq2 = bytes1, bytes2
+                    seq1, seq2 = seq1[valid[seq1._bytes]], seq2[valid[seq2._bytes]]
 
             # call function to calculate sequence distance
             return func(seq1, seq2, *args, **kwargs)
@@ -193,8 +189,8 @@ def hamming(
     seq1,
     seq2,
     proportion=True,
-    gap_policy="unique",
-    degenerate_policy="unique",
+    gaps=True,
+    degenerates=True,
 ):
     r"""Compute the Hamming distance between two sequences.
 
@@ -208,14 +204,12 @@ def hamming(
         Sequences to compute the Hamming distance between.
     proportion : bool, optional
         If True (default), normalize to a proportion of the sequence length.
-    gap_policy : {'unique', 'ignore'}, optional
-        How to handle gaps in the sequences. "unique" (default) treats gaps as unique
-        characters in the calculation. "ignore" excludes positions with either or both
-        gaps from the calculation.
-    degenerate_policy : {'unique', 'ignore'}, optional
-        How to handle degenerate characters in the sequences. "unique" (default) treats
-        them as unique characters. "ignore" excludes positions with degenerate
-        characters from the calculation.
+    gaps : bool, optional
+        If False, positions with either or both gaps in the two sequences will be
+        excluded from the calculation. Default is True.
+    degenerates : bool, optional
+        If False, positions with either or both degenerate characters in the two
+        sequences will be excluded from the calculation. Default is True.
 
     Returns
     -------
@@ -267,11 +261,11 @@ def hamming(
         return np.nan
 
     # Create a Boolean mask of gap and/or degenerate characters.
-    if gap_policy == "ignore":
+    if gaps is False:
         mask = seq1.gaps() | seq2.gaps()
-        if degenerate_policy == "ignore":
+        if degenerates is False:
             mask |= seq1.degenerates() | seq2.degenerates()
-    elif degenerate_policy == "ignore":
+    elif degenerates is False:
         mask = seq1.degenerates() | seq2.degenerates()
     else:
         mask = None
@@ -297,24 +291,31 @@ def hamming(
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
 def p_dist(seq1, seq2):
-    """Calculate the *p*-distance between two aligned sequences.
+    """Calculate the p-distance between two aligned sequences.
 
-    The proportion of mutations, a.k.a., p-distance, measures the
-    rate of mutation.
+    p-distance is the proportion of differing sites between two aligned sequences. It
+    is equivalent to the normalized Hamming distance (see :func:`hamming`), but only
+    considers canonical characters (e.g., the four nucleotides or the 20 amino acids).
 
-    The Hamming distance [1]_ between two equal-length sequences is the number of
-    differing characters. It is often normalized to a proportion of the sequence
-    length. This proportion is usually referred to as *p*-distance in bioinformatics.
+    .. math::
+        p = -\frac{no. of differing sites}{total no. of sites}
+
+    p-distance is the simplest measurement of the evolutionary distance (number of
+    substitutions per site) between two sequences. It is also referred to as the raw
+    distance. However, this metric may underestimate the true evolutionary distance
+    when the two sequences are divergent and substitutions became saturated. This
+    limitation may be overcome by adopting metrics correcting for multiple subsitutions
+    per site (such as :func:`jc69`) and other biases.
 
     Parameters
     ----------
     seq1, seq2 : GrammaredSequence
-        Sequences to compute the *p*-distance between.
+        Sequences to compute the p-distance between.
 
     Returns
     -------
     float
-        *p*-distance between ``seq1`` and ``seq2``.
+        p-distance between ``seq1`` and ``seq2``.
 
     Raises
     ------
@@ -336,7 +337,7 @@ def p_dist(seq1, seq2):
     """
     if (L := len(seq1)) == 0:
         return np.nan
-    return np.count_nonzero(seq1 != seq2) / L
+    return np.count_nonzero(seq1._bytes != seq2._bytes) / L
 
 
 def _p_dist(seqs):
@@ -364,12 +365,51 @@ def _p_dist_pair(seqs, mask):
     return dm
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA))
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def jc69(seq1, seq2):
-    """Compute the JC69 distance between two sequences."""
+    """Calculate the Jukes-Cantor (JC69) distance between two aligned sequences.
+
+    The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
+    per site) between two nucleotide sequences by correcting the observed proportion
+    of differing sites (p-distance, see :func:`p_dist`) to account for multiple
+    substitutions at the same site (i.e., saturation). It is calculated as:
+
+    .. math::
+        D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
+
+    Parameters
+    ----------
+    seq1, seq2 : GrammaredSequence
+        Sequences to compute the p-distance between.
+
+    Returns
+    -------
+    float
+        JC69 distance between ``seq1`` and ``seq2``.
+
+    See Also
+    --------
+    p_dist
+    jc69_correct
+
+    References
+    ----------
+    .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
+       Mammalian protein metabolism, 3(21), 132.
+
+    Notes
+    -----
+    JC69 is the most basic evolutionary model, assuming equal character frequencies and
+    equal substitution rates between characters.
+
+    This function returns NaN if :math:`p >= 0.75`. This happens when the two
+    sequences are too divergent and subsitutions are over-saturated for the reliable
+    estimation of the true evolutionary distance.
+
+    """
     if (L := len(seq1)) == 0:
         return np.nan
-    p = np.count_nonzero(seq1 != seq2) / L
+    p = np.count_nonzero(seq1._bytes != seq2._bytes) / L
     return jc69_correct(p)
 
 
@@ -384,16 +424,22 @@ def _jc69_pair(seqs, mask, chars=4):
 
 
 def jc69_correct(dists, chars=4):
-    r"""Perform Jukes-Cantor (JC69) correction of raw Hamming distances.
+    r"""Perform Jukes-Cantor (JC69) correction of a raw distance.
 
-    The JC69 model [1]_ estimates the true evolutionary distance (number of
-    substitutions per site) between two sequences by correcting the observed sequence
-    distance (*p*-distance) to account for repeated substitutions at the same site
-    (i.e., saturation). For nucleotide sequences (4 characters), the JC69-corrected
-    distance :math:`D` is calculated as:
+    The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
+    per site) between two sequences by correcting the observed proportion of differing
+    sites (p-distance, see :func:`p_dist`) to account for multiple substitutions at the
+    same site (i.e., saturation). It is calculated as:
 
     .. math::
-        D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
+        D = -\alpha ln(1 - \frac{p}{\alpha})
+
+    Where :math:`\alpha = \frac{no. of characters - }{no. of characters}`
+
+    The JC69 model was developed for nucleotide sequences (4 characters, therefore
+    :math:`\alpha = 0.75`). Technically, it is possible to apply JC69 correction on
+    protein sequences, with ``chars=20``. However, this estimation may be inaccurate
+    due to the profound variation of amino acid frequencies and substitution rates.
 
     Parameters
     ----------
