@@ -81,10 +81,10 @@ def ancom(
         be significantly different. This can can be anywhere between 0 and 1
         exclusive.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to

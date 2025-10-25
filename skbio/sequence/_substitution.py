@@ -342,7 +342,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         mismatch: Union[int, float],
         dtype: str = "float32",
     ) -> "SubstitutionMatrix":
-        f"""Create an identity substitution matrix.
+        r"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
         respectively, regardless of the character.

@@ -49,21 +49,27 @@ def ancombc(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        A matrix containing strictly positive count or proportional abundance data of
+        the samples. See :ref:`supported formats <table_like>`.
+
+        .. note::
+            If the table contains zero values, one should add a pseudocount or apply
+            :func:`multi_replace` to convert all values into positive numbers.
+
     metadata : pd.DataFrame or 2-D array_like
-        The metadata for the model. Rows correspond to samples and columns correspond
-        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        Metadata of the samples. Rows correspond to samples and columns correspond
+        to covariates (attributes). Must be a pandas DataFrame or convertible to a
         pandas DataFrame.
     formula : str or generic Formula object
-        The formula defining the model. Refer to `Patsy's documentation
+        A formula defining the model using factors included in the metadata columns.
+        Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
     grouping : str, optional
-        A metadata column name of interests for global test, which is used to identify
-        the features that are differentially abundant between at least two groups across
-        three or more groups in that attribute. The group must be one of the factors in
-        the formula. Default is None to skip global test.
+        A metadata column name of interest for *global test*, which identifies features
+        that are differentially abundant between at least two groups across three or
+        more groups in that column. Must be one of the factors in ``formula``. Default
+        is None, which skips global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -73,15 +79,15 @@ def ancombc(
         Significance level for the statistical tests. Must be in the range of (0, 1).
         Default is 0.05.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
 
     Returns
     -------
-    res : pd.DataFrame
+    res_main : pd.DataFrame
         A table of features and covariates, their log-fold changes and other relevant
         statistics of the primary ANCOM-BC analysis.
 
@@ -98,22 +104,19 @@ def ancombc(
         - ``W``: *W*-statistic, or the number of features that the current feature is
           tested to be significantly different against.
 
-        - ``pvalue``: *p*-value of the linear mixed effects model. The reported value
-          is the average of all of the *p*-values computed from each of the posterior
-          draws.
+        - ``pvalue``: *p*-value of the ANCOM-BC test.
 
-        - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
-          comparisons. The reported value is the average of all of the *q*-values
-          computed from each of the posterior draws.
+        - ``qvalue``: Corrected *p*-value of the ANCOM-BC test for multiple
+          comparisons.
 
         - ``Signif``: Whether the covariate category is significantly differentially
-          abundant from the reference category. A feature-covariate pair marked as
-          "True" suffice: 1) The *q*-value must be less than or equal to the
-          significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
-          must not overlap with zero.
+          abundant from the reference category. A feature-covariate pair is marked as
+          "True" if the *q*-value is less than or equal to the significance level
+          (``alpha``).
 
-    res_global : pd.DataFrame
-        A table of features and statistics of ANCOM-BC global test.
+    res_global : pd.DataFrame, optional
+        A table of features and statistics from the global test (when ``grouping`` is
+        set).
 
         - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
@@ -138,13 +141,14 @@ def ancombc(
     -----
     The input data table for ANCOM-BC must contain only positive numbers. One needs to
     remove zero values by, e.g., adding a pseudocount of 1.0.
+
     The categorical data in metadata is sorted alphabetically by default. The reference
     level for each attribute need to be changed manually.
 
     References
     ----------
     .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
-       with bias correction. Nature communications, 11(1), p.3514.
+       with bias correction. Nature Communications, 11(1), p.3514.
 
     Examples
     --------
@@ -235,9 +239,9 @@ def ancombc(
     ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
     ...            'u2', 'u3'])
 
-    The first DataFrame contains the ANCOM-BC test results that identifies
-    differentially abundant feature in treatment as well as in time. The second
-    DataFrame contains the ANCOM-BC global test results that indicates whether the
+    The first DataFrame contains the ANCOM-BC main test results that identifies
+    differentially abundant features by treatment as well as by time. The second
+    DataFrame contains the ANCOM-BC global test results that indicate whether the
     features are differentially abundant across multiple time points.
 
     >>> result = ancombc(table+1, metadata, formula="time+treatment", grouping="time")
@@ -743,10 +747,15 @@ def _calc_statistics(beta_hat, var_hat, method="holm"):
 
 
 def struc_zero(table, metadata, grouping, neg_lb=False):
-    """Identify features with structural zeros.
+    r"""Identify features with structural zeros.
 
-    The function returns a boolean matrix of features with structural zeros, i.e.,
-    observerd zeros due to systematical absence.
+    .. versionadded:: 0.7.1
+
+    Structural zeros refer to features that are systematically absent from certain
+    sample groups. Consequently, the observed feature frequencies are all zeros, or
+    mostly zeros, due to variability in technical factors. This function tests
+    whether the proportion of observed zeros is close to zero, which suggests the
+    absence of a feature in a given sample group.
 
     Parameters
     ----------
@@ -754,30 +763,51 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
         A matrix containing count or proportional abundance data of the samples. See
         :ref:`supported formats <table_like>`.
     metadata : pd.DataFrame or 2-D array_like
-        The metadata for the model. Rows correspond to samples and columns correspond
-        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        Metadata of the samples. Rows correspond to samples and columns correspond
+        to covariates (attributes). Must be a pandas DataFrame or convertible to a
         pandas DataFrame.
     grouping : str
         A metadata column name indicating the assignment of samples to groups.
     neg_lb : bool, optional
         Determine whether to use negative lower bound when calculating sample
-        proportion. Default is False. Generally, it is recommended to set `neg_lb=True`
+        proportions. Default is False. Generally, it is recommended to set it as True
         when the sample size per group is relatively large.
 
     Returns
     -------
-    pd.DataFrame
-        A table of whether the features are structural zeros in groups (True: structural
-        zero, False: not structural zero).
+    pd.DataFrame of bool of shape (n_features, n_groups)
+        A table indicating whether each feature (row) is a structural zero in each
+        group (column) (True: structural zero, False: not structural zero).
+
+    Notes
+    -----
+    The structural zero test was initially proposed and implemented in the ANCOM-II
+    method [1]_. It was adopted to the ANCOM-BC method [2]_ as a recommended method
+    for post-processing of test results.
+
+    A feature found to be a structural zero in a group should be automatically
+    considered as differentially (less) abundant compared with other groups in which
+    this feature is not a structural zero. Meanwhile, this feature should be excluded
+    from subsequent analyses that involves this group. If a feature is identified as a
+    structural zero in all groups, this feature should be removed entirely from
+    downstream analyses.
+
+    Note that the structural zero test should be applied to the original table before
+    adding a pseudocount (see :func:`multi_replace`), which will otherwise mask all
+    zeros and invalidate this test.
 
     References
     ----------
-    .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
-       with bias correction. Nature communications, 11(1), p.3514.
+    .. [1] Kaul, A., Mandal, S., Davidov, O., & Peddada, S. D. (2017). Analysis of
+       microbiome data in the presence of excess zeros. Frontiers in Microbiology, 8,
+       2114.
+
+    .. [2] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
+       with bias correction. Nature Communications, 11(1), p.3514.
 
     Examples
     --------
-    >>> from skbio.stats.composition import ancombc
+    >>> from skbio.stats.composition import struc_zero
     >>> import pandas as pd
 
     Generate a DataFrame with 10 samples and 6 features with 0's in specific groups:
@@ -803,16 +833,21 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     ...     index=[f's{i}' for i in range(10)])
 
     ``struc_zero`` function will detect features with structural zero. Features that
-    are identified as structural zeros in given group are not used in furthur
-    analysis such as ``ancombc`` and  ``dirmult_ttest``.
-    Setting `neg_lb=True` declares that the true prevalence of a feature in a group is
-    not significantly different from zero.
+    are identified as structural zeros in given groups should not be used in further
+    analyses such as ``ancombc`` and  ``dirmult_ttest``.
+
+    Setting ``neg_lb=True`` declares that the true prevalence of a feature in a group
+    is not significantly different from zero.
 
     >>> result = struc_zero(table, metadata, grouping="grouping", neg_lb=True)
     >>> result
-                  f0     f1     f2     f3     f4     f5
-    placebo    False  False  False  False   True  False
-    treatment  False  False   True  False  False   True
+        placebo  treatment
+    f0    False      False
+    f1    False      False
+    f2    False       True
+    f3    False      False
+    f4     True      False
+    f5    False       True
 
     """
     # Validate feature table and metadata
@@ -847,8 +882,7 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     zero_idx = p_hat <= 0
 
     # Output structural zero as a DataFrame
-    res = pd.DataFrame(zero_idx, columns=features, index=unique_groups)
-    return res
+    return pd.DataFrame(zero_idx.T, index=features, columns=unique_groups)
 
 
 def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
@@ -878,14 +912,14 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
 
     Returns
     -------
-    res_W : ndarray of shape (n_features,)
-        W of global test.
-    res_p : ndarray of shape (n_features,)
-        p values of global test.
-    qval : ndarray of shape (n_features,)
-        adjusted p value of global test.
-    reject : ndarray of shape (n_features,)
-        if the variable is differentially abundant.
+    W_global : ndarray of float of shape (n_features,)
+        W-statistics of global test.
+    pval : ndarray of float of shape (n_features,)
+        p-values of global test.
+    qval : ndarray of float of shape (n_features,)
+        Adjusted p-values of global test.
+    reject : ndarray of bool of shape (n_features,)
+        If the variable is differentially abundant.
 
     """
     # Slices of columns in the dmat that the terms in the grouping is mapped to
