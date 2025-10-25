@@ -306,8 +306,7 @@ class AncombcTests(TestCase):
         res = ancombc(table + 1, meta_data, "age + region + bmi")
 
         # format multi-index dataframe
-        obs = res[["FeatureID", "Covariate", "Signif"]]
-        obs = obs.pivot(index="FeatureID", columns="Covariate", values="Signif")
+        obs = res["Signif"].unstack()
         obs.columns.name = None
         obs.index.name = "taxon"
         obs = obs.rename(columns={"Intercept": "(Intercept)"})
@@ -341,6 +340,10 @@ class AncombcTests(TestCase):
                         False, False, False, False, False, False,  True, False, False,
                         False, False,  True])
         npt.assert_array_equal(obs, exp)
+
+        meta_data["bmi"] = 1
+        with self.assertRaises(ValueError):
+            ancombc(table + 1, meta_data, "age + region + bmi", "bmi")
 
 
 if __name__ == "__main__":
