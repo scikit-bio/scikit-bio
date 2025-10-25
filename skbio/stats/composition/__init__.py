@@ -46,6 +46,11 @@ compositions.
    ancombc
    dirmult_ttest
    dirmult_lme
+   struc_zero
+
+.. note::
+   Differential abundance tests will be moved to a separate module ``differential`` in
+   the next release of scikit-bio. The current location will be kept as an alias.
 
 
 Arithmetic operations
@@ -166,7 +171,7 @@ from ._base import (
     tree_basis,
 )
 from ._ancom import ancom
-from ._ancombc import ancombc
+from ._ancombc import ancombc, struc_zero
 from ._dirmult import dirmult_ttest, dirmult_lme
 
 __all__ = [
@@ -189,6 +194,7 @@ __all__ = [
     "tree_basis",
     "ancom",
     "ancombc",
+    "struc_zero",
     "dirmult_ttest",
     "dirmult_lme",
 ]
