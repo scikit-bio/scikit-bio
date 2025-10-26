@@ -159,19 +159,19 @@ def ancombc(
 
     Some other pre-processing options provided by the R command can be performed with:
 
-    To aggregate data at a given taxonomic level (``tax_level = "Family"``):
+    To aggregate data at a given taxonomic level (``tax_level="Family"``):
 
     .. code-block:: python
 
        table = table.T.groupby(feature_to_family_dict).sum().T
 
-    To discard features with prevalence < 10% among samples (``prv_cut = 0.1``):
+    To discard features with prevalence < 10% among samples (``prv_cut=0.1``):
 
     .. code-block:: python
 
        table = table.loc[:, (table > 0).mean() >= 0.1]
 
-    To discard samples with a total abundance < 1 million (``lib_cut = 1e6``):
+    To discard samples with a total abundance < 1 million (``lib_cut=1e6``):
 
     .. code-block:: python
 
@@ -947,7 +947,9 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     -----
     The structural zero test was initially proposed and implemented in the ANCOM-II
     method [1]_. It was adopted to the ANCOM-BC method [2]_ as a recommended method to
-    complement test results.
+    complement test results. See :func:`ancombc` for how to use this function along
+    with the ANCOM-BC test. Nevertheless, this function is generally useful with or
+    without explicit statistical tests of feature abundances.
 
     A feature found to be a structural zero in a group should be automatically
     considered as differentially (less) abundant compared with other groups in which
@@ -996,14 +998,14 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     ...     {'grouping': ['treatment'] * 5 + ['placebo'] * 5},
     ...     index=[f's{i}' for i in range(10)])
 
-    ``struc_zero`` function will detect features with structural zero. Features that
-    are identified as structural zeros in given groups should not be used in further
-    analyses such as ``ancombc`` and  ``dirmult_ttest``.
+    The ``struc_zero`` function will identify features with structural zeros. Features
+    that are identified as structural zeros in given groups should not be used in
+    further analyses such as ``ancombc`` and  ``dirmult_ttest``.
 
     Setting ``neg_lb=True`` declares that the true prevalence of a feature in a group
     is not significantly different from zero.
 
-    >>> result = struc_zero(table, metadata, grouping="grouping", neg_lb=True)
+    >>> result = struc_zero(table, metadata, grouping='grouping', neg_lb=True)
     >>> result
         placebo  treatment
     f0    False      False
