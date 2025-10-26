@@ -4,7 +4,7 @@ r"""Empty Files (:mod:`skbio.io.format.emptyfile`)
 .. currentmodule:: skbio.io.format.emptyfile
 
 This format exists to make debugging simpler, often an empty file is a mistake
-which can take an embarrasing amount of time to notice. This format has only
+which can take an embarrassing amount of time to notice. This format has only
 a sniffer and no readers or writers, so error messages will indicate as such
 if an empty file is accidentally used as input.
 

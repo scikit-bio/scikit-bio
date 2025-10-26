@@ -221,7 +221,7 @@ def _objects_to_embed(objs, fh, include_embedding_pointer=True):
             # For molecules, this is the position index of atoms in the SMILES string.
             arr = obj.bytes()
             # Store the embedding itself. We are assuming that the
-            # embbedding is a 2D numpy array
+            # embedding is a 2D numpy array
             emb = obj.embedding
             dtype = emb.dtype
             if "dtype" not in h5grp.attrs:

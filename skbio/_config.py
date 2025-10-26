@@ -16,7 +16,7 @@ Functions
    set_config
 
 
-Configuraton options
+Configuration options
 --------------------
 At present, only one configuration option is available:
 
@@ -57,7 +57,7 @@ def set_config(option: str, value: Any):
     Raises
     ------
     ValueError
-        If an unkown option is used or if an unsupported value for an option is used.
+        If an unknown option is used or if an unsupported value for an option is used.
 
     Examples
     --------

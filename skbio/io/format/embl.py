@@ -22,7 +22,7 @@ sequences. Data are distributed in flatfile format, similar to that of parent
 ENA records, with each flatfile representing a single feature"*.
 While only the sequence of the feature is included in such entries, features
 are derived from the parent entry, and can't be applied as interval metadata.
-For such reason, interval metatdata are ignored from Feature-level products,
+For such reason, interval metadata are ignored from Feature-level products,
 as they will be ignored by subsetting a generic Sequence object.
 
 Format Support
@@ -274,7 +274,7 @@ generator object to deal with multiple records
 >>> embl_gen = skbio.io.read(embl, format="embl")
 >>> dna_seq = next(embl_gen)
 
-For more informations, see :mod:`skbio.io`
+For more information, see :mod:`skbio.io`
 
 References
 ----------
@@ -383,7 +383,7 @@ REV_KEYS_TRANSLATOR = {v: k for k, v in KEYS_TRANSLATOR.items()}
 # the original genbank _yield_section divides entries in sections relying on
 # spaces (the same section has the same level of indentation). EMBL entries
 # have a key for each line, so to divide record in sections I need to define a
-# correspondance for each key to section, then I will divide a record in
+# correspondence for each key to section, then I will divide a record in
 # sections using these section name.
 KEYS_2_SECTIONS = {
     # identification
@@ -409,7 +409,7 @@ KEYS_2_SECTIONS = {
     "RG": "REFERENCE",
     "RT": "REFERENCE",
     "RL": "REFERENCE",
-    # This shuold be Reference Number. However, to split
+    # This should be Reference Number. However, to split
     # between references with _embl_yield_section I need to
     # change section after reading one reference. So a single
     # reference is completed when I found a new RN. The
@@ -454,7 +454,7 @@ def _get_embl_section(line):
 def _translate_key(key):
     """Translate a single key from EMBL to genbank.
 
-    Returns key itself if no traslation is defined.
+    Returns key itself if no translation is defined.
     """
     return KEYS_TRANSLATOR.get(key, key)
 
@@ -467,7 +467,7 @@ def _translate_keys(data):
     Translate a dictionary of uniprot key->value in a genbank like dictionary
     of key values. Keep old keys if no translation is defined.
     """
-    # traslate keys and get a new_data object
+    # translate keys and get a new_data object
     new_data = {_translate_key(k): v for k, v in data.items()}
 
     return new_data
@@ -690,7 +690,7 @@ def _parse_single_embl(chunks):
             parser = partial(parser, length=metadata["LOCUS"]["size"])
 
         elif section_name == "COMMENT":
-            # mantain newlines in comments
+            # maintain newlines in comments
             # partials add arguments to previous defined functions
             parser = partial(parser, join_delimiter="\n")
 
@@ -700,7 +700,7 @@ def _parse_single_embl(chunks):
         # reference can appear multiple times
         if section_name == "REFERENCE":
             # genbank data hasn't CROSS_REFERENCE section, To have a similar
-            # metatadata object, I chose to remove CROSS_REFERENCE from
+            # metadata object, I chose to remove CROSS_REFERENCE from
             # each single reference and put them in metadata. Since I could
             # have more references, I need a list of CROSS_REFERENCE, with
             # None values when CROSS_REFERENCE are not defined: there are cases
@@ -774,7 +774,7 @@ def _parse_single_embl(chunks):
         # accession will generate an update in all feature level products)
         metadata["VERSION"] = metadata["PARENT_ACCESSION"]
 
-    # return a string, metatdata as a dictionary and IntervalMetadata object
+    # return a string, metadata as a dictionary and IntervalMetadata object
     return sequence, metadata, interval_metadata
 
 
@@ -818,7 +818,7 @@ def _serialize_single_embl(obj, fh):
     # embl has a different magick number than embl
     serialize_default = partial(_serialize_section_default, indent=5)
 
-    # Now cicle for GB like headers (sections) in _HEADERS.
+    # Now cycle for GB like headers (sections) in _HEADERS.
     for header in _HEADERS:
         # Get appropriate serializer method or default one
         serializer = _SERIALIZER_TABLE.get(header, serialize_default)
@@ -915,7 +915,7 @@ def _parse_id(lines):
     # get only the first line of EMBL record
     line = lines[0]
 
-    # define a specific patter for EMBL
+    # define a specific pattern for EMBL
     pattern = re.compile(
         r"ID"
         r" +([^\s]+);"  # ie: CD789012
@@ -1388,7 +1388,7 @@ def _serialize_sequence(obj, indent=5):
     # get sequence as a string with lower letters (uniprot will be upper!)
     seq = str(obj).lower()
 
-    # count bases in sequence. Frequencies returns a dictionary of occurences
+    # count bases in sequence. Frequencies returns a dictionary of occurrences
     # of A,C,G,T. Sequences are stored always in capital letters
     freq = obj.frequencies()
 

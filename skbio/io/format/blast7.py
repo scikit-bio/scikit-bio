@@ -219,8 +219,7 @@ Suppose we have a legacy BLAST 9 file:
 ...     '# Database: other_vertebrate',
 ...     '# Query: AF178033',
 ...     '# Fields: ',
-...     'Query id,Subject id,% identity,alignment length,mismatches,gap openin\
-gs,q. start,q. end,s. start,s. end,e-value,bit score',
+...     'gs,q. start,q. end,s. start,s. end,e-value,bit score',
 ...     'AF178033\\tEMORG:AF178033\\t100.00\\t811\\t0\\t0\\t1\\t811\\t1\\t81\
 1\\t0.0\\t1566.6',
 ...     'AF178033\\tEMORG:AF178032\\t94.57\\t811\\t44\\t0\\t1\\t811\\t1\\t81\
@@ -364,7 +363,7 @@ def _blast7_to_data_frame(fh, cls=None):
             if columns is None:
                 columns = _parse_fields(line)
             else:
-                # Affirms data types do not differ throught file
+                # Affirms data types do not differ throughout file
                 next_columns = _parse_fields(line)
                 if columns != next_columns:
                     raise BLAST7FormatError(

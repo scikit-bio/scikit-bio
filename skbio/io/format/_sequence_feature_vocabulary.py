@@ -223,7 +223,7 @@ def _parse_loc_str(loc_str):
     e_right = r"(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)"
     illegal = r"(?P<ILLEGAL>.+)"
     # The order of tokens in the master regular expression also
-    # matters. When matching, re tries to match pattens in the order
+    # matters. When matching, re tries to match patterns in the order
     # specified. Thus, if a pattern happens to be a substring of a
     # longer pattern, you need to make sure the longer pattern goes
     # first.

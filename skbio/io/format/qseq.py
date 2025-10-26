@@ -51,7 +51,7 @@ For more details please refer to the CASAVA documentation [1]_.
 .. note:: `lowercase` functionality is supported when reading QSeq files.
    Refer to specific object constructor documentation for details.
 
-.. note:: scikit-bio allows for the filter field to be ommitted, but it is not
+.. note:: scikit-bio allows for the filter field to be omitted, but it is not
    clear if this is part of the original format specification.
 
 Format Parameters
@@ -340,7 +340,7 @@ def _record_parser(line):
     f_len = len(fields)
     if not (10 <= f_len <= 11):
         raise QSeqFormatError("Expected 10 or 11 fields, found %d." % f_len)
-    # If the filter field was ommitted, assume that it passed filtering:
+    # If the filter field was omitted, assume that it passed filtering:
     if f_len == 10:
         fields.append("1")
 
