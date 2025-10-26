@@ -700,7 +700,7 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         #    us to specify complex `where` statements, which is what we need to
         #    do here. For example, we need to specify things like:
         #        WHERE Subject='subject-1' AND SampleType='gut'
-        #    but their qmark/named-style syntaxes only supports substition of
+        #    but their qmark/named-style syntaxes only supports substitution of
         #    variables, such as:
         #        WHERE Subject=?
         # 3) sqlite3.Cursor.execute will only execute a single statement so
