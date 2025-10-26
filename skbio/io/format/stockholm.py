@@ -436,7 +436,7 @@ def _stockholm_to_tabular_msa(fh, cls=None, constructor=None):
             "must be a subclass of `GrammaredSequence` "
             "(e.g., `DNA`, `RNA`, `Protein`)."
         )
-    # Checks that contructor parameter is supported
+    # Checks that constructor parameter is supported
     elif not issubclass(constructor, GrammaredSequence):
         raise TypeError("`constructor` must be a subclass of `GrammaredSequence`.")
 

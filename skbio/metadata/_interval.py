@@ -783,7 +783,7 @@ fuzzy=[(True, True)], metadata={'gene': 'sagB'})
         ----------
         metadata : dict or ``None``
             If it is ``None``, return empty iterator; if it is
-            ``{}``, return an interator of all the ``Interval``
+            ``{}``, return an iterator of all the ``Interval``
             objects.
         intervals : iterable
             An iterable of ``Interval`` objects.
