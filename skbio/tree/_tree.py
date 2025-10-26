@@ -63,7 +63,7 @@ class TreeNode(SkbioObject):
         nodes and the root may also have names.
     length : float, int, or None
         Length of the branch connecting this node to its parent. Can represent
-        ellapsed time, amount of mutations, or other measures of evolutionary
+        elapsed time, amount of mutations, or other measures of evolutionary
         distance.
     support : float, int, or None
         Support value of the branch connecting this node to its parent. Can be
@@ -576,7 +576,7 @@ class TreeNode(SkbioObject):
         >>> print(lca.name)
         c
         >>> nodes = [tree.find('a'), tree.find('e')]
-        >>> lca = tree.lca(nodes)  # lca is an alias for convience
+        >>> lca = tree.lca(nodes)  # lca is an alias for convenience
         >>> print(lca.name)
         root
 
@@ -4514,7 +4514,7 @@ class TreeNode(SkbioObject):
         considered as unrooted.
 
         One can override this automatic decision by setting the ``rooted`` parameter,
-        which is recommended for explicity.
+        which is recommended for explicitness.
 
         By specifying ``proportion=True``, a unit distance will be returned, ranging
         from 0 (identical) to 1 (completely different).
@@ -5107,7 +5107,7 @@ class TreeNode(SkbioObject):
         Notes
         -----
         This method provides an efficient interface to assign a custom attribute to
-        every node of a tree through one postorder travesal. It is particularly useful
+        every node of a tree through one postorder traversal. It is particularly useful
         if one needs to frequently look up attributes that would normally require one
         traversal of the tree per lookup. The assigned attributes may be automatically
         deleted when the tree is manipulated.
@@ -5128,7 +5128,7 @@ class TreeNode(SkbioObject):
                   \f-------|
                             \-e
 
-        Cache a list of all descending tip names on each node. This faciliates the
+        Cache a list of all descending tip names on each node. This facilitates the
         assignment of taxon set under each clade in the tree. It resembles but is more
         efficient than calling :meth:`subset` multiple times.
 

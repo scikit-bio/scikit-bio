@@ -181,7 +181,7 @@ def _nj(dm):
     preserved.
 
     """
-    # This function re-uses the original array space during iteration, without creating
+    # This function reuses the original array space during iteration, without creating
     # additional intermediate arrays. Therefore, it is memory-efficient, and avoids the
     # time overhead of allocating new memory space.
 
@@ -226,7 +226,7 @@ def _nj(dm):
         L_i = d_ij_ + delta_
         L_j = d_ij_ - delta_
 
-        # The previously calculated sums can be updated for re-use. Specifically, for
+        # The previously calculated sums can be updated for reuse. Specifically, for
         # taxon k, there is:
         #   new sum = old sum - d(i, k) - d(j, k) + d({i,j}, k)
         #           = old sum - d(i, k) - d(j, k) + (d(i, k) + d(j, k) - d(i, j)) / 2
