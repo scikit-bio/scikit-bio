@@ -829,7 +829,10 @@ def _fasta_to_tabular_msa(fh, cls=None, qual=FileSentinel, constructor=None, **k
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    return cls(_fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs))
+    return cls(
+        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs),
+        minter="id",
+    )
 
 
 @fasta.writer(None)

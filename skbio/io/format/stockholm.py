@@ -343,7 +343,7 @@ GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 GS metadata is stored in the sequence-specific ``metadata`` dictionary:
 
 >>> list(msa[0].metadata.items())
-[('AC', 'O83071')]
+[('id', 'O83071/192-246'), ('AC', 'O83071')]
 
 GR metadata is stored in sequence-specific ``positional_metadata``:
 
@@ -591,7 +591,7 @@ class _SeqData:
     def __init__(self, name):
         self.name = name
         self._seq = None
-        self.metadata = None
+        self.metadata = {"id": name}
         self.positional_metadata = None
 
     @property
@@ -748,7 +748,10 @@ def _tabular_msa_to_stockholm(obj, fh):
 
         if seq.has_metadata():
             for gs_feature, gs_feature_data in seq.metadata.items():
-                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature, gs_feature_data))
+                if gs_feature != "id":
+                    fh.write(
+                        "#=GS %s %s %s\n" % (seq_name, gs_feature, gs_feature_data)
+                    )
 
         unpadded_data.append((seq_name, str(seq)))
         if seq.has_positional_metadata():
