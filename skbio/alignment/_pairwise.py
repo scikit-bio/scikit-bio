@@ -36,10 +36,10 @@ def local_pairwise_align_nucleotide(
     seq2 : DNA or RNA
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float, optional
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     match_score : int or float, optional
         The score to add for a match between a pair of bases (this is added
@@ -110,10 +110,10 @@ def local_pairwise_align_protein(
     seq2 : Protein
         The second unaligned sequence.
     gap_open_penalty : int or float, optional
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float, optional
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar), optional
         Lookup for substitution scores (these values are added to the
@@ -177,10 +177,10 @@ def local_pairwise_align(
     seq2 : GrammaredSequence
         The second unaligned sequence.
     gap_open_penalty : int or float
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar)
         Lookup for substitution scores (these values are added to the
@@ -284,10 +284,10 @@ def global_pairwise_align_nucleotide(
     seq2 : DNA, RNA, or TabularMSA[DNA|RNA]
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float, optional
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     match_score : int or float, optional
         The score to add for a match between a pair of bases (this is added
@@ -384,10 +384,10 @@ def global_pairwise_align_protein(
     seq2 : Protein or TabularMSA[Protein]
         The second unaligned sequence(s).
     gap_open_penalty : int or float, optional
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float, optional
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar), optional
         Lookup for substitution scores (these values are added to the
@@ -477,10 +477,10 @@ def global_pairwise_align(
     seq2 : GrammaredSequence or TabularMSA
         The second unaligned sequence(s).
     gap_open_penalty : int or float
-        Penalty for opening a gap (this is substracted from previous best
+        Penalty for opening a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     gap_extend_penalty : int or float
-        Penalty for extending a gap (this is substracted from previous best
+        Penalty for extending a gap (this is subtracted from previous best
         alignment score, so is typically positive).
     substitution_matrix: 2D dict (or similar)
         Lookup for substitution scores (these values are added to the

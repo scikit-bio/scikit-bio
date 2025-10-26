@@ -88,7 +88,7 @@ def permanova(
     of objects to groups (`grouping`) is randomly permuted a number of times
     (controlled via `permutations`). A pseudo-F statistic is computed for each
     permutation and the p-value is the proportion of permuted pseudo-F
-    statisics that are equal to or greater than the original (unpermuted)
+    statistics that are equal to or greater than the original (unpermuted)
     pseudo-F statistic.
 
     Parameters

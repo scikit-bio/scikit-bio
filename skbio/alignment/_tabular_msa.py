@@ -454,7 +454,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Here we sliced the first axis by a boolean vector, but then restricted
         the columns to a single column. Because the second axis was given a
-        nonscalar we still recieve an MSA even though only one column is
+        nonscalar we still receive an MSA even though only one column is
         present.
 
         Duplicate labels can be an unfortunate reality in the real world,
@@ -711,7 +711,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Here we sliced the first axis by a boolean vector, but then restricted
         the columns to a single column. Because the second axis was given a
-        nonscalar we still recieve an MSA even though only one column is
+        nonscalar we still receive an MSA even though only one column is
         present.
 
         """

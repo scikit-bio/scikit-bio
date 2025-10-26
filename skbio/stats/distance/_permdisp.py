@@ -173,7 +173,7 @@ def permdisp(
     ...                       ['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
-    Run PERMDISP using 99 permutations to caluculate the p-value. The seed is to
+    Run PERMDISP using 99 permutations to calculate the p-value. The seed is to
     make the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
@@ -209,7 +209,7 @@ def permdisp(
     statistic, and this test is used by default. Spatial medians are computed
     using an iterative algorithm to find the optimally minimum point from all
     other points in a group while centroids are computed using a deterministic
-    formula. As such the two different tests yeild slightly different F
+    formula. As such the two different tests yield slightly different F
     statistics.
 
     >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42)

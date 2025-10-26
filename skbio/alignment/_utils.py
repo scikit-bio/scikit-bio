@@ -315,7 +315,7 @@ def prep_gapcost(gap_cost, dtype=np.float32):
 
 
 def prep_identity_matrix(seqs, key, match, mismatch):
-    """Prepare an indentity matrix based on match/mismatch scores.
+    """Prepare an identity matrix based on match/mismatch scores.
 
     Parameters
     ----------
@@ -344,7 +344,7 @@ def prep_identity_matrix(seqs, key, match, mismatch):
        matrix that covers its specific alphabet.
     2. For non-grammared Sequence, string and other types that can be ASCII-encoded, a
        single identity matrix with all 128 ASCII codes will be created and cached.
-    3. For other types, an indentity matrix will be created each time and not cached.
+    3. For other types, an identity matrix will be created each time and not cached.
        It will cover all unique elements in the sequences.
 
     """

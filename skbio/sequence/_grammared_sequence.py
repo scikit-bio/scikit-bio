@@ -419,7 +419,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # presence or absence of certain characters (numbers).
         # It works by multiplying a mask where the numbers which are
         # permitted have a zero at their index, and all others have a one.
-        # The result is a vector which will propogate counts of invalid
+        # The result is a vector which will propagate counts of invalid
         # numbers and remove counts of valid numbers, so that we need only
         # see if the array is empty to determine validity.
         invalid_characters = (
