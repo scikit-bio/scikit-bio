@@ -608,8 +608,8 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     # Mask NaN values (deemed unnecessary; left here for future examination).
     # beta = beta[~np.isnan(beta)]
 
-    # There might be a chance that numberic optimization produces (near) zero weights
-    # (pi) or variances (kappa), which can cause numberical stability issues in the
+    # There might be a chance that numeric optimization produces (near) zero weights
+    # (pi) or variances (kappa), which can cause numerical stability issues in the
     # EM process. To safe-guard, one may use a small number `eps` as the floor of
     # those parameters. The original R code doesn't have this mechanism. Therefore, it
     # is currently disabled.
@@ -655,7 +655,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     np.sqrt(var_hat, out=stdevs[0])
     np.divide(beta, var_hat, out=ratios[0])
 
-    # Objective function for numberic optimization of variance estimation
+    # Objective function for numeric optimization of variance estimation
     # Note: `norm.logpdf` doesn't have an `out` parameter. To further optimize this,
     # one needs to manually implement the under-the-hood algorithm.
     def func(x, loc, resp):
@@ -728,7 +728,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         #              sum(r2i / (nu0 + kappa2)), 0)
         updated[5] = np.maximum(l2, 0)
 
-        # Perform numberic optimization to minimize variances of negative and positive
+        # Perform numeric optimization to minimize variances of negative and positive
         # components (kappa).
         # TODO: Consider scenarios where optimization doesn't converge.
         updated[6] = minimize(func, params[6], args=(means[1], resp[1]), **args).x[0]
