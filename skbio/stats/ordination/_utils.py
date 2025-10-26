@@ -35,7 +35,7 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
     ddof : int, optional, defaults to 0
         It means delta degrees of freedom. Variance is calculated by
         dividing by `n - ddof` (where `n` is the number of
-        elements). By default it computes the maximum likelyhood
+        elements). By default it computes the maximum likelihood
         estimator.
 
     Returns
@@ -95,7 +95,7 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     ddof : int, optional, defaults to 0
         If with_std is True, variance is calculated by dividing by `n
         - ddof` (where `n` is the number of elements). By default it
-        computes the maximum likelyhood stimator.
+        computes the maximum likelihood stimator.
     copy : bool, optional, defaults to True
         Whether to perform the standardization in place, or return a
         new copy of `a`.
@@ -189,7 +189,7 @@ def f_matrix(E_matrix):
     """Compute F matrix from E matrix.
 
     Centring step: for each element, the mean of the corresponding
-    row and column are substracted, and the mean of the whole
+    row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
     """
     row_means = E_matrix.mean(axis=1, keepdims=True)

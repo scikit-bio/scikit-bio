@@ -93,7 +93,7 @@ def ancom(
         by name. The default is one-way ANOVA ("f_oneway").
 
         .. versionchanged:: 0.7.0
-            Test funcion must accept 2-D arrays as input, perform batch testing, and
+            Test function must accept 2-D arrays as input, perform batch testing, and
             return 1-D arrays. SciPy functions have this capability. Custom functions
             may need modification.
 

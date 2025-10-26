@@ -172,7 +172,7 @@ def dirmult_ttest(
 
     Notes
     -----
-    The confidence intervals are computed using the mininum 2.5% and maximum
+    The confidence intervals are computed using the minimum 2.5% and maximum
     97.5% bounds computed across all of the posterior draws.
 
     The reference frame here is the geometric mean. Extracting absolute log

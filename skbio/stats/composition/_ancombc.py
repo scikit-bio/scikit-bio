@@ -598,7 +598,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     """
     # This function involves careful memory optimization to avoid creating temporary
     # arrays during iteration. Technically, the arrays could have been pre-allocated
-    # in the outer function `ancombc` and re-used across covariates, which could
+    # in the outer function `ancombc` and reused across covariates, which could
     # further enhance memory efficiency. It is left as-is for modularity.
 
     # The original R code has `na.rm = TRUE` in many commands. This is not necessary
@@ -608,8 +608,8 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     # Mask NaN values (deemed unnecessary; left here for future examination).
     # beta = beta[~np.isnan(beta)]
 
-    # There might be a chance that numeric optimization produces (near) zero weights
-    # (pi) or variances (kappa), which can cause numerical stability issues in the
+    # There might be a chance that numberic optimization produces (near) zero weights
+    # (pi) or variances (kappa), which can cause numberical stability issues in the
     # EM process. To safe-guard, one may use a small number `eps` as the floor of
     # those parameters. The original R code doesn't have this mechanism. Therefore, it
     # is currently disabled.
@@ -655,8 +655,8 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     np.sqrt(var_hat, out=stdevs[0])
     np.divide(beta, var_hat, out=ratios[0])
 
-    # Objective function for numeric optimization of variance estimation
-    # Note: `norm.logpdf` doesn't have an `out` parameter. To furhter optimize this,
+    # Objective function for numberic optimization of variance estimation
+    # Note: `norm.logpdf` doesn't have an `out` parameter. To further optimize this,
     # one needs to manually implement the under-the-hood algorithm.
     def func(x, loc, resp):
         log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
@@ -719,8 +719,8 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         denom = np.sum(intm, axis=1)
         np.subtract(beta, delta, out=resp[0])  # reuse as intermediate
         intm *= resp[0]
-        numer = np.sum(intm, axis=1)
-        l1, l2 = numer / denom
+        number = np.sum(intm, axis=1)
+        l1, l2 = number / denom
         # l1_new = min(sum(r1i * (beta - delta) / (nu0 + kappa1)) /
         #              sum(r1i / (nu0 + kappa1)), 0)
         updated[4] = np.minimum(l1, 0)
@@ -728,7 +728,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         #              sum(r2i / (nu0 + kappa2)), 0)
         updated[5] = np.maximum(l2, 0)
 
-        # Perform numeric optimization to minimize variances of negative and positive
+        # Perform numberic optimization to minimize variances of negative and positive
         # components (kappa).
         # TODO: Consider scenarios where optimization doesn't converge.
         updated[6] = minimize(func, params[6], args=(means[1], resp[1]), **args).x[0]
@@ -847,11 +847,11 @@ def _estimate_bias_var(beta, var_hat, params):
     beta_[C1] -= l1
     beta_[C2] -= l2
     nu_inv *= beta_
-    wls_numer = np.sum(nu_inv)
+    wls_number = np.sum(nu_inv)
 
     # Estimate the variance of bias
     wls_denom_inv = 1.0 / wls_denom
-    delta_wls = wls_numer * wls_denom_inv
+    delta_wls = wls_number * wls_denom_inv
     var_delta = np.nan_to_num(wls_denom_inv)
 
     # TODO: var_delta will be used if conserve=True to account for the variance of
@@ -1105,7 +1105,7 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     dof = group_ind.size
     A = np.identity(dof)
 
-    # for each feature, calcualte test statistics W by the following formula:
+    # for each feature, calculate test statistics W by the following formula:
     # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
     term = np.einsum("ik,jk->ji", A, beta_hat_sub)
     W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)
