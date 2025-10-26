@@ -4,15 +4,18 @@
 
 ### Features
 
-* Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293)).
+* Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293), [#2305](https://github.com/scikit-bio/scikit-bio/pull/2305), [#2306](https://github.com/scikit-bio/scikit-bio/pull/2306), [#2316](https://github.com/scikit-bio/scikit-bio/pull/2316)).
 * Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
-* Added new `PairwiseMatrix` and `SymmetricMatrix` classes and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+* Added function `struc_zero`, a statistical test for structural zeros. This function complements `ancombc` or can be used alone ([#2305](https://github.com/scikit-bio/scikit-bio/pull/2305)).
+* Added a new `SymmetricMatrix` class and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
 
 ### Performance enhancements
 
-* Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Drastically speed up `pcoa` with the default eigh method ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Enriched documentation of `permanova`, explaining the underlying mathematics, the usage, and how to calculate R<sup>2</sup>, a statistic that measures the proportion of data variance explained by the specified variable ([#2294](https://github.com/scikit-bio/scikit-bio/pull/2297), [#2294](https://github.com/scikit-bio/scikit-bio/pull/2297)).
 * Added float32 support for minimum evolution phylogenetic tree building algorithms (`gme`, `bme` and `nni`) ([#2291](https://github.com/scikit-bio/scikit-bio/pull/2291)).
 * Added float32 support for reading labeled square matrix (lsmat) file format (`io.format.lsmat`) ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
+
 
 ### Bug Fixes
 
@@ -22,6 +25,7 @@
 
 ### Miscellaneous
 
+* Renamed `DissimilarityMatrix` as `PairwiseMatrix` to better reflect its nature. The old name is kept as an alias ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
 * Dropped support for Python 3.9 and added support for Python 3.14 ([#2311](https://github.com/scikit-bio/scikit-bio/pull/2311)).
 * Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314))
 
@@ -271,7 +275,7 @@
 * Added the Benjamini-Hochberg method as an option for FDR correction (in addition to the existing Holm-Bonferroni method) for `ancom` and `dirmult_ttest` ([#1988](https://github.com/scikit-bio/scikit-bio/pull/1988)).
 * Added function `dirmult_ttest`, which performs differential abundance test using a Dirichilet multinomial distribution. This function mirrors the method provided by ALDEx2 ([#1956](https://github.com/scikit-bio/scikit-bio/pull/1956)).
 * Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
-* Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
+* Added class `SubstitutionMatrix` to support substitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
 * `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 * Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).

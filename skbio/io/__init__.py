@@ -186,7 +186,7 @@ automatically constructed from the procedural interface:
 
 As an example, let's read a :mod:`~skbio.io.format.newick` file into a
 :class:`~skbio.tree.TreeNode` object using both interfaces. Here we will use Python's
-built-in :class:`~io.StringIO` class to mimick an open file:
+built-in :class:`~io.StringIO` class to mimic an open file:
 
 >>> from skbio import read as sk_read
 >>> from skbio import TreeNode
@@ -258,7 +258,7 @@ Streaming files with read and write
 If you are working with particularly large files, streaming them might be preferable.
 For instance, if your file is larger than your available memory, you won't be able
 to read the entire file into memory at once. One way to get around this is to use
-streaming. Scikit-bio's ``io`` module offers the ability to contruct a streaming
+streaming. Scikit-bio's ``io`` module offers the ability to construct a streaming
 interface from the ``read`` and ``write`` functions.
 
 ``skbio.io.read`` returns a generator, which can then be passed to ``skbio.io.write``

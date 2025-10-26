@@ -1461,7 +1461,7 @@ def _check_basis(
     xp : namespace
         The array API compatible namespace corresponding ``basis``.
     basis : array of shape (n_basis, n_components)
-        A columns vetors for the basis.
+        A columns vectors for the basis.
     orthonormal : bool, optional
         If True, basis is required to be orthonormal. Default is False.
     subspace_dim : int, optional

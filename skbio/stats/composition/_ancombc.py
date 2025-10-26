@@ -153,7 +153,7 @@ def ancombc(
 
     .. code-block:: python
 
-       table = table + 1.0
+       table += 1
 
     See also :func:`multi_replace` for additional information on zero handling.
 
@@ -423,6 +423,8 @@ def ancombc(
     matrix, samples, features = _ingest_table(table)
     _check_composition(np, matrix, nozero=True)
     n_feats = matrix.shape[1]
+    if features is None:
+        features = np.arange(n_feats)
 
     # Log-transform count matrix.
     matrix = np.log(matrix)
@@ -656,7 +658,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     np.divide(beta, var_hat, out=ratios[0])
 
     # Objective function for numeric optimization of variance estimation
-    # Note: `norm.logpdf` doesn't have an `out` parameter. To furhter optimize this,
+    # Note: `norm.logpdf` doesn't have an `out` parameter. To further optimize this,
     # one needs to manually implement the under-the-hood algorithm.
     def func(x, loc, resp):
         log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
@@ -1105,7 +1107,7 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     dof = group_ind.size
     A = np.identity(dof)
 
-    # for each feature, calcualte test statistics W by the following formula:
+    # for each feature, calculate test statistics W by the following formula:
     # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
     term = np.einsum("ik,jk->ji", A, beta_hat_sub)
     W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)

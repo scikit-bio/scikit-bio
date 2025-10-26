@@ -1065,7 +1065,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
 
 class SymmetricMatrix(PairwiseMatrix):
-    """Store symmetric pairwise relationships between objects.
+    r"""Store symmetric pairwise relationships between objects.
 
     A ``SymmetricMatrix`` is a ``PairwiseMatrix`` with the additional requirement that
     the matrix data is symmetric (i.e., upper and lower triangles mirror each other).
@@ -1101,7 +1101,7 @@ class SymmetricMatrix(PairwiseMatrix):
     --------
     PairwiseMatrix
     SymmetricMatrix
-    squareform
+    scipy.spatial.distance.squareform
 
     """
 
@@ -1944,6 +1944,8 @@ class DistanceMatrix(SymmetricMatrix):
     --------
     PairwiseMatrix
     SymmetricMatrix
+    scipy.spatial.distance.pdist
+    scipy.spatial.distance.squareform
 
     Notes
     -----

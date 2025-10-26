@@ -278,6 +278,10 @@ class AncombcTests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
+        res = ancombc(self.table.to_numpy() + 1, self.grouping.to_frame(), "grouping")
+        obs = res["Signif"].to_numpy()
+        npt.assert_array_equal(obs, exp)
+
         # Load the HITChip Atlas dataset.
         # This dataset is adopted from the official ANCOM-BC tutorial:
         #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/
