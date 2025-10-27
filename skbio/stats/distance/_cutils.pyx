@@ -262,6 +262,88 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, intp_t[:, ::1] perm_order,
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+def mantel_perm_pearsonr_condensed_cy(TReal[::1] x_data_condensed, 
+                                      intp_t[:, ::1] perm_order,
+                                      TReal xmean, TReal normxm,
+                                      TReal[::1] ym_normalized,
+                                      TReal[::1] permuted_stats):
+    """
+    Fused permute, fma, pearsonr for mantel using condensed distance matrix format.
+    
+    This is similar to mantel_perm_pearsonr_cy but accepts x_data in condensed form (1D array)
+    instead of the full 2D distance matrix.
+    
+    Parameters
+    ----------
+    x_data_condensed : 1D array_like
+        Condensed distance matrix (lower triangle only).
+    perm_order : 2D array_like
+        List of permutation orders.
+    xmean: real
+        Mean value of condensed x_data
+    normxm: real
+        Norm of pre-processed xm
+    ym_normalized : 1D_array_like
+        Normalized condensed y_data
+    permuted_stats : 1D array_like
+        Output, Pearson stats
+    """
+    cdef Py_ssize_t x_n = x_data_condensed.shape[0]
+    cdef Py_ssize_t perms_n = perm_order.shape[0]
+    cdef Py_ssize_t out_n = perm_order.shape[1]
+    cdef Py_ssize_t y_n = ym_normalized.shape[0]
+    cdef Py_ssize_t on2 = permuted_stats.shape[0]
+    
+    assert x_n == ((out_n-1)*out_n)/2
+    assert y_n == ((out_n-1)*out_n)/2
+    assert perms_n == on2
+    
+    cdef Py_ssize_t p
+    cdef Py_ssize_t row, col, icol
+    cdef Py_ssize_t vrow, vcol
+    cdef Py_ssize_t idx, x_idx
+    
+    cdef TReal mul = 1.0/normxm
+    cdef TReal add = -xmean/normxm
+    
+    cdef TReal my_ps
+    cdef TReal yval
+    cdef TReal xval
+    
+    for p in prange(perms_n, nogil=True):
+        my_ps = 0.0
+        for row in range(out_n-1):
+            vrow = perm_order[p, row]
+            idx = row*(out_n-1) - ((row-1)*row)//2
+            for icol in range(out_n-row-1):
+                col = icol+row+1
+                vcol = perm_order[p, col]
+                
+                # Calculate the index in the condensed array for elements [vrow, vcol]
+                # Condensed index for element (i,j) where i < j is:
+                # n*i - i*(i+1)/2 + j - i - 1
+                # But we need to ensure vrow < vcol for the lookup
+                if vrow < vcol:
+                    x_idx = out_n*vrow - vrow*(vrow+1)//2 + vcol - vrow - 1
+                else:
+                    x_idx = out_n*vcol - vcol*(vcol+1)//2 + vrow - vcol - 1
+                
+                yval = ym_normalized[idx+icol]
+                xval = x_data_condensed[x_idx]*mul + add
+                # do not use += to avoid having prange consider it for reduction
+                my_ps = yval*xval + my_ps
+        
+        # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
+        # floating point arithmetic.
+        if my_ps>1.0:
+            my_ps = 1.0
+        elif my_ps<-1.0:
+            my_ps = -1.0
+        permuted_stats[p] = my_ps
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
                            Py_ssize_t[::1] group_sizes,
                            Py_ssize_t[::1] grouping):
