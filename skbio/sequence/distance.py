@@ -289,33 +289,33 @@ def hamming(
     return float(dist)
 
 
-@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
+@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
 def p_dist(seq1, seq2):
-    """Calculate the p-distance between two aligned sequences.
+    """Calculate the *p*-distance between two aligned sequences.
 
-    p-distance is the proportion of differing sites between two aligned sequences. It
+    *p*-distance is the proportion of differing sites between two aligned sequences. It
     is equivalent to the normalized Hamming distance (see :func:`hamming`), but only
-    considers canonical characters (e.g., the four nucleotides or the 20 amino acids).
+    considers definite characters (i.e., leaving out gaps and degenerate characters).
 
     .. math::
         p = -\frac{no. of differing sites}{total no. of sites}
 
-    p-distance is the simplest measurement of the evolutionary distance (number of
-    substitutions per site) between two sequences. It is also referred to as the raw
-    distance. However, this metric may underestimate the true evolutionary distance
+    *p*-distance is the simplest measurement of the evolutionary distance (number of
+    substitutions per site) between two sequences. It is also referred to as the *raw
+    distance*. However, this metric may underestimate the true evolutionary distance
     when the two sequences are divergent and substitutions became saturated. This
-    limitation may be overcome by adopting metrics correcting for multiple subsitutions
-    per site (such as :func:`jc69`) and other biases.
+    limitation may be overcome by adopting metrics that correct for multiple
+    substitutions per site (such as :func:`jc69`) and other biases.
 
     Parameters
     ----------
     seq1, seq2 : GrammaredSequence
-        Sequences to compute the p-distance between.
+        Sequences to compute the *p*-distance between.
 
     Returns
     -------
     float
-        p-distance between ``seq1`` and ``seq2``.
+        *p*-distance between ``seq1`` and ``seq2``.
 
     Raises
     ------
@@ -346,6 +346,7 @@ def _p_dist(seqs):
 
 
 def _p_dist_pair(seqs, mask):
+    """Compute pairwise p-distances between multiple sequences."""
     n = seqs.shape[0]
     n_1 = n - 1
     dm = np.empty((n * n_1 // 2,))
@@ -365,13 +366,13 @@ def _p_dist_pair(seqs, mask):
     return dm
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def jc69(seq1, seq2):
     """Calculate the Jukes-Cantor (JC69) distance between two aligned sequences.
 
     The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
     per site) between two nucleotide sequences by correcting the observed proportion
-    of differing sites (p-distance, see :func:`p_dist`) to account for multiple
+    of differing sites (*p*-distance, see :func:`p_dist`) to account for multiple
     substitutions at the same site (i.e., saturation). It is calculated as:
 
     .. math::
@@ -380,7 +381,7 @@ def jc69(seq1, seq2):
     Parameters
     ----------
     seq1, seq2 : GrammaredSequence
-        Sequences to compute the p-distance between.
+        Sequences to compute the JC69 distance between.
 
     Returns
     -------
@@ -399,8 +400,8 @@ def jc69(seq1, seq2):
 
     Notes
     -----
-    JC69 is the most basic evolutionary model, assuming equal character frequencies and
-    equal substitution rates between characters.
+    JC69 is the most basic evolutionary model for nucleotide sequences, assuming equal
+    base frequencies and equal substitution rates between bases.
 
     This function returns NaN if :math:`p >= 0.75`. This happens when the two
     sequences are too divergent and subsitutions are over-saturated for the reliable

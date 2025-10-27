@@ -72,7 +72,7 @@ def align_dists(
     consider using ``DistanceMatrix.from_iterable(alignment, metric)``.
 
     """
-    n_seqs = len(alignment)
+    n_seqs, n_pos = alignment.shape
 
     # Identify aligned sites (definite characters).
     sites = [seq.definites() for seq in alignment]
@@ -92,6 +92,23 @@ def align_dists(
         if shared_by_all is False:
             func_name += "_pair"
         func = getattr(skbio.sequence.distance, func_name)
+
+        # Filter sequences by a given alphabet.
+        alphabet = func._alphabet
+
+        if alphabet is not None:
+            if alphabet in ("nongap", "definite", "canonical"):
+                valid = getattr(alignment[0], f"_{alphabet}_hash")
+            else:
+                encoded = _encode_alphabet(alphabet)
+                valid = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
+                valid[encoded] = True
+
+            if equal:
+                pos = valid[seq1._bytes] & valid[seq2._bytes]
+                seq1, seq2 = seq1[pos], seq2[pos]
+            else:
+                seq1, seq2 = seq1[valid[seq1._bytes]], seq2[valid[seq2._bytes]]
 
         # Create 2D arrays of sequences (ASCII codes) and sites (Boolean mask).
         # This can be omitted after optimizing TabularMSA.
@@ -137,6 +154,39 @@ def align_dists(
         raise TypeError("`metric` must be a function or a string.")
 
     return DistanceMatrix(dm, ids=alignment.index.astype(str))
+
+
+def _valid_chars(alphabet, seqs):
+    """Create a mask of valid characters for distance calculation.
+
+    Parameters
+    ----------
+    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}
+        An alphabet of valid characters to be considered by the metric.
+
+    Returns
+    -------
+    ndarray of bool of shape (n_sequences, n_positions)
+        Boolean mask of valid characters (True).
+
+    See Also
+    --------
+    skbio.sequence.distance._metric_specs
+
+    """
+    from skbio.sequence._alphabet import _encode_alphabet
+
+    n_seqs = len(seqs)
+    seq1 = seqs[0]
+    L = len(seq1)
+    if alphabet in ("nongap", "definite", "canonical"):
+        valid = getattr(seq1, f"_{alphabet}_hash")
+    else:
+        encoded = _encode_alphabet(alphabet)
+        valid = np.zeros((seq1._num_ascii_codes,), dtype=bool)
+        valid[encoded] = True
+
+    mask = np.vstack([valid[seq._bytes] for seq in seqs])
 
 
 def _ids_from_msa(msa, ids):
