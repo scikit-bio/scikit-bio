@@ -117,12 +117,9 @@ if clang:
     # Apple clang does not support OpenMP at all
     use_openpm = False
 
-try:
-    if  os.environ["DISABLE_OPENMP"] in ("Y","YES","1"):
-        # Developer explicity requested not to use OpenMP
-        use_openpm = False
-except KeyError:
-    pass
+if os.getenv("DISABLE_OPENMP","N") in ("Y","YES","1"):
+    # Developer explicity requested not to use OpenMP
+    use_openpm = False
 
 # Compiler flags
 extra_compile_args = ["-I."]  # search current directory
