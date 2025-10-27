@@ -24,6 +24,7 @@
 * Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
 * Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 * Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project.
+* Fixed a runtime error when computing phylogenetic diversity metrics on 32-bit architectures.
 
 ### Miscellaneous
 
