@@ -161,9 +161,9 @@ class TestReaders(unittest.TestCase):
 
                 expected_seqs = []
                 expected_index = []
-                for seq, ID in components:
-                    expected_seqs.append(DNA(seq))
-                    expected_index.append(ID)
+                for seq, id_ in components:
+                    expected_seqs.append(DNA(seq, metadata={"id": id_}))
+                    expected_index.append(id_)
                 expected = TabularMSA(expected_seqs, index=expected_index)
 
                 self.assertEqual(observed, expected)
