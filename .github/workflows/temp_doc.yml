@@ -55,9 +55,10 @@ jobs:
           ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Update documentation
+      # hardcoding version number because github.ref_name will point to main if it's from a non-tagged commit
         run: |
-          rsync -av --delete doc/build/html/ website/docs/${{ github.ref_name }}
-          sed -i 's/docs\/${{ github.ref_name }}\//docs\/latest\//g' doc/build/html/sitemap.xml
+          rsync -av --delete doc/build/html/ website/docs/0.7.1
+          sed -i 's/docs\/0.7.1\//docs\/latest\//g' doc/build/html/sitemap.xml
           rsync -av --delete doc/build/html/ website/docs/latest
 
       - name: Publish website
