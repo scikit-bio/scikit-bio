@@ -135,9 +135,9 @@ test-requires = ["pytest", "coverage", "responses", "h5py"]
 before-build = "pip install --prefer-binary numpy cython h5py"
 
 [tool.cibuildwheel.linux]
-# Use manylinux2014 for better compatibility
-manylinux-x86_64-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux2014"
+# Updated to be compatible with Python 3.14
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.pytest.ini_options]
 addopts = [
