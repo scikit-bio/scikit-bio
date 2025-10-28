@@ -1,6 +1,8 @@
 # scikit-bio changelog
 
-## Version 0.7.1-dev
+## Version 0.7.2-dev
+
+## Version 0.7.1
 
 ### Features
 
@@ -21,16 +23,16 @@
 
 * Fixed an unexpected behavior in the file I/O of `TabularMSA` class that `fasta` and `fastq` formats populate `.metadata['id']` of each sequence whereas `clustal`, `phylip` and `stockholm` formats populate `.index` of the entire alignments. Now all file formats populate both pieces of information ([#2320](https://github.com/scikit-bio/scikit-bio/pull/2320)).
 * Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
-* Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+* Fixed IO format `binary_dm` implementation ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
 * Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 * Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project.
-* Fixed a runtime error when computing phylogenetic diversity metrics on 32-bit architectures.
+* Fixed a runtime error when computing phylogenetic diversity metrics on 32-bit architectures ([#2321](https://github.com/scikit-bio/scikit-bio/pull/2321)).
 
 ### Miscellaneous
 
 * Renamed `DissimilarityMatrix` as `PairwiseMatrix` to better reflect its nature. The old name is kept as an alias ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
 * Dropped support for Python 3.9 and added support for Python 3.14 ([#2311](https://github.com/scikit-bio/scikit-bio/pull/2311)).
-* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314))
+* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314)).
 
 ## Version 0.7.0
 
