@@ -39,7 +39,7 @@ jobs:
 
       - name: Build wheels
         # This may need to be updated for new Python versions, double check before release.
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_TEST_COMMAND: >
             ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && 
