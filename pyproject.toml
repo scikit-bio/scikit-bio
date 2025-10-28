@@ -123,7 +123,7 @@ packages = ["skbio"]
 skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 
 # Python versions to build
-build = "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses"]
