@@ -126,13 +126,13 @@ skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 # Make sure to update this before release
 build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
-before-test = "pip install --only-binary=:all: h5py"
+before-test = "pip install --prefer-binary h5py"
 
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses", "h5py"]
 
 # Install dependencies before building
-before-build = "pip install numpy cython h5py --only-binary=h5py"
+before-build = "pip install --prefer-binary numpy cython h5py"
 
 [tool.cibuildwheel.linux]
 # Use manylinux2014 for better compatibility
