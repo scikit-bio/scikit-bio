@@ -1141,7 +1141,7 @@ def _linear_moves(i, j, scomat, query, target, gap, eps):
     moves = []
     if (
         abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
-    ):  # subsitution
+    ):  # substitution
         moves.append(0)
     if abs(scomat[i, j - 1] - gap - score) <= eps:  # insertion
         moves.append(1)
@@ -1189,7 +1189,7 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_
         score = scomat[i, j]
         if (
             abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
-        ):  # subsitution
+        ):  # substitution
             moves.append(0)
         if abs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
             moves.append(5)

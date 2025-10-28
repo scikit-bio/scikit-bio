@@ -59,7 +59,7 @@ def dirmult_ttest(
     p_adjust="holm",
     seed=None,
 ):
-    r"""*T*-test using Dirichlet-multinomial distribution.
+    r"""Perform *t*-test using Dirichlet-multinomial distribution.
 
     The Dirichlet-multinomial distribution is a compound distribution that
     combines a Dirichlet distribution over the probabilities of a multinomial
@@ -107,17 +107,17 @@ def dirmult_ttest(
             ``treatment`` and ``reference`` are now optional.
 
     pseudocount : float, optional
-        A non-zero value added to the input counts to ensure that all of the
-        estimated abundances are strictly greater than zero.
+        A non-zero value added to the input counts to ensure that all of the estimated
+        abundances are strictly greater than zero. Default is 0.5.
     draws : int, optional
         The number of draws from the Dirichilet-multinomial posterior distribution
         More draws provide higher uncertainty surrounding the estimated
         log-fold changes and *p*-values.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
@@ -172,7 +172,7 @@ def dirmult_ttest(
 
     Notes
     -----
-    The confidence intervals are computed using the mininum 2.5% and maximum
+    The confidence intervals are computed using the minimum 2.5% and maximum
     97.5% bounds computed across all of the posterior draws.
 
     The reference frame here is the geometric mean. Extracting absolute log
@@ -384,10 +384,10 @@ def dirmult_lme(
         Number of draws from the Dirichlet-multinomial posterior distribution.
         Default is 128.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the

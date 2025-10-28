@@ -49,21 +49,27 @@ def ancombc(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        A matrix containing strictly positive count or proportional abundance data of
+        the samples. See :ref:`supported formats <table_like>`.
+
+        .. note::
+            If the table contains zero values, one should add a pseudocount or apply
+            :func:`multi_replace` to convert all values into positive numbers.
+
     metadata : pd.DataFrame or 2-D array_like
-        The metadata for the model. Rows correspond to samples and columns correspond
-        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        Metadata of the samples. Rows correspond to samples and columns correspond
+        to covariates (attributes). Must be a pandas DataFrame or convertible to a
         pandas DataFrame.
     formula : str or generic Formula object
-        The formula defining the model. Refer to `Patsy's documentation
+        A formula defining the model using factors included in the metadata columns.
+        Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
     grouping : str, optional
-        A metadata column name of interests for global test, which is used to identify
-        the features that are differentially abundant between at least two groups across
-        three or more groups in that attribute. The group must be one of the factors in
-        the formula. Default is None to skip global test.
+        A metadata column name of interest for *global test*, which identifies features
+        that are differentially abundant between at least two groups across three or
+        more groups in that column. Must be one of the factors in ``formula``. Default
+        is None, which skips global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -73,15 +79,15 @@ def ancombc(
         Significance level for the statistical tests. Must be in the range of (0, 1).
         Default is 0.05.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
 
     Returns
     -------
-    res : pd.DataFrame
+    res_main : pd.DataFrame
         A table of features and covariates, their log-fold changes and other relevant
         statistics of the primary ANCOM-BC analysis.
 
@@ -98,22 +104,19 @@ def ancombc(
         - ``W``: *W*-statistic, or the number of features that the current feature is
           tested to be significantly different against.
 
-        - ``pvalue``: *p*-value of the linear mixed effects model. The reported value
-          is the average of all of the *p*-values computed from each of the posterior
-          draws.
+        - ``pvalue``: *p*-value of the ANCOM-BC test.
 
-        - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
-          comparisons. The reported value is the average of all of the *q*-values
-          computed from each of the posterior draws.
+        - ``qvalue``: Corrected *p*-value of the ANCOM-BC test for multiple
+          comparisons.
 
         - ``Signif``: Whether the covariate category is significantly differentially
-          abundant from the reference category. A feature-covariate pair marked as
-          "True" suffice: 1) The *q*-value must be less than or equal to the
-          significance level (0.05). 2) The confidence interval (CI(2.5)..CI(97.5))
-          must not overlap with zero.
+          abundant from the reference category. A feature-covariate pair is marked as
+          "True" if the *q*-value is less than or equal to the significance level
+          (``alpha``).
 
-    res_global : pd.DataFrame
-        A table of features and statistics of ANCOM-BC global test.
+    res_global : pd.DataFrame, optional
+        A table of features and statistics from the global test (when ``grouping`` is
+        set).
 
         - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
@@ -136,123 +139,283 @@ def ancombc(
 
     Notes
     -----
-    The input data table for ANCOM-BC must contain only positive numbers. One needs to
-    remove zero values by, e.g., adding a pseudocount of 1.0.
-    The categorical data in metadata is sorted alphabetically by default. The reference
-    level for each attribute need to be changed manually.
+    This function is a Python re-implementation of the ANCOM-BC method [1]_, which was
+    originally implemented in the R package ``ANCOMBC``. This function provides an
+    efficient and scalable algorithm, with a simple interface consistent with other
+    scikit-bio components. The output of this function should match that of the R
+    package.
+
+    Comparing with the R command ``ancombc``, this function defers the flexibility of
+    data preprocessing to the user. Most importantly, if the input table contains zero
+    values (which is common), one needs to remove them by, e.g., adding a pseudocount
+    of 1 (``pseudo=1`` in the R command's parameters) (assuming ``table`` is a pandas
+    DataFrame):
+
+    .. code-block:: python
+
+       table += 1
+
+    See also :func:`multi_replace` for additional information on zero handling.
+
+    Some other pre-processing options provided by the R command can be performed with:
+
+    To aggregate data at a given taxonomic level (``tax_level="Family"``):
+
+    .. code-block:: python
+
+       table = table.T.groupby(feature_to_family_dict).sum().T
+
+    To discard features with prevalence < 10% among samples (``prv_cut=0.1``):
+
+    .. code-block:: python
+
+       table = table.loc[:, (table > 0).mean() >= 0.1]
+
+    To discard samples with a total abundance < 1 million (``lib_cut=1e6``):
+
+    .. code-block:: python
+
+       table = table.loc[table.sum(axis=1) >= 1e6]
+
+    Categorical columns in metadata are sorted alphabetically, and the reference level
+    for each column is automatically set to be the first category. If this behavior is
+    not intended, you will need to change the order manually, like:
+
+    .. code-block:: python
+
+       metadata['bmi'] = pd.Categorical(
+           metadata['bmi'], categories=['lean', 'overweight', 'obese'], ordered=True)
 
     References
     ----------
     .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
-       with bias correction. Nature communications, 11(1), p.3514.
+       with bias correction. Nature Communications, 11(1), p.3514.
 
     Examples
     --------
     >>> from skbio.stats.composition import ancombc
     >>> import pandas as pd
 
-    Let's load in a DataFrame with six samples and seven features (e.g., these
-    may be bacterial taxa):
+    **A basic example**
 
-    >>> table = pd.DataFrame([[12, 11, 10, 10, 10, 10, 10],
-    ...                       [9,  11, 12, 10, 10, 10, 10],
-    ...                       [1,  11, 10, 11, 10, 5,  9],
-    ...                       [22, 21, 9,  10, 10, 10, 10],
-    ...                       [20, 22, 10, 10, 13, 10, 10],
-    ...                       [23, 21, 14, 10, 10, 10, 10]],
-    ...                      index=['s1', 's2', 's3', 's4', 's5', 's6'],
-    ...                      columns=['b1', 'b2', 'b3', 'b4', 'b5', 'b6',
-    ...                               'b7'])
+    Let's create a data table with six samples and seven features (e.g., these may be
+    microbial taxa):
 
-    Then create a grouping vector. In this example, there is a treatment group
-    and a placebo group.
+    >>> samples = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    >>> features = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']
+    >>> table = pd.DataFrame(
+    ...     [[ 2,  0,  4,  7,  0,  0,  1],
+    ...      [ 1,  1,  0,  6,  5,  1, 10],
+    ...      [ 3,  0,  2,  9,  6,  0,  1],
+    ...      [ 0, 12,  1,  2,  0,  3,  2],
+    ...      [ 2,  2, 37,  0,  0,  7,  3],
+    ...      [10,  1,  0,  0,  4,  4,  3]],
+    ...     index=samples, columns=features)
 
-    >>> metadata = pd.DataFrame(
-    ...     {'grouping': ['treatment', 'treatment', 'treatment',
-    ...                   'placebo', 'placebo', 'placebo']},
-    ...     index=['s1', 's2', 's3', 's4', 's5', 's6'])
+    Then create a sampling grouping vector. In this example, there is a "healthy" group
+    and a "sick" group.
+
+    >>> grouping = ['healthy', 'healthy', 'healthy', 'sick', 'sick', 'sick']
+    >>> metadata = pd.Series(grouping, index=samples, name='status').to_frame()
 
     Now run ``ancombc`` to determine if there are any features that are significantly
-    different in abundance between the treatment and the placebo groups.
+    different in abundance between the healthy and the sick groups. Note that a
+    pseudocount of 1 is manually added to the table to remove zero values.
 
-    >>> result = ancombc(table + 1, metadata, 'grouping')
+    >>> result = ancombc(table + 1, metadata, formula='status')
     >>> result.round(3)
-       FeatureID              Covariate  Log2(FC)     SE       W  pvalue  qvalue  \
-    0         b1              Intercept     0.719  0.033  21.472   0.000   0.000
-    1         b1  grouping[T.treatment]    -1.182  0.385  -3.070   0.002   0.013
-    2         b2              Intercept     0.706  0.018  39.548   0.000   0.000
-    3         b2  grouping[T.treatment]    -0.537  0.097  -5.562   0.000   0.000
-    4         b3              Intercept     0.069  0.087   0.802   0.422   1.000
-    5         b3  grouping[T.treatment]     0.068  0.120   0.566   0.571   1.000
-    6         b4              Intercept    -0.002  0.015  -0.142   0.887   1.000
-    7         b4  grouping[T.treatment]     0.113  0.120   0.946   0.344   1.000
-    8         b5              Intercept     0.078  0.065   1.206   0.228   1.000
-    9         b5  grouping[T.treatment]     0.004  0.115   0.032   0.974   1.000
-    10        b6              Intercept    -0.002  0.015  -0.142   0.887   1.000
-    11        b6  grouping[T.treatment]    -0.118  0.072  -1.641   0.101   0.504
-    12        b7              Intercept    -0.002  0.015  -0.142   0.887   1.000
-    13        b7  grouping[T.treatment]     0.052  0.071   0.741   0.459   1.000
-    <BLANKLINE>
-        Signif
-    0     True
-    1     True
-    2     True
-    3     True
-    4    False
-    5    False
-    6    False
-    7    False
-    8    False
-    9    False
-    10   False
-    11   False
-    12   False
-    13   False
+                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F1        Intercept         -0.045  0.218 -0.207   0.836   1.000   False
+              status[T.sick]     0.126  0.589  0.214   0.831   1.000   False
+    F2        Intercept         -0.873  0.137 -6.381   0.000   0.000    True
+              status[T.sick]     1.241  0.538  2.307   0.021   0.105   False
+    F3        Intercept         -0.202  0.475 -0.425   0.671   1.000   False
+              status[T.sick]     0.561  0.964  0.582   0.561   1.000   False
+    F4        Intercept          1.005  0.136  7.399   0.000   0.000    True
+              status[T.sick]    -1.723  0.392 -4.399   0.000   0.000    True
+    F5        Intercept          0.141  0.422  0.335   0.738   1.000   False
+              status[T.sick]    -0.690  0.625 -1.104   0.270   1.000   False
+    F6        Intercept         -0.873  0.137 -6.381   0.000   0.000    True
+              status[T.sick]     1.480  0.160  9.255   0.000   0.000    True
+    F7        Intercept          0.157  0.401  0.391   0.695   1.000   False
+              status[T.sick]     0.049  0.405  0.121   0.904   1.000   False
 
-    The following example shows how to perform global test using ANCOM-BC to identify
-    features that are differentially abundant in more than one time point.
+    The covariate "status[T.sick]" stands for the effect of the "sick" group relative
+    to the reference group, "healthy" (the first group in alphabetical order is
+    automatically selected as the reference group). "Log2(FC)" represents the
+    :func:`clr`-transformed fold change of abundance (positive/negative: more/less
+    abundant in "sick" than in "healthy", respectively). A "True" in the "Signif"
+    column indicates a significantly differentially abundant feature-covariate pair.
+    This example shows that two features differ by healthy/sick status.
 
-    >>> table = pd.DataFrame(
-    ...     [[1.00000053, 6.09924644],
-    ...      [0.99999843, 7.0000045],
-    ...      [1.09999884, 8.08474053],
-    ...      [1.09999758, 1.10000349],
-    ...      [0.99999902, 2.00000027],
-    ...      [1.09999862, 2.99998318],
-    ...      [1.00000084, 2.10001257],
-    ...      [0.9999991, 3.09998418],
-    ...      [0.99999899, 3.9999742],
-    ...      [1.10000124, 5.0001796],
-    ...      [1.00000053, 6.09924644],
-    ...      [1.10000173, 6.99693644]],
-    ...     index=['u1', 'u2', 'u3', 'x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1',
-    ...            'z2', 'z3'],
-    ...     columns=['Y1', 'Y2'])
-    >>> metadata = pd.DataFrame(
-    ...     {'patient': [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4],
-    ...      'treatment': [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
-    ...      'time': [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],},
-    ...     index=['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'z1', 'z2', 'z3', 'u1',
-    ...            'u2', 'u3'])
+    >>> result.query('Covariate != "Intercept" & Signif == True').round(3)
+                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F4        status[T.sick]    -1.723  0.392 -4.399     0.0     0.0    True
+    F6        status[T.sick]     1.480  0.160  9.255     0.0     0.0    True
 
-    The first DataFrame contains the ANCOM-BC test results that identifies
-    differentially abundant feature in treatment as well as in time. The second
-    DataFrame contains the ANCOM-BC global test results that indicates whether the
-    features are differentially abundant across multiple time points.
+    **An advanced example**
 
-    >>> result = ancombc(table+1, metadata, formula="time+treatment", grouping="time")
-    >>> result[0][['FeatureID', 'Covariate', 'Signif']]
-          FeatureID  Covariate  Signif
-        0        Y1  Intercept    True
-        1        Y1       time    True
-        2        Y1  treatment    True
-        3        Y2  Intercept    True
-        4        Y2       time    True
-        5        Y2  treatment    True
-    >>> result[1].round(3)
-          FeatureID       W  pvalue  qvalue  Signif
-        0        Y1  11.625   0.001   0.002    True
-        1        Y2  12.069   0.001   0.002    True
+    Now we will create a complex dataset with 15 samples grouped into three disease
+    status: "mild", "moderate" and "severe", plus age as a confounder. Our goal is
+    to identify features that are differentially abundant between disease status.
+
+    >>> samples = [f'S{i}' for i in range(1, 16)]
+    >>> features = [f'F{i}' for i in range(1, 9)]
+    >>> data = [[ 2,  0,  7,  0,  0,  2,  3,  2],
+    ...         [ 0,  2,  0,  1,  1,  2,  0,  0],
+    ...         [ 3,  1,  0,  9,  0,  1,  1,  0],
+    ...         [ 2,  0,  1,  8,  1,  0, 11, 46],
+    ...         [ 1,  0,  1,  1,  0,  0,  2,  2],
+    ...         [ 0,  3, 22,  1,  1,  1,  3,  0],
+    ...         [ 1,  7, 16,  1,  0,  0,  2,  2],
+    ...         [ 0,  5,  6,  1,  2,  1,  0,  1],
+    ...         [ 1,  7,  0,  2,  1,  0,  3,  2],
+    ...         [ 0,  6,  4,  2,  0,  2,  2,  1],
+    ...         [ 3, 13,  7,  0,  0,  0,  3,  9],
+    ...         [ 1,  8,  5,  1,  0,  0,  0,  0],
+    ...         [ 0,  5, 14,  1,  0,  1,  0,  1],
+    ...         [ 5, 26,  3,  2,  0,  3,  1,  3],
+    ...         [ 0, 18,  7,  0,  0,  3,  1,  0]]
+    >>> table = pd.DataFrame(data, index=samples, columns=features)
+    >>> status = ['mild'] * 5 + ['moderate'] * 5 + ['severe'] * 5
+    >>> age = [39, 19, 20, 31, 15, 37, 27, 47, 26, 23, 39, 48, 46, 33, 36]
+    >>> metadata = pd.DataFrame({'status': status, 'age': age}, index=samples)
+
+    Run ``ancombc``. This time, we specify two factors: "status" and "age" in the
+    formula, such that the function will test the individual effects of each factor
+    while controlling for the other. Additionally, we instruct the function to perform
+    a *global test* on "status", which identifies features that are differentially
+    abundant between at least two status.
+
+    >>> res_main, res_global = ancombc(
+    ...     table + 1, metadata, formula='status + age', grouping='status')
+    >>> res_main.round(3)
+                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F1        Intercept             -0.006  0.346 -0.016   0.987   1.000   False
+              status[T.moderate]    -0.337  0.245 -1.376   0.169   1.000   False
+              status[T.severe]       0.278  0.350  0.792   0.428   1.000   False
+              age                    0.002  0.011  0.141   0.888   1.000   False
+    F2        Intercept              0.072  0.446  0.160   0.873   1.000   False
+              status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
+              status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
+              age                   -0.022  0.013 -1.676   0.094   0.562   False
+    F3        Intercept             -1.690  0.570 -2.967   0.003   0.021    True
+              status[T.moderate]     1.010  0.578  1.747   0.081   0.565   False
+              status[T.severe]       0.717  0.517  1.388   0.165   1.000   False
+              age                    0.063  0.022  2.883   0.004   0.031    True
+    F4        Intercept              0.439  0.483  0.910   0.363   1.000   False
+              status[T.moderate]    -0.046  0.405 -0.113   0.910   1.000   False
+              status[T.severe]      -0.244  0.536 -0.455   0.649   1.000   False
+              age                   -0.003  0.019 -0.185   0.854   1.000   False
+    F5        Intercept             -1.227  0.393 -3.125   0.002   0.014    True
+              status[T.moderate]     0.274  0.293  0.934   0.350   1.000   False
+              status[T.severe]      -0.323  0.320 -1.011   0.312   1.000   False
+              age                    0.027  0.014  2.021   0.043   0.303   False
+    F6        Intercept             -0.439  0.440 -0.999   0.318   1.000   False
+              status[T.moderate]     0.114  0.432  0.264   0.792   1.000   False
+              status[T.severe]       0.375  0.544  0.691   0.490   1.000   False
+              age                    0.008  0.016  0.480   0.631   1.000   False
+    F7        Intercept              0.201  0.472  0.426   0.670   1.000   False
+              status[T.moderate]     0.082  0.302  0.270   0.787   1.000   False
+              status[T.severe]      -0.264  0.401 -0.658   0.510   1.000   False
+              age                    0.004  0.016  0.272   0.785   1.000   False
+    F8        Intercept             -0.168  0.526 -0.319   0.750   1.000   False
+              status[T.moderate]    -0.402  0.584 -0.688   0.491   1.000   False
+              status[T.severe]      -0.299  0.728 -0.411   0.681   1.000   False
+              age                    0.022  0.018  1.237   0.216   1.000   False
+
+    We found that feature "F2" is significantly differentially (more) abundant in
+    "moderate" and "severe" groups compared with "mild", which serves as the reference
+    group. Additionally, feature "F3" is separately correlated with age.
+
+    >>> res_main.query('Covariate != "Intercept" & Signif == True').round(3)
+                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F2        status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
+              status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
+    F3        age                    0.063  0.022  2.883   0.004   0.031    True
+
+    The global test result suggests that "F2" and "F4" are differentially abundant
+    between two of the three groups (though it doesn't tell which groups).
+
+    >>> res_global.round(3)
+                    W  pvalue  qvalue  Signif
+    FeatureID
+    F1          1.855   0.791   1.000   False
+    F2         80.771   0.000   0.000    True
+    F3          2.925   0.463   1.000   False
+    F4         -0.093   0.000   0.000    True
+    F5          1.068   0.827   1.000   False
+    F6          0.121   0.117   0.704   False
+    F7          0.220   0.208   1.000   False
+    F8          0.485   0.430   1.000   False
+
+    **Structural zero test**
+
+    The structural zero test identifies features that are systematically absent from
+    certain sample groups. This test is an option of the R command ``ancombc``. In
+    scikit-bio, :func:`struc_zero` is a standalone function, as it is generally useful
+    with or without ANCOM-BC.
+
+    >>> from skbio.stats.composition import struc_zero
+    >>> res_zero = struc_zero(table, metadata, 'status')
+    >>> res_zero
+         mild  moderate  severe
+    F1  False     False   False
+    F2  False     False   False
+    F3  False     False   False
+    F4  False     False   False
+    F5  False     False    True
+    F6  False     False   False
+    F7  False     False   False
+    F8  False     False   False
+
+    The result reveals that feature "F5" is a structural zero in the "severe" groups,
+    as all or most of its values are zero. Although the ANCOM-BC test itself didn't
+    identify "F5", we should consider it as differentially (less) abundant than in the
+    other two groups.
+
+    We can use this additional information to update the global test result. The rule
+    is that a feature should be considered as globally differentially abundant if it is
+    a structural zero in at least one but not all groups.
+
+    >>> signif_global = res_global['Signif'] | (
+    ...     ~res_zero.all(axis=1) & res_zero.any(axis=1))
+    >>> signif_global
+    FeatureID
+    F1    False
+    F2     True
+    F3    False
+    F4     True
+    F5     True
+    F6    False
+    F7    False
+    F8    False
+    dtype: bool
+
+    The main ANCOM-BC result can also be updated with structural zeros.
+
+    >>> signif_main = res_main.query(
+    ...     'Covariate.str.startswith("status[T.")')['Signif'].unstack()
+    >>> signif_main.columns = signif_main.columns.str.removeprefix(
+    ...     'status[T.').str.removesuffix(']')
+    >>> signif_zero = res_zero.loc[signif_main.index, signif_main.columns]
+    >>> signif_main |= signif_zero
+    >>> signif_main.columns.name = None
+    >>> signif_main
+               moderate  severe
+    FeatureID
+    F1            False   False
+    F2             True    True
+    F3            False   False
+    F4            False   False
+    F5            False    True
+    F6            False   False
+    F7            False   False
+    F8            False   False
 
     """
     # Note: A pseudocount should have been added to the table by the user prior to
@@ -260,6 +423,8 @@ def ancombc(
     matrix, samples, features = _ingest_table(table)
     _check_composition(np, matrix, nozero=True)
     n_feats = matrix.shape[1]
+    if features is None:
+        features = np.arange(n_feats)
 
     # Log-transform count matrix.
     matrix = np.log(matrix)
@@ -267,6 +432,9 @@ def ancombc(
     # Validate metadata and cast to numbers where applicable.
     metadata = _check_metadata(metadata, matrix, samples)
     metadata = _type_cast_to_float(metadata)
+
+    if grouping is not None and len(metadata[grouping].unique()) < 3:
+        raise ValueError("Global test cannot be performed on less than three groups.")
 
     # Create a design matrix based on metadata and formula.
     dmat = dmatrix(formula, metadata)
@@ -311,9 +479,10 @@ def ancombc(
     )
     # Pandas' nullable boolean type
     res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+    res.set_index(["FeatureID", "Covariate"], inplace=True)
 
     # Output global test results
-    if grouping is not None and len(metadata[grouping].unique()) >= 3:
+    if grouping is not None:
         res_global = _global_test(dmat, grouping, beta_hat, vcov_hat, alpha, p_adjust)
         res_global_df = pd.DataFrame.from_dict(
             {
@@ -324,6 +493,7 @@ def ancombc(
                 "Signif": res_global[3],
             }
         )
+        res_global_df.set_index("FeatureID", inplace=True)
         return res, res_global_df
     return res  # , None
 
@@ -488,7 +658,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     np.divide(beta, var_hat, out=ratios[0])
 
     # Objective function for numeric optimization of variance estimation
-    # Note: `norm.logpdf` doesn't have an `out` parameter. To furhter optimize this,
+    # Note: `norm.logpdf` doesn't have an `out` parameter. To further optimize this,
     # one needs to manually implement the under-the-hood algorithm.
     def func(x, loc, resp):
         log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
@@ -743,10 +913,15 @@ def _calc_statistics(beta_hat, var_hat, method="holm"):
 
 
 def struc_zero(table, metadata, grouping, neg_lb=False):
-    """Identify features with structural zeros.
+    r"""Identify features with structural zeros.
 
-    The function returns a boolean matrix of features with structural zeros, i.e.,
-    observerd zeros due to systematical absence.
+    .. versionadded:: 0.7.1
+
+    Structural zeros refer to features that are systematically absent from certain
+    sample groups. Consequently, the observed feature frequencies are all zeros, or
+    mostly zeros, due to variability in technical factors. This function tests
+    whether the proportion of observed zeros is close to zero, which suggests the
+    absence of a feature in a given sample group.
 
     Parameters
     ----------
@@ -754,30 +929,53 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
         A matrix containing count or proportional abundance data of the samples. See
         :ref:`supported formats <table_like>`.
     metadata : pd.DataFrame or 2-D array_like
-        The metadata for the model. Rows correspond to samples and columns correspond
-        to covariates in the model. Must be a pandas DataFrame or convertible to a
+        Metadata of the samples. Rows correspond to samples and columns correspond
+        to covariates (attributes). Must be a pandas DataFrame or convertible to a
         pandas DataFrame.
     grouping : str
         A metadata column name indicating the assignment of samples to groups.
     neg_lb : bool, optional
         Determine whether to use negative lower bound when calculating sample
-        proportion. Default is False. Generally, it is recommended to set `neg_lb=True`
+        proportions. Default is False. Generally, it is recommended to set it as True
         when the sample size per group is relatively large.
 
     Returns
     -------
-    pd.DataFrame
-        A table of whether the features are structural zeros in groups (True: structural
-        zero, False: not structural zero).
+    pd.DataFrame of bool of shape (n_features, n_groups)
+        A table indicating whether each feature (row) is a structural zero in each
+        group (column) (True: structural zero, False: not structural zero).
+
+    Notes
+    -----
+    The structural zero test was initially proposed and implemented in the ANCOM-II
+    method [1]_. It was adopted to the ANCOM-BC method [2]_ as a recommended method to
+    complement test results. See :func:`ancombc` for how to use this function along
+    with the ANCOM-BC test. Nevertheless, this function is generally useful with or
+    without explicit statistical tests of feature abundances.
+
+    A feature found to be a structural zero in a group should be automatically
+    considered as differentially (less) abundant compared with other groups in which
+    this feature is not a structural zero. Meanwhile, this feature should be excluded
+    from subsequent analyses that involves this group. If a feature is identified as a
+    structural zero in all groups, this feature should be removed entirely from
+    downstream analyses.
+
+    Note that the structural zero test should be applied to the original table before
+    adding a pseudocount (see :func:`multi_replace`), which will otherwise mask all
+    zeros and invalidate this test.
 
     References
     ----------
-    .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
-       with bias correction. Nature communications, 11(1), p.3514.
+    .. [1] Kaul, A., Mandal, S., Davidov, O., & Peddada, S. D. (2017). Analysis of
+       microbiome data in the presence of excess zeros. Frontiers in Microbiology, 8,
+       2114.
+
+    .. [2] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
+       with bias correction. Nature Communications, 11(1), p.3514.
 
     Examples
     --------
-    >>> from skbio.stats.composition import ancombc
+    >>> from skbio.stats.composition import struc_zero
     >>> import pandas as pd
 
     Generate a DataFrame with 10 samples and 6 features with 0's in specific groups:
@@ -802,17 +1000,22 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     ...     {'grouping': ['treatment'] * 5 + ['placebo'] * 5},
     ...     index=[f's{i}' for i in range(10)])
 
-    ``struc_zero`` function will detect features with structural zero. Features that
-    are identified as structural zeros in given group are not used in furthur
-    analysis such as ``ancombc`` and  ``dirmult_ttest``.
-    Setting `neg_lb=True` declares that the true prevalence of a feature in a group is
-    not significantly different from zero.
+    The ``struc_zero`` function will identify features with structural zeros. Features
+    that are identified as structural zeros in given groups should not be used in
+    further analyses such as ``ancombc`` and  ``dirmult_ttest``.
 
-    >>> result = struc_zero(table, metadata, grouping="grouping", neg_lb=True)
+    Setting ``neg_lb=True`` declares that the true prevalence of a feature in a group
+    is not significantly different from zero.
+
+    >>> result = struc_zero(table, metadata, grouping='grouping', neg_lb=True)
     >>> result
-                  f0     f1     f2     f3     f4     f5
-    placebo    False  False  False  False   True  False
-    treatment  False  False   True  False  False   True
+        placebo  treatment
+    f0    False      False
+    f1    False      False
+    f2    False       True
+    f3    False      False
+    f4     True      False
+    f5    False       True
 
     """
     # Validate feature table and metadata
@@ -847,14 +1050,14 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     zero_idx = p_hat <= 0
 
     # Output structural zero as a DataFrame
-    res = pd.DataFrame(zero_idx, columns=features, index=unique_groups)
-    return res
+    return pd.DataFrame(zero_idx.T, index=features, columns=unique_groups)
 
 
 def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
-    """Output results from ANCOM-BC global test to determine feature that are
-    differentially abundant between at least 2 groups across 3 or more different
-    groups.
+    """Perform ANCOM-BC global test.
+
+    The global test is to determine features that are differentially abundant between
+    at least 2 sample groups across 3 or more groups.
 
     Parameters
     ----------
@@ -878,14 +1081,14 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
 
     Returns
     -------
-    res_W : ndarray of shape (n_features,)
-        W of global test.
-    res_p : ndarray of shape (n_features,)
-        p values of global test.
-    qval : ndarray of shape (n_features,)
-        adjusted p value of global test.
-    reject : ndarray of shape (n_features,)
-        if the variable is differentially abundant.
+    W_global : ndarray of float of shape (n_features,)
+        W-statistics of global test.
+    pval : ndarray of float of shape (n_features,)
+        p-values of global test.
+    qval : ndarray of float of shape (n_features,)
+        Adjusted p-values of global test.
+    reject : ndarray of bool of shape (n_features,)
+        If the variable is differentially abundant.
 
     """
     # Slices of columns in the dmat that the terms in the grouping is mapped to
@@ -904,7 +1107,7 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     dof = group_ind.size
     A = np.identity(dof)
 
-    # for each feature, calcualte test statistics W by the following formula:
+    # for each feature, calculate test statistics W by the following formula:
     # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
     term = np.einsum("ik,jk->ji", A, beta_hat_sub)
     W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)

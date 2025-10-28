@@ -620,7 +620,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 )
         elif isinstance(sequence, Sequence):
             # Sequence casting is acceptable between direct
-            # decendants/ancestors
+            # descendants/ancestors
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -2121,7 +2121,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             return a standard array if no gap character is found, or a masked
             array if gap character(s) are found.
         wildcard : 'auto', str of length 1 or None, optional
-            A character to subsitute characters in the sequence that are absent
+            A character to substitute characters in the sequence that are absent
             from the alphabet. If `'auto'` (default), will adopt the sequence's
             `wildcard_char` attribute (if available). If no wildcard is given
             and there are absent characters, will raise an error.

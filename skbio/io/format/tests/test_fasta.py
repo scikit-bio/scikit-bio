@@ -637,7 +637,7 @@ class ReaderTests(TestCase):
                 kwargs['constructor'] = CustomSequence
                 exp_list = [CustomSequence(seq) for seq in exp_list]
 
-            exp = TabularMSA(exp_list)
+            exp = TabularMSA(exp_list, minter='id')
 
             for fasta_fp in fasta_fps:
                 obs = _fasta_to_tabular_msa(fasta_fp, **kwargs)
