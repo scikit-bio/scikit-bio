@@ -17,7 +17,7 @@ An example of a FASTA-formatted file containing two DNA sequences::
     CATCGATCGATCGATGCATGCATGCATG
 
 The QUAL file format is an additional format related to FASTA. A FASTA file is
-sometimes accompanied by a QUAL file, particuarly when the FASTA file contains
+sometimes accompanied by a QUAL file, particularly when the FASTA file contains
 sequences generated on a high-throughput sequencing instrument. QUAL files
 store a Phred quality score (nonnegative integer) for each base in a sequence
 stored in FASTA format (see [4]_ for more details). scikit-bio supports reading
@@ -85,7 +85,7 @@ description separated by one or more whitespace characters.
 
 .. note:: When reading a FASTA-formatted file, the sequence ID and description
    are stored in the sequence `metadata` attribute, under the `'id'` and
-   `'description'` keys, repectively. Both are optional. Each will be
+   `'description'` keys, respectively. Both are optional. Each will be
    represented as the empty string (``''``) in `metadata` if it is not present
    in the header.
 
@@ -163,7 +163,7 @@ scores are represented as nonnegative integers separated by whitespace
    in the same order in both files (i.e., each FASTA and QUAL record must have
    the same ID and description after being parsed). In addition to having the
    same order, the number of FASTA records must match the number of QUAL
-   records (i.e., missing or additonal records are not allowed). scikit-bio
+   records (i.e., missing or additional records are not allowed). scikit-bio
    also requires that the number of quality scores match the number of bases in
    the corresponding sequence.
 
@@ -829,7 +829,10 @@ def _fasta_to_tabular_msa(fh, cls=None, qual=FileSentinel, constructor=None, **k
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    return cls(_fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs))
+    return cls(
+        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs),
+        minter="id",
+    )
 
 
 @fasta.writer(None)

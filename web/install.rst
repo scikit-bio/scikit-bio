@@ -89,6 +89,20 @@ For a more robust verification of the installation you may run the scikit-bio's 
     python -m skbio.test
 
 
+Parallelization
+---------------
+
+Many scikit-bio functions automatically take advantage of parallel processing to improve performance. By default, they utilize all available CPU cores when possible. There is currently no per-function parameter to control the number of threads used. You can set the environment variable ``OMP_NUM_THREADS`` to control the global parallelization behavior, or use `threadpoolctl <https://github.com/joblib/threadpoolctl>`_ to achieve more granular control within Python code.
+
+Multiple compute-intensive algorithms in scikit-bio are implemented in Cython and use OpenMP for parallel execution. If your system does not support OpenMP, or if you prefer to disable it, you can build from the scikit-bio source code with OpenMP disabled:
+
+    DISABLE_OPENMP=1 pip install scikit-bio --no-binary scikit-bio
+
+Or, if you have downloaded the repository:
+
+    DISABLE_OPENMP=1 pip install .
+
+
 Acceleration
 ------------
 

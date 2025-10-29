@@ -116,7 +116,7 @@ def pcoa(
     triangle inequality. If the negative eigenvalues are small in magnitude compared
     to the largest positive eigenvalue, it is usually safe to ignore them. However,
     large negative eigenvalues may indicate result inaccuracy, in which case a warning
-    message will be displayed. The paramter ``warn_neg_eigval`` controls the threshold
+    message will be displayed. The parameter ``warn_neg_eigval`` controls the threshold
     for the warning.
 
     PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
@@ -540,7 +540,7 @@ def pcoa_biplot(ordination, y):
     y : DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
-        normalized in cases of dimensionally heterogenous physical variables.
+        normalized in cases of dimensionally heterogeneous physical variables.
 
     Returns
     -------

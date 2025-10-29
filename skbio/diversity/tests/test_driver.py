@@ -161,7 +161,7 @@ class AlphaDiversityTests(TestCase):
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',
                           counts, taxa=taxa, tree=t)
 
-        # table has correct taxa but are overriden by wrong ones
+        # table has correct taxa but are overridden by wrong ones
         table = Table(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
                       ['OTU1', 'OTU2', 'OTU3'], ['S1', 'S2', 'S3'])
         self.assertRaises(MissingNodeError, alpha_diversity, 'faith_pd',

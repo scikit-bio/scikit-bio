@@ -81,10 +81,10 @@ def ancom(
         be significantly different. This can can be anywhere between 0 and 1
         exclusive.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are Holm-
-        Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-
-        Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
-        by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
     sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
@@ -93,7 +93,7 @@ def ancom(
         by name. The default is one-way ANOVA ("f_oneway").
 
         .. versionchanged:: 0.7.0
-            Test funcion must accept 2-D arrays as input, perform batch testing, and
+            Test function must accept 2-D arrays as input, perform batch testing, and
             return 1-D arrays. SciPy functions have this capability. Custom functions
             may need modification.
 
