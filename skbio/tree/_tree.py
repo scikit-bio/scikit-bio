@@ -19,7 +19,7 @@ from typing import (
     Generator,
     FrozenSet,
     Dict,
-    Vector,
+    Sequence,
     Any,
 )
 
@@ -4681,7 +4681,7 @@ class TreeNode(SkbioObject):
     def compare_wrfd(
         self,
         other: "TreeNode",
-        metric: Union[str, Callable[[Vector, Vector], float]] = "cityblock",
+        metric: Union[str, Callable[[Sequence, Sequence], float]] = "cityblock",
         rooted: Optional[bool] = None,
         include_tips: bool = True,
     ) -> float:
@@ -4850,7 +4850,7 @@ class TreeNode(SkbioObject):
         self,
         other: "TreeNode",
         sample: Optional[int] = None,
-        metric: Union[str, Callable[[Vector, Vector], float]] = "unitcorr",
+        metric: Union[str, Callable[[Sequence, Sequence], float]] = "unitcorr",
         shuffler: Optional[Union[int, np.random.Generator, Callable]] = None,
         use_length: bool = True,
         ignore_self: bool = True,
