@@ -40,7 +40,7 @@ Utility functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, Any, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING
 
 import functools
 
@@ -293,6 +293,8 @@ def hamming(
 def p_dist(seq1, seq2):
     """Calculate the *p*-distance between two aligned sequences.
 
+    .. versionadded:: 0.7.2
+
     *p*-distance is the proportion of differing sites between two aligned sequences. It
     is equivalent to the normalized Hamming distance (see :func:`hamming`), but only
     considers definite characters (i.e., leaving out gaps and degenerate characters).
@@ -513,11 +515,6 @@ def jc69_correct(dists, chars=4):
     if is_scalar:
         return res.item()
     return res
-
-
-@_metric_specs(equal=True)
-def transitions(seq1, seq2, proportion=True):
-    L, seq1, seq2 = _get_valid(seq1, seq2)
 
 
 @_metric_specs()

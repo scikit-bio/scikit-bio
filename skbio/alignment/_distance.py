@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, Iterable, Any, Callable, TYPE_CHECKING
-from itertools import combinations
+from typing import Optional, Union, Any, Callable, TYPE_CHECKING
 from inspect import isfunction
 
 import numpy as np
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.sequence._alphabet import _encode_alphabet
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.alignment import TabularMSA
@@ -21,18 +21,31 @@ if TYPE_CHECKING:  # pragma: no cover
 def align_dists(
     alignment: "TabularMSA",
     metric: Union[str, Callable],
-    ids: Optional[Union[str, Iterable[Any]]] = None,
     shared_by_all: Optional[bool] = True,
     **kwargs: Any,
 ) -> "DistanceMatrix":
     r"""Create a distance matrix from a multiple sequence alignment.
 
-    .. versionadded:: 0.7.1
+    .. versionadded:: 0.7.2
 
     This function calculates the distance between each pair of sequences based on the
     aligned sites and a given distance metric. The resulting distance matrix can be
     used for phylogenetic tree reconstruction (see :mod:`skbio.tree`) or other types of
     distance-based analyses.
+
+    A "site" refers to a position in a sequence that has a valid character from an
+    alphabet pre-defined by each metric. Typically, gaps are not considered as sites,
+    and will be excluded from calculation. Some metrics are further restricted to
+    certain characters, such as the four nucleotides or the 20 basic amino acids, while
+    excluding degenerate and/or non-canonical characters.
+
+    Sequences are filtered to aligned sites prior to calculation. This has two working
+    modes: By default, alignment positions with at least one invalid character in any
+    of the sequences are excluded from all sequences, leaving fully-aligned positions
+    across the entire alignment. When ``shared_by_all`` is set to False, this filtering
+    is applied to each pair of sequences, and positions with both characters valid are
+    retained for calculation, even if there are invalid characters at the same position
+    in other sequences.
 
     Parameters
     ----------
@@ -43,16 +56,10 @@ def align_dists(
         :mod:`skbio.sequence.distance` for available metrics. Passing metric as a
         string is preferable as this often results in an optimized version of the
         metric being used.
-    ids : str or array_like of shape (n_sequences,), optional
-        Unique identifiers of sequences in the alignment. Can be a list of strings, or
-        a key to the ``metadata`` property of each sequence. If not provided, the
-        metadata key ``id`` will be used if every sequence has it. Otherwise,
-        incremental integer strings "1", "2", "3",... will be used.
     shared_by_all : bool, optional
         Calculate the distance between each pair of sequences based on sites shared
         across all sequences (True, default), or shared between the current pair of
-        sequences (False). A "site" refers to a position in a sequence that has a
-        definite character (i.e., not a gap or a degenerate character).
+        sequences (False).
     kwargs : dict, optional
         Metric-specific parameters. Refer to the documentation of the chosen metric.
 
@@ -67,15 +74,15 @@ def align_dists(
 
     Notes
     -----
+    If you wish to apply a custom function between each pair of sequences, use
+    ``DistanceMatrix.from_iterable(alignment, function)`` instead.
+
     This function always strips positions with gap or degenerate characters from the
     aligned sequences. If you intend to compute distances using unstripped sequences,
     consider using ``DistanceMatrix.from_iterable(alignment, metric)``.
 
     """
-    n_seqs, n_pos = alignment.shape
-
-    # Identify aligned sites (definite characters).
-    sites = [seq.definites() for seq in alignment]
+    n_seqs = len(alignment)
 
     # Use a preset distance metric (efficient).
     if isinstance(metric, str):
@@ -88,52 +95,51 @@ def align_dists(
                 "Refer to `skbio.sequence.distance` for a list of available "
                 "metrics."
             )
+        alphabet = func._alphabet
         func_name = "_" + metric
         if shared_by_all is False:
             func_name += "_pair"
         func = getattr(skbio.sequence.distance, func_name)
 
-        # Filter sequences by a given alphabet.
-        alphabet = func._alphabet
+        # Create a 2D matrix of ASCII codes of all sequences.
+        # TODO: This can be omitted after optimizing TabularMSA.
+        seqs = np.vstack([seq._bytes for seq in alignment])
 
-        if alphabet is not None:
-            if alphabet in ("nongap", "definite", "canonical"):
-                valid = getattr(alignment[0], f"_{alphabet}_hash")
-            else:
-                encoded = _encode_alphabet(alphabet)
-                valid = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-                valid[encoded] = True
-
-            if equal:
-                pos = valid[seq1._bytes] & valid[seq2._bytes]
-                seq1, seq2 = seq1[pos], seq2[pos]
-            else:
-                seq1, seq2 = seq1[valid[seq1._bytes]], seq2[valid[seq2._bytes]]
-
-        # Create 2D arrays of sequences (ASCII codes) and sites (Boolean mask).
-        # This can be omitted after optimizing TabularMSA.
-        sites = np.vstack(sites)
-        seqs = [seq._bytes for seq in alignment]
-        seqs = np.vstack(seqs)
-
-        # complete deletion
-        if shared_by_all:
-            sites = np.all(sites, axis=0)
-            seqs = seqs[:, sites]
+        # Use all positions (gaps or characters).
+        if alphabet is None:
             dm = func(seqs, **kwargs)
 
-        # pairwise deletion
+        # Filter sequences by a given alphabet.
         else:
-            dm = func(seqs, sites, **kwargs)
+            valid = _valid_hash(alphabet, alignment.dtype)
+            site_mat = valid[seqs]
+
+            # complete deletion
+            if shared_by_all:
+                site_vec = np.all(site_mat, axis=0)
+                seqs = seqs[:, site_vec]
+                dm = func(seqs, **kwargs)
+
+            # pairwise deletion
+            else:
+                dm = func(seqs, site_mat, **kwargs)
 
     # Call a custom function on each pair of sequences (slow).
     elif callable(metric):
+        if hasattr(metric, "_alphabet"):
+            alphabet = metric._alphabet
+        else:
+            alphabet = "nogap"
+
+        valid = _valid_hash(alphabet, alignment.dtype)
+        site_mat = [valid[seq._bytes] for seq in alignment]
+
         dm = np.empty((n_seqs * (n_seqs - 1) // 2,))
 
         # complete deletion
         if shared_by_all:
-            sites = np.all(np.vstack(sites), axis=0)
-            seqs = [seq[sites] for seq in alignment]
+            site_vec = np.all(site_mat, axis=0)
+            seqs = [seq[site_vec] for seq in alignment]
             pos = -1
             for i in range(n_seqs - 1):
                 for j in range(i + 1, n_seqs):
@@ -145,9 +151,9 @@ def align_dists(
             pos = -1
             for i in range(n_seqs - 1):
                 for j in range(i + 1, n_seqs):
-                    sites_ = sites[i] & sites[j]  ## will stripe twice
-                    seq1 = alignment[i][sites_]
-                    seq2 = alignment[j][sites_]
+                    site_vec = site_mat[i] & site_mat[j]  ## will stripe twice
+                    seq1 = alignment[i][site_vec]
+                    seq2 = alignment[j][site_vec]
                     dm[pos + j] = metric(seq1, seq2, **kwargs)
                 pos += n_seqs - i - 2
     else:
@@ -156,37 +162,33 @@ def align_dists(
     return DistanceMatrix(dm, ids=alignment.index.astype(str))
 
 
-def _valid_chars(alphabet, seqs):
-    """Create a mask of valid characters for distance calculation.
+def _valid_hash(alphabet, seqtype):
+    """Create a hash table of valid characters for sequence filtering.
 
     Parameters
     ----------
     alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}
         An alphabet of valid characters to be considered by the metric.
+    seqtype : class
+        Sequence type, which stores grammar information.
 
     Returns
     -------
-    ndarray of bool of shape (n_sequences, n_positions)
-        Boolean mask of valid characters (True).
+    ndarray of bool of shape (128,)
+        Boolean mask of ASCII codes of valid characters (True).
 
     See Also
     --------
     skbio.sequence.distance._metric_specs
 
     """
-    from skbio.sequence._alphabet import _encode_alphabet
-
-    n_seqs = len(seqs)
-    seq1 = seqs[0]
-    L = len(seq1)
     if alphabet in ("nongap", "definite", "canonical"):
-        valid = getattr(seq1, f"_{alphabet}_hash")
+        valid = getattr(seqtype, f"_{alphabet}_hash")
     else:
         encoded = _encode_alphabet(alphabet)
-        valid = np.zeros((seq1._num_ascii_codes,), dtype=bool)
+        valid = np.zeros((seqtype._num_ascii_codes,), dtype=bool)
         valid[encoded] = True
-
-    mask = np.vstack([valid[seq._bytes] for seq in seqs])
+    return valid
 
 
 def _ids_from_msa(msa, ids):
