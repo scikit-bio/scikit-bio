@@ -467,7 +467,7 @@ def _gme(dm):
     For an input distance matrix with m taxa, the output tree will have 2m - 3 nodes.
     This memory space is pre-allocated to improve efficiency. The algorithm doesn't
     remake arrays during iteration, but repeatedly uses the already allocated space.
-    During an interation involving x nodes, the first x positions of each array are
+    During an iteration involving x nodes, the first x positions of each array are
     occupied, while the remaining positions are disregarded. There is no need to reset
     array values after each iteration.
 

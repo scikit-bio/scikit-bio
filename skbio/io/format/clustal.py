@@ -349,5 +349,5 @@ def _clustal_to_tabular_msa(fh, cls=None, constructor=None):
         raise ClustalFormatError("Sequences not aligned properly")
     seqs = []
     for label in labels:
-        seqs.append(constructor("".join(data[label])))
+        seqs.append(constructor("".join(data[label]), metadata={"id": label}))
     return cls(seqs, index=labels)

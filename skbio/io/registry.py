@@ -56,7 +56,7 @@ For example:
    myformat = create_format('myformat')
 
 The `myformat` object is what we will use to register our new functionality.
-At this point you should evaulate whether your format is binary or text.
+At this point you should evaluate whether your format is binary or text.
 If your format is binary, your :func:`create_format` call should look like
 this:
 
@@ -85,7 +85,7 @@ To create a sniffer simply decorate the following onto your sniffer function:
    def _myformat_sniffer(fh):
        # do something with `fh` to determine the membership of the file
 
-For futher details on sniffer functions see :func:`Format.sniffer`.
+For further details on sniffer functions see :func:`Format.sniffer`.
 
 Creating a reader is very similar, but has one difference:
 
@@ -98,8 +98,8 @@ Creating a reader is very similar, but has one difference:
 
 Here we bound a function to a specific class. We also demonstrated using
 our FileSentinel object to indicate to the registry that this reader can take
-auxilary files that should be handled in the same way as the primary file.
-For futher details on reader functions see :func:`Format.reader`.
+auxiliary files that should be handled in the same way as the primary file.
+For further details on reader functions see :func:`Format.reader`.
 
 Creating a writer is about the same:
 
@@ -193,8 +193,8 @@ class IORegistry:
     def __init__(self):
         """Initialize registry mapping formats and implementations to classes.
 
-        This seperation of binary and text formats is useful because there
-        are many situations where we may have recieved a text-file. When this
+        This separation of binary and text formats is useful because there
+        are many situations where we may have received a text-file. When this
         happens, the binary data fundamentally does not exist. We could
         assume encoding should be interpreted in reverse, however this misses
         the bigger point: why would the user ever want text to be treated as
@@ -418,7 +418,7 @@ class IORegistry:
         if "newline" in kwargs:
             raise TypeError("Cannot provide `newline` keyword argument when sniffing.")
 
-        # By resolving the input here, we have the oppurtunity to reuse the
+        # By resolving the input here, we have the opportunity to reuse the
         # file (which is potentially ephemeral). Each sniffer will also resolve
         # the file, but that call will short-circuit and won't claim
         # responsibility for closing the file. This means that the file
@@ -750,7 +750,7 @@ class Format:
         Parameters
         ----------
         override : bool, optional
-            If True, the existing sniffer will be overriden.
+            If True, the existing sniffer will be overridden.
 
         Raises
         ------
@@ -853,7 +853,7 @@ class Format:
             None, it is assumed that the function will produce a generator.
         override : bool, optional
             If True, any existing readers for `cls` in this format will be
-            overriden.
+            overridden.
 
         Raises
         ------
@@ -945,7 +945,7 @@ class Format:
             None, it is assumed that the function will consume a generator.
         override : bool, optional
             If True, any existing writers for `cls` in this format will be
-            overriden.
+            overridden.
 
         Raises
         ------

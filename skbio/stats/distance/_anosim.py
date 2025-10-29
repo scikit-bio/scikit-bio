@@ -43,7 +43,7 @@ def anosim(
     Statistical significance is assessed via a permutation test. The assignment
     of objects to groups (`grouping`) is randomly permuted a number of times
     (controlled via `permutations`). An R statistic is computed for each
-    permutation and the p-value is the proportion of permuted R statisics that
+    permutation and the p-value is the proportion of permuted R statistics that
     are equal to or greater than the original (unpermuted) R statistic.
 
     Parameters

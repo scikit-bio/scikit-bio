@@ -64,7 +64,7 @@ directly to workflow checks.
 ...        self.state = self.state[::-1]
 
 An instance of a ``Workflow`` must be passed a ``state`` object and any runtime
-options. There are a few other useful parameters that can be specfied but are
+options. There are a few other useful parameters that can be specified but are
 out of scope for the purposes of this example. We also do not need to provide
 a state object as our ``initialize_state`` method overrides ``self.state``.
 Now, let's create the instance.

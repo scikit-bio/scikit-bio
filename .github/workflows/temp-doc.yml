@@ -1,9 +1,7 @@
-name: Release
+name: Release Documentation Fix
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
 
 env:
   earliest_python: "3.10"
@@ -11,15 +9,15 @@ env:
 
 jobs:
   # Trigger wheel building workflow
-  build_and_publish:
-    name: Build and publish to PyPI
-    uses: ./.github/workflows/wheels.yml
-    secrets: inherit
+  # build_and_publish:
+  #   name: Build and publish to PyPI
+  #   uses: ./.github/workflows/wheels.yml
+  #   secrets: inherit
 
   doc:
     name: Publish documentation
     runs-on: ubuntu-latest
-    needs: build_and_publish  # Wait for wheels to be built
+    # needs: build_and_publish  # Wait for wheels to be built
     defaults:
       run:
         shell: bash -l {0}
@@ -32,11 +30,11 @@ jobs:
       - name: Setup Python environment
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.latest_python }}
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
           pip install --no-deps .
           pip list
 
@@ -57,9 +55,10 @@ jobs:
           ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Update documentation
+      # hardcoding version number because github.ref_name will point to main if it's from a non-tagged commit
         run: |
-          rsync -av --delete doc/build/html/ website/docs/${{ github.ref_name }}
-          sed -i 's/docs\/${{ github.ref_name }}\//docs\/latest\//g' doc/build/html/sitemap.xml
+          rsync -av --delete doc/build/html/ website/docs/0.7.1
+          sed -i 's/docs\/0.7.1\//docs\/latest\//g' doc/build/html/sitemap.xml
           rsync -av --delete doc/build/html/ website/docs/latest
 
       - name: Publish website
