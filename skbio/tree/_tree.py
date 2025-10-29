@@ -126,7 +126,7 @@ class TreeNode(SkbioObject):
         self.length = length
         self.support = support
         self.parent = parent
-        self.children = [self]
+        self.children: list["TreeNode"] = []
 
         # TODO: `id` doesn't need to be a default attribute.
         self.id = None
@@ -1343,7 +1343,7 @@ class TreeNode(SkbioObject):
         self,
         node: "TreeNode",
         distance: Optional[Union[float, int]] = None,
-        branch_attrs: Iterable[Optional[str]] = [],
+        branch_attrs: Iterable[str] = [],
         uncache: bool = True,
     ):
         r"""Insert a node into the branch connecting self and its parent.
@@ -1702,7 +1702,7 @@ class TreeNode(SkbioObject):
         prune: bool = True,
         inplace: bool = False,
         uncache: bool = True,
-    ):
+    ) -> "TreeNode":
         r"""Refine a tree such that it just has the desired tip names.
 
         Parameters
@@ -3512,7 +3512,7 @@ class TreeNode(SkbioObject):
             biparts: Dict[FrozenSet[str], float] = {}
             biparts_get = biparts.get
         else:
-            biparts: FrozenSet[str] = []
+            biparts: list[FrozenSet[str]] = []
             biparts_append = biparts.append
 
         for node in self.postorder(include_self=False):
@@ -3944,7 +3944,7 @@ class TreeNode(SkbioObject):
     @params_aliased([("nodes", "tip_subset", "0.6.3", True)])
     def total_length(
         self,
-        nodes: Optional[Union[Iterable["TreeNode"], str]] = None,
+        nodes: Optional[Iterable[Union["TreeNode", str]]] = None,
         include_stem: bool = False,
         include_self: bool = False,
     ) -> float:
