@@ -357,12 +357,17 @@ def _p_dist_pair(seqs, mask):
         end = start + n_1 - i
         target = dm[start:end]
 
-        mask_ = mask[i] & mask[i + 1 :]  ##
-        diff = (seqs[i] != seqs[i + 1 :]) & mask_  ##, ##
-        p = np.count_nonzero(diff, axis=1)  ## faster than np.sum, no out=.
+        mask_ = mask[i] & mask[i + 1 :]
+        diff = (seqs[i] != seqs[i + 1 :]) & mask_
+        p = np.count_nonzero(diff, axis=1)
 
-        L = np.sum(mask_, axis=1)
-        np.divide(p, L, out=target, where=L > 0)
+        L = np.count_nonzero(mask_, axis=1)
+        lmask = L > 0
+        if np.all(lmask):
+            np.divide(p, L, out=target)
+        else:
+            np.divide(p, L, out=target, where=lmask)
+            target[~lmask] = np.nan
 
         start = end
     return dm
@@ -515,6 +520,48 @@ def jc69_correct(dists, chars=4):
     if is_scalar:
         return res.item()
     return res
+
+
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+def transitions(seq1, seq2):
+    """Calculate the number or proportion of transitions between two aligned sequences.
+
+    .. versionadded:: 0.7.2
+
+    A transition is the substitution of a purine ("A" or "G") with another purine, or
+    the substitution of a pyrimidine ("C" or "T/U") with another pyrimidine.
+
+    Parameters
+    ----------
+    seq1, seq2 : GrammaredSequence
+        Sequences to compute the *p*-distance between.
+
+    Returns
+    -------
+    float
+        *p*-distance between ``seq1`` and ``seq2``.
+
+    Raises
+    ------
+    (see ``hamming``.)
+
+    See Also
+    --------
+    hamming
+
+    Examples
+    --------
+    >>> from skbio.sequence import Sequence
+    >>> from skbio.sequence.distance import p_dist
+    >>> seq1 = Sequence('AGGGTA')
+    >>> seq2 = Sequence('CGTTTA')
+    >>> p_dist(seq1, seq2)
+    0.5
+
+    """
+    if (L := len(seq1)) == 0:
+        return np.nan
+    return np.count_nonzero(seq1._bytes != seq2._bytes) / L
 
 
 @_metric_specs()
