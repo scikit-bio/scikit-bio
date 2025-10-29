@@ -1,0 +1,71 @@
+name: Release Documentation Fix
+
+on:
+  workflow_dispatch:
+
+env:
+  earliest_python: "3.10"
+  latest_python: "3.14"
+
+jobs:
+  # Trigger wheel building workflow
+  # build_and_publish:
+  #   name: Build and publish to PyPI
+  #   uses: ./.github/workflows/wheels.yml
+  #   secrets: inherit
+
+  doc:
+    name: Publish documentation
+    runs-on: ubuntu-latest
+    # needs: build_and_publish  # Wait for wheels to be built
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
+          pip install --no-deps .
+          pip list
+
+      - name: Build documentation
+        run: make doc
+
+      - name: Modify documentation
+        run: |
+          python doc/suburl.py
+          python doc/metatag.py
+          python doc/editmap.py
+
+      - name: Check out website
+        uses: actions/checkout@v4
+        with:
+          repository: scikit-bio/scikit-bio.github.io
+          path: website
+          ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
+
+      - name: Update documentation
+      # hardcoding version number because github.ref_name will point to main if it's from a non-tagged commit
+        run: |
+          rsync -av --delete doc/build/html/ website/docs/0.7.1
+          sed -i 's/docs\/0.7.1\//docs\/latest\//g' doc/build/html/sitemap.xml
+          rsync -av --delete doc/build/html/ website/docs/latest
+
+      - name: Publish website
+        run: |
+          cd website
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git add -A
+          git commit -m "Update from ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          git push
