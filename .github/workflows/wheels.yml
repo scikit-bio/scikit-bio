@@ -41,10 +41,10 @@ jobs:
         # This may need to be updated for new Python versions, double check before release.
         uses: pypa/cibuildwheel@v3.2.1
         env:
-        # Run full tests on release or manual trigger, otherwise (ie. on PRs) do simple import/print test.
+        # Run full tests on release or manual trigger, otherwise (i.e. on PRs) do simple import/print test.
           CIBW_TEST_COMMAND: >
-            ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags')) || github.event_name == 'workflow_dispatch' ?
-                'python -m skbio.test' :
+            ${{ ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags')) || github.event_name == 'workflow_dispatch') &&
+                'python -m skbio.test' ||
                 'python -c "import skbio; print(skbio.__version__)"' }}
 
       - uses: actions/upload-artifact@v4
