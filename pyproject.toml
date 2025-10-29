@@ -126,13 +126,11 @@ skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 # Make sure to update this before release
 build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
-before-test = "pip install --prefer-binary h5py"
-
 # Test dependencies
-test-requires = ["pytest", "coverage", "responses", "h5py"]
+test-requires = ["pytest", "coverage", "responses"]
 
 # Install dependencies before building
-before-build = "pip install --prefer-binary numpy cython h5py"
+before-build = "pip install numpy cython"
 
 [tool.cibuildwheel.linux]
 # Updated to be compatible with Python 3.14
