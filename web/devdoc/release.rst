@@ -9,9 +9,9 @@ This guide explains how to release a new version of scikit-bio. To illustrate ex
 
 .. note:: The following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted. They also assume that you have [Conda](https://conda.io) installed.
 
-Large portions of the workflow are not automated through GitHub workflows. In order to check that things will work correctly before running the release workflow in ``release.yml``, please follow these steps.
+Large portions of the workflow are now automated through GitHub workflows. In order to check that things will work correctly before running the release workflow in ``release.yml``, please follow these steps.
 
-The general workflow is this:
+The general workflow is:
 
 1. Update the version number in the repository from **x.y.z-dev** to **x.y.z**.
 
@@ -51,7 +51,7 @@ This is a **pre-release check** to be performed by the developer to ensure that 
 
 In an environment with **the same version of Python** specified in the ``Publish documentation`` job within the ``release.yml`` workflow, build the documentation locally using ``make doc`` and ensure that it runs without error and that everything renders correctly. 
 
-We now use Sphinx and automated workflows to handle the documentation building and publishing process, but Sphinx doesn't always release new versions in a timely manner, so it may be the case that there is no Sphinx version which is compatible with the most recent Python version. Hence the need for this check.
+We now use Sphinx and automated workflows to handle the documentation building and publishing process. Check Sphinx's most recent Python version support, and pin to this version in ``release.yml`` if it isn't the latest.
 
 
 Test wheels and sdist fully
@@ -61,37 +61,23 @@ This is a **pre-release check** to be performed by the developer to ensure that 
 
 The ``wheels.yml`` file may be triggered manually through GitHub Actions ``workflow_dispatch`` (https://github.com/scikit-bio/scikit-bio/actions/workflows/wheels.yml). Click the ``Run workflow`` button and run it against the ``main`` branch. 
 
-When this workflow is manually triggered, it will build wheels for all supported Python versions and all supported platforms, and run the full suite of unit tests on every wheel that it builds. This process typically takes about 1.5 hours, but it is well worth the time to ensure that the wheel building process will be successful when it's time to actually publish the release.
+When this workflow is manually triggered, it will build wheels for all supported Python versions and all supported platforms, and run the full suite of unit tests on every wheel that it builds.
+This process typically takes some time, but it is well worth the time to ensure that the wheel building process will be successful when it's time to actually publish the release.
 
-Manually check that the correct wheels are being build by downloading from the artifact download URL and inspecting the zip file containing the wheels provided by the ``Run actions/upload artifact`` portion of the wheel building process for each platform. The zip file should contain all the wheels you are trying to build. The download URL should look something like this in the GitHub UI:
-
-```
-Run actions/upload-artifact@v4
-With the provided path, there will be 5 files uploaded
-Artifact name is valid!
-Root directory input is valid!
-Beginning upload of artifact content to blob storage
-Uploaded bytes 8388608
-Uploaded bytes 16777216
-Uploaded bytes 25165824
-Uploaded bytes 32072773
-Finished uploading artifact content to blob storage!
-SHA256 digest of uploaded artifact zip is 08ba44f74c49a8095f6eb22b7d9b3d9718fec...
-Finalizing artifact upload
-Artifact wheels-macos-latest-4.zip successfully finalized. Artifact ID 4412078791
-Artifact wheels-macos-latest-4 has been successfully uploaded! Final size is 32072773 bytes. Artifact ID is 4412078791
-**Artifact download URL: https://github.com/scikit-bio/scikit-bio/actions/runs/18925281429/artifacts/4412078791**
-```
+Manually check that the correct wheels are built by downloading the artifacts from the workflow run or visually checking the output from ``cibuildwheel`` on the GitHub Actions workflow page.
+If downloading, inspect the zip file containing the wheels provided by workflow for each platform. The zip file should contain all the wheels you are trying to build.
 
 If you find that the desired wheels are not present in the zip files, or you are coming accross unexpected errors in the wheel building process, there are a few places to check:
 
 1. Check that you have updated the ``cibuildwheel`` portion of the ``pyproject.toml`` configuration file to include all supported Python versions and any other information you want.
 
-2. Ensure that the version of ``cibuildwheel`` used in ``wheels.yml`` is up to date. It may be the case that the latest version of Python is not supported by whichever version is currently in use in ``wheels.yml``. In this case, ``cibuildwheel`` will not throw an error or warning, it just won't build wheels for that version of Python.
+2. Ensure that the version of ``cibuildwheel`` used in ``wheels.yml`` is up to date. It may be the case that the latest version of Python is not supported by whichever version is currently in use in ``wheels.yml``.
+In this case, ``cibuildwheel`` will not throw an error or warning, it just won't build wheels for that version of Python.
 
 3. Check that the version of ``manylinux`` in the ``cibuildwheel`` section of ``pyproject.toml`` is up to date. This is particularly relevant if any of the errors you encounter are related to specific versions of ``glibc``.
 
-This workflow also builds the source distribution for the package. It is **highly recommended** to download the built sdist (it will be in a zip file like the wheels, from the ``Run actions/upload artifact`` section of the ``Build source distribution`` job in GitHub Actions) and test that you can build it against **every** Python version supported by scikit-bio. Again, this is tedious, but well worth the benefit of being certain things will work before publishing the release.
+This workflow also builds the source distribution for the package. It is **highly recommended** to download the built sdist from this workflow and test that you can build it against **every** Python version supported by scikit-bio.
+Again, this is tedious, but well worth the benefit of being certain things will work before publishing the release.
 
 
 Tag the release and publish
