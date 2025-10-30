@@ -119,8 +119,8 @@ packages = ["skbio"]
 "skbio.embedding.tests" = ["data/*"]
 
 [tool.cibuildwheel]
-# Skip 32-bit builds, PyPy, and musllinux
-skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
+# Skip 32-bit builds, PyPy, musllinux and unavailble Win-ARM64 Python builds
+skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*", "cp39-win_arm64", "cp310-win_arm64"]
 
 # Python versions to build
 # UPDATE BEFORE RELEASE
