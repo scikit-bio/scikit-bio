@@ -16,17 +16,24 @@ Generic distance metrics
    :toctree:
 
    hamming
+   p_dist
    kmer_distance
 
 
-Distance metrics for nucleotide sequences
------------------------------------------
+Nucleotide distance metrics
+---------------------------
+
+.. autosummary::
+   :toctree:
 
    jc69
 
 
 Utility functions
 -----------------
+
+.. autosummary::
+   :toctree:
 
    jc69_correct
 
@@ -185,18 +192,12 @@ def _metric_specs(
 
 
 @_metric_specs(equal=True)
-def hamming(
-    seq1,
-    seq2,
-    proportion=True,
-    gaps=True,
-    degenerates=True,
-):
+def hamming(seq1, seq2, proportion=True):
     r"""Compute the Hamming distance between two sequences.
 
     The Hamming distance [1]_ between two equal-length sequences is the number of
     differing characters. It is often normalized to a proportion of the sequence
-    length. This proportion is usually referred to as *p*-distance in bioinformatics.
+    length.
 
     Parameters
     ----------
@@ -204,12 +205,8 @@ def hamming(
         Sequences to compute the Hamming distance between.
     proportion : bool, optional
         If True (default), normalize to a proportion of the sequence length.
-    gaps : bool, optional
-        If False, positions with either or both gaps in the two sequences will be
-        excluded from the calculation. Default is True.
-    degenerates : bool, optional
-        If False, positions with either or both degenerate characters in the two
-        sequences will be excluded from the calculation. Default is True.
+
+        .. versionadded:: 0.7.2
 
     Returns
     -------
@@ -224,23 +221,21 @@ def hamming(
         If the sequences are not the same type.
     ValueError
         If the sequences are not the same length.
-    AttributeError
-        If gap or degenerate characters are not defined for the sequences.
 
     See Also
     --------
-    jc69_correct
+    p_dist
     scipy.spatial.distance.hamming
 
     Notes
     -----
-    ``np.nan`` will be returned if the sequences do not contain any characters.
-
     This function does not make assumptions about the sequence alphabet in use. Each
     sequence object's underlying sequence of characters are used to compute Hamming
     distance. Characters that may be considered equivalent in certain contexts (e.g.,
-    `-` and `.` as gap characters) are treated as distinct characters when computing
+    "-" and "." as gap characters) are treated as distinct characters when computing
     Hamming distance.
+
+    ``np.nan`` will be returned if the sequences do not contain any characters.
 
     References
     ----------
@@ -259,39 +254,38 @@ def hamming(
     """
     if (L := len(seq1)) == 0:
         return np.nan
-
-    # Create a Boolean mask of gap and/or degenerate characters.
-    if gaps is False:
-        mask = seq1.gaps() | seq2.gaps()
-        if degenerates is False:
-            mask |= seq1.degenerates() | seq2.degenerates()
-    elif degenerates is False:
-        mask = seq1.degenerates() | seq2.degenerates()
-    else:
-        mask = None
-
-    # Reduce sequences to valid positions, if necessary.
-    if mask is not None:
-        valid = ~mask
-        L_valid = np.sum(valid)
-        if L_valid == 0:
-            return np.nan
-        elif L_valid < L:
-            seq1 = seq1[valid]
-            seq2 = seq2[valid]
-            L = L_valid
-
-    # Count different positions
-    dist = np.sum(seq1.values != seq2.values)
+    dist = np.count_nonzero(seq1.values != seq2.values)
     if proportion:
         dist /= L
-
     return float(dist)
+
+
+def _hamming(seqs, proportion=True):
+    """Compute pairwise Hamming distances between multiple sequences."""
+    # SciPy's `pdist` is a shortcut to the answer.
+    if proportion:
+        return pdist(seqs, metric="hamming")
+    # Otherwise, compute with the following code.
+    n = seqs.shape[0]
+    n_1 = n - 1
+    dm = np.empty((n * n_1 // 2,))
+    start = 0
+    for i in range(n_1):
+        end = start + n_1 - i
+        dm[start:end] = np.count_nonzero(seqs[i] != seqs[i + 1 :], axis=1)
+        start = end
+    return dm
+
+
+def _hamming_pair(seqs, mask, proportion=True):
+    """Compute pairwise Hamming distances between multiple sequences."""
+    # The same as `_hamming`, and `mask` is merely a placeholder.
+    return _hamming(seqs, proportion)
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
 def p_dist(seq1, seq2):
-    """Calculate the *p*-distance between two aligned sequences.
+    r"""Calculate the *p*-distance between two aligned sequences.
 
     .. versionadded:: 0.7.2
 
@@ -300,14 +294,7 @@ def p_dist(seq1, seq2):
     considers definite characters (i.e., leaving out gaps and degenerate characters).
 
     .. math::
-        p = -\frac{no. of differing sites}{total no. of sites}
-
-    *p*-distance is the simplest measurement of the evolutionary distance (number of
-    substitutions per site) between two sequences. It is also referred to as the *raw
-    distance*. However, this metric may underestimate the true evolutionary distance
-    when the two sequences are divergent and substitutions became saturated. This
-    limitation may be overcome by adopting metrics that correct for multiple
-    substitutions per site (such as :func:`jc69`) and other biases.
+        p = \frac{\text{No. of differing sites}}{\text{Total no. of sites}}
 
     Parameters
     ----------
@@ -321,11 +308,21 @@ def p_dist(seq1, seq2):
 
     Raises
     ------
-    (see ``hamming``.)
+    See ``hamming``.
 
     See Also
     --------
     hamming
+    jc69
+
+    Notes
+    -----
+    *p*-distance is the simplest measurement of the evolutionary distance (number of
+    substitutions per site) between two sequences. It is also referred to as the *raw
+    distance*. However, this metric may underestimate the true evolutionary distance
+    when the two sequences are divergent and substitutions became saturated. This
+    limitation may be overcome by adopting metrics that correct for multiple
+    substitutions per site (such as :func:`jc69`) and other biases.
 
     Examples
     --------
@@ -339,7 +336,7 @@ def p_dist(seq1, seq2):
     """
     if (L := len(seq1)) == 0:
         return np.nan
-    return np.count_nonzero(seq1._bytes != seq2._bytes) / L
+    return (np.count_nonzero(seq1._bytes != seq2._bytes) / L).item()
 
 
 def _p_dist(seqs):
@@ -375,7 +372,7 @@ def _p_dist_pair(seqs, mask):
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def jc69(seq1, seq2):
-    """Calculate the Jukes-Cantor (JC69) distance between two aligned sequences.
+    r"""Calculate the Jukes-Cantor (JC69) distance between two aligned sequences.
 
     The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
     per site) between two nucleotide sequences by correcting the observed proportion
@@ -387,7 +384,7 @@ def jc69(seq1, seq2):
 
     Parameters
     ----------
-    seq1, seq2 : GrammaredSequence
+    seq1, seq2 : {DNA, RNA}
         Sequences to compute the JC69 distance between.
 
     Returns
@@ -407,11 +404,11 @@ def jc69(seq1, seq2):
 
     Notes
     -----
-    JC69 is the most basic evolutionary model for nucleotide sequences, assuming equal
-    base frequencies and equal substitution rates between bases.
+    JC69 is a basic evolutionary model for nucleotide sequences. It assumes equal base
+    frequencies and equal substitution rates between bases.
 
-    This function returns NaN if :math:`p >= 0.75`. This happens when the two
-    sequences are too divergent and subsitutions are over-saturated for the reliable
+    This function returns NaN if :math:`p \geq 0.75`. This happens when the two
+    sequences are too divergent and substitutions are over-saturated for reliable
     estimation of the true evolutionary distance.
 
     """
@@ -423,15 +420,15 @@ def jc69(seq1, seq2):
 
 def _jc69(seqs, chars=4):
     """Compute pairwise JC69 distances between sequences."""
-    return jc69_correct(_p_dist(seqs), chars)
+    return jc69_correct(_p_dist(seqs), chars, inplace=True)
 
 
 def _jc69_pair(seqs, mask, chars=4):
     """Compute pairwise JC69 distances between sequences."""
-    return jc69_correct(_p_dist_pair(seqs, mask), chars)
+    return jc69_correct(_p_dist_pair(seqs, mask), chars, inplace=True)
 
 
-def jc69_correct(dists, chars=4):
+def jc69_correct(dists, chars=4, inplace=False):
     r"""Perform Jukes-Cantor (JC69) correction of a raw distance.
 
     The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
@@ -442,12 +439,7 @@ def jc69_correct(dists, chars=4):
     .. math::
         D = -\alpha ln(1 - \frac{p}{\alpha})
 
-    Where :math:`\alpha = \frac{no. of characters - }{no. of characters}`
-
-    The JC69 model was developed for nucleotide sequences (4 characters, therefore
-    :math:`\alpha = 0.75`). Technically, it is possible to apply JC69 correction on
-    protein sequences, with ``chars=20``. However, this estimation may be inaccurate
-    due to the profound variation of amino acid frequencies and substitution rates.
+    Where :math:`\alpha = \frac{no. of characters - 1}{no. of characters}`
 
     Parameters
     ----------
@@ -456,7 +448,10 @@ def jc69_correct(dists, chars=4):
         of sequences.
     chars : int, optional
         Number of definite characters in the alphabet. Default is 4, which is for
-        nucleotide sequences ("A", "C", "G" and "T"/"U").
+        nucleotide sequences ("A", "C", "G" and "T/U").
+    inplace : bool, optional
+        If True and ``dists`` is an array, perform correction in place. Otherwise,
+        create a copy of the data. Default is False.
 
     Returns
     -------
@@ -477,8 +472,13 @@ def jc69_correct(dists, chars=4):
     JC69 is the most basic evolutionary model, assuming equal character frequencies and
     equal substitution rates between characters.
 
-    The functions returns ``nan`` if ``dist >= (chars - 1) / chars``. This happens when
-    the two sequences are too divergent and subsitutions are over-saturated for the
+    The JC69 model was developed for nucleotide sequences (4 characters, therefore
+    :math:`\alpha = 0.75`). Technically, it is possible to apply JC69 correction on
+    protein sequences, with ``chars=20``. However, this estimation may be inaccurate
+    due to the profound variation of amino acid frequencies and substitution rates.
+
+    The functions returns NaN if ``dist`` :math:`\geq \alpha`. This happens when the
+    two sequences are too divergent and substitutions are over-saturated for reliable
     estimation of the true evolutionary distance.
 
     References
@@ -505,26 +505,35 @@ def jc69_correct(dists, chars=4):
         raise ValueError("`chars` must be at least 2.")
     frac = (chars - 1) / chars
     is_scalar = np.isscalar(dists)
-    arr = np.asarray(dists)
 
-    # copy of array?
-    mask = arr < frac
+    if inplace and isinstance(dists, np.ndarray):
+        arr = dists
+    else:
+        arr = np.array(dists, copy=True)
+
+    # Values exceeding frac become NaN, as these sites are saturated and JC69 cannot
+    # estimate the true substitution number.
+    arr[arr >= frac] = np.nan
+
+    # Values that suffice 0 < x < frac are subject to the equation.
+    mask = (arr > 0) & (arr < frac)
     vals = arr[mask]
+
     vals /= -frac
     vals += 1.0
     np.log(vals, out=vals)
     vals *= -frac
-    res = np.full(arr.shape, np.nan)
-    res[mask] = vals
+
+    arr[mask] = vals
 
     if is_scalar:
-        return res.item()
-    return res
+        return arr.item()
+    return arr
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
-def transitions(seq1, seq2):
-    """Calculate the number or proportion of transitions between two aligned sequences.
+def transitions(seq1, seq2, proportion=True):
+    r"""Calculate the number or proportion of transitions between two aligned sequences.
 
     .. versionadded:: 0.7.2
 
@@ -533,35 +542,20 @@ def transitions(seq1, seq2):
 
     Parameters
     ----------
-    seq1, seq2 : GrammaredSequence
-        Sequences to compute the *p*-distance between.
+    seq1, seq2 : {DNA, RNA}
+        Sequences to compute transitions between.
+    proportion : bool, optional
+        If True (default), normalize to a proportion of the sequence length.
 
     Returns
     -------
     float
-        *p*-distance between ``seq1`` and ``seq2``.
-
-    Raises
-    ------
-    (see ``hamming``.)
-
-    See Also
-    --------
-    hamming
-
-    Examples
-    --------
-    >>> from skbio.sequence import Sequence
-    >>> from skbio.sequence.distance import p_dist
-    >>> seq1 = Sequence('AGGGTA')
-    >>> seq2 = Sequence('CGTTTA')
-    >>> p_dist(seq1, seq2)
-    0.5
+        Proportion or number of transitions between ``seq1`` and ``seq2``.
 
     """
     if (L := len(seq1)) == 0:
         return np.nan
-    return np.count_nonzero(seq1._bytes != seq2._bytes) / L
+    return np.nan
 
 
 @_metric_specs()

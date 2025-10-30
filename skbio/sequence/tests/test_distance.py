@@ -569,6 +569,23 @@ class TestJC69(TestCase):
         self.assertEqual(round(jc69_correct(0.5, chars=5), 3), 0.785)
         self.assertEqual(round(jc69_correct(0.8, chars=9), 3), 2.047)
 
+    def test_jc69_correct_inplace(self):
+        lst = [0.0, 0.1, 0.2, 0.5, 0.7, 1.0]
+        exp = np.array([0.0, 0.107, 0.233, 0.824, 2.031, np.nan])
+        obs = jc69_correct(lst, inplace=True)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIsNot(obs, lst)
+
+        arr = np.array(lst)
+        obs = jc69_correct(arr, inplace=False)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIsNot(obs, arr)
+
+        obs = jc69_correct(arr, inplace=True)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIs(obs, arr)
+        npt.assert_array_equal(arr.round(3), exp)
+
     def test_jc69_correct_error(self):
         with self.assertRaisesRegex(ValueError, r"`chars` must be at least 2."):
             jc69_correct(0.5, chars=1)
