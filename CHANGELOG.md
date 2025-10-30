@@ -3,6 +3,7 @@
 ## Version 0.7.1.post1
 
 * Fixed source distribution packaging for Python 3.14 support.
+* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2309]https://github.com/scikit-bio/scikit-bio/pull/2309).
 
 ## Version 0.7.1
 
@@ -12,7 +13,6 @@
 * Added function `struc_zero`, a statistical test for structural zeros. This function complements `ancombc` or can be used alone ([#2305](https://github.com/scikit-bio/scikit-bio/pull/2305)).
 * Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
 * Added new `PairwiseMatrix` and `SymmetricMatrix` classes and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
-* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2272]https://github.com/scikit-bio/scikit-bio/pull/2272).
 
 ### Performance enhancements
 
