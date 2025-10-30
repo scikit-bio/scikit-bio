@@ -64,7 +64,8 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          python-version: ${{ env.latest_python }}
+          # Pin to 3.13 for now because no Sphinx is compatible with Python 3.14
+          python-version: "3.13"
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
