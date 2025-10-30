@@ -17,7 +17,7 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, hamming, p_dist, kmer_distance, jc69_correct
+    _metric_specs, hamming, p_dist, kmer_distance, jc69, jc69_correct, k2p
 )
 
 
@@ -540,7 +540,58 @@ class TestKmerDistance(TestCase):
 
 
 class TestJC69(TestCase):
-    def test_jc69_correct_scalar(self):
+    def test_jc69(self):
+        # regular case
+        seq1 = DNA("AGATC")
+        seq2 = DNA("AGATG")
+        obs = jc69(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 3), 0.233)
+
+        # RNA sequences
+        seq1, seq2 = RNA("AUCG"), RNA("UACG")
+        self.assertEqual(round(jc69(seq1, seq2), 3), 0.824)
+
+        # sequences with gaps
+        seq1, seq2 = DNA("A--ACGG"), DNA("AGAAT-G")
+        self.assertEqual(round(jc69(seq1, seq2), 3), 0.304)
+
+        # sequences with degenerate characters
+        seq1, seq2 = DNA("ANGCRT"), DNA("CCSMTT")
+        self.assertEqual(round(jc69(seq1, seq2), 3), 0.824)
+
+        # identical sequences
+        seq1, seq2 = DNA("ACGT"), DNA("ACGT")
+        self.assertEqual(jc69(seq1, seq2), 0.0)
+
+        # distinct sequences
+        seq1, seq2 = DNA("ACGT"), DNA("TGCA")
+        self.assertTrue(np.isnan(jc69(seq1, seq2)))
+
+        # highly divergent sequences (p = 0.7)
+        seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
+        self.assertEqual(round(jc69(seq1, seq2), 3), 2.031)
+
+        # overly divergent sequences (p = 0.8)
+        seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
+        self.assertTrue(np.isnan(jc69(seq1, seq2)))
+
+        # empty sequences
+        seq1, seq2 = DNA(""), DNA("")
+        self.assertTrue(np.isnan(jc69(seq1, seq2)))
+
+        # protein sequences
+        seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
+        with self.assertRaises(TypeError):
+            jc69(seq1, seq2)
+
+        # non-grammared sequences
+        seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
+        with self.assertRaises(TypeError):
+            jc69(seq1, seq2)
+
+    def test_jc69_correct(self):
+        # scalar input
         obs = jc69_correct(0.1)
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 3), 0.107)
@@ -550,7 +601,7 @@ class TestJC69(TestCase):
         self.assertEqual(jc69_correct(0.0), 0.0)
         self.assertTrue(np.isnan(jc69_correct(0.8)))
 
-    def test_jc69_correct_array(self):
+        # list input
         lst = [0.0, 0.1, 0.2, 0.5, 0.7, 1.0]
         obs = jc69_correct(lst)
         self.assertIsInstance(obs, np.ndarray)
@@ -558,6 +609,24 @@ class TestJC69(TestCase):
         exp = np.array([0.0, 0.107, 0.233, 0.824, 2.031, np.nan])
         npt.assert_array_equal(obs.round(3), exp)
 
+        # inplace has no effect on non-array
+        obs = jc69_correct(lst, inplace=True)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIsNot(obs, lst)
+
+        # 1D array input
+        arr = np.array(lst)
+        obs = jc69_correct(arr, inplace=False)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIsNot(obs, arr)
+
+        # modify array in-place
+        obs = jc69_correct(arr, inplace=True)
+        npt.assert_array_equal(obs.round(3), exp)
+        self.assertIs(obs, arr)
+        npt.assert_array_equal(arr.round(3), exp)
+
+        # 2D array input
         shape = (2, 3)
         arr = np.reshape(lst, shape)
         obs = jc69_correct(arr)
@@ -565,30 +634,47 @@ class TestJC69(TestCase):
         exp = np.reshape(exp, shape)
         npt.assert_array_equal(obs.round(3), exp)
 
-    def test_jc69_correct_alt_chars(self):
+        # alternative character count
         self.assertEqual(round(jc69_correct(0.5, chars=5), 3), 0.785)
         self.assertEqual(round(jc69_correct(0.8, chars=9), 3), 2.047)
 
-    def test_jc69_correct_inplace(self):
-        lst = [0.0, 0.1, 0.2, 0.5, 0.7, 1.0]
-        exp = np.array([0.0, 0.107, 0.233, 0.824, 2.031, np.nan])
-        obs = jc69_correct(lst, inplace=True)
-        npt.assert_array_equal(obs.round(3), exp)
-        self.assertIsNot(obs, lst)
-
-        arr = np.array(lst)
-        obs = jc69_correct(arr, inplace=False)
-        npt.assert_array_equal(obs.round(3), exp)
-        self.assertIsNot(obs, arr)
-
-        obs = jc69_correct(arr, inplace=True)
-        npt.assert_array_equal(obs.round(3), exp)
-        self.assertIs(obs, arr)
-        npt.assert_array_equal(arr.round(3), exp)
-
-    def test_jc69_correct_error(self):
         with self.assertRaisesRegex(ValueError, r"`chars` must be at least 2."):
             jc69_correct(0.5, chars=1)
+
+
+class TestK2P(TestCase):
+    def test_k2p(self):
+        # regular case (8 sites, 2 transitions, 1 transversion)
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        obs = k2p(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 3), 0.562)
+
+        # identical sequences after trimming
+        self.assertEqual(k2p(DNA("AACGTY"), DNA("WACGTT")), 0.0)
+
+        # empty sequences after trimming
+        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
+        self.assertTrue(np.isnan(k2p(seq1, seq2)))
+
+        # too many transversions (2Q > 1)
+        seq1, seq2 = DNA("ACGTACGT"), DNA("AGCATATT")
+        self.assertTrue(np.isnan(k2p(seq1, seq2)))
+
+        # too many transitions (2P + Q > 1)
+        seq1, seq2 = DNA("ACGTATGT"), DNA("GTCTACAT")
+        self.assertTrue(np.isnan(k2p(seq1, seq2)))
+
+        # protein sequences
+        seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
+        with self.assertRaises(TypeError):
+            k2p(seq1, seq2)
+
+        # non-grammared sequences
+        seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
+        with self.assertRaises(TypeError):
+            k2p(seq1, seq2)
 
 
 if __name__ == "__main__":

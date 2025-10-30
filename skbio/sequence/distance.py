@@ -27,6 +27,7 @@ Nucleotide distance metrics
    :toctree:
 
    jc69
+   k2p
 
 
 Utility functions
@@ -277,7 +278,7 @@ def _hamming(seqs, mask=None, proportion=True):
 
     Returns
     -------
-    ndarray of float of shape (n * (n - 1) / 2,)
+    ndarray of float of shape (C(n_sequences, 2),)
         Hamming distance matrix in condensed form.
 
     """
@@ -366,7 +367,7 @@ def _p_dist(seqs, mask=None):
 
     Returns
     -------
-    ndarray of float of shape (n * (n - 1) / 2,)
+    ndarray of float of shape (C(n_sequences, 2),)
         p-distance matrix in condensed form.
 
     """
@@ -462,7 +463,7 @@ def _jc69(seqs, mask=None, chars=4):
 
     Returns
     -------
-    ndarray of float of shape (n * (n - 1) / 2,)
+    ndarray of float of shape (C(n_sequences, 2),)
         JC69 distance matrix in condensed form.
 
     """
@@ -573,30 +574,140 @@ def jc69_correct(dists, chars=4, inplace=False):
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
-def transitions(seq1, seq2, proportion=True):
-    r"""Calculate the number or proportion of transitions between two aligned sequences.
+def k2p(seq1, seq2):
+    r"""Calculate the K2P distance between two aligned sequences.
 
-    .. versionadded:: 0.7.2
+    The Kimura 2-parameter (K2P, a.k.a. K80) model [1]_ assumes differential rates of
+    transitions (substitutions between two purines or between two pyrimidines) versus
+    transversions (substitutions between a purine and a pyrimidine). It is calculated
+    as:
 
-    A transition is the substitution of a purine ("A" or "G") with another purine, or
-    the substitution of a pyrimidine ("C" or "T/U") with another pyrimidine.
+    .. math::
+        K = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
+
+    Where :math:`P` and :math:`Q` are the proportions of transitions and transversions,
+    respectively.
 
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
-        Sequences to compute transitions between.
-    proportion : bool, optional
-        If True (default), normalize to a proportion of the sequence length.
+        Sequences to compute the K2P distance between.
 
     Returns
     -------
     float
-        Proportion or number of transitions between ``seq1`` and ``seq2``.
+        K2P distance between ``seq1`` and ``seq2``.
+
+    See Also
+    --------
+    jc69
+
+    References
+    ----------
+    .. [1] Kimura, M. (1980). A simple method for estimating evolutionary rates of base
+       substitutions through comparative studies of nucleotide sequences. Journal of
+       Molecular Evolution, 16(2), 111-120.
+
+    Notes
+    -----
+    K2P extends from JC69 by modeling differential transition and transversion rates,
+    while also assuming equal base frequencies.
+
+    This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is
+    negative, which implicates over-saturation of substitutions.
 
     """
-    if (L := len(seq1)) == 0:
+    if len(seq1) == 0:
         return np.nan
-    return np.nan
+    seqs = np.vstack([seq1._bytes, seq2._bytes])
+    return _k2p(seqs).item()
+
+
+def _k2p(seqs, mask=None):
+    """Compute pairwise K2P distances between multiple sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Sequences to compute the K2P distance between.
+    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+        Boolean mask of valid sites (True). If provided, each sequence pair will be
+        filtered to positions that are valid in both of them.
+
+    Returns
+    -------
+    ndarray of float of shape (C(n_sequences, 2),)
+        K2P distance matrix in condensed form.
+
+    """
+    masked = mask is not None
+    n = seqs.shape[0]
+    n_1 = n - 1
+    L = seqs.shape[1]
+    logL = np.log(L)
+    dm = np.empty((n * n_1 // 2,))
+    start = 0
+    for i in range(n_1):
+        end = start + n_1 - i
+        target = dm[start:end]
+
+        # substitutions (!= 0)
+        # int16 is because the subtraction of two uint8's can underflow
+        subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
+
+        lmask = None
+        if masked:
+            mask_ = mask[i] & mask[i + 1 :]
+            subs[~mask_] = 0
+            L = np.count_nonzero(mask_, axis=1)
+            lmask = L > 0
+            if np.all(lmask):
+                lmask = None
+
+        # substitutions
+        p = np.count_nonzero(subs, axis=1)
+
+        ident = p == 0
+        has_ident = np.any(ident)
+
+        # transitions
+        # TODO: Cannot handle RNA (subs == 18) now
+        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == 17, axis=1)
+
+        # transversions
+        tv = p - ts
+
+        # convert into L * (1 - 2P - Q)
+        ts *= -2
+        ts -= tv
+        ts += L
+
+        # convert into L * (1 - 2Q)
+        tv *= -2
+        tv += L
+
+        valid = (ts > 0) & (tv > 0)
+
+        if lmask is not None:
+            valid &= lmask
+
+        if has_ident:
+            valid &= ~ident
+
+        if np.all(valid):
+            logL_ = np.log(L) if masked else logL
+            target[:] = 0.75 * logL_ - 0.5 * np.log(ts) - 0.25 * np.log(tv)
+        else:
+            logL_ = np.log(L[valid]) if masked else logL
+            target[valid] = (
+                0.75 * logL_ - 0.5 * np.log(ts[valid]) - 0.25 * np.log(tv[valid])
+            )
+            target[~valid] = np.nan
+            if has_ident:
+                target[ident] = 0
+
+        start = end
+    return dm
 
 
 @_metric_specs()
