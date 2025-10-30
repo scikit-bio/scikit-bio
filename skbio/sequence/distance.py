@@ -62,15 +62,18 @@ if TYPE_CHECKING:  # pragma: no cover
 
 # ----------------------------------------------------------------------------
 # Functions of this module are organized in the following structure: Each
-# distance metric "xyz" has three functions:
+# distance metric "xyz" has two functions:
 #
 # - `xyz` is a public-facing function that takes a pair of sequences as input
-#   and outputs a single number.
-# - `_xyz_full` is a private function that takes a 2-D array representing the
-#   ASCII codes of multiple aligned sequences as input, and generates a 1-D
-#   array representing a condensed distance matrix between the sequences.
-# - `_xyz_pair` resembles `_xyz_full` but additionally consumes a Boolean mask
-#   of the ASCII code array representing valid sites.
+#   and outputs a single number. It has several attributes specifying its
+#   behavior. See `_metric_specs` for details.
+#
+# - `_xyz` is a private function that takes a 2-D array representing the ASCII
+#   codes of multiple aligned sequences as input, and generates a 1-D array
+#   representing a condensed distance matrix between the sequences. This
+#   function is typically called by `skbio.alignment.align_dists`.
+#   Optionally, it consumes a Boolean mask of the input array, representing
+#   valid sites.
 #
 # The two private functions are called by `skbio.alignment.align_dists` and
 # this is more efficient than calling the public function between each pair of
@@ -260,11 +263,28 @@ def hamming(seq1, seq2, proportion=True):
     return float(dist)
 
 
-def _hamming(seqs, proportion=True):
-    """Compute pairwise Hamming distances between multiple sequences."""
-    # SciPy's `pdist` is a shortcut to the answer.
+def _hamming(seqs, mask=None, proportion=True):
+    """Compute pairwise Hamming distances between multiple sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Sequences to compute the Hamming distance between.
+    mask : None, optional
+        A placeholder. Hamming distance always consider all characters.
+    proportion : bool, optional
+        If True (default), normalize to a proportion of the sequence length.
+
+    Returns
+    -------
+    ndarray of float of shape (n * (n - 1) / 2,)
+        Hamming distance matrix in condensed form.
+
+    """
+    # SciPy's `pdist` is a highly optimized shortcut to the result.
     if proportion:
         return pdist(seqs, metric="hamming")
+
     # Otherwise, compute with the following code.
     n = seqs.shape[0]
     n_1 = n - 1
@@ -275,12 +295,6 @@ def _hamming(seqs, proportion=True):
         dm[start:end] = np.count_nonzero(seqs[i] != seqs[i + 1 :], axis=1)
         start = end
     return dm
-
-
-def _hamming_pair(seqs, mask, proportion=True):
-    """Compute pairwise Hamming distances between multiple sequences."""
-    # The same as `_hamming`, and `mask` is merely a placeholder.
-    return _hamming(seqs, proportion)
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
@@ -339,13 +353,28 @@ def p_dist(seq1, seq2):
     return (np.count_nonzero(seq1._bytes != seq2._bytes) / L).item()
 
 
-def _p_dist(seqs):
-    """Compute pairwise p-distances between multiple sequences."""
-    return pdist(seqs, metric="hamming")
+def _p_dist(seqs, mask=None):
+    """Compute pairwise p-distances between multiple sequences.
 
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Sequences to compute the Hamming distance between.
+    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+        Boolean mask of valid sites (True). If provided, each sequence pair will be
+        filtered to positions that are valid in both of them.
 
-def _p_dist_pair(seqs, mask):
-    """Compute pairwise p-distances between multiple sequences."""
+    Returns
+    -------
+    ndarray of float of shape (n * (n - 1) / 2,)
+        p-distance matrix in condensed form.
+
+    """
+    # SciPy's `pdist` is a highly optimized shortcut to the result.
+    if mask is None:
+        return pdist(seqs, metric="hamming")
+
+    # Otherwise, compute with the following code.
     n = seqs.shape[0]
     n_1 = n - 1
     dm = np.empty((n * n_1 // 2,))
@@ -418,14 +447,26 @@ def jc69(seq1, seq2):
     return jc69_correct(p)
 
 
-def _jc69(seqs, chars=4):
-    """Compute pairwise JC69 distances between sequences."""
-    return jc69_correct(_p_dist(seqs), chars, inplace=True)
+def _jc69(seqs, mask=None, chars=4):
+    """Compute pairwise JC69 distances between multiple sequences.
 
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Sequences to compute the Hamming distance between.
+    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+        Boolean mask of valid sites (True). If provided, each sequence pair will be
+        filtered to positions that are valid in both of them.
+    chars : int, optional
+        Number of definite characters in the alphabet. Default is 4 (for nucleotides).
 
-def _jc69_pair(seqs, mask, chars=4):
-    """Compute pairwise JC69 distances between sequences."""
-    return jc69_correct(_p_dist_pair(seqs, mask), chars, inplace=True)
+    Returns
+    -------
+    ndarray of float of shape (n * (n - 1) / 2,)
+        JC69 distance matrix in condensed form.
+
+    """
+    return jc69_correct(_p_dist(seqs, mask), chars, inplace=True)
 
 
 def jc69_correct(dists, chars=4, inplace=False):

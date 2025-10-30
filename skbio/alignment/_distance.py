@@ -96,10 +96,12 @@ def align_dists(
                 "metrics."
             )
         alphabet = func._alphabet
-        func_name = "_" + metric
-        if shared_by_all is False:
-            func_name += "_pair"
-        func = getattr(skbio.sequence.distance, func_name)
+        func = getattr(skbio.sequence.distance, "_" + metric)
+
+        # func_name = "_" + metric
+        # if shared_by_all is False:
+        #     func_name += "_pair"
+        # func = getattr(skbio.sequence.distance, func_name)
 
         # Create a 2D matrix of ASCII codes of all sequences.
         # TODO: This can be omitted after optimizing TabularMSA.
@@ -107,7 +109,7 @@ def align_dists(
 
         # Use all positions (gaps or characters).
         if alphabet is None:
-            dm = func(seqs, **kwargs)
+            dm = func(seqs, None, **kwargs)
 
         # Filter sequences by a given alphabet.
         else:
@@ -118,7 +120,7 @@ def align_dists(
             if shared_by_all:
                 site_vec = np.all(site_mat, axis=0)
                 seqs = seqs[:, site_vec]
-                dm = func(seqs, **kwargs)
+                dm = func(seqs, None, **kwargs)
 
             # pairwise deletion
             else:
