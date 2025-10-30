@@ -32,11 +32,12 @@ jobs:
       - name: Setup Python environment
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.latest_python }}
+        # Using 3.13 because Sphinx doesn't have a 3.14 compatible release yet
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
           pip install --no-deps .
           pip list
 
