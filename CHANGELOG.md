@@ -1,5 +1,9 @@
 # scikit-bio changelog
 
+## Version 0.7.1.post1
+
+* Fixed source distribution packaging for Python 3.14 support.
+
 ## Version 0.7.1
 
 ### Features
