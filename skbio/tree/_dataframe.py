@@ -1,71 +1,86 @@
 import pandas as pd
-import skbio
-from skbio import TreeNode
-
+from skbio.tree import TreeNode
 
 
 def treenode_to_dataframe(tree_node):
-   rows_for_dataframe = []
-   tree_node.assign_ids()
-   for node in tree_node.traverse(include_self=True):
-       # if node.nazme == 'None':
+    """Convert a TreeNode tree to a pandas DataFrame.
 
+    Each row contains: parent id (-1 for root), node id, name, length,
+    and whether the node is a tip.
+    """
+    rows_for_dataframe = []
+    tree_node.assign_ids()
+    for node in tree_node.traverse(include_self=True):
+        parent_id = node.parent.id if node.parent is not None else -1
+        node_id = node.id
+        rows_for_dataframe.append(
+            {
+                "parent": parent_id,
+                "node": node_id,
+                "name": node.name,
+                "length": node.length,
+                "is_tip": node.is_tip(),
+            }
+        )
 
-       rows_for_dataframe.append(
-           {'parent': node.parent.id if node.parent is not None else -1, "node": node.id, 'name': node.name,
-            'length': node.length,"is_tip":node.is_tip()})
-       # add in name of the node and edge length of the node
-   df = pd.DataFrame(rows_for_dataframe)
-   return df
-
+    df = pd.DataFrame(rows_for_dataframe)
+    return df
 
 
 def dataframe_to_treenode(dataframe):
-   # Find root node
-   root_row = dataframe[dataframe["parent"] == -1].iloc[0]
-   root = TreeNode(name=root_row["name"]) if root_row["name"] != 'None' else TreeNode()
-   root.id = root_row["node"]
+    """Reconstruct a TreeNode tree from the DataFrame representation.
 
+    The DataFrame must contain columns: 'node', 'parent', 'name', 'length'.
+    """
+    # Find root node
+    root_row = dataframe[dataframe["parent"] == -1].iloc[0]
+    root = (
+        TreeNode(name=root_row["name"])
+        if root_row["name"] != "None"
+        else TreeNode()
+    )
+    root.id = root_row["node"]
 
-   # Convert DataFrame to dictionary for fast lookup
-   node_dict = dataframe.set_index("node").to_dict(orient="index")
+    # Convert DataFrame to dictionary for fast lookup
+    node_indexed = dataframe.set_index("node")
+    node_dict = node_indexed.to_dict(orient="index")
 
+    # Create dictionary to store TreeNodes.
+    tree_nodes = {root.id: root}
 
-   # Create dictionary to store TreeNodes.
-   tree_nodes = {root.id: root}
+    # Build tree structure
+    for node_id, row in node_dict.items():
+        if node_id == root.id:
+            continue  # Skip root node
 
+        parent_id = row["parent"]
+        node_name = row["name"]
+        node_length = row["length"]
 
-   # Build tree structure
-   for node_id, row in node_dict.items():
-       if node_id == root.id:
-           continue  # Skip root node
+        # Create TreeNode
+        node = TreeNode(
+            name=node_name if node_name != "None" else None,
+            length=float(node_length) if pd.notna(node_length) else None,
+        )
+        node.id = node_id
+        tree_nodes[node_id] = node
 
+        # Append to parent (faster than repeated DataFrame lookups)
+        tree_nodes[parent_id].append(node)
 
-       parent_id = row["parent"]
-       node_name = row["name"]
-       node_length = row["length"]
-
-
-       # Create TreeNode
-       node = TreeNode(name=node_name if node_name != 'None' else None,
-                       length=float(node_length) if pd.notna(node_length) else None)
-       node.id = node_id
-       tree_nodes[node_id] = node
-
-
-       # Append to parent (faster than repeated DataFrame lookups)
-       tree_nodes[parent_id].append(node)
-
-
-   return root
+    return root
 
 def tip_to_root_conversion(dataframe, tip_node_names):
-    # Ensure 'name' column is treated as string type and convert 'None' strings to actual None
+    # Ensure 'name' column is treated as string type and convert 'None'
+    # strings to actual None
     dataframe['name'] = dataframe['name'].replace('None', None)
 
     required_columns = {"node", "parent", "name", "length"}
     if not required_columns.issubset(dataframe.columns):
-        raise ValueError(f"DataFrame is missing required columns: {required_columns - set(dataframe.columns)}")
+        missing = required_columns - set(dataframe.columns)
+        raise ValueError(
+            f"DataFrame is missing required columns: {missing}"
+        )
 
     # Ensure unique names for nodes with names
     named_nodes = dataframe[dataframe['name'].notna()]  # nodes with names
@@ -80,13 +95,23 @@ def tip_to_root_conversion(dataframe, tip_node_names):
             for i, idx in enumerate(duplicates, 1):
                 name_map[idx] = f"{name}_{i}"
 
-    # Apply the unique name mapping to named nodes only
-    dataframe.loc[named_nodes.index, 'name'] = named_nodes.index.map(lambda i: name_map.get(i, dataframe.at[i, 'name']))
+    # Apply the unique name mapping to named nodes only.
+    # Use a small helper to keep line lengths under the linter limit.
+    def _map_name(i):
+        return name_map.get(i, dataframe.at[i, "name"])
+
+    dataframe.loc[named_nodes.index, "name"] = (
+        named_nodes.index.map(_map_name)
+    )
 
     # Build lookup tables
-    node_dict = dataframe.set_index('node').to_dict(orient='index')  # Change indexing to 'node'
+    node_dict = (
+        dataframe.set_index('node').to_dict(orient='index')
+    )  # Change indexing to 'node'
     id_to_name = dataframe.set_index('node')['name'].to_dict()
-    name_to_id = {v: k for k, v in id_to_name.items()}  # Reverse mapping for names to node IDs
+    # Reverse mapping for names to node IDs
+    _items = id_to_name.items()
+    name_to_id = {v: k for k, v in _items}
 
     tree_nodes = {}
     seen_pairs = set()
@@ -101,9 +126,14 @@ def tip_to_root_conversion(dataframe, tip_node_names):
 
         # Create node with no name if it's missing
         if node_name is None:
-            node = TreeNode(length=float(length) if pd.notna(length) else None)  # Do not assign any name
+            node = TreeNode(
+                length=float(length) if pd.notna(length) else None
+            )  # Do not assign any name
         else:
-            node = TreeNode(name=node_name, length=float(length) if pd.notna(length) else None)
+            node = TreeNode(
+                name=node_name,
+                length=float(length) if pd.notna(length) else None,
+            )
 
         # Store the node in the dictionary for future reference
         tree_nodes[node_id] = node
