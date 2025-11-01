@@ -1,4 +1,5 @@
 from skbio.tree import TreeNode
+import skbio
 from unittest import TestCase
 from skbio.tree._dataframe import (
     treenode_to_dataframe,
@@ -33,16 +34,20 @@ class unit_test_dataframe_to_treenode_large_tree(TestCase):
         #      \e
 
         list_df = [{'parent': -1, 'node': 1, 'name': 'a', 'length': None},
-    # Use the in-memory tree built above as the expected tree instead of
-    # attempting to read from a file (tests originally had a placeholder
-    # path). This avoids importing skbio.io during focused testing.
-    self.expected_tree = self.TreeRoot
+                   {'parent': 1, 'node': 2, 'name': 'b', 'length': None},
                    {'parent': 2, 'node': 3, 'name': 'c', 'length': None},
                    {'parent': 2, 'node': 4, 'name': 'd', 'length': None},
                    {'parent': 1, 'node': 5, 'name': 'e', 'length': None}
                    ]
 
-        self.expected_tree = skbio.TreeNode.read('skbio/tree/tests/data/test_tree.newick', format='newick')
+        # Use the in-memory tree built above as the expected tree instead of
+        # attempting to read from a file (tests originally had a placeholder
+        # path). This avoids importing skbio.io during focused testing.
+        # self.expected_tree = self.TreeRoot
+
+        self.expected_tree = skbio.TreeNode.read(
+            'skbio/tree/tests/data/test_tree.newick', format='newick'
+        )
         observed_tree = treenode_to_dataframe(self.expected_tree)
         self.observed_tree = dataframe_to_treenode(observed_tree)
 
@@ -305,37 +310,28 @@ class TestTipToRootConversion(TestCase):
 
 class TestTipToRootConversion_large_tree(TestCase):
     def setUp(self):
-        # Load tree from file
-    # Build a small in-memory tree instead of reading from file to keep
-    # tests self-contained and avoid top-level io imports.
-    node_a = TreeNode(name='a')
-    node_b = TreeNode(name='b')
-    node_c = TreeNode(name='c')
-    node_d = TreeNode(name='d')
-    node_a.append(node_b)
-    node_a.append(node_c)
-    node_b.append(node_d)
+        # Build a small in-memory tree instead of reading from file to keep
+        # tests self-contained and avoid top-level io imports.
+        node_a = TreeNode(name='a')
+        node_b = TreeNode(name='b')
+        node_c = TreeNode(name='c')
+        node_d = TreeNode(name='d')
+        node_a.append(node_b)
+        node_a.append(node_c)
+        node_b.append(node_d)
 
-    self.tree_root = node_a
-    # choose tips to keep for reconstruction
-    self.tips_to_keep = ['c', 'd']
+        self.tree_root = node_a
+        # choose tips to keep for reconstruction
+        self.tips_to_keep = ['c', 'd']
 
-    # Convert tree to dataframe and reconstruct
-    self.df_tree = treenode_to_dataframe(self.tree_root)
-    self.reconstructed_tree = tip_to_root_conversion(self.df_tree, self.tips_to_keep)
-    self.expected_tree = self.tree_root.shear(self.tips_to_keep, prune=False)
-        self.tips_to_keep = ['give names of tip as string']
-
-        # Convert tree to dataframe
+        # Convert tree to dataframe and reconstruct
         self.df_tree = treenode_to_dataframe(self.tree_root)
-
-        # Reconstruct tree from the selected tips
         self.reconstructed_tree = tip_to_root_conversion(
             self.df_tree, self.tips_to_keep
         )
-
-        # Expected tree using shear with prune=False
-        self.expected_tree = self.tree_root.shear(self.tips_to_keep, prune=False)
+        self.expected_tree = self.tree_root.shear(
+            self.tips_to_keep, prune=False
+        )
 
     def test_all_nodes_present(self):
         #Ensure all nodes in expected tree are present in reconstructed tree.
@@ -364,7 +360,7 @@ class TestTipToRootConversion_large_tree(TestCase):
             self.assertIn(tip, reconstructed_tips)
 
     def test_branch_length_preservation(self):
-        tips_to_keep = ['enter tip name as list']
+        tips_to_keep = ['c', 'd']
         reconstructed = tip_to_root_conversion(self.df_tree, tips_to_keep)
 
         # Compare branch lengths for nodes with matching names
@@ -375,7 +371,7 @@ class TestTipToRootConversion_large_tree(TestCase):
                                  f"Branch length mismatch at node {node.name}")
 
     def test_ancestor_paths_match(self):
-        tips = ['enter tip name as list']
+        tips = ['c', 'd']
         reconstructed = tip_to_root_conversion(self.df_tree, tips)
 
         for tip in tips:
