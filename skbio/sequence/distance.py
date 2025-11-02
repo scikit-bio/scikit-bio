@@ -264,15 +264,17 @@ def hamming(seq1, seq2, proportion=True):
     return float(dist)
 
 
-def _hamming(seqs, mask=None, proportion=True):
+def _hamming(seqs, mask=None, seqtype=None, proportion=True):
     """Compute pairwise Hamming distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the Hamming distance between.
-    mask : None, optional
+    mask : ndarray of bool of shape (n_sequences, n_positions), optional
         A placeholder. Hamming distance always consider all characters.
+    seqtype : type, optional
+        A placeholder. Hamming distance is irrelevant to sequence type.
     proportion : bool, optional
         If True (default), normalize to a proportion of the sequence length.
 
@@ -354,7 +356,7 @@ def p_dist(seq1, seq2):
     return (np.count_nonzero(seq1._bytes != seq2._bytes) / L).item()
 
 
-def _p_dist(seqs, mask=None):
+def _p_dist(seqs, mask=None, seqtype=None):
     """Compute pairwise p-distances between multiple sequences.
 
     Parameters
@@ -364,6 +366,8 @@ def _p_dist(seqs, mask=None):
     mask : ndarray of bool of shape (n_sequences, n_positions), optional
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
+    seqtype : type, optional
+        A placeholder. p-distance is irrelevant to sequence type.
 
     Returns
     -------
@@ -385,8 +389,8 @@ def _p_dist(seqs, mask=None):
         target = dm[start:end]
 
         mask_ = mask[i] & mask[i + 1 :]
-        diff = (seqs[i] != seqs[i + 1 :]) & mask_
-        p = np.count_nonzero(diff, axis=1)
+        subs = (seqs[i] != seqs[i + 1 :]) & mask_
+        p = np.count_nonzero(subs, axis=1)
 
         L = np.count_nonzero(mask_, axis=1)
         lmask = L > 0
@@ -448,7 +452,7 @@ def jc69(seq1, seq2):
     return jc69_correct(p)
 
 
-def _jc69(seqs, mask=None, chars=4):
+def _jc69(seqs, mask=None, seqtype=None, chars=4):
     """Compute pairwise JC69 distances between multiple sequences.
 
     Parameters
@@ -458,6 +462,9 @@ def _jc69(seqs, mask=None, chars=4):
     mask : ndarray of bool of shape (n_sequences, n_positions), optional
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
+    seqtype : type, optional
+        A placeholder. p-distance is irrelevant to sequence type. Calculation of JC69
+        distance does not distinguish between DNA and RNA sequences.
     chars : int, optional
         Number of definite characters in the alphabet. Default is 4 (for nucleotides).
 
@@ -620,10 +627,10 @@ def k2p(seq1, seq2):
     if len(seq1) == 0:
         return np.nan
     seqs = np.vstack([seq1._bytes, seq2._bytes])
-    return _k2p(seqs).item()
+    return _k2p(seqs, seqtype=type(seq1)).item()
 
 
-def _k2p(seqs, mask=None):
+def _k2p(seqs, mask=None, seqtype=DNA):
     """Compute pairwise K2P distances between multiple sequences.
 
     Parameters
@@ -633,6 +640,8 @@ def _k2p(seqs, mask=None):
     mask : ndarray of bool of shape (n_sequences, n_positions), optional
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
+    seqtype : type, optional
+        Sequence type (DNA or RNA). Default is DNA.
 
     Returns
     -------
@@ -640,12 +649,20 @@ def _k2p(seqs, mask=None):
         K2P distance matrix in condensed form.
 
     """
-    masked = mask is not None
-    n = seqs.shape[0]
+    n, L = seqs.shape
     n_1 = n - 1
-    L = seqs.shape[1]
-    logL = np.log(L)
+    Cn2 = n * n_1 // 2
+    if L == 0:
+        return np.full((Cn2,), np.nan)
     dm = np.empty((n * n_1 // 2,))
+    logL = np.log(L)
+    masked = mask is not None
+
+    # This function uses the absolute difference between two ASCII codes to determine
+    # their substitution type. Match: 0. Transition: A<->G: 6, C<->T: 17, C<->U: 18.
+    # Transversion: all others. C = 17 (DNA) or 18 (RNA).
+    C = 17 + issubclass(seqtype, RNA)
+
     start = 0
     for i in range(n_1):
         end = start + n_1 - i
@@ -655,24 +672,22 @@ def _k2p(seqs, mask=None):
         # int16 is because the subtraction of two uint8's can underflow
         subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
 
-        lmask = None
+        has_empty = False
         if masked:
             mask_ = mask[i] & mask[i + 1 :]
             subs[~mask_] = 0
             L = np.count_nonzero(mask_, axis=1)
-            lmask = L > 0
-            if np.all(lmask):
-                lmask = None
+            L_mask = L > 0
+            has_empty = not np.all(L_mask)
+            # if none?
 
         # substitutions
         p = np.count_nonzero(subs, axis=1)
-
-        ident = p == 0
-        has_ident = np.any(ident)
+        p_mask = p > 0
+        has_ident = not np.all(p_mask)
 
         # transitions
-        # TODO: Cannot handle RNA (subs == 18) now
-        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == 17, axis=1)
+        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == C, axis=1)
 
         # transversions
         tv = p - ts
@@ -686,13 +701,16 @@ def _k2p(seqs, mask=None):
         tv *= -2
         tv += L
 
+        # Four groups of sequence pairs:
+        #   1. Empty sequences: K = NaN
+        #   2. Identical sequences: K = 0
+        #   3. Overly divergent sequences: K = NaN
+        #   4. Others (normal case): use the equation
         valid = (ts > 0) & (tv > 0)
-
-        if lmask is not None:
-            valid &= lmask
-
+        if has_empty:
+            valid &= L_mask
         if has_ident:
-            valid &= ~ident
+            valid &= p_mask
 
         if np.all(valid):
             logL_ = np.log(L) if masked else logL
@@ -704,7 +722,7 @@ def _k2p(seqs, mask=None):
             )
             target[~valid] = np.nan
             if has_ident:
-                target[ident] = 0
+                target[~p_mask] = 0
 
         start = end
     return dm

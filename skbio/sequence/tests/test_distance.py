@@ -666,6 +666,15 @@ class TestK2P(TestCase):
         seq1, seq2 = DNA("ACGTATGT"), DNA("GTCTACAT")
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
+        # RNA sequences
+        seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
+        obs = k2p(seq1, seq2)
+        self.assertEqual(round(obs, 3), 0.824)
+
+        # should match DNA distance
+        exp = k2p(seq1.reverse_transcribe(), seq2.reverse_transcribe())
+        self.assertAlmostEqual(obs, exp)
+
         # protein sequences
         seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
         with self.assertRaises(TypeError):

@@ -42,9 +42,9 @@ class AlignDistsTests(TestCase):
         # An edge case of RNA sequence alignment where no site is shared across all
         # sequences.
         self.msa3 = TabularMSA([
-            RNA("AG-UG"),
-            RNA("--AUC"),
-            RNA("ACU--"),
+            RNA("AG-UGCU-CA"),
+            RNA("--AUC--GC-"),
+            RNA("ACU--AUG-A"),
         ], index=list("abc"))
 
         # An edge case of DNA sequence alignment where one pair of sequences shares
@@ -56,7 +56,7 @@ class AlignDistsTests(TestCase):
         ], index=list("abc"))
 
     def test_align_dists_p_dist(self):
-        """p-distance"""
+        """p-distance."""
         # complete deletion (5 sites)
         obs = align_dists(self.msa1, "p_dist")
         self.assertIsInstance(obs, DistanceMatrix)
@@ -91,10 +91,10 @@ class AlignDistsTests(TestCase):
         npt.assert_array_equal(obs.data, exp)
 
         obs = align_dists(self.msa3, "p_dist", shared_by_all=False)
-        exp = np.array([[0. , 0.5, 0.5],
-                        [0.5, 0. , 1. ],
-                        [0.5, 1. , 0. ]])
-        npt.assert_array_equal(obs.data, exp)
+        exp = np.array([[0.   , 0.333, 0.4  ],
+                        [0.333, 0.   , 0.5  ],
+                        [0.4  , 0.5  , 0.   ]])
+        npt.assert_array_equal(obs.data.round(3), exp)
 
         # edge case: no site left after pairwise deletion
         obs = align_dists(self.msa4, "p_dist")
@@ -110,7 +110,7 @@ class AlignDistsTests(TestCase):
         npt.assert_array_equal(obs.data, exp)
 
     def test_align_dists_jc69(self):
-        """JC69 distance"""
+        """JC69 distance."""
         obs = align_dists(self.msa1, "jc69")
         exp = np.array([[0.   , 0.233, 1.207,   nan],
                         [0.233, 0.   , 0.572, 1.207],
@@ -130,6 +130,51 @@ class AlignDistsTests(TestCase):
 
         obs = align_dists(self.msa1, jc69, shared_by_all=False)
         npt.assert_array_equal(obs.data.round(3), exp)
+
+        obs = align_dists(self.msa3, "jc69")
+        exp = np.array([[ 0., nan, nan],
+                        [nan,  0., nan],
+                        [nan, nan,  0.]])
+        npt.assert_array_equal(obs.data, exp)
+
+        obs = align_dists(self.msa3, "jc69", shared_by_all=False)
+        exp = np.array([[0.   , 0.441, 0.572],
+                        [0.441, 0.   , 0.824],
+                        [0.572, 0.824, 0.   ]])
+        npt.assert_array_equal(obs.data.round(3), exp)
+
+        msg = ("'jc69' is compatible with ('DNA', 'RNA') sequence alignments, not "
+               "'Protein'.")
+        with self.assertRaises(TypeError) as cm:
+            align_dists(self.msa2, "jc69")
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(TypeError) as cm:
+            align_dists(self.msa2, jc69)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_align_dists_k2p(self):
+        """K2P distance."""
+        obs = align_dists(self.msa1, "k2p")
+        exp = np.array([[0.   , 0.255,   nan,   nan],
+                        [0.255, 0.   , 0.586, 1.207],
+                        [  nan, 0.586, 0.   , 0.586],
+                        [  nan, 1.207, 0.586, 0.   ]])
+        npt.assert_array_equal(obs.data.round(3), exp)
+
+        obs = align_dists(self.msa3, "k2p")
+        exp = np.array([[ 0., nan, nan],
+                        [nan,  0., nan],
+                        [nan, nan,  0.]])
+        npt.assert_array_equal(obs.data, exp)
+
+        obs = align_dists(self.msa3, "k2p", shared_by_all=False)
+        exp = np.array([[0.   , 0.477, 0.658],
+                        [0.477, 0.   ,   nan],
+                        [0.658,   nan, 0.   ]])
+        npt.assert_array_equal(obs.data.round(3), exp)
+
+        with self.assertRaises(TypeError):
+            align_dists(self.msa2, "k2p")
 
     def test_valid_hash(self):
         # DNA sequences

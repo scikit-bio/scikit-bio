@@ -83,6 +83,7 @@ def align_dists(
 
     """
     n_seqs = len(alignment)
+    seqtype = alignment.dtype
 
     # Use a preset distance metric (efficient).
     if isinstance(metric, str):
@@ -95,36 +96,29 @@ def align_dists(
                 "Refer to `skbio.sequence.distance` for a list of available "
                 "metrics."
             )
+        _check_seqtype(func, seqtype)
+
         alphabet = func._alphabet
         func = getattr(skbio.sequence.distance, "_" + metric)
-
-        # func_name = "_" + metric
-        # if shared_by_all is False:
-        #     func_name += "_pair"
-        # func = getattr(skbio.sequence.distance, func_name)
 
         # Create a 2D matrix of ASCII codes of all sequences.
         # TODO: This can be omitted after optimizing TabularMSA.
         seqs = np.vstack([seq._bytes for seq in alignment])
 
-        # Use all positions (gaps or characters).
-        if alphabet is None:
-            dm = func(seqs, None, **kwargs)
-
-        # Filter sequences by a given alphabet.
-        else:
-            valid = _valid_hash(alphabet, alignment.dtype)
+        # Mask sequences by a given alphabet.
+        site_mat = None
+        if alphabet is not None:
+            valid = _valid_hash(alphabet, seqtype)
             site_mat = valid[seqs]
 
-            # complete deletion
+            # Delete positions that are not shared by all sequences (complete deletion).
             if shared_by_all:
                 site_vec = np.all(site_mat, axis=0)
                 seqs = seqs[:, site_vec]
-                dm = func(seqs, None, **kwargs)
+                site_mat = None
+            # Otherwise, pass mask to the metric to trigger pairwise deletion.
 
-            # pairwise deletion
-            else:
-                dm = func(seqs, site_mat, **kwargs)
+        dm = func(seqs, site_mat, seqtype, **kwargs)
 
     # Call a custom function on each pair of sequences (slow).
     elif callable(metric):
@@ -132,8 +126,8 @@ def align_dists(
             alphabet = metric._alphabet
         else:
             alphabet = "nogap"
-
-        valid = _valid_hash(alphabet, alignment.dtype)
+        _check_seqtype(metric, seqtype)
+        valid = _valid_hash(alphabet, seqtype)
         site_mat = [valid[seq._bytes] for seq in alignment]
 
         dm = np.empty((n_seqs * (n_seqs - 1) // 2,))
@@ -144,17 +138,20 @@ def align_dists(
             seqs = [seq[site_vec] for seq in alignment]
             pos = -1
             for i in range(n_seqs - 1):
+                seq_i = seqs[i]
                 for j in range(i + 1, n_seqs):
-                    dm[pos + j] = metric(seqs[i], seqs[j], **kwargs)
+                    dm[pos + j] = metric(seq_i, seqs[j], **kwargs)
                 pos += n_seqs - i - 2
 
         # pairwise deletion
         else:
             pos = -1
             for i in range(n_seqs - 1):
+                seq_i = alignment[i]
+                sites_i = site_mat[i]
                 for j in range(i + 1, n_seqs):
-                    site_vec = site_mat[i] & site_mat[j]  ## will stripe twice
-                    seq1 = alignment[i][site_vec]
+                    site_vec = sites_i & site_mat[j]
+                    seq1 = seq_i[site_vec]
                     seq2 = alignment[j][site_vec]
                     dm[pos + j] = metric(seq1, seq2, **kwargs)
                 pos += n_seqs - i - 2
@@ -162,6 +159,39 @@ def align_dists(
         raise TypeError("`metric` must be a function or a string.")
 
     return DistanceMatrix(dm, ids=alignment.index.astype(str))
+
+
+def _check_seqtype(func, seqtype):
+    """Check if the input alignment has the expected sequence type.
+
+    Parameters
+    ----------
+    func : callable
+        An alphabet of valid characters to be considered by the metric.
+    seqtype : type
+        Sequence type, which stores grammar information.
+
+    Raises
+    ------
+    TypeError
+        If alignment sequence type is incompatible with the given metric.
+
+    See Also
+    --------
+    skbio.sequence.distance._metric_specs
+
+    """
+    valid_types = getattr(func, "_seqtype", None)
+    if valid_types is None or issubclass(seqtype, valid_types):
+        return
+    if isinstance(valid_types, tuple):
+        names_ = tuple(x.__name__ for x in valid_types)
+    else:
+        names_ = valid_types.__name__
+    raise TypeError(
+        f"{func.__name__!r} is compatible with {names_!r} sequence alignments, "
+        f"not {seqtype.__name__!r}."
+    )
 
 
 def _valid_hash(alphabet, seqtype):
