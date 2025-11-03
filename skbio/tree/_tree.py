@@ -603,7 +603,6 @@ class TreeNode(SkbioObject):
             raise ValueError("No node is specified.")
         nodes = [self.find(x) for x in nodes]
         if len(nodes) == 1:
-            assert type(nodes[0]) is self.__class__
             return nodes[0]
 
         # Keep a record of visited nodes, such that the temporary attribute assigned
@@ -617,7 +616,6 @@ class TreeNode(SkbioObject):
         curr = next(nodes := iter(nodes))
         prev = None
         while curr is not None:
-            assert type(curr) is self.__class__
             visited_append(curr)
             curr._prev = prev
             prev = curr
@@ -1437,7 +1435,6 @@ class TreeNode(SkbioObject):
         branch_attrs.add("support")
         branch_attrs.discard("length")
         for attr in branch_attrs:
-            assert type(attr) is str
             setattr(node, attr, getattr(self, attr, None))
 
         # determine insertion point
@@ -2019,7 +2016,9 @@ class TreeNode(SkbioObject):
         self,
         k: Optional[int] = None,
         names: Optional[list] = None,
-        shuffler: Optional[Union[int, np.random.Generator, Callable[[list]]]] = None,
+        shuffler: Optional[
+            Union[int, np.random.Generator, Callable[[list], None]]
+        ] = None,
         n: int = 1,
     ) -> Iterator["TreeNode"]:
         r"""Randomly shuffle tip names of the tree.
@@ -2678,7 +2677,6 @@ class TreeNode(SkbioObject):
         if above is not False:
             to_insert = node.__class__()
             distance = None if above is True else above
-            assert type(to_insert) is self.__class__
             node.insert(to_insert, distance, branch_attrs, uncache=False)
             node = to_insert
 
@@ -2692,7 +2690,6 @@ class TreeNode(SkbioObject):
             node.unrooted_move(branch_attrs=branch_attrs, uncache=False)
             if root_name and node.name is None:
                 node.name = root_name
-            assert type(node) is self.__class__
             return node
 
     def root_at_midpoint(
@@ -2815,7 +2812,6 @@ class TreeNode(SkbioObject):
         half_max_dist = max_dist / 2.0
 
         if max_dist == 0.0:
-            assert type(tree) is self.__class__
             return tree
 
         tip1 = tree.find(tips[0])
@@ -3253,7 +3249,6 @@ class TreeNode(SkbioObject):
             # add to result
             if subset and (include_tips or len(subset) > 1):
                 if subset != last:
-                    assert type(subsets_append) is FrozenSet[str]
                     subsets_append(last := subset)
                     if map_to_length:
                         lengths_append(node.length or 0.0)
@@ -3556,7 +3551,6 @@ class TreeNode(SkbioObject):
             # add to result
             if bipart and (include_tips or len(bipart) > 1):
                 if map_to_length:
-                    assert type(bipart) is str
                     biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
                 else:
                     biparts_append(bipart)
@@ -3835,7 +3829,6 @@ class TreeNode(SkbioObject):
         else:
             try:
                 while curr is not ancestor:
-                    assert type(curr.parent) is self.__class__
                     path_append(curr := curr.parent)
             except AttributeError:
                 raise NoParentError("Provided ancestor is not ancestral to self.")
@@ -4388,7 +4381,6 @@ class TreeNode(SkbioObject):
         if not endpoints:
             for i, tip in enumerate(self.tips()):
                 tip._range = (i, i + 1)
-                assert type(tip.name) is str
                 taxa_append(tip.name)
             num_tips = len(taxa)
 
@@ -5149,9 +5141,7 @@ class TreeNode(SkbioObject):
             else:
                 for node in tree.traverse():
                     for attr in attrs:
-                        assert type(attr) is str
                         if hasattr(node, attr):
-                            assert type(attr) is str
                             delattr(node, attr)
                 del tree._registered_caches
 
