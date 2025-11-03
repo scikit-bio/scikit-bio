@@ -15,8 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
-        # The 5 runners correspond to 5 architectures. Details:
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-13, macos-latest]
+        # The 6 runners correspond to 6 architectures. Details:
         # https://cibuildwheel.pypa.io/en/stable/options/#archs
         # The runners and architectures should be automatically associated. However, in
         # case not in the future, they can be manually specified as follows:
@@ -27,6 +27,8 @@ jobs:
         #     cibw_archs: 'aarch64'
         #   - os: windows-latest
         #     cibw_archs: 'AMD64'
+        #   - os: windows-11-arm
+        #     cibw_archs: 'ARM64'
         #   - os: macos-13
         #     cibw_archs: 'x86_64'
         #   - os: macos-latest
@@ -38,11 +40,13 @@ jobs:
           submodules: true
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        # This may need to be updated for new Python versions, double check before release.
+        uses: pypa/cibuildwheel@v3.2.1
         env:
+        # Run full tests on release or manual trigger, otherwise (i.e. on PRs) do simple import/print test.
           CIBW_TEST_COMMAND: >
-            ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && 
-                'python -m skbio.test' || 
+            ${{ ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags')) || github.event_name == 'workflow_dispatch') &&
+                'python -m skbio.test' ||
                 'python -c "import skbio; print(skbio.__version__)"' }}
 
       - uses: actions/upload-artifact@v4
