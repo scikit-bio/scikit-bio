@@ -49,7 +49,7 @@ Utility functions
 # ----------------------------------------------------------------------------
 
 from typing import Optional, Union, TYPE_CHECKING
-
+from inspect import signature
 import functools
 
 import numpy as np
@@ -129,6 +129,8 @@ def _metric_specs(
     """
 
     def decorator(func):
+        has_freqs = "freqs" in signature(func).parameters
+
         @functools.wraps(func)
         def wrapper(seq1, seq2, *args, **kwargs):
             # check if sequences are skbio.sequence objects
@@ -166,6 +168,13 @@ def _metric_specs(
                     f"sequences. {len(seq1)} != {len(seq2)}."
                 )
 
+            # calculate base frequencies if needed
+            if has_freqs and kwargs.get("freqs") is None:
+                is_rna = issubclass(type(seq1), RNA)
+                kwargs["freqs"] = _base_freqs(
+                    np.hstack((seq1._bytes, seq2._bytes)), 84 + is_rna
+                )
+
             # filter sequences by a given alphabet
             if alphabet is not None:
                 if alphabet in ("nongap", "definite", "canonical"):
@@ -189,6 +198,7 @@ def _metric_specs(
         wrapper._seqtype = seqtype
         wrapper._equal = equal
         wrapper._alphabet = alphabet
+        wrapper._has_freqs = has_freqs
 
         return wrapper
 
@@ -406,12 +416,13 @@ def _p_dist(seqs, mask=None, seqtype=None):
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def jc69(seq1, seq2):
-    r"""Calculate the Jukes-Cantor (JC69) distance between two aligned sequences.
+    r"""Calculate the JC69 distance between two aligned nucleotide sequences.
 
-    The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
-    per site) between two nucleotide sequences by correcting the observed proportion
-    of differing sites (*p*-distance, see :func:`p_dist`) to account for multiple
-    substitutions at the same site (i.e., saturation). It is calculated as:
+    The Jukes-Cantor (1969) (JC69) model [1]_ estimates the evolutionary distance
+    (number of substitutions per site) between two nucleotide sequences by correcting
+    the observed proportion of differing sites (*p*-distance, see :func:`p_dist`) to
+    account for multiple substitutions at the same site (i.e., saturation). It is
+    calculated as:
 
     .. math::
         D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
@@ -434,7 +445,7 @@ def jc69(seq1, seq2):
     References
     ----------
     .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
-       Mammalian protein metabolism, 3(21), 132.
+       Mammalian Protein Metabolism, 3(21), 132.
 
     Notes
     -----
@@ -582,7 +593,7 @@ def jc69_correct(dists, chars=4, inplace=False):
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def k2p(seq1, seq2):
-    r"""Calculate the K2P distance between two aligned sequences.
+    r"""Calculate the K2P distance between two aligned nucleotide sequences.
 
     The Kimura 2-parameter (K2P, a.k.a. K80) model [1]_ assumes differential rates of
     transitions (substitutions between two purines or between two pyrimidines) versus
@@ -726,6 +737,116 @@ def _k2p(seqs, mask=None, seqtype=DNA):
 
         start = end
     return dm
+
+
+# a lookup table that converts A, C, G, T/U into 0, 1, 2, 3
+_base_hash = np.full(128, 4, dtype=np.uint8)
+_base_hash[[65, 67, 71, 84, 85]] = [0, 1, 2, 3, 3]
+
+
+def _base_freqs(seqs, code=84):
+    return tuple(np.count_nonzero(seqs == char, axis=-1) for char in [65, 67, 71, code])
+
+
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+def tn93(seq1, seq2, freqs=None):
+    r"""Calculate the TN93 distance between two aligned nucleotide sequences.
+
+    The Tamura and Nei (1993) (TN93) model [1]_ assumes differential rates of the two
+    types of transitions: between purines (i.e., A <-> G) and between pyrimidines (i.e.,
+    C <-> T/U), and transversions (i.e., between a purine and a pyrimidine). It also
+    assumes unequal base frequencies. It is calculated as:
+
+    .. math::
+        K = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
+
+    Where :math:`P` and :math:`Q` are the proportions of transitions and transversions,
+    respectively.
+
+    Parameters
+    ----------
+    seq1, seq2 : {DNA, RNA}
+        Sequences to compute the K2P distance between.
+
+    Returns
+    -------
+    float
+        TN93 distance between ``seq1`` and ``seq2``.
+
+    See Also
+    --------
+    jc69
+
+    References
+    ----------
+    .. [1] Tamura, K., & Nei, M. (1993). Estimation of the number of nucleotide
+       substitutions in the control region of mitochondrial DNA in humans and
+       chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.
+
+    Notes
+    -----
+    K2P extends from JC69 by modeling differential transition and transversion rates,
+    while also assuming equal base frequencies.
+
+    This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is
+    negative, which implicates over-saturation of substitutions.
+
+    """
+    L = len(seq1)
+    is_rna = issubclass(type(seq1), RNA)
+    seq1, seq2 = seq1._bytes, seq2._bytes
+
+    # if freqs is None:
+    #     piA, piC, piG, piT = _base_freqs(np.hstack((seq1, seq2)), 84 + is_rna)
+    #     if not np.all([piA, piC, piG, piT]):
+    #         return np.inf
+
+    #     piA = 0.5 * piA / L
+    #     piC = 0.5 * piC / L
+    #     piG = 0.5 * piG / L
+    #     piT = 0.5 * piT / L
+
+    # else:
+    #     piA, piC, piG, piT = freqs
+
+    piA, piC, piG, piT = freqs
+    if not np.all([piA, piC, piG, piT]):
+        return np.inf
+
+    piA = 0.5 * piA / L
+    piC = 0.5 * piC / L
+    piG = 0.5 * piG / L
+    piT = 0.5 * piT / L
+
+    # piA, piC, piG, piT = 0.5* freqs / L
+    piR = piA + piG
+    piY = piC + piT
+
+    subs = np.abs(np.subtract(seq1, seq2, dtype=np.int16))
+    p = np.count_nonzero(subs)
+    P1 = np.count_nonzero(subs == 6)
+    P2 = np.count_nonzero(subs == 17 + is_rna)
+    Q = p - P1 - P2
+
+    P1 = P1 / L
+    P2 = P2 / L
+    Q = Q / L
+
+    a1 = 1.0 - P1 * piR / (2.0 * piA * piG) - Q / (2.0 * piR)
+    a2 = 1.0 - P2 * piY / (2.0 * piC * piT) - Q / (2.0 * piY)
+    b = 1.0 - Q / (2.0 * piR * piY)
+
+    if not (a1 > 0 and a2 > 0 and b > 0):
+        return np.inf
+
+    # coefficients
+    c1 = 2.0 * piA * piG / piR
+    c2 = 2.0 * piC * piT / piY
+    c3 = 2.0 * (piR * piY - piA * piG * piY / piR - piC * piT * piR / piY)
+
+    d = -c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(b)
+
+    return float(d)
 
 
 @_metric_specs()
