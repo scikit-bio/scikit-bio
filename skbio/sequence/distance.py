@@ -70,16 +70,12 @@ if TYPE_CHECKING:  # pragma: no cover
 #   and outputs a single number. It has several attributes specifying its
 #   behavior. See `_metric_specs` for details.
 #
-# - `_xyz` is a private function that takes a 2-D array representing the ASCII
-#   codes of multiple aligned sequences as input, and generates a 1-D array
-#   representing a condensed distance matrix between the sequences. This
-#   function is typically called by `skbio.alignment.align_dists`.
-#   Optionally, it consumes a Boolean mask of the input array, representing
-#   valid sites.
+# - `_xyz` is a private function that consumes a 2-D array representing the
+#   ASCII codes of multiple aligned sequences, and generates a condensed
+#   distance matrix between them. It is typically called by `skbio.alignment.
+#   align_dists`. Optionally, it consumes a Boolean mask of the input array,
+#   representing valid sites.
 #
-# The two private functions are called by `skbio.alignment.align_dists` and
-# this is more efficient than calling the public function between each pair of
-# sequences.
 # ----------------------------------------------------------------------------
 
 
@@ -160,17 +156,15 @@ def _metric_specs(
                     f"sequences. {len(seq1)} != {len(seq2)}."
                 )
 
+            # get valid characters
+            valid = _char_hash(alphabet, type1)
+
             # calculate base frequencies if needed
             if has_freqs and kwargs.get("freqs") is None:
-                is_rna = issubclass(type1, RNA)
-                kwargs["freqs"] = _base_freqs(
-                    np.hstack((seq1._bytes, seq2._bytes)), 84 + is_rna
-                )
+                kwargs["freqs"] = _char_freqs((seq1._bytes, seq2._bytes), valid)
 
-            # filter sequences by a given alphabet
-            if alphabet is not None:
-                valid = _valid_hash(alphabet, type1)
-
+            # filter sequences to valid characters
+            if valid is not None:
                 if equal:
                     pos = valid[seq1._bytes] & valid[seq2._bytes]
                     seq1, seq2 = seq1[pos], seq2[pos]
@@ -221,12 +215,12 @@ def _check_seqtype(name, this, valid=None):
     )
 
 
-def _valid_hash(alphabet, seqtype):
+def _char_hash(alphabet, seqtype):
     """Get a hash table of valid characters for sequence filtering.
 
     Parameters
     ----------
-    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}
+    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}, or None
         An alphabet of valid characters to be considered by the metric.
     seqtype : type
         Sequence type, which stores grammar information.
@@ -237,23 +231,56 @@ def _valid_hash(alphabet, seqtype):
         Boolean mask of ASCII codes of valid characters (True).
 
     """
-    if alphabet in ("nongap", "definite", "canonical"):
-        valid = getattr(seqtype, f"_{alphabet}_hash")
+    if alphabet is None:
+        return
+    elif alphabet in ("nongap", "definite", "canonical"):
+        return getattr(seqtype, f"_{alphabet}_hash")
     else:
         encoded = _encode_alphabet(alphabet)
         valid = np.zeros((seqtype._num_ascii_codes,), dtype=bool)
         valid[encoded] = True
-    return valid
+        return valid
 
 
-def fill_dm(func, seqs, mask):
+def _char_freqs(seqs, valid=None):
+    """Calculate relative frequencies of characters in sequences.
+
+    Parameters
+    ----------
+    seqs : array_like of int
+        Input sequences as ASCII codes (0-127).
+    valid : ndarray of bool of shape (128,), optional
+        Boolean mask of valid ASCII codes (True). If omitted, all ASCII codes (n = 128)
+        will be included in the result.
+
+    Returns
+    -------
+    ndarray of float of shape (n_alphabet,)
+        Relative frequencies of characters.
+
+    """
+    # This is an efficient way to count character frequencies. `ravel` makes a memory
+    # view of the data without copying, unless needed. `bincount` counts frequencies of
+    # all ASCII codes. Then only frequencies of valid characters will be returned.
+    freqs = np.bincount(np.ravel(seqs), minlength=128)
+    if valid is not None:
+        chars = np.flatnonzero(valid)
+        freqs = freqs[chars]
+    total = np.sum(freqs)
+    if total > 0:
+        return freqs / total
+    else:
+        return np.full(freqs.size, np.nan)
+
+
+def fill_dm(func, seqs, mask, isnan=False):
     n, L = seqs.shape
     n_1 = n - 1
     dm = np.empty((n * n_1 // 2,))
-    if L == 0:
+    if isnan or L == 0:
         dm.fill(np.nan)
         return dm
-    masked = mask is not None
+    # masked = mask is not None
     start = 0
     for i in range(n_1):
         end = start + n_1 - i
@@ -352,19 +379,21 @@ def hamming(seq1, seq2, proportion=True):
     0.5
 
     """
-    return _hamming(np.vstack((seq1._bytes, seq2._bytes)), proportion=proportion).item()
+    return _hamming(
+        np.vstack((seq1._bytes, seq2._bytes)), None, None, proportion=proportion
+    ).item()
 
 
-def _hamming(seqs, mask=None, seqtype=None, shared_by_all=True, proportion=True):
+def _hamming(seqs, mask, seqtype, proportion=True):
     """Compute pairwise Hamming distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the Hamming distance between.
-    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+    mask : ndarray of bool of shape (n_sequences, n_positions)
         A placeholder. Hamming distance always consider all characters.
-    seqtype : type, optional
+    seqtype : type
         A placeholder. Hamming distance is irrelevant to sequence type.
     proportion : bool, optional
         If True (default), normalize to a proportion of the sequence length.
@@ -377,23 +406,19 @@ def _hamming(seqs, mask=None, seqtype=None, shared_by_all=True, proportion=True)
     """
     # When `proportion=True`, the result is equivalent to SciPy's `pdist(seqs,
     # metric="hamming")`. But it seems that the following code is faster.
-    n, L = seqs.shape
-    n_1 = n - 1
-    Cn2 = n * n_1 // 2
-    if L == 0:
-        return np.full((Cn2,), np.nan)
-    dm = np.empty((n * n_1 // 2,))
+    npos = seqs.shape[1]
 
-    start = 0
-    for i in range(n_1):
-        end = start + n_1 - i
-        dm[start:end] = np.count_nonzero(seqs[i] != seqs[i + 1 :], axis=1)
-        start = end
+    def func(seqs, mask, i, out):
+        subs = seqs[i] != seqs[i + 1 :]
+        p = np.count_nonzero(subs, axis=1)
 
-    if proportion:
-        dm /= L
+        # normalize by sequence length
+        if proportion:
+            np.divide(p, npos, out=out)
+        else:
+            out[:] = p
 
-    return dm
+    return fill_dm(func, seqs, mask)
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
@@ -447,20 +472,20 @@ def p_dist(seq1, seq2):
     0.5
 
     """
-    return _p_dist(np.vstack((seq1._bytes, seq2._bytes))).item()
+    return _p_dist(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
 
 
-def _p_dist(seqs, mask=None, seqtype=None):
+def _p_dist(seqs, mask, seqtype):
     """Compute pairwise p-distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the Hamming distance between.
-    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+    mask : ndarray of bool of shape (n_sequences, n_positions)
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
-    seqtype : type, optional
+    seqtype : type
         A placeholder. p-distance is irrelevant to sequence type.
 
     Returns
@@ -539,20 +564,20 @@ def jc69(seq1, seq2):
     estimation of the true evolutionary distance.
 
     """
-    return _jc69(np.vstack((seq1._bytes, seq2._bytes))).item()
+    return _jc69(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
 
 
-def _jc69(seqs, mask=None, seqtype=None, chars=4):
+def _jc69(seqs, mask, seqtype, chars=4):
     """Compute pairwise JC69 distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the Hamming distance between.
-    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+    mask : ndarray of bool of shape (n_sequences, n_positions)
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
-    seqtype : type, optional
+    seqtype : type
         A placeholder. p-distance is irrelevant to sequence type. Calculation of JC69
         distance does not distinguish between DNA and RNA sequences.
     chars : int, optional
@@ -564,7 +589,7 @@ def _jc69(seqs, mask=None, seqtype=None, chars=4):
         JC69 distance matrix in condensed form.
 
     """
-    return jc69_correct(_p_dist(seqs, mask), chars, inplace=True)
+    return jc69_correct(_p_dist(seqs, mask, None), chars, inplace=True)
 
 
 def jc69_correct(dists, chars=4, inplace=False):
@@ -725,20 +750,20 @@ def k2p(seq1, seq2):
     negative, which implicates over-saturation of substitutions.
 
     """
-    return _k2p(np.vstack((seq1._bytes, seq2._bytes)), seqtype=type(seq1)).item()
+    return _k2p(np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1)).item()
 
 
-def _k2p(seqs, mask=None, seqtype=DNA):
+def _k2p(seqs, mask, seqtype):
     """Compute pairwise K2P distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the K2P distance between.
-    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+    mask : ndarray of bool of shape (n_sequences, n_positions)
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
-    seqtype : type, optional
+    seqtype : type
         Sequence type (DNA or RNA). Default is DNA.
 
     Returns
@@ -823,19 +848,6 @@ def _k2p(seqs, mask=None, seqtype=DNA):
     return fill_dm(func, seqs, mask)
 
 
-# a lookup table that converts A, C, G, T/U into 0, 1, 2, 3
-_base_hash = np.full(128, 4, dtype=np.uint8)
-_base_hash[[65, 67, 71, 84, 85]] = [0, 1, 2, 3, 3]
-
-
-def _base_freqs(seqs, code=84):
-    # freqs = np.array(
-    #     [np.count_nonzero(seqs == char, axis=-1) for char in [65, 67, 71, code]]
-    # )
-    freqs = np.count_nonzero(seqs.reshape(-1, 1) == [65, 67, 71, code], axis=0)
-    return freqs / np.sum(freqs)
-
-
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def tn93(seq1, seq2, freqs=None):
     r"""Calculate the TN93 distance between two aligned nucleotide sequences.
@@ -862,9 +874,9 @@ def tn93(seq1, seq2, freqs=None):
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the TN93 distance between.
     freqs : array_like of float of shape (4,), optional
-        Relative frequencies of nucleobases A, C, G, and T/U. Should sum to 1. If not
-        provided, the observed frequencies from the two input sequences combined will
-        be used.
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1. If not provided, the observed frequencies from the two input sequences
+        combined will be used.
 
     Returns
     -------
@@ -892,22 +904,20 @@ def tn93(seq1, seq2, freqs=None):
     ).item()
 
 
-def _tn93(seqs, mask=None, seqtype=DNA, freqs=None):
+def _tn93(seqs, mask, seqtype, freqs):
     """Compute pairwise TN93 distances between multiple sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
         Sequences to compute the TN93 distance between.
-    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+    mask : ndarray of bool of shape (n_sequences, n_positions)
         Boolean mask of valid sites (True). If provided, each sequence pair will be
         filtered to positions that are valid in both of them.
-    seqtype : type, optional
+    seqtype : type
         Sequence type (DNA or RNA). Default is DNA.
-    freqs : array_like of float of shape (4,), optional
-        Relative frequencies of nucleobases A, C, G, and T/U. Should sum to 1. If not
-        provided, the observed frequencies from the two input sequences combined will
-        be used.
+    freqs : array_like of float of shape (4,)
+        Relative frequencies of nucleobases A, C, G, and T/U.
 
     Returns
     -------
@@ -924,13 +934,10 @@ def _tn93(seqs, mask=None, seqtype=DNA, freqs=None):
 
     masked = mask is not None
 
-    if freqs is None:
-        freqs = (0.25, 0.25, 0.25, 0.25)
-    piA, piC, piG, piT = freqs
-
     if not np.all(freqs):
         dm[:] = np.nan
         return dm
+    piA, piC, piG, piT = freqs
 
     # frequencies of purines (R) and pyrimidines (Y)
     piR = piA + piG

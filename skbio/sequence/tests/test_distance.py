@@ -17,8 +17,8 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, _valid_hash, hamming, p_dist, kmer_distance, jc69, jc69_correct,
-    k2p, tn93
+    _metric_specs, _char_hash, _char_freqs, hamming, p_dist, kmer_distance, jc69,
+    jc69_correct, k2p, tn93
 )
 
 
@@ -136,48 +136,100 @@ class TestMetricSpecs(TestCase):
                "'Sequence'.")
         self.assertEqual(str(cm.exception), msg)
 
-    def test_valid_hash(self):
+    def test_char_hash(self):
         """Hash table of valid characters."""
-        # NOTE: A more intuitive test of this function is in skbio.alignment.distance.
+        # Note: A more intuitive test of this function is in skbio.alignment.distance.
         # DNA sequence
-        obs = _valid_hash("ACGT", DNA)
+        obs = _char_hash(None, DNA)
+        self.assertIsNone(obs)
+
+        obs = _char_hash("ACGT", DNA)
         exp = np.zeros(128, dtype=bool)
         exp[[65, 67, 71, 84]] = True
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("definite", DNA)
+        obs = _char_hash("definite", DNA)
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("canonical", DNA)
+        obs = _char_hash("canonical", DNA)
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("ACGTN", DNA)
+        obs = _char_hash("ACGTN", DNA)
         exp[78] = True
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("nongap", DNA)
+        obs = _char_hash("nongap", DNA)
         exp[sorted(map(ord, DNA.degenerate_chars))] = True
         npt.assert_array_equal(obs, exp)
 
         # RNA sequence
-        obs = _valid_hash("definite", RNA)
+        obs = _char_hash("definite", RNA)
         exp = np.zeros(128, dtype=bool)
         exp[[65, 67, 71, 85]] = True
         npt.assert_array_equal(obs, exp)
 
         # protein sequence
-        obs = _valid_hash("definite", Protein)
+        obs = _char_hash("definite", Protein)
         exp = np.zeros(128, dtype=bool)
         exp[sorted(map(ord, Protein.definite_chars))] = True
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("canonical", Protein)
+        obs = _char_hash("canonical", Protein)
         exp[sorted(map(ord, Protein.noncanonical_chars))] = False
         npt.assert_array_equal(obs, exp)
 
-        obs = _valid_hash("ABCD", Protein)
+        obs = _char_hash("ABCD", Protein)
         exp = np.zeros(128, dtype=bool)
         exp[65:69] = True
+        npt.assert_array_equal(obs, exp)
+
+    def test_char_freqs(self):
+        # DNA characters
+        valid = _char_hash("definite", DNA)
+        
+        # one 1D array
+        seq1 = DNA("CGATCATCTA")
+        obs = _char_freqs(seq1._bytes, valid)
+        exp = np.array([.3, .3, .1, .3])
+        npt.assert_array_equal(obs, exp)
+
+        # two 1D arrays
+        seq2 = DNA("CTGGCACCGA")
+        obs = _char_freqs((seq1._bytes, seq2._bytes), valid)
+        exp = np.array([.25, .35, .2, .2])
+        npt.assert_array_equal(obs, exp)
+
+        # 2D array
+        seqs = np.vstack((seq1._bytes, seq2._bytes))
+        obs = _char_freqs(seqs, valid)
+        exp = np.array([.25, .35, .2, .2])
+        npt.assert_array_equal(obs, exp)
+
+        # all ASCII codes
+        obs = _char_freqs(seqs)
+        self.assertTupleEqual(obs.shape, (128,))
+        self.assertEqual(obs[65], .25)
+        self.assertEqual(obs[67], .35)
+        self.assertEqual(obs[71], .2)
+        self.assertEqual(obs[84], .2)
+
+        # with gaps
+        seq3 = DNA("CGATC---ATCTA")
+        obs = _char_freqs(seq3._bytes, valid)
+        exp = np.array([.3, .3, .1, .3])
+        npt.assert_array_equal(obs, exp)
+
+        # RNA characters
+        valid = _char_hash("definite", RNA)
+        seq4 = RNA("CGAUCAUCUA")
+        obs = _char_freqs(seq4._bytes, valid)
+        exp = np.array([.3, .3, .1, .3])
+        npt.assert_array_equal(obs, exp)
+
+        # empty sequence
+        seq5 = RNA("")
+        obs = _char_freqs(seq5._bytes, valid)
+        exp = np.full(4, np.nan)
         npt.assert_array_equal(obs, exp)
 
     def test_equal(self):

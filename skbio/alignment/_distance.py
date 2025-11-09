@@ -13,7 +13,7 @@ import numpy as np
 
 from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
-from skbio.sequence.distance import _check_seqtype, _valid_hash
+from skbio.sequence.distance import _check_seqtype, _char_hash, _char_freqs
 import skbio.sequence.distance as sk_seqdist
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -133,7 +133,7 @@ def align_dists(
     alphabet = getattr(func, "_alphabet", None)
     if alphabet is None and preset is False:
         alphabet = "nongap"
-    valid = _valid_hash(alphabet, dtype)
+    valid = _char_hash(alphabet, dtype)
 
     # Create a 2D matrix of ASCII codes of all sequences.
     # TODO: This can be omitted after optimizing TabularMSA.
@@ -144,20 +144,12 @@ def align_dists(
         seqs = np.vstack([seq._bytes for seq in alignment])
 
     # Get character frequencies from the entire alignment.
-    # For RNA alignments, 1 is added to the ASCII code of "T" to become "U".
     if get_freqs:
-        is_rna = issubclass(dtype, RNA)
-        codes = [65, 67, 71, 84 + is_rna]
-        freqs = np.count_nonzero(seqs.reshape(-1, 1) == codes, axis=0)
-        kwargs["freqs"] = freqs / np.sum(freqs)
+        kwargs["freqs"] = _char_freqs(seqs, valid)
 
     # Use a preset distance metric (efficient).
     if preset:
         func = getattr(sk_seqdist, "_" + name)
-
-        # Create a 2D matrix of ASCII codes of all sequences.
-        # TODO: This can be omitted after optimizing TabularMSA.
-        seqs = np.vstack([seq._bytes for seq in alignment])
 
         # Mask sequences by a given alphabet.
         site_mat = None
@@ -226,21 +218,23 @@ def _get_preset(metric):
         func = getattr(sk_seqdist, metric, None)
         if func is None or not isfunction(func) or not hasattr(func, "_is_metric"):
             raise ValueError(
-                f"{metric!r} is not an available sequence distance metric name. "
-                "Refer to `skbio.sequence.distance` for a list of available "
-                "metrics."
+                f"{metric!r} is not an available sequence distance metric name. Refer "
+                "to `skbio.sequence.distance` for a list of available metrics."
             )
         preset = True
 
     elif callable(metric):
         func = metric
         if getmodule(func) is sk_seqdist:
-            if isfunction(func) and hasattr(func, "_is_metric"):
-                preset = True
-            else:
-                preset = False
+            if not isfunction(func) or not hasattr(func, "_is_metric"):
+                raise ValueError(
+                    f"`{func.__name__}` is not a sequence distance metric. Refer to "
+                    "`skbio.sequence.distance` for a list of available metrics."
+                )
+            preset = True
         else:
             preset = False
+
     else:
         raise TypeError("`metric` must be a function or a string.")
 
