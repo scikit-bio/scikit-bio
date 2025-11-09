@@ -17,7 +17,7 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, hamming, p_dist, kmer_distance, jc69, jc69_correct, k2p
+    _metric_specs, hamming, p_dist, kmer_distance, jc69, jc69_correct, k2p, tn93
 )
 
 
@@ -684,6 +684,59 @@ class TestK2P(TestCase):
         seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
         with self.assertRaises(TypeError):
             k2p(seq1, seq2)
+
+
+class TestTN93(TestCase):
+    def test_tn93(self):
+        # regular case (8 sites, 1 purine transition, 1 pyrimidine transition,
+        # 1 transversion)
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        obs = tn93(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.99700)
+
+        # identical sequences after trimming
+        self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)
+
+        # empty sequences after trimming
+        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
+        self.assertTrue(np.isnan(tn93(seq1, seq2)))
+
+        # too many purine transitions (a1 < 0)
+        seq1 = DNA("ACGTATGT")
+        seq2 = DNA("GCATGCAT")
+        self.assertTrue(np.isnan(tn93(seq1, seq2)))
+
+        # too many pyrimidine transitions (a2 < 0)
+        seq1 = DNA("ACCTTGCC")
+        seq2 = DNA("ATTTCGCT")
+        self.assertTrue(np.isnan(tn93(seq1, seq2)))
+
+        # too many transversions (a3 < 0)
+        seq1 = DNA("ACGTACGT")
+        seq2 = DNA("AGCATATT")
+        self.assertTrue(np.isnan(tn93(seq1, seq2)))
+
+        # RNA sequences
+        seq1 = RNA("AUCU-CGCAGU")
+        seq2 = RNA("AGGUUCAUA--")
+        obs = tn93(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.88543)
+
+        # should match DNA distance
+        exp = tn93(seq1.reverse_transcribe(), seq2.reverse_transcribe())
+        self.assertAlmostEqual(obs, exp)
+
+        # protein sequences
+        seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
+        with self.assertRaises(TypeError):
+            tn93(seq1, seq2)
+
+        # non-grammared sequences
+        seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
+        with self.assertRaises(TypeError):
+            tn93(seq1, seq2)
 
 
 if __name__ == "__main__":

@@ -39,21 +39,47 @@ class AlignDistsTests(TestCase):
             Protein("MQUENPT--"),  # non-canonical char: "U"
         ], index=list("abcd"))
 
-        # An edge case of RNA sequence alignment where no site is shared across all
-        # sequences.
+        # an RNA sequence alignment where no site is shared across all sequences.
         self.msa3 = TabularMSA([
             RNA("AG-UGCU-CA"),
             RNA("--AUC--GC-"),
             RNA("ACU--AUG-A"),
         ], index=list("abc"))
 
-        # An edge case of DNA sequence alignment where one pair of sequences shares
-        # no site.
+        # a DNA sequence alignment where one pair of sequences shares no site.
         self.msa4 = TabularMSA([
-            DNA("ACGT"),
-            DNA("AG--"),
-            DNA("--CT"),
+            DNA("ACGT-CT"),
+            DNA("AG--A-T"),
+            DNA("--CT-C-"),
         ], index=list("abc"))
+
+        # Identical sequences:
+        # 0 and 1 are identical
+        # 1 and 2 are identical after complete/pairwise deletion
+        # 2 and 3 are identical after complete deletion
+        self.msa_ident = TabularMSA([
+            DNA("ACG-TCTGCC"),
+            DNA("ACG-TCTGCC"),
+            DNA("ACGGTCT-CC"),
+            DNA("ACGATCT-CC"),
+        ], index=list("abcd"))
+
+        # Zero-length sequences
+        self.msa_0pos = TabularMSA((DNA(""), DNA(""), DNA("")), index=list("abc"))
+
+    def test_align_dists_edge(self):
+        # no sequence
+        with self.assertRaises(ValueError) as cm:
+            align_dists(TabularMSA(()), "p_dist")
+        msg = "Alignment contains no sequence."
+        self.assertEqual(str(cm.exception), msg)
+
+        # one sequence
+        msa = TabularMSA((DNA("ACGT"),), index=["a"])
+        obs = align_dists(msa, "p_dist")
+        exp = np.array([])
+        npt.assert_array_equal(obs.condensed_form(), exp)
+        self.assertTupleEqual(obs.ids, ("a",))
 
     def test_align_dists_p_dist(self):
         """p-distance."""
@@ -98,16 +124,17 @@ class AlignDistsTests(TestCase):
 
         # edge case: no site left after pairwise deletion
         obs = align_dists(self.msa4, "p_dist")
-        exp = np.array([[ 0., nan, nan],
-                        [nan,  0., nan],
-                        [nan, nan,  0.]])
-        npt.assert_array_equal(obs.data, exp)
+        exp = np.array([nan, nan, nan])
+        npt.assert_array_equal(obs.condensed_form(), exp)
 
         obs = align_dists(self.msa4, "p_dist", shared_by_all=False)
-        exp = np.array([[0. , 0.5, 0.5],
-                        [0.5, 0. , nan],
-                        [0.5, nan, 0. ]])
-        npt.assert_array_equal(obs.data, exp)
+        exp = np.array([0.333, 0.333, nan])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        # edge case: sequences are empty
+        obs = align_dists(self.msa_0pos, "p_dist")
+        exp = np.array([nan, nan, nan])
+        npt.assert_array_equal(obs.condensed_form(), exp)
 
     def test_align_dists_jc69(self):
         """JC69 distance."""

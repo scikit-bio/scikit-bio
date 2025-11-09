@@ -11,6 +11,7 @@ from inspect import isfunction
 
 import numpy as np
 
+from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
 from skbio.sequence._alphabet import _encode_alphabet
 
@@ -83,6 +84,11 @@ def align_dists(
 
     """
     n_seqs = len(alignment)
+
+    # This is unusual. However, TabularMSA currently allows no sequence.
+    if n_seqs == 0:
+        raise ValueError("Alignment contains no sequence.")
+
     seqtype = alignment.dtype
 
     # Use a preset distance metric (efficient).
@@ -99,11 +105,18 @@ def align_dists(
         _check_seqtype(func, seqtype)
 
         alphabet = func._alphabet
+        has_freqs = func._has_freqs
         func = getattr(skbio.sequence.distance, "_" + metric)
 
         # Create a 2D matrix of ASCII codes of all sequences.
         # TODO: This can be omitted after optimizing TabularMSA.
         seqs = np.vstack([seq._bytes for seq in alignment])
+
+        # Calculate character frequencies from the entire unfiltered alignment.
+        if has_freqs and "freqs" not in kwargs:
+            code = 84 + issubclass(alignment.dtype, RNA)
+            freqs = np.count_nonzero(seqs.reshape(-1, 1) == [65, 67, 71, code], axis=0)
+            kwargs["freqs"] = freqs / np.sum(freqs)
 
         # Mask sequences by a given alphabet.
         site_mat = None
