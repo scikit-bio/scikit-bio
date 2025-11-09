@@ -7,13 +7,14 @@
 # ----------------------------------------------------------------------------
 
 from typing import Optional, Union, Any, Callable, TYPE_CHECKING
-from inspect import isfunction
+from inspect import isfunction, getmodule
 
 import numpy as np
 
 from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
-from skbio.sequence._alphabet import _encode_alphabet
+from skbio.sequence.distance import _check_seqtype, _valid_hash
+import skbio.sequence.distance as sk_seqdist
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.alignment import TabularMSA
@@ -30,23 +31,10 @@ def align_dists(
     .. versionadded:: 0.7.2
 
     This function calculates the distance between each pair of sequences based on the
-    aligned sites and a given distance metric. The resulting distance matrix can be
-    used for phylogenetic tree reconstruction (see :mod:`skbio.tree`) or other types of
-    distance-based analyses.
-
-    A "site" refers to a position in a sequence that has a valid character from an
-    alphabet pre-defined by each metric. Typically, gaps are not considered as sites,
-    and will be excluded from calculation. Some metrics are further restricted to
-    certain characters, such as the four nucleotides or the 20 basic amino acids, while
-    excluding degenerate and/or non-canonical characters.
-
-    Sequences are filtered to aligned sites prior to calculation. This has two working
-    modes: By default, alignment positions with at least one invalid character in any
-    of the sequences are excluded from all sequences, leaving fully-aligned positions
-    across the entire alignment. When ``shared_by_all`` is set to False, this filtering
-    is applied to each pair of sequences, and positions with both characters valid are
-    retained for calculation, even if there are invalid characters at the same position
-    in other sequences.
+    aligned sites, using a pre-defined distance metric under
+    :mod:`skbio.sequence.distance` or a custom function. The resulting distance matrix
+    can be used for phylogenetic tree reconstruction (see :mod:`skbio.tree`) or other
+    types of distance-based analyses.
 
     Parameters
     ----------
@@ -54,9 +42,8 @@ def align_dists(
         Multiple sequence alignment.
     metric : str or callable
         The distance metric to apply to each pair of aligned sequences. See
-        :mod:`skbio.sequence.distance` for available metrics. Passing metric as a
-        string is preferable as this often results in an optimized version of the
-        metric being used.
+        :mod:`skbio.sequence.distance` for available metrics. Or supply a custom
+        function that takes two sequence objects and returns a number.
     shared_by_all : bool, optional
         Calculate the distance between each pair of sequences based on sites shared
         across all sequences (True, default), or shared between the current pair of
@@ -72,15 +59,59 @@ def align_dists(
     See Also
     --------
     skbio.sequence.distance
+    skbio.stats.distance.DistanceMatrix
 
     Notes
     -----
-    If you wish to apply a custom function between each pair of sequences, use
+    This function utilizes the preset metrics under :mod:`skbio.sequence.distance` to
+    calculate pairwise sequence distances. These metrics have been optimized such that
+    calling them through this function is significantly more efficient than directly
+    calling them on every pair of sequences in an alignment. Custom functions may be
+    provided but they may not have such acceleration.
+
+    A "site" refers to a position in a sequence that has a valid character from an
+    alphabet pre-defined by each metric. Typically, gaps are not considered as sites,
+    and will be excluded from calculation. Some metrics are further restricted to
+    certain characters, such as the four nucleobases or the 20 basic amino acids, while
+    excluding degenerate and/or non-canonical characters.
+
+    Sequences are filtered to aligned sites prior to calculation. This has two working
+    modes: By default, alignment positions with at least one invalid character in any
+    of the sequences are excluded from all sequences, leaving fully-aligned positions
+    across the entire alignment. When ``shared_by_all`` is set to False, this filtering
+    is applied to each pair of sequences, and positions with both characters valid are
+    retained for calculation, even if there are invalid characters at the same position
+    in other sequences.
+
+    Some distance metrics require observed character frequencies (see the ``freqs``
+    parameter of individual metric functions). They will be sampled from the entire
+    alignment using all sites prior to filtering. Therefore, distances calculated using
+    this function may be unequal to distances calculated by calling the metric function
+    on each pair of sequences, which would sample character frequencies from that pair
+    of sequences specifically.
+
+    If you wish to apply a custom function on each pair of sequences, without filtering
+    sites or considering global character frequencies, use
     ``DistanceMatrix.from_iterable(alignment, function)`` instead.
 
-    This function always strips positions with gap or degenerate characters from the
-    aligned sequences. If you intend to compute distances using unstripped sequences,
-    consider using ``DistanceMatrix.from_iterable(alignment, metric)``.
+    Examples
+    --------
+    >>> from skbio.sequence import DNA
+    >>> from skbio.alignment import TabularMSA, align_dists
+    >>> msa = TabularMSA([
+    ...     DNA('ATC-GTATCGG'),
+    ...     DNA('ATGCG--CCGC'),
+    ...     DNA('GTGCGTACGC-'),
+    ... ], index=list("abc"))
+    >>> dm = align_dists(msa, 'jc69')
+    >>> print(dm)
+    3x3 distance matrix
+    IDs:
+    'a', 'b', 'c'
+    Data:
+    [[ 0.          0.35967981  2.28339183]
+     [ 0.35967981  0.          0.6354734 ]
+     [ 2.28339183  0.6354734   0.        ]]
 
     """
     n_seqs = len(alignment)
@@ -89,39 +120,48 @@ def align_dists(
     if n_seqs == 0:
         raise ValueError("Alignment contains no sequence.")
 
-    seqtype = alignment.dtype
+    # determine preset or custom function
+    func, preset = _get_preset(metric)
+    name = func.__name__
+
+    # validate sequence type
+    dtype = alignment.dtype
+    seqtype = getattr(func, "_seqtype", None)
+    _check_seqtype(name, dtype, seqtype)
+
+    # get valid characters
+    alphabet = getattr(func, "_alphabet", None)
+    if alphabet is None and preset is False:
+        alphabet = "nongap"
+    valid = _valid_hash(alphabet, dtype)
+
+    # Create a 2D matrix of ASCII codes of all sequences.
+    # TODO: This can be omitted after optimizing TabularMSA.
+    # Currently it is needed when the metric is preset or character frequencies are to
+    # be calculated.
+    get_freqs = getattr(func, "_has_freqs", None) is True and "freqs" not in kwargs
+    if preset or get_freqs:
+        seqs = np.vstack([seq._bytes for seq in alignment])
+
+    # Get character frequencies from the entire alignment.
+    # For RNA alignments, 1 is added to the ASCII code of "T" to become "U".
+    if get_freqs:
+        is_rna = issubclass(dtype, RNA)
+        codes = [65, 67, 71, 84 + is_rna]
+        freqs = np.count_nonzero(seqs.reshape(-1, 1) == codes, axis=0)
+        kwargs["freqs"] = freqs / np.sum(freqs)
 
     # Use a preset distance metric (efficient).
-    if isinstance(metric, str):
-        import skbio.sequence.distance
-
-        func = getattr(skbio.sequence.distance, metric, None)
-        if func is None or not isfunction(func) or not hasattr(func, "_is_metric"):
-            raise ValueError(
-                f'"{metric}" is not an available sequence distance metric name. '
-                "Refer to `skbio.sequence.distance` for a list of available "
-                "metrics."
-            )
-        _check_seqtype(func, seqtype)
-
-        alphabet = func._alphabet
-        has_freqs = func._has_freqs
-        func = getattr(skbio.sequence.distance, "_" + metric)
+    if preset:
+        func = getattr(sk_seqdist, "_" + name)
 
         # Create a 2D matrix of ASCII codes of all sequences.
         # TODO: This can be omitted after optimizing TabularMSA.
         seqs = np.vstack([seq._bytes for seq in alignment])
 
-        # Calculate character frequencies from the entire unfiltered alignment.
-        if has_freqs and "freqs" not in kwargs:
-            code = 84 + issubclass(alignment.dtype, RNA)
-            freqs = np.count_nonzero(seqs.reshape(-1, 1) == [65, 67, 71, code], axis=0)
-            kwargs["freqs"] = freqs / np.sum(freqs)
-
         # Mask sequences by a given alphabet.
         site_mat = None
         if alphabet is not None:
-            valid = _valid_hash(alphabet, seqtype)
             site_mat = valid[seqs]
 
             # Delete positions that are not shared by all sequences (complete deletion).
@@ -131,16 +171,10 @@ def align_dists(
                 site_mat = None
             # Otherwise, pass mask to the metric to trigger pairwise deletion.
 
-        dm = func(seqs, site_mat, seqtype, **kwargs)
+        dm = func(seqs, site_mat, dtype, **kwargs)
 
     # Call a custom function on each pair of sequences (slow).
-    elif callable(metric):
-        if hasattr(metric, "_alphabet"):
-            alphabet = metric._alphabet
-        else:
-            alphabet = "nogap"
-        _check_seqtype(metric, seqtype)
-        valid = _valid_hash(alphabet, seqtype)
+    else:
         site_mat = [valid[seq._bytes] for seq in alignment]
 
         dm = np.empty((n_seqs * (n_seqs - 1) // 2,))
@@ -153,7 +187,7 @@ def align_dists(
             for i in range(n_seqs - 1):
                 seq_i = seqs[i]
                 for j in range(i + 1, n_seqs):
-                    dm[pos + j] = metric(seq_i, seqs[j], **kwargs)
+                    dm[pos + j] = func(seq_i, seqs[j], **kwargs)
                 pos += n_seqs - i - 2
 
         # pairwise deletion
@@ -166,90 +200,48 @@ def align_dists(
                     site_vec = sites_i & site_mat[j]
                     seq1 = seq_i[site_vec]
                     seq2 = alignment[j][site_vec]
-                    dm[pos + j] = metric(seq1, seq2, **kwargs)
+                    dm[pos + j] = func(seq1, seq2, **kwargs)
                 pos += n_seqs - i - 2
-    else:
-        raise TypeError("`metric` must be a function or a string.")
 
     return DistanceMatrix(dm, ids=alignment.index.astype(str))
 
 
-def _check_seqtype(func, seqtype):
-    """Check if the input alignment has the expected sequence type.
+def _get_preset(metric):
+    """Validate a present distance metric and return the underlying function.
 
     Parameters
     ----------
-    func : callable
-        An alphabet of valid characters to be considered by the metric.
-    seqtype : type
-        Sequence type, which stores grammar information.
-
-    Raises
-    ------
-    TypeError
-        If alignment sequence type is incompatible with the given metric.
-
-    See Also
-    --------
-    skbio.sequence.distance._metric_specs
-
-    """
-    valid_types = getattr(func, "_seqtype", None)
-    if valid_types is None or issubclass(seqtype, valid_types):
-        return
-    if isinstance(valid_types, tuple):
-        names_ = tuple(x.__name__ for x in valid_types)
-    else:
-        names_ = valid_types.__name__
-    raise TypeError(
-        f"{func.__name__!r} is compatible with {names_!r} sequence alignments, "
-        f"not {seqtype.__name__!r}."
-    )
-
-
-def _valid_hash(alphabet, seqtype):
-    """Create a hash table of valid characters for sequence filtering.
-
-    Parameters
-    ----------
-    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}
-        An alphabet of valid characters to be considered by the metric.
-    seqtype : class
-        Sequence type, which stores grammar information.
+    metric : str or callable
+        The distance metric specified.
 
     Returns
     -------
-    ndarray of bool of shape (128,)
-        Boolean mask of ASCII codes of valid characters (True).
-
-    See Also
-    --------
-    skbio.sequence.distance._metric_specs
+    func : callable
+        Function that calculates this metric.
+    preset : bool
+        Whether the metric is a preset one under `skbio.sequence.distance`.
 
     """
-    if alphabet in ("nongap", "definite", "canonical"):
-        valid = getattr(seqtype, f"_{alphabet}_hash")
+    if isinstance(metric, str):
+        func = getattr(sk_seqdist, metric, None)
+        if func is None or not isfunction(func) or not hasattr(func, "_is_metric"):
+            raise ValueError(
+                f"{metric!r} is not an available sequence distance metric name. "
+                "Refer to `skbio.sequence.distance` for a list of available "
+                "metrics."
+            )
+        preset = True
+
+    elif callable(metric):
+        func = metric
+        if getmodule(func) is sk_seqdist:
+            if isfunction(func) and hasattr(func, "_is_metric"):
+                preset = True
+            else:
+                preset = False
+        else:
+            preset = False
     else:
-        encoded = _encode_alphabet(alphabet)
-        valid = np.zeros((seqtype._num_ascii_codes,), dtype=bool)
-        valid[encoded] = True
-    return valid
+        raise TypeError("`metric` must be a function or a string.")
 
-
-def _ids_from_msa(msa, ids):
-    """Get sequence IDs from an alignment."""
-    key = None
-    if ids is None:
-        key = "id"
-    elif isinstance(ids, str):
-        key = ids
-
-    if key is not None:
-        try:
-            ids = [seq.metadata[key] for seq in msa]
-        except KeyError:
-            if ids is not None:
-                raise KeyError(f"Metadata key '{key}' is not present in all sequences.")
-            ids = tuple(str(i) for i in range(len(msa)))
-
-    return ids
+    return func, preset

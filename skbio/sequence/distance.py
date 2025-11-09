@@ -28,6 +28,7 @@ Nucleotide distance metrics
 
    jc69
    k2p
+   tn93
 
 
 Utility functions
@@ -129,60 +130,46 @@ def _metric_specs(
     """
 
     def decorator(func):
+        name = func.__name__
         has_freqs = "freqs" in signature(func).parameters
 
         @functools.wraps(func)
         def wrapper(seq1, seq2, *args, **kwargs):
             # check if sequences are skbio.sequence objects
-            for seq in seq1, seq2:
-                if not isinstance(seq, Sequence):
-                    raise TypeError(
-                        "Sequences must be skbio.sequence.Sequence instances, not "
-                        f"{type(seq).__name__!r}."
-                    )
+            type1 = type(seq1)
+            if not issubclass(type1, Sequence):
+                raise TypeError(
+                    "Sequences must be skbio.sequence.Sequence instances, not "
+                    f"{type1.__name__!r}."
+                )
 
             # check if sequences have the same type
-            if type(seq1) is not type(seq2):
+            if type1 is not type(seq2):
                 raise TypeError(
-                    f"Sequences must have matching type. {type(seq1).__name__!r} "
+                    f"Sequences must have matching type. {type1.__name__!r} "
                     f"does not match {type(seq2).__name__!r}."
                 )
 
             # check if sequences have the expected type
-            if seqtype is not None:
-                for seq in seq1, seq2:
-                    if not isinstance(seq, seqtype):
-                        if isinstance(seqtype, tuple):
-                            names_ = tuple(x.__name__ for x in seqtype)
-                        else:
-                            names_ = seqtype.__name__
-                        raise TypeError(
-                            f"Sequences must be {names_!r} instances, not "
-                            f"{type(seq).__name__!r}."
-                        )
+            _check_seqtype(name, type1, seqtype)
 
             # check if sequences have the same length
             if equal and len(seq1) != len(seq2):
                 raise ValueError(
-                    f"{func.__name__!r} can only be calculated between equal-length "
+                    f"{name!r} can only be calculated between equal-length "
                     f"sequences. {len(seq1)} != {len(seq2)}."
                 )
 
             # calculate base frequencies if needed
             if has_freqs and kwargs.get("freqs") is None:
-                is_rna = issubclass(type(seq1), RNA)
+                is_rna = issubclass(type1, RNA)
                 kwargs["freqs"] = _base_freqs(
                     np.hstack((seq1._bytes, seq2._bytes)), 84 + is_rna
                 )
 
             # filter sequences by a given alphabet
             if alphabet is not None:
-                if alphabet in ("nongap", "definite", "canonical"):
-                    valid = getattr(seq1, f"_{alphabet}_hash")
-                else:
-                    encoded = _encode_alphabet(alphabet)
-                    valid = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-                    valid[encoded] = True
+                valid = _valid_hash(alphabet, type1)
 
                 if equal:
                     pos = valid[seq1._bytes] & valid[seq2._bytes]
@@ -203,6 +190,60 @@ def _metric_specs(
         return wrapper
 
     return decorator
+
+
+def _check_seqtype(name, this, valid=None):
+    """Check if the input sequences have the expected sequence type.
+
+    Parameters
+    ----------
+    name : str
+        Name of the metric.
+    this : type
+        Type of the current sequence.
+    valid : type or tuple of type, optional
+        Valid sequence type(s).
+
+    Raises
+    ------
+    TypeError
+        If sequence type is incompatible with the given metric.
+
+    """
+    if valid is None or issubclass(this, valid):
+        return
+    if isinstance(valid, tuple):
+        types = tuple(x.__name__ for x in valid)
+    else:
+        types = valid.__name__
+    raise TypeError(
+        f"{name!r} is compatible with {types!r} sequences, not {this.__name__!r}."
+    )
+
+
+def _valid_hash(alphabet, seqtype):
+    """Get a hash table of valid characters for sequence filtering.
+
+    Parameters
+    ----------
+    alphabet : str, 1D array_like, {'nongap', 'definite', 'canonical'}
+        An alphabet of valid characters to be considered by the metric.
+    seqtype : type
+        Sequence type, which stores grammar information.
+
+    Returns
+    -------
+    ndarray of bool of shape (128,)
+        Boolean mask of ASCII codes of valid characters (True).
+
+    """
+    if alphabet in ("nongap", "definite", "canonical"):
+        valid = getattr(seqtype, f"_{alphabet}_hash")
+    else:
+        encoded = _encode_alphabet(alphabet)
+        valid = np.zeros((seqtype._num_ascii_codes,), dtype=bool)
+        valid[encoded] = True
+    return valid
 
 
 def fill_dm(func, seqs, mask):
@@ -680,7 +721,7 @@ def k2p(seq1, seq2):
     K2P extends from JC69 by modeling differential transition and transversion rates,
     while also assuming equal base frequencies.
 
-    This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is
+    This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is zero or
     negative, which implicates over-saturation of substitutions.
 
     """
@@ -800,20 +841,30 @@ def tn93(seq1, seq2, freqs=None):
     r"""Calculate the TN93 distance between two aligned nucleotide sequences.
 
     The Tamura and Nei (1993) (TN93) model [1]_ assumes differential rates of the two
-    types of transitions: between purines (i.e., A <-> G) and between pyrimidines (i.e.,
-    C <-> T/U), and transversions (i.e., between a purine and a pyrimidine). It also
-    assumes unequal base frequencies. It is calculated as:
+    types of transitions: between purines (R) (i.e., A <-> G) and between pyrimidines
+    (Y) (i.e., C <-> T/U), and transversions (i.e., between a purine and a pyrimidine).
+    It also assumes unequal base frequencies (:math:`\pi_A` to :math:`\pi_T`). It is
+    calculated as:
 
     .. math::
-        K = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
+        D = -2\frac{\pi_A\pi_G}{\pi_R}
+            ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q)\\
+            -2\frac{\pi_C\pi_T}{\pi_Y}
+            ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q)\\
+            -2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
+            ln(1-\frac{1}{2\pi_R\pi_Y}Q)
 
-    Where :math:`P` and :math:`Q` are the proportions of transitions and transversions,
-    respectively.
+    Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
+    transversions, respectively. :math:`Q` is the proportion of transversions.
 
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
-        Sequences to compute the K2P distance between.
+        Sequences to compute the TN93 distance between.
+    freqs : array_like of float of shape (4,), optional
+        Relative frequencies of nucleobases A, C, G, and T/U. Should sum to 1. If not
+        provided, the observed frequencies from the two input sequences combined will
+        be used.
 
     Returns
     -------
@@ -832,58 +883,38 @@ def tn93(seq1, seq2, freqs=None):
 
     Notes
     -----
-    K2P extends from JC69 by modeling differential transition and transversion rates,
-    while also assuming equal base frequencies.
-
-    This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is
+    This function returns NaN if any of the three logarithm arguments is zero or
     negative, which implicates over-saturation of substitutions.
 
     """
-    # print(freqs)
     return _tn93(
         np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
     ).item()
 
-    # L = len(seq1)
-    # is_rna = issubclass(type(seq1), RNA)
-    # seq1, seq2 = seq1._bytes, seq2._bytes
 
-    # piA, piC, piG, piT = freqs
-    # if not np.all([piA, piC, piG, piT]):
-    #     return np.inf
+def _tn93(seqs, mask=None, seqtype=DNA, freqs=None):
+    """Compute pairwise TN93 distances between multiple sequences.
 
-    # # piA, piC, piG, piT = 0.5* freqs / L
-    # piR = piA + piG
-    # piY = piC + piT
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Sequences to compute the TN93 distance between.
+    mask : ndarray of bool of shape (n_sequences, n_positions), optional
+        Boolean mask of valid sites (True). If provided, each sequence pair will be
+        filtered to positions that are valid in both of them.
+    seqtype : type, optional
+        Sequence type (DNA or RNA). Default is DNA.
+    freqs : array_like of float of shape (4,), optional
+        Relative frequencies of nucleobases A, C, G, and T/U. Should sum to 1. If not
+        provided, the observed frequencies from the two input sequences combined will
+        be used.
 
-    # subs = np.abs(np.subtract(seq1, seq2, dtype=np.int16))
-    # p = np.count_nonzero(subs)
-    # P1 = np.count_nonzero(subs == 6)
-    # P2 = np.count_nonzero(subs == 17 + is_rna)
-    # Q = p - P1 - P2
+    Returns
+    -------
+    ndarray of float of shape (C(n_sequences, 2),)
+        TN93 distance matrix in condensed form.
 
-    # P1 = P1 / L
-    # P2 = P2 / L
-    # Q = Q / L
-
-    # a1 = 1.0 - P1 * piR / (2.0 * piA * piG) - Q / (2.0 * piR)
-    # a2 = 1.0 - P2 * piY / (2.0 * piC * piT) - Q / (2.0 * piY)
-    # b = 1.0 - Q / (2.0 * piR * piY)
-
-    # if not (a1 > 0 and a2 > 0 and b > 0):
-    #     return np.inf
-
-    # # coefficients
-    # c1 = 2.0 * piA * piG / piR
-    # c2 = 2.0 * piC * piT / piY
-    # c3 = 2.0 * (piR * piY - piA * piG * piY / piR - piC * piT * piR / piY)
-
-    # d = -c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(b)
-
-    # return float(d)
-
-
-def _tn93(seqs, mask=None, seqtype=DNA, /, *, freqs=None):
+    """
     n, L = seqs.shape
     n_1 = n - 1
     dm = np.empty((n * n_1 // 2,))
@@ -891,15 +922,13 @@ def _tn93(seqs, mask=None, seqtype=DNA, /, *, freqs=None):
         dm[:] = np.nan
         return dm
 
-    log2 = np.log(2.0)
-    logL = np.log(L)
     masked = mask is not None
 
     if freqs is None:
         freqs = (0.25, 0.25, 0.25, 0.25)
     piA, piC, piG, piT = freqs
 
-    if not np.all([piA, piC, piG, piT]):
+    if not np.all(freqs):
         dm[:] = np.nan
         return dm
 
@@ -917,7 +946,10 @@ def _tn93(seqs, mask=None, seqtype=DNA, /, *, freqs=None):
     c1 = 2.0 * piAxG / piR
     c2 = 2.0 * piCxT / piY
     c3 = 2.0 * (piRxY - piY / piR_AxG - piR / piY_CxT)
+
     c123 = c1 + c2 + c3
+    log2 = np.log(2.0)
+    part0 = c123 * (np.log(L) + log2)
 
     C = 17 + issubclass(seqtype, RNA)
 
@@ -964,11 +996,9 @@ def _tn93(seqs, mask=None, seqtype=DNA, /, *, freqs=None):
                 ident &= L != 0
                 L = L[valid]
 
-        logL_ = np.log(L) if masked else logL
+        part0_ = c123 * (np.log(L) + log2) if masked else part0
 
-        res = (
-            c123 * (logL_ + log2) - c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(a3)
-        )
+        res = part0_ - c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(a3)
 
         if has_inval:
             target[valid] = res

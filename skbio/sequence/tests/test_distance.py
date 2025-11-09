@@ -17,7 +17,8 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, hamming, p_dist, kmer_distance, jc69, jc69_correct, k2p, tn93
+    _metric_specs, _valid_hash, hamming, p_dist, kmer_distance, jc69, jc69_correct,
+    k2p, tn93
 )
 
 
@@ -73,8 +74,18 @@ class TestMetricSpecs(TestCase):
         self.assertEqual(metric1(Protein("MVR"), Protein("TPD")), 1)
 
         with self.assertRaises(TypeError) as cm:
+            metric1("GGC", "CAT")
+        msg = "Sequences must be skbio.sequence.Sequence instances, not 'str'."
+        self.assertEqual(str(cm.exception), msg)
+
+        with self.assertRaises(TypeError) as cm:
+            metric1(Protein("MVR"), DNA("CAT"))
+        msg = "Sequences must have matching type. 'Protein' does not match 'DNA'."
+        self.assertEqual(str(cm.exception), msg)
+
+        with self.assertRaises(TypeError) as cm:
             metric1(DNA("GGC"), DNA("CAT"))
-        msg = "Sequences must be 'Protein' instances, not 'DNA'."
+        msg = "'metric1' is compatible with 'Protein' sequences, not 'DNA'."
         self.assertEqual(str(cm.exception), msg)
 
         @_metric_specs(seqtype=(DNA, RNA))
@@ -86,7 +97,7 @@ class TestMetricSpecs(TestCase):
 
         with self.assertRaises(TypeError) as cm:
             metric2(Protein("MVR"), Protein("TPD"))
-        msg = "Sequences must be ('DNA', 'RNA') instances, not 'Protein'."
+        msg = "'metric2' is compatible with ('DNA', 'RNA') sequences, not 'Protein'."
         self.assertEqual(str(cm.exception), msg)
 
         @_metric_specs(seqtype=GrammaredSequence)
@@ -121,8 +132,53 @@ class TestMetricSpecs(TestCase):
 
         with self.assertRaises(TypeError) as cm:
             metric3(Sequence("hello"), Sequence("there"))
-        msg = "Sequences must be 'GrammaredSequence' instances, not 'Sequence'."
+        msg = ("'metric3' is compatible with 'GrammaredSequence' sequences, not "
+               "'Sequence'.")
         self.assertEqual(str(cm.exception), msg)
+
+    def test_valid_hash(self):
+        """Hash table of valid characters."""
+        # NOTE: A more intuitive test of this function is in skbio.alignment.distance.
+        # DNA sequence
+        obs = _valid_hash("ACGT", DNA)
+        exp = np.zeros(128, dtype=bool)
+        exp[[65, 67, 71, 84]] = True
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("definite", DNA)
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("canonical", DNA)
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("ACGTN", DNA)
+        exp[78] = True
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("nongap", DNA)
+        exp[sorted(map(ord, DNA.degenerate_chars))] = True
+        npt.assert_array_equal(obs, exp)
+
+        # RNA sequence
+        obs = _valid_hash("definite", RNA)
+        exp = np.zeros(128, dtype=bool)
+        exp[[65, 67, 71, 85]] = True
+        npt.assert_array_equal(obs, exp)
+
+        # protein sequence
+        obs = _valid_hash("definite", Protein)
+        exp = np.zeros(128, dtype=bool)
+        exp[sorted(map(ord, Protein.definite_chars))] = True
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("canonical", Protein)
+        exp[sorted(map(ord, Protein.noncanonical_chars))] = False
+        npt.assert_array_equal(obs, exp)
+
+        obs = _valid_hash("ABCD", Protein)
+        exp = np.zeros(128, dtype=bool)
+        exp[65:69] = True
+        npt.assert_array_equal(obs, exp)
 
     def test_equal(self):
         """Test if input sequences are of equal length."""
@@ -209,19 +265,6 @@ class TestMetricSpecs(TestCase):
 
 
 class TestHamming(TestCase):
-    def test_non_sequence(self):
-        seq1 = Sequence('abc')
-        seq2 = 'abc'
-        with self.assertRaisesRegex(TypeError, "Sequence instances, not 'str'."):
-            hamming(seq1, seq2)
-        with self.assertRaisesRegex(TypeError, "Sequence instances, not 'str'."):
-            hamming(seq2, seq1)
-
-    def test_type_mismatch(self):
-        seq1 = Sequence('ABC')
-        seq2 = DNA('ACG')
-        with self.assertRaisesRegex(TypeError, "'Sequence' does not match 'DNA'."):
-            hamming(seq1, seq2)
 
     def test_length_mismatch(self):
         seq1 = Sequence('ABC')
@@ -526,18 +569,6 @@ class TestKmerDistance(TestCase):
         with self.assertRaisesRegex(ValueError, r'k must be greater than 0.'):
             kmer_distance(seq1, seq2, 0)
 
-    def test_type_mismatch_error(self):
-        seq1 = Sequence('ABC')
-        seq2 = DNA('ATC')
-        with self.assertRaisesRegex(TypeError, r"'Sequence' does not match 'DNA'"):
-            kmer_distance(seq1, seq2, 3)
-
-    def test_non_sequence_error(self):
-        seq1 = Sequence('ATCG')
-        seq2 = 'ATCG'
-        with self.assertRaisesRegex(TypeError, r"not 'str'"):
-            kmer_distance(seq1, seq2, 3)
-
 
 class TestJC69(TestCase):
     def test_jc69(self):
@@ -546,19 +577,19 @@ class TestJC69(TestCase):
         seq2 = DNA("AGATG")
         obs = jc69(seq1, seq2)
         self.assertIsInstance(obs, float)
-        self.assertEqual(round(obs, 3), 0.233)
+        self.assertEqual(round(obs, 5), 0.23262)
 
         # RNA sequences
         seq1, seq2 = RNA("AUCG"), RNA("UACG")
-        self.assertEqual(round(jc69(seq1, seq2), 3), 0.824)
+        self.assertEqual(round(jc69(seq1, seq2), 5), 0.82396)
 
         # sequences with gaps
         seq1, seq2 = DNA("A--ACGG"), DNA("AGAAT-G")
-        self.assertEqual(round(jc69(seq1, seq2), 3), 0.304)
+        self.assertEqual(round(jc69(seq1, seq2), 5), 0.30410)
 
         # sequences with degenerate characters
         seq1, seq2 = DNA("ANGCRT"), DNA("CCSMTT")
-        self.assertEqual(round(jc69(seq1, seq2), 3), 0.824)
+        self.assertEqual(round(jc69(seq1, seq2), 5), 0.82396)
 
         # identical sequences
         seq1, seq2 = DNA("ACGT"), DNA("ACGT")
@@ -570,7 +601,7 @@ class TestJC69(TestCase):
 
         # highly divergent sequences (p = 0.7)
         seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
-        self.assertEqual(round(jc69(seq1, seq2), 3), 2.031)
+        self.assertEqual(round(jc69(seq1, seq2), 5), 2.03104)
 
         # overly divergent sequences (p = 0.8)
         seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
@@ -594,10 +625,10 @@ class TestJC69(TestCase):
         # scalar input
         obs = jc69_correct(0.1)
         self.assertIsInstance(obs, float)
-        self.assertEqual(round(obs, 3), 0.107)
-        self.assertEqual(round(jc69_correct(0.2), 3), 0.233)
-        self.assertEqual(round(jc69_correct(0.5), 3), 0.824)
-        self.assertEqual(round(jc69_correct(0.7), 3), 2.031)
+        self.assertEqual(round(obs, 5), 0.10733)
+        self.assertEqual(round(jc69_correct(0.2), 5), 0.23262)
+        self.assertEqual(round(jc69_correct(0.5), 5), 0.82396)
+        self.assertEqual(round(jc69_correct(0.7), 5), 2.03104)
         self.assertEqual(jc69_correct(0.0), 0.0)
         self.assertTrue(np.isnan(jc69_correct(0.8)))
 
@@ -649,7 +680,7 @@ class TestK2P(TestCase):
         seq2 = DNA("AGAAT--CAACC")
         obs = k2p(seq1, seq2)
         self.assertIsInstance(obs, float)
-        self.assertEqual(round(obs, 3), 0.562)
+        self.assertEqual(round(obs, 5), 0.56234)
 
         # identical sequences after trimming
         self.assertEqual(k2p(DNA("AACGTY"), DNA("WACGTT")), 0.0)
@@ -669,7 +700,7 @@ class TestK2P(TestCase):
         # RNA sequences
         seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
         obs = k2p(seq1, seq2)
-        self.assertEqual(round(obs, 3), 0.824)
+        self.assertEqual(round(obs, 5), 0.82396)
 
         # should match DNA distance
         exp = k2p(seq1.reverse_transcribe(), seq2.reverse_transcribe())
@@ -688,13 +719,25 @@ class TestK2P(TestCase):
 
 class TestTN93(TestCase):
     def test_tn93(self):
-        # regular case (8 sites, 1 purine transition, 1 pyrimidine transition,
-        # 1 transversion)
+        # regular case: 8 sites, 1 purine transition, 1 pyrimidine transition,
+        # 1 transversion; use observed base frequencies
         seq1 = DNA("AT-ACGGCGA-C")
         seq2 = DNA("AGAAT--CAACC")
         obs = tn93(seq1, seq2)
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.99700)
+
+        # specify base frequencies
+        obs = tn93(seq1, seq2, freqs=(.2, .2, .3, .3))
+        self.assertEqual(round(obs, 5), 0.57303)
+
+        # even base frequencies
+        obs = tn93(seq1, seq2, freqs=(.25, .25, .25, .25))
+        self.assertEqual(round(obs, 5), 0.56234)
+
+        # zero base frequency
+        obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
+        self.assertTrue(np.isnan(obs))
 
         # identical sequences after trimming
         self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)
