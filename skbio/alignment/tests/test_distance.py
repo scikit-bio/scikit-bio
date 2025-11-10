@@ -13,7 +13,7 @@ import numpy.testing as npt
 
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
-from skbio.sequence.distance import p_dist, hamming, jc69, k2p, tn93, jc69_correct
+from skbio.sequence.distance import hamming, pdist, jc69, f81, k2p, f84, tn93, jc69_correct
 from skbio.stats.distance import DistanceMatrix
 
 from skbio.alignment._distance import align_dists, _char_hash
@@ -110,14 +110,14 @@ class AlignDistsTests(TestCase):
 
         # no sequence
         with self.assertRaises(ValueError) as cm:
-            align_dists(TabularMSA(()), "p_dist")
+            align_dists(TabularMSA(()), "pdist")
         msg = "Alignment contains no sequence."
         self.assertEqual(str(cm.exception), msg)
 
     def test_align_dists_edge(self):
         # one sequence
         msa = TabularMSA((DNA("ACGT"),), index=["a"])
-        obs = align_dists(msa, "p_dist")
+        obs = align_dists(msa, "pdist")
         exp = np.array([])
         npt.assert_array_equal(obs.condensed_form(), exp)
         self.assertTupleEqual(obs.ids, ("a",))
@@ -155,54 +155,54 @@ class AlignDistsTests(TestCase):
         exp = np.array([29, 32, 38], dtype=float)
         npt.assert_array_equal(obs.condensed_form(), exp)
 
-    def test_align_dists_p_dist(self):
+    def test_align_dists_pdist(self):
         """p-distance."""
-        obs = align_dists(self.msa_nucl, "p_dist")
+        obs = align_dists(self.msa_nucl, "pdist")
         exp = np.array([0.4444444, 0.4444444, 0.5277778])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
-        obs = align_dists(self.msa_nucl, "p_dist", shared_by_all=False)
+        obs = align_dists(self.msa_nucl, "pdist", shared_by_all=False)
         exp = np.array([0.4047619, 0.4318182, 0.5526316])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         # complete deletion (5 sites)
-        obs = align_dists(self.msa1, "p_dist")
+        obs = align_dists(self.msa1, "pdist")
         self.assertIsInstance(obs, DistanceMatrix)
         self.assertTupleEqual(obs.ids, tuple("abcd"))
         exp = np.array([0.2, 0.6, 0.8, 0.4, 0.6, 0.4])
         npt.assert_array_equal(obs.condensed_form(), exp)
 
         # supply function
-        obs = align_dists(self.msa1, p_dist)
+        obs = align_dists(self.msa1, pdist)
         npt.assert_array_equal(obs.condensed_form(), exp)
 
         # pairwise deletion
-        obs = align_dists(self.msa1, "p_dist", shared_by_all=False)
+        obs = align_dists(self.msa1, "pdist", shared_by_all=False)
         exp = np.array([2/7, 3/7, 4/8, 3/7, 4/7, 2/8])
         npt.assert_allclose(obs.condensed_form(), exp)
 
         # supply function
-        obs = align_dists(self.msa1, p_dist, shared_by_all=False)
+        obs = align_dists(self.msa1, pdist, shared_by_all=False)
         npt.assert_array_equal(obs.condensed_form(), exp)
 
         # edge case: no site left after complete deletion
-        obs = align_dists(self.msa3, "p_dist")
+        obs = align_dists(self.msa3, "pdist")
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
-        obs = align_dists(self.msa3, "p_dist", shared_by_all=False)
+        obs = align_dists(self.msa3, "pdist", shared_by_all=False)
         exp = np.array([0.333, 0.4, 0.5])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
         # edge case: no site left after pairwise deletion
-        obs = align_dists(self.msa4, "p_dist")
+        obs = align_dists(self.msa4, "pdist")
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
-        obs = align_dists(self.msa4, "p_dist", shared_by_all=False)
+        obs = align_dists(self.msa4, "pdist", shared_by_all=False)
         exp = np.array([0.333, 0.333, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
         # edge case: sequences are empty
-        obs = align_dists(self.msa_0pos, "p_dist")
+        obs = align_dists(self.msa_0pos, "pdist")
         exp = np.array([nan, nan, nan])
         npt.assert_array_equal(obs.condensed_form(), exp)
 
@@ -245,9 +245,56 @@ class AlignDistsTests(TestCase):
             align_dists(self.msa2, jc69)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_align_dists_f81(self):
+        """F81 distance."""
+        # normal DNA sequences
+        obs = align_dists(self.msa_nucl, "f81")
+        exp = np.array([0.6922797, 0.6922797, 0.9524649])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, f81)
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "f81", shared_by_all=False)
+        exp = np.array([0.5951889, 0.6599422, 1.0526322])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "f81", freqs=np.full(4, .25))
+        exp = np.array([0.6734562, 0.6734562, 0.9122965])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        # F81 is equivalent to JC69 when base frequencies are equal.
+        exp = align_dists(self.msa_nucl, "jc69")
+        npt.assert_allclose(obs.condensed_form(), exp.condensed_form())
+
+        # short DNA sequences with ambiguity
+        obs = align_dists(self.msa1, "f81")
+        exp = np.array([0.233, 1.234, nan, 0.576, 1.234, 0.576])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, "f81", shared_by_all=False)
+        exp = np.array([0.361, 0.641, 0.834, 0.641, 1.096, 0.305])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        # short, hollow RNA sequences
+        obs = align_dists(self.msa3, "f81")
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+        obs = align_dists(self.msa3, "f81", shared_by_all=False)
+        exp = np.array([0.442, 0.574, 0.829])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        with self.assertRaises(TypeError):
+            align_dists(self.msa2, "f81")
+
     def test_align_dists_k2p(self):
         """K2P distance."""
+        # normal DNA sequences
         obs = align_dists(self.msa_nucl, "k2p")
+        exp = np.array([0.6962528, 0.6749634, 0.9547713])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, k2p)
         exp = np.array([0.6962528, 0.6749634, 0.9547713])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
@@ -255,10 +302,16 @@ class AlignDistsTests(TestCase):
         exp = np.array([0.5921321, 0.6440233, 1.0287045])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
+        # short DNA sequences with ambiguity
         obs = align_dists(self.msa1, "k2p")
         exp = np.array([0.255, nan, nan, 0.586, 1.207, 0.586])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "k2p", shared_by_all=False)
+        exp = np.array([0.364, 0.710, 0.866, 0.710, 1.185, 0.307])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        # short, hollow RNA sequences
         obs = align_dists(self.msa3, "k2p")
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
@@ -268,6 +321,48 @@ class AlignDistsTests(TestCase):
 
         with self.assertRaises(TypeError):
             align_dists(self.msa2, "k2p")
+
+    def test_align_dists_f84(self):
+        """F84 distance."""
+        # normal DNA sequences
+        obs = align_dists(self.msa_nucl, "f84")
+        exp = np.array([0.7322711, 0.6966819, 1.0393658])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, f84)
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "f84", shared_by_all=False)
+        exp = np.array([0.6132254, 0.6629780, 1.1168612])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "f84", freqs=np.full(4, .25))
+        exp = np.array([0.6962528, 0.6749634, 0.9547713])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        # F84 is equivalent to K2P when base frequencies are equal.
+        exp = align_dists(self.msa_nucl, "k2p")
+        npt.assert_allclose(obs.condensed_form(), exp.condensed_form())
+
+        # short DNA sequences with ambiguity
+        obs = align_dists(self.msa1, "f84")
+        exp = np.array([0.258, nan, nan, 0.592, 1.234, 0.592])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, "f84", shared_by_all=False)
+        exp = np.array([0.366, 0.727, 0.884, 0.727, 1.230, 0.308])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        # short, hollow RNA sequences
+        obs = align_dists(self.msa3, "f84")
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+        obs = align_dists(self.msa3, "f84", shared_by_all=False)
+        exp = np.array([0.479, 0.661, nan])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        with self.assertRaises(TypeError):
+            align_dists(self.msa2, "f84")
 
     def test_align_dists_tn93(self):
         """TN93 distance."""

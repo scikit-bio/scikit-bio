@@ -17,8 +17,8 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, _char_hash, _char_freqs, hamming, p_dist, kmer_distance, jc69,
-    jc69_correct, f81, k2p, tn93
+    _metric_specs, _char_hash, _char_freqs, hamming, pdist, kmer_distance, jc69,
+    jc69_correct, f81, k2p, f84, tn93
 )
 
 
@@ -452,77 +452,77 @@ class TestHamming(TestCase):
 
 
 class TestPDist(TestCase):
-    def test_p_dist(self):
+    def test_pdist(self):
         # sequences of canonical characters
         seq1 = DNA("AGATC")
         seq2 = DNA("AGATG")
-        self.assertEqual(p_dist(seq1, seq2), 0.2)
+        self.assertEqual(pdist(seq1, seq2), 0.2)
 
         seq1 = RNA("AUCG")
         seq2 = RNA("UACG")
-        self.assertEqual(p_dist(seq1, seq2), 0.5)
+        self.assertEqual(pdist(seq1, seq2), 0.5)
 
         seq1 = Protein("RCKMAF")
         seq2 = Protein("SCPTAA")
-        self.assertAlmostEqual(p_dist(seq1, seq2), 2 / 3)
+        self.assertAlmostEqual(pdist(seq1, seq2), 2 / 3)
 
         # sequences with gaps
         seq1 = DNA("A--ACGG")
         seq2 = DNA("AGAAT-G")
-        self.assertEqual(p_dist(seq1, seq2), 0.25)
+        self.assertEqual(pdist(seq1, seq2), 0.25)
 
         seq1 = Protein("-PYCRNG")
         seq2 = Protein("MPYAKC-")
-        self.assertEqual(p_dist(seq1, seq2), 0.6)
+        self.assertEqual(pdist(seq1, seq2), 0.6)
 
         # sequences with degenerate characters
         seq1 = DNA("ANGCRT")
         seq2 = DNA("CCSMTT")
-        self.assertEqual(p_dist(seq1, seq2), 0.5)
+        self.assertEqual(pdist(seq1, seq2), 0.5)
 
         seq1 = Protein("NBMKK")
         seq2 = Protein("HEMYX")
-        self.assertAlmostEqual(p_dist(seq1, seq2), 2 / 3)
+        self.assertAlmostEqual(pdist(seq1, seq2), 2 / 3)
 
         # sequences with non-canonical characters
         # seq1 = Protein("NKOC")
         # seq2 = Protein("UKPA")
-        # self.assertAlmostEqual(p_dist(seq1, seq2), 0.5)
+        # self.assertAlmostEqual(pdist(seq1, seq2), 0.5)
 
         # identical sequences
         seq1 = DNA("ACGT")
         seq2 = DNA("ACGT")
-        self.assertEqual(p_dist(seq1, seq2), 0.0)
+        self.assertEqual(pdist(seq1, seq2), 0.0)
 
         # distinct sequences
         seq1 = DNA("ACGT")
         seq2 = DNA("TGCA")
-        self.assertEqual(p_dist(seq1, seq2), 1.0)
+        self.assertEqual(pdist(seq1, seq2), 1.0)
 
         # single-character sequences
         seq1 = RNA("U")
         seq2 = RNA("G")
-        self.assertEqual(p_dist(seq1, seq2), 1.0)
+        self.assertEqual(pdist(seq1, seq2), 1.0)
 
         # empty sequences
         seq1 = RNA("")
         seq2 = RNA("")
-        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+        self.assertTrue(np.isnan(pdist(seq1, seq2)))
 
         # empty sequences after trimming
         seq1 = DNA("AAA---")
         seq2 = DNA("---TTT")
-        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+        self.assertTrue(np.isnan(pdist(seq1, seq2)))
 
         seq1 = Protein("MGCPS")
         seq2 = Protein("XXXXX")
-        self.assertTrue(np.isnan(p_dist(seq1, seq2)))
+        self.assertTrue(np.isnan(pdist(seq1, seq2)))
 
         # non-grammared sequences
         seq1 = Sequence("AGCNT")
         seq2 = Sequence("CG-AT")
         with self.assertRaises(TypeError):
-            p_dist(seq1, seq2)
+            pdist(seq1, seq2)
 
 
 class TestKmerDistance(TestCase):
@@ -624,7 +624,7 @@ class TestKmerDistance(TestCase):
 
 class TestJC69(TestCase):
     def test_jc69(self):
-        # regular case
+        # normal case
         seq1 = DNA("AGATC")
         seq2 = DNA("AGATG")
         obs = jc69(seq1, seq2)
@@ -727,17 +727,47 @@ class TestJC69(TestCase):
 
 class TestF81(TestCase):
     def test_f81(self):
-        # regular case
+        # normal case
         seq1 = DNA("AT-ACGGCGA-C")
         seq2 = DNA("AGAAT--CAACC")
         obs = f81(seq1, seq2)
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.53708)
 
+        # even base frequencies (equivalent to JC69)
+        obs = f81(seq1, seq2, freqs=(.25, .25, .25, .25))
+        self.assertEqual(round(obs, 5), 0.51986)
+        exp = jc69(seq1, seq2)
+        self.assertAlmostEqual(obs, exp)
+
+        # identical sequences after trimming
+        self.assertEqual(f81(DNA("AACGTY"), DNA("WACGTT")), 0.0)
+
+        # empty sequences after trimming
+        self.assertTrue(np.isnan(f81(DNA("AAA---"), DNA("---TTT"))))
+
+        # highly divergent sequences
+        seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
+        self.assertEqual(round(f81(seq1, seq2), 5), 2.09101)
+
+        # overly divergent sequences
+        seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
+        self.assertTrue(np.isnan(f81(seq1, seq2)))
+
+        # RNA sequences
+        seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
+        self.assertEqual(round(f81(seq1, seq2), 5), 0.83539)
+
+        # non-nucleotide sequences
+        with self.assertRaises(TypeError):
+            f81(Protein("-PYCRNG"), Protein("MPYAKC-"))
+        with self.assertRaises(TypeError):
+            f81(Sequence("AGCNT"), Sequence("CG-AT"))
+
 
 class TestK2P(TestCase):
     def test_k2p(self):
-        # regular case (8 sites, 2 transitions, 1 transversion)
+        # normal case (8 sites, 2 transitions, 1 transversion)
         seq1 = DNA("AT-ACGGCGA-C")
         seq2 = DNA("AGAAT--CAACC")
         obs = k2p(seq1, seq2)
@@ -752,36 +782,72 @@ class TestK2P(TestCase):
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
         # too many transversions (2Q > 1)
-        seq1, seq2 = DNA("ACGTACGT"), DNA("AGCATATT")
+        seq1 = DNA("ACGTACGT")
+        seq2 = DNA("AGCATATT")
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
         # too many transitions (2P + Q > 1)
-        seq1, seq2 = DNA("ACGTATGT"), DNA("GTCTACAT")
+        seq1 = DNA("ACGTATGT")
+        seq2 = DNA("GTCTACAT")
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
         # RNA sequences
         seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
-        obs = k2p(seq1, seq2)
-        self.assertEqual(round(obs, 5), 0.82396)
+        self.assertEqual(round(k2p(seq1, seq2), 5), 0.82396)
 
-        # should match DNA distance
-        exp = k2p(seq1.reverse_transcribe(), seq2.reverse_transcribe())
+        # non-nucleotide sequences
+        with self.assertRaises(TypeError):
+            k2p(Protein("-PYCRNG"), Protein("MPYAKC-"))
+        with self.assertRaises(TypeError):
+            k2p(Sequence("AGCNT"), Sequence("CG-AT"))
+
+
+class TestF84(TestCase):
+    def test_f84(self):
+        # normal case
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        obs = f84(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.62024)
+
+        # even base frequencies (equivalent to K2P)
+        obs = f84(seq1, seq2, freqs=(.25, .25, .25, .25))
+        self.assertEqual(round(obs, 5), 0.56234)
+        exp = k2p(seq1, seq2)
         self.assertAlmostEqual(obs, exp)
 
-        # protein sequences
-        seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
-        with self.assertRaises(TypeError):
-            k2p(seq1, seq2)
+        # identical sequences after trimming
+        self.assertEqual(f84(DNA("AACGTY"), DNA("WACGTT")), 0.0)
 
-        # non-grammared sequences
-        seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
+        # empty sequences after trimming
+        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
+        self.assertTrue(np.isnan(f84(seq1, seq2)))
+
+        # too many transversions
+        seq1 = DNA("ACGTACGT")
+        seq2 = DNA("AGCATATT")
+        self.assertTrue(np.isnan(f84(seq1, seq2)))
+
+        # too many transitions
+        seq1 = DNA("ACGTATGT")
+        seq2 = DNA("GTCTACAT")
+        self.assertTrue(np.isnan(f84(seq1, seq2)))
+
+        # RNA sequences
+        seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
+        self.assertEqual(round(f84(seq1, seq2), 5), 0.83551)
+
+        # non-nucleotide sequences
         with self.assertRaises(TypeError):
-            k2p(seq1, seq2)
+            f84(Protein("-PYCRNG"), Protein("MPYAKC-"))
+        with self.assertRaises(TypeError):
+            f84(Sequence("AGCNT"), Sequence("CG-AT"))
 
 
 class TestTN93(TestCase):
     def test_tn93(self):
-        # regular case: 8 sites, 1 purine transition, 1 pyrimidine transition,
+        # normal case: 8 sites, 1 purine transition, 1 pyrimidine transition,
         # 1 transversion; use observed base frequencies
         seq1 = DNA("AT-ACGGCGA-C")
         seq2 = DNA("AGAAT--CAACC")
@@ -826,22 +892,13 @@ class TestTN93(TestCase):
         # RNA sequences
         seq1 = RNA("AUCU-CGCAGU")
         seq2 = RNA("AGGUUCAUA--")
-        obs = tn93(seq1, seq2)
-        self.assertEqual(round(obs, 5), 0.88543)
+        self.assertEqual(round(tn93(seq1, seq2), 5), 0.88543)
 
-        # should match DNA distance
-        exp = tn93(seq1.reverse_transcribe(), seq2.reverse_transcribe())
-        self.assertAlmostEqual(obs, exp)
-
-        # protein sequences
-        seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
+        # non-nucleotide sequences
         with self.assertRaises(TypeError):
-            tn93(seq1, seq2)
-
-        # non-grammared sequences
-        seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
+            tn93(Protein("-PYCRNG"), Protein("MPYAKC-"))
         with self.assertRaises(TypeError):
-            tn93(seq1, seq2)
+            tn93(Sequence("AGCNT"), Sequence("CG-AT"))
 
 
 if __name__ == "__main__":

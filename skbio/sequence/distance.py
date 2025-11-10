@@ -16,7 +16,7 @@ Generic distance metrics
    :toctree:
 
    hamming
-   p_dist
+   pdist
    kmer_distance
 
 
@@ -29,6 +29,7 @@ Nucleotide distance metrics
    jc69
    f81
    k2p
+   f84
    tn93
 
 
@@ -55,7 +56,6 @@ from inspect import signature
 import functools
 
 import numpy as np
-from scipy.spatial.distance import pdist
 
 from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
 from skbio.sequence._alphabet import _encode_alphabet
@@ -352,18 +352,20 @@ def hamming(seq1, seq2, proportion=True):
 
     See Also
     --------
-    p_dist
+    pdist
     scipy.spatial.distance.hamming
 
     Notes
     -----
-    This function does not make assumptions about the sequence alphabet in use. Each
-    sequence object's underlying sequence of characters are used to compute Hamming
-    distance. Characters that may be considered equivalent in certain contexts (e.g.,
-    "-" and "." as gap characters) are treated as distinct characters when computing
-    Hamming distance.
+    This function does not make assumptions about the sequence alphabet in use. All
+    characters of each sequence, including gaps and ambiguous codes, are used to
+    compute Hamming distance. Characters that may be considered equivalent in certain
+    contexts (e.g., "-" and "." as gap characters) are treated as distinct characters
+    when computing Hamming distance.
 
-    ``np.nan`` will be returned if the sequences do not contain any characters.
+    If this behavior is not desired, consider using :func:`pdist` instead.
+
+    NaN will be returned if the sequences do not contain any characters.
 
     References
     ----------
@@ -423,7 +425,7 @@ def _hamming(seqs, mask, seqtype, proportion=True):
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
-def p_dist(seq1, seq2):
+def pdist(seq1, seq2):
     r"""Calculate the *p*-distance between two aligned sequences.
 
     .. versionadded:: 0.7.2
@@ -463,20 +465,23 @@ def p_dist(seq1, seq2):
     limitation may be overcome by adopting metrics that correct for multiple
     substitutions per site (such as :func:`jc69`) and other biases.
 
+    This function should not be confused with the :func:`scipy.spatial.distance.pdist`
+    function of SciPy.
+
     Examples
     --------
     >>> from skbio.sequence import DNA
-    >>> from skbio.sequence.distance import p_dist
+    >>> from skbio.sequence.distance import pdist
     >>> seq1 = DNA('AGGGTA')
     >>> seq2 = DNA('CGTTTA')
-    >>> p_dist(seq1, seq2)
+    >>> pdist(seq1, seq2)
     0.5
 
     """
-    return _p_dist(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
+    return _pdist(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
 
 
-def _p_dist(seqs, mask, seqtype):
+def _pdist(seqs, mask, seqtype):
     """Compute pairwise p-distances between multiple sequences.
 
     Parameters
@@ -526,6 +531,8 @@ def _p_dist(seqs, mask, seqtype):
 def jc69(seq1, seq2):
     r"""Calculate the JC69 distance between two aligned nucleotide sequences.
 
+    .. versionadded:: 0.7.2
+
     The Jukes-Cantor (1969) (JC69) model [1]_ estimates the evolutionary distance
     (number of substitutions per site) between two nucleotide sequences by correcting
     the observed proportion of differing sites (i.e., *p*-distance) to account for
@@ -546,7 +553,7 @@ def jc69(seq1, seq2):
 
     See Also
     --------
-    p_dist
+    pdist
     jc69_correct
 
     References
@@ -589,13 +596,15 @@ def _jc69(seqs, mask, seqtype, chars=4):
         JC69 distance matrix in condensed form.
 
     """
-    dm = _p_dist(seqs, mask, None)
+    dm = _pdist(seqs, mask, None)
     _p_correct(dm, 0.75)
     return dm
 
 
 def jc69_correct(dists, chars=4, inplace=False):
     r"""Perform Jukes-Cantor (JC69) correction of a raw distance.
+
+    .. versionadded:: 0.7.2
 
     The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
     per site) between two sequences by correcting the observed proportion of differing
@@ -733,6 +742,8 @@ def _p_correct(dists, frac):
 def f81(seq1, seq2, freqs=None):
     r"""Calculate the F81 distance between two aligned nucleotide sequences.
 
+    .. versionadded:: 0.7.2
+
     The Felsenstein (1981) (F81) model [1]_ assumes equal substitution rates (like
     JC69) and varying base frequencies (:math:`\pi`). The distance is calculated as:
 
@@ -762,7 +773,7 @@ def f81(seq1, seq2, freqs=None):
     See Also
     --------
     jc69
-    p_dist
+    pdist
 
     References
     ----------
@@ -786,8 +797,8 @@ def f81(seq1, seq2, freqs=None):
 
 def _f81(seqs, mask, seqtype, freqs):
     """Compute pairwise F81 distances between multiple sequences."""
-    frac = 1.0 - np.sum(freqs**2)
-    arr = _p_dist(seqs, mask, None)
+    frac = 1.0 - np.sum(np.asarray(freqs) ** 2)
+    arr = _pdist(seqs, mask, None)
     _p_correct(arr, frac)
     return arr
 
@@ -796,13 +807,15 @@ def _f81(seqs, mask, seqtype, freqs):
 def k2p(seq1, seq2):
     r"""Calculate the K2P distance between two aligned nucleotide sequences.
 
+    .. versionadded:: 0.7.2
+
     The Kimura 2-parameter (K2P, a.k.a. K80) model [1]_ assumes differential rates of
     transitions (substitutions between two purines or between two pyrimidines) versus
     transversions (substitutions between a purine and a pyrimidine). It is calculated
     as:
 
     .. math::
-        K = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
+        D = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
 
     Where :math:`P` and :math:`Q` are the proportions of transitions and transversions,
     respectively.
@@ -935,14 +948,189 @@ def _k2p(seqs, mask, seqtype):
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+def f84(seq1, seq2, freqs=None):
+    r"""Calculate the F84 distance between two aligned nucleotide sequences.
+
+    .. versionadded:: 0.7.2
+
+    The Felsenstein 1984 (F84) model assumes differential rates of transitions and
+    transversions (like K2P), and varying base frequencies (:math:`\pi`). The distance
+    is calculated as:
+
+    .. math::
+        D = -2\frac{\pi_A\pi_G}{\pi_R}
+            ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q)\\
+            -2\frac{\pi_C\pi_T}{\pi_Y}
+            ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q)\\
+            -2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
+            ln(1-\frac{1}{2\pi_R\pi_Y}Q)
+
+    Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
+    transversions, respectively. :math:`Q` is the proportion of transversions.
+
+    Parameters
+    ----------
+    seq1, seq2 : {DNA, RNA}
+        Sequences to compute the TN93 distance between.
+    freqs : array_like of float of shape (4,), optional
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1. If not provided, the observed frequencies from the two input sequences
+        combined will be used.
+
+    Returns
+    -------
+    float
+        F84 distance between ``seq1`` and ``seq2``.
+
+    See Also
+    --------
+    k2p
+    tn93
+
+    Notes
+    -----
+    The Felsenstein 1984 (F84) model for calculating sequence distance was initially
+    implemented in the Phylip package. The model was then described in [1]_ and [2]_.
+    The above equation was adopted from [3]_, which is consistent with the
+    implementation in ``ape::dist.dna``.
+
+    F84 may be considered as a special case of the TN93 model where purine and
+    pyrimidine transition rates are equal.
+
+    This function returns NaN if either of the two logarithm arguments is zero or
+    negative.
+
+    References
+    ----------
+    .. [1] Kishino, H., & Hasegawa, M. (1989). Evaluation of the maximum likelihood
+       estimate of the evolutionary tree topologies from DNA sequence data, and the
+       branching order in Hominoidea. Journal of molecular evolution, 29(2), 170-179.
+
+    .. [2] Felsenstein, J., & Churchill, G. A. (1996). A Hidden Markov Model approach
+       to variation among sites in rate of evolution. Molecular Biology and Evolution,
+       13(1), 93-104.
+
+    .. [3] McGuire, G., Prentice, M. J., & Wright, F. (1999). Improved error bounds for
+       genetic distances from DNA sequences. Biometrics, 55(4), 1064-1070.
+
+    """
+    return _f84(
+        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
+    ).item()
+
+
+def _f84(seqs, mask, seqtype, freqs):
+    """Compute pairwise F84 distances between multiple sequences."""
+    n, L = seqs.shape
+    n_1 = n - 1
+    dm = np.empty((n * n_1 // 2,))
+    if L == 0:
+        dm[:] = np.nan
+        return dm
+
+    masked = mask is not None
+
+    if not np.all(freqs):
+        dm[:] = np.nan
+        return dm
+    piA, piC, piG, piT = freqs
+
+    # frequencies of purines (R) and pyrimidines (Y)
+    piR = piA + piG
+    piY = piC + piT
+
+    piAxG = piA * piG
+    piCxT = piC * piT
+    piRxY = piR * piY
+    piR_AxG = piR / piAxG
+    piY_CxT = piY / piCxT
+
+    # coefficients
+    A = piAxG / piR + piCxT / piY
+    B = piAxG + piCxT
+    C = piRxY
+
+    # c1 = 1 / (2.0 * A)
+    # c2 = (A - B) / (2.0 * A * C)
+    # cy = 2.0 * (A - B - C)
+
+    # c1 = 2.0 * piAxG / piR
+    # c2 = 2.0 * piCxT / piY
+    # c3 = 2.0 * (piRxY - piY / piR_AxG - piR / piY_CxT)
+
+    # c123 = c1 + c2 + c3
+    # log2 = np.log(2.0)
+    # part0 = c123 * (np.log(L) + log2)
+
+    Cx = 17 + issubclass(seqtype, RNA)
+
+    start = 0
+    for i in range(n_1):
+        end = start + n_1 - i
+        target = dm[start:end]
+
+        subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
+
+        if masked:
+            sites = mask[i] & mask[i + 1 :]
+            subs[~sites] = 0
+            L = np.count_nonzero(sites, axis=1)
+
+        # substitutions
+        p = np.count_nonzero(subs, axis=1)
+        ident = p == 0
+
+        # transitions
+        P = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == Cx, axis=1)
+
+        # transversions
+        Q = p - P
+
+        # arguments (must be positive) * 2L
+        Lx2 = 2.0 * L
+        a1 = Lx2 - P / A - Q * (A - B) / A / C
+        a2 = Lx2 - Q / C
+
+        # Identify normal cases.
+        # There is no need to test L > 0. If L = 0, a1 and a2 are guaranteed to be 0,
+        # per IEEE-754 (0 times any finite number is exactly 0).
+        valid = (a1 > 0) & (a2 > 0) & ~ident
+
+        has_inval = not np.all(valid)
+        if has_inval:
+            a1, a2 = a1[valid], a2[valid]
+            if masked:
+                ident &= L != 0
+                L = L[valid]
+
+        # part0_ = c123 * (np.log(L) + log2) if masked else part0
+
+        res = -2.0 * A * np.log(a1 / Lx2) + 2.0 * (A - B - C) * np.log(a2 / Lx2)
+
+        # res = part0_ - c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(a3)
+
+        if has_inval:
+            target[valid] = res
+            target[~valid] = np.nan
+            target[ident] = 0.0
+        else:
+            target[:] = res
+
+        start = end
+    return dm
+
+
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
 def tn93(seq1, seq2, freqs=None):
     r"""Calculate the TN93 distance between two aligned nucleotide sequences.
+
+    .. versionadded:: 0.7.2
 
     The Tamura and Nei (1993) (TN93) model [1]_ assumes differential rates of the two
     types of transitions: between purines (R) (i.e., A <-> G) and between pyrimidines
     (Y) (i.e., C <-> T/U), and transversions (i.e., between a purine and a pyrimidine).
-    It also assumes unequal base frequencies (:math:`\pi_A` to :math:`\pi_T`). It is
-    calculated as:
+    It also assumes varying base frequencies (:math:`\pi`). The distance is calculated
+    as:
 
     .. math::
         D = -2\frac{\pi_A\pi_G}{\pi_R}
