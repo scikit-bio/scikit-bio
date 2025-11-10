@@ -29,6 +29,41 @@ ctypedef cnp.float32_t float32_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cdef inline Py_ssize_t condensed_index(Py_ssize_t i, Py_ssize_t j, Py_ssize_t n) nogil:
+    """
+    Get index for condensed form from redundant form indices.
+    
+    This is a Cython implementation of the _condensed_index function
+    that can be used in nogil context.
+    
+    Parameters
+    ----------
+    i, j : Py_ssize_t
+        Matrix coordinates (row, col). Assumes i < j for upper triangular access.
+    n : Py_ssize_t
+        Sample size of the square matrix.
+    
+    Returns
+    -------
+    Py_ssize_t
+        Index in the condensed form vector.
+    """
+    cdef Py_ssize_t i_min, j_max
+    
+    # Ensure i < j (swap if necessary)
+    if i > j:
+        i_min = j
+        j_max = i
+    else:
+        i_min = i
+        j_max = j
+    
+    # Formula: i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
+    return i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
     """
     Check if mat is symmetric and hollow.
@@ -293,23 +328,23 @@ def mantel_perm_pearsonr_condensed_cy(TReal[::1] x_data_condensed,
     cdef Py_ssize_t out_n = perm_order.shape[1]
     cdef Py_ssize_t y_n = ym_normalized.shape[0]
     cdef Py_ssize_t on2 = permuted_stats.shape[0]
-    
+
     assert x_n == ((out_n-1)*out_n)/2
     assert y_n == ((out_n-1)*out_n)/2
     assert perms_n == on2
-    
+
     cdef Py_ssize_t p
     cdef Py_ssize_t row, col, icol
     cdef Py_ssize_t vrow, vcol
     cdef Py_ssize_t idx, x_idx
-    
+
     cdef TReal mul = 1.0/normxm
     cdef TReal add = -xmean/normxm
-    
+
     cdef TReal my_ps
     cdef TReal yval
     cdef TReal xval
-    
+
     for p in prange(perms_n, nogil=True):
         my_ps = 0.0
         for row in range(out_n-1):
@@ -318,23 +353,13 @@ def mantel_perm_pearsonr_condensed_cy(TReal[::1] x_data_condensed,
             for icol in range(out_n-row-1):
                 col = icol+row+1
                 vcol = perm_order[p, col]
-                
-                # Calculate the index in the condensed array for elements [vrow, vcol]
-                # Condensed index for element (i,j) where i < j is:
-                # n*i - i*(i+1)/2 + j - i - 1
-                # But we need to ensure vrow < vcol for the lookup
-                if vrow < vcol:
-                    x_idx = out_n*vrow - vrow*(vrow+1)//2 + vcol - vrow - 1
-                else:
-                    x_idx = out_n*vcol - vcol*(vcol+1)//2 + vrow - vcol - 1
-                
+
+                x_idx = condensed_index(vrow, vcol, out_n)
+
                 yval = ym_normalized[idx+icol]
                 xval = x_data_condensed[x_idx]*mul + add
-                # do not use += to avoid having prange consider it for reduction
                 my_ps = yval*xval + my_ps
-        
-        # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
-        # floating point arithmetic.
+
         if my_ps>1.0:
             my_ps = 1.0
         elif my_ps<-1.0:
