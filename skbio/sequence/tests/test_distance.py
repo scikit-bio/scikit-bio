@@ -18,7 +18,7 @@ from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
     _metric_specs, _char_hash, _char_freqs, hamming, p_dist, kmer_distance, jc69,
-    jc69_correct, k2p, tn93
+    jc69_correct, f81, k2p, tn93
 )
 
 
@@ -723,6 +723,16 @@ class TestJC69(TestCase):
 
         with self.assertRaisesRegex(ValueError, r"`chars` must be at least 2."):
             jc69_correct(0.5, chars=1)
+
+
+class TestF81(TestCase):
+    def test_f81(self):
+        # regular case
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        obs = f81(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.53708)
 
 
 class TestK2P(TestCase):

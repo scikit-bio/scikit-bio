@@ -27,6 +27,7 @@ Nucleotide distance metrics
    :toctree:
 
    jc69
+   f81
    k2p
    tn93
 
@@ -527,9 +528,8 @@ def jc69(seq1, seq2):
 
     The Jukes-Cantor (1969) (JC69) model [1]_ estimates the evolutionary distance
     (number of substitutions per site) between two nucleotide sequences by correcting
-    the observed proportion of differing sites (*p*-distance, see :func:`p_dist`) to
-    account for multiple substitutions at the same site (i.e., saturation). It is
-    calculated as:
+    the observed proportion of differing sites (i.e., *p*-distance) to account for
+    multiple substitutions at the same site (i.e., saturation). It is calculated as:
 
     .. math::
         D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
@@ -589,7 +589,9 @@ def _jc69(seqs, mask, seqtype, chars=4):
         JC69 distance matrix in condensed form.
 
     """
-    return jc69_correct(_p_dist(seqs, mask, None), chars, inplace=True)
+    dm = _p_dist(seqs, mask, None)
+    _p_correct(dm, 0.75)
+    return dm
 
 
 def jc69_correct(dists, chars=4, inplace=False):
@@ -597,8 +599,8 @@ def jc69_correct(dists, chars=4, inplace=False):
 
     The JC69 model [1]_ estimates the evolutionary distance (number of substitutions
     per site) between two sequences by correcting the observed proportion of differing
-    sites (p-distance, see :func:`p_dist`) to account for multiple substitutions at the
-    same site (i.e., saturation). It is calculated as:
+    sites (i.e., *p*-distance) to account for multiple substitutions at the same site
+    (i.e., saturation). The distance is calculated as:
 
     .. math::
         D = -\alpha ln(1 - \frac{p}{\alpha})
@@ -679,30 +681,114 @@ def jc69_correct(dists, chars=4, inplace=False):
     else:
         arr = np.array(dists, copy=True)
 
-    # Values exceeding frac become NaN, as these sites are saturated and JC69 cannot
-    # estimate the true substitution number.
-    arr[arr >= frac] = np.nan
+    # perform correction
+    _p_correct(arr, frac)
 
-    # Values that suffice 0 < x < frac are subject to the equation.
-    mask = (arr > 0) & (arr < frac)
+    if is_scalar:
+        return arr.item()
+    return arr
 
-    all_valid = np.all(mask)
-    if all_valid:
-        vals = arr
+
+def _p_correct(dists, frac):
+    """Correct p-distances in place using a JC69-like equation."""
+    # There are three categories of values:
+    # 1. Values exceeding frac become NaN, as these sites are saturated and the
+    #    equation cannot estimate the true substitution number.
+    # 2. Values == 0 remain 0.
+    # 3. Values that suffice 0 < x < frac are subject to the equation.
+    nonzero = dists > 0
+    saturated = dists >= frac
+
+    if np.any(saturated):
+        dists[saturated] = np.nan
+        all_valid = False
+        if np.all(nonzero):
+            valid = ~saturated
+        else:
+            valid = nonzero & ~saturated
     else:
-        vals = arr[mask]
+        if np.all(nonzero):
+            all_valid = True
+            valid = None
+        else:
+            all_valid = False
+            valid = nonzero
 
-    # perform calculation in place
+    if all_valid:
+        vals = dists
+    else:
+        vals = dists[valid]
+
+    # apply correction in place
     vals /= -frac
     vals += 1.0
     np.log(vals, out=vals)
     vals *= -frac
 
     if not all_valid:
-        arr[mask] = vals
+        dists[valid] = vals
 
-    if is_scalar:
-        return arr.item()
+
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+def f81(seq1, seq2, freqs=None):
+    r"""Calculate the F81 distance between two aligned nucleotide sequences.
+
+    The Felsenstein (1981) (F81) model [1]_ assumes equal substitution rates (like
+    JC69) and varying base frequencies (:math:`\pi`). The distance is calculated as:
+
+    .. math::
+        D = -\alpha ln(1 - \frac{p}{\alpha})
+
+    Where :math:`p` is the proportion of differing sites (i.e., *p*-distance). Factor
+    :math:`\alpha` is calculated as:
+
+    .. math::
+        \alpha = 1 - \pi_A^2 - \pi_C^2 - \pi_G^2 - \pi_T^2
+
+    Parameters
+    ----------
+    seq1, seq2 : {DNA, RNA}
+        Sequences to compute the F81 distance between.
+    freqs : array_like of float of shape (4,), optional
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1. If not provided, the observed frequencies from the two input sequences
+        combined will be used.
+
+    Returns
+    -------
+    float
+        F81 distance between ``seq1`` and ``seq2``.
+
+    See Also
+    --------
+    jc69
+    p_dist
+
+    References
+    ----------
+    .. [1] Felsenstein, J. (1981). Evolutionary trees from DNA sequences: a maximum
+       likelihood approach. Journal of Molecular Evolution, 17(6), 368-376.
+
+    Notes
+    -----
+    This function returns NaN if :math:`p \geq \alpha`.
+
+    """
+    # NOTE: The original Felsenstein (1981) paper described the F81 model in a context
+    # of maximum likelihood estimation. The above equation for F81 distance calculation
+    # can be found in McGuire et al, Biometrics, 1999 (Eq. 5), which is cited by the
+    # documentation of `ape::dist.dna`. The same equation was also described in Tajima
+    # and Nei, Mol Biol Evol, 1984 (Eq. 3).
+    return _f81(
+        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
+    ).item()
+
+
+def _f81(seqs, mask, seqtype, freqs):
+    """Compute pairwise F81 distances between multiple sequences."""
+    frac = 1.0 - np.sum(freqs**2)
+    arr = _p_dist(seqs, mask, None)
+    _p_correct(arr, frac)
     return arr
 
 
