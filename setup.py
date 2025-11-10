@@ -117,7 +117,7 @@ if clang:
     # Apple clang does not support OpenMP at all
     use_openpm = False
 
-if os.getenv("DISABLE_OPENMP","N") in ("Y","YES","1"):
+if os.getenv("DISABLE_OPENMP") in ("Y", "Yes", "YES", "1"):
     # Developer explicity requested not to use OpenMP
     use_openpm = False
 
