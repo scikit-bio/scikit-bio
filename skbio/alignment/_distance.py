@@ -114,11 +114,17 @@ def align_dists(
      [ 2.28339183  0.6354734   0.        ]]
 
     """
-    n_seqs = len(alignment)
+    ids = alignment.index.astype(str)
+    nseq, npos = alignment.shape
 
     # This is unusual. However, TabularMSA currently allows no sequence.
-    if n_seqs == 0:
+    if nseq == 0:
         raise ValueError("Alignment contains no sequence.")
+    size = nseq * (nseq - 1) // 2
+
+    # Also, TabularMSA allows zero-length sequences. Just return a matrix of NaN.
+    if npos == 0:
+        return DistanceMatrix(np.full(size, np.nan), ids=ids)
 
     # determine preset or custom function
     func, preset = _get_preset(metric)
@@ -137,65 +143,60 @@ def align_dists(
 
     # Create a 2D matrix of ASCII codes of all sequences.
     # TODO: This can be omitted after optimizing TabularMSA.
-    # Currently it is needed when the metric is preset or character frequencies are to
-    # be calculated.
-    get_freqs = getattr(func, "_has_freqs", None) is True and "freqs" not in kwargs
-    if preset or get_freqs:
-        seqs = np.vstack([seq._bytes for seq in alignment])
+    seqs = np.vstack([seq._bytes for seq in alignment])
+
+    # Create a 2D Boolean mask of valid sites.
+    site_mat = None if alphabet is None else valid[seqs]
 
     # Get character frequencies from the entire alignment.
-    if get_freqs:
+    if getattr(func, "_has_freqs", None) is True and "freqs" not in kwargs:
         kwargs["freqs"] = _char_freqs(seqs, valid)
 
     # Use a preset distance metric (efficient).
     if preset:
         func = getattr(sk_seqdist, "_" + name)
 
-        # Mask sequences by a given alphabet.
-        site_mat = None
-        if alphabet is not None:
-            site_mat = valid[seqs]
+        # Delete positions that are not shared by all sequences (complete deletion). If
+        # all positions are gone, return a NaN matrix.
+        if shared_by_all and site_mat is not None:
+            site_vec = np.all(site_mat, axis=0)
+            seqs = seqs[:, site_vec]
+            if seqs.shape[1] == 0:
+                return DistanceMatrix(np.full(size, np.nan), ids=ids)
+            site_mat = None
 
-            # Delete positions that are not shared by all sequences (complete deletion).
-            if shared_by_all:
-                site_vec = np.all(site_mat, axis=0)
-                seqs = seqs[:, site_vec]
-                site_mat = None
-            # Otherwise, pass mask to the metric to trigger pairwise deletion.
-
+        # Otherwise, pass mask to the metric to trigger pairwise deletion.
         dm = func(seqs, site_mat, dtype, **kwargs)
 
     # Call a custom function on each pair of sequences (slow).
     else:
-        site_mat = [valid[seq._bytes] for seq in alignment]
-
-        dm = np.empty((n_seqs * (n_seqs - 1) // 2,))
+        dm = np.empty(size)
 
         # complete deletion
         if shared_by_all:
             site_vec = np.all(site_mat, axis=0)
             seqs = [seq[site_vec] for seq in alignment]
             pos = -1
-            for i in range(n_seqs - 1):
+            for i in range(nseq - 1):
                 seq_i = seqs[i]
-                for j in range(i + 1, n_seqs):
+                for j in range(i + 1, nseq):
                     dm[pos + j] = func(seq_i, seqs[j], **kwargs)
-                pos += n_seqs - i - 2
+                pos += nseq - i - 2
 
         # pairwise deletion
         else:
             pos = -1
-            for i in range(n_seqs - 1):
+            for i in range(nseq - 1):
                 seq_i = alignment[i]
                 sites_i = site_mat[i]
-                for j in range(i + 1, n_seqs):
+                for j in range(i + 1, nseq):
                     site_vec = sites_i & site_mat[j]
                     seq1 = seq_i[site_vec]
                     seq2 = alignment[j][site_vec]
                     dm[pos + j] = func(seq1, seq2, **kwargs)
-                pos += n_seqs - i - 2
+                pos += nseq - i - 2
 
-    return DistanceMatrix(dm, ids=alignment.index.astype(str))
+    return DistanceMatrix(dm, ids=ids)
 
 
 def _get_preset(metric):

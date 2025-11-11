@@ -78,9 +78,6 @@ class AlignDistsTests(TestCase):
             DNA("ACGATCT-CC"),
         ], index=list("abcd"))
 
-        # Zero-length sequences
-        self.msa_0pos = TabularMSA((DNA(""), DNA(""), DNA("")), index=list("abc"))
-
     def test_align_dists_error(self):
         # wrong sequence type
         with self.assertRaises(TypeError) as cm:
@@ -121,6 +118,13 @@ class AlignDistsTests(TestCase):
         exp = np.array([])
         npt.assert_array_equal(obs.condensed_form(), exp)
         self.assertTupleEqual(obs.ids, ("a",))
+
+        # zero-length sequences
+        msa = TabularMSA((DNA(""), DNA(""), DNA("")), index=list("abc"))
+        obs = align_dists(msa, "pdist")
+        exp = np.array([nan, nan, nan])
+        npt.assert_array_equal(obs.condensed_form(), exp)
+        self.assertTupleEqual(obs.ids, ("a", "b", "c"))
 
     def test_align_dists_custom(self):
 
@@ -200,11 +204,6 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa4, "pdist", shared_by_all=False)
         exp = np.array([0.333, 0.333, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
-
-        # edge case: sequences are empty
-        obs = align_dists(self.msa_0pos, "pdist")
-        exp = np.array([nan, nan, nan])
-        npt.assert_array_equal(obs.condensed_form(), exp)
 
     def test_align_dists_jc69(self):
         """JC69 distance."""

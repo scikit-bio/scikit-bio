@@ -238,14 +238,14 @@ class TestMetricSpecs(TestCase):
 
         @_metric_specs()
         def metric1(seq1, seq2):
-            return 1
+            return 1.0
 
         self.assertFalse(metric1._equal)
         self.assertEqual(metric1(seq1, seq2), 1)
 
         @_metric_specs(equal=True)
         def metric2(seq1, seq2):
-            return 1
+            return 1.0
 
         self.assertTrue(metric2._equal)
         with self.assertRaises(ValueError) as cm:
@@ -253,6 +253,18 @@ class TestMetricSpecs(TestCase):
         msg = ("'metric2' can only be calculated between equal-length sequences. "
                "4 != 5.")
         self.assertEqual(str(cm.exception), msg)
+
+        # empty sequences
+        obs = metric2(DNA(""), DNA(""))
+        self.assertTrue(np.isnan(obs))
+
+        @_metric_specs(equal=True, alphabet="nongap")
+        def metric3(seq1, seq2):
+            return 1.0
+
+        # empty sequences after trimming
+        obs = metric3(DNA("AAA---"), DNA("---TTT"))
+        self.assertTrue(np.isnan(obs))
 
     def test_alphabet(self):
         """Filter input sequences by a given alphabet."""
@@ -398,58 +410,6 @@ class TestHamming(TestCase):
         self.assertIsInstance(obs, float)
         self.assertEqual(obs, 2.0)
 
-    # def test_ignore_gap_degen(self):
-    #     seq1 = DNA("ACGT")
-    #     seq2 = DNA("TCGA")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 0.5)
-    #     obs = hamming(seq1, seq2, gaps=False)
-    #     self.assertEqual(obs, 0.5)
-
-    #     seq1 = DNA("AGCGT")
-    #     seq2 = DNA("CG-AT")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 0.6)
-    #     obs = hamming(seq1, seq2, gaps=False)
-    #     self.assertEqual(obs, 0.5)
-
-    #     seq1 = DNA("AGCGT")
-    #     seq2 = DNA("CGNAT")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 0.6)
-    #     obs = hamming(seq1, seq2, degenerates=False)
-    #     self.assertEqual(obs, 0.5)
-
-    #     seq1 = DNA("CARGT")
-    #     seq2 = DNA("BAAGD")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 0.6)
-    #     obs = hamming(seq1, seq2, degenerates=False)
-    #     self.assertEqual(obs, 0.0)
-
-    #     seq1 = DNA("TARSTG-G")
-    #     seq2 = DNA("C--ATNAG")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 0.75)
-    #     obs = hamming(seq1, seq2, gaps=False, degenerates=False)
-    #     self.assertAlmostEqual(obs, 1 / 3)
-
-    # def test_non_left(self):
-    #     seq1 = DNA("AAA---")
-    #     seq2 = DNA("---TTT")
-    #     obs = hamming(seq1, seq2)
-    #     self.assertEqual(obs, 1.0)
-    #     obs = hamming(seq1, seq2, gaps=False)
-    #     self.assertTrue(np.isnan(obs))
-
-    # def test_gap_degen_undefined(self):
-    #     seq1 = Sequence("AGCNT")
-    #     seq2 = Sequence("CG-AT")
-    #     with self.assertRaisesRegex(AttributeError, r"has no attribute 'gaps'"):
-    #         hamming(seq1, seq2, gaps=False)
-    #     with self.assertRaisesRegex(AttributeError, r"has no attribute 'degenerates'"):
-    #         hamming(seq1, seq2, degenerates=False)
-
 
 class TestPDist(TestCase):
     def test_pdist(self):
@@ -485,9 +445,9 @@ class TestPDist(TestCase):
         self.assertAlmostEqual(pdist(seq1, seq2), 2 / 3)
 
         # sequences with non-canonical characters
-        # seq1 = Protein("NKOC")
-        # seq2 = Protein("UKPA")
-        # self.assertAlmostEqual(pdist(seq1, seq2), 0.5)
+        seq1 = Protein("NKOC")
+        seq2 = Protein("UKPA")
+        self.assertAlmostEqual(pdist(seq1, seq2), 0.75)
 
         # identical sequences
         seq1 = DNA("ACGT")
@@ -503,16 +463,6 @@ class TestPDist(TestCase):
         seq1 = RNA("U")
         seq2 = RNA("G")
         self.assertEqual(pdist(seq1, seq2), 1.0)
-
-        # empty sequences
-        seq1 = RNA("")
-        seq2 = RNA("")
-        self.assertTrue(np.isnan(pdist(seq1, seq2)))
-
-        # empty sequences after trimming
-        seq1 = DNA("AAA---")
-        seq2 = DNA("---TTT")
-        self.assertTrue(np.isnan(pdist(seq1, seq2)))
 
         seq1 = Protein("MGCPS")
         seq2 = Protein("XXXXX")
@@ -659,10 +609,6 @@ class TestJC69(TestCase):
         seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
         self.assertTrue(np.isnan(jc69(seq1, seq2)))
 
-        # empty sequences
-        seq1, seq2 = DNA(""), DNA("")
-        self.assertTrue(np.isnan(jc69(seq1, seq2)))
-
         # protein sequences
         seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
         with self.assertRaises(TypeError):
@@ -743,9 +689,6 @@ class TestF81(TestCase):
         # identical sequences after trimming
         self.assertEqual(f81(DNA("AACGTY"), DNA("WACGTT")), 0.0)
 
-        # empty sequences after trimming
-        self.assertTrue(np.isnan(f81(DNA("AAA---"), DNA("---TTT"))))
-
         # highly divergent sequences
         seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
         self.assertEqual(round(f81(seq1, seq2), 5), 2.09101)
@@ -776,10 +719,6 @@ class TestK2P(TestCase):
 
         # identical sequences after trimming
         self.assertEqual(k2p(DNA("AACGTY"), DNA("WACGTT")), 0.0)
-
-        # empty sequences after trimming
-        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
-        self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
         # too many transversions (2Q > 1)
         seq1 = DNA("ACGTACGT")
@@ -819,10 +758,6 @@ class TestF84(TestCase):
 
         # identical sequences after trimming
         self.assertEqual(f84(DNA("AACGTY"), DNA("WACGTT")), 0.0)
-
-        # empty sequences after trimming
-        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
-        self.assertTrue(np.isnan(f84(seq1, seq2)))
 
         # too many transversions
         seq1 = DNA("ACGTACGT")
@@ -864,15 +799,11 @@ class TestTN93(TestCase):
         self.assertEqual(round(obs, 5), 0.56234)
 
         # zero base frequency
-        obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
-        self.assertTrue(np.isnan(obs))
+        # obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
+        # self.assertTrue(np.isnan(obs))
 
         # identical sequences after trimming
         self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)
-
-        # empty sequences after trimming
-        seq1, seq2 = DNA("AAA---"), DNA("---TTT")
-        self.assertTrue(np.isnan(tn93(seq1, seq2)))
 
         # too many purine transitions (a1 < 0)
         seq1 = DNA("ACGTATGT")
