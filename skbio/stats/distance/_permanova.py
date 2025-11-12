@@ -24,7 +24,7 @@ from ._base import (
     _build_results,
     DistanceMatrix,
 )
-from ._cutils import permanova_f_stat_sW_cy
+from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
 from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
@@ -168,8 +168,8 @@ def permanova(
         raise TypeError("Input must be a DistanceMatrix.")
 
     # convert to redundant form for now
-    if distmat._flags["CONDENSED"]:
-        distmat = DistanceMatrix(distmat)
+    # if distmat._flags["CONDENSED"]:
+    #     distmat = DistanceMatrix(distmat)
 
     sample_size = distmat.shape[0]
 
@@ -202,9 +202,10 @@ def permanova(
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
     s_T = (distmat.data**2).sum() / sample_size
-    # we are going over the whole matrix, instead of just upper triangle
-    # so cut in half
-    s_T /= 2.0
+    if not distmat._flags["CONDENSED"]:
+        # we are going over the whole matrix, instead of just upper triangle
+        # so cut in half
+        s_T /= 2.0
 
     test_stat_function = partial(
         _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
@@ -222,8 +223,14 @@ def _compute_f_stat(
     sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
 ):
     """Compute PERMANOVA pseudo-F statistic."""
-    # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+    if distance_matrix._flags["CONDENSED"]:
+        # Calculate s_W for each group, accounting for different group sizes.
+        s_W = permanova_f_stat_sW_condensed_cy(
+            distance_matrix.data, group_sizes, grouping
+        )
+    else:
+        # Calculate s_W for each group, accounting for different group sizes.
+        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
