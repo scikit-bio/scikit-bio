@@ -332,6 +332,11 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         if category_to_color is None and centroids is True:
             raise ValueError("Metadata must be provided to plot centroids.")
 
+        if category_to_color is None and confidence_ellipses is True:
+            raise ValueError(
+                "Metadata must be provided to plot confidence ellipses."
+            )  # write corresponding unit test
+
         self._validate_plot_axes(coord_matrix, axes)
 
         if len(axes) == 3:  # 3d functionality
@@ -362,8 +367,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # ask user to require metadata for centroids and confidence ellipses
         if centroids and category_to_color:
             current_centroids = self.samples.groupby(df[column]).mean()
-            # print("Centroids:", current_centroids)
-            # print("Categories:", category_to_color.keys())  # Debug line
             for label, color in category_to_color.items():
                 if label in current_centroids.index:
                     if zs is None:
@@ -374,7 +377,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                             marker="x",
                             s=30,
                             label=f"'{label}' centroid",
-                            # edgecolors="black",
                         )
                     else:
                         ax.scatter(
@@ -385,10 +387,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                             marker="x",
                             s=30,
                             label=f"'{label}' centroid",
-                            # edgecolors="black",
                         )
 
-        # raise Value error that if confidence ellipse is true, and ndims > 2
+        # Confidence ellipse code derived from:
+        # https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html
         if confidence_ellipses and zs is None and category_to_color:
             for label, color in category_to_color.items():
                 group = self.samples[df[column] == label]
@@ -412,9 +414,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 mean_x = x_vals.mean()
                 mean_y = y_vals.mean()
 
-                # standard deviations
-                scale_x = np.sqrt(cov[0, 0]) * 2.4477  # 95% confidence interval
-                scale_y = np.sqrt(cov[1, 1]) * 2.4477  # 95% confidence interval
+                # 2 standard deviations for confidence interval
+                scale_x = np.sqrt(cov[0, 0]) * 2
+                scale_y = np.sqrt(cov[1, 1]) * 2
 
                 angle = 0.5 * np.degrees(
                     np.arctan2(2 * cov[0, 1], cov[0, 0] - cov[1, 1])
@@ -437,18 +439,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 )
                 ellipse.set_transform(transf + ax.transData)
                 ax.add_patch(ellipse)
-
-                # t = np.linspace(0, 2 * np.pi, 100)
-
-                # std_x = x_vals.std() old version
-                # std_y = y_vals.std()
-
-                # ellipse_x = mean_x + std_x * np.cos(t)
-                # ellipse_y = mean_y + std_y * np.sin(t)
-
-                # ax.plot(
-                # ellipse_x, ellipse_y, color=color, lw=2, label=f"'{label}' ellipse"
-                # )
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]

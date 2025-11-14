@@ -447,6 +447,29 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         #Test that plotting centroids without metadata raises ValueError.
         with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot centroids.'):
             self.min_ord_results.plot(centroids=True)
+    
+    def test_plot_with_confidence_ellipses(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', confidence_ellipses=True, cmap='Set1', n_dims=2)
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' ellipse" in labels)
+        self.assertTrue("'22' ellipse" in labels)
+
+    def test_plot_without_confidence_ellipse(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', confidence_ellipses=False, cmap='Set1', n_dims=2)
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' ellipse" not in labels)
+            self.assertTrue("'22' ellipse" not in labels)
+    
+    def test_plot_confidence_ellipses_without_metadata(self):
+        #Test that plotting confidence ellipses without metadata raises ValueError.
+        with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot confidence ellipses.'):
+            self.min_ord_results.plot(confidence_ellipses=True, n_dims = 2)
 
     def test_plot_confidence_ellipses_in_3d(self):
         #Test that plotting confidence ellipses in 3D raises ValueError.
