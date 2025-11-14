@@ -26,7 +26,7 @@ from scipy.stats import NearConstantInputWarning
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
-from ._cutils import mantel_perm_pearsonr_cy
+from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
 
 
 def mantel(
@@ -276,12 +276,6 @@ def mantel(
     """
     rng = get_rng(seed)
 
-    # convert to redundant form for now
-    if isinstance(x, DistanceMatrix) and x._flags["CONDENSED"]:
-        x = DistanceMatrix(x)
-    if isinstance(y, DistanceMatrix) and y._flags["CONDENSED"]:
-        y = DistanceMatrix(y)
-
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -413,7 +407,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n = x._data.shape[0]
+    mat_n = x.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
     comp_stat = orig_stat
@@ -432,9 +426,14 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
             perm_order[row, :] = rng.permutation(mat_n)
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(
-            x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-        )
+        if x._flags["CONDENSED"]:
+            mantel_perm_pearsonr_condensed_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
+        else:
+            mantel_perm_pearsonr_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
         comp_stat = permuted_stats[0]
         permuted_stats = permuted_stats[1:]
 
