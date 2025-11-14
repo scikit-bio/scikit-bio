@@ -181,8 +181,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         cmap=None,
         s=20,
         n_dims=3,
-        plot_centroids=False,
-        plot_confidence_ellipses=False,
+        centroids=False,
+        confidence_ellipses=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -228,8 +228,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
-        plot_centroids : bool, optional
+        centroids : bool, optional
             If True, plot the centroids of each category in `column`.
+        confidence_ellipses : bool, optional
+            If True, plot confidence ellipses for each category in `column`.
 
         Returns
         -------
@@ -317,19 +319,21 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         self._get_mpl_plt()
 
-        # print(df)
-
         # This handles any input, numpy/pandas/polars
         coord_matrix = np.atleast_2d(self.samples).T
-        # if get_config("table_output") == "pandas":
-        #     coord_matrix = self.samples.values.T
-        # elif get_config("table_output") == "numpy":
-        #     coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.sample_ids, cmap
         )
+
+        if n_dims == 3 and confidence_ellipses is True:
+            raise ValueError("Confidence ellipses can only be currently plotted in 2D.")
+
+        if category_to_color is None and centroids is True:
+            raise ValueError("Metadata must be provided to plot centroids.")
+
         self._validate_plot_axes(coord_matrix, axes)
+
         if len(axes) == 3:  # 3d functionality
             fig = self.plt.figure()
             ax = fig.add_subplot(projection="3d")
@@ -344,10 +348,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
             zs = None
 
-        point_colors, category_to_color = self._get_plot_point_colors(
-            df, column, self.samples.index, cmap
-        )
-
         if zs is None:
             scatter_fn = functools.partial(ax.scatter, xs, ys, s=s)
         else:
@@ -358,32 +358,38 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         else:
             plot = scatter_fn(c=point_colors)
 
-        if plot_centroids and category_to_color:
-            centroids = self.samples.groupby(df[column]).mean()
+        # add a raise value error if no metadata is provided
+        # ask user to require metadata for centroids and confidence ellipses
+        if centroids and category_to_color:
+            current_centroids = self.samples.groupby(df[column]).mean()
+            # print("Centroids:", current_centroids)
+            # print("Categories:", category_to_color.keys())  # Debug line
             for label, color in category_to_color.items():
-                if label in centroids.index:
+                if label in current_centroids.index:
                     if zs is None:
                         ax.scatter(
-                            centroids.loc[label].iloc[axes[0]],
-                            centroids.loc[label].iloc[axes[1]],
+                            current_centroids.loc[label].iloc[axes[0]],
+                            current_centroids.loc[label].iloc[axes[1]],
                             color=color,
                             marker="x",
                             s=30,
                             label=f"'{label}' centroid",
-                            edgecolors="black",
+                            # edgecolors="black",
                         )
                     else:
                         ax.scatter(
-                            centroids.loc[label].iloc[axes[0]],
-                            centroids.loc[label].iloc[axes[1]],
-                            centroids.loc[label].iloc[axes[2]],
+                            current_centroids.loc[label].iloc[axes[0]],
+                            current_centroids.loc[label].iloc[axes[1]],
+                            current_centroids.loc[label].iloc[axes[2]],
                             color=color,
                             marker="x",
                             s=30,
                             label=f"'{label}' centroid",
-                            edgecolors="black",
+                            # edgecolors="black",
                         )
-        if plot_confidence_ellipses and zs is None and category_to_color:
+
+        # raise Value error that if confidence ellipse is true, and ndims > 2
+        if confidence_ellipses and zs is None and category_to_color:
             for label, color in category_to_color.items():
                 group = self.samples[df[column] == label]
                 if len(group) < 2:
@@ -430,7 +436,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             if category_to_color is None:
                 fig.colorbar(plot)
             else:
-                self._plot_categorical_legend(ax, category_to_color)
+                self._plot_categorical_legend(
+                    ax,
+                    category_to_color,
+                    centroids=centroids,
+                    confidence_ellipses=confidence_ellipses,
+                )
 
         return fig
 
@@ -501,7 +512,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         return point_colors, category_to_color
 
-    def _plot_categorical_legend(self, ax, color_dict):
+    def _plot_categorical_legend(
+        self, ax, color_dict, centroids=False, confidence_ellipses=False
+    ):
         """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
         proxies = []
@@ -512,6 +525,24 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             )
             proxies.append(proxy)
             labels.append(category)
+
+            # Add centroid markers if enabled
+            if centroids:
+                proxy = self.mpl.lines.Line2D(
+                    [0],
+                    [0],
+                    linestyle="none",
+                    c=color_dict[category],
+                    marker="x",
+                    markersize=np.sqrt(30),
+                )
+                proxies.append(proxy)
+                labels.append(f"'{category}' centroid")
+            # Add confidence ellipse lines if enabled
+            if confidence_ellipses:
+                proxy = self.mpl.lines.Line2D([0], [0], c=color_dict[category], lw=2)
+                proxies.append(proxy)
+                labels.append(f"'{category}' ellipse")
 
         # place legend outside of the axes (centered)
         # derived from http://matplotlib.org/users/legend_guide.html
