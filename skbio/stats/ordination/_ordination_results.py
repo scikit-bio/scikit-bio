@@ -232,6 +232,8 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             If True, plot the centroids of each category in `column`.
         confidence_ellipses : bool, optional
             If True, plot confidence ellipses for each category in `column`.
+            Ellipses are calculated using to fit an interval of 2 standard deviations
+            using the covariance of the points.
 
         Returns
         -------
