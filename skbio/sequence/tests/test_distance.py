@@ -18,7 +18,7 @@ from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
     _metric_specs, _char_hash, _char_freqs, hamming, pdist, kmer_distance, jc69,
-    jc69_correct, f81, k2p, f84, tn93
+    jc69_correct, f81, k2p, f84, tn93, logdet
 )
 
 
@@ -830,6 +830,70 @@ class TestTN93(TestCase):
             tn93(Protein("-PYCRNG"), Protein("MPYAKC-"))
         with self.assertRaises(TypeError):
             tn93(Sequence("AGCNT"), Sequence("CG-AT"))
+
+
+class TestLogDet(TestCase):
+    def test_logdet(self):
+        # normal case (note that logdet)
+        seq1 = DNA("CTGTGCCTGTGCCGCCCCAGTACCGAAGTCCATGTA")
+        seq2 = DNA("CTGTGACCAGGCCACTTCACAAGTGGAGTTCAGGAT")
+        obs = logdet(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.74220)
+
+        seq1 = DNA("CTGTGC---CTGTGCCTTGCCCCAGTACCGAAG-TCCATGTAAA")
+        seq2 = DNA("CTGTGAAGACCAGGCC--ACTTCACAAGTGGAGGTTCAGGAT--")
+        obs = logdet(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.74220)
+
+        # LogDet is often NaN when sequences are short and frequency matrix is sparse.
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        self.assertTrue(np.isnan(logdet(seq1, seq2)))
+
+        # LogDet is often NaN when the alphabet is large (e.g., protein)
+        seq1 = Protein("PGTRVRAMAIYKQSQHMTEVVRRCPHHERCSDSDGLAPPQHLIRVEGNLRVEYL"
+                       "DDRNTFRHSVVVPYEPPEVGSDCTT")
+        seq2 = Protein("QGSVVRATAIYKKSEHVAEVVRRCPHHERTPDGDNLAPAGHLIRVEGNQRANYR"
+                       "EDNITLRHSVFVPYEAPQLGAEWTT")
+        self.assertTrue(np.isnan(logdet(seq1, seq2)))
+
+        # add a pseudocount can mitigate this scenario
+        # NOTE: This test produces different results in different systems.
+        # obs = logdet(seq1, seq2, pseudocount=0.5)
+        # self.assertEqual(round(obs, 5), 3.87727)
+
+        # LogDet is zero when sequences are identical and base frequencies are equal.
+        seq1 = RNA("ACGUACGU")
+        seq2 = RNA("ACGUACGU")
+        self.assertAlmostEqual(logdet(seq1, seq2), 0.0)
+
+        # custom sequence type with five characters
+        class CustomSequence(GrammaredSequence):
+            @classproperty
+            @overrides(GrammaredSequence)
+            def gap_chars(cls):
+                return set('^$')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '^'
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def definite_chars(cls):
+                return set('aeiou')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def degenerate_map(cls):
+                return {}
+
+        seq1 = CustomSequence("euooeuauaueia^^ioaoaiaioae^eiaoeiaooeueuiua")
+        seq2 = CustomSequence("eioaeiaeeoiiuaeioaeuiuueeeaaiaooiuoee^^uuua")
+        obs = logdet(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.84653)
 
 
 if __name__ == "__main__":

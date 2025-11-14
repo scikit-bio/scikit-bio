@@ -13,8 +13,9 @@ import numpy.testing as npt
 
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, DNA, RNA, Protein
-from skbio.sequence.distance import hamming, pdist, jc69, f81, k2p, f84, tn93, jc69_correct
+from skbio.sequence.distance import hamming, pdist, jc69, f81, k2p, f84, tn93, logdet, jc69_correct
 from skbio.stats.distance import DistanceMatrix
+from skbio.util import get_data_path
 
 from skbio.alignment._distance import align_dists, _char_hash
 
@@ -390,6 +391,45 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa3, "tn93", shared_by_all=False)
         exp = np.array([0.479, 0.661, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+    def test_align_dists_logdet(self):
+        """LogDet distance."""
+        obs = align_dists(self.msa_nucl, "logdet")
+        exp = np.array([0.7422038, 0.9347606, nan])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, logdet)
+        exp = np.array([0.7422038, 0.9347606, nan])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "logdet", shared_by_all=False)
+        exp = np.array([0.6549783, 0.9558150, nan])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        aln = TabularMSA.read(get_data_path("tp53.nucl.aln"), constructor=DNA)
+        obs = align_dists(aln, "logdet")
+        exp = np.array([
+            0.049, 0.242, 0.195, 0.171, 0.253, 0.204, 0.175, 0.289, 0.248, 0.219])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(aln, "logdet", shared_by_all=False)
+        exp = np.array([
+            0.051, 0.250, 0.199, 0.177, 0.262, 0.208, 0.181, 0.291, 0.247, 0.219])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        aln = TabularMSA.read(get_data_path("tp53.prot.aln"), constructor=Protein)
+        obs = align_dists(aln, "logdet")
+        exp = np.array([
+            0.189, 0.393, 0.342, 0.277, 0.406, 0.348, 0.267, 0.450, 0.374, 0.347])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(aln, "logdet", pseudocount=0.5)
+        exp = np.array([
+            0.585, 0.787, 0.737, 0.672, 0.800, 0.743, 0.663, 0.844, 0.768, 0.741])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa4, "logdet", shared_by_all=False)
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
 
     def test_site_mask(self):
         # NOTE: This test complements the original test of `_char_hash` in skbio.

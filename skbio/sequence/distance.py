@@ -17,6 +17,7 @@ Generic distance metrics
 
    hamming
    pdist
+   logdet
    kmer_distance
 
 
@@ -254,6 +255,43 @@ def _char_hash(alphabet, seqtype):
         return valid
 
 
+# Mappings of canonical characters to indices
+_char_indices = {}
+
+
+def _char_index(seqtype):
+    """Get a mapping of characters to indices.
+
+    It generates a vector in which indices are ASCII codes and values are indices
+    within the alphabet. Only canonical characters are included in the indices.
+    Other characters are masked with k (k is the number of canonical characters).
+
+    For example, DNA will have: A: 0, C: 1, G: 2, T: 3, others: 4.
+
+    Parameters
+    ----------
+    seqtype : type
+        Sequence type. Must be a subclass of `GrammaredSequence`, which defines
+        canonical
+        grammar information.
+
+    Returns
+    -------
+    nchar : int
+        Number of canonical characters.
+    index : ndarray of int of shape (128,)
+        Mapping of characters (ASCII codes) to indices.
+
+    """
+    if seqtype not in _char_indices:
+        chars = seqtype._canonical_codes
+        nchar = chars.size
+        index = np.full(seqtype._num_ascii_codes, nchar, dtype=int)
+        index[chars] = np.arange(nchar)
+        _char_indices[seqtype] = (nchar, index)
+    return _char_indices[seqtype]
+
+
 def _char_freqs(seqs, valid=None):
     """Calculate relative frequencies of characters in sequences.
 
@@ -313,7 +351,7 @@ def _build_dm(func, seqs, mask):
     start = 0
     for i in range(n_1):
         end = start + n_1 - i
-        target = dm[start:end]
+        # target = dm[start:end]
 
         func(seqs, mask, i, dm[start:end])
 
@@ -488,10 +526,14 @@ def pdist(seq1, seq2):
     -----
     *p*-distance is the simplest measurement of the evolutionary distance (number of
     substitutions per site) between two sequences. It is also referred to as the *raw
-    distance*. However, this metric may underestimate the true evolutionary distance
-    when the two sequences are divergent and substitutions became saturated. This
-    limitation may be overcome by adopting metrics that correct for multiple putative
-    substitutions per site (such as JC69) and other biases.
+    distance*.
+
+    *p*-distance effectively estimates the evolutionary distance between two closely
+    related sequences, where the number of observed substitutions is small. However,
+    it may underestimate the true evolutionary distance when the two sequences are
+    divergent and substitutions became saturated. This limitation may be overcome by
+    adopting metrics that correct for multiple putative substitutions per site (such
+    as JC69) and other biases.
 
     This function should not be confused with the :func:`~scipy.spatial.distance.pdist`
     function of SciPy.
@@ -590,11 +632,13 @@ def jc69(seq1, seq2):
     The Jukes-Cantor 1969 (JC69) model was originally described in [1]_.
 
     JC69 is a basic evolutionary model for nucleotide sequences. It assumes equal base
-    frequencies and equal substitution rates between bases.
+    frequencies and equal substitution rates between bases. It models sequence
+    evolution as a continuous-time Markov chain, and corrects the observed distance
+    (*p*-distance) for repeated substitutions to estimate the true distance.
 
     This function returns NaN if :math:`p \geq 0.75`. This happens when the two
     sequences are too divergent and substitutions are over-saturated for reliable
-    estimation of the true evolutionary distance.
+    estimation of the evolutionary distance.
 
     References
     ----------
@@ -923,8 +967,7 @@ def _k2p(seqs, mask, seqtype):
     C = 17 + issubclass(seqtype, RNA)
 
     npos = seqs.shape[1]
-    if npos > 0:
-        logL_75 = 0.75 * np.log(npos)
+    logL_75 = 0.75 * np.log(npos)
 
     def func(seqs, mask, i, out):
         # Identify substitutions (difference != 0).
@@ -1325,6 +1368,175 @@ def _tn93(seqs, mask, seqtype, freqs):
             out[:] = res
 
     return _build_dm(func, seqs, mask)
+
+
+@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
+def logdet(seq1, seq2, pseudocount=None):
+    r"""Calculate the LogDet distance between two aligned sequences.
+
+    .. versionadded:: 0.7.2
+
+    The LogDet estimator of evolutionary distance is robust to compositional biases and
+    nonstationary (i.e., changing over time) character frequencies. The distance is
+    calculated as:
+
+    .. math::
+        D = -\frac{1}{k}ln det \mathbf{F} - ln k
+
+    Where :math:`\mathbf{F}` is a :math:`k \times k` matrix of proportions of character
+    pairs between the two sequences. :math:`k` is the number of canonical characters in
+    the alphabet of the specific sequence type (e.g., 4 for nucleotide and 20 for
+    protein).
+
+    Parameters
+    ----------
+    seq1, seq2 : GrammaredSequence
+        Sequences to compute the LogDet distance between.
+    pseudocount : float, optional
+        A small positive value added to the count of each character pair to avoid
+        logarithm of zero. Can prevent a NaN result when some character pairs are
+        missing from the sequences. Default is None.
+
+    Returns
+    -------
+    float
+        LogDet distance between the two sequences.
+
+    See Also
+    --------
+    paralin
+
+    Notes
+    -----
+    The LogDet (meaning "logarithm of determinant") transformation was originally
+    described in [1]_. The above equation of LogDet distance was adopted from [2]_,
+    which is consistent with the implementation in ``ape::dist.dna``.
+
+    The function returns NaN when the determinant is 0 or negative.
+
+    Although the LogDet distance is mostly used for analyzing nucleotide sequences (_k_
+    = 4), this function is applicable to any grammared sequences with an arbitrarily
+    sized alphabet, in accordance with the original paper [1]_.
+
+    However, a large alphabet (e.g., protein sequences, with _k_ = 20) often results
+    in a sparse _F_ matrix, due to unobserved character pairs in the sequences.
+    Consequently, the LogDet distance will be NaN. This can be mitigated by specifying
+    a pseudocount (e.g., 0.5) to regularize the matrix.
+
+    Additionally, the LogDet distance tends to over-estimate the evolutionary distance
+    when the character frequencies are highly unequal. See [3]_ for a discussion and
+    a modified LogDet distance to account for unequal character frequencies.
+
+    The LogDet distance between two identical sequences is 0 only when the character
+    frequencies are equal, which is rarely the case in real data. However, the
+    ``DistanceMatrix`` data structure forces the diagonal (distance from each sequence
+    to itself) to be 0. Be cautious of this when self-distance is involved in the
+    subsequent analysis.
+
+    References
+    ----------
+    .. [1] Lockhart, P. J., Steel, M. A., Hendy, M. D., & Penny, D. (1994). Recovering
+       evolutionary trees under a more realistic model of sequence evolution. Molecular
+       Biology and Evolution, 11(4), 605-612.
+
+    .. [2] Gu, X., & Li, W. H. (1996). Bias-corrected paralinear and LogDet distances
+       and tests of molecular clocks and phylogenies under nonstationary nucleotide
+       frequencies. Molecular Biology and Evolution, 13(10), 1375-1383.
+
+    .. [3] Tamura, K., & Kumar, S. (2002). Evolutionary distance estimation under
+       heterogeneous substitution pattern among lineages. Molecular Biology and
+       Evolution, 19(10), 1727-1736.
+
+    """
+    return _logdet(
+        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), pseudocount
+    ).item()
+
+
+def _logdet(seqs, mask, seqtype, pseudocount=None):
+    """Compute pairwise LogDet distances between sequences."""
+    nchar, index = _char_index(seqtype)
+    seqs = index[seqs]
+
+    masked = mask is not None
+    n = seqs.shape[0]
+    n_1 = n - 1
+
+    # number of valid characters + others (see below)
+    k = nchar + masked
+
+    c1 = -1.0 / nchar
+    part0 = np.log(nchar)
+
+    # an offset added to sequence 2's to facilitate bincount (see below)
+    offvec = np.arange(n).reshape(-1, 1) * k**2
+
+    def func(seqs, mask, i, out):
+        # number of sequence pairs
+        m = n_1 - i
+
+        # The following code computes the count matrix between all sequence pairs.
+        # `np.bincount` is highly efficient for counting, but it only operates on a 1D
+        # array. To overcome this, two tricks are applied:
+        # 1) For each pair of sequences (i vs j), compute i * k + j, do bincount, then
+        #    reshape to (k, k), which is the count matrix.
+        # 2) For all pairs of sequences (i vs J), offset J by k^2 each, flatten, do
+        #    bincount, reshape to (-1, ...), which returns the counts of each sequence
+        #    pair.
+        # The outcome is a 3D array of shape (m, k, k).
+        pairs = seqs[i] * k + seqs[i + 1 :] + offvec[:m]
+        mat = np.bincount(pairs.ravel(), minlength=offvec[m, 0]).reshape(-1, k, k)
+
+        # In pairwise deletion mode, all characters other than the canonical ones are
+        # given the same and maximum code, which will be trimmed off from the count
+        # matrix.
+        # Complete deletion mode does not need this as all characters are canonical,
+        # which saves some compute (25 -> 16 for nucleotide sequences).
+        if masked:
+            mat = mat[:, :nchar, :nchar]
+
+        mat = mat.astype(float)
+
+        if pseudocount:
+            mat += pseudocount
+
+        total = mat.sum(axis=(1, 2), keepdims=True)
+
+        # drop empty sequences
+        # Note that if a pseudocount is added, empty sequences become non-empty.
+        has_empty = False
+        if masked and not pseudocount:
+            filled = (total > 0).ravel()
+            if has_empty := not np.all(filled):
+                mat, total = mat[filled], total[filled]
+
+        # convert counts to proportions
+        mat /= total
+
+        # `np.logabsdet` is more stable than `det` -> `log`.
+        sign, logabsdet = np.linalg.slogdet(mat)
+
+        # The determinant should be positive (sign = 1). Otherwise result is NaN.
+        valid = sign == 1.0
+        if has_inval := not np.all(valid):
+            logabsdet = logabsdet[valid]
+
+        # The formula (Eq. 2 of Gu & Li, 1996)
+        res = c1 * logabsdet - part0
+
+        if has_empty:
+            if has_inval:
+                filled[filled] = valid  # combine Boolean masks
+            valid = filled
+            has_inval = True
+        elif not has_inval:
+            valid = slice(None)
+
+        out[valid] = res
+        if has_inval:
+            out[~valid] = np.nan
+
+    return _build_dm(func, seqs, None)
 
 
 @_metric_specs()
