@@ -573,4 +573,4 @@ class TestInheritanceEdgeCases(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(buffer=False)
+    unittest.main()
