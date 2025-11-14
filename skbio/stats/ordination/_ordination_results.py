@@ -392,24 +392,63 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         if confidence_ellipses and zs is None and category_to_color:
             for label, color in category_to_color.items():
                 group = self.samples[df[column] == label]
-                if len(group) < 2:
-                    continue  # can't draw ellipse with less than 2 points
+                if len(group) < 3:
+                    continue  # can't draw ellipse with less than 3 points
 
                 x_vals = group.iloc[:, axes[0]]
                 y_vals = group.iloc[:, axes[1]]
 
+                # covariance matrix
+                cov = np.cov(x_vals, y_vals)
+
+                # pearson correlation coefficient
+                pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+
+                # ellipse radii
+                ell_radius_x = np.sqrt(1 + pearson)
+                ell_radius_y = np.sqrt(1 - pearson)
+
+                # means
                 mean_x = x_vals.mean()
                 mean_y = y_vals.mean()
-                std_x = x_vals.std()
-                std_y = y_vals.std()
 
-                t = np.linspace(0, 2 * np.pi, 100)
-                ellipse_x = mean_x + std_x * np.cos(t)
-                ellipse_y = mean_y + std_y * np.sin(t)
+                # standard deviations
+                scale_x = np.sqrt(cov[0, 0]) * 2.4477  # 95% confidence interval
+                scale_y = np.sqrt(cov[1, 1]) * 2.4477  # 95% confidence interval
 
-                ax.plot(
-                    ellipse_x, ellipse_y, color=color, lw=2, label=f"'{label}' ellipse"
+                angle = 0.5 * np.degrees(
+                    np.arctan2(2 * cov[0, 1], cov[0, 0] - cov[1, 1])
                 )
+
+                ellipse = self.mpl.patches.Ellipse(
+                    (0, 0),
+                    width=ell_radius_x * 2,
+                    height=ell_radius_y * 2,
+                    facecolor="none",
+                    edgecolor=color,
+                    lw=2,
+                    label=f"'{label}' ellipse",
+                )
+                transf = (
+                    self.mpl.transforms.Affine2D()
+                    .rotate_deg(angle)
+                    .scale(scale_x, scale_y)
+                    .translate(mean_x, mean_y)
+                )
+                ellipse.set_transform(transf + ax.transData)
+                ax.add_patch(ellipse)
+
+                # t = np.linspace(0, 2 * np.pi, 100)
+
+                # std_x = x_vals.std() old version
+                # std_y = y_vals.std()
+
+                # ellipse_x = mean_x + std_x * np.cos(t)
+                # ellipse_y = mean_y + std_y * np.sin(t)
+
+                # ax.plot(
+                # ellipse_x, ellipse_y, color=color, lw=2, label=f"'{label}' ellipse"
+                # )
 
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
