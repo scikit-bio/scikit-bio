@@ -206,7 +206,7 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
 
     def test_plot_with_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', plot_centroids=True, cmap='Set1')
+            self.df, 'categorical', centroids=True, cmap='Set1')
         ax = fig.get_axes()[0]
         labels = [t.get_text() for t in ax.get_legend().get_texts()]
         self.assertTrue("'foo' centroid" in labels)
@@ -214,7 +214,7 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
 
     def test_plot_without_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', plot_centroids=False, cmap='Set1')
+            self.df, 'categorical', centroids=False, cmap='Set1')
         ax = fig.get_axes()[0]
         legend = ax.get_legend()
         if legend:
@@ -427,7 +427,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
     
     def test_plot_with_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', plot_centroids=True, cmap='Set1', n_dims=2)
+            self.df, 'categorical', centroids=True, cmap='Set1', n_dims=2)
         ax = fig.get_axes()[0]
         labels = [t.get_text() for t in ax.get_legend().get_texts()]
         self.assertTrue("'foo' centroid" in labels)
@@ -435,13 +435,25 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_plot_without_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', plot_centroids=False, cmap='Set1', n_dims=2)
+            self.df, 'categorical', centroids=False, cmap='Set1', n_dims=2)
         ax = fig.get_axes()[0]
         legend = ax.get_legend()
         if legend:
             labels = [t.get_text() for t in legend.get_texts()]
             self.assertTrue("'foo' centroid" not in labels)
             self.assertTrue("'22' centroid" not in labels)
+            
+    def test_plot_centroids_without_metadata(self):
+        #Test that plotting centroids without metadata raises ValueError.
+        with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot centroids.'):
+            self.min_ord_results.plot(centroids=True)
+
+    def test_plot_confidence_ellipses_in_3d(self):
+        #Test that plotting confidence ellipses in 3D raises ValueError.
+        with self.assertRaisesRegex(ValueError, r'Confidence ellipses can only be currently plotted in 2D.'):
+            self.min_ord_results.plot(
+                self.df, 'categorical', confidence_ellipses=True, n_dims=3
+        )
 
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*3'):
