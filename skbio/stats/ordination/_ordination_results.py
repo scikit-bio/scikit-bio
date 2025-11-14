@@ -175,11 +175,14 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         self,
         df=None,
         column=None,
-        axes=(0, 1, 2),
+        axes=None,
         axis_labels=None,
         title="",
         cmap=None,
         s=20,
+        n_dims=3,
+        centroids=False,
+        confidence_ellipses=False,
     ):
         """Create a 3-D scatterplot of ordination results colored by metadata.
 
@@ -206,9 +209,10 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             not be colored by metadata.
         axes : iterable of int, optional
             Indices of sample coordinates to plot on the x-, y-, and z-axes.
-            For example, if plotting PCoA results, ``axes=(0, 1, 2)`` will plot
-            PC 1 on the x-axis, PC 2 on the y-axis, and PC 3 on the z-axis.
-            Must contain exactly three elements.
+            For example, if plotting PCoA results, ``axes=(0, 1)`` will plot
+            PC 1 on the x-axis and PC 2 on the y-axis. If plotting PCoA results,
+            ``axes=(0, 1, 2)`` will plot PC 1 on the x-axis, PC 2 on the y-axis,
+            and PC 3 on the z-axis.Must contain exactly two or three elements.
         axis_labels : iterable of str, optional
             Labels for the x-, y-, and z-axes. If ``None``, labels will be the
             values of `axes` cast as strings.
@@ -224,6 +228,12 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         s : scalar or iterable of scalars, optional
             Size of points. See matplotlib's ``Axes3D.scatter`` documentation
             for more details.
+        centroids : bool, optional
+            If True, plot the centroids of each category in `column`.
+        confidence_ellipses : bool, optional
+            If True, plot confidence ellipses for each category in `column`.
+            Ellipses are calculated using to fit an interval of 2 standard deviations
+            using the covariance of the points.
 
         Returns
         -------
@@ -301,49 +311,155 @@ class OrdinationResults(SkbioObject, PlottableMixin):
         # instead be added to EMPeror (http://biocore.github.io/emperor/).
         # Only bug fixes and minor updates should be made to this method.
 
-        self._get_mpl_plt()
+        if axes is None:
+            if n_dims == 2:
+                axes = [0, 1]
+            elif n_dims == 3:
+                axes = [0, 1, 2]
+            else:
+                raise ValueError("n_dims must be 2 or 3.")
 
-        # print(df)
+        self._get_mpl_plt()
 
         # This handles any input, numpy/pandas/polars
         coord_matrix = np.atleast_2d(self.samples).T
-        # if get_config("table_output") == "pandas":
-        #     coord_matrix = self.samples.values.T
-        # elif get_config("table_output") == "numpy":
-        #     coord_matrix = self.samples.T
 
         point_colors, category_to_color = self._get_plot_point_colors(
             df, column, self.sample_ids, cmap
         )
+
+        if n_dims == 3 and confidence_ellipses is True:
+            raise ValueError("Confidence ellipses can only be currently plotted in 2D.")
+
+        if category_to_color is None and centroids is True:
+            raise ValueError("Metadata must be provided to plot centroids.")
+
+        if category_to_color is None and confidence_ellipses is True:
+            raise ValueError(
+                "Metadata must be provided to plot confidence ellipses."
+            )  # write corresponding unit test
+
         self._validate_plot_axes(coord_matrix, axes)
 
-        fig = self.plt.figure()
-        ax = fig.add_subplot(projection="3d")
+        if len(axes) == 3:  # 3d functionality
+            fig = self.plt.figure()
+            ax = fig.add_subplot(projection="3d")
+            xs, ys, zs = (
+                coord_matrix[axes[0]],
+                coord_matrix[axes[1]],
+                coord_matrix[axes[2]],
+            )
 
-        xs = coord_matrix[axes[0]]
-        ys = coord_matrix[axes[1]]
-        zs = coord_matrix[axes[2]]
+        elif len(axes) == 2:  # 2d functionality
+            fig, ax = self.plt.subplots()
+            xs, ys = coord_matrix[axes[0]], coord_matrix[axes[1]]
+            zs = None
 
-        scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+        if zs is None:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, s=s)
+        else:
+            scatter_fn = functools.partial(ax.scatter, xs, ys, zs, s=s)
+
         if point_colors is None:
             plot = scatter_fn()
         else:
             plot = scatter_fn(c=point_colors)
 
+        # add a raise value error if no metadata is provided
+        # ask user to require metadata for centroids and confidence ellipses
+        if centroids and category_to_color:
+            current_centroids = self.samples.groupby(df[column]).mean()
+            for label, color in category_to_color.items():
+                if label in current_centroids.index:
+                    if zs is None:
+                        ax.scatter(
+                            current_centroids.loc[label].iloc[axes[0]],
+                            current_centroids.loc[label].iloc[axes[1]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                        )
+                    else:
+                        ax.scatter(
+                            current_centroids.loc[label].iloc[axes[0]],
+                            current_centroids.loc[label].iloc[axes[1]],
+                            current_centroids.loc[label].iloc[axes[2]],
+                            color=color,
+                            marker="x",
+                            s=30,
+                            label=f"'{label}' centroid",
+                        )
+
+        # Confidence ellipse code derived from:
+        # https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html
+        if confidence_ellipses and zs is None and category_to_color:
+            for label, color in category_to_color.items():
+                group = self.samples[df[column] == label]
+                if len(group) < 3:
+                    continue  # can't draw ellipse with less than 3 points
+
+                x_vals = group.iloc[:, axes[0]]
+                y_vals = group.iloc[:, axes[1]]
+
+                # covariance matrix
+                cov = np.cov(x_vals, y_vals)
+
+                # pearson correlation coefficient
+                pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+
+                # ellipse radii
+                ell_radius_x = np.sqrt(1 + pearson)
+                ell_radius_y = np.sqrt(1 - pearson)
+
+                # means
+                mean_x = x_vals.mean()
+                mean_y = y_vals.mean()
+
+                # 2 standard deviations for confidence interval
+                scale_x = np.sqrt(cov[0, 0]) * 2
+                scale_y = np.sqrt(cov[1, 1]) * 2
+
+                angle = 0.5 * np.degrees(
+                    np.arctan2(2 * cov[0, 1], cov[0, 0] - cov[1, 1])
+                )
+
+                ellipse = self.mpl.patches.Ellipse(
+                    (0, 0),
+                    width=ell_radius_x * 2,
+                    height=ell_radius_y * 2,
+                    facecolor="none",
+                    edgecolor=color,
+                    lw=2,
+                    label=f"'{label}' ellipse",
+                )
+                transf = (
+                    self.mpl.transforms.Affine2D()
+                    .rotate_deg(angle)
+                    .scale(scale_x, scale_y)
+                    .translate(mean_x, mean_y)
+                )
+                ellipse.set_transform(transf + ax.transData)
+                ax.add_patch(ellipse)
+
         if axis_labels is None:
             axis_labels = ["%d" % axis for axis in axes]
-        elif len(axis_labels) != 3:
+        elif len(axis_labels) != len(axes):
             raise ValueError(
-                "axis_labels must contain exactly three elements "
-                "(found %d elements)." % len(axis_labels)
+                f"axis_labels ({len(axis_labels)} elements) "
+                f"must contain the same number of elements as "
+                f"axes ({len(axes)} elements)."
             )
 
         ax.set_xlabel(axis_labels[0])
         ax.set_ylabel(axis_labels[1])
-        ax.set_zlabel(axis_labels[2])
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax.set_zticklabels([])
+
+        if len(axes) == 3:
+            ax.set_zlabel(axis_labels[2])
+            ax.set_zticklabels([])
+
         ax.set_title(title)
 
         # create legend/colorbar
@@ -351,25 +467,30 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             if category_to_color is None:
                 fig.colorbar(plot)
             else:
-                self._plot_categorical_legend(ax, category_to_color)
+                self._plot_categorical_legend(
+                    ax,
+                    category_to_color,
+                    centroids=centroids,
+                    confidence_ellipses=confidence_ellipses,
+                )
 
         return fig
 
     def _validate_plot_axes(self, coord_matrix, axes):
         """Validate `axes` against coordinates matrix."""
         num_dims = coord_matrix.shape[0]
-        if num_dims < 3:
+        if num_dims < 2:
             raise ValueError(
-                "At least three dimensions are required to plot "
+                "At least two dimensions are required to plot "
                 "ordination results. There are only %d "
                 "dimension(s)." % num_dims
             )
-        if len(axes) != 3:
+        if len(axes) not in [2, 3]:
             raise ValueError(
-                "`axes` must contain exactly three elements "
+                "`axes` must contain exactly two or three elements "
                 "(found %d elements)." % len(axes)
             )
-        if len(set(axes)) != 3:
+        if len(set(axes)) != len(axes):
             raise ValueError("The values provided for `axes` must be unique.")
 
         for idx, axis in enumerate(axes):
@@ -422,7 +543,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
         return point_colors, category_to_color
 
-    def _plot_categorical_legend(self, ax, color_dict):
+    def _plot_categorical_legend(
+        self, ax, color_dict, centroids=False, confidence_ellipses=False
+    ):
         """Add legend to plot using specified mapping of category to color."""
         # derived from http://stackoverflow.com/a/20505720
         proxies = []
@@ -433,6 +556,24 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             )
             proxies.append(proxy)
             labels.append(category)
+
+            # Add centroid markers if enabled
+            if centroids:
+                proxy = self.mpl.lines.Line2D(
+                    [0],
+                    [0],
+                    linestyle="none",
+                    c=color_dict[category],
+                    marker="x",
+                    markersize=np.sqrt(30),
+                )
+                proxies.append(proxy)
+                labels.append(f"'{category}' centroid")
+            # Add confidence ellipse lines if enabled
+            if confidence_ellipses:
+                proxy = self.mpl.lines.Line2D([0], [0], c=color_dict[category], lw=2)
+                proxies.append(proxy)
+                labels.append(f"'{category}' ellipse")
 
         # place legend outside of the axes (centered)
         # derived from http://matplotlib.org/users/legend_guide.html
