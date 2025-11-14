@@ -2,6 +2,10 @@
 
 ## Version 0.7.2-dev
 
+### Features
+
+* `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322]https://github.com/scikit-bio/scikit-bio/pull/2322).
+
 ## Version 0.7.1.post1
 
 * Fixed source distribution packaging for Python 3.14 support.
