@@ -18,6 +18,7 @@ Generic distance metrics
    hamming
    pdist
    logdet
+   paralin
    kmer_distance
 
 
@@ -324,7 +325,29 @@ def _char_freqs(seqs, valid=None):
 
 
 def _check_freqs(freqs, nonzero=False):
-    """Validate character frequencies."""
+    """Validate character frequencies.
+
+    Parameters
+    ----------
+    freqs : array_like of float of shape (n_alphabet,)
+        Relative frequencies of all characters in the alphabet.
+    nonzero : bool, optional
+        If True, frequencies must be non-zero (i.e., positive).
+
+    Returns
+    -------
+    ndarray of float of shape (n_alphabet,)
+        Relative frequencies of characters.
+
+    Raises
+    ------
+    ValueError
+        If sum of frequencies is not 1.
+    ValueError
+        If at least one frequency is negative (`nonzero=False`) or non-positive
+        (`nonzero=True`).
+
+    """
     freqs = np.asarray(freqs)
 
     if nonzero:
@@ -1376,14 +1399,14 @@ def logdet(seq1, seq2, pseudocount=None):
 
     .. versionadded:: 0.7.2
 
-    The LogDet estimator of evolutionary distance is robust to compositional biases and
-    nonstationary (i.e., changing over time) character frequencies. The distance is
-    calculated as:
+    The LogDet (meaning "logarithm of determinant") estimator of evolutionary distance
+    is robust to compositional biases and nonstationary (i.e., changing over time)
+    character frequencies. The distance is calculated as:
 
     .. math::
-        D = -\frac{1}{k}ln det \mathbf{F} - ln k
+        D = -\frac{1}{k}\ln \det\mathbf{J} - \ln k
 
-    Where :math:`\mathbf{F}` is a :math:`k \times k` matrix of proportions of character
+    Where :math:`\mathbf{J}` is a :math:`k \times k` matrix of proportions of character
     pairs between the two sequences. :math:`k` is the number of canonical characters in
     the alphabet of the specific sequence type (e.g., 4 for nucleotide and 20 for
     protein).
@@ -1394,8 +1417,7 @@ def logdet(seq1, seq2, pseudocount=None):
         Sequences to compute the LogDet distance between.
     pseudocount : float, optional
         A small positive value added to the count of each character pair to avoid
-        logarithm of zero. Can prevent a NaN result when some character pairs are
-        missing from the sequences. Default is None.
+        logarithm of zero. Default is None.
 
     Returns
     -------
@@ -1408,30 +1430,32 @@ def logdet(seq1, seq2, pseudocount=None):
 
     Notes
     -----
-    The LogDet (meaning "logarithm of determinant") transformation was originally
-    described in [1]_. The above equation of LogDet distance was adopted from [2]_,
-    which is consistent with the implementation in ``ape::dist.dna``.
+    The LogDet transformation was originally described in [1]_. The above equation of
+    LogDet distance was adopted from [2]_, which is consistent with the implementation
+    in ``ape::dist.dna``.
 
-    The function returns NaN when the determinant is 0 or negative.
-
-    Although the LogDet distance is mostly used for analyzing nucleotide sequences (_k_
+    Although the LogDet distance is mostly used for analyzing nucleotide sequences (*k*
     = 4), this function is applicable to any grammared sequences with an arbitrarily
     sized alphabet, in accordance with the original paper [1]_.
 
-    However, a large alphabet (e.g., protein sequences, with _k_ = 20) often results
-    in a sparse _F_ matrix, due to unobserved character pairs in the sequences.
+    However, a large alphabet (e.g., protein sequences, with *k* = 20) often results
+    in a sparse *J* matrix, due to unobserved character pairs in the sequences.
     Consequently, the LogDet distance will be NaN. This can be mitigated by specifying
     a pseudocount (e.g., 0.5) to regularize the matrix.
 
     Additionally, the LogDet distance tends to over-estimate the evolutionary distance
-    when the character frequencies are highly unequal. See [3]_ for a discussion and
+    when the character frequencies are highly unequal. Consider using the paralinear
+    distance (:func:`paralin`) instead in that case. See also [3]_ for a discussion and
     a modified LogDet distance to account for unequal character frequencies.
 
     The LogDet distance between two identical sequences is 0 only when the character
-    frequencies are equal, which is rarely the case in real data. However, the
-    ``DistanceMatrix`` data structure forces the diagonal (distance from each sequence
-    to itself) to be 0. Be cautious of this when self-distance is involved in the
-    subsequent analysis.
+    frequencies are equal, which is rarely the case in real data. However, when
+    constructing a LogDet distance matrix from a multiple sequence alignment using the
+    :func:`~skbio.alignment.align_dists` function, the resulting ``DistanceMatrix``
+    object forces the diagonal (distance from each sequence to itself) to be 0. Be
+    cautious of this when self-distance is involved in the subsequent analysis.
+
+    The function returns NaN when the determinant is 0 or negative.
 
     References
     ----------
@@ -1454,7 +1478,104 @@ def logdet(seq1, seq2, pseudocount=None):
 
 
 def _logdet(seqs, mask, seqtype, pseudocount=None):
-    """Compute pairwise LogDet distances between sequences."""
+    return _log_para(seqs, mask, seqtype, pseudocount, paralinear=False)
+
+
+@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
+def paralin(seq1, seq2, pseudocount=None):
+    r"""Calculate paralinear distance between two aligned sequences.
+
+    .. versionadded:: 0.7.2
+
+    The paralinear distance between two sequences is calculated as:
+
+    .. math::
+        D = -\frac{1}{k}\ln\frac{\det\mathbf{J}}
+            {\sqrt{\det\mathbf{D}_1\det\mathbf{D}_2}}
+
+    Where :math:`\mathbf{J}` is a matrix of proportions of character pairs between the
+    two sequences. :math:`\mathbf{D}_1` and :math:`\mathbf{D}_1` are diagonal matrices
+    of the proportions of characters within each of the two sequences. The matrices
+    are :math:`k \times k`, in which :math:`k` is the size of the alphabet.
+
+    This function considers only canonical characters in the alphabet of the specific
+    sequence type (e.g., *k* = 4 for nucleotide and *k* = 20 for protein).
+
+    Because :math:`\det\mathbf{D} = \prod_{x \in A}\pi_x`, where :math:`\pi_x` is the
+    proportion of character :math:`x` in alphabet :math:`A`, the above equation can be
+    simplified as:
+
+    .. math::
+        D = -\frac{1}{k}\ln\det\mathbf{J} +
+            \frac{1}{2k}\sum_{x \in A, i \in \{1, 2\}}\ln \pi_{x,i}
+
+    Parameters
+    ----------
+    seq1, seq2 : GrammaredSequence
+        Sequences to compute the paralinear distance between.
+    pseudocount : float, optional
+        A small positive value added to the count of each character or character pair
+        to avoid logarithm of zero. Default is None.
+
+    Returns
+    -------
+    float
+        Paralinear distance between the two sequences.
+
+    See Also
+    --------
+    logdet
+
+    Notes
+    -----
+    The paralinear distance between biological sequences was originally described in
+    [1]_. The above equation of paralinear distance was adopted from [2]_, which is
+    consistent with the implementation in ``ape::dist.dna``.
+
+    Although the paralinear distance is mostly used for analyzing nucleotide sequences
+    (*k* = 4), this function is applicable to any grammared sequences with an alphabet
+    of any size. However, sequences with a large alphabet (e.g., protein sequences,
+    with *k* = 20) often result in a paralinear distance of NaN, due to unobserved
+    characters or character pairs. This can be mitigated by adding a pseudocount
+    (e.g., 0.5) to regularize the matrices.
+
+    The paralinear distance is fundamentally similar to LogDet (:func:`logdet`).
+    Although developed separately, the paralinear distance may be considered as an
+    extension of LogDet that considers varying character frequencies. When the
+    character frequencies are equal within each of the two sequences, the paralinear
+    distance should be identical to the LogDet distance.
+
+    Unlike LogDet, the paralinear distance between two identical sequences, with equal
+    or unequal character frequencies, is zero.
+
+    .. note::
+        The LogDet distance computed by PHYLIP's `dnadist` command is actually
+        consistent with the paralinear distance implemented here.
+
+    The function returns NaN when any of the determinants is 0 or negative.
+
+    References
+    ----------
+    .. [1] Lake, J. A. (1994). Reconstructing evolutionary trees from DNA and protein
+       sequences: paralinear distances. Proceedings of the National Academy of
+       Sciences, 91(4), 1455-1459.
+
+    .. [2] Gu, X., & Li, W. H. (1996). Bias-corrected paralinear and LogDet distances
+       and tests of molecular clocks and phylogenies under nonstationary nucleotide
+       frequencies. Molecular Biology and Evolution, 13(10), 1375-1383.
+
+    """
+    return _paralin(
+        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), pseudocount
+    ).item()
+
+
+def _paralin(seqs, mask, seqtype, pseudocount=None):
+    return _log_para(seqs, mask, seqtype, pseudocount, paralinear=True)
+
+
+def _log_para(seqs, mask, seqtype, pseudocount=None, paralinear=False):
+    """Compute pairwise LogDet or paralinear distances between sequences."""
     nchar, index = _char_index(seqtype)
     seqs = index[seqs]
 
@@ -1465,11 +1586,32 @@ def _logdet(seqs, mask, seqtype, pseudocount=None):
     # number of valid characters + others (see below)
     k = nchar + masked
 
+    k2_inv = 0.5 / nchar
     c1 = -1.0 / nchar
-    part0 = np.log(nchar)
+    part0 = -np.log(nchar)
 
     # an offset added to sequence 2's to facilitate bincount (see below)
-    offvec = np.arange(n).reshape(-1, 1) * k**2
+    offvec = np.arange(n).reshape(-1, 1)
+
+    # Paralinear only: Calculate the logdets of diagonal matrices (i.e., character
+    # frequencies) of individual sequences: ln(det(F)) = ln(prod(f)) = sum(ln(f)).
+    # Available for complete deletion only. For pairwise deletion, we need to
+    # calculate this for each pair of sequences.
+    if paralinear and not masked:
+        seqs_off = seqs + offvec * k
+        freqs = np.bincount(seqs_off.ravel(), minlength=n * k).reshape(-1, k)
+        freqs = freqs.astype(float)
+        if pseudocount:
+            freqs += pseudocount * k
+
+        # Exclude sequences with any of the canonical character(s) missing (e.g., a
+        # DNA sequence without "T"), as they will result in logarithm of zero.
+        else:
+            freqs[freqs == 0] = np.nan
+        freqs /= freqs.sum(axis=1, keepdims=True)
+        diags = np.sum(np.log(freqs), axis=1)
+
+    offvec *= k**2
 
     def func(seqs, mask, i, out):
         # number of sequence pairs
@@ -1494,12 +1636,9 @@ def _logdet(seqs, mask, seqtype, pseudocount=None):
         # which saves some compute (25 -> 16 for nucleotide sequences).
         if masked:
             mat = mat[:, :nchar, :nchar]
-
         mat = mat.astype(float)
-
         if pseudocount:
             mat += pseudocount
-
         total = mat.sum(axis=(1, 2), keepdims=True)
 
         # drop empty sequences
@@ -1517,24 +1656,32 @@ def _logdet(seqs, mask, seqtype, pseudocount=None):
         sign, logabsdet = np.linalg.slogdet(mat)
 
         # The determinant should be positive (sign = 1). Otherwise result is NaN.
-        valid = sign == 1.0
-        if has_inval := not np.all(valid):
-            logabsdet = logabsdet[valid]
+        logabsdet[sign != 1.0] = np.nan
+
+        # LogDet distance uses a constant
+        if not paralinear:
+            c0 = part0
+
+        # Paralinear with complete deletion: use pre-calculated diagonals.
+        elif not masked:
+            c0 = k2_inv * (diags[i] + diags[i + 1 :])
+
+        # For pariwise deletion, calculate diagonals on the current sequence pair:
+        # Take the frequency matrix, sum rows to get the character frequencies of
+        # sequence 1; sum columns to get those of sequence 2.
+        else:
+            freq12 = np.concat((np.sum(mat, axis=1), np.sum(mat, axis=2)), axis=1)
+            freq12[freq12 == 0] = np.nan
+            c0 = k2_inv * np.sum(np.log(freq12), axis=1)
 
         # The formula (Eq. 2 of Gu & Li, 1996)
-        res = c1 * logabsdet - part0
+        res = c0 + c1 * logabsdet
 
         if has_empty:
-            if has_inval:
-                filled[filled] = valid  # combine Boolean masks
-            valid = filled
-            has_inval = True
-        elif not has_inval:
-            valid = slice(None)
-
-        out[valid] = res
-        if has_inval:
-            out[~valid] = np.nan
+            out[filled] = res
+            out[~filled] = np.nan
+        else:
+            out[:] = res
 
     return _build_dm(func, seqs, None)
 

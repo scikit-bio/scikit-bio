@@ -12,8 +12,10 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.alignment import TabularMSA
-from skbio.sequence import Sequence, DNA, RNA, Protein
-from skbio.sequence.distance import hamming, pdist, jc69, f81, k2p, f84, tn93, logdet, jc69_correct
+from skbio.sequence import DNA, RNA, Protein
+from skbio.sequence.distance import (
+    hamming, pdist, jc69, f81, k2p, f84, tn93, logdet, paralin, jc69_correct
+)
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_data_path
 
@@ -399,7 +401,6 @@ class AlignDistsTests(TestCase):
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         obs = align_dists(self.msa_nucl, logdet)
-        exp = np.array([0.7422038, 0.9347606, nan])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         obs = align_dists(self.msa_nucl, "logdet", shared_by_all=False)
@@ -429,6 +430,44 @@ class AlignDistsTests(TestCase):
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
         obs = align_dists(self.msa4, "logdet", shared_by_all=False)
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+    def test_align_dists_paralin(self):
+        """Paralinear distance."""
+        obs = align_dists(self.msa_nucl, "paralin")
+        exp = np.array([0.7212106, 0.7054428, nan])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, paralin)
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "paralin", shared_by_all=False)
+        exp = np.array([0.6378228, 0.6976025, nan])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        aln = TabularMSA.read(get_data_path("tp53.nucl.aln"), constructor=DNA)
+        obs = align_dists(aln, "paralin")
+        exp = np.array([
+            0.035, 0.231, 0.181, 0.151, 0.242, 0.190, 0.154, 0.278, 0.230, 0.199])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(aln, "paralin", shared_by_all=False)
+        exp = np.array([
+            0.037, 0.238, 0.186, 0.158, 0.25 , 0.195, 0.161, 0.279, 0.229, 0.199])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        aln = TabularMSA.read(get_data_path("tp53.prot.aln"), constructor=Protein)
+        obs = align_dists(aln, "paralin")
+        exp = np.array([
+            0.048, 0.244, 0.19 , 0.127, 0.258, 0.197, 0.119, 0.291, 0.218, 0.188])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(aln, "paralin", pseudocount=0.5)
+        exp = np.array([
+            0.531, 0.732, 0.678, 0.615, 0.745, 0.685, 0.606, 0.784, 0.710, 0.681])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa4, "paralin", shared_by_all=False)
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
     def test_site_mask(self):

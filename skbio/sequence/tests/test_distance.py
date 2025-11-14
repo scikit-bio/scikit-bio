@@ -17,8 +17,9 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, _char_hash, _char_freqs, hamming, pdist, kmer_distance, jc69,
-    jc69_correct, f81, k2p, f84, tn93, logdet
+    _metric_specs, _char_hash, _char_freqs, _check_freqs,
+    hamming, pdist, kmer_distance, jc69, jc69_correct, f81, k2p, f84, tn93,
+    logdet, paralin
 )
 
 
@@ -231,6 +232,29 @@ class TestMetricSpecs(TestCase):
         obs = _char_freqs(seq5._bytes, valid)
         exp = np.full(4, np.nan)
         npt.assert_array_equal(obs, exp)
+
+    def test_check_freqs(self):
+        """Valudate character frequencies."""
+        obs = _check_freqs([0.1, 0.2, 0.3, 0.4])
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.array([0.1, 0.2, 0.3, 0.4]))
+
+        with self.assertRaises(ValueError) as cm:
+            _check_freqs([0.2, 0.3, 0.5, 0.8])
+        msg = "Character frequencies must sum to 1.0."
+        self.assertEqual(str(cm.exception), msg)
+
+        with self.assertRaises(ValueError) as cm:
+            _check_freqs([-0.5, 0.3, 0.5, 0.7])
+        msg = "Character frequencies must all be non-negative."
+        self.assertEqual(str(cm.exception), msg)
+            
+        obs = _check_freqs([0.0, 0.3, 0.7])
+        self.assertIsInstance(obs, np.ndarray)
+        with self.assertRaises(ValueError) as cm:
+            _check_freqs([0.0, 0.3, 0.7], nonzero=True)
+        msg = "Character frequencies must all be positive."
+        self.assertEqual(str(cm.exception), msg)
 
     def test_equal(self):
         """Test if input sequences are of equal length."""
@@ -861,9 +885,10 @@ class TestLogDet(TestCase):
         # add a pseudocount can mitigate this scenario
         # NOTE: This test produces different results in different systems.
         # obs = logdet(seq1, seq2, pseudocount=0.5)
-        # self.assertEqual(round(obs, 5), 3.87727)
+        # self.assertEqual(round(obs, 5), 3.87727)  # Gen 1 Xeon
 
-        # LogDet is zero when sequences are identical and base frequencies are equal.
+        # LogDet is zero when sequences are identical and character frequencies are
+        # equal.
         seq1 = RNA("ACGUACGU")
         seq2 = RNA("ACGUACGU")
         self.assertAlmostEqual(logdet(seq1, seq2), 0.0)
@@ -894,6 +919,71 @@ class TestLogDet(TestCase):
         seq2 = CustomSequence("eioaeiaeeoiiuaeioaeuiuueeeaaiaooiuoee^^uuua")
         obs = logdet(seq1, seq2)
         self.assertEqual(round(obs, 5), 0.84653)
+
+
+class TestParalin(TestCase):
+    def test_paralin(self):
+        # normal case (note that logdet)
+        seq1 = DNA("CTGTGCCTGTGCCGCCCCAGTACCGAAGTCCATGTA")
+        seq2 = DNA("CTGTGACCAGGCCACTTCACAAGTGGAGTTCAGGAT")
+        obs = paralin(seq1, seq2)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.72121)
+
+        seq1 = DNA("CTGTGC---CTGTGCCTTGCCCCAGTACCGAAG-TCCATGTAAA")
+        seq2 = DNA("CTGTGAAGACCAGGCC--ACTTCACAAGTGGAGGTTCAGGAT--")
+        obs = paralin(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.72121)
+
+        # Paralinear is often NaN when sequences are short and the matrix is sparse.
+        seq1 = DNA("AT-ACGGCGA-C")
+        seq2 = DNA("AGAAT--CAACC")
+        self.assertTrue(np.isnan(paralin(seq1, seq2)))
+
+        # Paralinear collapses to LogDet when character frequencies are equal.
+        seq1 = DNA("ACCGGTAAGCTAAGGCCTTT")
+        seq2 = DNA("CCAGGTAAACTAGGGTCCTT")
+        obs = paralin(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.44595)
+        exp = logdet(seq1, seq2)
+        self.assertAlmostEqual(obs, exp)
+
+        # Paralinear is zero when sequences are identical, whether character
+        # frequencies are equal or not.
+        seq1 = RNA("ACGUACGU")
+        seq2 = RNA("ACGUACGU")
+        self.assertAlmostEqual(paralin(seq1, seq2), 0.0)
+
+        seq1 = RNA("AAACCGGU")
+        seq2 = RNA("AAACCGGU")
+        self.assertAlmostEqual(paralin(seq1, seq2), 0.0)
+
+        # custom sequence type with five characters
+        class CustomSequence(GrammaredSequence):
+            @classproperty
+            @overrides(GrammaredSequence)
+            def gap_chars(cls):
+                return set('^$')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def default_gap_char(cls):
+                return '^'
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def definite_chars(cls):
+                return set('aeiou')
+
+            @classproperty
+            @overrides(GrammaredSequence)
+            def degenerate_map(cls):
+                return {}
+
+        seq1 = CustomSequence("euooeuauaueia^^ioaoaiaioae^eiaoeiaooeueuiua")
+        seq2 = CustomSequence("eioaeiaeeoiiuaeioaeuiuueeeaaiaooiuoee^^uuua")
+        obs = paralin(seq1, seq2)
+        self.assertEqual(round(obs, 5), 0.82944)
 
 
 if __name__ == "__main__":
