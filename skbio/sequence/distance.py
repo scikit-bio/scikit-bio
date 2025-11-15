@@ -34,15 +34,6 @@ Nucleotide distance metrics
    f84
    tn93
 
-
-Utility functions
------------------
-
-.. autosummary::
-   :toctree:
-
-   jc69_correct
-
 """  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
@@ -77,7 +68,7 @@ if TYPE_CHECKING:  # pragma: no cover
 #   ASCII codes of multiple aligned sequences, and generates a condensed
 #   distance matrix between them. It is typically called by `skbio.alignment.
 #   align_dists`. Optionally, it consumes a Boolean mask of the input array,
-#   representing valid sites.
+#   representing valid sites, and the type of input sequences.
 #
 # ----------------------------------------------------------------------------
 
@@ -363,47 +354,15 @@ def _check_freqs(freqs, nonzero=False):
     return freqs
 
 
-def _build_dm(func, seqs, mask):
+def _build_dm(func, seqs):
+    """Construct a condensed distance matrix from pairwise distances."""
     n = seqs.shape[0]
     n_1 = n - 1
     dm = np.empty((n * n_1 // 2,))
-    # if L == 0:
-    #     dm.fill(np.nan)
-    #     return dm
-    # masked = mask is not None
     start = 0
     for i in range(n_1):
         end = start + n_1 - i
-        # target = dm[start:end]
-
-        func(seqs, mask, i, dm[start:end])
-
-        # diff = (seqs[i] != seqs[i + 1 :])
-
-        # if masked:
-        #     sites = mask[i] & mask[i + 1 :]
-        #     L = np.count_nonzero(sites, axis=1)
-
-        #     diff &= sites
-
-        #     # non-empty sequences
-        #     filled = L > 0
-        #     all_valid = np.all(filled):
-        #     if not all_valid:
-        #         target[~filled] = np.nan
-
-        # else:
-        #     all_valid = True
-
-        # # identical sequences
-        # p = np.count_nonzero(diff, axis=1)
-        # ident = p == 0
-
-        # if all_valid:
-        #     target[:] = func(p, L)
-        # else:
-        #     target[valid] = func(p, L)
-
+        func(seqs, i, dm[start:end])
         start = end
     return dm
 
@@ -450,9 +409,8 @@ def hamming(seq1, seq2, proportion=True):
     characters of each sequence, including gaps and ambiguous codes, are used to
     compute Hamming distance. Characters that may be considered equivalent in certain
     contexts (e.g., "-" and "." as gap characters) are treated as distinct characters
-    when computing Hamming distance.
-
-    If this behavior is not desired, consider using :func:`pdist` instead.
+    when computing Hamming distance. If this behavior is not desired, consider using
+    :func:`pdist` instead.
 
     NaN will be returned if the sequences do not contain any characters.
 
@@ -500,7 +458,7 @@ def _hamming(seqs, mask, seqtype, proportion=True):
     # metric="hamming")`. But it seems that the following code is faster.
     npos = seqs.shape[1]
 
-    def func(seqs, mask, i, out):
+    def func(seqs, i, out):
         subs = seqs[i] != seqs[i + 1 :]
         p = np.count_nonzero(subs, axis=1)
 
@@ -510,10 +468,10 @@ def _hamming(seqs, mask, seqtype, proportion=True):
         else:
             out[:] = p
 
-    return _build_dm(func, seqs, mask)
+    return _build_dm(func, seqs)
 
 
-@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="definite")
+@_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
 def pdist(seq1, seq2):
     r"""Calculate the *p*-distance between two aligned sequences.
 
@@ -571,7 +529,8 @@ def pdist(seq1, seq2):
     0.5
 
     """
-    return _pdist(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _pdist(seqs, None, None).item()
 
 
 def _pdist(seqs, mask, seqtype):
@@ -580,47 +539,52 @@ def _pdist(seqs, mask, seqtype):
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
-        Sequences to compute the Hamming distance between.
+        Input sequences.
     mask : ndarray of bool of shape (n_sequences, n_positions)
-        Boolean mask of valid sites (True). If provided, each sequence pair will be
-        filtered to positions that are valid in both of them.
+        Boolean mask of valid sites.
     seqtype : type
-        A placeholder. p-distance is irrelevant to sequence type.
+        A placeholder.
 
     Returns
     -------
     ndarray of float of shape (C(n_sequences, 2),)
-        p-distance matrix in condensed form.
+        p-distance matrix.
 
     """
     npos = seqs.shape[1]
+    masked = mask is not None
 
-    def func(seqs, mask, i, out):
+    def func1(seqs, i, out):
+        # identify differing sites (substitutions)
         subs = seqs[i] != seqs[i + 1 :]
-        if mask is None:
-            L = npos
-            filled = True
-        else:
-            sites = mask[i] & mask[i + 1 :]
-            subs &= sites
-            L = np.count_nonzero(sites, axis=1)
-            filled = L > 0
-            if np.all(filled):
-                filled = True
 
-        # count substitutions
+        # count substitutions (`count_nonzero` is faster than sum)
         p = np.count_nonzero(subs, axis=1)
 
         # normalize by sequence length
-        np.divide(p, L, out=out, where=filled)
+        np.divide(p, npos, out=out)
 
-        if filled is not True:
-            out[~filled] = np.nan
+    def func2(seqs, i, out):
+        subs = seqs[i] != seqs[i + 1 :]
 
-    return _build_dm(func, seqs, mask)
+        # delete sites where either or both characters are invalid
+        sites = mask[i] & mask[i + 1 :]
+        subs &= sites
+
+        # calculate sequence lengths after pairwise deletion
+        L = np.count_nonzero(sites, axis=1)
+        out[:] = np.count_nonzero(subs, axis=1)
+
+        # avoid zero division when sequences are empty
+        out[L == 0] = np.nan
+        out /= L
+
+    func = func1 if mask is None else func2
+
+    return _build_dm(func, seqs)
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def jc69(seq1, seq2):
     r"""Calculate the JC69 distance between two aligned nucleotide sequences.
 
@@ -646,7 +610,6 @@ def jc69(seq1, seq2):
 
     See Also
     --------
-    jc69_correct
     pdist
     f81
 
@@ -672,26 +635,22 @@ def jc69(seq1, seq2):
     return _jc69(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
 
 
-def _jc69(seqs, mask, seqtype, chars=4):
+def _jc69(seqs, mask, seqtype):
     """Compute pairwise JC69 distances between sequences.
 
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
-        Sequences to compute the Hamming distance between.
+        Input sequences.
     mask : ndarray of bool of shape (n_sequences, n_positions)
-        Boolean mask of valid sites (True). If provided, each sequence pair will be
-        filtered to positions that are valid in both of them.
+        Boolean mask of valid sites.
     seqtype : type
-        A placeholder. p-distance is irrelevant to sequence type. Calculation of JC69
-        distance does not distinguish between DNA and RNA sequences.
-    chars : int, optional
-        Number of definite characters in the alphabet. Default is 4 (for nucleotides).
+        A placeholder.
 
     Returns
     -------
     ndarray of float of shape (C(n_sequences, 2),)
-        JC69 distance matrix in condensed form.
+        JC69 distance matrix.
 
     """
     dm = _pdist(seqs, mask, None)
@@ -779,6 +738,8 @@ def jc69_correct(dists, chars=4, inplace=False):
     0.823959...
 
     """
+    # NOTE: This function is currently not exposed in the public API. Whether the JC69
+    # model and its name are suitable for generic sequence types needs justification.
     if chars < 2:
         raise ValueError("`chars` must be at least 2.")
     frac = (chars - 1) / chars
@@ -789,7 +750,6 @@ def jc69_correct(dists, chars=4, inplace=False):
     else:
         arr = np.array(dists, copy=True)
 
-    # perform correction
     _p_correct(arr, frac)
 
     if is_scalar:
@@ -797,47 +757,33 @@ def jc69_correct(dists, chars=4, inplace=False):
     return arr
 
 
-def _p_correct(dists, frac):
-    """Correct p-distances in place using a JC69-like equation."""
+def _p_correct(dists, coef):
+    """Correct p-distances in place to account for multiple substitutions.
+
+    Parameters
+    ----------
+    dists : ndarray of float
+        Raw p-distances to correct.
+    coef : float
+        Correction coefficient.
+
+    """
+    # TODO: Add gamma distribution.
+
     # There are three categories of values:
     # 1. Values exceeding frac become NaN, as these sites are saturated and the
     #    equation cannot estimate the true substitution number.
     # 2. Values == 0 remain 0.
     # 3. Values that suffice 0 < x < frac are subject to the equation.
-    nonzero = dists > 0
-    saturated = dists >= frac
-
-    if np.any(saturated):
-        dists[saturated] = np.nan
-        all_valid = False
-        if np.all(nonzero):
-            valid = ~saturated
-        else:
-            valid = nonzero & ~saturated
-    else:
-        if np.all(nonzero):
-            all_valid = True
-            valid = None
-        else:
-            all_valid = False
-            valid = nonzero
-
-    if all_valid:
-        vals = dists
-    else:
-        vals = dists[valid]
-
-    # apply correction in place
-    vals /= -frac
-    vals += 1.0
-    np.log(vals, out=vals)
-    vals *= -frac
-
-    if not all_valid:
-        dists[valid] = vals
+    dists[dists >= coef] = np.nan
+    dists /= -coef
+    dists += 1.0
+    np.log(dists, out=dists)
+    dists *= -coef
+    dists += 0.0  # optional: set -0.0 to 0.0
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def f81(seq1, seq2, freqs=None):
     r"""Calculate the F81 distance between two aligned nucleotide sequences.
 
@@ -872,7 +818,6 @@ def f81(seq1, seq2, freqs=None):
     See Also
     --------
     jc69
-    f81
 
     Notes
     -----
@@ -899,20 +844,37 @@ def f81(seq1, seq2, freqs=None):
        nucleotide sequences. Molecular Biology and Evolution, 1(3), 269-285.
 
     """
-    return _f81(
-        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
-    ).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _f81(seqs, None, type(seq1), freqs=freqs).item()
 
 
 def _f81(seqs, mask, seqtype, freqs):
-    """Compute pairwise F81 distances between sequences."""
-    frac = 1.0 - np.sum(np.asarray(freqs) ** 2)
+    """Compute pairwise F81 distances between sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Input sequences.
+    mask : ndarray of bool of shape (n_sequences, n_positions)
+        Boolean mask of valid sites.
+    seqtype : type
+        A placeholder.
+    freqs : ndarray of float of shape (4,)
+        Relative frequencies of the four nucleobases.
+
+    Returns
+    -------
+    ndarray of float of shape (C(n_sequences, 2),)
+        F81 distance matrix.
+
+    """
+    coef = 1.0 - np.sum(np.asarray(freqs) ** 2)
     arr = _pdist(seqs, mask, None)
-    _p_correct(arr, frac)
+    _p_correct(arr, coef)
     return arr
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def k2p(seq1, seq2):
     r"""Calculate the K2P distance between two aligned nucleotide sequences.
 
@@ -962,7 +924,8 @@ def k2p(seq1, seq2):
        Molecular Evolution, 16(2), 111-120.
 
     """
-    return _k2p(np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1)).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _k2p(seqs, None, type(seq1)).item()
 
 
 def _k2p(seqs, mask, seqtype):
@@ -971,34 +934,34 @@ def _k2p(seqs, mask, seqtype):
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
-        Sequences to compute the K2P distance between.
+        Input sequences.
     mask : ndarray of bool of shape (n_sequences, n_positions)
-        Boolean mask of valid sites (True). If provided, each sequence pair will be
-        filtered to positions that are valid in both of them.
+        Boolean mask of valid sites.
     seqtype : type
-        Sequence type (DNA or RNA). Default is DNA.
+        Sequence type (DNA or RNA).
 
     Returns
     -------
     ndarray of float of shape (C(n_sequences, 2),)
-        K2P distance matrix in condensed form.
+        K2P distance matrix.
 
     """
     # This function uses the absolute difference between two ASCII codes to determine
     # their substitution type. Match: 0. Transition: A<->G: 6, C<->T: 17, C<->U: 18.
     # Transversion: all others. C = 17 (DNA) or 18 (RNA).
-    C = 17 + issubclass(seqtype, RNA)
+    X = 17 + issubclass(seqtype, RNA)
 
     npos = seqs.shape[1]
+    masked = mask is not None
     logL_75 = 0.75 * np.log(npos)
 
-    def func(seqs, mask, i, out):
+    def func(seqs, i, out):
         # Identify substitutions (difference != 0).
         # Casting to int16 because the subtraction of two uint8's can underflow.
         subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
 
         # Pairwise deletion of masked sites.
-        if mask is not None:
+        if masked:
             sites = mask[i] & mask[i + 1 :]
             subs[~sites] = 0
             L = np.count_nonzero(sites, axis=1)
@@ -1011,7 +974,7 @@ def _k2p(seqs, mask, seqtype):
         ident = p == 0
 
         # transitions (ts) (P = ts / L)
-        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == C, axis=1)
+        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == X, axis=1)
 
         # transversions (tv) (Q = tv / L)
         tv = p - ts
@@ -1042,9 +1005,7 @@ def _k2p(seqs, mask, seqtype):
                 L = L[valid]
 
         # Simplified calculation from the original formula:
-        # K = -0.5 ln((1 - 2P - Q) * sqrt(1 - 2Q))
-        #   = -0.5 ln((L - 2ts - tv) / L * ((L - 2tv) / L)**0.5)
-        #   = -0.5 (ln(L - 2ts - tv) + 0.5 ln(L - 2tv) - 1.5 ln(L))
+        # D = -0.5 ln((1 - 2P - Q) * sqrt(1 - 2Q))
         #   = 0.75 ln(L) - 0.5 ln(L - 2ts - tv) - 0.25 ln(L - 2tv)
         c0 = logL_75 if mask is None else 0.75 * np.log(L)
         res = c0 - 0.5 * np.log(ts) - 0.25 * np.log(tv)
@@ -1056,10 +1017,10 @@ def _k2p(seqs, mask, seqtype):
         else:
             out[:] = res
 
-    return _build_dm(func, seqs, mask)
+    return _build_dm(func, seqs)
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def f84(seq1, seq2, freqs=None):
     r"""Calculate the F84 distance between two aligned nucleotide sequences.
 
@@ -1134,14 +1095,33 @@ def f84(seq1, seq2, freqs=None):
        genetic distances from DNA sequences. Biometrics, 55(4), 1064-1070.
 
     """
-    return _f84(
-        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
-    ).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _f84(seqs, None, type(seq1), freqs=freqs).item()
 
 
 def _f84(seqs, mask, seqtype, freqs):
-    """Compute pairwise F84 distances between sequences."""
+    """Compute pairwise F84 distances between sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Input sequences.
+    mask : ndarray of bool of shape (n_sequences, n_positions)
+        Boolean mask of valid sites.
+    seqtype : type
+        Sequence type (DNA or RNA).
+    freqs : ndarray of float of shape (4,)
+        Relative frequencies of the four nucleobases.
+
+    Returns
+    -------
+    ndarray of float of shape (C(n_sequences, 2),)
+        F84 distance matrix.
+
+    """
     npos = seqs.shape[1]
+    masked = mask is not None
+    X = 17 + issubclass(seqtype, RNA)
 
     piA, piC, piG, piT = freqs
 
@@ -1169,10 +1149,7 @@ def _f84(seqs, mask, seqtype, freqs):
     c1 = 2.0 * A
     c2 = 2.0 * BpC - c1
 
-    X = 17 + issubclass(seqtype, RNA)
-    masked = mask is not None
-
-    def func(seqs, mask, i, out):
+    def func(seqs, i, out):
         subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
 
         if masked:
@@ -1222,10 +1199,10 @@ def _f84(seqs, mask, seqtype, freqs):
         else:
             out[:] = res
 
-    return _build_dm(func, seqs, mask)
+    return _build_dm(func, seqs)
 
 
-@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="definite")
+@_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
 def tn93(seq1, seq2, freqs=None):
     r"""Calculate the TN93 distance between two aligned nucleotide sequences.
 
@@ -1283,9 +1260,8 @@ def tn93(seq1, seq2, freqs=None):
        chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.
 
     """
-    return _tn93(
-        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), freqs=freqs
-    ).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _tn93(seqs, None, type(seq1), freqs=freqs).item()
 
 
 def _tn93(seqs, mask, seqtype, freqs):
@@ -1294,19 +1270,18 @@ def _tn93(seqs, mask, seqtype, freqs):
     Parameters
     ----------
     seqs : ndarray of uint8 of shape (n_sequences, n_positions)
-        Sequences to compute the TN93 distance between.
+        Input sequences.
     mask : ndarray of bool of shape (n_sequences, n_positions)
-        Boolean mask of valid sites (True). If provided, each sequence pair will be
-        filtered to positions that are valid in both of them.
+        Boolean mask of valid sites.
     seqtype : type
-        Sequence type (DNA or RNA). Default is DNA.
-    freqs : array_like of float of shape (4,)
-        Relative frequencies of nucleobases A, C, G, and T/U.
+        Sequence type (DNA or RNA).
+    freqs : ndarray of float of shape (4,)
+        Relative frequencies of the four nucleobases.
 
     Returns
     -------
     ndarray of float of shape (C(n_sequences, 2),)
-        TN93 distance matrix in condensed form.
+        TN93 distance matrix.
 
     """
     npos = seqs.shape[1]
@@ -1337,7 +1312,7 @@ def _tn93(seqs, mask, seqtype, freqs):
 
     X = 17 + issubclass(seqtype, RNA)
 
-    def func(seqs, mask, i, out):
+    def func(seqs, i, out):
         subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
 
         if masked:
@@ -1390,7 +1365,7 @@ def _tn93(seqs, mask, seqtype, freqs):
         else:
             out[:] = res
 
-    return _build_dm(func, seqs, mask)
+    return _build_dm(func, seqs)
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
@@ -1472,13 +1447,13 @@ def logdet(seq1, seq2, pseudocount=None):
        Evolution, 19(10), 1727-1736.
 
     """
-    return _logdet(
-        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), pseudocount
-    ).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _logdet(seqs, None, type(seq1), pseudocount).item()
 
 
 def _logdet(seqs, mask, seqtype, pseudocount=None):
-    return _log_para(seqs, mask, seqtype, pseudocount, paralinear=False)
+    """Compute pairwise LogDet distances between sequences."""
+    return _logpara(seqs, mask, seqtype, pseudocount, paralinear=False)
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
@@ -1565,17 +1540,35 @@ def paralin(seq1, seq2, pseudocount=None):
        frequencies. Molecular Biology and Evolution, 13(10), 1375-1383.
 
     """
-    return _paralin(
-        np.vstack((seq1._bytes, seq2._bytes)), None, type(seq1), pseudocount
-    ).item()
+    seqs = np.vstack((seq1._bytes, seq2._bytes))
+    return _paralin(seqs, None, type(seq1), pseudocount).item()
 
 
 def _paralin(seqs, mask, seqtype, pseudocount=None):
-    return _log_para(seqs, mask, seqtype, pseudocount, paralinear=True)
+    """Compute pairwise paralinear distances between sequences."""
+    return _logpara(seqs, mask, seqtype, pseudocount, paralinear=True)
 
 
-def _log_para(seqs, mask, seqtype, pseudocount=None, paralinear=False):
-    """Compute pairwise LogDet or paralinear distances between sequences."""
+def _logpara(seqs, mask, seqtype, pseudocount=None, paralinear=False):
+    """Compute pairwise LogDet or paralinear distances between sequences.
+
+    Parameters
+    ----------
+    seqs : ndarray of uint8 of shape (n_sequences, n_positions)
+        Input sequences.
+    mask : ndarray of bool of shape (n_sequences, n_positions)
+        Boolean mask of valid sites.
+    pseudocount : int or float, optional
+        Pseudocount to added to counts.
+    paralinear : bool, optional
+        Calculate LogDet (False, default) or paralinear distance (True).
+
+    Returns
+    -------
+    ndarray of float of shape (C(n_sequences, 2),)
+        LogDet or paralinear distance matrix.
+
+    """
     nchar, index = _char_index(seqtype)
     seqs = index[seqs]
 
@@ -1613,7 +1606,7 @@ def _log_para(seqs, mask, seqtype, pseudocount=None, paralinear=False):
 
     offvec *= k**2
 
-    def func(seqs, mask, i, out):
+    def func(seqs, i, out):
         # number of sequence pairs
         m = n_1 - i
 
@@ -1683,7 +1676,7 @@ def _log_para(seqs, mask, seqtype, pseudocount=None, paralinear=False):
         else:
             out[:] = res
 
-    return _build_dm(func, seqs, None)
+    return _build_dm(func, seqs)
 
 
 @_metric_specs()

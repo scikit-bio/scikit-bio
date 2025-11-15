@@ -17,9 +17,8 @@ from skbio.util import classproperty
 from skbio.util._decorator import overrides
 
 from skbio.sequence.distance import (
-    _metric_specs, _char_hash, _char_freqs, _check_freqs,
-    hamming, pdist, kmer_distance, jc69, jc69_correct, f81, k2p, f84, tn93,
-    logdet, paralin
+    _metric_specs, _char_hash, _char_freqs, _check_freqs, hamming, pdist,
+    kmer_distance, jc69, jc69_correct, f81, k2p, f84, tn93, logdet, paralin
 )
 
 
@@ -471,7 +470,7 @@ class TestPDist(TestCase):
         # sequences with non-canonical characters
         seq1 = Protein("NKOC")
         seq2 = Protein("UKPA")
-        self.assertAlmostEqual(pdist(seq1, seq2), 0.75)
+        self.assertAlmostEqual(pdist(seq1, seq2), 0.5)
 
         # identical sequences
         seq1 = DNA("ACGT")
@@ -823,8 +822,8 @@ class TestTN93(TestCase):
         self.assertEqual(round(obs, 5), 0.56234)
 
         # zero base frequency
-        # obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
-        # self.assertTrue(np.isnan(obs))
+        obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
+        self.assertTrue(np.isnan(obs))
 
         # identical sequences after trimming
         self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)

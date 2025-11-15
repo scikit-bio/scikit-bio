@@ -14,7 +14,7 @@ import numpy.testing as npt
 from skbio.alignment import TabularMSA
 from skbio.sequence import DNA, RNA, Protein
 from skbio.sequence.distance import (
-    hamming, pdist, jc69, f81, k2p, f84, tn93, logdet, paralin, jc69_correct
+    hamming, pdist, jc69, f81, k2p, f84, tn93, logdet, paralin, _p_correct
 )
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_data_path
@@ -103,8 +103,8 @@ class AlignDistsTests(TestCase):
 
         # is a preset function but not a distance metric
         with self.assertRaises(ValueError) as cm:
-            align_dists(self.msa_prot, jc69_correct)
-        msg = ("`jc69_correct` is not a sequence distance metric. Refer to "
+            align_dists(self.msa_prot, _p_correct)
+        msg = ("`_p_correct` is not a sequence distance metric. Refer to "
                "`skbio.sequence.distance` for a list of available metrics.")
         self.assertEqual(str(cm.exception), msg)
 
