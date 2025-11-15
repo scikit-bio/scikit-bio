@@ -1,13 +1,24 @@
 # scikit-bio changelog
 
-## Version 0.7.1-dev
+## Version 0.7.2-dev
+
+### Features
+
+* `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322]https://github.com/scikit-bio/scikit-bio/pull/2322).
+
+## Version 0.7.1.post1
+
+* Fixed source distribution packaging for Python 3.14 support.
+* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2309]https://github.com/scikit-bio/scikit-bio/pull/2309).
+
+## Version 0.7.1
 
 ### Features
 
 * Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293), [#2305](https://github.com/scikit-bio/scikit-bio/pull/2305), [#2306](https://github.com/scikit-bio/scikit-bio/pull/2306), [#2316](https://github.com/scikit-bio/scikit-bio/pull/2316)).
-* Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
 * Added function `struc_zero`, a statistical test for structural zeros. This function complements `ancombc` or can be used alone ([#2305](https://github.com/scikit-bio/scikit-bio/pull/2305)).
-* Added a new `SymmetricMatrix` class and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+* Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
+* Added new `PairwiseMatrix` and `SymmetricMatrix` classes and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
 
 ### Performance enhancements
 
@@ -16,19 +27,22 @@
 * Added float32 support for minimum evolution phylogenetic tree building algorithms (`gme`, `bme` and `nni`) ([#2291](https://github.com/scikit-bio/scikit-bio/pull/2291)).
 * Added float32 support for reading labeled square matrix (lsmat) file format (`io.format.lsmat`) ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 
-
 ### Bug Fixes
 
+* Fixed an unexpected behavior in the file I/O of `TabularMSA` class that `fasta` and `fastq` formats populate `.metadata['id']` of each sequence whereas `clustal`, `phylip` and `stockholm` formats populate `.index` of the entire alignments. Now all file formats populate both pieces of information ([#2320](https://github.com/scikit-bio/scikit-bio/pull/2320)).
 * Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
-* Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+* Fixed IO format `binary_dm` implementation ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282), [#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
 * Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
 * Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project.
+* Fixed a runtime error when computing phylogenetic diversity metrics on 32-bit architectures ([#2321](https://github.com/scikit-bio/scikit-bio/pull/2321)).
 
 ### Miscellaneous
 
 * Renamed `DissimilarityMatrix` as `PairwiseMatrix` to better reflect its nature. The old name is kept as an alias ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+* Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project ([#2318](https://github.com/scikit-bio/scikit-bio/pull/2318)).
+* Added environment variable `DISABLE_OPENMP`, which lets a user optionally disable OpenMP when compiling the Cython code if needed ([#2319](https://github.com/scikit-bio/scikit-bio/pull/2319)).
 * Dropped support for Python 3.9 and added support for Python 3.14 ([#2311](https://github.com/scikit-bio/scikit-bio/pull/2311)).
-* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314))
+* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314)).
 
 ## Version 0.7.0
 

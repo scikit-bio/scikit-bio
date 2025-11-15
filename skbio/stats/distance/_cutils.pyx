@@ -29,6 +29,41 @@ ctypedef cnp.float32_t float32_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cdef inline Py_ssize_t condensed_index(Py_ssize_t i, Py_ssize_t j, Py_ssize_t n) nogil:
+    """
+    Get index for condensed form from redundant form indices.
+    
+    This is a Cython implementation of the _condensed_index function
+    that can be used in nogil context.
+    
+    Parameters
+    ----------
+    i, j : Py_ssize_t
+        Matrix coordinates (row, col). Assumes i < j for upper triangular access.
+    n : Py_ssize_t
+        Sample size of the square matrix.
+    
+    Returns
+    -------
+    Py_ssize_t
+        Index in the condensed form vector.
+    """
+    cdef Py_ssize_t i_min, j_max
+    
+    # Ensure i < j (swap if necessary)
+    if i > j:
+        i_min = j
+        j_max = i
+    else:
+        i_min = i
+        j_max = j
+    
+    # Formula: i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
+    return i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
     """
     Check if mat is symmetric and hollow.
@@ -253,6 +288,78 @@ def mantel_perm_pearsonr_cy(TReal[:, ::1] x_data, intp_t[:, ::1] perm_order,
 
         # Presumably, if abs(one_stat) > 1, then it is only some small artifact of
         # floating point arithmetic.
+        if my_ps>1.0:
+            my_ps = 1.0
+        elif my_ps<-1.0:
+            my_ps = -1.0
+        permuted_stats[p] = my_ps
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def mantel_perm_pearsonr_condensed_cy(TReal[::1] x_data_condensed, 
+                                      intp_t[:, ::1] perm_order,
+                                      TReal xmean, TReal normxm,
+                                      TReal[::1] ym_normalized,
+                                      TReal[::1] permuted_stats):
+    """
+    Fused permute, fma, pearsonr for mantel using condensed distance matrix format.
+    
+    This is similar to mantel_perm_pearsonr_cy but accepts x_data in condensed form (1D array)
+    instead of the full 2D distance matrix.
+    
+    Parameters
+    ----------
+    x_data_condensed : 1D array_like
+        Condensed distance matrix (lower triangle only).
+    perm_order : 2D array_like
+        List of permutation orders.
+    xmean: real
+        Mean value of condensed x_data
+    normxm: real
+        Norm of pre-processed xm
+    ym_normalized : 1D_array_like
+        Normalized condensed y_data
+    permuted_stats : 1D array_like
+        Output, Pearson stats
+    """
+    cdef Py_ssize_t x_n = x_data_condensed.shape[0]
+    cdef Py_ssize_t perms_n = perm_order.shape[0]
+    cdef Py_ssize_t out_n = perm_order.shape[1]
+    cdef Py_ssize_t y_n = ym_normalized.shape[0]
+    cdef Py_ssize_t on2 = permuted_stats.shape[0]
+
+    assert x_n == ((out_n-1)*out_n)/2
+    assert y_n == ((out_n-1)*out_n)/2
+    assert perms_n == on2
+
+    cdef Py_ssize_t p
+    cdef Py_ssize_t row, col, icol
+    cdef Py_ssize_t vrow, vcol
+    cdef Py_ssize_t idx, x_idx
+
+    cdef TReal mul = 1.0/normxm
+    cdef TReal add = -xmean/normxm
+
+    cdef TReal my_ps
+    cdef TReal yval
+    cdef TReal xval
+
+    for p in prange(perms_n, nogil=True):
+        my_ps = 0.0
+        for row in range(out_n-1):
+            vrow = perm_order[p, row]
+            idx = row*(out_n-1) - ((row-1)*row)//2
+            for icol in range(out_n-row-1):
+                col = icol+row+1
+                vcol = perm_order[p, col]
+
+                x_idx = condensed_index(vrow, vcol, out_n)
+
+                yval = ym_normalized[idx+icol]
+                xval = x_data_condensed[x_idx]*mul + add
+                my_ps = yval*xval + my_ps
+
         if my_ps>1.0:
             my_ps = 1.0
         elif my_ps<-1.0:

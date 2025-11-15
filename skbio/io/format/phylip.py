@@ -257,9 +257,9 @@ def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
 
     seqs = []
     index = []
-    for seq, ID in _parse_phylip_raw(fh):
-        seqs.append(constructor(seq))
-        index.append(ID)
+    for seq, id_ in _parse_phylip_raw(fh):
+        seqs.append(constructor(seq, metadata={"id": id_}))
+        index.append(id_)
     return cls(seqs, index=index)
 
 
