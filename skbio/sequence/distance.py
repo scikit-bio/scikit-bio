@@ -386,6 +386,11 @@ def _build_dm(func, seqs):
     return dm
 
 
+def _nan_dm(seqs):
+    """Construct a condensed distance matrix and fill it with NaN."""
+    return np.full(((n := seqs.shape[0]) * (n - 1) // 2,), np.nan)
+
+
 @_metric_specs(equal=True)
 def hamming(seq1, seq2, proportion=True):
     r"""Compute the Hamming distance between two sequences.
@@ -1117,6 +1122,9 @@ def _f84(seqs, mask, seqtype, freqs):
     piA, piC, piG, piT = freqs
 
     piR, piY = piA + piG, piC + piT
+    if not (piR > 0 and piY > 0):
+        return _nan_dm(seqs)
+
     piAxG, piCxT = piA * piG, piC * piT
 
     # intermediates (Eq. 2 of McGuire et al., 1999)
@@ -1249,6 +1257,9 @@ def _tn93(seqs, mask, seqtype, freqs):
     masked = mask is not None
     seqs = nucl_index[seqs]
     piA, piC, piG, piT = freqs
+
+    if not np.all(freqs > 0):
+        return _nan_dm(seqs)
 
     # frequencies of purines (R) and pyrimidines (Y)
     piR = piA + piG

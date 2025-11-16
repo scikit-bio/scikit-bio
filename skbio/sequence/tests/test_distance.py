@@ -779,6 +779,14 @@ class TestF84(TestCase):
         exp = k2p(seq1, seq2)
         self.assertAlmostEqual(obs, exp)
 
+        # one base has zero frequency (fine)
+        obs = f84(seq1, seq2, freqs=(.0, .2, .3, .5))
+        self.assertEqual(round(obs, 5), 1.07015)
+
+        # both purines have zero frequency (NaN)
+        obs = f84(seq1, seq2, freqs=(.0, .4, .0, .6))
+        self.assertTrue(np.isnan(obs))
+
         # identical sequences after trimming
         self.assertEqual(f84(DNA("AACGTY"), DNA("WACGTT")), 0.0)
 
@@ -822,8 +830,8 @@ class TestTN93(TestCase):
         self.assertEqual(round(obs, 5), 0.56234)
 
         # zero base frequency
-        # obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
-        # self.assertTrue(np.isnan(obs))
+        obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
+        self.assertTrue(np.isnan(obs))
 
         # identical sequences after trimming
         self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)
