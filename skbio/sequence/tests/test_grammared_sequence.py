@@ -272,8 +272,8 @@ class TestGrammaredSequence(TestCase):
                                         invalid_type):
                 ExampleGrammaredSequence('ACGTacgt', lowercase=invalid_key)
 
-    def test_definite_char_codes(self):
-        definite_char_codes = set(ExampleGrammaredSequence._definite_char_codes)
+    def test_definite_codes(self):
+        definite_char_codes = set(ExampleGrammaredSequence._definite_codes)
         self.assertEqual(definite_char_codes, set([65, 66, 67, 81]))
 
     def test_gap_codes(self):
