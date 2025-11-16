@@ -284,6 +284,12 @@ def _char_index(seqtype):
     return _char_indices[seqtype]
 
 
+# A special index for nucleotide sequences. This index is uint8 to save memory space.
+# A: 0, C: 1, G: 2, T and U: 3, others: 4
+nucl_index = np.full(128, 4, dtype=np.uint8)
+nucl_index[[65, 67, 71, 84, 85]] = [0, 1, 2, 3, 3]
+
+
 def _char_freqs(seqs, valid=None):
     """Calculate relative frequencies of characters in sequences.
 
@@ -946,78 +952,49 @@ def _k2p(seqs, mask, seqtype):
         K2P distance matrix.
 
     """
-    # This function uses the absolute difference between two ASCII codes to determine
-    # their substitution type. Match: 0. Transition: A<->G: 6, C<->T: 17, C<->U: 18.
-    # Transversion: all others. C = 17 (DNA) or 18 (RNA).
-    X = 17 + issubclass(seqtype, RNA)
-
-    npos = seqs.shape[1]
+    npos = float(seqs.shape[1])
     masked = mask is not None
-    logL_75 = 0.75 * np.log(npos)
+
+    # convert sequences to integers 0-4, which will facilitate bitwise operations.
+    seqs = nucl_index[seqs]
 
     def func(seqs, i, out):
-        # Identify substitutions (difference != 0).
-        # Casting to int16 because the subtraction of two uint8's can underflow.
-        subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
+        # identify transitions (ts) and tranversions (tv) via bitwise operations
+        subs = seqs[i] ^ seqs[i + 1 :]
+        ts = subs == 2
+        tv = subs & 1
 
-        # Pairwise deletion of masked sites.
+        # pairwise deletion of invalid sites followed by length re-calculation
         if masked:
             sites = mask[i] & mask[i + 1 :]
-            subs[~sites] = 0
-            L = np.count_nonzero(sites, axis=1)
+            L = np.count_nonzero(sites, axis=1).astype(float)
 
+            # set empty sequences to NaN to avoid zero division
+            L[L == 0] = np.nan
+
+            # filter transversions (transitions are not affected)
+            tv &= sites
         else:
             L = npos
 
-        # substitutions
-        p = np.count_nonzero(subs, axis=1)
-        ident = p == 0
+        # counts of transitions (P) and tranversions (Q)
+        P = np.count_nonzero(ts, axis=1) / L
+        Q = np.count_nonzero(tv, axis=1) / L
 
-        # transitions (ts) (P = ts / L)
-        ts = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == X, axis=1)
+        # calculate arguments and set non-positive values (over-saturated
+        # substitutions) to NaN to skip logarithm
+        a1 = 1.0 - 2.0 * P - Q
+        a1[a1 <= 0] = np.nan
 
-        # transversions (tv) (Q = tv / L)
-        tv = p - ts
+        a2 = 1.0 - 2.0 * Q
+        a2[a2 <= 0] = np.nan
 
-        # convert into L * (1 - 2P - Q)
-        ts *= -2
-        ts -= tv
-        ts += L
+        # the formula (Eq. 10 of Kimura, 1980)
+        out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
 
-        # convert into L * (1 - 2Q)
-        tv *= -2
-        tv += L
-
-        # Four groups of sequence pairs are to be treated differentially:
-        #   1. Empty sequences: K = NaN
-        #   2. Identical sequences: K = 0
-        #   3. Overly divergent sequences: K = NaN
-        #   4. Others (normal case): use the equation
-
-        # Identify normal pairs (4).
-        valid = (ts > 0) & (tv > 0) & ~ident
-
-        has_inval = not np.all(valid)
-        if has_inval:
-            ts, tv = ts[valid], tv[valid]
-            if mask is not None:
-                ident &= L != 0
-                L = L[valid]
-
-        # Simplified calculation from the original formula:
-        # D = -0.5 ln((1 - 2P - Q) * sqrt(1 - 2Q))
-        #   = 0.75 ln(L) - 0.5 ln(L - 2ts - tv) - 0.25 ln(L - 2tv)
-        c0 = logL_75 if mask is None else 0.75 * np.log(L)
-        res = c0 - 0.5 * np.log(ts) - 0.25 * np.log(tv)
-
-        if has_inval:
-            out[valid] = res
-            out[~valid] = np.nan
-            out[ident] = 0.0
-        else:
-            out[:] = res
-
-    return _build_dm(func, seqs)
+    dm = _build_dm(func, seqs)
+    dm += 0.0
+    return dm
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
@@ -1119,87 +1096,58 @@ def _f84(seqs, mask, seqtype, freqs):
         F84 distance matrix.
 
     """
-    npos = seqs.shape[1]
+    npos = float(seqs.shape[1])
     masked = mask is not None
-    X = 17 + issubclass(seqtype, RNA)
+    seqs = nucl_index[seqs]
 
+    # base frequencies
     piA, piC, piG, piT = freqs
 
-    piR = piA + piG
-    piY = piC + piT
-    piAxG = piA * piG
-    piCxT = piC * piT
+    piR, piY = piA + piG, piC + piT
+    piAxG, piCxT = piA * piG, piC * piT
 
     # intermediates (Eq. 2 of McGuire et al., 1999)
     A = piAxG / piR + piCxT / piY
     B = piAxG + piCxT
     C = piR * piY
 
-    A_inv = 1.0 / A
-    C_inv = 1.0 / C
-    BpC = B + C
-    AmB_AxC = (A - B) * A_inv * C_inv
-    BCx2 = 2.0 * BpC
-
-    nposx2 = 2.0 * npos
-    log2 = np.log(2.0)
-
     # coefficients
-    part0 = BCx2 * (np.log(npos) + log2)
-    c1 = 2.0 * A
-    c2 = 2.0 * BpC - c1
+    c1 = -2.0 * A
+    c2 = -2.0 * (B + C) - c1
+
+    A2inv = 0.5 / A
+    C2inv = 0.5 / C
+    AmB2AxC = 2.0 * (A - B) * A2inv * C2inv
 
     def func(seqs, i, out):
-        subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
+        subs = seqs[i] ^ seqs[i + 1 :]
+        ts = subs == 2
+        tv = subs & 1
 
         if masked:
             sites = mask[i] & mask[i + 1 :]
-            subs[~sites] = 0
-            L = np.count_nonzero(sites, axis=1)
-            Lx2 = 2.0 * L
+            L = np.count_nonzero(sites, axis=1).astype(float)
+            L[L == 0] = np.nan
+            tv &= sites
         else:
             L = npos
-            Lx2 = nposx2
 
-        # substitutions
-        p = np.count_nonzero(subs, axis=1)
-        ident = p == 0
+        P = np.count_nonzero(ts, axis=1) / L
+        Q = np.count_nonzero(tv, axis=1) / L
 
-        # transitions
-        P = np.count_nonzero(subs == 6, axis=1) + np.count_nonzero(subs == X, axis=1)
+        # arguments
+        a1 = 1.0 - A2inv * P - AmB2AxC * Q
+        a1[a1 <= 0] = np.nan
 
-        # transversions
-        Q = p - P
+        a2 = 1.0 - C2inv * Q
+        a2[a2 <= 0] = np.nan
 
-        # arguments (must be positive) * 2L
-        a1 = Lx2 - A_inv * P - AmB_AxC * Q
-        a2 = Lx2 - C_inv * Q
+        # the formula (Eq. 3 of McGuire et al., 1999)
+        out[:] = c1 * np.log(a1) + c2 * np.log(a2)
 
-        # identify normal cases
-        # There is no need to test L > 0. If L = 0, a1 and a2 are guaranteed to be 0,
-        # per IEEE-754 (0 times any finite number is exactly 0).
-        valid = (a1 > 0) & (a2 > 0) & ~ident
-
-        has_inval = not np.all(valid)
-        if has_inval:
-            a1, a2 = a1[valid], a2[valid]
-            if masked:
-                ident &= L != 0
-                L = L[valid]
-
-        c0 = BCx2 * (np.log(L) + log2) if masked else part0
-
-        # The formula (Eq. 3 of McGuire et al., 1999)
-        res = c0 - c1 * np.log(a1) - c2 * np.log(a2)
-
-        if has_inval:
-            out[valid] = res
-            out[~valid] = np.nan
-            out[ident] = 0.0
-        else:
-            out[:] = res
-
-    return _build_dm(func, seqs)
+    dm = _build_dm(func, seqs)
+    dm += 0.0
+    return dm
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
@@ -1284,88 +1232,69 @@ def _tn93(seqs, mask, seqtype, freqs):
         TN93 distance matrix.
 
     """
-    npos = seqs.shape[1]
-
+    npos = float(seqs.shape[1])
     masked = mask is not None
-
+    seqs = nucl_index[seqs]
     piA, piC, piG, piT = freqs
 
     # frequencies of purines (R) and pyrimidines (Y)
     piR = piA + piG
     piY = piC + piT
 
-    piAxG = piA * piG
-    piCxT = piC * piT
-    piRxY = piR * piY
+    piAxG = 2.0 * piA * piG
+    piCxT = 2.0 * piC * piT
+    piRxY = 2.0 * piR * piY
     piR_AxG = piR / piAxG
     piY_CxT = piY / piCxT
 
     # coefficients
-    c1 = 2.0 * piAxG / piR
-    c2 = 2.0 * piCxT / piY
-    c3 = 2.0 * (piRxY - piY / piR_AxG - piR / piY_CxT)
+    c1 = -piAxG / piR
+    c2 = -piCxT / piY
+    c3 = piY / piR_AxG + piR / piY_CxT - piRxY
 
-    c123 = c1 + c2 + c3
-    nposx2 = 2.0 * npos
-    log2 = np.log(2.0)
-    part0 = c123 * (np.log(npos) + log2)
+    piR *= 2.0
+    piY *= 2.0
 
-    X = 17 + issubclass(seqtype, RNA)
+    # pre-calcuate a bit mask of purine (0) vs pyrimidine (1)
+    bit0 = seqs & 1
 
     def func(seqs, i, out):
-        subs = np.abs(np.subtract(seqs[i], seqs[i + 1 :], dtype=np.int16))
+        subs = seqs[i] ^ seqs[i + 1 :]
+        ts = subs == 2
+        tv = subs & 1
+
+        # separate purine transitions (ts1) and pyrimidine transitions (ts2)
+        ts2 = ts & bit0[i]
 
         if masked:
             sites = mask[i] & mask[i + 1 :]
-            subs[~sites] = 0
-            L = np.count_nonzero(sites, axis=1)
-            Lx2 = 2.0 * L
+            L = np.count_nonzero(sites, axis=1).astype(float)
+            L[L == 0] = np.nan
+            tv &= sites
         else:
             L = npos
-            Lx2 = nposx2
 
-        # substitutions
-        p = np.count_nonzero(subs, axis=1)
-        ident = p == 0
+        P = np.count_nonzero(ts, axis=1) / L
+        Q = np.count_nonzero(tv, axis=1) / L
+        P2 = np.count_nonzero(ts2, axis=1) / L
+        P1 = P - P2
 
-        # purine transitions
-        P1 = np.count_nonzero(subs == 6, axis=1)
+        # arguments
+        a1 = 1.0 - P1 * piR_AxG - Q / piR
+        a1[a1 <= 0] = np.nan
 
-        # pyrimidine transitions
-        P2 = np.count_nonzero(subs == X, axis=1)
+        a2 = 1.0 - P2 * piY_CxT - Q / piY
+        a2[a2 <= 0] = np.nan
 
-        # transversions
-        Q = p - P1 - P2
+        a3 = 1.0 - Q / piRxY
+        a3[a3 <= 0] = np.nan
 
-        # arguments (must be positive) * 2L
-        Lx2 = 2.0 * L
-        a1 = Lx2 - P1 * piR_AxG - Q / piR
-        a2 = Lx2 - P2 * piY_CxT - Q / piY
-        a3 = Lx2 - Q / piRxY
+        # the formula (Eq. 3 of Tamura & Nei, 1993)
+        out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
 
-        # identify normal cases
-        valid = (a1 > 0) & (a2 > 0) & (a3 > 0) & ~ident
-
-        has_inval = not np.all(valid)
-        if has_inval:
-            a1, a2, a3 = a1[valid], a2[valid], a3[valid]
-            if masked:
-                ident &= L != 0
-                L = L[valid]
-
-        c0 = c123 * (np.log(L) + log2) if masked else part0
-
-        # The formula
-        res = c0 - c1 * np.log(a1) - c2 * np.log(a2) - c3 * np.log(a3)
-
-        if has_inval:
-            out[valid] = res
-            out[~valid] = np.nan
-            out[ident] = 0.0
-        else:
-            out[:] = res
-
-    return _build_dm(func, seqs)
+    dm = _build_dm(func, seqs)
+    dm += 0.0
+    return dm
 
 
 @_metric_specs(equal=True, seqtype=GrammaredSequence, alphabet="canonical")
@@ -1659,7 +1588,7 @@ def _logpara(seqs, mask, seqtype, pseudocount=None, paralinear=False):
         elif not masked:
             c0 = k2_inv * (diags[i] + diags[i + 1 :])
 
-        # For pariwise deletion, calculate diagonals on the current sequence pair:
+        # For pairwise deletion, calculate diagonals on the current sequence pair:
         # Take the frequency matrix, sum rows to get the character frequencies of
         # sequence 1; sum columns to get those of sequence 2.
         else:
