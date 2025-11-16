@@ -31,10 +31,9 @@ def align_dists(
     .. versionadded:: 0.7.2
 
     This function calculates the distance between each pair of sequences based on the
-    aligned sites, using a pre-defined distance metric under
-    :mod:`skbio.sequence.distance` or a custom function. The resulting distance matrix
-    can be used for phylogenetic tree reconstruction (see :mod:`skbio.tree`) or other
-    types of distance-based analyses.
+    aligned sites, using a pre-defined distance metric or a custom function. The
+    resulting distance matrix can be used for phylogenetic inference (see
+    :mod:`skbio.tree`) or other types of distance-based analyses.
 
     Parameters
     ----------

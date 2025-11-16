@@ -3,11 +3,12 @@
 
 .. currentmodule:: skbio.sequence.distance
 
-This module contains functions for computing distances between scikit-bio
-``Sequence`` objects. These functions can be used directly or supplied to other
-parts of the scikit-bio API that accept a sequence distance metric as input,
-such as :meth:`skbio.sequence.Sequence.distance` and
-:meth:`skbio.stats.distance.DistanceMatrix.from_iterable`.
+This module provides functions for computing distances between biological sequences.
+These functions can be used directly on two :class:`~skbio.sequence.Sequence` objects,
+or supplied to other parts of the scikit-bio API that accept a sequence distance metric
+as input, such as :func:`~skbio.alignment.align_dists`, :meth:`Sequence.distance
+<skbio.sequence.Sequence.distance>`, and :meth:`PairwiseMatrix.from_iterable
+<skbio.stats.distance.PairwiseMatrix.from_iterable>`.
 
 Generic distance metrics
 ------------------------
@@ -69,6 +70,18 @@ if TYPE_CHECKING:  # pragma: no cover
 #   distance matrix between them. It is typically called by `skbio.alignment.
 #   align_dists`. Optionally, it consumes a Boolean mask of the input array,
 #   representing valid sites, and the type of input sequences.
+#
+# Distance calculation on a multiple sequence alignment follows a common
+# strategy: Each sequence is iteratively selected and compared against all
+# remaining sequences via vectorized operations. This strategy ensures
+# efficiency which not inflatting memory consumption. Specifically, this
+# consumes at most n_seq x n_pos x c memory, in which c is a constant. This
+# is on the same scale as the original sequence alignment.
+#
+# It is possible to construct a loop-free, fully vectorized solution for some
+# distance metrics. However, that typically involves casting the sequences to
+# a 3D array of n_seq x n_seq x n_pos, which may consume a significant amount
+# of memory when there are many sequences.
 #
 # ----------------------------------------------------------------------------
 
@@ -461,7 +474,7 @@ def _hamming(seqs, mask, seqtype, proportion=True):
 
     """
     # When `proportion=True`, the result is equivalent to SciPy's `pdist(seqs,
-    # metric="hamming")`. But it seems that the following code is faster.
+    # metric="hamming")`.
     npos = seqs.shape[1]
 
     def func(seqs, i, out):
@@ -993,7 +1006,7 @@ def _k2p(seqs, mask, seqtype):
         out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
 
     dm = _build_dm(func, seqs)
-    dm += 0.0
+    dm += 0.0  # optional: set -0.0 to 0.0
     return dm
 
 
@@ -1042,7 +1055,7 @@ def f84(seq1, seq2, freqs=None):
     Notes
     -----
     The Felsenstein 1984 (F84) model for calculating sequence distance was initially
-    implemented in the Phylip package [1]_. The model was then described in [2]_ and
+    implemented in the PHYLIP package [1]_. The model was then described in [2]_ and
     [3]_. The above equation was adopted from [4]_, which is consistent with the
     implementation in ``ape::dist.dna``.
 
@@ -1156,9 +1169,9 @@ def tn93(seq1, seq2, freqs=None):
 
     .. versionadded:: 0.7.2
 
-    The Tamura and Nei (1993) (TN93) model assumes differential rates of the two
-    types of transitions: between purines (R) (i.e., A <-> G) and between pyrimidines
-    (Y) (i.e., C <-> T/U), and transversions (i.e., between a purine and a pyrimidine).
+    The Tamura and Nei 1993 (TN93) model assumes differential rates of the two types
+    of transitions: between purines (R) (i.e., A <-> G) and between pyrimidines (Y)
+    (i.e., C <-> T/U), and transversions (i.e., between a purine and a pyrimidine).
     It also allows varying base frequencies (:math:`\pi`). The distance is calculated
     as:
 
@@ -1498,6 +1511,12 @@ def _logpara(seqs, mask, seqtype, pseudocount=None, paralinear=False):
         LogDet or paralinear distance matrix.
 
     """
+    # NOTE: ape::dist.dna's "paralin" might have an inconsistency in the pairwise
+    # deletion mode, where it retrieves base frequencies from the original sequences
+    # rather than the trimmed ones. This inconsistency can be revealed by running
+    # both complete and pairwise deletion modes on an alignment of two sequences only.
+    # The current implementation addresses this issue. Therefore, the output won't be
+    # identical to ape::dist.dna's.
     nchar, index = _char_index(seqtype)
     seqs = index[seqs]
 
