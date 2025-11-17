@@ -74,7 +74,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # Distance calculation on a multiple sequence alignment follows a common
 # strategy: Each sequence is iteratively selected and compared against all
 # remaining sequences via vectorized operations. This strategy ensures
-# efficiency which not inflatting memory consumption. Specifically, this
+# efficiency while not inflating memory consumption. Specifically, this
 # consumes at most n_seq x n_pos x c memory, in which c is a constant. This
 # is on the same scale as the original sequence alignment.
 #
