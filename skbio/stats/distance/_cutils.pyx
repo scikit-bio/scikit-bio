@@ -435,7 +435,7 @@ def permanova_f_stat_sW_condensed_cy(TReal[::1] distance_matrix,
     cdef double local_s_W
     cdef double val
 
-    cdef Py_ssize_t row, col, rowi, coli
+    cdef Py_ssize_t row, col, rowi, coli, row1
     cdef Py_ssize_t in_n_2 = n//2
 
     for rowi in prange(in_n_2, nogil=True):
@@ -443,25 +443,27 @@ def permanova_f_stat_sW_condensed_cy(TReal[::1] distance_matrix,
         row=rowi
         local_s_W = 0.0
         group_idx = grouping[row]
+        row1 = row + 1
         for coli in range(n-row-1):
-            col = coli+row+1
+            col = coli + row1
             if grouping[col] == group_idx:
                 idx_ = condensed_index(row, col, n)
                 val = distance_matrix[idx_]
-                local_s_W = local_s_W + val * val
-        s_W += local_s_W/group_sizes[group_idx]
+                local_s_W += val * val
+        s_W += local_s_W / group_sizes[group_idx]
 
         row = n-rowi-2
         if row!=rowi: # don't double count
             local_s_W = 0.0
             group_idx = grouping[row]
+            row1 = row + 1
             for coli in range(n-row-1):
-                col = coli+row+1
+                col = coli + row1
                 if grouping[col] == group_idx:
                     idx_ = condensed_index(row, col, n)
                     val = distance_matrix[idx_]
-                    local_s_W = local_s_W + val * val
-            s_W += local_s_W/group_sizes[group_idx]
+                    local_s_W += val * val
+            s_W += local_s_W / group_sizes[group_idx]
 
     return s_W
 
