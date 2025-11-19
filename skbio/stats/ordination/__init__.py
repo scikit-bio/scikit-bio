@@ -26,6 +26,13 @@ Multidimensional scaling
    pcoa
    pcoa_biplot
 
+Dimensionality reduction
+------------------------
+
+.. autosummary::
+   :toctree:
+
+   pca
 
 Correspondence analysis
 -----------------------
@@ -160,6 +167,7 @@ from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa, pcoa_biplot
+from ._principal_component_analysis import pca
 from ._ordination_results import OrdinationResults
 from ._utils import (
     mean_and_std,
@@ -175,6 +183,7 @@ __all__ = [
     "ca",
     "rda",
     "cca",
+    "pca",
     "pcoa",
     "pcoa_biplot",
     "OrdinationResults",
