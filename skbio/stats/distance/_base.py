@@ -258,14 +258,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         iterable = list(iterable)
-        if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same time.")
-
-        keys_ = None
-        if key is not None:
-            keys_ = [resolve_key(e, key) for e in iterable]
-        elif keys is not None:
-            keys_ = list(keys)
+        keys_ = _get_keys(iterable, key, keys)
 
         dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
@@ -1488,14 +1481,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         iterable = list(iterable)
-        if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same time.")
-
-        keys_ = None
-        if key is not None:
-            keys_ = [resolve_key(e, key) for e in iterable]
-        elif keys is not None:
-            keys_ = list(keys)
+        keys_ = _get_keys(iterable, key, keys)
 
         dm = np.empty((len(iterable),) * 2)
         # this allows for diagonals which do not match the exact shape of the matrix,
@@ -2510,6 +2496,20 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     old_indices = _condensed_index(old_i, old_j, n_original)
 
     return in_mat[old_indices]
+
+
+def _get_keys(iterable, key, keys):
+    """Get IDs in the matrix."""
+    if key is not None and keys is not None:
+        raise ValueError("Cannot use both `key` and `keys` at the same time.")
+
+    keys_ = None
+    if key is not None:
+        keys_ = [resolve_key(e, key) for e in iterable]
+    elif keys is not None:
+        keys_ = list(keys)
+
+    return keys_
 
 
 def _get_element_from_condensed(
