@@ -7,6 +7,9 @@
 * Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336]https://github.com/scikit-bio/scikit-bio/pull/2336).
 * `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322]https://github.com/scikit-bio/scikit-bio/pull/2322).
 
+### Bug Fixes
+* Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338]https://github.com/scikit-bio/scikit-bio/pull/2338).
+
 ## Version 0.7.1.post1
 
 * Fixed source distribution packaging for Python 3.14 support.
