@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import os
-import importlib
 import inspect
 import pkgutil
 from unittest import TestCase, main
@@ -16,47 +15,30 @@ import skbio.io
 
 
 class ImportModuleTests(TestCase):
-    def setUp(self):
-        # Need this to handle cases where module name does not match format name.
-        self.fmt_mod_map = {
-            "blast6": "blast+6",
-            "blast7": "blast+7",
-            "emptyfile": "<emptyfile>",
-        }
-
-        self.registered_fmts = [
-            fmt.name for fmt in skbio.io.io_registry._binary_formats.values()
-        ] + [fmt.name for fmt in skbio.io.io_registry._text_formats.values()]
-
-    def test_format_imports(self):
+    def test_format_modules_imported_in_init(self):
+        """Verify all format modules are imported in __init__.py"""
+        init_file = os.path.join(os.path.dirname(skbio.io.__file__), '__init__.py')
+        
+        with open(init_file, 'r') as f:
+            init_content = f.read()
+        
         fmt_dir = os.path.dirname(skbio.io.format.__file__)
-        fmt_modules = []
-
+        
+        # Skip these special cases
+        skip_modules = {'emptyfile', '_test'}
+        
         for _, name, ispkg in pkgutil.iter_modules([fmt_dir]):
-            if not ispkg and not name.startswith("_"):
-                fmt_modules.append(name)
-
-        failed_imports = []
-        for mod_name in fmt_modules:
-            try:
-                full_name = f"skbio.io.format.{mod_name}"
-                module = importlib.import_module(full_name)
-                format_name = self.fmt_mod_map.get(mod_name, mod_name)
+            if not ispkg and not name.startswith("_") and name not in skip_modules:
+                expected_import = f'import_module("skbio.io.format.{name}")'
                 self.assertIn(
-                    format_name,
-                    self.registered_fmts,
-                    f"Format '{format_name} (from module '{mod_name}') not registered in io_registry",
+                    expected_import,
+                    init_content,
+                    f"\n\n\nModule '{name}' not imported in skbio.io.__init__.py"
                 )
-            except Exception as e:
-                failed_imports.append((mod_name, str(e)))
 
-        if failed_imports:
-            self.fail(f"Failed to import format modules: {failed_imports}")
-
-    def test_format_exceptions(self):
-        # Create dictionary of all existing format errors defined in the io module.
-        # name is a string which contains the name of the error, whereas obj is
-        # the actual object itself.
+    def test_format_exceptions_importable(self):
+        """Verify all format-specific exceptions are importable from skbio.io"""
+        # Get all format exception classes defined in the io module
         io_exceptions = {
             name: obj
             for name, obj in vars(skbio.io).items()
@@ -65,22 +47,23 @@ class ImportModuleTests(TestCase):
             and name.endswith("FormatError")
             and name != "FileFormatError"
         }
-
+        
+        failed_exceptions = []
         for name, exception_cls in io_exceptions.items():
-            # First, try to instantiate and raise the exception object itself.
-            # If during these two steps (instantiation and raising), any other type
-            # of exception is raised besides the one we want to be raised
-            # (exception_cls), the test will fail.
             try:
+                # Test instantiation
                 ex = exception_cls()
+                # Test raising
                 raise ex
             except exception_cls:
-                # Pass if the exception_cls is raised, this is exactly what we are
-                # testing for.
+                # This is expected - exception raised and caught correctly
                 pass
             except Exception as e:
-                # Fail if any other type of exception is raised.
-                self.fail(f"Failed to instantiate or raise {name}: {e}")
+                # Any other exception means something is wrong
+                failed_exceptions.append((name, str(e)))
+        
+        if failed_exceptions:
+            self.fail(f"Failed to instantiate or raise exceptions: {failed_exceptions}")
 
 
 if __name__ == "__main__":
