@@ -116,7 +116,7 @@ def pcoa(
     triangle inequality. If the negative eigenvalues are small in magnitude compared
     to the largest positive eigenvalue, it is usually safe to ignore them. However,
     large negative eigenvalues may indicate result inaccuracy, in which case a warning
-    message will be displayed. The paramter ``warn_neg_eigval`` controls the threshold
+    message will be displayed. The parameter ``warn_neg_eigval`` controls the threshold
     for the warning.
 
     PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
@@ -139,6 +139,7 @@ def pcoa(
        Journal on Scientific computing, 33(5), 2580-2594.
 
     """
+    # this converts to redundant form, regardless of input type
     distmat = DistanceMatrix(distmat)
 
     # If no dimension specified, by default will compute all eigenvectors
@@ -147,6 +148,14 @@ def pcoa(
         if method == "fsvd" and distmat.data.shape[0] > 10:
             warn(
                 "FSVD: since no value for dimensions is specified, "
+                "PCoA for all dimensions will be computed, which may "
+                "result in long computation time if the original "
+                "distance matrix is large.",
+                RuntimeWarning,
+            )
+        elif method == "eigh" and distmat.data.shape[0] > 10:
+            warn(
+                "EIGH: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
                 "result in long computation time if the original "
                 "distance matrix is large.",
@@ -177,32 +186,40 @@ def pcoa(
             "and 1."
         )
 
+    # new parameter for ndim = number of dimensions (accounting for
+    # non-int values)
+    ndim = dimensions
+
     # Perform eigendecomposition
     if method == "eigh":
+        long_method_name = "Principal Coordinate Analysis"
         # Center distance matrix, a requirement for PCoA here
         matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
-
-        # eigh does not natively support specifying dimensions, i.e.
-        # there are no speed gains unlike in FSVD. Later, we slice off unwanted
-        # dimensions to conform the result of eigh to the specified
-        # dimensions.
-
-        eigvals, eigvecs = eigh(matrix_data)
-        long_method_name = "Principal Coordinate Analysis"
+        if 0 < dimensions < 1:
+            if matrix_data.shape[0] > 10:
+                warn(
+                    "EIGH: since value for dimensions is specified as float,"
+                    " PCoA for all dimensions will be computed, which may"
+                    " result in long computation time if the original"
+                    " distance matrix is large."
+                    " Consider specifying an integer value to optimize performance.",
+                    RuntimeWarning,
+                )
+            ndim = matrix_data.shape[0]
+        subidx = [matrix_data.shape[0] - ndim, matrix_data.shape[0] - 1]
+        eigvals, eigvecs = eigh(matrix_data, subset_by_index=subidx)
     elif method == "fsvd":
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
-        # new parameter for num_dimensions = number of dimensions (accounting for
-        # non-int values)
-        ndim = dimensions
         if 0 < dimensions < 1:
-            warn(
-                "FSVD: since value for dimensions is specified as float, "
-                "PCoA for all dimensions will be computed, which may "
-                "result in long computation time if the original "
-                "distance matrix is large. "
-                "Consider specifying an integer value to optimize performance.",
-                RuntimeWarning,
-            )
+            if distmat.data.shape[0] > 10:
+                warn(
+                    "FSVD: since value for dimensions is specified as float,"
+                    " PCoA for all dimensions will be computed, which may"
+                    " result in long computation time if the original"
+                    " distance matrix is large."
+                    " Consider specifying an integer value to optimize performance.",
+                    RuntimeWarning,
+                )
             ndim = distmat.data.shape[0]
         if _skbb_pcoa_fsvd_available(
             distmat.data, dimensions, inplace, seed
@@ -272,7 +289,7 @@ def pcoa(
     eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
     eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
 
-    if method == "fsvd":
+    if ndim != distmat.data.shape[0]:
         # Since the dimension parameter, hereafter referred to as 'd',
         # restricts the number of eigenvalues and eigenvectors that FSVD
         # computes, we need to use an alternative method to compute the sum
@@ -523,7 +540,7 @@ def pcoa_biplot(ordination, y):
     y : DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
-        normalized in cases of dimensionally heterogenous physical variables.
+        normalized in cases of dimensionally heterogeneous physical variables.
 
     Returns
     -------

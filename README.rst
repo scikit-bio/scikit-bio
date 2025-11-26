@@ -13,7 +13,7 @@ Visit the scikit-bio website: https://scikit.bio to learn more about this projec
 Releases
 --------
 
-Latest release: `0.7.0 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.0>`_ (`documentation <https://scikit.bio/docs/0.7.0/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-070>`_). Compatible with Python 3.9 and above.
+Latest release: `0.7.1 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.1>`_ (`documentation <https://scikit.bio/docs/0.7.1/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-071>`_). Compatible with Python 3.10 and above.
 
 
 Installation

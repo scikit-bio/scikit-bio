@@ -77,7 +77,7 @@ def is_hollow(mat):
 
     """
     # is_symmetric_and_hollow_cy spends most
-    # of its time in symetry check, just use numpy
+    # of its time in symmetry check, just use numpy
     return np.trace(mat) == 0
 
 
@@ -111,7 +111,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     reorder_vec : 1D_array_like
         List of permutation indexes
     validate: boolean
-        Optional, if True, validate reorder_vec content, detaults to False
+        Optional, if True, validate reorder_vec content, defaults to False
 
     Returns
     -------
@@ -153,7 +153,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     reorder_vec : 1D_array_like
         List of permutation indexes
     validate: boolean
-        Optional, if True, validate reorder_vec content, detaults to False
+        Optional, if True, validate reorder_vec content, defaults to False
 
     Returns
     -------

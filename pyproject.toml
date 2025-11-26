@@ -7,7 +7,7 @@ name = "scikit-bio"
 dynamic = ["version"]
 description = "Data structures, algorithms and educational resources for bioinformatics."
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "BSD-3-Clause"
 license-files = ["LICENSE.txt"]
 authors = [
@@ -23,11 +23,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: Unix",
     "Operating System :: POSIX",
     "Operating System :: MacOS :: MacOS X",
@@ -37,10 +37,10 @@ dependencies = [
     "requests >= 2.20.0",
     "decorator >= 3.4.2",
     "natsort >= 4.0.3",
-    "numpy >= 1.17.0",
+    "numpy >= 2.0",
     "pandas >= 1.5.0",
     "scipy >= 1.9.0",
-    "h5py >= 3.6.0",
+    "h5py>=3.6.0",
     "biom-format >= 2.1.16",
     "statsmodels >= 0.14.0",
     "patsy >= 0.5.0",
@@ -119,11 +119,12 @@ packages = ["skbio"]
 "skbio.embedding.tests" = ["data/*"]
 
 [tool.cibuildwheel]
-# Skip 32-bit builds, PyPy, and musllinux
-skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
+# Skip 32-bit builds, PyPy, musllinux and unavailble Win-ARM64 Python builds
+skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*", "cp39-win_arm64", "cp310-win_arm64"]
 
 # Python versions to build
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+# UPDATE BEFORE RELEASE
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses"]
@@ -132,9 +133,9 @@ test-requires = ["pytest", "coverage", "responses"]
 before-build = "pip install numpy cython"
 
 [tool.cibuildwheel.linux]
-# Use manylinux2014 for better compatibility
-manylinux-x86_64-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux2014"
+# Updated to be compatible with Python 3.14
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.pytest.ini_options]
 addopts = [
@@ -160,7 +161,7 @@ ignore = [
 # Basic configurations for Ruff.
 # See https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 exclude = [
     "skbio/**/tests/*",  # ignoring to be able to implement pydocstyle
     "doc/**",  # documentation

@@ -14,7 +14,6 @@ from contextlib import contextmanager
 import numpy as np
 import pandas as pd
 
-import skbio.sequence.distance
 from skbio._base import SkbioObject
 from skbio.metadata._mixin import (
     MetadataMixin,
@@ -621,7 +620,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 )
         elif isinstance(sequence, Sequence):
             # Sequence casting is acceptable between direct
-            # decendants/ancestors
+            # descendants/ancestors
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -1549,7 +1548,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         # metric to apply and accept **kwargs
         other = self._munge_to_self_type(other, "distance")
         if metric is None:
-            metric = skbio.sequence.distance.hamming
+            import skbio.sequence.distance
+
+            metric = getattr(skbio.sequence.distance, "hamming", None)
         return float(metric(self, other))
 
     def matches(self, other):
@@ -1862,14 +1863,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return chars, indices
 
     def iter_kmers(self, k, overlap=True):
-        r"""Generate kmers of length `k` from this sequence.
+        r"""Generate k-mers of length `k` from this sequence.
 
         Parameters
         ----------
         k : int
             The kmer length.
         overlap : bool, optional
-            Defines whether the kmers should be overlapping or not.
+            Defines whether the k-mers should be overlapping or not.
 
         Yields
         ------
@@ -2122,7 +2123,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             return a standard array if no gap character is found, or a masked
             array if gap character(s) are found.
         wildcard : 'auto', str of length 1 or None, optional
-            A character to subsitute characters in the sequence that are absent
+            A character to substitute characters in the sequence that are absent
             from the alphabet. If `'auto'` (default), will adopt the sequence's
             `wildcard_char` attribute (if available). If no wildcard is given
             and there are absent characters, will raise an error.

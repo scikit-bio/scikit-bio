@@ -21,6 +21,7 @@ import skbio.metadata.missing as _missing
 from skbio.util import find_duplicates
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 from skbio.io.descriptors import Read, Write
+from .._base import SkbioObject
 
 
 DEFAULT_MISSING = _missing.DEFAULT_MISSING
@@ -237,7 +238,7 @@ class _MetadataBase:
 ColumnProperties = namedtuple("ColumnProperties", ["type", "missing_scheme"])
 
 
-class SampleMetadata(_MetadataBase):
+class SampleMetadata(_MetadataBase, SkbioObject):
     """Store metadata associated with identifiers in a study.
 
     Metadata is tabular in nature, mapping study identifiers (e.g. sample or
@@ -523,6 +524,14 @@ class SampleMetadata(_MetadataBase):
 
         return "\n".join(lines)
 
+    def __str__(self):
+        """Return the string summary of the metadata and its columns.
+
+        Required to inherit from SkbioObject.
+
+        """
+        return self.__repr__()
+
     def __eq__(self, other):
         """Determine if this metadata is equal to another.
 
@@ -692,7 +701,7 @@ class SampleMetadata(_MetadataBase):
         #    us to specify complex `where` statements, which is what we need to
         #    do here. For example, we need to specify things like:
         #        WHERE Subject='subject-1' AND SampleType='gut'
-        #    but their qmark/named-style syntaxes only supports substition of
+        #    but their qmark/named-style syntaxes only supports substitution of
         #    variables, such as:
         #        WHERE Subject=?
         # 3) sqlite3.Cursor.execute will only execute a single statement so

@@ -10,12 +10,12 @@ System requirements
 Platform
 ^^^^^^^^
 
-Scikit-bio runs on Linux, macOS, and Windows. It is currently available for the x86_64 and ARM64 architectures, although ARM64 support is not yet available for the Windows operating system.
+Scikit-bio runs on Linux, macOS, and Windows. It is currently available for the x86_64 and ARM64 architectures.
 
 Python
 ^^^^^^
 
-scikit-bio requires `Python <https://www.python.org/>`_ 3.9 or later installed in your system. See the `Python version support`_ section for more details.
+scikit-bio requires `Python <https://www.python.org/>`_ 3.10 or later installed in your system. See the `Python version support`_ section for more details.
 
 
 Environment based
@@ -87,6 +87,20 @@ This should print the installed version of scikit-bio without errors.
 For a more robust verification of the installation you may run the scikit-bio's unit tests in the environment where scikit-bio is installed. This will require the `pytest <https://github.com/pytest-dev/pytest>`_ package to be installed::
 
     python -m skbio.test
+
+
+Parallelization
+---------------
+
+Many scikit-bio functions automatically take advantage of parallel processing to improve performance. By default, they utilize all available CPU cores when possible. There is currently no per-function parameter to control the number of threads used. You can set the environment variable ``OMP_NUM_THREADS`` to control the global parallelization behavior, or use `threadpoolctl <https://github.com/joblib/threadpoolctl>`_ to achieve more granular control within Python code.
+
+Multiple compute-intensive algorithms in scikit-bio are implemented in Cython and use OpenMP for parallel execution. If your system does not support OpenMP, or if you prefer to disable it, you can build from the scikit-bio source code with OpenMP disabled:
+
+    DISABLE_OPENMP=1 pip install scikit-bio --no-binary scikit-bio
+
+Or, if you have downloaded the repository:
+
+    DISABLE_OPENMP=1 pip install .
 
 
 Acceleration

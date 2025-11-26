@@ -8,6 +8,13 @@
 
 from itertools import combinations
 
+from typing import Optional, Union, Tuple, Dict, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ._base import DistanceMatrix
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import SeedLike
+
 import warnings
 import numpy as np
 import pandas as pd
@@ -19,19 +26,19 @@ from scipy.stats import NearConstantInputWarning
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
-from ._cutils import mantel_perm_pearsonr_cy
+from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
 
 
 def mantel(
-    x,
-    y,
-    method="pearson",
-    permutations=999,
-    alternative="two-sided",
-    strict=True,
-    lookup=None,
-    seed=None,
-):
+    x: Union["DistanceMatrix", "ArrayLike"],
+    y: Union["DistanceMatrix", "ArrayLike"],
+    method: str = "pearson",
+    permutations: int = 999,
+    alternative: str = "two-sided",
+    strict: bool = True,
+    lookup: Optional[Dict[str, str]] = None,
+    seed: Optional["SeedLike"] = None,
+) -> Tuple[float, float, int]:
     r"""Compute correlation between distance matrices using the Mantel test.
 
     The Mantel test compares two distance matrices by computing the correlation
@@ -279,7 +286,7 @@ def mantel(
 
     if permutations < 0:
         raise ValueError(
-            "Number of permutations must be greater than or " "equal to zero."
+            "Number of permutations must be greater than or equal to zero."
         )
     if alternative not in ("two-sided", "greater", "less"):
         raise ValueError("Invalid alternative hypothesis '%s'." % alternative)
@@ -400,7 +407,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n = x._data.shape[0]
+    mat_n = x.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
     comp_stat = orig_stat
@@ -419,9 +426,14 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
             perm_order[row, :] = rng.permutation(mat_n)
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(
-            x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-        )
+        if x._flags["CONDENSED"]:
+            mantel_perm_pearsonr_condensed_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
+        else:
+            mantel_perm_pearsonr_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
         comp_stat = permuted_stats[0]
         permuted_stats = permuted_stats[1:]
 
@@ -510,15 +522,15 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
 
 
 def pwmantel(
-    dms,
-    labels=None,
-    method="pearson",
-    permutations=999,
-    alternative="two-sided",
-    strict=True,
-    lookup=None,
-    seed=None,
-):
+    dms: Sequence[Union["DistanceMatrix", "ArrayLike"]],
+    labels: Optional[Sequence[Union[str, int]]] = None,
+    method: str = "pearson",
+    permutations: int = 999,
+    alternative: str = "two-sided",
+    strict: bool = True,
+    lookup: Optional[Dict[str, str]] = None,
+    seed: Optional["SeedLike"] = None,
+) -> pd.DataFrame:
     """Run Mantel tests for every pair of given distance matrices.
 
     Runs a Mantel test for each pair of distance matrices and collates the
@@ -621,7 +633,7 @@ def pwmantel(
     else:
         if num_dms != len(labels):
             raise ValueError(
-                "Number of labels must match the number of " "distance matrices."
+                "Number of labels must match the number of distance matrices."
             )
         if len(set(labels)) != len(labels):
             raise ValueError("Labels must be unique.")
@@ -685,18 +697,17 @@ def _order_dms(x, y, strict=True, lookup=None):
         num_matches = len(id_order)
 
         if strict and ((num_matches != len(x.ids)) or (num_matches != len(y.ids))):
-            raise ValueError("IDs exist that are not in both distance " "matrices.")
+            raise ValueError("IDs exist that are not in both distance matrices.")
 
         if num_matches < 1:
-            raise ValueError("No matching IDs exist between the distance " "matrices.")
+            raise ValueError("No matching IDs exist between the distance matrices.")
 
         return x.filter(id_order), y.filter(id_order)
     else:
         # Both x and y aren't DistanceMatrix instances.
         if lookup is not None:
             raise ValueError(
-                "ID lookup can only be provided if inputs are "
-                "DistanceMatrix instances."
+                "ID lookup can only be provided if inputs are DistanceMatrix instances."
             )
 
         x = DistanceMatrix(x)

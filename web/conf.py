@@ -89,10 +89,10 @@ html_theme_options = {
     },
 
     # announcement banner on top of the screen
-    'announcement': (
-        f"{project} 0.7.0 has been released! <a href='"
-        f"{github_url}/releases/tag/0.7.0'>Check it out</a>."
-    ),
+    # 'announcement': (
+    #     f"{project} 0.7.0 has been released! <a href='"
+    #     f"{github_url}/releases/tag/0.7.0'>Check it out</a>."
+    # ),
 
     # social media links displayed as icons
     'github_url': github_url,
