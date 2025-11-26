@@ -127,6 +127,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     """
 
     default_write_format: ClassVar[str] = "lsmat"
+    """Default write format for this object: ``lsmat``."""
     # Used in __str__
     # TODO: decide on what to call a matrix element here
     _matrix_element_name: ClassVar[str] = "relationship"
