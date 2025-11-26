@@ -56,7 +56,7 @@ For example:
    myformat = create_format('myformat')
 
 The `myformat` object is what we will use to register our new functionality.
-At this point you should evaulate whether your format is binary or text.
+At this point you should evaluate whether your format is binary or text.
 If your format is binary, your :func:`create_format` call should look like
 this:
 
@@ -85,7 +85,7 @@ To create a sniffer simply decorate the following onto your sniffer function:
    def _myformat_sniffer(fh):
        # do something with `fh` to determine the membership of the file
 
-For futher details on sniffer functions see :func:`Format.sniffer`.
+For further details on sniffer functions see :func:`Format.sniffer`.
 
 Creating a reader is very similar, but has one difference:
 
@@ -98,8 +98,8 @@ Creating a reader is very similar, but has one difference:
 
 Here we bound a function to a specific class. We also demonstrated using
 our FileSentinel object to indicate to the registry that this reader can take
-auxilary files that should be handled in the same way as the primary file.
-For futher details on reader functions see :func:`Format.reader`.
+auxiliary files that should be handled in the same way as the primary file.
+For further details on reader functions see :func:`Format.reader`.
 
 Creating a writer is about the same:
 
@@ -182,6 +182,7 @@ from . import (
 from .util import _resolve_file, open_file, open_files, _d as _open_kwargs
 from skbio.util._misc import make_sentinel, find_sentinels
 from skbio.util._decorator import classonlymethod
+from skbio._base import SkbioObject
 
 FileSentinel = make_sentinel("FileSentinel")
 
@@ -192,8 +193,8 @@ class IORegistry:
     def __init__(self):
         """Initialize registry mapping formats and implementations to classes.
 
-        This seperation of binary and text formats is useful because there
-        are many situations where we may have recieved a text-file. When this
+        This separation of binary and text formats is useful because there
+        are many situations where we may have received a text-file. When this
         happens, the binary data fundamentally does not exist. We could
         assume encoding should be interpreted in reverse, however this misses
         the bigger point: why would the user ever want text to be treated as
@@ -237,7 +238,7 @@ class IORegistry:
         name = format_object.name
         if name in self._binary_formats or name in self._text_formats:
             raise DuplicateRegistrationError(
-                "A format already exists with" " that name: %s" % name
+                "A format already exists with that name: %s" % name
             )
 
         if format_object.is_binary_format:
@@ -326,11 +327,23 @@ class IORegistry:
         return self._get_rw(format_name, cls, "writers")
 
     def _get_rw(self, format_name, cls, lookup_name):
-        for lookup in self._lookups:
-            if format_name in lookup:
-                format_lookup = getattr(lookup[format_name], lookup_name)
-                if cls in format_lookup:
-                    return format_lookup[cls]
+        if cls is None:
+            # Handle generator case (cls=None)
+            for lookup in self._lookups:
+                if format_name in lookup:
+                    format_lookup = getattr(lookup[format_name], lookup_name)
+                    if cls in format_lookup:
+                        return format_lookup[cls]
+            return None
+        for parent in cls.__mro__:
+            # stop iteration at base class
+            if parent is SkbioObject:
+                break
+            for lookup in self._lookups:
+                if format_name in lookup:
+                    format_lookup = getattr(lookup[format_name], lookup_name)
+                    if parent in format_lookup:
+                        return format_lookup[parent]
         return None
 
     def list_read_formats(self, cls):
@@ -372,7 +385,7 @@ class IORegistry:
     def _iter_rw_formats(self, cls, lookup_name):
         for lookup in self._lookups:
             for format in lookup.values():
-                if cls in getattr(format, lookup_name):
+                if self._get_rw(format.name, cls, lookup_name) is not None:
                     yield format.name
 
     def sniff(self, file, into=None, **kwargs):
@@ -405,7 +418,7 @@ class IORegistry:
         if "newline" in kwargs:
             raise TypeError("Cannot provide `newline` keyword argument when sniffing.")
 
-        # By resolving the input here, we have the oppurtunity to reuse the
+        # By resolving the input here, we have the opportunity to reuse the
         # file (which is potentially ephemeral). Each sniffer will also resolve
         # the file, but that call will short-circuit and won't claim
         # responsibility for closing the file. This means that the file
@@ -540,7 +553,7 @@ class IORegistry:
             reader, kwargs = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
-            return reader(file, **kwargs)
+            return reader(file, cls=into, **kwargs)
 
     def _read_gen(self, file, fmt, into, verify, kwargs):
         io_kwargs = self._find_io_kwargs(kwargs)
@@ -552,7 +565,7 @@ class IORegistry:
             reader, kwargs = self._init_reader(
                 file, fmt, into, verify, kwargs, io_kwargs
             )
-            yield from reader(file, **kwargs)
+            yield from reader(file, cls=into, **kwargs)
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
@@ -737,7 +750,7 @@ class Format:
         Parameters
         ----------
         override : bool, optional
-            If True, the existing sniffer will be overriden.
+            If True, the existing sniffer will be overridden.
 
         Raises
         ------
@@ -772,7 +785,7 @@ class Format:
 
         if not override and self._sniffer_function is not None:
             raise DuplicateRegistrationError(
-                "A sniffer is already registered" " to format: %s" % self._name
+                "A sniffer is already registered to format: %s" % self._name
             )
 
         def decorator(sniffer):
@@ -840,7 +853,7 @@ class Format:
             None, it is assumed that the function will produce a generator.
         override : bool, optional
             If True, any existing readers for `cls` in this format will be
-            overriden.
+            overridden.
 
         Raises
         ------
@@ -863,8 +876,11 @@ class Format:
         ...         self.content = content
         ...
         >>> @myformat.reader(MyObject)
-        ... def myformat_reader(fh):
-        ...     return MyObject(fh.readlines()[1:])
+        ... def myformat_reader(fh, cls=None):
+        ...     # These lines enable any subclass on your class to inherit this reader!
+        ...     if cls is None:
+        ...         cls = MyObject
+        ...     return cls(fh.readlines()[1:])
         ...
         >>> MyObject.read(["myformat2\n", "some content here!\n"],
         ...               format='myformat').content
@@ -929,7 +945,7 @@ class Format:
             None, it is assumed that the function will consume a generator.
         override : bool, optional
             If True, any existing writers for `cls` in this format will be
-            overriden.
+            overridden.
 
         Raises
         ------
@@ -989,7 +1005,7 @@ class Format:
     def _check_registration(self, cls):
         if cls is not None and not inspect.isclass(cls):
             raise InvalidRegistrationError(
-                "`cls` must be a class or None, not" " %r" % cls
+                "`cls` must be a class or None, not %r" % cls
             )
 
     def _setup_locals(self, file_params, file, encoding, newline, kwargs):

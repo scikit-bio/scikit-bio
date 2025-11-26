@@ -93,7 +93,7 @@ Tutorial
 --------
 
 In scikit-bio, the :class:`TreeNode` class is the main and only data structure for tree
-represention. It is simple, flexible and powerful.
+representation. It is simple, flexible and powerful.
 
 >>> from skbio import TreeNode
 

@@ -106,8 +106,8 @@ class BaseTests(TestCase):
                                    0.55060902, 0.71052858, 0.61613483,
                                    0.54041008, 0.43554755, 0.53385652])
 
-        npt.assert_array_almost_equal(observed_lower, expected_lower)
-        npt.assert_array_almost_equal(observed_upper, expected_upper)
+        npt.assert_allclose(observed_lower, expected_lower)
+        npt.assert_allclose(observed_upper, expected_upper)
 
         self.assertTrue(np.isnan(esty_ci([0, 0])))
 

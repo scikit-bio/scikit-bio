@@ -218,7 +218,9 @@ def _ordination_sniffer(fh):
 
 
 @ordination.reader(OrdinationResults)
-def _ordination_to_ordination_results(fh):
+def _ordination_to_ordination_results(fh, cls=None):
+    if cls is None:
+        cls = OrdinationResults
     eigvals = _parse_vector_section(fh, "Eigvals")
     if eigvals is None:
         raise OrdinationFormatError("At least one eigval must be present.")
@@ -249,7 +251,7 @@ def _ordination_to_ordination_results(fh):
                 % (cons.index, site.index)
             )
 
-    return OrdinationResults(
+    return cls(
         short_method_name="",
         long_method_name="",
         eigvals=eigvals,

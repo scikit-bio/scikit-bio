@@ -56,6 +56,7 @@ Alignment statistics
    :toctree: generated/
 
     align_score
+    align_dists
 
 
 Deprecated functionality
@@ -434,6 +435,7 @@ from ._pairwise import (
 )
 from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
+from skbio.alignment._distance import align_dists
 from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
 
 __all__ = [
@@ -447,6 +449,7 @@ __all__ = [
     "local_pairwise_align_nucleotide",
     "local_pairwise_align_protein",
     "align_score",
+    "align_dists",
     "pair_align",
     "pair_align_nucl",
     "pair_align_prot",

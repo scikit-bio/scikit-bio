@@ -16,15 +16,13 @@ class Read:
 
     def __get__(self, instance, cls):
         if "_read_method" not in cls.__dict__:
-            cls._read_method = self._generate_read_method(cls)
+
+            def _read_method(file, format=None, **kwargs):
+                return skbio.io.read(file, into=cls, format=format, **kwargs)
+
+            _read_method.__doc__ = self._make_docstring(cls)
+            cls._read_method = _read_method
         return cls._read_method
-
-    def _generate_read_method(self, cls):
-        def _read_method(file, format=None, **kwargs):
-            return skbio.io.read(file, into=cls, format=format, **kwargs)
-
-        _read_method.__doc__ = self._make_docstring(cls)
-        return _read_method
 
     def _make_docstring(self, cls):
         name, supported_fmts, default, see = _docstring_vars(cls, "read")

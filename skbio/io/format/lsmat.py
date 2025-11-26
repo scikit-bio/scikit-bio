@@ -17,7 +17,9 @@ Format Support
 +------+------+---------------------------------------------------------------+
 |Reader|Writer|                          Object Class                         |
 +======+======+===============================================================+
-|Yes   |Yes   |:mod:`skbio.stats.distance.DissimilarityMatrix`                |
+|Yes   |Yes   |:mod:`skbio.stats.distance.PairwiseMatrix`                     |
++------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.stats.distance.SymmetricMatrix`                    |
 +------+------+---------------------------------------------------------------+
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
@@ -54,16 +56,20 @@ IDs will have any leading/trailing whitespace removed when they are parsed.
 
 Format Parameters
 -----------------
-The only supported format parameter is ``delimiter``, which defaults to the tab
-character (``'\t'``). ``delimiter`` is used to separate elements in the file
-format. Examples include tab (``'\t'``) for TSV format and comma (``','``) for
-CSV format. ``delimiter`` can be specified as a keyword argument when reading
-from or writing to a file.
+delimiter : str, optional
+    A string used to separate elements in the file format. Can be specified when
+    reading from or writing to a file. Default is the tab character (``'\t'``), and
+    the format is usually referred to as tab-separated values (TSV). Another common
+    choice is comma (``','``), used in the comma-separated values (CSV) format. A
+    special ``delimiter`` is ``None``, which represents a whitespace of arbitrary
+    length. This value is useful for reading a fixed-width text file. However, it
+    cannot be automatically determined, nor can it be specified when writing to a
+    file.
 
-A special ``delimiter`` is ``None``, which represents a whitespace of arbitrary
-length. This value is useful for reading a fixed-width text file. However, it
-cannot be automatically determined, nor can it be specified when writing to a
-file.
+dtype : str or dtype, optional
+    The data type of the underlying matrix data. Only relevant when reading from a
+    file. Default is "float64", which maps to ``np.float64``. The only other available
+    option is "float32" (or ``np.float32``).
 
 """  # noqa: D205, D415
 
@@ -79,7 +85,7 @@ import csv
 
 import numpy as np
 
-from skbio.stats.distance import DissimilarityMatrix, DistanceMatrix
+from skbio.stats.distance import PairwiseMatrix, DistanceMatrix, SymmetricMatrix
 from skbio.io import create_format, LSMatFormatError
 
 
@@ -95,6 +101,10 @@ def _lsmat_sniffer(fh):
             dialect = csv.Sniffer().sniff(header)
             delimiter = dialect.delimiter
 
+            # csv delimiter " " is equivalent to Python's str.split(sep=None)
+            if delimiter == " ":
+                delimiter = None
+
             ids = _parse_header(header, delimiter)
             first_id, _ = next(_parse_data(fh, delimiter), (None, None))
 
@@ -106,18 +116,34 @@ def _lsmat_sniffer(fh):
     return False, {}
 
 
-@lsmat.reader(DissimilarityMatrix)
-def _lsmat_to_dissimilarity_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DissimilarityMatrix, fh, delimiter)
+@lsmat.reader(PairwiseMatrix)
+def _lsmat_to_pairwise_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
+    if cls is None:
+        cls = PairwiseMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
+
+
+@lsmat.reader(SymmetricMatrix)
+def _lsmat_to_symmetric_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
+    if cls is None:
+        cls = SymmetricMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, delimiter="\t"):
-    return _lsmat_to_matrix(DistanceMatrix, fh, delimiter)
+def _lsmat_to_distance_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
+    if cls is None:
+        cls = DistanceMatrix
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
 
 
-@lsmat.writer(DissimilarityMatrix)
-def _dissimilarity_matrix_to_lsmat(obj, fh, delimiter="\t"):
+@lsmat.writer(PairwiseMatrix)
+def _pairwise_matrix_to_lsmat(obj, fh, delimiter="\t"):
+    _matrix_to_lsmat(obj, fh, delimiter)
+
+
+@lsmat.writer(SymmetricMatrix)
+def _symmetric_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
@@ -126,7 +152,7 @@ def _distance_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
-def _lsmat_to_matrix(cls, fh, delimiter):
+def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     # We aren't using np.loadtxt because it uses *way* too much memory
     # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
     # has finished). See:
@@ -138,45 +164,61 @@ def _lsmat_to_matrix(cls, fh, delimiter):
     #   - for each row of data in the input file:
     #     - populate the corresponding row in the ndarray with floats
 
+    dtype = np.dtype(dtype)
+    if dtype not in (np.float64, np.float32):
+        raise TypeError(f"{dtype} is not a supported data type.")
+
     header = _find_header(fh)
     if header is None:
         raise LSMatFormatError(
-            "Could not find a header line containing IDs in the "
-            "dissimilarity matrix file. Please verify that the file is "
-            "not empty."
+            "Could not find a header line containing IDs in the matrix file. Please "
+            "verify that the file is not empty."
         )
 
     ids = _parse_header(header, delimiter)
     num_ids = len(ids)
-    data = np.empty((num_ids, num_ids), dtype=np.float64)
+    data = np.empty((num_ids, num_ids), dtype=dtype)
+
+    # The default separator of `str.split` (consecutive whitespaces) is equivalent to
+    # " " in np.fromstring.
+    sep = delimiter if delimiter else " "
 
     row_idx = -1
-    for row_idx, (row_id, row_data) in enumerate(_parse_data(fh, delimiter)):
+    for line in fh:
+        line = line.strip()
+        if not line:
+            continue
+
+        row_idx += 1
         if row_idx >= num_ids:
             # We've hit a nonempty line after we already filled the data
             # matrix. Raise an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
-                "Encountered extra row(s) without corresponding IDs in " "the header."
+                "Encountered extra row(s) without corresponding IDs in the header."
             )
 
-        num_vals = len(row_data)
-        if num_vals != num_ids:
+        row_id, row_data = line.split(delimiter, 1)
+        if row_id.rstrip() != ids[row_idx]:
             raise LSMatFormatError(
-                "There are %d value(s) in row %d, which is not equal to the "
-                "number of ID(s) in the header (%d)." % (num_vals, row_idx + 1, num_ids)
+                "Encountered mismatched IDs while parsing the matrix file. Found %r "
+                "but expected %r. Please ensure that the IDs match between the matrix "
+                "header (first row) and the row labels (first column)."
+                % (row_id.rstrip(), ids[row_idx])
             )
 
-        expected_id = ids[row_idx]
-        if row_id == expected_id:
-            data[row_idx, :] = np.asarray(row_data, dtype=float)
-        else:
+        # np.fromstring is more efficient that str.split then float
+        row_data = np.fromstring(row_data, dtype=dtype, sep=sep)
+
+        # The code `data[row_idx, :] = row_data` will raise a ValueError if length
+        # doesn't match. However there is an exception: when row_data contains only one
+        # element, it will be broadcasted to the entire data[row_idx, :]. Therefore, an
+        # explicit check appears to be necessary.
+        if row_data.size != num_ids:
             raise LSMatFormatError(
-                "Encountered mismatched IDs while parsing the "
-                "dissimilarity matrix file. Found %r but expected "
-                "%r. Please ensure that the IDs match between the "
-                "dissimilarity matrix header (first row) and the row "
-                "labels (first column)." % (str(row_id), str(expected_id))
+                "There are %d value(s) in row %d, which is not equal to the number of "
+                "ID(s) in the header (%d)." % (row_data.size, row_idx + 1, num_ids)
             )
+        data[row_idx, :] = row_data
 
     if row_idx != num_ids - 1:
         raise LSMatFormatError(
@@ -216,15 +258,9 @@ def _parse_header(header, delimiter):
 
 def _parse_data(fh, delimiter):
     for line in fh:
-        stripped_line = line.strip()
-
-        if not stripped_line:
-            continue
-
-        tokens = line.rstrip().split(delimiter)
-        id_ = tokens[0].strip()
-
-        yield id_, tokens[1:]
+        if line := line.rstrip():
+            tokens = line.split(delimiter)
+            yield tokens[0].strip(), tokens[1:]
 
 
 def _matrix_to_lsmat(obj, fh, delimiter):

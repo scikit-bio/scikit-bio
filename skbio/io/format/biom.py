@@ -105,12 +105,12 @@ def _biom_sniffer(fh):
 
 
 @biom.reader(Table)
-def _biom_to_table_into(fh):
+def _biom_to_table_into(fh, cls=None):
     return _biom_to_table(fh)
 
 
 @biom.reader(None)
-def _biom_to_table_default(fh):
+def _biom_to_table_default(fh, cls=None):
     # skbio.read('foo.biom', format='biom')
     # will return a generator, that subsequently iterates the table.
     # returning a single item tuple yields expected behavior such that:
@@ -129,5 +129,11 @@ def _sktable_to_biom(obj, fh):
 
 
 def _table_to_biom(obj, fh):
-    h5grp = h5py.File(fh, "w")
-    obj.to_hdf5(h5grp, f"Written by scikit-bio version {skbio.__version__}")
+    # h5py needs a file path, not a file handle
+    if hasattr(fh, "name"):
+        fp = fh.name
+    else:
+        fp = fh
+
+    with h5py.File(fp, "w") as h5grp:
+        obj.to_hdf5(h5grp, f"Written by scikit-bio version {skbio.__version__}")

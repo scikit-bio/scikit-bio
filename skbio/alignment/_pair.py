@@ -892,10 +892,15 @@ def _encode_path(path, i0, i1, j0, j1):
     skbio.alignment.AlignPath.from_bits
 
     """
-    segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
-    lens = np.append(segs[1:] - segs[:-1], path.size - segs[-1])
+    if L := path.size:
+        segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+        lens = np.append(segs[1:] - segs[:-1], L - segs[-1])
+        ints = path[segs]
+    else:
+        lens = np.array([], dtype=np.intp)
+        ints = path
     ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
-    return PairAlignPath(lens, path[segs], ranges=ranges)
+    return PairAlignPath(lens, ints, ranges=ranges)
 
 
 def _trailing_gaps(path, pos, i, j, m, n, fill1, fill2):
@@ -1136,7 +1141,7 @@ def _linear_moves(i, j, scomat, query, target, gap, eps):
     moves = []
     if (
         abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
-    ):  # subsitution
+    ):  # substitution
         moves.append(0)
     if abs(scomat[i, j - 1] - gap - score) <= eps:  # insertion
         moves.append(1)
@@ -1184,7 +1189,7 @@ def _affine_moves(i, j, mat, scomat, insmat, delmat, query, target, gap_oe, gap_
         score = scomat[i, j]
         if (
             abs(scomat[i - 1, j - 1] + query[i - 1, target[j - 1]] - score) <= eps
-        ):  # subsitution
+        ):  # substitution
             moves.append(0)
         if abs(insmat[i, j] - score) <= eps:  # jump to insertion matrix
             moves.append(5)
