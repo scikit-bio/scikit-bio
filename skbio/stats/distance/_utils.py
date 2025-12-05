@@ -32,7 +32,7 @@ def is_symmetric_and_hollow(mat):
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See :ref:`parallelization <parallelization>` for information on
+    See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """
@@ -63,7 +63,7 @@ def is_symmetric(mat):
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See :ref:`parallelization <parallelization>` for information on
+    See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """
@@ -181,7 +181,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See :ref:`parallelization <parallelization>` for information on
+    See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """

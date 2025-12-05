@@ -511,7 +511,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Notes
         -----
         This function uses parallel computation for improved performance.
-        See :install:`parallelization guide <#parallelization>` for information on
+        See the :install:`parallelization guide <#parallelization>` for information on
         controlling the number of threads used.
 
         """
