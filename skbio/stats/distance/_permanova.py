@@ -126,6 +126,9 @@ def permanova(
     See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
+    Low-level acceleration is available for this function. See
+    :install:`scikit-bio-binaries <#acceleration>` for more information.
+
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
 
