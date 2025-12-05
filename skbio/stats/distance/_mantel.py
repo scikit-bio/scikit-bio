@@ -159,6 +159,10 @@ def mantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
@@ -584,6 +588,10 @@ def pwmantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     Passing a list of filepaths can be useful as it allows for a smaller amount
     of memory consumption as it only loads two matrices at a time as opposed to
     loading all distance matrices into memory.

@@ -29,6 +29,12 @@ def is_symmetric_and_hollow(mat):
     is_hollow: Boolean
         np.trace(mat) == 0
 
+    Notes
+    -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     """
     # is_symmetric_and_hollow_cy is optimized
     # for the common cas of c_contiguous.
@@ -53,6 +59,12 @@ def is_symmetric(mat):
     -------
     is_symmetric: Boolean
         not (mat.T != mat).any()
+
+    Notes
+    -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
 
     """
     # the is_hollow check is really cheap,
@@ -118,6 +130,12 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     out_mat : 2D array_like
         Distance matrix
 
+    Notes
+    -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     """
     np_reorder = np.asarray(reorder_vec, dtype=np.intp)
     if validate:
@@ -159,6 +177,12 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     -------
     out_mat_condensed : 1D array_like
         Condensed distance matrix
+
+    Notes
+    -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
 
     """
     np_reorder = np.asarray(reorder_vec, dtype=np.intp)
