@@ -122,6 +122,10 @@ def permanova(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
 

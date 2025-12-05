@@ -508,6 +508,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         MissingIDError
             If an ID in ``ids`` is not in the object's list of IDs.
 
+        Notes
+        -----
+        This function uses parallel computation for improved performance.
+        See :install:`parallelization guide <#parallelization>` for information on
+        controlling the number of threads used.
+
         """
         if tuple(self._ids) == tuple(ids):
             if self._flags["CONDENSED"]:
@@ -1749,6 +1755,10 @@ class SymmetricMatrix(PairwiseMatrix):
 
         Notes
         -----
+        This function uses parallel computation for improved performance.
+        See the :install:`parallelization guide <#parallelization>` for information on
+        controlling the number of threads used.
+
         This method does not modify the distance matrix that it is called on.
         It is more efficient to pass ``condensed=True`` than permuting the
         distance matrix and then converting to condensed format.

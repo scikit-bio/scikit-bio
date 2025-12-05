@@ -92,13 +92,28 @@ For a more robust verification of the installation you may run the scikit-bio's 
 Parallelization
 ---------------
 
-Many scikit-bio functions automatically take advantage of parallel processing to improve performance. By default, they utilize all available CPU cores when possible. There is currently no per-function parameter to control the number of threads used. You can set the environment variable ``OMP_NUM_THREADS`` to control the global parallelization behavior, or use `threadpoolctl <https://github.com/joblib/threadpoolctl>`_ to achieve more granular control within Python code.
+Many scikit-bio functions automatically take advantage of parallel processing to improve performance. By default, they utilize all available CPU cores when possible. There is currently no per-function parameter to control the number of threads used. You can set the environment variable ``OMP_NUM_THREADS`` to control the global parallelization behavior::
 
-Multiple compute-intensive algorithms in scikit-bio are implemented in Cython and use OpenMP for parallel execution. If your system does not support OpenMP, or if you prefer to disable it, you can build from the scikit-bio source code with OpenMP disabled:
+    # Setting OMP_NUM_THREADS inside a script
+    import os
+    os.environ["OMP_NUM_THREADS"] = "4"
+
+    # Alternatively, set it before launching your script
+    export OMP_NUM_THREADS=4 python script.py
+
+If more granular control over thread use is desired, we recommend using `threadpoolctl <https://github.com/joblib/threadpoolctl>`_::
+
+    from skbio import some_function
+    from threadpoolctl import thread_limits
+
+    with thread_limits(limits=1):
+        some_function()
+
+Multiple compute-intensive algorithms in scikit-bio are implemented in Cython and use OpenMP for parallel execution. If your system does not support OpenMP, or if you prefer to disable it, you can build from the scikit-bio source code with OpenMP disabled::
 
     DISABLE_OPENMP=1 pip install scikit-bio --no-binary scikit-bio
 
-Or, if you have downloaded the repository:
+Or, if you have downloaded the repository::
 
     DISABLE_OPENMP=1 pip install .
 

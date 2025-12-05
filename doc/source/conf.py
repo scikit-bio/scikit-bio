@@ -104,6 +104,7 @@ extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
     'wiki': (f'{wiki_url}/%s', None),
+    'install': (f'{html_baseurl}/install.html%s', None)
 }
 
 
