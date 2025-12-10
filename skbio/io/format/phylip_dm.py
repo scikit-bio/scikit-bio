@@ -16,6 +16,8 @@ Gorilla   1.5243 1.4465 0.5958 0.4631 0.0000 0.3484 0.3083
 Chimp     1.6043 1.4389 0.6179 0.5061 0.3484 0.0000 0.2692
 Human     1.5905 1.4629 0.5583 0.4710 0.3083 0.2692 0.0000"""
 
+import numpy as np
+
 from skbio.stats.distance import DistanceMatrix
 from skbio.io import create_format, PhylipFormatError
 
@@ -42,6 +44,21 @@ def _phylip_dm_sniffer(fh):
 
 
 # phylip_dm.reader(DistanceMatrix)
+def _phylip_dm_to_distance_matrix(fh, cls=None):
+    if cls is None:
+        cls = DistanceMatrix
+    data = _parse_phylip_dm_raw(fh)
+    dists = [x[0] for x in data]
+    ids = [x[1] for x in data]
+    # If it's in lower triangular form we convert it into condensed form to pass to
+    # DistanceMatrix.
+    if len(dists[0]) == 0:
+        dists = [
+            dists[row][col]
+            for col in range(len(dists))
+            for row in range(col + 1, len(dists))
+        ]
+    return cls(np.array(dists, dtype=float), ids)
 
 
 def _line_generator(fh):
@@ -86,7 +103,7 @@ def _validate_line(line, n_seqs, n_dists):
     return (dists, id)
 
 
-def _parse_phylip_raw(fh):
+def _parse_phylip_dm_raw(fh):
     """Raw parser for PHYLIP formatted distance matrix files.
 
     Returns a list of raw (dists, id) values."""
