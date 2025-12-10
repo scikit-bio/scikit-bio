@@ -8,8 +8,10 @@
 
 import unittest
 
+import numpy as np
+
 from skbio.util import get_data_path
-from skbio.io.format.phylip_dm import _phylip_dm_sniffer
+from skbio.io.format.phylip_dm import _phylip_dm_sniffer, _phylip_dm_to_distance_matrix
 
 class TestSniffer(unittest.TestCase):
     def setUp(self):
@@ -41,6 +43,23 @@ class TestSniffer(unittest.TestCase):
     def test_negatives(self):
         for fp in self.negatives:
             self.assertEqual(_phylip_dm_sniffer(fp), (False, {}))
+
+
+class TestReaders(unittest.TestCase):
+    def setUp(self):
+        self.expected_square_matrix = np.loadtxt(get_data_path("dm_raw_data.txt"))
+
+        self.positive_fps = [get_data_path(e) for e in [
+            # "96_lt_phylip_amazon.dist",
+            "98_lt_phylip_amazon.dist",
+            "98_sq_phylip_amazon.dist"
+        ]]
+
+    def test_phylip_dm_to_distance_matrix_valid_files(self):
+        for fp in self.positive_fps:
+            dm = _phylip_dm_to_distance_matrix(fp)
+            self.assertTrue((dm.data == self.expected_square_matrix).all())
+
 
 if __name__ == "main":
     unittest.main()
