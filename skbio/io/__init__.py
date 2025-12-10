@@ -50,6 +50,7 @@ are supported by each format, see the associated documentation.
    newick
    ordination
    phylip
+   phylip_dm
    qseq
    stockholm
    taxdump
@@ -383,6 +384,7 @@ import_module("skbio.io.format.taxdump")
 import_module("skbio.io.format.sample_metadata")
 import_module("skbio.io.format.biom")
 import_module("skbio.io.format.embed")
+import_module("skbio.io.format.phylip_dm")
 
 # This is meant to be a handy indicator to the user that they have done
 # something wrong.
