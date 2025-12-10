@@ -24,7 +24,7 @@ from skbio.io import create_format, PhylipFormatError
 phylip_dm = create_format("phylip_dm")
 
 
-# @phylip_dm.sniffer()
+@phylip_dm.sniffer()
 def _phylip_dm_sniffer(fh):
     # Strategy:
     #  Read the header and a single sequence; verify that the sequence length matches
@@ -43,7 +43,7 @@ def _phylip_dm_sniffer(fh):
     return True, {}
 
 
-# phylip_dm.reader(DistanceMatrix)
+@phylip_dm.reader(DistanceMatrix)
 def _phylip_dm_to_distance_matrix(fh, cls=None):
     if cls is None:
         cls = DistanceMatrix

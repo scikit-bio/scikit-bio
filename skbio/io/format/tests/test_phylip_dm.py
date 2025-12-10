@@ -8,3 +8,39 @@
 
 import unittest
 
+from skbio.util import get_data_path
+from skbio.io.format.phylip_dm import _phylip_dm_sniffer
+
+class TestSniffer(unittest.TestCase):
+    def setUp(self):
+        self.positives = [get_data_path(e) for e in [
+            "96_lt_phylip_amazon.dist",
+            "98_lt_phylip_amazon.dist",
+            "98_sq_phylip_amazon.dist"
+        ]]
+
+        self.negatives = [get_data_path(e) for e in [
+            "empty",
+            "whitespace_only",
+            "phylip_dm_invalid_empty_line_after_header.dist",
+            "phylip_dm_invalid_empty_line_before_header.dist",
+            "phylip_dm_sq_invalid_empty_line_after_header.dist",
+            "phylip_dm_sq_invalid_empty_line_before_header.dist",
+            "phylip_dm_invalid_header_too_long.dist",
+            "phylip_dm_invalid_no_header.dist",
+            "phylip_dm_invalid_wrong_number_dists.dist",
+            "phylip_dm_invalid_wrong_number_dists_sq.dist",
+            "phylip_dm_invalid_no_dists.dist",
+            "phylip_dm_invalid_zero_header.dist"
+        ]]
+
+    def test_positives(self):
+        for fp in self.positives:
+            self.assertEqual(_phylip_dm_sniffer(fp), (True, {}))
+
+    def test_negatives(self):
+        for fp in self.negatives:
+            self.assertEqual(_phylip_dm_sniffer(fp), (False, {}))
+
+if __name__ == "main":
+    unittest.main()
