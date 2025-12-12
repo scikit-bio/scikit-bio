@@ -286,11 +286,15 @@
 
          .. card::
 
-            Thrilled with completion of `scikit-bio workshop <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_ at ISMB 2024. Materials are `publicly available <https://github.com/scikit-bio/scikit-bio-tutorials>`_.
+            `scikit-bio paper <https://www.nature.com/articles/s41592-025-02981-z>`_ published in *Nature Methods*. Full text `available <https://rdcu.be/eUcOO>`_.
 
          .. card::
 
-            New `DOE award <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
+            `scikit-bio workshop <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_ at ISMB 2024. Materials are `publicly available <https://github.com/scikit-bio/scikit-bio-tutorials>`_.
+
+         .. card::
+
+            `DOE grant <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
 
          .. card::
 
