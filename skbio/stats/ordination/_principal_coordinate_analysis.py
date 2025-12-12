@@ -96,6 +96,13 @@ def pcoa(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
+    Low-level acceleration is available for this function. See
+    :install:`scikit-bio-binaries <#acceleration>` for more information.
+
     Principal Coordinate Analysis (PCoA) was first described in [1]_.
 
     This function uses a choice of two methods for matrix decomposition: The default

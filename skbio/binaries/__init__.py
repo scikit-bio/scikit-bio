@@ -7,7 +7,7 @@ This module provides an interface to the optimized functions
 that are available in the scikit-bio-binaries package,
 via the libskbb shared library.
 
-Since scikit-bio-binaries is not guaragteed to be installed
+Since scikit-bio-binaries is not guaranteed to be installed
 the module provides ways to check for the presence of the
 needed shared library.
 

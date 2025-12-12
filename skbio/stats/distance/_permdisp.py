@@ -142,6 +142,10 @@ def permdisp(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     This function uses Marti Anderson's PERMDISP2 procedure.
 
     The significance of the results from this function will be the same as the
