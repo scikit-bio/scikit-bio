@@ -10,6 +10,7 @@
 ### Bug Fixes
 
 * Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338](https://github.com/scikit-bio/scikit-bio/pull/2338)).
+* Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
 
 ### Miscellaneous
 
