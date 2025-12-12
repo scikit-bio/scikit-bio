@@ -20,6 +20,7 @@ from typing import (
     Union,
     TYPE_CHECKING,
 )
+from numpy.typing import ArrayLike
 
 import numpy as np
 import pandas as pd
@@ -1442,6 +1443,7 @@ class SymmetricMatrix(PairwiseMatrix):
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
         condensed: bool = False,
+        diagonal: float | ArrayLike = 0.0,
     ) -> "SymmetricMatrix":
         r"""Create a symmetric matrix from an iterable given a metric.
 
@@ -1466,6 +1468,8 @@ class SymmetricMatrix(PairwiseMatrix):
         condensed : bool, optional
             Store the data in a 2-D redundant form (False, default) or a 1-D condensed
             form (True).
+        diagonal : float or array_like, optional
+            Value(s) with which to fill the diagonal of the matrix.
 
         Returns
         -------
@@ -1492,7 +1496,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
-            np.fill_diagonal(dm, 0)
+            np.fill_diagonal(dm, diagonal)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
