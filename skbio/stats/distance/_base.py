@@ -261,7 +261,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         iterable = list(iterable)
         keys_ = _get_keys(iterable, key, keys)
 
-        dm = np.empty((len(iterable),) * 2)
+        dm = np.zeros((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable):
                 dm[i, j] = metric(a, b)
@@ -1463,9 +1463,6 @@ class SymmetricMatrix(PairwiseMatrix):
             and lower triangles and the diagonal. If False, ``metric`` is
             assumed to be symmetric and only the lower triangle (excluding the
             diagonal) is computed, thereby saving compute.
-        diagonal : 1-D array_like or float, optional
-            Fill the matrix diagonal with this number or vector when ``validate``
-            is False. Default is zero.
         condensed : bool, optional
             Store the data in a 2-D redundant form (False, default) or a 1-D condensed
             form (True).
@@ -1484,11 +1481,7 @@ class SymmetricMatrix(PairwiseMatrix):
         iterable = list(iterable)
         keys_ = _get_keys(iterable, key, keys)
 
-        dm = np.empty((len(iterable),) * 2)
-        # this allows for diagonals which do not match the exact shape of the matrix,
-        # np.fill_diagonal will just repeat the array to fill. Not sure if this is
-        # what we want here.
-        # np.fill_diagonal(dm, diagonal)
+        dm = np.zeros((len(iterable),) * 2)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
