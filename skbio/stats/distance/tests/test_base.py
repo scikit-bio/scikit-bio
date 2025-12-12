@@ -1505,6 +1505,23 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         )
         self.assertEqual(res, exp)
 
+    def test_from_iterable_with_invalid_diagonal(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError) as e:
+            self.matobj.from_iterable(iterable, lambda a, b: a * b, diagonal=1, validate=False)
+        self.assertEqual(
+            str(e.exception),
+            "Data must  be hollow (i.e., the diagonal can only contain zeros)."
+        )
+
+    def test_from_iterable_with_valid_diagonal(self):
+        iterable = (x for x in range(4))
+        exp = self.matobj(
+            [[0, 1, 2, 3], [1, 0, 2, 3], [2, 2, 0, 3], [3, 3, 3, 0]]
+        )
+        res = self.matobj.from_iterable(iterable, lambda a, b: a, diagonal=0, validate=False)
+        self.assertTrue((res.data == exp.data).all())
+
     def test_from_iterable_validate_non_hollow(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError) as e:

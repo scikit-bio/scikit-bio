@@ -1469,7 +1469,8 @@ class SymmetricMatrix(PairwiseMatrix):
             Store the data in a 2-D redundant form (False, default) or a 1-D condensed
             form (True).
         diagonal : float or array_like, optional
-            Value(s) with which to fill the diagonal of the matrix.
+            Value(s) with which to fill the diagonal of the matrix. Relevant only when
+            ``validate`` is False.
 
         Returns
         -------
