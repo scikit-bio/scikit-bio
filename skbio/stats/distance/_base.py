@@ -261,7 +261,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         iterable = list(iterable)
         keys_ = _get_keys(iterable, key, keys)
 
-        dm = np.zeros((len(iterable),) * 2)
+        dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable):
                 dm[i, j] = metric(a, b)
@@ -1481,7 +1481,7 @@ class SymmetricMatrix(PairwiseMatrix):
         iterable = list(iterable)
         keys_ = _get_keys(iterable, key, keys)
 
-        dm = np.zeros((len(iterable),) * 2)
+        dm = np.empty((len(iterable),) * 2)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1492,6 +1492,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
+            np.fill_diagonal(dm, 0)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
