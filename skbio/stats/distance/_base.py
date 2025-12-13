@@ -20,6 +20,7 @@ from typing import (
     Union,
     TYPE_CHECKING,
 )
+from numpy.typing import ArrayLike
 
 import numpy as np
 import pandas as pd
@@ -1442,6 +1443,7 @@ class SymmetricMatrix(PairwiseMatrix):
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
         condensed: bool = False,
+        diagonal: float | ArrayLike = 0.0,
     ) -> "SymmetricMatrix":
         r"""Create a symmetric matrix from an iterable given a metric.
 
@@ -1463,12 +1465,12 @@ class SymmetricMatrix(PairwiseMatrix):
             and lower triangles and the diagonal. If False, ``metric`` is
             assumed to be symmetric and only the lower triangle (excluding the
             diagonal) is computed, thereby saving compute.
-        diagonal : 1-D array_like or float, optional
-            Fill the matrix diagonal with this number or vector when ``validate``
-            is False. Default is zero.
         condensed : bool, optional
             Store the data in a 2-D redundant form (False, default) or a 1-D condensed
             form (True).
+        diagonal : float or array_like, optional
+            Value(s) with which to fill the diagonal of the matrix. Relevant only when
+            ``validate`` is False.
 
         Returns
         -------
@@ -1485,10 +1487,6 @@ class SymmetricMatrix(PairwiseMatrix):
         keys_ = _get_keys(iterable, key, keys)
 
         dm = np.empty((len(iterable),) * 2)
-        # this allows for diagonals which do not match the exact shape of the matrix,
-        # np.fill_diagonal will just repeat the array to fill. Not sure if this is
-        # what we want here.
-        # np.fill_diagonal(dm, diagonal)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1499,6 +1497,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
+            np.fill_diagonal(dm, diagonal)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
