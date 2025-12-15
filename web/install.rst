@@ -110,7 +110,7 @@ Many scikit-bio functions automatically take advantage of parallel processing to
     from skbio import some_function
 
     # Alternatively, set it before launching your script.
-    export OMP_NUM_THREADS=4 python script.py
+    OMP_NUM_THREADS=4 python script.py
 
 If more granular control over thread use is desired, we recommend using `threadpoolctl <https://github.com/joblib/threadpoolctl>`_::
 
