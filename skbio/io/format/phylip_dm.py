@@ -47,6 +47,15 @@ def _phylip_dm_sniffer(fh):
 def _phylip_dm_to_distance_matrix(fh, cls=None):
     if cls is None:
         cls = DistanceMatrix
+    return _phylip_to_dm(cls, fh)
+
+
+@phylip_dm.writer(DistanceMatrix)
+def _distance_matrix_to_phylip(obj, fh):
+    _matrix_to_phylip(obj, fh, delimiter="\t")
+
+
+def _phylip_to_dm(cls, fh):
     data = _parse_phylip_dm_raw(fh)
     dists = [x[0] for x in data]
     ids = [x[1] for x in data]
@@ -59,6 +68,48 @@ def _phylip_dm_to_distance_matrix(fh, cls=None):
             for row in range(col + 1, len(dists))
         ]
     return cls(np.array(dists, dtype=float), ids)
+
+
+def _matrix_to_phylip(obj, fh, delimiter, strict=True):
+    n_samples = obj.shape[0]
+    if n_samples < 2:
+        raise PhylipFormatError(
+            "DistanceMatrix can only be written in PHYLIP format if there are at least"
+            "two samples in the matrix."
+        )
+
+    # For now, sticking with strict PHYLIP format, may implement relaxed in the future
+    chunk_size = 10
+    ids = obj.ids
+    if strict:
+        for id in ids:
+            if len(id) > chunk_size:
+                raise PhylipFormatError(
+                    "DistanceMatrix can only be written in PHYLIP format if all ids "
+                    f"have {chunk_size} or fewer characters. Id found that exceeds "
+                    f"this limit: {id}. Use DistanceMatrix.rename to assign shorter "
+                    "ids."
+                )
+
+    fh.write(f"{str(n_samples)}\n")
+    delimiter = "%s" % delimiter
+
+    # if the DistanceMatrix is in redundant form, it will be written in redundant form
+    if not obj._flags["CONDENSED"]:
+        print("not condensed")
+        for id_, vals in zip(ids, obj.data):
+            fh.write("%s" % id_)
+            fh.write(delimiter)
+            fh.write(delimiter.join(np.asarray(vals, dtype=str)))
+            fh.write("\n")
+    # if the DistanceMatrix is in condensed form, it will be written in lower
+    # trianglular form
+    else:
+        for i, id_ in enumerate(ids):
+            fh.write("%s" % id_)
+            fh.write(delimiter)
+            fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
+            fh.write("\n")
 
 
 def _line_generator(fh):
