@@ -327,6 +327,7 @@ class SampleMetadata(_MetadataBase, SkbioObject):
     """
 
     default_write_format = "sample_metadata"
+    """Default write format for this object: ``sample_metadata``."""
 
     @classmethod
     def load(

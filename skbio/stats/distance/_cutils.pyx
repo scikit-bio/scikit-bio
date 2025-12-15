@@ -61,7 +61,6 @@ cdef inline Py_ssize_t condensed_index(Py_ssize_t i, Py_ssize_t j, Py_ssize_t n)
     # Formula: i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
     return i_min * n + j_max - ((i_min + 2) * (i_min + 1)) // 2
 
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
@@ -411,6 +410,60 @@ def permanova_f_stat_sW_cy(TReal[:, ::1] distance_matrix,
                     val = distance_matrix[row,col]
                     local_s_W = local_s_W + val * val
             s_W += local_s_W/group_sizes[group_idx]
+
+    return s_W
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def permanova_f_stat_sW_condensed_cy(TReal[::1] distance_matrix,
+                           Py_ssize_t[::1] group_sizes,
+                           Py_ssize_t[::1] grouping):
+    """Compute PERMANOVA pseudo-F partial statistic."""
+    cdef Py_ssize_t condensed_size = distance_matrix.shape[0]
+    cdef Py_ssize_t grouping_size = grouping.shape[0]
+
+    # Calculate the redundant form dimension from condensed vector length
+    # Formula: n = (1 + sqrt(1 + 8*k)) / 2, where k is the condensed vector length
+    cdef Py_ssize_t n = <Py_ssize_t>((1 + sqrt(1.0 + 8.0 * condensed_size)) / 2.0)
+
+    assert n == grouping_size
+    assert condensed_size == ((n - 1) * n) // 2
+
+    cdef double s_W = 0.0
+
+    cdef Py_ssize_t group_idx
+    cdef double local_s_W
+    cdef double val
+
+    cdef Py_ssize_t row, col, rowi, coli, row1
+    cdef Py_ssize_t in_n_2 = n//2
+
+    for rowi in prange(in_n_2, nogil=True):
+        # since columns get shorter, combine first and last
+        row=rowi
+        local_s_W = 0.0
+        group_idx = grouping[row]
+        row1 = row + 1
+        for coli in range(n-row-1):
+            col = coli + row1
+            if grouping[col] == group_idx:
+                idx_ = condensed_index(row, col, n)
+                val = distance_matrix[idx_]
+                local_s_W += val * val
+        s_W += local_s_W / group_sizes[group_idx]
+
+        row = n-rowi-2
+        if row!=rowi: # don't double count
+            local_s_W = 0.0
+            group_idx = grouping[row]
+            row1 = row + 1
+            for coli in range(n-row-1):
+                col = coli + row1
+                if grouping[col] == group_idx:
+                    idx_ = condensed_index(row, col, n)
+                    val = distance_matrix[idx_]
+                    local_s_W += val * val
+            s_W += local_s_W / group_sizes[group_idx]
 
     return s_W
 

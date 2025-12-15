@@ -20,6 +20,7 @@ from typing import (
     Union,
     TYPE_CHECKING,
 )
+from numpy.typing import ArrayLike
 
 import numpy as np
 import pandas as pd
@@ -127,6 +128,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     """
 
     default_write_format: ClassVar[str] = "lsmat"
+    """Default write format for this object: ``lsmat``."""
     # Used in __str__
     # TODO: decide on what to call a matrix element here
     _matrix_element_name: ClassVar[str] = "relationship"
@@ -258,14 +260,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         iterable = list(iterable)
-        if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same time.")
-
-        keys_ = None
-        if key is not None:
-            keys_ = [resolve_key(e, key) for e in iterable]
-        elif keys is not None:
-            keys_ = list(keys)
+        keys_ = _get_keys(iterable, key, keys)
 
         dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
@@ -1448,6 +1443,7 @@ class SymmetricMatrix(PairwiseMatrix):
         keys: Optional[Iterable[Any]] = None,
         validate: bool = True,
         condensed: bool = False,
+        diagonal: float | ArrayLike = 0.0,
     ) -> "SymmetricMatrix":
         r"""Create a symmetric matrix from an iterable given a metric.
 
@@ -1469,12 +1465,12 @@ class SymmetricMatrix(PairwiseMatrix):
             and lower triangles and the diagonal. If False, ``metric`` is
             assumed to be symmetric and only the lower triangle (excluding the
             diagonal) is computed, thereby saving compute.
-        diagonal : 1-D array_like or float, optional
-            Fill the matrix diagonal with this number or vector when ``validate``
-            is False. Default is zero.
         condensed : bool, optional
             Store the data in a 2-D redundant form (False, default) or a 1-D condensed
             form (True).
+        diagonal : float or array_like, optional
+            Value(s) with which to fill the diagonal of the matrix. Relevant only when
+            ``validate`` is False.
 
         Returns
         -------
@@ -1488,20 +1484,9 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         iterable = list(iterable)
-        if key is not None and keys is not None:
-            raise ValueError("Cannot use both `key` and `keys` at the same time.")
-
-        keys_ = None
-        if key is not None:
-            keys_ = [resolve_key(e, key) for e in iterable]
-        elif keys is not None:
-            keys_ = list(keys)
+        keys_ = _get_keys(iterable, key, keys)
 
         dm = np.empty((len(iterable),) * 2)
-        # this allows for diagonals which do not match the exact shape of the matrix,
-        # np.fill_diagonal will just repeat the array to fill. Not sure if this is
-        # what we want here.
-        # np.fill_diagonal(dm, diagonal)
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
@@ -1512,6 +1497,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
                     dm[i, j] = dm[j, i] = metric(a, b)
+            np.fill_diagonal(dm, diagonal)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
     def __getitem__(
@@ -2510,6 +2496,20 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     old_indices = _condensed_index(old_i, old_j, n_original)
 
     return in_mat[old_indices]
+
+
+def _get_keys(iterable, key, keys):
+    """Get IDs in the matrix."""
+    if key is not None and keys is not None:
+        raise ValueError("Cannot use both `key` and `keys` at the same time.")
+
+    keys_ = None
+    if key is not None:
+        keys_ = [resolve_key(e, key) for e in iterable]
+    elif keys is not None:
+        keys_ = list(keys)
+
+    return keys_
 
 
 def _get_element_from_condensed(

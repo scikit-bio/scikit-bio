@@ -13,6 +13,7 @@ from unittest import TestCase, main
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
+from scipy.spatial.distance import squareform
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
@@ -187,6 +188,224 @@ class PERMANOVATests(TestCase):
     def test_invalid_input(self):
         with self.assertRaises(TypeError):
             permanova(self.dm_ties.data, self.grouping_equal, seed=42)
+
+
+class PERMANOVACondensedTests(TestCase):
+    """Tests for PERMANOVA with condensed distance matrices.
+    
+    These tests verify that condensed and redundant forms of the same
+    distance matrix produce identical results.
+    """
+
+    def setUp(self):
+        # Distance matrices with and without ties in the ranks, with 2 groups
+        # of equal size.
+        dm_ids = ['s1', 's2', 's3', 's4']
+        self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
+        self.df = pd.read_csv(
+            io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
+                        's1,Control'), index_col=0)
+
+        # Create both redundant and condensed versions
+        self.dm_ties_redundant = DistanceMatrix([[0, 1, 1, 4],
+                                                  [1, 0, 3, 2],
+                                                  [1, 3, 0, 3],
+                                                  [4, 2, 3, 0]], dm_ids)
+        
+        self.dm_ties_condensed = DistanceMatrix(
+            squareform(self.dm_ties_redundant.data), #, checks=False),
+            dm_ids,
+            condensed=True
+        )
+
+        self.dm_no_ties_redundant = DistanceMatrix([[0, 1, 5, 4],
+                                                     [1, 0, 3, 2],
+                                                     [5, 3, 0, 3],
+                                                     [4, 2, 3, 0]], dm_ids)
+        
+        self.dm_no_ties_condensed = DistanceMatrix(
+            squareform(self.dm_no_ties_redundant.data), #, checks=False),
+            dm_ids,
+            condensed=True
+        )
+
+        # Test with 3 groups of unequal size.
+        self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
+                                 'Treatment1', 'Control', 'Control']
+
+        self.dm_unequal_redundant = DistanceMatrix(
+            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
+             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
+             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
+             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
+             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
+             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
+            ['s1', 's2', 's3', 's4', 's5', 's6'])
+        
+        self.dm_unequal_condensed = DistanceMatrix(
+            squareform(self.dm_unequal_redundant.data), #, checks=False),
+            ['s1', 's2', 's3', 's4', 's5', 's6'],
+            condensed=True
+        )
+
+        # Expected series index is the same across all tests.
+        self.exp_index = ['method name', 'test statistic name', 'sample size',
+                          'number of groups', 'test statistic', 'p-value',
+                          'number of permutations']
+
+        # Stricter series equality testing than the default.
+        self.assert_series_equal = partial(assert_series_equal,
+                                           check_index_type=True,
+                                           check_series_type=True)
+
+    def test_condensed_vs_redundant_ties(self):
+        """Test that condensed and redundant forms give identical results with ties."""
+        # Run with same seed for both
+        obs_redundant = permanova(self.dm_ties_redundant, self.grouping_equal, seed=42)
+        obs_condensed = permanova(self.dm_ties_condensed, self.grouping_equal, seed=42)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_vs_redundant_no_ties(self):
+        """Test that condensed and redundant forms give identical results without ties."""
+        obs_redundant = permanova(self.dm_no_ties_redundant, self.grouping_equal, seed=42)
+        obs_condensed = permanova(self.dm_no_ties_condensed, self.grouping_equal, seed=42)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_vs_redundant_unequal_groups(self):
+        """Test that condensed and redundant forms give identical results with unequal groups."""
+        obs_redundant = permanova(self.dm_unequal_redundant, self.grouping_unequal, seed=42)
+        obs_condensed = permanova(self.dm_unequal_condensed, self.grouping_unequal, seed=42)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_with_dataframe_grouping(self):
+        """Test that condensed form works with DataFrame grouping."""
+        obs_redundant = permanova(self.dm_ties_redundant, self.df, column='Group', seed=42)
+        obs_condensed = permanova(self.dm_ties_condensed, self.df, column='Group', seed=42)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_no_permutations(self):
+        """Test that condensed form works with no permutations."""
+        obs_redundant = permanova(self.dm_no_ties_redundant, self.grouping_equal, 
+                                  permutations=0)
+        obs_condensed = permanova(self.dm_no_ties_condensed, self.grouping_equal, 
+                                  permutations=0)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_different_permutation_counts(self):
+        """Test that condensed form gives consistent results across different permutation counts."""
+        # Test with various permutation counts
+        for n_perms in [99, 199, 999]:
+            obs_redundant = permanova(self.dm_ties_redundant, self.grouping_equal, 
+                                      permutations=n_perms, seed=42)
+            obs_condensed = permanova(self.dm_ties_condensed, self.grouping_equal, 
+                                      permutations=n_perms, seed=42)
+            
+            self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_multiple_runs_same_seed(self):
+        """Test that condensed form gives identical results across multiple runs with same seed."""
+        obs1 = permanova(self.dm_ties_condensed, self.grouping_equal, seed=42)
+        obs2 = permanova(self.dm_ties_condensed, self.grouping_equal, seed=42)
+        obs3 = permanova(self.dm_ties_condensed, self.grouping_equal, seed=42)
+        
+        self.assert_series_equal(obs1, obs2)
+        self.assert_series_equal(obs2, obs3)
+
+    def test_condensed_test_statistic_positive(self):
+        """Test that condensed form produces positive F-statistics."""
+        # This is a regression test for the bug where condensed matrices
+        # produced negative F-statistics due to incorrect s_T calculation
+        obs = permanova(self.dm_ties_condensed, self.grouping_equal, seed=42)
+        
+        # F-statistic should always be non-negative
+        self.assertGreaterEqual(obs['test statistic'], 0.0)
+        
+    def test_condensed_test_statistic_matches_expected(self):
+        """Test that condensed form produces expected F-statistic values."""
+        # These expected values come from the redundant form tests
+        obs_ties = permanova(self.dm_ties_condensed, self.grouping_equal, 
+                            permutations=0)
+        self.assertAlmostEqual(obs_ties['test statistic'], 2.0, places=5)
+        
+        obs_no_ties = permanova(self.dm_no_ties_condensed, self.grouping_equal, 
+                               permutations=0)
+        self.assertAlmostEqual(obs_no_ties['test statistic'], 4.4, places=5)
+
+    def test_condensed_large_matrix(self):
+        """Test condensed form with a larger matrix."""
+        # Create a 10x10 distance matrix
+        np.random.seed(42)
+        n = 10
+        redundant_data = np.random.rand(n, n)
+        redundant_data = (redundant_data + redundant_data.T) / 2  # Make symmetric
+        np.fill_diagonal(redundant_data, 0)  # Zero diagonal
+        
+        ids = [f's{i}' for i in range(n)]
+        dm_redundant = DistanceMatrix(redundant_data, ids)
+        dm_condensed = DistanceMatrix(squareform(redundant_data, checks=False), ids)
+        
+        grouping = ['A'] * 5 + ['B'] * 5
+        
+        obs_redundant = permanova(dm_redundant, grouping, seed=42, permutations=99)
+        obs_condensed = permanova(dm_condensed, grouping, seed=42, permutations=99)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_3x3_matrix(self):
+        """Test condensed form with 3x3 matrix."""
+        dm_redundant = DistanceMatrix([[0, 1, 2],
+                                       [1, 0, 3],
+                                       [2, 3, 0]], 
+                                      ['s1', 's2', 's3'])
+        dm_condensed = DistanceMatrix([1, 2, 3], ['s1', 's2', 's3'])
+        
+        grouping = ['A', 'A', 'B']
+        
+        obs_redundant = permanova(dm_redundant, grouping, seed=42, permutations=99)
+        obs_condensed = permanova(dm_condensed, grouping, seed=42, permutations=99)
+        
+        self.assert_series_equal(obs_redundant, obs_condensed)
+
+    def test_condensed_via_series(self):
+        """Test condensed form with pd.Series grouping (regression test for #1877)."""
+        dm_redundant = DistanceMatrix.read(get_data_path('frameSeries_dm.tsv'))
+        dm_condensed = DistanceMatrix(
+            squareform(dm_redundant.data, checks=False),
+            dm_redundant.ids
+        )
+        grouping = pd.read_csv(get_data_path("frameSeries_grouping.tsv"),
+                               sep="\t", index_col=0)
+
+        # Test with DataFrame
+        obs_redundant_frame = permanova(dm_redundant, grouping, column='tumor', seed=42)
+        obs_condensed_frame = permanova(dm_condensed, grouping, column='tumor', seed=42)
+        self.assert_series_equal(obs_redundant_frame, obs_condensed_frame)
+
+        # Test with Series
+        obs_redundant_series = permanova(dm_redundant, grouping['tumor'], seed=42)
+        obs_condensed_series = permanova(dm_condensed, grouping['tumor'], seed=42)
+        self.assert_series_equal(obs_redundant_series, obs_condensed_series)
+
+        # Verify both grouping types give same results for condensed
+        self.assert_series_equal(obs_condensed_frame, obs_condensed_series)
+
+    def test_condensed_flags_set_correctly(self):
+        """Test that condensed matrices have correct flags set."""
+        self.assertTrue(self.dm_ties_condensed._flags["CONDENSED"])
+        self.assertFalse(self.dm_ties_redundant._flags["CONDENSED"])
+
+    def test_condensed_data_shape(self):
+        """Test that condensed matrix data has correct shape."""
+        n = 4  # 4x4 matrix
+        expected_condensed_length = n * (n - 1) // 2
+
+        self.assertEqual(len(self.dm_ties_condensed.data), expected_condensed_length)
+        self.assertEqual(self.dm_ties_redundant.data.shape, (n, n))
 
 
 if __name__ == '__main__':

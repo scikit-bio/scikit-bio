@@ -142,6 +142,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """
 
     default_write_format = "fasta"
+    """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
 
     read = Read()
