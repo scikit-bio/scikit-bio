@@ -7,11 +7,13 @@
 # ----------------------------------------------------------------------------
 
 import unittest
+import io
 
 import numpy as np
 
 from skbio.util import get_data_path
-from skbio.io.format.phylip_dm import _phylip_dm_sniffer, _phylip_dm_to_distance_matrix
+from skbio.io.format.phylip_dm import _matrix_to_phylip, _phylip_dm_sniffer, _phylip_dm_to_distance_matrix
+from skbio.stats.distance import DistanceMatrix
 
 class TestSniffer(unittest.TestCase):
     def setUp(self):
@@ -61,5 +63,31 @@ class TestReaders(unittest.TestCase):
             self.assertTrue((dm.data == self.expected_square_matrix).all())
 
 
-if __name__ == "main":
+class TestWriters(unittest.TestCase):
+    def setUp(self):
+        simple_dm = DistanceMatrix([[0, 1, 2, 3],
+                                    [1, 0, 4, 5],
+                                    [2, 4, 0, 6],
+                                    [3, 5, 6, 0]])
+        simple_dm_condensed = DistanceMatrix([1, 2, 3, 4, 5, 6], condensed=True)
+        
+        self.objs = [simple_dm, simple_dm_condensed]
+        self.fps = [get_data_path("phylip_dm_simple_sq.dist"),
+                    get_data_path("phylip_dm_simple_lt.dist")]
+
+
+
+    def test_write(self):
+        for fp, obj in zip(self.fps, self.objs):
+            fh = io.StringIO()
+            _matrix_to_phylip(obj, fh, "\t")
+            obs = fh.getvalue()
+            fh.close()
+            with io.open(fp) as fh:
+                exp = fh.read()
+
+            self.assertEqual(obs, exp)
+
+
+if __name__ == "__main__":
     unittest.main()

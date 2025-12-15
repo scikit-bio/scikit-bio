@@ -92,11 +92,9 @@ def _matrix_to_phylip(obj, fh, delimiter, strict=True):
                 )
 
     fh.write(f"{str(n_samples)}\n")
-    delimiter = "%s" % delimiter
 
     # if the DistanceMatrix is in redundant form, it will be written in redundant form
     if not obj._flags["CONDENSED"]:
-        print("not condensed")
         for id_, vals in zip(ids, obj.data):
             fh.write("%s" % id_)
             fh.write(delimiter)
@@ -107,8 +105,9 @@ def _matrix_to_phylip(obj, fh, delimiter, strict=True):
     else:
         for i, id_ in enumerate(ids):
             fh.write("%s" % id_)
-            fh.write(delimiter)
-            fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
+            if i > 0:
+                fh.write(delimiter)
+                fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
             fh.write("\n")
 
 
