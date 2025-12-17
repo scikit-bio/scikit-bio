@@ -293,7 +293,7 @@ def _parse_phylip_dm_raw(fh, strict=False):
         )
 
     # Validate pattern consistency
-    if len(lengths) >= 3:  # Only check if we have enough data
+    if len(lengths) >= 3:
         is_square = all(L == lengths[0] for L in lengths)
         is_lower_tri = all(lengths[i] == i for i in range(len(lengths)))
 
