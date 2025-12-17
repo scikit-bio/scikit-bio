@@ -110,10 +110,6 @@ phylip_dm = create_format("phylip_dm")
 
 @phylip_dm.sniffer()
 def _phylip_dm_sniffer(fh):
-    # Strategy:
-    #  Try to parse as relaxed format first (more common).
-    #  If that fails, try strict format.
-    #  Return True if either works.
     try:
         header = next(_line_generator(fh))
         n_seqs = _validate_header(header)
@@ -126,19 +122,22 @@ def _phylip_dm_sniffer(fh):
 
         # Try relaxed format first
         try:
-            # print('trying relaxed')
             for line_no, line in enumerate(lines):
                 _validate_line(line, n_seqs, line_no, strict=False)
             return True, {}
         except PhylipFormatError:
-            # print('trying strict')
-            # Relaxed failed, try strict
+            pass
+        # Try strict format
+        try:
             for line_no, line in enumerate(lines):
                 _validate_line(line, n_seqs, line_no, strict=True)
             return True, {}
+        except PhylipFormatError:
+            pass
+
+        return False, {}
 
     except (StopIteration, PhylipFormatError):
-        # Neither format worked
         return False, {}
 
 
@@ -156,9 +155,7 @@ def _distance_matrix_to_phylip(obj, fh):
 
 def _phylip_to_dm(cls, fh, strict=False):
     data = _parse_phylip_dm_raw(fh, strict=strict)
-    print("\n\n\n", data, "\n\n\n")
     dists = [x[0] for x in data]
-    print(dists)
     ids = [x[1] for x in data]
     # If it's in lower triangular form we convert it into condensed form to pass to
     # DistanceMatrix.
@@ -168,7 +165,6 @@ def _phylip_to_dm(cls, fh, strict=False):
             for col in range(len(dists))
             for row in range(col + 1, len(dists))
         ]
-        print(dists)
     return cls(np.array(dists, dtype=float), ids)
 
 
@@ -239,12 +235,9 @@ def _validate_line(line, n_seqs, n_dists, strict=False):
     """
     if not line:
         raise PhylipFormatError("Empty lines are not allowed.")
-    # print(f"strict: {str(strict)}")
     if strict:
         id = line[:10].strip()
-        # print(f"id: {str(id)}")
         dists = line[10:].split()
-        # print(dists)
     else:
         split_line = line.split()
         # IDs are separated from values by whitespace.
@@ -253,8 +246,6 @@ def _validate_line(line, n_seqs, n_dists, strict=False):
     # This check handles lower triangle matrices. We expects 0 distances on the first
     # non-header line, a single distance on the second non-header line, and two
     # distances on the third non-header line.
-    print(f"dists: {dists}")
-    print(f"expected # of dists: {n_dists}")
     dists_len = len(dists)
     if dists_len != n_dists:
         # If there are more distances than expected for a lower triangle matrix, we
@@ -292,18 +283,20 @@ def _parse_phylip_dm_raw(fh, strict=False):
             f"The number of sequences is not {n_seqs} as specified in the header."
         )
 
-    # Validate pattern consistency
-    if len(lengths) >= 3:
-        is_square = all(L == lengths[0] for L in lengths)
-        is_lower_tri = all(lengths[i] == i for i in range(len(lengths)))
+    # Ensure that no matrix data was accidentally parsed as IDs.
+    # The logic here is that either all the distance arrays should be the same length
+    # (square format) or all the distance array lengths should be sequentially
+    # increasing (lower triangular). If neither is true, then something is wrong.
+    is_square = all(L == lengths[0] for L in lengths)
+    is_lower_tri = all(lengths[i] == i for i in range(len(lengths)))
 
-        if not (is_square or is_lower_tri):
-            raise PhylipFormatError(
-                f"Inconsistent distance counts detected: {lengths}. "
-                f"This may indicate that sequence IDs contain numeric characters "
-                f"being parsed as distances in strict format. "
-                f"Expected either all {n_seqs} (square) or 0,1,2,... "
-                f"(lower triangular)."
-            )
+    if not (is_square or is_lower_tri):
+        raise PhylipFormatError(
+            f"Inconsistent distance counts detected: {lengths}. "
+            f"This may indicate that sequence IDs contain numeric characters "
+            f"being parsed as distances in strict format. "
+            f"Expected either all {n_seqs} (square) or 0,1,2,... "
+            f"(lower triangular)."
+        )
 
     return data
