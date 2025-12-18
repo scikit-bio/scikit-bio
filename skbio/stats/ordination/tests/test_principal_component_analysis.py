@@ -6,8 +6,9 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import numpy as np
 from unittest import TestCase, main
+
+import numpy as np
 
 from skbio import OrdinationResults
 from skbio.stats.ordination import pca
@@ -70,7 +71,7 @@ class TestPCA(TestCase):
             sample_ids=row_ids,
             features=features,
             feature_ids=pc_ids,
-            proportion_explained = proportion_explained,
+            proportion_explained=proportion_explained,
         )
 
         # Reduced dimensionality expected results (2D)
@@ -116,7 +117,7 @@ class TestPCA(TestCase):
             sample_ids=row_ids,
             features=features,
             feature_ids=pc_ids,
-            proportion_explained = proportion_explained,
+            proportion_explained=proportion_explained,
         )
 
     def test_simple(self):
