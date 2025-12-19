@@ -168,6 +168,30 @@ class TestReaders(unittest.TestCase):
 
                 self.assertEqual(observed, expected)
 
+    def test_strict_format(self):
+        phylip_str = "2 6\nSeq1      ACGTAC\nSeq2      TGCATG\n"
+        fh = io.StringIO(phylip_str)
+        observed = _phylip_to_tabular_msa(fh, constructor=DNA, strict=True)
+        
+        expected = TabularMSA([
+            DNA('ACGTAC', metadata={'id': 'Seq1'}),
+            DNA('TGCATG', metadata={'id': 'Seq2'})
+        ], index=['Seq1', 'Seq2'])
+        
+        self.assertEqual(observed, expected)
+
+    def test_relaxed_format(self):
+        phylip_str = "2 6\nLongSequenceID1 ACGTAC\nAnotherLongID TGCATG\n"
+        fh = io.StringIO(phylip_str)
+        observed = _phylip_to_tabular_msa(fh, constructor=DNA, strict=False)
+        
+        expected = TabularMSA([
+            DNA('ACGTAC', metadata={'id': 'LongSequenceID1'}),
+            DNA('TGCATG', metadata={'id': 'AnotherLongID'})
+        ], index=['LongSequenceID1', 'AnotherLongID'])
+        
+        self.assertEqual(observed, expected)
+
 
 class TestWriters(unittest.TestCase):
     def setUp(self):

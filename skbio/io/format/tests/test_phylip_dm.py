@@ -132,48 +132,62 @@ class TestReaders(unittest.TestCase):
         with self.assertRaises(PhylipFormatError) as e:
             with open(get_data_path(fp), "r") as f:
                 dm = DistanceMatrix.read(f, format="phylip_dm", strict=False)
-        print(str(e.exception))
+        self.assertEqual(
+            str(e.exception),
+            "Inconsistent distance counts detected: [4, 4, 4, 3]. This may indicate that sequence IDs contain whitespace. IDs may only contain whitespace if the strict parameter is set to True. Expected either all 4 (square) or 0,1,2,... (lower triangular)."
+            )
 
 
 class TestWriters(unittest.TestCase):
     def setUp(self):
-        simple_dm = DistanceMatrix(
+        self.dm_condensed = DistanceMatrix([1, 2, 3, 4, 5, 6], condensed=True)
+        self.dm_square = DistanceMatrix(
             [[0, 1, 2, 3], [1, 0, 4, 5], [2, 4, 0, 6], [3, 5, 6, 0]]
         )
-        simple_dm_condensed = DistanceMatrix([1, 2, 3, 4, 5, 6], condensed=True)
-
-        self.objs = [simple_dm, simple_dm_condensed]
-        self.fps = [
-            get_data_path("phylip_dm_simple_sq.dist"),
-            get_data_path("phylip_dm_simple_lt.dist"),
-        ]
-
-    def test_write(self):
-        for fp, obj in zip(self.fps, self.objs):
-            fh = io.StringIO()
-            _matrix_to_phylip(obj, fh, "\t")
-            obs = fh.getvalue()
-            fh.close()
-            with io.open(fp) as fh:
-                exp = fh.read()
-
-            self.assertEqual(obs, exp)
-
-    def test_decorator_write(self):
-        for fp, obj in zip(self.fps, self.objs):
-            with tempfile.TemporaryFile(mode="w+t") as fh:
-                obj.write(fh, format="phylip_dm")
-                fh.seek(0)
-                obs = fh.read()
-            with io.open(fp) as fh:
-                exp = fh.read()
-
-            self.assertEqual(obs, exp)
+        
+        self.expected_lower_tri = "4\n0\n1\t1.0\n2\t2.0\t4.0\n3\t3.0\t5.0\t6.0\n"
+        self.expected_square = "4\n0\t0.0\t1.0\t2.0\t3.0\n1\t1.0\t0.0\t4.0\t5.0\n2\t2.0\t4.0\t0.0\t6.0\n3\t3.0\t5.0\t6.0\t0.0\n"
+    
+    def test_condensed_to_lower_tri(self):
+        """Test writing condensed DistanceMatrix to lower triangular format."""
+        fh = io.StringIO()
+        self.dm_condensed.write(fh, format='phylip_dm', lower_tri=True)
+        result = fh.getvalue()
+        fh.close()
+        
+        self.assertEqual(result, self.expected_lower_tri)
+    
+    def test_condensed_to_square(self):
+        """Test writing condensed DistanceMatrix to square format."""
+        fh = io.StringIO()
+        self.dm_condensed.write(fh, format='phylip_dm', lower_tri=False)
+        result = fh.getvalue()
+        fh.close()
+        
+        self.assertEqual(result, self.expected_square)
+    
+    def test_square_to_lower_tri(self):
+        """Test writing square DistanceMatrix to lower triangular format."""
+        fh = io.StringIO()
+        self.dm_square.write(fh, format='phylip_dm', lower_tri=True)
+        result = fh.getvalue()
+        fh.close()
+        
+        self.assertEqual(result, self.expected_lower_tri)
+    
+    def test_square_to_square(self):
+        """Test writing square DistanceMatrix to square format."""
+        fh = io.StringIO()
+        self.dm_square.write(fh, format='phylip_dm', lower_tri=False)
+        result = fh.getvalue()
+        fh.close()
+        
+        self.assertEqual(result, self.expected_square)
 
     def test_not_enough_sequences(self):
         with self.assertRaises(PhylipFormatError) as e:
             fh = io.StringIO()
-            _matrix_to_phylip(DistanceMatrix([]), fh, "\t")
+            _matrix_to_phylip(DistanceMatrix([]), fh, "\t", lower_tri=True)
             fh.close()
         self.assertEqual(
             str(e.exception),

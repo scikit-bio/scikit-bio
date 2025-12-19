@@ -205,12 +205,12 @@ We can now write the ``TabularMSA`` in PHYLIP format:
 
 References
 ----------
-.. [1] http://evolution.genetics.washington.edu/phylip.html
+.. [1] https://phylipweb.github.io/phylip
 .. [2] RAxML Version 8: A tool for Phylogenetic Analysis and
    Post-Analysis of Large Phylogenies". In Bioinformatics, 2014
-.. [3] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
+.. [3] https://phylipweb.github.io/phylip/doc/sequence.html
 .. [4] http://www.phylo.org/tools/obsolete/phylip.html
-.. [5] http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
+.. [5] https://bioperl.org/formats/alignment_formats/PHYLIP_multiple_alignment_format.html
 
 
 """  # noqa: D205, D415
@@ -249,7 +249,7 @@ def _phylip_sniffer(fh):
 
 
 @phylip.reader(TabularMSA)
-def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
+def _phylip_to_tabular_msa(fh, cls=None, constructor=None, strict=True):
     if cls is None:
         cls = TabularMSA
     if constructor is None:
@@ -257,7 +257,7 @@ def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
 
     seqs = []
     index = []
-    for seq, id_ in _parse_phylip_raw(fh):
+    for seq, id_ in _parse_phylip_raw(fh, strict=strict):
         seqs.append(constructor(seq, metadata={"id": id_}))
         index.append(id_)
     return cls(seqs, index=index)
@@ -316,11 +316,24 @@ def _validate_header(header):
     return n_seqs, seq_len
 
 
-def _validate_line(line, seq_len):
+def _validate_line(line, seq_len, strict=True):
     if not line:
         raise PhylipFormatError("Empty lines are not allowed.")
-    ID = line[:10].strip()
-    seq = line[10:].replace(" ", "")
+
+    if strict:
+        # Strict: first 10 characters are ID, rest is sequence
+        ID = line[:10].strip()
+        seq = line[10:].replace(" ", "")
+    else:
+        # Relaxed: whitespace-separated ID and sequence
+        split_line = line.split(None, 1)  # Split on first whitespace
+        if len(split_line) < 2:
+            raise PhylipFormatError(
+                "Each line must contain an ID and sequence separated by whitespace."
+            )
+        ID = split_line[0]
+        seq = split_line[1].replace(" ", "")
+
     if len(seq) != seq_len:
         raise PhylipFormatError(
             "The length of sequence %s is not %s as specified in the header."
@@ -329,7 +342,7 @@ def _validate_line(line, seq_len):
     return (seq, ID)
 
 
-def _parse_phylip_raw(fh):
+def _parse_phylip_raw(fh, strict=True):
     """Raw parser for PHYLIP files.
 
     Returns a list of raw (seq, id) values.  It is the responsibility of the
@@ -350,7 +363,7 @@ def _parse_phylip_raw(fh):
     # All following lines should be ID+sequence. No blank lines are allowed.
     data = []
     for line in _line_generator(fh):
-        data.append(_validate_line(line, seq_len))
+        data.append(_validate_line(line, seq_len, strict=strict))
     if len(data) != n_seqs:
         raise PhylipFormatError(
             "The number of sequences is not %s " % n_seqs
