@@ -27,7 +27,7 @@ Format Support
 Format Specification
 --------------------
 PHYLIP format is a plain text format containing exactly two sections: a header
-describing the number of sequences in the matrix, followed by the matrix itself.
+describing the number of sequences in the matrix, followed by the matrix itself [1]_.
 
 Relaxed vs. Strict PHYLIP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
