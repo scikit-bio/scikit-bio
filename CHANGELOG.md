@@ -6,7 +6,7 @@
 
 * Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
 * `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
-* Add new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345))
+* Add new `phylip_dm` format for PHYLIP formatted distance matrices, and add support for reading strict PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345))
 
 ### Bug Fixes
 
