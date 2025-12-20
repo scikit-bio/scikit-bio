@@ -145,40 +145,40 @@ class TestWriters(unittest.TestCase):
             [[0, 1, 2, 3], [1, 0, 4, 5], [2, 4, 0, 6], [3, 5, 6, 0]]
         )
         
-        self.expected_lower_tri = "4\n0\n1\t1.0\n2\t2.0\t4.0\n3\t3.0\t5.0\t6.0\n"
+        self.expected_tril = "4\n0\n1\t1.0\n2\t2.0\t4.0\n3\t3.0\t5.0\t6.0\n"
         self.expected_square = "4\n0\t0.0\t1.0\t2.0\t3.0\n1\t1.0\t0.0\t4.0\t5.0\n2\t2.0\t4.0\t0.0\t6.0\n3\t3.0\t5.0\t6.0\t0.0\n"
     
-    def test_condensed_to_lower_tri(self):
-        """Test writing condensed DistanceMatrix to lower triangular format."""
+    def test_condensed_to_tril(self):
+        """Test writing condensed DistanceMatrix to lower triangular layout."""
         fh = io.StringIO()
-        self.dm_condensed.write(fh, format='phylip_dm', lower_tri=True)
+        self.dm_condensed.write(fh, format="phylip_dm", layout="tril")
         result = fh.getvalue()
         fh.close()
         
-        self.assertEqual(result, self.expected_lower_tri)
+        self.assertEqual(result, self.expected_tril)
     
     def test_condensed_to_square(self):
-        """Test writing condensed DistanceMatrix to square format."""
+        """Test writing condensed DistanceMatrix to square layout."""
         fh = io.StringIO()
-        self.dm_condensed.write(fh, format='phylip_dm', lower_tri=False)
+        self.dm_condensed.write(fh, format="phylip_dm", layout="square")
         result = fh.getvalue()
         fh.close()
         
         self.assertEqual(result, self.expected_square)
     
-    def test_square_to_lower_tri(self):
-        """Test writing square DistanceMatrix to lower triangular format."""
+    def test_square_to_tril(self):
+        """Test writing square DistanceMatrix to lower triangular layout."""
         fh = io.StringIO()
-        self.dm_square.write(fh, format='phylip_dm', lower_tri=True)
+        self.dm_square.write(fh, format="phylip_dm", layout="tril")
         result = fh.getvalue()
         fh.close()
         
-        self.assertEqual(result, self.expected_lower_tri)
+        self.assertEqual(result, self.expected_tril)
     
     def test_square_to_square(self):
-        """Test writing square DistanceMatrix to square format."""
+        """Test writing square DistanceMatrix to square layout."""
         fh = io.StringIO()
-        self.dm_square.write(fh, format='phylip_dm', lower_tri=False)
+        self.dm_square.write(fh, format="phylip_dm", layout="square")
         result = fh.getvalue()
         fh.close()
         
@@ -187,13 +187,28 @@ class TestWriters(unittest.TestCase):
     def test_not_enough_sequences(self):
         with self.assertRaises(PhylipFormatError) as e:
             fh = io.StringIO()
-            _matrix_to_phylip(DistanceMatrix([]), fh, "\t", lower_tri=True)
+            _matrix_to_phylip(DistanceMatrix([]), fh, "\t", layout="tril")
             fh.close()
         self.assertEqual(
             str(e.exception),
             "DistanceMatrix can only be written in PHYLIP format if there are at least"
             " two samples in the matrix.",
         )
+
+    def test_invalid_layout(self):
+        """Test writing DistanceMatrix to invalid layout."""
+        fh = io.StringIO()
+
+        with self.assertRaises(PhylipFormatError) as e:
+            self.dm_square.write(fh, format="phylip_dm", layout="triu")
+        self.assertEqual(
+            str(e.exception), "Upper triangular layout is currently not supported.")
+
+        with self.assertRaises(PhylipFormatError) as e:
+            self.dm_square.write(fh, format="phylip_dm", layout="xyz")
+        self.assertEqual(str(e.exception), "'xyz' is not a supported matrix layout.")
+
+        fh.close()
 
 
 if __name__ == "__main__":

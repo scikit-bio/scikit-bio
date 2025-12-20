@@ -6,13 +6,24 @@
 The PHYLIP file format stores pairwise distance matrices. This format is commonly
 used in phylogenetic analysis and is compatible with tools in the PHYLIP package.
 
-An example PHYLIP-formatted distance matrix::
+An example PHYLIP-formatted distance matrix in lower triangular layout::
 
-    4
-    Seq1      0.0000 1.6866 1.7198 1.6606
-    Seq2      1.6866 0.0000 1.5232 1.4841
-    Seq3      1.7198 1.5232 0.0000 0.7115
-    Seq4      1.6606 1.4841 0.7115 0.0000
+    5
+    Seq1
+    Seq2    1.6866
+    Seq3    1.7198  1.5232
+    Seq4    1.6606  1.4841  0.7115
+    Seq5    1.5243  1.4465  0.5958  0.4631
+
+And its equivalent in square layout::
+
+    5
+    Seq1    0.0000  1.6866  1.7198  1.6606  1.5243
+    Seq2    1.6866  0.0000  1.5232  1.4841  1.4465
+    Seq3    1.7198  1.5232  0.0000  0.7115  0.5958
+    Seq4    1.6606  1.4841  0.7115  0.0000  0.4631
+    Seq5    1.5243  1.4465  0.5958  0.4631  0.0000
+
 
 Format Support
 --------------
@@ -27,20 +38,20 @@ Format Support
 Format Specification
 --------------------
 PHYLIP format is a plain text format containing exactly two sections: a header
-describing the number of sequences in the matrix, followed by the matrix itself [1]_.
+describing the number of objects in the matrix, followed by the matrix itself [1]_.
 
 Relaxed vs. Strict PHYLIP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 scikit-bio supports both **relaxed** and **strict** PHYLIP formats:
 
 **Relaxed PHYLIP** (default):
-    - Sequence IDs can have arbitrary length
+    - Object IDs can have arbitrary length
     - IDs and distance values are separated by whitespace (spaces or tabs)
     - IDs **must not** contain whitespace
     - This is the default format for both reading and writing
 
 **Strict PHYLIP** (optional):
-    - Sequence IDs must be exactly 10 characters (padded or truncated)
+    - Object IDs must be exactly 10 characters (padded or truncated)
     - Characters 1-10 are the ID, remaining characters are distance values
     - IDs **may** contain whitespace (e.g., "Sample 01 ")
     - Enable by setting ``strict=True`` when reading
@@ -49,18 +60,10 @@ scikit-bio supports both **relaxed** and **strict** PHYLIP formats:
    compatibility with legacy PHYLIP tools, ensure your IDs are 10 characters or
    fewer and do not contain whitespace.
 
-Sequential vs. Interleaved
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The original PHYLIP specification describes both sequential and interleaved formats.
-scikit-bio supports **sequential** format only, where each row of the matrix appears
-on a single line.
-
-.. note:: Interleaved PHYLIP formats are not currently supported.
-
 Header Section
 ^^^^^^^^^^^^^^
 The header consists of a single line with a single positive integer (``n``) that
-specifies the number of sequences in the matrix. This **must** be the first line
+specifies the number of objects in the matrix. This **must** be the first line
 in the file. The integer may be preceded by optional whitespace.
 
 .. note:: scikit-bio writes the PHYLIP format header without preceding spaces.
@@ -69,17 +72,22 @@ in the file. The integer may be preceded by optional whitespace.
 Matrix Section
 ^^^^^^^^^^^^^^
 The matrix section immediately follows the header. It consists of ``n`` lines (rows),
-one for each sequence. Each row consists of a sequence identifier (ID) followed by
-the distance values for that sequence, separated by whitespace.
+one for each object. Each row consists of an object identifier (ID) followed by
+the distance values for that object, separated by whitespace. Two alternative
+layouts of the matrix body are supported:
 
-**Square matrices**: Each row contains ``n`` distance values (the full row of the
-distance matrix, including the diagonal).
+**Square matrices** (``square``): Each row contains ``n`` distance values (the full
+row of the distance matrix, including the diagonal).
 
-**Lower triangular matrices**: Row ``i`` contains ``i`` distance values (only the
-values below the diagonal). The first row contains no distance values, just the ID.
+**Lower triangular matrices**  (``tril``): Row ``i`` contains ``i`` distance values
+(only the values below the diagonal). The first row contains no distance values, just
+the ID.
 
-Sequence IDs
-^^^^^^^^^^^^
+.. note:: The original PHYLIP format also defines upper triangular matrices (``triu``),
+   although they are less common and currently not supported by scikit-bio.
+
+Object IDs
+^^^^^^^^^^
 **Relaxed format** (default):
     - IDs can have arbitrary length
     - IDs **must not** contain whitespace characters (spaces, tabs, newlines)
@@ -94,77 +102,72 @@ Sequence IDs
 .. note:: When writing, any whitespace in IDs is automatically replaced with
    underscores to ensure compatibility with relaxed format.
 
+
+Format Parameters
+-----------------
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``strict`` : A Boolean indicating whether the object IDs are in strict (``True``) or
+  relaxed (``False``, default) format.
+
+Writer-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``layout`` : A string indicating the layout of the matrix body. Options are "tril"
+  (lower triangular, default) and "square" (square).
+
+
+Examples
+--------
+
 Reading PHYLIP Files
---------------------
-Use the standard scikit-bio I/O interface to read PHYLIP distance matrices:
+^^^^^^^^^^^^^^^^^^^^
 
-Reading a file::
+Reading a PHYLIP distance matrix file into a ``DistanceMatrix`` object:
 
-    >>> from skbio import DistanceMatrix
-    >>> dm = DistanceMatrix.read(  # doctest: +SKIP
-    ...     'distance_matrix.phylip', format='phylip_dm')
+>>> from skbio import DistanceMatrix
+>>> dm = DistanceMatrix.read(  # doctest: +SKIP
+...     'distance_matrix.phylip', format='phylip_dm')
 
-Reading with strict format parsing::
+Reading with strict format parsing:
 
-    >>> dm = DistanceMatrix.read(  # doctest: +SKIP
-    ...     'strict_matrix.phylip', format='phylip_dm', strict=True)
+>>> dm = DistanceMatrix.read(  # doctest: +SKIP
+...     'strict_matrix.phylip', format='phylip_dm', strict=True)
 
-Reading from a file handle::
+Reading from a file handle:
 
-    >>> with open('distance_matrix.phylip', 'r') as f:  # doctest: +SKIP
-    ...     dm = DistanceMatrix.read(f, format='phylip_dm')
+>>> with open('distance_matrix.phylip', 'r') as f:  # doctest: +SKIP
+...     dm = DistanceMatrix.read(f, format='phylip_dm')
 
 Writing PHYLIP Files
---------------------
+^^^^^^^^^^^^^^^^^^^^
+
 Use the standard scikit-bio I/O interface to write PHYLIP distance matrices. You can
-choose between lower triangular (more compact) or square format.
+choose between lower triangular (more compact) or square layout.
 
-Writing to lower triangular format (default)::
+Writing to lower triangular layout (default):
 
-    >>> dm.write('output.phylip', format='phylip_dm')  # doctest: +SKIP
-    >>> # or explicitly:
-    >>> dm.write(  # doctest: +SKIP
-    ...     'output.phylip', format='phylip_dm', lower_tri=True)
+>>> dm.write('output.phylip', format='phylip_dm')  # doctest: +SKIP
+>>> # or explicitly:
+>>> dm.write(  # doctest: +SKIP
+...     'output.phylip', format='phylip_dm', layout='tril')
 
-Writing to square format::
+Writing to square layout:
 
-    >>> dm.write(  # doctest: +SKIP
-    ...     'output_square.phylip', format='phylip_dm', lower_tri=False)
+>>> dm.write(  # doctest: +SKIP
+...     'output_square.phylip', format='phylip_dm', layout='square')
 
-Writing to a file handle::
+Writing to a file handle:
 
-    >>> with open('output.phylip', 'w') as f:  # doctest: +SKIP
-    ...     dm.write(f, format='phylip_dm', lower_tri=True)
+>>> with open('output.phylip', 'w') as f:  # doctest: +SKIP
+...     dm.write(f, format='phylip_dm')
 
 .. note:: The choice of output format (lower triangular vs. square) is independent
    of how the DistanceMatrix was created. You can write any DistanceMatrix to either
    format.
 
-Format Examples
----------------
-Lower triangular matrix::
-
-    4
-    Seq1
-    Seq2	1.5
-    Seq3	2.0	1.0
-    Seq4	3.0	2.5	1.8
-
-Square matrix::
-
-    4
-    Seq1	0.0	1.5	2.0	3.0
-    Seq2	1.5	0.0	1.0	2.5
-    Seq3	2.0	1.0	0.0	1.8
-    Seq4	3.0	2.5	1.8	0.0
-
-Strict format with 10-character IDs::
-
-    4
-    Sample_001  0.0 1.5 2.0 3.0
-    Sample_002  1.5 0.0 1.0 2.5
-    Sample_003  2.0 1.0 0.0 1.8
-    Sample_004  3.0 2.5 1.8 0.0
 
 Working with Whitespace in IDs
 -------------------------------
@@ -199,9 +202,8 @@ the header and matrix or within the matrix itself.
 
 References
 ----------
-.. [1] Felsenstein, J. PHYLIP (Phylogeny Inference Package) version 3.6.
-   Distributed by the author. Department of Genome Sciences, University of
-   Washington, Seattle. 2005.
+.. [1] Felsenstein, J. PHYLIP (Phylogeny Inference Package) version 3.6. Distributed by
+   the author. Department of Genome Sciences, University of Washington, Seattle. 2005.
    https://phylipweb.github.io/phylip/doc/distance.html
 
 """
@@ -263,8 +265,8 @@ def _phylip_dm_to_distance_matrix(fh, cls=None, strict=False):
 
 
 @phylip_dm.writer(DistanceMatrix)
-def _distance_matrix_to_phylip(obj, fh, lower_tri=True):
-    _matrix_to_phylip(obj, fh, delimiter="\t", lower_tri=lower_tri)
+def _distance_matrix_to_phylip(obj, fh, layout="tril"):
+    _matrix_to_phylip(obj, fh, delimiter="\t", layout=layout)
 
 
 def _phylip_to_dm(cls, fh, strict=False):
@@ -282,7 +284,7 @@ def _phylip_to_dm(cls, fh, strict=False):
     return cls(np.array(dists, dtype=float), ids)
 
 
-def _matrix_to_phylip(obj, fh, delimiter, lower_tri):
+def _matrix_to_phylip(obj, fh, delimiter, layout):
     n_samples = obj.shape[0]
     if n_samples < 2:
         raise PhylipFormatError(
@@ -293,7 +295,7 @@ def _matrix_to_phylip(obj, fh, delimiter, lower_tri):
     fh.write(f"{str(n_samples)}\n")
 
     # Default is to write lower triangle
-    if lower_tri:
+    if layout == "tril":
         for i, id_ in enumerate(ids):
             # Here we are replacing whitespace with underscore on write, but we still
             # need to be able to index the DistanceMatrix object by id (which may
@@ -304,13 +306,17 @@ def _matrix_to_phylip(obj, fh, delimiter, lower_tri):
                 fh.write(delimiter)
                 fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
             fh.write("\n")
-    else:
+    elif layout == "square":
         for id_, vals in zip(ids, obj.data):
             id_w = _remove_whitespace(id_)
             fh.write(id_w)
             fh.write(delimiter)
             fh.write(delimiter.join(np.asarray(obj[id_], dtype=str)))
             fh.write("\n")
+    elif layout == "triu":
+        raise PhylipFormatError("Upper triangular layout is currently not supported.")
+    else:
+        raise PhylipFormatError(f"'{layout}' is not a supported matrix layout.")
 
 
 def _remove_whitespace(id):
@@ -329,7 +335,7 @@ def _validate_header(header):
     try:
         (n_seqs,) = [int(x) for x in header_vals]
         if n_seqs < 1:
-            raise PhylipFormatError("The number of sequences must be positive.")
+            raise PhylipFormatError("The number of objects must be positive.")
     except ValueError:
         raise PhylipFormatError(
             "Found non-header line when attempting to read the 1st record "
@@ -346,7 +352,7 @@ def _validate_line(line, n_seqs, n_dists, strict=False):
     line
         The line of text being validated.
     n_seqs
-        The number of sequences in the matrix.
+        The number of objects in the matrix.
     n_dists
         The expected number of distances in the line. When a matrix is square, n_dists
         is equal to n_seqs. When a matrix is lower triangle, n_dists is equal to the
@@ -376,10 +382,10 @@ def _validate_line(line, n_seqs, n_dists, strict=False):
         if dists_len != n_seqs:
             raise PhylipFormatError(
                 f"The number of distances ({len(dists)}) is not ({n_seqs}) as "
-                f"specified in the header. It may be the case that parsing failed due "
-                f"to whitespace in the sequence IDs. The first distance value parsed "
-                f"is ({dists[0]}), which should be a float. Whitespace in IDs is only "
-                f"supported when the 'strict' parameter is set to True."
+                "specified in the header. It may be the case that parsing failed due "
+                "to whitespace in the object IDs. The first distance value parsed is "
+                f"({dists[0]}), which should be a float. Whitespace in IDs is only "
+                "supported when the 'strict' parameter is set to True."
             )
 
     return (dists, id), dists_len
@@ -405,7 +411,7 @@ def _parse_phylip_dm_raw(fh, strict=False):
 
     if len(data) != n_seqs:
         raise PhylipFormatError(
-            f"The number of sequences is not {n_seqs} as specified in the header."
+            f"The number of objects is not {n_seqs} as specified in the header."
         )
 
     # Ensure that no matrix data was accidentally parsed as IDs.
@@ -413,15 +419,14 @@ def _parse_phylip_dm_raw(fh, strict=False):
     # (square format) or all the distance array lengths should be sequentially
     # increasing (lower triangular). If neither is true, then something is wrong.
     is_square = all(L == lengths[0] for L in lengths)
-    is_lower_tri = all(lengths[i] == i for i in range(len(lengths)))
+    is_tril = all(lengths[i] == i for i in range(len(lengths)))
 
-    if not (is_square or is_lower_tri):
+    if not (is_square or is_tril):
         raise PhylipFormatError(
             f"Inconsistent distance counts detected: {lengths}. "
-            f"This may indicate that sequence IDs contain whitespace. IDs may only "
-            f"contain whitespace if the strict parameter is set to True. "
-            f"Expected either all {n_seqs} (square) or 0,1,2,... "
-            f"(lower triangular)."
+            "This may indicate that object IDs contain whitespace. IDs may only "
+            "contain whitespace if the strict parameter is set to True. "
+            f"Expected either all {n_seqs} (square) or 0,1,2,... (lower triangular)."
         )
 
     return data
