@@ -124,7 +124,7 @@ class TestReaders(unittest.TestCase):
                     data = _parse_phylip_dm_raw(f)
             self.assertEqual(
                 str(e.exception),
-                "The number of sequences is not 5 as specified in the header.",
+                "The number of objects is not 5 as specified in the header.",
             )
 
     def test_error_matrix_data_parsed_as_id(self):
@@ -134,7 +134,7 @@ class TestReaders(unittest.TestCase):
                 dm = DistanceMatrix.read(f, format="phylip_dm", strict=False)
         self.assertEqual(
             str(e.exception),
-            "Inconsistent distance counts detected: [4, 4, 4, 3]. This may indicate that sequence IDs contain whitespace. IDs may only contain whitespace if the strict parameter is set to True. Expected either all 4 (square) or 0,1,2,... (lower triangular)."
+            "Inconsistent distance counts detected: [4, 4, 4, 3]. This may indicate that object IDs contain whitespace. IDs may only contain whitespace if the strict parameter is set to True. Expected either all 4 (square) or 0,1,2,... (lower triangular)."
             )
 
 
@@ -184,7 +184,7 @@ class TestWriters(unittest.TestCase):
         
         self.assertEqual(result, self.expected_square)
 
-    def test_not_enough_sequences(self):
+    def test_not_enough_objects(self):
         with self.assertRaises(PhylipFormatError) as e:
             fh = io.StringIO()
             _matrix_to_phylip(DistanceMatrix([]), fh, "\t", layout="tril")
