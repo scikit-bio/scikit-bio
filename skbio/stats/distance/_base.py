@@ -1966,6 +1966,9 @@ class DistanceMatrix(SymmetricMatrix):
     # Override here, used in superclass __str__
     _matrix_element_name: ClassVar[str] = "distance"
 
+    read = Read()
+    write = Write()
+
     def __init__(
         self,
         data: Union[
