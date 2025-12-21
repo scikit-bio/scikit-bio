@@ -11,7 +11,7 @@ from warnings import warn
 
 import numpy as np
 
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
@@ -35,10 +35,10 @@ from skbio.util._decorator import params_aliased
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
 def permanova(
     distmat: "DistanceMatrix",
-    grouping: Union["pd.DataFrame", "ArrayLike"],
-    column: Optional[str] = None,
+    grouping: "pd.DataFrame" | "ArrayLike",
+    column: str | None = None,
     permutations: int = 999,
-    seed: Optional["SeedLike"] = None,
+    seed: "SeedLike" | None = None,
 ) -> "pd.Series":
     r"""Test for significant differences between groups using PERMANOVA.
 
