@@ -22,6 +22,7 @@ class TestSniffer(unittest.TestCase):
             'phylip_dna_3_seqs',
             'phylip_single_seq_long',
             'phylip_single_seq_short',
+            'phylip_single_seq_relaxed',
             'phylip_two_chunks',
             'phylip_variable_length_ids',
             'phylip_varied_whitespace_in_seqs',
@@ -157,16 +158,44 @@ class TestReaders(unittest.TestCase):
     def test_phylip_to_tabular_msa_valid_files(self):
         for valid_files, components in self.valid_configurations:
             for valid in valid_files:
-                observed = _phylip_to_tabular_msa(valid, constructor=DNA)
+                obs = _phylip_to_tabular_msa(valid, constructor=DNA)
 
-                expected_seqs = []
-                expected_index = []
+                exp_seqs = []
+                exp_index = []
                 for seq, id_ in components:
-                    expected_seqs.append(DNA(seq, metadata={"id": id_}))
-                    expected_index.append(id_)
-                expected = TabularMSA(expected_seqs, index=expected_index)
+                    exp_seqs.append(DNA(seq, metadata={"id": id_}))
+                    exp_index.append(id_)
+                exp = TabularMSA(exp_seqs, index=exp_index)
 
-                self.assertEqual(observed, expected)
+                self.assertEqual(obs, exp)
+
+    def test_strict_format(self):
+        fh = ["2 6\nSeq1      ACGTAC\nSeq2      TGCATG\n"]
+        obs = _phylip_to_tabular_msa(fh, constructor=DNA, strict=True)
+        
+        exp = TabularMSA([
+            DNA('ACGTAC', metadata={'id': 'Seq1'}),
+            DNA('TGCATG', metadata={'id': 'Seq2'})
+        ], index=['Seq1', 'Seq2'])
+        
+        self.assertEqual(obs, exp)
+
+    def test_relaxed_format(self):
+        fh = ["2 6\nLongSequenceID1 ACGTAC\nAnotherLongID TGCATG\n"]
+        obs = _phylip_to_tabular_msa(fh, constructor=DNA, strict=False)
+        
+        exp = TabularMSA([
+            DNA('ACGTAC', metadata={'id': 'LongSequenceID1'}),
+            DNA('TGCATG', metadata={'id': 'AnotherLongID'})
+        ], index=['LongSequenceID1', 'AnotherLongID'])
+        
+        self.assertEqual(obs, exp)
+
+        msg = "Each line must contain an ID and sequence separated by whitespace."
+        fh = ["1 5\nI_am_a_line_without_whitespace\n"]
+        with self.assertRaises(PhylipFormatError) as e:
+            _phylip_to_tabular_msa(fh, constructor=DNA, strict=False)
+        self.assertEqual(str(e.exception), msg)
 
     def test_strict_format(self):
         phylip_str = "2 6\nSeq1      ACGTAC\nSeq2      TGCATG\n"
