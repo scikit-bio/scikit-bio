@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from typing import Any, NamedTuple, TYPE_CHECKING
 
 import numpy as np
@@ -26,16 +28,16 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class PairAlignResult(NamedTuple):
     score: float
-    paths: list["PairAlignPath"] | None = None
+    paths: list[PairAlignPath] | None = None
     matrices: tuple[np.ndarray, ...] | None = None
 
 
 def pair_align(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
     mode: str = "global",
-    sub_score: tuple[float, float] | "SubstitutionMatrix" | str = (1.0, -1.0),
+    sub_score: tuple[float, float] | SubstitutionMatrix | str = (1.0, -1.0),
     gap_cost: float | tuple[float, float] = 2.0,
     free_ends: bool | tuple[bool, bool] | tuple[bool, bool, bool, bool] = True,
     trim_ends: bool = False,
@@ -466,8 +468,8 @@ def pair_align(
 
 
 def pair_align_nucl(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
     **kwargs: str,
 ) -> PairAlignResult:
@@ -511,8 +513,8 @@ def pair_align_nucl(
 
 
 def pair_align_prot(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
     **kwargs: str,
 ) -> PairAlignResult:

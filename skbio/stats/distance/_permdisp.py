@@ -6,29 +6,29 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from functools import partial
-
 from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
-    from skbio.util._typing import SeedLike
 
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
 from scipy.spatial.distance import cdist
-from ._cutils import geomedian_axis_one
 
+from ._cutils import geomedian_axis_one
 from ._base import (
     _preprocess_input_sng,
     _run_monte_carlo_stats,
     _build_results,
     DistanceMatrix,
 )
-
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import params_aliased
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import SeedLike
 
 
 @params_aliased(
@@ -38,16 +38,16 @@ from skbio.util._decorator import params_aliased
     ]
 )
 def permdisp(
-    distmat: "DistanceMatrix" | "OrdinationResults",
-    grouping: "pd.DataFrame" | "ArrayLike",
+    distmat: DistanceMatrix | OrdinationResults,
+    grouping: pd.DataFrame | ArrayLike,
     column: str | None = None,
     test: str = "median",
     permutations: int = 999,
     method: str = "eigh",
     dimensions: int = 10,
-    seed: "SeedLike" | None = None,
+    seed: SeedLike | None = None,
     warn_neg_eigval: bool | float = 0.01,
-) -> "pd.Series":
+) -> pd.Series:
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
     PERMDISP is a multivariate analog of Levene's test for homogeneity of multivariate
