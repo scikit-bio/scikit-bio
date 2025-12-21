@@ -40,18 +40,28 @@ PHYLIP format is a plain text format containing exactly two sections: a header
 describing the dimensions of the alignment, followed by the multiple sequence
 alignment itself.
 
-The format described here is "strict" PHYLIP, as described in [4]_. Strict
-PHYLIP requires that each sequence identifier is exactly 10 characters long
-(padded with spaces as necessary). Other bioinformatics tools (e.g., RAxML) may
-relax this rule to allow for longer sequence identifiers. See the
-**Alignment Section** below for more details.
-
 The format described here is "sequential" format. The original PHYLIP format
 specification [3]_ describes both sequential and interleaved formats.
 
 .. note:: scikit-bio currently supports reading and writing strict, sequential
    PHYLIP-formatted files. Relaxed and/or interleaved PHYLIP formats are not
    supported.
+
+Relaxed vs. Strict PHYLIP
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+scikit-bio supports both **relaxed** and **strict** PHYLIP formats:
+
+**Strict PHYLIP** (default):
+    - Sequence IDs must be exactly 10 characters (padded or truncated)
+    - Characters 1-10 are the ID, remaining characters are the sequence
+    - IDs **may** contain whitespace (e.g., "Sample 01 ")
+    - This is the default format for both reading and writing
+
+**Relaxed PHYLIP** (optional):
+    - Sequence IDs can have arbitrary length
+    - IDs and sequences are separated by whitespace (spaces or tabs)
+    - IDs **must not** contain whitespace
+    - Enable by setting ``strict=False`` when reading
 
 Header Section
 ^^^^^^^^^^^^^^
