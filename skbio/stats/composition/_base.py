@@ -17,7 +17,6 @@ import numpy as np
 from skbio.util._decorator import aliased, register_aliases, params_aliased
 from skbio.util._array import ingest_array
 
-
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
     from skbio.util._typing import ArrayLike, StdArray
