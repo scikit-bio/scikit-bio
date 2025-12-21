@@ -8,7 +8,7 @@
 
 from functools import partial
 
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
@@ -38,15 +38,15 @@ from skbio.util._decorator import params_aliased
     ]
 )
 def permdisp(
-    distmat: Union["DistanceMatrix", "OrdinationResults"],
-    grouping: Union["pd.DataFrame", "ArrayLike"],
-    column: Optional[str] = None,
+    distmat: "DistanceMatrix" | "OrdinationResults",
+    grouping: "pd.DataFrame" | "ArrayLike",
+    column: str | None = None,
     test: str = "median",
     permutations: int = 999,
     method: str = "eigh",
     dimensions: int = 10,
-    seed: Optional["SeedLike"] = None,
-    warn_neg_eigval: Union[bool, float] = 0.01,
+    seed: "SeedLike" | None = None,
+    warn_neg_eigval: bool | float = 0.01,
 ) -> "pd.Series":
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
