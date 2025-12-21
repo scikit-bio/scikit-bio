@@ -133,7 +133,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         data: NDArray | Sequence[float] | Sequence[Sequence[float]] | PairwiseMatrix,
         ids: Sequence[str] | None = None,
         validate: bool = True,
-    ) -> None:
+    ):
         data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
@@ -192,22 +192,22 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # At this point in the code we can be certain that data is an
         # ndarray.
         assert isinstance(data, np.ndarray)
-        data_: np.ndarray = data
+        data_: NDArray = data
         return (data_, ids, validate_shape, validate_ids)
 
-    def _generate_ids(self, data):
+    def _generate_ids(self, data: NDArray) -> tuple[str, ...]:
         """Generate ids if none provided."""
         if data.ndim != 1:
             return tuple(str(i) for i in range(data.shape[0]))
         else:
             return tuple(str(i) for i in range(_vec_to_shape(data)))
 
-    def _init_flags(self):
+    def _init_flags(self, condensed: bool = False) -> dict:
         """Initialize boolean flags for matrix forms."""
         # This is the default value. PairwiseMatrix doesn't really need flags.
         return {"CONDENSED": False}
 
-    def _init_data(self, data):
+    def _init_data(self, data: NDArray, condensed: bool = False) -> NDArray:
         """Initialize underlying data structure."""
         return data
 
@@ -413,13 +413,15 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         return self._copy()
 
-    def _copy(self, transpose: bool = False) -> PairwiseMatrix:
+    def _copy(self, transpose: bool = False, condensed: bool = False) -> PairwiseMatrix:
         r"""Copy support.
 
         Parameters
         ----------
         transpose : bool
-            Transpose the data on copy.
+            Whether transpose the data on copy.
+        condensed : bool
+            Placeholder. Always False.
 
         Returns
         -------
@@ -1197,7 +1199,7 @@ class SymmetricMatrix(PairwiseMatrix):
         # At this point in the code we can be certain that data is an
         # ndarray.
         assert isinstance(data, np.ndarray)
-        data_: np.ndarray = data
+        data_: NDArray = data
         return (
             data_,
             ids,
@@ -1208,7 +1210,9 @@ class SymmetricMatrix(PairwiseMatrix):
             validate_diagonal,
         )
 
-    def _init_diagonal(self, diagonal: float | NDArray, data: NDArray, condensed):
+    def _init_diagonal(
+        self, diagonal: float | NDArray | None, data: NDArray, condensed: bool
+    ) -> float | NDArray | None:
         """Initialize the diagonal attribute.
 
         Parameters
@@ -1217,33 +1221,37 @@ class SymmetricMatrix(PairwiseMatrix):
             The value or values defined along the diagonal of the matrix.
         data : np.ndarray
             1 or 2-dimensional array of the data of the matrix.
+        condensed : bool
+            Whether the matrix is in condensed form.
 
         Returns
         -------
-        float or np.ndarray
+        float, np.ndarray, or None
             The diagonal values of the matrix.
 
         """
         if diagonal is not None:
             if np.isscalar(diagonal):
-                return float(diagonal)
+                if isinstance(diagonal, (float, np.floating)):
+                    return diagonal
+                else:
+                    return float(diagonal)
             else:
                 return np.asarray(diagonal)
-        if condensed:
+        elif condensed:
             if data.ndim == 1:
                 return 0.0
-            if data.ndim == 2:
+            elif data.ndim == 2:
                 return np.diagonal(data)
-        else:
-            return None
+        return None
 
-    def _init_flags(self, condensed: bool) -> dict:
+    def _init_flags(self, condensed: bool = False) -> dict:
         """Initialize flags for symmetric matrix.
 
         Parameters
         ----------
         condensed : bool
-            Whether the matrix is in condensed form or not.
+            Whether the matrix is in condensed form.
 
         Returns
         -------
@@ -1256,7 +1264,7 @@ class SymmetricMatrix(PairwiseMatrix):
         else:
             return {"CONDENSED": False}
 
-    def _init_data(self, data: NDArray, condensed: bool) -> None:
+    def _init_data(self, data: NDArray, condensed: bool = False) -> NDArray:
         """Initialize data for symmetric matrix.
 
         Parameters
@@ -1428,7 +1436,7 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | ArrayLike = 0.0,
-    ) -> "SymmetricMatrix":
+    ) -> SymmetricMatrix:
         r"""Create a symmetric matrix from an iterable given a metric.
 
         Parameters
@@ -1775,13 +1783,17 @@ class SymmetricMatrix(PairwiseMatrix):
         else:
             return self._copy()
 
-    def _copy(self, condensed: bool = False) -> SymmetricMatrix:
+    def _copy(
+        self, transpose: bool = False, condensed: bool = False
+    ) -> SymmetricMatrix:
         """Copy support.
 
         Parameters
         ----------
+        transpose : bool
+            Placeholder. Always False.
         condensed : bool
-            Whether the matrix is in condensed form or not.
+            Whether the matrix is in condensed form.
 
         Returns
         -------
@@ -1840,7 +1852,9 @@ class SymmetricMatrix(PairwiseMatrix):
         # or j_ids is empty.
         values = [np.array([])]
         if self._flags["CONDENSED"]:
-            diagonal_val = getattr(self, "_diagonal", 0.0)
+            diagonal = getattr(self, "_diagonal", 0.0)
+            if diag_is_array := isinstance(diagonal, np.ndarray):
+                diag_arr = diagonal
             n = self.shape[0]
 
             # precompute to avoid repeated calculations
@@ -1854,15 +1868,13 @@ class SymmetricMatrix(PairwiseMatrix):
                         condensed_indices[key] = _condensed_index(key[0], key[1], n)
 
             for i_idx in i_indices:
+                diag_ = diag_arr[i_idx] if diag_is_array else diagonal
                 i.extend([self.ids[i_idx]] * j_length)
                 j.extend(j_labels)
                 subset_values = np.zeros(j_length, dtype=self._data.dtype)
                 for idx, j_idx in enumerate(j_indices):
                     if i_idx == j_idx:
-                        if np.isscalar(diagonal_val):
-                            subset_values[idx] = diagonal_val
-                        else:
-                            subset_values[idx] = diagonal_val[i_idx]
+                        subset_values[idx] = diag_
                     else:
                         key = (min(i_idx, j_idx), max(i_idx, j_idx))
                         subset_values[idx] = self._data[condensed_indices[key]]
@@ -1947,13 +1959,8 @@ class DistanceMatrix(SymmetricMatrix):
 
     def __init__(
         self,
-        data: Union[
-            np.ndarray,
-            Sequence[float],
-            Sequence[Sequence[float]],
-            "PairwiseMatrix",
-        ],
-        ids: Optional[Sequence[str]] = None,
+        data: NDArray | Sequence[float] | Sequence[Sequence[float]] | PairwiseMatrix,
+        ids: Sequence[str] | None = None,
         validate: bool = True,
         condensed: bool = False,
     ):
@@ -2030,10 +2037,10 @@ class DistanceMatrix(SymmetricMatrix):
         # At this point in the code we can be certain that data is an
         # ndarray.
         assert isinstance(data, np.ndarray)
-        data_: np.ndarray = data
+        data_: NDArray = data
         return data_, ids, validate_data, validate_ids, validate_shape
 
-    def _validate_data(self, data: np.ndarray) -> None:
+    def _validate_data(self, data: NDArray) -> None:
         """Validate the data array.
 
         Performs a check for symmetry and hollowness.
@@ -2051,19 +2058,19 @@ class DistanceMatrix(SymmetricMatrix):
                     "Data must  be hollow (i.e., the diagonal can only contain zeros)."
                 )
 
-    def _copy(
-        self, transpose: bool = False, condensed: bool = False
-    ) -> SymmetricMatrix:
+    def _copy(self, transpose: bool = False, condensed: bool = False) -> DistanceMatrix:
         """Copy support.
 
         Parameters
         ----------
+        transpose : bool
+            Placeholder. Always False.
         condensed : bool
-            Whether the matrix is in condensed form or not.
+            Whether the matrix is in condensed form.
 
         Returns
         -------
-        SymmetricMatrix
+        DistanceMatrix
 
         """
         # adding for backward compatibility
@@ -2345,7 +2352,7 @@ def _run_monte_carlo_stats(
     rng = get_rng(seed)
     p_value = np.nan
     if permutations > 0:
-        perm_stats = np.empty(permutations, dtype=np.float64)
+        perm_stats: NDArray = np.empty(permutations, dtype=np.float64)
 
         for i in range(permutations):
             perm_grouping = rng.permutation(grouping)
@@ -2500,8 +2507,8 @@ def _get_keys(iterable, key, keys):
 
 
 def _get_element_from_condensed(
-    condensed_data: NDArray, i: int, j: int, n: int, diagonal: NDArray
-) -> float:
+    condensed_data: NDArray, i: int, j: int, n: int, diagonal: float | NDArray
+) -> float | np.floating:
     """Get a single element from condensed storage.
 
     Parameters
@@ -2525,7 +2532,7 @@ def _get_element_from_condensed(
 
     """
     if i == j:
-        if np.isscalar(diagonal):
+        if isinstance(diagonal, (float, np.floating)):
             return diagonal
         else:
             return diagonal[i]
@@ -2535,7 +2542,7 @@ def _get_element_from_condensed(
 
 
 def _get_row_from_condensed(
-    condensed_data: NDArray, row_idx: int, n: int, diagonal: NDArray
+    condensed_data: NDArray, row_idx: int, n: int, diagonal: float | NDArray
 ) -> NDArray:
     """Extract a full row from condensed storage.
 
@@ -2559,7 +2566,7 @@ def _get_row_from_condensed(
     row = np.empty(n, dtype=condensed_data.dtype)
 
     # fill in diagonal value
-    if np.isscalar(diagonal):
+    if isinstance(diagonal, (float, np.floating)):
         row[row_idx] = diagonal
     else:
         row[row_idx] = diagonal[row_idx]
