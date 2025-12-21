@@ -5,7 +5,7 @@
 
 The PHYLIP file format stores a multiple sequence alignment. The format was
 originally defined and used in Joe Felsenstein's PHYLIP package [1]_, and has
-since been supported by several other bioinformatics tools (e.g., RAxML [2]_).
+since been supported by multiple other bioinformatics tools (e.g., RAxML [2]_).
 See [3]_ for the original format description, and [4]_ and [5]_ for additional
 descriptions.
 
@@ -123,12 +123,20 @@ improve readability), and both upper and lower case characters are supported.
 
 Format Parameters
 -----------------
-The only supported format parameter is ``constructor``, which specifies the
-type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
-and is a required format parameter. For example, if you know that the PHYLIP
-file you're reading contains DNA sequences, you would pass ``constructor=DNA``
-to the reader call.
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``constructor`` (required): The type of in-memory sequence object to read each
+  aligned sequence into. Must be a subclass of ``GrammaredSequence`` (e.g., ``DNA``,
+  ``RNA``, ``Protein``). For example, if you know that the PHYLIP file being readi
+  contains DNA sequences, you would pass ``constructor=DNA`` to the reader call.
+
+- ``strict`` : A Boolean indicating whether the object IDs are in strict (``True``,
+  default) or relaxed (``False``) format.
+
+  .. versionadded:: 0.7.2
+
 
 Examples
 --------
@@ -206,8 +214,8 @@ We can now write the ``TabularMSA`` in PHYLIP format:
 References
 ----------
 .. [1] https://phylipweb.github.io/phylip
-.. [2] RAxML Version 8: A tool for Phylogenetic Analysis and
-   Post-Analysis of Large Phylogenies". In Bioinformatics, 2014
+.. [2] Stamatakis, A. (2014). RAxML version 8: a tool for phylogenetic analysis and
+   post-analysis of large phylogenies. Bioinformatics, 30(9), 1312-1313.
 .. [3] https://phylipweb.github.io/phylip/doc/sequence.html
 .. [4] http://www.phylo.org/tools/obsolete/phylip.html
 .. [5] https://bioperl.org/formats/alignment_formats/PHYLIP_multiple_alignment_format.html
@@ -239,13 +247,28 @@ def _phylip_sniffer(fh):
     #   lines matches the header information, since that would require reading
     #   the whole file.
     try:
-        header = next(_line_generator(fh))
+        header = next(fh).rstrip()
         _, seq_len = _validate_header(header)
-        line = next(_line_generator(fh))
-        _validate_line(line, seq_len)
+        line = next(fh).rstrip()
+
+        # Try strict format
+        try:
+            _validate_line(line, seq_len, strict=True)
+            return True, {}
+        except PhylipFormatError:
+            pass
+
+        # Try relaxed format
+        try:
+            _validate_line(line, seq_len, strict=False)
+            return True, {}
+        except PhylipFormatError:
+            pass
+
+        return False, {}
+
     except (StopIteration, PhylipFormatError):
         return False, {}
-    return True, {}
 
 
 @phylip.reader(TabularMSA)
@@ -355,24 +378,18 @@ def _parse_phylip_raw(fh, strict=True):
 
     # File should have a single header on the first line.
     try:
-        header = next(_line_generator(fh))
+        header = next(fh).rstrip()
     except StopIteration:
         raise PhylipFormatError("This file is empty.")
     n_seqs, seq_len = _validate_header(header)
 
     # All following lines should be ID+sequence. No blank lines are allowed.
     data = []
-    for line in _line_generator(fh):
-        data.append(_validate_line(line, seq_len, strict=strict))
+    for line in fh:
+        data.append(_validate_line(line.rstrip(), seq_len, strict=strict))
     if len(data) != n_seqs:
         raise PhylipFormatError(
             "The number of sequences is not %s " % n_seqs
             + "as specified in the header."
         )
     return data
-
-
-def _line_generator(fh):
-    """Just remove linebreak characters and yield lines."""
-    for line in fh:
-        yield line.rstrip("\n")

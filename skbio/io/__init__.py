@@ -122,6 +122,7 @@ Exceptions and warnings
    NewickFormatError
    OrdinationFormatError
    PhylipFormatError
+   PhylipDMFormatError
    QSeqFormatError
    QUALFormatError
    StockholmFormatError
@@ -320,6 +321,7 @@ from ._exception import (
     NewickFormatError,
     OrdinationFormatError,
     PhylipFormatError,
+    PhylipDMFormatError,
     QSeqFormatError,
     QUALFormatError,
     StockholmFormatError,
@@ -354,6 +356,7 @@ __all__ = [
     "NewickFormatError",
     "OrdinationFormatError",
     "PhylipFormatError",
+    "PhylipDMFormatError",
     "QSeqFormatError",
     "QUALFormatError",
     "StockholmFormatError",
