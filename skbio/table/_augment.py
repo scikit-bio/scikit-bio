@@ -23,9 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import TableLike, SeedLike
 
 
-def _validate_labels(  # type: ignore[return]
-    labels: NDArray, n: int
-) -> tuple[NDArray, NDArray]:
+def _validate_labels(labels: NDArray, n: int) -> tuple[NDArray, NDArray]:
     r"""Ensure that the provided label is appropriate for the provided matrix.
 
     Parameters
