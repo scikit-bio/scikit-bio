@@ -50,17 +50,16 @@ def permdisp(
 ) -> "pd.Series":
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
-    PERMDISP is a multivariate analogue of Levene's test for homogeneity of
-    multivariate variances. Distances are handled by reducing the
-    original distances to principal coordinates. PERMDISP calculates an
-    F-statistic to assess whether the dispersions between groups is significant
+    PERMDISP is a multivariate analog of Levene's test for homogeneity of multivariate
+    variances. Distances are handled by reducing the original distances to principal
+    coordinates. PERMDISP calculates an F-statistic to assess whether the dispersions
+    between groups is significant.
 
     Parameters
     ----------
     distmat : DistanceMatrix or OrdinationResults
         Distance matrix containing distances between objects (e.g., distances
-        between samples of microbial communities) or
-        result of pcoa on such a matrix.
+        between samples of microbial communities) or result of pcoa on such a matrix.
     grouping : 1-D array_like or pandas.DataFrame
         Vector indicating the assignment of objects to groups. For example,
         these could be strings or integers denoting which group an object
@@ -77,18 +76,18 @@ def permdisp(
         Column name to use as the grouping vector if `grouping` is a
         ``DataFrame``. Must be provided if `grouping` is a ``DataFrame``.
         Cannot be provided if `grouping` is 1-D ``array_like``.
-    test : {'centroid', 'median'}
+    test : {'centroid', 'median'}, optional
         Determines whether the analysis is done using centroid or spatial
-        median.
+        median (default).
     permutations : int, optional
         Number of permutations to use when assessing statistical
         significance. Must be greater than or equal to zero. If zero,
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
-    method : str, optional
+    method : {'eigh', 'fsvd'}, optional
         Matrix decomposition method to use. Options are "eigh" (eigendecomposition,
         default) and "fsvd" (fast singular value decomposition). See
-        :func:`skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
+        :func:`~skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
         distmat is a OrdinationResults object.
     dimensions : int, optional
         Dimensions to reduce the distance matrix to if using the `fsvd` method.
@@ -108,8 +107,7 @@ def permdisp(
     Returns
     -------
     pandas.Series
-        Results of the statistical test, including ``test statistic`` and
-        ``p-value``.
+        Results of the statistical test, including ``test statistic`` and ``p-value``.
 
     Raises
     ------
@@ -118,22 +116,20 @@ def permdisp(
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
     ValueError
-        If the test is not centroid or median,
-        or if method is not eigh or fsvd
+        If the test is not centroid or median, or if method is not eigh or fsvd.
     TypeError
-        If the distance matrix is not an instance of a
-        ``skbio.DistanceMatrix``.
+        If the distance matrix is not an instance of ``DistanceMatrix``.
     ValueError
-        If there is only one group
+        If there is only one group.
     ValueError
-        If a list and a column name are both provided
+        If a list and a column name are both provided.
     ValueError
-        If a list is provided for `grouping` and it's length does not match
-        the number of ids in distmat
+        If a list is provided for `grouping` and it's length does not match.
+        the number of ids in distmat.
     ValueError
-        If all of the values in the grouping vector are unique
+        If all of the values in the grouping vector are unique.
     KeyError
-        If there are ids in grouping that are not in distmat
+        If there are ids in grouping that are not in distmat.
 
     See Also
     --------
@@ -164,8 +160,7 @@ def permdisp(
 
     Examples
     --------
-    Load a 6x6 distance matrix and grouping vector denoting 2 groups of
-    objects:
+    Load a 6x6 distance matrix and grouping vector denoting 2 groups of objects:
 
     >>> from skbio import DistanceMatrix
     >>> dm = DistanceMatrix([[0,    0.5,  0.75, 1, 0.66, 0.33],
@@ -177,8 +172,8 @@ def permdisp(
     ...                       ['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
-    Run PERMDISP using 99 permutations to calculate the p-value. The seed is to
-    make the output deterministic. You may skip it if that's not necessary.
+    Run PERMDISP using 99 permutations to calculate the p-value. The seed is to make
+    the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
     >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
@@ -191,11 +186,11 @@ def permdisp(
     number of permutations          99
     Name: PERMDISP results, dtype: object
 
-    The return value is a ``pandas.Series`` object containing the results of
-    the statistical test.
+    The return value is a ``pandas.Series`` object containing the results of the
+    statistical test.
 
-    To suppress calculation of the p-value and only obtain the F statistic,
-    specify zero permutations:
+    To suppress calculation of the p-value and only obtain the F statistic, specify
+    zero permutations:
 
     >>> permdisp(dm, grouping, permutations=0)
     method name               PERMDISP
