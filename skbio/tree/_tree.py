@@ -478,11 +478,12 @@ class TreeNode(SkbioObject):
         ['a', 'c', 'g']
 
         """
-        curr = self
-        result = [curr] if include_self else []
+        result = [self] if include_self else []
         result_append = result.append
-        while (parent := curr.parent) is not None:
-            result_append(curr := parent)
+        curr = self.parent
+        while curr is not None:
+            result_append(curr)
+            curr = curr.parent
         return result
 
     def siblings(self) -> list[TreeNode]:
@@ -509,9 +510,9 @@ class TreeNode(SkbioObject):
         ['d', 'f']
 
         """
-        try:
-            return [x for x in self.parent.children if x is not self]
-        except AttributeError:
+        if (parent := self.parent) is not None:
+            return [x for x in parent.children if x is not self]
+        else:
             return []
 
     def neighbors(self, ignore: TreeNode | None = None) -> list[TreeNode]:
@@ -1692,7 +1693,7 @@ class TreeNode(SkbioObject):
         prune: bool = True,
         inplace: bool = False,
         uncache: bool = True,
-    ) -> TreeNode:
+    ) -> TreeNode | None:
         r"""Refine a tree such that it just has the desired tip names.
 
         Parameters
@@ -1821,6 +1822,7 @@ class TreeNode(SkbioObject):
         # reconnect subtree to parent
         if inplace:
             tree.parent = curr_parent
+            return None
         else:
             return tree
 
@@ -2098,7 +2100,7 @@ class TreeNode(SkbioObject):
             raise ValueError("n must be > 0.")
 
         # determine shuffling function
-        shuffler = _check_shuffler(shuffler)
+        func = _check_shuffler(shuffler)
 
         # determine tip names to shuffle
         if names is not None:
@@ -2106,7 +2108,7 @@ class TreeNode(SkbioObject):
         else:
             tips = list(self.tips())
             if k is not None:
-                shuffler(tips)
+                func(tips)
                 tips = tips[:k]
             names = [x.name for x in tips]
 
@@ -2116,7 +2118,7 @@ class TreeNode(SkbioObject):
         # iteratively shuffle tip names and yield tree
         counter = 0
         while counter < n:
-            shuffler(names)
+            func(names)
             for tip, name in zip(tips, names):
                 tip.name = name
             yield self
@@ -3812,17 +3814,19 @@ class TreeNode(SkbioObject):
         1.0
 
         """
-        curr = self
-        path = [curr]
+        path = [self]
         path_append = path.append
         if ancestor is None:
-            while (curr := curr.parent) is not None:
+            curr = self.parent
+            while curr is not None:
                 path_append(curr)
+                curr = curr.parent
         else:
             try:
+                curr = self
                 while curr is not ancestor:
                     path_append(curr := curr.parent)
-            except AttributeError:
+            except AttributeError:  # reached root but didn't encounter ancestor
                 raise NoParentError("Provided ancestor is not ancestral to self.")
         if not include_root:
             path = path[:-1]
