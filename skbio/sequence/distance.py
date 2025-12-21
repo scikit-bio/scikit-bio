@@ -45,7 +45,9 @@ Nucleotide distance metrics
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from inspect import signature
 import functools
 
@@ -55,7 +57,7 @@ from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
 from skbio.sequence._alphabet import _encode_alphabet
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
+    from numpy.typing import NDArray, ArrayLike
 
 # ----------------------------------------------------------------------------
 # Functions of this module are organized in the following structure: Each
@@ -87,9 +89,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _metric_specs(
-    seqtype: Optional[type] = None,
+    seqtype: type | tuple[type, ...] | None = None,
     equal: bool = False,
-    alphabet: Optional[Union[str, "ArrayLike"]] = None,
+    alphabet: str | ArrayLike | None = None,
 ):
     r"""Specifications of a sequence distance metric.
 
@@ -299,7 +301,7 @@ def _char_index(seqtype):
 
 # A special index for nucleotide sequences. This index is uint8 to save memory space.
 # A: 0, C: 1, G: 2, T and U: 3, others: 4
-nucl_index = np.full(128, 4, dtype=np.uint8)
+nucl_index: NDArray[np.uint8] = np.full(128, 4, dtype=np.uint8)
 nucl_index[[65, 67, 71, 84, 85]] = [0, 1, 2, 3, 3]
 
 

@@ -6,8 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, Any, Callable, TYPE_CHECKING
+from __future__ import annotations
+
 from inspect import isfunction, getmodule
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -17,15 +19,17 @@ from skbio.sequence.distance import _check_seqtype, _char_hash, _char_freqs
 import skbio.sequence.distance as sk_seqdist
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
     from skbio.alignment import TabularMSA
+    from numpy.typing import NDArray
 
 
 def align_dists(
-    alignment: "TabularMSA",
-    metric: Union[str, Callable],
-    shared_by_all: Optional[bool] = True,
-    **kwargs: Any,
-) -> "DistanceMatrix":
+    alignment: TabularMSA,
+    metric: str | Callable,
+    shared_by_all: bool | None = True,
+    **kwargs: str,
+) -> DistanceMatrix:
     r"""Create a distance matrix from a multiple sequence alignment.
 
     .. versionadded:: 0.7.2
@@ -171,8 +175,17 @@ def align_dists(
     else:
         dm = np.empty(size)
 
+        # no deletion (TODO: unit test)
+        if site_mat is None:
+            pos = -1
+            for i in range(nseq - 1):
+                seq_i = alignment[i]
+                for j in range(i + 1, nseq):
+                    dm[pos + j] = func(seq_i, alignment[j], **kwargs)
+                pos += nseq - i - 2
+
         # complete deletion
-        if shared_by_all:
+        elif shared_by_all:
             site_vec = np.all(site_mat, axis=0)
             seqs = [seq[site_vec] for seq in alignment]
             pos = -1
