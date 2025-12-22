@@ -3144,10 +3144,10 @@ class TreeNode(SkbioObject):
         -------
         frozenset of frozenset of str, or
             All subsets of taxa defined by nodes descending from self. Returned if
-            `map_to_length` is False.
+            ``map_to_length`` is False.
         dict of {frozenset of str: float}
             Mapping of all subsets of taxa to their branch lengths. Returned if
-            `map_to_length` is True.
+            ``map_to_length`` is True.
 
         See Also
         --------
@@ -4032,7 +4032,7 @@ class TreeNode(SkbioObject):
         while curr is not None:
             first_path_append(curr)
             curr._unique = True
-            curr = curr.parent
+            curr = curr.parent  # type: ignore[assignment]
 
         other_paths = []
         other_paths_append = other_paths.append
@@ -4371,9 +4371,15 @@ class TreeNode(SkbioObject):
         # of tip indices within each node. A `_range` attribute is assigned to each
         # node, representing the range of tip indices.
         if not endpoints:
-            for i, tip in enumerate(self.tips()):
-                tip._range = (i, i + 1)
-                taxa_append(tip.name)
+            i = 0
+            for tip in self.tips():
+                if (name := tip.name) is not None:
+                    taxa_append(name)
+                    tip._range = (i, i + 1)
+                    i += 1
+            # for i, tip in enumerate(self.tips()):
+            #     tip._range = (i, i + 1)
+            #     taxa_append(tip.name)
             num_tips = len(taxa)
 
             # A tree could have duplicate taxa so this check is desired.
