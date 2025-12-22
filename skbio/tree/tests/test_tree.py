@@ -1340,6 +1340,18 @@ class TreeTests(TestCase):
         obs = t.root_at_midpoint(reset=False)
         self.assertEqual(str(obs), nwk)
 
+    def test_root_at_midpoint_missing_length(self):
+        # Internal node c has no length. It will be treated as 0.
+        # b and e are farthest apart, by 11, therefore root should be
+        # 5.5 above b, and 1.5 below c.
+        nwk = "((a:2,b:7)c,(d:1,e:3)f:1,g:2)h;\n"
+        t = TreeNode.read([nwk])
+        obs = t.root_at_midpoint(reset=False)
+        exp = TreeNode.read(["(b:5.5,(a:2,((d:1,e:3)f:1,g:2)h)c:1.5);"])
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
+
     def test_root_at_midpoint_tie(self):
         t = TreeNode.read(["(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1);"])
         obs = t.root_at_midpoint()

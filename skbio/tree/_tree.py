@@ -119,6 +119,8 @@ class TreeNode(SkbioObject):
     ):
         self.name = name
         self.length = length
+
+        # TODO: `support` doesn't need to be a default attribute.
         self.support = support
         self.parent = parent
         self.children: list[TreeNode] = []
@@ -596,9 +598,6 @@ class TreeNode(SkbioObject):
         """
         if not nodes:
             raise ValueError("No node is specified.")
-        nodes = [self.find(x) for x in nodes]
-        if len(nodes) == 1:
-            return nodes[0]
 
         # Keep a record of visited nodes, such that the temporary attribute assigned
         # to each node can be cleared after getting LCA.
@@ -608,20 +607,21 @@ class TreeNode(SkbioObject):
         # Path of the first node to root. LCA must be in this path.
         # A temporary attribute "prev" will be assigned to visited nodes. It represents
         # the previous node in the upward path.
-        curr = next(nodes := iter(nodes))
+        it = map(self.find, nodes)
+        curr = next(it)
         prev = None
         while curr is not None:
             visited_append(curr)
             curr._prev = prev
             prev = curr
-            curr = curr.parent
+            curr = curr.parent  # type: ignore[assignment]
 
         # Paths of other nodes to root.
         # The prev attribute no longer needs to record the previous node. It is
         # uniformly set as None. When the path hits a previously visited node, it will
         # stop. If the node is in the first path, its prev becomes None, indicating
         # that it has been visited more than once.
-        for curr in nodes:
+        for curr in it:
             while not hasattr(curr, "_prev"):
                 visited_append(curr)
                 curr._prev = None
@@ -963,7 +963,7 @@ class TreeNode(SkbioObject):
                     yield curr
                 if curr is self:
                     break
-                curr = curr.parent
+                curr = curr.parent  # type: ignore[assignment]
                 curr_children = curr.children
                 curr_children_len = len(curr_children)
                 child_index_stack_pop()
@@ -1058,7 +1058,7 @@ class TreeNode(SkbioObject):
                     yield curr
                 if curr is self:
                     break
-                curr = curr.parent
+                curr = curr.parent  # type: ignore[assignment]
                 curr_children = curr.children
                 child_index_stack_pop()
                 child_index_stack[-1] += 1
@@ -1586,7 +1586,7 @@ class TreeNode(SkbioObject):
             self.clear_caches()
         for node in self.traverse(include_self=False):
             if func(node):
-                node.parent.remove(node, uncache=False)
+                node.parent.remove(node, uncache=False)  # type: ignore[union-attr]
 
     def prune(self, uncache: bool = True):
         r"""Collapse single-child nodes in the tree.
@@ -1793,8 +1793,7 @@ class TreeNode(SkbioObject):
             tree = self.copy()
 
         # mark desired tips and their ancestors
-        marked: set[TreeNode]
-        marked = set()
+        marked: set[TreeNode] = set()
         marked_add = marked.add
         for tip in tree.tips():
             if tip.name in names:
@@ -1813,7 +1812,7 @@ class TreeNode(SkbioObject):
         # within clades that are already removed
         for node in list(tree.traverse()):
             if node not in marked:
-                node.parent.remove(node, uncache=False)
+                node.parent.remove(node, uncache=False)  # type: ignore[union-attr]
 
         # remove single-child nodes
         if prune:
@@ -1874,8 +1873,8 @@ class TreeNode(SkbioObject):
         for child in self.children:
             clen = child.length or 0.0
             child.length = clen + blen or None
-        parent.remove(self, uncache=False)
-        parent.extend(self.children, uncache=False)
+        parent.remove(self, uncache=False)  # type: ignore[union-attr]
+        parent.extend(self.children, uncache=False)  # type: ignore[union-attr]
 
     def unpack_by_func(self, func: Callable[[TreeNode], bool], uncache: bool = True):
         """Unpack internal nodes of a tree that meet certain criteria.
@@ -2644,10 +2643,10 @@ class TreeNode(SkbioObject):
         to_copy = False
         if not inplace:
             if reset or above is not False:
-                tree.assign_ids()
+                tree.assign_ids()  # every node will have an integer ID
                 new_tree = tree.copy()
                 new_tree.assign_ids()
-                node = new_tree.find_by_id(node.id)
+                node = new_tree.find_by_id(node.id)  # type: ignore[arg-type]
                 tree = new_tree
             else:
                 to_copy = True
@@ -2802,29 +2801,25 @@ class TreeNode(SkbioObject):
         if reset:
             tree.unroot(uncache=False)
 
-        max_dist, tips = tree.maxdist()
-        half_max_dist = max_dist / 2.0
-
+        max_dist, (tip1, tip2) = tree.maxdist()
         if max_dist == 0.0:
             return tree
+        half_max_dist = max_dist / 2.0
 
-        tip1 = tree.find(tips[0])
-        tip2 = tree.find(tips[1])
         lca = tree.lca([tip1, tip2])
-
-        if tip1.depth(lca) > half_max_dist:
+        if tip1.depth(lca, missing_as_zero=True) > half_max_dist:
             climb_node = tip1
         else:
             climb_node = tip2
 
         dist_climbed = 0.0
-        while dist_climbed + climb_node.length < half_max_dist:
-            dist_climbed += climb_node.length
+        while (dist_ := dist_climbed + climb_node.length or 0.0) < half_max_dist:
+            dist_climbed = dist_
             climb_node = climb_node.parent
 
         # case 1: midpoint is at the climb node's parent
         # make the parent node as the new root
-        if dist_climbed + climb_node.length == half_max_dist:
+        if (dist_climbed + climb_node.length or 0.0) == half_max_dist:
             new_root = climb_node.parent
 
         # case 2: midpoint is on the climb node's branch to its parent
@@ -3503,6 +3498,7 @@ class TreeNode(SkbioObject):
             biparts: list[frozenset[str]] = []
             biparts_append = biparts.append
 
+        # bipart: frozenset[str]
         for node in self.postorder(include_self=False):
             # tip: create a one-taxon set
             if not node.children:
