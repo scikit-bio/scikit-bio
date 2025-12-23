@@ -1488,13 +1488,30 @@ class TreeTests(TestCase):
 
     def test_subset(self):
         """Return a set of tip names descending from a node."""
+        # entire tree
         t = self.simple_t
         self.assertEqual(t.subset(), frozenset("abcd"))
+
+        # subtree
         c = t.children[0]
         self.assertEqual(c.subset(), frozenset("ab"))
-        leaf = c.children[1]
-        self.assertEqual(leaf.subset(), frozenset(""))
-        self.assertEqual(leaf.subset(include_self=True), frozenset("b"))
+
+        # tip
+        tip = c.children[1]
+        self.assertEqual(tip.subset(), frozenset())
+        self.assertEqual(tip.subset(include_self=True), frozenset("b"))
+
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertEqual(t.subset(), frozenset("abc"))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,));"])
+        self.assertEqual(t.subset(), frozenset("abc"))
+
+        # duplicate names
+        t = TreeNode.read(["((a,b),(c,a));"])
+        self.assertEqual(t.subset(), frozenset("abc"))
 
     def test_subsets(self):
         """Return all subsets descending from a node."""
@@ -1549,6 +1566,38 @@ class TreeTests(TestCase):
         self.assertFalse(t.subsets(within=""))
         self.assertFalse(t.subsets(within="xyz"))
 
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("abc")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("a"), frozenset("b"), frozenset("c")]))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,));"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("abc")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("a"), frozenset("b"), frozenset("c")]))
+
+        # duplicate names
+        t = TreeNode.read(["((a,b),(c,a));"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab"), frozenset("ca")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("abc"), frozenset("ab"), frozenset("ca")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("ca"), frozenset("a"), frozenset("b"),
+             frozenset("c")]))
+
     def test_bipart(self):
         """Return a set of tip names on the smaller side of the branch."""
         t = self.complex_tree
@@ -1577,6 +1626,15 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a,(b,c))X,(d,e)Y,f);"])
         self.assertSetEqual(t.find("X").bipart(), frozenset("abc"))
         self.assertSetEqual(t.find("Y").bipart(), frozenset("de"))
+
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertSetEqual(t.find("c").bipart(), frozenset("c"))
+        self.assertSetEqual(t.find("d").bipart(), frozenset("c"))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,)d);"])
+        self.assertSetEqual(t.find("d").bipart(), frozenset("c"))
 
     def test_biparts(self):
         """Return all sets of tip names on the smaller side of each branch."""
@@ -1654,6 +1712,11 @@ class TreeTests(TestCase):
         self.assertFalse(t.biparts(within=set()))
         self.assertFalse(t.biparts(within=""))
         self.assertFalse(t.biparts(within="xyz"))
+
+        # nameless tips
+        t = TreeNode.read(["(((a,),b),(c,d));"])
+        self.assertSetEqual(t.biparts(), frozenset({
+            frozenset({"a", "b"})}))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""

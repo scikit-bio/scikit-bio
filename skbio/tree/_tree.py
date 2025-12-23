@@ -3066,13 +3066,15 @@ class TreeNode(SkbioObject):
         example, one can check whether a taxon exists in the current tree or clade.
 
         By default, if this method is applied to a tip, an empty set will be returned,
-        because a tip does not have descendants. If `include_self` is True, a single-
+        because a tip does not have descendants. With ``include_self=True``, a single-
         element set containing the name of the tip will be returned. This behavior can
         be considered as returning taxa descending from the branch connecting self
         and its parent.
 
         Applying this method to the root node of a tree will return all taxa in the
         tree.
+
+        Duplicate tip names are tolerated and merged.
 
         Examples
         --------
@@ -3103,7 +3105,9 @@ class TreeNode(SkbioObject):
         False
 
         """
-        return frozenset(i.name for i in self.tips(include_self=include_self))
+        return frozenset(
+            x.name for x in self.tips(include_self=include_self) if x.name is not None
+        )
 
     def subsets(
         self,
@@ -3173,6 +3177,8 @@ class TreeNode(SkbioObject):
         applying this method to an unrooted tree. If such an assumption is not present,
         one should consider using :meth:`biparts` instead.
 
+        Duplicate tip names are tolerated and merged.
+
         This method operates on the subtree below the current node.
 
         Examples
@@ -3204,9 +3210,13 @@ class TreeNode(SkbioObject):
         False
 
         """
+        lookup: Iterable[str]
         if not (getall := within is None):
-            if not isinstance(within, (set, frozenset, dict)):
-                within = frozenset(within)
+            # get a hash table for efficient lookup
+            if isinstance(within, (set, frozenset, dict)):
+                lookup = within
+            else:
+                lookup = frozenset(within)
 
         # initiate result
         subsets: list[frozenset[str]] = []
@@ -3223,8 +3233,8 @@ class TreeNode(SkbioObject):
         for node in self.postorder(include_self=True):
             # tip: create a one-taxon set
             if not node.children:
-                if getall or node.name in within:
-                    subset = frozenset([node.name])
+                if (name := node.name) is not None and (getall or name in lookup):
+                    subset = frozenset([name])
                 else:
                     subset = frozenset()
 
@@ -3301,6 +3311,9 @@ class TreeNode(SkbioObject):
         Applying this method to a root node will return an empty set. Applying this
         method to a tip will return a single-element set containing the tip name. These
         two situations produce outputs independent of the topology of the tree.
+
+        Duplicate tip names, if separated by the target branch, can cause an unexpected
+        result. This function does not validate the uniqueness of tip names though.
 
         Examples
         --------
@@ -3410,6 +3423,9 @@ class TreeNode(SkbioObject):
             Mapping of All sets of smaller-side tip names to branch lengths. Returned
             if `map_to_length` is True.
 
+            .. versionchanged:: 0.7.2
+                Nameless tips are excluded from the results.
+
         See Also
         --------
         bipart
@@ -3430,6 +3446,9 @@ class TreeNode(SkbioObject):
         tree implies the direction of descendance, which may violate the purpose of
         bipartitioning a tree on arbitrary branches. If this is a concern, one should
         consider using :meth:`subsets` instead.
+
+        Duplicate tip names, if separated by the target branch, can cause unexpected
+        results. This function does not validate the uniqueness of tip names though.
 
         This method operates on the subtree below the current node.
 
@@ -3492,18 +3511,17 @@ class TreeNode(SkbioObject):
 
         # initiate result
         if map_to_length:
-            biparts: dict[frozenset[str], float] = {}
-            biparts_get = biparts.get
+            bipartz: dict[frozenset[str], float] = {}
+            bipartz_get = bipartz.get
         else:
             biparts: list[frozenset[str]] = []
             biparts_append = biparts.append
 
-        # bipart: frozenset[str]
         for node in self.postorder(include_self=False):
             # tip: create a one-taxon set
             if not node.children:
-                if getall or node.name in full:
-                    bipart = frozenset([node.name])
+                if (name := node.name) is not None and (getall or name in full):
+                    bipart = frozenset([name])
                 else:
                     bipart = frozenset()
                 flip = False
@@ -3541,7 +3559,7 @@ class TreeNode(SkbioObject):
             # add to result
             if bipart and (include_tips or len(bipart) > 1):
                 if map_to_length:
-                    biparts[bipart] = biparts_get(bipart, 0.0) + (node.length or 0.0)
+                    bipartz[bipart] = bipartz_get(bipart, 0.0) + (node.length or 0.0)
                 else:
                     biparts_append(bipart)
 
@@ -3553,7 +3571,7 @@ class TreeNode(SkbioObject):
             del child._bipart
             del child._flip
 
-        return biparts if map_to_length else frozenset(biparts)
+        return bipartz if map_to_length else frozenset(biparts)
 
     def _extract_support(self):
         """Extract the support value from a node label, if available.
