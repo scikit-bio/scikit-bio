@@ -19,6 +19,7 @@
 ### Miscellaneous
 
 * scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
+* `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
 
 
 ## Version 0.7.1.post1

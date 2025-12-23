@@ -1693,7 +1693,7 @@ class TreeNode(SkbioObject):
         prune: bool = True,
         inplace: bool = False,
         uncache: bool = True,
-    ) -> TreeNode | None:
+    ) -> TreeNode:
         r"""Refine a tree such that it just has the desired tip names.
 
         Parameters
@@ -1726,8 +1726,11 @@ class TreeNode(SkbioObject):
 
         Returns
         -------
-        TreeNode, optional
-            The resulting tree (if ``inplace`` is False).
+        TreeNode
+            The resulting tree.
+
+            .. versionchanged:: 0.7.2
+                The sheared tree is returned regardless of ``inplace``.
 
         Raises
         ------
@@ -1821,9 +1824,8 @@ class TreeNode(SkbioObject):
         # reconnect subtree to parent
         if inplace:
             tree.parent = curr_parent
-            return None
-        else:
-            return tree
+
+        return tree
 
     def unpack(self, uncache: bool = True):
         """Unpack an internal node in place.
