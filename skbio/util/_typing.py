@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable, Any, overload
+from typing import TypeAlias, Protocol, runtime_checkable, Any, overload
 
 import pandas as pd
 import numpy as np
@@ -181,14 +181,14 @@ class StdArray(Protocol):  # pragma: no cover
     ) -> StdArray: ...
 
 
-ArrayLike = NPArrayLike | StdArray
+ArrayLike: TypeAlias = NPArrayLike | StdArray
 
 # ------------------------------------------------
 # TableLike (see: skbio.table._tabular)
 # ------------------------------------------------
 
 # Base types which are always available
-TableLike = pd.DataFrame | np.ndarray | Table
+TableLike: TypeAlias = pd.DataFrame | np.ndarray | Table
 
 # add other types depending on availability
 pl = get_package("polars", raise_error=False)
@@ -204,4 +204,4 @@ if adt is not None:  # pragma: no cover
 # SeedLike (see: skbio.util.get_rng)
 # ------------------------------------------------
 
-SeedLike = int | np.random.Generator | np.random.RandomState
+SeedLike: TypeAlias = int | np.random.Generator | np.random.RandomState
