@@ -6,7 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Iterable, Union, Tuple, List, TYPE_CHECKING
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -21,38 +24,32 @@ from skbio.sequence._alphabet import (
 
 
 # This could be exposed as a public API.
-SequenceLike = Union[
-    "Sequence",
-    str,
-    bytes,
-    Iterable[Union[str, bytes, int, float, bool]],
-    NDArray,
-]
+SequenceLike: TypeAlias = (
+    Sequence | str | bytes | Iterable[str | bytes | int | float | bool] | NDArray
+)
 
 
 # This could be exposed as a public API.
-AlignmentLike = Union[
-    "TabularMSA",
-    Iterable["SequenceLike"],
-    Tuple["AlignPath", Iterable["SequenceLike"]],
-]
+AlignmentLike: TypeAlias = (
+    TabularMSA | Iterable[SequenceLike] | tuple[AlignPath, Iterable[SequenceLike]]
+)
 
 
 # cached identity matrices for alignment with match/mismatch scores
-_idmats: dict[Union[str, type], NDArray] = {}
+_idmats: dict[str | type, NDArray] = {}
 
 # indices of cached identity matrices
 _ididxs: dict[type, NDArray] = {}
 
 
 def encode_sequences(
-    seqs: Iterable["SequenceLike"],
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    seqs: Iterable[SequenceLike],
+    sub_score: tuple[float, float] | SubstitutionMatrix | str,
     aligned: bool = False,
     dtype: type = np.float32,
     gap_chars: str = "-",
     not_empty: bool = True,
-) -> Tuple[List[NDArray], NDArray, NDArray]:
+) -> tuple[list[NDArray], NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms sequences into indices in a substitution matrix to
@@ -205,10 +202,10 @@ def encode_sequences(
 
 
 def encode_alignment(
-    aln: "AlignmentLike",
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    aln: AlignmentLike,
+    sub_score: tuple[float, float] | SubstitutionMatrix | str,
     gap_chars: str = "-",
-) -> Tuple[List[NDArray], NDArray, NDArray, NDArray]:
+) -> tuple[list[NDArray], NDArray, NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms an alignment into a 2D array of indices in a
