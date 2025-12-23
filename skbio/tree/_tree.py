@@ -3103,7 +3103,7 @@ class TreeNode(SkbioObject):
         False
 
         """
-        return frozenset({i.name for i in self.tips(include_self=include_self)})
+        return frozenset(i.name for i in self.tips(include_self=include_self))
 
     def subsets(
         self,
@@ -3810,7 +3810,7 @@ class TreeNode(SkbioObject):
         1.0
 
         """
-        path = [self]
+        path: list[TreeNode] = [self]
         path_append = path.append
         if ancestor is None:
             curr = self.parent
@@ -3821,7 +3821,7 @@ class TreeNode(SkbioObject):
             try:
                 curr = self
                 while curr is not ancestor:
-                    path_append(curr := curr.parent)
+                    path_append(curr := curr.parent)  # type: ignore
             except AttributeError:  # reached root but didn't encounter ancestor
                 raise NoParentError("Provided ancestor is not ancestral to self.")
         if not include_root:
@@ -3831,7 +3831,7 @@ class TreeNode(SkbioObject):
         if missing_as_zero:
             return sum(x.length or 0.0 for x in path)
         try:
-            return sum(x.length for x in path)
+            return sum(x.length for x in path)  # type: ignore[misc]
         except TypeError:
             raise NoLengthError("Nodes without branch length are encountered.")
 
@@ -4257,14 +4257,14 @@ class TreeNode(SkbioObject):
     @aliased("tip_tip_distances", "0.6.3")
     def cophenet(
         self,
-        endpoints: list[TreeNode] | str | None = None,
+        endpoints: Iterable[TreeNode | str] | None = None,
         use_length: bool = True,
     ) -> DistanceMatrix:
         r"""Return a distance matrix between each pair of tips in the tree.
 
         Parameters
         ----------
-        endpoints : list of TreeNode or str, optional
+        endpoints : iterable of TreeNode or str, optional
             Tips or their names (i.e., taxa) to be included in the calculation. The
             returned distance matrix will use this order. If not specified, all tips
             will be included.
@@ -4377,9 +4377,6 @@ class TreeNode(SkbioObject):
                     taxa_append(name)
                     tip._range = (i, i + 1)
                     i += 1
-            # for i, tip in enumerate(self.tips()):
-            #     tip._range = (i, i + 1)
-            #     taxa_append(tip.name)
             num_tips = len(taxa)
 
             # A tree could have duplicate taxa so this check is desired.
@@ -4391,14 +4388,14 @@ class TreeNode(SkbioObject):
         # is still ensured.
         else:
             idxmap = {}
-            for i, tip in enumerate(endpoints):
-                # The `find` call will raise if there are duplicate taxa in the tree.
-                tip = self.find(tip)
-                if tip.children:
-                    raise ValueError(f"Node with name '{tip.name}' is not a tip.")
-                taxa_append(name := tip.name)
-                if name in idxmap:
+            for i, endpoint in enumerate(endpoints):
+                tip = self.find(endpoint)
+                if (name := tip.name) in idxmap:
                     raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
+                if tip.children:
+                    raise ValueError(f"Node with name '{name}' is not a tip.")
+                # The `find` call above guarantees `name` cannot be None.
+                taxa_append(name)  # type: ignore[arg-type]
                 idxmap[name] = i
             num_tips = len(taxa)
 
@@ -4441,7 +4438,7 @@ class TreeNode(SkbioObject):
             # This is significantly faster than saving to only one triangle and doing
             # doing `result += result.T` after the iteration.
             for range1, range2 in combinations(ranges, 2):
-                dists = depths[range1][:, np.newaxis] + depths[range2]
+                dists = depths[range1][:, None] + depths[range2]
                 result[range1, range2] = dists
                 result[range2, range1] = dists.T
 
@@ -4455,7 +4452,7 @@ class TreeNode(SkbioObject):
 
         # Reorder the distance matrix to reflect the given order of endpoints.
         if endpoints:
-            result = result[order][:, order]
+            result = result[np.ix_(order, order)]
 
         # Skip validation as all items to validate are guaranteed.
         return DistanceMatrix(result, taxa, validate=False)
@@ -5476,6 +5473,9 @@ class TreeNode(SkbioObject):
         else:
             name_ = name
 
+        if name_ is None:
+            raise MissingNodeError(f"Cannot find a node without a name.")
+
         # look up name in tips
         node = tree._tip_cache.get(name_, None)
         if node is not None:
@@ -5567,6 +5567,9 @@ class TreeNode(SkbioObject):
             name_ = name.name
         else:
             name_ = name
+
+        if name_ is None:
+            raise MissingNodeError(f"Cannot find nodes without a name.")
 
         tree.create_caches()
         tip = tree._tip_cache.get(name_, None)
@@ -6176,8 +6179,11 @@ class TreeNode(SkbioObject):
                 if not hasattr(self, attr):
                     raise AttributeError("Invalid attribute '%s'." % attr)
 
+        # `index_tree` calls `assign_ids`, which assigns integer IDs to `id` of each
+        # node, starting from 0.
         id_index, child_index = self.index_tree()
-        n = self.id + 1  # assign_ids starts at 0
+        n = self.id + 1  # type: ignore[operator]
+
         tmp = [np.zeros(n, dtype=dtype) for attr, dtype in attrs]
 
         for node in self.traverse(include_self=True):

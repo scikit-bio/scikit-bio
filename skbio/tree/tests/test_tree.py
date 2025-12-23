@@ -1203,9 +1203,9 @@ class TreeTests(TestCase):
         self.assertFalse(hasattr(tcopy, "_tip_cache"))
         self.assertTrue(obs.is_root())
         for node in obs.traverse():
-            assert not hasattr(node, "old_child")
+            self.assertFalse(hasattr(node, 'old_child'))
             for child in node.children:
-                assert child.parent is node
+                self.assertIs(child.parent, node)
         exp = TreeNode.read(["(a:1,b:1,((d:1,e:1)f:2,((h:1,i:1)j:0.5)k:0.5)g:1)c;"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
@@ -2049,24 +2049,71 @@ class TreeTests(TestCase):
         self.assertEqual(dist, 6)
         self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
-    def test_cophenet_endpoints(self):
-        """Get a tip-to-tip distance matrix."""
+    def test_cophenet_all(self):
+        """Get a tip-to-tip distance matrix of all taxa."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        nodes = [t.find("H"), t.find("G"), t.find("M")]
-        names = ["H", "G", "M"]
-        exp = DistanceMatrix(np.array([[0, 2.0, 6.7],
-                                       [2.0, 0, 6.7],
-                                       [6.7, 6.7, 0.0]]), ["H", "G", "M"])
-
-        obs = t.cophenet(endpoints=names)
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.5, 6.7],
+                                       [2.0, 0. , 6.5, 6.7],
+                                       [6.5, 6.5, 0. , 1.2],
+                                       [6.7, 6.7, 1.2, 0. ]]), ["H", "G", "R", "M"])
+        obs = t.cophenet()
         self.assertEqual(obs, exp)
 
+        # makes sure intermediate attributes are clear
+        for node in t.traverse(include_self=True):
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
+
+    def test_cophenet_endpoints(self):
+        """Get a tip-to-tip distance matrix of selected taxa."""
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        names = ["H", "G", "M"]
+        nodes = [t.find(x) for x in names]
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.7],
+                                       [2.0, 0. , 6.7],
+                                       [6.7, 6.7, 0. ]]), names)
+
+        # specify endpoints by node instance
         obs = t.cophenet(endpoints=nodes)
         self.assertEqual(obs, exp)
 
+        # specify endpoints by name (taxon)
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+
+        # endpoints can be any iterable (tuple, str, iter, dict...)
+        # but unordered iterable like set is not recommended
+        obs = t.cophenet(endpoints=tuple(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints="".join(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints=iter(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints={x: 0 for x in names})
+        self.assertEqual(obs, exp)
+
         for node in t.traverse(include_self=True):
-            assert not hasattr(node, '_start')
-            assert not hasattr(node, '_stop')
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
+
+        # different order
+        names = ["M", "H", "G"]
+        exp = DistanceMatrix(np.array([[0. , 6.7, 6.7],
+                                       [6.7, 0. , 2.0],
+                                       [6.7, 2.0, 0. ]]), names)
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+
+        # only 2 taxa
+        obs = t.cophenet(endpoints="HR")
+        exp = DistanceMatrix(np.array([[0. , 6.5],
+                                       [6.5, 0. ]]), "HR")
+        self.assertEqual(obs, exp)
+
+        # only 1 taxon
+        obs = t.cophenet(endpoints="H")
+        exp = DistanceMatrix(np.array([[0. ]]), "H")
+        self.assertEqual(obs, exp)
 
     def test_cophenet_counts(self):
         """Get a tip-to-tip distance matrix in counts."""
@@ -2075,7 +2122,7 @@ class TreeTests(TestCase):
         names = ["H", "G", "M"]
         exp = DistanceMatrix(np.array([[0, 2, 4],
                                        [2, 0, 4],
-                                       [4, 4, 0]]), ["H", "G", "M"])
+                                       [4, 4, 0]]), names)
 
         obs = t.cophenet(endpoints=names, use_length=False)
         self.assertEqual(obs, exp)
@@ -2084,13 +2131,15 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
-            assert not hasattr(node, '_start')
-            assert not hasattr(node, '_stop')
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
 
     def test_cophenet_bad_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
-        with self.assertRaises(ValueError):
+        msg = "Node with name 'foo' is not a tip."
+        with self.assertRaises(ValueError) as e:
             t.cophenet(endpoints=["foo"])
+        self.assertEqual(str(e.exception), msg)
         with self.assertRaises(MissingNodeError):
             t.cophenet(endpoints=["bar"])
 
@@ -2099,10 +2148,44 @@ class TreeTests(TestCase):
 
     def test_cophenet_duplicate_tips(self):
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,H:0.7):3);"])
-        with self.assertRaises(DuplicateNodeError):
+        msg = "Tree contains duplicate tip names."
+        with self.assertRaises(DuplicateNodeError) as e:
             t.cophenet()
-        with self.assertRaises(DuplicateNodeError):
-            t.cophenet(endpoints=["H", "R", "H"])
+        self.assertEqual(str(e.exception), msg)
+
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        msg = "Duplicate tip name 'H' found."
+        with self.assertRaises(DuplicateNodeError) as e:
+            t.cophenet(endpoints="HRH")
+        self.assertEqual(str(e.exception), msg)
+
+    def test_cophenet_no_name(self):
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        t.find("R").name = None
+        t.clear_caches()
+
+        names = ["H", "G", "M"]
+        nodes = [t.find(x) for x in names]
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.7],
+                                       [2.0, 0. , 6.7],
+                                       [6.7, 6.7, 0. ]]), names)
+
+        # tip without name is ignored
+        obs = t.cophenet()
+        self.assertEqual(obs, exp)
+
+        # endpoints without nameless tip is not affected
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints=nodes)
+        self.assertEqual(obs, exp)
+
+        # endpoints with nameless tip raises
+        nodes = [t.children[0].children[0], t.children[1].children[0]]
+        msg = "Cannot find a node without a name."
+        with self.assertRaises(MissingNodeError) as e:
+            t.cophenet(endpoints=nodes)
+        self.assertEqual(str(e.exception), msg)
 
     def test_cophenet_no_length(self):
         t = TreeNode.read(["((a,b)c,(d,e)f);"])
@@ -2614,6 +2697,13 @@ class TreeTests(TestCase):
         with self.assertRaisesRegex(MissingNodeError, msg):
             t.find(TreeNode("missing"))
 
+        # name is None
+        msg = "Cannot find a node without a name."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(None)
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(TreeNode())
+
         # input node name matches a tip but it's not in the current tree
         msg = "Node 'a' is not found in the tree."
         with self.assertRaisesRegex(MissingNodeError, msg):
@@ -2653,6 +2743,13 @@ class TreeTests(TestCase):
         msg = "Node 'missing' is not found."
         with self.assertRaisesRegex(MissingNodeError, msg):
             t.find_all("missing")
+
+        # node has no name
+        msg = "Cannot find nodes without a name."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find_all(None)
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find_all(TreeNode())
 
     def test_find_by_id(self):
         """Find a node by id"""
