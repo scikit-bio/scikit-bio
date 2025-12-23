@@ -7,9 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import io
-import unittest
-from unittest import TestCase, main
-from typing import Optional, Type, Any, ClassVar
+from unittest import TestCase, main, skipUnless
 
 import numpy as np
 import numpy.testing as npt
@@ -592,7 +590,7 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.filter([])
 
-    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_default(self):
         fig = self.dm_1x1.plot()
         self.assertIsInstance(fig, mpl.figure.Figure)
@@ -609,7 +607,7 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ["a"])
 
-    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_no_default(self):
         ids = ["0", "one", "2", "three", "4.000"]
         data = (
@@ -1644,7 +1642,6 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
                 iterable, lambda a, b: abs(b - a), key=str, keys=["1", "2", "3", "4"]
             )
 
-    def test_from_iterable_with_key_and_keys(self):
         iterable = (x for x in range(4))
         with self.assertRaises(ValueError):
             self.matobj.from_iterable(

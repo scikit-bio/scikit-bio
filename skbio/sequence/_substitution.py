@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from copy import deepcopy
-from typing import Optional, Union, Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -338,8 +338,8 @@ class SubstitutionMatrix(PairwiseMatrix):
     def identity(
         cls,
         alphabet: Iterable,
-        match: Union[int, float],
-        mismatch: Union[int, float],
+        match: int | float,
+        mismatch: int | float,
         dtype: str = "float32",
     ) -> "SubstitutionMatrix":
         r"""Create an identity substitution matrix.

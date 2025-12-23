@@ -28,7 +28,7 @@ def align_dists(
     alignment: TabularMSA,
     metric: str | Callable,
     shared_by_all: bool | None = True,
-    **kwargs: str,
+    **kwargs: Any,
 ) -> DistanceMatrix:
     r"""Create a distance matrix from a multiple sequence alignment.
 

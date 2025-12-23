@@ -734,7 +734,7 @@ class TreeTests(TestCase):
         # in place
         obs = t.shear(["G", "M"], inplace=True)
         self.assertEqual(str(t), exp)
-        self.assertIsNone(obs)
+        self.assertIs(obs, t)
 
         # keep cache
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])

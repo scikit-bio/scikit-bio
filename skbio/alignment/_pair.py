@@ -471,7 +471,7 @@ def pair_align_nucl(
     seq1: SequenceLike,
     seq2: SequenceLike,
     /,
-    **kwargs: str,
+    **kwargs: Any,
 ) -> PairAlignResult:
     r"""Align two nucleotide sequences.
 
@@ -516,7 +516,7 @@ def pair_align_prot(
     seq1: SequenceLike,
     seq2: SequenceLike,
     /,
-    **kwargs: str,
+    **kwargs: Any,
 ) -> PairAlignResult:
     r"""Align two protein sequences.
 
