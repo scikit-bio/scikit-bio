@@ -6,8 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -341,7 +343,7 @@ class SubstitutionMatrix(PairwiseMatrix):
     @classonlymethod
     def identity(
         cls,
-        alphabet: Iterable,
+        alphabet: Iterable[Any],
         match: int | float,
         mismatch: int | float,
         dtype: str = "float32",
