@@ -41,7 +41,7 @@ from ._compare import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Sequence, Iterable, Callable, Iterator, Generator
+    from collections.abc import Sequence, Iterable, Callable, Iterator
     from numpy.typing import NDArray
 
 
@@ -108,6 +108,20 @@ class TreeNode(SkbioObject):
 
     read = Read()
     write = Write()
+
+    # Methods of TreeNode involves various temporary attributes added to or removed
+    # from instances of this class. The following code informs mypy that this class
+    # may have arbitrary attributes.
+    if TYPE_CHECKING:  # pragma: no cover
+
+        def __getattr__(self, name: str) -> Any:
+            raise AttributeError(name)
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            object.__setattr__(self, name, value)
+
+        def __delattr__(self, name: str) -> None:
+            object.__delattr__(self, name)
 
     def __init__(
         self,

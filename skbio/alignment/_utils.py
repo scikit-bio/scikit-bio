@@ -205,7 +205,7 @@ def encode_alignment(
     aln: AlignmentLike,
     sub_score: tuple[float, float] | SubstitutionMatrix | str,
     gap_chars: str = "-",
-) -> tuple[list[NDArray], NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms an alignment into a 2D array of indices in a
@@ -224,7 +224,7 @@ def encode_alignment(
 
     Returns
     -------
-    seqs : list of ndarray of intp
+    seqs : ndarray of intp
         Indices of sequence characters in the substitution matrix.
     submat : ndarray of float of shape (n_alphabet, n_alphabet)
         Substitution matrix.
