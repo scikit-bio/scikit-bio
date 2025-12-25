@@ -9,6 +9,10 @@
 * Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
 * Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
 
+### Performance enhancements
+
+* Improved `TreeNode.from_linkage_matrix`, including efficiency, compatibility (it now accepts array-like objects), and documentation ([#2356](https://github.com/scikit-bio/scikit-bio/pull/2356)).
+
 ### Bug Fixes
 
 * Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338](https://github.com/scikit-bio/scikit-bio/pull/2338)).
