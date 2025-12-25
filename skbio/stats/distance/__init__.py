@@ -101,7 +101,7 @@ three objects with IDs ``a``, ``b``, and ``c``::
 Load a distance matrix from the file:
 
 >>> from io import StringIO
->>> from skbio import DistanceMatrix
+>>> from skbio.stats.distance import DistanceMatrix
 >>> dm_fh = StringIO("\ta\tb\tc\n"
 ...                  "a\t0.0\t0.5\t1.0\n"
 ...                  "b\t0.5\t0.0\t0.75\n"

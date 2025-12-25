@@ -118,7 +118,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Examples
     --------
-    >>> from skbio import DNA
+    >>> from skbio.sequence import DNA
     >>> DNA('ACCGAAT')
     DNA
     --------------------------
@@ -240,7 +240,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
         --------
         Transcribe DNA into RNA:
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> dna = DNA('TAACGTTA')
         >>> dna
         DNA
@@ -324,7 +324,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
         Translate DNA into protein using NCBI's standard genetic code (table ID
         1, the default genetic code in scikit-bio):
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> dna = DNA('ATGCCACTTTAA')
         >>> dna.translate()
         Protein
@@ -408,7 +408,7 @@ class DNA(GrammaredSequence, NucleotideMixin):
         NCBI's standard genetic code (table ID 1, the default genetic code in
         scikit-bio):
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> dna = DNA('ATGCCACTTTAA')
         >>> for protein in dna.translate_six_frames():
         ...     protein

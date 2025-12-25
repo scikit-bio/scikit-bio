@@ -13,7 +13,7 @@ import warnings
 import numpy as np
 import numpy.testing as npt
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
     goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,

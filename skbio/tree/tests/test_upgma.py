@@ -1,11 +1,9 @@
 import io
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, TreeNode
-
-from skbio.tree._upgma import (
-    upgma
-)
+from skbio.stats.distance import DistanceMatrix
+from skbio.tree import TreeNode
+from skbio.tree._upgma import upgma
 
 
 class UpgmaTests(TestCase):

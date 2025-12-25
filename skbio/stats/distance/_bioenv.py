@@ -107,8 +107,7 @@ def bioenv(distmat, data_frame, columns=None):
     Import the functionality we'll use in the following examples:
 
     >>> import pandas as pd
-    >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import bioenv
+    >>> from skbio.stats.distance import DistanceMatrix, bioenv
 
     Load a 4x4 community distance matrix:
 

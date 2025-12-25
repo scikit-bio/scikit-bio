@@ -1260,7 +1260,7 @@ def tree_basis(tree):
 
     Examples
     --------
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> tree = u"((b,c)a, d)root;"
     >>> t = TreeNode.read([tree])
     >>> basis, nodes = tree_basis(t)

@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio import Protein
+from skbio.sequence import Protein
 
 
 class TestProtein(unittest.TestCase):

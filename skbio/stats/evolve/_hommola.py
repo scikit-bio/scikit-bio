@@ -9,7 +9,7 @@
 import numpy as np
 from scipy.stats import pearsonr
 
-from skbio import DistanceMatrix
+from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
 
@@ -165,11 +165,11 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
         )
     if permutations < 0:
         raise ValueError(
-            "Number of permutations must be greater than or " "equal to zero."
+            "Number of permutations must be greater than or equal to zero."
         )
     if interaction.sum() < 3:
         raise ValueError(
-            "Must have at least 3 host-parasite interactions in " "`interaction`."
+            "Must have at least 3 host-parasite interactions in `interaction`."
         )
 
     # shortcut to eliminate nested for-loops specifying pairwise interaction

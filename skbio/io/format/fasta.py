@@ -330,7 +330,8 @@ registry in practice:
 Since these sequences are of equal length (presumably because they've been
 aligned), let's read the FASTA file into a ``TabularMSA`` object:
 
->>> from skbio import TabularMSA, DNA
+>>> from skbio.sequence import DNA
+>>> from skbio.alignment import TabularMSA
 >>> msa = TabularMSA.read(fl, constructor=DNA)
 >>> msa
 TabularMSA[DNA]
@@ -431,7 +432,7 @@ Stats:
 
 A single sequence can also be read into a ``Sequence`` (or subclass):
 
->>> from skbio import Sequence
+>>> from skbio.sequence import Sequence
 >>> seq = Sequence.read(fl)
 >>> seq
 Sequence

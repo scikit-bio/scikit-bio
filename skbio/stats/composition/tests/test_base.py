@@ -14,7 +14,7 @@ from numpy.exceptions import AxisError
 import pandas as pd
 from scipy.sparse import coo_matrix
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,

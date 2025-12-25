@@ -12,7 +12,8 @@ from heapq import heapify
 import numpy as np
 import numpy.testing as npt
 
-from skbio import DistanceMatrix, TreeNode
+from skbio.stats.distance import DistanceMatrix
+from skbio.tree import TreeNode
 from skbio.tree._me import (
     gme,
     bme,

@@ -272,7 +272,8 @@ Suppose we have a Stockholm file containing an MSA of protein sequences
 
 >>> import skbio.io
 >>> from io import StringIO
->>> from skbio import Protein, TabularMSA
+>>> from skbio.sequence import Protein
+>>> from skbio.alignment import TabularMSA
 >>> fs = '\\n'.join([
 ...         '# STOCKHOLM 1.0',
 ...         '#=GF CC CBS domains are small intracellular modules mostly'

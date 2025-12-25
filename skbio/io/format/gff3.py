@@ -74,7 +74,7 @@ Examples
 --------
 Let's create a file stream with following data in GFF3 format:
 
->>> from skbio import Sequence, DNA
+>>> from skbio.sequence import Sequence, DNA
 >>> gff_str = '''
 ... ##gff-version 3
 ... seq_1\\t.\\tgene\\t10\\t90\\t.\\t+\\t0\\tID=gen1

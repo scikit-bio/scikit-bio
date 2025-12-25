@@ -11,7 +11,7 @@ from unittest import TestCase, main
 
 import skbio.io
 
-from skbio import DNA, RNA, Sequence, Protein
+from skbio.sequence import DNA, RNA, Sequence, Protein
 from skbio.metadata import IntervalMetadata
 from skbio.util import get_data_path
 

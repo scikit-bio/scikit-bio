@@ -34,7 +34,7 @@ class MetadataMixin(metaclass=ABCMeta):
 
         Create a sequence with metadata:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> seq = Sequence('ACGT', metadata={'description': 'seq description',
         ...                                  'id': 'seq-id'})
 
@@ -160,7 +160,7 @@ class MetadataMixin(metaclass=ABCMeta):
            behavior. These examples apply to all other scikit-bio objects
            storing metadata.
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> seq = Sequence('ACGT')
         >>> seq.has_metadata()
         False
@@ -208,7 +208,7 @@ class PositionalMetadataMixin(metaclass=ABCMeta):
 
         Create a DNA sequence with positional metadata:
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA(
         ...     'ACGT',
         ...     positional_metadata={'exons': [True, True, False, True],
@@ -404,7 +404,7 @@ class PositionalMetadataMixin(metaclass=ABCMeta):
            scikit-bio objects storing positional metadata.
 
         >>> import pandas as pd
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('ACGT')
         >>> seq.has_positional_metadata()
         False

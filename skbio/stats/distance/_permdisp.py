@@ -162,7 +162,7 @@ def permdisp(
     --------
     Load a 6x6 distance matrix and grouping vector denoting 2 groups of objects:
 
-    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import DistanceMatrix
     >>> dm = DistanceMatrix([[0,    0.5,  0.75, 1, 0.66, 0.33],
     ...                       [0.5,  0,    0.25, 0.33, 0.77, 0.61],
     ...                       [0.75, 0.25, 0,    0.1, 0.44, 0.55],

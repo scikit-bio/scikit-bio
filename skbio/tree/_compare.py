@@ -243,7 +243,7 @@ def rf_dists(trees, ids=None, shared_by_all=True, proportion=False, rooted=False
 
     Examples
     --------
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "(((a,b),c),d,e);",
     ...     "((a,(b,c)),d,e);",
@@ -343,7 +343,7 @@ def wrf_dists(
 
     Examples
     --------
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);",
     ...     "((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);",
@@ -517,7 +517,7 @@ def path_dists(
 
     Examples
     --------
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> trees = [TreeNode.read([x]) for x in (
     ...     "((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);",
     ...     "((a:3,(b:2,c:2):1):3,d:8,(e:5,f:6):2);",

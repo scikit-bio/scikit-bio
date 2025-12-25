@@ -133,7 +133,7 @@ def unweighted_unifrac(u_counts, v_counts, taxa, tree, validate=True):
     We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> tree = TreeNode.read(StringIO(
     ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
     ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'
@@ -265,7 +265,7 @@ def weighted_unifrac(
     We also need a phylogenetic tree that relates the taxa to one another.
 
     >>> from io import StringIO
-    >>> from skbio import TreeNode
+    >>> from skbio.tree import TreeNode
     >>> tree = TreeNode.read(StringIO(
     ...                      '(((((U1:0.5,U2:0.5):0.5,U3:1.0):1.0):0.0,'
     ...                      '(U4:0.75,(U5:0.5,((U6:0.33,U7:0.62):0.5'

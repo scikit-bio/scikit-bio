@@ -90,7 +90,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
 
     Examples
     --------
-    >>> from skbio import RNA
+    >>> from skbio.sequence import RNA
     >>> RNA('ACCGAAU')
     RNA
     --------------------------
@@ -213,7 +213,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
         --------
         Reverse transcribe RNA into DNA:
 
-        >>> from skbio import RNA
+        >>> from skbio.sequence import RNA
         >>> rna = RNA('UAACGUUA')
         >>> rna
         RNA
@@ -296,7 +296,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
         Translate RNA into protein using NCBI's standard genetic code (table ID
         1, the default genetic code in scikit-bio):
 
-        >>> from skbio import RNA
+        >>> from skbio.sequence import RNA
         >>> rna = RNA('AUGCCACUUUAA')
         >>> rna.translate()
         Protein
@@ -384,7 +384,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
         NCBI's standard genetic code (table ID 1, the default genetic code in
         scikit-bio):
 
-        >>> from skbio import RNA
+        >>> from skbio.sequence import RNA
         >>> rna = RNA('AUGCCACUUUAA')
         >>> for protein in rna.translate_six_frames():
         ...     protein

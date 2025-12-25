@@ -129,7 +129,7 @@ Reading PHYLIP Files
 
 Read a PHYLIP distance matrix file into a ``DistanceMatrix`` object:
 
->>> from skbio import DistanceMatrix
+>>> from skbio.stats.distance import DistanceMatrix
 >>> dm = DistanceMatrix.read('input.phy', format='phylip_dm')  # doctest: +SKIP
 
 

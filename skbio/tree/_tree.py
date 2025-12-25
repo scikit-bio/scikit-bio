@@ -161,7 +161,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c, d)root;"])
         >>> repr(tree)
         '<TreeNode, name: root, internal node count: 1, tips count: 3>'
@@ -325,7 +325,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> tree_copy = tree.copy()
         >>> tree_nodes = set([id(n) for n in tree.traverse()])
@@ -355,7 +355,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.is_tip())
         False
@@ -403,7 +403,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.is_root())
         True
@@ -428,7 +428,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c);"])
         >>> print(tree.has_children())
         True
@@ -448,7 +448,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> tip_a = tree.find('a')
         >>> root = tip_a.root()
@@ -476,7 +476,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -519,7 +519,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e,f)g)root;"])
         >>> tip_e = tree.find('e')
         >>> [n.name for n in tip_e.siblings()]
@@ -550,7 +550,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> node_c = tree.find('c')
         >>> [n.name for n in node_c.neighbors()]
@@ -598,7 +598,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> nodes = [tree.find('a'), tree.find('b')]
         >>> lca = tree.lca(nodes)
@@ -720,7 +720,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -802,7 +802,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -864,7 +864,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -923,7 +923,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1012,7 +1012,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1105,7 +1105,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1162,7 +1162,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1210,7 +1210,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1263,7 +1263,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> root = TreeNode(name="root")
         >>> child1 = TreeNode(name="child1")
         >>> child2 = TreeNode(name="child2")
@@ -1319,7 +1319,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> root = TreeNode(name="root")
         >>> root.extend([TreeNode(name="child1"), TreeNode(name="child2")])
         >>> print(root)
@@ -1398,7 +1398,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:4,d:5)e;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -1495,7 +1495,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(a,b)c;"])
         >>> print(tree.pop(0))
         a;
@@ -1539,7 +1539,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(a,b)c;"])
         >>> tree.remove(tree.children[0])
         True
@@ -1588,7 +1588,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(a,b)c;"])
         >>> tree.remove_by_func(lambda x: x.name == 'b')
         >>> print(tree)
@@ -1635,7 +1635,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d)e)g,((h,i)j)k)root;"])
         >>> print(tree.ascii_art())
                                       /-a
@@ -1767,7 +1767,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,(h,i)j)root;"])
         >>> print(tree.ascii_art())
                                       /-a
@@ -1870,7 +1870,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(['((c:2.0,d:3.0)a:1.0,(e:2.0,f:1.0)b:2.0);'])
         >>> tree.find('b').unpack()
         >>> print(tree)
@@ -1913,7 +1913,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(['((c:2,d:3)a:1,(e:1,f:2)b:2);'])
         >>> tree.unpack_by_func(lambda x: x.length <= 1)
         >>> print(tree)
@@ -1978,7 +1978,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b,g,h)c,(d,e)f)root;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -2088,7 +2088,7 @@ class TreeNode(SkbioObject):
         --------
         Shuffle the names of a 4-tip tree for 5 times:
 
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b),(c,d));"])
         >>> for shuffled in tree.shuffle(shuffler=42, n=5):
         ...     print(shuffled)
@@ -2194,7 +2194,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(['(((a,b)c,(d,e)f)g,(h,i)j)k;'])
         >>> print(tree.ascii_art())
                                       /-a
@@ -2333,7 +2333,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_tree = tree.find('d').unrooted_copy()
         >>> print(new_tree)
@@ -2446,7 +2446,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> new_root = tree.find('d')
         >>> new_root.unrooted_move()
@@ -2579,7 +2579,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(((a,b)c,(d,e)f)g,h)i;"])
         >>> print(tree.ascii_art())
                                       /-a
@@ -2779,7 +2779,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:1)c:2,(d:3,e:4)f:5,g:1)h;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -2930,7 +2930,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(['((((a,b),(c,d)),(e,f)),g);'])
         >>> print(tree.ascii_art())
                                                 /-a
@@ -3035,7 +3035,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> print(tree.count())
         9
@@ -3094,7 +3094,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -3199,7 +3199,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)d)e,(f,g)h)i;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -3333,7 +3333,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["(((a,(b,c)X)Y,d)Z,(e,f),g);"])
         >>> print(tree.ascii_art())
                                       /-a
@@ -3470,7 +3470,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,(b,c)),(d,e),f);"])
         >>> print(tree.ascii_art())
                             /-a
@@ -3669,7 +3669,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> newick = "((a,b)95,(c,d):1.1,(e,f)'80:speciesA':1.0);"
         >>> tree = TreeNode.read([newick])
         >>> tree.assign_supports()
@@ -3723,7 +3723,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b,c),(d,e))root;"])
         >>> tree.is_bifurcating()
         False
@@ -3836,7 +3836,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> tree.find('a').depth()
         4.0
@@ -3920,7 +3920,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> dist, tip = tree.find('c').height()
         >>> dist
@@ -4018,7 +4018,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read([
         ...     "(((A:.1,B:1.2)C:.6,(D:.9,E:.6)F:.9)G:2.4,(H:.4,I:.5)J:1.3)K;"])
         >>> print(tree.ascii_art())
@@ -4166,7 +4166,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> tip_a = tree.find('a')
         >>> tip_d = tree.find('d')
@@ -4229,7 +4229,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
         >>> dist, tips = tree.maxdist()
         >>> dist
@@ -4366,7 +4366,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
 
         Calculate cophenetic distances as the sum of branch lengths (i.e., patristic
@@ -4526,7 +4526,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
         >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
         >>> tree1.compare_subsets(tree2)
@@ -4567,7 +4567,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree1 = TreeNode.read(["((a,b),(c,d));"])
         >>> tree2 = TreeNode.read(["(((a,b),c),d);"])
         >>> tree1.compare_biparts(tree2)
@@ -4662,7 +4662,7 @@ class TreeNode(SkbioObject):
         whereas the other two of each tree are unique (ab|cdef, abcf|de, bc|adef,
         abcd|ef). Therefore the RF distance is 2 + 2 = 4.
 
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree1 = TreeNode.read(["((a,b),c,((d,e),f));"])
         >>> print(tree1.ascii_art())
                             /-a
@@ -4795,7 +4795,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
         >>> print(tree1.ascii_art())
                             /-a
@@ -4998,7 +4998,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree1 = TreeNode.read(["((a:1,b:2):1,c:4,((d:4,e:5):2,f:6):1);"])
         >>> print(tree1.ascii_art())
                             /-a
@@ -5244,7 +5244,7 @@ class TreeNode(SkbioObject):
         This method facilitates evaluation for various useful node properties. Some
         representative examples are provided below.
 
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a:1.2,b:1.6)c:0.3,(d:0.8,e:1.0)f:0.6)g;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -5489,7 +5489,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> node = tree.find('c')
         >>> node.name
@@ -5648,7 +5648,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> print(tree.find_by_id(2).name)
         d
@@ -5688,7 +5688,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f);"])
         >>> func = lambda x: x.parent == tree.find('c')
         >>> [n.name for n in tree.find_by_func(func)]
@@ -5759,7 +5759,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
         >>> print(tree.ascii_art())
                             /-a
@@ -6222,7 +6222,7 @@ class TreeNode(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import TreeNode
+        >>> from skbio.tree import TreeNode
         >>> t = TreeNode.read(['(((a:1,b:2,c:3)x:4,(d:5)y:6)z:7);'])
         >>> res = t.to_array()
         >>> sorted(res.keys())

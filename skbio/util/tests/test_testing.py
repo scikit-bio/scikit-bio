@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import numpy.testing as npt
 
-from skbio import OrdinationResults
+from skbio.stats.ordination import OrdinationResults
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal)
 from skbio.util._testing import _normalize_signs, assert_series_almost_equal

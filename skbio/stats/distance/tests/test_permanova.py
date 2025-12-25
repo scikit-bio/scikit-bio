@@ -15,8 +15,7 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 from scipy.spatial.distance import squareform
 
-from skbio import DistanceMatrix
-from skbio.stats.distance import permanova
+from skbio.stats.distance import DistanceMatrix, permanova
 from skbio.util import get_data_path
 from skbio.stats.distance._base import _preprocess_input_sng
 
