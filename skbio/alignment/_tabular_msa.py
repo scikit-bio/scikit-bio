@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
+from collections import Counter, namedtuple
 import copy
 
 import numpy as np
@@ -25,7 +25,7 @@ from skbio.io.descriptors import Read, Write
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
+_Shape = namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -1418,7 +1418,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             assert dtype.default_gap_char not in freqs
             freqs[dtype.default_gap_char] = gap_freq
 
-            consensus.append(collections.Counter(freqs).most_common(1)[0][0])
+            consensus.append(Counter(freqs).most_common(1)[0][0])
 
         return dtype("".join(consensus), positional_metadata=positional_metadata)
 
