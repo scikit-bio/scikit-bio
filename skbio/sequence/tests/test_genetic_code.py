@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio import Sequence, DNA, RNA, Protein, GeneticCode
+from skbio.sequence import Sequence, DNA, RNA, Protein, GeneticCode
 from skbio.sequence._genetic_code import _ncbi_genetic_codes
 
 

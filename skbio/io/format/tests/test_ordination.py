@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import numpy.testing as npt
 
-from skbio import OrdinationResults
+from skbio.stats.ordination import OrdinationResults
 from skbio.io import OrdinationFormatError
 from skbio.io.format.ordination import (
     _ordination_to_ordination_results, _ordination_results_to_ordination,

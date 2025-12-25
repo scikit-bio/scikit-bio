@@ -806,7 +806,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         Examples
         --------
-        >>> from skbio import DistanceMatrix
+        >>> from skbio.stats.distance import DistanceMatrix
         >>> dm = DistanceMatrix([[0, 1, 2],
         ...                      [1, 0, 3],
         ...                      [2, 3, 0]], ids=['a', 'b', 'c'])
@@ -2113,7 +2113,7 @@ class DistanceMatrix(SymmetricMatrix):
 
         Examples
         --------
-        >>> from skbio import DistanceMatrix
+        >>> from skbio.stats.distance import DistanceMatrix
         >>> dm = DistanceMatrix([[0, 1, 2, 3],
         ...                      [1, 0, 4, 5],
         ...                      [2, 4, 0, 6],

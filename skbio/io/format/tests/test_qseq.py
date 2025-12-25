@@ -8,10 +8,9 @@
 
 import unittest
 
-from skbio import Sequence, DNA, RNA, Protein
-from skbio import read
+from skbio.sequence import Sequence, DNA, RNA, Protein
 from skbio.util import get_data_path
-from skbio.io import QSeqFormatError
+from skbio.io import read, QSeqFormatError
 from skbio.io.format.qseq import _qseq_to_generator, _qseq_sniffer
 import numpy as np
 

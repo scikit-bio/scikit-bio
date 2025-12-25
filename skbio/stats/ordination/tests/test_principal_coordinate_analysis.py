@@ -13,9 +13,8 @@ from copy import deepcopy
 from warnings import catch_warnings
 from unittest import TestCase, main
 
-from skbio import DistanceMatrix, OrdinationResults
-from skbio.stats.distance import PairwiseMatrixError
-from skbio.stats.ordination import pcoa, pcoa_biplot
+from skbio.stats.distance import DistanceMatrix, PairwiseMatrixError
+from skbio.stats.ordination import OrdinationResults, pcoa, pcoa_biplot
 from skbio.stats.ordination._principal_coordinate_analysis import _fsvd
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal)

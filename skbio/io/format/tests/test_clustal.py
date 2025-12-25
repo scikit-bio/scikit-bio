@@ -10,7 +10,7 @@ import string
 from io import StringIO
 from unittest import TestCase, main
 
-from skbio import TabularMSA
+from skbio.alignment import TabularMSA
 from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
 from skbio.util._decorator import overrides

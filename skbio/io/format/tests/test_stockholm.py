@@ -12,7 +12,8 @@ import io
 import unittest
 from collections import OrderedDict
 
-from skbio import TabularMSA, Protein, DNA, RNA
+from skbio.sequence import Protein, DNA, RNA
+from skbio.alignment import TabularMSA
 from skbio.io import StockholmFormatError
 from skbio.io.format.stockholm import (_stockholm_to_tabular_msa,
                                        _tabular_msa_to_stockholm,

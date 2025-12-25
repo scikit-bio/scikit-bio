@@ -117,7 +117,7 @@ def gme(dm, neg_as_zero=True):
     Define a new distance matrix object describing the distances between five taxa:
     human, monkey, pig, rat, and chicken.
 
-    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import DistanceMatrix
     >>> from skbio.tree import gme
 
     >>> dm = DistanceMatrix([[0, 0.02,  0.18,  0.34,  0.55],
@@ -224,7 +224,7 @@ def bme(dm, neg_as_zero=True, **kwargs):
     Define a new distance matrix object describing the distances between five taxa:
     human, monkey, pig, rat, and chicken.
 
-    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import DistanceMatrix
     >>> from skbio.tree import bme
 
     >>> dm = DistanceMatrix([[0, 0.02,  0.18,  0.34,  0.55],
@@ -328,8 +328,8 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     Examples
     --------
-    >>> from skbio import DistanceMatrix, TreeNode
-    >>> from skbio.tree import nni
+    >>> from skbio.stats.distance import DistanceMatrix
+    >>> from skbio.tree import TreeNode, nni
 
     Define a distance matrix describing the distances between five taxa.
 

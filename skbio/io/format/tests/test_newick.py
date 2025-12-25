@@ -9,7 +9,7 @@
 import io
 import unittest
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.io import NewickFormatError
 from skbio.io.format.newick import (
     _newick_to_tree_node, _tree_node_to_newick, _newick_sniffer)

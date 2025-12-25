@@ -11,8 +11,7 @@ import numpy.testing as npt
 import pandas as pd
 from unittest import TestCase, main
 
-from skbio import OrdinationResults
-from skbio.stats.ordination import rda
+from skbio.stats.ordination import OrdinationResults, rda
 from skbio.util import get_data_path, assert_ordination_results_equal
 
 

@@ -23,7 +23,7 @@ else:
     has_matplotlib = True
 
 import skbio.sequence.distance
-from skbio import DistanceMatrix, Sequence
+from skbio.sequence import Sequence
 from skbio.stats.distance import (
     PairwiseMatrixError,
     DistanceMatrixError,
@@ -31,6 +31,7 @@ from skbio.stats.distance import (
     MissingIDError,
     PairwiseMatrix,
     SymmetricMatrix,
+    DistanceMatrix,
     randdm,
 )
 from skbio.stats.distance._base import _preprocess_input, _run_monte_carlo_stats

@@ -8,7 +8,7 @@
 
 import unittest
 
-from skbio import DNA, RNA
+from skbio.sequence import DNA, RNA
 from skbio.metadata import IntervalMetadata
 
 

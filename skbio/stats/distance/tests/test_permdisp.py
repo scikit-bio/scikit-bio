@@ -15,9 +15,8 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway, ConstantInputWarning
 
-from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
-from skbio.stats.distance import permdisp
+from skbio.stats.distance import DistanceMatrix, permdisp
 from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path

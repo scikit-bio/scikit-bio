@@ -11,7 +11,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio import TreeNode, DistanceMatrix
+from skbio.tree import TreeNode
+from skbio.stats.distance import DistanceMatrix
 from skbio.diversity import beta_diversity, block_beta_diversity
 from skbio.diversity._block import (_block_party, _generate_id_blocks,
                                     _pairs_to_compute, _block_compute,

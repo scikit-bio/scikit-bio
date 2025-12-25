@@ -14,8 +14,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 
 from skbio._config import set_config
-from skbio import OrdinationResults
-from skbio.stats.ordination import ca
+from skbio.stats.ordination import OrdinationResults, ca
 from skbio.util import (
     get_package,
     get_data_path,

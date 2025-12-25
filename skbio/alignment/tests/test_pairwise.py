@@ -11,8 +11,9 @@ import warnings
 
 import numpy as np
 
-from skbio import Sequence, Protein, DNA, RNA, TabularMSA, SubstitutionMatrix
+from skbio.sequence import Sequence, Protein, DNA, RNA, SubstitutionMatrix
 from skbio.alignment import (
+    TabularMSA,
     global_pairwise_align_protein, local_pairwise_align_protein,
     global_pairwise_align_nucleotide, local_pairwise_align_nucleotide,
     local_pairwise_align, global_pairwise_align)

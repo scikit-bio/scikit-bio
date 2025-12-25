@@ -65,7 +65,7 @@ class GeneticCode(SkbioObject):
     Get NCBI's standard genetic code (table ID 1, the default genetic code
     in scikit-bio):
 
-    >>> from skbio import GeneticCode
+    >>> from skbio.sequence import GeneticCode
     >>> GeneticCode.from_ncbi()
     GeneticCode (Standard)
     -------------------------------------------------------------------------
@@ -99,7 +99,7 @@ class GeneticCode(SkbioObject):
 
     Translate an RNA sequence to protein using NCBI's standard genetic code:
 
-    >>> from skbio import RNA
+    >>> from skbio.sequence import RNA
     >>> rna = RNA('AUGCCACUUUAA')
     >>> GeneticCode.from_ncbi().translate(rna)
     Protein
@@ -455,7 +455,7 @@ class GeneticCode(SkbioObject):
         Translate RNA into protein using NCBI's standard genetic code (table ID
         1, the default genetic code in scikit-bio):
 
-        >>> from skbio import RNA, GeneticCode
+        >>> from skbio.sequence import RNA, GeneticCode
         >>> rna = RNA('AGUAUUCUGCCACUGUAAGAA')
         >>> sgc = GeneticCode.from_ncbi()
         >>> sgc.translate(rna)
@@ -675,7 +675,7 @@ class GeneticCode(SkbioObject):
         NCBI's standard genetic code (table ID 1, the default genetic code in
         scikit-bio):
 
-        >>> from skbio import RNA, GeneticCode
+        >>> from skbio.sequence import RNA, GeneticCode
         >>> rna = RNA('AUGCCACUUUAA')
         >>> sgc = GeneticCode.from_ncbi()
         >>> for protein in sgc.translate_six_frames(rna):

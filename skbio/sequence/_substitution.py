@@ -82,7 +82,7 @@ class SubstitutionMatrix(PairwiseMatrix):
     bases. The value -1 in the upper-right and lower-left triangles represents a
     mismatch between two different bases.
 
-    >>> from skbio import SubstitutionMatrix
+    >>> from skbio.sequence import SubstitutionMatrix
     >>> sm = SubstitutionMatrix('ACGT', np.array([
     ...     [2, -1, -1, -1],
     ...     [-1, 2, -1, -1],
@@ -117,7 +117,7 @@ class SubstitutionMatrix(PairwiseMatrix):
     With a :class:`~skbio.sequence.Sequence` object, one can efficiently map all
     characters to their indices in the substitution matrix.
 
-    >>> from skbio import DNA
+    >>> from skbio.sequence import DNA
     >>> seq = DNA('GGATCC')
     >>> seq.to_indices(sm)
     array([2, 2, 0, 1, 3, 3])
@@ -312,7 +312,7 @@ class SubstitutionMatrix(PairwiseMatrix):
 
         Examples
         --------
-        >>> from skbio import SubstitutionMatrix
+        >>> from skbio.sequence import SubstitutionMatrix
         >>> d = {'a': {'a': 1, 'b': 0, 'c': 0},
         ...      'b': {'a': 0, 'b': 1, 'c': 0},
         ...      'c': {'a': 0, 'b': 0, 'c': 1}}
@@ -371,7 +371,7 @@ class SubstitutionMatrix(PairwiseMatrix):
 
         Examples
         --------
-        >>> from skbio import SubstitutionMatrix
+        >>> from skbio.sequence import SubstitutionMatrix
         >>> mat = SubstitutionMatrix.identity('ACGT', 1, -2)
         >>> mat.alphabet
         ('A', 'C', 'G', 'T')
@@ -440,7 +440,7 @@ class SubstitutionMatrix(PairwiseMatrix):
 
         Examples
         --------
-        >>> from skbio import SubstitutionMatrix
+        >>> from skbio.sequence import SubstitutionMatrix
         >>> mat = SubstitutionMatrix.by_name('BLOSUM62')
         >>> len(mat.alphabet)
         24

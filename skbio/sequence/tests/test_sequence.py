@@ -20,7 +20,7 @@ import pandas as pd
 from scipy.spatial.distance import hamming as sp_hamming
 
 from skbio.sequence.distance import hamming as sk_hamming
-from skbio import Sequence, DNA, SubstitutionMatrix
+from skbio.sequence import Sequence, DNA, SubstitutionMatrix
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
                                       _as_slice_if_single_index)
@@ -2599,7 +2599,7 @@ class TestDistance(TestSequenceBase):
 # tests take care of this)
 class SequenceReprDoctests:
     r""">>> import pandas as pd
-    >>> from skbio import Sequence
+    >>> from skbio.sequence import Sequence
 
     Empty (minimal) sequence:
 

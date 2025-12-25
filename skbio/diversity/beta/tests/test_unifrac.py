@@ -11,8 +11,7 @@ from unittest import main, TestCase
 
 import numpy as np
 
-from skbio import TreeNode
-from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.tree import TreeNode, DuplicateNodeError, MissingNodeError
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.diversity.beta._unifrac import (_unweighted_unifrac,
                                            _weighted_unifrac,

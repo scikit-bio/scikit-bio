@@ -12,7 +12,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.util import get_data_path
-from skbio import Protein
+from skbio.sequence import Protein
 from skbio.embedding._embedding import SequenceVector, embed_vec_to_numpy
 from skbio.embedding._protein import (
     ProteinEmbedding,

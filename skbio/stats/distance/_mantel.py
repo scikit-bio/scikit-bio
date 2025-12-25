@@ -186,8 +186,7 @@ def mantel(
     --------
     Import the functionality we'll use in the following examples:
 
-    >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import mantel
+    >>> from skbio.stats.distance import DistanceMatrix, mantel
 
     Define two 3x3 distance matrices:
 
@@ -599,8 +598,7 @@ def pwmantel(
     --------
     Import the functionality we'll use in the following examples:
 
-    >>> from skbio import DistanceMatrix
-    >>> from skbio.stats.distance import pwmantel
+    >>> from skbio.stats.distance import DistanceMatrix, pwmantel
 
     Define three 3x3 distance matrices:
 

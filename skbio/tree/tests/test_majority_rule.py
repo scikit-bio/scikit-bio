@@ -10,8 +10,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from skbio import TreeNode
-from skbio.tree import majority_rule
+from skbio.tree import TreeNode, majority_rule
 from skbio.tree._majority_rule import (
     _walk_clades, _filter_clades, _build_trees)
 

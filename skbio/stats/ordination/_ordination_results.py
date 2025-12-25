@@ -266,7 +266,7 @@ class OrdinationResults(SkbioObject, PlottableMixin):
 
            Define a distance matrix with four samples labelled A-D:
 
-           >>> from skbio import DistanceMatrix
+           >>> from skbio.stats.distance import DistanceMatrix
            >>> dm = DistanceMatrix([[0., 0.21712454, 0.5007512, 0.91769271],
            ...                      [0.21712454, 0., 0.45995501, 0.80332382],
            ...                      [0.5007512, 0.45995501, 0., 0.65463348],

@@ -16,7 +16,7 @@ import numpy as np
 
 import skbio
 from skbio.io import write
-from skbio import Protein
+from skbio.sequence import Protein
 from skbio.util import get_data_path
 from skbio.embedding._protein import ProteinEmbedding
 from skbio.embedding._protein import ProteinVector

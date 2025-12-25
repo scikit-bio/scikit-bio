@@ -92,7 +92,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     --------
     Create a ``TabularMSA`` object with three DNA sequences and four positions:
 
-    >>> from skbio import DNA, TabularMSA
+    >>> from skbio.sequence import DNA
+    >>> from skbio.alignment import TabularMSA
     >>> seqs = [
     ...     DNA('ACGT'),
     ...     DNA('AG-T'),
@@ -158,7 +159,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa.dtype
         <class 'skbio.sequence._dna.DNA'>
@@ -178,7 +180,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
 
         Create a ``TabularMSA`` object with 2 sequences and 3 positions:
 
@@ -232,7 +235,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Create a ``TabularMSA`` object with sequences labeled by sequence
         identifier:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('AC-', metadata={'id': 'c'})]
@@ -327,7 +331,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         First we need to set up an MSA to slice:
 
-        >>> from skbio import TabularMSA, DNA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
         ...                   DNA("ACGA")], index=['a', 'b', 'c', 'd'])
         >>> msa
@@ -588,7 +593,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         First we need to set up an MSA to slice:
 
-        >>> from skbio import TabularMSA, DNA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA("ACGT"), DNA("A-GT"), DNA("AC-T"),
         ...                   DNA("ACGA")])
         >>> msa
@@ -747,7 +753,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> seqs = {'a': DNA('ACGT'), 'b': DNA('A--T')}
         >>> msa = TabularMSA.from_dict(seqs)
         >>> msa.shape
@@ -865,7 +872,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
 
         MSA with sequences and positions:
 
@@ -905,7 +913,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')], index=['l1', 'l2'])
         >>> 'l1' in msa
         True
@@ -931,7 +940,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> len(msa)
         2
@@ -952,7 +962,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> for seq in msa:
         ...     str(seq)
@@ -972,7 +983,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> for seq in reversed(msa):
         ...     str(seq)
@@ -1004,7 +1016,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, RNA, TabularMSA
+        >>> from skbio.sequence import DNA, RNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa == msa
         True
@@ -1092,7 +1105,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Examples
         --------
         >>> import copy
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa_copy = copy.copy(msa)
         >>> msa_copy == msa
@@ -1123,7 +1137,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Examples
         --------
         >>> import copy
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'), DNA('AC-')])
         >>> msa_copy = copy.deepcopy(msa)
         >>> msa_copy == msa
@@ -1260,7 +1275,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         Create an MSA with positional metadata:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> sequences = [DNA('ACG'),
         ...              DNA('A-T')]
         >>> msa = TabularMSA(sequences,
@@ -1372,7 +1388,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> sequences = [DNA('AC---'),
         ...              DNA('AT-C.'),
         ...              DNA('TT-CG')]
@@ -1607,7 +1624,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Compute frequency of gap characters for each position in the MSA (i.e.,
         *across* the sequence axis):
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACG'),
         ...                   DNA('A--'),
         ...                   DNA('AC.'),
@@ -1685,7 +1703,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         Create a ``TabularMSA`` object with default index labels:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'a'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('CCG', metadata={'id': 'c'})]
@@ -1782,7 +1801,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         Create an MSA with a single sequence labeled ``'seq1'``:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACGT')], index=['seq1'])
         >>> msa
         TabularMSA[DNA]
@@ -1889,7 +1909,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------
         Create an MSA with a single sequence labeled ``'seq1'``:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa = TabularMSA([DNA('ACGT')], index=['seq1'])
         >>> msa
         TabularMSA[DNA]
@@ -2133,7 +2154,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Join MSAs by sequence:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> msa1 = TabularMSA([DNA('AC'),
         ...                    DNA('A-')])
         >>> msa2 = TabularMSA([DNA('G-T'),
@@ -2393,7 +2415,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Create a ``TabularMSA`` object with sequence identifiers as index
         labels:
 
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> seqs = [DNA('ACG', metadata={'id': 'c'}),
         ...         DNA('AC-', metadata={'id': 'b'}),
         ...         DNA('AC-', metadata={'id': 'a'})]
@@ -2456,7 +2479,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA
         >>> seqs = [DNA('ACGT'), DNA('A--T')]
         >>> msa = TabularMSA(seqs, index=['a', 'b'])
         >>> dictionary = msa.to_dict()
@@ -2505,8 +2529,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
-        >>> from skbio.alignment import AlignPath
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA, AlignPath
         >>> seqs = [
         ...    DNA('CGTCGTGC'),
         ...    DNA('CAGTC'),

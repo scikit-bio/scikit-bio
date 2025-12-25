@@ -14,7 +14,8 @@ from functools import partial
 
 import numpy as np
 
-from skbio import Sequence, DNA, RNA, Protein, TabularMSA
+from skbio.sequence import Sequence, DNA, RNA, Protein
+from skbio.alignment import TabularMSA
 from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_sequence,

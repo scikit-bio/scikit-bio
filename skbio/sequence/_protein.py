@@ -135,7 +135,7 @@ class Protein(GrammaredSequence):
 
     Examples
     --------
-    >>> from skbio import Protein
+    >>> from skbio.sequence import Protein
     >>> Protein('PAW')
     Protein
     --------------------------
@@ -247,7 +247,7 @@ class Protein(GrammaredSequence):
 
         Examples
         --------
-        >>> from skbio import Protein
+        >>> from skbio.sequence import Protein
         >>> s = Protein('PAW')
         >>> s.stops()
         array([False, False, False], dtype=bool)
@@ -269,7 +269,7 @@ class Protein(GrammaredSequence):
 
         Examples
         --------
-        >>> from skbio import Protein
+        >>> from skbio.sequence import Protein
         >>> s = Protein('PAW')
         >>> s.has_stops()
         False
