@@ -2899,25 +2899,36 @@ class TreeTests(TestCase):
 
     def test_from_linkage_matrix(self):
         # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
-        id_list = ["A", "B", "C", "D", "E", "F", "G"]
-        linkage = np.asarray([[1.0,  5.0,  1.0,  2.0],
-                              [0.0,  3.0,  8.0,  2.0],
-                              [6.0,  7.0, 12.5,  3.0],
-                              [8.0,  9.0, 16.5,  5.0],
-                              [2.0, 10.0, 29.0,  6.0],
-                              [4.0, 11.0, 34.0,  7.0]])
+        lnkmat = np.asarray([[1.0,  5.0,  1.0,  2.0],
+                             [0.0,  3.0,  8.0,  2.0],
+                             [6.0,  7.0, 12.5,  3.0],
+                             [8.0,  9.0, 16.5,  5.0],
+                             [2.0, 10.0, 29.0,  6.0],
+                             [4.0, 11.0, 34.0,  7.0]])
+        names = ["A", "B", "C", "D", "E", "F", "G"]
 
-        tree = TreeNode.from_linkage_matrix(linkage, id_list)
+        obs = TreeNode.from_linkage_matrix(lnkmat, names)
+        self.assertIsInstance(obs, TreeNode)
+        exp = ("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,F:0.5)"
+               ":5.75):2.0):6.25):2.5);\n")
+        self.assertEqual(str(obs), exp)
 
-        self.assertIs(type(tree), TreeNode)
+        obs = TreeNodeSubclass.from_linkage_matrix(lnkmat, names)
+        self.assertIsInstance(obs, TreeNodeSubclass)
 
-        self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                         "F:0.5):5.75):2.0):6.25):2.5);\n",
-                         str(tree))
+        obs = TreeNode.from_linkage_matrix(lnkmat.tolist(), names)
+        self.assertEqual(str(obs), exp)
 
-        tree = TreeNodeSubclass.from_linkage_matrix(linkage, id_list)
+        obs = TreeNode.from_linkage_matrix(lnkmat, tuple(names))
+        self.assertEqual(str(obs), exp)
 
-        self.assertIs(type(tree), TreeNodeSubclass)
+        obs = TreeNode.from_linkage_matrix(lnkmat, np.array(names))
+        self.assertEqual(str(obs), exp)
+
+        msg = "Number of names must be number of rows in the linkage matrix plus one."
+        with self.assertRaises(ValueError) as e:
+            TreeNode.from_linkage_matrix(lnkmat, names[:-1])
+        self.assertEqual(str(e.exception), msg)
 
     def test_from_taxonomy(self):
         lineages = [("1", ["a", "b", "c", "d", "e", "f", "g"]),
