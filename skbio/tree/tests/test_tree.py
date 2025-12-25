@@ -2916,14 +2916,19 @@ class TreeTests(TestCase):
         obs = TreeNodeSubclass.from_linkage_matrix(lnkmat, names)
         self.assertIsInstance(obs, TreeNodeSubclass)
 
-        obs = TreeNodeSubclass.from_linkage_matrix(lnkmat.tolist(), names)
+        obs = TreeNode.from_linkage_matrix(lnkmat.tolist(), names)
         self.assertEqual(str(obs), exp)
 
-        obs = TreeNodeSubclass.from_linkage_matrix(lnkmat, tuple(names))
+        obs = TreeNode.from_linkage_matrix(lnkmat, tuple(names))
         self.assertEqual(str(obs), exp)
 
-        obs = TreeNodeSubclass.from_linkage_matrix(lnkmat, np.array(names))
+        obs = TreeNode.from_linkage_matrix(lnkmat, np.array(names))
         self.assertEqual(str(obs), exp)
+
+        msg = "Number of names must be number of rows in the linkage matrix plus one."
+        with self.assertRaises(ValueError) as e:
+            TreeNode.from_linkage_matrix(lnkmat, names[:-1])
+        self.assertEqual(str(e.exception), msg)
 
     def test_from_taxonomy(self):
         lineages = [("1", ["a", "b", "c", "d", "e", "f", "g"]),

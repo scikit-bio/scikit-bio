@@ -5866,7 +5866,7 @@ class TreeNode(SkbioObject):
         n_clusters = lnkmat.shape[0]
         if n_tips != n_clusters + 1:
             raise ValueError(
-                "There must be one more name than rows of the linkage matrix."
+                "Number of names must be number of rows in the linkage matrix plus one."
             )
 
         # allocate node list
