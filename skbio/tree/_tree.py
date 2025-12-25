@@ -42,7 +42,7 @@ from ._compare import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Iterator
-    from numpy.typing import NDArray, ArrayLike
+    from numpy.typing import ArrayLike
 
 
 # ----------------------------------------------------------------------------
@@ -5785,14 +5785,14 @@ class TreeNode(SkbioObject):
             ("names", "id_list", "0.7.2", False),
         ]
     )
-    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: ArrayLike[str]) -> TreeNode:
+    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: Iterable[str]) -> TreeNode:
         r"""Construct tree from a SciPy linkage matrix.
 
         Parameters
         ----------
-        lnkmat : array_like of shape (n_tips - 1, 4)
+        lnkmat : array_like of shape (n_tips - 1, 3+)
             A SciPy linkage matrix.
-        names : array_like of str of shape (n_tips,)
+        names : iterable of str of shape (n_tips,)
             Corresponding tip names of the indices in the linkage matrix.
 
         Returns
@@ -5816,7 +5816,7 @@ class TreeNode(SkbioObject):
         1. Index of left child cluster
         2. Index of right child cluster
         3. Distance between two child clusters
-        4. Number of descending taxa
+        4. Number of descending taxa (not used in this function)
 
         Due to the mathematical nature of hierarchical clustering, the tree converted
         from a linkage matrix must be a perfect binary tree, where every internal node
@@ -5862,6 +5862,8 @@ class TreeNode(SkbioObject):
         """
         # see also: skbio.tree._nj._tree_from_linkmat
         lnkmat = np.asarray(lnkmat)
+        if not isinstance(names, list):
+            names = list(names)
         n_tips = len(names)
         n_clusters = lnkmat.shape[0]
         if n_tips != n_clusters + 1:
@@ -5870,18 +5872,18 @@ class TreeNode(SkbioObject):
             )
 
         # allocate node list
-        nodes = [cls(x) for x in list(names) + [None] * n_clusters]
+        nodes = [cls(x) for x in names + [None] * n_clusters]
 
         heights = np.empty(n_clusters + n_tips)
         heights[:n_tips] = 0.0
 
-        A = lnkmat[:, 0].astype(int).tolist()
-        B = lnkmat[:, 1].astype(int).tolist()
-        L = lnkmat[:, 2] * 0.5
+        left_idx = lnkmat[:, 0].astype(int).tolist()
+        right_idx = lnkmat[:, 1].astype(int).tolist()
+        half_dist = lnkmat[:, 2] * 0.5
 
         # build tree incrementally
         idx = n_tips
-        for a, b, height in zip(A, B, L):
+        for a, b, height in zip(left_idx, right_idx, half_dist):
             heights[idx] = height
 
             child_a = nodes[a]
