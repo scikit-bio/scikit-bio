@@ -178,7 +178,7 @@ def dirmult_ttest(
 
     Therefore, it is generally recommended to provide raw counts instead of
     pre-normalized proportions, as the latter will remove the magnitude information and
-    increase uncertainty in the estimates, which can lead to less powerful tests.
+    increase uncertainty in the estimates, which can lead to higher uncertainty and increased false negatives.
 
     The confidence intervals are computed by taking the minimum of all per-draw 2.5%
     bounds and the maximum of all per-draw 97.5% bounds across posterior draws. This
