@@ -12,6 +12,7 @@
 ### Performance enhancements
 
 * Improved `TreeNode.from_linkage_matrix`, including efficiency, compatibility (it now accepts array-like objects), and documentation ([#2356](https://github.com/scikit-bio/scikit-bio/pull/2356)).
+* Updated the documentation of `dirmult_ttest` to recommend input data supplied as raw counts rather than pre-normalized proportions, as the latter lose magnitude information and can lead to higher statistical uncertainty ([#2358](https://github.com/scikit-bio/scikit-bio/pull/2358)).
 
 ### Bug Fixes
 
