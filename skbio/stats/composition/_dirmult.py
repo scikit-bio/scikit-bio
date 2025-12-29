@@ -87,7 +87,7 @@ def dirmult_ttest(
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
         :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for stronger statistical power. See Notes for details.
+        for lower statistical uncertainty. See Notes for details.
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. These could be strings
         or integers denoting which group a sample belongs to. If it is a pandas Series
