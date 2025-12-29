@@ -171,7 +171,7 @@ def dirmult_ttest(
     Notes
     -----
     A benefit of using the Dirichlet-multinomial distribution is that the statistical
-    power increases along with the abundance magnitude. Larger counts per sample (e.g.,
+    uncertainty decreases increases along with the abundance magnitude. Larger counts per sample (e.g.,
     resulting from higher sequencing depth) will decrease the uncertainty of the
     estimated statistics, resulting in lower *p*-values for true positives. This is in
     contrast to many other statistical tests.
