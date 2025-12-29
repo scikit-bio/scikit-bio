@@ -171,14 +171,14 @@ def dirmult_ttest(
     Notes
     -----
     A benefit of using the Dirichlet-multinomial distribution is that the statistical
-    uncertainty decreases increases along with the abundance magnitude. Larger counts per sample (e.g.,
-    resulting from higher sequencing depth) will decrease the uncertainty of the
-    estimated statistics, resulting in lower *p*-values for true positives. This is in
-    contrast to many other statistical tests.
+    uncertainty decreases as the magnitude of abundance increases. Larger counts per
+    sample (e.g., resulting from higher sequencing depth) will reduce the uncertainty
+    of the estimated statistics, resulting in lower *p*-values for true positives. This
+    is in contrast to many other statistical tests.
 
     Therefore, it is generally recommended to provide raw counts instead of
-    pre-normalized proportions, as the latter will remove the magnitude information and
-    increase uncertainty in the estimates, which can lead to higher uncertainty and increased false negatives.
+    pre-normalized proportions, as the latter will remove the magnitude information,
+    which can lead to higher uncertainty in the estimates and increased false negatives.
 
     The confidence intervals are computed by taking the minimum of all per-draw 2.5%
     bounds and the maximum of all per-draw 97.5% bounds across posterior draws. This
@@ -370,7 +370,8 @@ def dirmult_lme(
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
         :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for lower statistical uncertainty. See Notes of :func:`dirmult_ttest` for details.
+        for lower statistical uncertainty. See Notes of :func:`dirmult_ttest` for
+        details.
     metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a
