@@ -32,9 +32,7 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _bal_avgdist_insert_dynamic,
-    _bal_avgdist_insert_dynamic_use,
     _bal_avgdist_insert_guided,
-    _bal_avgdist_insert_guided_use,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 
@@ -540,13 +538,9 @@ def _bme(dm, parallel=None, chunksize=10000, minclade=100):
     if parallel is False:
         func = _bal_avgdist_insert
     elif chunksize:
-        func = (
-            _bal_avgdist_insert_dynamic_use if minclade else _bal_avgdist_insert_dynamic
-        )
+        func = _bal_avgdist_insert_dynamic
     else:
-        func = (
-            _bal_avgdist_insert_guided_use if minclade else _bal_avgdist_insert_guided
-        )
+        func = _bal_avgdist_insert_guided
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
