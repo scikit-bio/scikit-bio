@@ -390,6 +390,11 @@ class _MMvecModel:
         grad : np.ndarray
             Flattened gradient vector.
         """
+        # Extract sparse indices and weights
+        rows = X_coo.row  # sample indices (nnz,)
+        cols = X_coo.col  # microbe indices (nnz,)
+        weights = X_coo.data  # microbe counts (nnz,)
+
         # Build augmented matrices once
         U_aug, V_aug = self._build_augmented_matrices()
 
@@ -398,43 +403,49 @@ class _MMvecModel:
         logits_all = np.hstack([np.zeros((self.n_microbes, 1)), logits_core])
 
         # Stable softmax for all microbes
-        log_norm = logsumexp(logits_all, axis=1, keepdims=True)
+        log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
         probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
-
-        # Initialize loss and gradients
-        loss = 0.0
-        dU = np.zeros_like(self.U)
-        db_U = np.zeros_like(self.b_U)
-        dV = np.zeros_like(self.V)
-        db_V = np.zeros_like(self.b_V)
 
         # Sample totals
         N = Y.sum(axis=1)  # (n_samples,)
 
-        # Iterate over all non-zero (sample, microbe) pairs
-        for i in range(len(X_coo.data)):
-            s = X_coo.row[i]
-            m = X_coo.col[i]
-            w = X_coo.data[i]  # weight (microbe count)
+        # === Vectorized loss computation ===
+        # Gather logits and log_norm for each (sample, microbe) pair
+        logits_batch = logits_all[cols, :]  # (nnz, d2)
+        log_norm_batch = log_norm[cols, 0]  # (nnz,)
+        Y_batch = Y[rows, :]  # (nnz, d2)
+        N_batch = N[rows]  # (nnz,)
 
-            y_s = Y[s, :]  # (d2,)
-            eta = logits_all[m, :]
-            pi = probs_all[m, :]
+        # Log-likelihood: sum_j y_j * eta_j - N * logsumexp(eta)
+        log_lik = (Y_batch * logits_batch).sum(axis=1) - N_batch * log_norm_batch
+        loss = -np.dot(weights, log_lik)  # weighted sum
 
-            # Log-likelihood contribution (weighted by microbe count)
-            log_lik = np.dot(y_s, eta) - N[s] * log_norm[m, 0]
-            loss -= w * log_lik
+        # === Vectorized gradient computation ===
+        # Delta: w * (y[1:] - N * pi[1:]) for each (sample, microbe) pair
+        probs_batch = probs_all[cols, :]  # (nnz, d2)
+        delta = weights[:, None] * (
+            Y_batch[:, 1:] - N_batch[:, None] * probs_batch[:, 1:]
+        )  # (nnz, d2-1)
 
-            # Gradient w.r.t. non-reference logits
-            delta = w * (y_s[1:] - N[s] * pi[1:])  # (d2-1,)
+        # dV: sum over all entries of outer(U[m], delta)
+        # This is U[cols].T @ delta = (p, nnz) @ (nnz, d2-1) = (p, d2-1)
+        U_batch = self.U[cols, :]  # (nnz, p)
+        dV = -U_batch.T @ delta  # (p, d2-1)
 
-            # Accumulate gradients (negative because loss = -log_lik)
-            dV -= np.outer(self.U[m, :], delta)
-            db_V -= delta.reshape(1, -1)
-            dU[m, :] -= delta @ self.V.T
-            db_U[m, 0] -= delta.sum()
+        # db_V: sum of delta over all entries
+        db_V = -delta.sum(axis=0, keepdims=True)  # (1, d2-1)
 
-        # Add prior terms (L2 regularization)
+        # dU: scatter-add delta @ V.T to rows indexed by cols
+        delta_V = delta @ self.V.T  # (nnz, p)
+        dU = np.zeros_like(self.U)
+        np.add.at(dU, cols, -delta_V)
+
+        # db_U: scatter-add delta.sum(axis=1) to rows indexed by cols
+        delta_sum = delta.sum(axis=1)  # (nnz,)
+        db_U = np.zeros_like(self.b_U)
+        np.add.at(db_U, (cols, 0), -delta_sum)
+
+        # === Add prior terms (L2 regularization) ===
         u_diff = self.U - self.u_prior_mean
         b_u_diff = self.b_U - self.u_prior_mean
         v_diff = self.V - self.v_prior_mean
