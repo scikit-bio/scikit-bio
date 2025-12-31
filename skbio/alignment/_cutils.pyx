@@ -83,7 +83,7 @@ def _fill_linear_matrix(
 
     `query` is a pre-computed profile of the query sequence. Each row represents a
     character in the query sequence and each column represents a symbol in the
-    subsitution matrix. `target` is a vector of indices in the subsitution matrix,
+    substitution matrix. `target` is a vector of indices in the substitution matrix,
     and each elements represents a character in the target sequence. Therefore,
     `query[i - 1, target[j - 1]]` directly looks up the substitution score between
     i-th character in query and j-th character in target.

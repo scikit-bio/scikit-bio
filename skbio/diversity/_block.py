@@ -6,11 +6,9 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Any, Optional, Union, Callable, TYPE_CHECKING
+from __future__ import annotations
 
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
-    from skbio.util._typing import TableLike
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -18,6 +16,11 @@ from skbio.diversity._driver import partial_beta_diversity
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import _validate_counts_matrix
 from skbio.table._tabular import _ingest_table
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import TableLike
 
 
 def _generate_id_blocks(ids, k=64):
@@ -258,13 +261,13 @@ def _reduce(blocks):
 
 
 def block_beta_diversity(
-    metric: Union[str, Callable],
-    counts: "TableLike",
-    ids: Optional["ArrayLike"] = None,
+    metric: str | Callable,
+    counts: TableLike,
+    ids: ArrayLike | None = None,
     validate: bool = True,
     k: int = 64,
-    reduce_f: Optional[Callable] = None,
-    map_f: Optional[Callable] = None,
+    reduce_f: Callable | None = None,
+    map_f: Callable | None = None,
     **kwargs: Any,
 ) -> DistanceMatrix:
     """Perform a block-decomposition beta diversity calculation.
@@ -323,7 +326,7 @@ def block_beta_diversity(
 
     References
     ----------
-    .. [1] http://www.earthmicrobiome.org/
+    .. [1] https://earthmicrobiome.ucsd.edu/
 
     """
     if "taxa" in kwargs:

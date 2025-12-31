@@ -6,17 +6,23 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Optional, Union, Iterable
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
 from skbio.util._decorator import classonlymethod
-from skbio.stats.distance import DissimilarityMatrix
+from skbio.stats.distance import PairwiseMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
 
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+    from numpy.typing import NDArray
 
-class SubstitutionMatrix(DissimilarityMatrix):
+
+class SubstitutionMatrix(PairwiseMatrix):
     r"""Scoring matrix between characters in biological sequences.
 
     Parameters
@@ -27,11 +33,11 @@ class SubstitutionMatrix(DissimilarityMatrix):
         Scores of substitutions from one character (row, or axis=0) to another
         character (column, or axis=1).
     kwargs : dict
-        Additional arguments for the ``DissimilarityMatrix`` constructor.
+        Additional arguments for the ``PairwiseMatrix`` constructor.
 
     See Also
     --------
-    skbio.stats.distance.DissimilarityMatrix
+    skbio.stats.distance.PairwiseMatrix
 
     Notes
     -----
@@ -58,7 +64,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
     pre-defined and can be referred to by name. Examples include NUC.4.4 for
     nucleotides, and variants of BLOSUM and PAM matrices for amino acids.
 
-    ``SubstitutionMatrix`` is a subclass of ``DissimilarityMatrix``. Therefore,
+    ``SubstitutionMatrix`` is a subclass of ``PairwiseMatrix``. Therefore,
     all attributes and methods of the latter also apply to the former.
 
     The default floating-point data type of ``SubstitutionMatrix`` is float32. If you
@@ -218,7 +224,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     def __init__(self, alphabet, scores, **kwargs):
         """Initialize a substitution matrix object."""
-        # cast to float32 (see DissimilarityMatrix.__init__)
+        # cast to float32 (see PairwiseMatrix.__init__)
         _issue_copy = True
         if isinstance(scores, np.ndarray):
             if scores.dtype in (np.float32, np.float64):
@@ -280,7 +286,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
 
     @classonlymethod
     def from_dict(
-        cls, dictionary: dict[dict], dtype: str = "float32"
+        cls, dictionary: dict[str, dict[str, float]], dtype: str = "float32"
     ) -> "SubstitutionMatrix":
         """Create a substitution matrix from a 2D dictionary.
 
@@ -323,7 +329,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
         n = len(alphabet)
-        scores = np.full((n, n), np.nan, dtype=dtype)
+        scores: NDArray = np.full((n, n), np.nan, dtype=dtype)
         for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError(
@@ -337,12 +343,12 @@ class SubstitutionMatrix(DissimilarityMatrix):
     @classonlymethod
     def identity(
         cls,
-        alphabet: Iterable,
-        match: Union[int, float],
-        mismatch: Union[int, float],
+        alphabet: Iterable[Any],
+        match: int | float,
+        mismatch: int | float,
         dtype: str = "float32",
     ) -> "SubstitutionMatrix":
-        f"""Create an identity substitution matrix.
+        r"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
         respectively, regardless of the character.
@@ -378,7 +384,7 @@ class SubstitutionMatrix(DissimilarityMatrix):
         """
         alphabet = tuple(alphabet)
         n = len(alphabet)
-        scores = np.full((n, n), mismatch, dtype=dtype)
+        scores: NDArray = np.full((n, n), mismatch, dtype=dtype)
         np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 

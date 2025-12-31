@@ -1196,6 +1196,8 @@ def _bal_avgdist_insert_guided(
     cdef Py_ssize_t curr, anc, cousin, depth_1, depth_diff
     cdef Py_ssize_t a, b
     cdef floating power, diff
+=======
+>>>>>>> upstream
 
     # number of operations per iteration
     cdef int ops

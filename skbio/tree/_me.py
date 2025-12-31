@@ -35,6 +35,7 @@ from ._c_me import (
     _bal_avgdist_insert_guided,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
+from skbio.stats.distance import DistanceMatrix
 
 
 def gme(dm, neg_as_zero=True):
@@ -146,6 +147,10 @@ def gme(dm, neg_as_zero=True):
     """
     _validate_dm(dm)
 
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
+
     # reconstruct tree topology and branch lengths using GME
     tree, lens = _gme(dm.data)
 
@@ -248,6 +253,10 @@ def bme(dm, neg_as_zero=True, **kwargs):
 
     """
     _validate_dm(dm)
+
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
     tree, lens = _bme(dm.data, **kwargs)
@@ -372,6 +381,10 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     """
     _validate_dm_and_tree(dm, tree)
 
+    # convert to redundant form for now
+    if dm._flags["CONDENSED"]:
+        dm = DistanceMatrix(dm)
+
     # generate tree array
     taxa = dm.ids
     tree, preodr, postodr = _root_from_treenode(tree, taxa)
@@ -455,7 +468,7 @@ def _gme(dm):
     For an input distance matrix with m taxa, the output tree will have 2m - 3 nodes.
     This memory space is pre-allocated to improve efficiency. The algorithm doesn't
     remake arrays during iteration, but repeatedly uses the already allocated space.
-    During an interation involving x nodes, the first x positions of each array are
+    During an iteration involving x nodes, the first x positions of each array are
     occupied, while the remaining positions are disregarded. There is no need to reset
     array values after each iteration.
 

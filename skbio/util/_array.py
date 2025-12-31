@@ -8,7 +8,9 @@
 
 """Array-like objects and namespaces."""
 
-from typing import Union, Tuple, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 import array_api_compat as aac
@@ -35,7 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # -------------------------------------------------------------------------------------
 
 
-def _get_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
+def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
     r"""Convert an array-like variable into an array object.
 
     Parameters
@@ -84,8 +86,8 @@ def _get_array(arr: "ArrayLike", /, *, to_numpy: bool = False) -> "StdArray":
 
 
 def ingest_array(
-    *arrays: "ArrayLike", to_numpy: bool = False
-) -> Tuple["ModuleType", Union["StdArray", "ArrayLike"]]:
+    *arrays: ArrayLike, to_numpy: bool = False
+) -> tuple[ModuleType, StdArray | ArrayLike]:
     r"""Convert array-like variables into array objects and their shared namespace.
 
     Parameters

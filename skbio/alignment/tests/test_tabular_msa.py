@@ -1220,7 +1220,7 @@ class SharedPropertyIndexTests(SharedIndexTests):
            This does mean the iloc via a fancy index and simple scalar must
            work correctly.
         """
-        # This will be overriden for TestLoc because the first axis are labels
+        # This will be overridden for TestLoc because the first axis are labels
         self.combo_first_axis = [
             ([], []),
             (slice(0, 0), []),

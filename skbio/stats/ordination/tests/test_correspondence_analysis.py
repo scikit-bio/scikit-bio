@@ -151,7 +151,7 @@ class TestCAResults(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,
@@ -200,7 +200,7 @@ class TestCAResults(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,
@@ -272,7 +272,7 @@ class TestCAResults_NumPy(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,
@@ -305,7 +305,7 @@ class TestCAResults_NumPy(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,
@@ -374,7 +374,7 @@ class TestCAResults_Polars(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,
@@ -416,7 +416,7 @@ class TestCAResults_Polars(TestCase):
 
         exp = OrdinationResults(
             "CA",
-            "Correspondance Analysis",
+            "Correspondence Analysis",
             eigvals=eigvals,
             features=features,
             samples=samples,

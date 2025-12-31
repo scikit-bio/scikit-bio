@@ -9,7 +9,7 @@ on:
     paths: [ "web/**", "!**.md" ]
 
 env:
-  latest_python: "3.13"
+  latest_python: "3.14"
 
 jobs:
 

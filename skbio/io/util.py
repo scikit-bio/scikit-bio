@@ -163,7 +163,7 @@ def open(
            of `filehandle` will not close `file`. Calling `close` on
            `filehandle` will close `file`. Conversely calling `close` on `file`
            will cause `filehandle` to reflect a closed state. **This does not
-           mean that a `flush` has occured for `filehandle`, there may still
+           mean that a `flush` has occurred for `filehandle`, there may still
            have been data in its buffer! Additionally, resources may not have
            been cleaned up properly, so ALWAYS call `close` on `filehandle` and
            NOT on `file`.**

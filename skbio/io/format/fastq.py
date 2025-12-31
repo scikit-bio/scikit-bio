@@ -333,7 +333,7 @@ def _fastq_sniffer(fh):
 
 @fastq.reader(None)
 def _fastq_to_generator(
-    fh, variant=None, phred_offset=None, constructor=Sequence, **kwargs
+    fh, cls=None, variant=None, phred_offset=None, constructor=Sequence, **kwargs
 ):
     # Skip any blank or whitespace-only lines at beginning of file
     try:
@@ -368,13 +368,17 @@ def _fastq_to_generator(
 
 
 @fastq.reader(Sequence)
-def _fastq_to_sequence(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
+def _fastq_to_sequence(
+    fh, cls=None, variant=None, phred_offset=None, seq_num=1, **kwargs
+):
+    if cls is None:
+        cls = Sequence
     return _get_nth_sequence(
         _fastq_to_generator(
             fh,
             variant=variant,
             phred_offset=phred_offset,
-            constructor=Sequence,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -382,33 +386,41 @@ def _fastq_to_sequence(fh, variant=None, phred_offset=None, seq_num=1, **kwargs)
 
 
 @fastq.reader(DNA)
-def _fastq_to_dna(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
+def _fastq_to_dna(fh, cls=None, variant=None, phred_offset=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     return _get_nth_sequence(
         _fastq_to_generator(
-            fh, variant=variant, phred_offset=phred_offset, constructor=DNA, **kwargs
+            fh, variant=variant, phred_offset=phred_offset, constructor=cls, **kwargs
         ),
         seq_num,
     )
 
 
 @fastq.reader(RNA)
-def _fastq_to_rna(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
+def _fastq_to_rna(fh, cls=None, variant=None, phred_offset=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     return _get_nth_sequence(
         _fastq_to_generator(
-            fh, variant=variant, phred_offset=phred_offset, constructor=RNA, **kwargs
+            fh, variant=variant, phred_offset=phred_offset, constructor=cls, **kwargs
         ),
         seq_num,
     )
 
 
 @fastq.reader(Protein)
-def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
+def _fastq_to_protein(
+    fh, cls=None, variant=None, phred_offset=None, seq_num=1, **kwargs
+):
+    if cls is None:
+        cls = Protein
     return _get_nth_sequence(
         _fastq_to_generator(
             fh,
             variant=variant,
             phred_offset=phred_offset,
-            constructor=Protein,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -417,19 +429,22 @@ def _fastq_to_protein(fh, variant=None, phred_offset=None, seq_num=1, **kwargs):
 
 @fastq.reader(TabularMSA)
 def _fastq_to_tabular_msa(
-    fh, variant=None, phred_offset=None, constructor=None, **kwargs
+    fh, cls=None, variant=None, phred_offset=None, constructor=None, **kwargs
 ):
+    if cls is None:
+        cls = TabularMSA
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    return TabularMSA(
+    return cls(
         _fastq_to_generator(
             fh,
             variant=variant,
             phred_offset=phred_offset,
             constructor=constructor,
             **kwargs,
-        )
+        ),
+        minter="id",
     )
 
 
@@ -569,7 +584,7 @@ def _tabular_msa_to_fastq(
 
 
 def _blank_error(unique_text):
-    error_string = ("Found blank or whitespace-only line {} in " "FASTQ file").format(
+    error_string = ("Found blank or whitespace-only line {} in FASTQ file").format(
         unique_text
     )
     raise FASTQFormatError(error_string)

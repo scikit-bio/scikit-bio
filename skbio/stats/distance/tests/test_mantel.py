@@ -17,7 +17,7 @@ from scipy.spatial.distance import squareform
 from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantInputWarning
 
 from skbio import DistanceMatrix
-from skbio.stats.distance import (DissimilarityMatrixError,
+from skbio.stats.distance import (PairwiseMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
@@ -32,14 +32,25 @@ class MantelTestData(TestCase):
     def setUp(self):
         # Small dataset of minimal size (3x3). Mix of floats and ints in a
         # native Python nested list structure.
-        self.minx = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
-        self.miny = [[0, 2, 7], [2, 0, 6], [7, 6, 0]]
-        self.minz = [[0, 0.5, 0.25], [0.5, 0, 0.1], [0.25, 0.1, 0]]
+        self.minx = [[0, 1, 2],
+                     [1, 0, 3],
+                     [2, 3, 0]]
+        self.miny = [[0, 2, 7],
+                     [2, 0, 6],
+                     [7, 6, 0]]
+        self.minz = [[0, 0.5, 0.25],
+                     [0.5, 0, 0.1],
+                     [0.25, 0.1, 0]]
 
         # Version of the above dataset stored as DistanceMatrix instances.
         self.minx_dm = DistanceMatrix(self.minx)
         self.miny_dm = DistanceMatrix(self.miny)
         self.minz_dm = DistanceMatrix(self.minz)
+
+        # Condensed data
+        self.minx_cond = DistanceMatrix(self.minx, condensed=True)
+        self.miny_cond = DistanceMatrix(self.miny, condensed=True)
+        self.minz_cond = DistanceMatrix(self.minz, condensed=True)
 
         # Versions of self.minx_dm and self.minz_dm that each have an extra ID
         # on the end.
@@ -458,7 +469,7 @@ class MantelTests(MantelTestData):
 
     def test_invalid_distance_matrix(self):
         # Single asymmetric, non-hollow distance matrix.
-        with self.assertRaises(DissimilarityMatrixError):
+        with self.assertRaises(PairwiseMatrixError):
             mantel([[1, 2], [3, 4]], [[0, 0], [0, 0]])
 
         # Two asymmetric distance matrices.
@@ -752,6 +763,375 @@ class OrderDistanceMatricesTests(MantelTestData):
 
         with self.assertRaises(TypeError):
             _order_dms(self.minz_dm, self.minx)
+
+
+class MantelCondensedTests(TestCase):
+    """Test that mantel works identically with condensed and full matrices."""
+    
+    def setUp(self):
+        """Set up test data in both full and condensed forms."""
+        # Small 3x3 matrices
+        self.small_x = [[0, 1, 2],
+                        [1, 0, 3],
+                        [2, 3, 0]]
+        self.small_y = [[0, 2, 7],
+                        [2, 0, 6],
+                        [7, 6, 0]]
+        
+        # Medium 5x5 matrices
+        self.medium_x = [[0, 1, 2, 3, 4],
+                         [1, 0, 5, 6, 7],
+                         [2, 5, 0, 8, 9],
+                         [3, 6, 8, 0, 10],
+                         [4, 7, 9, 10, 0]]
+        self.medium_y = [[0, 2, 4, 6, 8],
+                         [2, 0, 3, 5, 7],
+                         [4, 3, 0, 9, 11],
+                         [6, 5, 9, 0, 13],
+                         [8, 7, 11, 13, 0]]
+        
+        # Floating point matrices
+        self.float_x = [[0.0, 0.5, 0.75],
+                        [0.5, 0.0, 0.25],
+                        [0.75, 0.25, 0.0]]
+        self.float_y = [[0.0, 1.5, 2.25],
+                        [1.5, 0.0, 1.75],
+                        [2.25, 1.75, 0.0]]
+        
+        # Fixed seed for reproducible tests
+        self.seed = 42
+        self.n_perms = 99
+
+    def test_small_matrices_pearson(self):
+        """Test small 3x3 matrices with Pearson correlation."""
+        # Full form
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, n_full = mantel(
+            x_full, y_full, method='pearson', 
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Condensed form
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, n_cond = mantel(
+            x_cond, y_cond, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Results should be identical
+        self.assertAlmostEqual(stat_full, stat_cond, places=10,
+                              msg="Correlation coefficients differ")
+        self.assertAlmostEqual(p_full, p_cond, places=10,
+                              msg="P-values differ")
+        self.assertEqual(n_full, n_cond,
+                        msg="Sample sizes differ")
+
+    def test_medium_matrices_pearson(self):
+        """Test medium 5x5 matrices with Pearson correlation."""
+        # Full form
+        x_full = DistanceMatrix(self.medium_x)
+        y_full = DistanceMatrix(self.medium_y)
+        stat_full, p_full, n_full = mantel(
+            x_full, y_full, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Condensed form
+        x_cond = DistanceMatrix(self.medium_x, condensed=True)
+        y_cond = DistanceMatrix(self.medium_y, condensed=True)
+        stat_cond, p_cond, n_cond = mantel(
+            x_cond, y_cond, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Results should be identical
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+        self.assertEqual(n_full, n_cond)
+
+    def test_floating_point_matrices_pearson(self):
+        """Test floating point matrices with Pearson correlation."""
+        # Full form
+        x_full = DistanceMatrix(self.float_x)
+        y_full = DistanceMatrix(self.float_y)
+        stat_full, p_full, n_full = mantel(
+            x_full, y_full, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Condensed form
+        x_cond = DistanceMatrix(self.float_x, condensed=True)
+        y_cond = DistanceMatrix(self.float_y, condensed=True)
+        stat_cond, p_cond, n_cond = mantel(
+            x_cond, y_cond, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Results should be identical
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+        self.assertEqual(n_full, n_cond)
+
+    def test_small_matrices_spearman(self):
+        """Test small 3x3 matrices with Spearman correlation."""
+        # Full form
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, n_full = mantel(
+            x_full, y_full, method='spearman',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Condensed form
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, n_cond = mantel(
+            x_cond, y_cond, method='spearman',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Results should be identical
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+        self.assertEqual(n_full, n_cond)
+
+    def test_mixed_formats_x_condensed_y_full(self):
+        """Test with x condensed and y full."""
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_full = DistanceMatrix(self.small_y)
+        stat_mixed, p_mixed, n_mixed = mantel(
+            x_cond, y_full, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Compare to both condensed
+        x_cond2 = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, n_cond = mantel(
+            x_cond2, y_cond, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_mixed, stat_cond, places=10)
+        self.assertAlmostEqual(p_mixed, p_cond, places=10)
+        self.assertEqual(n_mixed, n_cond)
+
+    def test_mixed_formats_x_full_y_condensed(self):
+        """Test with x full and y condensed."""
+        x_full = DistanceMatrix(self.small_x)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_mixed, p_mixed, n_mixed = mantel(
+            x_full, y_cond, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Compare to both full
+        x_full2 = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, n_full = mantel(
+            x_full2, y_full, method='pearson',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_mixed, stat_full, places=10)
+        self.assertAlmostEqual(p_mixed, p_full, places=10)
+        self.assertEqual(n_mixed, n_full)
+
+    def test_alternative_hypotheses_two_sided(self):
+        """Test two-sided alternative with condensed matrices."""
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, alternative='two-sided',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, alternative='two-sided',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_alternative_hypotheses_greater(self):
+        """Test greater alternative with condensed matrices."""
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, alternative='greater',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, alternative='greater',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_alternative_hypotheses_less(self):
+        """Test less alternative with condensed matrices."""
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, alternative='less',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, alternative='less',
+            permutations=self.n_perms, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_zero_permutations(self):
+        """Test with zero permutations (no significance testing)."""
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_y)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, permutations=0
+        )
+        
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_y, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, permutations=0
+        )
+        
+        # Correlation should be identical
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        # P-values should both be NaN
+        self.assertTrue(np.isnan(p_full))
+        self.assertTrue(np.isnan(p_cond))
+
+    def test_many_permutations(self):
+        """Test with many permutations to ensure statistical stability."""
+        x_full = DistanceMatrix(self.medium_x)
+        y_full = DistanceMatrix(self.medium_y)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, permutations=999, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(self.medium_x, condensed=True)
+        y_cond = DistanceMatrix(self.medium_y, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, permutations=999, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_negative_correlation(self):
+        """Test matrices with negative correlation."""
+        # Create matrices with negative correlation
+        x_data = [[0, 1, 5],
+                  [1, 0, 4],
+                  [5, 4, 0]]
+        y_data = [[0, 5, 1],
+                  [5, 0, 2],
+                  [1, 2, 0]]
+        
+        x_full = DistanceMatrix(x_data)
+        y_full = DistanceMatrix(y_data)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, permutations=self.n_perms, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(x_data, condensed=True)
+        y_cond = DistanceMatrix(y_data, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Verify negative correlation
+        self.assertLess(stat_full, 0)
+        self.assertLess(stat_cond, 0)
+        # Verify they match
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_perfect_correlation(self):
+        """Test identical matrices (perfect correlation)."""
+        x_full = DistanceMatrix(self.small_x)
+        y_full = DistanceMatrix(self.small_x)  # Same as x
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, permutations=self.n_perms, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(self.small_x, condensed=True)
+        y_cond = DistanceMatrix(self.small_x, condensed=True)  # Same as x
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, permutations=self.n_perms, seed=self.seed
+        )
+        
+        # Should be perfect correlation
+        self.assertAlmostEqual(stat_full, 1.0, places=10)
+        self.assertAlmostEqual(stat_cond, 1.0, places=10)
+        # Results should match
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_large_matrix(self):
+        """Test with a larger matrix to ensure scalability."""
+        # Create a 10x10 matrix
+        np.random.seed(42)
+        n = 10
+        x_data = np.random.rand(n, n)
+        x_data = (x_data + x_data.T) / 2  # Make symmetric
+        np.fill_diagonal(x_data, 0)  # Make hollow
+        
+        y_data = np.random.rand(n, n)
+        y_data = (y_data + y_data.T) / 2
+        np.fill_diagonal(y_data, 0)
+        
+        x_full = DistanceMatrix(x_data)
+        y_full = DistanceMatrix(y_data)
+        stat_full, p_full, _ = mantel(
+            x_full, y_full, permutations=99, seed=self.seed
+        )
+        
+        x_cond = DistanceMatrix(x_data, condensed=True)
+        y_cond = DistanceMatrix(y_data, condensed=True)
+        stat_cond, p_cond, _ = mantel(
+            x_cond, y_cond, permutations=99, seed=self.seed
+        )
+        
+        self.assertAlmostEqual(stat_full, stat_cond, places=10)
+        self.assertAlmostEqual(p_full, p_cond, places=10)
+
+    def test_condensed_form_memory_advantage(self):
+        """Verify that condensed form actually uses less memory."""
+        n = 100
+        np.random.seed(42)
+        data = np.random.rand(n, n)
+        data = (data + data.T) / 2
+        np.fill_diagonal(data, 0)
+        
+        dm_full = DistanceMatrix(data)
+        dm_cond = DistanceMatrix(data, condensed=True)
+        
+        # Full form should be n x n
+        self.assertEqual(dm_full._data.shape, (n, n))
+        # Condensed form should be n*(n-1)/2
+        expected_cond_size = n * (n - 1) // 2
+        self.assertEqual(dm_cond._data.shape, (expected_cond_size,))
+        
+        # Memory usage: condensed should be approximately half
+        full_size = dm_full._data.nbytes
+        cond_size = dm_cond._data.nbytes
+        self.assertLess(cond_size, full_size / 2 + 1)  # +1 for rounding
 
 
 if __name__ == '__main__':

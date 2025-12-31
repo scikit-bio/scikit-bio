@@ -104,6 +104,7 @@ extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
     'wiki': (f'{wiki_url}/%s', None),
+    'install': (f'{html_baseurl}/install.html%s', None)
 }
 
 
@@ -282,8 +283,12 @@ from autoinherit import InheritedAutosummary
 
 
 # Let autosummary skip members that have a "skipdoc" attribute that is True.
+# Skip __annotate_func__ because sphinx has an issue with Python 3.14 that they haven't
+# released a fix for yet.
 
 def skip_member(app, what, name, obj, skip, options):
+    if name == '__annotate_func__':
+        return True
     return getattr(obj, "_skipdoc", None)
 
 

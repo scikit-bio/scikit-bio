@@ -15,7 +15,7 @@ from ._grammared_sequence import _motifs as parent_motifs
 
 
 class NucleotideMixin(metaclass=ABCMeta):
-    """Mixin for adding funtionality for working with sequences of nucleotides.
+    """Mixin for adding functionality for working with sequences of nucleotides.
 
     This is an abstract base class (ABC) that cannot be instantiated.
 

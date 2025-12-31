@@ -10,7 +10,7 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-DTYPE = np.int64
+DTYPE = np.intp
 ctypedef np.npy_intp intp_t
 
 @cython.boundscheck(False)

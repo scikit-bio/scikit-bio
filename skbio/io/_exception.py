@@ -102,6 +102,12 @@ class PhylipFormatError(FileFormatError):
     pass
 
 
+class PhylipDMFormatError(FileFormatError):
+    """Raised when a ``phylip_dm`` formatted file cannot be parsed."""
+
+    pass
+
+
 class QSeqFormatError(FileFormatError):
     """Raised when a ``qseq`` formatted file cannot be parsed."""
 

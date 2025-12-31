@@ -368,33 +368,41 @@ def _genbank_sniffer(fh):
 
 
 @genbank.reader(None)
-def _genbank_to_generator(fh, constructor=None, **kwargs):
+def _genbank_to_generator(fh, cls=None, constructor=None, **kwargs):
     for record in _parse_genbanks(fh):
         yield _construct(record, constructor, **kwargs)
 
 
 @genbank.reader(Sequence)
-def _genbank_to_sequence(fh, seq_num=1, **kwargs):
+def _genbank_to_sequence(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Sequence
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
-    return _construct(record, Sequence, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 @genbank.reader(DNA)
-def _genbank_to_dna(fh, seq_num=1, **kwargs):
+def _genbank_to_dna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
-    return _construct(record, DNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 @genbank.reader(RNA)
-def _genbank_to_rna(fh, seq_num=1, **kwargs):
+def _genbank_to_rna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
-    return _construct(record, RNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 @genbank.reader(Protein)
-def _genbank_to_protein(fh, seq_num=1, **kwargs):
+def _genbank_to_protein(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Protein
     record = _get_nth_sequence(_parse_genbanks(fh), seq_num)
-    return _construct(record, Protein, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 @genbank.writer(None)
@@ -688,9 +696,7 @@ def _serialize_source(header, obj, indent=12):
 
     """
     s = (
-        "{header:<{indent}}{organism}\n"
-        "{h:<{indent}}{organism}\n"
-        "{space}{taxonomy}\n"
+        "{header:<{indent}}{organism}\n{h:<{indent}}{organism}\n{space}{taxonomy}\n"
     ).format(
         header=header,
         indent=indent,

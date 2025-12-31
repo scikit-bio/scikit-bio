@@ -264,11 +264,11 @@ _default_columns = [
 
 
 @blast6.reader(pd.DataFrame)
-def _blast6_to_data_frame(fh, columns=None, default_columns=False):
+def _blast6_to_data_frame(fh, cls=None, columns=None, default_columns=False):
     if default_columns and columns is not None:
-        raise ValueError("`columns` and `default_columns` cannot both be" " provided.")
+        raise ValueError("`columns` and `default_columns` cannot both be provided.")
     if not default_columns and columns is None:
-        raise ValueError("Either `columns` or `default_columns` must be" " provided.")
+        raise ValueError("Either `columns` or `default_columns` must be provided.")
     if default_columns:
         columns = _default_columns
     else:

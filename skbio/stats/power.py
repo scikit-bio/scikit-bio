@@ -345,7 +345,7 @@ def subsample_power(
         counts_interval=counts_interval,
     )
 
-    # Prealocates the power array
+    # Preallocates the power array
     power = np.zeros((num_runs, len(sample_counts), num_p))
 
     rng = get_rng(seed)
@@ -556,7 +556,7 @@ def subsample_paired_power(
         counts_interval=counts_interval,
     )
 
-    # Prealocates the power array
+    # Preallocates the power array
     power = np.zeros((num_runs, len(sample_counts), num_p))
 
     # Calculates power instances
@@ -829,7 +829,7 @@ def _compare_distributions(
         If counts is a 1-D array and counts and samples are different lengths.
 
     """
-    # Prealocates the pvalue matrix
+    # Preallocates the pvalue matrix
     p_values = np.zeros((num_p, num_iter))
 
     # Determines the number of samples per group

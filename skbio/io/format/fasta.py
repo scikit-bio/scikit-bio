@@ -17,7 +17,7 @@ An example of a FASTA-formatted file containing two DNA sequences::
     CATCGATCGATCGATGCATGCATGCATG
 
 The QUAL file format is an additional format related to FASTA. A FASTA file is
-sometimes accompanied by a QUAL file, particuarly when the FASTA file contains
+sometimes accompanied by a QUAL file, particularly when the FASTA file contains
 sequences generated on a high-throughput sequencing instrument. QUAL files
 store a Phred quality score (nonnegative integer) for each base in a sequence
 stored in FASTA format (see [4]_ for more details). scikit-bio supports reading
@@ -85,7 +85,7 @@ description separated by one or more whitespace characters.
 
 .. note:: When reading a FASTA-formatted file, the sequence ID and description
    are stored in the sequence `metadata` attribute, under the `'id'` and
-   `'description'` keys, repectively. Both are optional. Each will be
+   `'description'` keys, respectively. Both are optional. Each will be
    represented as the empty string (``''``) in `metadata` if it is not present
    in the header.
 
@@ -163,7 +163,7 @@ scores are represented as nonnegative integers separated by whitespace
    in the same order in both files (i.e., each FASTA and QUAL record must have
    the same ID and description after being parsed). In addition to having the
    same order, the number of FASTA records must match the number of QUAL
-   records (i.e., missing or additonal records are not allowed). scikit-bio
+   records (i.e., missing or additional records are not allowed). scikit-bio
    also requires that the number of quality scores match the number of bases in
    the corresponding sequence.
 
@@ -733,7 +733,9 @@ def _sniffer_data_parser(chunks):
 
 
 @fasta.reader(None)
-def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
+def _fasta_to_generator(
+    fh, cls=None, qual=FileSentinel, constructor=Sequence, **kwargs
+):
     kwargs = kwargs.copy()
     if "keep_spaces" in kwargs:
         kwarg = {"keep_spaces": kwargs.pop("keep_spaces")}
@@ -784,40 +786,52 @@ def _fasta_to_generator(fh, qual=FileSentinel, constructor=Sequence, **kwargs):
 
 
 @fasta.reader(Sequence)
-def _fasta_to_sequence(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_sequence(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Sequence
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Sequence, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(DNA)
-def _fasta_to_dna(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_dna(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=DNA, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(RNA)
-def _fasta_to_rna(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_rna(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=RNA, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(Protein)
-def _fasta_to_protein(fh, qual=FileSentinel, seq_num=1, **kwargs):
+def _fasta_to_protein(fh, cls=None, qual=FileSentinel, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Protein
     return _get_nth_sequence(
-        _fasta_to_generator(fh, qual=qual, constructor=Protein, **kwargs), seq_num
+        _fasta_to_generator(fh, qual=qual, constructor=cls, **kwargs), seq_num
     )
 
 
 @fasta.reader(TabularMSA)
-def _fasta_to_tabular_msa(fh, qual=FileSentinel, constructor=None, **kwargs):
+def _fasta_to_tabular_msa(fh, cls=None, qual=FileSentinel, constructor=None, **kwargs):
+    if cls is None:
+        cls = TabularMSA
+
     if constructor is None:
         raise ValueError("Must provide `constructor`.")
 
-    return TabularMSA(
-        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs)
+    return cls(
+        _fasta_to_generator(fh, qual=qual, constructor=constructor, **kwargs),
+        minter="id",
     )
 
 

@@ -16,8 +16,8 @@ Functions
    set_config
 
 
-Configuraton options
---------------------
+Configuration options
+---------------------
 At present, only one configuration option is available:
 
 **table_output** : *{"pandas", "numpy", "polars"}, default="pandas"*
@@ -57,7 +57,7 @@ def set_config(option: str, value: Any):
     Raises
     ------
     ValueError
-        If an unkown option is used or if an unsupported value for an option is used.
+        If an unknown option is used or if an unsupported value for an option is used.
 
     Examples
     --------
@@ -69,12 +69,11 @@ def set_config(option: str, value: Any):
         raise KeyError(f"Unknown option: '{option}'.")
 
     # Validate option-specific values.
-    # TODO: Replace `if ... elif` with `match ... case` after dropping Python 3.9
-    # support.
-    if option == "table_output":
-        pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
-        if value not in pos_opts:
-            raise ValueError(f"Unsupported value '{value}' for '{option}'.")
+    match option:
+        case "table_output":
+            pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
+            if value not in pos_opts:
+                raise ValueError(f"Unsupported value '{value}' for '{option}'.")
 
     _SKBIO_OPTIONS[option] = value
 

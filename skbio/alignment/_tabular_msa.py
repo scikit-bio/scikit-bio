@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
+from collections import Counter, namedtuple
 import copy
 
 import numpy as np
@@ -25,7 +25,7 @@ from skbio.io.descriptors import Read, Write
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
+_Shape = namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -142,6 +142,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """
 
     default_write_format = "fasta"
+    """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
 
     read = Read()
@@ -454,7 +455,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Here we sliced the first axis by a boolean vector, but then restricted
         the columns to a single column. Because the second axis was given a
-        nonscalar we still recieve an MSA even though only one column is
+        nonscalar we still receive an MSA even though only one column is
         present.
 
         Duplicate labels can be an unfortunate reality in the real world,
@@ -711,7 +712,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Here we sliced the first axis by a boolean vector, but then restricted
         the columns to a single column. Because the second axis was given a
-        nonscalar we still recieve an MSA even though only one column is
+        nonscalar we still receive an MSA even though only one column is
         present.
 
         """
@@ -1417,7 +1418,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             assert dtype.default_gap_char not in freqs
             freqs[dtype.default_gap_char] = gap_freq
 
-            consensus.append(collections.Counter(freqs).most_common(1)[0][0])
+            consensus.append(Counter(freqs).most_common(1)[0][0])
 
         return dtype("".join(consensus), positional_metadata=positional_metadata)
 

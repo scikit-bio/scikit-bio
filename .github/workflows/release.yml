@@ -6,8 +6,8 @@ on:
       - '*'
 
 env:
-  earliest_python: "3.9"
-  latest_python: "3.13"
+  earliest_python: "3.10"
+  latest_python: "3.14"
 
 jobs:
   # Trigger wheel building workflow
@@ -29,18 +29,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Python environment
+        uses: actions/setup-python@v5
         with:
-          auto-update-conda: true
-          python-version: ${{ env.latest_python }}
-          environment-file: ci/conda_host_env.yml
+        # Using 3.13 because Sphinx doesn't have a 3.14 compatible release yet.
+        # Otherwise this should be ${{ env.latest_python }}
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
-          pip install -r ci/requirements.doc.txt
-          pip install .
-          conda list
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
+          pip install --no-deps .
+          pip list
 
       - name: Build documentation
         run: make doc

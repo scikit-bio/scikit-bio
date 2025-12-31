@@ -51,7 +51,7 @@ For more details please refer to the CASAVA documentation [1]_.
 .. note:: `lowercase` functionality is supported when reading QSeq files.
    Refer to specific object constructor documentation for details.
 
-.. note:: scikit-bio allows for the filter field to be ommitted, but it is not
+.. note:: scikit-bio allows for the filter field to be omitted, but it is not
    clear if this is part of the original format specification.
 
 Format Parameters
@@ -184,6 +184,7 @@ def _qseq_sniffer(fh):
 @qseq.reader(None)
 def _qseq_to_generator(
     fh,
+    cls=None,
     constructor=Sequence,
     filter=_will_filter,
     phred_offset=_default_phred_offset,
@@ -237,18 +238,21 @@ def _qseq_to_generator(
 @qseq.reader(Sequence)
 def _qseq_to_sequence(
     fh,
+    cls=None,
     seq_num=1,
     phred_offset=_default_phred_offset,
     variant=_default_variant,
     **kwargs,
 ):
+    if cls is None:
+        cls = Sequence
     return _get_nth_sequence(
         _qseq_to_generator(
             fh,
             filter=False,
             phred_offset=phred_offset,
             variant=variant,
-            constructor=Sequence,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -258,18 +262,21 @@ def _qseq_to_sequence(
 @qseq.reader(DNA)
 def _qseq_to_dna(
     fh,
+    cls=None,
     seq_num=1,
     phred_offset=_default_phred_offset,
     variant=_default_variant,
     **kwargs,
 ):
+    if cls is None:
+        cls = DNA
     return _get_nth_sequence(
         _qseq_to_generator(
             fh,
             filter=False,
             phred_offset=phred_offset,
             variant=variant,
-            constructor=DNA,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -279,18 +286,21 @@ def _qseq_to_dna(
 @qseq.reader(RNA)
 def _qseq_to_rna(
     fh,
+    cls=None,
     seq_num=1,
     phred_offset=_default_phred_offset,
     variant=_default_variant,
     **kwargs,
 ):
+    if cls is None:
+        cls = RNA
     return _get_nth_sequence(
         _qseq_to_generator(
             fh,
             filter=False,
             phred_offset=phred_offset,
             variant=variant,
-            constructor=RNA,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -300,18 +310,21 @@ def _qseq_to_rna(
 @qseq.reader(Protein)
 def _qseq_to_protein(
     fh,
+    cls=None,
     seq_num=1,
     phred_offset=_default_phred_offset,
     variant=_default_variant,
     **kwargs,
 ):
+    if cls is None:
+        cls = Protein
     return _get_nth_sequence(
         _qseq_to_generator(
             fh,
             filter=False,
             phred_offset=phred_offset,
             variant=variant,
-            constructor=Protein,
+            constructor=cls,
             **kwargs,
         ),
         seq_num,
@@ -327,7 +340,7 @@ def _record_parser(line):
     f_len = len(fields)
     if not (10 <= f_len <= 11):
         raise QSeqFormatError("Expected 10 or 11 fields, found %d." % f_len)
-    # If the filter field was ommitted, assume that it passed filtering:
+    # If the filter field was omitted, assume that it passed filtering:
     if f_len == 10:
         fields.append("1")
 

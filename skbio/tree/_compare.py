@@ -431,8 +431,8 @@ def _path_dists(trees, sample, metric, shuffler, use_length, ignore_self):
     if ignore_self:
         paths = [x.condensed_form() for x in paths]
 
-    # Otherwise, create 1-D views of the entire square matrics. `ravel` copies the data
-    # only when necessary, and in this case doesn't.
+    # Otherwise, create 1-D views of the entire square matrices. `ravel` copies the
+    # data only when necessary, and in this case doesn't.
     else:
         paths = [x.data.ravel() for x in paths]
 

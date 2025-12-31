@@ -42,13 +42,13 @@ class TestOrdinationResults(unittest.TestCase):
                                    columns=['CA1', 'CA2'])
 
         self.ordination_results = OrdinationResults(
-            'CA', 'Correspondance Analysis', eigvals=eigvals,
+            'CA', 'Correspondence Analysis', eigvals=eigvals,
             samples=samples_df, features=features_df,
             feature_ids=features_ids, sample_ids=sample_ids)
 
     def test_str(self):
         exp = ("Ordination results:\n"
-               "\tMethod: Correspondance Analysis (CA)\n"
+               "\tMethod: Correspondence Analysis (CA)\n"
                "\tEigvals: 2\n"
                "\tProportion explained: N/A\n"
                "\tFeatures: 3x2\n"

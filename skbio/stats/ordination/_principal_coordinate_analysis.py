@@ -96,6 +96,13 @@ def pcoa(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
+    Low-level acceleration is available for this function. See
+    :install:`scikit-bio-binaries <#acceleration>` for more information.
+
     Principal Coordinate Analysis (PCoA) was first described in [1]_.
 
     This function uses a choice of two methods for matrix decomposition: The default
@@ -116,7 +123,7 @@ def pcoa(
     triangle inequality. If the negative eigenvalues are small in magnitude compared
     to the largest positive eigenvalue, it is usually safe to ignore them. However,
     large negative eigenvalues may indicate result inaccuracy, in which case a warning
-    message will be displayed. The paramter ``warn_neg_eigval`` controls the threshold
+    message will be displayed. The parameter ``warn_neg_eigval`` controls the threshold
     for the warning.
 
     PCoA on Euclidean distances is equivalent to Principal Component Analysis (PCA).
@@ -139,6 +146,7 @@ def pcoa(
        Journal on Scientific computing, 33(5), 2580-2594.
 
     """
+    # this converts to redundant form, regardless of input type
     distmat = DistanceMatrix(distmat)
 
     # If no dimension specified, by default will compute all eigenvectors
@@ -196,29 +204,29 @@ def pcoa(
         matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
         if 0 < dimensions < 1:
             if matrix_data.shape[0] > 10:
-                 warn(
-                     "EIGH: since value for dimensions is specified as float,"
-                     " PCoA for all dimensions will be computed, which may"
-                     " result in long computation time if the original"
-                     " distance matrix is large."
-                     " Consider specifying an integer value to optimize performance.",
-                     RuntimeWarning,
-                 )
+                warn(
+                    "EIGH: since value for dimensions is specified as float,"
+                    " PCoA for all dimensions will be computed, which may"
+                    " result in long computation time if the original"
+                    " distance matrix is large."
+                    " Consider specifying an integer value to optimize performance.",
+                    RuntimeWarning,
+                )
             ndim = matrix_data.shape[0]
-        subidx = [matrix_data.shape[0]-ndim, matrix_data.shape[0]-1]
+        subidx = [matrix_data.shape[0] - ndim, matrix_data.shape[0] - 1]
         eigvals, eigvecs = eigh(matrix_data, subset_by_index=subidx)
     elif method == "fsvd":
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         if 0 < dimensions < 1:
             if distmat.data.shape[0] > 10:
-                 warn(
-                     "FSVD: since value for dimensions is specified as float,"
-                     " PCoA for all dimensions will be computed, which may"
-                     " result in long computation time if the original"
-                     " distance matrix is large."
-                     " Consider specifying an integer value to optimize performance.",
-                     RuntimeWarning,
-                 )
+                warn(
+                    "FSVD: since value for dimensions is specified as float,"
+                    " PCoA for all dimensions will be computed, which may"
+                    " result in long computation time if the original"
+                    " distance matrix is large."
+                    " Consider specifying an integer value to optimize performance.",
+                    RuntimeWarning,
+                )
             ndim = distmat.data.shape[0]
         if _skbb_pcoa_fsvd_available(
             distmat.data, dimensions, inplace, seed
@@ -539,7 +547,7 @@ def pcoa_biplot(ordination, y):
     y : DataFrame
         Samples by features table of dimensions (n, m). These can be
         environmental features or abundance counts. This table should be
-        normalized in cases of dimensionally heterogenous physical variables.
+        normalized in cases of dimensionally heterogeneous physical variables.
 
     Returns
     -------

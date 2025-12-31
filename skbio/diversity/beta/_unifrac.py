@@ -603,7 +603,7 @@ def _weighted_unifrac_branch_correction(
         positions in this vector for all nodes in the tree, but only tips
         should be non-zero.
     u_node_proportions, v_node_proportions : np.ndarray
-        Proportional abundace of observations of all nodes in the tree in
+        Proportional abundance of observations of all nodes in the tree in
         samples ``u`` and ``v``, respectively.
     u_total_count, v_total_count : float
         The sum of the observations in samples ``u`` and ``v``, respectively.

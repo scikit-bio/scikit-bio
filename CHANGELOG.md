@@ -1,15 +1,75 @@
 # scikit-bio changelog
 
-## Version 0.7.1-dev
+## Version 0.7.2-dev
+
+### Features
+
+* Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
+* `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
+* Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
 
 ### Performance enhancements
 
-* Drastically speed up default eigh pcoa ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Improved `TreeNode.from_linkage_matrix`, including efficiency, compatibility (it now accepts array-like objects), and documentation ([#2356](https://github.com/scikit-bio/scikit-bio/pull/2356)).
+* Updated the documentation of `dirmult_ttest` to recommend input data supplied as raw counts rather than pre-normalized proportions, as the latter lose magnitude information and can lead to higher statistical uncertainty ([#2358](https://github.com/scikit-bio/scikit-bio/pull/2358)).
 
 ### Bug Fixes
 
+* Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338](https://github.com/scikit-bio/scikit-bio/pull/2338)).
+* Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
+* Fixed a bug in `TreeNode.root_at_midpoint` which could fail on a tree with no-length branches ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Fixed an unexpected behavior in several `TreeNode` methods, where tips with `.name is None` were considered as taxa and included in the calculation. Nameless tips are unusual but not forbidden by the current data model. After fixation, those tips are excluded from the calculation. Affected methods are `subset`, `subsets`, `bipart`, `bipart` and `cophenet` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+
+### Miscellaneous
+
+* scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
+* `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+
+
+## Version 0.7.1.post1
+
+### Features
+
+* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2309](https://github.com/scikit-bio/scikit-bio/pull/2309)).
+
+### Bug Fixes
+
+* Fixed source distribution packaging for Python 3.14 support.
+
+
+## Version 0.7.1
+
+### Features
+
+* Added function `ancombc`, a Python implementation of the ANCOM-BC (analysis of compositions of microbiomes with bias correction) method for differential abundance testing. We thank @FrederickHuangLin for advice ([#2293](https://github.com/scikit-bio/scikit-bio/pull/2293), [#2305](https://github.com/scikit-bio/scikit-bio/pull/2305), [#2306](https://github.com/scikit-bio/scikit-bio/pull/2306), [#2316](https://github.com/scikit-bio/scikit-bio/pull/2316)).
+* Added function `struc_zero`, a statistical test for structural zeros. This function complements `ancombc` or can be used alone ([#2305](https://github.com/scikit-bio/scikit-bio/pull/2305)).
+* Enabled inheritance of IO methods (read, write, sniff) on all scikit-bio objects. Subclasses now inherit IO operations, significantly improving custom class creation and extensibility ([#2301](https://github.com/scikit-bio/scikit-bio/pull/2301)).
+* Added new `PairwiseMatrix` and `SymmetricMatrix` classes and an updated `DistanceMatrix` class. Underlying data of `SymmetricMatrix` and `DistanceMatrix` classes can now be stored in condensed form, reducing memory footprint by 50% ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+
+### Performance enhancements
+
+* Drastically speed up `pcoa` with the default eigh method ([#2285](https://github.com/scikit-bio/scikit-bio/pull/2285)).
+* Enriched documentation of `permanova`, explaining the underlying mathematics, the usage, and how to calculate R<sup>2</sup>, a statistic that measures the proportion of data variance explained by the specified variable ([#2294](https://github.com/scikit-bio/scikit-bio/pull/2297), [#2294](https://github.com/scikit-bio/scikit-bio/pull/2297)).
+* Added float32 support for minimum evolution phylogenetic tree building algorithms (`gme`, `bme` and `nni`) ([#2291](https://github.com/scikit-bio/scikit-bio/pull/2291)).
+* Added float32 support for reading labeled square matrix (lsmat) file format (`io.format.lsmat`) ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
+
+### Bug Fixes
+
+* Fixed an unexpected behavior in the file I/O of `TabularMSA` class that `fasta` and `fastq` formats populate `.metadata['id']` of each sequence whereas `clustal`, `phylip` and `stockholm` formats populate `.index` of the entire alignments. Now all file formats populate both pieces of information ([#2320](https://github.com/scikit-bio/scikit-bio/pull/2320)).
 * Fixed a bug that `pair_align` with `trim_ends=True` on completely misaligned sequences would raise an IndexError instead of returning an empty path ([#2284](https://github.com/scikit-bio/scikit-bio/pull/2284)).
-* Fixed IO format `binary_dm` implementation, was completely broken before ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282),[#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+* Fixed IO format `binary_dm` implementation ([#2282](https://github.com/scikit-bio/scikit-bio/pull/2282), [#2283](https://github.com/scikit-bio/scikit-bio/pull/2283)).
+* Fixed a bug in reading binary dissimilarity matrix format (`io.format.binary_dm`), that a float32 data file would be unnecessarily casted into float64 ([#2230](https://github.com/scikit-bio/scikit-bio/pull/2230)).
+* Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project.
+* Fixed a runtime error when computing phylogenetic diversity metrics on 32-bit architectures ([#2321](https://github.com/scikit-bio/scikit-bio/pull/2321)).
+
+### Miscellaneous
+
+* Renamed `DissimilarityMatrix` as `PairwiseMatrix` to better reflect its nature. The old name is kept as an alias ([#2289](https://github.com/scikit-bio/scikit-bio/pull/2289)).
+* Replace "Correspondance Analysis" with "Correspondence Analysis" in creating `OrdinationResults` objects for the accuracy of terminology. This term has been "Correspondence Analysis" otherwise in the project ([#2318](https://github.com/scikit-bio/scikit-bio/pull/2318)).
+* Added environment variable `DISABLE_OPENMP`, which lets a user optionally disable OpenMP when compiling the Cython code if needed ([#2319](https://github.com/scikit-bio/scikit-bio/pull/2319)).
+* Dropped support for Python 3.9 and added support for Python 3.14 ([#2311](https://github.com/scikit-bio/scikit-bio/pull/2311)).
+* Dropped support for NumPy versions older than 2.0 ([#2314](https://github.com/scikit-bio/scikit-bio/pull/2314)).
 
 ## Version 0.7.0
 
@@ -257,7 +317,7 @@
 * Added the Benjamini-Hochberg method as an option for FDR correction (in addition to the existing Holm-Bonferroni method) for `ancom` and `dirmult_ttest` ([#1988](https://github.com/scikit-bio/scikit-bio/pull/1988)).
 * Added function `dirmult_ttest`, which performs differential abundance test using a Dirichilet multinomial distribution. This function mirrors the method provided by ALDEx2 ([#1956](https://github.com/scikit-bio/scikit-bio/pull/1956)).
 * Added method `Sequence.to_indices` to convert a sequence into a vector of indices of characters in an alphabet (can be from a substitution matrix) or unique characters observed in the sequence. Supports gap masking and wildcard substitution ([#1917](https://github.com/scikit-bio/scikit-bio/pull/1917)).
-* Added class `SubstitutionMatrix` to support subsitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
+* Added class `SubstitutionMatrix` to support substitution matrices for nucleotides, amino acids are more general cases ([#1913](https://github.com/scikit-bio/scikit-bio/pull/1913)).
 * Added alpha diversity metric `sobs`, which is the observed species richness (S_{obs}) of a sample. `sobs` will replace `observed_otus`, which uses the historical term "OTU". Also added metric `observed_features` to be compatible with the QIIME 2 terminology. All three metrics are equivalent ([#1902](https://github.com/scikit-bio/scikit-bio/pull/1902)).
 * `beta_diversity` now supports use of Pandas a `DataFrame` index, issue [#1808](https://github.com/scikit-bio/scikit-bio/issues/1808).
 * Added alpha diversity metric `phydiv`, which is a generalized phylogenetic diversity (PD) framework permitting unrooted or rooted tree, unweighted or weighted by abundance, and an exponent parameter of the weight term ([#1893](https://github.com/scikit-bio/scikit-bio/pull/1893)).

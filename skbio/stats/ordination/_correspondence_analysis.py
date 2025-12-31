@@ -95,7 +95,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
 
     short_method_name = "CA"
-    long_method_name = "Correspondance Analysis"
+    long_method_name = "Correspondence Analysis"
 
     # we deconstruct the dataframe to avoid duplicating the data and be able
     # to perform operations on the matrix
@@ -103,7 +103,7 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
         X, sample_ids=sample_ids, feature_ids=feature_ids
     )
 
-    # Correspondance Analysis
+    # Correspondence Analysis
     r, c = X.shape
 
     if X.min() < 0:

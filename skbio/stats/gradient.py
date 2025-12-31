@@ -97,7 +97,6 @@ Control
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
-from typing import Optional
 
 import numpy as np
 from natsort import realsorted
@@ -200,8 +199,7 @@ def _ANOVA_trajectories(category, res_by_group):
             category,
             None,
             None,
-            "This group can not be used. All groups "
-            "should have more than 1 element.",
+            "This group can not be used. All groups should have more than 1 element.",
         )
     # We are ok to run ANOVA
     _, p_val = f_oneway(*values)
@@ -404,7 +402,7 @@ class GradientANOVA:
     """
 
     # Should be defined by the derived classes
-    _alg_name: Optional[str] = None
+    _alg_name: str | None = None
 
     def __init__(
         self,
@@ -518,7 +516,7 @@ class GradientANOVA:
 
         # Check if they actually have sample ids in common
         if not sample_ids:
-            raise ValueError("Coordinates and metadata map had no samples " "in common")
+            raise ValueError("Coordinates and metadata map had no samples in common")
 
         # pandas no longer allows use of set with .loc
         sample_ids = list(sample_ids)
@@ -600,7 +598,7 @@ class GradientANOVA:
             # directly calls this method, which shouldn't be done
             # (that's why the method is private)
             raise RuntimeError(
-                "No samples to process, an empty list cannot " "be processed"
+                "No samples to process, an empty list cannot be processed"
             )
 
         # The weighting can only be done over trajectories with a length
@@ -613,9 +611,7 @@ class GradientANOVA:
                 )
             except (FloatingPointError, ValueError):
                 self._message_buffer.append(
-                    "Could not weight group, no "
-                    "gradient in the the "
-                    "weighting vector.\n"
+                    "Could not weight group, no gradient in the the weighting vector.\n"
                 )
                 trajectories = trajectories_copy
 
@@ -637,7 +633,7 @@ class GradientANOVA:
             This is the base class
 
         """
-        raise NotImplementedError("No algorithm is implemented on the base " "class.")
+        raise NotImplementedError("No algorithm is implemented on the base class.")
 
 
 class AverageGradientANOVA(GradientANOVA):

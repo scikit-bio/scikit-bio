@@ -22,7 +22,7 @@ sequences. Data are distributed in flatfile format, similar to that of parent
 ENA records, with each flatfile representing a single feature"*.
 While only the sequence of the feature is included in such entries, features
 are derived from the parent entry, and can't be applied as interval metadata.
-For such reason, interval metatdata are ignored from Feature-level products,
+For such reason, interval metadata are ignored from Feature-level products,
 as they will be ignored by subsetting a generic Sequence object.
 
 Format Support
@@ -454,7 +454,7 @@ def _get_embl_section(line):
 def _translate_key(key):
     """Translate a single key from EMBL to genbank.
 
-    Returns key itself if no traslation is defined.
+    Returns key itself if no translation is defined.
     """
     return KEYS_TRANSLATOR.get(key, key)
 
@@ -537,35 +537,41 @@ def _embl_sniffer(fh):
 
 
 @embl.reader(None)
-def _embl_to_generator(fh, constructor=None, **kwargs):
+def _embl_to_generator(fh, cls=None, constructor=None, **kwargs):
     for record in _parse_embls(fh):
         yield _construct(record, constructor, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(Sequence)
-def _embl_to_sequence(fh, seq_num=1, **kwargs):
+def _embl_to_sequence(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = Sequence
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, Sequence, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(DNA)
-def _embl_to_dna(fh, seq_num=1, **kwargs):
+def _embl_to_dna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = DNA
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, DNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # Method to read EMBL data as skbio.sequence.DNA
 @embl.reader(RNA)
-def _embl_to_rna(fh, seq_num=1, **kwargs):
+def _embl_to_rna(fh, cls=None, seq_num=1, **kwargs):
+    if cls is None:
+        cls = RNA
     record = _get_nth_sequence(_parse_embls(fh), seq_num)
-    return _construct(record, RNA, **kwargs)
+    return _construct(record, cls, **kwargs)
 
 
 # No protein support at the moment
 @embl.reader(Protein)
-def _embl_to_protein(fh, seq_num=1, **kwargs):
+def _embl_to_protein(fh, cls=None, seq_num=1, **kwargs):
     # no protein support, at the moment
     raise EMBLFormatError(
         "There's no protein support for EMBL record. "
@@ -684,7 +690,7 @@ def _parse_single_embl(chunks):
             parser = partial(parser, length=metadata["LOCUS"]["size"])
 
         elif section_name == "COMMENT":
-            # mantain newlines in comments
+            # maintain newlines in comments
             # partials add arguments to previous defined functions
             parser = partial(parser, join_delimiter="\n")
 
@@ -768,7 +774,7 @@ def _parse_single_embl(chunks):
         # accession will generate an update in all feature level products)
         metadata["VERSION"] = metadata["PARENT_ACCESSION"]
 
-    # return a string, metatdata as a dictionary and IntervalMetadata object
+    # return a string, metadata as a dictionary and IntervalMetadata object
     return sequence, metadata, interval_metadata
 
 
@@ -1382,7 +1388,7 @@ def _serialize_sequence(obj, indent=5):
     # get sequence as a string with lower letters (uniprot will be upper!)
     seq = str(obj).lower()
 
-    # count bases in sequence. Frequencies returns a dictionary of occurences
+    # count bases in sequence. Frequencies returns a dictionary of occurrences
     # of A,C,G,T. Sequences are stored always in capital letters
     freq = obj.frequencies()
 

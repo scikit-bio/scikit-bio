@@ -6,7 +6,9 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Union, Tuple, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -19,9 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def align_score(
-    alignment: "AlignmentLike",
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str] = (1.0, -1.0),
-    gap_cost: Union[float, Tuple[float, float]] = 2.0,
+    alignment: AlignmentLike,
+    sub_score: tuple[float, float] | SubstitutionMatrix | str = (1.0, -1.0),
+    gap_cost: float | tuple[float, float] = 2.0,
     free_ends: bool = True,
     gap_chars: str = "-.",
 ) -> float:
