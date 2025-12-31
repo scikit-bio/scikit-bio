@@ -15,6 +15,78 @@ This module provides methods for multimodal data analysis, including techniques
 for learning joint embeddings across multiple data modalities (e.g., microbes
 and metabolites).
 
+Multimodal analysis addresses a common challenge in biological studies: how to
+integrate measurements from different molecular layers (e.g., 16S rRNA gene
+sequencing, metabolomics, proteomics) collected from the same samples. By
+learning shared latent representations, these methods can reveal relationships
+between different types of biological entities.
+
+
+MMvec (Microbe-Metabolite Vectors)
+----------------------------------
+
+The primary method in this module is MMvec, which learns a co-occurrence model
+between microbes and metabolites. The core idea is to model the conditional
+probability of observing a metabolite given the presence of a microbe:
+
+.. math::
+
+    P(\text{metabolite}_j | \text{microbe}_i) \propto
+    \exp(U_i \cdot V_j + b_{U_i} + b_{V_j})
+
+where :math:`U` and :math:`V` are low-dimensional embedding matrices and
+:math:`b_U`, :math:`b_V` are bias terms. This neural network-inspired approach
+enables:
+
+- **Dimensionality reduction**: Both microbes and metabolites are embedded in
+  the same latent space, enabling visualization and downstream analysis.
+- **Prediction**: Given a microbial community composition, predict expected
+  metabolite profiles.
+- **Interpretability**: The learned conditional probabilities (ranks) indicate
+  which microbes are associated with which metabolites.
+
+Example usage::
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from skbio.stats.multimodal import mmvec
+
+    >>> # Microbe counts (samples x microbes)
+    >>> microbes = pd.DataFrame(
+    ...     np.random.randint(0, 100, size=(50, 10)),
+    ...     columns=[f'OTU_{i}' for i in range(10)]
+    ... )
+    >>> # Metabolite intensities (samples x metabolites)
+    >>> metabolites = pd.DataFrame(
+    ...     np.random.randint(0, 100, size=(50, 20)),
+    ...     columns=[f'metabolite_{i}' for i in range(20)]
+    ... )
+
+    >>> # Fit model
+    >>> result = mmvec(microbes, metabolites, n_components=3)
+
+    >>> # Access embeddings
+    >>> result.microbe_embeddings.shape
+    (10, 4)
+    >>> result.metabolite_embeddings.shape
+    (20, 4)
+
+    >>> # Get conditional probabilities
+    >>> probs = result.probabilities()
+
+    >>> # Predict metabolites for new samples
+    >>> predictions = result.predict(microbes.iloc[:5])
+
+    >>> # Evaluate on held-out data
+    >>> q2 = result.score(microbes.iloc[-10:], metabolites.iloc[-10:])
+
+
+References
+----------
+.. [1] Morton, J.T., et al. "Learning representations of microbe-metabolite
+   interactions." Nature Methods 16, 1306-1314 (2019).
+   https://doi.org/10.1038/s41592-019-0616-3
+
 
 Functions
 ---------

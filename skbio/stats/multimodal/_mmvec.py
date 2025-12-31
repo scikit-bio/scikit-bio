@@ -158,9 +158,6 @@ class _MMvecModel:
         Y,
         batch_size=50,
         batch_normalization="legacy",
-        return_cv=False,
-        X_test=None,
-        Y_test=None,
         rng=None,
     ):
         """Compute loss and gradients for a mini-batch.
@@ -175,12 +172,6 @@ class _MMvecModel:
             Mini-batch size.
         batch_normalization : {'legacy', 'unbiased'}
             Batch normalization mode.
-        return_cv : bool
-            Whether to return cross-validation error.
-        X_test : array-like, optional
-            Test microbe counts for CV.
-        Y_test : array-like, optional
-            Test metabolite counts for CV.
         rng : numpy.random.Generator, optional
             Random number generator for batch sampling.
 
@@ -190,8 +181,6 @@ class _MMvecModel:
             Negative log posterior.
         grads : dict
             Gradients for U, b_U, V, b_V.
-        cv_error : float, optional
-            Cross-validation MAE if return_cv=True.
         """
         # Convert to sparse COO format if needed
         if issparse(X):
@@ -278,48 +267,7 @@ class _MMvecModel:
 
         grads = {"U": dU, "b_U": db_U, "V": dV, "b_V": db_V}
 
-        if return_cv and X_test is not None and Y_test is not None:
-            cv_error = self._compute_cv_error(X_test, Y_test)
-            return loss, grads, cv_error
-
         return loss, grads
-
-    def _compute_cv_error(self, X_test, Y_test):
-        """Compute cross-validation mean absolute error.
-
-        Parameters
-        ----------
-        X_test : array-like
-            Test microbe counts.
-        Y_test : array-like
-            Test metabolite counts.
-
-        Returns
-        -------
-        cv_error : float
-            Mean absolute error on test set.
-        """
-        if issparse(X_test):
-            X_coo = X_test.tocoo()
-        else:
-            X_coo = coo_matrix(X_test)
-
-        Y_arr = np.asarray(Y_test)
-        sample_ids = X_coo.row
-        microbe_ids = X_coo.col
-
-        # Forward pass
-        logits = self.forward(microbe_ids)
-        probs = softmax(logits)
-
-        # Expected counts
-        Y_batch = Y_arr[sample_ids, :]
-        N = Y_batch.sum(axis=1, keepdims=True)
-        expected = N * probs
-
-        # Mean absolute error
-        mae = np.mean(np.abs(expected - Y_batch))
-        return mae
 
     def ranks(self):
         """Compute log conditional probabilities (ranks).
@@ -487,7 +435,7 @@ class MMvecResults(SkbioObject):
         Log conditional probabilities P(metabolite | microbe).
         Shape: (n_microbes, n_metabolites). Row-centered.
     convergence : pd.DataFrame
-        Training metrics per iteration: iteration, loss, cv_error.
+        Training metrics per iteration: iteration, loss.
     """
 
     def __init__(
@@ -528,6 +476,169 @@ class MMvecResults(SkbioObject):
         return pd.DataFrame(
             probs, index=self.ranks.index, columns=self.ranks.columns
         )
+
+    def predict(self, microbes):
+        """Predict metabolite distributions given microbe abundances.
+
+        Computes the expected metabolite distribution for each sample by
+        marginalizing over microbe compositions:
+
+        P(metabolite) = sum_i P(microbe_i) * P(metabolite | microbe_i)
+
+        Parameters
+        ----------
+        microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
+            Microbe abundance counts. Columns must match the microbes used
+            during training.
+
+        Returns
+        -------
+        predictions : pd.DataFrame
+            Predicted metabolite proportions for each sample.
+            Shape: (n_samples, n_metabolites). Each row sums to 1.
+
+        Examples
+        --------
+        >>> from skbio.stats.multimodal import mmvec
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> np.random.seed(42)
+        >>> microbes = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(20, 5)),
+        ...     columns=[f'OTU_{i}' for i in range(5)]
+        ... )
+        >>> metabolites = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(20, 8)),
+        ...     columns=[f'met_{i}' for i in range(8)]
+        ... )
+        >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=10)
+        >>> # Predict on new samples
+        >>> new_microbes = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(5, 5)),
+        ...     columns=[f'OTU_{i}' for i in range(5)]
+        ... )
+        >>> predictions = result.predict(new_microbes)
+        >>> predictions.shape
+        (5, 8)
+        >>> np.allclose(predictions.sum(axis=1), 1.0)
+        True
+
+        """
+        # Convert to array if needed
+        if hasattr(microbes, "values"):
+            X = microbes.values.astype(np.float64)
+            sample_ids = list(microbes.index)
+        else:
+            X = np.asarray(microbes, dtype=np.float64)
+            sample_ids = [f"sample_{i}" for i in range(X.shape[0])]
+
+        # Normalize to proportions
+        row_sums = X.sum(axis=1, keepdims=True)
+        if np.any(row_sums == 0):
+            raise ValueError(
+                "microbes contains samples with all-zero counts. "
+                "Remove these samples before calling predict."
+            )
+        microbe_props = X / row_sums
+
+        # Get conditional probabilities P(metabolite | microbe)
+        cond_probs = self.probabilities().values  # (n_microbes, n_metabolites)
+
+        # Marginal: sum_microbe P(metabolite | microbe) * P(microbe)
+        predicted = microbe_props @ cond_probs
+
+        return pd.DataFrame(
+            predicted,
+            index=sample_ids,
+            columns=self.ranks.columns,
+        )
+
+    def score(self, microbes, metabolites):
+        r"""Compute Q² (coefficient of prediction) on held-out data.
+
+        Q² measures predictive performance on test data, analogous to R²
+        but for cross-validation. Values range from -inf to 1, where 1
+        indicates perfect prediction and 0 indicates prediction no better
+        than the mean.
+
+        .. math::
+
+            Q^2 = 1 - \frac{SS_{res}}{SS_{tot}}
+                = 1 - \frac{\sum(y - \hat{y})^2}{\sum(y - \bar{y})^2}
+
+        Parameters
+        ----------
+        microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
+            Test microbe abundance counts.
+        metabolites : pd.DataFrame or array-like of shape (n_samples, n_metabolites)
+            Test metabolite abundance counts.
+
+        Returns
+        -------
+        q2 : float
+            Q² score. Higher is better, with 1.0 being perfect prediction.
+
+        See Also
+        --------
+        predict : Predict metabolite distributions.
+        probabilities : Get conditional probability matrix.
+
+        Examples
+        --------
+        >>> from skbio.stats.multimodal import mmvec
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> np.random.seed(42)
+        >>> # Training data
+        >>> microbes = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(30, 5)),
+        ...     columns=[f'OTU_{i}' for i in range(5)]
+        ... )
+        >>> metabolites = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(30, 8)),
+        ...     columns=[f'met_{i}' for i in range(8)]
+        ... )
+        >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=50)
+        >>> # Evaluate on test data
+        >>> test_microbes = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(10, 5)),
+        ...     columns=[f'OTU_{i}' for i in range(5)]
+        ... )
+        >>> test_metabolites = pd.DataFrame(
+        ...     np.random.randint(1, 50, size=(10, 8)),
+        ...     columns=[f'met_{i}' for i in range(8)]
+        ... )
+        >>> q2 = result.score(test_microbes, test_metabolites)
+        >>> isinstance(q2, float)
+        True
+
+        """
+        # Get predictions
+        predicted = self.predict(microbes).values
+
+        # Convert actual metabolites to proportions
+        if hasattr(metabolites, "values"):
+            Y = metabolites.values.astype(np.float64)
+        else:
+            Y = np.asarray(metabolites, dtype=np.float64)
+
+        row_sums = Y.sum(axis=1, keepdims=True)
+        if np.any(row_sums == 0):
+            raise ValueError(
+                "metabolites contains samples with all-zero counts. "
+                "Remove these samples before calling score."
+            )
+        actual = Y / row_sums
+
+        # Q² = 1 - SS_res / SS_tot
+        ss_res = np.sum((actual - predicted) ** 2)
+        ss_tot = np.sum((actual - actual.mean()) ** 2)
+
+        if ss_tot == 0:
+            # All actual values are the same - return 0 to avoid division by zero
+            return 0.0
+
+        return 1 - ss_res / ss_tot
 
 
 def _adam_update(param, grad, m, v, t, lr, beta_1, beta_2, eps=1e-8):
@@ -601,6 +712,331 @@ def _clip_gradients(grads, clipnorm):
     return grads
 
 
+def _validate_inputs(microbes, metabolites, u_prior_scale, v_prior_scale):
+    """Validate and convert input data for MMvec.
+
+    Parameters
+    ----------
+    microbes : pd.DataFrame or array-like
+        Microbe abundance counts.
+    metabolites : pd.DataFrame or array-like
+        Metabolite abundance counts.
+    u_prior_scale : float
+        Scale of Gaussian prior on U.
+    v_prior_scale : float
+        Scale of Gaussian prior on V.
+
+    Returns
+    -------
+    X : np.ndarray
+        Microbe counts as float64 array.
+    Y : np.ndarray
+        Metabolite counts as float64 array.
+    microbe_ids : list
+        Microbe feature IDs.
+    metabolite_ids : list
+        Metabolite feature IDs.
+
+    Raises
+    ------
+    ValueError
+        If inputs are invalid.
+    """
+    # Convert to arrays
+    if hasattr(microbes, "values"):
+        X = microbes.values.astype(np.float64)
+        microbe_ids = list(microbes.columns)
+    else:
+        X = np.asarray(microbes, dtype=np.float64)
+        microbe_ids = [f"microbe_{i}" for i in range(X.shape[1])]
+
+    if hasattr(metabolites, "values"):
+        Y = metabolites.values.astype(np.float64)
+        metabolite_ids = list(metabolites.columns)
+    else:
+        Y = np.asarray(metabolites, dtype=np.float64)
+        metabolite_ids = [f"metabolite_{i}" for i in range(Y.shape[1])]
+
+    n_samples_X = X.shape[0]
+    n_samples_Y = Y.shape[0]
+
+    # Input validation
+    if n_samples_X != n_samples_Y:
+        raise ValueError(
+            f"microbes and metabolites must have the same number of samples. "
+            f"Got {n_samples_X} and {n_samples_Y}."
+        )
+
+    if u_prior_scale <= 0:
+        raise ValueError(
+            f"u_prior_scale must be positive, got {u_prior_scale}."
+        )
+
+    if v_prior_scale <= 0:
+        raise ValueError(
+            f"v_prior_scale must be positive, got {v_prior_scale}."
+        )
+
+    # Check for all-zero columns in microbes
+    microbe_sums = X.sum(axis=0)
+    zero_microbes = np.where(microbe_sums == 0)[0]
+    if len(zero_microbes) > 0:
+        zero_ids = [microbe_ids[i] for i in zero_microbes[:5]]
+        msg = f"microbes contains all-zero columns: {zero_ids}"
+        if len(zero_microbes) > 5:
+            msg += f" and {len(zero_microbes) - 5} more"
+        raise ValueError(msg + ". Remove these before calling mmvec.")
+
+    # Check for all-zero columns in metabolites
+    metabolite_sums = Y.sum(axis=0)
+    zero_metabolites = np.where(metabolite_sums == 0)[0]
+    if len(zero_metabolites) > 0:
+        zero_ids = [metabolite_ids[i] for i in zero_metabolites[:5]]
+        msg = f"metabolites contains all-zero columns: {zero_ids}"
+        if len(zero_metabolites) > 5:
+            msg += f" and {len(zero_metabolites) - 5} more"
+        raise ValueError(msg + ". Remove these before calling mmvec.")
+
+    # Check for all-zero rows (samples with no counts)
+    microbe_row_sums = X.sum(axis=1)
+    zero_samples = np.where(microbe_row_sums == 0)[0]
+    if len(zero_samples) > 0:
+        raise ValueError(
+            f"microbes contains {len(zero_samples)} samples with all-zero "
+            f"counts. Remove these samples before calling mmvec."
+        )
+
+    return X, Y, microbe_ids, metabolite_ids
+
+
+def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
+    """Train MMvec model using L-BFGS-B optimization.
+
+    Parameters
+    ----------
+    model : _MMvecModel
+        Initialized model to train.
+    X_coo : coo_matrix
+        Microbe counts in sparse COO format.
+    Y : np.ndarray
+        Metabolite counts.
+    max_iter : int
+        Maximum number of L-BFGS iterations.
+    verbose : bool
+        Print training progress.
+
+    Returns
+    -------
+    convergence_data : list of dict
+        Training metrics per iteration.
+    """
+    convergence_data = []
+    iteration_count = [0]  # Use list to allow modification in closure
+
+    def objective(theta):
+        model.unpack_params(theta)
+        loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
+        iteration_count[0] += 1
+
+        convergence_data.append({
+            "iteration": iteration_count[0],
+            "loss": loss,
+        })
+
+        if verbose and iteration_count[0] % 10 == 0:
+            print(f"Iteration {iteration_count[0]}, Loss: {loss:.4f}")
+
+        return loss, grad
+
+    # Initial parameters
+    theta0 = model.pack_params()
+
+    # Run L-BFGS-B
+    result = minimize(
+        objective,
+        theta0,
+        method="L-BFGS-B",
+        jac=True,
+        options={
+            "maxiter": max_iter,
+            "ftol": 1e-9,
+            "gtol": 1e-5,
+            "disp": False,
+        },
+    )
+
+    # Unpack final parameters
+    model.unpack_params(result.x)
+
+    if verbose:
+        print(f"L-BFGS-B converged: {result.success}, "
+              f"iterations: {result.nit}, message: {result.message}")
+
+    return convergence_data
+
+
+def _train_adam(
+    model,
+    X,
+    Y,
+    X_coo,
+    rng,
+    max_iter,
+    learning_rate,
+    batch_size,
+    beta_1,
+    beta_2,
+    clipnorm,
+    batch_normalization,
+    verbose,
+):
+    """Train MMvec model using Adam optimization.
+
+    Parameters
+    ----------
+    model : _MMvecModel
+        Initialized model to train.
+    X : np.ndarray
+        Microbe counts.
+    Y : np.ndarray
+        Metabolite counts.
+    X_coo : coo_matrix
+        Microbe counts in sparse COO format.
+    rng : np.random.Generator
+        Random number generator.
+    max_iter : int
+        Number of epochs.
+    learning_rate : float
+        Adam learning rate.
+    batch_size : int
+        Mini-batch size.
+    beta_1 : float
+        Adam exponential decay rate for first moment.
+    beta_2 : float
+        Adam exponential decay rate for second moment.
+    clipnorm : float
+        Gradient clipping threshold.
+    batch_normalization : str
+        Batch normalization mode ('unbiased' or 'legacy').
+    verbose : bool
+        Print training progress.
+
+    Returns
+    -------
+    convergence_data : list of dict
+        Training metrics per iteration.
+    """
+    convergence_data = []
+
+    # Initialize Adam moments
+    moments = {
+        "U": (np.zeros_like(model.U), np.zeros_like(model.U)),
+        "b_U": (np.zeros_like(model.b_U), np.zeros_like(model.b_U)),
+        "V": (np.zeros_like(model.V), np.zeros_like(model.V)),
+        "b_V": (np.zeros_like(model.b_V), np.zeros_like(model.b_V)),
+    }
+
+    # Compute number of iterations per epoch
+    nnz = len(X_coo.data)
+    iterations_per_epoch = max(1, nnz // batch_size)
+
+    t = 0
+    for epoch in range(max_iter):
+        for _ in range(iterations_per_epoch):
+            t += 1
+
+            # Compute loss and gradients
+            loss, grads = model.loss_and_gradients(
+                X,
+                Y,
+                batch_size=batch_size,
+                batch_normalization=batch_normalization,
+                rng=rng,
+            )
+
+            # Gradient clipping
+            grads = _clip_gradients(grads, clipnorm)
+
+            # Adam updates
+            for param_name in ["U", "b_U", "V", "b_V"]:
+                param = getattr(model, param_name)
+                m, v = moments[param_name]
+                param, m, v = _adam_update(
+                    param,
+                    grads[param_name],
+                    m,
+                    v,
+                    t,
+                    learning_rate,
+                    beta_1,
+                    beta_2,
+                )
+                setattr(model, param_name, param)
+                moments[param_name] = (m, v)
+
+            convergence_data.append({"iteration": t, "loss": loss})
+
+        if verbose:
+            print(f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}")
+
+    return convergence_data
+
+
+def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
+    """Build MMvecResults from trained model.
+
+    Parameters
+    ----------
+    model : _MMvecModel
+        Trained model.
+    microbe_ids : list
+        Microbe feature IDs.
+    metabolite_ids : list
+        Metabolite feature IDs.
+    convergence_data : list of dict
+        Training metrics.
+
+    Returns
+    -------
+    MMvecResults
+        Results object with embeddings and convergence data.
+    """
+    n_components = model.n_components
+
+    # Compute ranks
+    ranks = model.ranks()
+
+    # Microbe embeddings: U with bias
+    microbe_emb = np.hstack([model.U, model.b_U])
+    pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
+    microbe_embeddings = pd.DataFrame(
+        microbe_emb, index=microbe_ids, columns=pc_cols
+    )
+
+    # Metabolite embeddings: V^T with bias
+    # First row is reference (no embedding), rest are actual embeddings
+    metabolite_emb = np.vstack([
+        np.zeros((1, n_components + 1)),  # Reference category
+        np.hstack([model.V.T, model.b_V.T]),
+    ])
+    metabolite_embeddings = pd.DataFrame(
+        metabolite_emb, index=metabolite_ids, columns=pc_cols
+    )
+
+    ranks_df = pd.DataFrame(
+        ranks, index=microbe_ids, columns=metabolite_ids
+    )
+
+    convergence = pd.DataFrame(convergence_data)
+
+    return MMvecResults(
+        microbe_embeddings=microbe_embeddings,
+        metabolite_embeddings=metabolite_embeddings,
+        ranks=ranks_df,
+        convergence=convergence,
+    )
+
+
 def mmvec(
     microbes,
     metabolites,
@@ -617,8 +1053,6 @@ def mmvec(
     beta_2=0.95,
     clipnorm=10.0,
     batch_normalization="unbiased",
-    test_microbes=None,
-    test_metabolites=None,
     random_state=None,
     verbose=False,
 ):
@@ -673,10 +1107,6 @@ def mmvec(
 
         - 'unbiased': Uses norm = sum(microbe_counts) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
-    test_microbes : pd.DataFrame, optional
-        Test microbe counts for cross-validation.
-    test_metabolites : pd.DataFrame, optional
-        Test metabolite counts for cross-validation.
     random_state : int or numpy.random.Generator, optional
         Seed for random number generation or a Generator instance.
         If an int, creates a Generator with that seed. Default is None.
@@ -691,7 +1121,7 @@ def mmvec(
         - microbe_embeddings: DataFrame (n_microbes, n_components + 1)
         - metabolite_embeddings: DataFrame (n_metabolites, n_components + 1)
         - ranks: DataFrame (n_microbes, n_metabolites)
-        - convergence: DataFrame with loss/cv_error per iteration
+        - convergence: DataFrame with loss per iteration
 
     Notes
     -----
@@ -701,6 +1131,9 @@ def mmvec(
 
         P(\text{metabolite}_j | \text{microbe}_i) =
         \text{softmax}(U_i \cdot V_j + b_{U_i} + b_{V_j})
+
+    To evaluate model performance on held-out data, use the ``score`` method
+    of the returned ``MMvecResults`` object.
 
     References
     ----------
@@ -727,90 +1160,19 @@ def mmvec(
     (10, 15)
 
     """
-    # Create a single RNG to use throughout the function.
-    # Accept either an int seed or an existing Generator.
+    # Create RNG - accept either an int seed or an existing Generator
     if isinstance(random_state, np.random.Generator):
         rng = random_state
     else:
         rng = np.random.default_rng(random_state)
 
-    # Convert to arrays
-    if hasattr(microbes, "values"):
-        X = microbes.values.astype(np.float64)
-        microbe_ids = list(microbes.columns)
-    else:
-        X = np.asarray(microbes, dtype=np.float64)
-        microbe_ids = [f"microbe_{i}" for i in range(X.shape[1])]
+    # Validate and convert inputs
+    X, Y, microbe_ids, metabolite_ids = _validate_inputs(
+        microbes, metabolites, u_prior_scale, v_prior_scale
+    )
 
-    if hasattr(metabolites, "values"):
-        Y = metabolites.values.astype(np.float64)
-        metabolite_ids = list(metabolites.columns)
-    else:
-        Y = np.asarray(metabolites, dtype=np.float64)
-        metabolite_ids = [f"metabolite_{i}" for i in range(Y.shape[1])]
-
-    n_samples_X, n_microbes = X.shape
-    n_samples_Y, n_metabolites = Y.shape
-
-    # Input validation
-    if n_samples_X != n_samples_Y:
-        raise ValueError(
-            f"microbes and metabolites must have the same number of samples. "
-            f"Got {n_samples_X} and {n_samples_Y}."
-        )
-
-    if u_prior_scale <= 0:
-        raise ValueError(
-            f"u_prior_scale must be positive, got {u_prior_scale}."
-        )
-
-    if v_prior_scale <= 0:
-        raise ValueError(
-            f"v_prior_scale must be positive, got {v_prior_scale}."
-        )
-
-    # Check for all-zero columns in microbes
-    microbe_sums = X.sum(axis=0)
-    zero_microbes = np.where(microbe_sums == 0)[0]
-    if len(zero_microbes) > 0:
-        zero_ids = [microbe_ids[i] for i in zero_microbes[:5]]
-        msg = f"microbes contains all-zero columns: {zero_ids}"
-        if len(zero_microbes) > 5:
-            msg += f" and {len(zero_microbes) - 5} more"
-        raise ValueError(msg + ". Remove these before calling mmvec.")
-
-    # Check for all-zero columns in metabolites
-    metabolite_sums = Y.sum(axis=0)
-    zero_metabolites = np.where(metabolite_sums == 0)[0]
-    if len(zero_metabolites) > 0:
-        zero_ids = [metabolite_ids[i] for i in zero_metabolites[:5]]
-        msg = f"metabolites contains all-zero columns: {zero_ids}"
-        if len(zero_metabolites) > 5:
-            msg += f" and {len(zero_metabolites) - 5} more"
-        raise ValueError(msg + ". Remove these before calling mmvec.")
-
-    # Check for all-zero rows (samples with no counts)
-    microbe_row_sums = X.sum(axis=1)
-    zero_samples = np.where(microbe_row_sums == 0)[0]
-    if len(zero_samples) > 0:
-        raise ValueError(
-            f"microbes contains {len(zero_samples)} samples with all-zero "
-            f"counts. Remove these samples before calling mmvec."
-        )
-
-    # Prepare test data if provided
-    X_test = None
-    Y_test = None
-    if test_microbes is not None and test_metabolites is not None:
-        if hasattr(test_microbes, "values"):
-            X_test = test_microbes.values.astype(np.float64)
-        else:
-            X_test = np.asarray(test_microbes, dtype=np.float64)
-
-        if hasattr(test_metabolites, "values"):
-            Y_test = test_metabolites.values.astype(np.float64)
-        else:
-            Y_test = np.asarray(test_metabolites, dtype=np.float64)
+    n_microbes = X.shape[1]
+    n_metabolites = Y.shape[1]
 
     # Validate optimizer
     optimizer = optimizer.lower()
@@ -834,160 +1196,24 @@ def mmvec(
     # Convert to sparse COO format
     X_coo = coo_matrix(X)
 
-    # Training loop
-    convergence_data = []
-
+    # Train model
     if optimizer == "lbfgs":
-        # L-BFGS-B optimization
-        iteration_count = [0]  # Use list to allow modification in closure
-
-        def objective(theta):
-            model.unpack_params(theta)
-            loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
-            iteration_count[0] += 1
-
-            # Compute CV error if test data provided
-            cv_error = None
-            if X_test is not None:
-                cv_error = model._compute_cv_error(X_test, Y_test)
-
-            convergence_data.append({
-                "iteration": iteration_count[0],
-                "loss": loss,
-                "cv_error": cv_error,
-            })
-
-            if verbose and iteration_count[0] % 10 == 0:
-                msg = f"Iteration {iteration_count[0]}, Loss: {loss:.4f}"
-                if cv_error is not None:
-                    msg += f", CV Error: {cv_error:.4f}"
-                print(msg)
-
-            return loss, grad
-
-        # Initial parameters
-        theta0 = model.pack_params()
-
-        # Run L-BFGS-B
-        result = minimize(
-            objective,
-            theta0,
-            method="L-BFGS-B",
-            jac=True,
-            options={
-                "maxiter": max_iter,
-                "ftol": 1e-9,
-                "gtol": 1e-5,
-                "disp": False,
-            },
+        convergence_data = _train_lbfgs(model, X_coo, Y, max_iter, verbose)
+    else:
+        convergence_data = _train_adam(
+            model=model,
+            X=X,
+            Y=Y,
+            X_coo=X_coo,
+            rng=rng,
+            max_iter=max_iter,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            beta_1=beta_1,
+            beta_2=beta_2,
+            clipnorm=clipnorm,
+            batch_normalization=batch_normalization,
+            verbose=verbose,
         )
 
-        # Unpack final parameters
-        model.unpack_params(result.x)
-
-        if verbose:
-            print(f"L-BFGS-B converged: {result.success}, "
-                  f"iterations: {result.nit}, message: {result.message}")
-
-    else:
-        # Adam optimization
-        moments = {
-            "U": (np.zeros_like(model.U), np.zeros_like(model.U)),
-            "b_U": (np.zeros_like(model.b_U), np.zeros_like(model.b_U)),
-            "V": (np.zeros_like(model.V), np.zeros_like(model.V)),
-            "b_V": (np.zeros_like(model.b_V), np.zeros_like(model.b_V)),
-        }
-
-        # Compute number of iterations per epoch
-        nnz = len(X_coo.data)
-        iterations_per_epoch = max(1, nnz // batch_size)
-
-        t = 0
-        for epoch in range(max_iter):
-            for _ in range(iterations_per_epoch):
-                t += 1
-
-                # Compute loss and gradients
-                if X_test is not None:
-                    loss, grads, cv_error = model.loss_and_gradients(
-                        X,
-                        Y,
-                        batch_size=batch_size,
-                        batch_normalization=batch_normalization,
-                        return_cv=True,
-                        X_test=X_test,
-                        Y_test=Y_test,
-                        rng=rng,
-                    )
-                else:
-                    loss, grads = model.loss_and_gradients(
-                        X,
-                        Y,
-                        batch_size=batch_size,
-                        batch_normalization=batch_normalization,
-                        rng=rng,
-                    )
-                    cv_error = None
-
-                # Gradient clipping
-                grads = _clip_gradients(grads, clipnorm)
-
-                # Adam updates
-                for param_name in ["U", "b_U", "V", "b_V"]:
-                    param = getattr(model, param_name)
-                    m, v = moments[param_name]
-                    param, m, v = _adam_update(
-                        param,
-                        grads[param_name],
-                        m,
-                        v,
-                        t,
-                        learning_rate,
-                        beta_1,
-                        beta_2,
-                    )
-                    setattr(model, param_name, param)
-                    moments[param_name] = (m, v)
-
-                convergence_data.append(
-                    {"iteration": t, "loss": loss, "cv_error": cv_error}
-                )
-
-            if verbose:
-                msg = f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}"
-                if cv_error is not None:
-                    msg += f", CV Error: {cv_error:.4f}"
-                print(msg)
-
-    # Build results
-    ranks = model.ranks()
-
-    # Microbe embeddings: U with bias
-    microbe_emb = np.hstack([model.U, model.b_U])
-    pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
-    microbe_embeddings = pd.DataFrame(
-        microbe_emb, index=microbe_ids, columns=pc_cols
-    )
-
-    # Metabolite embeddings: V^T with bias
-    # First row is reference (no embedding), rest are actual embeddings
-    metabolite_emb = np.vstack([
-        np.zeros((1, n_components + 1)),  # Reference category
-        np.hstack([model.V.T, model.b_V.T]),
-    ])
-    metabolite_embeddings = pd.DataFrame(
-        metabolite_emb, index=metabolite_ids, columns=pc_cols
-    )
-
-    ranks_df = pd.DataFrame(
-        ranks, index=microbe_ids, columns=metabolite_ids
-    )
-
-    convergence = pd.DataFrame(convergence_data)
-
-    return MMvecResults(
-        microbe_embeddings=microbe_embeddings,
-        metabolite_embeddings=metabolite_embeddings,
-        ranks=ranks_df,
-        convergence=convergence,
-    )
+    return _build_results(model, microbe_ids, metabolite_ids, convergence_data)

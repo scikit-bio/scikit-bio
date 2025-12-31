@@ -62,8 +62,6 @@ class TestMMvecRecovery(unittest.TestCase):
         result = mmvec(
             self.trainX,
             self.trainY,
-            test_microbes=self.testX,
-            test_metabolites=self.testY,
             n_components=2,
             optimizer="adam",
             max_iter=1000,
@@ -112,15 +110,13 @@ class TestMMvecRecovery(unittest.TestCase):
         self.assertGreater(s_r, 0.5, f"Probability correlation too low: {s_r}")
         self.assertLess(s_p, 0.05, f"Probability p-value too high: {s_p}")
 
-    def test_cv_error_reasonable(self):
-        """Cross-validation error should be reasonable."""
+    def test_score_reasonable(self):
+        """Q² score on held-out data should be reasonable."""
         np.random.seed(1)
 
         result = mmvec(
             self.trainX,
             self.trainY,
-            test_microbes=self.testX,
-            test_metabolites=self.testY,
             n_components=2,
             optimizer="adam",
             max_iter=1000,
@@ -131,9 +127,12 @@ class TestMMvecRecovery(unittest.TestCase):
             random_state=0,
         )
 
-        # Check that CV error is reasonable (< 500 as in original test)
-        final_cv = result.convergence["cv_error"].dropna().iloc[-1]
-        self.assertLess(final_cv, 500, f"CV error too high: {final_cv}")
+        # Compute Q² score on test data
+        q2 = result.score(self.testX, self.testY)
+
+        # Q² should be positive for a reasonably trained model
+        # (better than predicting the mean)
+        self.assertGreater(q2, -1.0, f"Q² score too low: {q2}")
 
 
 class TestMMvecGradients(unittest.TestCase):
@@ -371,8 +370,8 @@ class TestMMvecBasic(unittest.TestCase):
 class TestMMvecResults(unittest.TestCase):
     """Test MMvecResults class."""
 
-    def test_probabilities(self):
-        """Test probability computation from ranks."""
+    def setUp(self):
+        """Create test data."""
         np.random.seed(42)
         res = random_multimodal(
             num_microbes=8,
@@ -380,11 +379,13 @@ class TestMMvecResults(unittest.TestCase):
             num_samples=50,
             seed=42,
         )
-        microbes, metabolites = res[0], res[1]
+        self.microbes, self.metabolites = res[0], res[1]
 
+    def test_probabilities(self):
+        """Test probability computation from ranks."""
         result = mmvec(
-            microbes,
-            metabolites,
+            self.microbes,
+            self.metabolites,
             n_components=2,
             max_iter=50,
             random_state=42,
@@ -397,6 +398,78 @@ class TestMMvecResults(unittest.TestCase):
 
         # Probabilities should be positive
         self.assertTrue((probs.values >= 0).all())
+
+    def test_predict(self):
+        """Test predict method returns valid metabolite distributions."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            max_iter=50,
+            random_state=42,
+        )
+
+        # Predict on new samples
+        new_microbes = self.microbes.iloc[:5]
+        predictions = result.predict(new_microbes)
+
+        # Predictions should have correct shape
+        self.assertEqual(predictions.shape, (5, 10))
+
+        # Predictions should sum to 1 per row
+        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+
+        # Predictions should be positive
+        self.assertTrue((predictions.values >= 0).all())
+
+        # Column names should match metabolites
+        self.assertEqual(
+            list(predictions.columns),
+            list(self.metabolites.columns),
+        )
+
+    def test_score(self):
+        """Test score method returns valid Q² value."""
+        # Split data
+        train_microbes = self.microbes.iloc[:40]
+        test_microbes = self.microbes.iloc[40:]
+        train_metabolites = self.metabolites.iloc[:40]
+        test_metabolites = self.metabolites.iloc[40:]
+
+        result = mmvec(
+            train_microbes,
+            train_metabolites,
+            n_components=2,
+            max_iter=100,
+            random_state=42,
+        )
+
+        q2 = result.score(test_microbes, test_metabolites)
+
+        # Q² should be a float
+        self.assertIsInstance(q2, float)
+
+        # Q² should be <= 1.0 (perfect prediction)
+        self.assertLessEqual(q2, 1.0)
+
+    def test_predict_zero_sample_raises(self):
+        """Predict with zero-count sample should raise ValueError."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            max_iter=10,
+            random_state=42,
+        )
+
+        # Create microbes with a zero row
+        zero_microbes = self.microbes.iloc[:3].copy()
+        zero_microbes.iloc[0, :] = 0
+
+        with self.assertRaises(ValueError) as ctx:
+            result.predict(zero_microbes)
+
+        self.assertIn("all-zero counts", str(ctx.exception))
 
 
 class TestMMvecValidation(unittest.TestCase):
@@ -664,7 +737,6 @@ class TestMMvecOutputVerification(unittest.TestCase):
         # Check columns exist
         self.assertIn("iteration", result.convergence.columns)
         self.assertIn("loss", result.convergence.columns)
-        self.assertIn("cv_error", result.convergence.columns)
 
         # Iterations should be sequential positive integers
         iterations = result.convergence["iteration"].values
@@ -789,8 +861,8 @@ class TestMMvecLBFGS(unittest.TestCase):
         )
         self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
 
-    def test_lbfgs_with_test_data(self):
-        """L-BFGS should work with test data for CV error."""
+    def test_lbfgs_score_on_test_data(self):
+        """L-BFGS model should produce reasonable Q² score on test data."""
         # Split data
         train_microbes = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
@@ -800,17 +872,17 @@ class TestMMvecLBFGS(unittest.TestCase):
         result = mmvec(
             train_microbes,
             train_metabolites,
-            test_microbes=test_microbes,
-            test_metabolites=test_metabolites,
             n_components=2,
             optimizer="lbfgs",
             max_iter=100,
             random_state=42,
         )
 
-        # CV error should be tracked
-        cv_errors = result.convergence["cv_error"].dropna()
-        self.assertGreater(len(cv_errors), 0)
+        # Compute Q² score on test data
+        q2 = result.score(test_microbes, test_metabolites)
+
+        # Q² should be a valid float
+        self.assertIsInstance(q2, float)
 
     def test_invalid_optimizer_raises(self):
         """Invalid optimizer should raise ValueError."""
