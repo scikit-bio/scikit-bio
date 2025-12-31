@@ -421,21 +421,115 @@ class _MMvecModel:
 
 
 class MMvecResults(SkbioObject):
-    """Results from MMvec analysis.
+    r"""Results from MMvec analysis.
+
+    This class contains the learned embeddings and co-occurrence patterns
+    from fitting an MMvec model. The key outputs enable both interpretation
+    (which microbes co-occur with which metabolites) and prediction
+    (expected metabolites given a microbial community).
 
     Attributes
     ----------
     microbe_embeddings : pd.DataFrame
         Microbe coordinates in latent space.
-        Shape: (n_microbes, n_components + 1) where +1 is bias.
+        Shape: (n_microbes, n_components + 1) where +1 is the bias term.
+
+        Each row is a vector representation of a microbe. Microbes with
+        similar embedding vectors tend to co-occur with similar sets of
+        metabolites. The Euclidean distance or cosine similarity between
+        microbe embeddings can be used to identify functionally related
+        microbes. The final column ("bias") captures the baseline tendency
+        of each microbe to associate with metabolites overall.
+
     metabolite_embeddings : pd.DataFrame
         Metabolite coordinates in latent space.
-        Shape: (n_metabolites, n_components + 1).
+        Shape: (n_metabolites, n_components + 1) where +1 is the bias term.
+
+        Each row is a vector representation of a metabolite. Metabolites
+        with similar embedding vectors tend to co-occur with similar sets
+        of microbes. The first row corresponds to the reference metabolite
+        (all zeros) used for identifiability. The distance between
+        metabolite embeddings indicates similarity in their microbial
+        associations. The final column ("bias") captures the baseline
+        abundance of each metabolite.
+
     ranks : pd.DataFrame
-        Log conditional probabilities P(metabolite | microbe).
+        Log conditional probability matrix (co-occurrence scores).
         Shape: (n_microbes, n_metabolites). Row-centered.
+
+        Entry (i, j) represents the log-odds of observing metabolite j
+        given microbe i, relative to the row mean. Higher values indicate
+        stronger positive associations. This matrix is row-centered (each
+        row sums to zero) for identifiability. To obtain actual conditional
+        probabilities, use the :meth:`probabilities` method.
+
+        The ranks matrix is the primary output for identifying
+        microbe-metabolite associations. Sorting each row reveals which
+        metabolites are most strongly associated with each microbe.
+
     convergence : pd.DataFrame
-        Training metrics per iteration: iteration, loss.
+        Training diagnostics with columns:
+
+        - ``iteration``: Iteration number (1-indexed).
+        - ``loss``: Negative log-posterior (lower is better).
+
+        Use this to diagnose training issues. The loss should generally
+        decrease and stabilize. If the loss is still decreasing at the
+        final iteration, consider increasing ``max_iter``. If the loss
+        oscillates (Adam optimizer), try reducing ``learning_rate``.
+
+    Notes
+    -----
+    **Detecting Overfitting with Q²**
+
+    Overfitting occurs when the model memorizes training data rather than
+    learning generalizable patterns. To detect overfitting:
+
+    1. Split your data into training and test sets before fitting.
+    2. Fit the model on training data only.
+    3. Use :meth:`score` to compute Q² on held-out test data.
+
+    Interpretation of Q² values:
+
+    - **Q² close to 1**: Excellent predictive performance.
+    - **Q² close to 0**: Model predicts no better than the mean.
+    - **Q² negative**: Model performs worse than predicting the mean,
+      indicating overfitting or model misspecification.
+
+    If Q² is much lower than expected, try:
+
+    - Reducing ``n_components`` (fewer latent dimensions).
+    - Increasing regularization via smaller ``u_prior_scale`` and
+      ``v_prior_scale`` values.
+    - Collecting more training samples.
+
+    **Embedding Interpretation**
+
+    The embeddings place microbes and metabolites in the same latent space.
+    The inner product between a microbe embedding and metabolite embedding
+    (plus bias terms) gives the log-odds of their co-occurrence:
+
+    .. math::
+
+        \log \frac{P(m_j | \mu_i)}{P(m_{\text{ref}} | \mu_i)} =
+        U_i \cdot V_j + b_{U_i} + b_{V_j}
+
+    This means:
+
+    - Microbes pointing in similar directions associate with similar
+      metabolites.
+    - Metabolites pointing in similar directions are produced/consumed
+      by similar microbes.
+    - The angle between a microbe and metabolite vector indicates their
+      association strength.
+
+    See Also
+    --------
+    mmvec : Fit an MMvec model.
+    probabilities : Convert ranks to conditional probabilities.
+    predict : Predict metabolite distributions for new samples.
+    score : Evaluate predictive performance with Q².
+
     """
 
     def __init__(
@@ -1058,15 +1152,23 @@ def mmvec(
 ):
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
 
-    Learns joint embeddings of microbes and metabolites from their
-    co-occurrence patterns using a multinomial likelihood model.
+    Learns joint embeddings of two feature sets from their co-occurrence
+    patterns using a multinomial likelihood model.
+
+    While the parameter names use "microbes" and "metabolites" following the
+    original publication, this method is **generic** and can be applied to any
+    two omics modalities representable as compositional (count-based) data.
+    For example: microbes and host transcripts, proteins and metabolites, or
+    any pair of feature tables sharing the same samples.
 
     Parameters
     ----------
     microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
-        Microbe abundance counts.
+        Abundance counts for the first modality (e.g., microbes, proteins).
+        This modality is treated as the "conditioning" variable.
     metabolites : pd.DataFrame or array-like of shape (n_samples, n_metabolites)
-        Metabolite abundance/intensity values.
+        Abundance counts for the second modality (e.g., metabolites, transcripts).
+        This modality is treated as the "conditioned" variable.
     n_components : int, optional
         Number of latent dimensions for embeddings. Default is 3.
     optimizer : {'lbfgs', 'adam'}, optional
@@ -1085,13 +1187,17 @@ def mmvec(
     batch_size : int, optional
         Mini-batch size for Adam optimizer. Ignored for 'lbfgs'. Default is 50.
     u_prior_mean : float, optional
-        Mean of Gaussian prior on microbe embeddings. Default is 0.0.
+        Mean of Gaussian prior on first modality (microbes) embeddings.
+        Default is 0.0.
     u_prior_scale : float, optional
-        Scale (std) of Gaussian prior on microbe embeddings. Default is 1.0.
+        Scale (std) of Gaussian prior on first modality embeddings.
+        Default is 1.0. Smaller values increase regularization.
     v_prior_mean : float, optional
-        Mean of Gaussian prior on metabolite embeddings. Default is 0.0.
+        Mean of Gaussian prior on second modality (metabolites) embeddings.
+        Default is 0.0.
     v_prior_scale : float, optional
-        Scale (std) of Gaussian prior on metabolite embeddings. Default is 1.0.
+        Scale (std) of Gaussian prior on second modality embeddings.
+        Default is 1.0. Smaller values increase regularization.
     beta_1 : float, optional
         Adam exponential decay rate for first moment. Ignored for 'lbfgs'.
         Default is 0.9.

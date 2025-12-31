@@ -26,24 +26,33 @@ MMvec (Microbe-Metabolite Vectors)
 ----------------------------------
 
 The primary method in this module is MMvec, which learns a co-occurrence model
-between microbes and metabolites. The core idea is to model the conditional
-probability of observing a metabolite given the presence of a microbe:
+between two sets of features. While originally developed for microbe-metabolite
+interactions, the methodology is generic and can be applied to **any two omics
+modalities representable as compositional (count-based) data**, such as:
+
+- Microbes and metabolites (the original use case)
+- Microbes and host transcripts
+- Proteins and metabolites
+- Any pair of feature tables sharing the same samples
+
+The core idea is to model the conditional probability of observing a feature
+from one modality given the presence of a feature from another:
 
 .. math::
 
-    P(\text{metabolite}_j | \text{microbe}_i) \propto
+    P(\text{feature}_j^{(2)} | \text{feature}_i^{(1)}) \propto
     \exp(U_i \cdot V_j + b_{U_i} + b_{V_j})
 
 where :math:`U` and :math:`V` are low-dimensional embedding matrices and
 :math:`b_U`, :math:`b_V` are bias terms. This neural network-inspired approach
 enables:
 
-- **Dimensionality reduction**: Both microbes and metabolites are embedded in
+- **Dimensionality reduction**: Features from both modalities are embedded in
   the same latent space, enabling visualization and downstream analysis.
-- **Prediction**: Given a microbial community composition, predict expected
-  metabolite profiles.
+- **Prediction**: Given a composition from one modality, predict expected
+  profiles in the other modality.
 - **Interpretability**: The learned conditional probabilities (ranks) indicate
-  which microbes are associated with which metabolites.
+  which features from one modality are associated with features from the other.
 
 Example usage::
 
