@@ -14,6 +14,7 @@ and metabolites from their co-occurrence patterns.
 
 import numpy as np
 import pandas as pd
+from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.sparse import coo_matrix, issparse
 
@@ -336,6 +337,129 @@ class _MMvecModel:
         ranks = logits - logits.mean(axis=1, keepdims=True)
         return ranks
 
+    def pack_params(self):
+        """Flatten all parameters into a single vector.
+
+        Returns
+        -------
+        theta : np.ndarray
+            Flattened parameters [U, b_U, V, b_V].
+        """
+        return np.concatenate([
+            self.U.ravel(),
+            self.b_U.ravel(),
+            self.V.ravel(),
+            self.b_V.ravel(),
+        ])
+
+    def unpack_params(self, theta):
+        """Restore parameter matrices from flat vector.
+
+        Parameters
+        ----------
+        theta : np.ndarray
+            Flattened parameters.
+        """
+        d1 = self.n_microbes
+        d2 = self.n_metabolites
+        p = self.n_components
+
+        idx = 0
+        self.U = theta[idx:idx + d1 * p].reshape(d1, p)
+        idx += d1 * p
+        self.b_U = theta[idx:idx + d1].reshape(d1, 1)
+        idx += d1
+        self.V = theta[idx:idx + p * (d2 - 1)].reshape(p, d2 - 1)
+        idx += p * (d2 - 1)
+        self.b_V = theta[idx:idx + (d2 - 1)].reshape(1, d2 - 1)
+
+    def full_batch_loss_and_gradient(self, X_coo, Y):
+        """Compute full-batch loss and gradient for L-BFGS.
+
+        Parameters
+        ----------
+        X_coo : coo_matrix
+            Microbe counts in COO format.
+        Y : np.ndarray of shape (n_samples, n_metabolites)
+            Metabolite counts.
+
+        Returns
+        -------
+        loss : float
+            Negative log-posterior.
+        grad : np.ndarray
+            Flattened gradient vector.
+        """
+        # Build augmented matrices once
+        U_aug, V_aug = self._build_augmented_matrices()
+
+        # Precompute all logits: (d1, d2) with reference column = 0
+        logits_core = U_aug @ V_aug  # (d1, d2-1)
+        logits_all = np.hstack([np.zeros((self.n_microbes, 1)), logits_core])
+
+        # Stable softmax for all microbes
+        log_norm = logsumexp(logits_all, axis=1, keepdims=True)
+        probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
+
+        # Initialize loss and gradients
+        loss = 0.0
+        dU = np.zeros_like(self.U)
+        db_U = np.zeros_like(self.b_U)
+        dV = np.zeros_like(self.V)
+        db_V = np.zeros_like(self.b_V)
+
+        # Sample totals
+        N = Y.sum(axis=1)  # (n_samples,)
+
+        # Iterate over all non-zero (sample, microbe) pairs
+        for i in range(len(X_coo.data)):
+            s = X_coo.row[i]
+            m = X_coo.col[i]
+            w = X_coo.data[i]  # weight (microbe count)
+
+            y_s = Y[s, :]  # (d2,)
+            eta = logits_all[m, :]
+            pi = probs_all[m, :]
+
+            # Log-likelihood contribution (weighted by microbe count)
+            log_lik = np.dot(y_s, eta) - N[s] * log_norm[m, 0]
+            loss -= w * log_lik
+
+            # Gradient w.r.t. non-reference logits
+            delta = w * (y_s[1:] - N[s] * pi[1:])  # (d2-1,)
+
+            # Accumulate gradients (negative because loss = -log_lik)
+            dV -= np.outer(self.U[m, :], delta)
+            db_V -= delta.reshape(1, -1)
+            dU[m, :] -= delta @ self.V.T
+            db_U[m, 0] -= delta.sum()
+
+        # Add prior terms (L2 regularization)
+        u_diff = self.U - self.u_prior_mean
+        b_u_diff = self.b_U - self.u_prior_mean
+        v_diff = self.V - self.v_prior_mean
+        b_v_diff = self.b_V - self.v_prior_mean
+
+        loss += 0.5 * np.sum(u_diff**2) / self.u_prior_scale**2
+        loss += 0.5 * np.sum(b_u_diff**2) / self.u_prior_scale**2
+        loss += 0.5 * np.sum(v_diff**2) / self.v_prior_scale**2
+        loss += 0.5 * np.sum(b_v_diff**2) / self.v_prior_scale**2
+
+        dU += u_diff / self.u_prior_scale**2
+        db_U += b_u_diff / self.u_prior_scale**2
+        dV += v_diff / self.v_prior_scale**2
+        db_V += b_v_diff / self.v_prior_scale**2
+
+        # Pack gradients
+        grad = np.concatenate([
+            dU.ravel(),
+            db_U.ravel(),
+            dV.ravel(),
+            db_V.ravel(),
+        ])
+
+        return loss, grad
+
 
 class MMvecResults(SkbioObject):
     """Results from MMvec analysis.
@@ -470,9 +594,10 @@ def mmvec(
     microbes,
     metabolites,
     n_components=3,
-    epochs=100,
-    batch_size=50,
+    optimizer="lbfgs",
+    max_iter=1000,
     learning_rate=1e-3,
+    batch_size=50,
     u_prior_mean=0.0,
     u_prior_scale=1.0,
     v_prior_mean=0.0,
@@ -499,12 +624,21 @@ def mmvec(
         Metabolite abundance/intensity values.
     n_components : int, optional
         Number of latent dimensions for embeddings. Default is 3.
-    epochs : int, optional
-        Number of training epochs. Default is 100.
-    batch_size : int, optional
-        Mini-batch size for stochastic optimization. Default is 50.
+    optimizer : {'lbfgs', 'adam'}, optional
+        Optimization algorithm to use. Default is 'lbfgs'.
+
+        - 'lbfgs': L-BFGS-B quasi-Newton method. Recommended for most cases.
+          Typically converges in 50-200 iterations. Deterministic.
+        - 'adam': Stochastic gradient descent with Adam. Use for very large
+          datasets or when stochastic behavior is desired.
+    max_iter : int, optional
+        Maximum number of iterations. Default is 1000. For 'lbfgs', this is
+        the max number of L-BFGS iterations. For 'adam', this is the number
+        of epochs.
     learning_rate : float, optional
-        Adam optimizer learning rate. Default is 1e-3.
+        Adam optimizer learning rate. Ignored for 'lbfgs'. Default is 1e-3.
+    batch_size : int, optional
+        Mini-batch size for Adam optimizer. Ignored for 'lbfgs'. Default is 50.
     u_prior_mean : float, optional
         Mean of Gaussian prior on microbe embeddings. Default is 0.0.
     u_prior_scale : float, optional
@@ -514,13 +648,17 @@ def mmvec(
     v_prior_scale : float, optional
         Scale (std) of Gaussian prior on metabolite embeddings. Default is 1.0.
     beta_1 : float, optional
-        Adam exponential decay rate for first moment. Default is 0.9.
+        Adam exponential decay rate for first moment. Ignored for 'lbfgs'.
+        Default is 0.9.
     beta_2 : float, optional
-        Adam exponential decay rate for second moment. Default is 0.95.
+        Adam exponential decay rate for second moment. Ignored for 'lbfgs'.
+        Default is 0.95.
     clipnorm : float, optional
-        Gradient clipping threshold (global L2 norm). Default is 10.0.
+        Gradient clipping threshold for Adam (global L2 norm). Ignored for
+        'lbfgs'. Default is 10.0.
     batch_normalization : {'unbiased', 'legacy'}, optional
-        Method for scaling mini-batch likelihood. Default is 'unbiased'.
+        Method for scaling mini-batch likelihood in Adam. Ignored for 'lbfgs'.
+        Default is 'unbiased'.
 
         - 'unbiased': Uses norm = sum(microbe_counts) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
@@ -573,7 +711,7 @@ def mmvec(
     ...     np.random.randint(0, 100, size=(50, 15)),
     ...     columns=[f'metabolite_{i}' for i in range(15)]
     ... )
-    >>> result = mmvec(microbes, metabolites, n_components=2, epochs=10)
+    >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=10)
     >>> result.ranks.shape
     (10, 15)
 
@@ -663,6 +801,13 @@ def mmvec(
         else:
             Y_test = np.asarray(test_metabolites, dtype=np.float64)
 
+    # Validate optimizer
+    optimizer = optimizer.lower()
+    if optimizer not in ("lbfgs", "adam"):
+        raise ValueError(
+            f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'."
+        )
+
     # Initialize model
     model = _MMvecModel(
         n_microbes=n_microbes,
@@ -675,78 +820,133 @@ def mmvec(
         rng=rng,
     )
 
-    # Initialize Adam moments
-    moments = {
-        "U": (np.zeros_like(model.U), np.zeros_like(model.U)),
-        "b_U": (np.zeros_like(model.b_U), np.zeros_like(model.b_U)),
-        "V": (np.zeros_like(model.V), np.zeros_like(model.V)),
-        "b_V": (np.zeros_like(model.b_V), np.zeros_like(model.b_V)),
-    }
-
-    # Compute number of iterations per epoch
+    # Convert to sparse COO format
     X_coo = coo_matrix(X)
-    nnz = len(X_coo.data)
-    iterations_per_epoch = max(1, nnz // batch_size)
 
     # Training loop
     convergence_data = []
-    t = 0
 
-    for epoch in range(epochs):
-        for _ in range(iterations_per_epoch):
-            t += 1
+    if optimizer == "lbfgs":
+        # L-BFGS-B optimization
+        iteration_count = [0]  # Use list to allow modification in closure
 
-            # Compute loss and gradients
+        def objective(theta):
+            model.unpack_params(theta)
+            loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
+            iteration_count[0] += 1
+
+            # Compute CV error if test data provided
+            cv_error = None
             if X_test is not None:
-                loss, grads, cv_error = model.loss_and_gradients(
-                    X,
-                    Y,
-                    batch_size=batch_size,
-                    batch_normalization=batch_normalization,
-                    return_cv=True,
-                    X_test=X_test,
-                    Y_test=Y_test,
-                    rng=rng,
-                )
-            else:
-                loss, grads = model.loss_and_gradients(
-                    X,
-                    Y,
-                    batch_size=batch_size,
-                    batch_normalization=batch_normalization,
-                    rng=rng,
-                )
-                cv_error = None
+                cv_error = model._compute_cv_error(X_test, Y_test)
 
-            # Gradient clipping
-            grads = _clip_gradients(grads, clipnorm)
+            convergence_data.append({
+                "iteration": iteration_count[0],
+                "loss": loss,
+                "cv_error": cv_error,
+            })
 
-            # Adam updates
-            for param_name in ["U", "b_U", "V", "b_V"]:
-                param = getattr(model, param_name)
-                m, v = moments[param_name]
-                param, m, v = _adam_update(
-                    param,
-                    grads[param_name],
-                    m,
-                    v,
-                    t,
-                    learning_rate,
-                    beta_1,
-                    beta_2,
-                )
-                setattr(model, param_name, param)
-                moments[param_name] = (m, v)
+            if verbose and iteration_count[0] % 10 == 0:
+                msg = f"Iteration {iteration_count[0]}, Loss: {loss:.4f}"
+                if cv_error is not None:
+                    msg += f", CV Error: {cv_error:.4f}"
+                print(msg)
 
-            convergence_data.append(
-                {"iteration": t, "loss": loss, "cv_error": cv_error}
-            )
+            return loss, grad
+
+        # Initial parameters
+        theta0 = model.pack_params()
+
+        # Run L-BFGS-B
+        result = minimize(
+            objective,
+            theta0,
+            method="L-BFGS-B",
+            jac=True,
+            options={
+                "maxiter": max_iter,
+                "ftol": 1e-9,
+                "gtol": 1e-5,
+                "disp": False,
+            },
+        )
+
+        # Unpack final parameters
+        model.unpack_params(result.x)
 
         if verbose:
-            msg = f"Epoch {epoch + 1}/{epochs}, Loss: {loss:.4f}"
-            if cv_error is not None:
-                msg += f", CV Error: {cv_error:.4f}"
-            print(msg)
+            print(f"L-BFGS-B converged: {result.success}, "
+                  f"iterations: {result.nit}, message: {result.message}")
+
+    else:
+        # Adam optimization
+        moments = {
+            "U": (np.zeros_like(model.U), np.zeros_like(model.U)),
+            "b_U": (np.zeros_like(model.b_U), np.zeros_like(model.b_U)),
+            "V": (np.zeros_like(model.V), np.zeros_like(model.V)),
+            "b_V": (np.zeros_like(model.b_V), np.zeros_like(model.b_V)),
+        }
+
+        # Compute number of iterations per epoch
+        nnz = len(X_coo.data)
+        iterations_per_epoch = max(1, nnz // batch_size)
+
+        t = 0
+        for epoch in range(max_iter):
+            for _ in range(iterations_per_epoch):
+                t += 1
+
+                # Compute loss and gradients
+                if X_test is not None:
+                    loss, grads, cv_error = model.loss_and_gradients(
+                        X,
+                        Y,
+                        batch_size=batch_size,
+                        batch_normalization=batch_normalization,
+                        return_cv=True,
+                        X_test=X_test,
+                        Y_test=Y_test,
+                        rng=rng,
+                    )
+                else:
+                    loss, grads = model.loss_and_gradients(
+                        X,
+                        Y,
+                        batch_size=batch_size,
+                        batch_normalization=batch_normalization,
+                        rng=rng,
+                    )
+                    cv_error = None
+
+                # Gradient clipping
+                grads = _clip_gradients(grads, clipnorm)
+
+                # Adam updates
+                for param_name in ["U", "b_U", "V", "b_V"]:
+                    param = getattr(model, param_name)
+                    m, v = moments[param_name]
+                    param, m, v = _adam_update(
+                        param,
+                        grads[param_name],
+                        m,
+                        v,
+                        t,
+                        learning_rate,
+                        beta_1,
+                        beta_2,
+                    )
+                    setattr(model, param_name, param)
+                    moments[param_name] = (m, v)
+
+                convergence_data.append(
+                    {"iteration": t, "loss": loss, "cv_error": cv_error}
+                )
+
+            if verbose:
+                msg = f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}"
+                if cv_error is not None:
+                    msg += f", CV Error: {cv_error:.4f}"
+                print(msg)
 
     # Build results
     ranks = model.ranks()

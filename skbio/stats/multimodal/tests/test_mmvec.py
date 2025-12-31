@@ -65,7 +65,8 @@ class TestMMvecRecovery(unittest.TestCase):
             test_microbes=self.testX,
             test_metabolites=self.testY,
             n_components=2,
-            epochs=1000,
+            optimizer="adam",
+            max_iter=1000,
             batch_size=50,
             learning_rate=1e-3,
             beta_1=0.8,
@@ -121,7 +122,8 @@ class TestMMvecRecovery(unittest.TestCase):
             test_microbes=self.testX,
             test_metabolites=self.testY,
             n_components=2,
-            epochs=1000,
+            optimizer="adam",
+            max_iter=1000,
             batch_size=50,
             learning_rate=1e-3,
             beta_1=0.8,
@@ -252,7 +254,7 @@ class TestMMvecBasic(unittest.TestCase):
             microbes,
             metabolites,
             n_components=3,
-            epochs=10,
+            max_iter=10,
             random_state=42,
         )
 
@@ -286,7 +288,7 @@ class TestMMvecBasic(unittest.TestCase):
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             random_state=42,
         )
 
@@ -309,7 +311,7 @@ class TestMMvecBasic(unittest.TestCase):
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             random_state=123,
         )
 
@@ -317,7 +319,7 @@ class TestMMvecBasic(unittest.TestCase):
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             random_state=123,
         )
 
@@ -336,12 +338,13 @@ class TestMMvecBasic(unittest.TestCase):
         )
         microbes, metabolites = res[0], res[1]
 
-        # Legacy mode
+        # Legacy mode (batch_normalization only applies to Adam)
         result_legacy = mmvec(
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            optimizer="adam",
+            max_iter=50,
             batch_normalization="legacy",
             random_state=42,
         )
@@ -352,7 +355,8 @@ class TestMMvecBasic(unittest.TestCase):
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            optimizer="adam",
+            max_iter=50,
             batch_normalization="unbiased",
             random_state=42,
         )
@@ -382,7 +386,7 @@ class TestMMvecResults(unittest.TestCase):
             microbes,
             metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             random_state=42,
         )
 
@@ -415,7 +419,7 @@ class TestMMvecValidation(unittest.TestCase):
         metabolites = self.metabolites.iloc[:50]  # 50 samples
 
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, metabolites, epochs=1)
+            mmvec(microbes, metabolites, max_iter=1)
 
         self.assertIn("same number of samples", str(ctx.exception))
 
@@ -425,7 +429,7 @@ class TestMMvecValidation(unittest.TestCase):
         microbes.iloc[:, 0] = 0  # Set first column to all zeros
 
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, self.metabolites, epochs=1)
+            mmvec(microbes, self.metabolites, max_iter=1)
 
         self.assertIn("all-zero columns", str(ctx.exception))
         self.assertIn("OTU_0", str(ctx.exception))
@@ -436,7 +440,7 @@ class TestMMvecValidation(unittest.TestCase):
         metabolites.iloc[:, 0] = 0  # Set first column to all zeros
 
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, metabolites, epochs=1)
+            mmvec(self.microbes, metabolites, max_iter=1)
 
         self.assertIn("all-zero columns", str(ctx.exception))
         self.assertIn("metabolite_0", str(ctx.exception))
@@ -447,7 +451,7 @@ class TestMMvecValidation(unittest.TestCase):
         microbes.iloc[0, :] = 0  # Set first row to all zeros
 
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, self.metabolites, epochs=1)
+            mmvec(microbes, self.metabolites, max_iter=1)
 
         self.assertIn("all-zero counts", str(ctx.exception))
 
@@ -458,7 +462,7 @@ class TestMMvecValidation(unittest.TestCase):
                 self.microbes,
                 self.metabolites,
                 u_prior_scale=0,
-                epochs=1,
+                max_iter=1,
             )
 
         self.assertIn("u_prior_scale must be positive", str(ctx.exception))
@@ -470,7 +474,7 @@ class TestMMvecValidation(unittest.TestCase):
                 self.microbes,
                 self.metabolites,
                 u_prior_scale=-1.0,
-                epochs=1,
+                max_iter=1,
             )
 
         self.assertIn("u_prior_scale must be positive", str(ctx.exception))
@@ -482,7 +486,7 @@ class TestMMvecValidation(unittest.TestCase):
                 self.microbes,
                 self.metabolites,
                 v_prior_scale=0,
-                epochs=1,
+                max_iter=1,
             )
 
         self.assertIn("v_prior_scale must be positive", str(ctx.exception))
@@ -494,7 +498,7 @@ class TestMMvecValidation(unittest.TestCase):
                 self.microbes,
                 self.metabolites,
                 v_prior_scale=-0.5,
-                epochs=1,
+                max_iter=1,
             )
 
         self.assertIn("v_prior_scale must be positive", str(ctx.exception))
@@ -524,7 +528,7 @@ class TestMMvecInputTypes(unittest.TestCase):
             microbes_sparse,
             metabolites_sparse,
             n_components=2,
-            epochs=10,
+            max_iter=10,
             random_state=42,
         )
 
@@ -555,7 +559,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             self.microbes,
             self.metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             u_prior_mean=0.0,
             v_prior_mean=0.0,
             random_state=42,
@@ -565,7 +569,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             self.microbes,
             self.metabolites,
             n_components=2,
-            epochs=50,
+            max_iter=50,
             u_prior_mean=5.0,
             v_prior_mean=5.0,
             random_state=42,
@@ -590,7 +594,8 @@ class TestMMvecParameterBehavior(unittest.TestCase):
                 self.microbes,
                 self.metabolites,
                 n_components=2,
-                epochs=5,
+                optimizer="adam",
+                max_iter=5,
                 verbose=True,
                 random_state=42,
             )
@@ -622,7 +627,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             self.microbes,
             self.metabolites,
             n_components=2,
-            epochs=10,
+            max_iter=10,
             random_state=42,
         )
 
@@ -652,7 +657,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             self.microbes,
             self.metabolites,
             n_components=2,
-            epochs=10,
+            max_iter=10,
             random_state=42,
         )
 
@@ -672,7 +677,8 @@ class TestMMvecOutputVerification(unittest.TestCase):
             self.microbes,
             self.metabolites,
             n_components=2,
-            epochs=100,
+            optimizer="adam",
+            max_iter=100,
             random_state=42,
         )
 
@@ -684,6 +690,139 @@ class TestMMvecOutputVerification(unittest.TestCase):
         late_loss = losses[-n // 10 :].mean()
 
         self.assertLess(late_loss, early_loss)
+
+
+class TestMMvecLBFGS(unittest.TestCase):
+    """Test L-BFGS optimizer for MMvec."""
+
+    def setUp(self):
+        """Create test data."""
+        np.random.seed(42)
+        res = random_multimodal(
+            num_microbes=8,
+            num_metabolites=10,
+            num_samples=50,
+            latent_dim=2,
+            seed=42,
+        )
+        self.microbes, self.metabolites = res[0], res[1]
+        self.U = res[4]
+        self.V = res[6]
+
+    def test_lbfgs_produces_valid_results(self):
+        """L-BFGS optimizer should produce valid results."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=100,
+            random_state=42,
+        )
+
+        # Check result type
+        self.assertIsInstance(result, MMvecResults)
+
+        # Check shapes
+        self.assertEqual(result.microbe_embeddings.shape, (8, 3))
+        self.assertEqual(result.metabolite_embeddings.shape, (10, 3))
+        self.assertEqual(result.ranks.shape, (8, 10))
+
+        # Ranks should be row-centered
+        row_means = result.ranks.values.mean(axis=1)
+        np.testing.assert_allclose(row_means, 0, atol=1e-10)
+
+    def test_lbfgs_reproducibility(self):
+        """L-BFGS should be deterministic with same seed."""
+        result1 = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=50,
+            random_state=123,
+        )
+
+        result2 = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=50,
+            random_state=123,
+        )
+
+        np.testing.assert_allclose(
+            result1.ranks.values, result2.ranks.values, rtol=1e-10
+        )
+
+    def test_lbfgs_recovers_structure(self):
+        """L-BFGS should recover embedding structure from synthetic data."""
+        # Use more data for better recovery
+        np.random.seed(1)
+        res = random_multimodal(
+            num_microbes=8,
+            num_metabolites=8,
+            num_samples=150,
+            latent_dim=2,
+            sigmaQ=2,
+            microbe_total=1000,
+            metabolite_total=10000,
+            seed=1,
+        )
+        microbes, metabolites = res[0], res[1]
+        U_true = res[4]
+
+        result = mmvec(
+            microbes,
+            metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=500,
+            random_state=42,
+        )
+
+        # Check correlation of pairwise distances
+        u_r, u_p = spearmanr(
+            pdist(result.microbe_embeddings.values[:, :-1]),
+            pdist(U_true),
+        )
+        self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
+
+    def test_lbfgs_with_test_data(self):
+        """L-BFGS should work with test data for CV error."""
+        # Split data
+        train_microbes = self.microbes.iloc[:40]
+        test_microbes = self.microbes.iloc[40:]
+        train_metabolites = self.metabolites.iloc[:40]
+        test_metabolites = self.metabolites.iloc[40:]
+
+        result = mmvec(
+            train_microbes,
+            train_metabolites,
+            test_microbes=test_microbes,
+            test_metabolites=test_metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=100,
+            random_state=42,
+        )
+
+        # CV error should be tracked
+        cv_errors = result.convergence["cv_error"].dropna()
+        self.assertGreater(len(cv_errors), 0)
+
+    def test_invalid_optimizer_raises(self):
+        """Invalid optimizer should raise ValueError."""
+        with self.assertRaises(ValueError) as ctx:
+            mmvec(
+                self.microbes,
+                self.metabolites,
+                optimizer="invalid",
+                max_iter=1,
+            )
+
+        self.assertIn("optimizer must be", str(ctx.exception))
 
 
 if __name__ == "__main__":
