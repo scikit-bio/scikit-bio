@@ -110,15 +110,14 @@ Format Parameters
 
 Reader-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- ``strict`` : A Boolean indicating whether the object IDs are in strict (``True``) or
-  relaxed (``False``, default) format.
+strict : bool, optional
+    Whether the object IDs are in strict (True) or relaxed (False, default) format.
 
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- ``layout`` : A string indicating the layout of the matrix body. Options are "lower"
-  (lower triangle, default) and "square" (square).
+layout : {'lower', 'square'}, optional
+    Layout of the matrix body. Options are "lower" (lower triangle, default) and
+    "square" (square).
 
 
 Examples
