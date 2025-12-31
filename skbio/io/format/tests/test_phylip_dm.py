@@ -113,6 +113,28 @@ class TestReaders(unittest.TestCase):
             dm = _phylip_dm_to_distance_matrix(fp)
             self.assertTrue((dm.data == exp).all())
 
+    def test_read_dtype(self):
+        fn = _phylip_dm_to_distance_matrix
+        fp = self.positive_fps_relaxed[0]
+        exp = self.exp_data_relaxed[0]
+
+        # float64 (default)
+        for dtype in (None, float, np.float64, "float64"):
+            obs = fn(fp, dtype=dtype)
+            self.assertTrue((obs.data == exp).all())
+            self.assertEqual(obs.dtype, np.float64)
+
+        # float32
+        exp = exp.astype(np.float32)
+        for dtype in (np.float32, "float32"):
+            obs = fn(fp, dtype=dtype)
+            self.assertTrue((obs.data == exp).all())
+            self.assertEqual(obs.dtype, np.float32)
+
+        # invalid data type
+        for dtype in ("xyz", int, "float16", "uint8", np.float16):
+            self.assertRaises(TypeError, fn, fp, dtype=dtype)
+
     def test_error_empty_file(self):
         with self.assertRaises(PhylipDMFormatError) as e:
             with open(get_data_path("empty"), "r") as f:

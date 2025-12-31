@@ -113,6 +113,11 @@ Reader-specific Parameters
 strict : bool, optional
     Whether the object IDs are in strict (True) or relaxed (False, default) format.
 
+dtype : str or dtype, optional
+    The data type of the underlying matrix data. Only relevant when reading from a
+    file. Default is "float64", which maps to ``np.float64``. The only other available
+    option is "float32" (or ``np.float32``).
+
 Writer-specific Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 layout : {'lower', 'square'}, optional
@@ -258,10 +263,10 @@ def _phylip_dm_sniffer(fh):
 
 
 @phylip_dm.reader(DistanceMatrix)
-def _phylip_dm_to_distance_matrix(fh, cls=None, strict=False):
+def _phylip_dm_to_distance_matrix(fh, cls=None, strict=False, dtype="float64"):
     if cls is None:
         cls = DistanceMatrix
-    return _phylip_to_dm(cls, fh, strict=strict)
+    return _phylip_to_dm(cls, fh, strict=strict, dtype=dtype)
 
 
 @phylip_dm.writer(DistanceMatrix)
@@ -269,7 +274,11 @@ def _distance_matrix_to_phylip(obj, fh, layout="lower"):
     _matrix_to_phylip(obj, fh, delimiter="\t", layout=layout)
 
 
-def _phylip_to_dm(cls, fh, strict=False):
+def _phylip_to_dm(cls, fh, strict=False, dtype="float64"):
+    dtype = np.dtype(dtype)
+    if dtype not in (np.float64, np.float32):
+        raise TypeError(f"{dtype} is not a supported data type.")
+
     data = _parse_phylip_dm_raw(fh, strict=strict)
     dists = [x[0] for x in data]
     ids = [x[1] for x in data]
@@ -281,7 +290,7 @@ def _phylip_to_dm(cls, fh, strict=False):
             for col in range(len(dists))
             for row in range(col + 1, len(dists))
         ]
-    return cls(np.array(dists, dtype=float), ids)
+    return cls(np.array(dists, dtype=dtype), ids)
 
 
 def _matrix_to_phylip(obj, fh, delimiter, layout):
