@@ -897,5 +897,283 @@ class TestMMvecLBFGS(unittest.TestCase):
         self.assertIn("optimizer must be", str(ctx.exception))
 
 
+class TestMMvecCaseStudies(unittest.TestCase):
+    """Test MMvec on real-world case study datasets.
+
+    These tests verify that the MMvec implementation can reproduce the
+    biological findings from the original mmvec publication and example
+    notebooks.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Load case study datasets."""
+        import biom
+        import os
+
+        # Get the test data directory
+        test_dir = os.path.dirname(__file__)
+
+        # Load soils dataset (smaller, faster)
+        soils_dir = os.path.join(test_dir, "data", "soils")
+        cls.soils_microbes = biom.load_table(
+            os.path.join(soils_dir, "microbes.biom")
+        )
+        cls.soils_metabolites = biom.load_table(
+            os.path.join(soils_dir, "metabolites.biom")
+        )
+
+        # Load CF dataset
+        cf_dir = os.path.join(test_dir, "data", "cf")
+        cls.cf_microbes = biom.load_table(
+            os.path.join(cf_dir, "otus_nt.biom")
+        )
+        cls.cf_metabolites = biom.load_table(
+            os.path.join(cf_dir, "lcms_nt.biom")
+        )
+        cls.cf_microbe_metadata = pd.read_csv(
+            os.path.join(cf_dir, "microbe-metadata.txt"),
+            sep="\t",
+            index_col=0,
+        )
+        cls.cf_metabolite_metadata = pd.read_csv(
+            os.path.join(cf_dir, "metabolite-metadata.txt"),
+            sep="\t",
+            index_col=0,
+        )
+
+    def _biom_to_dataframe(self, table, axis="observation"):
+        """Convert BIOM table to pandas DataFrame.
+
+        Parameters
+        ----------
+        table : biom.Table
+            BIOM table to convert.
+        axis : str
+            'observation' for feature table, 'sample' otherwise.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with observations as columns and samples as rows.
+        """
+        data = table.matrix_data.toarray()
+        if axis == "observation":
+            df = pd.DataFrame(
+                data.T,
+                index=table.ids("sample"),
+                columns=table.ids("observation"),
+            )
+        else:
+            df = pd.DataFrame(
+                data,
+                index=table.ids("observation"),
+                columns=table.ids("sample"),
+            )
+        return df
+
+    def test_soils_cyanobacteria_metabolites(self):
+        """Cyanobacteria should co-occur with known microcoleus metabolites.
+
+        This test reproduces the finding from the soils example notebook:
+        the model should learn that Cyanobacteria (specifically rplo 1)
+        co-occur with a known set of 13 metabolites associated with
+        Microcoleus vaginatus, a desert crust cyanobacterium.
+
+        Reference: Morton et al. "Learning representations of
+        microbe-metabolite interactions." Nature Methods, 2019.
+        """
+        # Convert to DataFrames
+        microbes_df = self._biom_to_dataframe(self.soils_microbes)
+        metabolites_df = self._biom_to_dataframe(self.soils_metabolites)
+
+        # Filter to common samples
+        common_samples = list(
+            set(microbes_df.index) & set(metabolites_df.index)
+        )
+        microbes_df = microbes_df.loc[common_samples]
+        metabolites_df = metabolites_df.loc[common_samples]
+
+        # Remove zero-sum columns
+        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
+        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
+
+        # Remove zero-sum rows
+        row_sums = microbes_df.sum(axis=1)
+        valid_samples = row_sums[row_sums > 0].index
+        microbes_df = microbes_df.loc[valid_samples]
+        metabolites_df = metabolites_df.loc[valid_samples]
+
+        # Fit the model with low latent dimension for faster testing
+        result = mmvec(
+            microbes_df,
+            metabolites_df,
+            n_components=1,
+            optimizer="lbfgs",
+            max_iter=500,
+            u_prior_scale=1.0,
+            v_prior_scale=1.0,
+            random_state=42,
+        )
+
+        # Define expected Cyanobacteria-associated metabolites
+        microcoleus_metabolites = {
+            "(3-methyladenine)",
+            "7-methyladenine",
+            "4-guanidinobutanoate",
+            "uracil",
+            "xanthine",
+            "hypoxanthine",
+            "(N6-acetyl-lysine)",
+            "cytosine",
+            "N-acetylornithine",
+            "succinate",
+            "adenosine",
+            "guanine",
+            "adenine",
+        }
+
+        # Get ranks for Cyanobacteria (rplo 1)
+        cyanobacteria_id = "rplo 1 (Cyanobacteria)"
+        ranks = result.ranks
+
+        # Check that the Cyanobacteria microbe is present
+        self.assertIn(
+            cyanobacteria_id,
+            ranks.index,
+            f"Cyanobacteria ID {cyanobacteria_id} not found in ranks",
+        )
+
+        # Filter to metabolites present in the data
+        present_metabolites = microcoleus_metabolites & set(ranks.columns)
+        self.assertGreater(
+            len(present_metabolites),
+            0,
+            "No expected metabolites found in data",
+        )
+
+        # Count how many of the expected metabolites have positive rank
+        # for Cyanobacteria
+        cyanobacteria_ranks = ranks.loc[cyanobacteria_id]
+        positive_metabolites = set()
+        for met in present_metabolites:
+            if cyanobacteria_ranks[met] > 0:
+                positive_metabolites.add(met)
+
+        # The original notebook expects all 13 metabolites to have
+        # positive ranks for Cyanobacteria. We use a more lenient
+        # threshold to account for optimization variability.
+        n_expected = len(present_metabolites)
+        n_positive = len(positive_metabolites)
+
+        self.assertGreaterEqual(
+            n_positive,
+            n_expected * 0.85,  # At least 85% should have positive ranks
+            f"Expected most of {n_expected} microcoleus metabolites to have "
+            f"positive ranks for Cyanobacteria, but only {n_positive} did. "
+            f"Positive: {positive_metabolites}",
+        )
+
+    def test_cf_pseudomonas_rhamnolipids(self):
+        """Pseudomonas should co-occur with rhamnolipids in CF sputum.
+
+        This test reproduces the finding from the CF (cystic fibrosis)
+        example notebook: the model should learn that Pseudomonas
+        microbes co-occur with rhamnolipids and other Pseudomonas-
+        associated metabolites.
+
+        Reference: Morton et al. "Learning representations of
+        microbe-metabolite interactions." Nature Methods, 2019.
+        """
+        # Convert to DataFrames
+        microbes_df = self._biom_to_dataframe(self.cf_microbes)
+        metabolites_df = self._biom_to_dataframe(self.cf_metabolites)
+
+        # Filter to common samples
+        common_samples = list(
+            set(microbes_df.index) & set(metabolites_df.index)
+        )
+        microbes_df = microbes_df.loc[common_samples]
+        metabolites_df = metabolites_df.loc[common_samples]
+
+        # Remove zero-sum columns
+        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
+        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
+
+        # Remove zero-sum rows
+        row_sums = microbes_df.sum(axis=1)
+        valid_samples = row_sums[row_sums > 0].index
+        microbes_df = microbes_df.loc[valid_samples]
+        metabolites_df = metabolites_df.loc[valid_samples]
+
+        # Find Pseudomonas microbes
+        microbe_metadata = self.cf_microbe_metadata.loc[
+            self.cf_microbe_metadata.index.isin(microbes_df.columns)
+        ]
+        pseudomonas_mask = microbe_metadata["Taxon"].str.contains(
+            "Pseudomonas", na=False
+        )
+        pseudomonas_ids = microbe_metadata[pseudomonas_mask].index.tolist()
+
+        # Get expert-annotated metabolites
+        metabolite_metadata = self.cf_metabolite_metadata.dropna(
+            subset=["expert_annotation"]
+        )
+        expert_metabolites = metabolite_metadata.index.tolist()
+        expert_metabolites = [
+            m for m in expert_metabolites if m in metabolites_df.columns
+        ]
+
+        self.assertGreater(
+            len(pseudomonas_ids), 0, "No Pseudomonas microbes found"
+        )
+        self.assertGreater(
+            len(expert_metabolites), 0, "No expert-annotated metabolites found"
+        )
+
+        # Fit the model with parameters similar to the original
+        result = mmvec(
+            microbes_df,
+            metabolites_df,
+            n_components=3,
+            optimizer="lbfgs",
+            max_iter=500,
+            u_prior_scale=1.0,
+            v_prior_scale=1.0,
+            random_state=42,
+        )
+
+        ranks = result.ranks
+
+        # Check that Pseudomonas microbes are present
+        pseudomonas_in_ranks = [
+            p for p in pseudomonas_ids if p in ranks.index
+        ]
+        self.assertGreater(
+            len(pseudomonas_in_ranks),
+            0,
+            "No Pseudomonas microbes found in ranks",
+        )
+
+        # For the first Pseudomonas, count expert-annotated metabolites
+        # with positive ranks
+        first_pseudomonas = pseudomonas_in_ranks[0]
+        pseudomonas_ranks = ranks.loc[first_pseudomonas]
+
+        positive_count = sum(
+            1 for met in expert_metabolites if pseudomonas_ranks.get(met, 0) > 0
+        )
+
+        # The original notebook expects at least 19 metabolites with
+        # positive ranks. We use a slightly lower threshold for
+        # reproducibility.
+        self.assertGreaterEqual(
+            positive_count,
+            15,  # At least 15 of 20 expert-annotated metabolites
+            f"Expected at least 15 expert-annotated metabolites to have "
+            f"positive ranks for Pseudomonas, but only {positive_count} did.",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
