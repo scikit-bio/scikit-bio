@@ -14,7 +14,8 @@ import pandas as pd
 from scipy.spatial.distance import euclidean
 
 from skbio.sequence import DNA, Protein
-from skbio import DistanceMatrix, OrdinationResults
+from skbio.stats.distance import DistanceMatrix
+from skbio.stats.ordination import OrdinationResults
 from skbio.embedding._protein import ProteinVector
 
 from skbio.embedding._embedding import (

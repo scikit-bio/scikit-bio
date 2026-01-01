@@ -71,7 +71,8 @@ Assume we have a clustal-formatted file of RNA sequences:
 
 We can use the following code to read the clustal file into a ``TabularMSA``:
 
->>> from skbio import TabularMSA, RNA
+>>> from skbio.sequence import RNA
+>>> from skbio.alignment import TabularMSA
 >>> clustal_f = ['CLUSTAL W (1.82) multiple sequence alignment\n',
 ...              '\n',
 ...              'abc   GCAUGCAUCUGCAUACGUACGUACGCAUGCA\n',
@@ -99,7 +100,7 @@ We can use the following code to write a ``TabularMSA`` to a clustal-formatted
 file:
 
 >>> from io import StringIO
->>> from skbio import DNA
+>>> from skbio.sequence import DNA
 >>> seqs = [DNA('ACCGTTGTA-GTAGCT', metadata={'id': 'seq1'}),
 ...         DNA('A--GTCGAA-GTACCT', metadata={'id': 'sequence-2'}),
 ...         DNA('AGAGTTGAAGGTATCT', metadata={'id': '3'})]

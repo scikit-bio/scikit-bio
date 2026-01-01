@@ -11,7 +11,7 @@ from unittest import TestCase, main
 
 import numpy.testing as npt
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.tree._exception import DuplicateNodeError, MissingNodeError
 from skbio.tree._utils import _validate_taxa_and_tree
 

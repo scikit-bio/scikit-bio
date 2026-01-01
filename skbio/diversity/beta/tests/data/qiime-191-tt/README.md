@@ -12,7 +12,7 @@ After converting to tsv, the following OTUs are removed because they are not pre
 Then, in the python interpreter, we midpoint root the tree (since this is a QIIME 1.9.1 installation, this step is performed with scikit-bio 0.2.3):
 
 ```python
-from skbio import TreeNode
+from skbio.tree import TreeNode
 t = TreeNode.read('./tree')
 t = t.root_at_midpoint()
 t.write('tree', format='newick')

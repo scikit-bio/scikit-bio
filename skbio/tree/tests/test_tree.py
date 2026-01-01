@@ -16,8 +16,8 @@ import pandas as pd
 from scipy.stats import pearsonr
 from scipy.spatial.distance import euclidean
 
-from skbio import DistanceMatrix, TreeNode
-from skbio.tree import (DuplicateNodeError, NoLengthError,
+from skbio.stats.distance import DistanceMatrix
+from skbio.tree import (TreeNode, DuplicateNodeError, NoLengthError,
                         TreeError, MissingNodeError, NoParentError)
 
 

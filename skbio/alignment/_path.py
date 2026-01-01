@@ -104,8 +104,8 @@ class AlignPath(SkbioObject):
     Create an ``AlignPath`` object from a ``TabularMSA`` object with three DNA
     sequences and 20 positions.
 
-    >>> from skbio import DNA, TabularMSA
-    >>> from skbio.alignment import AlignPath
+    >>> from skbio.sequence import DNA
+    >>> from skbio.alignment import TabularMSA, AlignPath
     >>> msa = TabularMSA([
     ...    DNA('CGGTCGTAACGCGTA---CA'),
     ...    DNA('CAG--GTAAG-CATACCTCA'),
@@ -303,8 +303,8 @@ class AlignPath(SkbioObject):
 
         Examples
         --------
-        >>> from skbio import DNA, TabularMSA
-        >>> from skbio.alignment import AlignPath
+        >>> from skbio.sequence import DNA
+        >>> from skbio.alignment import TabularMSA, AlignPath
         >>> seqs = [
         ...    DNA('CGTCGTGC'),
         ...    DNA('CA--GT-C'),

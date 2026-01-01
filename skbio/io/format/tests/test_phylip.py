@@ -12,7 +12,8 @@ import unittest
 from skbio.io import PhylipFormatError
 from skbio.io.format.phylip import (
     _tabular_msa_to_phylip, _phylip_to_tabular_msa, _phylip_sniffer)
-from skbio import TabularMSA, DNA, RNA
+from skbio.sequence import DNA, RNA
+from skbio.alignment import TabularMSA
 from skbio.util import get_data_path
 
 

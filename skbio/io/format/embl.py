@@ -188,7 +188,7 @@ Suppose we have the following EMBL file example:
 Now we can read it as ``DNA`` object:
 
 >>> import io
->>> from skbio import DNA, RNA, Sequence
+>>> from skbio.sequence import DNA, RNA, Sequence
 >>> embl = io.StringIO(embl_str)
 >>> dna_seq = DNA.read(embl)
 >>> dna_seq

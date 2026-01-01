@@ -173,7 +173,7 @@ Examples
 This is a simple Newick string.
 
 >>> from io import StringIO
->>> from skbio import read
+>>> from skbio.io import read
 >>> from skbio.tree import TreeNode
 >>> f = StringIO("((D, E)B, (F, G)C)A;")
 >>> tree = read(f, format="newick", into=TreeNode)

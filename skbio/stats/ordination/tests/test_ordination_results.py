@@ -20,7 +20,7 @@ except ImportError:
 else:
     has_matplotlib = True
 
-from skbio import OrdinationResults
+from skbio.stats.ordination import OrdinationResults
 
 
 class TestOrdinationResults(unittest.TestCase):

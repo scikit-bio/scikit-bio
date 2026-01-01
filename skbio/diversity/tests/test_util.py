@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import numpy.testing as npt
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.diversity._util import (
     vectorize_counts_and_tree,
     _validate_counts_vector,

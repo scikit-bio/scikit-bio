@@ -108,7 +108,7 @@ def nj(
     Define a new distance matrix object describing the distances between five
     taxa: a, b, c, d, and e.
 
-    >>> from skbio import DistanceMatrix
+    >>> from skbio.stats.distance import DistanceMatrix
     >>> from skbio.tree import nj
 
     >>> data = [[0,  5,  9,  9,  8],
