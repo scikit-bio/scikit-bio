@@ -232,7 +232,7 @@ phylip_dm = create_format("phylip_dm")
 @phylip_dm.sniffer()
 def _phylip_dm_sniffer(fh):
     try:
-        header = next(fh).rstrip()
+        header = next(fh)
         n_seqs = _validate_header(header)
 
         # Collect the first 3 lines for validation
@@ -245,14 +245,14 @@ def _phylip_dm_sniffer(fh):
         try:
             for line_no, line in enumerate(lines):
                 _validate_line(line, n_seqs, line_no, strict=False)
-            return True, {}
+            return True, {"strict": False}
         except PhylipDMFormatError:
             pass
         # Try strict format
         try:
             for line_no, line in enumerate(lines):
                 _validate_line(line, n_seqs, line_no, strict=True)
-            return True, {}
+            return True, {"strict": True}
         except PhylipDMFormatError:
             pass
 
@@ -266,34 +266,121 @@ def _phylip_dm_sniffer(fh):
 def _phylip_dm_to_distance_matrix(fh, cls=None, strict=False, dtype="float64"):
     if cls is None:
         cls = DistanceMatrix
-    return _phylip_to_dm(cls, fh, strict=strict, dtype=dtype)
+    return cls(*_parse_phylip_dm_raw(fh, strict=strict, dtype=dtype))
 
 
 @phylip_dm.writer(DistanceMatrix)
-def _distance_matrix_to_phylip(obj, fh, layout="lower"):
-    _matrix_to_phylip(obj, fh, delimiter="\t", layout=layout)
+def _distance_matrix_to_phylip_dm(obj, fh, layout="lower"):
+    _matrix_to_phylip_dm(obj, fh, delimiter="\t", layout=layout)
 
 
-def _phylip_to_dm(cls, fh, strict=False, dtype="float64"):
+def _parse_phylip_dm_raw(fh, strict=False, dtype="float64"):
+    """Parse a PHYLIP formatted distance matrix file.
+
+    Parameters
+    ----------
+    fh : iterator of str
+        File handle of a PHYLIP formatted distance matrix.
+    strict : bool, optional
+        Strict (True) or relaxed (False, default) object ID format.
+    dtype : str or dtype, optional
+        Data type of distance values. Can be "float64" (default) or "float32".
+
+    Returns
+    -------
+    data : ndarray of shape (n_objects, n_objects)
+        Distance matrix data.
+    ids : list of str
+        Object IDs.
+
+    Raises
+    ------
+    TypeError
+        If dtype is invalid.
+    PhylipDMFormatError
+        If file is empty.
+
+    """
     dtype = np.dtype(dtype)
     if dtype not in (np.float64, np.float32):
         raise TypeError(f"{dtype} is not a supported data type.")
 
-    data = _parse_phylip_dm_raw(fh, strict=strict)
-    dists = [x[0] for x in data]
-    ids = [x[1] for x in data]
-    # If it's in lower triangular form we convert it into condensed form to pass to
-    # DistanceMatrix.
-    if len(dists[0]) == 0:
-        dists = [
-            dists[row][col]
-            for col in range(len(dists))
-            for row in range(col + 1, len(dists))
-        ]
-    return cls(np.array(dists, dtype=dtype), ids)
+    try:
+        header = next(fh)
+    except StopIteration:
+        raise PhylipDMFormatError("This file is empty.")
+    n_seqs = _validate_header(header)
+
+    # allocate array space
+    data = np.empty((n_seqs, n_seqs), dtype=dtype)
+
+    n_dists = 0
+    lengths = []
+    ids = []
+    for line in fh:
+        id_, data_, length_ = _validate_line(
+            line.rstrip(), n_seqs, n_dists, strict=strict, dtype=dtype
+        )
+        try:
+            data[n_dists, :length_] = data_
+        except IndexError:
+            raise PhylipDMFormatError(
+                f"The number of objects is not {n_seqs} as specified in the header."
+            )
+        lengths.append(length_)
+        ids.append(id_)
+        n_dists += 1
+
+    if n_dists != n_seqs:
+        raise PhylipDMFormatError(
+            f"The number of objects is not {n_seqs} as specified in the header."
+        )
+
+    # Ensure that no matrix data was accidentally parsed as IDs.
+    # The logic here is that either all the distance arrays should be the same length
+    # (square format) or all the distance array lengths should be sequentially
+    # increasing (lower triangular). If neither is true, then something is wrong.
+    is_square = all(L == lengths[0] for L in lengths)
+    is_lower = all(lengths[i] == i for i in range(len(lengths)))
+
+    if not (is_square or is_lower):
+        raise PhylipDMFormatError(
+            f"Inconsistent distance counts detected: {lengths}. "
+            "This may indicate that object IDs contain whitespace. IDs may only "
+            "contain whitespace if the strict parameter is set to True. "
+            f"Expected either all {n_seqs} (square) or 0,1,2,... (lower triangular)."
+        )
+
+    if is_lower:
+        np.fill_diagonal(data, 0.0)
+        upper = np.triu_indices(n_seqs, k=1)
+        data[upper] = data.T[upper]
+
+    return data, ids
 
 
-def _matrix_to_phylip(obj, fh, delimiter, layout):
+def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
+    """Write a distance matrix object into a PHYLIP distance matrix file.
+
+    Parameters
+    ----------
+    obj : DistanceMatrix
+        Distance matrix object.
+    fh : file handle
+        PHYLIP distance matrix file.
+    delimiter : str
+        Field delimiter.
+    layout : {'square', 'lower'}
+        Matrix layout.
+
+    Raises
+    ------
+    TypeError
+        If dtype is invalid.
+    PhylipDMFormatError
+        If file is empty.
+
+    """
     n_samples = obj.shape[0]
     if n_samples < 2:
         raise PhylipDMFormatError(
@@ -334,50 +421,85 @@ def _remove_whitespace(id_):
 
 
 def _validate_header(header):
-    header_vals = header.split()
+    """Check that the header line contains a valid number of objects.
+
+    Parameters
+    ----------
+    header : str
+        The header line being validated.
+
+    Returns
+    -------
+    n_seqs
+        The number of objects in the matrix.
+
+    Raises
+    ------
+    PhylipDMFormatError
+        If header cannot be converted into an integer.
+        If number of objects is zero or negative.
+
+    """
     try:
-        (n_seqs,) = [int(x) for x in header_vals]
-        if n_seqs < 1:
-            raise PhylipDMFormatError("The number of objects must be positive.")
+        n_seqs = int(header.strip())
     except ValueError:
-        raise PhylipDMFormatError(
-            "Found non-header line when attempting to read the 1st record "
-            f"(header line should have a single integer): {header}"
-        )
+        raise PhylipDMFormatError("Header line must be a single integer.")
+    if n_seqs < 1:
+        raise PhylipDMFormatError("The number of objects must be positive.")
     return n_seqs
 
 
-def _validate_line(line, n_seqs, n_dists, strict=False):
+def _validate_line(line, n_seqs, n_dists, strict=False, dtype="float64"):
     """Check that each line contains the expected number of values.
 
     Parameters
     ----------
-    line
+    line : str
         The line of text being validated.
-    n_seqs
+    n_seqs : int
         The number of objects in the matrix.
-    n_dists
+    n_dists : int
         The expected number of distances in the line. When a matrix is square, n_dists
         is equal to n_seqs. When a matrix is lower triangle, n_dists is equal to the
         current line number (minus the header), i.e. the 0th non-header line should have
         0 distances, the 1st non-header line should have 1 distance, the 2nd non-header
         line should have 2 distances.
 
+    Returns
+    -------
+    str
+        Object ID.
+    ndarray
+        Distance values.
+    int
+        Number of distance values.
+
     """
     if not line:
         raise PhylipDMFormatError("Empty lines are not allowed.")
+
+    # IDs are strictly 10 characters or less
     if strict:
         id_ = line[:10].strip()
-        dists = line[10:].split()
+        dists = line[10:]
+
+    # IDs are separated from values by whitespace.
     else:
-        split_line = line.split()
-        # IDs are separated from values by whitespace.
-        id_ = split_line[0]
-        dists = split_line[1:]
-    # This check handles lower triangle matrices. We expects 0 distances on the first
+        try:
+            id_, dists = line.split(None, 1)
+        except ValueError:
+            id_, dists = line.strip(), ""
+
+    # Convert cell values into numbers.
+    # `sep=" "` can handle all contiguous whitespaces, like Python's `str.split()`.
+    # if `dists` consists of only contiguous whitespaces, output will be [-1], so it is
+    # important to strip it before processing.
+    dists = np.fromstring(dists, sep=" ", dtype=dtype)
+
+    # This check handles lower triangle matrices. We expect 0 distance on the first
     # non-header line, a single distance on the second non-header line, and two
     # distances on the third non-header line.
-    dists_len = len(dists)
+    dists_len = dists.size
     if dists_len != n_dists:
         # If there are more distances than expected for a lower triangle matrix, we
         # expect that it is a square matrix. In this case we check that the number of
@@ -391,45 +513,4 @@ def _validate_line(line, n_seqs, n_dists, strict=False):
                 "supported when the 'strict' parameter is set to True."
             )
 
-    return (dists, id_), dists_len
-
-
-def _parse_phylip_dm_raw(fh, strict=False):
-    """Raw parser for PHYLIP formatted distance matrix files."""
-    try:
-        header = next(fh).rstrip()
-    except StopIteration:
-        raise PhylipDMFormatError("This file is empty.")
-    n_seqs = _validate_header(header)
-
-    n_dists = 0
-    data = []
-    lengths = []
-
-    for line in fh:
-        data_, length = _validate_line(line.rstrip(), n_seqs, n_dists, strict=strict)
-        data.append(data_)
-        lengths.append(length)
-        n_dists += 1
-
-    if len(data) != n_seqs:
-        raise PhylipDMFormatError(
-            f"The number of objects is not {n_seqs} as specified in the header."
-        )
-
-    # Ensure that no matrix data was accidentally parsed as IDs.
-    # The logic here is that either all the distance arrays should be the same length
-    # (square format) or all the distance array lengths should be sequentially
-    # increasing (lower triangular). If neither is true, then something is wrong.
-    is_square = all(L == lengths[0] for L in lengths)
-    is_lower = all(lengths[i] == i for i in range(len(lengths)))
-
-    if not (is_square or is_lower):
-        raise PhylipDMFormatError(
-            f"Inconsistent distance counts detected: {lengths}. "
-            "This may indicate that object IDs contain whitespace. IDs may only "
-            "contain whitespace if the strict parameter is set to True. "
-            f"Expected either all {n_seqs} (square) or 0,1,2,... (lower triangular)."
-        )
-
-    return data
+    return id_, dists, dists_len

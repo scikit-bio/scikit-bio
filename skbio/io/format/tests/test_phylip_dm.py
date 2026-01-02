@@ -14,7 +14,8 @@ import numpy as np
 
 from skbio.util import get_data_path
 from skbio.io.format.phylip_dm import (
-    _matrix_to_phylip,
+    _validate_header,
+    _matrix_to_phylip_dm,
     _phylip_dm_sniffer,
     _phylip_dm_to_distance_matrix,
     _parse_phylip_dm_raw,
@@ -51,12 +52,28 @@ class TestSniffer(unittest.TestCase):
 
     def test_positives(self):
         for fp in self.positives:
-            self.assertEqual(_phylip_dm_sniffer(fp), (True, {}))
+            self.assertEqual(_phylip_dm_sniffer(fp), (True, {"strict": "strict" in fp}))
 
     def test_negatives(self):
         for fp in self.negatives:
             self.assertEqual(_phylip_dm_sniffer(fp), (False, {}))
 
+    def test_validate_header(self):
+        self.assertEqual(_validate_header("5\n"), 5)
+        self.assertEqual(_validate_header("   5\n"), 5)
+        self.assertEqual(_validate_header("5  \n"), 5)
+
+        msg = "Header line must be a single integer."
+        for header in ("  3 7\n", "1.25\n", "hello\n"):
+            with self.assertRaises(PhylipDMFormatError) as cm:
+                _validate_header(header)
+            self.assertEqual(str(cm.exception), msg)
+
+        msg = "The number of objects must be positive."
+        for n in ("-5\n", "0\n"):
+            with self.assertRaises(PhylipDMFormatError) as cm:
+                _validate_header(f"{n}\n")
+            self.assertEqual(str(cm.exception), msg)
 
 class TestReaders(unittest.TestCase):
     def setUp(self):
@@ -218,7 +235,7 @@ class TestWriters(unittest.TestCase):
             "least two samples in the matrix."
         )
         with self.assertRaises(PhylipDMFormatError) as e:
-            _matrix_to_phylip(DistanceMatrix([]), fh, "\t", layout="lower")
+            _matrix_to_phylip_dm(DistanceMatrix([]), fh, "\t", layout="lower")
         self.assertEqual(str(e.exception), msg)
         fh.close()
 
@@ -237,4 +254,4 @@ class TestWriters(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main(buffer=False)
+    unittest.main()
