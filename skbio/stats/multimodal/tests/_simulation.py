@@ -10,10 +10,10 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.utils import check_random_state
 
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
+from skbio.util import get_rng
 
 
 def random_multimodal(
@@ -91,10 +91,10 @@ def random_multimodal(
         True metabolite bias vector (1, num_metabolites - 1).
 
     """
-    state = check_random_state(seed)
+    rng = get_rng(seed)
 
     # Regression coefficients for gradient model
-    beta = state.normal(uB, sigmaB, size=(2, num_microbes))
+    beta = rng.normal(uB, sigmaB, size=(2, num_microbes))
 
     # Design matrix: intercept + gradient
     X = np.vstack(
@@ -103,7 +103,7 @@ def random_multimodal(
 
     # Generate microbe compositions from ILR with noise
     microbes = ilr_inv(
-        state.multivariate_normal(
+        rng.multivariate_normal(
             mean=np.zeros(num_microbes - 1),
             cov=np.diag([sigmaQ] * (num_microbes - 1)),
             size=num_samples,
@@ -111,11 +111,11 @@ def random_multimodal(
     )
 
     # Generate latent embeddings
-    Umain = state.normal(uU, sigmaU, size=(num_microbes, latent_dim))
-    Vmain = state.normal(uV, sigmaV, size=(latent_dim, num_metabolites - 1))
+    Umain = rng.normal(uU, sigmaU, size=(num_microbes, latent_dim))
+    Vmain = rng.normal(uV, sigmaV, size=(latent_dim, num_metabolites - 1))
 
-    Ubias = state.normal(uU, sigmaU, size=(num_microbes, 1))
-    Vbias = state.normal(uV, sigmaV, size=(1, num_metabolites - 1))
+    Ubias = rng.normal(uU, sigmaU, size=(num_microbes, 1))
+    Vbias = rng.normal(uV, sigmaV, size=(1, num_metabolites - 1))
 
     # Augmented matrices for computing probabilities
     U_ = np.hstack((np.ones((num_microbes, 1)), Ubias, Umain))
@@ -134,10 +134,10 @@ def random_multimodal(
 
     for n in range(num_samples):
         # Draw microbe counts
-        otu = state.multinomial(n1, microbes[n, :])
+        otu = rng.multinomial(n1, microbes[n, :])
         # For each microbe, draw metabolites conditional on that microbe
         for i in range(num_microbes):
-            ms = state.multinomial(otu[i] * n2, probs[i, :])
+            ms = rng.multinomial(otu[i] * n2, probs[i, :])
             metabolite_counts[n, :] += ms
         microbe_counts[n, :] += otu
 
