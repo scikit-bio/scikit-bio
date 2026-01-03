@@ -241,88 +241,94 @@ def _phylip_dm_sniffer(fh):
 
     # Sequentially test four combinations of format parameters. If any of these passed,
     # return immediately. If failed, continue to test the next combination.
-    for square in (False, True):
-        for strict in (False, True):
+    # for square in (False, True):
+    #     for strict in (False, True):
+    #         try:
+    #             for i, line in enumerate(lines):
+    #                 _parse_line(line, i, n_objs, strict, square, float)
+    #         except PhylipDMFormatError:
+    #             continue
+    #         else:
+    #             return True, {
+    #                 "layout": "square" if square else "lower",
+    #                 "strict": strict,
+    #             }
+
+    # return False, {}
+
+    strict = False
+    square = None
+    n_lines = len(lines)
+    i = 0
+    while i < n_lines:
+        line = lines[i]
+
+        # empty line is prohibited
+        if not line:
+            return False, {}
+
+        # ID in strict format: up to first 10 characters
+        if strict:
+            id_ = line[:10].strip()
+            vals = line[10:].split()
+
+            # ID cannot be empty
+            if not id_:
+                return False, {}
+
+        # ID in relaxed format (default): before the first whitespace
+        else:
             try:
-                for i, line in enumerate(lines):
-                    _parse_line(line, i, n_objs, strict, square, float)
-            except PhylipDMFormatError:
-                continue
+                id_, *vals = line.rstrip().split()
+            except ValueError:
+                return False, {}
+
+        n_vals = len(vals)
+        to_strict = False
+
+        # Infer layout from the second line: no value => lower triangular layout;
+        # same number of values as objects => square layout.
+        if i == 0:
+            if n_vals == n_objs:
+                square = True
+            elif n_vals == 0:
+                square = False
+            elif not strict:
+                to_strict = True
             else:
-                return True, {
-                    "layout": "square" if square else "lower",
-                    "strict": strict,
-                }
+                return False, {}
 
-    return False, {}
+        # A special case: first ID consumes exactly 10 characters, leaving no
+        # whitespace between it and values. As a consequence, there appears to be
+        # one less value than objects. When this is observed, we will turn on
+        # strict ID format and restart from the second line.
 
-    # i = 0
-    # while i < n_lines:
-    #     line = lines[i]
+        # For all remaining lines, check if the number of values is expected.
+        elif (square and n_vals != n_objs) or (not square and n_vals != i):
+            if not strict:
+                to_strict = True
+            else:
+                return False, {}
 
-    #     # empty line is prohibited
-    #     if not line:
-    #         return False, {}
+        # all values must be numeric
+        try:
+            _ = list(map(float, vals))
+        except ValueError:
+            if not strict:
+                to_strict = True
+            else:
+                return False, {}
 
-    #     # ID in strict format: up to first 10 characters
-    #     if strict:
-    #         id_ = line[:10].strip()
-    #         vals = line[10:].split()
+        # Switch to strict ID format and restart the iteration.
+        if to_strict:
+            strict = True
+            square = None
+            i = 0
+            continue
 
-    #         # ID cannot be empty
-    #         if not id_:
-    #             return False, {}
+        i += 1
 
-    #     # ID in relaxed format (default): before the first whitespace
-    #     else:
-    #         id_, *vals = line.rstrip().split()
-
-    #     n_vals = len(vals)
-    #     to_strict = False
-
-    #     # Infer layout from the second line: no value => lower triangular layout;
-    #     # same number of values as objects => square layout.
-    #     if i == 0:
-    #         if n_vals == n_objs:
-    #             square = True
-    #         elif n_vals == 0:
-    #             square = False
-    #         elif not strict:
-    #             to_strict = True
-    #         else:
-    #             return False, {}
-
-    #     # A special case: first ID consumes exactly 10 characters, leaving no
-    #     # whitespace between it and values. As a consequence, there appears to be
-    #     # one less value than objects. When this is observed, we will turn on
-    #     # strict ID format and restart from the second line.
-
-    #     # For all remaining lines, check if the number of values is expected.
-    #     elif (square and n_vals != n_objs) or (not square and n_vals != i):
-    #         if not strict:
-    #             to_strict = True
-    #         else:
-    #             return False, {}
-
-    #     # all values must be numeric
-    #     try:
-    #         _ = list(map(float, vals))
-    #     except ValueError:
-    #         if not strict:
-    #             to_strict = True
-    #         else:
-    #             return False, {}
-
-    #     # Switch to strict ID format and restart the iteration.
-    #     if to_strict:
-    #         strict = True
-    #         square = None
-    #         i = 0
-    #         continue
-
-    #     i += 1
-
-    # return True, {"strict": strict, "layout": "square" if square else "lower"}
+    return True, {"layout": "square" if square else "lower", "strict": strict}
 
 
 @phylip_dm.reader(DistanceMatrix)
@@ -333,7 +339,7 @@ def _phylip_dm_to_distance_matrix(
         cls = DistanceMatrix
     dtype = _check_dtype(dtype)
     square = _check_layout(layout)
-    data, ids = _phylip_dm_to_matrix(fh, strict, square, dtype)
+    data, ids = _phylip_dm_to_matrix(fh, square, strict, dtype)
     return cls(data, ids)
 
 
@@ -413,7 +419,7 @@ def _phylip_dm_to_matrix(fh, square, strict, dtype):
     if len(ids) < n_objs:
         raise PhylipDMFormatError(
             f"The number of rows in the matrix body ({len(ids)}) does not match the "
-            f"number of objects as specified in the header ({n_objs})."
+            f"number of objects specified in the header ({n_objs})."
         )
 
     # fill upper triangle of the array
@@ -588,8 +594,8 @@ def _parse_line(line, idx, n_objs, square, strict, dtype):
     if square:
         if n_vals != n_objs:
             raise PhylipDMFormatError(
-                f"The number of distance values in line {idx + 2} is {n_vals} whereas "
-                f"the expectation is {n_objs} as specified in the header."
+                f"The number of distance values ({n_vals}) in line {idx + 2} does not "
+                f"match the expectation ({n_objs}, as specified in the header)."
             )
 
     # For lower triangular matrices, we expect 0 distance on the first (non-header)
@@ -598,8 +604,8 @@ def _parse_line(line, idx, n_objs, square, strict, dtype):
     else:
         if n_vals != idx:
             raise PhylipDMFormatError(
-                f"The number of distance values in line {idx + 2} is {n_vals} whereas "
-                f"the expectation is {idx} (line number - 2)."
+                f"The number of distance values ({n_vals}) in line {idx + 2} does not "
+                f"match the expectation ({idx}, which is line number - 2)."
             )
 
     return id_, vals, n_vals
