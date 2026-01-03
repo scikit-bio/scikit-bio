@@ -38,30 +38,11 @@ Format Support
 |Yes   |Yes   |:mod:`skbio.stats.distance.DistanceMatrix`                     |
 +------+------+---------------------------------------------------------------+
 
+
 Format Specification
 --------------------
 PHYLIP format is a plain text format containing exactly two sections: a header
 describing the number of objects in the matrix, followed by the matrix itself.
-
-Relaxed vs. Strict PHYLIP
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-scikit-bio supports both **relaxed** and **strict** PHYLIP formats:
-
-**Relaxed PHYLIP** (default):
-    - Object IDs can have arbitrary length
-    - IDs and distance values are separated by whitespace (spaces or tabs)
-    - IDs **must not** contain whitespace
-    - This is the default format for both reading and writing
-
-**Strict PHYLIP** (optional):
-    - Object IDs must be exactly 10 characters (padded or truncated)
-    - Characters 1-10 are the ID, remaining characters are distance values
-    - IDs **may** contain whitespace (e.g., "Sample 01 ")
-    - Enable by setting ``strict=True`` when reading
-
-.. note:: scikit-bio writes in relaxed format by default. For strict format
-   compatibility with legacy PHYLIP tools, ensure your IDs are 10 characters or
-   fewer and do not contain whitespace.
 
 Header Section
 ^^^^^^^^^^^^^^
@@ -70,7 +51,6 @@ specifies the number of objects in the matrix. This **must** be the first line
 in the file. The integer may be preceded by optional whitespace.
 
 .. note:: scikit-bio writes the PHYLIP format header without preceding spaces.
-   Empty lines are not allowed between the header and the matrix.
 
 Matrix Section
 ^^^^^^^^^^^^^^
@@ -85,21 +65,28 @@ distance matrix, including the diagonal).
 **Lower triangular matrices**: Row ``i`` contains ``i`` distance values (only the
 values below the diagonal). The first row contains no distance values, just the ID.
 
+.. note:: Empty lines are not allowed between the header and the matrix.
+
 .. note:: The original PHYLIP format also defines upper triangular matrices, although
    they are less common and currently not supported by scikit-bio.
 
 Object IDs
 ^^^^^^^^^^
+scikit-bio supports both **relaxed** and **strict** object ID formats:
+
 **Relaxed format** (default):
     - IDs can have arbitrary length
-    - IDs **must not** contain whitespace characters (spaces, tabs, newlines)
-    - IDs **must not** be empty
-    - All characters except whitespace and newlines are valid
+    - IDs **must not** contain whitespace characters (spaces, tabs, etc.)
+    - All characters except whitespace are valid
 
 **Strict format** (``strict=True``):
     - IDs occupy exactly the first 10 characters of each line
     - IDs **may** contain whitespace
     - IDs are automatically padded or truncated to 10 characters
+
+scikit-bio writes in relaxed format by default. For strict format compatibility with
+legacy PHYLIP tools, ensure your IDs are 10 characters or fewer and do not contain
+whitespace.
 
 .. note:: When writing, any whitespace in IDs is automatically replaced with
    underscores to ensure compatibility with relaxed format.
@@ -191,6 +178,7 @@ with underscores to ensure compatibility::
     >>> dm.write('output.phy', format='phylip_dm')  # doctest: +SKIP
     >>> # IDs in output will be: 'Sample_01', 'Sample_02', 'Sample_03'
 
+
 Common Errors
 -------------
 **"Inconsistent distance counts detected"**: This error typically occurs when:
@@ -204,6 +192,7 @@ Common Errors
 **"Empty lines are not allowed"**:
     - PHYLIP format does not allow blank lines between the header and matrix or within
       the matrix itself.
+
 
 References
 ----------
@@ -338,7 +327,7 @@ def _phylip_dm_sniffer(fh):
 
 @phylip_dm.reader(DistanceMatrix)
 def _phylip_dm_to_distance_matrix(
-    fh, cls=None, strict=False, layout="lower", dtype="float64"
+    fh, cls=None, layout="lower", strict=False, dtype="float64"
 ):
     if cls is None:
         cls = DistanceMatrix
@@ -370,17 +359,17 @@ def _check_dtype(dtype):
     return typ
 
 
-def _phylip_dm_to_matrix(fh, strict, square, dtype):
+def _phylip_dm_to_matrix(fh, square, strict, dtype):
     """Parse a PHYLIP formatted distance matrix file.
 
     Parameters
     ----------
     fh : iterator of str
         File handle of a PHYLIP formatted distance matrix.
-    strict : bool
-        Strict (True) or relaxed (False) object ID format.
     square : bool
         Square (True) or lower triangular (False) layout of matrix body.
+    strict : bool
+        Strict (True) or relaxed (False) object ID format.
     dtype : type
         Data type of distance values (float64 or float32).
 
@@ -411,7 +400,7 @@ def _phylip_dm_to_matrix(fh, strict, square, dtype):
 
     # parse each line of matrix body and append results
     for i, line in enumerate(fh):
-        id_, vals, n_vals = _parse_line(line, i, n_objs, strict, square, dtype)
+        id_, vals, n_vals = _parse_line(line, i, n_objs, square, strict, dtype)
         ids.append(id_)
         try:
             data[i, :n_vals] = vals
@@ -524,7 +513,7 @@ def _parse_header(header):
     return n_objs
 
 
-def _parse_line(line, idx, n_objs, strict, square, dtype):
+def _parse_line(line, idx, n_objs, square, strict, dtype):
     """Parse each line in the matrix body.
 
     Parameters
@@ -532,14 +521,13 @@ def _parse_line(line, idx, n_objs, strict, square, dtype):
     line : str
         Line of text being parsed.
     idx : int
-        Index of the line. Relative to the matrix body (e.g., 2nd line of the file has
-        idx = 0).
+        Line index relative to matrix body (e.g., 2nd line of file has idx = 0).
     n_objs : int
         Number of objects in the matrix.
-    strict : bool
-        Strict (True) or relaxed (False) object ID format.
     square : bool
         Square (True) or lower triangular (False) layout of matrix body.
+    strict : bool
+        Strict (True) or relaxed (False) object ID format.
     dtype : type
         Data type of distance values (float64 or float32).
 
