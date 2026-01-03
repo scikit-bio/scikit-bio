@@ -252,8 +252,8 @@ def _phylip_dm_sniffer(fh):
 
     # Sequentially test four combinations of format parameters. If any of these passed,
     # return immediately. If failed, continue to test the next combination.
-    for strict in (False, True):
-        for square in (False, True):
+    for square in (False, True):
+        for strict in (False, True):
             try:
                 for i, line in enumerate(lines):
                     _parse_line(line, i, n_objs, strict, square, float)
@@ -261,8 +261,8 @@ def _phylip_dm_sniffer(fh):
                 continue
             else:
                 return True, {
-                    "strict": strict,
                     "layout": "square" if square else "lower",
+                    "strict": strict,
                 }
 
     return False, {}
