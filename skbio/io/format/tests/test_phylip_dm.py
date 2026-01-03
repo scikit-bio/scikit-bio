@@ -14,10 +14,10 @@ import numpy as np
 from skbio.util import get_data_path
 from skbio.io.format.phylip_dm import (
     _parse_header,
-    _matrix_to_phylip_dm,
+    _parse_line,
     _phylip_dm_sniffer,
     _phylip_dm_to_distance_matrix,
-    _phylip_dm_to_matrix,
+    _matrix_to_phylip_dm,
 )
 from skbio.io import PhylipDMFormatError
 from skbio.stats.distance import DistanceMatrix
@@ -40,6 +40,21 @@ class TestHelpers(unittest.TestCase):
             with self.assertRaises(PhylipDMFormatError) as cm:
                 _parse_header(f"{n}\n")
             self.assertEqual(str(cm.exception), msg)
+
+    def test_parse_line(self):
+        for line in ("", "\n", "   \n", "\t\r\n"):
+            with self.assertRaises(PhylipDMFormatError) as cm:
+                _parse_line(line, 0, 1, False, False, float)
+            self.assertEqual(str(cm.exception), "Empty lines are not allowed.")
+
+        with self.assertRaises(PhylipDMFormatError) as cm:
+            _parse_line("            1.23", 0, 1, False, True, float)
+        self.assertEqual(str(cm.exception), "Empty IDs are not allowed.")
+
+        with self.assertRaises(PhylipDMFormatError) as cm:
+            _parse_line("sample\t0.25\there\t0.17", 7, 3, True, False, float)
+        self.assertEqual(str(cm.exception), (
+            "Non-numeric cell values encountered in line 9."))
 
 
 class TestSniffer(unittest.TestCase):

@@ -241,94 +241,87 @@ def _phylip_dm_sniffer(fh):
 
     # Sequentially test four combinations of format parameters. If any of these passed,
     # return immediately. If failed, continue to test the next combination.
-    # for square in (False, True):
-    #     for strict in (False, True):
-    #         try:
-    #             for i, line in enumerate(lines):
-    #                 _parse_line(line, i, n_objs, strict, square, float)
-    #         except PhylipDMFormatError:
-    #             continue
-    #         else:
-    #             return True, {
-    #                 "layout": "square" if square else "lower",
-    #                 "strict": strict,
-    #             }
-
-    # return False, {}
-
-    strict = False
-    square = None
-    n_lines = len(lines)
-    i = 0
-    while i < n_lines:
-        line = lines[i]
-
-        # empty line is prohibited
-        if not line:
-            return False, {}
-
-        # ID in strict format: up to first 10 characters
-        if strict:
-            id_ = line[:10].strip()
-            vals = line[10:].split()
-
-            # ID cannot be empty
-            if not id_:
-                return False, {}
-
-        # ID in relaxed format (default): before the first whitespace
-        else:
+    for square in (False, True):
+        for strict in (False, True):
             try:
-                id_, *vals = line.rstrip().split()
-            except ValueError:
-                return False, {}
-
-        n_vals = len(vals)
-        to_strict = False
-
-        # Infer layout from the second line: no value => lower triangular layout;
-        # same number of values as objects => square layout.
-        if i == 0:
-            if n_vals == n_objs:
-                square = True
-            elif n_vals == 0:
-                square = False
-            elif not strict:
-                to_strict = True
+                for i, line in enumerate(lines):
+                    _parse_line(line, i, n_objs, square, strict, float)
+            except PhylipDMFormatError:
+                continue
             else:
-                return False, {}
+                return True, {
+                    "layout": "square" if square else "lower",
+                    "strict": strict,
+                }
 
-        # A special case: first ID consumes exactly 10 characters, leaving no
-        # whitespace between it and values. As a consequence, there appears to be
-        # one less value than objects. When this is observed, we will turn on
-        # strict ID format and restart from the second line.
+    return False, {}
 
-        # For all remaining lines, check if the number of values is expected.
-        elif (square and n_vals != n_objs) or (not square and n_vals != i):
-            if not strict:
-                to_strict = True
-            else:
-                return False, {}
+    # strict = False
+    # square = None
+    # n_lines = len(lines)
+    # i = 0
+    # while i < n_lines:
+    #     line = lines[i]
 
-        # all values must be numeric
-        try:
-            _ = list(map(float, vals))
-        except ValueError:
-            if not strict:
-                to_strict = True
-            else:
-                return False, {}
+    #     # empty line is prohibited
+    #     if not line:
+    #         return False, {}
 
-        # Switch to strict ID format and restart the iteration.
-        if to_strict:
-            strict = True
-            square = None
-            i = 0
-            continue
+    #     # ID in strict format: up to first 10 characters
+    #     if strict:
+    #         id_ = line[:10].strip()
+    #         vals = line[10:].split()
+    #         if not id_:
+    #             return False, {}
 
-        i += 1
+    #     # ID in relaxed format (default): before the first whitespace
+    #     else:
+    #         try:
+    #             id_, *vals = line.rstrip().split()
+    #         except ValueError:
+    #             return False, {}
 
-    return True, {"layout": "square" if square else "lower", "strict": strict}
+    #     n_vals = len(vals)
+    #     to_strict = False
+
+    #     # Infer layout from the second line: no value => lower triangular layout;
+    #     # same number of values as objects => square layout.
+    #     if i == 0:
+    #         if n_vals == n_objs:
+    #             square = True
+    #         elif n_vals == 0:
+    #             square = False
+    #         elif not strict:
+    #             to_strict = True
+    #         else:
+    #             return False, {}
+
+    #     # For all remaining lines, check if the number of values is expected.
+    #     elif (square and n_vals != n_objs) or (not square and n_vals != i):
+    #         if not strict:
+    #             to_strict = True
+    #         else:
+    #             return False, {}
+
+    #     # all values must be numeric
+    #     try:
+    #         _ = list(map(float, vals))
+    #     except ValueError:
+    #         if not strict:
+    #             to_strict = True
+    #         else:
+    #             return False, {}
+
+    #     # Switch to strict ID format and restart the iteration.
+    #     if to_strict:
+    #         strict = True
+    #         square = None
+    #         i = 0
+    #         continue
+
+    #     i += 1
+
+    # return True, {"layout": "square" if square else "lower", "strict": strict}
 
 
 @phylip_dm.reader(DistanceMatrix)
@@ -551,7 +544,7 @@ def _parse_line(line, idx, n_objs, square, strict, dtype):
     PhylipDMFormatError
         If line contains only whitespaces.
         If object ID is empty (strict only).
-        If number of objects is zero or negative.
+        If there are non-numeric values.
 
     """
     msg_plus = (
@@ -584,7 +577,9 @@ def _parse_line(line, idx, n_objs, square, strict, dtype):
     try:
         vals = np.fromstring(rest, sep=" ", dtype=dtype)
     except ValueError:
-        raise PhylipDMFormatError("Non-numeric cell values encountered.")
+        raise PhylipDMFormatError(
+            f"Non-numeric cell values encountered in line {idx + 2}."
+        )
     else:
         n_vals = vals.size
 
