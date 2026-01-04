@@ -274,23 +274,6 @@ def _distance_matrix_to_phylip_dm(obj, fh, layout="lower"):
     _matrix_to_phylip_dm(obj, fh, delimiter="\t", layout=layout)
 
 
-def _check_layout(layout):
-    if layout == "lower":
-        return False
-    elif layout == "square":
-        return True
-    elif layout == "upper":
-        raise PhylipDMFormatError("Upper triangular layout is currently not supported.")
-    else:
-        raise PhylipDMFormatError(f"'{layout}' is not a supported matrix layout.")
-
-
-def _check_dtype(dtype):
-    if (typ := np.dtype(dtype)) not in (np.float64, np.float32):
-        raise TypeError(f"{dtype} is not a supported data type.")
-    return typ
-
-
 def _phylip_dm_to_matrix(fh, square, strict, dtype):
     """Parse a PHYLIP formatted distance matrix file.
 
@@ -391,6 +374,9 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
     # square layout
     if _check_layout(layout):
         for id_, vals in zip(ids, obj.data):
+            # Here we are replacing whitespace with underscore on write, but we still
+            # need to be able to index the DistanceMatrix object by id (which may
+            # contain whitespace) so create a separate variable for writing the id
             id_w = _remove_whitespace(id_)
             fh.write(id_w)
             fh.write(delimiter)
@@ -409,11 +395,6 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
                 fh.write(delimiter)
                 fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
             fh.write("\n")
-
-
-def _remove_whitespace(id_):
-    """Replace whitepace with underscores in IDs."""
-    return id_.replace(" ", "_")
 
 
 def _parse_header(header):
@@ -537,3 +518,25 @@ def _parse_line(line, idx, n_objs, square, strict, dtype):
             )
 
     return id_, vals, n_vals
+
+
+def _remove_whitespace(id_):
+    """Replace whitepace with underscores in IDs."""
+    return id_.replace(" ", "_")
+
+
+def _check_layout(layout):
+    if layout == "lower":
+        return False
+    elif layout == "square":
+        return True
+    elif layout == "upper":
+        raise PhylipDMFormatError("Upper triangular layout is currently not supported.")
+    else:
+        raise PhylipDMFormatError(f"'{layout}' is not a supported matrix layout.")
+
+
+def _check_dtype(dtype):
+    if (typ := np.dtype(dtype)) not in (np.float64, np.float32):
+        raise TypeError(f"{dtype} is not a supported data type.")
+    return typ
