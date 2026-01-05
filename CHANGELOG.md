@@ -8,6 +8,7 @@
 * `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
 * Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
 * Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added new plotting functionality for `OrdinationResults` objects, including plotting centroids, confidence ellipses, and 2D plots ([#2362](https://github.com/scikit-bio/scikit-bio/pull/2362))
 
 ### Performance enhancements
 
