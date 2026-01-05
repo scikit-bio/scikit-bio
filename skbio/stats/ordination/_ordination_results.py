@@ -505,9 +505,6 @@ class OrdinationResults(SkbioObject, PlottableMixin):
             # Pearson correlation coefficient
             pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
 
-            # Clip pearson to [-1, 1] to handle numerical precision issues
-            pearson = np.clip(pearson, -1, 1)
-
             # Ellipse radii
             ell_radius_x = np.sqrt(1 + pearson)
             ell_radius_y = np.sqrt(1 - pearson)
