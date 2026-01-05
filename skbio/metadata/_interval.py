@@ -509,6 +509,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
     write = Write()
 
     default_write_format = "gff3"
+    """Default write format for this object: ``gff3``."""
 
     def __init__(self, upper_bound, copy_from=None):
         self._upper_bound = upper_bound

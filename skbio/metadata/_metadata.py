@@ -11,7 +11,6 @@ from collections import namedtuple, OrderedDict
 from itertools import chain
 from types import MappingProxyType
 from warnings import catch_warnings, filterwarnings
-from typing import Optional
 import sqlite3
 
 import pandas as pd
@@ -327,13 +326,14 @@ class SampleMetadata(_MetadataBase, SkbioObject):
     """
 
     default_write_format = "sample_metadata"
+    """Default write format for this object: ``sample_metadata``."""
 
     @classmethod
     def load(
         cls,
         filepath: str,
-        column_types: Optional[dict[str, str]] = None,
-        column_missing_schemes: Optional[dict[str, str]] = None,
+        column_types: dict[str, str] | None = None,
+        column_missing_schemes: dict[str, str] | None = None,
         default_missing_scheme: str = DEFAULT_MISSING,
     ) -> "SampleMetadata":
         """Load a TSV metadata file.
@@ -940,7 +940,7 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
     """
 
     # Abstract, must be defined by subclasses.
-    type: Optional[str] = None
+    type: str | None = None
 
     @classmethod
     @abstractmethod

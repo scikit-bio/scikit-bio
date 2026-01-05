@@ -6,22 +6,24 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Union, Sequence, TYPE_CHECKING
+from __future__ import annotations
 
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike, NDArray
-    from skbio.tree import TreeNode
-    from skbio.util._typing import TableLike, SeedLike
+from typing import TYPE_CHECKING
 
 import numpy as np
+
 from skbio.util import get_rng
 from skbio.stats.composition import closure
 from skbio.table._tabular import _ingest_table
 
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Sequence
+    from numpy.typing import ArrayLike, NDArray
+    from skbio.tree import TreeNode
+    from skbio.util._typing import TableLike, SeedLike
 
-def _validate_labels(  # type: ignore[return]
-    labels: "NDArray", n: int
-) -> tuple["NDArray", "NDArray"]:
+
+def _validate_labels(labels: NDArray, n: int) -> tuple[NDArray, NDArray]:
     r"""Ensure that the provided label is appropriate for the provided matrix.
 
     Parameters
@@ -104,7 +106,7 @@ def _validate_labels(  # type: ignore[return]
         return labels_index, labels
 
 
-def _normalize_matrix(matrix: "NDArray") -> "NDArray":
+def _normalize_matrix(matrix: NDArray) -> NDArray:
     r"""Normalize a data matrix if needed such that each row sums to 1.
 
     Parameters
@@ -123,7 +125,7 @@ def _normalize_matrix(matrix: "NDArray") -> "NDArray":
     return closure(matrix)
 
 
-def _all_pairs(n: int) -> "NDArray":
+def _all_pairs(n: int) -> NDArray:
     r"""Get all pairs of sample indices.
 
     Parameters
@@ -140,7 +142,7 @@ def _all_pairs(n: int) -> "NDArray":
     return np.column_stack(np.triu_indices(n, k=1))
 
 
-def _intra_class_pairs(labels: "ArrayLike") -> "NDArray":
+def _intra_class_pairs(labels: ArrayLike) -> NDArray:
     r"""Get pairs of sample indices within each class.
 
     Parameters
@@ -167,16 +169,16 @@ def _intra_class_pairs(labels: "ArrayLike") -> "NDArray":
 
 
 def _format_input(
-    table,
-    labels: Union[Sequence, "NDArray"],
-    intra_class: Optional[bool] = False,
-    normalize: Optional[bool] = False,
-    taxa: Optional[Union[Sequence, "NDArray"]] = None,
+    table: TableLike,
+    labels: Sequence | NDArray,
+    intra_class: bool | None = False,
+    normalize: bool | None = False,
+    taxa: Sequence | NDArray | None = None,
 ) -> tuple[
-    "NDArray",
-    Optional["NDArray"],
-    "NDArray",
-    Optional[Union[Sequence, "NDArray"]],
+    NDArray,
+    NDArray | None,
+    NDArray,
+    Sequence | NDArray | None,
 ]:
     """Format input data for augmentation.
 
@@ -224,11 +226,11 @@ def _format_input(
 
 
 def _make_aug_labels(
-    labels: Optional["NDArray"],
-    pairs: "NDArray",
-    lams: "NDArray",
+    labels: NDArray | None,
+    pairs: NDArray,
+    lams: NDArray,
     intra_class: bool,
-) -> Optional["NDArray"]:
+) -> NDArray | None:
     r"""Generate class labels for synthetic samples.
 
     Parameters
@@ -249,7 +251,7 @@ def _make_aug_labels(
 
     """
     if labels is None:
-        return
+        return None
     elif intra_class:
         return labels[pairs[:, 0]]
     else:
@@ -257,12 +259,12 @@ def _make_aug_labels(
 
 
 def _format_output(
-    aug_matrix: "NDArray",
-    aug_labels: Optional["NDArray"],
-    matrix: "NDArray",
-    labels: Optional["NDArray"],
+    aug_matrix: NDArray,
+    aug_labels: NDArray | None,
+    matrix: NDArray,
+    labels: NDArray | None,
     append: bool = False,
-) -> tuple["NDArray", "NDArray"]:
+) -> tuple[NDArray, NDArray]:
     """Format output data of augmentation.
 
     Parameters
@@ -300,14 +302,14 @@ def _format_output(
 
 
 def mixup(
-    table: "TableLike",
+    table: TableLike,
     n: int,
-    labels: Optional["NDArray"] = None,
+    labels: NDArray | None = None,
     intra_class: bool = False,
     alpha: float = 2.0,
     append: bool = False,
-    seed: Optional["SeedLike"] = None,
-) -> tuple["NDArray", Optional["NDArray"]]:
+    seed: SeedLike | None = None,
+) -> tuple[NDArray, NDArray | None]:
     r"""Data augmentation by vanilla mixup.
 
     Parameters
@@ -424,7 +426,7 @@ def mixup(
     return _format_output(aug_matrix, aug_labels, matrix, labels, append)
 
 
-def _aitchison_add(x: "NDArray", y: "NDArray") -> "NDArray":
+def _aitchison_add(x: NDArray, y: NDArray) -> NDArray:
     r"""Perform Aitchison addition on two samples or sample groups.
 
     Parameters
@@ -443,7 +445,7 @@ def _aitchison_add(x: "NDArray", y: "NDArray") -> "NDArray":
     return (prod := x * y) / prod.sum(axis=-1, keepdims=True)
 
 
-def _aitchison_multiply(x: "NDArray", p: float) -> "NDArray":
+def _aitchison_multiply(x: NDArray, p: float) -> NDArray:
     r"""Perform Aitchison multiplication on a sample (group) with a scalar.
 
     Parameters
@@ -463,15 +465,15 @@ def _aitchison_multiply(x: "NDArray", p: float) -> "NDArray":
 
 
 def aitchison_mixup(
-    table: "TableLike",
+    table: TableLike,
     n: int,
-    labels: Optional["NDArray"] = None,
+    labels: NDArray | None = None,
     intra_class: bool = False,
     alpha: float = 2.0,
     normalize: bool = True,
     append: bool = False,
-    seed: Optional["SeedLike"] = None,
-) -> tuple["NDArray", Optional["NDArray"]]:
+    seed: SeedLike | None = None,
+) -> tuple[NDArray, NDArray | None]:
     r"""Data augmentation by Aitchison mixup.
 
     This function requires the data to be compositional (values per sample sum to one).
@@ -607,13 +609,13 @@ def aitchison_mixup(
 
 
 def compos_cutmix(
-    table: "TableLike",
+    table: TableLike,
     n: int,
-    labels: Optional["NDArray"] = None,
+    labels: NDArray | None = None,
     normalize: bool = True,
     append: bool = False,
-    seed: Optional["SeedLike"] = None,
-) -> tuple["NDArray", Optional["NDArray"]]:
+    seed: SeedLike | None = None,
+) -> tuple[NDArray, NDArray | None]:
     r"""Data augmentation by compositional cutmix.
 
     This function requires the data to be compositional (values per sample sum to one).
@@ -731,7 +733,7 @@ def compos_cutmix(
 
 
 def _indices_under_nodes(
-    tree: "TreeNode", taxa: Union[Sequence, "NDArray"]
+    tree: TreeNode, taxa: Sequence | NDArray
 ) -> list[dict[int, None]]:
     """Pre-compute feature indices descending from each node.
 
@@ -803,16 +805,16 @@ def _indices_under_nodes(
 
 
 def phylomix(
-    table: "TableLike",
+    table: TableLike,
     n: int,
-    tree: "TreeNode",
-    taxa: Optional["ArrayLike"] = None,
-    labels: Optional["NDArray"] = None,
+    tree: TreeNode,
+    taxa: ArrayLike | None = None,
+    labels: NDArray | None = None,
     intra_class: bool = False,
     alpha: float = 2.0,
     append: bool = False,
-    seed: Optional["SeedLike"] = None,
-) -> tuple["NDArray", Optional["NDArray"]]:
+    seed: SeedLike | None = None,
+) -> tuple[NDArray, NDArray | None]:
     r"""Data augmentation by PhyloMix.
 
     Parameters

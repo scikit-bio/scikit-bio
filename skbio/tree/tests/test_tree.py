@@ -734,7 +734,7 @@ class TreeTests(TestCase):
         # in place
         obs = t.shear(["G", "M"], inplace=True)
         self.assertEqual(str(t), exp)
-        self.assertIsNone(obs)
+        self.assertIs(obs, t)
 
         # keep cache
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
@@ -1203,9 +1203,9 @@ class TreeTests(TestCase):
         self.assertFalse(hasattr(tcopy, "_tip_cache"))
         self.assertTrue(obs.is_root())
         for node in obs.traverse():
-            assert not hasattr(node, "old_child")
+            self.assertFalse(hasattr(node, 'old_child'))
             for child in node.children:
-                assert child.parent is node
+                self.assertIs(child.parent, node)
         exp = TreeNode.read(["(a:1,b:1,((d:1,e:1)f:2,((h:1,i:1)j:0.5)k:0.5)g:1)c;"])
         for o, e in zip(obs.traverse(), exp.traverse()):
             self.assertEqual(o.name, e.name)
@@ -1339,6 +1339,18 @@ class TreeTests(TestCase):
         t = TreeNode.read([nwk])
         obs = t.root_at_midpoint(reset=False)
         self.assertEqual(str(obs), nwk)
+
+    def test_root_at_midpoint_missing_length(self):
+        # Internal node c has no length. It will be treated as 0.
+        # b and e are farthest apart, by 11, therefore root should be
+        # 5.5 above b, and 1.5 below c.
+        nwk = "((a:2,b:7)c,(d:1,e:3)f:1,g:2)h;\n"
+        t = TreeNode.read([nwk])
+        obs = t.root_at_midpoint(reset=False)
+        exp = TreeNode.read(["(b:5.5,(a:2,((d:1,e:3)f:1,g:2)h)c:1.5);"])
+        for o, e in zip(obs.traverse(), exp.traverse()):
+            self.assertEqual(o.name, e.name)
+            self.assertEqual(o.length, e.length)
 
     def test_root_at_midpoint_tie(self):
         t = TreeNode.read(["(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1);"])
@@ -1476,13 +1488,30 @@ class TreeTests(TestCase):
 
     def test_subset(self):
         """Return a set of tip names descending from a node."""
+        # entire tree
         t = self.simple_t
         self.assertEqual(t.subset(), frozenset("abcd"))
+
+        # subtree
         c = t.children[0]
         self.assertEqual(c.subset(), frozenset("ab"))
-        leaf = c.children[1]
-        self.assertEqual(leaf.subset(), frozenset(""))
-        self.assertEqual(leaf.subset(include_self=True), frozenset("b"))
+
+        # tip
+        tip = c.children[1]
+        self.assertEqual(tip.subset(), frozenset())
+        self.assertEqual(tip.subset(include_self=True), frozenset("b"))
+
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertEqual(t.subset(), frozenset("abc"))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,));"])
+        self.assertEqual(t.subset(), frozenset("abc"))
+
+        # duplicate names
+        t = TreeNode.read(["((a,b),(c,a));"])
+        self.assertEqual(t.subset(), frozenset("abc"))
 
     def test_subsets(self):
         """Return all subsets descending from a node."""
@@ -1537,6 +1566,38 @@ class TreeTests(TestCase):
         self.assertFalse(t.subsets(within=""))
         self.assertFalse(t.subsets(within="xyz"))
 
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("abc")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("a"), frozenset("b"), frozenset("c")]))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,));"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(within="abc"), frozenset(
+            [frozenset("ab")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("ab"), frozenset("abc")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("a"), frozenset("b"), frozenset("c")]))
+
+        # duplicate names
+        t = TreeNode.read(["((a,b),(c,a));"])
+        self.assertSetEqual(t.subsets(), frozenset(
+            [frozenset("ab"), frozenset("ca")]))
+        self.assertSetEqual(t.subsets(include_full=True), frozenset(
+            [frozenset("abc"), frozenset("ab"), frozenset("ca")]))
+        self.assertSetEqual(t.subsets(include_tips=True), frozenset(
+            [frozenset("ab"), frozenset("ca"), frozenset("a"), frozenset("b"),
+             frozenset("c")]))
+
     def test_bipart(self):
         """Return a set of tip names on the smaller side of the branch."""
         t = self.complex_tree
@@ -1565,6 +1626,15 @@ class TreeTests(TestCase):
         t = TreeNode.read(["((a,(b,c))X,(d,e)Y,f);"])
         self.assertSetEqual(t.find("X").bipart(), frozenset("abc"))
         self.assertSetEqual(t.find("Y").bipart(), frozenset("de"))
+
+        # single-child internal node
+        t = TreeNode.read(["((a,b),(c)d);"])
+        self.assertSetEqual(t.find("c").bipart(), frozenset("c"))
+        self.assertSetEqual(t.find("d").bipart(), frozenset("c"))
+
+        # nameless tips
+        t = TreeNode.read(["((a,b),(c,)d);"])
+        self.assertSetEqual(t.find("d").bipart(), frozenset("c"))
 
     def test_biparts(self):
         """Return all sets of tip names on the smaller side of each branch."""
@@ -1642,6 +1712,11 @@ class TreeTests(TestCase):
         self.assertFalse(t.biparts(within=set()))
         self.assertFalse(t.biparts(within=""))
         self.assertFalse(t.biparts(within="xyz"))
+
+        # nameless tips
+        t = TreeNode.read(["(((a,),b),(c,d));"])
+        self.assertSetEqual(t.biparts(), frozenset({
+            frozenset({"a", "b"})}))
 
     def test_assign_supports(self):
         """Extract support values of internal nodes."""
@@ -2037,24 +2112,71 @@ class TreeTests(TestCase):
         self.assertEqual(dist, 6)
         self.assertListEqual([n.name for n in nodes], ["d", "a"])
 
-    def test_cophenet_endpoints(self):
-        """Get a tip-to-tip distance matrix."""
+    def test_cophenet_all(self):
+        """Get a tip-to-tip distance matrix of all taxa."""
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
-        nodes = [t.find("H"), t.find("G"), t.find("M")]
-        names = ["H", "G", "M"]
-        exp = DistanceMatrix(np.array([[0, 2.0, 6.7],
-                                       [2.0, 0, 6.7],
-                                       [6.7, 6.7, 0.0]]), ["H", "G", "M"])
-
-        obs = t.cophenet(endpoints=names)
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.5, 6.7],
+                                       [2.0, 0. , 6.5, 6.7],
+                                       [6.5, 6.5, 0. , 1.2],
+                                       [6.7, 6.7, 1.2, 0. ]]), ["H", "G", "R", "M"])
+        obs = t.cophenet()
         self.assertEqual(obs, exp)
 
+        # makes sure intermediate attributes are clear
+        for node in t.traverse(include_self=True):
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
+
+    def test_cophenet_endpoints(self):
+        """Get a tip-to-tip distance matrix of selected taxa."""
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        names = ["H", "G", "M"]
+        nodes = [t.find(x) for x in names]
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.7],
+                                       [2.0, 0. , 6.7],
+                                       [6.7, 6.7, 0. ]]), names)
+
+        # specify endpoints by node instance
         obs = t.cophenet(endpoints=nodes)
         self.assertEqual(obs, exp)
 
+        # specify endpoints by name (taxon)
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+
+        # endpoints can be any iterable (tuple, str, iter, dict...)
+        # but unordered iterable like set is not recommended
+        obs = t.cophenet(endpoints=tuple(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints="".join(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints=iter(names))
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints={x: 0 for x in names})
+        self.assertEqual(obs, exp)
+
         for node in t.traverse(include_self=True):
-            assert not hasattr(node, '_start')
-            assert not hasattr(node, '_stop')
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
+
+        # different order
+        names = ["M", "H", "G"]
+        exp = DistanceMatrix(np.array([[0. , 6.7, 6.7],
+                                       [6.7, 0. , 2.0],
+                                       [6.7, 2.0, 0. ]]), names)
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+
+        # only 2 taxa
+        obs = t.cophenet(endpoints="HR")
+        exp = DistanceMatrix(np.array([[0. , 6.5],
+                                       [6.5, 0. ]]), "HR")
+        self.assertEqual(obs, exp)
+
+        # only 1 taxon
+        obs = t.cophenet(endpoints="H")
+        exp = DistanceMatrix(np.array([[0. ]]), "H")
+        self.assertEqual(obs, exp)
 
     def test_cophenet_counts(self):
         """Get a tip-to-tip distance matrix in counts."""
@@ -2063,7 +2185,7 @@ class TreeTests(TestCase):
         names = ["H", "G", "M"]
         exp = DistanceMatrix(np.array([[0, 2, 4],
                                        [2, 0, 4],
-                                       [4, 4, 0]]), ["H", "G", "M"])
+                                       [4, 4, 0]]), names)
 
         obs = t.cophenet(endpoints=names, use_length=False)
         self.assertEqual(obs, exp)
@@ -2072,13 +2194,15 @@ class TreeTests(TestCase):
         self.assertEqual(obs, exp)
 
         for node in t.traverse(include_self=True):
-            assert not hasattr(node, '_start')
-            assert not hasattr(node, '_stop')
+            self.assertFalse(hasattr(node, '_start'))
+            self.assertFalse(hasattr(node, '_stop'))
 
     def test_cophenet_bad_endpoints(self):
         t = TreeNode.read(["((H:1,G:1)foo:2,(R:0.5,M:0.7):3);"])
-        with self.assertRaises(ValueError):
+        msg = "Node with name 'foo' is not a tip."
+        with self.assertRaises(ValueError) as e:
             t.cophenet(endpoints=["foo"])
+        self.assertEqual(str(e.exception), msg)
         with self.assertRaises(MissingNodeError):
             t.cophenet(endpoints=["bar"])
 
@@ -2087,10 +2211,44 @@ class TreeTests(TestCase):
 
     def test_cophenet_duplicate_tips(self):
         t = TreeNode.read(["((H:1,G:1):2,(R:0.5,H:0.7):3);"])
-        with self.assertRaises(DuplicateNodeError):
+        msg = "Tree contains duplicate tip names."
+        with self.assertRaises(DuplicateNodeError) as e:
             t.cophenet()
-        with self.assertRaises(DuplicateNodeError):
-            t.cophenet(endpoints=["H", "R", "H"])
+        self.assertEqual(str(e.exception), msg)
+
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        msg = "Duplicate tip name 'H' found."
+        with self.assertRaises(DuplicateNodeError) as e:
+            t.cophenet(endpoints="HRH")
+        self.assertEqual(str(e.exception), msg)
+
+    def test_cophenet_no_name(self):
+        t = TreeNode.read(["((H:1,G:1):2,(R:0.5,M:0.7):3);"])
+        t.find("R").name = None
+        t.clear_caches()
+
+        names = ["H", "G", "M"]
+        nodes = [t.find(x) for x in names]
+        exp = DistanceMatrix(np.array([[0. , 2.0, 6.7],
+                                       [2.0, 0. , 6.7],
+                                       [6.7, 6.7, 0. ]]), names)
+
+        # tip without name is ignored
+        obs = t.cophenet()
+        self.assertEqual(obs, exp)
+
+        # endpoints without nameless tip is not affected
+        obs = t.cophenet(endpoints=names)
+        self.assertEqual(obs, exp)
+        obs = t.cophenet(endpoints=nodes)
+        self.assertEqual(obs, exp)
+
+        # endpoints with nameless tip raises
+        nodes = [t.children[0].children[0], t.children[1].children[0]]
+        msg = "Cannot find a node without a name."
+        with self.assertRaises(MissingNodeError) as e:
+            t.cophenet(endpoints=nodes)
+        self.assertEqual(str(e.exception), msg)
 
     def test_cophenet_no_length(self):
         t = TreeNode.read(["((a,b)c,(d,e)f);"])
@@ -2602,6 +2760,13 @@ class TreeTests(TestCase):
         with self.assertRaisesRegex(MissingNodeError, msg):
             t.find(TreeNode("missing"))
 
+        # name is None
+        msg = "Cannot find a node without a name."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(None)
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find(TreeNode())
+
         # input node name matches a tip but it's not in the current tree
         msg = "Node 'a' is not found in the tree."
         with self.assertRaisesRegex(MissingNodeError, msg):
@@ -2641,6 +2806,13 @@ class TreeTests(TestCase):
         msg = "Node 'missing' is not found."
         with self.assertRaisesRegex(MissingNodeError, msg):
             t.find_all("missing")
+
+        # node has no name
+        msg = "Cannot find nodes without a name."
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find_all(None)
+        with self.assertRaisesRegex(MissingNodeError, msg):
+            t.find_all(TreeNode())
 
     def test_find_by_id(self):
         """Find a node by id"""
@@ -2727,25 +2899,36 @@ class TreeTests(TestCase):
 
     def test_from_linkage_matrix(self):
         # Ensure matches: http://www.southampton.ac.uk/~re1u06/teaching/upgma/
-        id_list = ["A", "B", "C", "D", "E", "F", "G"]
-        linkage = np.asarray([[1.0,  5.0,  1.0,  2.0],
-                              [0.0,  3.0,  8.0,  2.0],
-                              [6.0,  7.0, 12.5,  3.0],
-                              [8.0,  9.0, 16.5,  5.0],
-                              [2.0, 10.0, 29.0,  6.0],
-                              [4.0, 11.0, 34.0,  7.0]])
+        lnkmat = np.asarray([[1.0,  5.0,  1.0,  2.0],
+                             [0.0,  3.0,  8.0,  2.0],
+                             [6.0,  7.0, 12.5,  3.0],
+                             [8.0,  9.0, 16.5,  5.0],
+                             [2.0, 10.0, 29.0,  6.0],
+                             [4.0, 11.0, 34.0,  7.0]])
+        names = ["A", "B", "C", "D", "E", "F", "G"]
 
-        tree = TreeNode.from_linkage_matrix(linkage, id_list)
+        obs = TreeNode.from_linkage_matrix(lnkmat, names)
+        self.assertIsInstance(obs, TreeNode)
+        exp = ("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,F:0.5)"
+               ":5.75):2.0):6.25):2.5);\n")
+        self.assertEqual(str(obs), exp)
 
-        self.assertIs(type(tree), TreeNode)
+        obs = TreeNodeSubclass.from_linkage_matrix(lnkmat, names)
+        self.assertIsInstance(obs, TreeNodeSubclass)
 
-        self.assertEqual("(E:17.0,(C:14.5,((A:4.0,D:4.0):4.25,(G:6.25,(B:0.5,"
-                         "F:0.5):5.75):2.0):6.25):2.5);\n",
-                         str(tree))
+        obs = TreeNode.from_linkage_matrix(lnkmat.tolist(), names)
+        self.assertEqual(str(obs), exp)
 
-        tree = TreeNodeSubclass.from_linkage_matrix(linkage, id_list)
+        obs = TreeNode.from_linkage_matrix(lnkmat, tuple(names))
+        self.assertEqual(str(obs), exp)
 
-        self.assertIs(type(tree), TreeNodeSubclass)
+        obs = TreeNode.from_linkage_matrix(lnkmat, np.array(names))
+        self.assertEqual(str(obs), exp)
+
+        msg = "Number of names must be number of rows in the linkage matrix plus one."
+        with self.assertRaises(ValueError) as e:
+            TreeNode.from_linkage_matrix(lnkmat, names[:-1])
+        self.assertEqual(str(e.exception), msg)
 
     def test_from_taxonomy(self):
         lineages = [("1", ["a", "b", "c", "d", "e", "f", "g"]),

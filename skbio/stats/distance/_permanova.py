@@ -6,17 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from functools import partial
 from warnings import warn
+from typing import TYPE_CHECKING
 
 import numpy as np
-
-from typing import Optional, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
-    import pandas as pd
-    from skbio.util._typing import SeedLike
 
 from ._base import (
     _preprocess_input_sng,
@@ -24,22 +20,27 @@ from ._base import (
     _build_results,
     DistanceMatrix,
 )
-from ._cutils import permanova_f_stat_sW_cy
+from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
 from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
 )
 from skbio.util._decorator import params_aliased
 
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    import pandas as pd
+    from skbio.util._typing import SeedLike
+
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
 def permanova(
-    distmat: "DistanceMatrix",
-    grouping: Union["pd.DataFrame", "ArrayLike"],
-    column: Optional[str] = None,
+    distmat: DistanceMatrix,
+    grouping: pd.DataFrame | ArrayLike,
+    column: str | None = None,
     permutations: int = 999,
-    seed: Optional["SeedLike"] = None,
-) -> "pd.Series":
+    seed: SeedLike | None = None,
+) -> pd.Series:
     r"""Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a non-parametric
@@ -122,6 +123,13 @@ def permanova(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
+    Low-level acceleration is available for this function. See
+    :install:`scikit-bio-binaries <#acceleration>` for more information.
+
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
 
@@ -167,10 +175,6 @@ def permanova(
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
-    # convert to redundant form for now
-    if distmat._flags["CONDENSED"]:
-        distmat = DistanceMatrix(distmat)
-
     sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
@@ -202,9 +206,10 @@ def permanova(
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
     s_T = (distmat.data**2).sum() / sample_size
-    # we are going over the whole matrix, instead of just upper triangle
-    # so cut in half
-    s_T /= 2.0
+    if not distmat._flags["CONDENSED"]:
+        # we are going over the whole matrix, instead of just upper triangle
+        # so cut in half
+        s_T /= 2.0
 
     test_stat_function = partial(
         _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
@@ -223,7 +228,12 @@ def _compute_f_stat(
 ):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
-    s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+    if distance_matrix._flags["CONDENSED"]:
+        s_W = permanova_f_stat_sW_condensed_cy(
+            distance_matrix.data, group_sizes, grouping
+        )
+    else:
+        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))

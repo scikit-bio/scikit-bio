@@ -6,15 +6,16 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Any, TYPE_CHECKING
+from __future__ import annotations
+
 from sys import modules
 from warnings import warn
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
 from skbio.util._decorator import aliased, register_aliases, params_aliased
 from skbio.util._array import ingest_array
-
 
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
@@ -22,11 +23,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _check_composition(
-    xp: "ModuleType",
-    mat: "StdArray",
+    xp: ModuleType,
+    mat: StdArray,
     axis: int = -1,
     nozero: bool = False,
-    maxdim: Optional[int] = None,
+    maxdim: int | None = None,
 ):
     r"""Check if the input matrix contain valid compositions.
 
@@ -73,7 +74,7 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform closure to ensure that all components of each composition sum to 1.
 
     .. versionchanged:: 0.7.0
@@ -115,7 +116,7 @@ def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     return _closure(xp, mat, axis)
 
 
-def _closure(xp: "ModuleType", mat: "StdArray", axis: int = -1) -> "StdArray":
+def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
     """Perform closure."""
     return mat / xp.sum(mat, axis=axis, keepdims=True)
 
@@ -194,7 +195,7 @@ def _closure_two(x, y, validate):
     return xp, _closure(xp, x), _closure(xp, y)
 
 
-def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def perturb(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Perform the perturbation operation.
 
     This operation is defined as:
@@ -254,7 +255,7 @@ def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray"
     return _closure(xp, cx * cy)
 
 
-def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def perturb_inv(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Perform the inverse perturbation operation.
 
     This operation is defined as:
@@ -302,7 +303,7 @@ def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdAr
     return _closure(xp, cx / cy)
 
 
-def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
+def power(x: ArrayLike, a: float, validate: bool = True) -> StdArray:
     r"""Perform the power operation.
 
     This operation is defined as follows:
@@ -352,7 +353,7 @@ def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     return _closure(xp, cx**a).squeeze()
 
 
-def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def inner(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows:
@@ -393,7 +394,7 @@ def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     return xp.matmul(clrx, clry.T)
 
 
-def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+def clr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform centre log ratio (CLR) transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -456,12 +457,12 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     return _clr(xp, mat, axis)
 
 
-def _clr(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+def _clr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform CLR transform."""
     return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
 
-def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+def clr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform inverse centre log ratio (CLR) transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -538,7 +539,7 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     return _clr_inv(xp, mat, axis)
 
 
-def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform inverse CLR transform."""
     # for numerical stability, shift the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
@@ -547,11 +548,11 @@ def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
 
 @params_aliased([("validate", "check", "0.7.0", True)])
 def ilr(
-    mat: "ArrayLike",
-    basis: Optional["ArrayLike"] = None,
+    mat: ArrayLike,
+    basis: ArrayLike | None = None,
     axis: int = -1,
     validate: bool = True,
-) -> "StdArray":
+) -> StdArray:
     r"""Perform isometric log ratio (ILR) transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -654,7 +655,7 @@ def _swap_axis(ndim, axis):
     return res
 
 
-def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "StdArray":
+def _ilr(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
     """Perform ILR transform."""
     mat = _clr(xp, mat, axis)
     # tensordot return's shape consists of the non-contracted axes (dimensions) of
@@ -666,11 +667,11 @@ def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "St
 
 @params_aliased([("validate", "check", "0.7.0", True)])
 def ilr_inv(
-    mat: "ArrayLike",
-    basis: Optional["ArrayLike"] = None,
+    mat: ArrayLike,
+    basis: ArrayLike | None = None,
     axis: int = -1,
     validate: bool = True,
-) -> "StdArray":
+) -> StdArray:
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -761,9 +762,7 @@ def ilr_inv(
     return _ilr_inv(xp, mat, basis, axis)
 
 
-def _ilr_inv(
-    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
-) -> "StdArray":
+def _ilr_inv(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
     """Perform ILR transform."""
     prod = xp.tensordot(mat, basis, axes=([axis], [0]))
     perm = xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
@@ -772,8 +771,8 @@ def _ilr_inv(
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
 def alr(
-    mat: "ArrayLike", ref_idx: int = 0, axis: int = -1, validate: bool = True
-) -> "StdArray":
+    mat: ArrayLike, ref_idx: int = 0, axis: int = -1, validate: bool = True
+) -> StdArray:
     r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -848,7 +847,7 @@ def alr(
     return _alr(xp, mat, ref_idx, axis)
 
 
-def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
+def _alr(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
@@ -880,7 +879,7 @@ def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArra
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
-def alr_inv(mat: "ArrayLike", ref_idx: int = 0, axis: int = -1) -> "StdArray":
+def alr_inv(mat: ArrayLike, ref_idx: int = 0, axis: int = -1) -> StdArray:
     r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -958,7 +957,7 @@ def alr_inv(mat: "ArrayLike", ref_idx: int = 0, axis: int = -1) -> "StdArray":
     return _alr_inv(xp, mat, ref_idx, axis)
 
 
-def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
+def _alr_inv(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
     # The following code can be replaced with a single NumPy function call.
     #     comp = xp.insert(emat, ref_idx, 1.0, axis=axis)
     # However, `insert` is not in the Python array API standard. For compatibility with
@@ -980,7 +979,7 @@ def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "Std
     return _closure(xp, comp, axis)
 
 
-def centralize(mat: "ArrayLike") -> "StdArray":
+def centralize(mat: ArrayLike) -> StdArray:
     r"""Center data around its geometric average.
 
     Parameters
@@ -1449,10 +1448,10 @@ def sbp_basis(sbp):
 
 
 def _check_basis(
-    xp: "ModuleType",
-    basis: "StdArray",
+    xp: ModuleType,
+    basis: StdArray,
     orthonormal: bool = False,
-    subspace_dim: Optional[int] = None,
+    subspace_dim: int | None = None,
 ):
     r"""Check if basis is a valid basis for transformation.
 
