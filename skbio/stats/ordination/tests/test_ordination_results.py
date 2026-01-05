@@ -405,12 +405,14 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         npt.assert_equal(ax.get_ylabel(), exp_ylabel)
 
     def test_plot_no_metadata(self):
-        fig = self.min_ord_results.plot(n_dims=2)
+        # Test 2D plot without metadata - axes should default to [0, 1]
+        fig = self.min_ord_results.plot()
         self.check_basic_figure_sanity(fig, 1, '', False, '0', '1')
     
-    def test_plot_invalid_ndims(self):
-        with self.assertRaisesRegex(ValueError, r'n_dims must be 2 or 3.'):
-            self.min_ord_results.plot(n_dims=0)
+    def test_plot_explicit_2d_axes(self):
+        # Test explicitly passing 2D axes
+        fig = self.min_ord_results.plot(axes=[0, 1])
+        self.check_basic_figure_sanity(fig, 1, '', False, '0', '1')
 
     def test_plot_with_numeric_metadata_and_plot_options(self):
         fig = self.min_ord_results.plot(
@@ -427,7 +429,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
     
     def test_plot_with_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', centroids=True, cmap='Set1', n_dims=2)
+            self.df, 'categorical', centroids=True, cmap='Set1', axes=[0, 1])
         ax = fig.get_axes()[0]
         labels = [t.get_text() for t in ax.get_legend().get_texts()]
         self.assertTrue("'foo' centroid" in labels)
@@ -435,7 +437,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_plot_without_centroids(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', centroids=False, cmap='Set1', n_dims=2)
+            self.df, 'categorical', centroids=False, cmap='Set1', axes=[0, 1])
         ax = fig.get_axes()[0]
         legend = ax.get_legend()
         if legend:
@@ -444,13 +446,13 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
             self.assertTrue("'22' centroid" not in labels)
             
     def test_plot_centroids_without_metadata(self):
-        #Test that plotting centroids without metadata raises ValueError.
+        # Test that plotting centroids without metadata raises ValueError.
         with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot centroids.'):
             self.min_ord_results.plot(centroids=True)
     
     def test_plot_with_confidence_ellipses(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', confidence_ellipses=True, cmap='Set1', n_dims=2)
+            self.df, 'categorical', confidence_ellipses=True, cmap='Set1', axes=[0, 1])
         ax = fig.get_axes()[0]
         labels = [t.get_text() for t in ax.get_legend().get_texts()]
         self.assertTrue("'foo' ellipse" in labels)
@@ -458,7 +460,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
     def test_plot_without_confidence_ellipse(self):
         fig = self.min_ord_results.plot(
-            self.df, 'categorical', confidence_ellipses=False, cmap='Set1', n_dims=2)
+            self.df, 'categorical', confidence_ellipses=False, cmap='Set1', axes=[0, 1])
         ax = fig.get_axes()[0]
         legend = ax.get_legend()
         if legend:
@@ -467,16 +469,28 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
             self.assertTrue("'22' ellipse" not in labels)
     
     def test_plot_confidence_ellipses_without_metadata(self):
-        #Test that plotting confidence ellipses without metadata raises ValueError.
+        # Test that plotting confidence ellipses without metadata raises ValueError.
         with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot confidence ellipses.'):
-            self.min_ord_results.plot(confidence_ellipses=True, n_dims = 2)
+            self.min_ord_results.plot(confidence_ellipses=True, axes=[0, 1])
 
     def test_plot_confidence_ellipses_in_3d(self):
-        #Test that plotting confidence ellipses in 3D raises ValueError.
-        with self.assertRaisesRegex(ValueError, r'Confidence ellipses can only be currently plotted in 2D.'):
-            self.min_ord_results.plot(
-                self.df, 'categorical', confidence_ellipses=True, n_dims=3
-        )
+        # Test that plotting confidence ellipses in 3D raises ValueError.
+        # Need to create a 3D ordination result first
+        eigvals_3d = np.array([0.50, 0.25, 0.10])
+        samples_3d = np.array([[0.1, 0.2, 0.3],
+                               [0.2, 0.3, 0.4],
+                               [0.3, 0.4, 0.5],
+                               [0.4, 0.5, 0.6]])
+        samples_df_3d = pd.DataFrame(samples_3d, ['A', 'B', 'C', 'D'],
+                                     ['PC1', 'PC2', 'PC3'])
+        ord_results_3d = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', eigvals_3d, samples_df_3d)
+        ord_results_3d._get_mpl_plt()
+        
+        with self.assertRaisesRegex(ValueError, r'Confidence ellipses can only be plotted in 2D.'):
+            ord_results_3d.plot(
+                self.df, 'categorical', confidence_ellipses=True, axes=[0, 1, 2]
+            )
 
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*3'):
@@ -487,7 +501,7 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
         # shouldn't raise an error on valid input. nothing is returned, so
         # nothing to check here
         samples = self.min_ord_results.samples.values.T
-        self.min_ord_results._validate_plot_axes(samples, (0,1))
+        self.min_ord_results._validate_plot_axes(samples, (0, 1))
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
@@ -602,6 +616,88 @@ class TestOrdinationResults2DPlotting(unittest.TestCase):
 
         colors = [line.get_color() for line in legend.get_lines()]
         npt.assert_equal(sorted(colors), ['green', 'red'])
+
+    def test_plot_confidence_ellipses_helper(self):
+        # Test the _plot_confidence_ellipses helper function directly
+        # Create a simple dataframe with enough points per category
+        df_sufficient = pd.DataFrame([['foo', '42'],
+                                      ['foo', '43'],
+                                      ['foo', '44'],
+                                      [22, 0],
+                                      [22, -4.2],
+                                      [22, 5.1]],
+                                     index=['A', 'B', 'C', 'D', 'E', 'F'],
+                                     columns=['categorical', 'numeric'])
+        
+        # Create samples with good spread
+        samples_sufficient = np.array([[0.1, 0.3],
+                                       [0.3, 0.15],
+                                       [0.2, 0.4],
+                                       [0.5, 0.6],
+                                       [0.4, 0.45],
+                                       [0.6, 0.7]])
+        samples_df_sufficient = pd.DataFrame(samples_sufficient, 
+                                             ['A', 'B', 'C', 'D', 'E', 'F'],
+                                             ['PC1', 'PC2'])
+        
+        ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', 
+            np.array([0.50, 0.25]), samples_df_sufficient)
+        ord_results._get_mpl_plt()
+        
+        fig, ax = plt.subplots()
+        
+        category_to_color = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        
+        # Call the helper function
+        ord_results._plot_confidence_ellipses(
+            ax, df_sufficient, 'categorical', category_to_color, [0, 1])
+        
+        # Check that ellipses were added as patches
+        patches = ax.patches
+        self.assertEqual(len(patches), 2)
+        
+        # Check that all patches are Ellipse objects
+        for patch in patches:
+            self.assertIsInstance(patch, mpl.patches.Ellipse)
+        
+        plt.close(fig)
+    
+    def test_plot_confidence_ellipses_insufficient_points(self):
+        # Test that ellipses are not plotted for categories with < 3 points
+        df_sparse = pd.DataFrame([['foo', '42'],
+                                  [22, 0]],
+                                 index=['A', 'B'],
+                                 columns=['categorical', 'numeric'])
+        
+        samples_sparse = np.array([[0.1, 0.2],
+                                   [0.2, 0.3]])
+        samples_df_sparse = pd.DataFrame(samples_sparse, ['A', 'B'],
+                                         ['PC1', 'PC2'])
+        
+        ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', 
+            np.array([0.50, 0.25]), samples_df_sparse)
+        ord_results._get_mpl_plt()
+        
+        fig, ax = plt.subplots()
+        
+        category_to_color = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        
+        ord_results._plot_confidence_ellipses(
+            ax, df_sparse, 'categorical', category_to_color, [0, 1])
+        
+        # Should have 0 ellipses since no category has 3+ points
+        patches = ax.patches
+        self.assertEqual(len(patches), 0)
+        
+        plt.close(fig)
         
 
 if __name__ == '__main__':
