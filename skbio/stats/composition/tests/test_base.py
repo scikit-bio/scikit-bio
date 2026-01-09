@@ -17,8 +17,8 @@ from scipy.sparse import coo_matrix
 from skbio import TreeNode
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
+    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, rclr,
+    ilr, ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
 
@@ -888,6 +888,230 @@ class VLRTests(TestCase):
         dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False, validate=False)
         output = dism.data.sum() / 2
         self.assertAlmostEqual(output, 0.2857382286903922)
+
+
+class TestRclr(TestCase):
+    """Tests for the robust centered log-ratio transformation."""
+
+    def test_basic_rclr(self):
+        """Test basic rclr transformation."""
+        # Simple matrix with no zeros
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+        result = rclr(mat)
+
+        # For each row, the mean of transformed values should be ~0
+        # (only over observed values)
+        for i in range(mat.shape[0]):
+            observed = ~np.isnan(result[i])
+            npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    def test_rclr_with_zeros(self):
+        """Test rclr handles zeros by producing NaN."""
+        mat = np.array([[1, 0, 3], [4, 5, 0]])
+        result = rclr(mat)
+
+        # Zeros should become NaN
+        self.assertTrue(np.isnan(result[0, 1]))
+        self.assertTrue(np.isnan(result[1, 2]))
+
+        # Non-zero positions should not be NaN
+        self.assertFalse(np.isnan(result[0, 0]))
+        self.assertFalse(np.isnan(result[0, 2]))
+
+    def test_rclr_centering(self):
+        """Test that rclr centers each row correctly."""
+        mat = np.array([[1, 2, 0, 4], [0, 3, 3, 0], [2, 2, 2, 2]])
+        result = rclr(mat)
+
+        # For rows with observed values, mean should be 0
+        for i in range(mat.shape[0]):
+            observed = ~np.isnan(result[i])
+            if np.any(observed):
+                npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    def test_rclr_negative_values_error(self):
+        """Test that negative values raise an error."""
+        mat = np.array([[1, -2, 3], [4, 5, 6]])
+
+        with self.assertRaises(ValueError) as context:
+            rclr(mat)
+
+        self.assertIn("negative", str(context.exception))
+
+    def test_rclr_inf_error(self):
+        """Test that infinite values raise an error."""
+        mat = np.array([[1, np.inf, 3], [4, 5, 6]])
+
+        with self.assertRaises(ValueError) as context:
+            rclr(mat)
+
+        self.assertIn("infinite", str(context.exception))
+
+    def test_rclr_nan_preserved(self):
+        """Test that NaN values (missing entries) are preserved."""
+        mat = np.array([[1, np.nan, 3], [4, 5, 6]])
+        result = rclr(mat)
+
+        # NaN should remain NaN
+        self.assertTrue(np.isnan(result[0, 1]))
+
+        # Non-NaN values should be transformed
+        self.assertFalse(np.isnan(result[0, 0]))
+        self.assertFalse(np.isnan(result[0, 2]))
+
+    def test_rclr_1d_input(self):
+        """Test that 1D input works correctly."""
+        vec = np.array([1, 2, 3])
+        result = rclr(vec)
+
+        # Should handle 1D gracefully
+        self.assertEqual(result.shape, vec.shape)
+        npt.assert_almost_equal(np.nanmean(result), 0.0)
+
+    def test_rclr_uniform_row(self):
+        """Test rclr on uniform row (all same values)."""
+        mat = np.array([[2, 2, 2, 2]])
+        result = rclr(mat)
+
+        # Uniform row should have all zeros (log-ratio of equal values)
+        npt.assert_almost_equal(result[0], [0.0, 0.0, 0.0, 0.0])
+
+    def test_rclr_preserves_ratios(self):
+        """Test that rclr preserves log-ratios between features."""
+        mat = np.array([[1, 2, 4]])
+        result = rclr(mat)
+
+        # log(2) - log(1) = log(2)
+        expected_ratio = np.log(2)
+        observed_ratio = result[0, 1] - result[0, 0]
+        npt.assert_almost_equal(observed_ratio, expected_ratio)
+
+    def test_rclr_3d_tensor(self):
+        """Test rclr on 3D tensor."""
+        tensor = np.array([
+            [[1, 2, 3], [4, 5, 6]],
+            [[7, 8, 9], [10, 11, 12]]
+        ])
+        result = rclr(tensor)
+
+        # Shape should be preserved
+        self.assertEqual(result.shape, tensor.shape)
+
+        # Each sample's mean should be approximately 0
+        result_2d = result.reshape(-1, tensor.shape[-1])
+        for i in range(result_2d.shape[0]):
+            observed = ~np.isnan(result_2d[i])
+            if np.any(observed):
+                npt.assert_almost_equal(result_2d[i, observed].mean(), 0.0,
+                                        decimal=5)
+
+    def test_rclr_3d_with_zeros(self):
+        """Test rclr handles zeros in 3D tensor."""
+        tensor = np.array([
+            [[1, 0, 3], [0, 5, 6]],
+            [[7, 8, 0], [10, 0, 12]]
+        ])
+        result = rclr(tensor)
+
+        # Zeros should become NaN
+        self.assertTrue(np.isnan(result[0, 0, 1]))
+        self.assertTrue(np.isnan(result[0, 1, 0]))
+        self.assertTrue(np.isnan(result[1, 0, 2]))
+        self.assertTrue(np.isnan(result[1, 1, 1]))
+
+    def test_rclr_various_shapes(self):
+        """Test that various tensor shapes work correctly."""
+        shapes = [(2, 3, 4), (5, 2, 6), (3, 3, 3)]
+
+        for shape in shapes:
+            tensor = np.random.rand(*shape) + 0.1  # Avoid zeros
+            result = rclr(tensor)
+            self.assertEqual(result.shape, shape)
+
+    def test_rclr_dense_equals_clr(self):
+        """Test that rclr equals clr on dense data without zeros."""
+        # Dense count data with no zeros
+        count_data = np.array([[2, 2, 6], [4, 4, 2]])
+
+        # Apply rclr
+        rclr_result = rclr(count_data)
+
+        # Apply closure then clr
+        closed_data = closure(count_data)
+        clr_result = clr(closed_data)
+
+        # Results should be identical for dense data
+        npt.assert_allclose(rclr_result, clr_result, rtol=1e-10)
+
+    def test_rclr_sparse_expected_values(self):
+        """Test rclr on sparse data with known expected values."""
+        # Sparse count data with zeros
+        count_data = np.array([[3, 3, 0], [0, 4, 2]])
+
+        # Expected values (zeros become NaN, observed values centered)
+        expected = np.array([[0.0, 0.0, np.nan],
+                            [np.nan, 0.34657359, -0.34657359]])
+
+        result = rclr(count_data)
+
+        # Check non-NaN values match expected
+        npt.assert_allclose(result[~np.isnan(result)],
+                           expected[~np.isnan(expected)],
+                           rtol=1e-5)
+
+        # Check NaN positions match
+        npt.assert_array_equal(np.isnan(result), np.isnan(expected))
+
+    def test_rclr_axis_parameter(self):
+        """Test rclr with different axis values."""
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+
+        # Default axis=-1 (features on last axis)
+        result_default = rclr(mat)
+        result_last = rclr(mat, axis=-1)
+        npt.assert_array_equal(result_default, result_last)
+
+        # axis=0 (features on first axis)
+        result_axis0 = rclr(mat, axis=0)
+        self.assertEqual(result_axis0.shape, mat.shape)
+
+        # Each column should be centered
+        for j in range(mat.shape[1]):
+            observed = ~np.isnan(result_axis0[:, j])
+            if np.any(observed):
+                npt.assert_almost_equal(result_axis0[observed, j].mean(), 0.0)
+
+    def test_rclr_log_ratio_preservation(self):
+        """Test that log-ratios are preserved exactly."""
+        # Data where we can compute expected values analytically
+        data = np.array([[1, 2, 4, 8]])
+
+        result = rclr(data)
+
+        # Log-ratio between adjacent pairs should be log(2)
+        expected_ratio = np.log(2)
+        for i in range(3):
+            observed_ratio = result[0, i + 1] - result[0, i]
+            npt.assert_almost_equal(observed_ratio, expected_ratio)
+
+    def test_rclr_geometric_mean_centering(self):
+        """Test that each row is centered at geometric mean."""
+        np.random.seed(42)
+        data = np.random.rand(5, 10) * 100 + 1  # No zeros
+
+        result = rclr(data)
+
+        # Each row should have mean of 0 (centered at geometric mean)
+        for i in range(data.shape[0]):
+            row_mean = np.nanmean(result[i])
+            npt.assert_almost_equal(row_mean, 0.0, decimal=10)
+
+    def test_rclr_validate_false(self):
+        """Test that validation can be disabled."""
+        # This should work with validate=False even with potential edge cases
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+        result = rclr(mat, validate=False)
+        self.assertEqual(result.shape, mat.shape)
 
 
 if __name__ == "__main__":
