@@ -881,7 +881,9 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         npt.assert_equal(sm.diagonal, self.dm_5x5_cond.diagonal)
 
         # symmetric from symmetric, change ids
-        sm = SymmetricMatrix(self.dm_5x5_cond, ids = ['aa', 'bb', 'cc', 'dd', 'ee'], condensed=True)
+        sm = SymmetricMatrix(
+            self.dm_5x5_cond, ids=['aa', 'bb', 'cc', 'dd', 'ee'], condensed=True
+        )
         npt.assert_equal(sm.data, self.dm_5x5_cond.data)
         self.assertEqual(sm.ids, ('aa', 'bb', 'cc', 'dd', 'ee'))
         npt.assert_equal(sm.diagonal, self.dm_5x5_cond.diagonal)
@@ -914,7 +916,7 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(sm.ids, ('aa', 'bb', 'cc'))
         npt.assert_equal(sm.diagonal, self.dm_3x3_cond.diagonal)
 
-        # symmetric from distance, change diagonal, only possible when the 
+        # symmetric from distance, change diagonal, only possible when the
         # original matrix is condensed, because we can't provide diagonal with a 2D
         # matrix as input
         dm = DistanceMatrix(self.dm_3x3_cond, condensed=True)
@@ -923,7 +925,7 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(sm.ids, self.dm_3x3_cond.ids)
         npt.assert_equal(sm.diagonal, np.array([11, 22, 33]))
 
-        # 
+        #
         dm = SymmetricMatrix(self.dm_3x3_cond, condensed=True)
         sm = self.matobj(dm, dm.ids, diagonal=[11, 22, 33], condensed=True)
         npt.assert_equal(sm.data, self.dm_3x3_cond.data)
@@ -934,7 +936,11 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(SymmetricMatrixError) as e:
             pm = PairwiseMatrix(self.dm_3x3_cond)
             sm = self.matobj(pm, pm.ids, diagonal=[11, 22, 33], condensed=True)
-        self.assertEqual(str(e.exception), "Cannot provide diagonal when data matrix is 2D. Information contained along diagonal is ambiguous.")
+        self.assertEqual(
+            str(e.exception),
+            "Cannot provide diagonal when data matrix is 2D. Information "
+            "contained along diagonal is ambiguous.",
+        )
 
     def test_as_condensed(self):
         sm = self.dm_3x3.as_condensed()
@@ -958,11 +964,13 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             SymmetricMatrix([1, 2, 3], ["a"], condensed=True)
         self.assertEqual(
             str(e.exception),
-            "The number of IDs (1) must match the number of rows/columns in the data (3).",
+            "The number of IDs (1) must match the number of rows/columns in "
+            "the data (3).",
         )
 
     def test_init_diagonal_1d_none(self):
-        # diagonal=None and 1d input should return None, because the underlying data structure is redundant
+        # diagonal=None and 1d input should return None, because the
+        # underlying data structure is redundant
         sm = SymmetricMatrix([1, 2, 3])
         obs = sm.diagonal
         exp = None
@@ -976,7 +984,8 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         self.assertEqual(obs, exp)
 
     def test_init_diagonal_2d_nonzero_trace(self):
-        # diagonal=None and 2d input should return None if it contains non-zeros, because the underlying data structure is redundant
+        # diagonal=None and 2d input should return None if it contains
+        # non-zeros, because the underlying data structure is redundant
         sm = SymmetricMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
         obs = sm.diagonal
         exp = None
@@ -1036,7 +1045,8 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             sm = SymmetricMatrix([[0, 1], [1, 0]], diagonal=[2, 3])
         self.assertEqual(
             str(e.exception),
-            "Cannot provide diagonal when data matrix is 2D. Information contained along diagonal is ambiguous.",
+            "Cannot provide diagonal when data matrix is 2D. Information "
+            "contained along diagonal is ambiguous.",
         )
 
     def test_validate_shape_invalid_1D_size(self):
@@ -1044,7 +1054,8 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             SymmetricMatrix([1, 2, 3, 4])
         self.assertEqual(
             str(e.exception),
-            "Incompatible vector size. It must be a binomial coefficient n choose 2 for some integer n >= 2.",
+            "Incompatible vector size. It must be a binomial coefficient n "
+            "choose 2 for some integer n >= 2.",
         )
 
     def test_validate_shape_3D(self):
@@ -1506,7 +1517,9 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
     def test_from_iterable_with_invalid_diagonal(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError) as e:
-            self.matobj.from_iterable(iterable, lambda a, b: a * b, diagonal=1, validate=False)
+            self.matobj.from_iterable(
+                iterable, lambda a, b: a * b, diagonal=1, validate=False
+            )
         self.assertEqual(
             str(e.exception),
             "Data must  be hollow (i.e., the diagonal can only contain zeros)."
@@ -1517,7 +1530,9 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         exp = self.matobj(
             [[0, 1, 2, 3], [1, 0, 2, 3], [2, 2, 0, 3], [3, 3, 3, 0]]
         )
-        res = self.matobj.from_iterable(iterable, lambda a, b: a, diagonal=0, validate=False)
+        res = self.matobj.from_iterable(
+            iterable, lambda a, b: a, diagonal=0, validate=False
+        )
         self.assertTrue((res.data == exp.data).all())
 
     def test_from_iterable_validate_non_hollow(self):
@@ -2004,19 +2019,24 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
         # Test successful renaming with a function in strict mode (default)
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"])
-        rename_func = lambda x: x + "_1"
+
+        def rename_func(x):
+            return x + "_1"
+
         dm.rename(rename_func)
         exp = ("a_1", "b_1")
         self.assertEqual(dm.ids, exp)
 
-        # Test renaming in non-strict mode where one ID is not included in the dictionary
+        # Test renaming in non-strict mode where one ID is not included in
+        # the dictionary
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"])
         rename_dict = {"a": "x"}  # 'b' will retain its original ID
         dm.rename(rename_dict, strict=False)
         exp = ("x", "b")
         self.assertEqual(dm.ids, exp)
 
-        # Test that renaming with strict=True raises an error if not all IDs are included
+        # Test that renaming with strict=True raises an error if not all IDs
+        # are included
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"])
         rename_dict = {"a": "x"}  # Missing 'b'
         with self.assertRaises(ValueError):
@@ -2032,19 +2052,24 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
 
         # Test successful renaming with a function in strict mode (default)
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"], condensed=True)
-        rename_func = lambda x: x + "_1"
+
+        def rename_func(x):
+            return x + "_1"
+
         dm.rename(rename_func)
         exp = ("a_1", "b_1")
         self.assertEqual(dm.ids, exp)
 
-        # Test renaming in non-strict mode where one ID is not included in the dictionary
+        # Test renaming in non-strict mode where one ID is not included in
+        # the dictionary
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"], condensed=True)
         rename_dict = {"a": "x"}  # 'b' will retain its original ID
         dm.rename(rename_dict, strict=False)
         exp = ("x", "b")
         self.assertEqual(dm.ids, exp)
 
-        # Test that renaming with strict=True raises an error if not all IDs are included
+        # Test that renaming with strict=True raises an error if not all IDs
+        # are included
         dm = DistanceMatrix([[0, 1], [1, 0]], ids=["a", "b"], condensed=True)
         rename_dict = {"a": "x"}  # Missing 'b'
         with self.assertRaises(ValueError):
@@ -2232,6 +2257,344 @@ class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
 
     def setUp(self):
         super(DistanceMatrixTests, self).setUp()
+
+
+class SparseDistanceMatrixTests(TestCase):
+    """Test suite for sparse DistanceMatrix implementation."""
+
+    def setUp(self):
+        """Set up test data for sparse distance matrices."""
+        # Dense test data
+        self.dm_3x3_data = [[0.0, 0.01, 4.2], [0.01, 0.0, 12.0], [4.2, 12.0, 0.0]]
+        self.dm_3x3_ids = ["a", "b", "c"]
+
+        # Sparse test data (mostly zeros)
+        self.sparse_4x4_data = [
+            [0.0, 1.0, 0.0, 0.0],
+            [1.0, 0.0, 2.0, 0.0],
+            [0.0, 2.0, 0.0, 3.0],
+            [0.0, 0.0, 3.0, 0.0],
+        ]
+        self.sparse_4x4_ids = ["w", "x", "y", "z"]
+
+        # Create scipy sparse array
+        import scipy.sparse
+        self.csr_data = scipy.sparse.csr_array(self.sparse_4x4_data)
+
+    def test_construction_with_sparse_true(self):
+        """Test creating sparse distance matrix with sparse=True."""
+        dm = DistanceMatrix(self.dm_3x3_data, self.dm_3x3_ids, sparse=True)
+
+        self.assertTrue(dm._flags["SPARSE"])
+        self.assertFalse(dm._flags["CONDENSED"])
+        self.assertIsInstance(dm.data, scipy.sparse.csr_array)
+        self.assertEqual(dm.shape, (3, 3))
+        npt.assert_array_almost_equal(dm.data.toarray(), self.dm_3x3_data)
+
+    def test_construction_from_sparse_array(self):
+        """Test creating distance matrix from scipy sparse array."""
+        dm = DistanceMatrix(self.csr_data, self.sparse_4x4_ids, sparse=True)
+
+        self.assertTrue(dm._flags["SPARSE"])
+        self.assertIsInstance(dm.data, scipy.sparse.csr_array)
+        npt.assert_array_almost_equal(dm.data.toarray(), self.sparse_4x4_data)
+
+    def test_construction_sparse_false_converts_to_dense(self):
+        """Test that sparse=False converts sparse input to dense."""
+        dm = DistanceMatrix(self.csr_data, self.sparse_4x4_ids, sparse=False)
+
+        self.assertFalse(dm._flags["SPARSE"])
+        self.assertIsInstance(dm.data, np.ndarray)
+        npt.assert_array_almost_equal(dm.data, self.sparse_4x4_data)
+
+    def test_construction_sparse_and_condensed_raises_error(self):
+        """Test that sparse=True and condensed=True raises error."""
+        with self.assertRaisesRegex(
+            DistanceMatrixError, "Cannot create sparse matrix in condensed form"
+        ):
+            DistanceMatrix(
+                self.dm_3x3_data, self.dm_3x3_ids, sparse=True, condensed=True
+            )
+
+    def test_validation_sparse_symmetry(self):
+        """Test that asymmetric sparse matrices are rejected."""
+        asym_data = [[0.0, 1.0], [2.0, 0.0]]  # Not symmetric
+
+        with self.assertRaisesRegex(
+            DistanceMatrixError,
+            "Data must be symmetric"
+        ):
+            DistanceMatrix(asym_data, ["a", "b"], sparse=True)
+
+    def test_validation_sparse_hollowness(self):
+        """Test that non-hollow sparse matrices are rejected."""
+        non_hollow = [[1.0, 0.0], [0.0, 1.0]]  # Non-zero diagonal
+
+        with self.assertRaisesRegex(
+            DistanceMatrixError,
+            "Data must.*be hollow"
+        ):
+            DistanceMatrix(non_hollow, ["a", "b"], sparse=True)
+
+    def test_validation_sparse_shape(self):
+        """Test that non-square sparse matrices are rejected."""
+        import scipy.sparse
+        non_square = scipy.sparse.csr_array([[0.0, 1.0, 2.0], [1.0, 0.0, 3.0]])
+
+        with self.assertRaisesRegex(
+            SymmetricMatrixError,
+            "Data must be square"
+        ):
+            DistanceMatrix(non_square, ["a", "b"], sparse=True)
+
+    def test_shape_property(self):
+        """Test that shape property works for sparse matrices."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+        self.assertEqual(dm.shape, (4, 4))
+
+    def test_dtype_property(self):
+        """Test that dtype property works for sparse matrices."""
+        dm = DistanceMatrix(self.dm_3x3_data, self.dm_3x3_ids, sparse=True)
+        self.assertEqual(dm.dtype, np.float64)
+
+    def test_ids_property(self):
+        """Test that ids property works for sparse matrices."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+        self.assertEqual(dm.ids, tuple(self.sparse_4x4_ids))
+
+    def test_getitem_single_id(self):
+        """Test indexing by single ID returns dense array."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        row = dm["x"]
+        self.assertIsInstance(row, np.ndarray)
+        npt.assert_array_almost_equal(row, [1.0, 0.0, 2.0, 0.0])
+
+    def test_getitem_id_pair(self):
+        """Test indexing by ID pair returns scalar."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        val = dm["x", "y"]
+        self.assertEqual(val, 2.0)
+
+        val = dm["w", "z"]
+        self.assertEqual(val, 0.0)
+
+    def test_getitem_numpy_slicing(self):
+        """Test NumPy-style slicing on sparse matrices."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        # Slicing returns sparse submatrix
+        submatrix = dm[1:3, 1:3]
+        self.assertIsInstance(submatrix, scipy.sparse.csr_array)
+        expected = [[0.0, 2.0], [2.0, 0.0]]
+        npt.assert_array_almost_equal(submatrix.toarray(), expected)
+
+    def test_filter_preserves_sparsity(self):
+        """Test that filter() preserves sparse format."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        filtered = dm.filter(["x", "z"])
+
+        self.assertTrue(filtered._flags["SPARSE"])
+        self.assertIsInstance(filtered.data, scipy.sparse.csr_array)
+        self.assertEqual(filtered.shape, (2, 2))
+        self.assertEqual(filtered.ids, ("x", "z"))
+        npt.assert_array_almost_equal(
+            filtered.data.toarray(),
+            [[0.0, 0.0], [0.0, 0.0]]
+        )
+
+    def test_copy_preserves_sparsity(self):
+        """Test that copy() preserves sparse format."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        dm_copy = dm.copy()
+
+        self.assertTrue(dm_copy._flags["SPARSE"])
+        self.assertIsInstance(dm_copy.data, scipy.sparse.csr_array)
+        self.assertIsNot(dm_copy.data, dm.data)
+        npt.assert_array_almost_equal(dm_copy.data.toarray(), dm.data.toarray())
+
+    def test_copy_to_condensed_converts_to_dense(self):
+        """Test that copying to condensed form densifies sparse matrix."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        dm_condensed = dm._copy(condensed=True)
+
+        self.assertTrue(dm_condensed._flags["CONDENSED"])
+        self.assertFalse(dm_condensed._flags["SPARSE"])
+        self.assertIsInstance(dm_condensed.data, np.ndarray)
+        self.assertEqual(dm_condensed.data.ndim, 1)
+
+    def test_permute_preserves_sparsity(self):
+        """Test that permute() preserves sparse format."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        dm_permuted = dm.permute(seed=42)
+
+        self.assertTrue(dm_permuted._flags["SPARSE"])
+        self.assertIsInstance(dm_permuted.data, scipy.sparse.csr_array)
+        self.assertEqual(dm_permuted.shape, (4, 4))
+
+    def test_permute_to_condensed_densifies(self):
+        """Test that permute(condensed=True) converts to dense."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        condensed = dm.permute(condensed=True, seed=42)
+
+        self.assertIsInstance(condensed, np.ndarray)
+        self.assertEqual(condensed.ndim, 1)
+
+    def test_redundant_form_converts_to_dense(self):
+        """Test that redundant_form() returns dense array."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        dense = dm.redundant_form()
+
+        self.assertIsInstance(dense, np.ndarray)
+        npt.assert_array_almost_equal(dense, self.sparse_4x4_data)
+
+    def test_condensed_form_converts_to_dense(self):
+        """Test that condensed_form() returns dense 1D array."""
+        dm = DistanceMatrix(self.dm_3x3_data, self.dm_3x3_ids, sparse=True)
+
+        condensed = dm.condensed_form()
+
+        self.assertIsInstance(condensed, np.ndarray)
+        self.assertEqual(condensed.ndim, 1)
+        # Verify it matches scipy's condensed form
+        expected = scipy.spatial.distance.squareform(
+            self.dm_3x3_data, force="tovector", checks=False
+        )
+        npt.assert_array_almost_equal(condensed, expected)
+
+    def test_as_sparse_from_dense(self):
+        """Test converting dense matrix to sparse."""
+        dm_dense = DistanceMatrix(
+            self.sparse_4x4_data, self.sparse_4x4_ids, sparse=False
+        )
+
+        dm_sparse = dm_dense.as_sparse()
+
+        self.assertTrue(dm_sparse._flags["SPARSE"])
+        self.assertIsInstance(dm_sparse.data, scipy.sparse.csr_array)
+        npt.assert_array_almost_equal(
+            dm_sparse.data.toarray(),
+            self.sparse_4x4_data
+        )
+
+    def test_as_sparse_from_sparse_returns_copy(self):
+        """Test that as_sparse() on sparse matrix returns copy."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        dm_sparse = dm.as_sparse()
+
+        self.assertTrue(dm_sparse._flags["SPARSE"])
+        self.assertIsNot(dm_sparse, dm)
+        self.assertIsNot(dm_sparse.data, dm.data)
+
+    def test_as_dense_from_sparse(self):
+        """Test converting sparse matrix to dense."""
+        dm_sparse = DistanceMatrix(
+            self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True
+        )
+
+        dm_dense = dm_sparse.as_dense()
+
+        self.assertFalse(dm_dense._flags["SPARSE"])
+        self.assertIsInstance(dm_dense.data, np.ndarray)
+        npt.assert_array_almost_equal(dm_dense.data, self.sparse_4x4_data)
+
+    def test_as_dense_from_dense_returns_copy(self):
+        """Test that as_dense() on dense matrix returns copy."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=False)
+
+        dm_dense = dm.as_dense()
+
+        self.assertFalse(dm_dense._flags["SPARSE"])
+        self.assertIsNot(dm_dense, dm)
+        self.assertIsNot(dm_dense.data, dm.data)
+
+    def test_to_data_frame_from_sparse(self):
+        """Test conversion to DataFrame from sparse matrix."""
+        dm = DistanceMatrix(self.sparse_4x4_data, self.sparse_4x4_ids, sparse=True)
+
+        df = dm.to_data_frame()
+
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertEqual(df.shape, (4, 4))
+        npt.assert_array_almost_equal(df.values, self.sparse_4x4_data)
+
+    def test_sparse_dense_roundtrip(self):
+        """Test roundtrip conversion between sparse and dense."""
+        dm_original = DistanceMatrix(
+            self.sparse_4x4_data, self.sparse_4x4_ids, sparse=False
+        )
+
+        dm_sparse = dm_original.as_sparse()
+        dm_back = dm_sparse.as_dense()
+
+        npt.assert_array_almost_equal(dm_back.data, dm_original.data)
+        self.assertEqual(dm_back.ids, dm_original.ids)
+
+
+class SparseDistanceMatrixIOTests(TestCase):
+    """Test I/O operations for sparse distance matrices."""
+
+    def setUp(self):
+        """Set up test data for I/O tests."""
+        self.sparse_data = [
+            [0.0, 1.0, 0.0],
+            [1.0, 0.0, 2.0],
+            [0.0, 2.0, 0.0],
+        ]
+        self.ids = ["a", "b", "c"]
+
+    def test_write_lsmat_densifies_sparse(self):
+        """Test that writing sparse matrix to lsmat format densifies it."""
+        dm = DistanceMatrix(self.sparse_data, self.ids, sparse=True)
+
+        fh = io.StringIO()
+        dm.write(fh, format="lsmat")
+        fh.seek(0)
+
+        # Read back as dense
+        dm_read = DistanceMatrix.read(fh, format="lsmat")
+
+        self.assertFalse(dm_read._flags["SPARSE"])
+        npt.assert_array_almost_equal(dm_read.data, self.sparse_data)
+
+    def test_read_lsmat_with_sparse_true(self):
+        """Test reading lsmat format with sparse=True."""
+        # Write dense matrix
+        dm_dense = DistanceMatrix(self.sparse_data, self.ids, sparse=False)
+        fh = io.StringIO()
+        dm_dense.write(fh, format="lsmat")
+        fh.seek(0)
+
+        # Read as sparse
+        dm_sparse = DistanceMatrix.read(fh, format="lsmat", sparse=True)
+
+        self.assertTrue(dm_sparse._flags["SPARSE"])
+        self.assertIsInstance(dm_sparse.data, scipy.sparse.csr_array)
+        npt.assert_array_almost_equal(dm_sparse.data.toarray(), self.sparse_data)
+
+    def test_lsmat_roundtrip_preserves_values(self):
+        """Test that sparse matrix values survive I/O roundtrip."""
+        dm_original = DistanceMatrix(self.sparse_data, self.ids, sparse=True)
+
+        # Write and read back
+        fh = io.StringIO()
+        dm_original.write(fh, format="lsmat")
+        fh.seek(0)
+        dm_read = DistanceMatrix.read(fh, format="lsmat", sparse=True)
+
+        npt.assert_array_almost_equal(
+            dm_read.data.toarray(),
+            dm_original.data.toarray()
+        )
+        self.assertEqual(dm_read.ids, dm_original.ids)
 
 
 if __name__ == "__main__":

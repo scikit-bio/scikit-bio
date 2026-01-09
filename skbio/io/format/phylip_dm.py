@@ -259,14 +259,17 @@ def _phylip_dm_sniffer(fh):
 
 @phylip_dm.reader(DistanceMatrix)
 def _phylip_dm_to_distance_matrix(
-    fh, cls=None, layout="lower", strict=False, dtype="float64"
+    fh, cls=None, layout="lower", strict=False, dtype="float64", sparse=False
 ):
     if cls is None:
         cls = DistanceMatrix
     dtype = _check_dtype(dtype)
     square = _check_layout(layout)
     data, ids = _phylip_dm_to_matrix(fh, square, strict, dtype)
-    return cls(data, ids)
+    try:
+        return cls(data, ids, sparse=sparse)
+    except TypeError:
+        return cls(data, ids)
 
 
 @phylip_dm.writer(DistanceMatrix)
@@ -371,9 +374,14 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
     ids = obj.ids
     fh.write(f"{str(n_samples)}\n")
 
+    # Get data, densifying if sparse
+    data = obj.data
+    if hasattr(obj, "_flags") and obj._flags.get("SPARSE", False):
+        data = obj.redundant_form()
+
     # square layout
     if _check_layout(layout):
-        for id_, vals in zip(ids, obj.data):
+        for id_, vals in zip(ids, data):
             # Here we are replacing whitespace with underscore on write, but we still
             # need to be able to index the DistanceMatrix object by id (which may
             # contain whitespace) so create a separate variable for writing the id
