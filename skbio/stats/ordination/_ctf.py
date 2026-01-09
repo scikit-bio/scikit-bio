@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 r"""Compositional Tensor Factorization (CTF).
@@ -14,7 +14,7 @@ by constructing a three-way tensor and performing tensor factorization.
 
 References
 ----------
-.. [1] Martino C, Shenhav L, Marotz CA, et al. 2020. Context-aware
+.. [1] Martino C, Shenhav L, Marotz CA, et al. 2021. Context-aware
    dimensionality reduction deconvolutes gut microbial community
    dynamics. Nature Biotechnology 39:165-168.
 
@@ -224,7 +224,7 @@ def ctf(table, sample_metadata, individual_id_column, state_column,
 
     References
     ----------
-    .. [1] Martino C, Shenhav L, Marotz CA, et al. 2020. Context-aware
+    .. [1] Martino C, Shenhav L, Marotz CA, et al. 2021. Context-aware
        dimensionality reduction deconvolutes gut microbial community
        dynamics. Nature Biotechnology 39:165-168.
 

@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import unittest
@@ -29,7 +29,7 @@ class TestSVDSort(unittest.TestCase):
         # S should be sorted in descending order
         npt.assert_array_equal(S_sorted, [3, 2, 1])
 
-    def test_sort_preserves_correspondance(self):
+    def test_sort_preserves_correspondence(self):
         """Test that U, S, V correspondence is maintained after sorting."""
         np.random.seed(42)
         U = np.random.randn(5, 3)

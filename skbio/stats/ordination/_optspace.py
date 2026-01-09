@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 r"""OptSpace Matrix Completion Algorithm.
@@ -193,7 +193,6 @@ def _compute_singular_values(U, V, M_observed, observed_mask):
         Optimal diagonal singular value matrix (r x r).
     """
     r = U.shape[1]
-    n, m = M_observed.shape
 
     # Build and solve the linear system for S
     # For each observed entry (i,j): M[i,j] = sum_k U[i,k] * S[k,k] * V[j,k]

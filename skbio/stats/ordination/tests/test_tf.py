@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import unittest
@@ -284,7 +284,7 @@ class TestTensorFactorizationCentering(unittest.TestCase):
 
         # With centering disabled, factors should not be exactly zero mean
         # (though the reconstruction might still center due to optimization)
-        self.assertTrue(tf.factors is not None)
+        self.assertIsNotNone(tf.factors)
 
 
 class TestKhatriRaoGemelli(unittest.TestCase):

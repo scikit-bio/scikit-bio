@@ -3,7 +3,7 @@
 #
 # Distributed under the terms of the Modified BSD License.
 #
-# The full license is in the file COPYING.txt, distributed with this software.
+# The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
 import unittest
@@ -597,8 +597,8 @@ class TestCTFIntegration(unittest.TestCase):
             n_initializations=3
         )
 
-        # Should have all 6 subjects
-        self.assertEqual(subject_ord.samples.shape[0], 6)
+        # Should have all subjects
+        self.assertEqual(subject_ord.samples.shape[0], n_subjects)
 
         # Should have all 4 timepoints
         self.assertEqual(state_ord.samples.shape[0], 4)
