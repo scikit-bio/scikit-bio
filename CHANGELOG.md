@@ -29,7 +29,7 @@
 
 ### Backward-incompatible changes
 
-* Removed `sokalmichener` from the list of supported beta diversity metrics (see `get_beta_diversity_metrics`), as this metric was removed from SciPy in 1.17.0. SciPy's documentation recommended using `rogerstanimoto` instead ([#2367](https://github.com/scikit-bio/scikit-bio/pull/2367)).
+* Removed `sokalmichener` from the list of supported beta diversity metrics (see `get_beta_diversity_metrics`), as this metric was removed in SciPy 1.17.0. SciPy's documentation recommended using `rogerstanimoto` instead ([#2367](https://github.com/scikit-bio/scikit-bio/pull/2367)).
 
 
 ## Version 0.7.1.post1

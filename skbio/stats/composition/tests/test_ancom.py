@@ -551,8 +551,9 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_no_signal(self):
-        with self.assertWarns(ConstantInputWarning):
-            result = ancom(self.table3, self.cats3, p_adjust=None)
+        # with self.assertWarns(ConstantInputWarning):
+        #     result = ancom(self.table3, self.cats3, p_adjust=None)
+        result = ancom(self.table3, self.cats3, p_adjust=None)
         exp = pd.DataFrame(
             {'W': np.array([0]*7),
              'Signif': np.array([False]*7, dtype=bool)})

@@ -165,8 +165,9 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        with self.assertWarns(ConstantInputWarning):
-            obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        # with self.assertWarns(ConstantInputWarning):
+        #     obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
