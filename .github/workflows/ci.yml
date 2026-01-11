@@ -44,7 +44,8 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          python -m pip install -r ci/requirements.lint.txt
+          python -m ensurepip
+          pip install -r ci/requirements.lint.txt
           conda list
       - name: Run Ruff
         run: |
@@ -69,8 +70,9 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          python -m pip install -r ci/requirements.doc.txt
-          python -m pip install .
+          python -m ensurepip
+          pip install -r ci/requirements.doc.txt
+          pip install .
           conda list
       - name: Make documentation
         run: make doc
@@ -113,13 +115,14 @@ jobs:
       - name: Install dependencies
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
-          python -m pip install --no-deps .
+          python -m ensurepip
+          pip install --no-deps .
           conda list
       # install anndata and polars here to test as optional dependencies.
       # encountered errors when installing using conda
       - name: Install optional dependencies
         run: |
-          python -m pip install anndata polars
+          pip install anndata polars
           conda list
       - name: Run unit tests
         env:
@@ -173,15 +176,17 @@ jobs:
         if: ${{ matrix.use_conda }}
         run: |
           conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
-          python -m pip install --no-deps .
+          python -m ensurepip
+          pip install --no-deps .
           conda list
       # pip installation
       - name: Install dependencies
         if: ${{ !matrix.use_conda }}
         run: |
-          python -m pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
-          python -m pip install --no-deps .
-          python -m pip list
+          python -m ensurepip
+          pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
+          pip install --no-deps .
+          pip list
       - name: Run unit tests
         env:
           WITH_COVERAGE: "TRUE"
