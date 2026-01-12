@@ -40,6 +40,7 @@ from skbio.tree._c_me import (
     _bal_avgdist_taxon,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
+    _bal_avgdist_insert_p,
     _ols_lengths,
     _ols_lengths_d2,
     _bal_lengths,
@@ -1155,6 +1156,69 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
+                obs := adm.copy(), i, adk, tree, postodr, powers, stack
+            )
+
+            # insert taxon and calculate full matrix
+            tree_, pre_, post_ = tree.copy(), preodr.copy(), postodr.copy()
+            _insert_taxon(m, i, tree_, pre_, post_)
+            _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
+
+            npt.assert_allclose(obs, exp)
+
+    def test_bal_avgdist_insert_p(self):
+        """Update balanced average distance matrix after taxon insertion."""
+        # Test if the algorithm produces the same result as calculated from the full
+        # matrix after taxon insertion.
+        tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
+        powers = 2.0 ** -np.arange(5)
+        stack = np.zeros(7, dtype=int)
+        adm = np.array([
+            [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
+            [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
+            [ 9. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
+            [ 9. , 10. ,  9.5,  0. ,  8. ,  0. ,  0. ],
+            [ 9. , 10. ,  9.5,  8. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+        ])
+        adk = np.array([
+            [7.  , 8.  ],
+            [9.  , 6.5 ],
+            [5.  , 8.5 ],
+            [7.  , 5.75],
+            [3.  , 7.75],
+            [0.  , 0.  ],
+            [0.  , 0.  ],
+        ])
+        # Insert e as a sibling of d. This should recover tree1.
+        target = 4
+        _bal_avgdist_insert_p(
+            obs := adm.copy(), target, adk, tree, postodr, powers, stack
+        )
+        exp = np.array([
+            [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
+            [ 5.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
+            [ 8.75,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+            [ 9.  , 10.  ,  9.5 ,  0.  ,  8.  ,  7.5 ,  7.  ],
+            [ 9.  , 10.  ,  9.5 ,  8.  ,  0.  ,  8.75,  3.  ],
+            [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
+            [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
+        ])
+        npt.assert_allclose(obs, exp)
+
+        # another example: all possible insertions
+        dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
+        n = tree.shape[0]
+        m = tree[0, 4] + 1
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
+        _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        powers = 2.0 ** -np.arange(m)
+        stack = np.zeros(n, dtype=int)
+
+        for i in range(n - 2):
+            # update matrix using the algorithm
+            _bal_avgdist_insert_p(
                 obs := adm.copy(), i, adk, tree, postodr, powers, stack
             )
 
