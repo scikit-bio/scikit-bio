@@ -69,6 +69,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          python -m ensurepip
           pip install numpy cython build
 
       - name: Build sdist

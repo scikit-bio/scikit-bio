@@ -8,6 +8,7 @@
 * `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
 * Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
 * Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added new plotting functionality for `OrdinationResults` objects, including plotting centroids, confidence ellipses, and 2D plots ([#2362](https://github.com/scikit-bio/scikit-bio/pull/2362))
 
 ### Performance enhancements
 
@@ -25,6 +26,10 @@
 
 * scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
 * `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+
+### Backward-incompatible changes
+
+* Removed `sokalmichener` from the list of supported beta diversity metrics (see `get_beta_diversity_metrics`), as this metric was removed in SciPy 1.17.0. SciPy's documentation recommended using `rogerstanimoto` instead ([#2367](https://github.com/scikit-bio/scikit-bio/pull/2367)).
 
 
 ## Version 0.7.1.post1
