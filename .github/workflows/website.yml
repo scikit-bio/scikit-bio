@@ -30,7 +30,9 @@ jobs:
           python-version: ${{ env.latest_python }}
 
       - name: Install dependencies
-        run: pip install -r ci/requirements.doc.txt
+        run: |
+          python -m ensurepip
+          pip install -r ci/requirements.doc.txt
 
       - name: Make website
         run: make web

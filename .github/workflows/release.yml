@@ -38,6 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m ensurepip
           pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
           pip install --no-deps .
           pip list

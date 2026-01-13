@@ -165,8 +165,11 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        with self.assertWarns(ConstantInputWarning):
-            obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        # TODO: SciPy 1.17+ changed the behavior of f_oneway so that a
+        # ConstantInputWarning may no longer be emitted for this case.
+        # Once the expected behavior is clarified, consider reintroducing
+        # an explicit warning assertion here.
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
