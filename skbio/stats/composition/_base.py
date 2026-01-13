@@ -127,7 +127,19 @@ def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
     """Perform closure."""
-    return mat / xp.sum(mat, axis=axis, keepdims=True)
+    row_sums = _nansum(xp, mat, axis=axis, keepdims=True)
+    return mat / row_sums
+
+
+def _nansum(
+    xp: ModuleType, arr: StdArray, axis: int, keepdims: bool = False
+) -> StdArray:
+    """Sum array elements along axis, ignoring NaN values."""
+    # Create mask of non-NaN values
+    nan_mask = xp.isnan(arr)
+    # Replace NaN with 0 for summation
+    arr_no_nan = xp.where(nan_mask, xp.asarray(0.0, dtype=arr.dtype), arr)
+    return xp.sum(arr_no_nan, axis=axis, keepdims=keepdims)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -634,34 +646,29 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform rclr transform."""
-    # Ensure float dtype for output (NaN requires float)
     float_dtype = xp.float64
     mat_float = xp.asarray(mat, dtype=float_dtype)
 
-    # Create mask for observed (non-zero and non-NaN) values
-    # NaN values in input are treated as missing and should remain NaN
-    observed_mask = (mat > 0) & ~xp.isnan(mat_float)
+    # Track which values were observed in the ORIGINAL input
+    observed_mask = (mat_float > 0) & ~xp.isnan(mat_float)
 
-    # For closure, replace NaN with 0 temporarily
-    mat_for_closure = xp.where(
-        xp.isnan(mat_float), xp.asarray(0.0, dtype=float_dtype), mat_float
+    # Normalize to closure (using _nansum internally)
+    closed = _closure(xp, mat_float, axis)
+    closed_safe = xp.where(
+        closed > 0, closed, xp.asarray(float("nan"), dtype=float_dtype)
     )
 
-    # Normalize to closure (rows sum to 1)
-    closed = _closure(xp, mat_for_closure, axis)
+    # Take log (will give -inf for zeros, NaN for NaN)
+    log_closed = xp.log(closed_safe)
 
-    # Take log, zeros become -inf
-    log_closed = xp.log(closed)
-
-    # Count observed values along axis for geometric mean
+    # Count observed values from ORIGINAL mask
     n_observed = xp.sum(observed_mask.astype(float_dtype), axis=axis, keepdims=True)
 
-    # Sum of logs for observed values only (replace non-observed with 0 for sum)
+    # Sum logs for observed values only
     log_masked = xp.where(observed_mask, log_closed, xp.asarray(0.0, dtype=float_dtype))
     log_sum = xp.sum(log_masked, axis=axis, keepdims=True)
 
-    # Geometric mean (in log space) over observed values
-    # Avoid division by zero for all-zero/all-NaN compositions
+    # Geometric mean
     n_observed_safe = xp.where(
         n_observed > 0, n_observed, xp.asarray(1.0, dtype=float_dtype)
     )
@@ -670,7 +677,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     # Center by geometric mean
     result = log_closed - geo_mean_log
 
-    # Replace non-observed (zeros and NaN) with NaN
+    # Replace non-observed with NaN
     result = xp.where(
         observed_mask, result, xp.asarray(float("nan"), dtype=float_dtype)
     )
