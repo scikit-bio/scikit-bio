@@ -28,6 +28,7 @@ def _check_composition(
     axis: int = -1,
     nozero: bool = False,
     maxdim: int | None = None,
+    allnum: bool = True,
 ):
     r"""Check if the input matrix contain valid compositions.
 
@@ -43,6 +44,8 @@ def _check_composition(
         If True, matrix cannot have zero values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
+    allnum : bool, optionsl
+        If True, matrix cannot have NaN values.
 
     Raises
     ------
@@ -60,8 +63,14 @@ def _check_composition(
     """
     if not xp.isdtype(mat.dtype, "numeric"):
         raise TypeError("Input matrix must have a numeric data type.")
-    if not xp.all(xp.isfinite(mat)):
-        raise ValueError("Input matrix cannot have infinite or NaN values.")
+    if allnum:
+        # Don't allow infinite or NaN values.
+        if not xp.all(xp.isfinite(mat)):
+            raise ValueError("Input matrix cannot have infinite or NaN values.")
+    else:
+        # Allow NaN, but not infinite.
+        if xp.any(xp.isinf(mat)):
+            raise ValueError("Input matrix cannot have infinite values.")
     if nozero:
         if xp.any(mat <= 0):
             raise ValueError("Input matrix cannot have negative or zero components.")
@@ -550,14 +559,14 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform robust centre log ratio (rclr) transformation.
 
     The robust CLR transformation is similar to the standard CLR transformation,
-    but it only operates on observed (non-zero) values. This makes it suitable
-    for sparse compositional data such as microbiome count data.
+    but it only operates on observed (non-zero) values [1]_. This makes it suitable
+    for sparse compositional data.
 
     For each composition, the transformation computes:
 
     .. math::
 
-        rclr(x_i) = \log(x_i) - \frac{1}{|S|} \sum_{j \in S} \log(x_j)
+        rclr(x_i) = \ln(x_i) - \frac{1}{|S|} \sum_{j \in S} \ln(x_j)
 
     where :math:`S` is the set of indices with non-zero values, and :math:`|S|`
     is the number of non-zero values.
@@ -599,9 +608,9 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
     References
     ----------
-    .. [1] Martino C, Morton JT, Marotz CA, Thompson LR, Tripathi A,
-       Knight R, Zengler K. 2019. A Novel Sparse Compositional Technique
-       Reveals Microbial Perturbations. mSystems 4:e00016-19.
+    .. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+       Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+       microbial perturbations. MSystems, 4(1), 10-1128.
 
     Examples
     --------
@@ -619,23 +628,8 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     """
     xp, mat = ingest_array(mat)
     if validate:
-        _check_rclr_input(xp, mat)
+        _check_composition(xp, mat, allnum=False)
     return _rclr(xp, mat, axis)
-
-
-def _check_rclr_input(xp: ModuleType, mat: StdArray) -> None:
-    """Check if input is valid for rclr transformation.
-
-    NaN values are allowed as they represent missing entries.
-    """
-    if not xp.isdtype(mat.dtype, "numeric"):
-        raise TypeError("Input matrix must have a numeric data type.")
-    if xp.any(xp.isinf(mat)):
-        raise ValueError("Input matrix cannot have infinite values.")
-    # Check for negative values, excluding NaN (which represents missing data)
-    non_nan_mask = ~xp.isnan(mat)
-    if xp.any(mat[non_nan_mask] < 0):
-        raise ValueError("Input matrix cannot have negative values.")
 
 
 def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
@@ -657,8 +651,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     closed = _closure(xp, mat_for_closure, axis)
 
     # Take log, zeros become -inf
-    with np.errstate(divide="ignore"):
-        log_closed = xp.log(closed)
+    log_closed = xp.log(closed)
 
     # Count observed values along axis for geometric mean
     n_observed = xp.sum(observed_mask.astype(float_dtype), axis=axis, keepdims=True)
