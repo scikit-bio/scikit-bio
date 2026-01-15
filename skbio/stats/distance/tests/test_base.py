@@ -14,6 +14,7 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 import scipy.spatial.distance
+from scipy.sparse import csr_array, issparse
 
 try:
     import matplotlib as mpl
@@ -787,6 +788,11 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ["a", "b", "c", "d"])
 
+    def test_init_with_sparse(self):
+        mat = csr_array([[0, 0, 1], [0, 1, 0], [0, 0, 0]], dtype=np.float64)
+        pm = self.matobj(mat, sparse=True)
+        self.assertTrue(pm._flags["SPARSE"])
+        self.assertTrue(issparse(pm.data))
 
 class SymmetricMatrixTestBase(PairwiseMatrixTestData):
     @classmethod
