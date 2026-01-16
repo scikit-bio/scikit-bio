@@ -14,6 +14,7 @@ from typing import Any, ClassVar, Type, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+import scipy.sparse
 from scipy.spatial.distance import squareform
 
 from skbio._base import SkbioObject
@@ -122,7 +123,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     default_write_format: ClassVar[str] = "lsmat"
     """Default write format for this object: ``lsmat``."""
     # Used in __str__
-    # TODO: decide on what to call a matrix element here
     _matrix_element_name: ClassVar[str] = "relationship"
 
     read = Read()
@@ -133,6 +133,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         data: NDArray | Sequence[float] | Sequence[Sequence[float]] | PairwiseMatrix,
         ids: Sequence[str] | None = None,
         validate: bool = True,
+        sparse: bool = False,
     ):
         data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
@@ -153,8 +154,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         self._ids = ids
         self._id_index = self._index_list(self._ids)
-        self._data = self._init_data(data)
-        self._flags = self._init_flags()
+        self._data = self._init_data(data, sparse)
+        self._flags = self._init_flags(sparse)
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
@@ -166,6 +167,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                 validate_ids = False
                 ids = data.ids
             data = data.data
+
+        if scipy.sparse.issparse(data):
+            return (data, ids, validate_shape, validate_ids)
 
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
@@ -202,13 +206,26 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         else:
             return tuple(str(i) for i in range(_vec_to_shape(data)))
 
-    def _init_flags(self, condensed: bool = False) -> dict:
+    def _init_flags(self, sparse: bool) -> dict:
         """Initialize boolean flags for matrix forms."""
-        # This is the default value. PairwiseMatrix doesn't really need flags.
-        return {"CONDENSED": False}
+        return {"CONDENSED": False, "SPARSE": sparse}
 
-    def _init_data(self, data: NDArray, condensed: bool = False) -> NDArray:
+    def _init_data(self, data: NDArray, sparse: bool) -> NDArray:
         """Initialize underlying data structure."""
+        if sparse:
+            # Convert 1D -> 2D if needed
+            if isinstance(data, np.ndarray) and data.ndim == 1:
+                data = squareform(data, force="tomatrix", checks=False)
+
+            # Already sparse -> return as-is
+            if isinstance(data, scipy.sparse.csr_array):
+                return data
+
+            # Dense -> sparse conversion
+            return scipy.sparse.csr_array(data)
+        else:
+            if scipy.sparse.issparse(data):
+                data = data.todense()
         return data
 
     @classonlymethod
@@ -306,7 +323,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         equal. The shape of the redundant form matrix is returned.
 
         """
-        if self._flags["CONDENSED"]:
+        if self._flags.get("SPARSE", False):
+            return self._data.shape
+        if self._flags.get("CONDENSED", False):
             m = _vec_to_shape(self._data)
             return (m, m)
         return self._data.shape
@@ -317,9 +336,14 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         Notes
         -----
-        If the matrix is stored in redundant form, size is equivalent to
-        ``self.shape[0] * self.shape[1]``. If the matrix is stored in condensed form,
-        size is equal to the number of elements in the condensed array.
+        The returned value depends on the storage format:
+
+        - Redundant (dense) form: ``self.shape[0] * self.shape[1]``
+        - Condensed (vector) form: number of elements in the condensed array
+        - Sparse form: number of non-zero elements stored
+
+        This property reflects the actual memory footprint of the storage format, not
+        the conceptual size of the full matrix.
 
         """
         return self._data.size
@@ -413,7 +437,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         return self._copy()
 
-    def _copy(self, transpose: bool = False, condensed: bool = False) -> PairwiseMatrix:
+    def _copy(self, transpose: bool = False) -> PairwiseMatrix:
         r"""Copy support.
 
         Parameters
@@ -473,7 +497,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def filter(
         self,
         ids: Sequence[str],
-        strict: bool = True,  # , preserve_condensed=True
+        strict: bool = True,
     ) -> PairwiseMatrix:
         r"""Filter the matrix by IDs.
 
@@ -506,7 +530,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         """
         if tuple(self._ids) == tuple(ids):
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                return self.__class__(self._data, self._ids, sparse=True)
+            elif self._flags.get("CONDENSED", False):
                 return self.__class__(self._data, self._ids, condensed=True)
             else:
                 return self.__class__(self._data, self._ids)
@@ -528,7 +554,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
-        if self._flags["CONDENSED"]:
+        if self._flags.get("SPARSE", False):
+            idxs_array = np.array(idxs)
+            # Fancy indexing with np.ix_
+            filtered_data = self._data[np.ix_(idxs_array, idxs_array)]
+            self._validate_ids(filtered_data, ids)
+            return self.__class__(filtered_data, ids, validate=False, sparse=True)
+        elif self._flags.get("CONDENSED", False):
             filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
             return self.__class__(filtered_data, ids, validate=False, condensed=True)
@@ -1034,6 +1066,24 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         matrix could be used after the exception is caught and handled.
 
         """
+        # Handle sparse arrays
+        if isinstance(data, scipy.sparse.csr_array):
+            if 0 in data.shape:
+                raise PairwiseMatrixError("Data must be at least 1x1 in size.")
+            if len(data.shape) != 2:
+                raise PairwiseMatrixError("Data must have exactly two dimensions.")
+            if data.shape[0] != data.shape[1]:
+                raise PairwiseMatrixError(
+                    "Data must be square (i.e., have the same number of rows"
+                    " and columns)."
+                )
+            if data.dtype not in (np.float32, np.float64):
+                raise PairwiseMatrixError(
+                    "Data must contain only floating point values."
+                )
+            return
+
+        # Handle dense arrays
         if 0 in data.shape:
             raise PairwiseMatrixError("Data must be at least 1x1 in size.")
         if len(data.shape) != 2:
@@ -1100,6 +1150,7 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | NDArray = None,
+        sparse: bool = False,
     ):
         (
             data,
@@ -1129,8 +1180,8 @@ class SymmetricMatrix(PairwiseMatrix):
         self._ids = ids
         self._id_index = self._index_list(self._ids)
         self._diagonal = self._init_diagonal(diagonal, data, condensed)
-        self._data = self._init_data(data, condensed)
-        self._flags = self._init_flags(condensed)
+        self._data = self._init_data(data, condensed, sparse)
+        self._flags = self._init_flags(condensed, sparse)
 
     def _normalize_input(self, data, ids, diagonal):
         """Get input into standard numpy array format."""
@@ -1173,6 +1224,17 @@ class SymmetricMatrix(PairwiseMatrix):
             if diagonal is None:
                 validate_diagonal = False
             data = data.data
+
+        if scipy.sparse.issparse(data):
+            return (
+                data,
+                ids,
+                diagonal,
+                validate_data,
+                validate_ids,
+                validate_shape,
+                validate_diagonal,
+            )
 
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
@@ -1245,41 +1307,65 @@ class SymmetricMatrix(PairwiseMatrix):
                 return np.diagonal(data)
         return None
 
-    def _init_flags(self, condensed: bool = False) -> dict:
+    def _init_flags(self, condensed: bool = False, sparse: bool = False) -> dict:
         """Initialize flags for symmetric matrix.
 
         Parameters
         ----------
         condensed : bool
             Whether the matrix is in condensed form.
+        sparse : bool
+            Whether the matrix is in sparse form.
 
         Returns
         -------
         dict
             Dictionary containing information on the form of the matrix.
 
-        """
-        if condensed:
-            return {"CONDENSED": True}
-        else:
-            return {"CONDENSED": False}
+        Raises
+        ------
+        DistanceMatrixError
+            If both condensed and sparse are True.
 
-    def _init_data(self, data: NDArray, condensed: bool = False) -> NDArray:
+        """
+        if condensed and sparse:
+            raise DistanceMatrixError("Cannot set both CONDENSED and SPARSE flags.")
+        return {"CONDENSED": condensed, "SPARSE": sparse}
+
+    def _init_data(
+        self, data: NDArray, condensed: bool = False, sparse: bool = False
+    ) -> NDArray:
         """Initialize data for symmetric matrix.
 
         Parameters
         ----------
-        data : np.ndarray
+        data : np.ndarray or scipy.sparse.csr_array
             1-D or 2-D array representing the data of the matrix.
         condensed : bool
             Whether or not to store the data in condensed form.
+        sparse : bool
+            Whether or not to store the data in sparse form.
 
         Returns
         -------
-        np.ndarray
+        np.ndarray or scipy.sparse.csr_array
             1-D or 2-D array containing the values of the matrix.
 
         """
+        if sparse:
+            # Convert 1D -> 2D if needed
+            if isinstance(data, np.ndarray) and data.ndim == 1:
+                data = squareform(data, force="tomatrix", checks=False)
+
+            # Already sparse -> return as-is
+            if isinstance(data, scipy.sparse.csr_array):
+                return data
+
+            # Dense -> sparse conversion
+            return scipy.sparse.csr_array(data)
+        else:
+            if scipy.sparse.issparse(data):
+                data = data.todense()
         if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
@@ -1307,8 +1393,20 @@ class SymmetricMatrix(PairwiseMatrix):
         be symmetric.
 
         """
+        # Handle sparse arrays
+        if isinstance(data, scipy.sparse.csr_array):
+            # Symmetry check: (A - A.T).nnz == 0
+            diff = data - data.T
+            if diff.nnz != 0:
+                raise SymmetricMatrixError(
+                    "Data must be symmetric and cannot contain NaNs."
+                )
+            return
+
         if (data.ndim != 1) and (not is_symmetric(data)):
-            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
+            raise SymmetricMatrixError(
+                "Data must be symmetric and cannot contain NaNs."
+            )
 
     def _validate_diagonal(
         self, data: NDArray, diagonal: NDArray | None = None
@@ -1353,6 +1451,21 @@ class SymmetricMatrix(PairwiseMatrix):
         symmetric matrix. If input is not 1D or 2D, it raises an error.
 
         """
+        # Handle sparse arrays (always 2D)
+        if isinstance(data, scipy.sparse.csr_array):
+            if 0 in data.shape:
+                raise SymmetricMatrixError("Data must be at least 1x1 in size.")
+            if data.shape[0] != data.shape[1]:
+                raise SymmetricMatrixError(
+                    "Data must be square (i.e., have the same number of rows and "
+                    "columns)."
+                )
+            if data.dtype not in (np.float32, np.float64):
+                raise SymmetricMatrixError(
+                    "Data must contain only floating point values."
+                )
+            return
+
         if data.ndim == 2:
             if 0 in data.shape:
                 raise SymmetricMatrixError("Data must be at least 1x1 in size.")
@@ -1531,7 +1644,10 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         if isinstance(index, str):
             row_idx = self.index(index)
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                # Return dense 1D array for compatibility
+                return self._data[row_idx].toarray().ravel()
+            elif self._flags.get("CONDENSED", False):
                 return _get_row_from_condensed(
                     self._data, row_idx, self.shape[0], self._diagonal
                 )
@@ -1539,7 +1655,10 @@ class SymmetricMatrix(PairwiseMatrix):
                 return self._data[row_idx]
         elif isinstance(index, tuple) and self._is_id_pair(index):
             i, j = self.index(index[0]), self.index(index[1])
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                # Scalar extraction works directly
+                return self._data[i, j]
+            elif self._flags.get("CONDENSED", False):
                 return _get_element_from_condensed(
                     self._data, i, j, self.shape[0], self._diagonal
                 )
@@ -1549,7 +1668,10 @@ class SymmetricMatrix(PairwiseMatrix):
             # NumPy index types are numerous and complex, easier to just
             # ignore them in type checking.
             # revert to redundant form to handle numpy style indexing
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                # Pass through to scipy sparse array
+                return self._data.__getitem__(index)  # type: ignore[index]
+            elif self._flags.get("CONDENSED", False):
                 return self.redundant_form().__getitem__(index)
             else:
                 return self._data.__getitem__(index)  # type: ignore[index]
@@ -1620,7 +1742,9 @@ class SymmetricMatrix(PairwiseMatrix):
                [ 2., 3., 0.]])
 
         """
-        if self._flags["CONDENSED"]:
+        if self._flags.get("SPARSE", False):
+            return self._data.toarray()
+        elif self._flags.get("CONDENSED", False):
             mat = squareform(self._data, force="tomatrix", checks=False)
             np.fill_diagonal(mat, self._diagonal)
             return mat
@@ -1661,6 +1785,87 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         return self._copy(condensed=True)
 
+    def as_sparse(self) -> SymmetricMatrix:
+        """Convert to sparse format.
+
+        Returns
+        -------
+        SymmetricMatrix
+            A new matrix object with the same data stored in sparse format.
+
+        See Also
+        --------
+        as_dense
+        as_redundant
+        as_condensed
+
+        Notes
+        -----
+        This method always returns a new matrix object. If the matrix is already
+        sparse, a deep copy is returned. Condensed matrices will be converted to
+        redundant form before sparsification.
+
+        Examples
+        --------
+        Convert a dense matrix to sparse format:
+
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> sm_dense = SymmetricMatrix([[0, 1, 0],
+        ...                             [1, 0, 3],
+        ...                             [0, 3, 0]], ids=['a', 'b', 'c'])
+        >>> sm_sparse = sm_dense.as_sparse()
+        >>> type(sm_sparse.data)
+        <class 'scipy.sparse._csr.csr_array'>
+
+        """
+        if self._flags.get("SPARSE", False):
+            return self.copy()
+
+        data = (
+            self.redundant_form() if self._flags.get("CONDENSED", False) else self._data
+        )
+        return self.__class__(data, deepcopy(self.ids), sparse=True)
+
+    def as_dense(self) -> SymmetricMatrix:
+        """Convert to dense format.
+
+        Returns
+        -------
+        SymmetricMatrix
+            A new matrix object with the same data stored in dense format.
+
+        See Also
+        --------
+        as_sparse
+        as_redundant
+        as_condensed
+
+        Notes
+        -----
+        This method always returns a new matrix object in redundant (dense) form.
+        If the matrix is already dense, a deep copy is returned.
+
+        Examples
+        --------
+        Convert a sparse matrix back to dense format:
+
+        >>> from skbio.stats.distance import SymmetricMatrix
+        >>> import scipy.sparse
+        >>> data_sparse = scipy.sparse.csr_array([[0.0, 1.0, 0.0],
+        ...                                       [1.0, 0.0, 3.0],
+        ...                                       [0.0, 3.0, 0.0]])
+        >>> sm_sparse = SymmetricMatrix(data_sparse, ids=['a', 'b', 'c'], sparse=True)
+        >>> sm_dense = sm_sparse.as_dense()
+        >>> type(sm_dense.data)
+        <class 'numpy.ndarray'>
+
+        """
+        if not self._flags.get("SPARSE", False):
+            return self.copy()
+
+        data = self._data.todense()
+        return self.__class__(data, deepcopy(self.ids), sparse=False)
+
     def condensed_form(self) -> NDArray:
         r"""Return an array of distances in condensed format.
 
@@ -1696,7 +1901,10 @@ class SymmetricMatrix(PairwiseMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        if self._flags["CONDENSED"]:
+        if self._flags.get("SPARSE", False):
+            dense = self._data.toarray()
+            return squareform(dense, force="tovector", checks=False)
+        elif self._flags.get("CONDENSED", False):
             return self._data
         else:
             return squareform(self._data, force="tovector", checks=False)
@@ -1753,14 +1961,23 @@ class SymmetricMatrix(PairwiseMatrix):
         if condensed:
             # if self.__class__ != DistanceMatrix:
             #     raise TypeError("Only distance matrices can return condensed.")
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                # Convert sparse to dense, then condensed
+                permuted_sparse = self._data[np.ix_(order, order)]
+                permuted_dense = permuted_sparse.toarray()
+                return squareform(permuted_dense, force="tovector", checks=False)
+            elif self._flags.get("CONDENSED", False):
                 permuted_condensed = distmat_reorder_condensed_py(self._data, order)
             else:
                 permuted_condensed = distmat_reorder_condensed(self._data, order)
             return permuted_condensed
         else:
             # Note: Skip validation, since we assume self was already validated
-            if self._flags["CONDENSED"]:
+            if self._flags.get("SPARSE", False):
+                # Permute using fancy indexing
+                permuted = self._data[np.ix_(order, order)]
+                return self.__class__(permuted, self.ids, validate=False, sparse=True)
+            elif self._flags.get("CONDENSED", False):
                 permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
                     permuted, self.ids, validate=False, condensed=True
@@ -1778,7 +1995,9 @@ class SymmetricMatrix(PairwiseMatrix):
             Deep copy of the matrix. Will be the same type as ``self``.
 
         """
-        if self._flags["CONDENSED"]:
+        if self._flags.get("SPARSE", False):
+            return self._copy()
+        elif self._flags.get("CONDENSED", False):
             return self._copy(condensed=True)
         else:
             return self._copy()
@@ -1800,6 +2019,31 @@ class SymmetricMatrix(PairwiseMatrix):
         SymmetricMatrix
 
         """
+        # Handle sparse matrices
+        if self._flags.get("SPARSE", False):
+            if condensed:
+                # Convert to dense, then condensed
+                dense = self._data.toarray()
+                condensed_data = squareform(dense, force="tovector", checks=False)
+                return self.__class__(
+                    condensed_data,
+                    deepcopy(self.ids),
+                    diagonal=deepcopy(self._diagonal),
+                    validate=False,
+                    condensed=True,
+                )
+            else:
+                data_copy = self._data.copy()
+                if transpose:
+                    data_copy = data_copy.T.tocsr()
+                return self.__class__(
+                    data_copy,
+                    deepcopy(self.ids),
+                    diagonal=deepcopy(self._diagonal),
+                    validate=False,
+                    sparse=True,
+                )
+
         # adding for backward compatibility
         data = self._data.copy()
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -1851,7 +2095,7 @@ class SymmetricMatrix(PairwiseMatrix):
         # included here so that np.hstack works in the event that either i_ids
         # or j_ids is empty.
         values = [np.array([])]
-        if self._flags["CONDENSED"]:
+        if self._flags.get("CONDENSED", False):
             diagonal = getattr(self, "_diagonal", 0.0)
             if diag_is_array := isinstance(diagonal, np.ndarray):
                 diag_arr = diagonal
@@ -1963,9 +2207,10 @@ class DistanceMatrix(SymmetricMatrix):
         ids: Sequence[str] | None = None,
         validate: bool = True,
         condensed: bool = False,
+        sparse: bool = False,
     ):
         data, ids, validate_data, validate_ids, validate_shape = self._normalize_input(
-            data, ids
+            data, ids, sparse, condensed
         )
 
         if ids is None:
@@ -1984,14 +2229,22 @@ class DistanceMatrix(SymmetricMatrix):
         self._ids = ids
         self._id_index = self._index_list(self._ids)
         self._diagonal = 0.0
-        self._data = self._init_data(data, condensed)
-        self._flags = self._init_flags(condensed)
+        self._data = self._init_data(data, condensed, sparse)
+        self._flags = self._init_flags(condensed, sparse)
 
-    def _normalize_input(self, data, ids):
-        """Get input into standard numpy array format."""
+    def _normalize_input(self, data, ids, sparse, condensed):
+        """Get input into standard numpy array format or sparse array format."""
         validate_data = True
         validate_ids = True
         validate_shape = True
+
+        # Validate sparse+condensed conflict
+        if sparse and condensed:
+            raise DistanceMatrixError(
+                "Cannot create sparse matrix in condensed form. "
+                "Sparse matrices only support redundant (2D) form."
+            )
+
         # ids = data.ids if ids is None else ids
         # if it's a distance matrix we can assume it's already been checked for symmetry
         # and hollowness
@@ -2011,6 +2264,15 @@ class DistanceMatrix(SymmetricMatrix):
                 validate_ids = False
                 ids = data.ids
             data = data.data
+
+        # Handle sparse input
+        if isinstance(data, scipy.sparse.csr_array):
+            if not sparse:
+                # User passed sparse data but wants dense matrix
+                data = data.toarray()
+            else:
+                # Sparse input and sparse requested, return as-is
+                return data, ids, validate_data, validate_ids, validate_shape
 
         # It is necessary to standardize the representation of the .data
         # attribute of this object. The input types might be list, tuple,
@@ -2046,6 +2308,23 @@ class DistanceMatrix(SymmetricMatrix):
         Performs a check for symmetry and hollowness.
 
         """
+        # Handle sparse arrays
+        if isinstance(data, scipy.sparse.csr_array):
+            # Symmetry check: (A - A.T).nnz == 0
+            diff = data - data.T
+            if diff.nnz != 0:
+                raise DistanceMatrixError(
+                    "Data must be symmetric and cannot contain NaNs."
+                )
+
+            # Hollowness check: diagonal must be all zeros
+            diag = data.diagonal()
+            if not np.allclose(diag, 0):
+                raise DistanceMatrixError(
+                    "Data must be hollow (i.e., the diagonal can only contain zeros)."
+                )
+            return
+
         # if the input data is 1D, we don't need to check for hollowness or symmetry
         if data.ndim == 2:
             data_sym, data_hol = is_symmetric_and_hollow(data)
@@ -2073,6 +2352,29 @@ class DistanceMatrix(SymmetricMatrix):
         DistanceMatrix
 
         """
+        # Handle sparse matrices
+        if self._flags.get("SPARSE", False):
+            if condensed:
+                # Convert to dense, then condensed
+                dense = self._data.toarray()
+                condensed_data = squareform(dense, force="tovector", checks=False)
+                return self.__class__(
+                    condensed_data,
+                    deepcopy(self.ids),
+                    validate=False,
+                    condensed=True,
+                )
+            else:
+                data_copy = self._data.copy()
+                if transpose:
+                    data_copy = data_copy.T.tocsr()
+                return self.__class__(
+                    data_copy,
+                    deepcopy(self.ids),
+                    validate=False,
+                    sparse=True,
+                )
+
         # adding for backward compatibility
         data = self._data.copy()
         if transpose:
