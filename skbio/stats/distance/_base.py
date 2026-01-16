@@ -223,6 +223,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
 
             # Dense -> sparse conversion
             return scipy.sparse.csr_array(data)
+        else:
+            if scipy.sparse.issparse(data):
+                data = data.todense()
         return data
 
     @classonlymethod
@@ -1360,7 +1363,10 @@ class SymmetricMatrix(PairwiseMatrix):
 
             # Dense -> sparse conversion
             return scipy.sparse.csr_array(data)
-        elif condensed:
+        else:
+            if scipy.sparse.issparse(data):
+                data = data.todense()
+        if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
                 return data
@@ -1855,8 +1861,6 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if not self._flags.get("SPARSE", False):
-            print(self._flags)
-            print("shouldnt be here")
             return self.copy()
 
         data = self._data.todense()

@@ -591,6 +591,14 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.filter([])
 
+    def test_filter_sparse_same_ids(self):
+        pm = self.matobj([1, 0, 0], ids=["a", "b", "c"], sparse=True)
+        pmf = pm.filter(["a", "b", "c"])
+        self.assertTrue(pm._flags["SPARSE"] and pmf._flags["SPARSE"])
+        self.assertTrue(issparse(pm.data) and issparse(pmf.data))
+        npt.assert_array_equal(pm.data.todense(), pmf.data.todense())
+
+
     @skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_default(self):
         fig = self.dm_1x1.plot()
@@ -777,6 +785,24 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
                 np.array([[[0.0, 42.0], [42.0, 0.0]], [[0.0, 24.0], [24.0, 0.0]]])
             )
 
+    def test_validate_invalid_shape_sparse(self):
+        # first check it actually likes good matrices
+        self.dm_3x3._validate_shape(csr_array(np.array([[0.0, 42.0], [42.0, 0.0]])))
+        # it checks just the shape, not the content
+        self.dm_3x3._validate_shape(csr_array(np.array([[1.0, 2.0], [3.0, 4.0]])))
+        # empty array
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3._validate_shape(csr_array(np.array([])))
+        # invalid shape
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3._validate_shape(
+                csr_array(np.array([[0.0, 42.0], [42.0, 0.0], [22.0, 22.0]]))
+            )
+        with self.assertRaises(PairwiseMatrixError):
+            self.dm_3x3._validate_shape(
+                csr_array(np.array([[0, 42], [42, 0], [22, 22]]))
+            )
+
     def test_validate_invalid_ids(self):
         # repeated ids
         with self.assertRaises(PairwiseMatrixError):
@@ -788,11 +814,40 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3._validate_ids(self.dm_3x3.data, ["a", "b", "c", "d"])
 
-    def test_init_with_sparse(self):
+    def test_init__data_with_sparse(self):
         mat = csr_array([[0, 0, 1], [0, 1, 0], [0, 0, 0]], dtype=np.float64)
         pm = self.matobj(mat, sparse=True)
         self.assertTrue(pm._flags["SPARSE"])
         self.assertTrue(issparse(pm.data))
+        npt.assert_array_equal(mat.todense(), pm.data.todense())
+
+    def test_init_data_condensed_to_sparse(self):
+        mat = np.array([1, 2, 3, 4, 5, 6])
+        pm = self.matobj(mat, sparse=True)
+        self.assertTrue(pm._flags["SPARSE"])
+        self.assertTrue(issparse(pm.data))
+        npt.assert_array_equal(pm.data.todense(), np.array([[0.0, 1.0, 2.0, 3.0],
+                                                            [1.0, 0.0, 4.0, 5.0],
+                                                            [2.0, 4.0, 0.0, 6.0],
+                                                            [3.0, 5.0, 6.0, 0.0]]))
+
+    def test_init_data_np_to_sparse(self):
+        mat = np.array([[0.0, 1.0, 0.0],
+                        [0.5, 2.0, 0.0],
+                        [0.0, 0.0, 0.0]])
+        pm = self.matobj(mat, sparse=True)
+        self.assertTrue(pm._flags["SPARSE"])
+        self.assertTrue(issparse(pm.data))
+        npt.assert_array_equal(pm.data.todense(), mat)
+
+    def test_init_data_sparse_to_dense(self):
+        mat = csr_array([[0, 3, 1],
+                         [2, 5, 0],
+                         [0, 0, 0]], dtype=float)
+        pm = self.matobj(mat, sparse=False)
+        self.assertTrue(not pm._flags["SPARSE"])
+        self.assertTrue(not issparse(pm.data))
+        npt.assert_array_equal(mat.todense(), pm.data)
 
 class SymmetricMatrixTestBase(PairwiseMatrixTestData):
     @classmethod
@@ -878,6 +933,31 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
         npt.assert_equal(sm.data, self.dm_3x3.data)
         self.assertEqual(sm.ids, self.dm_3x3.ids)
         npt.assert_equal(sm.diagonal, self.dm_3x3.diagonal)
+
+    def test_construction_sparse_and_condensed_raises_error(self):
+        """Test that sparse=True and condensed=True raises error."""
+        with self.assertRaisesRegex(
+            DistanceMatrixError, "Cannot create sparse matrix in condensed form"
+        ):
+            DistanceMatrix(
+                self.dm_3x3_data, sparse=True, condensed=True
+            )
+
+    def test_init_data_sparse_to_sparse(self):
+        mat = csr_array([[0, 1], [1, 0]], dtype=float)
+        sm = self.matobj(mat, sparse=False)
+        self.assertTrue(not sm._flags["SPARSE"])
+        self.assertTrue(not issparse(sm.data))
+        npt.assert_array_equal(mat.todense(), sm.data)
+
+    def test_init_data_condensed_to_sparse(self):
+        mat = np.array([1, 2, 3], dtype=float)
+        sm = self.matobj(mat, sparse=True)
+        self.assertTrue(sm._flags["SPARSE"])
+        self.assertTrue(issparse(sm.data))
+        npt.assert_array_equal(sm.data.todense(), np.array([[0.0, 1.0, 2.0],
+                                                            [1.0, 0.0, 3.0],
+                                                            [2.0, 3.0, 0.0]]))
 
     def test_matrix_from_matrix_condensed(self):
         # symmetric from symmetric
