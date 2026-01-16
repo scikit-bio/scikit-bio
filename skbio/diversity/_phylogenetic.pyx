@@ -10,8 +10,14 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-DTYPE = np.intp
+# platform-specific
+INDEX_DTYPE = np.intp
+
+# use 64-bit ints for counts (otherwise, overflows on 32-bit systems ie WASM)
+COUNT_DTYPE = np.int64
+
 ctypedef np.npy_intp intp_t
+ctypedef np.int64_t count_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -65,7 +71,7 @@ def _tip_distances(np.ndarray[np.double_t, ndim=1] a, object t,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef _traverse_reduce(np.ndarray[intp_t, ndim=2] child_index,
-                      np.ndarray[intp_t, ndim=2] a):
+                      np.ndarray[count_t, ndim=2] a):
     """Apply a[k] = sum[i:j]
 
     Parameters
@@ -124,7 +130,7 @@ cdef _traverse_reduce(np.ndarray[intp_t, ndim=2] child_index,
     cdef:
         Py_ssize_t i, j, k
         intp_t node, start, end
-        intp_t n_envs = a.shape[1]
+        count_t n_envs = a.shape[1]
 
     # possible GPGPU target
     for i in range(child_index.shape[0]):
@@ -164,19 +170,20 @@ def _nodes_by_counts(np.ndarray counts,
     """
     cdef:
         np.ndarray nodes, observed_ids
-        np.ndarray[intp_t, ndim=2] count_array, counts_t
+        np.ndarray[count_t, ndim=2] count_array, counts_t
         np.ndarray[intp_t, ndim=1] observed_indices, taxa_in_nodes
         Py_ssize_t i, j
         set observed_ids_set
         object n
         dict node_lookup
-        intp_t n_count_vectors, n_count_taxa
+        count_t n_count_vectors, n_count_otus
 
     nodes = indexed['name']
 
     # allow counts to be a vector
     counts = np.atleast_2d(counts)
-    counts = counts.astype(DTYPE, copy=False)
+
+    counts = counts.astype(COUNT_DTYPE, copy=False)
 
     # determine observed IDs. It may be possible to unroll these calls to
     # squeeze a little more performance
@@ -192,14 +199,15 @@ def _nodes_by_counts(np.ndarray counts,
             node_lookup[n] = i
 
     # determine the positions of the observed IDs in nodes
-    taxa_in_nodes = np.zeros(observed_ids.shape[0], dtype=DTYPE)
+    taxa_in_nodes = np.zeros(observed_ids.shape[0], dtype=INDEX_DTYPE)
+
     for i in range(observed_ids.shape[0]):
         n = observed_ids[i]
         taxa_in_nodes[i] = node_lookup[n]
 
     # count_array has a row per node (not tip) and a column per env.
     n_count_vectors = counts.shape[0]
-    count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=DTYPE)
+    count_array = np.zeros((nodes.shape[0], n_count_vectors), dtype=COUNT_DTYPE)
 
     # populate the counts array with the counts of each observation in each
     # env
@@ -209,7 +217,7 @@ def _nodes_by_counts(np.ndarray counts,
         for j in range(n_count_vectors):
             count_array[taxa_in_nodes[i], j] = counts_t[observed_indices[i], j]
 
-    child_index = indexed['child_index'].astype(DTYPE, copy=False)
+    child_index = indexed['child_index'].astype(INDEX_DTYPE, copy=False)
     _traverse_reduce(child_index, count_array)
 
     return count_array
