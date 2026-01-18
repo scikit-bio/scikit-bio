@@ -32,11 +32,6 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _bal_avgdist_insert_p,
-    _bal_avgdist_insert_static,
-    _bal_avgdist_insert_dynamic,
-    _bal_avgdist_insert_dynamic_rev,
-    _bal_avgdist_insert_guided,
-    _bal_avgdist_insert_guided_rev,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
