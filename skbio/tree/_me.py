@@ -557,18 +557,12 @@ def _bme(
     else:
         func = _bal_avgdist_insert_p
         args = ()
-    # elif parallel == "static":
-    #     func = _bal_avgdist_insert_static
-    # elif parallel == "dynamic":
-    #     if reverse:
-    #         func = _bal_avgdist_insert_dynamic_rev
-    #     else:
-    #         func = _bal_avgdist_insert_dynamic
-    # elif parallel == "guided":
-    #     if reverse:
-    #         func = _bal_avgdist_insert_guided_rev
-    #     else:
-    #         func = _bal_avgdist_insert_guided
+    # elif parallel == 1:
+    #     func = _bal_avgdist_insert_p1
+    #     args = ()
+    # elif parallel == 2:
+    #     func = _bal_avgdist_insert_p2
+    #     args = ()
     # else:
     #     raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
