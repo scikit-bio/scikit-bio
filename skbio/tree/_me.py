@@ -31,6 +31,7 @@ from ._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
+    _bal_avgdist_insert_p,
     _bal_avgdist_insert_static,
     _bal_avgdist_insert_dynamic,
     _bal_avgdist_insert_dynamic_rev,
@@ -558,16 +559,23 @@ def _bme(
     if not parallel:
         func = _bal_avgdist_insert
         args = ()
-    elif parallel == "static":
-        func = _bal_avgdist_insert_static
-    elif parallel == "dynamic":
-        func = (
-            _bal_avgdist_insert_dynamic_rev if reverse else _bal_avgdist_insert_dynamic
-        )
-    elif parallel == "guided":
-        func = _bal_avgdist_insert_guided_rev if reverse else _bal_avgdist_insert_guided
     else:
-        raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
+        func = _bal_avgdist_insert_p
+        args = ()
+    # elif parallel == "static":
+    #     func = _bal_avgdist_insert_static
+    # elif parallel == "dynamic":
+    #     if reverse:
+    #         func = _bal_avgdist_insert_dynamic_rev
+    #     else:
+    #         func = _bal_avgdist_insert_dynamic
+    # elif parallel == "guided":
+    #     if reverse:
+    #         func = _bal_avgdist_insert_guided_rev
+    #     else:
+    #         func = _bal_avgdist_insert_guided
+    # else:
+    #     raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]

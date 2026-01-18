@@ -1111,6 +1111,8 @@ def _bal_avgdist_insert_p(
     ### Step 2: Distances within the clade below target. ###
 
     # Locate the clade below target (excluding target). Skip if target is a tip.
+    # NOTE: This `if` condition can save half of the `prange` calls, each of which has
+    # an overhead (even if range is empty).
     ops = tree[target, 4] * 2 - 2
     if ops > 0:
         ii = tree[target, 7]
@@ -1175,40 +1177,53 @@ def _bal_avgdist_insert_p(
             ] * diff
 
         # Locate the cousin clade descending from the ancestor (including cousin).
+        # Likewise, enter `prange` only if cousin is an internal node.
         cousin = tree[curr, 3]
-        ii = tree[cousin, 7]
         ops = tree[cousin, 4] * 2 - 1
-        chunk = max(1, chunksize // ops)
-        for i in prange(
-            ii - ops + 1, ii + 1, nogil=True, schedule="dynamic", chunksize=chunk,
-            use_threads_if=chunk < ops
-        ):
-            a = postodr[i]
+        if ops > 1:
+            chunk = max(1, chunksize // ops)
+            ii = tree[cousin, 7]
+            for i in prange(
+                ii - ops + 1, ii + 1, nogil=True, schedule="dynamic", chunksize=chunk,
+                use_threads_if=chunk < ops
+            ):
+                a = postodr[i]
 
-            # Transfer the pre-calculated distances between k and each descendant
-            # (lower).
-            adm[a, tip] = adm[tip, a] = adk[a, 0]
+                # Transfer the pre-calculated distances between k and each descendant
+                # (lower).
+                adm[a, tip] = adm[tip, a] = adk[a, 0]
 
-            # Calculate the distance between link (lower, containing k) and each
-            # descendant (lower).
-            adm[a, link] = adm[link, a] = 0.5 * (adk[a, 0] + adm[a, target])
+                # Calculate the distance between link (lower, containing k) and each
+                # descendant (lower).
+                adm[a, link] = adm[link, a] = 0.5 * (adk[a, 0] + adm[a, target])
 
-            # Calculate the distance between each previous ancestor (lower, containing
-            # k) and each descendant (lower).
-            diff = adk[a, 0] - adm[a, target]
-            for j in range(anc_i):
-                b = stack[j]
-                adm[a, b] = adm[b, a] = adm[a, b] + powers[depth_1 - tree[b, 5]] * diff
+                # Calculate the distance between each previous ancestor (lower, containing
+                # k) and each descendant (lower).
+                diff = adk[a, 0] - adm[a, target]
+                for j in range(anc_i):
+                    b = stack[j]
+                    adm[a, b] = adm[b, a] = adm[a, b] + powers[depth_1 - tree[b, 5]] * diff
 
-            # Iterate over descendants of each member of the clade, and calculate the
-            # distance between the former (upper, containing k) and the latter (lower).
-            jj = tree[a, 7]
-            power = powers[depth_diff + tree[a, 5]]
-            for j in range(jj - tree[a, 4] * 2 + 2, jj):
-                b = postodr[j]
-                adm[a, b] = adm[b, a] = adm[a, b] + power * (
-                    adk[b, 0] - adm[b, target]
-                )
+                # Iterate over descendants of each member of the clade, and calculate the
+                # distance between the former (upper, containing k) and the latter (lower).
+                jj = tree[a, 7]
+                power = powers[depth_diff + tree[a, 5]]
+                for j in range(jj - tree[a, 4] * 2 + 2, jj):
+                    b = postodr[j]
+                    adm[a, b] = adm[b, a] = adm[a, b] + power * (
+                        adk[b, 0] - adm[b, target]
+                    )
+
+        # when cousin is a tip
+        else:
+            adm[cousin, tip] = adm[tip, cousin] = adk[cousin, 0]
+            adm[cousin, link] = adm[link, cousin] = 0.5 * (
+                adk[cousin, 0] + adm[cousin, target]
+            )
+            diff = adk[cousin, 0] - adm[cousin, target]
+            for i in range(anc_i):
+                a = stack[i]
+                adm[cousin, a] = adm[a, cousin] = adm[cousin, a] + powers[depth_1 - tree[a, 5]] * diff
 
         curr = anc
         anc_i += 1
