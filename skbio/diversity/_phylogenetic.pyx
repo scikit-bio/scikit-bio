@@ -176,7 +176,7 @@ def _nodes_by_counts(np.ndarray counts,
         set observed_ids_set
         object n
         dict node_lookup
-        count_t n_count_vectors, n_count_otus
+        count_t n_count_vectors, n_count_taxa
 
     nodes = indexed['name']
 
