@@ -32,12 +32,13 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _bal_avgdist_insert_p,
+    # _bal_avgdist_insert_p2,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
 
 
-def gme(dm, neg_as_zero=True):
+def gme(dm, neg_as_zero=True, method=1):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2
@@ -491,7 +492,7 @@ def _gme(dm):
     ad2 = np.empty((n, 2), dtype=dtype)
 
     # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=dtype)
+    adk = np.empty((2, n), dtype=dtype)
 
     # branch lengths or length changes
     lens = np.empty((n,), dtype=dtype)
@@ -579,13 +580,15 @@ def _bme(
     adm = np.empty((n, n), dtype=dtype)
 
     # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=dtype)
+    adk = np.empty((2, n), dtype=dtype)
 
     # branch lengths or length changes
     lens = np.empty((n,), dtype=dtype)
 
     # a stack for traversal operations
     stack = np.empty((n,), dtype=int)
+
+    adkm = np.empty((n,), dtype=dtype)  ###
 
     # initialize 3-taxon tree
     _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
@@ -602,7 +605,7 @@ def _bme(
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack, *args)
+        func(adm, target, adk, tree, postodr, powers, stack, adkm, *args)
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
@@ -1321,12 +1324,13 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
 
     full = taxas[0] | frozenset([0])
 
+    adkl, adku = adk[0], adk[1]
     dk = dm[taxon]
     for node in range(n):
         taxa_lower = taxas[node]
-        adk[node, 0] = dk[list(taxa_lower)].mean()
+        adkl[node] = dk[list(taxa_lower)].mean()
         taxa_upper = full - taxa_lower
-        adk[node, 1] = dk[list(taxa_upper)].mean()
+        adku[node] = dk[list(taxa_upper)].mean()
 
 
 def _init_swaps(tree, dtype):

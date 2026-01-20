@@ -1060,7 +1060,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _avgdist_taxon(
-            adk := np.zeros((n, 2), dtype=float), taxon, self.dm1, self.tree1m1,
+            adk := np.zeros((2, n), dtype=float), taxon, self.dm1, self.tree1m1,
             self.preodr1m1, self.postodr1m1
         )
         _avgdist_d2_insert(
@@ -1088,7 +1088,7 @@ class MeTests(TestCase):
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 2]], adm[ran_, tree[ran_, 3]]]).T)
-        _avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
 
         for i in range(n - 2):
             # calculate distant-2 values using the algorithm
@@ -1119,15 +1119,8 @@ class MeTests(TestCase):
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
         ])
-        adk = np.array([
-            [7.  , 8.  ],
-            [9.  , 6.5 ],
-            [5.  , 8.5 ],
-            [7.  , 5.75],
-            [3.  , 7.75],
-            [0.  , 0.  ],
-            [0.  , 0.  ],
-        ])
+        adk = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+                        [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
@@ -1149,7 +1142,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         m = tree[0, 4] + 1
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         powers = 2.0 ** -np.arange(m)
         stack = np.zeros(n, dtype=int)
 
@@ -1182,15 +1175,8 @@ class MeTests(TestCase):
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
         ])
-        adk = np.array([
-            [7.  , 8.  ],
-            [9.  , 6.5 ],
-            [5.  , 8.5 ],
-            [7.  , 5.75],
-            [3.  , 7.75],
-            [0.  , 0.  ],
-            [0.  , 0.  ],
-        ])
+        adk = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+                        [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert_p(
@@ -1212,7 +1198,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         m = tree[0, 4] + 1
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         powers = 2.0 ** -np.arange(m)
         stack = np.zeros(n, dtype=int)
 
@@ -1306,7 +1292,7 @@ class MeTests(TestCase):
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         ad2 = np.ascontiguousarray(np.vstack([
             adm[ran_, tree[ran_, 2]], adm[ran_, tree[ran_, 3]]]).T)
-        _avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, preodr)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
@@ -1321,7 +1307,7 @@ class MeTests(TestCase):
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
         ad2 = np.ascontiguousarray(np.vstack([
             adm[ran_, tree[ran_, 2]], adm[ran_, tree[ran_, 3]]]).T)
-        _avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, preodr)
         # For each branch, insert taxon, calculate full matrix, then calculate and sum
         # all branch lengths. The difference between each sum and the sum by the root
@@ -1346,7 +1332,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         m = tree[0, 4] + 1
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         res = _bal_min_branch(obs := np.zeros(n), adm, adk, tree, preodr)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
@@ -1358,7 +1344,7 @@ class MeTests(TestCase):
         n = tree.shape[0]
         m = tree[0, 4] + 1
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((n, 2)), m, dm, tree, preodr, postodr)
+        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         res = _bal_min_branch(obs := np.zeros(n), adm, adk, tree, preodr)
         exp = np.zeros(n)
         for i in range(n - 2):
