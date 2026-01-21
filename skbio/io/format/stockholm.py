@@ -316,7 +316,7 @@ The sequence names are stored in the ``index``:
 >>> msa.index
 Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
        'O31699/88-139'],
-      dtype='object')
+      dtype='str')
 
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 

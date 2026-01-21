@@ -137,7 +137,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     AG-T
     -C-T
     >>> msa.index
-    Index(['seq1', 'seq2', 'seq3'], dtype='object')
+    Index(['seq1', 'seq2', 'seq3'], dtype='str')
 
     """
 
@@ -241,13 +241,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Retrieve index:
 
         >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        Index(['a', 'b', 'c'], dtype='str')
 
         Set index:
 
         >>> msa.index = ['seq1', 'seq2', 'seq3']
         >>> msa.index
-        Index(['seq1', 'seq2', 'seq3'], dtype='object')
+        Index(['seq1', 'seq2', 'seq3'], dtype='str')
 
         Deleting the index resets it to the ``TabularMSA`` constructor's
         default:
@@ -342,7 +342,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         AC-T
         ACGA
         >>> msa.index
-        Index(['a', 'b', 'c', 'd'], dtype='object')
+        Index(['a', 'b', 'c', 'd'], dtype='str')
 
 
         When we slice by a scalar we get the original sequence back out of the
@@ -1697,7 +1697,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.reassign_index(minter='id')
         >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        Index(['a', 'b', 'c'], dtype='str')
 
         Assign default index:
 
@@ -1710,7 +1710,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> msa.reassign_index(mapping={0: 'seq1', 1: 'seq2'})
         >>> msa.index
-        Index(['seq1', 'seq2', 2], dtype='object')
+        Index(['seq1', 'seq2', 2], dtype='str')
 
         """
         if mapping is not None and minter is not None:
@@ -1793,7 +1793,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ---------------------
         ACGT
         >>> msa.index
-        Index(['seq1'], dtype='object')
+        Index(['seq1'], dtype='str')
 
         Append a new sequence to the MSA, providing its index label via
         `index`:
@@ -1809,7 +1809,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACGT
         AG-T
         >>> msa.index
-        Index(['seq1', 'seq2'], dtype='object')
+        Index(['seq1', 'seq2'], dtype='str')
 
         Append another sequence, this time resetting the MSA's index labels to
         the default with `reset_index`. Note that since the MSA's index is
@@ -1900,7 +1900,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ---------------------
         ACGT
         >>> msa.index
-        Index(['seq1'], dtype='object')
+        Index(['seq1'], dtype='str')
 
         Extend the MSA with sequences, providing their index labels via
         `index`:
@@ -1917,7 +1917,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         AG-T
         -G-T
         >>> msa.index
-        Index(['seq1', 'seq2', 'seq3'], dtype='object')
+        Index(['seq1', 'seq2', 'seq3'], dtype='str')
 
         Extend with more sequences, this time resetting the MSA's index labels
         to the default with `reset_index`. Note that since the MSA's index is
@@ -2168,7 +2168,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACT--
         A-G-T
         >>> joined.index
-        Index(['a', 'b'], dtype='object')
+        Index(['a', 'b'], dtype='str')
 
         By default both MSA indexes must match. Use ``how`` to specify an inner
         join:
@@ -2197,7 +2197,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACT--
         A-G-T
         >>> joined.index
-        Index(['a', 'b'], dtype='object')
+        Index(['a', 'b'], dtype='str')
         >>> joined.positional_metadata
            col2
         0     1
@@ -2228,7 +2228,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         -C---
         --ACG
         >>> joined.index
-        Index(['a', 'b', 'c', 'z'], dtype='object')
+        Index(['a', 'b', 'c', 'z'], dtype='str')
         >>> joined.positional_metadata
            col1  col2 col3
         0  42.0     1  NaN
@@ -2266,7 +2266,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                         ),
                     ],
                     ignore_index=True,
-                    sort=True,
+                    sort=False,
                 )
             elif how == "right":
                 joined_positional_metadata = pd.concat(
@@ -2277,13 +2277,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                         other.positional_metadata,
                     ],
                     ignore_index=True,
-                    sort=True,
+                    sort=False,
                 )
             else:
                 joined_positional_metadata = pd.concat(
                     [self.positional_metadata, other.positional_metadata],
                     ignore_index=True,
-                    sort=True,
+                    sort=False,
                     **concat_kwargs,
                 )
 
@@ -2409,7 +2409,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         AC-
         AC-
         >>> msa.index
-        Index(['c', 'b', 'a'], dtype='object')
+        Index(['c', 'b', 'a'], dtype='str')
 
         Sort the sequences in alphabetical order by index label:
 
@@ -2425,7 +2425,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         AC-
         ACG
         >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        Index(['a', 'b', 'c'], dtype='str')
 
         Note that since the sort is in-place, the ``TabularMSA`` object is
         modified (a new object is *not* returned).

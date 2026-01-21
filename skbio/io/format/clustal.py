@@ -93,7 +93,7 @@ GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
 ----------------------------------------------CGUGCAUGCAU-CGAU
 ------------------------------------------CAUUCGUACGUACGCAUGAC
 >>> msa.index
-Index(['abc', 'def', 'xyz'], dtype='object')
+Index(['abc', 'def', 'xyz'], dtype='str')
 
 We can use the following code to write a ``TabularMSA`` to a clustal-formatted
 file:
@@ -115,7 +115,7 @@ ACCGTTGTA-GTAGCT
 A--GTCGAA-GTACCT
 AGAGTTGAAGGTATCT
 >>> msa.index
-Index(['seq1', 'sequence-2', '3'], dtype='object')
+Index(['seq1', 'sequence-2', '3'], dtype='str')
 >>> fh = StringIO()
 >>> _ = msa.write(fh, format='clustal')
 >>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE

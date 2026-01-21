@@ -486,7 +486,8 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         else:
             raise TypeError(
                 "Metadata column %r has an unsupported pandas dtype of %s. "
-                "Supported dtypes: float, int, object" % (series.name, dtype)
+                "Supported dtypes: float, int, object, str, string"
+                % (series.name, dtype)
             )
 
         return column
@@ -1011,7 +1012,8 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
 
         if not self._is_supported_dtype(series.dtype):
             raise TypeError(
-                "%s %r does not support a pandas.Series object with dtype %s"
+                "%s %r does not support a pandas.Series object with dtype %s. "
+                "Supported dtypes: object, str, string"
                 % (self.__class__.__name__, series.name, series.dtype)
             )
 
@@ -1273,7 +1275,16 @@ class CategoricalMetadataColumn(MetadataColumn):
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
-        return dtype == "object"
+        # Older pandas returned 'object' for strings
+        if dtype == "object":
+            return True
+        # New pandas has StringDtype
+        dtype_str = str(dtype)
+        if dtype_str == "str":
+            return True
+        if dtype_str.startswith("string") or "StringDtype" in dtype_str:
+            return True
+        return False
 
     @classmethod
     def _normalize_(cls, series):
