@@ -489,7 +489,7 @@ def _gme(dm):
     tree, preodr, postodr = _allocate_tree(n)
 
     # average distances between distant-2 subtrees
-    ad2 = np.empty((n, 2), dtype=dtype)
+    ad2 = np.empty((2, n), dtype=dtype)
 
     # average distances from a taxon to each subtree
     adk = np.empty((2, n), dtype=dtype)
@@ -1234,10 +1234,10 @@ def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
 
     # average distances between distant-2 subtrees
     else:
-        ads[1, 0] = dm[0, 1]
-        ads[2, 0] = dm[0, 2]
-        ads[1, 1] = ads[2, 1] = dm[1, 2]
-        ads[0, 0] = ads[0, 1] = 0
+        ads[1, 1] = dm[0, 1]
+        ads[1, 2] = dm[0, 2]
+        ads[0, 1] = ads[0, 2] = dm[1, 2]
+        ads[1, 0] = ads[0, 0] = 0
 
 
 def _insert_taxon_treenode(taxon, target, tree):

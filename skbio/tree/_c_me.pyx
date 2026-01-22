@@ -557,33 +557,36 @@ def _ols_lengths_d2(
     cdef Py_ssize_t node, left, sibling
     cdef Py_ssize_t m = tree[0, 4] + 1
 
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
+
     for node in range(1, 2 * m - 3):
         left = tree[node, 0]
 
         # External (terminal) branch: based on Eq. 4 of the paper.
         if left == 0:
-            lens[node] = 0.5 * (ad2[node, 0] + ad2[node, 1] - ad2[tree[node, 3], 0])
+            lens[node] = 0.5 * (ad2l[node] + ad2u[node] - ad2u[tree[node, 3]])
 
         # Internal branch: based on the equation discussed above.
         else:
             sibling = tree[node, 3]
             lens[node] = 0.5 * (
-                ad2[left, 0]
-                + ad2[tree[node, 1], 0]
-                + ad2[node, 0]
-                + ad2[node, 1]
-                - ad2[sibling, 0]
-                - ad2[left, 1]
+                ad2u[left]
+                + ad2u[tree[node, 1]]
+                + ad2u[node]
+                + ad2l[node]
+                - ad2u[sibling]
+                - ad2l[left]
             ) - (
                 tree[sibling, 4]
-                * ad2[node, 1]
+                * ad2l[node]
                 + (m - tree[tree[node, 2], 4])
-                * ad2[node, 0]
+                * ad2u[node]
             ) / (m - tree[node, 4])
 
     # root branch
     left = tree[0, 0]
-    lens[0] = 0.5 * (ad2[left, 0] + ad2[tree[0, 1], 0] - ad2[left, 1])
+    lens[0] = 0.5 * (ad2u[left] + ad2u[tree[0, 1]] - ad2l[left])
 
 
 def _bal_lengths(
@@ -653,6 +656,8 @@ def _ols_min_branch_d2(
     cdef Py_ssize_t m = tree[0, 4] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
 
@@ -674,9 +679,9 @@ def _ols_min_branch_d2(
 
         # factor 0.5 is omitted
         lens[node] = L = lens[parent] + (
-            (lambda_0 - lambda_1) * (adkl[sibling] + ad2[node, 0])
-            + (lambda_1 - 1) * (ad2[sibling, 1] + adku[parent])
-            + (1 - lambda_0) * (ad2[sibling, 0] + adkl[node])
+            (lambda_0 - lambda_1) * (adkl[sibling] + ad2u[node])
+            + (lambda_1 - 1) * (ad2l[sibling] + adku[parent])
+            + (1 - lambda_0) * (ad2u[sibling] + adkl[node])
         )
 
         if L < min_len:
@@ -776,14 +781,14 @@ def _avgdist_d2_insert(
 ):
     r"""Update average distances between distant-2 subtrees after taxon insertion.
 
-    This function will update ad2, a float array of (n, 2) representing pairwise
+    This function will update ad2, a float array of (2, n) representing pairwise
     distances between all distant-2 subtrees in the tree. Here, `distant-2 subtrees`
     refer to subtrees that are two branches away from each other. Specifically, there
     are two scenarios:
 
-    - Column 0: Distance between the lower subtree of the current node and the upper
+    - Row 0: Distance between the lower subtree of the current node and the lower
       subtree of its parent.
-    - Column 1: Distance between the lower subtree of the current node and the lower
+    - Row 1: Distance between the lower subtree of the current node and the upper
       subtree of its sibling.
 
     This function assumes that the taxon will be inserted into the branch connecting
@@ -811,6 +816,8 @@ def _avgdist_d2_insert(
     cdef Py_ssize_t link = n
     cdef Py_ssize_t tip = n + 1
 
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
 
@@ -818,24 +825,24 @@ def _avgdist_d2_insert(
 
     if target == 0:
         # k (lower) to root (parent, upper): pre-calculated
-        ad2[tip, 0] = adku[0]
+        ad2u[tip] = adku[0]
 
         # k (lower) to link (sibling, lower): equals to k to root (lower).
-        ad2[link, 1] = ad2[tip, 1] = adkl[0]
+        ad2l[link] = ad2l[tip] = adkl[0]
 
         # Link (lower) to root (parent, upper): de novo calculation according to the
         # equation in A4.1(b). It is basically the distance between the upper and lower
         # subtrees of the root itself.
         left, right = tree[0, 0], tree[0, 1]
-        ad2[link, 0] = (
-            tree[left, 4] * ad2[left, 0] + tree[right, 4] * ad2[right, 0]
+        ad2u[link] = (
+            tree[left, 4] * ad2u[left] + tree[right, 4] * ad2u[right]
         ) / tree[0, 4]
 
         # Calculate all node (lower) to parent (upper, containing k) distances. These
         # parents include the new link.
         for node in range(1, n):
             p_size = m - tree[tree[node, 2], 4]
-            ad2[node, 0] = (adkl[node] + ad2[node, 0] * p_size) / (p_size + 1)
+            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
         return
 
@@ -845,23 +852,23 @@ def _avgdist_d2_insert(
     size_1 = size + 1
 
     # Temporarily copy the distances of target to link (will edit later).
-    ad2[link, 0] = ad2[target, 0]
-    ad2[link, 1] = ad2[target, 1]
+    ad2u[link] = ad2u[target]
+    ad2l[link] = ad2l[target]
 
     # Distance between k (lower) and link (parent, upper) equals to that between k and
     # the upper subtree of target.
-    ad2[tip, 0] = adku[target]
+    ad2u[tip] = adku[target]
 
     # Distance between target (lower) and link (parent, upper) needs to be calculated
     # using the equation in A4.1(c). Basically, it is the distance between the lower
     # and upper subtrees of the same target.
-    ad2[target, 0] = (
-        tree[sibling, 4] * ad2[target, 1] + (m - tree[parent, 4]) * ad2[target, 0]
+    ad2u[target] = (
+        tree[sibling, 4] * ad2l[target] + (m - tree[parent, 4]) * ad2u[target]
     ) / (m - size)
 
     # Transfer the pre-calculated distance between target (lower) and k (sibling,
     # lower).
-    ad2[target, 1] = ad2[tip, 1] = adkl[target]
+    ad2l[target] = ad2l[tip] = adkl[target]
 
     # Within the clade below target, calculate the distance between each node (lower)
     # and its parent (upper, containing k).
@@ -869,20 +876,18 @@ def _avgdist_d2_insert(
     for i in range(ii + 1, ii + size * 2 - 1):
         node = preodr[i]
         p_size = m - tree[tree[node, 2], 4]
-        ad2[node, 0] = (adkl[node] + ad2[node, 0] * p_size) / (p_size + 1)
+        ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
     # Iterate over the ancestors of target, starting from link and ending at root.
     curr = link
     while curr:
         # Calculate the distance between each pair of lower (containing k) and upper
         # ancestors.
-        ad2[curr, 0] = (adku[parent] + ad2[curr, 0] * size) / size_1
+        ad2u[curr] = (adku[parent] + ad2u[curr] * size) / size_1
 
         # Calculate the distance between each ancestor (lower, containing k) and its
         # sibling (lower).
-        ad2[curr, 1] = ad2[sibling, 1] = (
-            adkl[sibling] + ad2[curr, 1] * size
-        ) / size_1
+        ad2l[curr] = ad2l[sibling] = (adkl[sibling] + ad2l[curr] * size) / size_1
 
         # Within the clade below each sibling, calculate the distance between each node
         # (lower) and its parent (upper, containing k).
@@ -890,7 +895,7 @@ def _avgdist_d2_insert(
         for i in range(ii + 1, ii + tree[sibling, 4] * 2 - 1):
             node = preodr[i]
             p_size = m - tree[tree[node, 2], 4]
-            ad2[node, 0] = (adkl[node] + ad2[node, 0] * p_size) / (p_size + 1)
+            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
         curr = parent
         parent, sibling, size = tree[curr, 2], tree[curr, 3], tree[curr, 4]
