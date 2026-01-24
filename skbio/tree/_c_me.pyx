@@ -38,12 +38,6 @@ cdef int MINCLADE = 100
 # In the experimental code `_bal_avgdist_insert_p`, a "dynamic" policy with a chunk
 # size inversely proportional to the clade size is adopted, thus fewer larger clades
 # will be processed in each thread.
-#
-# Additionally, it would have been ideal to disable parallelization if the clade being
-# processed is small. In a typical traversal, half of the clades are tips, making it
-# useless to parallelize. Cython 3.1 will introduce a parameter `use_threads_if`, which
-# can address this issue. But we need to put it on hold before Cython 3.1 is released
-# and widely adopted.
 # ------------------------------------------------------------------------------------
 
 cdef (int, bint) config_prange(
@@ -186,6 +180,12 @@ def _avgdist_matrix(
     cdef Py_ssize_t a1 = 0, a2 = 0, a1_size = 0, a2_size = 0
     cdef Py_ssize_t b, b_size, b1, b2
 
+    # pointers to matrix rows to facilitate lookup of cells
+    cdef floating* dm_0 = &dm[0, 0]
+    cdef floating* dm_a
+    cdef floating* adm_0 = &adm[0, 0]
+    cdef floating* adm_a
+
     # total numbers of taxa and nodes in the tree
     cdef Py_ssize_t m = tree[0, 4] + 1
     cdef Py_ssize_t n = 2 * m - 3
@@ -203,7 +203,7 @@ def _avgdist_matrix(
     # Loop over nodes in postorder.
     # Skip the root, which is always the last node in the postorder traversal.
     for i in range(n - 1):
-        a = postodr[i]
+        a = postodr[i]        
         a_size = tree[a, 4]
 
         # check if a is a tip
@@ -213,6 +213,9 @@ def _avgdist_matrix(
             a_taxon = 0  # a can never be root (taxon 0), therefore 0 means none
             a1, a2 = tree[a, 0], tree[a, 1]
             a1_size, a2_size = tree[a1, 4], tree[a2, 4]
+
+        dm_a = &dm[a_taxon, 0]
+        adm_a = &adm[a, 0]
 
         # Iterate over the ancestors of a, and find the other subtree on the right.
         # We can skip the left subtree because it must have been calculated already.
@@ -229,7 +232,7 @@ def _avgdist_matrix(
             # This postorder doesn't need to be re-calculated. Because all nodes within
             # a clade are continuous in postorder, one can take a slice of the full
             # postorder that represent the descending nodes of the current node. The
-            # size of the slice is 2 x taxon count - 2. *
+            # size of the slice is 2 x taxon count - 2.
             k = tree[sibling, 7]
             for j in range(k - tree[sibling, 4] * 2 + 2, k + 1):
                 b = postodr[j]
@@ -238,13 +241,13 @@ def _avgdist_matrix(
                 # If both a and b are tips, take the original taxon-to-taxon distance
                 # (A4.1 (a) i).
                 if b_size == 1 and a_taxon != 0:
-                    adm[a, b] = adm[b, a] = dm[a_taxon, tree[b, 1]]
+                    adm_a[b] = adm[b, a] = dm_a[tree[b, 1]]
 
                 # If a is an internal node, and b is either (a tip or an internal node),
                 # calculate the average distance based on the two child subtrees of a
                 # (A4.1 (a) ii).
                 elif a_taxon == 0:
-                    adm[a, b] = adm[b, a] = (
+                    adm_a[b] = adm[b, a] = (
                         a1_size * adm[a1, b] + a2_size * adm[a2, b]
                     ) / a_size
 
@@ -252,8 +255,8 @@ def _avgdist_matrix(
                 # distance based on the two child subtrees of b (A4.1 (a) iii).
                 else:
                     b1, b2 = tree[b, 0], tree[b, 1]
-                    adm[a, b] = adm[b, a] = (
-                        tree[b1, 4] * adm[a, b1] + tree[b2, 4] * adm[a, b2]
+                    adm_a[b] = adm[b, a] = (
+                        tree[b1, 4] * adm_a[b1] + tree[b2, 4] * adm_a[b2]
                     ) / b_size
 
             curr = parent
@@ -265,12 +268,11 @@ def _avgdist_matrix(
         a = postodr[i]
         a_size = tree[a, 4]
         if a_size == 1:
-            a_taxon = tree[a, 1]
-            adm[a, 0] = adm[0, a] = dm[0, a_taxon]
+            adm[a, 0] = adm_0[a] = dm_0[tree[a, 1]]
         else:
             a1, a2 = tree[a, 0], tree[a, 1]
-            adm[a, 0] = adm[0, a] = (
-                tree[a1, 4] * adm[a1, 0] + tree[a2, 4] * adm[a2, 0]
+            adm[a, 0] = adm_0[a] = (
+                tree[a1, 4] * adm_0[a1] + tree[a2, 4] * adm_0[a2]
             ) / a_size
 
     # Step 3: Calculate nested subtree to subtree distances, in which the first node
@@ -292,10 +294,11 @@ def _avgdist_matrix(
         # Iterate over all subtrees below b.
         # The paper says this traversal can be done in any manner. Here, we use the
         # postorder. See * above.
+        adm_a = &adm[a, 0]
         k = tree[a, 7]
         for j in range(k - tree[a, 4] * 2 + 2, k):
             b = postodr[j]
-            adm[a, b] = adm[b, a] = (
+            adm_a[b] = adm[b, a] = (
                 s_size * adm[b, sibling] + p_size * adm[b, parent]
             ) / a_size
 
@@ -323,6 +326,11 @@ def _bal_avgdist_matrix(
     cdef Py_ssize_t a, b, a_taxon
     cdef Py_ssize_t a1 = 0, a2 = 0
 
+    cdef floating* dm_0 = &dm[0, 0]
+    cdef floating* dm_a
+    cdef floating* adm_0 = &adm[0, 0]
+    cdef floating* adm_a
+
     cdef Py_ssize_t n = 2 * tree[0, 4] - 1
 
     # Step 1: Calculate non-nested subtree to subtree distances.
@@ -333,6 +341,8 @@ def _bal_avgdist_matrix(
         else:
             a_taxon = 0
             a1, a2 = tree[a, 0], tree[a, 1]
+        dm_a = &dm[a_taxon, 0]
+        adm_a = &adm[a, 0]
         curr = a
         while curr:
             parent = tree[curr, 2]
@@ -344,12 +354,12 @@ def _bal_avgdist_matrix(
             for j in range(k - tree[sibling, 4] * 2 + 2, k + 1):
                 b = postodr[j]
                 if tree[b, 0] == 0 and a_taxon != 0:
-                    adm[a, b] = adm[b, a] = dm[a_taxon, tree[b, 1]]
+                    adm_a[b] = adm[b, a] = dm_a[tree[b, 1]]
                 elif a_taxon == 0:
-                    adm[a, b] = adm[b, a] = 0.5 * (adm[a1, b] + adm[a2, b])
+                    adm_a[b] = adm[b, a] = 0.5 * (adm[a1, b] + adm[a2, b])
                 else:
-                    adm[a, b] = adm[b, a] = 0.5 * (
-                        adm[a, tree[b, 0]] + adm[a, tree[b, 1]]
+                    adm_a[b] = adm[b, a] = 0.5 * (
+                        adm_a[tree[b, 0]] + adm_a[tree[b, 1]]
                     )
             curr = parent
 
@@ -357,17 +367,18 @@ def _bal_avgdist_matrix(
     for i in range(n - 1):
         a = postodr[i]
         if tree[a, 0] == 0:
-            adm[a, 0] = adm[0, a] = dm[0, tree[a, 1]]
+            adm[a, 0] = adm_0[a] = dm_0[tree[a, 1]]
         else:
-            adm[a, 0] = adm[0, a] = 0.5 * (adm[tree[a, 0], 0] + adm[tree[a, 1], 0])
+            adm[a, 0] = adm_0[a] = 0.5 * (adm_0[tree[a, 0]] + adm_0[tree[a, 1]])
 
     # Step 3: Calculate nested subtree to subtree distances.
     for i in range(1, n):
         a = preodr[i]
+        adm_a = &adm[a, 0]
         parent, sibling, k = tree[a, 2], tree[a, 3], tree[a, 7]
         for j in range(k - tree[a, 4] * 2 + 2, k):
             b = postodr[j]
-            adm[a, b] = adm[b, a] = 0.5 * (adm[b, sibling] + adm[b, parent])
+            adm_a[b] = adm[b, a] = 0.5 * (adm[b, sibling] + adm[b, parent])
 
 
 def _avgdist_taxon(
