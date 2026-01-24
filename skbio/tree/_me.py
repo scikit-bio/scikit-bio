@@ -37,7 +37,7 @@ from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
 
 
-def gme(dm, neg_as_zero=True, method=1):
+def gme(dm, neg_as_zero=True):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2

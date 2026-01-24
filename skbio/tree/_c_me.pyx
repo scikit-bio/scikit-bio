@@ -742,47 +742,6 @@ def _bal_min_branch(
     return min_node
 
 
-def _bal_min_branch_2(
-    floating[::1] lens,
-    floating[:, ::1] adm,
-    floating[:, ::1] adk,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-):
-    """Find the branch with the minimum length change after inserting a new taxon.
-
-    This function resembles :func:`_ols_min_branch_d2` but it 1) uses the balanced
-    framework and 2) calculates based on the entire matrix. See also the note of the
-    latter.
-
-    Implemented according to Eq. 10 of Desper and Gascuel (2002).
-
-    """
-    cdef Py_ssize_t i
-    cdef Py_ssize_t node, parent, sibling
-    cdef floating L
-
-    cdef Py_ssize_t min_node = 0
-    cdef floating min_len = 0
-
-    cdef floating* adkl = &adk[0, 0]
-    cdef floating* adku = &adk[1, 0]
-
-    lens[min_node] = min_len
-    for i in range(1, 2 * tree[0, 4] - 1):
-        node = preodr[i]
-        parent = tree[node, 2]
-        sibling = tree[node, 3]
-
-        # factor 0.25 is omitted
-        lens[node] = L = lens[parent] + (
-            adm[sibling, parent] + adkl[node] - adm[sibling, node] - adku[parent]
-        )
-        if L < min_len:
-            min_len, min_node = L, node
-    return min_node
-
-
 def _avgdist_d2_insert(
     floating[:, ::1] ad2,
     Py_ssize_t target,
