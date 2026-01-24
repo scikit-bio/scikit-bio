@@ -1003,36 +1003,20 @@ class MeTests(TestCase):
         taxon = dm.shape[0] - 1
         tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
         n = tree.shape[0]
-        _bal_avgdist_taxon(obs := np.zeros((n, 2)), taxon, dm, tree, preodr, postodr)
-        exp = np.array([
-            [7.  , 8.  ],
-            [9.  , 6.5 ],
-            [5.  , 8.5 ],
-            [7.  , 5.75],
-            [3.  , 7.75],
-            [0.  , 0.  ],
-            [0.  , 0.  ],
-        ])
+        _bal_avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, preodr, postodr)
+        exp = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+                        [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
         npt.assert_allclose(obs, exp)
 
         dm = self.dm3
         taxon = dm.shape[0] - 1
         tree, preodr, postodr = self.tree3, self.preodr3, self.postodr3
         n = tree.shape[0]
-        _bal_avgdist_taxon(obs := np.zeros((n, 2)), taxon, dm, tree, preodr, postodr)
-        exp = np.array([
-            [0.639, 1.59 ],
-            [0.411, 1.228],
-            [0.866, 1.001],
-            [0.515, 0.768],
-            [0.308, 0.871],
-            [1.463, 0.635],
-            [0.269, 1.232],
-            [0.471, 0.663],
-            [0.558, 0.62 ],
-            [0.   , 0.   ],
-            [0.   , 0.   ],
-        ])
+        _bal_avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, preodr, postodr)
+        exp = np.array([[0.639, 0.411, 0.866, 0.515, 0.308, 1.463, 0.269, 0.471, 0.558,
+                         0.   , 0.   ],
+                        [1.59 , 1.228, 1.001, 0.768, 0.871, 0.635, 1.232, 0.663, 0.62 ,
+                         0.   , 0.   ]])
         npt.assert_array_equal(obs.round(3), exp)
 
     def test_avgdist_d2_insert(self):
@@ -1198,7 +1182,7 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert_p(
-                obs := adm.copy(), i, adk, tree, postodr, powers, stack
+                obs := adm.copy(), i, adk.copy(), tree, postodr, powers, stack
             )
 
             # insert taxon and calculate full matrix
