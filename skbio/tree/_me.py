@@ -31,7 +31,9 @@ from ._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
-    _bal_avgdist_insert_p,
+    _bal_avgdist_insert_p1,
+    _bal_avgdist_insert_p2,
+    _bal_avgdist_fill,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -554,17 +556,23 @@ def _bme(
     if not parallel:
         func = _bal_avgdist_insert
         args = ()
-    else:
-        func = _bal_avgdist_insert_p
-        args = ()
-    # elif parallel == 1:
-    #     func = _bal_avgdist_insert_p1
-    #     args = ()
-    # elif parallel == 2:
-    #     func = _bal_avgdist_insert_p2
-    #     args = ()
     # else:
-    #     raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
+    #     func = _bal_avgdist_insert_p
+    #     args = ()
+    elif parallel == 1:
+        func = _bal_avgdist_insert_p1
+        args = ()
+    elif parallel == 2:
+        func = _bal_avgdist_insert_p2
+        args = ()
+    elif parallel == 3:
+        func = _bal_avgdist_insert_c0
+        args = ()
+    elif parallel == 3:
+        func = _bal_avgdist_insert_c1
+        args = ()
+    else:
+        raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
@@ -587,6 +595,8 @@ def _bme(
     # a stack for traversal operations
     stack = np.empty((n,), dtype=int)
 
+    paths = np.empty((n,), dtype=int)
+
     # initialize 3-taxon tree
     _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
 
@@ -602,7 +612,10 @@ def _bme(
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack, *args)
+        func(adm, target, adk, tree, postodr, powers, stack, paths, *args)
+
+        if parallel == 2:
+            _bal_avgdist_fill(adm, adk, tree, postodr, powers, paths)
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
@@ -1499,3 +1512,198 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
             tree[s_clade, 6] -= c_width
             preodr[(cs_start := c_start + s_width) : s_end] = c_clade
             preodr[c_start:cs_start] = stack[:s_width]
+
+
+def _bal_avgdist_insert_c0(adm, target, adk, tree, postodr, powers, stack, paths):
+    m = tree[0, 4] + 1
+    n = 2 * m - 3
+    link = n
+    tip = n + 1
+    adm_t = adm[target]
+    adkl, adku = adk[0], adk[1]
+
+    for i in range(n):
+        adm[i, tip] = adm[tip, i] = adkl[i]
+        adkl[i] -= adm_t[i]
+
+    if target == 0:
+        adm[link, tip] = adm[tip, link] = adm[0, tip]
+        adm[0, tip] = adm[tip, 0] = adku[0]
+        a1, a2 = tree[0, 0], tree[0, 1]
+        adm[0, link] = adm[link, 0] = 0.5 * (adm[a1, 0] + adm[a2, 0])
+        for a in range(1, n):
+            adm_a = adm[a]
+            adm_a[link] = adm[link, a] = adm_a[0] + 0.5 * adkl[a]
+            ii = tree[a, 7]
+            power = powers[tree[a, 5] + 1]
+            for i in range(ii - tree[a, 4] * 2 + 2, ii):
+                b = postodr[i]
+                adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+
+        return
+
+    parent, sibling, depth = tree[target, 2], tree[target, 3], tree[target, 5]
+    adm[tip, link] = adm[link, tip] = adku[target]
+    adm_t[link] = adm[link, target] = 0.5 * (adm_t[sibling] + adm_t[parent])
+    ops = tree[target, 4] * 2 - 2
+    if ops > 0:
+        ii = tree[target, 7]
+        for i in range(ii - ops, ii):
+            a = postodr[i]
+            adm_a = adm[a]
+            adm_a[link] = adm[link, a] = adm_a[target]
+            jj = tree[a, 7]
+            power = powers[tree[a, 5] - depth + 1]
+            for j in range(jj - tree[a, 4] * 2 + 2, jj):
+                b = postodr[j]
+                adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+        for i in range(ii - ops, ii):
+            a = postodr[i]
+            adm_t[a] = adm[a, target] = adm_t[a] + 0.5 * adkl[a]
+
+    anc_i = 0
+    curr = target
+    depth_diff = 2 - depth
+    while curr:
+        stack[anc_i] = anc = tree[curr, 2]
+        adm_c = adm[anc]
+        adm_c[tip] = adm[tip, anc] = adku[anc]
+        adm_c[link] = adm[link, anc] = 0.5 * (adku[anc] + adm_c[target])
+        diff = adku[anc] - adm_c[target]
+        for i in range(anc_i):
+            a = stack[i]
+            adm_c[a] = adm[a, anc] = adm_c[a] + powers[i + 2] * diff
+
+        cousin = tree[curr, 3]
+        ops = tree[cousin, 4] * 2 - 1
+        if ops > 1:
+            ii = tree[cousin, 7]
+            for i in range(ii - ops + 1, ii + 1):
+                a = postodr[i]
+                adm_a = adm[a]
+                adm_a[link] = adm[link, a] = adm_a[target] + 0.5 * adkl[a]
+                diff = adkl[a]
+                for j in range(anc_i):
+                    b = stack[j]
+                    adm_a[b] = adm[b, a] = adm_a[b] + powers[j + 2] * diff
+
+                jj = tree[a, 7]
+                power = powers[depth_diff + tree[a, 5]]
+                for j in range(jj - tree[a, 4] * 2 + 2, jj):
+                    b = postodr[j]
+                    adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+
+        else:
+            adm_a = adm[cousin]
+            adm_a[link] = adm[link, cousin] = adm_a[target] + 0.5 * adkl[cousin]
+            diff = adkl[cousin]
+            for j in range(anc_i):
+                b = stack[j]
+                adm_a[b] = adm[b, cousin] = adm_a[b] + powers[j + 2] * diff
+
+        curr = anc
+        anc_i += 1
+        depth_diff += 2
+
+
+def _bal_avgdist_insert_c1(adm, target, adk, tree, postodr, powers, stack, paths):
+    m = tree[0, 4] + 1
+    n = 2 * m - 3
+    link = n
+    tip = n + 1
+    adm_t = adm[target]
+    adkl, adku = adk[0], adk[1]
+
+    for i in range(n):
+        adm[i, tip] = adm[tip, i] = adkl[i]
+        adkl[i] -= adm_t[i]
+
+    ####
+    paths[target] = 0
+
+    if target == 0:
+        adm[link, tip] = adm[tip, link] = adm[0, tip]
+        adm[0, tip] = adm[tip, 0] = adku[0]
+        a1, a2 = tree[0, 0], tree[0, 1]
+        adm[0, link] = adm[link, 0] = 0.5 * (adm[a1, 0] + adm[a2, 0])
+        for a in range(1, n):
+            adm_a = adm[a]
+            adm_a[link] = adm[link, a] = adm_a[0] + 0.5 * adkl[a]
+            ###
+            paths[a] = tree[a, 5] + 1
+            # ii = tree[a, 7]
+            # power = powers[tree[a, 5] + 1]
+            # for i in range(ii - tree[a, 4] * 2 + 2, ii):
+            #     b = postodr[i]
+            #     adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+
+    else:
+        parent, sibling, depth = tree[target, 2], tree[target, 3], tree[target, 5]
+        adm[tip, link] = adm[link, tip] = adku[target]
+        adm_t[link] = adm[link, target] = 0.5 * (adm_t[sibling] + adm_t[parent])
+        ops = tree[target, 4] * 2 - 2
+        ii = tree[target, 7]
+        for i in range(ii - ops, ii):
+            a = postodr[i]
+            adm_a = adm[a]
+            adm_a[link] = adm[link, a] = adm_a[target]
+            adm_t[a] = adm[a, target] = adm_t[a] + 0.5 * adkl[a]
+            ###
+            paths[a] = tree[a, 5] - depth + 1
+            # jj = tree[a, 7]
+            # power = powers[tree[a, 5] - depth + 1]
+            # for j in range(jj - tree[a, 4] * 2 + 2, jj):
+            #     b = postodr[j]
+            #     adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+        # for i in range(ii - ops, ii):
+        #     a = postodr[i]
+        #     adm_t[a] = adm[a, target] = adm_t[a] + 0.5 * adkl[a]
+
+        anc_i = 0
+        curr = target
+        depth_diff = 2 - depth
+        while curr:
+            stack[anc_i] = anc = tree[curr, 2]
+            ###
+            dists[anc] = 0
+            adm_c = adm[anc]
+            adm_c[tip] = adm[tip, anc] = adku[anc]
+            adm_c[link] = adm[link, anc] = 0.5 * (adku[anc] + adm_c[target])
+            diff = adku[anc] - adm_c[target]
+            for i in range(anc_i):
+                a = stack[i]
+                adm_c[a] = adm[a, anc] = adm_c[a] + powers[i + 2] * diff
+
+            cousin = tree[curr, 3]
+            ops = tree[cousin, 4] * 2 - 1
+            ii = tree[cousin, 7]
+            for i in range(ii - ops + 1, ii + 1):
+                a = postodr[i]
+                adm_a = adm[a]
+                adm_a[link] = adm[link, a] = adm_a[target] + 0.5 * adkl[a]
+                diff = adkl[a]
+                for j in range(anc_i):
+                    b = stack[j]
+                    adm_a[b] = adm[b, a] = adm_a[b] + powers[j + 2] * diff
+
+                ###
+                paths[a] = depth_diff + tree[a, 5]
+                # jj = tree[a, 7]
+                # power = powers[depth_diff + tree[a, 5]]
+                # for j in range(jj - tree[a, 4] * 2 + 2, jj):
+                #     b = postodr[j]
+                #     adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+
+            curr = anc
+            anc_i += 1
+            depth_diff += 2
+
+    for a in range(n):
+        adm_a = adm[a]
+        path = paths[a]
+        if path > 0:
+            power = powers[path]
+            jj = tree[a, 7]
+            for j in range(jj - tree[a, 4] * 2 + 2, jj):
+                b = postodr[j]
+                adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
