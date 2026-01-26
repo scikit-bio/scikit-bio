@@ -21,10 +21,6 @@ from heapq import heappush
 # arrays for all operations. This improves computational efficiency.
 
 
-# chunk size for parallelization (experimental)
-cdef int CHUNKSIZE = 10000
-cdef int MINCLADE = 100
-
 # ------------------------------------------------------------------------------------
 # NOTE on parallelization: The algorithms implemented here were designed to facilitate
 # parallelization. Specifically, the preorder and postorder are stored, with which the
@@ -44,7 +40,7 @@ cdef (int, bint) config_prange(
     int ops,
     int chunksize,
     int minclade,
-    bint adaptive,
+    bint adaptive = False,
 ) noexcept nogil:
     """Determine prange schedule.
 
@@ -1124,9 +1120,9 @@ def _bal_avgdist_insert_p(
     floating[::1] powers,
     Py_ssize_t[::1] stack,
     Py_ssize_t[::1] paths,
-    int chunksize = CHUNKSIZE,
-    int minclade = MINCLADE,
-    bint adaptive = True,
+    int schedule = 0,
+    int chunksize = 1,
+    int minclade = 1,
 ):
     r"""Update balanced average distance matrix after taxon insertion.
 
@@ -1152,9 +1148,10 @@ def _bal_avgdist_insert_p(
     # chunk size
     cdef int chunk
 
+    cdef bint use_threads
+
     # dimensions and positions
-    cdef Py_ssize_t m = tree[0, 4] + 1
-    cdef Py_ssize_t n = 2 * m - 3
+    cdef Py_ssize_t n = 2 * tree[0, 4] - 1
     cdef Py_ssize_t link = n
     cdef Py_ssize_t tip = n + 1
 
@@ -1360,9 +1357,9 @@ def _bal_avgdist_insert_p2(
     floating[::1] powers,
     Py_ssize_t[::1] stack,
     Py_ssize_t[::1] paths,
-    int chunksize = CHUNKSIZE,
-    int minclade = MINCLADE,
-    bint adaptive = True,
+    int schedule = 0,
+    int chunksize = 1,
+    int minclade = 1,
 ):
     r"""Update balanced average distance matrix after taxon insertion.
 
@@ -1393,6 +1390,8 @@ def _bal_avgdist_insert_p2(
 
     # chunk size
     cdef int chunk
+
+    cdef bint use_threads
 
     # dimensions and positions
     cdef Py_ssize_t n = 2 * tree[0, 4] - 1
@@ -1527,7 +1526,6 @@ def _bal_avgdist_insert_p2(
             cousin = tree[curr, 3]
             ii = tree[cousin, 7]
             ops = tree[cousin, 4] * 2 - 1
-            chunk = max(1, chunksize // ops)
 
             # Cousin is right, curr is left.
             # ops = 13 + 5n
@@ -1536,7 +1534,7 @@ def _bal_avgdist_insert_p2(
                     a = postodr[i]
                     adm_a = &adm[a, 0]
                     diff, cell = adkl[a], adm_a[target]
-                    
+
                     # Transfer the pre-calculated distances between k and each descendant
                     adm_a[tip] = diff
 
@@ -1583,20 +1581,59 @@ def _bal_avgdist_insert_p2(
     # - Best case (balanced tree): 2n log2 n - 2n + 2 ~= O(nlogn)
     # - Worst case (skewed tree): n^2 - n ~= O(n^2)
 
-    chunk = max(1, 10000 // n)
-    for a in prange(
-        n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=chunk < n
-    ):
-    # for a in prange(n, nogil=True, use_threads_if=n > 500):
-        path = paths[a]
-        size = tree[a, 4]
-        if path > 0 and size > 0:
-            power = powers[path]
-            adm_a = &adm[a, 0]
-            jj = tree[a, 7]
-            for j in range(jj - size * 2 + 2, jj):
-                b = postodr[j]
-                adm_a[b] += power * adkl[b]
+    chunk, use_threads = config_prange(n, chunksize, minclade)
+    if schedule == 0:
+        for a in prange(
+            n, nogil=True, schedule="static", chunksize=chunk, use_threads_if=use_threads
+        ):
+            path = paths[a]
+            size = tree[a, 4]
+            if path > 0 and size > 0:
+                power = powers[path]
+                adm_a = &adm[a, 0]
+                jj = tree[a, 7]
+                for j in range(jj - size * 2 + 2, jj):
+                    b = postodr[j]
+                    adm_a[b] += power * adkl[b]
+    elif schedule == 1:
+        for a in prange(
+            n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=use_threads
+        ):
+            path = paths[a]
+            size = tree[a, 4]
+            if path > 0 and size > 0:
+                power = powers[path]
+                adm_a = &adm[a, 0]
+                jj = tree[a, 7]
+                for j in range(jj - size * 2 + 2, jj):
+                    b = postodr[j]
+                    adm_a[b] += power * adkl[b]
+    elif schedule == 2:
+        for a in prange(
+            n, nogil=True, schedule="guided", chunksize=chunk, use_threads_if=use_threads
+        ):
+            path = paths[a]
+            size = tree[a, 4]
+            if path > 0 and size > 0:
+                power = powers[path]
+                adm_a = &adm[a, 0]
+                jj = tree[a, 7]
+                for j in range(jj - size * 2 + 2, jj):
+                    b = postodr[j]
+                    adm_a[b] += power * adkl[b]
+
+    # for a in prange(
+    #     n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=chunk < n
+    # ):
+    #     path = paths[a]
+    #     size = tree[a, 4]
+    #     if path > 0 and size > 0:
+    #         power = powers[path]
+    #         adm_a = &adm[a, 0]
+    #         jj = tree[a, 7]
+    #         for j in range(jj - size * 2 + 2, jj):
+    #             b = postodr[j]
+    #             adm_a[b] += power * adkl[b]
 
 
 def _insert_taxon(

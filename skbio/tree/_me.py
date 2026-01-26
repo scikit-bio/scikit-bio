@@ -521,7 +521,11 @@ def _gme(dm):
 
 
 def _bme(
-    dm, parallel=None, chunksize=10000, minclade=100, adaptive=False, reverse=False
+    dm,
+    parallel=None,
+    schedule="static",
+    chunksize=10000,
+    minclade=100,
 ):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
@@ -550,8 +554,15 @@ def _bme(
     """
     dtype = dm.dtype
 
+    if schedule == "static":
+        schedule = 0
+    elif schedule == "dynamic":
+        schedule = 1
+    elif schedule == "guided":
+        schedule = 2
+
     # chunksize = chunksize / ops if adpative else chunksize
-    args = (chunksize, minclade, adaptive)
+    args = (schedule, chunksize, minclade)
     if not parallel:
         func = _bal_avgdist_insert
         args = ()
@@ -560,10 +571,8 @@ def _bme(
     #     args = ()
     elif parallel == 1:
         func = _bal_avgdist_insert_p
-        args = ()
     elif parallel == 2:
         func = _bal_avgdist_insert_p2
-        args = ()
     else:
         raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
