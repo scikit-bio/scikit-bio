@@ -40,7 +40,7 @@ from skbio.tree._c_me import (
     _bal_avgdist_taxon,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
-    _bal_avgdist_insert_p,
+    _bal_avgdist_insert_p0 as _bal_avgdist_insert_p,
     _ols_lengths,
     _ols_lengths_d2,
     _bal_lengths,
