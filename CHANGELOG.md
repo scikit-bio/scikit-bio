@@ -6,15 +6,30 @@
 
 * Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
 * `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
+* Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added new plotting functionality for `OrdinationResults` objects, including plotting centroids, confidence ellipses, and 2D plots ([#2362](https://github.com/scikit-bio/scikit-bio/pull/2362))
+
+### Performance enhancements
+
+* Improved `TreeNode.from_linkage_matrix`, including efficiency, compatibility (it now accepts array-like objects), and documentation ([#2356](https://github.com/scikit-bio/scikit-bio/pull/2356)).
+* Updated the documentation of `dirmult_ttest` to recommend input data supplied as raw counts rather than pre-normalized proportions, as the latter lose magnitude information and can lead to higher statistical uncertainty ([#2358](https://github.com/scikit-bio/scikit-bio/pull/2358)).
 
 ### Bug Fixes
 
 * Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338](https://github.com/scikit-bio/scikit-bio/pull/2338)).
 * Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
+* Fixed a bug in `TreeNode.root_at_midpoint` which could fail on a tree with no-length branches ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Fixed an unexpected behavior in several `TreeNode` methods, where tips with `.name is None` were considered as taxa and included in the calculation. Nameless tips are unusual but not forbidden by the current data model. After fixation, those tips are excluded from the calculation. Affected methods are `subset`, `subsets`, `bipart`, `bipart` and `cophenet` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
 
 ### Miscellaneous
 
 * scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
+* `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+
+### Backward-incompatible changes
+
+* Removed `sokalmichener` from the list of supported beta diversity metrics (see `get_beta_diversity_metrics`), as this metric was removed in SciPy 1.17.0. SciPy's documentation recommended using `rogerstanimoto` instead ([#2367](https://github.com/scikit-bio/scikit-bio/pull/2367)).
 
 
 ## Version 0.7.1.post1

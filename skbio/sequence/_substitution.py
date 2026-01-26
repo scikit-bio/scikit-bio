@@ -6,14 +6,20 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Optional, Union, Iterable
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
 from skbio.util._decorator import classonlymethod
 from skbio.stats.distance import PairwiseMatrix
 from skbio.sequence._alphabet import _alphabet_to_hashes
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+    from numpy.typing import NDArray
 
 
 class SubstitutionMatrix(PairwiseMatrix):
@@ -280,7 +286,7 @@ class SubstitutionMatrix(PairwiseMatrix):
 
     @classonlymethod
     def from_dict(
-        cls, dictionary: dict[dict], dtype: str = "float32"
+        cls, dictionary: dict[str, dict[str, float]], dtype: str = "float32"
     ) -> "SubstitutionMatrix":
         """Create a substitution matrix from a 2D dictionary.
 
@@ -323,7 +329,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         alphabet_set = set(alphabet)
         idmap = {x: i for i, x in enumerate(alphabet)}
         n = len(alphabet)
-        scores = np.full((n, n), np.nan, dtype=dtype)
+        scores: NDArray = np.full((n, n), np.nan, dtype=dtype)
         for i, row in enumerate(rows):
             if set(row) != alphabet_set:
                 raise ValueError(
@@ -337,9 +343,9 @@ class SubstitutionMatrix(PairwiseMatrix):
     @classonlymethod
     def identity(
         cls,
-        alphabet: Iterable,
-        match: Union[int, float],
-        mismatch: Union[int, float],
+        alphabet: Iterable[Any],
+        match: int | float,
+        mismatch: int | float,
         dtype: str = "float32",
     ) -> "SubstitutionMatrix":
         r"""Create an identity substitution matrix.
@@ -378,7 +384,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         """
         alphabet = tuple(alphabet)
         n = len(alphabet)
-        scores = np.full((n, n), mismatch, dtype=dtype)
+        scores: NDArray = np.full((n, n), mismatch, dtype=dtype)
         np.fill_diagonal(scores, match)
         return cls(alphabet, scores)
 

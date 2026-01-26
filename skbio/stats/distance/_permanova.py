@@ -6,17 +6,13 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from functools import partial
 from warnings import warn
+from typing import TYPE_CHECKING
 
 import numpy as np
-
-from typing import Optional, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
-    import pandas as pd
-    from skbio.util._typing import SeedLike
 
 from ._base import (
     _preprocess_input_sng,
@@ -31,15 +27,20 @@ from skbio.binaries import (
 )
 from skbio.util._decorator import params_aliased
 
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    import pandas as pd
+    from skbio.util._typing import SeedLike
+
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
 def permanova(
-    distmat: "DistanceMatrix",
-    grouping: Union["pd.DataFrame", "ArrayLike"],
-    column: Optional[str] = None,
+    distmat: DistanceMatrix,
+    grouping: pd.DataFrame | ArrayLike,
+    column: str | None = None,
     permutations: int = 999,
-    seed: Optional["SeedLike"] = None,
-) -> "pd.Series":
+    seed: SeedLike | None = None,
+) -> pd.Series:
     r"""Test for significant differences between groups using PERMANOVA.
 
     Permutational Multivariate Analysis of Variance (PERMANOVA) is a non-parametric

@@ -61,24 +61,23 @@ def dirmult_ttest(
 ):
     r"""Perform *t*-test using Dirichlet-multinomial distribution.
 
-    The Dirichlet-multinomial distribution is a compound distribution that
-    combines a Dirichlet distribution over the probabilities of a multinomial
-    distribution. This distribution is used to model the distribution of
-    species abundances in a community.
+    The Dirichlet-multinomial distribution is a compound distribution that combines a
+    Dirichlet distribution over the probabilities of a multinomial distribution. This
+    distribution models the distribution of species abundances in a community.
 
-    To perform the *t*-test, we first fit a Dirichlet-multinomial distribution
-    for each sample, and then we compute the fold change and *p*-value for each
-    feature. The fold change is computed as the difference between the
-    samples of the two groups. *t*-tests are then performed on the posterior
-    samples, drawn from each Dirichlet-multinomial distribution. The
-    log-fold changes as well as their credible intervals, the *p*-values and
-    the multiple comparison corrected *p*-values are reported.
+    Abundance data of each sample is first fit to a Dirichlet-multinomial distribution.
+    The posteriors are then transformed to the center log ratio (CLR) coordinates
+    (see :func:`clr`), based on which the fold changes (differences between the
+    treatment/reference group means) are calculated and Welch's *t*-tests are performed
+    to assess the significance. This process is repeated for multiple draws to provide
+    robust estimates of the statistics. The fold changes, their confidence intervals,
+    the *p*-values and multiple-comparison corrected *p*-values are reported.
 
     This process mirrors the approach performed by the R package "ALDEx2" [1]_.
 
     Additionally, this function excludes hits with a 95% confidence interval of
-    fold-change crossing zero during any draw. This step further reduces false
-    positive hits, especially among low-abundance features.
+    fold-change crossing zero during any draw. This step further reduces false positive
+    hits, especially among low-abundance features.
 
     .. versionchanged:: 0.7.0
         Computational efficiency significantly improved.
@@ -87,7 +86,8 @@ def dirmult_ttest(
     ----------
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        :ref:`supported formats <table_like>`. Counts are recommended over proportions
+        for lower statistical uncertainty. See Notes for details.
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. These could be strings
         or integers denoting which group a sample belongs to. If it is a pandas Series
@@ -110,9 +110,9 @@ def dirmult_ttest(
         A non-zero value added to the input counts to ensure that all of the estimated
         abundances are strictly greater than zero. Default is 0.5.
     draws : int, optional
-        The number of draws from the Dirichilet-multinomial posterior distribution
-        More draws provide higher uncertainty surrounding the estimated
-        log-fold changes and *p*-values.
+        The number of draws from the Dirichlet-multinomial posterior distribution. More
+        draws provide more robust estimates of uncertainty for the log-fold changes and
+        *p*-values. Default is 128.
     p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are
         Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
@@ -132,24 +132,22 @@ def dirmult_ttest(
           average across all of the posterior draws.
 
         - ``Log2(FC)``: Expected log2-fold change of abundance from the reference group
-          to the treatment group. The value is expressed in the center log ratio (see
-          :func:`clr`) transformed coordinates. The reported value is the average of
-          all of the log2-fold changes computed from each of the posterior draws.
+          to the treatment group. The value is expressed in the CLR-transformed
+          coordinates. The reported value is the average of all of the log2-fold changes
+          computed from each of the posterior draws.
 
         - ``CI(2.5)``: 2.5% quantile of the log2-fold change. The reported value is the
-          minimum of all of the 2.5% quantiles computed from each of the posterior
-          draws.
+          minimum of per-draw 2.5% quantiles across all posterior draws.
 
         - ``CI(97.5)``: 97.5% quantile of the log2-fold change. The reported value is
-          the maximum of all of the 97.5% quantiles computed from each of the posterior
-          draws.
+          the maximum of per-draw 97.5% quantiles across all posterior draws.
 
         - ``pvalue``: *p*-value of Welch's *t*-test. The reported value is the average
-          of all of the *p*-values computed from each of the posterior draws.
+          of the per-draw *p*-values across all posterior draws.
 
         - ``qvalue``: Corrected *p*-value of Welch's *t*-test for multiple comparisons.
-          The reported value is the average of all of the *q*-values computed from each
-          of the posterior draws.
+          The reported value is the average of the per-draw *q*-values across all
+          posterior draws.
 
         - ``Signif``: Whether feature is significantly differentially abundant between
           the treatment and reference groups. A feature marked as "True" suffice: 1)
@@ -172,20 +170,26 @@ def dirmult_ttest(
 
     Notes
     -----
-    The confidence intervals are computed using the minimum 2.5% and maximum
-    97.5% bounds computed across all of the posterior draws.
+    A benefit of using the Dirichlet-multinomial distribution is that the statistical
+    uncertainty decreases as the magnitude of abundance increases. Larger counts per
+    sample (e.g., resulting from higher sequencing depth) will reduce the uncertainty
+    of the estimated statistics, resulting in lower *p*-values for true positives. This
+    is in contrast to many other statistical tests.
 
-    The reference frame here is the geometric mean. Extracting absolute log
-    fold changes from this test assumes that the average feature abundance
-    between the ``treatment`` and the ``reference`` groups are the same. If this
-    assumption is violated, then the log-fold changes will be biased, and the
-    *p*-values will not be reliable. However, the bias is the same across each
-    feature, as a result the ordering of the log-fold changes can still be useful.
+    Therefore, it is generally recommended to provide raw counts instead of
+    pre-normalized proportions, as the latter will remove the magnitude information,
+    which can lead to higher uncertainty in the estimates and increased false negatives.
 
-    One benefit of using the Dirichlet-multinomial distribution is that the
-    statistical power increases with regards to the abundance magnitude. More counts
-    per sample will shrink the size of the confidence intervals, and can result in
-    lower *p*-values.
+    The confidence intervals are computed by taking the minimum of all per-draw 2.5%
+    bounds and the maximum of all per-draw 97.5% bounds across posterior draws. This
+    produces a conservative (wider) interval that captures variability across draws.
+
+    The reference frame in this analysis is the geometric mean. Extracting absolute
+    log-fold changes from this test assumes that the average feature abundance between
+    the treatment and reference groups are identical. If this assumption is violated,
+    the log-fold changes will be biased, and the *p*-values will not be reliable.
+    However, the bias is the same across each feature, as a result the ordering of the
+    log-fold changes can still be useful.
 
     References
     ----------
@@ -365,7 +369,9 @@ def dirmult_lme(
     ----------
     table : table_like of shape (n_samples, n_features)
         A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        :ref:`supported formats <table_like>`. Counts are recommended over proportions
+        for lower statistical uncertainty. See Notes of :func:`dirmult_ttest` for
+        details.
     metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a

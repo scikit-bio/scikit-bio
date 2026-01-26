@@ -5,7 +5,7 @@
 
 The PHYLIP file format stores a multiple sequence alignment. The format was
 originally defined and used in Joe Felsenstein's PHYLIP package [1]_, and has
-since been supported by several other bioinformatics tools (e.g., RAxML [2]_).
+since been supported by multiple other bioinformatics tools (e.g., RAxML [2]_).
 See [3]_ for the original format description, and [4]_ and [5]_ for additional
 descriptions.
 
@@ -40,18 +40,28 @@ PHYLIP format is a plain text format containing exactly two sections: a header
 describing the dimensions of the alignment, followed by the multiple sequence
 alignment itself.
 
-The format described here is "strict" PHYLIP, as described in [4]_. Strict
-PHYLIP requires that each sequence identifier is exactly 10 characters long
-(padded with spaces as necessary). Other bioinformatics tools (e.g., RAxML) may
-relax this rule to allow for longer sequence identifiers. See the
-**Alignment Section** below for more details.
-
 The format described here is "sequential" format. The original PHYLIP format
 specification [3]_ describes both sequential and interleaved formats.
 
 .. note:: scikit-bio currently supports reading and writing strict, sequential
    PHYLIP-formatted files. Relaxed and/or interleaved PHYLIP formats are not
    supported.
+
+Relaxed vs. Strict PHYLIP
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+scikit-bio supports both **relaxed** and **strict** PHYLIP formats:
+
+**Strict PHYLIP** (default):
+    - Sequence IDs must be exactly 10 characters (padded or truncated)
+    - Characters 1-10 are the ID, remaining characters are the sequence
+    - IDs **may** contain whitespace (e.g., "Sample 01 ")
+    - This is the default format for both reading and writing
+
+**Relaxed PHYLIP** (optional):
+    - Sequence IDs can have arbitrary length
+    - IDs and sequences are separated by whitespace (spaces or tabs)
+    - IDs **must not** contain whitespace
+    - Enable by setting ``strict=False`` when reading
 
 Header Section
 ^^^^^^^^^^^^^^
@@ -123,12 +133,20 @@ improve readability), and both upper and lower case characters are supported.
 
 Format Parameters
 -----------------
-The only supported format parameter is ``constructor``, which specifies the
-type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
-and is a required format parameter. For example, if you know that the PHYLIP
-file you're reading contains DNA sequences, you would pass ``constructor=DNA``
-to the reader call.
+
+Reader-specific Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``constructor`` (required): The type of in-memory sequence object to read each
+  aligned sequence into. Must be a subclass of ``GrammaredSequence`` (e.g., ``DNA``,
+  ``RNA``, ``Protein``). For example, if you know that the PHYLIP file being readi
+  contains DNA sequences, you would pass ``constructor=DNA`` to the reader call.
+
+- ``strict`` : A Boolean indicating whether the object IDs are in strict (``True``,
+  default) or relaxed (``False``) format.
+
+  .. versionadded:: 0.7.2
+
 
 Examples
 --------
@@ -205,12 +223,12 @@ We can now write the ``TabularMSA`` in PHYLIP format:
 
 References
 ----------
-.. [1] http://evolution.genetics.washington.edu/phylip.html
-.. [2] RAxML Version 8: A tool for Phylogenetic Analysis and
-   Post-Analysis of Large Phylogenies". In Bioinformatics, 2014
-.. [3] http://evolution.genetics.washington.edu/phylip/doc/sequence.html
+.. [1] https://phylipweb.github.io/phylip
+.. [2] Stamatakis, A. (2014). RAxML version 8: a tool for phylogenetic analysis and
+   post-analysis of large phylogenies. Bioinformatics, 30(9), 1312-1313.
+.. [3] https://phylipweb.github.io/phylip/doc/sequence.html
 .. [4] http://www.phylo.org/tools/obsolete/phylip.html
-.. [5] http://www.bioperl.org/wiki/PHYLIP_multiple_alignment_format
+.. [5] https://bioperl.org/formats/alignment_formats/PHYLIP_multiple_alignment_format.html
 
 
 """  # noqa: D205, D415
@@ -239,17 +257,32 @@ def _phylip_sniffer(fh):
     #   lines matches the header information, since that would require reading
     #   the whole file.
     try:
-        header = next(_line_generator(fh))
+        header = next(fh).rstrip()
         _, seq_len = _validate_header(header)
-        line = next(_line_generator(fh))
-        _validate_line(line, seq_len)
+        line = next(fh).rstrip()
+
+        # Try strict format
+        try:
+            _validate_line(line, seq_len, strict=True)
+            return True, {}
+        except PhylipFormatError:
+            pass
+
+        # Try relaxed format
+        try:
+            _validate_line(line, seq_len, strict=False)
+            return True, {}
+        except PhylipFormatError:
+            pass
+
+        return False, {}
+
     except (StopIteration, PhylipFormatError):
         return False, {}
-    return True, {}
 
 
 @phylip.reader(TabularMSA)
-def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
+def _phylip_to_tabular_msa(fh, cls=None, constructor=None, strict=True):
     if cls is None:
         cls = TabularMSA
     if constructor is None:
@@ -257,7 +290,7 @@ def _phylip_to_tabular_msa(fh, cls=None, constructor=None):
 
     seqs = []
     index = []
-    for seq, id_ in _parse_phylip_raw(fh):
+    for seq, id_ in _parse_phylip_raw(fh, strict=strict):
         seqs.append(constructor(seq, metadata={"id": id_}))
         index.append(id_)
     return cls(seqs, index=index)
@@ -316,11 +349,24 @@ def _validate_header(header):
     return n_seqs, seq_len
 
 
-def _validate_line(line, seq_len):
+def _validate_line(line, seq_len, strict=True):
     if not line:
         raise PhylipFormatError("Empty lines are not allowed.")
-    ID = line[:10].strip()
-    seq = line[10:].replace(" ", "")
+
+    if strict:
+        # Strict: first 10 characters are ID, rest is sequence
+        ID = line[:10].strip()
+        seq = line[10:].replace(" ", "")
+    else:
+        # Relaxed: whitespace-separated ID and sequence
+        split_line = line.split(None, 1)  # Split on first whitespace
+        if len(split_line) < 2:
+            raise PhylipFormatError(
+                "Each line must contain an ID and sequence separated by whitespace."
+            )
+        ID = split_line[0]
+        seq = split_line[1].replace(" ", "")
+
     if len(seq) != seq_len:
         raise PhylipFormatError(
             "The length of sequence %s is not %s as specified in the header."
@@ -329,7 +375,7 @@ def _validate_line(line, seq_len):
     return (seq, ID)
 
 
-def _parse_phylip_raw(fh):
+def _parse_phylip_raw(fh, strict=True):
     """Raw parser for PHYLIP files.
 
     Returns a list of raw (seq, id) values.  It is the responsibility of the
@@ -342,24 +388,18 @@ def _parse_phylip_raw(fh):
 
     # File should have a single header on the first line.
     try:
-        header = next(_line_generator(fh))
+        header = next(fh).rstrip()
     except StopIteration:
         raise PhylipFormatError("This file is empty.")
     n_seqs, seq_len = _validate_header(header)
 
     # All following lines should be ID+sequence. No blank lines are allowed.
     data = []
-    for line in _line_generator(fh):
-        data.append(_validate_line(line, seq_len))
+    for line in fh:
+        data.append(_validate_line(line.rstrip(), seq_len, strict=strict))
     if len(data) != n_seqs:
         raise PhylipFormatError(
             "The number of sequences is not %s " % n_seqs
             + "as specified in the header."
         )
     return data
-
-
-def _line_generator(fh):
-    """Just remove linebreak characters and yield lines."""
-    for line in fh:
-        yield line.rstrip("\n")
