@@ -156,6 +156,27 @@ class TestPCA(TestCase):
         assert_ordination_results_equal(results, self.reduced_dim_expected_results,
                                         ignore_directionality=True)
         
+    def test_svd_full_dim_iterative(self):
+        results = pca(self.X, 
+                      method="svd",
+                      iterative=True,
+                      sample_ids=["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
+                      feature_ids=["Feature 1", "Feature 2", "Feature 3", "Feature 4"])
+
+        assert_ordination_results_equal(results, self.full_dim_expected_results,
+                                        ignore_directionality=True)
+        
+    def test_svd_reduced_dim_iterative(self):
+        results = pca(self.X, 
+                      method="svd",
+                      dimensions=2,
+                      iterative=True,
+                      sample_ids=["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
+                      feature_ids=["Feature 1", "Feature 2", "Feature 3", "Feature 4"])
+
+        assert_ordination_results_equal(results, self.reduced_dim_expected_results,
+                                        ignore_directionality=True)
+        
     def test_eigh_full_dim(self):
         results = pca(self.X, 
                       method="eigh",
@@ -169,6 +190,27 @@ class TestPCA(TestCase):
         results = pca(self.X, 
                       method="eigh",
                       dimensions=2,
+                      sample_ids=["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
+                      feature_ids=["Feature 1", "Feature 2", "Feature 3", "Feature 4"])
+
+        assert_ordination_results_equal(results, self.reduced_dim_expected_results,
+                                        ignore_directionality=True)
+        
+    def test_eigh_full_dim(self):
+        results = pca(self.X, 
+                      method="eigh",
+                      iterative=True,
+                      sample_ids=["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
+                      feature_ids=["Feature 1", "Feature 2", "Feature 3", "Feature 4"])
+
+        assert_ordination_results_equal(results, self.full_dim_expected_results,
+                                        ignore_directionality=True)
+        
+    def test_eigh_reduced_dim(self):
+        results = pca(self.X, 
+                      method="eigh",
+                      dimensions=2,
+                      iterative=True,
                       sample_ids=["Sample 1", "Sample 2", "Sample 3", "Sample 4"],
                       feature_ids=["Feature 1", "Feature 2", "Feature 3", "Feature 4"])
 

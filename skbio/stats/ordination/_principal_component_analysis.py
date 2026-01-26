@@ -126,15 +126,15 @@ def pca(
     when the desired number of principal components is much less than the
     size of the data matrix.
 
-    The number of dimensions is determined by ``dimensions``, and if no
-    dimension is specified, the default is to compute all eigenvalues.
-    The iterative parameter is incompatible with computing all eigenvalues;
-    therefore, if no dimension is specified, dense algorithms are used
-    regardless.
+    The number of principal components kept is determined by ``dimensions``,
+    and if no dimension is specified, the default is to compute all
+    eigenvalues. The iterative parameter is incompatible with computing
+    all eigenvalues; therefore, if no dimension is specified, dense
+    algorithms are used regardless.
 
-    If ``iterative`` is specified as True, ``svd`` is computed by SciPy's
+    If ``iterative`` is specified as False, ``svd`` is computed by SciPy's
     dense "svd" function, and ``eigh`` is computed by SciPy's dense "eigh"
-    function. If ``iterative`` is specified as False, the methods are computed
+    function. If ``iterative`` is specified as True, the methods are computed
     by SciPy's sparse "svds" and "eigsh" functions respectively.
 
     References
@@ -218,14 +218,15 @@ def pca(
 
         # The total variance, the trace of the covariance matrix, is equal to
         # the squared Frobenius norm of the centered data matrix scaled by
-        # the total degrees of freedom [need source?]
+        # the total degrees of freedom
         total_variance = np.sum(np.square(X_centered)) / (n - 1)
 
     # Handle method parameter
     else:
         raise ValueError("Method must be 'eigh' or 'svd'")
 
-    # Iterative algorithms may return an unsorted output
+    # Iterative algorithms may return an unsorted output,
+    # so they should be sorted
     if iterative:
         idx = variances.argsort()[::-1]
         variances = variances[idx]
