@@ -34,6 +34,7 @@ from ._c_me import (
     _bal_avgdist_insert_p1,
     _bal_avgdist_insert_p2,
     _bal_avgdist_insert_p3,
+    _bal_avgdist_insert_p4,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -567,6 +568,9 @@ def _bme(
         args = ()
     elif parallel == 3:
         func = _bal_avgdist_insert_p3
+        args = ()
+    elif parallel == 4:
+        func = _bal_avgdist_insert_p4
         args = ()
     else:
         raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
