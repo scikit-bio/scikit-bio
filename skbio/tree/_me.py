@@ -34,7 +34,9 @@ from ._c_me import (
     _bal_all_swaps,
     _bal_avgdist_insert_p,
     _bal_avgdist_insert_p2,
-    _fill_pairs,
+    _bal_avgdist_insert_p3,
+    _fill_horizontal,
+    _fill_vertical,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -577,6 +579,8 @@ def _bme(
         func = _bal_avgdist_insert_p
     elif parallel == 2:
         func = _bal_avgdist_insert_p2
+    elif parallel == 3:
+        func = _bal_avgdist_insert_p3
     else:
         raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
@@ -604,6 +608,9 @@ def _bme(
     # stores path lengths between subtrees
     paths = np.empty((n,), dtype=int)
 
+    # numbers of generations from target to shared ancestor
+    gens = np.empty((n,), dtype=int)
+
     # initialize 3-taxon tree
     _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
 
@@ -612,35 +619,52 @@ def _bme(
 
     # adk, min, adm, fill, insert
     t0 = perf_counter()
-    t_adm = 0.0
-    t_fill = 0.0
+
+    t_adk, t_min, t_adm, t_hor, t_ver, t_ins = 0, 0, 0, 0, 0, 0
 
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate balanced average distances from new taxon to existing subtrees.
+        start = perf_counter()
+
         _bal_avgdist_taxon(adk, k, dm, tree, preodr, postodr)
+        end = perf_counter()
+        t_adk += end - start
+        start = end
 
         # Find the branch with minimum length change.
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
-
-        t0_ = perf_counter()
+        end = perf_counter()
+        t_min += end - start
+        start = end
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack, paths, *args)
-        t1_ = perf_counter()
+        func(adm, target, adk, tree, postodr, powers, stack, paths, gens, *args)
+        end = perf_counter()
+        t_adm += end - start
+        start = end
 
-        if parallel == 2:
-            _fill_pairs(adm, adk, tree, preodr, powers, paths, *args)
+        if parallel == 3:
+            _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
+        end = perf_counter()
+        t_hor += end - start
+        start = end
 
-        t2_ = perf_counter()
-        t_adm += t1_ - t0_
-        t_fill += t2_ - t1_
+        if parallel >= 2:
+            _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
+        end = perf_counter()
+        t_ver += end - start
+        start = end
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
+        end = perf_counter()
+        t_ins += end - start
 
-    t_total = perf_counter() - t0
-    print("{:.3f}".format(t_adm), "{:.3f}".format(t_fill), "{:.3f}".format(t_total))
+    t_tot = perf_counter() - t0
+    print(
+        *("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins))
+    )
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
