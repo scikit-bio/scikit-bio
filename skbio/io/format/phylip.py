@@ -167,8 +167,8 @@ Stats:
 ACCGTTGTA-GTAGCT
 A--GTCGAA-GTACCT
 AGAGTTGAAGGTATCT
->>> msa.index
-Index(['seq1', 'sequence-2', '3'], dtype='str')
+>>> msa.index # doctest: +ELLIPSIS
+Index(['seq1', 'sequence-2', '3'], dtype='...')
 
 Now let's write the ``TabularMSA`` to file in PHYLIP format and take a look at
 the output:

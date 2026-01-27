@@ -1027,7 +1027,7 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
     i1 = 0
 
     # Groups the data by the control groups
-    ctrl_groups = meta.groupby(control_cats).groups
+    ctrl_groups = meta.groupby(control_cats, dropna=False).groups
     # Identifies the samples that satisfy the control pairs. Keys are iterated
     # in sorted order so that results don't change with different dictionary
     # ordering.

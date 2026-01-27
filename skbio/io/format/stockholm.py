@@ -293,14 +293,14 @@ Suppose we have a Stockholm file containing an MSA of protein sequences
 ...     ])
 >>> fh = StringIO(fs)
 >>> msa = TabularMSA.read(fh, constructor=Protein)
->>> msa # doctest: +NORMALIZE_WHITESPACE
+>>> msa # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 TabularMSA[Protein]
 ----------------------------------------------------------------------
 Metadata:
     'CC': 'CBS domains are small intracellular modules mostly found in
            2 or four copies within a protein.'
 Positional metadata:
-    'SS_cons': <dtype: object>
+    'SS_cons': <dtype: ...>
 Stats:
     sequence count: 5
     position count: 37
@@ -313,10 +313,10 @@ EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 
 The sequence names are stored in the ``index``:
 
->>> msa.index
+>>> msa.index # doctest: +ELLIPSIS
 Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
        'O31699/88-139'],
-      dtype='str')
+      dtype='...')
 
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 

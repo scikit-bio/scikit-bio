@@ -62,6 +62,9 @@ class TestBlast6Reader(unittest.TestCase):
                              'query2']], columns=['sacc', 'score', 'gapopen',
                                                   'qcovs', 'sblastnames',
                                                   'sallacc', 'qaccver'])
+        # Depending on Pandas version, this column may be string, object, or float
+        # (np.nan). Converting to object enables passing with all versions.
+        df['sblastnames'] = df['sblastnames'].astype(object)
         exp['sblastnames'] = exp['sblastnames'].astype(object)
         assert_data_frame_almost_equal(df, exp)
 

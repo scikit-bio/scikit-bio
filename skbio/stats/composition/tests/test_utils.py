@@ -260,7 +260,7 @@ class UtilsTests(TestCase):
         obs = _type_cast_to_float(df)
         self.assertIsInstance(obs, pd.DataFrame)
         self.assertIsNot(obs, df)
-        self.assertEqual(obs["name"].dtype, np.object_)
+        self.assertTrue(pd.api.types.is_string_dtype(obs["name"]))
         self.assertEqual(obs["age"].dtype, np.float64)
         self.assertEqual(obs["bmi"].dtype, np.float64)
 
