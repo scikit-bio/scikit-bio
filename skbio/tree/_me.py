@@ -554,15 +554,15 @@ def _bme(
     """
     dtype = dm.dtype
 
-    if schedule == "static":
-        schedule = 0
-    elif schedule == "dynamic":
-        schedule = 1
-    elif schedule == "guided":
-        schedule = 2
+    # if schedule == "static":
+    #     schedule = 0
+    # elif schedule == "dynamic":
+    #     schedule = 1
+    # elif schedule == "guided":
+    #     schedule = 2
 
     # chunksize = chunksize / ops if adpative else chunksize
-    args = (schedule, chunksize, minclade)
+    args = (chunksize, minclade, False)
     if not parallel:
         func = _bal_avgdist_insert
         args = ()
