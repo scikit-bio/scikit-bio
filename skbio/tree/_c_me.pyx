@@ -783,7 +783,7 @@ def _bal_min_branch(
     cdef floating* adku = &adk[1, 0]
 
     #####
-    cdef floating val
+    cdef floating cell
 
     lens[min_node] = min_len
     for i in range(1, 2 * tree[0, 4] - 1):
@@ -801,11 +801,11 @@ def _bal_min_branch(
 
         #####
         if tree[parent, 0] == node:
-            val = adm[sibling, node]  # node is left, sibling is right
+            cell = adm[sibling, node]  # node is left, sibling is right
         else:
-            val = adm[node, sibling]
+            cell = adm[node, sibling]
         lens[node] = L = lens[parent] + (
-            adm[parent, sibling] + adkl[node] - val - adku[parent]
+            adm[parent, sibling] + adkl[node] - cell - adku[parent]
         )
 
         if L < min_len:
@@ -1589,6 +1589,38 @@ def _bal_avgdist_insert_p2(
     # - Best case (balanced tree): 2n log2 n - 2n + 2 ~= O(nlogn)
     # - Worst case (skewed tree): n^2 - n ~= O(n^2)
 
+    # chunk, worth = config_prange(n, chunksize, minclade, adaptive)
+    # for a in prange(
+    #     n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
+    # ):
+    #     path = paths[a]
+    #     size = tree[a, 4]
+    #     if path > 0 and size > 0:
+    #         power = powers[path]
+    #         adm_a = &adm[a, 0]
+    #         jj = tree[a, 7]
+    #         for j in range(jj - size * 2 + 2, jj):
+    #             b = postodr[j]
+    #             adm_a[b] += power * adkl[b]
+
+
+def _fill_pairs(
+    floating[:, ::1] adm,
+    floating[:, ::1] adk,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+    floating[::1] powers,
+    Py_ssize_t[::1] paths,
+    int chunksize = 10,
+    int minclade = 100,
+    bint adaptive = False,
+):
+    cdef Py_ssize_t a, b, j, jj, path, size
+    cdef floating power
+    cdef int chunk   # chunk size
+    cdef bint worth  # whether use threads
+    cdef Py_ssize_t n = 2 * tree[0, 4] - 1
+    cdef floating* adkl = &adk[0, 0]
     chunk, worth = config_prange(n, chunksize, minclade, adaptive)
     for a in prange(
         n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
@@ -1598,10 +1630,18 @@ def _bal_avgdist_insert_p2(
         if path > 0 and size > 0:
             power = powers[path]
             adm_a = &adm[a, 0]
-            jj = tree[a, 7]
-            for j in range(jj - size * 2 + 2, jj):
-                b = postodr[j]
+
+            # preorder
+            jj = tree[a, 6]
+            for j in range(jj + 1, jj + size * 2 - 1):
+                b = preodr[j]
                 adm_a[b] += power * adkl[b]
+
+            # postorder
+            # jj = tree[a, 7]
+            # for j in range(jj - size * 2 + 2, jj):
+            #     b = postodr[j]
+            #     adm_a[b] += power * adkl[b]
 
 
 def _insert_taxon(

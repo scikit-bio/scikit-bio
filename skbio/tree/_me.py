@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from time import perf_counter
 from heapq import heapify, heappop
 
 import numpy as np
@@ -33,6 +34,7 @@ from ._c_me import (
     _bal_all_swaps,
     _bal_avgdist_insert_p,
     _bal_avgdist_insert_p2,
+    _fill_pairs,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -523,8 +525,10 @@ def _gme(dm):
 def _bme(
     dm,
     parallel=None,
-    schedule="static",
-    chunksize=10000,
+    # schedule="static",
+    # chunksize=10000,
+    # minclade=100,
+    chunksize=20,
     minclade=100,
 ):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
@@ -606,6 +610,11 @@ def _bme(
     # Pre-calculate negative powers of 2.
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
+    # adk, min, adm, fill, insert
+    t0 = perf_counter()
+    t_adm = 0.0
+    t_fill = 0.0
+
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate balanced average distances from new taxon to existing subtrees.
@@ -614,11 +623,24 @@ def _bme(
         # Find the branch with minimum length change.
         target = _bal_min_branch(lens, adm, adk, tree, preodr)
 
+        t0_ = perf_counter()
+
         # Update balanced average distance matrix between all subtrees.
         func(adm, target, adk, tree, postodr, powers, stack, paths, *args)
+        t1_ = perf_counter()
+
+        if parallel == 2:
+            _fill_pairs(adm, adk, tree, preodr, powers, paths, *args)
+
+        t2_ = perf_counter()
+        t_adm += t1_ - t0_
+        t_fill += t2_ - t1_
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
+
+    t_total = perf_counter() - t0
+    print("{:.3f}".format(t_adm), "{:.3f}".format(t_fill), "{:.3f}".format(t_total))
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
