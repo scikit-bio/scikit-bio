@@ -126,6 +126,7 @@ import collections
 import copy
 
 import numpy as np
+import pandas as pd
 import scipy.stats
 
 from skbio.util import get_rng
@@ -1021,13 +1022,25 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         position of the reference group sample in the list of samples.
 
     """
+    from packaging.version import Version
+
     # Sets up variables to be filled
     meta_pairs = {}
     index = []
     i1 = 0
 
     # Groups the data by the control groups
-    ctrl_groups = meta.groupby(control_cats, dropna=False).groups
+    # To handle pandas 4 behavior...
+    # Pandas4Warning: In a future version, the keys of `groups` will be a tuple with a
+    # single element, e.g. (ABX,) , instead of a scalar, e.g. ABX, when grouping by a
+    # list with a single element. Use ``df.groupby(by='a').groups`` instead of
+    # ``df.groupby(by=['a']).groups`` to avoid this warning
+    if len(control_cats) == 1:
+        control_cats = control_cats[0]
+    if Version(pd.__version__) >= Version("3.0.0"):
+        ctrl_groups = meta.groupby(control_cats, dropna=False).groups
+    else:
+        ctrl_groups = meta.groupby(control_cats).groups
     # Identifies the samples that satisfy the control pairs. Keys are iterated
     # in sorted order so that results don't change with different dictionary
     # ordering.
