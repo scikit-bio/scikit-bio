@@ -1336,7 +1336,7 @@ class NumericMetadataColumn(MetadataColumn):
 
     @classmethod
     def _normalize_(cls, series):
-        series = series.astype(float, copy=True, errors="raise")
+        series = series.astype(float, errors="raise").copy()
         if np.isinf(series).any():
             raise ValueError(
                 "%s does not support positive or negative infinity as a "
