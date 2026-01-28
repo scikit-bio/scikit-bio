@@ -19,7 +19,7 @@ class DummyMetadataColumn(MetadataColumn):
 
     @classmethod
     def _normalize_(cls, series):
-        return series.astype(float, copy=True, errors='raise')
+        return series.astype(float, errors='raise').copy()
 
 
 class TestInvalidMetadataColumnConstruction(unittest.TestCase):
