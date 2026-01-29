@@ -21,6 +21,7 @@
 * Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
 * Fixed a bug in `TreeNode.root_at_midpoint` which could fail on a tree with no-length branches ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
 * Fixed an unexpected behavior in several `TreeNode` methods, where tips with `.name is None` were considered as taxa and included in the calculation. Nameless tips are unusual but not forbidden by the current data model. After fixation, those tips are excluded from the calculation. Affected methods are `subset`, `subsets`, `bipart`, `bipart` and `cophenet` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Fixed an integer overflow issue in `_nodes_by_counts` that can occur on 32-bit systems (such as WASM)
 
 ### Miscellaneous
 
