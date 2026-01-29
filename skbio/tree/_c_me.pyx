@@ -1869,7 +1869,7 @@ def _fill_horizontal(
         gen = gens[a]
         if gen > 0:
             diff = adkl[a]
-            if tree[a, 7] > post_t:
+            if tree[a, 7] > post_t:  # postorder
                 adm_a = &adm[a, 0]
                 for i in range(gen):
                     adm_a[stack[i]] += powers_2[i] * diff
