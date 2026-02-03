@@ -1107,12 +1107,22 @@ class MeTests(TestCase):
         powers = 2.0 ** -np.arange(5)
         stack = np.zeros(7, dtype=int)
         paths = np.zeros(7, dtype=int)  #####
+        gens = np.zeros(7, dtype=int)  #####
+        # adm = np.array([
+        #     [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
+        #     [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
+        #     [ 9. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
+        #     [ 9. , 10. ,  9.5,  0. ,  8. ,  0. ,  0. ],
+        #     [ 9. , 10. ,  9.5,  8. ,  0. ,  0. ,  0. ],
+        #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+        #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+        # ])
         adm = np.array([
             [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
-            [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
-            [ 9. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
-            [ 9. , 10. ,  9.5,  0. ,  8. ,  0. ,  0. ],
-            [ 9. , 10. ,  9.5,  8. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
+            [ 0. , 10. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. , 10. ,  0. ,  8. ,  0. ,  0. ,  0. ],
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
             [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
         ])
@@ -1121,16 +1131,25 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert(
-            obs := adm.copy(), target, adk, tree, postodr, powers, stack, paths
+            obs := adm, target, adk, tree, postodr, powers, stack, paths, gens
         )
+        # exp = np.array([
+        #     [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
+        #     [ 5.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
+        #     [ 8.75,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+        #     [ 9.  , 10.  ,  9.5 ,  0.  ,  8.  ,  7.5 ,  7.  ],
+        #     [ 9.  , 10.  ,  9.5 ,  8.  ,  0.  ,  8.75,  3.  ],
+        #     [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
+        #     [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
+        # ])
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
-            [ 5.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
-            [ 8.75,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
-            [ 9.  , 10.  ,  9.5 ,  0.  ,  8.  ,  7.5 ,  7.  ],
-            [ 9.  , 10.  ,  9.5 ,  8.  ,  0.  ,  8.75,  3.  ],
-            [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
-            [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
+            [ 0.  ,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+            [ 0.  , 10.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
+            [ 0.  , 10.  ,  0.  ,  8.  ,  0.  ,  0.  ,  0.  ],
+            [ 0.  ,  9.5 ,  0.  ,  7.5 ,  8.75,  0.  ,  7.75],
+            [ 0.  ,  9.  ,  0.  ,  7.  ,  3.  ,  0.  ,  0.  ],
         ])
         npt.assert_allclose(obs, exp)
 
@@ -1142,17 +1161,19 @@ class MeTests(TestCase):
         _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
         powers = 2.0 ** -np.arange(m)
         stack = np.zeros(n, dtype=int)
+        _halve_adm(adm, tree, n - 2)  #####
 
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                obs := adm.copy(), i, adk, tree, postodr, powers, stack, paths
+                obs := adm.copy(), i, adk.copy(), tree, postodr, powers, stack, paths, gens
             )
 
             # insert taxon and calculate full matrix
             tree_, pre_, post_ = tree.copy(), preodr.copy(), postodr.copy()
             _insert_taxon(m, i, tree_, pre_, post_)
             _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
+            _halve_adm(exp, tree_, n)  #####
 
             npt.assert_allclose(obs, exp)
 
@@ -1164,6 +1185,7 @@ class MeTests(TestCase):
         powers = 2.0 ** -np.arange(5)
         stack = np.zeros(7, dtype=int)
         paths = np.zeros(7, dtype=int)  #####
+        gens = np.zeros(7, dtype=int)  #####
         # adm = np.array([
         #     [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
         #     [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
@@ -1187,7 +1209,7 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         target = 4
         _bal_avgdist_insert_p(
-            obs := adm.copy(), target, adk, tree, postodr, powers, stack, paths
+            obs := adm, target, adk, tree, postodr, powers, stack, paths, gens
         )
         # exp = np.array([
         #     [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -1222,7 +1244,7 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert_p(
-                obs := adm.copy(), i, adk.copy(), tree, postodr, powers, stack, paths
+                obs := adm.copy(), i, adk.copy(), tree, postodr, powers, stack, paths, gens
             )
 
             # insert taxon and calculate full matrix

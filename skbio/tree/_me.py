@@ -524,15 +524,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(
-    dm,
-    parallel=None,
-    # schedule="static",
-    # chunksize=10000,
-    # minclade=100,
-    chunksize=20,
-    minclade=100,
-):
+def _bme(dm, parallel=None, chunksize=20, minclade=100):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -560,21 +552,11 @@ def _bme(
     """
     dtype = dm.dtype
 
-    # if schedule == "static":
-    #     schedule = 0
-    # elif schedule == "dynamic":
-    #     schedule = 1
-    # elif schedule == "guided":
-    #     schedule = 2
-
     # chunksize = chunksize / ops if adpative else chunksize
     args = (chunksize, minclade, False)
     if not parallel:
         func = _bal_avgdist_insert
         args = ()
-    # else:
-    #     func = _bal_avgdist_insert_p
-    #     args = ()
     elif parallel == 1:
         func = _bal_avgdist_insert_p
     elif parallel == 2:
@@ -644,17 +626,17 @@ def _bme(
         t_adm += end - start
         start = end
 
-        if parallel == 3:
-            _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
-        end = perf_counter()
-        t_hor += end - start
-        start = end
+        # if parallel == 3:
+        #     _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
+        # end = perf_counter()
+        # t_hor += end - start
+        # start = end
 
-        if parallel >= 2:
-            _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
-        end = perf_counter()
-        t_ver += end - start
-        start = end
+        # if parallel >= 2:
+        #     _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
+        # end = perf_counter()
+        # t_ver += end - start
+        # start = end
 
         # Insert new taxon into tree.
         _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
@@ -662,9 +644,11 @@ def _bme(
         t_ins += end - start
 
     t_tot = perf_counter() - t0
-    print(
-        *("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins))
-    )
+    # print(
+    #     *("{:.3f}".format(x) for x in (
+    #         t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins
+    #     ))
+    # )
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
