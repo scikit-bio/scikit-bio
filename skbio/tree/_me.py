@@ -1659,6 +1659,8 @@ def _insert_taxon_py(taxon, target, tree, preodr, postodr, use_depth=True):
 ##########
 ##########
 
+# preorder : ancestor - descendant, left - right
+
 
 def _bme2(dm, **kwargs):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction."""
