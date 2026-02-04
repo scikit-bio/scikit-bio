@@ -36,6 +36,8 @@ from ._c_me import (
     _bal_avgdist_insert_p,
     _bal_avgdist_insert_p2,
     _bal_avgdist_insert_p3,
+    _bal_avgdist_insert_p4,
+    _bal_avgdist_insert_p5,
     _fill_horizontal,
     _fill_vertical,
 )
@@ -564,6 +566,10 @@ def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
         avgdist_func = _bal_avgdist_insert_p2
     elif parallel == 3:
         avgdist_func = _bal_avgdist_insert_p3
+    elif parallel == 4:
+        avgdist_func = _bal_avgdist_insert_p4
+    elif parallel == 5:
+        avgdist_func = _bal_avgdist_insert_p5
     else:
         raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
 
@@ -633,17 +639,17 @@ def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
         t_adm += end - start
         start = end
 
-        if parallel == 3:
-            _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
-        end = perf_counter()
-        t_hor += end - start
-        start = end
+        # if parallel == 3:
+        #     _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
+        # end = perf_counter()
+        # t_hor += end - start
+        # start = end
 
-        if parallel >= 2:
-            _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
-        end = perf_counter()
-        t_ver += end - start
-        start = end
+        # if parallel >= 2:
+        #     _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
+        # end = perf_counter()
+        # t_ver += end - start
+        # start = end
 
         # Insert new taxon into tree.
         treeup_func(k, target, tree, preodr, postodr, use_depth=True)
@@ -651,9 +657,10 @@ def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
         t_ins += end - start
 
     t_tot = perf_counter() - t0
-    print(
-        *("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins))
-    )
+    print(*("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_ins)))
+    # print(*("{:.3f}".format(x) for x in (
+    #     t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins
+    # )))
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
