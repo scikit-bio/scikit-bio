@@ -10,6 +10,7 @@
 
 from cython cimport floating
 from cython.parallel cimport prange
+from libc.string cimport memmove
 from heapq import heappush
 
 
@@ -943,6 +944,8 @@ def _avgdist_d2_insert(
         size_1 = size + 1
 
 
+### Old serial version (double assignment) ###
+
 # def _bal_avgdist_insert(
 #     floating[:, ::1] adm,
 #     Py_ssize_t target,
@@ -1327,16 +1330,17 @@ def _bal_avgdist_insert(
     while curr:
         stack[anc_i] = anc = tree[curr, 2]
         adm_c = &adm[anc, 0]
+        diff, cell = adku[anc], adm_c[target]
 
         # Transfer the pre-calculated distance between k and ancestor (upper).
-        adm_c[tip] = adku[anc]
+        adm_c[tip] = diff
 
         # Calculate the distance between link (lower, with k) and ancestor (upper).
-        adm_c[link] = 0.5 * (adku[anc] + adm_c[target])
+        adm_c[link] = 0.5 * (diff + cell)
 
         # Calculate the distance between each previous ancestor (lower, with k)
         # and the current ancestor (upper).
-        diff = adku[anc] - adm_c[target]
+        diff -= cell
         for i in range(anc_i):
             adm_c[stack[i]] += powers_2[i] * diff
 
@@ -1400,7 +1404,7 @@ def _bal_avgdist_insert(
         depoff += 2
 
 
-### parallelize as it goes ###
+### parallelize as it goes; no intermediate ###
 
 def _bal_avgdist_insert_p(
     floating[:, ::1] adm,
@@ -1416,62 +1420,39 @@ def _bal_avgdist_insert_p(
     int minclade = 100,
     bint adaptive = False,
 ):
-    r"""Update balanced average distance matrix after taxon insertion.
-
-    This function is the parallel version of :func:`_bal_avgdist_insert`.
-
-    Within each subtree of n taxa, the total number of ancestor-descendant pairs is
-    between O(nlogn) (balanced tree, best case) and O(n^2) (skewed tree, worst case).
-
-    In postorder traversal (left - right - parent), ancestors are always latter than
-    descendants, right children (and their descendants) are always latter than left
-    children (and their descendants).
-
-    """
+    r"""Update balanced average distance matrix after taxon insertion."""
     cdef Py_ssize_t i, j, ii, jj, anc_i
     cdef Py_ssize_t parent, sibling, depth
     cdef Py_ssize_t curr, anc, cousin, depoff
     cdef Py_ssize_t a, b
 
-    # Intermediate variables
-    cdef floating cell  # specific value in `adm` (a matrix)
-    cdef floating diff  # difference in distance; usually from `adk`
-    cdef floating power  # negative power of 2; from `powers`
+    cdef floating cell, diff, power
 
     # Parallelization
     cdef int ops     # total operations
     cdef int chunk   # chunk size
     cdef bint worth  # whether use threads
 
-    # dimensions and positions
     cdef Py_ssize_t n = 2 * tree[0, 4] - 1
     cdef Py_ssize_t link = n
     cdef Py_ssize_t tip = n + 1
 
-    # Pointers to lower and upper tree distances
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
 
-    # Pointers to specific rows in `adm`
     cdef floating* adm_t = &adm[target, 0]
     cdef floating* adm_l = &adm[link, 0]
     cdef floating* adm_k = &adm[tip, 0]
-    cdef floating* adm_c  # each ancestor of target
-    cdef floating* adm_a  # each node within a clade
+    cdef floating* adm_c
+    cdef floating* adm_a
 
     cdef floating* powers_2 = &powers[2]
 
     ###### Special case: insert into the root branch. ######
 
     if target == 0:
-        # Transfer distance between k and root (upper).
         adm_t[tip]= adku[0]
-
-        # k to link: equals to k to root (lower).
         adm_k[link] = adkl[0]
-
-        # Root to link: de novo calculation according to the equation in A4.1(b). It is
-        # basically the distance between the upper and lower subtrees of the root.
         adm_t[link] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
 
         # Iterate over all nodes but the root.
@@ -1483,16 +1464,8 @@ def _bal_avgdist_insert_p(
             1, n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
         ):
             adm_a = &adm[a, 0]
-
-            # Transfer distances between the node (lower) and k.
             adm_k[a] = adkl[a]
-
-            # Calculate the distance between the node (lower) and link (upper, with two
-            # taxa (0 and k) added) using Eq. 8.
             adm_l[a] = 0.5 * (adkl[a] + adm_t[a])
-
-            # Calculate the distances between the node (upper, containing k) and each
-            # of its descendant (lower).
             ii = tree[a, 7]
             power = powers[tree[a, 5] + 1]
             for i in range(ii - tree[a, 4] * 2 + 2, ii):
@@ -1507,25 +1480,13 @@ def _bal_avgdist_insert_p(
 
     ### Step 1: Distances around the insertion point. ###
 
-    # Distance between k (lower) and link (upper) equals to that between k and the
-    # upper subtree of target.
     adm_l[tip] = adku[target]
-
-    # Distance between target (lower) and link (upper) needs to be calculated using the
-    # equation in A4.1(c). Basically, it is the distance between the lower and upper
-    # subtrees of the same target.
-    if tree[parent, 0] == target:
-        cell = adm[sibling, target]
-    else:
-        cell = adm[target, sibling]
+    cell = adm[sibling, target] if tree[parent, 0] == target else adm_t[sibling]
     adm_l[target] = 0.5 * (cell + adm[parent, target])
-
-    # Transfer pre-calculated distance between target (lower) and k (lower).
     adm_k[target] = adkl[target]
 
     ### Step 2: Distances within the clade below target. ###
 
-    # Locate the clade below target (excluding target). Skip if target is a tip.
     depoff = 1 - depth
     ops = tree[target, 4] * 2 - 2
     if ops > 0:
@@ -1537,26 +1498,14 @@ def _bal_avgdist_insert_p(
         ):
             a = postodr[i]
             adm_a = &adm[a, 0]
-
-            # Transfer pre-calculated distance between k (lower) and any node within
-            # the clade (lower).
             adm[tip, a] = adkl[a]
-
-            # Distance from any descendant (lower) to link (upper) equals to that to
-            # target.
             adm[link, a] = adm[target, a]
-
-            # Within the clade, find all ancestor (a) - descendant (b) pairs, and
-            # calculate the distance between the upper subtree of a (containing k) and
-            # the lower subtree of b.
             jj = tree[a, 7]
             power = powers[tree[a, 5] + depoff]
             for j in range(jj - tree[a, 4] * 2 + 2, jj):
                 b = postodr[j]
                 adm_a[b] += power * (adkl[b] - adm_t[b])
 
-        # Finally, calculate the distance between each node within the clade (lower)
-        # and target (upper).
         # NOTE: This loop cannot be merged into the above loop as the latter has been
         # parallelized (i.e., no longer in postorder).
         # TODO: Parallelize this loop
@@ -1566,34 +1515,24 @@ def _bal_avgdist_insert_p(
 
     ### Step 3: Distances among nodes outside the clade. ###
 
-    # Iterate over ancestors of target in ascending order.
     anc_i = 0
     curr = target
     depoff = 2 - depth
     while curr:
         stack[anc_i] = anc = tree[curr, 2]
         adm_c = &adm[anc, 0]
-
-        # Transfer the pre-calculated distance between k and the ancestor (upper).
         adm_c[tip] = adku[anc]
-
-        # Calculate the distance between link (lower, containing k) and the ancestor
-        # (upper).
         adm_c[link] = 0.5 * (adku[anc] + adm_c[target])
-
-        # Calculate the distance between each previous ancestor (lower, containing k)
-        # and the current ancestor (upper).
         diff = adku[anc] - adm_c[target]
         for i in range(anc_i):
             adm_c[stack[i]] += powers_2[i] * diff
 
-        # Locate the cousin clade descending from the ancestor (including cousin).
         cousin = tree[curr, 3]
         ii = tree[cousin, 7] + 1
         ops = tree[cousin, 4] * 2 - 1
         chunk, worth = config_prange(ops, chunksize, minclade, adaptive)
 
-        # Cousin is right, curr is left.
+        # Cousin is right
         if tree[anc, 0] == curr:
             for i in prange(
                 ii - ops, ii, nogil=True, schedule="dynamic", chunksize=chunk,
@@ -1601,30 +1540,18 @@ def _bal_avgdist_insert_p(
             ):
                 a = postodr[i]
                 adm_a = &adm[a, 0]
-
-                # Transfer the pre-calculated distances between k and each descendant
-                # (lower).
                 adm_a[tip] = adkl[a]
-
-                # Calculate the distance between link (lower, containing k) and each
-                # descendant (lower).
                 adm_a[link] = 0.5 * (adkl[a] + adm_a[target])
-
-                # Calculate the distance between each previous ancestor (lower, containing
-                # k) and each descendant (lower).
                 diff = adkl[a] - adm_a[target]
                 for j in range(anc_i):
                     adm_a[stack[j]] += powers_2[j] * diff
-
-                # Iterate over descendants of each member of the clade, and calculate the
-                # distance between the former (upper, containing k) and the latter (lower).
                 jj = tree[a, 7]
                 power = powers[tree[a, 5] + depoff]
                 for j in range(jj - tree[a, 4] * 2 + 2, jj):
                     b = postodr[j]
                     adm_a[b] += power * (adkl[b] - adm[b, target])
 
-        # Cousin is left, curr is left.
+        # Cousin is left
         else:
             for i in prange(
                 ii - ops, ii, nogil=True, schedule="dynamic", chunksize=chunk,
@@ -1648,7 +1575,7 @@ def _bal_avgdist_insert_p(
         depoff += 2
 
 
-### centralized parallelization ###
+### centralized parallelization : separate vertical fill ###
 
 def _bal_avgdist_insert_p2(
     floating[:, ::1] adm,
@@ -1664,27 +1591,13 @@ def _bal_avgdist_insert_p2(
     int minclade = 100,
     bint adaptive = False,
 ):
-    r"""Update balanced average distance matrix after taxon insertion.
-
-    This function is the parallel version of :func:`_bal_avgdist_insert`.
-
-    Within each subtree of n taxa, the total number of ancestor-descendant pairs is
-    between O(nlogn) (balanced tree, best case) and O(n^2) (skewed tree, worst case).
-
-    In postorder traversal (left - right - parent), ancestors are always latter than
-    descendants, right children (and their descendants) are always latter than left
-    children (and their descendants).
-
-    """
+    r"""Update balanced average distance matrix after taxon insertion."""
     cdef Py_ssize_t i, j, ii, jj, anc_i
     cdef Py_ssize_t parent, sibling, size, depth
     cdef Py_ssize_t curr, anc, cousin, depoff
     cdef Py_ssize_t a, b
 
-    # Intermediate variables:
-    cdef floating cell  # specific value in `adm` (a matrix)
-    cdef floating diff  # difference in distance; usually from `adk`
-    cdef floating power  # negative power of 2; from `powers`
+    cdef floating cell, diff, power
 
     # Parallelization
     cdef int ops     # total operations
@@ -1698,16 +1611,14 @@ def _bal_avgdist_insert_p2(
     cdef Py_ssize_t link = n
     cdef Py_ssize_t tip = n + 1
 
-    # Pointers to lower and upper tree distances
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
 
-    # Pointers to specific rows in `adm`
     cdef floating* adm_t = &adm[target, 0]
     cdef floating* adm_l = &adm[link, 0]
     cdef floating* adm_k = &adm[tip, 0]
-    cdef floating* adm_c  # each ancestor of target
-    cdef floating* adm_a  # each node within a clade
+    cdef floating* adm_c
+    cdef floating* adm_a
 
     cdef floating* powers_2 = &powers[2]
 
@@ -1716,36 +1627,14 @@ def _bal_avgdist_insert_p2(
     ###### Special case: insert into the root branch. ######
 
     if target == 0:
-        # Transfer distance between k and root (upper).
         adm_t[tip] = adku[0]
-
-        # k to link: equals to k to root (lower).
         adm_k[link] = adkl[0]
-
-        # Root to link: de novo calculation according to the equation in A4.1(b). It is
-        # basically the distance between the upper and lower subtrees of the root.
         adm_t[link] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
-
-        # Iterate over all nodes but the root.
-        # NOTE: Nodes are ordered by the order they were inserted into the tree. Thus,
-        # the sizes of clades do not have an obvious ascending or descending pattern.
-        # This eases workload distribution across threads.
-        # ops = 10
         for a in prange(1, n, nogil=True, use_threads_if=n >= minops):
-
-            # Transfer distances between the node (lower) and k.
             adm_k[a] = diff = adkl[a]
             cell = adm_t[a]
-
-            # Calculate the distance between the node (lower) and link (upper, with two
-            # taxa (0 and k) added) using Eq. 8.
             adm_l[a] = 0.5 * (diff + cell)
-
-            # Cache intermediate.
             adkl[a] = diff - cell
-
-            # Calculate the path length between the node and k, which directly descends
-            # from the root.
             paths[a] = tree[a, 5] + 1
 
     ###### Regular case: insert into any other branch. ######
@@ -1755,20 +1644,9 @@ def _bal_avgdist_insert_p2(
 
         ### Step 1: Distances around the insertion point. ###
 
-        # Distance between k (lower) and link (upper) equals to that between k and the
-        # upper subtree of target.
         adm_l[tip] = adku[target]
-
-        # Distance between target (lower) and link (upper) needs to be calculated using the
-        # equation in A4.1(c). Basically, it is the distance between the lower and upper
-        # subtrees of the same target.
-        if tree[parent, 0] == target:
-            cell = adm[sibling, target]
-        else:
-            cell = adm[target, sibling]
+        cell = adm[sibling, target] if tree[parent, 0] == target else adm_t[sibling]
         adm_l[target] = 0.5 * (cell + adm[parent, target])
-
-        # Transfer pre-calculated distance between target (lower) and k (lower).
         adm_k[target] = adkl[target]
 
         ### Step 2: Distances within the clade below target. ###
@@ -1780,21 +1658,10 @@ def _bal_avgdist_insert_p2(
         ii = tree[target, 7]
         for i in prange(ii - ops, ii, nogil=True, use_threads_if=ops > minops):
             a = postodr[i]
-
-            # Transfer pre-calculated distance between k (lower) and any node within
-            # the clade (lower).
             adm_k[a] = diff = adkl[a]
-
-            # Distance from any descendant (lower) to link (upper) equals to that to
-            # target.
             adm_l[a] = cell = adm_t[a]
-
-            # Calculate the distance between node (lower) and target (upper).
             adm_t[a] = 0.5 * (diff + cell)
-
             adkl[a] = diff - cell
-
-            # Path length
             paths[a] = tree[a, 5] + depoff
 
         ### Step 3: Distances among nodes outside the clade. ###
@@ -1807,53 +1674,32 @@ def _bal_avgdist_insert_p2(
             stack[anc_i] = anc = tree[curr, 2]
             paths[anc] = 0
             adm_c = &adm[anc, 0]
-
-            # Transfer the pre-calculated distance between k and the ancestor (upper).
             adm_c[tip] = diff = adku[anc]
-
-            # Calculate the distance between link (lower, containing k) and the ancestor
-            # (upper).
             cell = adm_c[target]
             adm_c[link] = 0.5 * (diff + cell)
-
-            # Calculate the distance between each previous ancestor (lower, containing k)
-            # and the current ancestor (upper).
-            diff = diff - cell
+            diff -= cell
             for i in range(anc_i):
                 adm_c[stack[i]] += powers_2[i] * diff
 
-            # Locate the cousin clade descending from the ancestor (including cousin).
             cousin = tree[curr, 3]
             ii = tree[cousin, 7]
             ops = tree[cousin, 4] * 2 - 1
 
-            # Cousin is right, curr is left.
+            # Cousin is right
             # ops = 13 + 5n
             if tree[anc, 0] == curr:
                 for i in prange(ii - ops + 1, ii + 1, nogil=True, use_threads_if=ops * anc_i > minops):
                     a = postodr[i]
                     adm_a = &adm[a, 0]
                     diff, cell = adkl[a], adm_a[target]
-
-                    # Transfer the pre-calculated distances between k and each descendant
                     adm_a[tip] = diff
-
-                    # Calculate the distance between link (lower, containing k) and each
-                    # descendant (lower).
                     adm_a[link] = 0.5 * (diff + cell)
-
-                    # Cache an intermediate.
                     adkl[a] = diff = diff - cell
-
-                    # Calculate the distance between each previous ancestor (lower, containing
-                    # k) and each descendant (lower).
                     for j in range(anc_i):
                         adm_a[stack[j]] += powers_2[j] * diff
-
-                    # path length
                     paths[a] = tree[a, 5] + depoff
 
-            # Cousin is left, curr is left.
+            # Cousin is left
             else:
                 for i in prange(ii - ops + 1, ii + 1, nogil=True, use_threads_if=ops * anc_i > minops):
                     a = postodr[i]
@@ -1872,15 +1718,6 @@ def _bal_avgdist_insert_p2(
 
     ###### Fill all ancestor - descendant pairs. ######
 
-    # This section iterates over all nodes in the tree, except for: 1) target and its
-    # ancestors all the way to root, which have been handled previously and 2) tips,
-    # which have no descendants. Within each clade, all ancestor (upper) - descendant
-    # (lower) pairs are iterated, and their distances are calculated.
-
-    # In a tree of n taxa, the total number of ancestor-descendant pairs is:
-    # - Best case (balanced tree): 2n log2 n - 2n + 2 ~= O(nlogn)
-    # - Worst case (skewed tree): n^2 - n ~= O(n^2)
-
     # chunk, worth = config_prange(n, chunksize, minclade, adaptive)
     # for a in prange(
     #     n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
@@ -1894,7 +1731,6 @@ def _bal_avgdist_insert_p2(
     #         for j in range(jj - size * 2 + 2, jj):
     #             b = postodr[j]
     #             adm_a[b] += power * adkl[b]
-
 
 
 def _bal_avgdist_insert_p3(
@@ -2028,7 +1864,6 @@ def _bal_avgdist_insert_p3(
         depoff = 1 - depth
         ops = tree[target, 4] * 2 - 2
         ii = tree[target, 7]
-        # for i in prange(ii - ops, ii, nogil=True, use_threads_if=ops > minops):
         for i in range(ii - ops, ii):
             a = postodr[i]
 
@@ -2071,7 +1906,6 @@ def _bal_avgdist_insert_p3(
 
             # Calculate the distance between each previous ancestor (lower, containing k)
             # and the current ancestor (upper).
-            # TODO: This can be added to prange.
             diff = diff - cell
             for i in range(anc_i):
                 adm_c[stack[i]] += powers_2[i] * diff
@@ -2084,7 +1918,6 @@ def _bal_avgdist_insert_p3(
             # Cousin is right, curr is left.
             # ops = 13 + 5n
             if tree[anc, 0] == curr:
-                # for i in prange(ii - ops + 1, ii + 1, nogil=True, use_threads_if=ops * anc_i > minops):
                 for i in range(ii - ops + 1, ii + 1):
                     a = postodr[i]
                     adm_a = &adm[a, 0]
@@ -2097,30 +1930,19 @@ def _bal_avgdist_insert_p3(
                     # descendant (lower).
                     adm_a[link] = 0.5 * (diff + cell)
 
-                    # Cache an intermediate.
-                    adkl[a] = diff = diff - cell
-
-                    # Calculate the distance between each previous ancestor (lower, containing
-                    # k) and each descendant (lower).
-                    # for j in range(anc_i):
-                    #     adm_a[stack[j]] += powers_2[j] * diff
-
-                    # path length
+                    adkl[a] = diff - cell
                     paths[a] = tree[a, 5] + depoff
                     gens[a] = anc_i
 
             # Cousin is left, curr is left.
             else:
-                # for i in prange(ii - ops + 1, ii + 1, nogil=True, use_threads_if=ops * anc_i > minops):
                 for i in range(ii - ops + 1, ii + 1):
                     a = postodr[i]
                     adm_a = &adm[a, 0]
                     diff, cell = adkl[a], adm_t[a]
                     adm_k[a] = diff
                     adm_l[a] = 0.5 * (diff + cell)
-                    adkl[a] = diff = diff - cell
-                    # for j in range(anc_i):
-                    #     adm[stack[j], a] += powers_2[j] * diff
+                    adkl[a] = diff - cell
                     paths[a] = tree[a, 5] + depoff
                     gens[a] = anc_i
 
@@ -2379,24 +2201,216 @@ def _insert_taxon(
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
         # clade +1, link inserted before clade
         for i in range(n - 1, pre_i_after - 1, -1):
-            k = preodr[i]
-            tree[k, 6] += 2
-            preodr[i + 2] = k
+            tree[preodr[i], 6] += 2
+            # k = preodr[i]
+            # tree[k, 6] += 2
+            # preodr[i + 2] = k
+
+        memmove(&preodr[pre_i_after + 2], &preodr[pre_i_after], <size_t>(
+            (n - pre_i_after) * sizeof(Py_ssize_t)
+        ))
+
         preodr[pre_i_after + 1] = tip
 
         for i in range(pre_i_after - 1, pre_i - 1, -1):
-            k = preodr[i]
-            tree[k, 6] += 1
-            preodr[i + 1] = k
+            tree[preodr[i], 6] += 1
+            # k = preodr[i]
+            # tree[k, 6] += 1
+            # preodr[i + 1] = k
+
+        memmove(&preodr[pre_i + 1], &preodr[pre_i], <size_t>(
+            (pre_i_after - pre_i) * sizeof(Py_ssize_t)
+        ))
+
         preodr[pre_i] = link
 
         # postorder shift: all nodes after clade +2, tip and link inserted after clade
         for i in range(n - 1, post_i, -1):
-            k = postodr[i]
-            tree[k, 7] += 2
-            postodr[i + 2] = k
+            tree[postodr[i], 7] += 2
+            # k = postodr[i]
+            # tree[k, 7] += 2
+            # postodr[i + 2] = k
+
+        memmove(&postodr[post_i + 3], &postodr[post_i + 1], <size_t>(
+            (n - post_i - 1) * sizeof(Py_ssize_t)
+        ))
+
         postodr[post_i + 2] = link
         postodr[post_i + 1] = tip
+
+        # size +1 from link to root
+        curr = link
+        while curr:
+            parent = tree[curr, 2]
+            tree[parent, 4] += 1
+            curr = parent
+
+
+def _insert_taxon_1(
+    Py_ssize_t taxon,
+    Py_ssize_t target,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+    Py_ssize_t[::1] postodr,
+    bint use_depth=True,
+):
+    r"""Insert a taxon between a target node and its parent.
+
+    Move memory instead of +1 or +2.
+
+    """
+    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i1
+    cdef Py_ssize_t i, k, side, pre_i_after, curr
+
+    # determine tree dimensions
+    # typically n = 2 * taxon - 3, but this function doesn't enforce this
+    cdef Py_ssize_t m = tree[0, 4]
+    cdef Py_ssize_t n = m * 2 - 1
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    cdef Py_ssize_t* node
+
+    cdef size_t intsize = sizeof(Py_ssize_t)
+
+    # Special case (root branch): taxon k becomes the sibling of all existing taxa
+    # except for the root (taxon 0).
+    if target == 0:
+        node = &tree[0, 0]
+
+        # children
+        left, right = node[0], node[1]
+        tree[left, 2] = tree[right, 2] = link
+
+        # root
+        node[0] = link
+        node[1] = tip
+        node[4] = m + 1
+        node[7] = n + 1
+
+        # link
+        node = &tree[link, 0]
+        node[0] = left
+        node[1] = right
+        node[2] = 0
+        node[3] = tip
+        node[4] = m
+        node[5] = 1
+        node[6] = 1
+        node[7] = n - 1
+
+        # tip
+        node = &tree[tip, 0]
+        node[0] = 0
+        node[1] = taxon
+        node[2] = 0
+        node[3] = link
+        node[4] = 1
+        node[5] = 1
+        node[6] = n + 1
+        node[7] = n
+
+        # entire tree depth + 1
+        if use_depth:
+            for i in range(1, n):
+                tree[i, 5] += 1
+                tree[i, 6] += 1
+        else:
+            for i in range(1, n):
+                tree[i, 6] += 1
+
+        # preorder
+        memmove(&preodr[2], &preodr[1], <size_t>((n - 1) * intsize))
+
+        preodr[1] = link
+        preodr[n + 1] = tip
+
+        # postorder
+        postodr[n - 1] = link
+        postodr[n] = tip
+        postodr[n + 1] = 0
+
+    # Regular case (any other branch): The link becomes the parent of the target node,
+    # and child of its original parent. Taxon k becomes the sibling
+    else:
+        node = &tree[target, 0]
+        left = node[0]
+        right = node[1]
+        parent = node[2]
+        sibling = node[3]
+        size = node[4]
+        depth = node[5]
+        pre_i = node[6]
+        post_i1 = node[7] + 1
+
+        side = int(tree[parent, 0] != target)
+        tree[parent, side] = link
+        tree[sibling, 3] = link
+        node[2] = link
+        node[3] = tip
+
+        # preorder index of node after clade
+        pre_i_after = pre_i + size * 2 - 1
+
+        # link
+        node = &tree[link, 0]
+        node[0] = target
+        node[1] = tip
+        node[2] = parent
+        node[3] = sibling
+        node[4] = size + 1
+        node[5] = depth
+        node[6] = pre_i
+        node[7] = post_i1 + 1
+
+        # tip
+        node = &tree[tip, 0]
+        node[0] = 0
+        node[1] = taxon
+        node[2] = link
+        node[3] = target
+        node[4] = 1
+        node[5] = depth + 1
+        node[6] = pre_i_after + 1
+        node[7] = post_i1
+
+        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
+        # clade +1, link inserted before clade
+        for i in range(pre_i_after, n):
+            tree[preodr[i], 6] += 2
+
+        memmove(&preodr[pre_i_after + 2], &preodr[pre_i_after], <size_t>(
+            (n - pre_i_after) * intsize
+        ))
+
+        preodr[pre_i_after + 1] = tip
+
+        # optional: clade depth +1
+        if use_depth:
+            for i in range(pre_i, pre_i_after):
+                k = preodr[i]
+                tree[k, 5] += 1
+                tree[k, 6] += 1
+        else:
+            for i in range(pre_i, pre_i_after):
+                tree[preodr[i], 6] += 1
+
+        memmove(&preodr[pre_i + 1], &preodr[pre_i], <size_t>(
+            (pre_i_after - pre_i) * intsize
+        ))
+
+        preodr[pre_i] = link
+
+        # postorder shift: all nodes after clade +2, tip and link inserted after clade
+        for i in range(post_i1, n):
+            tree[postodr[i], 7] += 2
+
+        memmove(&postodr[post_i1 + 2], &postodr[post_i1], <size_t>(
+            (n - post_i1) * intsize
+        ))
+
+        postodr[post_i1 + 1] = link
+        postodr[post_i1] = tip
 
         # size +1 from link to root
         curr = link

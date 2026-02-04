@@ -16,6 +16,7 @@ from ._c_me import (
     _preorder,
     _postorder,
     _insert_taxon,
+    _insert_taxon_1,
     _avgdist_taxon,
     _bal_avgdist_taxon,
     _avgdist_d2_insert,
@@ -524,7 +525,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=None, chunksize=20, minclade=100):
+def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -555,16 +556,22 @@ def _bme(dm, parallel=None, chunksize=20, minclade=100):
     # chunksize = chunksize / ops if adpative else chunksize
     args = (chunksize, minclade, False)
     if not parallel:
-        func = _bal_avgdist_insert
+        avgdist_func = _bal_avgdist_insert
         args = ()
     elif parallel == 1:
-        func = _bal_avgdist_insert_p
+        avgdist_func = _bal_avgdist_insert_p
     elif parallel == 2:
-        func = _bal_avgdist_insert_p2
+        avgdist_func = _bal_avgdist_insert_p2
     elif parallel == 3:
-        func = _bal_avgdist_insert_p3
+        avgdist_func = _bal_avgdist_insert_p3
     else:
         raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
+
+    #####
+    if treeup == 0:
+        treeup_func = _insert_taxon
+    else:
+        treeup_func = _insert_taxon_1
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
@@ -621,34 +628,32 @@ def _bme(dm, parallel=None, chunksize=20, minclade=100):
         start = end
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack, paths, gens, *args)
+        avgdist_func(adm, target, adk, tree, postodr, powers, stack, paths, gens, *args)
         end = perf_counter()
         t_adm += end - start
         start = end
 
-        # if parallel == 3:
-        #     _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
-        # end = perf_counter()
-        # t_hor += end - start
-        # start = end
+        if parallel == 3:
+            _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
+        end = perf_counter()
+        t_hor += end - start
+        start = end
 
-        # if parallel >= 2:
-        #     _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
-        # end = perf_counter()
-        # t_ver += end - start
-        # start = end
+        if parallel >= 2:
+            _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
+        end = perf_counter()
+        t_ver += end - start
+        start = end
 
         # Insert new taxon into tree.
-        _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
+        treeup_func(k, target, tree, preodr, postodr, use_depth=True)
         end = perf_counter()
         t_ins += end - start
 
     t_tot = perf_counter() - t0
-    # print(
-    #     *("{:.3f}".format(x) for x in (
-    #         t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins
-    #     ))
-    # )
+    print(
+        *("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins))
+    )
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
@@ -1737,3 +1742,124 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
 #             for j in range(jj - tree[a, 4] * 2 + 2, jj):
 #                 b = postodr[j]
 #                 adm_a[b] = adm[b, a] = adm_a[b] + power * adkl[b]
+
+
+def _insert_taxon_py(taxon, target, tree, preodr, postodr, use_depth=True):
+    r"""Insert a taxon between a target node and its parent.
+
+    For example, with the following local structure of the original tree:
+
+          A
+         / \
+        B   C
+
+    With target=B, this function inserts a taxon into the branch A-B. The structure
+    becomes:
+
+            A
+           / \
+        link  C
+         / \
+        B  taxon
+
+    A special case is that the taxon is inserted into the root branch (node=0). The
+    tree becomes:
+
+            A
+           / \
+        link taxon
+         / \
+        B   C
+
+    The inserted taxon always becomes the right child.
+
+    """
+    # determine tree dimensions
+    # typically n = 2 * taxon - 3, but this function doesn't enforce this
+    m = tree[0, 4]
+    n = m * 2 - 1
+    link = n
+    tip = n + 1
+
+    node = tree[target]
+
+    # Special case (root branch): taxon k becomes the sibling of all existing taxa
+    # except for the root (taxon 0).
+    if target == 0:
+        # children
+        left, right = node[:2]
+        tree[left, 2] = tree[right, 2] = link
+
+        # root
+        node[0] = link
+        node[1] = tip
+        node[4] = m + 1
+        node[7] = n + 1
+
+        # link
+        tree[link] = [left, right, 0, tip, m, 1, 1, n - 1]
+
+        # tip
+        tree[tip] = [0, taxon, 0, link, 1, 1, n + 1, n]
+
+        # entire tree depth + 1
+        if use_depth:
+            tree[1:n, 5] += 1
+
+        # preorder
+        tree[1:n, 6] += 1
+        preodr[2 : n + 1] = preodr[1:n]
+        preodr[1] = link
+        preodr[n + 1] = tip
+
+        # postorder
+        postodr[n - 1 : n + 2] = [link, tip, 0]
+
+    # Regular case (any other branch): The link becomes the parent of the target node,
+    # and child of its original parent. Taxon k becomes the sibling
+    else:
+        left, right, parent, sibling, size, depth, pre_i, post_i = node
+        side = (tree[parent, 0] != target).astype(int)
+        tree[parent, side] = link
+        tree[sibling, 3] = link
+        node[2] = link
+        node[3] = tip
+
+        # identify nodes desceding from target
+        clade_n = size * 2 - 1  # number of nodes in clade (including target)
+        pre_i_after = pre_i + clade_n  # preorder index of node after clade
+        clade = preodr[pre_i:pre_i_after]  # range of clade in preorder
+
+        # link
+        tree[link] = [target, tip, parent, sibling, size + 1, depth, pre_i, post_i + 2]
+
+        # tip
+        tree[tip] = [0, taxon, link, target, 1, depth + 1, pre_i_after + 1, post_i + 1]
+
+        # clade depth +1
+        if use_depth:
+            tree[clade, 5] += 1
+
+        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
+        # clade +1, link inserted before clade
+        pre_after = preodr[pre_i_after:n]
+        tree[pre_after, 6] += 2
+        preodr[pre_i_after + 2 : n + 2] = pre_after
+        preodr[pre_i_after + 1] = tip
+        tree[clade, 6] += 1
+        preodr[pre_i + 1 : pre_i_after + 1] = clade
+        preodr[pre_i] = link
+
+        # postorder shift: all nodes after clade +2, tip and link inserted after clade
+        post_after = postodr[post_i + 1 : n]
+        tree[post_after, 7] += 2
+        postodr[post_i + 3 : n + 2] = post_after
+        postodr[post_i + 2] = link
+        postodr[post_i + 1] = tip
+
+        # size +1 from link to root
+        curr = link
+        while curr:
+            anc = tree[curr, 2]
+            tree[anc, 4] += 1
+            curr = anc
