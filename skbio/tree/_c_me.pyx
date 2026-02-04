@@ -3236,6 +3236,7 @@ def _bal_avgdist_insert2(
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] postodr,
     Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] depths,
     floating[::1] powers,
     Py_ssize_t[::1] stack,
     Py_ssize_t[::1] paths,
@@ -3288,13 +3289,14 @@ def _bal_avgdist_insert2(
 
             # Calculate the path length between the node and k, which directly descends
             # from the root.
-            paths[a] = tree[a, 5] + 1
+            paths[a] = depths[a] + 1
             gens[a] = 0
 
     ###### Regular case: insert into any other branch. ######
 
     else:
-        parent, sibling, depth = tree[target, 2], tree[target, 3], tree[target, 5]
+        parent, sibling = tree[target, 2], tree[target, 3]
+        depth = depths[target]
 
         ### Step 1: Distances around the insertion point. ###
 
@@ -3314,7 +3316,7 @@ def _bal_avgdist_insert2(
             adm_l[a] = cell = adm_t[a]
             adm_t[a] = 0.5 * (diff + cell)
             adkl[a] = diff - cell
-            paths[a] = tree[a, 5] + depoff
+            paths[a] = depths[a] + depoff
             gens[a] = 0
 
         ### Step 3: Distances among nodes outside the clade. ###
@@ -3347,7 +3349,7 @@ def _bal_avgdist_insert2(
                     adm_a[tip] = diff
                     adm_a[link] = 0.5 * (diff + cell)
                     adkl[a] = diff - cell
-                    paths[a] = tree[a, 5] + depoff
+                    paths[a] = depths[a] + depoff
                     gens[a] = anc_i
 
             # Cousin is left
@@ -3359,7 +3361,7 @@ def _bal_avgdist_insert2(
                     adm_k[a] = diff
                     adm_l[a] = 0.5 * (diff + cell)
                     adkl[a] = diff - cell
-                    paths[a] = tree[a, 5] + depoff
+                    paths[a] = depths[a] + depoff
                     gens[a] = anc_i
 
             curr = anc
@@ -3405,6 +3407,7 @@ def _insert_taxon2(
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] postodr,
     Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] depths,
     bint use_depth=True,
 ):
     r"""Insert a taxon between a target node and its parent."""
@@ -3442,7 +3445,7 @@ def _insert_taxon2(
         node[2] = 0
         node[3] = tip
         sizes[link] = m
-        node[5] = 1
+        depths[link] = 1
         node[6] = 1
         node[7] = n - 1
 
@@ -3453,14 +3456,14 @@ def _insert_taxon2(
         node[2] = 0
         node[3] = link
         sizes[tip] = 1
-        node[5] = 1
+        depths[tip] = 1
         node[6] = n + 1
         node[7] = n
 
         # entire tree depth + 1
         if use_depth:
             for i in range(1, n):
-                tree[i, 5] += 1
+                depths[i] += 1
 
         # preorder
         for i in range(n - 1, 0, -1):
@@ -3483,7 +3486,7 @@ def _insert_taxon2(
         parent = node[2]
         sibling = node[3]
         size = sizes[target]
-        depth = node[5]
+        depth = depths[target]
         pre_i = node[6]
         post_i = node[7]
 
@@ -3503,7 +3506,7 @@ def _insert_taxon2(
         node[2] = parent
         node[3] = sibling
         sizes[link] = size + 1
-        node[5] = depth
+        depths[link] = depth
         node[6] = pre_i
         node[7] = post_i + 2
 
@@ -3514,14 +3517,14 @@ def _insert_taxon2(
         node[2] = link
         node[3] = target
         sizes[tip] = 1
-        node[5] = depth + 1
+        depths[tip] = depth + 1
         node[6] = pre_i_after + 1
         node[7] = post_i + 1
 
         # clade depth +1
         if use_depth:
             for i in range(pre_i, pre_i_after):
-                tree[preodr[i], 5] += 1
+                depths[preodr[i]] += 1
 
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
         # clade +1, link inserted before clade

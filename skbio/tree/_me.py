@@ -1665,7 +1665,7 @@ def _bme2(dm, **kwargs):
     dtype = dm.dtype
     m = dm.shape[0]
     n = 2 * m - 3
-    tree, preodr, postodr, sizes = _allocate_tree2(n)
+    tree, preodr, postodr, sizes, depths = _allocate_tree2(n)
     adm = np.empty((n, n), dtype=dtype)
     adk = np.empty((2, n), dtype=dtype)
     lens = np.empty((n,), dtype=dtype)
@@ -1674,7 +1674,7 @@ def _bme2(dm, **kwargs):
     gens = np.empty((n,), dtype=int)
 
     print(n)
-    _init_tree2(dm, tree, preodr, postodr, sizes, adm, matrix=True)
+    _init_tree2(dm, tree, preodr, postodr, sizes, depths, adm, matrix=True)
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     n = 3  # n = 2 * k - 3
@@ -1682,9 +1682,20 @@ def _bme2(dm, **kwargs):
         _bal_avgdist_taxon2(adk, k, dm, n, tree, preodr, postodr)
         target = _bal_min_branch2(lens, adm, adk, n, tree, preodr)
         _bal_avgdist_insert2(
-            n, adm, target, adk, tree, postodr, sizes, powers, stack, paths, gens
+            n,
+            adm,
+            target,
+            adk,
+            tree,
+            postodr,
+            sizes,
+            depths,
+            powers,
+            stack,
+            paths,
+            gens,
         )
-        _insert_taxon2(k, target, tree, preodr, postodr, sizes, use_depth=True)
+        _insert_taxon2(k, target, tree, preodr, postodr, sizes, depths, use_depth=True)
         n += 2
 
     _bal_lengths2(lens, adm, tree)
@@ -1696,16 +1707,18 @@ def _allocate_tree2(n):
     preodr = np.empty(n, dtype=int)
     postodr = np.empty(n, dtype=int)
     sizes = np.empty(n, dtype=int)
-    return tree, preodr, postodr, sizes
+    depths = np.empty(n, dtype=int)
+    return tree, preodr, postodr, sizes, depths
 
 
-def _init_tree2(dm, tree, preodr, postodr, sizes, ads, matrix=False):
+def _init_tree2(dm, tree, preodr, postodr, sizes, depths, ads, matrix=False):
     tree[:3] = [
         [1, 2, 0, 0, 2, 0, 0, 2],  # 0: root
         [0, 1, 0, 2, 1, 1, 1, 0],  # 1: left child
         [0, 2, 0, 1, 1, 1, 2, 1],  # 2: right child
     ]
     sizes[:3] = [2, 1, 1]  ###
+    depths[:3] = [0, 1, 1]  ###
     preodr[:3] = [0, 1, 2]
     postodr[:3] = [1, 2, 0]
     if matrix:
