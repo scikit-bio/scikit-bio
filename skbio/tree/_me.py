@@ -1673,7 +1673,6 @@ def _bme2(dm, **kwargs):
     paths = np.empty((n,), dtype=int)
     gens = np.empty((n,), dtype=int)
 
-    print(n)
     _init_tree2(dm, tree, preodr, postodr, sizes, depths, adm, matrix=True)
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
@@ -1687,6 +1686,7 @@ def _bme2(dm, **kwargs):
             target,
             adk,
             tree,
+            preodr,
             postodr,
             sizes,
             depths,
@@ -1695,6 +1695,7 @@ def _bme2(dm, **kwargs):
             paths,
             gens,
         )
+        target = preodr[target]
         _insert_taxon2(k, target, tree, preodr, postodr, sizes, depths, use_depth=True)
         n += 2
 
