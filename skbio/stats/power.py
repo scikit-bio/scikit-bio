@@ -1022,25 +1022,22 @@ def _identify_sample_groups(meta, cat, control_cats, order, strict_match):
         position of the reference group sample in the list of samples.
 
     """
-    from packaging.version import Version
 
     # Sets up variables to be filled
     meta_pairs = {}
     index = []
     i1 = 0
 
-    # Groups the data by the control groups
-    # To handle pandas 4 behavior...
-    # Pandas4Warning: In a future version, the keys of `groups` will be a tuple with a
-    # single element, e.g. (ABX,) , instead of a scalar, e.g. ABX, when grouping by a
-    # list with a single element. Use ``df.groupby(by='a').groups`` instead of
-    # ``df.groupby(by=['a']).groups`` to avoid this warning
-    if len(control_cats) == 1:
-        control_cats = control_cats[0]
-    if Version(pd.__version__) >= Version("3.0.0"):
-        ctrl_groups = meta.groupby(control_cats, dropna=False).groups
-    else:
-        ctrl_groups = meta.groupby(control_cats).groups
+    # Groups the data by the control groups.
+    # Avoid pandas 4 warning about single-element list keys.
+    group_by = control_cats[0] if len(control_cats) == 1 else control_cats
+
+    # TODO: pandas 3.0 changed NaN normalization. The strict_match=False
+    # tests are skipped for pandas 3.0 until this is properly resolved.
+    # See: test_power.py::test__identify_sample_groups_not_strict
+    #      test_power.py::test_paired_subsamples_not_strict
+    ctrl_groups = meta.groupby(group_by).groups
+
     # Identifies the samples that satisfy the control pairs. Keys are iterated
     # in sorted order so that results don't change with different dictionary
     # ordering.

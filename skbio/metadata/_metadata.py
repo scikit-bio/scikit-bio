@@ -486,8 +486,7 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         else:
             raise TypeError(
                 "Metadata column %r has an unsupported pandas dtype of %s. "
-                "Supported dtypes: float, int, object, str, string"
-                % (series.name, dtype)
+                "Supported dtypes: float, int, object, str." % (series.name, dtype)
             )
 
         return column
@@ -995,6 +994,18 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         """
         return self._missing_scheme
 
+    @property
+    @abstractmethod
+    def supported_dtypes(self):
+        """Data types supported by this type of metadata column.
+
+        Returns
+        -------
+        tuple
+            Supported dtype(s).
+        """
+        pass
+
     def __init__(self, series, missing_scheme=DEFAULT_MISSING):
         if not isinstance(series, pd.Series):
             raise TypeError(
@@ -1013,8 +1024,13 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         if not self._is_supported_dtype(series.dtype):
             raise TypeError(
                 "%s %r does not support a pandas.Series object with dtype %s. "
-                "Supported dtypes: object, str, string"
-                % (self.__class__.__name__, series.name, series.dtype)
+                "Supported dtypes: %s"
+                % (
+                    self.__class__.__name__,
+                    series.name,
+                    series.dtype,
+                    ", ".join(self.supported_dtypes),
+                )
             )
 
         self._missing_scheme = missing_scheme
@@ -1272,9 +1288,11 @@ class CategoricalMetadataColumn(MetadataColumn):
     """
 
     type = "categorical"
+    supported_dtypes = ("object", "str")
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
+        # pd.api.types.is_string_dtype(dtype)
         # Older pandas returned 'object' for strings
         if dtype == "object":
             return True
@@ -1329,6 +1347,7 @@ class NumericMetadataColumn(MetadataColumn):
     """
 
     type = "numeric"
+    supported_dtypes = ("float", "int", "int64")
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
