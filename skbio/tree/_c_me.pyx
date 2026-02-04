@@ -2512,39 +2512,24 @@ def _insert_taxon(
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
         # clade +1, link inserted before clade
         for i in range(n - 1, pre_i_after - 1, -1):
-            tree[preodr[i], 6] += 2
-            # k = preodr[i]
-            # tree[k, 6] += 2
-            # preodr[i + 2] = k
-
-        memmove(&preodr[pre_i_after + 2], &preodr[pre_i_after], <size_t>(
-            (n - pre_i_after) * sizeof(Py_ssize_t)
-        ))
+            k = preodr[i]
+            tree[k, 6] += 2
+            preodr[i + 2] = k
 
         preodr[pre_i_after + 1] = tip
 
         for i in range(pre_i_after - 1, pre_i - 1, -1):
-            tree[preodr[i], 6] += 1
-            # k = preodr[i]
-            # tree[k, 6] += 1
-            # preodr[i + 1] = k
-
-        memmove(&preodr[pre_i + 1], &preodr[pre_i], <size_t>(
-            (pre_i_after - pre_i) * sizeof(Py_ssize_t)
-        ))
+            k = preodr[i]
+            tree[k, 6] += 1
+            preodr[i + 1] = k
 
         preodr[pre_i] = link
 
         # postorder shift: all nodes after clade +2, tip and link inserted after clade
         for i in range(n - 1, post_i, -1):
-            tree[postodr[i], 7] += 2
-            # k = postodr[i]
-            # tree[k, 7] += 2
-            # postodr[i + 2] = k
-
-        memmove(&postodr[post_i + 3], &postodr[post_i + 1], <size_t>(
-            (n - post_i - 1) * sizeof(Py_ssize_t)
-        ))
+            k = postodr[i]
+            tree[k, 7] += 2
+            postodr[i + 2] = k
 
         postodr[post_i + 2] = link
         postodr[post_i + 1] = tip
@@ -3174,3 +3159,448 @@ def _bal_all_swaps(
             gains[branch], sides[branch] = Lcomm - L1, 0
         else:
             gains[branch], sides[branch] = Lcomm - L2, 1
+
+
+##########
+##########
+##########
+
+
+def _bal_avgdist_taxon2(
+    floating[:, ::1] adk,
+    Py_ssize_t k,
+    floating[:, :] dm,
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+    Py_ssize_t[::1] postodr,
+):
+    r"""Calculate balanced average distances between a new taxon and existing subtrees."""
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+    for i in range(n):
+        node = postodr[i]
+        left, right = tree[node, 0], tree[node, 1]
+        if left == 0:
+            adkl[node] = dm[k, right]
+        else:
+            adkl[node] = 0.5 * (adkl[left] + adkl[right])
+    adku[0] = dm[k, 0]
+    for i in range(1, n):
+        node = preodr[i]
+        adku[node] = 0.5 * (adku[tree[node, 2]] + adkl[tree[node, 3]])
+
+
+
+def _bal_min_branch2(
+    floating[::1] lens,
+    floating[:, ::1] adm,
+    floating[:, ::1] adk,
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+):
+    """Find the branch with the minimum length change after inserting a new taxon."""
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, parent, sibling
+    cdef floating L
+    cdef Py_ssize_t min_node = 0
+    cdef floating min_len = 0
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+    cdef floating cell
+    lens[min_node] = min_len
+    for i in range(1, n):
+        node = preodr[i]
+        parent = tree[node, 2]
+        sibling = tree[node, 3]
+        if tree[parent, 0] == node:
+            cell = adm[sibling, node]
+        else:
+            cell = adm[node, sibling]
+        lens[node] = L = lens[parent] + (
+            adm[parent, sibling] + adkl[node] - cell - adku[parent]
+        )
+        if L < min_len:
+            min_len, min_node = L, node
+    return min_node
+
+
+def _bal_avgdist_insert2(
+    Py_ssize_t n,
+    floating[:, ::1] adm,
+    Py_ssize_t target,
+    floating[:, ::1] adk,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] sizes,
+    floating[::1] powers,
+    Py_ssize_t[::1] stack,
+    Py_ssize_t[::1] paths,
+    Py_ssize_t[::1] gens,
+    int chunksize = 10,
+    int minclade = 100,
+    bint adaptive = False,
+):
+    r"""Update balanced average distance matrix after taxon insertion."""
+    cdef Py_ssize_t i, j, ii, jj, anc_i
+    cdef Py_ssize_t parent, sibling, size, depth
+    cdef Py_ssize_t curr, anc, cousin, depoff
+    cdef Py_ssize_t a, b
+
+    cdef floating cell, diff, power
+
+    # Parallelization
+    cdef int ops     # total operations
+    cdef int chunk   # chunk size
+    cdef bint worth  # whether use threads
+
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
+    cdef floating* adm_t = &adm[target, 0]
+    cdef floating* adm_l = &adm[link, 0]
+    cdef floating* adm_k = &adm[tip, 0]
+    cdef floating* adm_c
+    cdef floating* adm_a
+
+    cdef floating* powers_2 = &powers[2]
+
+    paths[target] = 0
+    gens[target] = 0
+
+    ###### Special case: insert into the root branch. ######
+
+    if target == 0:
+        adm_t[tip] = adku[0]
+        adm_k[link] = adkl[0]
+        adm_t[link] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
+        for a in range(1, n):
+            adm_k[a] = diff = adkl[a]
+            cell = adm_t[a]
+            adm_l[a] = 0.5 * (diff + cell)
+            adkl[a] = diff - cell
+
+            # Calculate the path length between the node and k, which directly descends
+            # from the root.
+            paths[a] = tree[a, 5] + 1
+            gens[a] = 0
+
+    ###### Regular case: insert into any other branch. ######
+
+    else:
+        parent, sibling, depth = tree[target, 2], tree[target, 3], tree[target, 5]
+
+        ### Step 1: Distances around the insertion point. ###
+
+        adm_l[tip] = adku[target]
+        cell = adm[sibling, target] if tree[parent, 0] == target else adm_t[sibling]
+        adm_l[target] = 0.5 * (cell + adm[parent, target])
+        adm_k[target] = adkl[target]
+
+        ### Step 2: Distances within the clade below target. ###
+
+        depoff = 1 - depth
+        ops = sizes[target] * 2 - 2
+        ii = tree[target, 7]
+        for i in range(ii - ops, ii):
+            a = postodr[i]
+            adm_k[a] = diff = adkl[a]
+            adm_l[a] = cell = adm_t[a]
+            adm_t[a] = 0.5 * (diff + cell)
+            adkl[a] = diff - cell
+            paths[a] = tree[a, 5] + depoff
+            gens[a] = 0
+
+        ### Step 3: Distances among nodes outside the clade. ###
+
+        anc_i = 0
+        curr = target
+        depoff = 2 - depth
+        while curr:
+            stack[anc_i] = anc = tree[curr, 2]
+            paths[anc] = 0
+            gens[anc] = 0
+            adm_c = &adm[anc, 0]
+            adm_c[tip] = diff = adku[anc]
+            cell = adm_c[target]
+            adm_c[link] = 0.5 * (diff + cell)
+            diff -= cell
+            for i in range(anc_i):
+                adm_c[stack[i]] += powers_2[i] * diff
+
+            cousin = tree[curr, 3]
+            ii = tree[cousin, 7]
+            ops = sizes[cousin] * 2 - 1
+
+            # Cousin is right
+            if tree[anc, 0] == curr:
+                for i in range(ii - ops + 1, ii + 1):
+                    a = postodr[i]
+                    adm_a = &adm[a, 0]
+                    diff, cell = adkl[a], adm_a[target]
+                    adm_a[tip] = diff
+                    adm_a[link] = 0.5 * (diff + cell)
+                    adkl[a] = diff - cell
+                    paths[a] = tree[a, 5] + depoff
+                    gens[a] = anc_i
+
+            # Cousin is left
+            else:
+                for i in range(ii - ops + 1, ii + 1):
+                    a = postodr[i]
+                    adm_a = &adm[a, 0]
+                    diff, cell = adkl[a], adm_t[a]
+                    adm_k[a] = diff
+                    adm_l[a] = 0.5 * (diff + cell)
+                    adkl[a] = diff - cell
+                    paths[a] = tree[a, 5] + depoff
+                    gens[a] = anc_i
+
+            curr = anc
+            anc_i += 1
+            depoff += 2
+
+    ###### Parallelization ######
+
+    cdef Py_ssize_t post_t = tree[target, 7]
+    chunk, worth = config_prange(n, chunksize, minclade, adaptive)
+    for i in prange(
+        n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
+    ):
+        a = postodr[i]
+
+        # Direct (L) - cousin (L) pairs
+        gen = gens[a]
+        if gen > 0:
+            diff = adkl[a]
+            if i > post_t:  # postorder
+                adm_a = &adm[a, 0]
+                for j in range(gen):
+                    adm_a[stack[j]] += powers_2[j] * diff
+            else:
+                for j in range(gen):
+                    adm[stack[j], a] += powers_2[j] * diff
+
+        # Ancestor (U) - descendant (L) pairs
+        path = paths[a]
+        size = sizes[a]
+        if path > 0 and size > 0:
+            power = powers[path]
+            adm_a = &adm[a, 0]
+            for j in range(i - size * 2 + 2, i):
+                b = postodr[j]
+                adm_a[b] += power * adkl[b]
+
+
+def _insert_taxon2(
+    Py_ssize_t taxon,
+    Py_ssize_t target,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] sizes,
+    bint use_depth=True,
+):
+    r"""Insert a taxon between a target node and its parent."""
+    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i
+    cdef Py_ssize_t i, k, side, pre_i_after, curr
+
+    # determine tree dimensions
+    # typically n = 2 * taxon - 3, but this function doesn't enforce this
+    cdef Py_ssize_t m = taxon - 1
+    cdef Py_ssize_t n = m * 2 - 1
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    cdef Py_ssize_t* node
+
+    # Special case (root branch): taxon k becomes the sibling of all existing taxa
+    # except for the root (taxon 0).
+    if target == 0:
+        node = &tree[0, 0]
+
+        # children
+        left, right = node[0], node[1]
+        tree[left, 2] = tree[right, 2] = link
+
+        # root
+        node[0] = link
+        node[1] = tip
+        sizes[0] = m + 1
+        node[7] = n + 1
+
+        # link
+        node = &tree[link, 0]
+        node[0] = left
+        node[1] = right
+        node[2] = 0
+        node[3] = tip
+        sizes[link] = m
+        node[5] = 1
+        node[6] = 1
+        node[7] = n - 1
+
+        # tip
+        node = &tree[tip, 0]
+        node[0] = 0
+        node[1] = taxon
+        node[2] = 0
+        node[3] = link
+        sizes[tip] = 1
+        node[5] = 1
+        node[6] = n + 1
+        node[7] = n
+
+        # entire tree depth + 1
+        if use_depth:
+            for i in range(1, n):
+                tree[i, 5] += 1
+
+        # preorder
+        for i in range(n - 1, 0, -1):
+            tree[i, 6] += 1
+            preodr[i + 1] = preodr[i]
+        preodr[1] = link
+        preodr[n + 1] = tip
+
+        # postorder
+        postodr[n - 1] = link
+        postodr[n] = tip
+        postodr[n + 1] = 0
+
+    # Regular case (any other branch): The link becomes the parent of the target node,
+    # and child of its original parent. Taxon k becomes the sibling
+    else:
+        node = &tree[target, 0]
+        left = node[0]
+        right = node[1]
+        parent = node[2]
+        sibling = node[3]
+        size = sizes[target]
+        depth = node[5]
+        pre_i = node[6]
+        post_i = node[7]
+
+        side = int(tree[parent, 0] != target)
+        tree[parent, side] = link
+        tree[sibling, 3] = link
+        node[2] = link
+        node[3] = tip
+
+        # preorder index of node after clade
+        pre_i_after = pre_i + size * 2 - 1
+
+        # link
+        node = &tree[link, 0]
+        node[0] = target
+        node[1] = tip
+        node[2] = parent
+        node[3] = sibling
+        sizes[link] = size + 1
+        node[5] = depth
+        node[6] = pre_i
+        node[7] = post_i + 2
+
+        # tip
+        node = &tree[tip, 0]
+        node[0] = 0
+        node[1] = taxon
+        node[2] = link
+        node[3] = target
+        sizes[tip] = 1
+        node[5] = depth + 1
+        node[6] = pre_i_after + 1
+        node[7] = post_i + 1
+
+        # clade depth +1
+        if use_depth:
+            for i in range(pre_i, pre_i_after):
+                tree[preodr[i], 5] += 1
+
+        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
+        # clade +1, link inserted before clade
+        for i in range(n - 1, pre_i_after - 1, -1):
+            k = preodr[i]
+            tree[k, 6] += 2
+            preodr[i + 2] = k
+
+        preodr[pre_i_after + 1] = tip
+
+        for i in range(pre_i_after - 1, pre_i - 1, -1):
+            k = preodr[i]
+            tree[k, 6] += 1
+            preodr[i + 1] = k
+
+        preodr[pre_i] = link
+
+        # postorder shift: all nodes after clade +2, tip and link inserted after clade
+        for i in range(n - 1, post_i, -1):
+            k = postodr[i]
+            tree[k, 7] += 2
+            postodr[i + 2] = k
+
+        postodr[post_i + 2] = link
+        postodr[post_i + 1] = tip
+
+        # size +1 from link to root
+        curr = link
+        while curr:
+            parent = tree[curr, 2]
+            sizes[parent] += 1
+            curr = parent
+
+
+def _bal_lengths2(
+    floating[::1] lens,
+    floating[:, ::1] adm,
+    Py_ssize_t[:, ::1] tree,
+):
+    r"""Calculate branch lengths of a tree based on the balanced framework."""
+    cdef Py_ssize_t n = tree.shape[0]
+    cdef Py_ssize_t node, left, right, parent, sibling
+
+    for node in range(1, n):
+        left, parent, sibling = tree[node, 0], tree[node, 2], tree[node, 3]
+
+        # node is tip
+        if left == 0:
+            if tree[parent, 0] == node:
+                lens[node] = 0.5 * (
+                    adm[parent, node] + adm[sibling, node] - adm[parent, sibling]
+                )
+            else:
+                lens[node] = 0.5 * (
+                    adm[parent, node] + adm[node, sibling] - adm[parent, sibling]
+                )
+
+        # node is internal
+        else:
+            right = tree[node, 1]
+
+            # node is left, sibling is right
+            if tree[parent, 0] == node:
+                right = tree[node, 1]
+                lens[node] = 0.25 * (
+                    adm[parent, left]
+                    + adm[sibling, right]
+                    + adm[parent, right]
+                    + adm[sibling, left]
+                ) - 0.5 * (adm[parent, sibling] + adm[right, left])
+
+            # sibling is left, node is right
+            else:
+                lens[node] = 0.25 * (
+                    adm[parent, left]
+                    + adm[right, sibling]
+                    + adm[parent, right]
+                    + adm[left, sibling]
+                ) - 0.5 * (adm[parent, sibling] + adm[right, left])
+
+    left, right = tree[0, 0], tree[0, 1]
+    lens[0] = 0.5 * (adm[0, left] + adm[0, right] - adm[right, left])
