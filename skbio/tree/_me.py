@@ -272,7 +272,10 @@ def bme(dm, neg_as_zero=True, **kwargs):
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
-    tree, lens = _bme2(dm.data, **kwargs)
+    if "method" in kwargs and kwargs["method"] == 2:
+        tree, lens = _bme2(dm.data, **kwargs)
+    else:
+        tree, lens = _bme(dm.data, parallel=kwargs.get("parallel", 5))
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -1664,6 +1667,7 @@ def _insert_taxon_py(taxon, target, tree, preodr, postodr, use_depth=True):
 
 def _bme2(dm, **kwargs):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction."""
+    print("method 2")
     dtype = dm.dtype
     m = dm.shape[0]
     n = 2 * m - 3
@@ -1678,10 +1682,22 @@ def _bme2(dm, **kwargs):
     _init_tree2(dm, tree, preodr, postodr, sizes, depths, adm, matrix=True)
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
+    t0 = perf_counter()
+    t_adk, t_min, t_adm, t_hor, t_ver, t_ins = 0, 0, 0, 0, 0, 0
+
     n = 3  # n = 2 * k - 3
     for k in range(3, m):
-        _bal_avgdist_taxon2(adk, k, dm, n, tree, preodr, postodr)
+        start = perf_counter()
+        _bal_avgdist_taxon2(adk, k, dm, n, tree, preodr)
+        end = perf_counter()
+        t_adk += end - start
+        start = end
+
         target = _bal_min_branch2(lens, adm, adk, n, tree, preodr)
+        end = perf_counter()
+        t_min += end - start
+        start = end
+
         _bal_avgdist_insert2(
             n,
             adm,
@@ -1689,7 +1705,6 @@ def _bme2(dm, **kwargs):
             adk,
             tree,
             preodr,
-            postodr,
             sizes,
             depths,
             powers,
@@ -1697,9 +1712,19 @@ def _bme2(dm, **kwargs):
             paths,
             gens,
         )
-        target = preodr[target]
-        _insert_taxon2(k, target, tree, preodr, postodr, sizes, depths, use_depth=True)
+        end = perf_counter()
+        t_adm += end - start
+        start = end
+
+        # target = preodr[target]
+        _insert_taxon2(k, target, tree, preodr, sizes, depths, use_depth=True)
+        end = perf_counter()
+        t_ins += end - start
+
         n += 2
+
+    t_tot = perf_counter() - t0
+    print(*("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_ins)))
 
     _bal_lengths2(lens, adm, tree)
     return tree, lens
