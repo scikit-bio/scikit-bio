@@ -3686,12 +3686,10 @@ def _bal_avgdist_insert2(
 
     if target == 0:
         adm_t[tip] = adku[0]
-        # adm_k[link] = adkl[0]
         adm_l[tip] = adkl[0]
         adm_t[link] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
-        for i in range(1, n):
-            a = preodr[i]  ###
-            # adm_k[a] = diff = adkl[a]
+        for i in range(1, n):  ### can do original order?
+            a = preodr[i]
             adm[a, tip] = diff = adkl[a]
             cell = adm_t[a]
             adm_l[a] = 0.5 * (diff + cell)
@@ -3712,17 +3710,11 @@ def _bal_avgdist_insert2(
 
         adm_l[tip] = adku[tarori]
 
-        # preorder
+        # determine side
         if tree[parent, 0] == tarori:
             cell = adm_t[sibling]
         else:
             cell = adm[sibling, tarori]
-
-        # postorder
-        # if tree[parent, 0] == tarori:
-        #     cell = adm[sibling, tarori]
-        # else:
-        #     cell = adm_t[sibling]
 
         adm_l[tarori] = 0.5 * (cell + adm[parent, tarori])
         adm_t[tip] = adkl[tarori]
@@ -3731,10 +3723,8 @@ def _bal_avgdist_insert2(
 
         depoff = 1 - depth
         ops = sizes[tarori] * 2 - 2
-        # ii = tree[target, 6]
         for i in range(target + 1, target + ops + 1):
             a = preodr[i]
-            # adm_k[a] = diff = adkl[a]
             adm[a, tip] = diff = adkl[a]
             adm_l[a] = cell = adm_t[a]
             adm_t[a] = 0.5 * (diff + cell)
@@ -3743,8 +3733,6 @@ def _bal_avgdist_insert2(
             gens[a] = 0
 
         ### Step 3: Distances among nodes outside the clade. ###
-
-        # target = preodr[target]
 
         anc_i = 0
         curr = target
@@ -3769,7 +3757,6 @@ def _bal_avgdist_insert2(
                 ancpre = curr - sizes[left] * 2
                 cuzpre = ancpre + 1
 
-            # stack[anc_i] = anc = tree[curr, 2]
             paths[anc] = 0
             gens[anc] = 0
             adm_c = &adm[anc, 0]
@@ -3780,8 +3767,6 @@ def _bal_avgdist_insert2(
             for i in range(anc_i):
                 adm_c[stack[i]] += powers_2[i] * diff
 
-            # cousin = tree[curori, 3]
-            # ii = tree[cousin, 6]
             ops = sizes[tree[curori, 3]] * 2 - 1
 
             # Cousin is left
@@ -3814,8 +3799,6 @@ def _bal_avgdist_insert2(
 
     ###### Parallelization ######
 
-    # cdef Py_ssize_t post_t = tree[tarori, 7]
-    # cdef Py_ssize_t post_t = tree[target, 7]
     chunk, worth = config_prange(n, chunksize, minclade, adaptive)
     for i in prange(
         n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
@@ -3840,7 +3823,6 @@ def _bal_avgdist_insert2(
         if path > 0 and size > 0:
             power = powers[path]
             adm_a = &adm[a, 0]
-            # for j in range(i - size * 2 + 2, i):
             for j in range(i + 1, i + size * 2 - 1):
                 b = preodr[j]
                 adm_a[b] += power * adkl[b]
