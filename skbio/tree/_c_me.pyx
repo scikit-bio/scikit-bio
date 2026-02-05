@@ -3192,6 +3192,37 @@ def _bal_avgdist_taxon2(
         adku[node] = 0.5 * (adku[tree[node, 2]] + adkl[tree[node, 3]])
 
 
+def _bal_avgdist_taxon2_cc(
+    floating[:, ::1] adk,
+    Py_ssize_t k,
+    floating[:, ::1] dm,
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] preodr,
+):
+    r"""Calculate balanced average distances between a new taxon and existing subtrees.
+    
+    Assuming `dm` is C-contiguous.
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right
+    cdef floating* dm_k = &dm[k, 0]
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+    for i in range(n - 1, -1, -1):
+        node = preodr[i]
+        left, right = tree[node, 0], tree[node, 1]
+        if left == 0:
+            adkl[node] = dm_k[right]
+        else:
+            adkl[node] = 0.5 * (adkl[left] + adkl[right])
+    adku[0] = dm_k[0]
+    for i in range(1, n):
+        node = preodr[i]
+        adku[node] = 0.5 * (adku[tree[node, 2]] + adkl[tree[node, 3]])
+
+
 def _bal_min_branch2(
     floating[::1] lens,
     floating[:, ::1] adm,
@@ -3209,7 +3240,7 @@ def _bal_min_branch2(
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
     cdef floating cell
-    lens[min_node] = min_len
+    # lens[min_node] = min_len
     for i in range(1, n):
         node = preodr[i]
         parent = tree[node, 2]

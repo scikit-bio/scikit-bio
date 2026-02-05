@@ -42,6 +42,7 @@ from ._c_me import (
     _fill_vertical,
     ###
     _bal_avgdist_taxon2,
+    _bal_avgdist_taxon2_cc,
     _bal_min_branch2,
     _bal_avgdist_insert2,
     _insert_taxon2,
@@ -1675,6 +1676,7 @@ def _bme2(dm, **kwargs):
     adm = np.empty((n, n), dtype=dtype)
     adk = np.empty((2, n), dtype=dtype)
     lens = np.empty((n,), dtype=dtype)
+    lens[0] = 0
     stack = np.empty((n,), dtype=int)
     paths = np.empty((n,), dtype=int)
     gens = np.empty((n,), dtype=int)
@@ -1685,10 +1687,15 @@ def _bme2(dm, **kwargs):
     t0 = perf_counter()
     t_adk, t_min, t_adm, t_hor, t_ver, t_ins = 0, 0, 0, 0, 0, 0
 
+    if dm.flags["C_CONTIGUOUS"]:
+        adk_func = _bal_avgdist_taxon2_cc
+    else:
+        adk_func = _bal_avgdist_taxon2
+
     n = 3  # n = 2 * k - 3
     for k in range(3, m):
         start = perf_counter()
-        _bal_avgdist_taxon2(adk, k, dm, n, tree, preodr)
+        adk_func(adk, k, dm, n, tree, preodr)
         end = perf_counter()
         t_adk += end - start
         start = end
