@@ -1752,7 +1752,8 @@ def _init_tree2(dm, tree, preodr, postodr, sizes, depths, ads, matrix=False):
         [0, 1, 0, 2, 1, 1, 1, 0],  # 1: left child
         [0, 2, 0, 1, 1, 1, 2, 1],  # 2: right child
     ]
-    sizes[:3] = [2, 1, 1]  ###
+    # sizes[:3] = [2, 1, 1]  ###
+    sizes[:3] = [3, 1, 1]
     depths[:3] = [0, 1, 1]  ###
     preodr[:3] = [0, 1, 2]
     postodr[:3] = [1, 2, 0]

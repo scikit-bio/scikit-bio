@@ -3349,7 +3349,8 @@ def _bal_avgdist_insert2(
         ### Step 2: Distances within the clade below target. ###
 
         depoff = 1 - depth
-        ops = sizes[tarori] * 2 - 2
+        # ops = sizes[tarori] * 2 - 2
+        ops = sizes[tarori] - 1
         for i in range(target + 1, target + ops + 1):
             a = preodr[i]
             adm[a, tip] = diff = adkl[a]
@@ -3379,9 +3380,11 @@ def _bal_avgdist_insert2(
             left = tree[anc, 0]
             if left == curori:
                 ancpre = curr - 1
-                cuzpre = ancpre + sizes[curori] * 2
+                # cuzpre = ancpre + sizes[curori] * 2
+                cuzpre = ancpre + sizes[curori] + 1
             else:
-                ancpre = curr - sizes[left] * 2
+                # ancpre = curr - sizes[left] * 2
+                ancpre = curr - sizes[left] - 1
                 cuzpre = ancpre + 1
 
             paths[anc] = 0
@@ -3394,7 +3397,8 @@ def _bal_avgdist_insert2(
             for i in range(anc_i):
                 adm_c[stack[i]] += powers_2[i] * diff
 
-            ops = sizes[tree[curori, 3]] * 2 - 1
+            # ops = sizes[tree[curori, 3]] * 2 - 1
+            ops = sizes[tree[curori, 3]]
 
             # Cousin is left
             if left != curori:
@@ -3450,7 +3454,8 @@ def _bal_avgdist_insert2(
         if path > 0 and size > 1:
             power = powers[path]
             adm_a = &adm[a, 0]
-            for j in range(i + 1, i + size * 2 - 1):
+            # for j in range(i + 1, i + size * 2 - 1):
+            for j in range(i + 1, i + size):
                 b = preodr[j]
                 adm_a[b] += power * adkl[b]
 
@@ -3495,7 +3500,8 @@ def _insert_taxon2(
         # root
         node[0] = link
         node[1] = tip
-        sizes[0] = m + 1
+        # sizes[0] = m + 1
+        sizes[0] = n + 2
 
         # link
         node = &tree[link, 0]
@@ -3503,7 +3509,8 @@ def _insert_taxon2(
         node[1] = right
         node[2] = 0
         node[3] = tip
-        sizes[link] = m
+        # sizes[link] = m
+        sizes[link] = n
         depths[link] = 1
 
         # tip
@@ -3546,7 +3553,8 @@ def _insert_taxon2(
         node[3] = tip
 
         # preorder index of node after clade
-        after = index + size * 2 - 1
+        # after = index + size * 2 - 1
+        after = index + size
 
         # link
         node = &tree[link, 0]
@@ -3554,7 +3562,8 @@ def _insert_taxon2(
         node[1] = tip
         node[2] = parent
         node[3] = sibling
-        sizes[link] = size + 1
+        # sizes[link] = size + 1
+        sizes[link] = size + 2
         depths[link] = depth
 
         # tip
@@ -3590,7 +3599,8 @@ def _insert_taxon2(
         curr = link
         while curr:
             parent = tree[curr, 2]
-            sizes[parent] += 1
+            # sizes[parent] += 1
+            sizes[parent] += 2
             curr = parent
 
 
