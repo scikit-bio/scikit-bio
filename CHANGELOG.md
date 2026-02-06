@@ -27,6 +27,7 @@
 
 * scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
 * `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Added compatibility for pandas 3.0. Most functionality works, but the `INSDC:missing` scheme for encoding missing values is not yet supported with pandas 3.0. See issue [#2375](https://github.com/scikit-bio/scikit-bio/issues/2375) for tracking ([#2371](https://github.com/scikit-bio/scikit-bio/pull/2371)).
 
 ### Backward-incompatible changes
 
