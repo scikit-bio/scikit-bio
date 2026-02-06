@@ -19,6 +19,7 @@ from ._c_me import (
     _insert_taxon_1,
     _avgdist_taxon,
     _bal_avgdist_taxon,
+    _bal_avgdist_taxon_cc,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
     _ols_lengths,
@@ -34,19 +35,7 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _bal_avgdist_insert_p,
-    _bal_avgdist_insert_p2,
-    _bal_avgdist_insert_p3,
-    _bal_avgdist_insert_p4,
-    _bal_avgdist_insert_p5,
-    _fill_horizontal,
-    _fill_vertical,
-    ###
-    _bal_avgdist_taxon2,
-    _bal_avgdist_taxon2_cc,
-    _bal_min_branch2,
-    _bal_avgdist_insert2,
-    _insert_taxon2,
-    _bal_lengths2,
+    _bal_avgdist_fill,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -273,10 +262,7 @@ def bme(dm, neg_as_zero=True, **kwargs):
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
-    if "method" in kwargs and kwargs["method"] == 2:
-        tree, lens = _bme2(dm.data, **kwargs)
-    else:
-        tree, lens = _bme(dm.data, parallel=kwargs.get("parallel", 5))
+    tree, lens = _bme(dm.data, **kwargs)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -537,7 +523,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
+def _bme(dm, parallel=0, chunksize=20, minclade=100):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -565,114 +551,123 @@ def _bme(dm, parallel=0, treeup=0, chunksize=20, minclade=100):
     """
     dtype = dm.dtype
 
-    # chunksize = chunksize / ops if adpative else chunksize
-    args = (chunksize, minclade, False)
-    if not parallel:
-        avgdist_func = _bal_avgdist_insert
-        args = ()
-    elif parallel == 1:
-        avgdist_func = _bal_avgdist_insert_p
-    elif parallel == 2:
-        avgdist_func = _bal_avgdist_insert_p2
-    elif parallel == 3:
-        avgdist_func = _bal_avgdist_insert_p3
-    elif parallel == 4:
-        avgdist_func = _bal_avgdist_insert_p4
-    elif parallel == 5:
-        avgdist_func = _bal_avgdist_insert_p5
+    # faster processing for C-contiguous data
+    if dm.flags["C_CONTIGUOUS"]:
+        adk_func = _bal_avgdist_taxon_cc
     else:
-        raise ValueError(f"Invalid OpenMP scheduling policy: '{parallel}'.")
-
-    #####
-    if treeup == 0:
-        treeup_func = _insert_taxon
-    else:
-        treeup_func = _insert_taxon_1
+        adk_func = _bal_avgdist_taxon
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
     n = 2 * m - 3
 
-    # Pre-allocate memory spaces:
-    # tree structure
-    tree, preodr, postodr = _allocate_tree(n)
+    ### Pre-allocate array memory space. ###
+
+    # tree topology
+    tree = np.empty((n, 4), dtype=int)
+
+    # node indices in preorder
+    preodr = np.empty(n, dtype=int)
+
+    # number of nodes within each clade
+    sizes = np.empty(n, dtype=int)
+
+    # number of branches to root
+    depths = np.empty(n, dtype=int)
 
     # average distances between all subtrees
     # (This is the dominant factor in BME, and what makes it more expensive than GME.)
     adm = np.empty((n, n), dtype=dtype)
 
-    # average distances from a taxon to each subtree
-    adk = np.empty((2, n), dtype=dtype)
+    # average distances from an added taxon (k) to each subtree (lower and upper).
+    adkl = np.empty(n, dtype=dtype)
+    adku = np.empty(n, dtype=dtype)
 
     # branch lengths or length changes
-    lens = np.empty((n,), dtype=dtype)
+    lens = np.empty(n, dtype=dtype)
 
-    # a stack for traversal operations
-    stack = np.empty((n,), dtype=int)
+    # ancestry of target (nodes from its parent to root in ascending order)
+    ancs = np.empty(n, dtype=int)
 
-    # stores path lengths between subtrees
-    paths = np.empty((n,), dtype=int)
+    # degree (number of branches in the path) between target and each node
+    degs = np.empty(n, dtype=int)
 
-    # numbers of generations from target to shared ancestor
-    gens = np.empty((n,), dtype=int)
+    # number of generations from target to ancestor shared with each node (i.e., tMRCA)
+    gens = np.empty(n, dtype=int)
 
-    # initialize 3-taxon tree
-    _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
+    ### Initialize tree with three taxa. ###
+
+    # 3-taxon tree topology
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
+    sizes[:3] = [3, 1, 1]
+    depths[:3] = [0, 1, 1]
+    preodr[:3] = [0, 1, 2]
+
+    # balanced average distances between the 3 taxa
+    adm[0, 1] = adm[1, 0] = dm[0, 1]
+    adm[0, 2] = adm[2, 0] = dm[0, 2]
+    adm[1, 2] = adm[2, 1] = dm[1, 2]
+
+    # Branch length change of root (start of preorder traversal) is always zero.
+    lens[0] = 0.0
 
     # Pre-calculate negative powers of 2.
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
-    # adk, min, adm, fill, insert
-    t0 = perf_counter()
+    ### Iteratively add taxa. ###
 
-    t_adk, t_min, t_adm, t_hor, t_ver, t_ins = 0, 0, 0, 0, 0, 0
+    times = np.empty((m, 6))
 
-    # Iteratively add taxa to the tree.
+    # n = 2 * k - 3
+    n = 3
+
     for k in range(3, m):
+        times[k, 0] = perf_counter()
+
         # Calculate balanced average distances from new taxon to existing subtrees.
-        start = perf_counter()
+        adk_func(n, k, dm, adkl, adku, tree, preodr)
+        times[k, 1] = perf_counter()
 
-        _bal_avgdist_taxon(adk, k, dm, tree, preodr, postodr)
-        end = perf_counter()
-        t_adk += end - start
-        start = end
-
-        # Find the branch with minimum length change.
-        target = _bal_min_branch(lens, adm, adk, tree, preodr)
-        end = perf_counter()
-        t_min += end - start
-        start = end
+        # Find the branch with minimum length change, which the new taxon (k) will be
+        # inserted into.
+        target = _bal_min_branch(n, lens, adm, adkl, adku, tree, preodr)
+        times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
-        avgdist_func(adm, target, adk, tree, postodr, powers, stack, paths, gens, *args)
-        end = perf_counter()
-        t_adm += end - start
-        start = end
+        _bal_avgdist_insert_p(
+            n,
+            target,
+            adm,
+            adkl,
+            adku,
+            tree,
+            preodr,
+            sizes,
+            depths,
+            powers,
+            ancs,
+            degs,
+            gens,
+        )
+        times[k, 3] = perf_counter()
 
-        # if parallel == 3:
-        #     _fill_horizontal(target, adm, adk, tree, powers, stack, gens, *args)
-        # end = perf_counter()
-        # t_hor += end - start
-        # start = end
+        _bal_avgdist_fill(n, target, adm, adkl, preodr, sizes, powers, ancs, degs, gens)
+        times[k, 4] = perf_counter()
 
-        # if parallel >= 2:
-        #     _fill_vertical(adm, adk, tree, preodr, powers, paths, *args)
-        # end = perf_counter()
-        # t_ver += end - start
-        # start = end
+        # Update tree topology with the inserted taxon.
+        _insert_taxon(k, target, tree, preodr, sizes, depths, use_depth=True)
+        times[k, 5] = perf_counter()
 
-        # Insert new taxon into tree.
-        treeup_func(k, target, tree, preodr, postodr, use_depth=True)
-        end = perf_counter()
-        t_ins += end - start
+        n += 2
 
-    t_tot = perf_counter() - t0
-    print(*("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_ins)))
-    # print(*("{:.3f}".format(x) for x in (
-    #     t_tot, t_adk, t_min, t_adm, t_hor, t_ver, t_ins
-    # )))
+    print(np.diff(times, axis=1).sum(axis=0).round(3))
 
-    # Calculate branch lengths using a balanced framework.
+    ### Calculate branch lengths. ###
+
     _bal_lengths(lens, adm, tree)
 
     return tree, lens
@@ -1657,112 +1652,3 @@ def _insert_taxon_py(taxon, target, tree, preodr, postodr, use_depth=True):
             anc = tree[curr, 2]
             tree[anc, 4] += 1
             curr = anc
-
-
-##########
-##########
-##########
-
-# preorder : ancestor - descendant, left - right
-
-
-def _bme2(dm, **kwargs):
-    r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction."""
-    print("method 2")
-    dtype = dm.dtype
-    m = dm.shape[0]
-    n = 2 * m - 3
-    tree, preodr, postodr, sizes, depths = _allocate_tree2(n)
-    adm = np.empty((n, n), dtype=dtype)
-    adk = np.empty((2, n), dtype=dtype)
-    lens = np.empty((n,), dtype=dtype)
-    lens[0] = 0
-    stack = np.empty((n,), dtype=int)
-    paths = np.empty((n,), dtype=int)
-    gens = np.empty((n,), dtype=int)
-
-    _init_tree2(dm, tree, preodr, postodr, sizes, depths, adm, matrix=True)
-    powers = np.ldexp(dtype.type(1.0), -np.arange(m))
-
-    t0 = perf_counter()
-    t_adk, t_min, t_adm, t_hor, t_ver, t_ins = 0, 0, 0, 0, 0, 0
-
-    if dm.flags["C_CONTIGUOUS"]:
-        adk_func = _bal_avgdist_taxon2_cc
-    else:
-        adk_func = _bal_avgdist_taxon2
-
-    n = 3  # n = 2 * k - 3
-    for k in range(3, m):
-        start = perf_counter()
-        adk_func(adk, k, dm, n, tree, preodr)
-        end = perf_counter()
-        t_adk += end - start
-        start = end
-
-        target = _bal_min_branch2(lens, adm, adk, n, tree, preodr)
-        end = perf_counter()
-        t_min += end - start
-        start = end
-
-        _bal_avgdist_insert2(
-            n,
-            adm,
-            target,
-            adk,
-            tree,
-            preodr,
-            sizes,
-            depths,
-            powers,
-            stack,
-            paths,
-            gens,
-        )
-        end = perf_counter()
-        t_adm += end - start
-        start = end
-
-        # target = preodr[target]
-        _insert_taxon2(k, target, tree, preodr, sizes, depths, use_depth=True)
-        end = perf_counter()
-        t_ins += end - start
-
-        n += 2
-
-    t_tot = perf_counter() - t0
-    print(*("{:.3f}".format(x) for x in (t_tot, t_adk, t_min, t_adm, t_ins)))
-
-    _bal_lengths2(lens, adm, tree)
-    return tree, lens
-
-
-def _allocate_tree2(n):
-    tree = np.empty((n, 8), dtype=int)
-    preodr = np.empty(n, dtype=int)
-    postodr = np.empty(n, dtype=int)
-    sizes = np.empty(n, dtype=int)
-    depths = np.empty(n, dtype=int)
-    return tree, preodr, postodr, sizes, depths
-
-
-def _init_tree2(dm, tree, preodr, postodr, sizes, depths, ads, matrix=False):
-    tree[:3] = [
-        [1, 2, 0, 0, 2, 0, 0, 2],  # 0: root
-        [0, 1, 0, 2, 1, 1, 1, 0],  # 1: left child
-        [0, 2, 0, 1, 1, 1, 2, 1],  # 2: right child
-    ]
-    # sizes[:3] = [2, 1, 1]  ###
-    sizes[:3] = [3, 1, 1]
-    depths[:3] = [0, 1, 1]  ###
-    preodr[:3] = [0, 1, 2]
-    postodr[:3] = [1, 2, 0]
-    if matrix:
-        ads[0, 1] = ads[1, 0] = dm[0, 1]
-        ads[0, 2] = ads[2, 0] = dm[0, 2]
-        ads[1, 2] = ads[2, 1] = dm[1, 2]
-    else:
-        ads[1, 1] = dm[0, 1]
-        ads[1, 2] = dm[0, 2]
-        ads[0, 1] = ads[0, 2] = dm[1, 2]
-        ads[1, 0] = ads[0, 0] = 0
