@@ -621,6 +621,7 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
     ### Iteratively add taxa. ###
 
     times = np.empty((m, 6))
+    times[:3, :] = 0.0
 
     # n = 2 * k - 3
     n = 3
