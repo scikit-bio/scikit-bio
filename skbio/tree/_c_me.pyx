@@ -1511,15 +1511,13 @@ def _bal_avgdist_insert_p(
             # size of cousin clade
             size = sizes[node[3]]
 
-            degs[anc] = 0
-            gens[anc] = 0
             adm_c = &adm[anc, 0]
             adm_c[kay] = diff = adku[anc]
             cell = adm_c[tag]
             adm_c[lnk] = 0.5 * (diff + cell)
-            diff -= cell
-            for i in range(n_anc):
-                adm_c[ancs[i]] += powers_2[i] * diff
+            adkl[anc] = diff - cell
+            degs[anc] = 0
+            gens[anc] = n_anc
 
             # curr is left, cousin is right
             if (left := tree[anc, 0]) == curori:
@@ -1597,8 +1595,6 @@ def _bal_avgdist_fill(
         n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
     ):
         a = order[i]
-        if (deg := degs[a]) == 0:
-            continue
 
         # Direct (L) - cousin (L) pairs
         if (gen := gens[a]) > 0:
@@ -1616,7 +1612,7 @@ def _bal_avgdist_fill(
                     adm[ancs[j], a] += powers_2[j] * diff
 
         # Ancestor (U) - descendant (L) pairs
-        if (size := sizes[a]) > 1:
+        if (deg := degs[a]) > 0 and (size := sizes[a]) > 1:
             power = powers[deg]
             adm_a = &adm[a, 0]
             for j in range(i + 1, i + size):
