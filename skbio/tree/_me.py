@@ -16,7 +16,6 @@ from ._c_me import (
     _preorder,
     _postorder,
     _insert_taxon,
-    _insert_taxon_1,
     _avgdist_taxon,
     _bal_avgdist_taxon,
     _bal_avgdist_taxon_cc,

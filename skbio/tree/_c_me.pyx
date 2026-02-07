@@ -1459,7 +1459,7 @@ def _bal_avgdist_insert_p(
         adm_t[kay] = adku[0]
         adm_l[kay] = adkl[0]
         adm_t[lnk] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
-        for i in range(1, n):  ### can do original order?
+        for i in range(1, n):  # NOTE: can also do original order
             a = order[i]
             adm[a, kay] = diff = adkl[a]
             cell = adm_t[a]
@@ -1622,12 +1622,13 @@ def _bal_avgdist_fill(
                 adm_a[b] += power * adkl[b]
 
 
-def _insert_taxon_x(
+def _insert_taxon(
     Py_ssize_t taxon,
-    Py_ssize_t target,
+    Py_ssize_t index,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] depths,
     bint use_depth=True,
 ):
     r"""Insert a taxon between a target node and its parent.
@@ -1667,185 +1668,22 @@ def _insert_taxon_x(
     """
     # This function can be simplified by Python and NumPy APIs. Although I hoped that
     # NumPy vectorization can accelerate the code, especially the pre- and postorder
-    # parts, the reality according to my tests is that cell-by-cell Cython code is
-    # significantly faster than NumPy, and greatly reduces the overall runtime of the
-    # entire algorithms. This effect is more obvious when the dataset is small, but
-    # less so when it is large (but it is still there).
-    #
-    # The reason might be that when moving a block of elements within the same array,
-    # NumPy needs to create a temporary array, but Cython can do the job in place.
-    #
-    # There might be a chance to re-consider NumPy (or even CuPy) API in the future.
-    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i
-    cdef Py_ssize_t i, k, side, pre_i_after, curr
+    # parts, the reality according to my tests is that Cython code is significantly
+    # faster than NumPy, and greatly reduces the overall runtime.
+
+    cdef Py_ssize_t left, right, parent, sibling, size, depth
+    cdef Py_ssize_t i, side, curr
+
+    cdef Py_ssize_t after  # preorder index of node immediately after clade
 
     # determine tree dimensions
     # typically n = 2 * taxon - 3, but this function doesn't enforce this
-    cdef Py_ssize_t m = tree[0, 4]
+    cdef Py_ssize_t m = taxon - 1
     cdef Py_ssize_t n = m * 2 - 1
     cdef Py_ssize_t link = n
     cdef Py_ssize_t tip = n + 1
 
-    cdef Py_ssize_t* node
-
-    # Special case (root branch): taxon k becomes the sibling of all existing taxa
-    # except for the root (taxon 0).
-    if target == 0:
-        node = &tree[0, 0]
-
-        # children
-        left, right = node[0], node[1]
-        tree[left, 2] = tree[right, 2] = link
-
-        # root
-        node[0] = link
-        node[1] = tip
-        node[4] = m + 1
-        node[7] = n + 1
-
-        # link
-        node = &tree[link, 0]
-        node[0] = left
-        node[1] = right
-        node[2] = 0
-        node[3] = tip
-        node[4] = m
-        node[5] = 1
-        node[6] = 1
-        node[7] = n - 1
-
-        # tip
-        node = &tree[tip, 0]
-        node[0] = 0
-        node[1] = taxon
-        node[2] = 0
-        node[3] = link
-        node[4] = 1
-        node[5] = 1
-        node[6] = n + 1
-        node[7] = n
-
-        # entire tree depth + 1
-        if use_depth:
-            for i in range(1, n):
-                tree[i, 5] += 1
-
-        # preorder
-        for i in range(n - 1, 0, -1):
-            tree[i, 6] += 1
-            preodr[i + 1] = preodr[i]
-        preodr[1] = link
-        preodr[n + 1] = tip
-
-        # postorder
-        postodr[n - 1] = link
-        postodr[n] = tip
-        postodr[n + 1] = 0
-
-    # Regular case (any other branch): The link becomes the parent of the target node,
-    # and child of its original parent. Taxon k becomes the sibling
-    else:
-        node = &tree[target, 0]
-        left = node[0]
-        right = node[1]
-        parent = node[2]
-        sibling = node[3]
-        size = node[4]
-        depth = node[5]
-        pre_i = node[6]
-        post_i = node[7]
-
-        side = int(tree[parent, 0] != target)
-        tree[parent, side] = link
-        tree[sibling, 3] = link
-        node[2] = link
-        node[3] = tip
-
-        # preorder index of node after clade
-        pre_i_after = pre_i + size * 2 - 1
-
-        # link
-        node = &tree[link, 0]
-        node[0] = target
-        node[1] = tip
-        node[2] = parent
-        node[3] = sibling
-        node[4] = size + 1
-        node[5] = depth
-        node[6] = pre_i
-        node[7] = post_i + 2
-
-        # tip
-        node = &tree[tip, 0]
-        node[0] = 0
-        node[1] = taxon
-        node[2] = link
-        node[3] = target
-        node[4] = 1
-        node[5] = depth + 1
-        node[6] = pre_i_after + 1
-        node[7] = post_i + 1
-
-        # clade depth +1
-        if use_depth:
-            for i in range(pre_i, pre_i_after):
-                tree[preodr[i], 5] += 1
-
-        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
-        # clade +1, link inserted before clade
-        for i in range(n - 1, pre_i_after - 1, -1):
-            k = preodr[i]
-            tree[k, 6] += 2
-            preodr[i + 2] = k
-
-        preodr[pre_i_after + 1] = tip
-
-        for i in range(pre_i_after - 1, pre_i - 1, -1):
-            k = preodr[i]
-            tree[k, 6] += 1
-            preodr[i + 1] = k
-
-        preodr[pre_i] = link
-
-        # postorder shift: all nodes after clade +2, tip and link inserted after clade
-        for i in range(n - 1, post_i, -1):
-            k = postodr[i]
-            tree[k, 7] += 2
-            postodr[i + 2] = k
-
-        postodr[post_i + 2] = link
-        postodr[post_i + 1] = tip
-
-        # size +1 from link to root
-        curr = link
-        while curr:
-            parent = tree[curr, 2]
-            tree[parent, 4] += 1
-            curr = parent
-
-
-def _insert_taxon_1(
-    Py_ssize_t taxon,
-    Py_ssize_t target,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] postodr,
-    bint use_depth=True,
-):
-    r"""Insert a taxon between a target node and its parent.
-
-    Move memory instead of +1 or +2.
-
-    """
-    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i, post_i1
-    cdef Py_ssize_t i, k, side, pre_i_after, curr
-
-    # determine tree dimensions
-    # typically n = 2 * taxon - 3, but this function doesn't enforce this
-    cdef Py_ssize_t m = tree[0, 4]
-    cdef Py_ssize_t n = m * 2 - 1
-    cdef Py_ssize_t link = n
-    cdef Py_ssize_t tip = n + 1
+    cdef Py_ssize_t target = preodr[index]
 
     cdef Py_ssize_t* node
 
@@ -1863,8 +1701,7 @@ def _insert_taxon_1(
         # root
         node[0] = link
         node[1] = tip
-        node[4] = m + 1
-        node[7] = n + 1
+        sizes[0] = n + 2
 
         # link
         node = &tree[link, 0]
@@ -1872,10 +1709,7 @@ def _insert_taxon_1(
         node[1] = right
         node[2] = 0
         node[3] = tip
-        node[4] = m
-        node[5] = 1
-        node[6] = 1
-        node[7] = n - 1
+        sizes[link] = n
 
         # tip
         node = &tree[tip, 0]
@@ -1883,30 +1717,27 @@ def _insert_taxon_1(
         node[1] = taxon
         node[2] = 0
         node[3] = link
-        node[4] = 1
-        node[5] = 1
-        node[6] = n + 1
-        node[7] = n
-
-        # entire tree depth + 1
-        if use_depth:
-            for i in range(1, n):
-                tree[i, 5] += 1
-                tree[i, 6] += 1
-        else:
-            for i in range(1, n):
-                tree[i, 6] += 1
+        sizes[tip] = 1
 
         # preorder
+        # for i in range(1, n):
+        #     preodr[i + 1] = preodr[i]
         memmove(&preodr[2], &preodr[1], <size_t>((n - 1) * intsize))
 
         preodr[1] = link
         preodr[n + 1] = tip
 
         # postorder
-        postodr[n - 1] = link
-        postodr[n] = tip
-        postodr[n + 1] = 0
+        # postodr[n - 1] = link
+        # postodr[n] = tip
+        # postodr[n + 1] = 0
+
+        # entire tree depth + 1
+        # if use_depth:
+        #     depths[link] = 1
+        #     depths[tip] = 1
+        #     for i in range(1, n):
+        #         depths[i] += 1
 
     # Regular case (any other branch): The link becomes the parent of the target node,
     # and child of its original parent. Taxon k becomes the sibling
@@ -1916,10 +1747,7 @@ def _insert_taxon_1(
         right = node[1]
         parent = node[2]
         sibling = node[3]
-        size = node[4]
-        depth = node[5]
-        pre_i = node[6]
-        post_i1 = node[7] + 1
+        size = sizes[target]
 
         side = int(tree[parent, 0] != target)
         tree[parent, side] = link
@@ -1928,7 +1756,7 @@ def _insert_taxon_1(
         node[3] = tip
 
         # preorder index of node after clade
-        pre_i_after = pre_i + size * 2 - 1
+        after = index + size
 
         # link
         node = &tree[link, 0]
@@ -1936,10 +1764,7 @@ def _insert_taxon_1(
         node[1] = tip
         node[2] = parent
         node[3] = sibling
-        node[4] = size + 1
-        node[5] = depth
-        node[6] = pre_i
-        node[7] = post_i1 + 1
+        sizes[link] = size + 2
 
         # tip
         node = &tree[tip, 0]
@@ -1947,54 +1772,44 @@ def _insert_taxon_1(
         node[1] = taxon
         node[2] = link
         node[3] = target
-        node[4] = 1
-        node[5] = depth + 1
-        node[6] = pre_i_after + 1
-        node[7] = post_i1
+        sizes[tip] = 1
+
+        # clade depth +1
+        # if use_depth:
+        #     depth = depths[target]
+        #     depths[link] = depth
+        #     depths[tip] = depth + 1
+        #     for i in range(index, after):
+        #         depths[preodr[i]] += 1
 
         # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
         # clade +1, link inserted before clade
-        for i in range(pre_i_after, n):
-            tree[preodr[i], 6] += 2
-
-        memmove(&preodr[pre_i_after + 2], &preodr[pre_i_after], <size_t>(
-            (n - pre_i_after) * intsize
+        # for i in range(after, n):
+        #     preodr[i + 2] = preodr[i]
+        memmove(&preodr[after + 2], &preodr[after], <size_t>(
+            (n - after) * intsize
         ))
-
-        preodr[pre_i_after + 1] = tip
-
-        # optional: clade depth +1
-        if use_depth:
-            for i in range(pre_i, pre_i_after):
-                k = preodr[i]
-                tree[k, 5] += 1
-                tree[k, 6] += 1
-        else:
-            for i in range(pre_i, pre_i_after):
-                tree[preodr[i], 6] += 1
-
-        memmove(&preodr[pre_i + 1], &preodr[pre_i], <size_t>(
-            (pre_i_after - pre_i) * intsize
+        preodr[after + 1] = tip
+        # for i in range(index, after):
+        #     preodr[i + 1] = preodr[i]
+        memmove(&preodr[index + 1], &preodr[index], <size_t>(
+            (after - index) * intsize
         ))
-
-        preodr[pre_i] = link
+        preodr[index] = link
 
         # postorder shift: all nodes after clade +2, tip and link inserted after clade
-        for i in range(post_i1, n):
-            tree[postodr[i], 7] += 2
+        # for i in range(n - 1, post_i, -1):
+        #     k = postodr[i]
+        #     tree[k, 7] += 2
+        #     postodr[i + 2] = k
+        # postodr[post_i + 2] = link
+        # postodr[post_i + 1] = tip
 
-        memmove(&postodr[post_i1 + 2], &postodr[post_i1], <size_t>(
-            (n - post_i1) * intsize
-        ))
-
-        postodr[post_i1 + 1] = link
-        postodr[post_i1] = tip
-
-        # size +1 from link to root
+        # size +2 from link to root
         curr = link
         while curr:
             parent = tree[curr, 2]
-            tree[parent, 4] += 1
+            sizes[parent] += 2
             curr = parent
 
 
@@ -2441,181 +2256,3 @@ def _bal_all_swaps(
             gains[branch], sides[branch] = Lcomm - L1, 0
         else:
             gains[branch], sides[branch] = Lcomm - L2, 1
-
-
-##########
-##########
-##########
-
-
-def _insert_taxon(
-    Py_ssize_t taxon,
-    Py_ssize_t index,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] sizes,
-    Py_ssize_t[::1] depths,
-    bint use_depth=True,
-):
-    r"""Insert a taxon between a target node and its parent.
-
-    For example, with the following local structure of the original tree:
-
-          A
-         / \
-        B   C
-
-    With target=B, this function inserts a taxon into the branch A-B. The structure
-    becomes:
-
-            A
-           / \
-        link  C
-         / \
-        B  taxon
-
-    The link and taxon will be appended to the end of the tree array, but the pre- and
-    postorders need to be muted such that new nodes can be inserted. Specifically:
-
-        Preorder:  A - B - C => A - link - B - taxon - C
-        Postorder: B - C - A => B - taxon - link - C - A
-
-    A special case is that the taxon is inserted into the root branch (node=0). The
-    tree becomes:
-
-            A
-           / \
-        link taxon
-         / \
-        B   C
-
-    The inserted taxon always becomes the right child.
-
-    """
-    cdef Py_ssize_t left, right, parent, sibling, size, depth
-    cdef Py_ssize_t i, side, curr
-
-    cdef Py_ssize_t after  # preorder index of node immediately after clade
-
-    # determine tree dimensions
-    # typically n = 2 * taxon - 3, but this function doesn't enforce this
-    cdef Py_ssize_t m = taxon - 1
-    cdef Py_ssize_t n = m * 2 - 1
-    cdef Py_ssize_t link = n
-    cdef Py_ssize_t tip = n + 1
-
-    cdef Py_ssize_t target = preodr[index]
-
-    cdef Py_ssize_t* node
-
-    cdef size_t intsize = sizeof(Py_ssize_t)
-
-    # Special case (root branch): taxon k becomes the sibling of all existing taxa
-    # except for the root (taxon 0).
-    if target == 0:
-        node = &tree[0, 0]
-
-        # children
-        left, right = node[0], node[1]
-        tree[left, 2] = tree[right, 2] = link
-
-        # root
-        node[0] = link
-        node[1] = tip
-        sizes[0] = n + 2
-
-        # link
-        node = &tree[link, 0]
-        node[0] = left
-        node[1] = right
-        node[2] = 0
-        node[3] = tip
-        sizes[link] = n
-
-        # tip
-        node = &tree[tip, 0]
-        node[0] = 0
-        node[1] = taxon
-        node[2] = 0
-        node[3] = link
-        sizes[tip] = 1
-
-        # preorder
-        # for i in range(1, n):
-        #     preodr[i + 1] = preodr[i]
-        memmove(&preodr[2], &preodr[1], <size_t>((n - 1) * intsize))
-
-        preodr[1] = link
-        preodr[n + 1] = tip
-
-        # entire tree depth + 1
-        # if use_depth:
-        #     depths[link] = 1
-        #     depths[tip] = 1
-        #     for i in range(1, n):
-        #         depths[i] += 1
-
-    # Regular case (any other branch): The link becomes the parent of the target node,
-    # and child of its original parent. Taxon k becomes the sibling
-    else:
-        node = &tree[target, 0]
-        left = node[0]
-        right = node[1]
-        parent = node[2]
-        sibling = node[3]
-        size = sizes[target]
-
-        side = int(tree[parent, 0] != target)
-        tree[parent, side] = link
-        tree[sibling, 3] = link
-        node[2] = link
-        node[3] = tip
-
-        # preorder index of node after clade
-        after = index + size
-
-        # link
-        node = &tree[link, 0]
-        node[0] = target
-        node[1] = tip
-        node[2] = parent
-        node[3] = sibling
-        sizes[link] = size + 2
-
-        # tip
-        node = &tree[tip, 0]
-        node[0] = 0
-        node[1] = taxon
-        node[2] = link
-        node[3] = target
-        sizes[tip] = 1
-
-        # clade depth +1
-        # if use_depth:
-        #     depth = depths[target]
-        #     depths[link] = depth
-        #     depths[tip] = depth + 1
-        #     for i in range(index, after):
-        #         depths[preodr[i]] += 1
-
-        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
-        # clade +1, link inserted before clade
-        # for i in range(after, n):
-        #     preodr[i + 2] = preodr[i]
-        memmove(&preodr[after + 2], &preodr[after], <size_t>(
-            (n - after) * intsize
-        ))
-        preodr[after + 1] = tip
-        # for i in range(index, after):
-        #     preodr[i + 1] = preodr[i]
-        memmove(&preodr[index + 1], &preodr[index], <size_t>(
-            (after - index) * intsize
-        ))
-        preodr[index] = link
-
-        # size +2 from link to root
-        curr = link
-        while curr:
-            parent = tree[curr, 2]
-            sizes[parent] += 2
-            curr = parent
