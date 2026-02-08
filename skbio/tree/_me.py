@@ -605,6 +605,9 @@ def _bme(dm, parallel=500, method=0, factor=10):
     # number of generations from target to ancestor shared with each node (i.e., tMRCA)
     gens = np.empty(n, dtype=int)
 
+    # intermediate storing `adkl[x] - adm[target, x]`
+    intm = np.empty(n, dtype=dtype)
+
     ### Initialize tree with three taxa. ###
 
     # 3-taxon tree topology
@@ -676,6 +679,7 @@ def _bme(dm, parallel=500, method=0, factor=10):
             ancs,
             degs,
             gens,
+            intm,
         )
         times[k, 3] = perf_counter()
 
@@ -686,26 +690,26 @@ def _bme(dm, parallel=500, method=0, factor=10):
 
         # Fill ancestor - descendant pairs.
         if k < paramin:
-            _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
+            _bal_avgdist_verti(n, adm, intm, preodr, sizes, powers, degs)
         elif method == 0:
-            _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
+            _bal_avgdist_verti_p(n, adm, intm, preodr, sizes, powers, degs)
         elif method == 1:
             n_chunks = _chunk_sizes(n, threads, factor, preodr, sizes, chunks)
             _bal_avgdist_verti_pc(
-                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+                n, adm, intm, preodr, sizes, powers, degs, chunks, n_chunks
             )
         elif method == 2:
             n_chunks = _chunk_pairs(n, threads, factor, preodr, sizes, pairs, chunks)
             _bal_avgdist_verti_pc(
-                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+                n, adm, intm, preodr, sizes, powers, degs, chunks, n_chunks
             )
         times[k, 4] = perf_counter()
 
         # Fill direct - cousin pairs.
         if k < paramin:
-            _bal_avgdist_horiz(n, target, adm, adkl, preodr, powers, ancs, gens)
+            _bal_avgdist_horiz(n, target, adm, intm, preodr, powers, ancs, gens)
         else:
-            _bal_avgdist_horiz_p(n, target, adm, adkl, preodr, powers, ancs, gens)
+            _bal_avgdist_horiz_p(n, target, adm, intm, preodr, powers, ancs, gens)
         times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
