@@ -34,7 +34,15 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _bal_avgdist_insert_p,
-    _bal_avgdist_fill,
+    # _bal_avgdist_fill,
+    _bal_avgdist_verti,
+    _bal_avgdist_verti_p,
+    _bal_avgdist_verti_pc,
+    _bal_avgdist_horiz,
+    _bal_avgdist_horiz_p,
+    _get_num_threads,
+    _chunk_sizes,
+    _chunk_pairs,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -522,7 +530,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=0, chunksize=20, minclade=100):
+def _bme(dm, parallel=500, method=0, factor=10):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -568,8 +576,11 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
     # node indices in preorder
     preodr = np.empty(n, dtype=int)
 
-    # number of nodes within each clade
+    # number of nodes (tips and internal) within each clade
     sizes = np.empty(n, dtype=int)
+
+    # number of ancestor-descendant pairs (i.e., sum of depths) within each clade
+    pairs = np.empty(n, dtype=int)
 
     # number of branches to root
     depths = np.empty(n, dtype=int)
@@ -603,6 +614,7 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
         [0, 2, 0, 1],  # 2: right child
     ]
     sizes[:3] = [3, 1, 1]
+    pairs[:3] = [2, 0, 0]
     depths[:3] = [0, 1, 1]
     preodr[:3] = [0, 1, 2]
 
@@ -619,7 +631,18 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
 
     ### Iteratively add taxa. ###
 
-    times = np.empty((m, 6))
+    threads = _get_num_threads()
+    # print(threads)
+
+    if not parallel or threads <= 1:
+        paramin = 0
+    else:
+        paramin = parallel
+
+    chunks = np.empty(n + 1, dtype=int)
+    chunks[0] = 0
+
+    times = np.empty((m, 7))
     times[:3, :] = 0.0
 
     # n = 2 * k - 3
@@ -647,6 +670,7 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
             tree,
             preodr,
             sizes,
+            pairs,
             depths,
             powers,
             ancs,
@@ -655,16 +679,46 @@ def _bme(dm, parallel=0, chunksize=20, minclade=100):
         )
         times[k, 3] = perf_counter()
 
-        _bal_avgdist_fill(n, target, adm, adkl, preodr, sizes, powers, ancs, degs, gens)
+        # _bal_avgdist_fill(
+        #     n, target, adm, adkl, preodr, sizes, powers, ancs, degs, gens
+        # )
+        # times[k, 4] = perf_counter()
+
+        # Fill ancestor - descendant pairs.
+        if k < paramin:
+            _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
+        elif method == 0:
+            _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
+        elif method == 1:
+            n_chunks = _chunk_sizes(n, threads, factor, preodr, sizes, chunks)
+            _bal_avgdist_verti_pc(
+                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+            )
+        elif method == 2:
+            n_chunks = _chunk_pairs(n, threads, factor, preodr, sizes, pairs, chunks)
+            _bal_avgdist_verti_pc(
+                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+            )
         times[k, 4] = perf_counter()
+
+        # Fill direct - cousin pairs.
+        if k < paramin:
+            _bal_avgdist_horiz(n, target, adm, adkl, preodr, powers, ancs, gens)
+        else:
+            _bal_avgdist_horiz_p(n, target, adm, adkl, preodr, powers, ancs, gens)
+        times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
         _insert_taxon(k, target, tree, preodr, sizes, depths, use_depth=True)
-        times[k, 5] = perf_counter()
+        times[k, 6] = perf_counter()
 
         n += 2
 
+    # print(n_chunks, pairs[:5])
     print(np.diff(times, axis=1).sum(axis=0).round(3))
+
+    # Output intermediate data for diagnosis
+    # np.savez('tree.npz', tree, preodr, sizes, pairs, depths, chunks[:n_chunks])
 
     ### Calculate branch lengths. ###
 
