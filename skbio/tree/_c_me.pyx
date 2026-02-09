@@ -906,6 +906,47 @@ def _bal_min_branch(
     return min_i
 
 
+def _bal_min_branch2(
+    Py_ssize_t n,
+    floating[::1] lens,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    floating[::1] adku,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+):
+    """Find the branch with the minimum length change after inserting a new taxon.
+
+    This is an alternative version that is faster, but it doesn't maintain strict
+    preorder. Result may be different.
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right
+    cdef floating L_intm, L_left, L_right
+
+    cdef Py_ssize_t min_i = 0
+    cdef floating min_len = 0
+
+    # Identify the smallest branch length change through a preorder traversal.
+    # NOTE: Length change of root (`lens[0]`) has been set to zero.
+    for i in range(n):
+        node = order[i]
+        if left := tree[node, 0]:  # internal node
+            right = tree[node, 1]
+            L_intm = lens[node] - adm[left, right] - adku[node]
+            lens[left] = L_left = L_intm + adm[node, right] + adkl[left]
+            lens[right] = L_right = L_intm + adm[node, left] + adkl[right]
+            if L_left <= L_right:
+                if L_left < min_len:
+                    min_len, min_i = L_left, i + 1
+            elif L_right < min_len:
+                min_len, min_i = L_right, i + sizes[left] + 1
+
+    return min_i
+
+
 def _avgdist_d2_insert(
     floating[:, ::1] ad2,
     Py_ssize_t target,

@@ -43,6 +43,7 @@ from ._c_me import (
     _get_num_threads,
     _chunk_sizes,
     _chunk_pairs,
+    _bal_min_branch2,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -730,7 +731,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
         n += 2
 
     # print(n_chunks, pairs[:5])
-    # print(np.diff(times, axis=1).sum(axis=0).round(3))
+    print(np.diff(times, axis=1).sum(axis=0).round(3))
 
     # Output intermediate data for diagnosis
     # np.savez('tree.npz', tree, preodr, sizes, pairs, depths, chunks[:n_chunks])
