@@ -154,8 +154,7 @@ def _postorder(
 
 def _chunk_sizes(
     Py_ssize_t n,
-    Py_ssize_t threads,
-    Py_ssize_t factor,
+    Py_ssize_t goal,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] chunks,
@@ -164,7 +163,7 @@ def _chunk_sizes(
     cdef Py_ssize_t s  # number of nodes within each clade
 
     # pre-defined chunk size
-    cdef Py_ssize_t chunksize = max(1, (sizes[0] - 1) // (threads * factor))
+    cdef Py_ssize_t chunksize = max(1, (sizes[0] - 1) // goal)
 
     # remaining space within current chunk
     cdef Py_ssize_t space = chunksize
@@ -187,8 +186,7 @@ def _chunk_sizes(
 
 def _chunk_pairs(
     Py_ssize_t n,
-    Py_ssize_t threads,
-    Py_ssize_t factor,
+    Py_ssize_t goal,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] pairs,
@@ -201,7 +199,7 @@ def _chunk_pairs(
     cdef Py_ssize_t p  # number of ancestor-descendant pairs within each clade
 
     # pre-defined chunk size
-    cdef Py_ssize_t chunksize = max(1, pairs[0] // (threads * factor))
+    cdef Py_ssize_t chunksize = max(1, pairs[0] // goal)
 
     # remaining space within current chunk
     cdef Py_ssize_t space = chunksize
@@ -1498,165 +1496,6 @@ def _bal_avgdist_insert(
         depoff += 2
 
 
-### parallelize as it goes; no intermediate ###
-
-
-# def _bal_avgdist_insert_p(
-#     Py_ssize_t n,
-#     Py_ssize_t index,
-#     floating[:, ::1] adm,
-#     floating[::1] adkl,
-#     floating[::1] adku,
-#     Py_ssize_t[:, ::1] tree,
-#     Py_ssize_t[::1] order,
-#     Py_ssize_t[::1] sizes,
-#     Py_ssize_t[::1] depths,
-#     floating[::1] powers,
-#     Py_ssize_t[::1] ancs,
-#     Py_ssize_t[::1] degs,
-#     Py_ssize_t[::1] gens,
-# ):
-#     r"""Update balanced average distance matrix after taxon insertion."""
-#     cdef Py_ssize_t a  # nodes as in tree
-#     cdef Py_ssize_t i  # nodes as in order
-
-#     # pointer to a node (row) in tree
-#     cdef Py_ssize_t* node
-
-#     cdef Py_ssize_t tag = order[index]  # target node
-#     cdef Py_ssize_t lnk = n              # link node
-#     cdef Py_ssize_t kay = n + 1          # new taxon (k)
-#     cdef Py_ssize_t par = tree[tag, 2]   # parent
-#     cdef Py_ssize_t sib = tree[tag, 3]   # sibling
-#     cdef Py_ssize_t anc                  # ancestor
-#     cdef Py_ssize_t cuz                  # cousin (not used)
-
-#     cdef Py_ssize_t size, depth
-
-#     cdef Py_ssize_t curr  # index of current ancestor
-#     cdef Py_ssize_t n_anc  # number of previous ancestors
-
-#     cdef Py_ssize_t dep_a, depoff
-
-#     cdef floating cell, diff
-
-#     ### original order
-
-#     cdef Py_ssize_t left, curori, anc_i, cuz_i
-
-#     cdef floating* adm_t = &adm[tag, 0]
-#     cdef floating* adm_l = &adm[lnk, 0]
-#     cdef floating* adm_k = &adm[kay, 0]
-#     cdef floating* adm_c
-#     cdef floating* adm_a
-
-#     cdef floating* powers_2 = &powers[2]
-
-#     degs[tag] = 0
-#     gens[tag] = 0
-
-#     ###### Special case: insert into the root branch. ######
-
-#     if index == 0:
-#         depths[lnk] = depths[kay] = 1
-#         adm_t[kay] = adku[0]
-#         adm_l[kay] = adkl[0]
-#         adm_t[lnk] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
-#         for i in range(1, n):  # NOTE: can also do original order
-#             a = order[i]
-#             adm[a, kay] = diff = adkl[a]
-#             cell = adm_t[a]
-#             adm_l[a] = 0.5 * (diff + cell)
-#             adkl[a] = diff - cell
-
-#             # Calculate the path length between the node and k, which directly descends
-#             # from the root.
-#             degs[a] = depths[a] = depths[a] + 1
-#             gens[a] = 0
-
-#     ###### Regular case: insert into any other branch. ######
-
-#     else:
-#         depths[lnk] = depth = depths[tag]
-#         depths[kay] = depths[tag] = depth + 1
-
-#         ### Step 1: Distances around the insertion point. ###
-
-#         adm_l[kay] = adku[tag]
-
-#         # determine side
-#         cell = adm_t[sib] if tree[par, 0] == tag else adm[sib, tag]
-#         adm_l[tag] = 0.5 * (cell + adm[par, tag])
-#         adm_t[kay] = adkl[tag]
-
-#         ### Step 2: Distances within the clade below target. ###
-
-#         for i in range(index + 1, index + sizes[tag]):
-#             a = order[i]
-#             adm[a, kay] = diff = adkl[a]
-#             adm_l[a] = cell = adm_t[a]
-#             adm_t[a] = 0.5 * (diff + cell)
-#             adkl[a] = diff - cell
-#             depths[a] = dep_a = depths[a] + 1
-#             degs[a] = dep_a - depth
-#             gens[a] = 0
-
-#         ### Step 3: Distances among nodes outside the clade. ###
-
-#         n_anc = 0
-#         curr = index
-#         depoff = 2 - depth
-
-#         while curr:
-
-#             curori = order[curr]
-#             node = &tree[curori, 0]
-#             ancs[n_anc] = anc = node[2]
-
-#             # size of cousin clade
-#             size = sizes[node[3]]
-
-#             adm_c = &adm[anc, 0]
-#             adm_c[kay] = diff = adku[anc]
-#             cell = adm_c[tag]
-#             adm_c[lnk] = 0.5 * (diff + cell)
-#             adkl[anc] = diff - cell
-#             degs[anc] = 0
-#             gens[anc] = n_anc
-
-#             # curr is left, cousin is right
-#             if (left := tree[anc, 0]) == curori:
-#                 anc_i = curr - 1
-#                 cuz_i = curr + sizes[curori]
-#                 for i in range(cuz_i, cuz_i + size):
-#                     a = order[i]
-#                     adm_a = &adm[a, 0]
-#                     diff, cell = adkl[a], adm_t[a]
-#                     adm_k[a] = diff
-#                     adm_l[a] = 0.5 * (diff + cell)
-#                     adkl[a] = diff - cell
-#                     degs[a] = depths[a] + depoff
-#                     gens[a] = n_anc
-
-#             # cousin is left, curr is right
-#             else:
-#                 cuz_i = curr - sizes[left]
-#                 anc_i = cuz_i - 1
-#                 for i in range(cuz_i, cuz_i + size):
-#                     a = order[i]
-#                     adm_a = &adm[a, 0]
-#                     diff, cell = adkl[a], adm_a[tag]
-#                     adm_a[kay] = diff
-#                     adm_a[lnk] = 0.5 * (diff + cell)
-#                     adkl[a] = diff - cell
-#                     degs[a] = depths[a] + depoff
-#                     gens[a] = n_anc
-
-#             curr = anc_i
-#             n_anc += 1
-#             depoff += 2
-
-
 def _bal_avgdist_insert_p(
     Py_ssize_t n,
     Py_ssize_t index,
@@ -1672,7 +1511,6 @@ def _bal_avgdist_insert_p(
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] degs,
     Py_ssize_t[::1] gens,
-    floating[::1] intm,
 ):
     r"""Update balanced average distance matrix after taxon insertion."""
     cdef Py_ssize_t a  # nodes as in tree
@@ -1710,6 +1548,9 @@ def _bal_avgdist_insert_p(
 
     cdef floating* powers_2 = &powers[2]
 
+    # tips always have deg = 0; tips never become internal nodes
+    degs[kay] = 0
+
     degs[tag] = 0
     gens[tag] = 0
 
@@ -1726,7 +1567,8 @@ def _bal_avgdist_insert_p(
         sizes[0] = n + 2
         sizes[lnk] = n
 
-        depths[lnk] = depths[kay] = 1
+        # depths[lnk] = depths[kay] = 1
+        depths[lnk] = 1
 
         adm_t[kay] = adku[0]
         adm_l[kay] = adkl[0]
@@ -1737,12 +1579,12 @@ def _bal_avgdist_insert_p(
             adm[a, kay] = diff = adkl[a]
             cell = adm_t[a]
             adm_l[a] = 0.5 * (diff + cell)
-            # adkl[a] = diff - cell
-            intm[a] = diff - cell
+            adkl[a] = diff - cell
 
             # Calculate the path length between the node and k, which directly descends
             # from the root.
-            degs[a] = depths[a] = depths[a] + 1
+            if tree[a, 0]:
+                degs[a] = depths[a] = depths[a] + 1
             gens[a] = 0
 
     ###### Regular case: insert into any other branch. ######
@@ -1751,8 +1593,13 @@ def _bal_avgdist_insert_p(
         pairs[lnk] = pairs[tag] + sizes[tag] + 1
         sizes[lnk] = sizes[tag] + 2
 
-        depths[lnk] = depth = depths[tag]
-        depths[kay] = depths[tag] = depth + 1
+        # depths[lnk] = depth = depths[tag]
+        # depths[kay] = depths[tag] = depth + 1
+        if tree[tag, 0] == 0:
+            depths[lnk] = depth = depths[tree[tag, 2]] + 1
+        else:
+            depths[lnk] = depth = depths[tag]
+            depths[tag] = depth + 1
 
         ### Step 1: Distances around the insertion point. ###
 
@@ -1765,15 +1612,16 @@ def _bal_avgdist_insert_p(
 
         ### Step 2: Distances within the clade below target. ###
 
+        # degs[tag] = 1  # this will move `0.5 * (diff + cell)` to parallelization
         for i in range(index + 1, index + sizes[tag]):
             a = order[i]
             adm[a, kay] = diff = adkl[a]
             adm_l[a] = cell = adm_t[a]
             adm_t[a] = 0.5 * (diff + cell)
-            # adkl[a] = diff - cell
-            intm[a] = diff - cell
-            depths[a] = dep_a = depths[a] + 1
-            degs[a] = dep_a - depth
+            adkl[a] = diff - cell
+            if tree[a, 0]:
+                depths[a] = dep_a = depths[a] + 1
+                degs[a] = dep_a - depth
             gens[a] = 0
 
         ### Step 3: Distances among nodes outside the clade. ###
@@ -1795,8 +1643,7 @@ def _bal_avgdist_insert_p(
             adm_c[kay] = diff = adku[anc]
             cell = adm_c[tag]
             adm_c[lnk] = 0.5 * (diff + cell)
-            # adkl[anc] = diff - cell
-            intm[anc] = diff - cell
+            adkl[anc] = diff - cell
             degs[anc] = 0
             gens[anc] = n_anc
 
@@ -1810,9 +1657,9 @@ def _bal_avgdist_insert_p(
                     diff, cell = adkl[a], adm_t[a]
                     adm_k[a] = diff
                     adm_l[a] = 0.5 * (diff + cell)
-                    # adkl[a] = diff - cell
-                    intm[a] = diff - cell
-                    degs[a] = depths[a] + depoff
+                    adkl[a] = diff - cell
+                    if tree[a, 0]:
+                        degs[a] = depths[a] + depoff
                     gens[a] = n_anc
 
             # cousin is left, curr is right
@@ -1825,9 +1672,9 @@ def _bal_avgdist_insert_p(
                     diff, cell = adkl[a], adm_a[tag]
                     adm_a[kay] = diff
                     adm_a[lnk] = 0.5 * (diff + cell)
-                    # adkl[a] = diff - cell
-                    intm[a] = diff - cell
-                    degs[a] = depths[a] + depoff
+                    adkl[a] = diff - cell
+                    if tree[a, 0]:
+                        degs[a] = depths[a] + depoff
                     gens[a] = n_anc
 
             curr = anc_i
@@ -1842,78 +1689,10 @@ def _bal_avgdist_insert_p(
             pairs[anc] += size + 2 * i + 3
 
 
-# def _bal_avgdist_fill(
-#     Py_ssize_t n,
-#     Py_ssize_t index,
-#     floating[:, ::1] adm,
-#     floating[::1] adkl,
-#     Py_ssize_t[::1] order,
-#     Py_ssize_t[::1] sizes,
-#     floating[::1] powers,
-#     Py_ssize_t[::1] ancs,
-#     Py_ssize_t[::1] degs,
-#     Py_ssize_t[::1] gens,
-#     int chunksize = 10,
-#     int minclade = 100,
-#     bint adaptive = False,
-# ):
-#     r"""Update balanced average distance matrix after taxon insertion.
-
-#     This is the parallel part.
-
-#     """
-#     cdef Py_ssize_t a, b  # nodes as in tree
-#     cdef Py_ssize_t i, j  # nodes as in order
-
-#     cdef Py_ssize_t size
-
-#     cdef Py_ssize_t deg  # degree (number of branches between a node and target)
-#     cdef Py_ssize_t gen  # number of generations between target and shared ancestor
-
-#     cdef floating diff
-#     cdef floating power
-
-#     cdef floating* adm_a
-
-#     cdef int chunk   # chunk size
-#     cdef bint worth  # whether use threads
-
-#     cdef floating* powers_2 = &powers[2]
-
-#     chunk, worth = config_prange(n, chunksize, minclade, adaptive)
-#     for i in prange(
-#         n, nogil=True, schedule="dynamic", chunksize=chunk, use_threads_if=worth
-#     ):
-#         a = order[i]
-
-#         # Direct (L) - cousin (L) pairs
-#         if (gen := gens[a]) > 0:
-#             diff = adkl[a]
-
-#             # earlier than target in preorder (left cousin)
-#             if i < index:
-#                 adm_a = &adm[a, 0]
-#                 for j in range(gen):
-#                     adm_a[ancs[j]] += powers_2[j] * diff
-
-#             # later (right cousin)
-#             else:
-#                 for j in range(gen):
-#                     adm[ancs[j], a] += powers_2[j] * diff
-
-#         # Ancestor (U) - descendant (L) pairs
-#         if (deg := degs[a]) > 0 and (size := sizes[a]) > 1:
-#             power = powers[deg]
-#             adm_a = &adm[a, 0]
-#             for j in range(i + 1, i + size):
-#                 b = order[j]
-#                 adm_a[b] += power * adkl[b]
-
-
 def _bal_avgdist_verti(
     Py_ssize_t n,
     floating[:, ::1] adm,
-    floating[::1] intm,
+    floating[::1] adkl,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     floating[::1] powers,
@@ -1932,18 +1711,18 @@ def _bal_avgdist_verti(
     cdef floating* adm_a
     for i in range(n):
         a = order[i]
-        if (deg := degs[a]) > 0 and (size := sizes[a]) > 1:
+        if (deg := degs[a]) > 0:
             power = powers[deg]
             adm_a = &adm[a, 0]
-            for j in range(i + 1, i + size):
+            for j in range(i + 1, i + sizes[a]):
                 b = order[j]
-                adm_a[b] += power * intm[b]
+                adm_a[b] += power * adkl[b]
 
 
 def _bal_avgdist_verti_p(
     Py_ssize_t n,
     floating[:, ::1] adm,
-    floating[::1] intm,
+    floating[::1] adkl,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     floating[::1] powers,
@@ -1965,18 +1744,18 @@ def _bal_avgdist_verti_p(
     # chunk, worth = config_prange(n, chunksize, minclade)
     for i in prange(n, nogil=True, schedule="dynamic", chunksize=chunk):
         a = order[i]
-        if (deg := degs[a]) > 0 and (size := sizes[a]) > 1:
+        if (deg := degs[a]) > 0:
             power = powers[deg]
             adm_a = &adm[a, 0]
-            for j in range(i + 1, i + size):
+            for j in range(i + 1, i + sizes[a]):
                 b = order[j]
-                adm_a[b] += power * intm[b]
+                adm_a[b] += power * adkl[b]
 
 
 def _bal_avgdist_verti_pc(
     Py_ssize_t n,
     floating[:, ::1] adm,
-    floating[::1] intm,
+    floating[::1] adkl,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     floating[::1] powers,
@@ -1995,19 +1774,20 @@ def _bal_avgdist_verti_pc(
     for c in prange(n_chunks, nogil=True, schedule="dynamic"):
         for i in range(chunks[c], chunks[c + 1]):
             a = order[i]
-            if (deg := degs[a]) > 0 and (size := sizes[a]) > 1:
+            if (deg := degs[a]) > 0:
                 power = powers[deg]
                 adm_a = &adm[a, 0]
-                for j in range(i + 1, i + size):
+                for j in range(i + 1, i + sizes[a]):
                     b = order[j]
-                    adm_a[b] += power * intm[b]
+                    adm_a[b] += power * adkl[b]
 
 
 def _bal_avgdist_horiz(
     Py_ssize_t n,
     Py_ssize_t index,
+    Py_ssize_t after,
     floating[:, ::1] adm,
-    floating[::1] intm,
+    floating[::1] adkl,
     Py_ssize_t[::1] order,
     floating[::1] powers,
     Py_ssize_t[::1] ancs,
@@ -2024,24 +1804,31 @@ def _bal_avgdist_horiz(
     cdef floating diff
     cdef floating* adm_a
     cdef floating* powers_2 = &powers[2]
-    for i in range(n):
+
+    # left cousin
+    for i in range(index):
         a = order[i]
-        if (gen := gens[a]) > 0:
-            diff = intm[a]
-            if i < index:  # left cousin
-                adm_a = &adm[a, 0]
-                for j in range(gen):
-                    adm_a[ancs[j]] += powers_2[j] * diff
-            else:  # right cousin
-                for j in range(gen):
-                    adm[ancs[j], a] += powers_2[j] * diff
+        diff = adkl[a]
+        adm_a = &adm[a, 0]
+        # adm_a[n] = adm_a[tag] + 0.5 * diff  # moving `0.5 * (diff + cell)` here
+        for j in range(gens[a]):
+            adm_a[ancs[j]] += powers_2[j] * diff
+
+    # right cousin
+    for i in range(after, n):
+        a = order[i]
+        diff = adkl[a]
+        # adm_l[a] = adm_t[a] + 0.5 * diff  # same as above
+        for j in range(gens[a]):
+            adm[ancs[j], a] += powers_2[j] * diff
 
 
 def _bal_avgdist_horiz_p(
     Py_ssize_t n,
     Py_ssize_t index,
+    Py_ssize_t after,
     floating[:, ::1] adm,
-    floating[::1] intm,
+    floating[::1] adkl,
     Py_ssize_t[::1] order,
     floating[::1] powers,
     Py_ssize_t[::1] ancs,
@@ -2060,18 +1847,21 @@ def _bal_avgdist_horiz_p(
     cdef int chunk = 10  # chunk size
     cdef bint worth  # whether use threads
     cdef floating* powers_2 = &powers[2]
-    # chunk, worth = config_prange(n, chunksize, minclade, adaptive)
-    for i in prange(n, nogil=True, schedule="dynamic", chunksize=chunk):
+
+    # left cousin
+    for i in prange(index, nogil=True, schedule="dynamic", chunksize=chunk):
         a = order[i]
-        if (gen := gens[a]) > 0:
-            diff = intm[a]
-            if i < index:  # left cousin
-                adm_a = &adm[a, 0]
-                for j in range(gen):
-                    adm_a[ancs[j]] += powers_2[j] * diff
-            else:  # right cousin
-                for j in range(gen):
-                    adm[ancs[j], a] += powers_2[j] * diff
+        diff = adkl[a]
+        adm_a = &adm[a, 0]
+        for j in range(gens[a]):
+            adm_a[ancs[j]] += powers_2[j] * diff
+
+    # right cousin
+    for i in prange(after, n, nogil=True, schedule="dynamic", chunksize=chunk):
+        a = order[i]
+        diff = adkl[a]
+        for j in range(gens[a]):
+            adm[ancs[j], a] += powers_2[j] * diff
 
 
 def _insert_taxon(

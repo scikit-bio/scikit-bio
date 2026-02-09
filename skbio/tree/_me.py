@@ -530,7 +530,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=500, method=0, factor=10):
+def _bme(dm, parallel=500, method=0, factor=32):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -568,6 +568,23 @@ def _bme(dm, parallel=500, method=0, factor=10):
     m = dm.shape[0]
     n = 2 * m - 3
 
+    ### Determine parallelization plan. ###
+
+    # Number of threads available to OpenMP.
+    threads = _get_num_threads()
+    # print(threads)
+
+    # Target number of chunks into which tree nodes will be evenly divided. Per-chunk
+    # max. capacity = total number of nodes / this number. Therefore, the actual number
+    # of chunks usually exceeds this number.
+    goal = threads * factor
+
+    # Minimum number of nodes in the current tree that is worth for parallelization.
+    if not parallel or threads <= 1:
+        paramin = 0
+    else:
+        paramin = parallel
+
     ### Pre-allocate array memory space. ###
 
     # tree topology
@@ -593,20 +610,26 @@ def _bme(dm, parallel=500, method=0, factor=10):
     adkl = np.empty(n, dtype=dtype)
     adku = np.empty(n, dtype=dtype)
 
-    # branch lengths or length changes
+    # Branch lengths or length changes. The latter is relative to the root (i.e., start
+    # of preorder traversal). Therefore the first element is always zero.
     lens = np.empty(n, dtype=dtype)
+    lens[0] = 0.0
 
     # ancestry of target (nodes from its parent to root in ascending order)
     ancs = np.empty(n, dtype=int)
 
-    # degree (number of branches in the path) between target and each node
+    # Degree (number of branches in the path) between target and each node. This value
+    # is 0 for tips to exclude them from calculation.
     degs = np.empty(n, dtype=int)
+    degs[1] = degs[2] = 0
 
     # number of generations from target to ancestor shared with each node (i.e., tMRCA)
     gens = np.empty(n, dtype=int)
 
-    # intermediate storing `adkl[x] - adm[target, x]`
-    intm = np.empty(n, dtype=dtype)
+    # Indices of chunk bounds. The maximum number of chunks is n (i.e., one node per
+    # chunk), therefore n + 1 boundaries are needed. The first bound must be 0.
+    chunks = np.empty(n + 1, dtype=int)
+    chunks[0] = 0
 
     ### Initialize tree with three taxa. ###
 
@@ -626,24 +649,10 @@ def _bme(dm, parallel=500, method=0, factor=10):
     adm[0, 2] = adm[2, 0] = dm[0, 2]
     adm[1, 2] = adm[2, 1] = dm[1, 2]
 
-    # Branch length change of root (start of preorder traversal) is always zero.
-    lens[0] = 0.0
-
     # Pre-calculate negative powers of 2.
     powers = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     ### Iteratively add taxa. ###
-
-    threads = _get_num_threads()
-    # print(threads)
-
-    if not parallel or threads <= 1:
-        paramin = 0
-    else:
-        paramin = parallel
-
-    chunks = np.empty(n + 1, dtype=int)
-    chunks[0] = 0
 
     times = np.empty((m, 7))
     times[:3, :] = 0.0
@@ -661,6 +670,7 @@ def _bme(dm, parallel=500, method=0, factor=10):
         # Find the branch with minimum length change, which the new taxon (k) will be
         # inserted into.
         target = _bal_min_branch(n, lens, adm, adkl, adku, tree, preodr)
+        after = target + sizes[preodr[target]]
         times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
@@ -679,7 +689,6 @@ def _bme(dm, parallel=500, method=0, factor=10):
             ancs,
             degs,
             gens,
-            intm,
         )
         times[k, 3] = perf_counter()
 
@@ -690,26 +699,28 @@ def _bme(dm, parallel=500, method=0, factor=10):
 
         # Fill ancestor - descendant pairs.
         if k < paramin:
-            _bal_avgdist_verti(n, adm, intm, preodr, sizes, powers, degs)
+            _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
         elif method == 0:
-            _bal_avgdist_verti_p(n, adm, intm, preodr, sizes, powers, degs)
+            _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
         elif method == 1:
-            n_chunks = _chunk_sizes(n, threads, factor, preodr, sizes, chunks)
+            n_chunks = _chunk_sizes(n, goal, preodr, sizes, chunks)
             _bal_avgdist_verti_pc(
-                n, adm, intm, preodr, sizes, powers, degs, chunks, n_chunks
+                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
             )
         elif method == 2:
-            n_chunks = _chunk_pairs(n, threads, factor, preodr, sizes, pairs, chunks)
+            n_chunks = _chunk_pairs(n, goal, preodr, sizes, pairs, chunks)
             _bal_avgdist_verti_pc(
-                n, adm, intm, preodr, sizes, powers, degs, chunks, n_chunks
+                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
             )
         times[k, 4] = perf_counter()
 
         # Fill direct - cousin pairs.
         if k < paramin:
-            _bal_avgdist_horiz(n, target, adm, intm, preodr, powers, ancs, gens)
+            _bal_avgdist_horiz(n, target, after, adm, adkl, preodr, powers, ancs, gens)
         else:
-            _bal_avgdist_horiz_p(n, target, adm, intm, preodr, powers, ancs, gens)
+            _bal_avgdist_horiz_p(
+                n, target, after, adm, adkl, preodr, powers, ancs, gens
+            )
         times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
@@ -719,7 +730,7 @@ def _bme(dm, parallel=500, method=0, factor=10):
         n += 2
 
     # print(n_chunks, pairs[:5])
-    print(np.diff(times, axis=1).sum(axis=0).round(3))
+    # print(np.diff(times, axis=1).sum(axis=0).round(3))
 
     # Output intermediate data for diagnosis
     # np.savez('tree.npz', tree, preodr, sizes, pairs, depths, chunks[:n_chunks])
