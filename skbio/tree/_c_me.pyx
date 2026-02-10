@@ -1550,6 +1550,7 @@ def _bal_avgdist_insert_p(
     Py_ssize_t[::1] depths,
     floating[::1] powers,
     Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] ancidxs,
     Py_ssize_t[::1] degs,
     Py_ssize_t[::1] gens,
 ):
@@ -1667,7 +1668,9 @@ def _bal_avgdist_insert_p(
 
         ### Step 3: Distances among nodes outside the clade. ###
 
-        n_anc = 0
+        # number of generations up from target
+        level = 0
+
         curr = index
         depoff = 2 - depth
 
@@ -1675,7 +1678,7 @@ def _bal_avgdist_insert_p(
 
             curori = order[curr]
             node = &tree[curori, 0]
-            ancs[n_anc] = anc = node[2]
+            ancs[level] = anc = node[2]
 
             # size of cousin clade
             size = sizes[node[3]]
@@ -1686,11 +1689,11 @@ def _bal_avgdist_insert_p(
             adm_c[lnk] = 0.5 * (diff + cell)
             adkl[anc] = diff - cell
             degs[anc] = 0
-            gens[anc] = n_anc
+            gens[anc] = level
 
             # curr is left, cousin is right
             if (left := tree[anc, 0]) == curori:
-                anc_i = curr - 1
+                ancidxs[level] = anc_i = curr - 1
                 cuz_i = curr + sizes[curori]
                 for i in range(cuz_i, cuz_i + size):
                     a = order[i]
@@ -1701,12 +1704,12 @@ def _bal_avgdist_insert_p(
                     adkl[a] = diff - cell
                     if tree[a, 0]:
                         degs[a] = depths[a] + depoff
-                    gens[a] = n_anc
+                    gens[a] = level
 
             # cousin is left, curr is right
             else:
                 cuz_i = curr - sizes[left]
-                anc_i = cuz_i - 1
+                ancidxs[level] = anc_i = cuz_i - 1
                 for i in range(cuz_i, cuz_i + size):
                     a = order[i]
                     adm_a = &adm[a, 0]
@@ -1716,15 +1719,15 @@ def _bal_avgdist_insert_p(
                     adkl[a] = diff - cell
                     if tree[a, 0]:
                         degs[a] = depths[a] + depoff
-                    gens[a] = n_anc
+                    gens[a] = level
 
             curr = anc_i
-            n_anc += 1
+            level += 1
             depoff += 2
 
         ### update sizes of spine
         size = sizes[tag]
-        for i in range(n_anc):
+        for i in range(level):
             anc = ancs[i]
             sizes[anc] += 2
             pairs[anc] += size + 2 * i + 3
@@ -1862,6 +1865,89 @@ def _bal_avgdist_horiz(
         # adm_l[a] = adm_t[a] + 0.5 * diff  # same as above
         for j in range(gens[a]):
             adm[ancs[j], a] += powers_2[j] * diff
+
+
+def _mark_horiz(
+    Py_ssize_t n,
+    Py_ssize_t depth,
+    Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] segs,
+    Py_ssize_t[::1] gens,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+):
+    r"""Mark horizontal edges.
+
+    Parameters
+    ----------
+    depth : int
+        Depth of target, which equals to the number of ancestors in the lineage.
+    ancs : int[:]
+        Indices of ancestors in ascending order (from target's parent to root).
+    segs : int[:]
+        Indices of nodes that mark the beginnings of segments.
+    gens : int[:]
+        Number of generations from target's parent per segment.
+
+    Returns
+    -------
+    int
+        Number of segments.
+
+    Notes
+    -----
+    There should be at most n segments (every node is its own segment). The actual
+    bounds are:
+
+    - min. = depth - 1
+
+        When all ancestors are right children of their parents, such that their left
+        cousins do not need to be marked.
+
+    - max. = depth * 2 - 1
+
+        When all ancestors are left children, and their right cousins are marked.
+
+    """
+    cdef Py_ssize_t curr, child, rn
+
+    cdef Py_ssize_t li = 0
+    cdef Py_ssize_t ri = n    
+
+    # Special case: target is root or a direct child of root, in which cases the entire
+    # tree has level = 0.
+    if depth <= 1:
+        segs[0] = gens[0] = 0
+        return 1
+
+    # Trace lineage downward from root to target's grandparent.
+    for i in range(depth - 1, 0, -1):
+        curr = ancs[i]
+        child = ancs[i - 1]
+
+        # Mark ancestor
+        segs[li] = curr
+        gens[li] = i
+        li += 1
+
+        # Mark right cousin (left cousin is the same as ancestor)
+        if child == curr + 1:
+            ri -= 1
+            segs[ri] = child + sizes[order[child]]
+            gens[ri] = i
+
+    # Mark target's parent
+    segs[li] = ancs[0]
+    gens[li] = 0
+    li += 1 
+
+    # Move right cousins to left (can do memmove)
+    rn = n - ri
+    for i in range(rn):
+        segs[li + i] = segs[ri + i]
+        gens[li + i] = gens[ri + i]
+
+    return li + rn
 
 
 def _bal_avgdist_horiz_p(

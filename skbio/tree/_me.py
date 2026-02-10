@@ -44,6 +44,7 @@ from ._c_me import (
     _chunk_sizes,
     _chunk_pairs,
     _bal_min_branch2,
+    _mark_horiz,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -618,13 +619,15 @@ def _bme(dm, parallel=500, method=0, factor=32):
 
     # ancestry of target (nodes from its parent to root in ascending order)
     ancs = np.empty(n, dtype=int)
+    ancidxs = np.empty(n, dtype=int)
 
     # Degree (number of branches in the path) between target and each node. This value
     # is 0 for tips to exclude them from calculation.
     degs = np.empty(n, dtype=int)
     degs[1] = degs[2] = 0
 
-    # number of generations from target to ancestor shared with each node (i.e., tMRCA)
+    # number of generations from target's parent (i.e., "target" in the upside-down
+    # view) to ancestor shared with each node (i.e., tMRCA)
     gens = np.empty(n, dtype=int)
 
     # Indices of chunk bounds. The maximum number of chunks is n (i.e., one node per
@@ -688,6 +691,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
             depths,
             powers,
             ancs,
+            ancidxs,
             degs,
             gens,
         )
@@ -715,6 +719,40 @@ def _bme(dm, parallel=500, method=0, factor=32):
             )
         times[k, 4] = perf_counter()
 
+        ######
+
+        if k == m - 1:
+            tarori = preodr[target]
+            depth = depths[tree[tarori, 2]] + 1
+            segs = np.empty(n, dtype=int)
+            gens2 = np.empty(n, dtype=int)
+            n_segs = _mark_horizx(n, depth, ancidxs, segs, gens2, preodr, sizes)
+
+            # parent == 1271
+            # print(ancidxs[:depth])
+            print(n_segs)
+            print(segs[:n_segs])
+            print(gens2[:n_segs])
+
+            gens3 = np.empty(n, dtype=int)
+
+            seg_i = 0
+            seg = segs[seg_i]
+            for i in range(n):
+                if i == seg:
+                    gen = gens2[i]
+                    if seg_i < n_segs - 1:
+                        seg_i += 1
+                        seg = segs[seg_i]
+                gens3[preodr[i]] = gen
+
+            print(gens[:100])
+            print(gens3[:100])
+
+            assert (gens3[:100] == gens[:100]).all()
+
+        ######
+
         # Fill direct - cousin pairs.
         if k < paramin:
             _bal_avgdist_horiz(n, target, after, adm, adkl, preodr, powers, ancs, gens)
@@ -741,6 +779,48 @@ def _bme(dm, parallel=500, method=0, factor=32):
     _bal_lengths(lens, adm, tree)
 
     return tree, lens
+
+
+def _mark_horizx(n, depth, ancs, segs, gens, order, sizes):
+    li = 0
+    ri = n
+
+    # Special case: target is root or a direct child of root, in which cases the entire
+    # tree has level = 0.
+    if depth <= 1:
+        segs[0] = gens[0] = 0
+        return 1
+
+    # Trace lineage downward from root to target's grandparent.
+    for i in range(depth - 1, 0, -1):
+        curr = ancs[i]
+        child = ancs[i - 1]
+
+        # Mark ancestor
+        segs[li] = curr
+        gens[li] = i
+        li += 1
+
+        # Mark right cousin (left cousin is the same as ancestor)
+        if child == curr + 1:
+            ri -= 1
+            segs[ri] = child + sizes[order[child]]
+            gens[ri] = i
+
+    # Mark target's parent
+    segs[li] = ancs[0]
+    gens[li] = 0
+    li += 1
+
+    # print(depth, n, li, ri)
+
+    # Move right cousins to left (can do memmove)
+    rn = n - ri
+    for i in range(rn):
+        segs[li + i] = segs[ri + i]
+        gens[li + i] = gens[ri + i]
+
+    return li + rn
 
 
 def _fastnni(dm, tree, preodr, postodr, lens):
