@@ -664,8 +664,8 @@ def _bme(dm, parallel=500, method=0, factor=32):
     times[:3, :] = 0.0
 
     ###
-    segs = np.empty(n, dtype=int)
-    gens2 = np.empty(n, dtype=int)
+    segs = np.empty(n + 1, dtype=int)
+    gens = np.empty(n + 1, dtype=int)
 
     # n = 2 * k - 3
     n = 3
@@ -684,6 +684,21 @@ def _bme(dm, parallel=500, method=0, factor=32):
         times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
+        # _bal_avgdist_insert_p(
+        #     n,
+        #     target,
+        #     adm,
+        #     adkl,
+        #     adku,
+        #     tree,
+        #     preodr,
+        #     sizes,
+        #     pairs,
+        #     depths,
+        #     powers,
+        #     ancs,
+        #     ancidxs,
+        # )
         _bal_avgdist_insert_p(
             n,
             target,
@@ -695,9 +710,9 @@ def _bme(dm, parallel=500, method=0, factor=32):
             sizes,
             pairs,
             depths,
-            powers,
             ancs,
-            ancidxs,
+            segs,
+            gens,
         )
         times[k, 3] = perf_counter()
 
@@ -705,7 +720,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
         depth = (
             depths[tree[preodr[target], 2]] + 1 if target else 0
         )  # NOTE: original target's depth already +1
-        _mark_changes(n, depth, ancidxs, segs, gens2, preodr, sizes)
+        # _mark_changes(n, depth, ancidxs, segs, gens2, preodr, sizes)
         _bal_avgdist_fill(
             n,
             target,
@@ -718,7 +733,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
             depths,
             powers,
             ancs,
-            gens2,
+            gens,
             segs,
         )
         times[k, 4] = perf_counter()
