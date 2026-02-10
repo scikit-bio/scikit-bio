@@ -1896,8 +1896,8 @@ def _mark_horiz(
 
     Notes
     -----
-    There should be at most n segments (every node is its own segment). The actual
-    bounds are:
+    It is easy to know that there can be no more than n segments (when every node is
+    its own segment). The actual bounds are:
 
     - min. = depth - 1
 
@@ -1908,16 +1908,27 @@ def _mark_horiz(
 
         When all ancestors are left children, and their right cousins are marked.
 
-    """
-    cdef Py_ssize_t curr, child, rn
+    When the tree is extremely skewed and all ancestors are left children, there will
+    be n - 2 segments, because target's parent always has 3 children and they are the
+    same segment.
 
+    Therefore, filling index n_segs to mark the end of the segment array is safe.
+
+    """
+    cdef Py_ssize_t curr, child, m
+
+    # Left and right indices in the segment array. Ancestors are appended to the left
+    # (smaller) end of the array. Right cousins are appended to the right (larger) end
+    # of the array. When done, the right cousins are moved to the left to make all
+    # segments contiguous.
     cdef Py_ssize_t li = 0
-    cdef Py_ssize_t ri = n    
+    cdef Py_ssize_t ri = n
 
     # Special case: target is root or a direct child of root, in which cases the entire
     # tree has level = 0.
     if depth <= 1:
         segs[0] = gens[0] = 0
+        segs[1] = -1
         return 1
 
     # Trace lineage downward from root to target's grandparent.
@@ -1933,7 +1944,7 @@ def _mark_horiz(
         # Mark right cousin (left cousin is the same as ancestor)
         if child == curr + 1:
             ri -= 1
-            segs[ri] = child + sizes[order[child]]
+            segs[ri] = child + sizes[order[child]] - 2  # this 2 was added in `insert`
             gens[ri] = i
 
     # Mark target's parent
@@ -1942,12 +1953,148 @@ def _mark_horiz(
     li += 1 
 
     # Move right cousins to left (can do memmove)
-    rn = n - ri
-    for i in range(rn):
+    m = n - ri
+    for i in range(m):
         segs[li + i] = segs[ri + i]
         gens[li + i] = gens[ri + i]
 
-    return li + rn
+    m += li
+
+    # Add a -1 to mark the end
+    segs[m] = -1
+    return m
+
+
+def _bal_avgdist_horiz_x(
+    Py_ssize_t n,
+    Py_ssize_t index,
+    Py_ssize_t after,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    Py_ssize_t[::1] order,
+    floating[::1] powers,
+    Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] gens,
+    Py_ssize_t[::1] segs,
+):
+    r"""Update balanced average distance matrix after taxon insertion.
+
+    Fill direct (L) - cousin (L) pairs.
+
+    """
+    cdef Py_ssize_t a, b  # nodes as in tree
+    cdef Py_ssize_t i, j  # nodes as in order
+    cdef floating diff
+    cdef floating* adm_a
+    cdef floating* powers_2 = &powers[2]
+
+    cdef Py_ssize_t ii = 0
+    cdef Py_ssize_t seg = segs[ii]
+    cdef Py_ssize_t gen = -1
+
+    for i in range(n):
+        a = order[i]
+        diff = adkl[a]
+        if i == seg:
+            gen = gens[ii]
+            ii += 1
+            seg = segs[ii]
+        if i <= index:
+            adm_a = &adm[a, 0]
+            for j in range(gen):
+                adm_a[ancs[j]] += powers_2[j] * diff
+        else:
+            for j in range(gen):
+                adm[ancs[j], a] += powers_2[j] * diff
+
+
+def _bal_avgdist_fill(
+    Py_ssize_t n,
+    Py_ssize_t index,
+    Py_ssize_t after,
+    Py_ssize_t depth,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] depths,
+    floating[::1] powers,
+    Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] gens,
+    Py_ssize_t[::1] segs,
+):
+    r"""Update balanced average distance matrix after taxon insertion.
+
+    Fill direct (L) - cousin (L) pairs.
+
+    """
+    cdef Py_ssize_t a, b  # nodes as in tree
+    cdef Py_ssize_t i, j  # nodes as in order
+    cdef floating diff
+    cdef floating* adm_a
+    cdef floating* powers_2 = &powers[2]
+    cdef Py_ssize_t size, deg
+
+    cdef Py_ssize_t ii = 0
+    cdef Py_ssize_t seg = segs[ii]
+    cdef Py_ssize_t gen = -1
+
+    # cdef Py_ssize_t depth = depths[order[index]]  # parent??
+
+    for i in range(n):
+        a = order[i]
+        adm_a = &adm[a, 0]
+        diff = adkl[a]
+
+        # degs : verti (target == 0, spine == 0, all other != 0) (but tips excluded)
+        #     deg is calculated only once per node
+        #     tips don't need depth
+        # gens : horiz (target & below = 0, all above != 0)
+
+        # below: deg = dep_a - dep_t
+        # above: deg = dep_a - dep_t + 2 * (gen + 1)
+
+        # Current node is before target in preorder, which means 1) every segment break
+        # it encounters is an ancestor; 2) it is before any ancestor lower than the
+        # shared ancestor.
+        if i <= index:
+            if i == seg:
+                gen = gens[ii]
+                ii += 1
+                seg = segs[ii]
+                deg = 2 * (gen + 1) - depth
+
+            # if not an ancestor, trigger vertical fill
+            elif i != index:  # TODO: skip this check
+                if (size := sizes[a]) > 1:
+                    power = powers[depths[a] + deg]
+                    for j in range(i + 1, i + size):
+                        b = order[j]
+                        adm_a[b] += power * adkl[b]
+
+            # horizontal fill is guaranteed
+            for j in range(gen):
+                adm_a[ancs[j]] += powers_2[j] * diff
+
+        else:
+            if i == seg:
+                gen = gens[ii]
+                ii += 1
+                seg = segs[ii]
+                deg = 2 * (gen + 1) - depth
+
+            # both fills are guaranteed
+            if (size := sizes[a]) > 1:
+                if i >= after:
+                    power = powers[depths[a] + deg]
+                else:
+                    power = powers[depths[a] - depth]
+                for j in range(i + 1, i + size):
+                    b = order[j]
+                    adm_a[b] += power * adkl[b]
+
+            for j in range(gen):
+                adm[ancs[j], a] += powers_2[j] * diff
 
 
 def _bal_avgdist_horiz_p(

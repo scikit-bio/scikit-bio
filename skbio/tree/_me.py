@@ -45,6 +45,8 @@ from ._c_me import (
     _chunk_pairs,
     _bal_min_branch2,
     _mark_horiz,
+    _bal_avgdist_horiz_x,
+    _bal_avgdist_fill,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -661,6 +663,10 @@ def _bme(dm, parallel=500, method=0, factor=32):
     times = np.empty((m, 7))
     times[:3, :] = 0.0
 
+    ###
+    segs = np.empty(n, dtype=int)
+    gens2 = np.empty(n, dtype=int)
+
     # n = 2 * k - 3
     n = 3
 
@@ -697,69 +703,60 @@ def _bme(dm, parallel=500, method=0, factor=32):
         )
         times[k, 3] = perf_counter()
 
-        # _bal_avgdist_fill(
-        #     n, target, adm, adkl, preodr, sizes, powers, ancs, degs, gens
-        # )
-        # times[k, 4] = perf_counter()
-
-        # Fill ancestor - descendant pairs.
-        if k < paramin:
-            _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
-        elif method == 0:
-            _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
-        elif method == 1:
-            n_chunks = _chunk_sizes(n, goal, preodr, sizes, chunks)
-            _bal_avgdist_verti_pc(
-                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
-            )
-        elif method == 2:
-            n_chunks = _chunk_pairs(n, goal, preodr, sizes, pairs, chunks)
-            _bal_avgdist_verti_pc(
-                n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
-            )
+        ######
+        depth = (
+            depths[tree[preodr[target], 2]] + 1 if target else 0
+        )  # NOTE: original target's depth already +1
+        _mark_horiz(n, depth, ancidxs, segs, gens2, preodr, sizes)
+        _bal_avgdist_fill(
+            n,
+            target,
+            after,
+            depth,
+            adm,
+            adkl,
+            preodr,
+            sizes,
+            depths,
+            powers,
+            ancs,
+            gens2,
+            segs,
+        )
         times[k, 4] = perf_counter()
 
-        ######
+        # # Fill ancestor - descendant pairs.
+        # if k < paramin:
+        #     _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
+        # elif method == 0:
+        #     _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
+        # elif method == 1:
+        #     n_chunks = _chunk_sizes(n, goal, preodr, sizes, chunks)
+        #     _bal_avgdist_verti_pc(
+        #         n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+        #     )
+        # elif method == 2:
+        #     n_chunks = _chunk_pairs(n, goal, preodr, sizes, pairs, chunks)
+        #     _bal_avgdist_verti_pc(
+        #         n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
+        #     )
+        # times[k, 4] = perf_counter()
 
-        if k == m - 1:
-            tarori = preodr[target]
-            depth = depths[tree[tarori, 2]] + 1
-            segs = np.empty(n, dtype=int)
-            gens2 = np.empty(n, dtype=int)
-            n_segs = _mark_horizx(n, depth, ancidxs, segs, gens2, preodr, sizes)
-
-            # parent == 1271
-            # print(ancidxs[:depth])
-            print(n_segs)
-            print(segs[:n_segs])
-            print(gens2[:n_segs])
-
-            gens3 = np.empty(n, dtype=int)
-
-            seg_i = 0
-            seg = segs[seg_i]
-            for i in range(n):
-                if i == seg:
-                    gen = gens2[i]
-                    if seg_i < n_segs - 1:
-                        seg_i += 1
-                        seg = segs[seg_i]
-                gens3[preodr[i]] = gen
-
-            print(gens[:100])
-            print(gens3[:100])
-
-            assert (gens3[:100] == gens[:100]).all()
-
-        ######
-
-        # Fill direct - cousin pairs.
-        if k < paramin:
-            _bal_avgdist_horiz(n, target, after, adm, adkl, preodr, powers, ancs, gens)
-        else:
-            _bal_avgdist_horiz_p(
-                n, target, after, adm, adkl, preodr, powers, ancs, gens
-            )
+        # # Fill direct - cousin pairs.
+        # if k < paramin:
+        #     _bal_avgdist_horiz(
+        #         n, target, after, adm, adkl, preodr, powers, ancs, gens
+        # .    )
+        # else:
+        #     # _bal_avgdist_horiz_p(
+        #     #     n, target, after, adm, adkl, preodr, powers, ancs, gens
+        #     # )
+        #     tarori = preodr[target]
+        #     depth = depths[tree[tarori, 2]] + 1
+        #     n_segs = _mark_horiz(n, depth, ancidxs, segs, gens2, preodr, sizes)
+        #     _bal_avgdist_horiz_x(
+        #         n, target, after, adm, adkl, preodr, powers, ancs, gens2, segs
+        #     )
         times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
@@ -804,7 +801,7 @@ def _mark_horizx(n, depth, ancs, segs, gens, order, sizes):
         # Mark right cousin (left cousin is the same as ancestor)
         if child == curr + 1:
             ri -= 1
-            segs[ri] = child + sizes[order[child]]
+            segs[ri] = child + sizes[order[child]] - 2
             gens[ri] = i
 
     # Mark target's parent
