@@ -44,7 +44,7 @@ from ._c_me import (
     _chunk_sizes,
     _chunk_pairs,
     _bal_min_branch2,
-    _mark_horiz,
+    _mark_changes,
     _bal_avgdist_horiz_x,
     _bal_avgdist_fill,
 )
@@ -625,12 +625,12 @@ def _bme(dm, parallel=500, method=0, factor=32):
 
     # Degree (number of branches in the path) between target and each node. This value
     # is 0 for tips to exclude them from calculation.
-    degs = np.empty(n, dtype=int)
-    degs[1] = degs[2] = 0
+    # degs = np.empty(n, dtype=int)
+    # degs[1] = degs[2] = 0
 
     # number of generations from target's parent (i.e., "target" in the upside-down
     # view) to ancestor shared with each node (i.e., tMRCA)
-    gens = np.empty(n, dtype=int)
+    # gens = np.empty(n, dtype=int)
 
     # Indices of chunk bounds. The maximum number of chunks is n (i.e., one node per
     # chunk), therefore n + 1 boundaries are needed. The first bound must be 0.
@@ -698,8 +698,6 @@ def _bme(dm, parallel=500, method=0, factor=32):
             powers,
             ancs,
             ancidxs,
-            degs,
-            gens,
         )
         times[k, 3] = perf_counter()
 
@@ -707,7 +705,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
         depth = (
             depths[tree[preodr[target], 2]] + 1 if target else 0
         )  # NOTE: original target's depth already +1
-        _mark_horiz(n, depth, ancidxs, segs, gens2, preodr, sizes)
+        _mark_changes(n, depth, ancidxs, segs, gens2, preodr, sizes)
         _bal_avgdist_fill(
             n,
             target,
@@ -760,7 +758,7 @@ def _bme(dm, parallel=500, method=0, factor=32):
         times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
-        _insert_taxon(k, target, tree, preodr, sizes, depths, use_depth=True)
+        _insert_taxon(k, target, tree, preodr, sizes)
         times[k, 6] = perf_counter()
 
         n += 2

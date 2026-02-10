@@ -1551,8 +1551,6 @@ def _bal_avgdist_insert_p(
     floating[::1] powers,
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] ancidxs,
-    Py_ssize_t[::1] degs,
-    Py_ssize_t[::1] gens,
 ):
     r"""Update balanced average distance matrix after taxon insertion."""
     cdef Py_ssize_t a  # nodes as in tree
@@ -1590,12 +1588,6 @@ def _bal_avgdist_insert_p(
 
     cdef floating* powers_2 = &powers[2]
 
-    # tips always have deg = 0; tips never become internal nodes
-    degs[kay] = 0
-
-    degs[tag] = 0
-    gens[tag] = 0
-
     pairs[kay] = 0
     sizes[kay] = 1
 
@@ -1609,8 +1601,7 @@ def _bal_avgdist_insert_p(
         sizes[0] = n + 2
         sizes[lnk] = n
 
-        # depths[lnk] = depths[kay] = 1
-        depths[lnk] = 1
+        depths[lnk] = depths[kay] = 1
 
         adm_t[kay] = adku[0]
         adm_l[kay] = adkl[0]
@@ -1623,11 +1614,10 @@ def _bal_avgdist_insert_p(
             adm_l[a] = 0.5 * (diff + cell)
             adkl[a] = diff - cell
 
-            # Calculate the path length between the node and k, which directly descends
-            # from the root.
-            if tree[a, 0]:
-                degs[a] = depths[a] = depths[a] + 1
-            gens[a] = 0
+            # Although depth is unnecessary for tips, having an `if` check here will
+            # likely slow down because interleaved internal/tips are bad for branch
+            # prediction.
+            depths[a] += 1
 
     ###### Regular case: insert into any other branch. ######
 
@@ -1635,13 +1625,8 @@ def _bal_avgdist_insert_p(
         pairs[lnk] = pairs[tag] + sizes[tag] + 1
         sizes[lnk] = sizes[tag] + 2
 
-        # depths[lnk] = depth = depths[tag]
-        # depths[kay] = depths[tag] = depth + 1
-        if tree[tag, 0] == 0:
-            depths[lnk] = depth = depths[tree[tag, 2]] + 1
-        else:
-            depths[lnk] = depth = depths[tag]
-            depths[tag] = depth + 1
+        depths[lnk] = depth = depths[tag]
+        depths[kay] = depths[tag] = depth + 1
 
         ### Step 1: Distances around the insertion point. ###
 
@@ -1654,17 +1639,13 @@ def _bal_avgdist_insert_p(
 
         ### Step 2: Distances within the clade below target. ###
 
-        # degs[tag] = 1  # this will move `0.5 * (diff + cell)` to parallelization
         for i in range(index + 1, index + sizes[tag]):
             a = order[i]
             adm[a, kay] = diff = adkl[a]
             adm_l[a] = cell = adm_t[a]
             adm_t[a] = 0.5 * (diff + cell)
             adkl[a] = diff - cell
-            if tree[a, 0]:
-                depths[a] = dep_a = depths[a] + 1
-                degs[a] = dep_a - depth
-            gens[a] = 0
+            depths[a] += 1
 
         ### Step 3: Distances among nodes outside the clade. ###
 
@@ -1688,8 +1669,6 @@ def _bal_avgdist_insert_p(
             cell = adm_c[tag]
             adm_c[lnk] = 0.5 * (diff + cell)
             adkl[anc] = diff - cell
-            degs[anc] = 0
-            gens[anc] = level
 
             # curr is left, cousin is right
             if (left := tree[anc, 0]) == curori:
@@ -1702,9 +1681,6 @@ def _bal_avgdist_insert_p(
                     adm_k[a] = diff
                     adm_l[a] = 0.5 * (diff + cell)
                     adkl[a] = diff - cell
-                    if tree[a, 0]:
-                        degs[a] = depths[a] + depoff
-                    gens[a] = level
 
             # cousin is left, curr is right
             else:
@@ -1717,9 +1693,6 @@ def _bal_avgdist_insert_p(
                     adm_a[kay] = diff
                     adm_a[lnk] = 0.5 * (diff + cell)
                     adkl[a] = diff - cell
-                    if tree[a, 0]:
-                        degs[a] = depths[a] + depoff
-                    gens[a] = level
 
             curr = anc_i
             level += 1
@@ -1867,7 +1840,7 @@ def _bal_avgdist_horiz(
             adm[ancs[j], a] += powers_2[j] * diff
 
 
-def _mark_horiz(
+def _mark_changes(
     Py_ssize_t n,
     Py_ssize_t depth,
     Py_ssize_t[::1] ancs,
@@ -1876,7 +1849,7 @@ def _mark_horiz(
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
 ):
-    r"""Mark horizontal edges.
+    r"""Mark changing points.
 
     Parameters
     ----------
@@ -2144,8 +2117,6 @@ def _insert_taxon(
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] preodr,
     Py_ssize_t[::1] sizes,
-    Py_ssize_t[::1] depths,
-    bint use_depth=True,
 ):
     r"""Insert a taxon between a target node and its parent.
 
