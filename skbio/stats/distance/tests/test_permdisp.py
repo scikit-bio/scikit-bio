@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+import platform
 
 import numpy as np
 import numpy.testing as npt
@@ -22,6 +23,7 @@ from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
+IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
 class PERMDISPTests(TestCase):
 
@@ -200,6 +202,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -216,10 +219,9 @@ class PERMDISPTests(TestCase):
         obs2 = permdisp(po, self.unif_grouping, test='median',
                         permutations=99, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs2, exp, atol=0.02)
+        self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -236,10 +238,9 @@ class PERMDISPTests(TestCase):
         obs2 = permdisp(po, self.unif_grouping, test='median',
                         permutations=99, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs2, exp, atol=0.02)
+        self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -250,18 +251,15 @@ class PERMDISPTests(TestCase):
                        permutations=99,
                        method='fsvd', dimensions=3, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs, exp, atol=0.02)
+        self.assert_series_equal(obs, exp)
 
         po = pcoa(self.unifrac_dm, method='fsvd', dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs, exp, atol=0.02)
+        self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -272,17 +270,13 @@ class PERMDISPTests(TestCase):
                        permutations=99,
                        method='fsvd', dimensions=3, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs, exp, atol=0.02)
+        self.assert_series_equal(obs, exp)
 
         po = pcoa(self.unifrac_dm_condensed, method='fsvd', dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        # Added atol for failure of this test on macos-15-intel during pre-release
-        # build of 0.7.2
-        self.assert_series_equal(obs, exp, atol=0.02)
+        self.assert_series_equal(obs, exp)
 
     def test_not_distance_matrix(self):
         dm = []
