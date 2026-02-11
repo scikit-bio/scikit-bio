@@ -26,13 +26,11 @@ Multidimensional scaling
    pcoa
    pcoa_biplot
 
-Dimensionality reduction
-------------------------
 
-.. autosummary::
-   :toctree:
+..
+   TODO: re-add "Dimensionality reduction" (PCA) section when RCLR and RPCA are
+   finished.
 
-   pca
 
 Correspondence analysis
 -----------------------
@@ -183,7 +181,7 @@ __all__ = [
     "ca",
     "rda",
     "cca",
-    "pca",
+    # "pca",
     "pcoa",
     "pcoa_biplot",
     "OrdinationResults",

@@ -5,9 +5,9 @@
 ### Features
 
 * Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
-* `mantel` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322)).
+* `mantel` and `permanova` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322), [#2335](https://github.com/scikit-bio/scikit-bio/pull/2335)).
 * Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
-* Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345), [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352), and [#2361](https://github.com/scikit-bio/scikit-bio/pull/2361)).
 * Added new plotting functionality for `OrdinationResults` objects, including plotting centroids, confidence ellipses, and 2D plots ([#2362](https://github.com/scikit-bio/scikit-bio/pull/2362))
 
 ### Performance enhancements
@@ -21,13 +21,15 @@
 * Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
 * Fixed a bug in `TreeNode.root_at_midpoint` which could fail on a tree with no-length branches ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
 * Fixed an unexpected behavior in several `TreeNode` methods, where tips with `.name is None` were considered as taxa and included in the calculation. Nameless tips are unusual but not forbidden by the current data model. After fixation, those tips are excluded from the calculation. Affected methods are `subset`, `subsets`, `bipart`, `bipart` and `cophenet` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
-* Fixed an integer overflow issue in `_nodes_by_counts` that can occur on 32-bit systems (such as WASM)
+* Fixed an integer overflow issue in `_nodes_by_counts` that can occur on 32-bit systems, such as WASM ([#2369]https://github.com/scikit-bio/scikit-bio/pull/2369).
 
 ### Miscellaneous
 
 * scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
 * `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
 * Added compatibility for pandas 3.0. Most functionality works, but the `INSDC:missing` scheme for encoding missing values is not yet supported with pandas 3.0. See issue [#2375](https://github.com/scikit-bio/scikit-bio/issues/2375) for tracking ([#2371](https://github.com/scikit-bio/scikit-bio/pull/2371)).
+* Documentation was improved for the `default_write_format` attributes of supported file types ([#2340](https://github.com/scikit-bio/scikit-bio/pull/2340))
+* Improved documentation for parallelization techniques across the package ([#2343](https://github.com/scikit-bio/scikit-bio/pull/2343))
 
 ### Backward-incompatible changes
 
