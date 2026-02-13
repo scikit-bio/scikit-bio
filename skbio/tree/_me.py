@@ -47,6 +47,8 @@ from ._c_me import (
     _mark_changes,
     _bal_avgdist_horiz_x,
     _bal_avgdist_fill,
+    _chunk_nodes,
+    _bal_avgdist_fill_p,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -534,7 +536,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=500, method=0, factor=32):
+def _bme(dm, parallel=500, method=0, factor=16):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
@@ -621,7 +623,6 @@ def _bme(dm, parallel=500, method=0, factor=32):
 
     # ancestry of target (nodes from its parent to root in ascending order)
     ancs = np.empty(n, dtype=int)
-    ancidxs = np.empty(n, dtype=int)
 
     # Degree (number of branches in the path) between target and each node. This value
     # is 0 for tips to exclude them from calculation.
@@ -636,6 +637,8 @@ def _bme(dm, parallel=500, method=0, factor=32):
     # chunk), therefore n + 1 boundaries are needed. The first bound must be 0.
     chunks = np.empty(n + 1, dtype=int)
     chunks[0] = 0
+    chu_idxs = np.empty(n + 1, dtype=int)
+    chu_idxs[0] = 0
 
     ### Initialize tree with three taxa. ###
 
@@ -666,11 +669,20 @@ def _bme(dm, parallel=500, method=0, factor=32):
     ###
     segs = np.empty(n + 1, dtype=int)
     gens = np.empty(n + 1, dtype=int)
+    seg_sizes = np.empty(n + 1, dtype=int)
+    seg_pairs = np.empty(n + 1, dtype=int)
+    # chu_segs = np.empty(n + 1, dtype=int)
+    chu_idxs = np.empty(n, dtype=int)
+    chu_idxs[0] = 0
+    chu_gens = np.empty(n, dtype=int)
 
     # n = 2 * k - 3
     n = 3
 
     for k in range(3, m):
+        # if k % 100 == 0:
+        #     print(k)
+
         times[k, 0] = perf_counter()
 
         # Calculate balanced average distances from new taxon to existing subtrees.
@@ -684,21 +696,6 @@ def _bme(dm, parallel=500, method=0, factor=32):
         times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
-        # _bal_avgdist_insert_p(
-        #     n,
-        #     target,
-        #     adm,
-        #     adkl,
-        #     adku,
-        #     tree,
-        #     preodr,
-        #     sizes,
-        #     pairs,
-        #     depths,
-        #     powers,
-        #     ancs,
-        #     ancidxs,
-        # )
         _bal_avgdist_insert_p(
             n,
             target,
@@ -713,6 +710,8 @@ def _bme(dm, parallel=500, method=0, factor=32):
             ancs,
             segs,
             gens,
+            seg_sizes,
+            seg_pairs,
         )
         times[k, 3] = perf_counter()
 
@@ -720,57 +719,61 @@ def _bme(dm, parallel=500, method=0, factor=32):
         depth = (
             depths[tree[preodr[target], 2]] + 1 if target else 0
         )  # NOTE: original target's depth already +1
-        # _mark_changes(n, depth, ancidxs, segs, gens2, preodr, sizes)
-        _bal_avgdist_fill(
-            n,
-            target,
-            after,
-            depth,
-            adm,
-            adkl,
-            preodr,
-            sizes,
-            depths,
-            powers,
-            ancs,
-            gens,
-            segs,
-        )
+
+        if k < paramin:
+            _bal_avgdist_fill(
+                n,
+                target,
+                depth,
+                adm,
+                adkl,
+                preodr,
+                sizes,
+                depths,
+                powers,
+                ancs,
+                segs,
+                gens,
+            )
+        else:
+            n_chunks = _chunk_nodes(
+                n,
+                goal,
+                target,
+                preodr,
+                sizes,
+                pairs,
+                chunks,
+                segs,
+                gens,
+                seg_sizes,
+                seg_pairs,
+                chu_idxs,
+                chu_gens,
+            )
+            # try:
+            #     assert len(np.unique(chunks[:n_chunks + 1])) == n_chunks + 1
+            # except AssertionError:
+            #     print(parallel, k, chunks[:n_chunks + 1], chu_idxs[:n_chunks + 1])
+            #     exit()
+            _bal_avgdist_fill_p(
+                n,
+                target,
+                depth,
+                adm,
+                adkl,
+                preodr,
+                sizes,
+                depths,
+                powers,
+                ancs,
+                segs,
+                gens,
+                n_chunks,
+                chunks,
+                chu_idxs,
+            )
         times[k, 4] = perf_counter()
-
-        # # Fill ancestor - descendant pairs.
-        # if k < paramin:
-        #     _bal_avgdist_verti(n, adm, adkl, preodr, sizes, powers, degs)
-        # elif method == 0:
-        #     _bal_avgdist_verti_p(n, adm, adkl, preodr, sizes, powers, degs)
-        # elif method == 1:
-        #     n_chunks = _chunk_sizes(n, goal, preodr, sizes, chunks)
-        #     _bal_avgdist_verti_pc(
-        #         n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
-        #     )
-        # elif method == 2:
-        #     n_chunks = _chunk_pairs(n, goal, preodr, sizes, pairs, chunks)
-        #     _bal_avgdist_verti_pc(
-        #         n, adm, adkl, preodr, sizes, powers, degs, chunks, n_chunks
-        #     )
-        # times[k, 4] = perf_counter()
-
-        # # Fill direct - cousin pairs.
-        # if k < paramin:
-        #     _bal_avgdist_horiz(
-        #         n, target, after, adm, adkl, preodr, powers, ancs, gens
-        # .    )
-        # else:
-        #     # _bal_avgdist_horiz_p(
-        #     #     n, target, after, adm, adkl, preodr, powers, ancs, gens
-        #     # )
-        #     tarori = preodr[target]
-        #     depth = depths[tree[tarori, 2]] + 1
-        #     n_segs = _mark_horiz(n, depth, ancidxs, segs, gens2, preodr, sizes)
-        #     _bal_avgdist_horiz_x(
-        #         n, target, after, adm, adkl, preodr, powers, ancs, gens2, segs
-        #     )
-        times[k, 5] = perf_counter()
 
         # Update tree topology with the inserted taxon.
         _insert_taxon(k, target, tree, preodr, sizes)
@@ -821,8 +824,6 @@ def _mark_horizx(n, depth, ancs, segs, gens, order, sizes):
     segs[li] = ancs[0]
     gens[li] = 0
     li += 1
-
-    # print(depth, n, li, ri)
 
     # Move right cousins to left (can do memmove)
     rn = n - ri
