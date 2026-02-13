@@ -624,15 +624,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
     # ancestry of target (nodes from its parent to root in ascending order)
     ancs = np.empty(n, dtype=int)
 
-    # Degree (number of branches in the path) between target and each node. This value
-    # is 0 for tips to exclude them from calculation.
-    # degs = np.empty(n, dtype=int)
-    # degs[1] = degs[2] = 0
-
-    # number of generations from target's parent (i.e., "target" in the upside-down
-    # view) to ancestor shared with each node (i.e., tMRCA)
-    # gens = np.empty(n, dtype=int)
-
     # Indices of chunk bounds. The maximum number of chunks is n (i.e., one node per
     # chunk), therefore n + 1 boundaries are needed. The first bound must be 0.
     chunks = np.empty(n + 1, dtype=int)
@@ -669,20 +660,17 @@ def _bme(dm, parallel=500, method=0, factor=16):
     ###
     segs = np.empty(n + 1, dtype=int)
     gens = np.empty(n + 1, dtype=int)
-    seg_sizes = np.empty(n + 1, dtype=int)
-    seg_pairs = np.empty(n + 1, dtype=int)
-    # chu_segs = np.empty(n + 1, dtype=int)
+
+    # workload of clade under each checkpoint
+    cp_ops = np.empty(n, dtype=int)
+
     chu_idxs = np.empty(n, dtype=int)
     chu_idxs[0] = 0
-    chu_gens = np.empty(n, dtype=int)
 
-    # n = 2 * k - 3
+    # current number of nodes in the tree: n = 2 * k - 3
     n = 3
 
     for k in range(3, m):
-        # if k % 100 == 0:
-        #     print(k)
-
         times[k, 0] = perf_counter()
 
         # Calculate balanced average distances from new taxon to existing subtrees.
@@ -710,8 +698,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             ancs,
             segs,
             gens,
-            seg_sizes,
-            seg_pairs,
+            cp_ops,
         )
         times[k, 3] = perf_counter()
 
@@ -746,10 +733,8 @@ def _bme(dm, parallel=500, method=0, factor=16):
                 chunks,
                 segs,
                 gens,
-                seg_sizes,
-                seg_pairs,
+                cp_ops,
                 chu_idxs,
-                chu_gens,
             )
             # try:
             #     assert len(np.unique(chunks[:n_chunks + 1])) == n_chunks + 1

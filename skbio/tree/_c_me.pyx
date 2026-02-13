@@ -250,10 +250,8 @@ def _chunk_nodes(
     Py_ssize_t[::1] chunks,
     Py_ssize_t[::1] segs,
     Py_ssize_t[::1] gens,
-    Py_ssize_t[::1] seg_sizes,
-    Py_ssize_t[::1] seg_pairs,
+    Py_ssize_t[::1] cp_ops,
     Py_ssize_t[::1] chu_idxs,
-    Py_ssize_t[::1] chu_gens,
 ):
     """Partition tree into chunks of nodes with roughly even workloads.
 
@@ -285,7 +283,7 @@ def _chunk_nodes(
        For each clade, the workload is the number of nodes times `gen`.
 
     Workloads of checkpoint clades are special and cannot be calculated using the above
-    rules. The arrays `seg_sizes` and `seg_pairs` provides these values.
+    rules. The array `cp_ops` stores the correct values.
 
     ***
 
@@ -316,7 +314,7 @@ def _chunk_nodes(
     cdef Py_ssize_t node_ops, tree_ops
 
     # Total workload of the tree was pre-calculated and stored at root.
-    cdef Py_ssize_t total_ops = seg_pairs[0] + seg_sizes[0]
+    cdef Py_ssize_t total_ops = cp_ops[0]
 
     # chunk capacity
     # TODO: replace `1` with a minimum number
@@ -326,7 +324,6 @@ def _chunk_nodes(
     cdef Py_ssize_t n_chunks = 1   # current number of chunks
     # chu_idxs[0] = 0              # next checkpoint of current chunk (done already)
     cdef Py_ssize_t gen = gens[0]  # current checkpoint's level
-    chu_gens[0] = gen
     cdef Py_ssize_t ii = 1         # next checkpoint index
     cdef Py_ssize_t seg = segs[1]  # next checkpoint (node)
     cdef Py_ssize_t i = 1          # current node index
@@ -346,7 +343,7 @@ def _chunk_nodes(
             # when checkpoint is target or an ancestor of it
             if i <= index:
                 node_ops = gen - 1
-                tree_ops = seg_pairs[ii] + seg_sizes[ii]
+                tree_ops = cp_ops[ii]
             
             # when checkpoint is a right cousin
             else:
@@ -389,7 +386,6 @@ def _chunk_nodes(
             # close current chunk and move to next chunk
             chunks[n_chunks] = i
             chu_idxs[n_chunks] = ii
-            chu_gens[n_chunks] = gen  # NOTE: this is the gen before current node; can infer from gens[ii - 1]
             n_chunks += 1
 
             i = new_i
@@ -1907,8 +1903,7 @@ def _bal_avgdist_insert_p(
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] segs,
     Py_ssize_t[::1] gens,
-    Py_ssize_t[::1] seg_sizes,
-    Py_ssize_t[::1] seg_pairs,
+    Py_ssize_t[::1] cp_ops,
 ):
     r"""Update balanced average distance matrix after taxon insertion.
 
@@ -1919,14 +1914,6 @@ def _bal_avgdist_insert_p(
         Indices of nodes that mark the starts of segments.
     gens : int[:]
         Number of generations from target to shared ancestor per segment.
-    seg_sizes
-        Number of nodes to analyze under each segment start.
-        - ancestor: left cousin size + 1
-        - right cousin: its size
-    seg_pairs
-        Number of ancestor-descendant pairs to analyze under each segment start.
-        - ancestor: left cousin pairs
-        - right cousin: its pair
     
     """
     cdef Py_ssize_t a  # nodes as in tree
@@ -1987,8 +1974,7 @@ def _bal_avgdist_insert_p(
         # chunk_cps <= indices of change points
         # chunk_lvs <= levels at the beginning
         # chunks
-        seg_sizes[0] = 0
-        seg_pairs[0] = pairs[0] - sizes[0] + 1
+        cp_ops[0] = pairs[0] - sizes[0] + 1
 
         #####
         pairs[lnk] = pairs[0]
@@ -2024,12 +2010,9 @@ def _bal_avgdist_insert_p(
     else:
         #####
         depth = depths[tag]
-
         sizeoff = 0
         pairoff = sizes[tag] - 1
-
-        seg_sizes[depth] = sizeoff
-        seg_pairs[depth] = pairs[index] - pairoff
+        cp_ops[depth] = pairs[index] - pairoff
 
         #####
         pairs[lnk] = pairs[tag] + sizes[tag] + 1
@@ -2099,8 +2082,7 @@ def _bal_avgdist_insert_p(
 
                 segs[ri] = cuz_i
                 gens[ri] = level + 1
-                seg_sizes[ri] = sizes[cuz] * level
-                seg_pairs[ri] = pairs[cuz]
+                cp_ops[ri] = sizes[cuz] * level + pairs[cuz]
                 ri += 1
 
                 for i in range(cuz_i, cuz_i + size):
@@ -2133,10 +2115,8 @@ def _bal_avgdist_insert_p(
 
             #####
             sizeoff += (sizes[cuz] + 1) * level
-            seg_sizes[li] = sizeoff
-
             pairoff += sizes[anc] - 1
-            seg_pairs[li] = pairs[anc] - pairoff
+            cp_ops[li] = sizeoff + pairs[anc] - pairoff
 
             li -= 1
             level += 1
