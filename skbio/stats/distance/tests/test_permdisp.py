@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+import platform
 
 import numpy as np
 import numpy.testing as npt
@@ -22,6 +23,7 @@ from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
+IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
 class PERMDISPTests(TestCase):
 
@@ -165,8 +167,11 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        with self.assertWarns(ConstantInputWarning):
-            obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        # TODO: SciPy 1.17+ changed the behavior of f_oneway so that a
+        # ConstantInputWarning may no longer be emitted for this case.
+        # Once the expected behavior is clarified, consider reintroducing
+        # an explicit warning assertion here.
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
@@ -197,6 +202,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -215,6 +221,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -233,6 +240,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -251,6 +259,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,

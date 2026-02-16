@@ -486,7 +486,7 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         else:
             raise TypeError(
                 "Metadata column %r has an unsupported pandas dtype of %s. "
-                "Supported dtypes: float, int, object" % (series.name, dtype)
+                "Supported dtypes: float, int, object, str." % (series.name, dtype)
             )
 
         return column
@@ -994,6 +994,18 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         """
         return self._missing_scheme
 
+    @property
+    @abstractmethod
+    def supported_dtypes(self):
+        """Data types supported by this type of metadata column.
+
+        Returns
+        -------
+        tuple
+            Supported dtype(s).
+        """
+        pass
+
     def __init__(self, series, missing_scheme=DEFAULT_MISSING):
         if not isinstance(series, pd.Series):
             raise TypeError(
@@ -1011,8 +1023,14 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
 
         if not self._is_supported_dtype(series.dtype):
             raise TypeError(
-                "%s %r does not support a pandas.Series object with dtype %s"
-                % (self.__class__.__name__, series.name, series.dtype)
+                "%s %r does not support a pandas.Series object with dtype %s. "
+                "Supported dtypes: %s"
+                % (
+                    self.__class__.__name__,
+                    series.name,
+                    series.dtype,
+                    ", ".join(self.supported_dtypes),
+                )
             )
 
         self._missing_scheme = missing_scheme
@@ -1270,10 +1288,21 @@ class CategoricalMetadataColumn(MetadataColumn):
     """
 
     type = "categorical"
+    supported_dtypes = ("object", "str")
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
-        return dtype == "object"
+        # pd.api.types.is_string_dtype(dtype)
+        # Older pandas returned 'object' for strings
+        if dtype == "object":
+            return True
+        # New pandas has StringDtype
+        dtype_str = str(dtype)
+        if dtype_str == "str":
+            return True
+        if dtype_str.startswith("string") or "StringDtype" in dtype_str:
+            return True
+        return False
 
     @classmethod
     def _normalize_(cls, series):
@@ -1318,6 +1347,7 @@ class NumericMetadataColumn(MetadataColumn):
     """
 
     type = "numeric"
+    supported_dtypes = ("float", "int", "int64")
 
     @classmethod
     def _is_supported_dtype(cls, dtype):
@@ -1325,7 +1355,7 @@ class NumericMetadataColumn(MetadataColumn):
 
     @classmethod
     def _normalize_(cls, series):
-        series = series.astype(float, copy=True, errors="raise")
+        series = series.astype(float, errors="raise").copy()
         if np.isinf(series).any():
             raise ValueError(
                 "%s does not support positive or negative infinity as a "
