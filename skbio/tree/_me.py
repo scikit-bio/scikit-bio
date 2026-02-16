@@ -610,7 +610,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
     ancs = np.empty(N, dtype=int)
 
     # pointers to rows in `adm` representing individual ancestors
-    anc_ptrs = np.empty(N, dtype=int)
+    ancx = np.empty(N, dtype=int)
 
     # Pre-calculate negative powers of 2.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
@@ -666,7 +666,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             depths,
             npots,
             ancs,
-            anc_ptrs,
+            ancx,
         )
         times[k, 3] = perf_counter()
         times[k, 4] = perf_counter()
@@ -731,7 +731,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             pairs,
             depths,
             ancs,
-            anc_ptrs,
+            ancx,
             segs,
             cp_lvl,
             cp_ops,
@@ -755,7 +755,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             depths,
             npots,
             ancs,
-            anc_ptrs,
+            ancx,
             segs,
             cp_lvl,
             n_chunks,
