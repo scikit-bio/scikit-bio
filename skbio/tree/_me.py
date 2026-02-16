@@ -36,9 +36,9 @@ from ._c_me import (
     _bal_avgdist_insert_p,
     _get_num_threads,
     _bal_min_branch2,
-    _bal_avgdist_fill,
     _count_pairs,
     _chunk_nodes,
+    _update_size_pair,
     _bal_avgdist_fill_p,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
@@ -606,8 +606,11 @@ def _bme(dm, parallel=500, method=0, factor=16):
     lens = np.empty(N, dtype=dtype)
     lens[0] = 0.0
 
-    # ancestry of target (nodes from its parent to root in ascending order)
+    # ancestors of target (nodes from its parent to root in ascending order)
     ancs = np.empty(N, dtype=int)
+
+    # pointers to rows in `adm` representing individual ancestors
+    anc_ptrs = np.empty(N, dtype=int)
 
     # Pre-calculate negative powers of 2.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
@@ -652,7 +655,18 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
         # Update balanced average distance matrix between all subtrees.
         _bal_avgdist_insert(
-            n, target, adm, adkl, adku, tree, order, sizes, depths, npots, ancs
+            n,
+            target,
+            adm,
+            adkl,
+            adku,
+            tree,
+            order,
+            sizes,
+            depths,
+            npots,
+            ancs,
+            anc_ptrs,
         )
         times[k, 3] = perf_counter()
         times[k, 4] = perf_counter()
@@ -717,6 +731,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             pairs,
             depths,
             ancs,
+            anc_ptrs,
             segs,
             cp_lvl,
             cp_ops,
@@ -727,6 +742,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         n_chunks = _chunk_nodes(
             n, goal, target, order, sizes, pairs, chunks, segs, cp_lvl, cp_ops, chu_cps
         )
+        _update_size_pair(target, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_fill_p(
@@ -739,6 +755,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             depths,
             npots,
             ancs,
+            anc_ptrs,
             segs,
             cp_lvl,
             n_chunks,
