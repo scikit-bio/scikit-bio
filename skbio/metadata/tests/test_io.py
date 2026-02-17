@@ -553,7 +553,6 @@ class TestLoadSuccess(unittest.TestCase):
         self.assertEqual(obs_md, exp_md)
 
     def test_missing_data(self):
-        print(f"Running things...!")
         fp = get_data_path('valid/missing-data.tsv')
 
         obs_md = SampleMetadata.load(fp)
@@ -567,7 +566,6 @@ class TestLoadSuccess(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, np.nan], dtype=object))]),
             index=exp_index)
         exp_md = SampleMetadata(exp_df)
-        print(f"obs_md: {obs_md}, exp_md: {exp_md}")
 
         self.assertEqual(obs_md, exp_md)
 
@@ -633,7 +631,7 @@ class TestLoadSuccess(unittest.TestCase):
         ]
         self.assertEqual(obs_columns, exp_columns)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
+    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_insdc_override(self):
         fp = get_data_path('valid/override-insdc.tsv')
 
@@ -1127,7 +1125,11 @@ class TestSave(unittest.TestCase):
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
         )
-
+        print('\n')
+        print(obs)
+        print('\n')
+        print(exp)
+        print('\n')
         self.assertEqual(obs, exp)
 
     @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
