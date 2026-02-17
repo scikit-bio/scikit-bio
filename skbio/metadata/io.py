@@ -17,7 +17,7 @@ import pandas as pd
 
 from skbio.io._fileobject import SaneTextIOWrapper
 from skbio.util import find_duplicates
-from .missing import DEFAULT_MISSING, BUILTIN_MISSING, series_encode_missing
+from .missing import DEFAULT_MISSING, SCHEMES, series_encode_missing
 from .base import SUPPORTED_COLUMN_TYPES, FORMATTED_ID_HEADERS, is_id_header
 from ..metadata._metadata import SampleMetadata, MetadataColumn
 
@@ -149,12 +149,20 @@ class MetadataReader:
 
         try:
             # Cast each column to the appropriate dtype based on column type.
-            df = df.apply(
-                self._cast_column,
-                axis="index",
-                column_types=resolved_column_types,
-                missing_schemes=resolved_missing,
-            )
+            # df = df.apply(
+            #     self._cast_column,
+            #     axis="index",
+            #     column_types=resolved_column_types,
+            #     missing_schemes=resolved_missing,
+            # )
+            missing_masks = {}
+            for col_name, series in df.items():
+                new_series, mask = self._cast_column(
+                    series, resolved_column_types, resolved_missing
+                )
+                df[col_name] = new_series
+                missing_masks[col_name] = mask
+
         except MetadataFileError as e:
             # HACK: If an exception is raised within `DataFrame.apply`, pandas
             # adds an extra tuple element to `e.args`, making the original
@@ -171,6 +179,7 @@ class MetadataReader:
                 df,
                 column_missing_schemes=resolved_missing,
                 default_missing_scheme=default_missing_scheme,
+                missing_masks=missing_masks,
             )
         except Exception as e:
             raise MetadataFileError(
@@ -294,12 +303,12 @@ class MetadataReader:
 
         if "missing" in directives:
             for column_name, column_missing in directives["missing"].items():
-                if column_missing not in BUILTIN_MISSING:
+                if column_missing not in SCHEMES:
                     raise MetadataFileError(
                         "Column %r has an unrecognized missing value scheme %r"
                         " specified in its #sk:missing or #q2:missing directive."
                         " Supported missing value schemes (case-sensitive): %s"
-                        % (column_name, column_missing, list(BUILTIN_MISSING))
+                        % (column_name, column_missing, list(SCHEMES))
                     )
 
         return directives
@@ -379,20 +388,21 @@ class MetadataReader:
         return len(row) > 0 and (row[0].split(" ")[0] in ["#sk:missing", "#q2:missing"])
 
     def _cast_column(self, series, column_types, missing_schemes):
+        missing_mask = pd.Series(None, index=series.index, dtype="object")
         if series.name in missing_schemes:
             scheme = missing_schemes[series.name]
-            series = series_encode_missing(series, scheme)
+            series, missing_mask = series_encode_missing(series, scheme)
         if series.name in column_types:
             if column_types[series.name] == "numeric":
-                return self._to_numeric(series)
+                return (self._to_numeric(series), missing_mask)
             else:  # 'categorical'
-                return self._to_categorical(series)
+                return (self._to_categorical(series), missing_mask)
         else:
             # Infer type
             try:
-                return self._to_numeric(series)
+                return (self._to_numeric(series), missing_mask)
             except MetadataFileError:
-                return self._to_categorical(series)
+                return (self._to_categorical(series), missing_mask)
 
     def _to_categorical(self, series):
         # Replace empty strings with `None` to force the series to remain
@@ -472,7 +482,13 @@ class MetadataWriter:
                 tsv_writer.writerow(missing_directive)
 
             df = md.to_dataframe(encode_missing=True)
+            # print('\n')
+            # print('df before fillna in write(save)')
+            # print(df)
             df.fillna("", inplace=True)
+            # print('\n')
+            # print('df after fillna in write(save)')
+            # print(df)
             # since `applymap` is going to be deprecated soon
             # and `map` may not work on older versions of pandas
             try:
