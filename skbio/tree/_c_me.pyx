@@ -9,7 +9,7 @@
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 
 from cython cimport floating
-from cython.parallel cimport prange
+from cython.parallel cimport parallel, prange
 from openmp cimport omp_get_max_threads
 from libc.string cimport memmove
 from heapq import heappush
@@ -1800,6 +1800,170 @@ def _bal_avgdist_insert_p(
     #     pairs[anc] += size + 2 * i + 3
 
 
+def _bal_insert_mark(
+    Py_ssize_t n,
+    Py_ssize_t tag_i,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    floating[::1] adku,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] pairs,
+    Py_ssize_t[::1] depths,
+    Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] ancx,
+    Py_ssize_t[::1] cps,
+    Py_ssize_t[::1] cp_lvl,
+    Py_ssize_t[::1] cp_ops,
+):
+    r"""Update balanced average distance matrix after taxon insertion."""
+    # nodes as in tree
+    cdef Py_ssize_t tag = order[tag_i]   # target node
+    cdef Py_ssize_t lnk = n              # link node
+    cdef Py_ssize_t kay = n + 1          # new taxon (k)
+    cdef Py_ssize_t par = tree[tag, 2]   # parent
+    cdef Py_ssize_t sib = tree[tag, 3]   # sibling
+    cdef Py_ssize_t cur                  # current
+    cdef Py_ssize_t anc                  # ancestor
+    cdef Py_ssize_t cuz                  # cousin
+    cdef Py_ssize_t lft                  # left child
+
+    # nodes as in order
+    cdef Py_ssize_t cur_i, anc_i, cuz_i
+
+    cdef Py_ssize_t size = sizes[tag]
+    cdef Py_ssize_t cuz_s
+    cdef Py_ssize_t depth = depths[tag]
+
+    cdef floating* adm_t = &adm[tag, 0]
+    cdef floating* adm_l = &adm[lnk, 0]
+
+    cdef Py_ssize_t level
+    cdef Py_ssize_t stride = adm.shape[1]
+
+    # Accumulative number of horizontal operations to be assigned to each node in the
+    # spine. This number += (cousin size + 1) * (level - 1) at each node.
+    cdef Py_ssize_t achori
+
+    # Accumulative number of vertical operations to be subtracted from each node in the
+    # spine. This number += (size - 1) at each node.
+    cdef Py_ssize_t acvert
+
+    # Left and right indices in the change point array. Ancestors are appended to the
+    # left side of the array. Right cousins are appended to the right side.
+    cdef Py_ssize_t li, ri
+
+    pairs[kay] = 0
+    sizes[kay] = 1
+
+    ###### Special case: insert into the root branch. ######
+
+    if tag_i == 0:
+        cp_ops[0] = pairs[0] - sizes[0] + 1
+
+        pairs[lnk] = pairs[0]
+        pairs[0] += sizes[0] + 1
+
+        sizes[0] = n + 2
+        sizes[lnk] = n
+        depths[lnk] = depths[kay] = 1
+
+        # There is only one change point, which is the entire tree.
+        cps[0] = 0
+        cps[1] = n
+        cp_lvl[0] = -1
+
+        adm_t[kay] = adku[0]
+        adm_l[kay] = adkl[0]
+        adm_t[lnk] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
+
+        return
+
+    ###### Regular case: insert into any other branch. ######
+
+    sizes[lnk] = size + 2
+    pairs[lnk] = pairs[tag] + size + 1
+    depths[lnk] = depth
+    depths[kay] = depths[tag] = depth + 1
+
+    # accumulative horizontal and vertical operations
+    achori = 0
+    acvert = size - 1
+
+    # Target clade workload = number of pairs - (number of nodes - 1). This is because
+    # target node itself is not involved in calculation.
+    cp_ops[depth] = pairs[tag] - acvert
+
+    # Depth is the total number of ancestors of target. Therefore, target must
+    # be placed at index = depth in the list of change points.
+    cps[depth] = tag_i
+    cp_lvl[depth] = -1
+    li = depth - 1
+    ri = depth + 1
+
+    # Update distances around the insertion point.
+
+    adm_l[kay] = adku[tag]
+    adm_l[tag] = 0.5 * (adm[par, tag] + (
+        adm_t[sib] if tree[par, 0] == tag else adm[sib, tag]
+    ))
+    adm_t[kay] = adkl[tag]
+
+    # Mark "spine" of the tree.
+
+    level = 0  # number of generations up from target
+    cur_i = tag_i
+    while cur_i:
+        cur = order[cur_i]
+        ancs[level] = anc = tree[cur, 2]
+        ancx[level] = stride * anc
+
+        # Transfer upper distance to lower distance, which will be utilized later.
+        adkl[anc] = adku[anc]
+
+        # current is left, cousin is right
+        if (lft := tree[anc, 0]) == cur:
+            anc_i = cur_i - 1
+            cuz_i = cur_i + sizes[cur]
+            cuz = order[cuz_i]
+            cuz_s = sizes[cuz]
+
+            cps[li] = anc_i
+            cp_lvl[li] = level
+
+            # Add right cousin to the change point list.
+            cps[ri] = cuz_i
+            cp_lvl[ri] = level
+            # TODO: cp_ops is essentially the same as regular nodes. Can it be skipped?
+            cp_ops[ri] = cuz_s * level + pairs[cuz]
+            ri += 1
+
+        # cousin is left, current is right
+        else:
+            cuz_i = cur_i - sizes[lft]
+            anc_i = cuz_i - 1
+            cuz = order[cuz_i]
+            cuz_s = sizes[cuz]
+
+            cps[li] = anc_i
+            cp_lvl[li] = level
+
+        cur_i = anc_i
+
+        # Update accumulative size and pair.
+        # +1 is because of the ancestor itself is added to the clade.
+        achori += (cuz_s + 1) * level
+        # -1 is because only descendants but not the clade root are counted.
+        acvert += sizes[anc] - 1
+        cp_ops[li] = achori + pairs[anc] - acvert
+
+        li -= 1
+        level += 1
+
+    cps[ri] = n
+
+
 def _update_size_pair(
     Py_ssize_t tag_i,
     Py_ssize_t depth,
@@ -2000,6 +2164,70 @@ def _chunk_nodes(
     return n_chunks
 
 
+def _bal_insert_pass(
+    Py_ssize_t n,
+    Py_ssize_t tag_i,
+    Py_ssize_t aft_i,
+    Py_ssize_t[::1] order,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    Py_ssize_t[::1] depths,
+):
+    cdef Py_ssize_t tag = order[tag_i]
+    cdef Py_ssize_t lnk = n
+    cdef Py_ssize_t kay = n + 1
+    cdef Py_ssize_t i, a
+    cdef floating diff, cell
+
+    cdef floating* adm_t = &adm[tag, 0]
+    cdef floating* adm_l = &adm[lnk, 0]
+    cdef floating* adm_k = &adm[kay, 0]
+    cdef floating* adm_a
+
+    if tag_i == 0:
+        for i in prange(1, n, nogil=True):
+            a = order[i]
+            diff = adkl[a]
+            cell = adm_t[a]
+            adm[a, kay] = diff
+            adm_l[a] = 0.5 * (diff + cell)
+            adkl[a] = diff - cell
+            depths[a] += 1
+        return
+
+    for i in prange(n, nogil=True):
+        a = order[i]
+
+        # before target clade (ancestors and left cousins)
+        if i < tag_i:
+            adm_a = &adm[a, 0]
+            diff = adkl[a]
+            cell = adm_a[tag]
+            adm_a[kay] = diff
+            adm_a[lnk] = 0.5 * (diff + cell)
+
+        # target (skip)
+        elif i == tag_i:
+            continue
+        else:
+            diff = adkl[a]
+            cell = adm_t[a]
+
+            # within target clade
+            if i < aft_i:
+                adm[a, kay] = diff
+                adm_l[a] = cell
+                adm_t[a] = 0.5 * (diff + cell)
+                depths[a] += 1
+
+            # after target clade (right cousins)
+            else:
+                adm_k[a] = diff
+                adm_l[a] = 0.5 * (diff + cell)
+
+        adkl[a] = diff - cell
+
+
 def _bal_avgdist_fill(
     Py_ssize_t n,
     Py_ssize_t tag_i,
@@ -2076,7 +2304,9 @@ def _bal_avgdist_fill(
 
 
 def _bal_avgdist_fill_p(
+    Py_ssize_t n,
     Py_ssize_t tag_i,
+    Py_ssize_t aft_i,
     Py_ssize_t depth,
     floating[:, ::1] adm,
     floating[::1] adkl,
@@ -2095,12 +2325,21 @@ def _bal_avgdist_fill_p(
     r"""Update balanced average distance matrix after taxon insertion."""
     cdef Py_ssize_t a, b  # nodes as in tree
     cdef Py_ssize_t i, j  # nodes as in order
-    cdef floating diff
-    cdef floating* adm_a
-    cdef floating* npots_2 = &npots[2]
-    cdef Py_ssize_t size
+
+    cdef Py_ssize_t tag = order[tag_i]
+    cdef Py_ssize_t lnk = n
+    cdef Py_ssize_t kay = n + 1
+
+    cdef floating diff, cell
 
     cdef floating* adm_0 = &adm[0, 0]
+    cdef floating* adm_t = &adm[tag, 0]
+    cdef floating* adm_l = &adm[lnk, 0]
+    cdef floating* adm_k = &adm[kay, 0]
+    cdef floating* adm_a
+
+    cdef floating* npots_2 = &npots[2]
+    cdef Py_ssize_t size
 
     cdef Py_ssize_t depth_2 = depth - 2  # intermediate
 
@@ -2114,68 +2353,115 @@ def _bal_avgdist_fill_p(
     # number of branches from insertion point to any node
     cdef Py_ssize_t deg
 
-    for c in prange(n_chunks, nogil=True, schedule="dynamic"):
-        ii = chu_cps[c]  # target segment
-        cp = cps[ii]
-        level = cp_lvl[ii - 1] if ii > 0 else -1
-        deg = 2 * level - depth_2
+    with nogil, parallel():
 
-        for i in range(chunks[c], chunks[c + 1]):
-            a = order[i]
-            adm_a = &adm[a, 0]
-            diff = adkl[a]
+        ### Flat phase - O(n) ###
 
-            # Current node is at or before target in preorder. This means two things:
-            # 1) It is before any ancestor lower than the ancestor shared between it
-            #    and target. Therefore, the horizontally filled cell coordinates must
-            #    be [a, anc].
-            # 2) Every change point it encounters is target or an ancestor, which are
-            #    skipped during vertical filling.
-            # This `if` would cost little compute due to branch prediction.
-            if i <= tag_i:
-                if i == cp:
-                    level = cp_lvl[ii]
+        if tag_i == 0:
+            for i in prange(1, n):
+                a = order[i]
+                diff = adkl[a]
+                cell = adm_t[a]
+                adm[a, kay] = diff
+                adm_l[a] = 0.5 * (diff + cell)
+                adkl[a] = diff - cell
+                depths[a] += 1
 
-                    # NOTE: This cannot be written as `ii += 1`, otherwise Cython will
-                    # complain: "Cannot read reduction variable in loop body."
-                    ii = ii + 1
-                    cp = cps[ii]
-                    deg = 2 * level - depth_2
+        else:
+            for i in prange(n):
+                a = order[i]
+                diff = adkl[a]
 
-                # if not in spine, trigger vertical fill
+                # before target clade (ancestors and left cousins)
+                if i < tag_i:
+                    adm_a = &adm[a, 0]
+                    cell = adm_a[tag]
+                    adm_a[kay] = diff
+                    adm_a[lnk] = 0.5 * (diff + cell)
+                    adkl[a] = diff - cell
+
+                # skip target
+                elif i > tag_i:
+                    cell = adm_t[a]
+
+                    # within target clade
+                    if i < aft_i:
+                        adm[a, kay] = diff
+                        adm_l[a] = cell
+                        adm_t[a] = 0.5 * (diff + cell)
+                        depths[a] += 1
+
+                    # after target clade (right cousins)
+                    else:
+                        adm_k[a] = diff
+                        adm_l[a] = 0.5 * (diff + cell)
+
+                    adkl[a] = diff - cell
+
+        ### Nested phase - O(nlogn) to O(n^2) ###
+
+        for c in prange(n_chunks, schedule="dynamic"):
+            ii = chu_cps[c]  # target segment
+            cp = cps[ii]
+            level = cp_lvl[ii - 1] if ii > 0 else -1
+            deg = 2 * level - depth_2
+
+            for i in range(chunks[c], chunks[c + 1]):
+                a = order[i]
+                adm_a = &adm[a, 0]
+                diff = adkl[a]
+
+                # Current node is at or before target in preorder. This means two things:
+                # 1) It is before any ancestor lower than the ancestor shared between it
+                #    and target. Therefore, the horizontally filled cell coordinates must
+                #    be [a, anc].
+                # 2) Every change point it encounters is target or an ancestor, which are
+                #    skipped during vertical filling.
+                # This `if` would cost little compute due to branch prediction.
+                if i <= tag_i:
+                    if i == cp:
+                        level = cp_lvl[ii]
+
+                        # NOTE: This cannot be written as `ii += 1`, otherwise Cython will
+                        # complain: "Cannot read reduction variable in loop body."
+                        ii = ii + 1
+                        cp = cps[ii]
+                        deg = 2 * level - depth_2
+
+                    # if not in spine, trigger vertical fill
+                    else:
+                        # NOTE: There is a dilemma here: the current code has an `if` which
+                        # isn't good for branch prediction as tips (size = 1) are frequent.
+                        # But removing this `if` will add two array reads to this memory-
+                        # bound algorithm. Test suggests keeping the current code is fine.
+                        if (size := sizes[a]) > 1:
+                            npot = npots[depths[a] + deg]
+                            for j in range(i + 1, i + size):
+                                b = order[j]
+                                adm_a[b] += npot * adkl[b]
+
+                    # horizontal fill is guaranteed
+                    for j in range(level):
+                        adm_a[ancs[j]] += npots_2[j] * diff
+
+                # Current node is after target. This means: 1) Horizontal Cell coordinates
+                # are [anc, a]. 2) Change points are right cousins.
                 else:
-                    # NOTE: There is a dilemma here: the current code has an `if` which
-                    # isn't good for branch prediction as tips (size = 1) are frequent.
-                    # But removing this `if` will add two array reads to this memory-
-                    # bound algorithm. Test suggests keeping the current code is fine.
+                    if i == cp:
+                        level = cp_lvl[ii]
+                        ii = ii + 1
+                        cp = cps[ii]
+                        deg = 2 * level - depth_2
+
+                    # both fills are guaranteed
                     if (size := sizes[a]) > 1:
                         npot = npots[depths[a] + deg]
                         for j in range(i + 1, i + size):
                             b = order[j]
                             adm_a[b] += npot * adkl[b]
 
-                # horizontal fill is guaranteed
-                for j in range(level):
-                    adm_a[ancs[j]] += npots_2[j] * diff
-
-            # Current node is after target. This means: 1) Horizontal Cell coordinates
-            # are [anc, a]. 2) Change points are right cousins.
-            else:
-                if i == cp:
-                    level = cp_lvl[ii]
-                    ii = ii + 1
-                    cp = cps[ii]
-                    deg = 2 * level - depth_2
-
-                # both fills are guaranteed
-                if (size := sizes[a]) > 1:
-                    npot = npots[depths[a] + deg]
-                    for j in range(i + 1, i + size):
-                        b = order[j]
-                        adm_a[b] += npot * adkl[b]
-
-                for j in range(level):
-                    adm_0[ancx[j] + a] += npots_2[j] * diff
+                    for j in range(level):
+                        adm_0[ancx[j] + a] += npots_2[j] * diff
 
 
 def _insert_taxon(

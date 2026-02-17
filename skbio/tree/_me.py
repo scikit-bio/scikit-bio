@@ -40,6 +40,8 @@ from ._c_me import (
     _chunk_nodes,
     _update_size_pair,
     _bal_avgdist_fill_p,
+    _bal_insert_mark,
+    _bal_insert_pass,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -714,12 +716,14 @@ def _bme(dm, parallel=500, method=0, factor=16):
         times[k, 1] = perf_counter()
 
         target = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        after = target + sizes[order[target]]  ###
         depth = depths[order[target]]
         times[k, 2] = perf_counter()
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
-        _bal_avgdist_insert_p(
+        # _bal_avgdist_insert_p(
+        _bal_insert_mark(
             n,
             target,
             adm,
@@ -736,6 +740,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             cp_lvl,
             cp_ops,
         )
+        # _bal_insert_pass(n, target, after, order, adm, adkl, depths)
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
@@ -746,7 +751,9 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_fill_p(
+            n,
             target,
+            after,
             depth,
             adm,
             adkl,
@@ -2089,3 +2096,51 @@ def _bal_avgdist_insert_py(
     ### update sizes of spine
     for i in range(level):
         sizes[ancs[i]] += 2
+
+
+def _bal_insert_pass_py(n, tag_i, aft_i, order, adkl, adm, depths):
+    tag = order[tag_i]
+    lnk = n
+    kay = n + 1
+
+    if tag_i == 0:
+        for i in range(1, n):
+            a = order[i]
+            diff = adkl[a]
+            cell = adm[0, a]
+            adm[a, kay] = diff
+            adm[lnk, a] = 0.5 * (diff + cell)
+            adkl[a] = diff - cell
+            depths[a] += 1
+        return
+
+    for i in range(n):
+        a = order[i]
+
+        # before target clade (ancestors and left cousins)
+        if i < tag_i:
+            diff = adkl[a]
+            cell = adm[a, tag]
+            adm[a, kay] = diff
+            adm[a, lnk] = 0.5 * (diff + cell)
+
+        # target (skip)
+        elif i == tag_i:
+            continue
+        else:
+            diff = adkl[a]
+            cell = adm[tag, a]
+
+            # within target clade
+            if i < aft_i:
+                adm[a, kay] = diff
+                adm[lnk, a] = cell
+                adm[tag, a] = 0.5 * (diff + cell)
+                depths[a] += 1
+
+            # after target clade (right cousins)
+            else:
+                adm[kay, a] = diff
+                adm[lnk, a] = 0.5 * (diff + cell)
+
+        adkl[a] = diff - cell
