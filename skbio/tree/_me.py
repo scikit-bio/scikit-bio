@@ -33,15 +33,13 @@ from ._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
-    _bal_avgdist_insert_p,
     _get_num_threads,
     _bal_min_branch2,
     _count_pairs,
     _chunk_nodes,
     _update_size_pair,
-    _bal_avgdist_fill_p,
-    _bal_insert_mark,
-    _bal_insert_pass,
+    _bal_insert_plan,
+    _bal_avgdist_fill,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -554,6 +552,12 @@ def _bme(dm, parallel=500, method=0, factor=16):
     on subtree sizes, which is simpler and more efficient than GME in individual
     calculations (but this cannot compensate for the former).
 
+    ***
+
+    This function utilizes parallelization. It is only worth to parallelize when the
+    tree has grown beyond certain size. Therefore, this function implements a three-
+    phase process:
+
     """
     dtype = dm.dtype
 
@@ -569,17 +573,42 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
     ### Determine parallelization plan. ###
 
+    # To disable parallelization, set parallel=False or 0
+    # To maximize the range of parallelization, set parallel=3
+
+    # The iteration is divided into three phases:
+    # - Phase 1: Serial.
+    # - Phase 2: Parallelize the update of average distance between pairs of subtrees,
+    #   which requires nested iterations. These calculations are between O(nlog(n))
+    #   and O(n^2), and therefore the dominant part of the algorith.
+    #   * If we assume a Yule process, the expected number of ancestor-descendant pairs
+    #     is approximately 4n * ln(n), which is close to the number of calculations.
+    # - Phase 3: Also parallelize flat iterations over all nodes (O(n)). These steps
+    #   are not dominant but still cost non-negligible time.
+
+    # The parameter `parallel` defines the threshold of current number of taxa (i.e.,
+    # tips) in the tree that triggers parallelization (entering phase 2). The threshold
+    # of entering phase 3 is 2n * ln(n) (derived from above).
+
+    # The default setting parallel=500 translates into: Enter phase 2 when the tree
+    # has grown to 500 taxa (999 nodes). Enter phase 3 when tree has 6,215 taxa.
+
     # Number of threads available to OpenMP.
     threads = _get_num_threads()
 
     # Crossover point between serial and parallel phases. When the tree has grown to
     # this number of taxa, parallelization becomes worth and is performed afterwards.
-    if threads <= 1 or parallel is False:  # never parallelize
-        parath = m
-    elif parallel is True:  # always parallelize
-        parath = 3
-    else:  # parallelize beyond this taxon count
-        parath = max(3, min(m, parallel))
+
+    # never parallelize
+    if threads <= 1 or not parallel:
+        nest_th = flat_th = m
+
+    # parallelize beyond this taxon count
+    else:
+        nest_th = max(3, parallel)  # algorithm starts with 3 taxa
+        flat_th = 2 * nest_th * int(np.log(nest_th))  # calculate 2nd threshold
+        nest_th = min(nest_th, parallel)  # cap by target tree size
+        flat_th = min(flat_th, parallel)
 
     ### Pre-allocate array memory space. ###
 
@@ -622,7 +651,13 @@ def _bme(dm, parallel=500, method=0, factor=16):
     # powers that are actually used is often closer to log2(m) (balanced tree) than to
     # m (skewed tree). So lookup is often efficient.
     # NOTE: When l >= certain threshold, 2^(-l) effectively becomes 0 in floating-point
-    # arithmetics. This threshold is 150 for float32 and 1075 for float64.
+    # arithmetics. This threshold is 150 for float32 and 1075 for float64. So the array
+    # has a large proportion of zeros at the right end.
+    # NOTE: A potential optimization is to skip all calculations when path length goes
+    # beyond the above thresholds. However, in a binary tree the max. path length is at
+    # the logarithmic scale (more precisely, height ~= 4.31107 ln(n), according to
+    # Devroye et al. Bull Math Biol. 2025). So path lengths in a tree of 100k taxa are
+    # usually below 100, making this optimization unnecessary.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     ### Initialize tree with three taxa. ###
@@ -645,13 +680,11 @@ def _bme(dm, parallel=500, method=0, factor=16):
     times = np.empty((m, 6))
     times[:3, :] = 0.0
 
-    ####################
-    ### Serial phase ###
-    ####################
+    ### Phase 1: Serial ###
 
     n = 3  # current number of nodes in the tree: n = 2 * k - 3
 
-    for k in range(3, parath):
+    for k in range(3, nest_th):
         times[k, 0] = perf_counter()
 
         # Calculate balanced average distances from new taxon to existing subtrees.
@@ -687,9 +720,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
         n += 2
 
-    ######################
-    ### Parallel phase ###
-    ######################
+    ### Phase 2: Parallel (nested only) ###
 
     # Target number of chunks into which tree nodes will be evenly divided. Per-chunk
     # capacity = total number of nodes / this number. The actual chunk count usually
@@ -700,25 +731,26 @@ def _bme(dm, parallel=500, method=0, factor=16):
     pairs = np.empty(N, dtype=int)
     _count_pairs(n, tree, order, sizes, pairs)
 
-    # Change points, i.e., indices of nodes in preorder where level changes.
+    # segment bounds (nodes within each segment has the same level)
     segs = np.empty(N + 1, dtype=int)
 
-    # Level (number of branches ascending from target's parent) of each change point.
-    cp_lvl = np.empty(N + 1, dtype=int)
+    # level (number of branches ascending from target's parent) of each segment
+    lvls = np.empty(N, dtype=int)
 
-    # Indices of chunk bounds. The maximum number of chunks is n (i.e., one node per
-    # chunk), therefore n + 1 boundaries are needed. The first bound must be 0.
+    # chunk bounds in preorder
+    # NOTE: The maximum number of chunks is n (i.e., one node per chunk), therefore
+    # n + 1 boundaries are needed. The first bound must be 0.
     chunks = np.empty(N + 1, dtype=int)
     chunks[0] = 0
 
-    # Change point index at the beginning of each chunk.
-    chu_cps = np.empty(N, dtype=int)
-    chu_cps[0] = 0
+    # segment index at the beginning of each chunk
+    chusegs = np.empty(N, dtype=int)
+    chusegs[0] = 0
 
     # workload of clade under each checkpoint
-    cp_ops = np.empty(N, dtype=int)
+    oops = np.empty(N, dtype=int)
 
-    for k in range(parath, m):
+    for k in range(nest_th, flat_th):
         times[k, 0] = perf_counter()
         adk_func(n, k, dm, adkl, adku, tree, order)
         times[k, 1] = perf_counter()
@@ -730,8 +762,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
-        # _bal_avgdist_insert_p(
-        _bal_insert_mark(
+        _bal_insert_plan(
             n,
             target,
             adm,
@@ -745,20 +776,21 @@ def _bme(dm, parallel=500, method=0, factor=16):
             ancs,
             ancx,
             segs,
-            cp_lvl,
-            cp_ops,
+            lvls,
+            oops,
+            flat=True,
         )
         # _bal_insert_pass(n, target, after, order, adm, adkl, depths)
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
         n_chunks = _chunk_nodes(
-            n, goal, target, order, sizes, pairs, chunks, segs, cp_lvl, cp_ops, chu_cps
+            n, goal, target, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
         )
         _update_size_pair(target, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_fill_p(
+        _bal_avgdist_fill(
             n,
             target,
             after,
@@ -772,10 +804,80 @@ def _bme(dm, parallel=500, method=0, factor=16):
             ancs,
             ancx,
             segs,
-            cp_lvl,
+            lvls,
             n_chunks,
             chunks,
-            chu_cps,
+            chusegs,
+            flat=False,
+        )
+        times[k, 4] = perf_counter()
+
+        _insert_taxon(k, target, tree, order, sizes)
+        times[k, 5] = perf_counter()
+
+        n += 2
+
+    ### Phase 3: Parallel (nested and flat) ###
+
+    for k in range(flat_th, m):
+        times[k, 0] = perf_counter()
+        adk_func(n, k, dm, adkl, adku, tree, order)
+        times[k, 1] = perf_counter()
+
+        target = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        after = target + sizes[order[target]]  ###
+        depth = depths[order[target]]
+        times[k, 2] = perf_counter()
+
+        # Navigate the tree from target upward to root to identify the "spine", to
+        # calculate special values and intermediates
+        _bal_insert_plan(
+            n,
+            target,
+            adm,
+            adkl,
+            adku,
+            tree,
+            order,
+            sizes,
+            pairs,
+            depths,
+            ancs,
+            ancx,
+            segs,
+            lvls,
+            oops,
+            flat=False,
+        )
+        # _bal_insert_pass(n, target, after, order, adm, adkl, depths)
+        times[k, 3] = perf_counter()
+
+        # Distribute nodes into chunks such that they have roughly even workloads.
+        n_chunks = _chunk_nodes(
+            n, goal, target, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
+        )
+        _update_size_pair(target, depth, sizes, pairs, ancs)
+
+        # Update balanced average distance matrix through parallelization.
+        _bal_avgdist_fill(
+            n,
+            target,
+            after,
+            depth,
+            adm,
+            adkl,
+            order,
+            sizes,
+            depths,
+            npots,
+            ancs,
+            ancx,
+            segs,
+            lvls,
+            n_chunks,
+            chunks,
+            chusegs,
+            flat=True,
         )
         times[k, 4] = perf_counter()
 
