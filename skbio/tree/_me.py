@@ -579,7 +579,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
     elif parallel is True:  # always parallelize
         parath = 3
     else:  # parallelize beyond this taxon count
-        parath = min(m, parallel)
+        parath = max(3, min(m, parallel))
 
     ### Pre-allocate array memory space. ###
 
@@ -614,7 +614,15 @@ def _bme(dm, parallel=500, method=0, factor=16):
     # pointers to rows in `adm` representing individual ancestors
     ancx = np.empty(N, dtype=int)
 
-    # Pre-calculate negative powers of 2.
+    # Pre-calculate negative powers of 2 for quick lookup.
+    # NOTE: The maximum number of branches connecting any two nodes (i.e., diameter) is
+    # m (when tree is extremely skewed). Therefore m powers are sufficient.
+    # NOTE: This method appears to be faster than calling the C function `ldexp` each
+    # time. When m is large, the array may exceed cache size. However, the range of
+    # powers that are actually used is often closer to log2(m) (balanced tree) than to
+    # m (skewed tree). So lookup is often efficient.
+    # NOTE: When l >= certain threshold, 2^(-l) effectively becomes 0 in floating-point
+    # arithmetics. This threshold is 150 for float32 and 1075 for float64.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     ### Initialize tree with three taxa. ###

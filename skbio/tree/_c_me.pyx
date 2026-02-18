@@ -12,6 +12,7 @@ from cython cimport floating
 from cython.parallel cimport parallel, prange
 from openmp cimport omp_get_max_threads
 from libc.string cimport memmove
+from libc.math cimport ldexp, ldexpf
 from heapq import heappush
 
 
@@ -40,14 +41,23 @@ from heapq import heappush
 
 
 def _get_num_threads():
-    """Determine the number of threads that will be used by OpenMP.
+    """Determine the number of threads that will be used by OpenMP."""
+    return omp_get_max_threads()
 
-    Returns
-    -------
-    int
+
+cdef inline floating xldexp(floating x, int exp) noexcept nogil:
+    """Calculate power of 2.
+
+    This function is not used because tests found it is slower than pre-calculating
+    all possible powers of 2 (`npots`) and lookup.
+
+    Additionally, there is a bit hacking method to make this calculation even faster.
 
     """
-    return omp_get_max_threads()
+    if floating is float:
+        return ldexpf(x, exp)
+    else:
+        return ldexp(x, exp)
 
 
 cdef (int, bint) config_prange(
@@ -1355,6 +1365,9 @@ def _bal_avgdist_insert(
                 b = order[j]
                 adm_a[b] += npot * adkl[b]
 
+            # NOTE: `npots[deg] * adkl[b]` can be replaced with `xldexp(adkl[b], -deg)`
+            # but tests found the current method is faster.
+
         return
 
     ##### Regular case: insert into any other branch. #####
@@ -1594,8 +1607,8 @@ def _bal_avgdist_insert_p(
 
     ***
 
-    change point : root anc3 anc2 anc1 anc0 target rcuz1 rcuz3
-           order :    0    5   12   19   31     42    65    73
+    change point : root anc3 anc2 anc1 anc0 target rcuz1 rcuz3     n
+           order :    0    5   12   19   31     42    65    73   100
            level :    4    3    2    1    0     -1     1     3
         ancestor :    4    3    2    1    0
 
@@ -2086,7 +2099,7 @@ def _chunk_nodes(
             if i <= tag_i:
                 node_ops = lvl
                 tree_ops = cp_ops[ii]
-            
+
             # when change point is a right cousin
             else:
                 node_ops = s + lvl - 1
@@ -2160,7 +2173,7 @@ def _chunk_nodes(
         # lvl = cp_lvl[ii - 1]
         # cp = cps[ii]
 
-    chunks[n_chunks] = n # upper bound of last chunk
+    chunks[n_chunks] = n  # upper bound of last chunk
     return n_chunks
 
 
@@ -2443,6 +2456,7 @@ def _bal_avgdist_fill_p(
                     # horizontal fill is guaranteed
                     for j in range(level):
                         adm_a[ancs[j]] += npots_2[j] * diff
+                        # adm_a[ancs[j]] += ldexp(diff, -2 - j)
 
                 # Current node is after target. This means: 1) Horizontal Cell coordinates
                 # are [anc, a]. 2) Change points are right cousins.
@@ -2462,6 +2476,7 @@ def _bal_avgdist_fill_p(
 
                     for j in range(level):
                         adm_0[ancx[j] + a] += npots_2[j] * diff
+                        # adm_0[ancx[j] + a] += ldexp(diff, -2 - j)
 
 
 def _insert_taxon(
