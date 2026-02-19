@@ -1562,6 +1562,7 @@ def _bal_insert_plan(
     floating[:, ::1] adm,
     floating[::1] adkl,
     floating[::1] adku,
+    floating[::1] diffs,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
@@ -1684,7 +1685,7 @@ def _bal_insert_plan(
                 diff, cell = adkl[a], adm_t[a]
                 adm[a, kay] = diff
                 adm_l[a] = 0.5 * (diff + cell)
-                adkl[a] = diff - cell
+                diffs[i] = diff - cell
                 depths[a] += 1
                 # this +1 here is important; it cannot be postponed to `_insert_taxon`
                 # TODO: double-check the maths
@@ -1729,7 +1730,7 @@ def _bal_insert_plan(
             adm[a, kay] = diff
             adm_l[a] = cell
             adm_t[a] = 0.5 * (diff + cell)
-            adkl[a] = diff - cell
+            diffs[i] = diff - cell
             depths[a] += 1
 
     ### Step 3: Distances among nodes outside the clade. ###
@@ -1740,17 +1741,6 @@ def _bal_insert_plan(
         cur = order[cur_i]
         ancs[level] = anc = tree[cur, 2]
         ancx[level] = stride * anc
-
-        if flat:
-            adm_r = &adm[anc, 0]
-            diff, cell = adku[anc], adm_r[tag]
-            adm_r[kay] = diff
-            adm_r[lnk] = 0.5 * (diff + cell)
-            adkl[anc] = diff - cell
-
-        # Transfer upper distance to lower distance, which will be utilized later.
-        else:
-            adkl[anc] = adku[anc]
 
         # current is left, cousin is right
         if (lft := tree[anc, 0]) == cur:
@@ -1776,7 +1766,7 @@ def _bal_insert_plan(
                     diff, cell = adkl[a], adm_t[a]
                     adm_k[a] = diff
                     adm_l[a] = 0.5 * (diff + cell)
-                    adkl[a] = diff - cell
+                    diffs[i] = diff - cell
 
         # cousin is left, current is right
         else:
@@ -1795,7 +1785,18 @@ def _bal_insert_plan(
                     diff, cell = adkl[a], adm_a[tag]
                     adm_a[kay] = diff
                     adm_a[lnk] = 0.5 * (diff + cell)
-                    adkl[a] = diff - cell
+                    diffs[i] = diff - cell
+
+        if flat:
+            adm_r = &adm[anc, 0]
+            diff, cell = adku[anc], adm_r[tag]
+            adm_r[kay] = diff
+            adm_r[lnk] = 0.5 * (diff + cell)
+            diffs[anc_i] = diff - cell
+
+        # Transfer upper distance to lower distance, which will be utilized later.
+        else:
+            adkl[anc] = adku[anc]
 
         cur_i = anc_i
 
@@ -2331,6 +2332,7 @@ def _bal_avgdist_fill(
     Py_ssize_t depth,
     floating[:, ::1] adm,
     floating[::1] adkl,
+    floating[::1] diffs,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] depths,
@@ -2386,7 +2388,7 @@ def _bal_avgdist_fill(
                     cell = adm_t[a]
                     adm[a, kay] = diff
                     adm_l[a] = 0.5 * (diff + cell)
-                    adkl[a] = diff - cell
+                    diffs[i] = diff - cell
                     depths[a] += 1
 
             else:
@@ -2400,7 +2402,7 @@ def _bal_avgdist_fill(
                         cell = adm_a[tag]
                         adm_a[kay] = diff
                         adm_a[lnk] = 0.5 * (diff + cell)
-                        adkl[a] = diff - cell
+                        diffs[i] = diff - cell
 
                     # skip target
                     elif i > tag_i:
@@ -2418,7 +2420,7 @@ def _bal_avgdist_fill(
                             adm_k[a] = diff
                             adm_l[a] = 0.5 * (diff + cell)
 
-                        adkl[a] = diff - cell
+                        diffs[i] = diff - cell
 
         ### Nested phase - O(nlogn) to O(n^2) ###
 
@@ -2431,7 +2433,7 @@ def _bal_avgdist_fill(
             for i in range(chunks[c], chunks[c + 1]):
                 a = order[i]
                 adm_a = &adm[a, 0]
-                diff = adkl[a]
+                diff = diffs[i]
 
                 # Current node is at or before target in preorder. This means two things:
                 # 1) It is before any ancestor lower than the ancestor shared between it
@@ -2459,8 +2461,7 @@ def _bal_avgdist_fill(
                         if (size := sizes[a]) > 1:
                             npot = npots[depths[a] + deg]
                             for j in range(i + 1, i + size):
-                                b = order[j]
-                                adm_a[b] += npot * adkl[b]
+                                adm_a[order[j]] += npot * diffs[j]
 
                     # horizontal fill is guaranteed
                     for j in range(level):
@@ -2480,8 +2481,7 @@ def _bal_avgdist_fill(
                     if (size := sizes[a]) > 1:
                         npot = npots[depths[a] + deg]
                         for j in range(i + 1, i + size):
-                            b = order[j]
-                            adm_a[b] += npot * adkl[b]
+                            adm_a[order[j]] += npot * diffs[j]
 
                     for j in range(level):
                         adm_0[ancx[j] + a] += npots_2[j] * diff
