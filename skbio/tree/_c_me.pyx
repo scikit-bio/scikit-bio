@@ -1175,6 +1175,7 @@ def _bal_avgdist_insert(
     floating[:, ::1] adm,
     floating[::1] adkl,
     floating[::1] adku,
+    floating[::1] diffs,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
@@ -1349,7 +1350,7 @@ def _bal_avgdist_insert(
             # to be repeatedly calculated in the loop below. `adkl` will be completely
             # re-calculated by `_bal_avgdist_taxon`, so it is fine to use it to store
             # intermediates.
-            adkl[a] = diff - cell
+            diffs[i] = diff - cell
 
             # Update depth (entire tree +1 deeper).
             # NOTE: Although depth is unnecessary for tips, having an `if` check here
@@ -1362,8 +1363,7 @@ def _bal_avgdist_insert(
             # above. The order of iteration is not important.
             npot = npots[deg]
             for j in range(i + 1, i + sizes[a]):
-                b = order[j]
-                adm_a[b] += npot * adkl[b]
+                adm_a[order[j]] += npot * diffs[j]
 
             # NOTE: `npots[deg] * adkl[b]` can be replaced with `xldexp(adkl[b], -deg)`
             # but tests found the current method is faster.
@@ -1417,15 +1417,14 @@ def _bal_avgdist_insert(
         # Calculate the distance between each descendant (lower) and target (upper).
         adm_t[a] = 0.5 * (diff + cell)
 
-        adkl[a] = diff - cell  # intermediate
+        diffs[i] = diff - cell  # intermediate
         depths[a] = deg = depths[a] + 1  # depth +1
 
         # Within the clade, find all ancestor (a) - descendant (b) pairs, and calculate
         # the distance between a (upper, with k) and b (lower).
         npot = npots[deg - depth]
         for j in range(i + 1, i + sizes[a]):
-            b = order[j]
-            adm_a[b] += npot * adkl[b]
+            adm_a[order[j]] += npot * diffs[j]
 
     ### Step 3: Distances among nodes outside the clade. ###
 
@@ -1485,7 +1484,7 @@ def _bal_avgdist_insert(
                 cell = adm_t[a]
                 adm_l[a] = 0.5 * (diff + cell)
 
-                adkl[a] = diff = diff - cell  # intermediate
+                diffs[i] = diff = diff - cell  # intermediate
 
                 # Calculate the distance between each previous ancestor (lower, with k
                 # and each descendant (lower).
@@ -1497,8 +1496,7 @@ def _bal_avgdist_insert(
                 # descendants (lower).
                 npot = npots[depths[a] + deg]
                 for j in range(i + 1, i + sizes[a]):
-                    b = order[j]
-                    adm_a[b] += npot * adkl[b]
+                    adm_a[order[j]] += npot * diffs[j]
 
         # Cousin is left, and coordinates are [cousin, current]. Otherwise the same.
         else:
@@ -1515,13 +1513,12 @@ def _bal_avgdist_insert(
                 diff, cell = adkl[a], adm_a[tag]
                 adm_a[kay] = diff
                 adm_a[lnk] = 0.5 * (diff + cell)
-                adkl[a] = diff = diff - cell
+                diffs[i] = diff = diff - cell
                 for j in range(level):
                     adm_a[ancs[j]] += npots_2[j] * diff
                 npot = npots[depths[a] + deg]
                 for j in range(i + 1, i + sizes[a]):
-                    b = order[j]
-                    adm_a[b] += npot * adkl[b]
+                    adm_a[order[j]] += npot * diffs[j]
 
         # level up
         cur_i = anc_i
