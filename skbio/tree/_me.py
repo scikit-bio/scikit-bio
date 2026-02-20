@@ -34,7 +34,6 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _get_num_threads,
-    _bal_min_branch2,
     _count_pairs,
     _chunk_nodes,
     _update_size_pair,
@@ -695,15 +694,19 @@ def _bme(dm, parallel=500, method=0, factor=16):
         adk_func(n, k, dm, adkl, adku, tree, order)
         times[k, 1] = perf_counter()
 
-        # Find the branch with minimum length change, into which the new taxon (k) will
-        # be inserted.
-        target = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        # Find the branch with minimum length change, into which the new taxon will be
+        # inserted. Return value is the preorder index of the node under this branch.
+        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+
+        # Get the preorder index of the node immediately after the target clade.
+        iaft = itag + sizes[order[itag]]
+
         times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
         _bal_avgdist_insert(
             n,
-            target,
+            itag,
             adm,
             adkl,
             adku,
@@ -720,17 +723,17 @@ def _bme(dm, parallel=500, method=0, factor=16):
         times[k, 4] = perf_counter()
 
         # Update tree topology with the inserted taxon.
-        _insert_taxon(k, target, tree, order, sizes)
+        _insert_taxon(k, itag, iaft, tree, order)
         times[k, 5] = perf_counter()
 
         n += 2
 
     ### Phase 2: Parallel (nested only) ###
 
-    # Target number of chunks into which tree nodes will be evenly divided. Per-chunk
+    # Expected number of chunks into which tree nodes will be evenly divided. Per-chunk
     # capacity = total number of nodes / this number. The actual chunk count usually
     # exceeds this number.
-    goal = threads * factor
+    enc = threads * factor
 
     # number of ancestor-descendant pairs (i.e., sum of depths) within each clade
     pairs = np.empty(N, dtype=int)
@@ -752,24 +755,26 @@ def _bme(dm, parallel=500, method=0, factor=16):
     chusegs = np.empty(N, dtype=int)
     chusegs[0] = 0
 
-    # workload of clade under each checkpoint
+    # workload of clade under each segment start
     oops = np.empty(N, dtype=int)
 
     for k in range(nest_th, flat_th):
         times[k, 0] = perf_counter()
         adk_func(n, k, dm, adkl, adku, tree, order)
         times[k, 1] = perf_counter()
+        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        tag = order[itag]
+        iaft = itag + sizes[tag]
 
-        target = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
-        after = target + sizes[order[target]]  ###
-        depth = depths[order[target]]
+        # Get the depth of target, which equals to the number of ancestors of it.
+        depth = depths[tag]
         times[k, 2] = perf_counter()
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
             n,
-            target,
+            itag,
             adm,
             adkl,
             adku,
@@ -790,15 +795,14 @@ def _bme(dm, parallel=500, method=0, factor=16):
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        n_chunks = _chunk_nodes(
-            n, goal, target, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
+        nc = _chunk_nodes(
+            n, enc, itag, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
         )
-        _update_size_pair(target, depth, sizes, pairs, ancs)
+        _update_size_pair(itag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_nest(
-            n,
-            target,
+            itag,
             depth,
             adm,
             diffs,
@@ -810,13 +814,13 @@ def _bme(dm, parallel=500, method=0, factor=16):
             ancx,
             segs,
             lvls,
-            n_chunks,
+            nc,
             chunks,
             chusegs,
         )
         times[k, 4] = perf_counter()
 
-        _insert_taxon(k, target, tree, order, sizes)
+        _insert_taxon(k, itag, iaft, tree, order)
         times[k, 5] = perf_counter()
 
         n += 2
@@ -828,16 +832,17 @@ def _bme(dm, parallel=500, method=0, factor=16):
         adk_func(n, k, dm, adkl, adku, tree, order)
         times[k, 1] = perf_counter()
 
-        target = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
-        after = target + sizes[order[target]]  ###
-        depth = depths[order[target]]
+        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        tag = order[itag]
+        iaft = itag + sizes[tag]
+        depth = depths[tag]
         times[k, 2] = perf_counter()
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
             n,
-            target,
+            itag,
             adm,
             adkl,
             adku,
@@ -858,16 +863,15 @@ def _bme(dm, parallel=500, method=0, factor=16):
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        n_chunks = _chunk_nodes(
-            n, goal, target, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
+        nc = _chunk_nodes(
+            n, enc, itag, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
         )
-        _update_size_pair(target, depth, sizes, pairs, ancs)
+        _update_size_pair(itag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_flat(n, target, after, order, adm, adkl, diffs, depths)
+        _bal_avgdist_flat(n, itag, iaft, order, adm, adkl, diffs, depths)
         _bal_avgdist_nest(
-            n,
-            target,
+            itag,
             depth,
             adm,
             diffs,
@@ -879,22 +883,21 @@ def _bme(dm, parallel=500, method=0, factor=16):
             ancx,
             segs,
             lvls,
-            n_chunks,
+            nc,
             chunks,
             chusegs,
         )
         times[k, 4] = perf_counter()
 
-        _insert_taxon(k, target, tree, order, sizes)
+        _insert_taxon(k, itag, iaft, tree, order)
         times[k, 5] = perf_counter()
 
         n += 2
 
-    # print(n_chunks, pairs[:5])
     print(np.diff(times, axis=1).sum(axis=0).round(3))
 
     # Output intermediate data for diagnosis
-    # np.savez('tree.npz', tree, order, sizes, pairs, depths, chunks[:n_chunks])
+    # np.savez('tree.npz', tree, order, sizes, pairs, depths, chunks[:nc])
 
     ### Calculate branch lengths. ###
 
@@ -1789,472 +1792,3 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
             tree[s_clade, 6] -= c_width
             preodr[(cs_start := c_start + s_width) : s_end] = c_clade
             preodr[c_start:cs_start] = stack[:s_width]
-
-
-def _insert_taxon_py(taxon, target, tree, preodr, postodr, use_depth=True):
-    r"""Insert a taxon between a target node and its parent."""
-    # determine tree dimensions
-    # typically n = 2 * taxon - 3, but this function doesn't enforce this
-    m = tree[0, 4]
-    n = m * 2 - 1
-    link = n
-    tip = n + 1
-
-    node = tree[target]
-
-    # Special case (root branch): taxon k becomes the sibling of all existing taxa
-    # except for the root (taxon 0).
-    if target == 0:
-        # children
-        left, right = node[:2]
-        tree[left, 2] = tree[right, 2] = link
-
-        # root
-        node[0] = link
-        node[1] = tip
-        node[4] = m + 1
-        node[7] = n + 1
-
-        # link
-        tree[link] = [left, right, 0, tip, m, 1, 1, n - 1]
-
-        # tip
-        tree[tip] = [0, taxon, 0, link, 1, 1, n + 1, n]
-
-        # entire tree depth + 1
-        if use_depth:
-            tree[1:n, 5] += 1
-
-        # preorder
-        tree[1:n, 6] += 1
-        preodr[2 : n + 1] = preodr[1:n]
-        preodr[1] = link
-        preodr[n + 1] = tip
-
-        # postorder
-        postodr[n - 1 : n + 2] = [link, tip, 0]
-
-    # Regular case (any other branch): The link becomes the parent of the target node,
-    # and child of its original parent. Taxon k becomes the sibling
-    else:
-        left, right, parent, sibling, size, depth, pre_i, post_i = node
-        side = (tree[parent, 0] != target).astype(int)
-        tree[parent, side] = link
-        tree[sibling, 3] = link
-        node[2] = link
-        node[3] = tip
-
-        # identify nodes desceding from target
-        clade_n = size * 2 - 1  # number of nodes in clade (including target)
-        pre_i_after = pre_i + clade_n  # preorder index of node after clade
-        clade = preodr[pre_i:pre_i_after]  # range of clade in preorder
-
-        # link
-        tree[link] = [target, tip, parent, sibling, size + 1, depth, pre_i, post_i + 2]
-
-        # tip
-        tree[tip] = [0, taxon, link, target, 1, depth + 1, pre_i_after + 1, post_i + 1]
-
-        # clade depth +1
-        if use_depth:
-            tree[clade, 5] += 1
-
-        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
-        # clade +1, link inserted before clade
-        pre_after = preodr[pre_i_after:n]
-        tree[pre_after, 6] += 2
-        preodr[pre_i_after + 2 : n + 2] = pre_after
-        preodr[pre_i_after + 1] = tip
-        tree[clade, 6] += 1
-        preodr[pre_i + 1 : pre_i_after + 1] = clade
-        preodr[pre_i] = link
-
-        # postorder shift: all nodes after clade +2, tip and link inserted after clade
-        post_after = postodr[post_i + 1 : n]
-        tree[post_after, 7] += 2
-        postodr[post_i + 3 : n + 2] = post_after
-        postodr[post_i + 2] = link
-        postodr[post_i + 1] = tip
-
-        # size +1 from link to root
-        curr = link
-        while curr:
-            anc = tree[curr, 2]
-            tree[anc, 4] += 1
-            curr = anc
-
-
-def _bal_avgdist_insert_py(
-    n, index, adm, adkl, adku, tree, order, sizes, depths, npots, ancs
-):
-    r"""Update balanced average distance matrix after taxon insertion.
-
-    This function resembles :func:`_avgdist_d2_insert` but it 1) uses the balanced
-    framework and, 2) updates the entire matrix (`adm`), which makes it the dominant
-    term of the entire algorithm.
-
-    This function is the serial version. A parallel version can be found in
-    :func:`_bal_avgdist_insert_p`.
-
-    This function assumes that the taxon will be inserted into the branch connecting
-    the target node and its parent. After insertion, the taxon will become the right
-    sibling of the target.
-
-                                    parent
-             parent                  /  \
-             /  \        =>       link  sibling
-        target  sibling           /  \
-                             target  taxon (k)
-
-    This function only updates distance [i, j] but not [j, i], saving half of the
-    assignment operations, which are expensive given the size of the matrix. i and j
-    suffice i < j in a preorder traversal (parent - left - right), where 1) ancestors
-    are always earlier than their descendants, and 2) left children (and their
-    descendants) are always earlier than right children (and their descendants).
-    Therefore, the order of i, j can be easily determined during tree traversal.
-
-                 anc3 (root)
-                 /   \
-              anc2    x
-             /   \
-            +    anc1
-           /     /   \
-          +   link    x
-              /  \
-         target  taxon (k)
-           /
-          o
-         / \
-        o   o
-
-    The tree can be partitioned into two parts: 1) the clade descending from target
-    (o) and 2) the clades that are cousins to the target, which in turn are divided
-    into left cousins (+) and right cousins (x). These clades can be identified by
-    navigating all ancestors of target up until root.
-
-    0. For a tree with N taxa, the number of ancestors (i.e., depth) of any node is
-       between O(logN) (balanced tree, best case) and O(N) (skewed tree, worst case).
-
-    The distances to be updated can be divided into two compute-intensive categories:
-
-    1. Within each clade (o, + and x), the distance between the upper subtree of each
-       ancestor and the lower subtree of each of its descendants needs to be updated.
-       The total number of ancestor-descendant pairs (i.e., sum of depths) is between
-       O(nlogn) (balanced tree, best case) and O(n^2) (skewed tree, worst case).
-
-    2. Within each cousin clade (+ and x), the distance between the lower subtree of
-       each node and the lower subtree of each ancestor of target needs to be updated.
-
-    ***
-
-    Two additional parameters are provided: `npots` is a pre-calculated array of
-    2^(-l) powers (l is the depth difference between two nodes). `ancs` is an
-    integer array to store ancestral nodes of target.
-
-    """
-    # cdef Py_ssize_t a, b  # nodes as in tree
-    # cdef Py_ssize_t i, j  # nodes as in order
-
-    # cdef Py_ssize_t d  # depth
-
-    # cdef Py_ssize_t level
-    # cdef Py_ssize_t parent, sibling, depth
-    # cdef Py_ssize_t curr, anc, cousin, depoff
-
-    # cdef Py_ssize_t target = order[index]
-    target = order[index]
-
-    # cdef Py_ssize_t cur_i, anc_i, cuz_i
-
-    # Intermediate variables
-    # cdef floating cell  # specific value in `adm` (a matrix)
-    # cdef floating diff  # difference of distance; usually from `adk`
-    # cdef floating npot  # negative power of 2; from `npots`
-
-    # Dimensions and positions
-    # cdef Py_ssize_t link = n
-    # cdef Py_ssize_t tip = n + 1
-    link = n
-    tip = n + 1
-
-    # Pointers to specific rows in `adm`
-    # cdef floating* adm_t = &adm[target, 0]
-    # cdef floating* adm_l = &adm[link, 0]
-    # cdef floating* adm_k = &adm[tip, 0]
-    # cdef floating* adm_c  # each ancestor of target
-    # cdef floating* adm_a  # each node within a clade
-    adm_t = adm[target]
-    adm_l = adm[link]
-    adm_k = adm[tip]
-
-    # cdef floating* npots_2 = &npots[2]
-    npots_2 = npots[2:]
-
-    sizes[tip] = 1
-
-    ##### Special case: insert into the root branch. #####
-
-    #    root (target)      root
-    #    /  \               /  \
-    # left  right   =>   link  taxon (k)
-    #                    /  \
-    #                 left  right
-
-    if index == 0:
-        # Update sizes and depths.
-        sizes[0] = n + 2
-        sizes[link] = n
-        depths[link] = depths[tip] = 1
-
-        # Transfer distance between k and root (upper).
-        adm_t[tip] = adku[0]
-
-        # k to link: equals to k to root (lower).
-        adm_l[tip] = adkl[0]
-
-        # Root to link: de novo calculation according to the equation in A4.1(b). It is
-        # basically the distance between the upper and lower subtrees of the root.
-        adm_t[link] = 0.5 * (adm_t[tree[0, 0]] + adm_t[tree[0, 1]])
-
-        # Iterate over all nodes but root (first in preorder). It is important to do
-        # this in reverse preorder, such that the intermediates (see below) of all
-        # descendants of a node are already calculated when they are used.
-        for i in range(n - 1, 0, -1):
-            a = order[i]
-            # adm_a = &adm[a, 0]
-            adm_a = adm[a]
-
-            # Transfer distances between the node (lower) and k.
-            adm_a[tip] = diff = adkl[a]
-            cell = adm_t[a]
-
-            # Calculate the distance between the node (lower) and link (upper, with two
-            # taxa (0 and k) added) using Eq. 8.
-            adm_l[a] = 0.5 * (diff + cell)
-
-            # Calculate this intermediate and store in `adkl`, such that it won't need
-            # to be repeatedly calculated in the loop below. `adkl` will be completely
-            # re-calculated by `_bal_avgdist_taxon`, so it is fine to use it to store
-            # intermediates.
-            adkl[a] = diff - cell
-
-            # Update depth (entire tree +1).
-            # NOTE: Although depth is unnecessary for tips, having an `if` check here
-            # may not benefit performance because interleaved internal/tips are bad for
-            # branch prediction.
-            depths[a] = d = depths[a] + 1
-
-            # Calculate the distances between the node (U, containing k) and each of
-            # its descendants (L). We can now reuse the intermediate calculated above.
-            # The order of iteration is not important.
-            npot = npots[d]
-            for j in range(i + 1, i + sizes[a]):
-                b = order[j]
-                adm_a[b] += npot * adkl[b]
-
-        return
-
-    ##### Regular case: insert into any other branch. #####
-
-    ### Step 1: Distances around the insertion point. ###
-
-    # Update sizes and depths.
-    size = sizes[target]
-    sizes[link] = size + 2
-
-    # Update depths.
-    depths[link] = depth = depths[target]
-    depths[tip] = depths[target] = depth + 1
-
-    # Distance between k (lower) and link (upper) equals to that between k and the
-    # upper subtree of target.
-    adm_l[tip] = adku[target]
-
-    # Distance between target (lower) and link (upper) needs to be calculated using the
-    # equation in A4.1(c). Basically, it is the distance between the lower and upper
-    # subtrees of the same target.
-    parent, sibling = tree[target, 2], tree[target, 3]
-    cell = adm[target, sibling] if tree[parent, 0] == target else adm[sibling, target]
-    adm_l[target] = 0.5 * (cell + adm[parent, target])
-
-    # Transfer pre-calculated distance between target (lower) and k (lower).
-    adm_t[tip] = adkl[target]
-
-    ### Step 2: Distances within the clade below target. ###
-
-    # Locate the clade below target (excluding target).
-    for i in range(index + size - 1, index, -1):
-        a = order[i]
-        # adm_a = &adm[a, 0]
-        adm_a = adm[a]
-
-        # Transfer pre-calculated distance between k (lower) and any node within
-        # the clade (lower).
-        adm_a[tip] = diff = adkl[a]
-
-        # Distance from any descendant (lower) to link (upper) equals to that to
-        # target.
-        adm_l[a] = cell = adm_t[a]
-
-        # Calculate the distance between each node within the clade (lower) and target
-        # (upper).
-        adm_t[a] = 0.5 * (diff + cell)
-
-        # intermediate
-        adkl[a] = diff - cell
-
-        # depth
-        depths[a] = d = depths[a] + 1
-
-        # Within the clade, find all ancestor (a) - descendant (b) pairs, and
-        # calculate the distance between the upper subtree of a (with k) and
-        # the lower subtree of b.
-        npot = npots[d - depth]
-        for j in range(i + 1, i + sizes[a]):
-            b = order[j]
-            adm_a[b] += npot * adkl[b]
-
-    ### Step 3: Distances among nodes outside the clade. ###
-
-    # Iterate over ancestors of target in ascending order till root.
-    level = 0
-    depoff = 2 - depth
-
-    cur_i = index
-    while cur_i:
-        cur = order[cur_i]
-        ancs[level] = anc = tree[cur, 2]
-        # adm_c = &adm[anc, 0]
-        adm_c = adm[anc]
-
-        # Transfer the pre-calculated distance between k and ancestor (upper).
-        adm_c[tip] = diff = adku[anc]
-
-        # Calculate the distance between link (lower, with k) and ancestor (upper).
-        cell = adm_c[target]
-        adm_c[link] = 0.5 * (diff + cell)
-
-        # Calculate the distance between each previous ancestor (lower, with k)
-        # and the current ancestor (upper).
-        # adkl[anc] = diff = diff - cell
-        diff -= cell
-        for i in range(level):
-            adm_c[ancs[i]] += npots_2[i] * diff
-
-        # Locate the cousin clade descending from the ancestor (including cousin).
-
-        # Determine whether cousin is the right or left child of the shared ancestor.
-        # This helps to determine the order of coordinates of each distance to be
-        # updated. If cousin is right, then coordinates are [curr, cousin].
-        if (left := tree[anc, 0]) == cur:
-            anc_i = cur_i - 1
-            cuz_i = cur_i + sizes[cur]
-            cuz = order[cuz_i]
-
-            for i in range(cuz_i + sizes[cuz] - 1, cuz_i - 1, -1):
-                a = order[i]
-                # adm_a = &adm[a, 0]
-                adm_a = adm[a]
-
-                # Transfer the pre-calculated distances between k and each descendant
-                # (lower).
-                adm_k[a] = diff = adkl[a]
-
-                # Calculate the distance between link (lower, with k) and each
-                # descendant (lower).
-                cell = adm_t[a]
-                adm_l[a] = 0.5 * (diff + cell)
-
-                # intermediate
-                adkl[a] = diff = diff - cell
-
-                # Calculate the distance between each previous ancestor (lower, with k
-                # and each descendant (lower).
-                for j in range(level):
-                    adm[ancs[j], a] += npots_2[j] * diff
-
-                # Iterate over descendants of each member of the clade, and calculate
-                # the distance between the former (upper, with k) and the latter
-                # (lower).
-                npot = npots[depths[a] + depoff]
-                for j in range(i + 1, i + sizes[a]):
-                    b = order[j]
-                    adm_a[b] += npot * adkl[b]
-
-        # If cousin is left, coordinates are [cousin, curr]. Everything else is the
-        # same, but code might be slightly slower due to the coordinates.
-        else:
-            cuz_i = cur_i - sizes[left]
-            anc_i = cuz_i - 1
-            cuz = order[cuz_i]
-
-            for i in range(cuz_i + sizes[cuz] - 1, cuz_i - 1, -1):
-                a = order[i]
-                # adm_a = &adm[a, 0]
-                adm_a = adm[a]
-                diff, cell = adkl[a], adm_a[target]
-                adm_a[tip] = diff
-                adm_a[link] = 0.5 * (diff + cell)
-                adkl[a] = diff = diff - cell
-                for j in range(level):
-                    adm_a[ancs[j]] += npots_2[j] * diff
-                npot = npots[depths[a] + depoff]
-                for j in range(i + 1, i + sizes[a]):
-                    b = order[j]
-                    adm_a[b] += npot * adkl[b]
-
-        cur_i = anc_i
-        level += 1
-        depoff += 2
-
-    ### update sizes of spine
-    for i in range(level):
-        sizes[ancs[i]] += 2
-
-
-def _bal_insert_pass_py(n, tag_i, aft_i, order, adkl, adm, depths):
-    tag = order[tag_i]
-    lnk = n
-    kay = n + 1
-
-    if tag_i == 0:
-        for i in range(1, n):
-            a = order[i]
-            diff = adkl[a]
-            cell = adm[0, a]
-            adm[a, kay] = diff
-            adm[lnk, a] = 0.5 * (diff + cell)
-            adkl[a] = diff - cell
-            depths[a] += 1
-        return
-
-    for i in range(n):
-        a = order[i]
-
-        # before target clade (ancestors and left cousins)
-        if i < tag_i:
-            diff = adkl[a]
-            cell = adm[a, tag]
-            adm[a, kay] = diff
-            adm[a, lnk] = 0.5 * (diff + cell)
-
-        # target (skip)
-        elif i == tag_i:
-            continue
-        else:
-            diff = adkl[a]
-            cell = adm[tag, a]
-
-            # within target clade
-            if i < aft_i:
-                adm[a, kay] = diff
-                adm[lnk, a] = cell
-                adm[tag, a] = 0.5 * (diff + cell)
-                depths[a] += 1
-
-            # after target clade (right cousins)
-            else:
-                adm[kay, a] = diff
-                adm[lnk, a] = 0.5 * (diff + cell)
-
-        adkl[a] = diff - cell
