@@ -39,7 +39,8 @@ from ._c_me import (
     _chunk_nodes,
     _update_size_pair,
     _bal_insert_plan,
-    _bal_avgdist_fill,
+    _bal_avgdist_flat,
+    _bal_avgdist_nest,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -637,7 +638,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
     lens = np.empty(N, dtype=dtype)
     lens[0] = 0.0
 
-    ####
+    # intermediate
     diffs = np.empty(N, dtype=dtype)
 
     # ancestors of target (nodes from its parent to root in ascending order)
@@ -665,6 +666,8 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
     ### Initialize tree with three taxa. ###
 
+    n = 3  # current number of nodes in the tree: n = 2 * k - 3
+
     # 3-taxon tree topology
     tree[:3] = [
         [1, 2, 0, 0],  # 0: root
@@ -684,8 +687,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
     times[:3, :] = 0.0
 
     ### Phase 1: Serial ###
-
-    n = 3  # current number of nodes in the tree: n = 2 * k - 3
 
     for k in range(3, nest_th):
         times[k, 0] = perf_counter()
@@ -795,13 +796,11 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _update_size_pair(target, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_fill(
+        _bal_avgdist_nest(
             n,
             target,
-            after,
             depth,
             adm,
-            adkl,
             diffs,
             order,
             sizes,
@@ -814,7 +813,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
             n_chunks,
             chunks,
             chusegs,
-            flat=False,
         )
         times[k, 4] = perf_counter()
 
@@ -866,13 +864,12 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _update_size_pair(target, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_fill(
+        _bal_avgdist_flat(n, target, after, order, adm, adkl, diffs, depths)
+        _bal_avgdist_nest(
             n,
             target,
-            after,
             depth,
             adm,
-            adkl,
             diffs,
             order,
             sizes,
@@ -885,7 +882,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
             n_chunks,
             chunks,
             chusegs,
-            flat=True,
         )
         times[k, 4] = perf_counter()
 

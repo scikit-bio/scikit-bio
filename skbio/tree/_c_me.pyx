@@ -2325,6 +2325,181 @@ def _bal_insert_pass(
 #                 adm[ancs[j], a] += npots_2[j] * diff
 
 
+def _bal_avgdist_flat(
+    Py_ssize_t n,
+    Py_ssize_t tag_i,
+    Py_ssize_t aft_i,
+    Py_ssize_t[::1] order,
+    floating[:, ::1] adm,
+    floating[::1] adkl,
+    floating[::1] diffs,
+    Py_ssize_t[::1] depths,
+):
+    r"""Update balanced average distance matrix after taxon insertion."""
+    cdef Py_ssize_t i, a
+
+    cdef Py_ssize_t tag = order[tag_i]
+    cdef Py_ssize_t lnk = n
+    cdef Py_ssize_t kay = n + 1
+
+    cdef floating diff, cell
+
+    cdef floating* adm_t = &adm[tag, 0]
+    cdef floating* adm_l = &adm[lnk, 0]
+    cdef floating* adm_k = &adm[kay, 0]
+    cdef floating* adm_a
+
+    # special case
+    if tag_i == 0:
+        for i in prange(1, n, nogil=True):
+            a = order[i]
+            diff = adkl[a]
+            cell = adm_t[a]
+            adm[a, kay] = diff
+            adm_l[a] = 0.5 * (diff + cell)
+            diffs[i] = diff - cell
+            depths[a] += 1
+
+    # regular case
+    else:
+        for i in prange(n, nogil=True):
+            a = order[i]
+            diff = adkl[a]
+
+            # before target clade (ancestors and left cousins)
+            if i < tag_i:
+                adm_a = &adm[a, 0]
+                cell = adm_a[tag]
+                adm_a[kay] = diff
+                adm_a[lnk] = 0.5 * (diff + cell)
+                diffs[i] = diff - cell
+
+            # skip target
+            elif i > tag_i:
+                cell = adm_t[a]
+
+                # within target clade
+                if i < aft_i:
+                    adm[a, kay] = diff
+                    adm_l[a] = cell
+                    adm_t[a] = 0.5 * (diff + cell)
+                    depths[a] += 1
+
+                # after target clade (right cousins)
+                else:
+                    adm_k[a] = diff
+                    adm_l[a] = 0.5 * (diff + cell)
+
+                diffs[i] = diff - cell
+
+
+def _bal_avgdist_nest(
+    Py_ssize_t n,
+    Py_ssize_t tag_i,
+    Py_ssize_t depth,
+    floating[:, ::1] adm,
+    floating[::1] diffs,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+    Py_ssize_t[::1] depths,
+    floating[::1] npots,
+    Py_ssize_t[::1] ancs,
+    Py_ssize_t[::1] ancx,
+    Py_ssize_t[::1] segs,
+    Py_ssize_t[::1] lvls,
+    Py_ssize_t n_chunks,
+    Py_ssize_t[::1] chunks,
+    Py_ssize_t[::1] chusegs,
+):
+    r"""Update balanced average distances through nested loops.
+    
+    This function is the dominant part of the entire BME algorithm, It is between
+    O(nlogn) and O(n^2). Therefore parallelization is desired.
+
+    """
+    cdef Py_ssize_t a, b  # nodes as in tree
+    cdef Py_ssize_t i, j  # nodes as in order
+    cdef Py_ssize_t size
+    cdef Py_ssize_t depth_2 = depth - 2  # intermediate
+    cdef Py_ssize_t c     # chunk index
+    cdef Py_ssize_t ii    # segment index
+    cdef Py_ssize_t seg   # segment bound
+
+    cdef floating diff
+    cdef floating* adm_0 = &adm[0, 0]
+    cdef floating* adm_a
+    cdef floating* npots_2 = &npots[2]
+
+    # number of branches from insertion point to shared ancestor
+    cdef Py_ssize_t lvl
+
+    # number of branches from insertion point to any node
+    cdef Py_ssize_t deg
+
+    for c in prange(n_chunks, nogil=True, schedule="dynamic"):
+        ii = chusegs[c]  # target segment
+        seg = segs[ii]
+        lvl = lvls[ii - 1] if ii > 0 else -1
+        deg = 2 * lvl - depth_2
+
+        for i in range(chunks[c], chunks[c + 1]):
+            a = order[i]
+            adm_a = &adm[a, 0]
+            diff = diffs[i]
+
+            # Current node is at or before target in preorder. This means two things:
+            # 1) It is before any ancestor lower than the ancestor shared between it
+            #    and target. Therefore, the horizontally filled cell coordinates must
+            #    be [a, anc].
+            # 2) Every change point it encounters is target or an ancestor, which are
+            #    skipped during vertical filling.
+            # This `if` would cost little compute due to branch prediction.
+            if i <= tag_i:
+                if i == seg:
+                    lvl = lvls[ii]
+
+                    # NOTE: This cannot be written as `ii += 1`, otherwise Cython will
+                    # complain: "Cannot read reduction variable in loop body."
+                    ii = ii + 1
+                    seg = segs[ii]
+                    deg = 2 * lvl - depth_2
+
+                # if not in spine, trigger vertical fill
+                else:
+                    # NOTE: There is a dilemma here: the current code has an `if` which
+                    # isn't good for branch prediction as tips (size = 1) are frequent.
+                    # But removing this `if` will add two array reads to this memory-
+                    # bound algorithm. Test suggests keeping the current code is fine.
+                    if (size := sizes[a]) > 1:
+                        npot = npots[depths[a] + deg]
+                        for j in range(i + 1, i + size):
+                            adm_a[order[j]] += npot * diffs[j]
+
+                # horizontal fill is guaranteed
+                for j in range(lvl):
+                    adm_a[ancs[j]] += npots_2[j] * diff
+                    # adm_a[ancs[j]] += ldexp(diff, -2 - j)
+
+            # Current node is after target. This means: 1) Horizontal Cell coordinates
+            # are [anc, a]. 2) Change points are right cousins.
+            else:
+                if i == seg:
+                    lvl = lvls[ii]
+                    ii = ii + 1
+                    seg = segs[ii]
+                    deg = 2 * lvl - depth_2
+
+                # both fills are guaranteed
+                if (size := sizes[a]) > 1:
+                    npot = npots[depths[a] + deg]
+                    for j in range(i + 1, i + size):
+                        adm_a[order[j]] += npot * diffs[j]
+
+                for j in range(lvl):
+                    adm_0[ancx[j] + a] += npots_2[j] * diff
+                    # adm_0[ancx[j] + a] += ldexp(diff, -2 - j)
+
+
 def _bal_avgdist_fill(
     Py_ssize_t n,
     Py_ssize_t tag_i,
