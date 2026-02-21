@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from time import perf_counter
 from heapq import heapify, heappop
 
 import numpy as np
@@ -681,9 +680,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
     adm[0, 2] = adm[2, 0] = dm[0, 2]
     adm[1, 2] = adm[2, 1] = dm[1, 2]
 
-    times = np.empty((m, 6))
-    times[:3, :] = 0.0
-
     # group arguments to make it easier to write
     args1 = (adm, adk, tree)
     args2 = (order, sizes, depths)
@@ -691,11 +687,8 @@ def _bme(dm, parallel=500, method=0, factor=16):
     ### Phase 1: Serial ###
 
     for k in range(3, nest_th):
-        times[k, 0] = perf_counter()
-
         # Calculate balanced average distances from new taxon to existing subtrees.
         adk_func(n, k, dm, adk, tree, order)
-        times[k, 1] = perf_counter()
 
         # Find the branch with minimum length change, into which the new taxon will be
         # inserted. Return value is the preorder index of the node under this branch.
@@ -704,16 +697,11 @@ def _bme(dm, parallel=500, method=0, factor=16):
         # Get the preorder index of the node immediately after the target clade.
         iaft = itag + sizes[order[itag]]
 
-        times[k, 2] = perf_counter()
-
         # Update balanced average distance matrix between all subtrees.
         _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
-        times[k, 3] = perf_counter()
-        times[k, 4] = perf_counter()
 
         # Update tree topology with the inserted taxon.
         _insert_taxon(k, itag, iaft, tree, order)
-        times[k, 5] = perf_counter()
 
         n += 2
 
@@ -750,23 +738,19 @@ def _bme(dm, parallel=500, method=0, factor=16):
     args3 = (ancs, ancx, segs, lvls)
 
     for k in range(nest_th, flat_th):
-        times[k, 0] = perf_counter()
         adk_func(n, k, dm, adk, tree, order)
-        times[k, 1] = perf_counter()
         itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
         iaft = itag + sizes[tag]
 
         # Get the depth of target, which equals to the number of ancestors of it.
         depth = depths[tag]
-        times[k, 2] = perf_counter()
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
             n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, True
         )
-        times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
         nc = _bal_insert_chunk(
@@ -778,32 +762,25 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _bal_avgdist_nest(
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
-        times[k, 4] = perf_counter()
 
         _insert_taxon(k, itag, iaft, tree, order)
-        times[k, 5] = perf_counter()
-
         n += 2
 
     ### Phase 3: Parallel (nested and flat) ###
 
     for k in range(flat_th, m):
-        times[k, 0] = perf_counter()
         adk_func(n, k, dm, adk, tree, order)
-        times[k, 1] = perf_counter()
 
         itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
         iaft = itag + sizes[tag]
         depth = depths[tag]
-        times[k, 2] = perf_counter()
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
             n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, False
         )
-        times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
         nc = _bal_insert_chunk(
@@ -816,14 +793,9 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _bal_avgdist_nest(
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
-        times[k, 4] = perf_counter()
 
         _insert_taxon(k, itag, iaft, tree, order)
-        times[k, 5] = perf_counter()
-
         n += 2
-
-    print(np.diff(times, axis=1).sum(axis=0).round(3))
 
     # Output intermediate data for diagnosis
     # np.savez('tree.npz', tree, order, sizes, pairs, depths, chunks[:nc])
