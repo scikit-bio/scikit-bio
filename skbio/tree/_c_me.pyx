@@ -1800,7 +1800,7 @@ def _bal_insert_plan(
     segs[ri] = n
 
 
-def _bal_insert_chunk(
+def _bal_avgdist_chunk(
     Py_ssize_t n,
     Py_ssize_t itag,
     Py_ssize_t[::1] order,
@@ -1908,10 +1908,6 @@ def _bal_insert_chunk(
                 node_ops = size + lvl - 1
                 tree_ops = pairs[node] + size * lvl
 
-            # Locate next segment start
-            # ii += 1
-            # seg = segs[ii]
-
         # regular scenario (same as right cousin)
         else:
             node_ops = size + lvl - 1
@@ -1964,21 +1960,29 @@ def _bal_insert_chunk(
     return nchu
 
 
-def _update_size_pair(
-    Py_ssize_t itag,
+def _bal_update_spine(
+    Py_ssize_t tag,
     Py_ssize_t depth,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] pairs,
     Py_ssize_t[::1] ancs,
 ):
-    """Update size and pair of nodes along the spine."""
+    """Update size and pair of ancestors of target.
+
+    Each ancestor's size +2 because link and kay are added. Its pair += size of target
+    clade (link to target clade) + 1 (link to kay) + 2 * (level + 1) (this and each
+    previous ancestor to link).
+
+    This trivial function has to be executed after chunking and before filling.
+
+    """
     cdef Py_ssize_t i
-    cdef Py_ssize_t size = sizes[itag]
+    cdef Py_ssize_t size_3 = sizes[tag] + 3
 
     for i in range(depth):
         anc = ancs[i]
         sizes[anc] += 2
-        pairs[anc] += size + 2 * i + 3
+        pairs[anc] += size_3 + 2 * i
 
 
 def _bal_avgdist_flat(
@@ -2124,22 +2128,20 @@ def _bal_avgdist_nest(
                 if i == seg:
                     lvl = lvls[iseg]
 
-                    # NOTE: This cannot be written as `ii += 1`, otherwise Cython will
-                    # complain: "Cannot read reduction variable in loop body."
+                    # NOTE: This cannot be written as `iseg += 1`, otherwise Cython
+                    # will complain: "Cannot read reduction variable in loop body."
                     iseg = iseg + 1
                     seg = segs[iseg]
                     deg = 2 * lvl - dep2
 
-                # if not in spine, trigger vertical fill
-                else:
-                    # NOTE: There is a dilemma here: the current code has an `if` which
-                    # isn't good for branch prediction as tips (size = 1) are frequent.
-                    # But removing this `if` will add two array reads to this memory-
-                    # bound algorithm. Test suggests keeping the current code is fine.
-                    if (size := sizes[a]) > 1:
-                        npot = npots[depths[a] + deg]
-                        for j in range(i + 1, i + size):
-                            adm_a[order[j]] += npot * diffs[j]
+                # If not in spine, trigger vertical fill.
+                # NOTE: This `if` isn't good for branch prediction because tips (size
+                # = 1) are frequent. But removing `if` will add two array reads. Test
+                # suggests keeping the current code is fine.
+                elif (size := sizes[a]) > 1:
+                    npot = npots[depths[a] + deg]
+                    for j in range(i + 1, i + size):
+                        adm_a[order[j]] += npot * diffs[j]
 
                 # horizontal fill is guaranteed
                 for j in range(lvl):

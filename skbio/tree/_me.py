@@ -34,8 +34,8 @@ from ._c_me import (
     _bal_all_swaps,
     _get_num_threads,
     _count_pairs,
-    _bal_insert_chunk,
-    _update_size_pair,
+    _bal_avgdist_chunk,
+    _bal_update_spine,
     _bal_insert_plan,
     _bal_avgdist_flat,
     _bal_avgdist_nest,
@@ -753,10 +753,10 @@ def _bme(dm, parallel=500, method=0, factor=16):
         )
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        nc = _bal_insert_chunk(
+        nc = _bal_avgdist_chunk(
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
-        _update_size_pair(itag, depth, sizes, pairs, ancs)
+        _bal_update_spine(tag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_nest(
@@ -770,7 +770,6 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
     for k in range(flat_th, m):
         adk_func(n, k, dm, adk, tree, order)
-
         itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
         iaft = itag + sizes[tag]
@@ -783,10 +782,10 @@ def _bme(dm, parallel=500, method=0, factor=16):
         )
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        nc = _bal_insert_chunk(
+        nc = _bal_avgdist_chunk(
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
-        _update_size_pair(itag, depth, sizes, pairs, ancs)
+        _bal_update_spine(tag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_flat(n, itag, iaft, order, adm, adk, diffs, depths)
