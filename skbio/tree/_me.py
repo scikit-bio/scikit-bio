@@ -776,16 +776,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_nest(
-            itag,
-            depth,
-            adm,
-            *args2,
-            diffs,
-            npots,
-            *args3,
-            nc,
-            chunks,
-            chusegs,
+            itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
         times[k, 4] = perf_counter()
 
@@ -823,16 +814,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_flat(n, itag, iaft, order, adm, adk, diffs, depths)
         _bal_avgdist_nest(
-            itag,
-            depth,
-            adm,
-            *args2,
-            diffs,
-            npots,
-            *args3,
-            nc,
-            chunks,
-            chusegs,
+            itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
         times[k, 4] = perf_counter()
 
