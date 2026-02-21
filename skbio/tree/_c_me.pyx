@@ -426,8 +426,7 @@ def _bal_avgdist_taxon(
     Py_ssize_t n,
     Py_ssize_t k,
     floating[:, :] dm,
-    floating[::1] adkl,
-    floating[::1] adku,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
 ):
@@ -438,6 +437,8 @@ def _bal_avgdist_taxon(
     """
     cdef Py_ssize_t i
     cdef Py_ssize_t node, left, right
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
 
     # Calculate distances to lower subtrees in reversed preorder (bottom-up).
     # This modifies the original algorithm, which is postorder. Both postorder and
@@ -464,8 +465,7 @@ def _bal_avgdist_taxon_cc(
     Py_ssize_t n,
     Py_ssize_t k,
     floating[:, ::1] dm,
-    floating[::1] adkl,
-    floating[::1] adku,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
 ):
@@ -478,6 +478,9 @@ def _bal_avgdist_taxon_cc(
     cdef Py_ssize_t i
     cdef Py_ssize_t node, left, right
     cdef floating* dm_k = &dm[k, 0]
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
     for i in range(n - 1, -1, -1):
         node = order[i]
         left, right = tree[node, 0], tree[node, 1]
@@ -754,8 +757,7 @@ def _bal_min_branch(
     Py_ssize_t n,
     floating[::1] lens,
     floating[:, ::1] adm,
-    floating[::1] adkl,
-    floating[::1] adku,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
 ):
@@ -771,6 +773,9 @@ def _bal_min_branch(
     cdef Py_ssize_t i
     cdef Py_ssize_t node, parent, sibling
     cdef floating length
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
 
     cdef Py_ssize_t min_i = 0
     cdef floating min_len = 0
@@ -801,8 +806,7 @@ def _bal_min_branch2(
     Py_ssize_t n,
     floating[::1] lens,
     floating[:, ::1] adm,
-    floating[::1] adkl,
-    floating[::1] adku,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
@@ -816,6 +820,9 @@ def _bal_min_branch2(
     cdef Py_ssize_t i
     cdef Py_ssize_t node, left, right
     cdef floating L_intm, L_left, L_right
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
 
     cdef Py_ssize_t min_i = 0
     cdef floating min_len = 0
@@ -1142,13 +1149,12 @@ def _bal_avgdist_insert(
     Py_ssize_t n,
     Py_ssize_t itag,
     floating[:, ::1] adm,
-    floating[::1] adkl,
-    floating[::1] adku,
-    floating[::1] diffs,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] depths,
+    floating[::1] diffs,
     floating[::1] npots,
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] ancx,
@@ -1260,6 +1266,9 @@ def _bal_avgdist_insert(
     cdef floating diff    # difference of distance; usually from `adk`
     cdef floating npot    # negative power of 2; from `npots`
 
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
     # pointers to specific rows in `adm`
     cdef floating* adm_0 = &adm[0, 0]
     cdef floating* adm_t = &adm[tag, 0]
@@ -1360,7 +1369,6 @@ def _bal_avgdist_insert(
     # Distance between target (lower) and link (upper) needs to be calculated using the
     # equation in A4.1(c). Basically, it is the distance between the lower and upper
     # subtrees of the same target.
-    par, sib = tree[tag, 2], tree[tag, 3]
     cell = adm[tag, sib] if tree[par, 0] == tag else adm[sib, tag]
     adm_l[tag] = 0.5 * (cell + adm[par, tag])
 
@@ -1528,14 +1536,13 @@ def _bal_insert_plan(
     Py_ssize_t n,
     Py_ssize_t itag,
     floating[:, ::1] adm,
-    floating[::1] adkl,
-    floating[::1] adku,
-    floating[::1] diffs,
+    floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
-    Py_ssize_t[::1] pairs,
     Py_ssize_t[::1] depths,
+    Py_ssize_t[::1] pairs,
+    floating[::1] diffs,
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] ancx,
     Py_ssize_t[::1] segs,
@@ -1581,26 +1588,29 @@ def _bal_insert_plan(
        ancestor :    4    3    2    1    0
 
     """
-    cdef Py_ssize_t a  # nodes as in tree
-    cdef Py_ssize_t tag = order[itag]   # target node
-    cdef Py_ssize_t lnk = n             # link node
-    cdef Py_ssize_t kay = n + 1         # new taxon (k)
-    cdef Py_ssize_t par = tree[tag, 2]  # parent
-    cdef Py_ssize_t sib = tree[tag, 3]  # sibling
-    cdef Py_ssize_t cur                 # current
-    cdef Py_ssize_t anc                 # ancestor
-    cdef Py_ssize_t cuz                 # cousin
-    cdef Py_ssize_t lft                 # left child
+    cdef Py_ssize_t a
+    cdef Py_ssize_t tag = order[itag]
+    cdef Py_ssize_t lnk = n
+    cdef Py_ssize_t kay = n + 1
+    cdef Py_ssize_t par = tree[tag, 2]
+    cdef Py_ssize_t sib = tree[tag, 3]
+    cdef Py_ssize_t cur
+    cdef Py_ssize_t anc
+    cdef Py_ssize_t cuz
+    cdef Py_ssize_t lft
 
-    cdef Py_ssize_t i  # nodes as in order
+    cdef Py_ssize_t i
     cdef Py_ssize_t icur, ianc, icuz
-
+    cdef Py_ssize_t lvl
     cdef Py_ssize_t size = sizes[tag]
     cdef Py_ssize_t s_cuz
     cdef Py_ssize_t depth = depths[tag]
     cdef Py_ssize_t pair = pairs[tag]
 
-    cdef floating cell, diff  # intermediates
+    cdef floating cell, diff
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
 
     cdef floating* adm_t = &adm[tag, 0]
     cdef floating* adm_l = &adm[lnk, 0]
@@ -1608,7 +1618,6 @@ def _bal_insert_plan(
     cdef floating* adm_r
     cdef floating* adm_a
 
-    cdef Py_ssize_t level
     cdef Py_ssize_t stride = adm.shape[1]
 
     # Accumulative number of horizontal operations to be assigned to each node in the
@@ -1708,12 +1717,12 @@ def _bal_insert_plan(
 
     ### Step 3: Distances among nodes outside the clade. ###
 
-    level = 0
+    lvl = 0
     icur = itag
     while icur:
         cur = order[icur]
-        ancs[level] = anc = tree[cur, 2]
-        ancx[level] = stride * anc
+        ancs[lvl] = anc = tree[cur, 2]
+        ancx[lvl] = stride * anc
 
         # Current is left, cousin is right
         if (lft := tree[anc, 0]) == cur:
@@ -1724,8 +1733,8 @@ def _bal_insert_plan(
 
             # Add right cousin to segments, on the right side of target.
             segs[ri] = icuz
-            lvls[ri] = level
-            oops[ri] = s_cuz * level + pairs[cuz]
+            lvls[ri] = lvl
+            oops[ri] = s_cuz * lvl + pairs[cuz]
             ri += 1
 
             # TODO: ops of right cousins is the same as that of regular nodes. Can this
@@ -1770,19 +1779,19 @@ def _bal_insert_plan(
 
         # Update accumulative size and pair.
         # +1 because the ancestor itself is added to the clade.
-        achori += (s_cuz + 1) * level
+        achori += (s_cuz + 1) * lvl
 
         # -1 because only descendants but not the clade root are counted.
         acvert += sizes[anc] - 1
 
         # Add ancestor to segments, on the left side of target.
         segs[li] = ianc
-        lvls[li] = level
+        lvls[li] = lvl
         oops[li] = achori + pairs[anc] - acvert
         li -= 1
 
         icur = ianc
-        level += 1
+        lvl += 1
 
     # Seal the segment array.
     # NOTE: Otherwise, since `segs` is reused across iterations, a later iteration may
@@ -1791,17 +1800,17 @@ def _bal_insert_plan(
     segs[ri] = n
 
 
-def _chunk_nodes(
+def _bal_insert_chunk(
     Py_ssize_t n,
-    Py_ssize_t enc,
     Py_ssize_t itag,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] pairs,
-    Py_ssize_t[::1] chunks,
     Py_ssize_t[::1] segs,
     Py_ssize_t[::1] lvls,
     Py_ssize_t[::1] oops,
+    Py_ssize_t enc,
+    Py_ssize_t[::1] chunks,
     Py_ssize_t[::1] chusegs,
 ):
     """Partition tree into chunks of nodes with roughly even workloads.
@@ -1978,7 +1987,7 @@ def _bal_avgdist_flat(
     Py_ssize_t iaft,
     Py_ssize_t[::1] order,
     floating[:, ::1] adm,
-    floating[::1] adkl,
+    floating[:, ::1] adk,
     floating[::1] diffs,
     Py_ssize_t[::1] depths,
 ):
@@ -1997,6 +2006,8 @@ def _bal_avgdist_flat(
     cdef Py_ssize_t tag = order[itag]
     cdef Py_ssize_t lnk = n
     cdef Py_ssize_t kay = n + 1
+
+    cdef floating* adkl = &adk[0, 0]
 
     cdef floating diff, cell
 
@@ -2053,10 +2064,10 @@ def _bal_avgdist_nest(
     Py_ssize_t itag,
     Py_ssize_t depth,
     floating[:, ::1] adm,
-    floating[::1] diffs,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
     Py_ssize_t[::1] depths,
+    floating[::1] diffs,
     floating[::1] npots,
     Py_ssize_t[::1] ancs,
     Py_ssize_t[::1] ancx,

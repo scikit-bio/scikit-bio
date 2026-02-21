@@ -35,7 +35,7 @@ from ._c_me import (
     _bal_all_swaps,
     _get_num_threads,
     _count_pairs,
-    _chunk_nodes,
+    _bal_insert_chunk,
     _update_size_pair,
     _bal_insert_plan,
     _bal_avgdist_flat,
@@ -629,8 +629,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
     adm = np.empty((N, N), dtype=dtype)
 
     # average distances from an added taxon (k) to each subtree (lower and upper).
-    adkl = np.empty(N, dtype=dtype)
-    adku = np.empty(N, dtype=dtype)
+    adk = np.empty((2, N), dtype=dtype)
 
     # Branch lengths or length changes. The latter is relative to the root (i.e., start
     # of preorder traversal). Therefore the first element is always zero.
@@ -685,18 +684,22 @@ def _bme(dm, parallel=500, method=0, factor=16):
     times = np.empty((m, 6))
     times[:3, :] = 0.0
 
+    # group arguments to make it easier to write
+    args1 = (adm, adk, tree)
+    args2 = (order, sizes, depths)
+
     ### Phase 1: Serial ###
 
     for k in range(3, nest_th):
         times[k, 0] = perf_counter()
 
         # Calculate balanced average distances from new taxon to existing subtrees.
-        adk_func(n, k, dm, adkl, adku, tree, order)
+        adk_func(n, k, dm, adk, tree, order)
         times[k, 1] = perf_counter()
 
         # Find the branch with minimum length change, into which the new taxon will be
         # inserted. Return value is the preorder index of the node under this branch.
-        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        itag = _bal_min_branch(n, lens, *args1, order)
 
         # Get the preorder index of the node immediately after the target clade.
         iaft = itag + sizes[order[itag]]
@@ -704,21 +707,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         times[k, 2] = perf_counter()
 
         # Update balanced average distance matrix between all subtrees.
-        _bal_avgdist_insert(
-            n,
-            itag,
-            adm,
-            adkl,
-            adku,
-            diffs,
-            tree,
-            order,
-            sizes,
-            depths,
-            npots,
-            ancs,
-            ancx,
-        )
+        _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
         times[k, 3] = perf_counter()
         times[k, 4] = perf_counter()
 
@@ -745,6 +734,9 @@ def _bme(dm, parallel=500, method=0, factor=16):
     # level (number of branches ascending from target's parent) of each segment
     lvls = np.empty(N, dtype=int)
 
+    # workload of clade under each segment start
+    oops = np.empty(N, dtype=int)
+
     # chunk bounds in preorder
     # NOTE: The maximum number of chunks is n (i.e., one node per chunk), therefore
     # n + 1 boundaries are needed. The first bound must be 0.
@@ -755,14 +747,13 @@ def _bme(dm, parallel=500, method=0, factor=16):
     chusegs = np.empty(N, dtype=int)
     chusegs[0] = 0
 
-    # workload of clade under each segment start
-    oops = np.empty(N, dtype=int)
+    args3 = (ancs, ancx, segs, lvls)
 
     for k in range(nest_th, flat_th):
         times[k, 0] = perf_counter()
-        adk_func(n, k, dm, adkl, adku, tree, order)
+        adk_func(n, k, dm, adk, tree, order)
         times[k, 1] = perf_counter()
-        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
         iaft = itag + sizes[tag]
 
@@ -773,30 +764,13 @@ def _bme(dm, parallel=500, method=0, factor=16):
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
-            n,
-            itag,
-            adm,
-            adkl,
-            adku,
-            diffs,
-            tree,
-            order,
-            sizes,
-            pairs,
-            depths,
-            ancs,
-            ancx,
-            segs,
-            lvls,
-            oops,
-            flat=True,
+            n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, True
         )
-        # _bal_insert_pass(n, target, after, order, adm, adkl, depths)
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        nc = _chunk_nodes(
-            n, enc, itag, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
+        nc = _bal_insert_chunk(
+            n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
         _update_size_pair(itag, depth, sizes, pairs, ancs)
 
@@ -805,15 +779,10 @@ def _bme(dm, parallel=500, method=0, factor=16):
             itag,
             depth,
             adm,
+            *args2,
             diffs,
-            order,
-            sizes,
-            depths,
             npots,
-            ancs,
-            ancx,
-            segs,
-            lvls,
+            *args3,
             nc,
             chunks,
             chusegs,
@@ -829,10 +798,10 @@ def _bme(dm, parallel=500, method=0, factor=16):
 
     for k in range(flat_th, m):
         times[k, 0] = perf_counter()
-        adk_func(n, k, dm, adkl, adku, tree, order)
+        adk_func(n, k, dm, adk, tree, order)
         times[k, 1] = perf_counter()
 
-        itag = _bal_min_branch(n, lens, adm, adkl, adku, tree, order)
+        itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
         iaft = itag + sizes[tag]
         depth = depths[tag]
@@ -841,48 +810,26 @@ def _bme(dm, parallel=500, method=0, factor=16):
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
         _bal_insert_plan(
-            n,
-            itag,
-            adm,
-            adkl,
-            adku,
-            diffs,
-            tree,
-            order,
-            sizes,
-            pairs,
-            depths,
-            ancs,
-            ancx,
-            segs,
-            lvls,
-            oops,
-            flat=False,
+            n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, False
         )
-        # _bal_insert_pass(n, target, after, order, adm, adkl, depths)
         times[k, 3] = perf_counter()
 
         # Distribute nodes into chunks such that they have roughly even workloads.
-        nc = _chunk_nodes(
-            n, enc, itag, order, sizes, pairs, chunks, segs, lvls, oops, chusegs
+        nc = _bal_insert_chunk(
+            n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
         _update_size_pair(itag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_flat(n, itag, iaft, order, adm, adkl, diffs, depths)
+        _bal_avgdist_flat(n, itag, iaft, order, adm, adk, diffs, depths)
         _bal_avgdist_nest(
             itag,
             depth,
             adm,
+            *args2,
             diffs,
-            order,
-            sizes,
-            depths,
             npots,
-            ancs,
-            ancx,
-            segs,
-            lvls,
+            *args3,
             nc,
             chunks,
             chusegs,
