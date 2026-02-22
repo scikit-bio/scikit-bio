@@ -527,13 +527,19 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=500, method=0, factor=16):
+def _bme(dm, parallel=500, factor=16):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
     ----------
     dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
+    parallel : bool or int
+        Whether to parallelize (bool) and since how many taxa in the tree to start
+        parallelization (int, default: 500).
+    factor : int
+        During parallelization, the program will try to partition the tree into chunks
+        of available thread count multiplied by this number. Default is 16.
 
     Returns
     -------

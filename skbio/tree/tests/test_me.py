@@ -13,6 +13,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
+from skbio.util import get_data_path
 from skbio.tree._me import (
     gme,
     bme,
@@ -52,6 +53,10 @@ from skbio.tree._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
+    _bal_insert_plan,
+    _bal_avgdist_chunk,
+    _bal_update_spine,
+    _bal_avgdist_nest,
 )
 
 
@@ -365,6 +370,14 @@ class MeTests(TestCase):
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 
+    def test_gme_real(self):
+        """Test on a real dataset with 100 taxa."""
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = gme(dm, neg_as_zero=False)
+        exp = TreeNode.read(get_data_path("mp100.gme.nwk"))
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
     def test_bme(self):
         """The entire tree building workflow."""
         # simple integer example
@@ -380,6 +393,11 @@ class MeTests(TestCase):
 
         # float32
         obs = bme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # parallelization
+        obs = bme(DistanceMatrix(self.dm2, self.taxa2), parallel=True)
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
@@ -411,6 +429,30 @@ class MeTests(TestCase):
         obs = bme(dm, neg_as_zero=True)
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
+
+    def test_bme_real(self):
+        """Test on a real dataset with 100 taxa."""
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = bme(dm, neg_as_zero=False)
+        exp = TreeNode.read(get_data_path("mp100.bme.nwk"))
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+        # disable parallelization (no effect, since tree is small)
+        obs = bme(dm, neg_as_zero=False, parallel=False)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+        # always enable parallelization
+        obs = bme(dm, neg_as_zero=False, parallel=True)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+        # specify a threshold for parallelization
+        # (50 will not enter phase 3)
+        obs = bme(dm, neg_as_zero=False, parallel=50)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+        # (15 will enter phase 3)
+        obs = bme(dm, neg_as_zero=False, parallel=15)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
 
     def test_nni(self):
         """The entire tree rearrangement workflow."""
@@ -531,6 +573,26 @@ class MeTests(TestCase):
         obs = nni(tree, dm, balanced=False, neg_as_zero=True)
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
+
+    def test_nni_real(self):
+        """Test on a real dataset with 100 taxa."""
+        # FastNNI
+        tree = TreeNode.read(get_data_path("mp100.gme.nwk"))
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = nni(tree, dm, balanced=False, neg_as_zero=False)
+        exp = TreeNode.read(get_data_path("mp100.gme.nni.nwk"))
+        self.assertNotEqual(obs.compare_rfd(tree), 0.0)
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+        # BNNI
+        tree = TreeNode.read(get_data_path("mp100.bme.nwk"))
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = nni(tree, dm, balanced=True, neg_as_zero=False)
+        exp = TreeNode.read(get_data_path("mp100.bme.nni.nwk"))
+        self.assertNotEqual(obs.compare_rfd(tree), 0.0)
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
 
     def test_check_tree(self):
         """Check the integrity of a tree structure."""
@@ -1173,15 +1235,14 @@ class MeTests(TestCase):
         npt.assert_allclose(obs, exp)
 
         # another example: all possible insertions
-        dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
+        dm, tree, order = self.dm3, self.tree3, self.preodr3
         n = tree.shape[0]
-        # m = tree[0, 4] + 1
-        m = 6
+        m = dm.shape[0] - 1
         sizes = np.array([8, 5, 3, 3, 1, 1, 1, 1, 1, 0, 0])
         depths = np.array([0, 1, 1, 2, 2, 2, 2, 3, 3, 0, 0])
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr)
-        _half_adm(adm, preodr, n - 2)
-        _bal_avgdist_taxon(n - 2, m, dm, adk := np.zeros((2, n)), tree, preodr)
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
+        _half_adm(adm, order, n - 2)
+        _bal_avgdist_taxon(n - 2, m, dm, adk := np.zeros((2, n)), tree, order)
         npots = 2.0 ** -np.arange(m)
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)
@@ -1191,17 +1252,77 @@ class MeTests(TestCase):
         for i in range(n - 2):
             # update matrix using the algorithm
             _bal_avgdist_insert(
-                n - 2, i, obs := adm.copy(), adk.copy(), tree, preodr,
+                n - 2, i, obs := adm.copy(), adk.copy(), tree, order,
                 sizes.copy(), depths.copy(), *args
             )
             # insert taxon and calculate full matrix
-            tree_, pre_ = tree.copy(), preodr.copy()
-            _insert_taxon(m, preodr[i], tree_, pre_)
-            _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_)
-            _half_adm(exp, pre_, n)
+            tree_, order_ = tree.copy(), order.copy()
+            _insert_taxon(m, order[i], tree_, order_)
+            _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, order_)
+            _half_adm(exp, order_, n)
 
             npt.assert_allclose(obs, exp)
             break
+
+    def test_bal_avgdist_insert_p2(self):
+        """Update balanced average distance matrix after taxon insertion."""
+        # Test if the algorithm produces the same result as calculated from the full
+        # matrix after taxon insertion.
+        tree, order = self.tree1m1, self.preodr1m1
+        n = tree.shape[0]
+        sizes = np.array([5, 1, 3, 1, 1, 0, 0])
+        depths = np.array([0, 1, 1, 2, 2, 0, 0])
+        npots = 2.0 ** -np.arange(5)
+        diffs = np.zeros(n)
+        ancs = np.zeros(n, dtype=int)
+        ancx = np.zeros(n, dtype=int)
+        args = (diffs, npots, ancs, ancx)
+        adm = np.array([
+            [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
+            [ 0. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  9.5,  9.5,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  8. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+        ])
+        adk = np.array([
+            [7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+            [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ],
+        ])
+        # Insert e as a sibling of d. This should recover tree1.
+        itag = 4
+
+        # _bal_insert_plan(
+        #     n, itag, adm, adk, tree, order, sizes, depths, pairs, diffs, ancs, ancx,
+        #     segs, lvls, oops, True
+        # )
+
+        # # Distribute nodes into chunks such that they have roughly even workloads.
+        # nc = _bal_avgdist_chunk(
+        #     n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
+        # )
+        # _bal_update_spine(tag, depth, sizes, pairs, ancs)
+
+        # # Update balanced average distance matrix through parallelization.
+        # _bal_avgdist_nest(
+        #     itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
+        # )
+
+
+        _bal_avgdist_insert(
+            n - 2, itag, obs := adm, adk, tree, order, sizes, depths, *args
+        )
+        exp = np.array([
+            [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
+            [ 0.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
+            [ 0.  ,  0   ,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  8.  ,  7.5 ,  7.  ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  3.  ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  8.75,  0.  ,  7.75],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
+        ])
+        npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_insert_p(self):
         """Update balanced average distance matrix after taxon insertion."""
