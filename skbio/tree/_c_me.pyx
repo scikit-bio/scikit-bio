@@ -135,8 +135,7 @@ def _avgdist_matrix(
     floating[:, ::1] adm,
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] order,
 ):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
@@ -189,10 +188,10 @@ def _avgdist_matrix(
     # distances are symmetric, one can save half of the calculations, as done by the
     # following code.
 
-    # Loop over nodes in postorder.
-    # Skip the root, which is always the last node in the postorder traversal.
-    for i in range(n - 1):
-        a = postodr[i]        
+    # Loop over nodes in reversed preorder (outcome matches postorder).
+    # Skip the root, which is always the first node in the preorder traversal.
+    for i in range(n - 1, 0, -1):
+        a = order[i]
         a_size = tree[a, 4]
 
         # check if a is a tip
@@ -217,14 +216,14 @@ def _avgdist_matrix(
                 continue
             sibling = tree[curr, 3]
 
-            # Loop over nodes within the right subtree in postorder.
-            # This postorder doesn't need to be re-calculated. Because all nodes within
-            # a clade are continuous in postorder, one can take a slice of the full
-            # postorder that represent the descending nodes of the current node. The
+            # Loop over nodes within the right subtree in reversed preorder.
+            # This preorder doesn't need to be re-calculated. Because all nodes within
+            # a clade are contiguous in preorder, one can take a slice of the full
+            # preorder that represents the descending nodes of the current node. The
             # size of the slice is 2 x taxon count - 2.
-            k = tree[sibling, 7]
-            for j in range(k - tree[sibling, 4] * 2 + 2, k + 1):
-                b = postodr[j]
+            k = tree[sibling, 6]
+            for j in range(k + tree[sibling, 4] * 2 - 2, k - 1, -1):
+                b = order[j]
                 b_size = tree[b, 4]
 
                 # If both a and b are tips, take the original taxon-to-taxon distance
@@ -252,9 +251,9 @@ def _avgdist_matrix(
 
     # Step 2: Calculate subtree to root (taxon 0) distances (A4.1 (b)).
 
-    # This is done through a postorder traversal.
-    for i in range(n - 1):
-        a = postodr[i]
+    # This is done through a reversed preorder traversal.
+    for i in range(n - 1, 0, -1):
+        a = order[i]
         a_size = tree[a, 4]
         if a_size == 1:
             adm[a, 0] = adm_0[a] = dm_0[tree[a, 1]]
@@ -271,7 +270,7 @@ def _avgdist_matrix(
 
     # This is done through a preorder traversal.
     for i in range(1, n):
-        a = preodr[i]
+        a = order[i]
         parent, sibling = tree[a, 2], tree[a, 3]
 
         # The size of (upper) subtree b is the complement of its descendants. Same for
@@ -282,11 +281,11 @@ def _avgdist_matrix(
 
         # Iterate over all subtrees below b.
         # The paper says this traversal can be done in any manner. Here, we use the
-        # postorder. See * above.
+        # preorder. See * above.
         adm_a = &adm[a, 0]
-        k = tree[a, 7]
-        for j in range(k - tree[a, 4] * 2 + 2, k):
-            b = postodr[j]
+        k = tree[a, 6]
+        for j in range(k + 1, k + tree[a, 4] * 2 - 1):
+            b = order[j]
             adm_a[b] = adm[b, a] = (
                 s_size * adm[b, sibling] + p_size * adm[b, parent]
             ) / a_size
@@ -296,8 +295,7 @@ def _bal_avgdist_matrix(
     floating[:, ::1] adm,
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] order,
 ):
     r"""Calculate a matrix of balanced average distances between all pairs of subtrees.
 
@@ -323,8 +321,8 @@ def _bal_avgdist_matrix(
     cdef Py_ssize_t n = 2 * tree[0, 4] - 1
 
     # Step 1: Calculate non-nested subtree to subtree distances.
-    for i in range(n - 1):
-        a = postodr[i]
+    for i in range(n - 1, 0, -1):
+        a = order[i]
         if tree[a, 0] == 0:
             a_taxon = tree[a, 1]
         else:
@@ -339,9 +337,9 @@ def _bal_avgdist_matrix(
                 curr = parent
                 continue
             sibling = tree[curr, 3]
-            k = tree[sibling, 7]
-            for j in range(k - tree[sibling, 4] * 2 + 2, k + 1):
-                b = postodr[j]
+            k = tree[sibling, 6]
+            for j in range(k + tree[sibling, 4] * 2 - 2, k - 1, -1):
+                b = order[j]
                 if tree[b, 0] == 0 and a_taxon != 0:
                     adm_a[b] = adm[b, a] = dm_a[tree[b, 1]]
                 elif a_taxon == 0:
@@ -353,8 +351,8 @@ def _bal_avgdist_matrix(
             curr = parent
 
     # Step 2: Calculate subtree to root distances.
-    for i in range(n - 1):
-        a = postodr[i]
+    for i in range(n - 1, 0, -1):
+        a = order[i]
         if tree[a, 0] == 0:
             adm[a, 0] = adm_0[a] = dm_0[tree[a, 1]]
         else:
@@ -362,11 +360,11 @@ def _bal_avgdist_matrix(
 
     # Step 3: Calculate nested subtree to subtree distances.
     for i in range(1, n):
-        a = preodr[i]
+        a = order[i]
         adm_a = &adm[a, 0]
-        parent, sibling, k = tree[a, 2], tree[a, 3], tree[a, 7]
-        for j in range(k - tree[a, 4] * 2 + 2, k):
-            b = postodr[j]
+        parent, sibling, k = tree[a, 2], tree[a, 3], tree[a, 6]
+        for j in range(k + 1, k + tree[a, 4] * 2 - 1):
+            b = order[j]
             adm_a[b] = adm[b, a] = 0.5 * (adm[b, sibling] + adm[b, parent])
 
 
@@ -375,8 +373,7 @@ def _avgdist_taxon(
     Py_ssize_t taxon,
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] preodr,
-    Py_ssize_t[::1] postodr,
+    Py_ssize_t[::1] order,
 ):
     """Calculate average distances between a new taxon (k) and existing subtrees.
 
@@ -385,8 +382,9 @@ def _avgdist_taxon(
     each existing node, respectively.
 
     Implemented according to Appendix 3 of Desper and Gascuel (2002). Basically, this
-    algorithm calculates all lower subtree distances via a postorder traversal, then
-    calculates all upper subtree distances via a preorder traversal.
+    algorithm calculates all lower subtree distances via a reversed preorder traversal
+    (paper says postorder traversal), then calculates all upper subtree distances via a
+    preorder traversal.
 
     """
     cdef Py_ssize_t i
@@ -400,8 +398,8 @@ def _avgdist_taxon(
     cdef floating* adku = &adk[1, 0]
 
     # Calculate the distance between taxon and the lower subtree of each node.
-    for i in range(n):
-        node = postodr[i]
+    for i in range(n - 1, -1, -1):
+        node = order[i]
         left, right = tree[node, 0], tree[node, 1]
         if left == 0:
             adkl[node] = dm[taxon, right]
@@ -415,7 +413,7 @@ def _avgdist_taxon(
 
     # Calculate the distance between taxon k and the upper subtree of each node.
     for i in range(1, n):
-        node = preodr[i]
+        node = order[i]
         parent, sibling = tree[node, 2], tree[node, 3]
         adku[node] = (
             (m - tree[parent, 4]) * adku[parent] + tree[sibling, 4] * adkl[sibling]
@@ -2168,7 +2166,7 @@ def _bal_avgdist_nest(
                     # adm_0[ancx[j] + a] += ldexp(diff, -2 - j)
 
 
-def _insert_taxon(
+def _insert_taxon_x(
     Py_ssize_t taxon,
     Py_ssize_t itag,
     Py_ssize_t iaft,
@@ -2788,3 +2786,192 @@ def _bal_all_swaps(
             gains[branch], sides[branch] = Lcomm - L1, 0
         else:
             gains[branch], sides[branch] = Lcomm - L2, 1
+
+
+def _insert_taxon(
+    Py_ssize_t taxon,
+    Py_ssize_t target,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    bint use_depth=True,
+):
+    r"""Insert a taxon between a target node and its parent.
+
+    For example, with the following local structure of the original tree:
+
+          A
+         / \
+        B   C
+
+    With target=B, this function inserts a taxon into the branch A-B. The structure
+    becomes:
+
+            A
+           / \
+        link  C
+         / \
+        B  taxon
+
+    The link and taxon will be appended to the end of the tree array, but the pre- and
+    postorders need to be muted such that new nodes can be inserted. Specifically:
+
+        Preorder:  A - B - C => A - link - B - taxon - C
+        Postorder: B - C - A => B - taxon - link - C - A
+
+    A special case is that the taxon is inserted into the root branch (node=0). The
+    tree becomes:
+
+            A
+           / \
+        link taxon
+         / \
+        B   C
+
+    The inserted taxon always becomes the right child.
+
+    """
+    # This function can be simplified by Python and NumPy APIs. Although I hoped that
+    # NumPy vectorization can accelerate the code, especially the pre- and postorder
+    # parts, the reality according to my tests is that cell-by-cell Cython code is
+    # significantly faster than NumPy, and greatly reduces the overall runtime of the
+    # entire algorithms. This effect is more obvious when the dataset is small, but
+    # less so when it is large (but it is still there).
+    #
+    # The reason might be that when moving a block of elements within the same array,
+    # NumPy needs to create a temporary array, but Cython can do the job in place.
+    #
+    # There might be a chance to re-consider NumPy (or even CuPy) API in the future.
+    cdef Py_ssize_t left, right, parent, sibling, size, depth, pre_i
+    cdef Py_ssize_t i, k, side, pre_i_after, curr
+
+    # determine tree dimensions
+    # typically n = 2 * taxon - 3, but this function doesn't enforce this
+    cdef Py_ssize_t m = tree[0, 4]
+    cdef Py_ssize_t n = m * 2 - 1
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    # Special case (root branch): taxon k becomes the sibling of all existing taxa
+    # except for the root (taxon 0).
+    if target == 0:
+        # children
+        left, right = tree[0, 0], tree[0, 1]
+        tree[left, 2] = tree[right, 2] = link
+
+        # root
+        tree[0, 0] = link
+        tree[0, 1] = tip
+        tree[0, 4] = m + 1
+        # tree[0, 7] = n + 1
+
+        # link
+        tree[link, 0] = left
+        tree[link, 1] = right
+        tree[link, 2] = 0
+        tree[link, 3] = tip
+        tree[link, 4] = m
+        tree[link, 5] = 1
+        tree[link, 6] = 1
+        # tree[link, 7] = n - 1
+
+        # tip
+        tree[tip, 0] = 0
+        tree[tip, 1] = taxon
+        tree[tip, 2] = 0
+        tree[tip, 3] = link
+        tree[tip, 4] = 1
+        tree[tip, 5] = 1
+        tree[tip, 6] = n + 1
+        # tree[tip, 7] = n
+
+        # entire tree depth + 1
+        if use_depth:
+            for i in range(1, n):
+                tree[i, 5] += 1
+
+        # preorder
+        for i in range(n - 1, 0, -1):
+            tree[i, 6] += 1
+            order[i + 1] = order[i]
+        order[1] = link
+        order[n + 1] = tip
+
+        # postorder
+        # postodr[n - 1] = link
+        # postodr[n] = tip
+        # postodr[n + 1] = 0
+
+    # Regular case (any other branch): The link becomes the parent of the target node,
+    # and child of its original parent. Taxon k becomes the sibling
+    else:
+        left = tree[target, 0]
+        right = tree[target, 1]
+        parent = tree[target, 2]
+        sibling = tree[target, 3]
+        size = tree[target, 4]
+        depth = tree[target, 5]
+        pre_i = tree[target, 6]
+        # post_i = tree[target, 7]
+
+        side = int(tree[parent, 0] != target)
+        tree[parent, side] = link
+        tree[sibling, 3] = link
+        tree[target, 2] = link
+        tree[target, 3] = tip
+
+        # preorder index of node after clade
+        pre_i_after = pre_i + size * 2 - 1
+
+        # link
+        tree[link, 0] = target
+        tree[link, 1] = tip
+        tree[link, 2] = parent
+        tree[link, 3] = sibling
+        tree[link, 4] = size + 1
+        tree[link, 5] = depth
+        tree[link, 6] = pre_i
+        # tree[link, 7] = post_i + 2
+
+        # tip
+        tree[tip, 0] = 0
+        tree[tip, 1] = taxon
+        tree[tip, 2] = link
+        tree[tip, 3] = target
+        tree[tip, 4] = 1
+        tree[tip, 5] = depth + 1
+        tree[tip, 6] = pre_i_after + 1
+        # tree[tip, 7] = post_i + 1
+
+        # clade depth +1
+        if use_depth:
+            for i in range(pre_i, pre_i_after):
+                tree[order[i], 5] += 1
+
+        # preorder shift: nodes after clade +2, tip inserted after clade, nodes within
+        # clade +1, link inserted before clade
+        for i in range(n - 1, pre_i_after - 1, -1):
+            k = order[i]
+            tree[k, 6] += 2
+            order[i + 2] = k
+        order[pre_i_after + 1] = tip
+
+        for i in range(pre_i_after - 1, pre_i - 1, -1):
+            k = order[i]
+            tree[k, 6] += 1
+            order[i + 1] = k
+        order[pre_i] = link
+
+        # postorder shift: all nodes after clade +2, tip and link inserted after clade
+        # for i in range(n - 1, post_i, -1):
+        #     k = postodr[i]
+        #     tree[k, 7] += 2
+        #     postodr[i + 2] = k
+        # postodr[post_i + 2] = link
+        # postodr[post_i + 1] = tip
+
+        # size +1 from link to root
+        curr = link
+        while curr:
+            parent = tree[curr, 2]
+            tree[parent, 4] += 1
+            curr = parent

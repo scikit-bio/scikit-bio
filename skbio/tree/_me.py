@@ -15,6 +15,7 @@ from ._c_me import (
     _preorder,
     _postorder,
     _insert_taxon,
+    _insert_taxon_x,
     _avgdist_taxon,
     _bal_avgdist_taxon,
     _bal_avgdist_taxon_cc,
@@ -400,7 +401,7 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
-    func(dm.data, tree, preodr, postodr, lens)
+    func(dm.data, tree, preodr, lens)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -509,7 +510,7 @@ def _gme(dm):
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate average distances from new taxon to existing subtrees.
-        _avgdist_taxon(adk, k, dm, tree, preodr, postodr)
+        _avgdist_taxon(adk, k, dm, tree, preodr)
 
         # Find a branch with minimum length change.
         target = _ols_min_branch_d2(lens, ad2, adk, tree, preodr)
@@ -518,7 +519,7 @@ def _gme(dm):
         _avgdist_d2_insert(ad2, target, adk, tree, preodr)
 
         # Insert new taxon into tree.
-        _insert_taxon(k, target, tree, preodr, postodr, use_depth=False)
+        _insert_taxon(k, target, tree, preodr, use_depth=False)
 
     # Calculate branch lengths using an OLS framework.
     _ols_lengths_d2(lens, ad2, tree)
@@ -701,7 +702,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
 
         # Update tree topology with the inserted taxon.
-        _insert_taxon(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, iaft, tree, order)
 
         n += 2
 
@@ -763,7 +764,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, iaft, tree, order)
         n += 2
 
     ### Phase 3: Parallel (nested and flat) ###
@@ -793,7 +794,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, iaft, tree, order)
         n += 2
 
     # Output intermediate data for diagnosis
@@ -806,7 +807,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
     return tree, lens
 
 
-def _fastnni(dm, tree, preodr, postodr, lens):
+def _fastnni(dm, tree, preodr, lens):
     r"""Perform fast nearest neighbor interchange (FastNNI) on a tree.
 
     To improve the tree under the minimum evolution (ME) criterion using an OLS
@@ -858,7 +859,7 @@ def _fastnni(dm, tree, preodr, postodr, lens):
 
     # Calculate average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _avgdist_matrix(adm, dm, tree, preodr, postodr)
+    _avgdist_matrix(adm, dm, tree, preodr)
 
     # Calculate length changes of all possible swaps.
     _ols_all_swaps(lens, tree, adm)
@@ -892,7 +893,7 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     _ols_lengths(lens, adm, tree)
 
 
-def _bnni(dm, tree, preodr, postodr, lens):
+def _bnni(dm, tree, preodr, lens):
     r"""Perform balanced nearest neighbor interchange (BNNI) on a tree.
 
     To improve the tree under the balanced minimum evolution (BME) criterion given a
@@ -918,7 +919,7 @@ def _bnni(dm, tree, preodr, postodr, lens):
 
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _bal_avgdist_matrix(adm, dm, tree, preodr, postodr)
+    _bal_avgdist_matrix(adm, dm, tree, preodr)
 
     # Pre-calculate negative powers of 2.
     npots = np.ldexp(dtype.type(1.0), -np.arange(dm.shape[0]))
@@ -1453,7 +1454,7 @@ def _insert_taxon_treenode(taxon, target, tree):
             parent.children = parent.children[::-1]
 
 
-def _avgdist_matrix_naive(adm, dm, tree, postodr):
+def _avgdist_matrix_naive(adm, dm, tree, order):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
     This function produces the same result as :func:`_avgdist_matrix`. However, it
@@ -1469,7 +1470,9 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
     """
     n = tree[0, 4] * 2 - 1
     taxas = {}
-    for node in postodr[:n]:
+
+    # iterate over nodes in reversed preorder (same outcome as postorder)
+    for node in order[n - 1 :: -1]:
         left, right = tree[node, :2]
         if not left:
             taxas[node] = frozenset([right])
@@ -1491,7 +1494,7 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
             # subset) of b.
 
 
-def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
+def _avgdist_taxon_naive(adk, taxon, dm, tree, order):
     """Calculate average distances between a new taxon and existing subtrees.
 
     This function produces the same result as :func:`_avgdist_taxon`, but it
@@ -1505,7 +1508,9 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
     """
     n = tree[0, 4] * 2 - 1
     taxas = {}
-    for node in postodr[:n]:
+
+    # iterate over nodes in reversed preorder (same outcome as postorder)
+    for node in order[n - 1 :: -1]:
         left, right = tree[node, :2]
         if not left:
             taxas[node] = frozenset([right])
