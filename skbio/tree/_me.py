@@ -695,14 +695,11 @@ def _bme(dm, parallel=500, method=0, factor=16):
         # inserted. Return value is the preorder index of the node under this branch.
         itag = _bal_min_branch(n, lens, *args1, order)
 
-        # Get the preorder index of the node immediately after the target clade.
-        iaft = itag + sizes[order[itag]]
-
         # Update balanced average distance matrix between all subtrees.
         _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
 
         # Update tree topology with the inserted taxon.
-        _insert_taxon_x(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, sizes[order[itag]], tree, order)
 
         n += 2
 
@@ -742,7 +739,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         adk_func(n, k, dm, adk, tree, order)
         itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
-        iaft = itag + sizes[tag]
+        size = sizes[tag]
 
         # Get the depth of target, which equals to the number of ancestors of it.
         depth = depths[tag]
@@ -764,7 +761,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon_x(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, size, tree, order)
         n += 2
 
     ### Phase 3: Parallel (nested and flat) ###
@@ -773,7 +770,7 @@ def _bme(dm, parallel=500, method=0, factor=16):
         adk_func(n, k, dm, adk, tree, order)
         itag = _bal_min_branch(n, lens, *args1, order)
         tag = order[itag]
-        iaft = itag + sizes[tag]
+        size = sizes[tag]
         depth = depths[tag]
 
         # Navigate the tree from target upward to root to identify the "spine", to
@@ -789,12 +786,12 @@ def _bme(dm, parallel=500, method=0, factor=16):
         _bal_update_spine(tag, depth, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
-        _bal_avgdist_flat(n, itag, iaft, order, adm, adk, diffs, depths)
+        _bal_avgdist_flat(n, itag, size, order, adm, adk, diffs, depths)
         _bal_avgdist_nest(
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon_x(k, itag, iaft, tree, order)
+        _insert_taxon_x(k, itag, size, tree, order)
         n += 2
 
     # Output intermediate data for diagnosis

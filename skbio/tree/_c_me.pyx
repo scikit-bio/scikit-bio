@@ -1986,7 +1986,7 @@ def _bal_update_spine(
 def _bal_avgdist_flat(
     Py_ssize_t n,
     Py_ssize_t itag,
-    Py_ssize_t iaft,
+    Py_ssize_t size,
     Py_ssize_t[::1] order,
     floating[:, ::1] adm,
     floating[:, ::1] adk,
@@ -2008,6 +2008,8 @@ def _bal_avgdist_flat(
     cdef Py_ssize_t tag = order[itag]
     cdef Py_ssize_t lnk = n
     cdef Py_ssize_t kay = n + 1
+
+    cdef Py_ssize_t iaft = itag + size
 
     cdef floating* adkl = &adk[0, 0]
 
@@ -2169,7 +2171,7 @@ def _bal_avgdist_nest(
 def _insert_taxon_x(
     Py_ssize_t taxon,
     Py_ssize_t itag,
-    Py_ssize_t iaft,
+    Py_ssize_t size,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
 ):
@@ -2208,21 +2210,20 @@ def _insert_taxon_x(
     The inserted taxon always becomes the right child.
 
     """
-    # This function can be simplified by Python and NumPy APIs. Although I hoped that
-    # NumPy vectorization can accelerate the code, especially the pre- and postorder
-    # parts, the reality according to my tests is that Cython code is significantly
-    # faster than NumPy, and greatly reduces the overall runtime.
-
     cdef Py_ssize_t lft, rgt, par, sib
     cdef Py_ssize_t side
 
-    # Determine tree dimensions.
+    # determine tree dimensions
     cdef Py_ssize_t m = taxon - 1
     cdef Py_ssize_t n = m * 2 - 1
     cdef Py_ssize_t lnk = n
     cdef Py_ssize_t kay = n + 1
 
+    # target node as in tree
     cdef Py_ssize_t tag = order[itag]
+
+    # preorder index immediately after target clade
+    cdef Py_ssize_t iaft = itag + size
 
     cdef Py_ssize_t* node
 

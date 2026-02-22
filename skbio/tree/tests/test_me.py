@@ -66,11 +66,31 @@ from skbio.tree._c_me import (
 
 
 def _half_adm(adm, order, n=None):
+    """Replace the invalid half of an average distance matrix with zero.
+
+    A cell [i, j] is filled only when i < j in preorder traversal.
+
+    """
     if n is None:
         n = adm.shape[0]
     for i in range(n):
         for j in range(i + 1, n):
             adm[order[j], order[i]] = 0
+
+
+def _full_adm(adm, order, n=None):
+    """Fill the invalid half of an average distance matrix with values.
+
+    A cell [j, i] that suffices i < j in preorder traversal is filled with [i, j].
+
+    """
+    if n is None:
+        n = adm.shape[0]
+    for i in range(n):
+        a = order[i]
+        for j in range(i + 1, n):
+            b = order[j]
+            adm[b, a] = adm[a, b]
 
 
 def _halve_adm(adm, tree, n=None):
@@ -927,58 +947,51 @@ class MeTests(TestCase):
     def test_avgdist_matrix(self):
         """Calculate an average distance matrix."""
         # Test if the algorithm produces the same result as the native method does.
-        dm, tree, preodr = self.dm1, self.tree1, self.preodr1
+        dm, tree, order = self.dm1, self.tree1, self.preodr1
         n = tree.shape[0]
         obs = np.zeros((n, n), dtype=float)
-        _avgdist_matrix(obs, dm, tree, preodr)
+        _avgdist_matrix(obs, dm, tree, order)
         exp = np.zeros((n, n), dtype=float)
-        _avgdist_matrix_naive(exp, dm, tree, preodr)
+        _avgdist_matrix_naive(exp, dm, tree, order)
         npt.assert_allclose(obs, exp)
-        # dm, tree, preodr, postodr = self.dm1, self.tree1, self.preodr1, self.postodr1
-        # n = tree.shape[0]
-        # obs = np.zeros((n, n), dtype=float)
-        # _avgdist_matrix(obs, dm, tree, preodr, postodr)
-        # exp = np.zeros((n, n), dtype=float)
-        # _avgdist_matrix_naive(exp, dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
 
-        # # make sure all cells are populated
-        # _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr, postodr)
-        # np.fill_diagonal(obs, 0)
-        # _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
+        # make sure all cells are populated
+        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order)
+        np.fill_diagonal(obs, 0)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order)
+        npt.assert_allclose(obs, exp)
 
-        # # incomplete tree
-        # tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
-        # _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
-        # _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
+        # incomplete tree
+        tree, order = self.tree1m1, self.preodr1m1
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order)
+        npt.assert_allclose(obs, exp)
 
-        # # example 1 v2
-        # tree, preodr, postodr = self.tree1v2, self.preodr1v2, self.postodr1v2
-        # _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
-        # _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
+        # example 1 v2
+        tree, order = self.tree1v2, self.preodr1v2
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order)
+        npt.assert_allclose(obs, exp)
 
-        # # example 2 (complete)
-        # dm, tree, preodr, postodr = self.dm2, self.tree2, self.preodr2, self.postodr2
-        # n = tree.shape[0]
-        # _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
-        # _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
+        # example 2 (complete)
+        dm, tree, order = self.dm2, self.tree2, self.preodr2
+        n = tree.shape[0]
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order)
+        npt.assert_allclose(obs, exp)
 
-        # # example 3 (incomplete)
-        # dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
-        # n = tree.shape[0]
-        # _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr, postodr)
-        # _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, postodr)
-        # npt.assert_allclose(obs, exp)
+        # example 3 (incomplete)
+        dm, tree, order = self.dm3, self.tree3, self.preodr3
+        n = tree.shape[0]
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order)
+        npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_matrix(self):
         """Calculate a balanced average distance matrix."""
-        dm, tree, preodr = self.dm1, self.tree1, self.preodr1
+        dm, tree, order = self.dm1, self.tree1, self.preodr1
         n = tree.shape[0]
-        _bal_avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr)
+        _bal_avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  8.5 ,  8.  ,  9.  ],
             [ 5.  ,  0.  ,  9.75, 10.  ,  9.5 ,  9.  , 10.  ],
@@ -990,13 +1003,13 @@ class MeTests(TestCase):
         ])
         npt.assert_allclose(obs, exp)
 
-        _bal_avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, preodr)
+        _bal_avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order)
         np.fill_diagonal(obs, 0)
         npt.assert_allclose(obs, exp)
 
-        dm, tree, preodr = self.dm3, self.tree3, self.preodr3
+        dm, tree, order = self.dm3, self.tree3, self.preodr3
         n = tree[0, 4] * 2 - 1
-        _bal_avgdist_matrix(obs := np.zeros((n, n)), dm, tree, preodr)
+        _bal_avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order)
         exp = np.array([
             [0.   , 1.607, 1.645, 1.69 , 1.524, 1.687, 1.604, 1.661, 1.72 ],
             [1.607, 0.   , 0.965, 1.362, 1.211, 1.475, 0.455, 1.328, 1.395],
@@ -1074,7 +1087,7 @@ class MeTests(TestCase):
         target = 4
         _avgdist_taxon(
             adk := np.zeros((2, n), dtype=float), taxon, self.dm1, self.tree1m1,
-            self.preodr1m1, self.postodr1m1
+            self.preodr1m1
         )
         _avgdist_d2_insert(
             obs := ad2.copy(), target, adk, self.tree1m1, self.preodr1m1
@@ -1092,109 +1105,30 @@ class MeTests(TestCase):
         npt.assert_array_equal(obs.round(3), exp)
 
         # another example: all possible insertions
-        dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
+        dm, tree, order = self.dm3, self.tree3, self.preodr3
         n = tree.shape[0]
         m = tree[0, 4] + 1
         ran_ = np.arange(n)
 
         # get distant-2 values from the full matrix
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]]))
 
-        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order)
 
         for i in range(n - 2):
             # calculate distant-2 values using the algorithm
-            _avgdist_d2_insert(obs := ad2.copy(), i, adk, tree, preodr)
+            _avgdist_d2_insert(obs := ad2.copy(), i, adk, tree, order)
 
             # insert taxon and calculate full matrix
-            tree_, pre_, post_ = tree.copy(), preodr.copy(), postodr.copy()
-            _insert_taxon(m, i, tree_, pre_, post_)
-            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, pre_, post_)
+            tree_, order_, = tree.copy(), order.copy()
+            _insert_taxon(m, i, tree_, order_,)
+            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_,)
             exp = np.ascontiguousarray(
                 np.vstack([adm[ran_, tree_[ran_, 3]], adm[ran_, tree_[ran_, 2]]]))
 
             npt.assert_allclose(obs, exp)
-
-    # def test_bal_avgdist_insert(self):
-    #     """Update balanced average distance matrix after taxon insertion."""
-    #     # Test if the algorithm produces the same result as calculated from the full
-    #     # matrix after taxon insertion.
-    #     tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
-    #     powers = 2.0 ** -np.arange(5)
-    #     stack = np.zeros(7, dtype=int)
-    #     paths = np.zeros(7, dtype=int)  #####
-    #     gens = np.zeros(7, dtype=int)  #####
-    #     # adm = np.array([
-    #     #     [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
-    #     #     [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  9.5,  0. ,  8. ,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  9.5,  8. ,  0. ,  0. ,  0. ],
-    #     #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     # ])
-    #     adm = np.array([
-    #         [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  8. ,  0. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     ])
-    #     adk = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
-    #                     [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
-    #     # Insert e as a sibling of d. This should recover tree1.
-    #     target = 4
-    #     _bal_avgdist_insert(
-    #         obs := adm, target, adk, tree, postodr, powers, stack, paths, gens
-    #     )
-    #     # exp = np.array([
-    #     #     [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
-    #     #     [ 5.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
-    #     #     [ 8.75,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
-    #     #     [ 9.  , 10.  ,  9.5 ,  0.  ,  8.  ,  7.5 ,  7.  ],
-    #     #     [ 9.  , 10.  ,  9.5 ,  8.  ,  0.  ,  8.75,  3.  ],
-    #     #     [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
-    #     #     [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
-    #     # ])
-    #     exp = np.array([
-    #         [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
-    #         [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  ,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
-    #         [ 0.  , 10.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  , 10.  ,  0.  ,  8.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  ,  9.5 ,  0.  ,  7.5 ,  8.75,  0.  ,  7.75],
-    #         [ 0.  ,  9.  ,  0.  ,  7.  ,  3.  ,  0.  ,  0.  ],
-    #     ])
-    #     npt.assert_allclose(obs, exp)
-
-    #     # another example: all possible insertions
-    #     dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
-    #     n = tree.shape[0]
-    #     m = tree[0, 4] + 1
-    #     _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-    #     _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
-    #     powers = 2.0 ** -np.arange(m)
-    #     stack = np.zeros(n, dtype=int)
-    #     _halve_adm(adm, tree, n - 2)  #####
-
-    #     for i in range(n - 2):
-    #         # update matrix using the algorithm
-    #         _bal_avgdist_insert(
-    #             obs := adm.copy(), i, adk.copy(), tree, postodr, powers, stack, paths, gens
-    #         )
-
-    #         # insert taxon and calculate full matrix
-    #         tree_, pre_, post_ = tree.copy(), preodr.copy(), postodr.copy()
-    #         _insert_taxon(m, i, tree_, pre_, post_)
-    #         _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
-    #         _halve_adm(exp, tree_, n)  #####
-
-    #         npt.assert_allclose(obs, exp)
-
 
     def test_bal_avgdist_insert(self):
         """Update balanced average distance matrix after taxon insertion."""
