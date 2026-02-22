@@ -1123,7 +1123,7 @@ class MeTests(TestCase):
 
             # insert taxon and calculate full matrix
             tree_, order_, = tree.copy(), order.copy()
-            _insert_taxon(m, i, tree_, order_,)
+            _insert_taxon(m, i, tree_, order_)
             _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_,)
             exp = np.ascontiguousarray(
                 np.vstack([adm[ran_, tree_[ran_, 3]], adm[ran_, tree_[ran_, 2]]]))
@@ -1331,16 +1331,16 @@ class MeTests(TestCase):
         """Calculate tree branch lengths using a balanced framework."""
         # Example 1: In this simple example, OLS and balanced frameworks produce the
         # same branch lengths.
-        dm, tree, preodr, postodr = self.dm1, self.tree1, self.preodr1, self.postodr1
+        dm, tree, order = self.dm1, self.tree1, self.preodr1
         n = tree.shape[0]
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
         _bal_lengths(obs := np.zeros(n), adm, tree)
         npt.assert_allclose(obs, self.lens1)
 
         # Example 2: Also slightly different from the original branch lengths.
-        dm, tree, preodr, postodr = self.dm2, self.tree2, self.preodr2, self.postodr2
+        dm, tree, order = self.dm2, self.tree2, self.preodr2
         n = tree.shape[0]
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
         _bal_lengths(obs := np.zeros(n), adm, tree)
         exp = np.array([
             0.92853125, 0.75806875, 0.41086875, 0.36733125, 0.04648125, 0.28469375,
@@ -1394,35 +1394,35 @@ class MeTests(TestCase):
         """Find the branch with minimum length change using a balacned framework."""
         # Test if result matches ground truth.
         dm = self.dm1
-        tree, preodr, postodr = self.tree1m1, self.preodr1m1, self.postodr1m1
+        tree, order = self.tree1m1, self.preodr1m1
         n = tree.shape[0]
-        m = tree[0, 4] + 1
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
-        res = _bal_min_branch(obs := np.zeros(n), adm, adk, tree, preodr)
+        k = dm.shape[0] - 1
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
+        _bal_avgdist_taxon(n - 2, k, dm, adk := np.zeros((2, n)), tree, order)
+        res = _bal_min_branch(n - 2, obs := np.zeros(n), adm, adk, tree, order)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
         # The algorithm omits factor 0.25, therefore we need to x4 here.
         npt.assert_allclose(obs, 4 * exp)
 
         # Test if result matches that calculated from the entire tree.
-        dm, tree, preodr, postodr = self.dm3, self.tree3, self.preodr3, self.postodr3
+        dm, tree, order = self.dm3, self.tree3, self.preodr3
         n = tree.shape[0]
-        m = tree[0, 4] + 1
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, postodr)
-        _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, postodr)
-        res = _bal_min_branch(obs := np.zeros(n), adm, adk, tree, preodr)
+        k = dm.shape[0] - 1
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
+        _bal_avgdist_taxon(n - 2, k, dm, adk := np.zeros((2, n)), tree, order)
+        res = _bal_min_branch(n - 2, obs := np.zeros(n), adm, adk, tree, order)
         exp = np.zeros(n)
         for i in range(n - 2):
-            tree_, pre_, post_ = tree.copy(), preodr.copy(), postodr.copy()
-            _insert_taxon(m, i, tree_, pre_, post_)
-            _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, pre_, post_)
+            tree_, order_ = tree.copy(), order.copy()
+            _insert_taxon(k, i, tree_, order_)
+            _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_)
             _bal_lengths(lens := np.zeros(n), adm, tree_)
             exp[i] = lens.sum()
         exp[:n - 2] -= exp[0]
 
         npt.assert_allclose(obs, 4 * exp)
-        self.assertEqual(res, exp[:n - 2].argmin())
+        self.assertEqual(order[res], exp[:n - 2].argmin())
 
     def test_swap_branches(self):
         # example 1: swap (e,d) with b
