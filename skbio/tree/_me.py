@@ -40,12 +40,16 @@ from ._c_me import (
     _bal_insert_plan,
     _bal_avgdist_flat,
     _bal_avgdist_nest,
+    _avgdist_taxon2,
+    _ols_min_branch_d22,
+    _avgdist_d2_insert2,
+    _ols_lengths_d22,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
 
 
-def gme(dm, neg_as_zero=True):
+def gme(dm, neg_as_zero=True, method=1):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2
@@ -158,8 +162,10 @@ def gme(dm, neg_as_zero=True):
     if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
+    func = _gme2 if method else _gme
+
     # reconstruct tree topology and branch lengths using GME
-    tree, lens = _gme(dm.data)
+    tree, lens = func(dm.data)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -1066,6 +1072,7 @@ def _allocate_tree(n):
 
     """
     tree = np.empty((n, 8), dtype=int)
+    tree[:, 4] = -1
     preodr = np.empty((n,), dtype=int)
     postodr = np.empty((n,), dtype=int)
     return tree, preodr, postodr
@@ -1700,3 +1707,63 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
             tree[s_clade, 6] -= c_width
             preodr[(cs_start := c_start + s_width) : s_end] = c_clade
             preodr[c_start:cs_start] = stack[:s_width]
+
+
+def _gme2(dm):
+    dtype = dm.dtype
+
+    # number of taxa in the input distance matrix
+    m = dm.shape[0]
+
+    # number of nodes in the final tree (note: taxon 0 is at root)
+    n = 2 * m - 3
+
+    # tree topology (see `_check_tree`)
+    tree = np.empty((n, 4), dtype=int)
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
+
+    # node indices in preorder
+    order = np.empty(n, dtype=int)
+    order[:3] = [0, 1, 2]
+
+    # number of taxa (i.e., tips) descending from each node (=1 if a tip).
+    taxas = np.full(n, -1, dtype=int)
+    taxas[:3] = [2, 1, 1]
+
+    # average distances between distant-2 subtrees
+    ad2 = np.empty((2, n), dtype=dtype)
+    ad2[1, 1] = dm[0, 1]
+    ad2[1, 2] = dm[0, 2]
+    ad2[0, 1] = ad2[0, 2] = dm[1, 2]
+    ad2[1, 0] = ad2[0, 0] = 0
+
+    # average distances from a taxon to each subtree
+    adk = np.empty((2, n), dtype=dtype)
+
+    # branch lengths or length changes
+    lens = np.empty((n,), dtype=dtype)
+    lens[0] = 0
+
+    # Iteratively add taxa to the tree.
+    for k in range(3, m):
+        # Calculate average distances from new taxon to existing subtrees.
+        _avgdist_taxon2(adk, k, dm, tree, order, taxas)
+
+        # Find a branch with minimum length change.
+        itag = _ols_min_branch_d22(lens, ad2, adk, tree, order, taxas)
+        size = taxas[order[itag]] * 2 - 1
+
+        # Update average distances between distant-2 subtrees.
+        _avgdist_d2_insert2(ad2, itag, adk, tree, order, taxas)
+
+        # Insert new taxon into tree.
+        _insert_taxon_x(k, itag, size, tree, order)
+
+    # Calculate branch lengths using an OLS framework.
+    _ols_lengths_d22(lens, ad2, tree, taxas)
+
+    return tree, lens

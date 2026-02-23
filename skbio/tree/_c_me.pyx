@@ -2976,3 +2976,364 @@ def _insert_taxon(
             parent = tree[curr, 2]
             tree[parent, 4] += 1
             curr = parent
+
+
+def _avgdist_taxon2(
+    floating[:, ::1] adk,
+    Py_ssize_t taxon,
+    floating[:, :] dm,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] taxas,
+):
+    """Calculate average distances between a new taxon (k) and existing subtrees.
+
+    This function will update adk, a float array of (2, n) in which the two rows
+    represent the average distances from the taxon to the lower and upper subtrees of
+    each existing node, respectively.
+
+    Implemented according to Appendix 3 of Desper and Gascuel (2002). Basically, this
+    algorithm calculates all lower subtree distances via a reversed preorder traversal
+    (paper says postorder traversal), then calculates all upper subtree distances via a
+    preorder traversal.
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right, parent, sibling
+
+    # total numbers of taxa and nodes in the tree
+    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t n = 2 * m - 3
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
+    # Calculate the distance between taxon and the lower subtree of each node.
+    for i in range(n - 1, -1, -1):
+        node = order[i]
+        left, right = tree[node, 0], tree[node, 1]
+        if left == 0:
+            adkl[node] = dm[taxon, right]
+        else:
+            adkl[node] = (
+                taxas[left] * adkl[left] + taxas[right] * adkl[right]
+            ) / taxas[node]
+
+    # Assign upper distance of root.
+    adku[0] = dm[taxon, 0]
+
+    # Calculate the distance between taxon k and the upper subtree of each node.
+    for i in range(1, n):
+        node = order[i]
+        parent, sibling = tree[node, 2], tree[node, 3]
+        adku[node] = (
+            (m - taxas[parent]) * adku[parent] + taxas[sibling] * adkl[sibling]
+        ) / (m - taxas[node])
+
+
+def _ols_min_branch_d22(
+    floating[::1] lens,
+    floating[:, ::1] ad2,
+    floating[:, ::1] adk,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] taxas,
+):
+    r"""Find the branch with the minimum length change after inserting a new taxon.
+
+    It returns the node at the lower end of the branch.
+
+    Implemented according to Eq. 7 of Desper and Gascuel (2002).
+
+    IMPORTANT NOTE: Should there are ties (which are common), this function returns
+    the first minimum branch seen during preorder traversal. This behavior resembles
+    FastME. Alternatively, one can return the first minimum branch by the order of
+    addition using `return lens[:n].argmin()`, which could produce different results
+    at the presence of ties. It must be noted that all candidates in a tie are equally
+    optimal in the current iteration of the greedy algorithm.
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, parent, sibling, size, p_size, s_size
+    cdef floating L, numerator, lambda_0, lambda_1
+
+    cdef Py_ssize_t min_i = 0
+    cdef floating min_len = 0
+    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t n = 2 * m - 3
+
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
+    # Traverse tree in preorder and calculate the length change of each branch from its
+    # previous branch.
+    for i in range(1, n):
+        node = order[i]
+        parent = tree[node, 2]
+        sibling = tree[node, 3]
+        size = taxas[node]
+        p_size = m - taxas[parent]
+        s_size = taxas[sibling]
+
+        numerator = s_size + size * p_size
+        lambda_0 = numerator / ((s_size + size) * (p_size + 1))
+        lambda_1 = numerator / ((s_size + p_size) * (size + 1))
+
+        # factor 0.5 is omitted
+        lens[node] = L = lens[parent] + (
+            (lambda_0 - lambda_1) * (adkl[sibling] + ad2u[node])
+            + (lambda_1 - 1) * (ad2l[sibling] + adku[parent])
+            + (1 - lambda_0) * (ad2u[sibling] + adkl[node])
+        )
+
+        if L < min_len:
+            min_len, min_i = L, i
+
+    return min_i
+
+
+def _avgdist_d2_insert2(
+    floating[:, ::1] ad2,
+    Py_ssize_t itag,
+    floating[:, ::1] adk,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] taxas,
+):
+    r"""Update average distances between distant-2 subtrees after taxon insertion.
+
+    This function will update `ad2`, a float array of (2, n) representing pairwise
+    distances between all distant-2 subtrees in the tree. Here, `distant-2 subtrees`
+    refer to subtrees that are two branches away from each other. Specifically, there
+    are two scenarios:
+
+    - Row 0: Distance between the lower subtree of the current node and the lower
+      subtree of its parent.
+    - Row 1: Distance between the lower subtree of the current node and the upper
+      subtree of its sibling.
+
+    This function assumes that the taxon will be inserted into the branch connecting
+    the target node and its parent. After insertion, the taxon will become the sibling
+    of the target.
+
+                                    parent
+             parent                  /  \
+             /  \        =>       link  sibling
+        target  sibling           /  \
+                             target  taxon (k)
+
+    This function should be executed *before* calling :func:`_insert_taxon`, which will
+    mutate the tree.
+
+    Implemented according to Eq. 8 of Desper and Gascuel (2002).
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right, parent, sibling, curr, p_size, size_1
+
+    cdef Py_ssize_t target = order[itag]
+    cdef Py_ssize_t size = taxas[target]
+
+    cdef Py_ssize_t ipar, isib
+
+    # dimensions and positions
+    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t n = 2 * m - 3
+    cdef Py_ssize_t link = n
+    cdef Py_ssize_t tip = n + 1
+
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
+    ###### Special case: insert into the root branch. ######
+
+    if target == 0:
+
+        # k (lower) to root (parent, upper): pre-calculated
+        ad2u[tip] = adku[0]
+
+        # k (lower) to link (sibling, lower): equals to k to root (lower).
+        ad2l[link] = ad2l[tip] = adkl[0]
+
+        # Link (lower) to root (parent, upper): de novo calculation according to the
+        # equation in A4.1(b). It is basically the distance between the upper and lower
+        # subtrees of the root itself.
+        left, right = tree[0, 0], tree[0, 1]
+        ad2u[link] = (
+            taxas[left] * ad2u[left] + taxas[right] * ad2u[right]
+        ) / size
+
+        # Calculate all node (lower) to parent (upper, containing k) distances. These
+        # parents include the new link.
+        for node in range(1, n):
+            p_size = m - taxas[tree[node, 2]]
+            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+
+        # Update taxon counts of special ndes.
+        taxas[tip] = 1
+        taxas[link] = size
+        taxas[0] = size + 1
+
+        return
+
+    ###### Regular case: insert into any other branch. ######
+
+    parent, sibling = tree[target, 2], tree[target, 3]
+    size_1 = size + 1
+
+    taxas[tip] = 1
+    taxas[link] = size_1
+
+    # Temporarily copy the distances of target to link (will edit later).
+    ad2u[link] = ad2u[target]
+    ad2l[link] = ad2l[target]
+
+    # Distance between k (lower) and link (parent, upper) equals to that between k and
+    # the upper subtree of target.
+    ad2u[tip] = adku[target]
+
+    # Distance between target (lower) and link (parent, upper) needs to be calculated
+    # using the equation in A4.1(c). Basically, it is the distance between the lower
+    # and upper subtrees of the same target.
+    ad2u[target] = (
+        taxas[sibling] * ad2l[target] + (m - taxas[parent]) * ad2u[target]
+    ) / (m - size)
+
+    # Transfer the pre-calculated distance between target (lower) and k (sibling,
+    # lower).
+    ad2l[target] = ad2l[tip] = adkl[target]
+
+    # Within the clade below target, calculate the distance between each node (lower)
+    # and its parent (upper, containing k).
+    for i in range(itag + 1, itag + size * 2 - 1):
+        node = order[i]
+        p_size = m - taxas[tree[node, 2]]
+        ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+
+    # Iterate over the ancestors of target, starting from link and ending at root.
+    if tree[parent, 0] == target:  # left child
+        ipar = itag - 1
+        isib = itag + size * 2 - 1
+    else:  # right child
+        ipar = itag - taxas[sibling] * 2
+        isib = ipar + 1
+
+    curr = link
+    while curr:
+        # Calculate the distance between each pair of lower (containing k) and upper
+        # ancestors.
+        ad2u[curr] = (adku[parent] + ad2u[curr] * size) / size_1
+
+        # Calculate the distance between each ancestor (lower, containing k) and its
+        # sibling (lower).
+        ad2l[curr] = ad2l[sibling] = (adkl[sibling] + ad2l[curr] * size) / size_1
+
+        # Within the clade below each sibling, calculate the distance between each node
+        # (lower) and its parent (upper, containing k).
+        for i in range(isib + 1, isib + taxas[sibling] * 2 - 1):
+            node = order[i]
+            p_size = m - taxas[tree[node, 2]]
+            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+
+        curr = parent
+        parent, sibling, size = tree[curr, 2], tree[curr, 3], taxas[curr]
+        size_1 = size + 1
+
+        if tree[parent, 0] == curr:  # left child
+            isib = ipar + size * 2 - 1
+            ipar -= 1
+        else:  # right child
+            ipar -= taxas[sibling] * 2
+            isib = ipar + 1
+
+        # add k to taxon count
+        taxas[curr] += 1
+
+
+def _ols_lengths_d22(
+    floating[::1] lens,
+    floating[:, ::1] ad2,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] taxas,
+):
+    r"""Calculate branch lengths of a tree based on an OLS framework.
+
+    Using only average distances between pairs of distant-2 subtrees.
+
+    This function produces the same result as `_ols_lengths`. The latter relies on
+    Eq. 3 of Desper and Gascuel (2002), which involves distances between distant-3
+    subtrees. Therefore, we need to modify the equation such that it only takes
+    distances between distant-2 subtrees as input.
+
+    Specifically, with the following local structure:
+
+                |
+              parent
+              /   \
+           node  sibling
+           /  \
+        left  right
+
+    We will need to calculate the distances between left / right (lower) and parent
+    (upper) / sibling (lower). This can be achieved by (according to Fig. 2a):
+
+        d(left(L), parent(U)) = d(left(L), node(U)) + d(node(L), parent(U))
+            - d(node(L), node(U))
+
+    Do the same for d(right(L), parent(U)), d(left(L), sibling(L)), and d(right(L),
+    sibling(L)). Plug results into Eq. 3, we will get:
+
+        l(node) = 0.5 * (
+            d(left(L), parent(U)) + d(right(L), parent(U)) + d(node(L), parent(U))
+            + d(node(L), sibling(U)) - d(sibling(L), parent(U)) - d(left(L), right(L))
+        ) - d(node(L), node(U))
+
+    Note that this equation is free of the lambda factor.
+
+    Here, d(node(L), node(U)) is the distance between the lower and upper subtrees of
+    the same node. This can be calculated using the equation in A4.1(c):
+
+        d(node(L), node(U)) = (|sibling(L)| * d(node(L), sibling(L)) + |parent(U)|
+            * d(node(L), parent(U))) / |node(U)|
+
+    Therefore, we will get l(node).
+
+    """
+    cdef Py_ssize_t node, left, sibling
+    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t n = 2 * m - 3
+
+    cdef floating* ad2l = &ad2[0, 0]
+    cdef floating* ad2u = &ad2[1, 0]
+
+    for node in range(1, n):
+        left = tree[node, 0]
+
+        # External (terminal) branch: based on Eq. 4 of the paper.
+        if left == 0:
+            lens[node] = 0.5 * (ad2l[node] + ad2u[node] - ad2u[tree[node, 3]])
+
+        # Internal branch: based on the equation discussed above.
+        else:
+            sibling = tree[node, 3]
+            lens[node] = 0.5 * (
+                ad2u[left]
+                + ad2u[tree[node, 1]]
+                + ad2u[node]
+                + ad2l[node]
+                - ad2u[sibling]
+                - ad2l[left]
+            ) - (
+                taxas[sibling]
+                * ad2l[node]
+                + (m - taxas[tree[node, 2]])
+                * ad2u[node]
+            ) / (m - taxas[node])
+
+    # root branch
+    left = tree[0, 0]
+    lens[0] = 0.5 * (ad2u[left] + ad2u[tree[0, 1]] - ad2l[left])
