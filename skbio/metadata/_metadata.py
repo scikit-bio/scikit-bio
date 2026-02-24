@@ -667,13 +667,14 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         try:
             series = self._dataframe[name]
             missing_scheme = self._columns[name].missing_scheme
+            missing_mask = self._missing_masks[name]
         except KeyError:
             raise ValueError(
                 "%r is not a column in the metadata. Available columns: "
                 "%s" % (name, ", ".join(repr(c) for c in self.columns))
             )
 
-        return self._metadata_column_factory(series, missing_scheme)
+        return self._metadata_column_factory(series, missing_scheme, missing_mask)
 
     def get_ids(self, where=None):
         """Retrieve IDs matching search criteria.
@@ -1156,6 +1157,9 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         if encode_missing:
             missing = self.get_missing()
             if not missing.empty:
+                # Convert to object dtype to allow mixing numeric with string values
+                if series.dtype != object:
+                    series = series.astype(object)
                 series[missing.index] = missing
 
         return series
@@ -1192,8 +1196,16 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         If the column was constructed with a missing scheme, then the values
         of the series will be the original terms instead of NaN.
 
+        Returns a series with object dtype to allow for both NaN values
+        and string terms (e.g., INSDC vocabulary).
+
         """
-        return _missing.series_extract_missing(self._series, self._missing_mask)
+        result = _missing.series_extract_missing(self._series, self._missing_mask)
+        # Always return object dtype for consistency - the result could contain
+        # strings (INSDC terms) or NaN values
+        if result.dtype != object:
+            result = result.astype(object)
+        return result
 
     def get_value(self, id):
         """Retrieve metadata column value associated with an ID.
@@ -1350,7 +1362,6 @@ class CategoricalMetadataColumn(MetadataColumn):
                     return value
             elif pd.isna(value):  # permits np.nan, Python float nan, None
                 if isinstance(value, float) and np.isnan(value):
-                    # if type(value) is float and np.isnan(value):
                     return value
                 return np.nan
             else:
@@ -1361,9 +1372,10 @@ class CategoricalMetadataColumn(MetadataColumn):
                 )
 
         norm_series = series.apply(normalize)
-        # print(norm_series.dtype)
-        # print('\n')
-        # norm_series = norm_series.astype(object)
+        # Preserve object dtype for all-NaN categorical columns
+        # (series.apply can convert object to float64 when all values are NaN)
+        if series.dtype == object and norm_series.dtype != object:
+            norm_series = norm_series.astype(object)
         norm_series.index = norm_series.index.str.strip()
         norm_series.name = norm_series.name.strip()
         return norm_series
