@@ -48,14 +48,12 @@ class RoundTripMixin:
     def test_roundtrip_float(self):
         self.check_roundtrip(0.05, float)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_roundtrip_string(self):
         self.check_roundtrip('hello', object)
 
     def test_roundtrip_int(self):
         self.check_roundtrip(42, float)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_roundtrip_bool(self):
         self.check_roundtrip(True, object)
 

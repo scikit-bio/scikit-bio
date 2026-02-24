@@ -326,7 +326,6 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
                                              ('col3', 'categorical'),
                                              ('col4', 'categorical')])
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_missing_data_insdc(self):
         index = pd.Index(['None', 'nan', 'NA', 'foo'], name='id')
         df = pd.DataFrame(collections.OrderedDict([
@@ -356,7 +355,6 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
              'col4': np.array([np.nan, np.nan, np.nan, np.nan], dtype=object)},
             index=index), check_dtype=False)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_missing_data_insdc_column_missing(self):
         index = pd.Index(['None', 'nan', 'NA', 'foo'], name='id')
         df = pd.DataFrame(collections.OrderedDict([
@@ -390,7 +388,6 @@ class TestMetadataConstructionAndProperties(unittest.TestCase):
              'col4': np.array([np.nan, np.nan, np.nan, np.nan], dtype=object)},
             index=index), check_dtype=False)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_missing_data_default_override(self):
         index = pd.Index(['None', 'nan', 'NA', 'foo'], name='id')
         df = pd.DataFrame(collections.OrderedDict([
@@ -614,7 +611,6 @@ class TestToDataframe(unittest.TestCase):
         pd.testing.assert_frame_equal(obs, df, check_dtype=False)
         self.assertEqual(obs.columns.tolist(), ['z', 'a', 'ch'])
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_missing_data(self):
         # Different missing data representations should be normalized to np.nan
         index = pd.Index(['None', 'nan', 'NA', 'id1'], name='id')
@@ -688,7 +684,6 @@ class TestToDataframe(unittest.TestCase):
         pd.testing.assert_frame_equal(obs, df, check_dtype=False)
         self.assertIsNot(obs, df)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_insdc_missing_encode_missing_true(self):
         df = pd.DataFrame({'col1': [42, 'missing'],
                            'col2': ['foo', 'not applicable']},
@@ -701,7 +696,6 @@ class TestToDataframe(unittest.TestCase):
         pd.testing.assert_frame_equal(obs, df, check_dtype=False)
         self.assertIsNot(obs, df)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_insdc_missing_encode_missing_false(self):
         df = pd.DataFrame({'col1': [42, 'missing'],
                            'col2': ['foo', 'not applicable']},

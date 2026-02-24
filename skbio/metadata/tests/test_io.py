@@ -631,7 +631,6 @@ class TestLoadSuccess(unittest.TestCase):
         ]
         self.assertEqual(obs_columns, exp_columns)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_insdc_override(self):
         fp = get_data_path('valid/override-insdc.tsv')
 
@@ -1101,7 +1100,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_missing_schemes(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1132,7 +1130,6 @@ class TestSave(unittest.TestCase):
         print('\n')
         self.assertEqual(obs, exp)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_default_missing_scheme(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1157,7 +1154,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_default_missing_scheme_override(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1412,7 +1408,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_categorical_metadata_column_insdc_missing(self):
         mdc = CategoricalMetadataColumn(pd.Series(
             ['foo', 'missing', '42.50'], name='categorical-column',
@@ -1477,7 +1472,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    # @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")  # Fixed
     def test_numeric_metadata_column_insdc_missing(self):
         mdc = NumericMetadataColumn(pd.Series(
             [1e-15, 'missing', -999.0], name='numeric-column',
