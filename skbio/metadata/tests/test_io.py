@@ -1123,11 +1123,6 @@ class TestSave(unittest.TestCase):
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
         )
-        print('\n')
-        print(obs)
-        print('\n')
-        print(exp)
-        print('\n')
         self.assertEqual(obs, exp)
 
     def test_default_missing_scheme(self):

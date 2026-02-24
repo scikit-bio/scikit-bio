@@ -149,12 +149,6 @@ class MetadataReader:
 
         try:
             # Cast each column to the appropriate dtype based on column type.
-            # df = df.apply(
-            #     self._cast_column,
-            #     axis="index",
-            #     column_types=resolved_column_types,
-            #     missing_schemes=resolved_missing,
-            # )
             missing_masks = {}
             for col_name, series in df.items():
                 new_series, mask = self._cast_column(
@@ -482,13 +476,7 @@ class MetadataWriter:
                 tsv_writer.writerow(missing_directive)
 
             df = md.to_dataframe(encode_missing=True)
-            # print('\n')
-            # print('df before fillna in write(save)')
-            # print(df)
             df.fillna("", inplace=True)
-            # print('\n')
-            # print('df after fillna in write(save)')
-            # print(df)
             # since `applymap` is going to be deprecated soon
             # and `map` may not work on older versions of pandas
             try:

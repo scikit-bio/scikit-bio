@@ -624,16 +624,6 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         """
         df = self._dataframe.copy()
         if encode_missing:
-            # def replace_nan(series):
-            #     missing = _missing.series_extract_missing(series)
-            #                   #, self._missing_masks)
-            #     # avoid dtype changing if there's no missing values
-            #     if not missing.empty:
-            #         series = series.astype(object)
-            #         series[missing.index] = missing
-            #     return series
-
-            # df = df.apply(replace_nan)
             for col_name, series in df.items():
                 missing = _missing.series_extract_missing(
                     series, self._missing_masks[col_name]
