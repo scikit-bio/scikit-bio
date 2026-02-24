@@ -2,6 +2,10 @@
 
 ## Version 0.7.3-dev
 
+### Bug Fixes
+
+* Fixed incompatibility issues between the `skbio.Metadata` module and Pandas >= 3.0 ([#2387](https://github.com/scikit-bio/scikit-bio/pull/2387))
+
 
 ## Version 0.7.2
 
