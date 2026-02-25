@@ -259,18 +259,18 @@ class DirMultLMETests(TestCase):
             "Covar2", "Covar3", "Covar2", "Covar3", "Covar2", "Covar3", "Covar2",
             "Covar3"])
         self.assertTrue((res["Reps"] == 1).all())
-        # npt.assert_array_equal(res["Log2(FC)"].round(5), np.array([
-        #     2.70838, 1.69677, 0.95602, 0.32545, -1.99027, -0.81289, -1.67413,
-        #     -1.20933]))
-        # npt.assert_array_equal(res["CI(2.5)"].round(5), np.array([
-        #     -0.8187, -1.22405, -0.73669, -0.65793, -4.36225, -2.91061, -3.88579,
-        #     -3.20487]))
-        # npt.assert_array_equal(res["CI(97.5)"].round(5), np.array([
-        #     6.23545, 4.61759, 2.64873, 1.30884, 0.38171, 1.28483, 0.53754, 0.78621]))
-        # npt.assert_array_equal(res["pvalue"].round(5), np.array([
-        #     0.13232, 0.25488, 0.26831, 0.51657, 0.10006, 0.44755, 0.13792, 0.23492]))
-        # npt.assert_array_equal(res["qvalue"].round(5), np.array([
-        #     0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]))
+        npt.assert_allclose(res["Log2(FC)"].round(5), np.array([
+             2.70838, 1.69677, 0.95602, 0.32545, -1.99027, -0.81289, -1.67413,
+             -1.20933]), atol=1e-2)
+        npt.assert_allclose(res["CI(2.5)"].round(5), np.array([
+             -0.8187, -1.22405, -0.73669, -0.65793, -4.36225, -2.91061, -3.88579,
+             -3.20487]), atol=0.5)
+        npt.assert_allclose(res["CI(97.5)"].round(5), np.array([
+             6.23545, 4.61759, 2.64873, 1.30884, 0.38171, 1.28483, 0.53754, 0.78621]), atol=0.5)
+        npt.assert_allclose(res["pvalue"].round(5), np.array([
+             0.13232, 0.25488, 0.26831, 0.51657, 0.10006, 0.44755, 0.13792, 0.23492]), atol=0.1)
+        npt.assert_allclose(res["qvalue"].round(5), np.array([
+             0.24713, 0.44479, 0.46463, 0.76629, 0.19011, 0.6948 , 0.25681, 0.41466]), atol = 0.1)
         self.assertTrue((res["Signif"] == False).all())
 
         # confirm that 2.5% < fold-change < 97.5%
