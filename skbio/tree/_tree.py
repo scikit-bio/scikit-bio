@@ -43,6 +43,7 @@ from ._compare import (
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Iterator
     from numpy.typing import ArrayLike
+    from typing import Self
 
 
 # ----------------------------------------------------------------------------
@@ -5785,7 +5786,7 @@ class TreeNode(SkbioObject):
             ("names", "id_list", "0.7.2", False),
         ]
     )
-    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: Iterable[str]) -> TreeNode:
+    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: Iterable[str]) -> Self:
         r"""Construct tree from a SciPy linkage matrix.
 
         Parameters
@@ -5900,9 +5901,7 @@ class TreeNode(SkbioObject):
         return nodes[-1]
 
     @classonlymethod
-    def from_taxonomy(
-        cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame
-    ) -> TreeNode:
+    def from_taxonomy(cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame) -> Self:
         r"""Construct a tree from a taxonomy.
 
         Parameters
@@ -6074,7 +6073,7 @@ class TreeNode(SkbioObject):
     @classonlymethod
     def from_taxdump(
         cls, nodes: pd.DataFrame, names: pd.DataFrame | dict | None = None
-    ) -> TreeNode:
+    ) -> Self:
         r"""Construct a tree from the NCBI taxonomy database.
 
         Parameters
