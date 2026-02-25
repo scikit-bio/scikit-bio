@@ -18,6 +18,7 @@ from skbio.util._decorator import classonlymethod
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike, NDArray
     from skbio.sequence import Sequence
+    from typing import Self
 
 
 # CIGAR codes indexed by states in PairAlignPath
@@ -332,7 +333,7 @@ class AlignPath(SkbioObject):
         return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
     @classonlymethod
-    def from_bits(cls, bits: ArrayLike, starts: ArrayLike | None = None) -> "AlignPath":
+    def from_bits(cls, bits: ArrayLike, starts: ArrayLike | None = None) -> Self:
         r"""Create an alignment path from a bit array (0 - character, 1 - gap).
 
         Parameters
@@ -495,7 +496,7 @@ class AlignPath(SkbioObject):
         return res
 
     @classonlymethod
-    def from_aligned(cls, aln, gap_chars="-", starts=None) -> "AlignPath":
+    def from_aligned(cls, aln, gap_chars="-", starts=None) -> Self:
         r"""Create an alignment path from aligned sequences.
 
         Parameters
@@ -615,7 +616,7 @@ class AlignPath(SkbioObject):
         return chars, gaps, bits, lens
 
     @classonlymethod
-    def from_tabular(cls, msa, starts=None) -> "AlignPath":
+    def from_tabular(cls, msa, starts=None) -> Self:
         r"""Create an alignment path from a `TabularMSA` object.
 
         Parameters
@@ -733,7 +734,7 @@ class AlignPath(SkbioObject):
             return np.where(pos, idx, gap)
 
     @classonlymethod
-    def from_indices(cls, indices, gap=-1) -> "AlignPath":
+    def from_indices(cls, indices, gap=-1) -> Self:
         r"""Create an alignment path from character indices in the original sequences.
 
         Parameters
@@ -891,7 +892,7 @@ class AlignPath(SkbioObject):
             return lens.cumsum(axis=1)
 
     @classonlymethod
-    def from_coordinates(cls, coords) -> "AlignPath":
+    def from_coordinates(cls, coords) -> Self:
         r"""Create an alignment path from an array of segment coordinates.
 
         Parameters
@@ -1121,7 +1122,7 @@ class PairAlignPath(AlignPath):
         return f"<{repr_}, CIGAR: '{cigar}'>"
 
     @classonlymethod
-    def from_bits(cls, bits, starts=None) -> "PairAlignPath":
+    def from_bits(cls, bits, starts=None) -> Self:
         r"""Create a pairwise alignment path from a bit array.
 
         Refer to :meth:`AlignPath.from_bits` for usage.
@@ -1228,9 +1229,7 @@ class PairAlignPath(AlignPath):
             )
 
     @classonlymethod
-    def from_cigar(
-        cls, cigar: str | bytes, starts: ArrayLike | None = None
-    ) -> "PairAlignPath":
+    def from_cigar(cls, cigar: str | bytes, starts: ArrayLike | None = None) -> Self:
         r"""Create a pairwise alignment path from a CIGAR string.
 
         Parameters
