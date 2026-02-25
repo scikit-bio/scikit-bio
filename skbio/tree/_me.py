@@ -40,7 +40,6 @@ from ._c_me import (
     _bal_insert_plan,
     _bal_avgdist_flat,
     _bal_avgdist_nest,
-    _avgdist_taxon2,
     _ols_min_branch_d22,
     _avgdist_d2_insert2,
     _ols_lengths_d22,
@@ -162,10 +161,8 @@ def gme(dm, neg_as_zero=True, method=1):
     if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
-    func = _gme2 if method else _gme
-
     # reconstruct tree topology and branch lengths using GME
-    tree, lens = func(dm.data)
+    tree, lens = _gme(dm.data)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -491,44 +488,59 @@ def _gme(dm):
     """
     dtype = dm.dtype
 
-    # number of taxa
+    # number of taxa in the input distance matrix
     m = dm.shape[0]
 
-    # number of nodes in the final tree
+    # number of nodes in the final tree (note: taxon 0 is at root)
     n = 2 * m - 3
 
-    # Pre-allocate memory spaces:
-    # tree structure
-    tree, preodr, postodr = _allocate_tree(n)
+    # tree topology (see `_check_tree`)
+    tree = np.empty((n, 4), dtype=int)
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
+
+    # node indices in preorder
+    order = np.empty(n, dtype=int)
+    order[:3] = [0, 1, 2]
+
+    # number of taxa (i.e., tips) descending from each node (=1 if a tip).
+    taxas = np.full(n, -1, dtype=int)
+    taxas[:3] = [2, 1, 1]
 
     # average distances between distant-2 subtrees
     ad2 = np.empty((2, n), dtype=dtype)
+    ad2[1, 1] = dm[0, 1]
+    ad2[1, 2] = dm[0, 2]
+    ad2[0, 1] = ad2[0, 2] = dm[1, 2]
+    ad2[1, 0] = ad2[0, 0] = 0
 
     # average distances from a taxon to each subtree
     adk = np.empty((2, n), dtype=dtype)
 
     # branch lengths or length changes
     lens = np.empty((n,), dtype=dtype)
-
-    # Initialize 3-taxon tree.
-    _init_tree(dm, tree, preodr, postodr, ad2, matrix=False)
+    lens[0] = 0
 
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate average distances from new taxon to existing subtrees.
-        _avgdist_taxon(adk, k, dm, tree, preodr)
+        _avgdist_taxon(adk, k, dm, tree, order, taxas)
 
         # Find a branch with minimum length change.
-        target = _ols_min_branch_d2(lens, ad2, adk, tree, preodr)
+        itag = _ols_min_branch_d22(lens, ad2, adk, tree, order, taxas)
+        size = taxas[order[itag]] * 2 - 1
 
         # Update average distances between distant-2 subtrees.
-        _avgdist_d2_insert(ad2, target, adk, tree, preodr)
+        _avgdist_d2_insert2(ad2, itag, adk, tree, order, taxas)
 
         # Insert new taxon into tree.
-        _insert_taxon(k, target, tree, preodr, use_depth=False)
+        _insert_taxon_x(k, itag, size, tree, order)
 
     # Calculate branch lengths using an OLS framework.
-    _ols_lengths_d2(lens, ad2, tree)
+    _ols_lengths_d22(lens, ad2, tree, taxas)
 
     return tree, lens
 
@@ -1504,7 +1516,7 @@ def _avgdist_matrix_naive(adm, dm, tree, order):
             # subset) of b.
 
 
-def _avgdist_taxon_naive(adk, taxon, dm, tree, order):
+def _avgdist_taxon_naive(adk, taxon, dm, tree, order, taxas):
     """Calculate average distances between a new taxon and existing subtrees.
 
     This function produces the same result as :func:`_avgdist_taxon`, but it
@@ -1516,23 +1528,23 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, order):
     used in the actual GME algorithm.
 
     """
-    n = tree[0, 4] * 2 - 1
-    taxas = {}
+    n = taxas[0] * 2 - 1
+    taxon_sets = {}
 
     # iterate over nodes in reversed preorder (same outcome as postorder)
     for node in order[n - 1 :: -1]:
         left, right = tree[node, :2]
         if not left:
-            taxas[node] = frozenset([right])
+            taxon_sets[node] = frozenset([right])
         else:
-            taxas[node] = taxas[left] | taxas[right]
+            taxon_sets[node] = taxon_sets[left] | taxon_sets[right]
 
-    full = taxas[0] | frozenset([0])
+    full = taxon_sets[0] | frozenset([0])
 
     adkl, adku = adk[0], adk[1]
     dk = dm[taxon]
     for node in range(n):
-        taxa_lower = taxas[node]
+        taxa_lower = taxon_sets[node]
         adkl[node] = dk[list(taxa_lower)].mean()
         taxa_upper = full - taxa_lower
         adku[node] = dk[list(taxa_upper)].mean()
@@ -1707,63 +1719,3 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
             tree[s_clade, 6] -= c_width
             preodr[(cs_start := c_start + s_width) : s_end] = c_clade
             preodr[c_start:cs_start] = stack[:s_width]
-
-
-def _gme2(dm):
-    dtype = dm.dtype
-
-    # number of taxa in the input distance matrix
-    m = dm.shape[0]
-
-    # number of nodes in the final tree (note: taxon 0 is at root)
-    n = 2 * m - 3
-
-    # tree topology (see `_check_tree`)
-    tree = np.empty((n, 4), dtype=int)
-    tree[:3] = [
-        [1, 2, 0, 0],  # 0: root
-        [0, 1, 0, 2],  # 1: left child
-        [0, 2, 0, 1],  # 2: right child
-    ]
-
-    # node indices in preorder
-    order = np.empty(n, dtype=int)
-    order[:3] = [0, 1, 2]
-
-    # number of taxa (i.e., tips) descending from each node (=1 if a tip).
-    taxas = np.full(n, -1, dtype=int)
-    taxas[:3] = [2, 1, 1]
-
-    # average distances between distant-2 subtrees
-    ad2 = np.empty((2, n), dtype=dtype)
-    ad2[1, 1] = dm[0, 1]
-    ad2[1, 2] = dm[0, 2]
-    ad2[0, 1] = ad2[0, 2] = dm[1, 2]
-    ad2[1, 0] = ad2[0, 0] = 0
-
-    # average distances from a taxon to each subtree
-    adk = np.empty((2, n), dtype=dtype)
-
-    # branch lengths or length changes
-    lens = np.empty((n,), dtype=dtype)
-    lens[0] = 0
-
-    # Iteratively add taxa to the tree.
-    for k in range(3, m):
-        # Calculate average distances from new taxon to existing subtrees.
-        _avgdist_taxon2(adk, k, dm, tree, order, taxas)
-
-        # Find a branch with minimum length change.
-        itag = _ols_min_branch_d22(lens, ad2, adk, tree, order, taxas)
-        size = taxas[order[itag]] * 2 - 1
-
-        # Update average distances between distant-2 subtrees.
-        _avgdist_d2_insert2(ad2, itag, adk, tree, order, taxas)
-
-        # Insert new taxon into tree.
-        _insert_taxon_x(k, itag, size, tree, order)
-
-    # Calculate branch lengths using an OLS framework.
-    _ols_lengths_d22(lens, ad2, tree, taxas)
-
-    return tree, lens

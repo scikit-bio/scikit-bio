@@ -374,6 +374,7 @@ def _avgdist_taxon(
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
+    Py_ssize_t[::1] taxas,
 ):
     """Calculate average distances between a new taxon (k) and existing subtrees.
 
@@ -391,7 +392,7 @@ def _avgdist_taxon(
     cdef Py_ssize_t node, left, right, parent, sibling
 
     # total numbers of taxa and nodes in the tree
-    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t m = taxas[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
     cdef floating* adkl = &adk[0, 0]
@@ -405,8 +406,8 @@ def _avgdist_taxon(
             adkl[node] = dm[taxon, right]
         else:
             adkl[node] = (
-                tree[left, 4] * adkl[left] + tree[right, 4] * adkl[right]
-            ) / tree[node, 4]
+                taxas[left] * adkl[left] + taxas[right] * adkl[right]
+            ) / taxas[node]
 
     # Assign upper distance of root.
     adku[0] = dm[taxon, 0]
@@ -416,8 +417,8 @@ def _avgdist_taxon(
         node = order[i]
         parent, sibling = tree[node, 2], tree[node, 3]
         adku[node] = (
-            (m - tree[parent, 4]) * adku[parent] + tree[sibling, 4] * adkl[sibling]
-        ) / (m - tree[node, 4])
+            (m - taxas[parent]) * adku[parent] + taxas[sibling] * adkl[sibling]
+        ) / (m - taxas[node])
 
 
 def _bal_avgdist_taxon(
@@ -2976,59 +2977,6 @@ def _insert_taxon(
             parent = tree[curr, 2]
             tree[parent, 4] += 1
             curr = parent
-
-
-def _avgdist_taxon2(
-    floating[:, ::1] adk,
-    Py_ssize_t taxon,
-    floating[:, :] dm,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
-):
-    """Calculate average distances between a new taxon (k) and existing subtrees.
-
-    This function will update adk, a float array of (2, n) in which the two rows
-    represent the average distances from the taxon to the lower and upper subtrees of
-    each existing node, respectively.
-
-    Implemented according to Appendix 3 of Desper and Gascuel (2002). Basically, this
-    algorithm calculates all lower subtree distances via a reversed preorder traversal
-    (paper says postorder traversal), then calculates all upper subtree distances via a
-    preorder traversal.
-
-    """
-    cdef Py_ssize_t i
-    cdef Py_ssize_t node, left, right, parent, sibling
-
-    # total numbers of taxa and nodes in the tree
-    cdef Py_ssize_t m = taxas[0] + 1
-    cdef Py_ssize_t n = 2 * m - 3
-
-    cdef floating* adkl = &adk[0, 0]
-    cdef floating* adku = &adk[1, 0]
-
-    # Calculate the distance between taxon and the lower subtree of each node.
-    for i in range(n - 1, -1, -1):
-        node = order[i]
-        left, right = tree[node, 0], tree[node, 1]
-        if left == 0:
-            adkl[node] = dm[taxon, right]
-        else:
-            adkl[node] = (
-                taxas[left] * adkl[left] + taxas[right] * adkl[right]
-            ) / taxas[node]
-
-    # Assign upper distance of root.
-    adku[0] = dm[taxon, 0]
-
-    # Calculate the distance between taxon k and the upper subtree of each node.
-    for i in range(1, n):
-        node = order[i]
-        parent, sibling = tree[node, 2], tree[node, 3]
-        adku[node] = (
-            (m - taxas[parent]) * adku[parent] + taxas[sibling] * adkl[sibling]
-        ) / (m - taxas[node])
 
 
 def _ols_min_branch_d22(

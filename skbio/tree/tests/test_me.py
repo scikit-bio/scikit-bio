@@ -1090,8 +1090,9 @@ class MeTests(TestCase):
         # Test if the algorithm reproduces the manually calculated result.
         n = self.tree1.shape[0]
         taxon = self.dm1.shape[0] - 1
+        taxas = np.array([3, 1, 2, 1, 1, 0, 0])
         obs = np.zeros((2, n), dtype=float)
-        _avgdist_taxon_naive(obs, taxon, self.dm1, self.tree1m1, self.preodr1m1)
+        _avgdist_taxon_naive(obs, taxon, self.dm1, self.tree1m1, self.preodr1m1, taxas)
         exp = np. array([[6.333, 9.   , 5.   , 7.   , 3.   , 0.   , 0.   ],
                          [8.   , 6.   , 8.5  , 6.667, 8.   , 0.   , 0.   ]])
         npt.assert_array_equal(obs.round(3), exp)
@@ -1103,8 +1104,9 @@ class MeTests(TestCase):
         taxon = dm.shape[0] - 1
         tree, order = self.tree1m1, self.preodr1m1
         n = tree.shape[0]
-        _avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, order)
-        _avgdist_taxon_naive(exp := np.zeros((2, n)), taxon, dm, tree, order)
+        taxas = np.array([3, 1, 2, 1, 1, 0, 0])
+        _avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, order, taxas)
+        _avgdist_taxon_naive(exp := np.zeros((2, n)), taxon, dm, tree, order, taxas)
         npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_taxon(self):
