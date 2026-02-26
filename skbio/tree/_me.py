@@ -40,9 +40,7 @@ from ._c_me import (
     _bal_insert_plan,
     _bal_avgdist_flat,
     _bal_avgdist_nest,
-    _ols_min_branch_d22,
-    _avgdist_d2_insert2,
-    _ols_lengths_d22,
+    _count_taxa,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -530,17 +528,17 @@ def _gme(dm):
         _avgdist_taxon(adk, k, dm, tree, order, taxas)
 
         # Find a branch with minimum length change.
-        itag = _ols_min_branch_d22(lens, ad2, adk, tree, order, taxas)
+        itag = _ols_min_branch_d2(lens, ad2, adk, tree, order, taxas)
         size = taxas[order[itag]] * 2 - 1
 
         # Update average distances between distant-2 subtrees.
-        _avgdist_d2_insert2(ad2, itag, adk, tree, order, taxas)
+        _avgdist_d2_insert(ad2, itag, adk, tree, order, taxas)
 
         # Insert new taxon into tree.
         _insert_taxon_x(k, itag, size, tree, order)
 
     # Calculate branch lengths using an OLS framework.
-    _ols_lengths_d22(lens, ad2, tree, taxas)
+    _ols_lengths_d2(lens, ad2, tree, taxas)
 
     return tree, lens
 
@@ -876,11 +874,14 @@ def _fastnni(dm, tree, preodr, lens):
     """
     dtype = dm.dtype
     n = tree.shape[0]
+    taxas = np.empty(n, dtype=int)
+    _count_taxa(n, tree, preodr, taxas)
+
     stack = np.empty(n, dtype=int)
 
     # Calculate average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _avgdist_matrix(adm, dm, tree, preodr)
+    _avgdist_matrix(adm, dm, tree, preodr, taxas)
 
     # Calculate length changes of all possible swaps.
     _ols_all_swaps(lens, tree, adm)
@@ -911,7 +912,8 @@ def _fastnni(dm, tree, preodr, lens):
         _ols_corner_swaps(target, heap, lens, tree, adm)
 
     # Calculate branch lengths using an OLS framework.
-    _ols_lengths(lens, adm, tree)
+    _count_taxa(n, tree, preodr, taxas)
+    _ols_lengths(lens, adm, tree, taxas)
 
 
 def _bnni(dm, tree, preodr, lens):
@@ -1476,7 +1478,7 @@ def _insert_taxon_treenode(taxon, target, tree):
             parent.children = parent.children[::-1]
 
 
-def _avgdist_matrix_naive(adm, dm, tree, order):
+def _avgdist_matrix_naive(adm, dm, tree, order, taxas):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
     This function produces the same result as :func:`_avgdist_matrix`. However, it
@@ -1490,27 +1492,27 @@ def _avgdist_matrix_naive(adm, dm, tree, order):
     used in the actual GME algorithm.
 
     """
-    n = tree[0, 4] * 2 - 1
-    taxas = {}
+    n = taxas[0] * 2 - 1
+    taxon_sets = {}
 
     # iterate over nodes in reversed preorder (same outcome as postorder)
     for node in order[n - 1 :: -1]:
-        left, right = tree[node, :2]
+        left, right = tree[node, 0], tree[node, 1]
         if not left:
-            taxas[node] = frozenset([right])
+            taxon_sets[node] = frozenset([right])
         else:
-            taxas[node] = taxas[left] | taxas[right]
+            taxon_sets[node] = taxon_sets[left] | taxon_sets[right]
 
-    full = taxas[0] | frozenset([0])
+    full = taxon_sets[0] | frozenset([0])
 
     for a in range(n):
-        a_taxa = taxas[a]
+        a_taxa = taxon_sets[a]
         a_taxa_r = full - a_taxa
         # adm[a, a] = dm[list(a_taxa)][:, list(a_taxa_r)].mean()  # self distance
         for b in range(a + 1, n):
             # If a is an ancestor (proper superset) of b, flip a's taxon set as the
             # the upper subtree of a will be considered.
-            a_taxa_ = a_taxa_r if a_taxa > (b_taxa := taxas[b]) else a_taxa
+            a_taxa_ = a_taxa_r if a_taxa > (b_taxa := taxon_sets[b]) else a_taxa
             adm[a, b] = adm[b, a] = dm[list(a_taxa_)][:, list(b_taxa)].mean()
             # Because this is postorder traversal, a cannot be a descendant (proper
             # subset) of b.
