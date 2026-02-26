@@ -461,7 +461,7 @@ def _bal_avgdist_taxon(
         adku[node] = 0.5 * (adku[tree[node, 2]] + adkl[tree[node, 3]])
 
 
-def _bal_avgdist_taxon_cc(
+def _bal_avgdist_taxon_c(
     Py_ssize_t n,
     Py_ssize_t k,
     floating[:, ::1] dm,
@@ -894,7 +894,7 @@ def _avgdist_d2_insert(
     cdef Py_ssize_t lnk = n             # link node
     cdef Py_ssize_t kay = n + 1         # new taxon (k)
     cdef Py_ssize_t node, curr          # any node and current node
-    cdef Py_ssize_t par, sib, lft, rgt  # parent, sibling, left and children
+    cdef Py_ssize_t par, sib, lft, rgt  # parent, sibling, left and right children
 
     # node indices as in order
     cdef Py_ssize_t i

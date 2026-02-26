@@ -40,6 +40,7 @@ from skbio.tree._c_me import (
     _bal_avgdist_matrix,
     _avgdist_taxon,
     _bal_avgdist_taxon,
+    _bal_avgdist_taxon_c,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
     # _bal_avgdist_insert_p,
@@ -403,6 +404,11 @@ class MeTests(TestCase):
 
         # float32
         obs = bme(DistanceMatrix(self.dm2.astype("float32"), self.taxa2))
+        exp = TreeNode.read([self.nwk2])
+        self.assertEqual(obs.compare_rfd(exp), 0)
+
+        # non-contiguous data
+        obs = bme(DistanceMatrix(np.asfortranarray(self.dm2), self.taxa2))
         exp = TreeNode.read([self.nwk2])
         self.assertEqual(obs.compare_rfd(exp), 0)
 
@@ -1135,6 +1141,10 @@ class MeTests(TestCase):
                         [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
         npt.assert_allclose(obs, exp)
 
+        # non-contiguous
+        _bal_avgdist_taxon(n - 2, k, np.asfortranarray(dm), obs, tree, order)
+        npt.assert_allclose(obs, exp)
+
         dm = self.dm3
         tree, order = self.tree3, self.preodr3
         k = dm.shape[0] - 1
@@ -1146,6 +1156,18 @@ class MeTests(TestCase):
                         [1.59 , 1.228, 1.001, 0.768, 0.871, 0.635, 1.232, 0.663, 0.62 ,
                          0.   , 0.   ]])
         npt.assert_array_equal(obs.round(3), exp)
+
+    def test_bal_avgdist_taxon_c(self):
+        """Calculate taxon-to-subtree balanced average distances."""
+        dm = self.dm1
+        tree, order = self.tree1m1, self.preodr1m1
+        k = dm.shape[0] - 1
+        n = tree.shape[0]
+        obs = np.zeros((2, n))
+        _bal_avgdist_taxon_c(n - 2, k, dm, obs, tree, order)
+        exp = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+                        [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
+        npt.assert_allclose(obs, exp)
 
     def test_avgdist_d2_insert(self):
         """Update distant-2 subtree average distances after taxon insertion."""

@@ -18,7 +18,7 @@ from ._c_me import (
     _insert_taxon_x,
     _avgdist_taxon,
     _bal_avgdist_taxon,
-    _bal_avgdist_taxon_cc,
+    _bal_avgdist_taxon_c,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
     _ols_lengths,
@@ -586,10 +586,7 @@ def _bme(dm, parallel=500, factor=16):
     dtype = dm.dtype
 
     # faster processing for C-contiguous data
-    if dm.flags["C_CONTIGUOUS"]:
-        adk_func = _bal_avgdist_taxon_cc
-    else:
-        adk_func = _bal_avgdist_taxon
+    adk_func = _bal_avgdist_taxon_c if dm.flags["C_CONTIGUOUS"] else _bal_avgdist_taxon
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
@@ -642,10 +639,10 @@ def _bme(dm, parallel=500, factor=16):
     # node indices in preorder
     order = np.empty(N, dtype=int)
 
-    # number of nodes (tips and internal) within each clade
+    # number of nodes (tips and internal, incl. root) within each clade
     sizes = np.empty(N, dtype=int)
 
-    # number of branches to root
+    # number of branches from each node to root
     depths = np.empty(N, dtype=int)
 
     # average distances between all subtrees
