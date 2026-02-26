@@ -136,7 +136,7 @@ def _avgdist_matrix(
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
@@ -176,7 +176,7 @@ def _avgdist_matrix(
     cdef floating* adm_a
 
     # total numbers of taxa and nodes in the tree
-    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
     # Calculate the average distance between each pair of subtrees defined by nodes
@@ -201,7 +201,7 @@ def _avgdist_matrix(
         else:
             a_taxon = 0  # a can never be root (taxon 0), therefore 0 means none
             a1, a2 = tree[a, 0], tree[a, 1]
-            a1_size, a2_size = taxas[a1], taxas[a2]
+            a1_size, a2_size = tacts[a1], tacts[a2]
 
         dm_a = &dm[a_taxon, 0]
         adm_a = &adm[a, 0]
@@ -223,9 +223,9 @@ def _avgdist_matrix(
             # preorder that represents the descending nodes of the current node. The
             # size of the slice is 2 x taxon count - 2.
             k = tree[sibling, 6]
-            for j in range(k + taxas[sibling] * 2 - 2, k - 1, -1):
+            for j in range(k + tacts[sibling] * 2 - 2, k - 1, -1):
                 b = order[j]
-                b_size = taxas[b]
+                b_size = tacts[b]
 
                 # If both a and b are tips, take the original taxon-to-taxon distance
                 # (A4.1 (a) i).
@@ -245,7 +245,7 @@ def _avgdist_matrix(
                 else:
                     b1, b2 = tree[b, 0], tree[b, 1]
                     adm_a[b] = adm[b, a] = (
-                        taxas[b1] * adm_a[b1] + taxas[b2] * adm_a[b2]
+                        tacts[b1] * adm_a[b1] + tacts[b2] * adm_a[b2]
                     ) / b_size
 
             curr = parent
@@ -255,13 +255,13 @@ def _avgdist_matrix(
     # This is done through a reversed preorder traversal.
     for i in range(n - 1, 0, -1):
         a = order[i]
-        a_size = taxas[a]
+        a_size = tacts[a]
         if a_size == 1:
             adm[a, 0] = adm_0[a] = dm_0[tree[a, 1]]
         else:
             a1, a2 = tree[a, 0], tree[a, 1]
             adm[a, 0] = adm_0[a] = (
-                taxas[a1] * adm_0[a1] + taxas[a2] * adm_0[a2]
+                tacts[a1] * adm_0[a1] + tacts[a2] * adm_0[a2]
             ) / a_size
 
     # Step 3: Calculate nested subtree to subtree distances, in which the first node
@@ -276,16 +276,16 @@ def _avgdist_matrix(
 
         # The size of (upper) subtree b is the complement of its descendants. Same for
         # the parent subtree.
-        a_size = m - taxas[a]
-        p_size = m - taxas[parent]
-        s_size = taxas[sibling]
+        a_size = m - tacts[a]
+        p_size = m - tacts[parent]
+        s_size = tacts[sibling]
 
         # Iterate over all subtrees below b.
         # The paper says this traversal can be done in any manner. Here, we use the
         # preorder. See * above.
         adm_a = &adm[a, 0]
         k = tree[a, 6]
-        for j in range(k + 1, k + taxas[a] * 2 - 1):
+        for j in range(k + 1, k + tacts[a] * 2 - 1):
             b = order[j]
             adm_a[b] = adm[b, a] = (
                 s_size * adm[b, sibling] + p_size * adm[b, parent]
@@ -375,7 +375,7 @@ def _avgdist_taxon(
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     """Calculate average distances between a new taxon (k) and existing subtrees.
 
@@ -393,7 +393,7 @@ def _avgdist_taxon(
     cdef Py_ssize_t node, left, right, parent, sibling
 
     # total numbers of taxa and nodes in the tree
-    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
     cdef floating* adkl = &adk[0, 0]
@@ -407,8 +407,8 @@ def _avgdist_taxon(
             adkl[node] = dm[taxon, right]
         else:
             adkl[node] = (
-                taxas[left] * adkl[left] + taxas[right] * adkl[right]
-            ) / taxas[node]
+                tacts[left] * adkl[left] + tacts[right] * adkl[right]
+            ) / tacts[node]
 
     # Assign upper distance of root.
     adku[0] = dm[taxon, 0]
@@ -418,8 +418,8 @@ def _avgdist_taxon(
         node = order[i]
         parent, sibling = tree[node, 2], tree[node, 3]
         adku[node] = (
-            (m - taxas[parent]) * adku[parent] + taxas[sibling] * adkl[sibling]
-        ) / (m - taxas[node])
+            (m - tacts[parent]) * adku[parent] + tacts[sibling] * adkl[sibling]
+        ) / (m - tacts[node])
 
 
 def _bal_avgdist_taxon(
@@ -498,7 +498,7 @@ def _ols_lengths(
     floating[::1] lens,
     floating[:, ::1] adm,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Calculate branch lengths of a tree based on the OLS framework.
 
@@ -512,7 +512,7 @@ def _ols_lengths(
     cdef Py_ssize_t node, left, right, parent, sibling
     cdef Py_ssize_t l_size, r_size, p_size, s_size
     cdef floating lambda_
-    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
 
     for node in range(1, 2 * m - 3):
         left = tree[node, 0]
@@ -530,10 +530,10 @@ def _ols_lengths(
         # (B), and children (C and D) (Eq. 3).
         else:
             right = tree[node, 1]
-            l_size = taxas[left]
-            r_size = taxas[right]
-            p_size = m - taxas[parent]
-            s_size = taxas[sibling]
+            l_size = tacts[left]
+            r_size = tacts[right]
+            p_size = m - tacts[parent]
+            s_size = tacts[sibling]
             lambda_ = <floating>(p_size * r_size + s_size * l_size) / (
                 (p_size + s_size) * (l_size + r_size)
             )
@@ -552,7 +552,7 @@ def _ols_lengths_d2(
     floating[::1] lens,
     floating[:, ::1] ad2,
     Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Calculate branch lengths of a tree based on an OLS framework.
 
@@ -598,7 +598,7 @@ def _ols_lengths_d2(
 
     """
     cdef Py_ssize_t node, left, sibling
-    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
     cdef floating* ad2l = &ad2[0, 0]
@@ -622,11 +622,11 @@ def _ols_lengths_d2(
                 - ad2u[sibling]
                 - ad2l[left]
             ) - (
-                taxas[sibling]
+                tacts[sibling]
                 * ad2l[node]
-                + (m - taxas[tree[node, 2]])
+                + (m - tacts[tree[node, 2]])
                 * ad2u[node]
-            ) / (m - taxas[node])
+            ) / (m - tacts[node])
 
     # root branch
     left = tree[0, 0]
@@ -698,7 +698,7 @@ def _ols_min_branch_d2(
     floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Find the branch with the minimum length change after inserting a new taxon.
 
@@ -720,7 +720,7 @@ def _ols_min_branch_d2(
 
     cdef Py_ssize_t min_i = 0
     cdef floating min_len = 0
-    cdef Py_ssize_t m = taxas[0] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
 
     cdef floating* ad2l = &ad2[0, 0]
@@ -734,9 +734,9 @@ def _ols_min_branch_d2(
         node = order[i]
         parent = tree[node, 2]
         sibling = tree[node, 3]
-        size = taxas[node]
-        p_size = m - taxas[parent]
-        s_size = taxas[sibling]
+        size = tacts[node]
+        p_size = m - tacts[parent]
+        s_size = tacts[sibling]
 
         numerator = s_size + size * p_size
         lambda_0 = numerator / ((s_size + size) * (p_size + 1))
@@ -853,7 +853,7 @@ def _avgdist_d2_insert(
     floating[:, ::1] adk,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Update average distances between distant-2 subtrees after taxon insertion.
 
@@ -883,29 +883,27 @@ def _avgdist_d2_insert(
     Implemented according to Eq. 8 of Desper and Gascuel (2002).
 
     """
-    # tree dimensions
-    cdef Py_ssize_t m = taxas[0] + 1
+    # total taxon count (all tips plus root)
+    cdef Py_ssize_t m = tacts[0] + 1
+
+    # total node count
     cdef Py_ssize_t n = 2 * m - 3
 
     # node indices as in tree
-    cdef Py_ssize_t node                # any node
-    cdef Py_ssize_t curr                # current node
     cdef Py_ssize_t tag = order[itag]   # target node
     cdef Py_ssize_t lnk = n             # link node
     cdef Py_ssize_t kay = n + 1         # new taxon (k)
-    cdef Py_ssize_t par                 # parent
-    cdef Py_ssize_t sib                 # sibling
-    cdef Py_ssize_t lft                 # left child
-    cdef Py_ssize_t rgt                 # right child
+    cdef Py_ssize_t node, curr          # any node and current node
+    cdef Py_ssize_t par, sib, lft, rgt  # parent, sibling, left and children
 
     # node indices as in order
     cdef Py_ssize_t i
     cdef Py_ssize_t ipar, isib
 
     # taxon counts
-    cdef Py_ssize_t size = taxas[tag]
-    cdef Py_ssize_t size_1 = size + 1
-    cdef Py_ssize_t p_size
+    cdef Py_ssize_t tact = tacts[tag]
+    cdef Py_ssize_t tact_1 = tact + 1
+    cdef Py_ssize_t cpar
 
     # row pointers
     cdef floating* ad2l = &ad2[0, 0]
@@ -918,8 +916,8 @@ def _avgdist_d2_insert(
     if tag == 0:
 
         # Assign taxon counts of special ndes.
-        taxas[kay] = 1
-        taxas[lnk] = size
+        tacts[kay] = 1
+        tacts[lnk] = tact
 
         # k (lower) to root (parent, upper): pre-calculated
         ad2u[kay] = adku[0]
@@ -931,24 +929,24 @@ def _avgdist_d2_insert(
         # equation in A4.1(b). It is basically the distance between the upper and lower
         # subtrees of the root itself.
         lft, rgt = tree[0, 0], tree[0, 1]
-        ad2u[lnk] = (taxas[lft] * ad2u[lft] + taxas[rgt] * ad2u[rgt]) / size
+        ad2u[lnk] = (tacts[lft] * ad2u[lft] + tacts[rgt] * ad2u[rgt]) / tact
 
         # Calculate all node (lower) to parent (upper, containing k) distances. These
         # parents include the new link.
         for node in range(1, n):
-            p_size = m - taxas[tree[node, 2]]
-            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+            cpar = m - tacts[tree[node, 2]]
+            ad2u[node] = (adkl[node] + ad2u[node] * cpar) / (cpar + 1)
 
         # Finally, update the taxon count of root.
-        taxas[0] = size_1
+        tacts[0] = tact_1
 
         return
 
     ###### Regular case: insert into any other branch. ######
 
     # Assign taxon counts of special ndes.
-    taxas[kay] = 1
-    taxas[lnk] = size_1
+    tacts[kay] = 1
+    tacts[lnk] = tact_1
 
     # Temporarily copy the distances of target to link (will edit later).
     ad2u[lnk] = ad2u[tag]
@@ -962,7 +960,7 @@ def _avgdist_d2_insert(
     # using the equation in A4.1(c). Basically, it is the distance between the lower
     # and upper subtrees of the same target.
     par, sib = tree[tag, 2], tree[tag, 3]
-    ad2u[tag] = (taxas[sib] * ad2l[tag] + (m - taxas[par]) * ad2u[tag]) / (m - size)
+    ad2u[tag] = (tacts[sib] * ad2l[tag] + (m - tacts[par]) * ad2u[tag]) / (m - tact)
 
     # Transfer the pre-calculated distance between target (lower) and k (sibling,
     # lower).
@@ -970,10 +968,10 @@ def _avgdist_d2_insert(
 
     # Within the clade below target, calculate the distance between each node (lower)
     # and its parent (upper, containing k).
-    for i in range(itag + 1, itag + size * 2 - 1):
+    for i in range(itag + 1, itag + tact * 2 - 1):
         node = order[i]
-        p_size = m - taxas[tree[node, 2]]
-        ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+        cpar = m - tacts[tree[node, 2]]
+        ad2u[node] = (adkl[node] + ad2u[node] * cpar) / (cpar + 1)
 
     # Locate the preorder indices of parent and sibling.
     # NOTE: The same logic is also included in the `while` loop below, which is awkward
@@ -982,9 +980,9 @@ def _avgdist_d2_insert(
     # special case without adding unnecessary checks.
     if tree[par, 0] == tag:  # target/link is left child
         ipar = itag - 1
-        isib = itag + size * 2 - 1
+        isib = itag + tact * 2 - 1
     else:  # right child
-        ipar = itag - taxas[sib] * 2
+        ipar = itag - tacts[sib] * 2
         isib = ipar + 1
 
     # Iterate over the ancestors of target, starting from link and ending at root.
@@ -992,34 +990,34 @@ def _avgdist_d2_insert(
     while curr:
         # Calculate the distance between each pair of lower (containing k) and upper
         # ancestors.
-        ad2u[curr] = (adku[par] + ad2u[curr] * size) / size_1
+        ad2u[curr] = (adku[par] + ad2u[curr] * tact) / tact_1
 
         # Calculate the distance between each ancestor (lower, containing k) and its
         # sibling (lower).
-        ad2l[curr] = ad2l[sib] = (adkl[sib] + ad2l[curr] * size) / size_1
+        ad2l[curr] = ad2l[sib] = (adkl[sib] + ad2l[curr] * tact) / tact_1
 
         # Within the clade below each sibling, calculate the distance between each node
         # (lower) and its parent (upper, containing k).
-        for i in range(isib + 1, isib + taxas[sib] * 2 - 1):
+        for i in range(isib + 1, isib + tacts[sib] * 2 - 1):
             node = order[i]
-            p_size = m - taxas[tree[node, 2]]
-            ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
+            cpar = m - tacts[tree[node, 2]]
+            ad2u[node] = (adkl[node] + ad2u[node] * cpar) / (cpar + 1)
 
         # Up one level.
         curr = par
-        par, sib, size = tree[curr, 2], tree[curr, 3], taxas[curr]
-        size_1 = size + 1
+        par, sib, tact = tree[curr, 2], tree[curr, 3], tacts[curr]
+        tact_1 = tact + 1
 
         # Locate parent and sibling of the current node.
         if tree[par, 0] == curr:  # left child
-            isib = ipar + size * 2 - 1
+            isib = ipar + tact * 2 - 1
             ipar -= 1
         else:  # right child
-            ipar -= taxas[sib] * 2
+            ipar -= tacts[sib] * 2
             isib = ipar + 1
 
         # Add k to taxon count.
-        taxas[curr] += 1
+        tacts[curr] += 1
 
 
 ### Old serial version (double assignment) ###
@@ -1583,16 +1581,16 @@ def _count_taxa(
     Py_ssize_t n,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
-    Py_ssize_t[::1] taxas,
+    Py_ssize_t[::1] tacts,
 ):
     """Calculate the number of taxa (tips) descending from each node."""
     cdef Py_ssize_t i, node, lft
     for i in range(n - 1, -1, -1):
         node = order[i]
         if lft := tree[node, 0]:
-            taxas[node] = taxas[lft] + taxas[tree[node, 1]]
+            tacts[node] = tacts[lft] + tacts[tree[node, 1]]
         else:
-            taxas[node] = 1
+            tacts[node] = 1
 
 
 def _count_sizes(

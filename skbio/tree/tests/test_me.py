@@ -152,7 +152,7 @@ class MeTests(TestCase):
         self.preodr1 = np.array([0, 1, 2, 3, 4, 5, 6])
         self.postodr1 = np.array([1, 3, 5, 6, 4, 2, 0])
         self.lens1 = np.array([2, 3, 3, 4, 2, 1, 2], dtype=float)
-        self.taxas1 = np.array([4, 1, 3, 1, 2, 1, 1])
+        self.tacts1 = np.array([4, 1, 3, 1, 2, 1, 1])
 
         # An unfinished tree for example 1 (missing e)
         #           /-b
@@ -172,7 +172,7 @@ class MeTests(TestCase):
         ])
         self.preodr1m1 = np.array([0, 1, 2, 3, 4, 0, 0])
         self.postodr1m1 = np.array([1, 3, 4, 2, 0, 0, 0])
-        self.taxas1m1 = np.array([3, 1, 2, 1, 1, 0, 0])
+        self.tacts1m1 = np.array([3, 1, 2, 1, 1, 0, 0])
         self.sizes1m1 = np.array([5, 1, 3, 1, 1, 0, 0])
         self.depths1m1 = np.array([0, 1, 1, 2, 2, 0, 0])
 
@@ -196,7 +196,7 @@ class MeTests(TestCase):
         ])
         self.preodr1v2 = np.array([0, 1, 3, 4, 2, 5, 6])
         self.postodr1v2 = np.array([3, 4, 1, 5, 6, 2, 0])
-        self.taxas1v2 = np.array([4, 2, 2, 1, 1, 1, 1])
+        self.tacts1v2 = np.array([4, 2, 2, 1, 1, 1, 1])
 
         # Example 2
         # This example was adopted from the Phylip manual:
@@ -244,7 +244,7 @@ class MeTests(TestCase):
         ])
         self.preodr2 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         self.postodr2 = np.array([1, 3, 5, 7, 9, 10, 8, 6, 4, 2, 0])
-        self.taxas2 = np.array([6, 1, 5, 1, 4, 1, 3, 1, 2, 1, 1])
+        self.tacts2 = np.array([6, 1, 5, 1, 4, 1, 3, 1, 2, 1, 1])
         self.lens2 = np.array([
             0.91769, 0.76891, 0.42026875, 0.372875, 0.0326305, 0.2705917, 0.03939583,
             0.1525417, 0.0412083, 0.1240375, 0.1451625,
@@ -280,7 +280,7 @@ class MeTests(TestCase):
         ])
         self.preodr3 = np.array([0, 1, 3, 7, 8, 4, 2, 5, 6, 0, 0])
         self.postodr3 = np.array([7, 8, 3, 4, 1, 5, 6, 2, 0, 0, 0])
-        self.taxas3 = np.array([5, 3, 2, 2, 1, 1, 1, 1, 1, 0, 0])
+        self.tacts3 = np.array([5, 3, 2, 2, 1, 1, 1, 1, 1, 0, 0])
         self.sizes3 = np.array([8, 5, 3, 3, 1, 1, 1, 1, 1, 0, 0])
         self.depths3 = np.array([0, 1, 1, 2, 2, 2, 2, 3, 3, 0, 0])
 
@@ -976,7 +976,7 @@ class MeTests(TestCase):
         # Test if the algorithm reproduces the manually calculated result.
         n = self.tree1.shape[0]
         obs = np.zeros((n, n), dtype=float)
-        _avgdist_matrix_naive(obs, self.dm1, self.tree1, self.preodr1, self.taxas1)
+        _avgdist_matrix_naive(obs, self.dm1, self.tree1, self.preodr1, self.tacts1)
         exp = np.array([
             [ 0.   ,  5.   ,  8.667,  9.   ,  8.5  ,  8.   ,  9.   ],
             [ 5.   ,  0.   ,  9.667, 10.   ,  9.5  ,  9.   , 10.   ],
@@ -991,7 +991,7 @@ class MeTests(TestCase):
         # incomplete tree
         obs = np.zeros((n, n), dtype=float)
         _avgdist_matrix_naive(
-            obs, self.dm1, self.tree1m1, self.preodr1m1, self.taxas1m1
+            obs, self.dm1, self.tree1m1, self.preodr1m1, self.tacts1m1
         )
         exp = np.array([
             [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
@@ -1007,7 +1007,7 @@ class MeTests(TestCase):
         # alternative tree
         obs = np.zeros((n, n), dtype=float)
         _avgdist_matrix_naive(
-            obs, self.dm1, self.tree1v2, self.preodr1v2, self.taxas1v2
+            obs, self.dm1, self.tree1v2, self.preodr1v2, self.tacts1v2
         )
         exp = np.array([
             [ 0.  ,  7.  ,  8.5 ,  5.  ,  9.  ,  8.  ,  9.  ],
@@ -1023,44 +1023,44 @@ class MeTests(TestCase):
     def test_avgdist_matrix(self):
         """Calculate an average distance matrix."""
         # Test if the algorithm produces the same result as the native method does.
-        dm, tree, order, taxas = self.dm1, self.tree1, self.preodr1, self.taxas1
+        dm, tree, order, tacts = self.dm1, self.tree1, self.preodr1, self.tacts1
         n = tree.shape[0]
         obs = np.zeros((n, n), dtype=float)
-        _avgdist_matrix(obs, dm, tree, order, taxas)
+        _avgdist_matrix(obs, dm, tree, order, tacts)
         exp = np.zeros((n, n), dtype=float)
-        _avgdist_matrix_naive(exp, dm, tree, order, taxas)
+        _avgdist_matrix_naive(exp, dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # make sure all cells are populated
-        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order, taxas)
+        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order, tacts)
         np.fill_diagonal(obs, 0)
-        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # incomplete tree
-        tree, order, taxas = self.tree1m1, self.preodr1m1, self.taxas1m1
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, taxas)
-        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, taxas)
+        tree, order, tacts = self.tree1m1, self.preodr1m1, self.tacts1m1
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 1 v2
-        tree, order, taxas = self.tree1v2, self.preodr1v2, self.taxas1v2
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, taxas)
-        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, taxas)
+        tree, order, tacts = self.tree1v2, self.preodr1v2, self.tacts1v2
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 2 (complete)
-        dm, tree, order, taxas = self.dm2, self.tree2, self.preodr2, self.taxas2
+        dm, tree, order, tacts = self.dm2, self.tree2, self.preodr2, self.tacts2
         n = tree.shape[0]
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, taxas)
-        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 3 (incomplete)
-        dm, tree, order, taxas = self.dm3, self.tree3, self.preodr3, self.taxas3
+        dm, tree, order, tacts = self.dm3, self.tree3, self.preodr3, self.tacts3
         n = tree.shape[0]
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, taxas)
-        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_matrix(self):
@@ -1104,9 +1104,10 @@ class MeTests(TestCase):
         # Test if the algorithm reproduces the manually calculated result.
         n = self.tree1.shape[0]
         taxon = self.dm1.shape[0] - 1
-        taxas = np.array([3, 1, 2, 1, 1, 0, 0])
         obs = np.zeros((2, n), dtype=float)
-        _avgdist_taxon_naive(obs, taxon, self.dm1, self.tree1m1, self.preodr1m1, taxas)
+        _avgdist_taxon_naive(
+            obs, taxon, self.dm1, self.tree1m1, self.preodr1m1, self.tacts1m1
+        )
         exp = np. array([[6.333, 9.   , 5.   , 7.   , 3.   , 0.   , 0.   ],
                          [8.   , 6.   , 8.5  , 6.667, 8.   , 0.   , 0.   ]])
         npt.assert_array_equal(obs.round(3), exp)
@@ -1116,11 +1117,10 @@ class MeTests(TestCase):
         # Test if the algorithm produces the same result as the naive method does.
         dm = self.dm1
         taxon = dm.shape[0] - 1
-        tree, order = self.tree1m1, self.preodr1m1
+        tree, order, tacts = self.tree1m1, self.preodr1m1, self.tacts1m1
         n = tree.shape[0]
-        taxas = np.array([3, 1, 2, 1, 1, 0, 0])
-        _avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, order, taxas)
-        _avgdist_taxon_naive(exp := np.zeros((2, n)), taxon, dm, tree, order, taxas)
+        _avgdist_taxon(obs := np.zeros((2, n)), taxon, dm, tree, order, tacts)
+        _avgdist_taxon_naive(exp := np.zeros((2, n)), taxon, dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_taxon(self):
@@ -1165,10 +1165,10 @@ class MeTests(TestCase):
         target = 4
         _avgdist_taxon(
             adk := np.zeros((2, n), dtype=float), taxon, self.dm1, self.tree1m1,
-            self.preodr1m1, self.taxas1m1
+            self.preodr1m1, self.tacts1m1
         )
         _avgdist_d2_insert(
-            obs := ad2.copy(), target, adk, self.tree1m1, self.preodr1m1, self.taxas1m1
+            obs := ad2.copy(), target, adk, self.tree1m1, self.preodr1m1, self.tacts1m1
         )
         # The following values were taken from the full-scale distance matrix.
         exp = np.array([
@@ -1183,27 +1183,27 @@ class MeTests(TestCase):
         npt.assert_array_equal(obs.round(3), exp)
 
         # another example: all possible insertions
-        dm, tree, order, taxas = self.dm3, self.tree3, self.preodr3, self.taxas3
+        dm, tree, order, tacts = self.dm3, self.tree3, self.preodr3, self.tacts3
         n = tree.shape[0]
         m = tree[0, 4] + 1
         ran_ = np.arange(n)
 
         # get distant-2 values from the full matrix
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]])
         )
-        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, taxas)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, tacts)
 
         for i in range(n - 2):
             # calculate distant-2 values using the algorithm
-            _avgdist_d2_insert(obs := ad2.copy(), i, adk, tree, order, taxas.copy())
+            _avgdist_d2_insert(obs := ad2.copy(), i, adk, tree, order, tacts.copy())
 
             # insert taxon and calculate full matrix
             tree_, order_, = tree.copy(), order.copy()
             _insert_taxon(m, order[i], tree_, order_)
-            _count_taxa(n, tree_, order_, taxas_ := np.empty(n, dtype=int))
-            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_, taxas_)
+            _count_taxa(n, tree_, order_, tacts_ := np.empty(n, dtype=int))
+            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_, tacts_)
             exp = np.ascontiguousarray(
                 np.vstack([adm[ran_, tree_[ran_, 3]], adm[ran_, tree_[ran_, 2]]])
             )
@@ -1424,20 +1424,18 @@ class MeTests(TestCase):
         """Calculate tree branch lengths using an OLS framework."""
         # Example 1: This should recover the same branch lengths as in the original
         # tree.
-        dm, tree, order = self.dm1, self.tree1, self.preodr1
-        taxas = np.array([4, 1, 3, 1, 2, 1, 1])
+        dm, tree, order, tacts = self.dm1, self.tree1, self.preodr1, self.tacts1
         n = tree.shape[0]
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
-        _ols_lengths(obs := np.zeros(n), adm, tree, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
+        _ols_lengths(obs := np.zeros(n), adm, tree, tacts)
         npt.assert_allclose(obs, self.lens1)
 
         # Example 2: The output is close but not precisely identical to those in the
         # original tree.
-        dm, tree, order = self.dm2, self.tree2, self.preodr2
+        dm, tree, order, tacts = self.dm2, self.tree2, self.preodr2, self.tacts2
         n = tree.shape[0]
-        taxas = np.array([6, 1, 5, 1, 4, 1, 3, 1, 2, 1, 1])
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
-        _ols_lengths(obs := np.zeros(n), adm, tree, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
+        _ols_lengths(obs := np.zeros(n), adm, tree, tacts)
         exp = np.array([
             0.91769, 0.76891, 0.42026875, 0.35793125, 0.04316597, 0.28054444,
             0.03137847, 0.15226875, 0.04148125, 0.12214, 0.14706])
@@ -1447,25 +1445,25 @@ class MeTests(TestCase):
         """Calculate tree branch lengths using an OLS framework."""
         # Test if result matches that calculated from the full matrix.
         # example 1
-        dm, tree, order, taxas = self.dm1, self.tree1, self.preodr1, self.taxas1
+        dm, tree, order, tacts = self.dm1, self.tree1, self.preodr1, self.tacts1
         n = tree.shape[0]
         ran_ = np.arange(n)
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]]))
-        _ols_lengths_d2(obs := np.zeros(n), ad2, tree, taxas)
-        _ols_lengths(exp := np.zeros(n), adm, tree, taxas)
+        _ols_lengths_d2(obs := np.zeros(n), ad2, tree, tacts)
+        _ols_lengths(exp := np.zeros(n), adm, tree, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 2
-        dm, tree, order, taxas = self.dm2, self.tree2, self.preodr2, self.taxas2
+        dm, tree, order, tacts = self.dm2, self.tree2, self.preodr2, self.tacts2
         n = tree.shape[0]
         ran_ = np.arange(n)
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]]))
-        _ols_lengths_d2(obs := np.zeros(n), ad2, tree, taxas)
-        _ols_lengths(exp := np.zeros(n), adm, tree, taxas)
+        _ols_lengths_d2(obs := np.zeros(n), ad2, tree, tacts)
+        _ols_lengths(exp := np.zeros(n), adm, tree, tacts)
         npt.assert_allclose(obs, exp)
 
     def test_bal_lengths(self):
@@ -1491,32 +1489,31 @@ class MeTests(TestCase):
     def test_ols_min_branch_d2(self):
         """Find the branch with minimum length change using an OLS framework."""
         # Test if result matches ground truth.
-        dm, tree, order = self.dm1, self.tree1m1, self.preodr1m1
+        dm, tree, order, tacts = self.dm1, self.tree1m1, self.preodr1m1, self.tacts1m1
         n = tree.shape[0]
         m = tree[0, 4] + 1
         ran_ = np.arange(n)
-        taxas = np.array([3, 1, 2, 1, 1, 0, 0])
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         ad2 = np.ascontiguousarray(np.vstack([
             adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]]))
-        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, taxas)
-        res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, order, taxas)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, tacts)
+        res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, order, tacts)
         self.assertEqual(res, 4)
         exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
         # The algorithm omits factor 0.5, therefore we need to x2 here.
         npt.assert_allclose(obs, 2 * exp)
 
         # Test if result matches that calculated from the entire tree.
-        dm, tree, order, taxas = self.dm3, self.tree3, self.preodr3, self.taxas3
+        dm, tree, order, tacts = self.dm3, self.tree3, self.preodr3, self.tacts3
         n = tree.shape[0]
         m = tree[0, 4] + 1
         ran_ = np.arange(n)
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         ad2 = np.ascontiguousarray(
             np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]])
         )
-        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, taxas)
-        res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, order, taxas)
+        _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, tacts)
+        res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, order, tacts)
 
         # For each branch, insert taxon, calculate full matrix, then calculate and sum
         # all branch lengths. The difference between each sum and the sum by the root
@@ -1524,9 +1521,9 @@ class MeTests(TestCase):
         exp = np.zeros(n)
         for i in range(n - 2):
             _insert_taxon(m, order[i], tree_ := tree.copy(), order_ := order.copy())
-            _count_taxa(n, tree_, order_, taxas_ := np.empty(n, dtype=int))
-            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_, taxas_)
-            _ols_lengths(lens := np.zeros(n), adm, tree_, taxas_)
+            _count_taxa(n, tree_, order_, tacts_ := np.empty(n, dtype=int))
+            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_, tacts_)
+            _ols_lengths(lens := np.zeros(n), adm, tree_, tacts_)
             exp[order[i]] = lens.sum()
         exp[:n - 2] -= exp[0]
 
