@@ -883,20 +883,31 @@ def _avgdist_d2_insert(
     Implemented according to Eq. 8 of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t i
-    cdef Py_ssize_t node, left, right, parent, sibling, curr, p_size, size_1
-
-    cdef Py_ssize_t target = order[itag]
-    cdef Py_ssize_t size = taxas[target]
-
-    cdef Py_ssize_t ipar, isib
-
-    # dimensions and positions
+    # tree dimensions
     cdef Py_ssize_t m = taxas[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
-    cdef Py_ssize_t link = n
-    cdef Py_ssize_t tip = n + 1
 
+    # node indices as in tree
+    cdef Py_ssize_t node                # any node
+    cdef Py_ssize_t curr                # current node
+    cdef Py_ssize_t tag = order[itag]   # target node
+    cdef Py_ssize_t lnk = n             # link node
+    cdef Py_ssize_t kay = n + 1         # new taxon (k)
+    cdef Py_ssize_t par                 # parent
+    cdef Py_ssize_t sib                 # sibling
+    cdef Py_ssize_t lft                 # left child
+    cdef Py_ssize_t rgt                 # right child
+
+    # node indices as in order
+    cdef Py_ssize_t i
+    cdef Py_ssize_t ipar, isib
+
+    # taxon counts
+    cdef Py_ssize_t size = taxas[tag]
+    cdef Py_ssize_t size_1 = size + 1
+    cdef Py_ssize_t p_size
+
+    # row pointers
     cdef floating* ad2l = &ad2[0, 0]
     cdef floating* ad2u = &ad2[1, 0]
     cdef floating* adkl = &adk[0, 0]
@@ -904,21 +915,23 @@ def _avgdist_d2_insert(
 
     ###### Special case: insert into the root branch. ######
 
-    if target == 0:
+    if tag == 0:
+
+        # Assign taxon counts of special ndes.
+        taxas[kay] = 1
+        taxas[lnk] = size
 
         # k (lower) to root (parent, upper): pre-calculated
-        ad2u[tip] = adku[0]
+        ad2u[kay] = adku[0]
 
         # k (lower) to link (sibling, lower): equals to k to root (lower).
-        ad2l[link] = ad2l[tip] = adkl[0]
+        ad2l[lnk] = ad2l[kay] = adkl[0]
 
         # Link (lower) to root (parent, upper): de novo calculation according to the
         # equation in A4.1(b). It is basically the distance between the upper and lower
         # subtrees of the root itself.
-        left, right = tree[0, 0], tree[0, 1]
-        ad2u[link] = (
-            taxas[left] * ad2u[left] + taxas[right] * ad2u[right]
-        ) / size
+        lft, rgt = tree[0, 0], tree[0, 1]
+        ad2u[lnk] = (taxas[lft] * ad2u[lft] + taxas[rgt] * ad2u[rgt]) / size
 
         # Calculate all node (lower) to parent (upper, containing k) distances. These
         # parents include the new link.
@@ -926,39 +939,34 @@ def _avgdist_d2_insert(
             p_size = m - taxas[tree[node, 2]]
             ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
-        # Update taxon counts of special ndes.
-        taxas[tip] = 1
-        taxas[link] = size
-        taxas[0] = size + 1
+        # Finally, update the taxon count of root.
+        taxas[0] = size_1
 
         return
 
     ###### Regular case: insert into any other branch. ######
 
-    parent, sibling = tree[target, 2], tree[target, 3]
-    size_1 = size + 1
-
-    taxas[tip] = 1
-    taxas[link] = size_1
+    # Assign taxon counts of special ndes.
+    taxas[kay] = 1
+    taxas[lnk] = size_1
 
     # Temporarily copy the distances of target to link (will edit later).
-    ad2u[link] = ad2u[target]
-    ad2l[link] = ad2l[target]
+    ad2u[lnk] = ad2u[tag]
+    ad2l[lnk] = ad2l[tag]
 
     # Distance between k (lower) and link (parent, upper) equals to that between k and
     # the upper subtree of target.
-    ad2u[tip] = adku[target]
+    ad2u[kay] = adku[tag]
 
     # Distance between target (lower) and link (parent, upper) needs to be calculated
     # using the equation in A4.1(c). Basically, it is the distance between the lower
     # and upper subtrees of the same target.
-    ad2u[target] = (
-        taxas[sibling] * ad2l[target] + (m - taxas[parent]) * ad2u[target]
-    ) / (m - size)
+    par, sib = tree[tag, 2], tree[tag, 3]
+    ad2u[tag] = (taxas[sib] * ad2l[tag] + (m - taxas[par]) * ad2u[tag]) / (m - size)
 
     # Transfer the pre-calculated distance between target (lower) and k (sibling,
     # lower).
-    ad2l[target] = ad2l[tip] = adkl[target]
+    ad2l[tag] = ad2l[kay] = adkl[tag]
 
     # Within the clade below target, calculate the distance between each node (lower)
     # and its parent (upper, containing k).
@@ -967,43 +975,50 @@ def _avgdist_d2_insert(
         p_size = m - taxas[tree[node, 2]]
         ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
-    # Iterate over the ancestors of target, starting from link and ending at root.
-    if tree[parent, 0] == target:  # left child
+    # Locate the preorder indices of parent and sibling.
+    # NOTE: The same logic is also included in the `while` loop below, which is awkward
+    # but necessary because the loop starts with link instead of target. Unless we
+    # update tree topology before this function call, we can't let the loop handle the
+    # special case without adding unnecessary checks.
+    if tree[par, 0] == tag:  # target/link is left child
         ipar = itag - 1
         isib = itag + size * 2 - 1
     else:  # right child
-        ipar = itag - taxas[sibling] * 2
+        ipar = itag - taxas[sib] * 2
         isib = ipar + 1
 
-    curr = link
+    # Iterate over the ancestors of target, starting from link and ending at root.
+    curr = lnk
     while curr:
         # Calculate the distance between each pair of lower (containing k) and upper
         # ancestors.
-        ad2u[curr] = (adku[parent] + ad2u[curr] * size) / size_1
+        ad2u[curr] = (adku[par] + ad2u[curr] * size) / size_1
 
         # Calculate the distance between each ancestor (lower, containing k) and its
         # sibling (lower).
-        ad2l[curr] = ad2l[sibling] = (adkl[sibling] + ad2l[curr] * size) / size_1
+        ad2l[curr] = ad2l[sib] = (adkl[sib] + ad2l[curr] * size) / size_1
 
         # Within the clade below each sibling, calculate the distance between each node
         # (lower) and its parent (upper, containing k).
-        for i in range(isib + 1, isib + taxas[sibling] * 2 - 1):
+        for i in range(isib + 1, isib + taxas[sib] * 2 - 1):
             node = order[i]
             p_size = m - taxas[tree[node, 2]]
             ad2u[node] = (adkl[node] + ad2u[node] * p_size) / (p_size + 1)
 
-        curr = parent
-        parent, sibling, size = tree[curr, 2], tree[curr, 3], taxas[curr]
+        # Up one level.
+        curr = par
+        par, sib, size = tree[curr, 2], tree[curr, 3], taxas[curr]
         size_1 = size + 1
 
-        if tree[parent, 0] == curr:  # left child
+        # Locate parent and sibling of the current node.
+        if tree[par, 0] == curr:  # left child
             isib = ipar + size * 2 - 1
             ipar -= 1
         else:  # right child
-            ipar -= taxas[sibling] * 2
+            ipar -= taxas[sib] * 2
             isib = ipar + 1
 
-        # add k to taxon count
+        # Add k to taxon count.
         taxas[curr] += 1
 
 
@@ -1513,8 +1528,8 @@ def _bal_avgdist_insert(
             s_cuz = sizes[lft]
             ianc = icur - s_cuz - 1
 
-            # This is equivalent to range(cuz_i + cuz_s - 1, cuz_i - 1, -1), in which
-            # cuz_i = anc_i + 1.
+            # This is equivalent to range(icuz + s_cuz - 1, icuz - 1, -1), in which
+            # icuz = ianc + 1.
             for i in range(ianc + s_cuz, ianc, -1):
                 a = order[i]
                 adm_a = &adm[a, 0]

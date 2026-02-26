@@ -941,7 +941,7 @@ def _bnni(dm, tree, preodr, lens):
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
 
-    sizes = np.empty(n, dtype=int)
+    # sizes = np.empty(n, dtype=int)
     # _count_sizes(n, tree, preodr, sizes)
 
     # Calculate balanced average distances between all pairs of subtrees.
