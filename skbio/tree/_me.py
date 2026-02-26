@@ -17,6 +17,7 @@ from ._c_me import (
     _insert_taxon,
     _insert_taxon_x,
     _avgdist_taxon,
+    _avgdist_taxon_c,
     _bal_avgdist_taxon,
     _bal_avgdist_taxon_c,
     _avgdist_d2_insert,
@@ -487,6 +488,9 @@ def _gme(dm):
     """
     dtype = dm.dtype
 
+    # faster processing for C-contiguous data
+    adk_func = _avgdist_taxon_c if dm.flags["C_CONTIGUOUS"] else _avgdist_taxon
+
     # number of taxa in the input distance matrix
     m = dm.shape[0]
 
@@ -527,7 +531,7 @@ def _gme(dm):
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate average distances from new taxon to existing subtrees.
-        _avgdist_taxon(adk, k, dm, tree, order, tacts)
+        adk_func(adk, k, dm, tree, order, tacts)
 
         # Find a branch with minimum length change.
         itag = _ols_min_branch_d2(lens, ad2, adk, tree, order, tacts)

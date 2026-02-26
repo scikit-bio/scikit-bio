@@ -422,6 +422,56 @@ def _avgdist_taxon(
         ) / (m - tacts[node])
 
 
+def _avgdist_taxon_c(
+    floating[:, ::1] adk,
+    Py_ssize_t taxon,
+    floating[:, ::1] dm,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] tacts,
+):
+    """Calculate average distances between a new taxon (k) and existing subtrees.
+
+    This function is identical to `_avgdist_taxon` except that it assumes `dm` is
+    C-contiguous, which makes lookup more efficient.
+
+    """
+    cdef Py_ssize_t i
+    cdef Py_ssize_t node, left, right, parent, sibling
+
+    # total numbers of taxa and nodes in the tree
+    cdef Py_ssize_t m = tacts[0] + 1
+    cdef Py_ssize_t n = 2 * m - 3
+
+    # pointer to taxon row in the distance matrix
+    cdef floating* dm_k = &dm[taxon, 0]
+
+    cdef floating* adkl = &adk[0, 0]
+    cdef floating* adku = &adk[1, 0]
+
+    # Calculate the distance between taxon and the lower subtree of each node.
+    for i in range(n - 1, -1, -1):
+        node = order[i]
+        left, right = tree[node, 0], tree[node, 1]
+        if left == 0:
+            adkl[node] = dm_k[right]
+        else:
+            adkl[node] = (
+                tacts[left] * adkl[left] + tacts[right] * adkl[right]
+            ) / tacts[node]
+
+    # Assign upper distance of root.
+    adku[0] = dm_k[0]
+
+    # Calculate the distance between taxon k and the upper subtree of each node.
+    for i in range(1, n):
+        node = order[i]
+        parent, sibling = tree[node, 2], tree[node, 3]
+        adku[node] = (
+            (m - tacts[parent]) * adku[parent] + tacts[sibling] * adkl[sibling]
+        ) / (m - tacts[node])
+
+
 def _bal_avgdist_taxon(
     Py_ssize_t n,
     Py_ssize_t k,
@@ -471,8 +521,7 @@ def _bal_avgdist_taxon_c(
 ):
     r"""Calculate balanced average distances between a new taxon and existing subtrees.
 
-    This function is identical to `_bal_avgdist_taxon` except that it assumes `dm` is
-    C-contiguous, which makes lookup more efficient.
+    Identical to `_bal_avgdist_taxon` but assumes a C-contiguous `dm`.
 
     """
     cdef Py_ssize_t i
