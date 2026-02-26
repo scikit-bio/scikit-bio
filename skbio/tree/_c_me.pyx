@@ -1076,7 +1076,7 @@ def _avgdist_d2_insert(
 #     Py_ssize_t target,
 #     floating[:, ::1] adk,
 #     Py_ssize_t[:, ::1] tree,
-#     Py_ssize_t[::1] postodr,
+#     Py_ssize_t[::1] posodr,
 #     floating[::1] npots,
 #     Py_ssize_t[::1] stack,
 #     Py_ssize_t[::1] paths,
@@ -1138,7 +1138,7 @@ def _avgdist_d2_insert(
 #             ii = tree[a, 7]
 #             npot = npots[tree[a, 5] + 1]
 #             for i in range(ii - tree[a, 4] * 2 + 2, ii):
-#                 b = postodr[i]
+#                 b = posodr[i]
 #                 adm[a, b] = adm[b, a] = adm[a, b] + npot * (adkl[b] - adm[0, b])
 
 #         return
@@ -1152,7 +1152,7 @@ def _avgdist_d2_insert(
 #     # Locate the clade below target (including target)
 #     ii = tree[target, 7]
 #     for i in range(ii - tree[target, 4] * 2 + 2, ii + 1):
-#         a = postodr[i]
+#         a = posodr[i]
 
 #         # Transfer pre-calculated distance between k (lower) and any node within the clade
 #         # (including target, lower).
@@ -1167,7 +1167,7 @@ def _avgdist_d2_insert(
 #         jj = tree[a, 7]
 #         npot = npots[tree[a, 5] - depth + 1]
 #         for j in range(jj - tree[a, 4] * 2 + 2, jj):
-#             b = postodr[j]
+#             b = posodr[j]
 #             adm[a, b] = adm[b, a] = adm[a, b] + npot * (adkl[b] - adm[target, b])
 
 #     ### Step 2: Distances around the insertion point. ###
@@ -1210,7 +1210,7 @@ def _avgdist_d2_insert(
 #         cousin = tree[curr, 3]
 #         ii = tree[cousin, 7]
 #         for i in range(ii - tree[cousin, 4] * 2 + 2, ii + 1):
-#             a = postodr[i]
+#             a = posodr[i]
 
 #             # Transfer the pre-calculated distances between k and each descendant
 #             # (lower).
@@ -1232,7 +1232,7 @@ def _avgdist_d2_insert(
 #             jj = tree[a, 7]
 #             npot = npots[depth_diff + tree[a, 5]]
 #             for j in range(jj - tree[a, 4] * 2 + 2, jj):
-#                 b = postodr[j]
+#                 b = posodr[j]
 #                 adm[a, b] = adm[b, a] = adm[a, b] + npot * (adkl[b] - adm[b, target])
 
 #         curr = anc
@@ -1598,7 +1598,57 @@ def _bal_avgdist_insert(
         deg += 2
 
 
-def _count_pairs(
+def _calc_tacts(
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] tacts,
+):
+    """Calculate the number of taxa (tips) descending from each node."""
+    cdef Py_ssize_t i, node, lft
+    for i in range(n - 1, -1, -1):
+        node = order[i]
+        if lft := tree[node, 0]:
+            tacts[node] = tacts[lft] + tacts[tree[node, 1]]
+        else:
+            tacts[node] = 1
+
+
+def _calc_sizes(
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+):
+    """Calculate the number of nodes within each clade (including root).
+
+    NOTE: size = tact * 2 - 1
+
+    """
+    cdef Py_ssize_t i, node, lft
+    for i in range(n - 1, -1, -1):
+        node = order[i]
+        if lft := tree[node, 0]:
+            sizes[node] = sizes[lft] + sizes[tree[node, 1]] + 1
+        else:
+            sizes[node] = 1
+
+
+def _calc_depths(
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] depths,
+):
+    """Calculate the number of branches from root to each node (i.e., depth)."""
+    cdef Py_ssize_t i, node
+    depths[0] = 0  # root
+    for i in range(1, n):
+        node = order[i]
+        depths[node] = depths[tree[node, 2]] + 1
+
+
+def _calc_pairs(
     Py_ssize_t n,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
@@ -1624,38 +1674,6 @@ def _count_pairs(
             pairs[a] = pairs[lft] + pairs[rgt] + sizes[lft] + sizes[rgt]
         else:
             pairs[a] = 0
-
-
-def _count_taxa(
-    Py_ssize_t n,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] order,
-    Py_ssize_t[::1] tacts,
-):
-    """Calculate the number of taxa (tips) descending from each node."""
-    cdef Py_ssize_t i, node, lft
-    for i in range(n - 1, -1, -1):
-        node = order[i]
-        if lft := tree[node, 0]:
-            tacts[node] = tacts[lft] + tacts[tree[node, 1]]
-        else:
-            tacts[node] = 1
-
-
-def _count_sizes(
-    Py_ssize_t n,
-    Py_ssize_t[:, ::1] tree,
-    Py_ssize_t[::1] order,
-    Py_ssize_t[::1] sizes,
-):
-    """Calculate the number of nodes within each clade (including root)."""
-    cdef Py_ssize_t i, node, lft
-    for i in range(n - 1, -1, -1):
-        node = order[i]
-        if lft := tree[node, 0]:
-            sizes[node] = sizes[lft] + sizes[tree[node, 1]] + 1
-        else:
-            sizes[node] = 1
 
 
 def _bal_insert_plan(
@@ -2393,9 +2411,9 @@ def _insert_taxon_x(
         order[n + 1] = kay
 
         # postorder
-        # postodr[n - 1] = link
-        # postodr[n] = tip
-        # postodr[n + 1] = 0
+        # posodr[n - 1] = link
+        # posodr[n] = tip
+        # posodr[n + 1] = 0
 
         # entire tree depth + 1
         # if use_depth:
@@ -2458,11 +2476,11 @@ def _insert_taxon_x(
 
         # postorder shift: all nodes after clade +2, tip and link inserted after clade
         # for i in range(n - 1, post_i, -1):
-        #     k = postodr[i]
+        #     k = posodr[i]
         #     tree[k, 7] += 2
-        #     postodr[i + 2] = k
-        # postodr[post_i + 2] = link
-        # postodr[post_i + 1] = tip
+        #     posodr[i + 2] = k
+        # posodr[post_i + 2] = link
+        # posodr[post_i + 1] = tip
 
         # size +2 from parent to root
         # curr = link
@@ -3026,9 +3044,9 @@ def _insert_taxon(
         order[n + 1] = tip
 
         # postorder
-        # postodr[n - 1] = link
-        # postodr[n] = tip
-        # postodr[n + 1] = 0
+        # posodr[n - 1] = link
+        # posodr[n] = tip
+        # posodr[n + 1] = 0
 
     # Regular case (any other branch): The link becomes the parent of the target node,
     # and child of its original parent. Taxon k becomes the sibling
@@ -3092,11 +3110,11 @@ def _insert_taxon(
 
         # postorder shift: all nodes after clade +2, tip and link inserted after clade
         # for i in range(n - 1, post_i, -1):
-        #     k = postodr[i]
+        #     k = posodr[i]
         #     tree[k, 7] += 2
-        #     postodr[i + 2] = k
-        # postodr[post_i + 2] = link
-        # postodr[post_i + 1] = tip
+        #     posodr[i + 2] = k
+        # posodr[post_i + 2] = link
+        # posodr[post_i + 1] = tip
 
         # size +1 from link to root
         curr = link
