@@ -837,10 +837,10 @@ def _fastnni(dm, tree, preodr, lens):
 
     This algorithm was implemented following Section 2.2 and Appendix 4 of Desper and
     Gascuel (2002). Basically, it creates a full average distance matrix between all
-    pairs of subtrees, evaluates all possible swaps, then it iteratively perform
-    swaps that lead to the maximum reduction of overall branch lengths. During this
-    process, it needs to update the evaluation of the four corner branches after one
-    branch is swapped.
+    pairs of subtrees, evaluates all possible swaps, then iteratively performs swaps
+    that lead to the maximum reduction of overall branch lengths. During this process,
+    it needs to update the evaluation of the four corner branches after one branch is
+    swapped.
 
     ---
 
@@ -851,7 +851,7 @@ def _fastnni(dm, tree, preodr, lens):
 
         0. Length change (negative; smaller is better)
         1. Corresponding node index
-        2. Corresponding side (0: left, 1: right) child to be swapped with sibling
+        2. Corresponding side (0: left, 1: right) of child to swap with sibling
 
     For example, (-0.15, 7, 1) means that swapping the right child and the sibling of
     node 7 will reduce the overall branch length by 0.15.
