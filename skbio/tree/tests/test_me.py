@@ -1503,31 +1503,31 @@ class MeTests(TestCase):
         npt.assert_allclose(obs, 2 * exp)
 
         # Test if result matches that calculated from the entire tree.
-        dm, tree, order = self.dm3, self.tree3, self.preodr3
+        dm, tree, order, taxas = self.dm3, self.tree3, self.preodr3, self.taxas3
         n = tree.shape[0]
         m = tree[0, 4] + 1
         ran_ = np.arange(n)
-        taxas = np.array([5, 3, 2, 2, 1, 1, 1, 1, 1, 0, 0])
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, taxas)
-        ad2 = np.ascontiguousarray(np.vstack([
-            adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]]))
+        ad2 = np.ascontiguousarray(
+            np.vstack([adm[ran_, tree[ran_, 3]], adm[ran_, tree[ran_, 2]]])
+        )
         _avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, order, taxas)
         res = _ols_min_branch_d2(obs := np.zeros(n), ad2, adk, tree, order, taxas)
 
         # For each branch, insert taxon, calculate full matrix, then calculate and sum
         # all branch lengths. The difference between each sum and the sum by the root
         # branch is the length change value calculated by the algorithm. 
-        # exp = np.zeros(n)
-        # for i in range(n - 2):
-        #     tree_, pre_, taxas_ = tree.copy(), order.copy(), taxas.copy()
-        #     _insert_taxon(m, i, tree_, pre_)
-        #     _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, pre_, taxas_)
-        #     _ols_lengths(lens := np.zeros(n), adm, tree_)
-        #     exp[i] = lens.sum()
-        # exp[:n - 2] -= exp[0]
+        exp = np.zeros(n)
+        for i in range(n - 2):
+            _insert_taxon(m, order[i], tree_ := tree.copy(), order_ := order.copy())
+            _count_taxa(n, tree_, order_, taxas_ := np.empty(n, dtype=int))
+            _avgdist_matrix(adm := np.zeros((n, n)), dm, tree_, order_, taxas_)
+            _ols_lengths(lens := np.zeros(n), adm, tree_, taxas_)
+            exp[order[i]] = lens.sum()
+        exp[:n - 2] -= exp[0]
 
-        # npt.assert_allclose(obs, exp * 2)
-        # self.assertEqual(res, exp[:n - 2].argmin())
+        npt.assert_allclose(obs, exp * 2)
+        self.assertEqual(order[res], exp[:n - 2].argmin())
 
     def test_bal_min_branch(self):
         """Find the branch with minimum length change using a balacned framework."""
