@@ -173,6 +173,8 @@ class MeTests(TestCase):
         self.preodr1m1 = np.array([0, 1, 2, 3, 4, 0, 0])
         self.postodr1m1 = np.array([1, 3, 4, 2, 0, 0, 0])
         self.taxas1m1 = np.array([3, 1, 2, 1, 1, 0, 0])
+        self.sizes1m1 = np.array([5, 1, 3, 1, 1, 0, 0])
+        self.depths1m1 = np.array([0, 1, 1, 2, 2, 0, 0])
 
         # An alternative tree for example 1 (less ladder-like)
         #                     /-b
@@ -279,6 +281,8 @@ class MeTests(TestCase):
         self.preodr3 = np.array([0, 1, 3, 7, 8, 4, 2, 5, 6, 0, 0])
         self.postodr3 = np.array([7, 8, 3, 4, 1, 5, 6, 2, 0, 0, 0])
         self.taxas3 = np.array([5, 3, 2, 2, 1, 1, 1, 1, 1, 0, 0])
+        self.sizes3 = np.array([8, 5, 3, 3, 1, 1, 1, 1, 1, 0, 0])
+        self.depths3 = np.array([0, 1, 1, 2, 2, 2, 2, 3, 3, 0, 0])
 
         # Example 4
         # This example is based on example 3, with the last taxon g inserted as the
@@ -1210,11 +1214,11 @@ class MeTests(TestCase):
         """Update balanced average distance matrix after taxon insertion."""
         # Test if the algorithm produces the same result as calculated from the full
         # matrix after taxon insertion.
-        tree, order = self.tree1m1, self.preodr1m1
+        tree, order, sizes, depths = (
+            self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1
+        )
         n = tree.shape[0]
-        sizes = np.array([5, 1, 3, 1, 1, 0, 0])
-        depths = np.array([0, 1, 1, 2, 2, 0, 0])
-        npots = 2.0 ** -np.arange(5)
+        npots = 2.0 ** -np.arange(n)
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)
         ancx = np.zeros(n, dtype=int)
@@ -1249,11 +1253,11 @@ class MeTests(TestCase):
         npt.assert_allclose(obs, exp)
 
         # another example: all possible insertions
-        dm, tree, order = self.dm3, self.tree3, self.preodr3
+        dm, tree, order, sizes, depths = (
+            self.dm3, self.tree3, self.preodr3, self.sizes3, self.depths3
+        )
         n = tree.shape[0]
         m = dm.shape[0] - 1
-        sizes = np.array([8, 5, 3, 3, 1, 1, 1, 1, 1, 0, 0])
-        depths = np.array([0, 1, 1, 2, 2, 2, 2, 3, 3, 0, 0])
         _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order)
         _half_adm(adm, order, n - 2)
         _bal_avgdist_taxon(n - 2, m, dm, adk := np.zeros((2, n)), tree, order)
@@ -1282,10 +1286,10 @@ class MeTests(TestCase):
         """Update balanced average distance matrix after taxon insertion."""
         # Test if the algorithm produces the same result as calculated from the full
         # matrix after taxon insertion.
-        tree, order = self.tree1m1, self.preodr1m1
+        tree, order, sizes, depths = (
+            self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1
+        )
         n = tree.shape[0]
-        sizes = np.array([5, 1, 3, 1, 1, 0, 0])
-        depths = np.array([0, 1, 1, 2, 2, 0, 0])
         npots = 2.0 ** -np.arange(5)
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)

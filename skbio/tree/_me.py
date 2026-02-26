@@ -41,6 +41,7 @@ from ._c_me import (
     _bal_avgdist_flat,
     _bal_avgdist_nest,
     _count_taxa,
+    _count_sizes,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -939,6 +940,9 @@ def _bnni(dm, tree, preodr, lens):
     dtype = dm.dtype
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
+
+    sizes = np.empty(n, dtype=int)
+    # _count_sizes(n, tree, preodr, sizes)
 
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)

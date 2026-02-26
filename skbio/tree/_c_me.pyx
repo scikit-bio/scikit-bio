@@ -1580,6 +1580,22 @@ def _count_taxa(
             taxas[node] = 1
 
 
+def _count_sizes(
+    Py_ssize_t n,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] sizes,
+):
+    """Calculate the number of nodes within each clade (including root)."""
+    cdef Py_ssize_t i, node, lft
+    for i in range(n - 1, -1, -1):
+        node = order[i]
+        if lft := tree[node, 0]:
+            sizes[node] = sizes[lft] + sizes[tree[node, 1]] + 1
+        else:
+            sizes[node] = 1
+
+
 def _bal_insert_plan(
     Py_ssize_t n,
     Py_ssize_t itag,
