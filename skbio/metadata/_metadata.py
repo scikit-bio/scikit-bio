@@ -953,6 +953,13 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
     missing_scheme : "blank", "no-missing", "INSDC:missing"
         How to interpret terms for missing values. These will be converted
         to NaN. The default treatment is to take no action.
+    missing_mask : pd.Series or None, optional
+        A Series with the same index as `series` that records the original
+        missing value terms (e.g. "not applicable", "missing") for entries
+        that were converted to NaN during encoding. Non-null entries in the
+        mask indicate the original term; null entries indicate no encoded
+        term. When None (the default), the mask is computed automatically
+        from `series` using the provided `missing_scheme`.
 
     """
 
