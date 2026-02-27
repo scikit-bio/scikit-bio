@@ -860,13 +860,13 @@ def _fastnni(dm, tree, order, lens):
     this value is 0. For internal nodes, this value is negative or 0. Only negative
     values are stored in the heap. 0 means this node is not useful.
 
-    Additionally, the "side" information is stored in column 7 of the tree array.
+    Additionally, the side information is stored in `sides`.
 
     When a swap is updated, the new length change (if negative) is pushed into the
     heap, but the old length change won't be deleted from the heap (which would be
     inefficient as O(n)). Instead, a "lazy deletion" mechanism is adopted: When the
     negative-most swap is popped out of the heap, it is checked against the stored
-    length change (in `lens`) and side (in `tree[:, 7]`). If they don't match, then
+    length change (in `lens`) and side (in `sides`). If they don't match, then
     it means that it is outdated and should be skipped. Otherwise, it is considered
     relevant and the swap will be performed.
 
@@ -874,18 +874,26 @@ def _fastnni(dm, tree, order, lens):
     code isn't significantly faster than a naive `np.argmax` on then entire `lens`.
     Consider optimization.
 
+    TODO: It might be possible to use `index` only once during `_avgdist_matrix` and
+    stop maintaining it during swaps, which may save some time, while solely relying on
+    `order`. However, that would complicate the implementation, as the node indices
+    stored in `heap` must be updated after each swap. There might be a way to do this
+    without updating the heap, but it would require careful design and testing.
+
     """
     dtype = dm.dtype
     n = tree.shape[0]
 
-    # Create preorder index. This array is needed just once, during `_avgdist_matrix`.
-    # It won't be incrementally maintained during iteration.
+    # preorder index
     index = np.empty(n, dtype=int)
     index[order] = np.arange(n)
 
-    # Calculate taxon counts.
+    # taxon counts
     tacts = np.empty(n, dtype=int)
     _calc_tacts(n, tree, order, tacts)
+
+    # side (left: 0, right: 1) of each node relative to its parent
+    sides = np.empty(n, dtype=int)
 
     stack = np.empty(n, dtype=int)
 
@@ -894,10 +902,10 @@ def _fastnni(dm, tree, order, lens):
     _avgdist_matrix(adm, dm, tree, order, index, tacts)
 
     # Calculate length changes of all possible swaps.
-    _ols_all_swaps(lens, tree, adm)
+    _ols_all_swaps(lens, adm, tree, tacts, sides)
 
     # Create a heap that stores negative length changes and their nodes and sides.
-    heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
+    heap = [(lens[i], i, sides[i]) for i in np.flatnonzero(lens)]
     heapify(heap)
 
     # Iteratively swap branches until there is no more beneficial swap.
@@ -906,23 +914,23 @@ def _fastnni(dm, tree, order, lens):
         L, target, side = heappop(heap)
 
         # Skip if this swap is outdated.
-        if L != lens[target] or side != tree[target, 7]:
+        if L != lens[target] or side != sides[target]:
             continue
 
         # Reset this swap.
         lens[target] = 0
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, order, stack, use_depth=False)
+        _swap_branches(target, side, tree, order, index, tacts, stack, use_depth=False)
 
         # Update average distances after swapping.
-        _avgdist_swap(adm, target, side, tree)
+        _avgdist_swap(index[target], side, adm, tree, order, tacts)
 
         # Update length reductions of swaps of the four corner branches.
-        _ols_corner_swaps(target, heap, lens, tree, adm)
+        _ols_corner_swaps(target, heap, lens, adm, tree, tacts, sides)
 
     # Calculate branch lengths using an OLS framework.
-    _calc_tacts(n, tree, order, tacts)
+    # _calc_tacts(n, tree, order, tacts)
     _ols_lengths(lens, adm, tree, tacts)
 
 
@@ -1611,7 +1619,7 @@ def _swap_branches_treenode(node1, node2):
     parent2.append(node1, False)
 
 
-def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
+def _swap_branches(target, side, tree, preodr, preidx, tacts, stack, use_depth=True):
     r"""Swap one child of the target node with its sibling.
 
                  |                         |
@@ -1638,14 +1646,14 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
     parent = tree[target, 2]
     sibling = tree[target, 3]
 
-    c_size = tree[child, 4]
-    o_size = tree[other, 4]
-    s_size = tree[sibling, 4]
+    c_size = tacts[child]
+    o_size = tacts[other]
+    s_size = tacts[sibling]
 
     # update connections
     tree[target, side] = sibling
     tree[target, 3] = child
-    tree[target, 4] += s_size - c_size
+    tacts[target] += s_size - c_size
 
     p_side = int(tree[parent, 0] == target)  # sibling side of parent
     tree[parent, p_side] = child
@@ -1659,17 +1667,17 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
     tree[other, 3] = sibling
 
     # locate the clades under the relevant nodes
-    c_start = tree[child, 6]
+    c_start = preidx[child]
     c_width = c_size * 2 - 1
     c_end = c_start + c_width
     c_clade = preodr[c_start:c_end]
 
-    s_start = tree[sibling, 6]
+    s_start = preidx[sibling]
     s_width = s_size * 2 - 1
     s_end = s_start + s_width
     s_clade = preodr[s_start:s_end]
 
-    o_start = tree[other, 6]
+    o_start = preidx[other]
     o_width = o_size * 2 - 1
     o_end = o_start + o_width
     o_clade = preodr[o_start:o_end]
@@ -1681,16 +1689,16 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
 
     # update preorder (naive)
     # _preorder(preodr, tree, stack)
-    # tree[:n, 6] = np.argsort(preodr[:n])
+    # preidx[preodr[:n]] = np.arange(n)
 
     # update postorder (naive)
     # _postorder(posodr, tree, stack)
-    # tree[:n, 7] = np.argsort(posodr[:n])
+    # posidx[posodr[:n]] = np.arange(n)
 
     # update preorder
     # sibling is the left child of parent
     if p_side == 0:
-        tree[target, 6] += c_width - s_width
+        preidx[target] += c_width - s_width
         stack[:c_width] = c_clade
         stack[c_width] = target
         c1_width = c_width + 1
@@ -1698,17 +1706,17 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
         # sibling_clade, target, child_clade, other_clade =>
         # child_clade, target, sibling_clade, other_clade
         if side == 0:
-            tree[s_clade, 6] += c_width + 1
-            tree[c_clade, 6] -= s_width + 1
+            preidx[s_clade] += c_width + 1
+            preidx[c_clade] -= s_width + 1
             preodr[(sc1_start := s_start + c1_width) : c_end] = s_clade
             preodr[s_start:sc1_start] = stack[:c1_width]
 
         # sibling_clade, target, other_clade, child_clade =>
         # child_clade, target, other_clade, sibling_clade
         else:
-            tree[s_clade, 6] += c_width + o_width + 1
-            tree[c_clade, 6] -= s_width + o_width + 1
-            tree[o_clade, 6] += c_width - s_width
+            preidx[s_clade] += c_width + o_width + 1
+            preidx[c_clade] -= s_width + o_width + 1
+            preidx[o_clade] += c_width - s_width
             stack[c1_width : (c1o_width := c1_width + o_width)] = o_clade
             preodr[(sc1o_start := s_start + c1o_width) : c_end] = s_clade
             preodr[s_start:sc1o_start] = stack[:c1o_width]
@@ -1720,9 +1728,9 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
         # target, child_clade, other_clade, sibling_clade =>
         # target, sibling_clade, other_clade, child_clade
         if side == 0:
-            tree[c_clade, 6] += (so_width := s_width + o_width)
-            tree[s_clade, 6] -= c_width + o_width
-            tree[o_clade, 6] += s_width - c_width
+            preidx[c_clade] += (so_width := s_width + o_width)
+            preidx[s_clade] -= c_width + o_width
+            preidx[o_clade] += s_width - c_width
             stack[s_width:so_width] = o_clade
             preodr[(cso_start := c_start + so_width) : s_end] = c_clade
             preodr[c_start:cso_start] = stack[:so_width]
@@ -1730,7 +1738,7 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
         # target, other_clade, child_clade, sibling_clade =>
         # target, other_clade, sibling_clade, child_clade
         else:
-            tree[c_clade, 6] += s_width
-            tree[s_clade, 6] -= c_width
+            preidx[c_clade] += s_width
+            preidx[s_clade] -= c_width
             preodr[(cs_start := c_start + s_width) : s_end] = c_clade
             preodr[c_start:cs_start] = stack[:s_width]

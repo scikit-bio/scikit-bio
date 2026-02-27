@@ -2496,10 +2496,12 @@ def _insert_taxon_x(
 
 
 def _avgdist_swap(
-    floating[:, ::1] adm,
-    Py_ssize_t target,
+    Py_ssize_t itag,
     Py_ssize_t side,
+    floating[:, ::1] adm,
     Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] order,
+    Py_ssize_t[::1] tacts,
 ):
     r"""Update average distance matrix after branch swapping.
 
@@ -2528,11 +2530,14 @@ def _avgdist_swap(
     Implemented according to A4.3(b) of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t node
+    cdef Py_ssize_t i, node
 
     # total numbers of taxa and nodes in the tree
-    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t n = 2 * m - 3
+
+    # target node
+    cdef Py_ssize_t target = order[itag]
 
     # the two branches that were swapped
     cdef Py_ssize_t child = tree[target, 3]  # former child, now sibling
@@ -2542,53 +2547,59 @@ def _avgdist_swap(
     cdef Py_ssize_t other = tree[target, 1 - side]  # the other child
     cdef Py_ssize_t parent = tree[target, 2]  # the parent
 
-    cdef Py_ssize_t c_size = tree[child, 4]
-    cdef Py_ssize_t o_size = tree[other, 4]
-    cdef Py_ssize_t s_size = tree[sibling, 4]
-    cdef Py_ssize_t p_size = m - tree[parent, 4]
+    cdef Py_ssize_t c_size = tacts[child]
+    cdef Py_ssize_t o_size = tacts[other]
+    cdef Py_ssize_t s_size = tacts[sibling]
+    cdef Py_ssize_t p_size = m - tacts[parent]
+
+    cdef Py_ssize_t so_size = s_size + o_size
+    cdef Py_ssize_t cp_size = c_size + p_size
 
     # Loop over all nodes except for target. These nodes can be divided into ones
     # within the clade below target (former sibling and other), and ones that are
     # outside the clade (former child and parent). Their distances to the target will
     # be updated separately.
-    cdef Py_ssize_t start = tree[target, 6]
-    cdef Py_ssize_t end = start + tree[target, 4] * 2 - 1
+    cdef Py_ssize_t iaft = itag + tacts[target] * 2 - 1
 
-    # # 1) subtrees within (parent, child) vs sibling (lower) + other (lower)
-    # for node in range(start):
-    #     adm[node, target] = adm[target, node] = (
-    #         s_size * adm[node, sibling] + o_size * adm[node, other]
-    #     ) / (s_size + o_size)
+    # 1) subtrees within (parent, child) vs sibling (lower) + other (lower)
+    for i in range(itag):
+        node = order[i]
+        adm[node, target] = adm[target, node] = (
+            s_size * adm[node, sibling] + o_size * adm[node, other]
+        ) / so_size
 
-    # # 2) # subtrees within (sibling, other) vs parent (upper) + child (lower)
-    # for node in range(start + 1, end):
-    #     adm[node, target] = adm[target, node] = (
-    #         p_size * adm[node, parent] + c_size * adm[node, child]
-    #     ) / (c_size + p_size)
+    # 2) # subtrees within (sibling, other) vs parent (upper) + child (lower)
+    for i in range(itag + 1, iaft):
+        node = order[i]
+        adm[node, target] = adm[target, node] = (
+            p_size * adm[node, parent] + c_size * adm[node, child]
+        ) / cp_size
 
-    # # 3) same as 1)
-    # for node in range(end, n):
-    #     adm[node, target] = adm[target, node] = (
-    #         s_size * adm[node, sibling] + o_size * adm[node, other]
-    #     ) / (s_size + o_size)
+    # 3) same as 1)
+    for i in range(iaft, n):
+        node = order[i]
+        adm[node, target] = adm[target, node] = (
+            s_size * adm[node, sibling] + o_size * adm[node, other]
+        ) / so_size
 
-    cdef floating temp_val = adm[target, target]
+    # cdef floating temp_val = adm[target, target]
 
-    for node in range(n):
-        # subtrees within (sibling, other) vs parent (upper) + child (lower)
-        if start < tree[node, 6] < end:
-            adm[node, target] = adm[target, node] = (
-                p_size * adm[node, parent] + c_size * adm[node, child]
-            ) / (c_size + p_size)
+    # for i in range(n):
+    #     node = order[i]
+    #     # subtrees within (sibling, other) vs parent (upper) + child (lower)
+    #     if itag < i < iaft:
+    #         adm[node, target] = adm[target, node] = (
+    #             p_size * adm[node, parent] + c_size * adm[node, child]
+    #         ) / (c_size + p_size)
 
-        # subtrees within (parent, child) vs sibling (lower) + other (lower)
-        else:
-            adm[node, target] = adm[target, node] = (
-                s_size * adm[node, sibling] + o_size * adm[node, other]
-            ) / (s_size + o_size)
+    #     # subtrees within (parent, child) vs sibling (lower) + other (lower)
+    #     else:
+    #         adm[node, target] = adm[target, node] = (
+    #             s_size * adm[node, sibling] + o_size * adm[node, other]
+    #         ) / (s_size + o_size)
 
-    # this cell doesn't need to be filled and let's reset it
-    adm[target, target] = temp_val
+    # # this cell doesn't need to be filled and let's reset it
+    # adm[target, target] = temp_val
 
 
 def _bal_avgdist_swap(
@@ -2794,8 +2805,10 @@ cdef void _ols_swap(
 
 def _ols_all_swaps(
     floating[::1] lens,
-    Py_ssize_t[:, ::1] tree,
     floating[:, ::1] adm,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] tacts,
+    Py_ssize_t[::1] sides,
 ):
     r"""Evaluate all possible swaps at all internal branches of a tree.
 
@@ -2807,7 +2820,7 @@ def _ols_all_swaps(
     Implemented according to A4.2(a) of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t node, left, right, parent, sibling
     
     # root is zero
@@ -2824,11 +2837,11 @@ def _ols_all_swaps(
             # calculate length change
             _ols_swap(
                 &lens[node],
-                &tree[node, 7],
-                m - tree[parent, 4],
-                tree[sibling, 4],
-                tree[left, 4],
-                tree[right, 4],
+                &sides[node],
+                m - tacts[parent],
+                tacts[sibling],
+                tacts[left],
+                tacts[right],
                 adm[parent, sibling] + adm[left, right],
                 adm[parent, left] + adm[sibling, right],
                 adm[parent, right] + adm[sibling, left],
@@ -2843,8 +2856,10 @@ def _ols_corner_swaps(
     Py_ssize_t target,
     list heap,
     floating[::1] lens,
-    Py_ssize_t[:, ::1] tree,
     floating[:, ::1] adm,
+    Py_ssize_t[:, ::1] tree,
+    Py_ssize_t[::1] tacts,
+    Py_ssize_t[::1] sides,
 ):
     r"""Update swaps of the four corner branches of a swapped branch.
 
@@ -2866,7 +2881,7 @@ def _ols_corner_swaps(
     Implemented according to A4.2(c) of Desper and Gascuel (2002).
 
     """
-    cdef Py_ssize_t m = tree[0, 4] + 1
+    cdef Py_ssize_t m = tacts[0] + 1
     cdef Py_ssize_t i, left, right, parent, sibling
 
     # update four corner branches if they are internal
@@ -2883,19 +2898,20 @@ def _ols_corner_swaps(
             # calculate length change
             _ols_swap(
                 &lens[node],
-                &tree[node, 7],
-                m - tree[parent, 4],
-                tree[sibling, 4],
-                tree[left, 4],
-                tree[right, 4],
+                &sides[node],
+                m - tacts[parent],
+                tacts[sibling],
+                tacts[left],
+                tacts[right],
                 adm[parent, sibling] + adm[left, right],
                 adm[parent, left] + adm[sibling, right],
                 adm[parent, right] + adm[sibling, left],
             )
 
-            # if length is reduced, push the swap into the heap
+            # if length is reduced, push the swap into heap
+            # TODO: arithmetic error can cause increase?
             if lens[node]:
-                heappush(heap, (lens[node], node, tree[node, 7]))
+                heappush(heap, (lens[node], node, sides[node]))
 
 
 def _bal_all_swaps(
