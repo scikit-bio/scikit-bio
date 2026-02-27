@@ -11,6 +11,14 @@ from skbio.metadata._metadata import (MetadataColumn, CategoricalMetadataColumn,
 
 PANDAS_3 = Version(pd.__version__) >= Version("3.0.0")
 
+
+def _is_string_dtype(dtype):
+    """Check if dtype is a string-like dtype (handles Pandas 2.x and 3.x)."""
+    if dtype == object:
+        return True
+    dtype_str = str(dtype)
+    return dtype_str == 'str' or dtype_str.startswith('string') or 'StringDtype' in dtype_str
+
 # Dummy class for testing MetadataColumn ABC
 class DummyMetadataColumn(MetadataColumn):
     type = 'dummy'
@@ -376,7 +384,6 @@ class TestToSeries(unittest.TestCase):
         pd.testing.assert_series_equal(obs, series)
         self.assertIsNot(obs, series)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_encode_missing_true(self):
         series = pd.Series([1, 2.5, 'missing'], name='col',
                            index=pd.Index(['id1', 'id2', 'id3'], name='id'))
@@ -449,7 +456,6 @@ class TestToDataframe(unittest.TestCase):
 
         pd.testing.assert_frame_equal(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_encode_missing_true(self):
         series = pd.Series([1, 2.5, 'missing'], name='col',
                            index=pd.Index(['id1', 'id2', 'id3'], name='id'))
@@ -603,7 +609,6 @@ class TestGetIDs(unittest.TestCase):
 
 
 class TestGetMissing(unittest.TestCase):
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_missing_mixed(self):
         series = pd.Series(
             [0.0, np.nan, 3.3, 'missing', 'not applicable', 4.4], name='col1',
@@ -615,7 +620,8 @@ class TestGetMissing(unittest.TestCase):
         exp = pd.Series([np.nan, 'missing', 'not applicable'], name='col1',
                         index=pd.Index(['b', 'd', 'e'], name='sampleid'))
 
-        pd.testing.assert_series_equal(missing, exp)
+        # check_dtype=False for Pandas 3.x compatibility (StringDtype vs object)
+        pd.testing.assert_series_equal(missing, exp, check_dtype=False)
 
     def test_missing_blanks(self):
         series = pd.Series(
@@ -630,7 +636,6 @@ class TestGetMissing(unittest.TestCase):
 
         pd.testing.assert_series_equal(missing, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_no_missing(self):
         series = pd.Series(
             [0.0, 1.1, 3.3, 3.5, 4.0, 4.4], name='col1',
@@ -639,10 +644,10 @@ class TestGetMissing(unittest.TestCase):
 
         missing = mdc.get_missing()
 
-        exp = pd.Series([], name='col1', dtype=object,
-                        index=pd.Index([], name='sampleid'))
-
-        pd.testing.assert_series_equal(missing, exp)
+        # For empty series, verify it has no values rather than strict dtype comparison
+        self.assertEqual(len(missing), 0)
+        self.assertEqual(missing.name, 'col1')
+        self.assertEqual(missing.index.name, 'sampleid')
 
 
 # The tests for CategoricalMetadataColumn and NumericMetadataColumn only test
@@ -676,7 +681,6 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
     def test_type_property(self):
         self.assertEqual(CategoricalMetadataColumn.type, 'categorical')
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_supported_dtype(self):
         series = pd.Series(
             ['foo', np.nan, 'bar', 'foo'], name='my column',
@@ -689,10 +693,10 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
         self.assertEqual(mdc.name, 'my column')
 
         obs_series = mdc.to_series()
-        pd.testing.assert_series_equal(obs_series, series)
-        self.assertEqual(obs_series.dtype, object)
+        pd.testing.assert_series_equal(obs_series, series, check_dtype=False)
+        self.assertTrue(_is_string_dtype(obs_series.dtype),
+            f"Expected string-like dtype, got {obs_series.dtype}")
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_numeric_strings_preserved_as_strings(self):
         series = pd.Series(
             ['1', np.nan, '2.5', '3.0'], name='my column',
@@ -705,10 +709,10 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
         self.assertEqual(mdc.name, 'my column')
 
         obs_series = mdc.to_series()
-        pd.testing.assert_series_equal(obs_series, series)
-        self.assertEqual(obs_series.dtype, object)
+        pd.testing.assert_series_equal(obs_series, series, check_dtype=False)
+        self.assertTrue(_is_string_dtype(obs_series.dtype),
+            f"Expected string-like dtype, got {obs_series.dtype}")
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_missing_data_normalized(self):
         # Different missing data representations should be normalized to np.nan
         mdc = CategoricalMetadataColumn(pd.Series(
@@ -721,8 +725,9 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
             [np.nan, 'foo', np.nan, np.nan], name='col1',
             index=pd.Index(['a', 'b', 'c', 'd'], name='id'))
 
-        pd.testing.assert_series_equal(obs, exp)
-        self.assertEqual(obs.dtype, object)
+        pd.testing.assert_series_equal(obs, exp, check_dtype=False)
+        self.assertTrue(_is_string_dtype(obs.dtype),
+            f"Expected string-like dtype, got {obs.dtype}")
         self.assertTrue(np.isnan(obs['a']))
         self.assertTrue(np.isnan(obs['c']))
         self.assertTrue(np.isnan(obs['d']))
@@ -738,8 +743,9 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
             np.array([np.nan, np.nan, np.nan], dtype=object), name='col1',
             index=pd.Index(['a', 'b', 'c'], name='id'))
 
-        pd.testing.assert_series_equal(obs, exp)
-        self.assertEqual(obs.dtype, object)
+        pd.testing.assert_series_equal(obs, exp, check_dtype=False)
+        self.assertTrue(_is_string_dtype(obs.dtype),
+            f"Expected string-like dtype, got {obs.dtype}")
 
     def test_leading_trailing_whitespace_value(self):
         col1 = CategoricalMetadataColumn(pd.Series(
@@ -771,7 +777,6 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
 
         self.assertEqual(col1, col2)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_missing_insdc(self):
         mdc = CategoricalMetadataColumn(pd.Series(
                 ['missing', 'foo', float('nan'), None], name='col1',
@@ -784,8 +789,9 @@ class TestCategoricalMetadataColumn(unittest.TestCase):
             [np.nan, 'foo', np.nan, np.nan], name='col1',
             index=pd.Index(['a', 'b', 'c', 'd'], name='id'))
 
-        pd.testing.assert_series_equal(obs, exp)
-        self.assertEqual(obs.dtype, object)
+        pd.testing.assert_series_equal(obs, exp, check_dtype=False)
+        self.assertTrue(_is_string_dtype(obs.dtype),
+            f"Expected string-like dtype, got {obs.dtype}")
         self.assertTrue(np.isnan(obs['a']))
         self.assertTrue(np.isnan(obs['c']))
         self.assertTrue(np.isnan(obs['d']))
