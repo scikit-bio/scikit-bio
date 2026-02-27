@@ -198,7 +198,7 @@ def _avgdist_matrix(
     # Skip the root, which is always the first node in the preorder traversal.
     for i in range(n - 1, 0, -1):
         a = order[i]
-        a_size = tree[a, 4]
+        a_size = tacts[a]
 
         # check if a is a tip
         if a_size == 1:

@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from itertools import product
 from heapq import heapify
 
 import numpy as np
@@ -1707,21 +1708,16 @@ class MeTests(TestCase):
         n = tree.shape[0]
         stack = np.full(n, 0)
         _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, index, tacts)
-        for node in range(1, n):
+        for node, side in product(range(1, n), range(2)):
             if tree[node, 0] == 0:  # omit tips
                 continue
-            for side in range(2):  # swap left and right children
-                tree_, order_, index_, tacts_ = (
-                    tree.copy(), order.copy(), index.copy(), tacts.copy()
-                )
-                _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
-                _avgdist_swap(
-                    index_[node], side, obs := adm.copy(), tree_, order_, tacts_
-                )
-                _avgdist_matrix(
-                    exp := np.zeros((n, n)), dm, tree_, order_, index_, tacts_
-                )
-                npt.assert_allclose(obs, exp)
+            tree_, order_, index_, tacts_ = (
+                tree.copy(), order.copy(), index.copy(), tacts.copy()
+            )
+            _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
+            _avgdist_swap(index_[node], side, obs := adm.copy(), tree_, order_, tacts_)
+            _avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, order_, index_, tacts_)
+            npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_swap(self):
         """Update balanced average distance matrix after branch swapping."""
@@ -1774,7 +1770,8 @@ class MeTests(TestCase):
     def test_ols_all_swaps(self):
         """Evaluate possible swaps at all branches of a tree."""
         dm, tree, order, index, tacts = (
-            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4)
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4
+        )
         n = tree.shape[0]
         _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, index, tacts)
         _ols_lengths(lens := np.empty(n), adm, tree, tacts)
@@ -1794,8 +1791,7 @@ class MeTests(TestCase):
             side = sides[node]
             tree_, order_, index_, tacts_ = (
                 tree.copy(), order.copy(), index.copy(), tacts.copy())
-            _swap_branches(
-                node, side, tree_, order_, index_, tacts_, stack, use_depth=False)
+            _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
             _avgdist_swap(
                 index_[node], side, adm_ := adm.copy(), tree_, order_, tacts_)
             _ols_lengths(lens_ := np.empty(n), adm_, tree_, tacts_)
@@ -1805,24 +1801,33 @@ class MeTests(TestCase):
 
     def test_ols_corner_swaps(self):
         """Update swaps of the four corner branches of a swapped branch."""
-        dm, tree, preodr, posodr = self.dm4, self.tree4, self.preodr4, self.posodr4
+        dm, tree, order, index, tacts = (
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4
+        )
         n = tree.shape[0]
-        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, preodr, posodr)
-        _ols_all_swaps(lens := np.empty(n), tree, adm)
-        heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
+        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, index, tacts)
+        sides = np.empty(n, dtype=int)
+        _ols_all_swaps(lens := np.empty(n), adm, tree, tacts, sides)
+        heap = [(lens[i], i, sides[i]) for i in np.flatnonzero(lens)]
         heapify(heap)
 
         # Perform swaps at the two branches that are known to produce gains (see
         # `test_ols_all_swaps`), and check if the updated result matches the result
         # re-calculated from the entire tree.
         stack = np.full(n, 0)
-        for node in np.nonzero(lens)[0]:
-            side = tree[node, 7]
-            tree_, pre_ = tree.copy(), preodr.copy()
-            _swap_branches(node, side, tree_, pre_, stack, use_depth=False)
-            _avgdist_swap(adm_ := adm.copy(), node, side, tree_)
-            _ols_all_swaps(exp := np.empty(n), tree_, adm_)
-            _ols_corner_swaps(node, heap, obs := lens.copy(), tree_, adm_)
+        for node in np.flatnonzero(lens):
+            side = sides[node]
+            tree_, order_, index_, tacts_ = (
+                tree.copy(), order.copy(), index.copy(), tacts.copy()
+            )
+            _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
+            _avgdist_swap(
+                index_[node], side, adm_ := adm.copy(), tree_, order_, tacts_
+            )
+            _ols_all_swaps(exp := np.empty(n), adm_, tree_, tacts_, sides)
+            _ols_corner_swaps(
+                node, heap, obs := lens.copy(), adm_, tree_, tacts_, sides
+            )
             obs[node] = 0
             npt.assert_allclose(obs, exp)
 
