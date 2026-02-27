@@ -136,6 +136,7 @@ def _avgdist_matrix(
     floating[:, :] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
+    Py_ssize_t[::1] index,
     Py_ssize_t[::1] tacts,
 ):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
@@ -158,6 +159,10 @@ def _avgdist_matrix(
     subtrees (B) to the other (A):
 
         d(A, B) = (|B_1| * d(A, B_1) + |B_2| * d(A, B_2)) / |B|
+
+    NOTE: Although tracing ancestry of a given node can be done without preorder index,
+    as in (`_bal`)`_avgdist_insert`, index is provided here to save compute since this
+    operation needs to be done for every node in the tree.
 
     TODO: It might be possible to only fill half of the matrix (upper or lower
     triangle). Same for other functions, especially those in BME.
@@ -222,7 +227,7 @@ def _avgdist_matrix(
             # a clade are contiguous in preorder, one can take a slice of the full
             # preorder that represents the descending nodes of the current node. The
             # size of the slice is 2 x taxon count - 2.
-            k = tree[sibling, 6]
+            k = index[sibling]
             for j in range(k + tacts[sibling] * 2 - 2, k - 1, -1):
                 b = order[j]
                 b_size = tacts[b]
@@ -284,7 +289,7 @@ def _avgdist_matrix(
         # The paper says this traversal can be done in any manner. Here, we use the
         # preorder. See * above.
         adm_a = &adm[a, 0]
-        k = tree[a, 6]
+        k = index[a]
         for j in range(k + 1, k + tacts[a] * 2 - 1):
             b = order[j]
             adm_a[b] = adm[b, a] = (

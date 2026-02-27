@@ -829,7 +829,7 @@ def _bme(dm, parallel=500, factor=16):
     return tree, lens
 
 
-def _fastnni(dm, tree, preodr, lens):
+def _fastnni(dm, tree, order, lens):
     r"""Perform fast nearest neighbor interchange (FastNNI) on a tree.
 
     To improve the tree under the minimum evolution (ME) criterion using an OLS
@@ -877,14 +877,21 @@ def _fastnni(dm, tree, preodr, lens):
     """
     dtype = dm.dtype
     n = tree.shape[0]
+
+    # Create preorder index. This array is needed just once, during `_avgdist_matrix`.
+    # It won't be incrementally maintained during iteration.
+    index = np.empty(n, dtype=int)
+    index[order] = np.arange(n)
+
+    # Calculate taxon counts.
     tacts = np.empty(n, dtype=int)
-    _calc_tacts(n, tree, preodr, tacts)
+    _calc_tacts(n, tree, order, tacts)
 
     stack = np.empty(n, dtype=int)
 
     # Calculate average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _avgdist_matrix(adm, dm, tree, preodr, tacts)
+    _avgdist_matrix(adm, dm, tree, order, index, tacts)
 
     # Calculate length changes of all possible swaps.
     _ols_all_swaps(lens, tree, adm)
@@ -906,7 +913,7 @@ def _fastnni(dm, tree, preodr, lens):
         lens[target] = 0
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, preodr, stack, use_depth=False)
+        _swap_branches(target, side, tree, order, stack, use_depth=False)
 
         # Update average distances after swapping.
         _avgdist_swap(adm, target, side, tree)
@@ -915,7 +922,7 @@ def _fastnni(dm, tree, preodr, lens):
         _ols_corner_swaps(target, heap, lens, tree, adm)
 
     # Calculate branch lengths using an OLS framework.
-    _calc_tacts(n, tree, preodr, tacts)
+    _calc_tacts(n, tree, order, tacts)
     _ols_lengths(lens, adm, tree, tacts)
 
 

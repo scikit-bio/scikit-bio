@@ -216,7 +216,7 @@ class MeTests(TestCase):
             [0, 2, 2, 5, 1, 2, 6, 4],  # 6: c
         ])
         self.preodr1v2 = np.array([0, 1, 3, 4, 2, 5, 6])
-        self.preidx1v2 = np.array([0, 1, 3, 4, 2, 5, 6])
+        self.preidx1v2 = np.array([0, 1, 4, 2, 3, 5, 6])
         self.posodr1v2 = np.array([3, 4, 1, 5, 6, 2, 0])
         self.posidx1v2 = np.array([6, 2, 5, 0, 1, 3, 4])
         self.tacts1v2 = np.array([4, 2, 2, 1, 1, 1, 1])
@@ -1073,43 +1073,48 @@ class MeTests(TestCase):
     def test_avgdist_matrix(self):
         """Calculate an average distance matrix."""
         # Test if the algorithm produces the same result as the native method does.
-        dm, tree, order, tacts = self.dm1, self.tree1, self.preodr1, self.tacts1
+        dm, tree, order, index, tacts = (
+            self.dm1, self.tree1, self.preodr1, self.preidx1, self.tacts1)
         n = tree.shape[0]
         obs = np.zeros((n, n), dtype=float)
-        _avgdist_matrix(obs, dm, tree, order, tacts)
+        _avgdist_matrix(obs, dm, tree, order, index, tacts)
         exp = np.zeros((n, n), dtype=float)
         _avgdist_matrix_naive(exp, dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # make sure all cells are populated
-        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order, tacts)
+        _avgdist_matrix(obs := np.full((n, n), np.nan), dm, tree, order, index, tacts)
         np.fill_diagonal(obs, 0)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # incomplete tree
-        tree, order, tacts = self.tree1m1, self.preodr1m1, self.tacts1m1
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        tree, order, index, tacts = (
+            self.tree1m1, self.preodr1m1, self.preidx1m1, self.tacts1m1)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, index, tacts)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 1 v2
-        tree, order, tacts = self.tree1v2, self.preodr1v2, self.tacts1v2
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        tree, order, index, tacts = (
+            self.tree1v2, self.preodr1v2, self.preidx1v2, self.tacts1v2)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, index, tacts)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 2 (complete)
-        dm, tree, order, tacts = self.dm2, self.tree2, self.preodr2, self.tacts2
+        dm, tree, order, index, tacts = (
+            self.dm2, self.tree2, self.preodr2, self.preidx2, self.tacts2)
         n = tree.shape[0]
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, index, tacts)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
         # example 3 (incomplete)
-        dm, tree, order, tacts = self.dm3, self.tree3, self.preodr3, self.tacts3
+        dm, tree, order, index, tacts = (
+            self.dm3, self.tree3, self.preodr3, self.preidx3, self.tacts3)
         n = tree.shape[0]
-        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, tacts)
+        _avgdist_matrix(obs := np.zeros((n, n)), dm, tree, order, index, tacts)
         _avgdist_matrix_naive(exp := np.zeros((n, n)), dm, tree, order, tacts)
         npt.assert_allclose(obs, exp)
 
