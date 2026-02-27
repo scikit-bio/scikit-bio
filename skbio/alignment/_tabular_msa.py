@@ -145,6 +145,16 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
 
+    _reader_kwargs = {
+        "constructor": (
+            "callable, optional\n"
+            "    The type of in-memory sequence object to read each sequence into. This\n"
+            "    must be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``,\n"
+            "    ``Protein``). This parameter is required by most formats that read\n"
+            "    into a ``TabularMSA``."
+        )
+    }
+
     read = Read()
     write = Write()
 
