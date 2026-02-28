@@ -27,7 +27,6 @@ from skbio.tree._me import (
     _insert_taxon_treenode,
     _avgdist_matrix_naive,
     _avgdist_taxon_naive,
-    _init_swaps,
     _swap_branches_treenode,
     _swap_branches,
 )
@@ -1755,21 +1754,12 @@ class MeTests(TestCase):
                 _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
                 npt.assert_allclose(obs, exp)
 
-    def test_init_swaps(self):
-        """Initialize branch swapping information."""
-        # There are four internal branches in the tree:
-        # 1: ((d,c),(e,g)), 2: (b,f), 3: (d,c), 9: (e,g)
-        tree = self.tree4
-        _, _, nodes = _init_swaps(tree, np.float64)
-        npt.assert_array_equal(nodes, np.array([1, 2, 3, 9]))
-
     def test_ols_all_swaps(self):
         """Evaluate possible swaps at all branches of a tree."""
         dm, tree, order, index, tacts = (
-            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4
-        )
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4)
         n = tree.shape[0]
-        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, index, tacts)
+        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, tacts)
         _ols_lengths(lens := np.empty(n), adm, tree, tacts)
         lensum = lens.sum()
 
@@ -1787,8 +1777,7 @@ class MeTests(TestCase):
             side = sides[node]
             tree_, order_, index_, tacts_ = (
                 tree.copy(), order.copy(), index.copy(), tacts.copy())
-            tacts_[node] += tacts[tree[node, 3]] - tacts[tree[node, side]]
-            _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
+            _swap_branches(node, side, tree_, order_, index_, stack, tacts=tacts_)
             _avgdist_swap(
                 index_[node], side, adm_ := adm.copy(), tree_, order_, tacts_)
             _ols_lengths(lens_ := np.empty(n), adm_, tree_, tacts_)
@@ -1799,10 +1788,9 @@ class MeTests(TestCase):
     def test_ols_corner_swaps(self):
         """Update swaps of the four corner branches of a swapped branch."""
         dm, tree, order, index, tacts = (
-            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4
-        )
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4)
         n = tree.shape[0]
-        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, index, tacts)
+        _avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, tacts)
         sides = np.empty(n, dtype=int)
         _ols_all_swaps(lens := np.empty(n), adm, tree, tacts, sides)
         heap = [(lens[i], i, sides[i]) for i in np.flatnonzero(lens)]
@@ -1815,23 +1803,22 @@ class MeTests(TestCase):
         for node in np.flatnonzero(lens):
             side = sides[node]
             tree_, order_, index_, tacts_ = (
-                tree.copy(), order.copy(), index.copy(), tacts.copy()
-            )
-            _swap_branches(node, side, tree_, order_, index_, tacts_, stack, False)
+                tree.copy(), order.copy(), index.copy(), tacts.copy())
+            _swap_branches(node, side, tree_, order_, index_, stack, tacts=tacts_)
             _avgdist_swap(
-                index_[node], side, adm_ := adm.copy(), tree_, order_, tacts_
-            )
+                index_[node], side, adm_ := adm.copy(), tree_, order_, tacts_)
             _ols_all_swaps(exp := np.empty(n), adm_, tree_, tacts_, sides)
             _ols_corner_swaps(
-                node, heap, obs := lens.copy(), adm_, tree_, tacts_, sides
-            )
+                node, heap, obs := lens.copy(), adm_, tree_, tacts_, sides)
             obs[node] = 0
             npt.assert_allclose(obs, exp)
 
     def test_bal_all_swaps(self):
         """Evaluate possible swaps at all branches of a tree."""
         # Using the same strategy as `test_ols_all_swaps`.
-        dm, tree, order, sizes = self.dm4, self.tree4, self.preodr4, self.sizes4
+        dm, tree, order, index, sizes, depths = (
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.sizes4, self.depths4
+        )
         n = tree.shape[0]
         m = tree[0, 4] + 1
         npots = np.ldexp(1.0, -np.arange(m))
@@ -1839,24 +1826,31 @@ class MeTests(TestCase):
         _bal_lengths(lens := np.empty(n), adm, tree)
         lensum = lens.sum()
 
-        gains, sides, nodes = _init_swaps(tree, np.float64)
+        nodes = np.flatnonzero(tree[1:, 0]) + 1
+        nb = nodes.size
+        gains = np.zeros(nb, dtype=float)
+        sides = np.empty(nb, dtype=int)
+
         _bal_all_swaps(gains, sides, nodes, adm, tree)
         exp = np.array([0, 0.9407, 0.06885, 0])
         npt.assert_allclose(gains, exp)
 
-        # stack = np.full(n, 0)
-        # for branch in range(nodes.shape[0]):
-        #     if gains[branch] == 0:
-        #         continue
-        #     node = nodes[branch]
-        #     side = sides[branch]
-        #     tree_, pre_ = tree.copy(), order.copy()
-        #     _swap_branches(node, side, tree_, pre_, stack, use_depth=True)
-        #     _bal_avgdist_swap(adm_ := adm.copy(), node, side, tree_, pre_, npots, stack)
-        #     _bal_lengths(lens_ := np.empty(n), adm_, tree_)
+        stack = np.full(n, 0)
+        for branch in range(nb):
+            if gains[branch] == 0:
+                continue
+            node, side = nodes[branch], sides[branch]
+            tree_, order_, index_, sizes_, depths_ = (
+                tree.copy(), order.copy(), index.copy(), sizes.copy(), depths.copy())
+            _swap_branches(
+                node, side, tree_, order_, index_, stack, sizes=sizes_, depths=depths_)
+            _bal_avgdist_swap(
+                adm_ := adm.copy(), node, side, tree_, order_, index_, sizes_, depths_,
+                npots, stack)
+            _bal_lengths(lens_ := np.empty(n), adm_, tree_)
 
-        #     # The algorithm omits factor 0.25, therefore we need to x4 here.
-        #     self.assertAlmostEqual(gains[branch], 4 * (lensum - lens_.sum()))
+            # The algorithm omits factor 0.25, therefore we need to x4 here.
+            self.assertAlmostEqual(gains[branch], 4 * (lensum - lens_.sum()))
 
 
 if __name__ == "__main__":

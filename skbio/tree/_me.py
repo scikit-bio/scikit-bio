@@ -998,6 +998,9 @@ def _bnni(dm, tree, order, lens):
             nodes[branch] = node
             branch += 1
 
+    nodes2 = np.flatnonzero(tree[1:, 0]) + 1
+    assert (nodes == nodes2).all()
+
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
     _bal_avgdist_matrix(adm, dm, tree, order, sizes)
