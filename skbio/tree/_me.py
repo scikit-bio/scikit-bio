@@ -875,8 +875,8 @@ def _fastnni(dm, tree, order, lens):
     Consider optimization.
 
     TODO: It might be possible to use `index` only once during `_avgdist_matrix` and
-    stop maintaining it during swaps, which may save some time, while solely relying on
-    `order`. However, that would complicate the implementation, as the node indices
+    stop maintaining it during swaps, which will save some time, while solely relying
+    on `order`. However, that would complicate the implementation, as the node indices
     stored in `heap` must be updated after each swap. There might be a way to do this
     without updating the heap, but it would require careful design and testing.
 
@@ -892,14 +892,15 @@ def _fastnni(dm, tree, order, lens):
     tacts = np.empty(n, dtype=int)
     _calc_tacts(n, tree, order, tacts)
 
-    # side (left: 0, right: 1) of each node relative to its parent
+    # child side (left: 0, right: 1) of each node to swap
     sides = np.empty(n, dtype=int)
 
+    # intermediate array
     stack = np.empty(n, dtype=int)
 
     # Calculate average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _avgdist_matrix(adm, dm, tree, order, index, tacts)
+    _avgdist_matrix(adm, dm, tree, order, tacts)
 
     # Calculate length changes of all possible swaps.
     _ols_all_swaps(lens, adm, tree, tacts, sides)
@@ -920,6 +921,9 @@ def _fastnni(dm, tree, order, lens):
         # Reset this swap.
         lens[target] = 0
 
+        # Update target size (+ sibling - child).
+        tacts[target] += tacts[tree[target, 3]] - tacts[tree[target, side]]
+
         # Swap the branches in the tree.
         _swap_branches(target, side, tree, order, index, tacts, stack, use_depth=False)
 
@@ -934,7 +938,7 @@ def _fastnni(dm, tree, order, lens):
     _ols_lengths(lens, adm, tree, tacts)
 
 
-def _bnni(dm, tree, preodr, lens):
+def _bnni(dm, tree, order, lens):
     r"""Perform balanced nearest neighbor interchange (BNNI) on a tree.
 
     To improve the tree under the balanced minimum evolution (BME) criterion given a
@@ -955,21 +959,49 @@ def _bnni(dm, tree, preodr, lens):
 
     """
     dtype = dm.dtype
+    m = dm.shape[0]
     n = tree.shape[0]
     stack = np.empty(n, dtype=int)
 
-    # sizes = np.empty(n, dtype=int)
-    # _calc_sizes(n, tree, preodr, sizes)
+    sizes = np.empty(n, dtype=int)
+    _calc_sizes(n, tree, order, sizes)
+
+    # number of internal branches
+    # For a tree with m taxa (including root), there should be m - 3 internal branches.
+    nb = m - 3
+
+    # internal branch indices of nodes (only for internal nodes)
+    # The association between nodes and internal branches are fixed, no matter how tree
+    # is swapped.
+    brchs = np.empty(n, dtype=int)
+
+    # The following three arrays store information of internal branches.
+    # overall tree length reduction (larger is better)
+    gains = np.zeros(nb, dtype=dtype)
+
+    # child side (left: 0, right: 1) of each node to swap
+    sides = np.empty(nb, dtype=int)
+
+    # node index of each branch
+    nodes = np.empty(nb, dtype=int)
+
+    # identify all internal branches
+    branch = 0
+    for node in range(1, tree.shape[0]):
+        if tree[node, 0]:
+            brchs[node] = branch
+            nodes[branch] = node
+            branch += 1
 
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _bal_avgdist_matrix(adm, dm, tree, preodr)
+    _bal_avgdist_matrix(adm, dm, tree, order, sizes)
 
     # Pre-calculate negative powers of 2.
-    npots = np.ldexp(dtype.type(1.0), -np.arange(dm.shape[0]))
+    npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     # Initialize branch swapping information.
-    gains, sides, nodes = _init_swaps(tree, dtype=dtype)
+    # gains, sides, nodes = _init_swaps(tree, dtype=dtype)
 
     # Iteratively swap branches until there is no more beneficial swap.
     while True:
@@ -984,10 +1016,10 @@ def _bnni(dm, tree, preodr, lens):
         target = nodes[branch]
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, preodr, stack, use_depth=True)
+        _swap_branches(target, side, tree, order, stack, use_depth=True)
 
         # Update balanced average distances after swapping.
-        _bal_avgdist_swap(adm, target, side, tree, preodr, npots, stack)
+        _bal_avgdist_swap(adm, target, side, tree, order, npots, stack)
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
@@ -1653,7 +1685,7 @@ def _swap_branches(target, side, tree, preodr, preidx, tacts, stack, use_depth=T
     # update connections
     tree[target, side] = sibling
     tree[target, 3] = child
-    tacts[target] += s_size - c_size
+    # tacts[target] += s_size - c_size
 
     p_side = int(tree[parent, 0] == target)  # sibling side of parent
     tree[parent, p_side] = child
