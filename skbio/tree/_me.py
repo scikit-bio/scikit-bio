@@ -43,6 +43,7 @@ from ._c_me import (
     _bal_avgdist_nest,
     _calc_tacts,
     _calc_sizes,
+    _calc_depths,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -921,11 +922,8 @@ def _fastnni(dm, tree, order, lens):
         # Reset this swap.
         lens[target] = 0
 
-        # Update target size (+ sibling - child).
-        tacts[target] += tacts[tree[target, 3]] - tacts[tree[target, side]]
-
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, order, index, tacts, stack, use_depth=False)
+        _swap_branches(target, side, tree, order, index, stack, tacts=tacts)
 
         # Update average distances after swapping.
         _avgdist_swap(index[target], side, adm, tree, order, tacts)
@@ -934,7 +932,6 @@ def _fastnni(dm, tree, order, lens):
         _ols_corner_swaps(target, heap, lens, adm, tree, tacts, sides)
 
     # Calculate branch lengths using an OLS framework.
-    # _calc_tacts(n, tree, order, tacts)
     _ols_lengths(lens, adm, tree, tacts)
 
 
@@ -961,10 +958,18 @@ def _bnni(dm, tree, order, lens):
     dtype = dm.dtype
     m = dm.shape[0]
     n = tree.shape[0]
-    stack = np.empty(n, dtype=int)
 
+    # preorder index
+    index = np.empty(n, dtype=int)
+    index[order] = np.arange(n)
+
+    # node counts
     sizes = np.empty(n, dtype=int)
     _calc_sizes(n, tree, order, sizes)
+
+    # node depths
+    depths = np.empty(n, dtype=int)
+    _calc_depths(n, tree, order, depths)
 
     # number of internal branches
     # For a tree with m taxa (including root), there should be m - 3 internal branches.
@@ -987,7 +992,7 @@ def _bnni(dm, tree, order, lens):
 
     # identify all internal branches
     branch = 0
-    for node in range(1, tree.shape[0]):
+    for node in range(1, n):
         if tree[node, 0]:
             brchs[node] = branch
             nodes[branch] = node
@@ -999,6 +1004,8 @@ def _bnni(dm, tree, order, lens):
 
     # Pre-calculate negative powers of 2.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
+
+    stack = np.empty(n, dtype=int)
 
     # Initialize branch swapping information.
     # gains, sides, nodes = _init_swaps(tree, dtype=dtype)
@@ -1012,14 +1019,17 @@ def _bnni(dm, tree, order, lens):
         branch = gains.argmax()
         if gains[branch] <= 0:
             break
-        side = sides[branch]
-        target = nodes[branch]
+        target, side = nodes[branch], sides[branch]
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, order, stack, use_depth=True)
+        _swap_branches(
+            target, side, tree, order, index, stack, sizes=sizes, depths=depths
+        )
 
         # Update balanced average distances after swapping.
-        _bal_avgdist_swap(adm, target, side, tree, order, npots, stack)
+        _bal_avgdist_swap(
+            adm, target, side, tree, order, index, sizes, depths, npots, stack
+        )
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
@@ -1651,7 +1661,9 @@ def _swap_branches_treenode(node1, node2):
     parent2.append(node1, False)
 
 
-def _swap_branches(target, side, tree, preodr, preidx, tacts, stack, use_depth=True):
+def _swap_branches(
+    target, side, tree, order, index, stack, tacts=None, sizes=None, depths=None
+):
     r"""Swap one child of the target node with its sibling.
 
                  |                         |
@@ -1671,21 +1683,36 @@ def _swap_branches(target, side, tree, preodr, preidx, tacts, stack, use_depth=T
     implemented.
 
     """
-    # This function can potentially optimized using Cython. See _insert_taxon.
+    # This function can potentially be optimized using Cython. See `_insert_taxon`.
 
     child = tree[target, side]
     other = tree[target, 1 - side]  # other child
     parent = tree[target, 2]
     sibling = tree[target, 3]
 
-    c_size = tacts[child]
-    o_size = tacts[other]
-    s_size = tacts[sibling]
-
     # update connections
     tree[target, side] = sibling
     tree[target, 3] = child
-    # tacts[target] += s_size - c_size
+
+    # update taxon count
+    if tacts is not None:
+        c_tact = tacts[child]
+        o_tact = tacts[other]
+        s_tact = tacts[sibling]
+
+        tacts[target] += s_tact - c_tact
+
+        c_size = c_tact * 2 - 1
+        o_size = o_tact * 2 - 1
+        s_size = s_tact * 2 - 1
+
+    # update node count
+    if sizes is not None:
+        c_size = sizes[child]
+        o_size = sizes[other]
+        s_size = sizes[sibling]
+
+        sizes[target] += s_size - c_size
 
     p_side = int(tree[parent, 0] == target)  # sibling side of parent
     tree[parent, p_side] = child
@@ -1699,78 +1726,71 @@ def _swap_branches(target, side, tree, preodr, preidx, tacts, stack, use_depth=T
     tree[other, 3] = sibling
 
     # locate the clades under the relevant nodes
-    c_start = preidx[child]
-    c_width = c_size * 2 - 1
-    c_end = c_start + c_width
-    c_clade = preodr[c_start:c_end]
+    c_start = index[child]
+    c_end = c_start + c_size
+    c_clade = order[c_start:c_end]
 
-    s_start = preidx[sibling]
-    s_width = s_size * 2 - 1
-    s_end = s_start + s_width
-    s_clade = preodr[s_start:s_end]
+    s_start = index[sibling]
+    s_end = s_start + s_size
+    s_clade = order[s_start:s_end]
 
-    o_start = preidx[other]
-    o_width = o_size * 2 - 1
-    o_end = o_start + o_width
-    o_clade = preodr[o_start:o_end]
+    o_start = index[other]
+    o_end = o_start + o_size
+    o_clade = order[o_start:o_end]
 
-    # update depth (if needed)
-    if use_depth:
-        tree[c_clade, 5] -= 1
-        tree[s_clade, 5] += 1
+    # update depths
+    if depths is not None:
+        depths[c_clade] -= 1
+        depths[s_clade] += 1
 
     # update preorder (naive)
-    # _preorder(preodr, tree, stack)
-    # preidx[preodr[:n]] = np.arange(n)
-
-    # update postorder (naive)
-    # _postorder(posodr, tree, stack)
-    # posidx[posodr[:n]] = np.arange(n)
+    # _preorder(order, tree, stack)
+    # index[order[:n]] = np.arange(n)
 
     # update preorder
     # sibling is the left child of parent
     if p_side == 0:
-        preidx[target] += c_width - s_width
-        stack[:c_width] = c_clade
-        stack[c_width] = target
-        c1_width = c_width + 1
+        index[target] += c_size - s_size
+        stack[:c_size] = c_clade
+        stack[c_size] = target
+        c1_width = c_size + 1
 
         # sibling_clade, target, child_clade, other_clade =>
         # child_clade, target, sibling_clade, other_clade
         if side == 0:
-            preidx[s_clade] += c_width + 1
-            preidx[c_clade] -= s_width + 1
-            preodr[(sc1_start := s_start + c1_width) : c_end] = s_clade
-            preodr[s_start:sc1_start] = stack[:c1_width]
+            index[s_clade] += c_size + 1
+            index[c_clade] -= s_size + 1
+            order[(sc1_start := s_start + c1_width) : c_end] = s_clade
+            order[s_start:sc1_start] = stack[:c1_width]
 
         # sibling_clade, target, other_clade, child_clade =>
         # child_clade, target, other_clade, sibling_clade
         else:
-            preidx[s_clade] += c_width + o_width + 1
-            preidx[c_clade] -= s_width + o_width + 1
-            preidx[o_clade] += c_width - s_width
-            stack[c1_width : (c1o_width := c1_width + o_width)] = o_clade
-            preodr[(sc1o_start := s_start + c1o_width) : c_end] = s_clade
-            preodr[s_start:sc1o_start] = stack[:c1o_width]
+            index[s_clade] += c_size + o_size + 1
+            index[c_clade] -= s_size + o_size + 1
+            index[o_clade] += c_size - s_size
+            stack[c1_width : (c1o_width := c1_width + o_size)] = o_clade
+            order[(sc1o_start := s_start + c1o_width) : c_end] = s_clade
+            order[s_start:sc1o_start] = stack[:c1o_width]
 
     # sibling is the right child of parent
     else:
-        stack[:s_width] = s_clade
+        stack[:s_size] = s_clade
 
         # target, child_clade, other_clade, sibling_clade =>
         # target, sibling_clade, other_clade, child_clade
         if side == 0:
-            preidx[c_clade] += (so_width := s_width + o_width)
-            preidx[s_clade] -= c_width + o_width
-            preidx[o_clade] += s_width - c_width
-            stack[s_width:so_width] = o_clade
-            preodr[(cso_start := c_start + so_width) : s_end] = c_clade
-            preodr[c_start:cso_start] = stack[:so_width]
+            index[c_clade] += (so_width := s_size + o_size)
+            index[s_clade] -= c_size + o_size
+            index[o_clade] += s_size - c_size
+            stack[s_size:so_width] = o_clade
+            order[(cso_start := c_start + so_width) : s_end] = c_clade
+            order[c_start:cso_start] = stack[:so_width]
 
         # target, other_clade, child_clade, sibling_clade =>
         # target, other_clade, sibling_clade, child_clade
         else:
-            preidx[c_clade] += s_width
-            preidx[s_clade] -= c_width
-            preodr[(cs_start := c_start + s_width) : s_end] = c_clade
-            preodr[c_start:cs_start] = stack[:s_width]
+            index[c_clade] += s_size
+            index[s_clade] -= c_size
+            order[(cs_start := c_start + s_size) : s_end] = c_clade
+            order[c_start:cs_start] = stack[:s_size]
