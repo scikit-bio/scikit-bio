@@ -18,12 +18,10 @@ from skbio.tree._me import (
     gme,
     bme,
     nni,
-    _check_tree,
     _allocate_tree,
     _to_treenode,
     _from_treenode,
     _root_from_treenode,
-    _init_tree,
     _insert_taxon_treenode,
     _avgdist_matrix_naive,
     _avgdist_taxon_naive,
@@ -71,6 +69,29 @@ from skbio.tree._c_me import (
 # def _fill_pairs(dm):
 #     nans = np.isnan(dm)
 #     dm[nans] = dm.T[nans]
+
+
+def _check_tree(tree, n=None):
+    """Check the integrity of an array-based tree structure.
+    
+    A tree is represented by a 2D integer array of four columns:
+
+        0. Left child index, or 0 if a tip.
+        1. Right child index, or taxon index if a tip.
+        2. Parent index, or 0 if root.
+        3. Sibling index, or 0 if root.
+    
+    """
+    if n is None:
+        n = tree.shape[0]
+    for i in range(n):
+        left, right = tree[i, 0], tree[i, 1]
+        if left == 0:
+            assert i == 0 or right != 0
+        else:
+            assert tree[left, 2] == tree[right, 2] == i
+            assert tree[left, 3] == right
+            assert tree[right, 3] == left
 
 
 def _half_adm(adm, order, n=None):
@@ -697,35 +718,52 @@ class MeTests(TestCase):
         # a complete tree
         obj = TreeNode.read([self.nwk1])
         taxmap = {x: i for i, x in enumerate(self.taxa1)}
-        obs = _allocate_tree(len(taxmap) * 2 - 3)
-        _from_treenode(obj, taxmap, *obs)
-        _check_tree(*obs)
-        npt.assert_array_equal(obs[0], self.tree1)
-        npt.assert_array_equal(obs[1], self.preodr1)
-        npt.assert_array_equal(obs[2], self.posodr1)
+        n = len(taxmap) * 2 - 3
+        obs = np.empty((n, 4), dtype=int)
+        num = _from_treenode(obj, taxmap, obs)
+        self.assertEqual(num, n)
+
+        # check if tree topology is correct
+        _check_tree(obs)
+
+        # check if nodes are in preorder
+        stack = np.empty(n, dtype=int)
+        _preorder(order := np.empty(n, dtype=int), obs, stack)
+        npt.assert_array_equal(order, np.arange(n))
+
+        # check if tree topology matches expectation
+        npt.assert_array_equal(obs, self.tree1[:, :4])
 
         # an incomplete tree
         obj = TreeNode.read([self.nwk1m1])
-        _from_treenode(obj, taxmap, *obs)
-        _check_tree(*obs)
-        # unused cells are empty, so we need to fill them before comparison
-        for arr in obs:
-            arr[-2:] = 0
-        npt.assert_array_equal(obs[0], self.tree1m1)
-        npt.assert_array_equal(obs[1], self.preodr1m1)
-        npt.assert_array_equal(obs[2], self.posodr1m1)
+        num = _from_treenode(obj, taxmap, obs)
+        self.assertEqual(num, n - 2)
+        _check_tree(obs, n - 2)
+        obs[-2:] = 0  # fill unused cells before comparison
+        npt.assert_array_equal(obs, self.tree1m1[:, :4])
+
+        # start from index 2
+        _from_treenode(obj, taxmap, obs, pos=2)
+        exp = np.array([[3, 4, 0, 0],
+                        [0, 1, 2, 4],
+                        [5, 6, 2, 3],
+                        [0, 2, 4, 6],
+                        [0, 3, 4, 5]])
+        npt.assert_array_equal(obs[2:], exp)
 
         # non-binary tree
         obj = TreeNode.read(["((b,c,d),e)a;"])
-        with self.assertRaises(ValueError):
-            _from_treenode(obj, taxmap, *obs)
+        with self.assertRaises(ValueError) as cm:
+            _from_treenode(obj, taxmap, obs)
+        self.assertEqual(str(cm.exception), "Tree is not strictly bifurcating.")
 
         # another example
         obj = TreeNode.read([self.nwk3])
         taxmap = {x: i for i, x in enumerate(self.taxa3)}
-        obs = _allocate_tree(len(taxmap) * 2 - 3)
-        _from_treenode(obj, taxmap, *obs)
-        _check_tree(*obs)
+        n = len(taxmap) * 2 - 3
+        obs = np.empty((n, 4), dtype=int)
+        _from_treenode(obj, taxmap, obs)
+        _check_tree(obs, n - 2)
         # note: self.tree3 is not in preorder so we can't directly compare
 
     def test_root_from_treenode(self):
@@ -738,40 +776,31 @@ class MeTests(TestCase):
 
         # Now convert to array to see if it matches the reference.
         obs = _root_from_treenode(obj, self.taxa1)
-        _check_tree(*obs)
-        npt.assert_array_equal(obs[0], self.tree1)
-        npt.assert_array_equal(obs[1], self.preodr1)
-        npt.assert_array_equal(obs[2], self.posodr1)
+        _check_tree(obs)
+        npt.assert_array_equal(obs, self.tree1[:, :4])
 
         # Test a different order of taxa. This time, taxon "c" will become the root.
         taxa = list("cadeb")
         obs = _root_from_treenode(obj, taxa)
-        exp = (
-            np.array([
-                [1, 4, 0, 0, 4, 0, 0, 6],  # c
-                [2, 3, 0, 4, 2, 1, 1, 2],  # (e,d)
-                [0, 3, 1, 3, 1, 2, 2, 0],  # e
-                [0, 2, 1, 2, 1, 2, 3, 1],  # d
-                [5, 6, 0, 1, 2, 1, 4, 5],  # (b,a)
-                [0, 4, 4, 6, 1, 2, 5, 3],  # b
-                [0, 1, 4, 5, 1, 2, 6, 4],  # a
-            ]),
-            np.array([0, 1, 2, 3, 4, 5, 6]),
-            np.array([2, 3, 1, 5, 6, 4, 0]),
-        )
-        _check_tree(*obs)
-        for o, e in zip(obs, exp):
-            npt.assert_array_equal(o, e)
+        exp = np.array([
+            [1, 4, 0, 0, 4, 0, 0, 6],  # c
+            [2, 3, 0, 4, 2, 1, 1, 2],  # (e,d)
+            [0, 3, 1, 3, 1, 2, 2, 0],  # e
+            [0, 2, 1, 2, 1, 2, 3, 1],  # d
+            [5, 6, 0, 1, 2, 1, 4, 5],  # (b,a)
+            [0, 4, 4, 6, 1, 2, 5, 3],  # b
+            [0, 1, 4, 5, 1, 2, 6, 4],  # a
+        ])
+        _check_tree(obs)
+        npt.assert_array_equal(obs, exp[:, :4])
 
         # Root the tree at an internal branch and test to recover the same result.
         obj = obj.find("e").parent
         obj = obj.root_at(above=True)
         self.assertEqual(len(obj.children), 2)
         obs = _root_from_treenode(obj, self.taxa1)
-        _check_tree(*obs)
-        npt.assert_array_equal(obs[0], self.tree1)
-        npt.assert_array_equal(obs[1], self.preodr1)
-        npt.assert_array_equal(obs[2], self.posodr1)
+        _check_tree(obs)
+        npt.assert_array_equal(obs, self.tree1[:, :4])
 
         # Example 4: Test all possible roots (taxa).
         obj = TreeNode.read([self.nwk4])
@@ -788,25 +817,22 @@ class MeTests(TestCase):
 
             # use the algorithm to generate the array
             obs = _root_from_treenode(obj, taxa_)
-            _check_tree(*obs)
+            _check_tree(obs)
 
             # root the TreeNode object instead (slower) and generate the array
             obj_ = obj.root_at(taxon_)
             obj_.prune()
 
             taxmap = {x: i for i, x in enumerate(taxa_)}
-            exp = _allocate_tree(n)
-            _from_treenode(obj_, taxmap, *exp)
-
-            for o, e in zip(obs, exp):
-                npt.assert_array_equal(o, e)
+            _from_treenode(obj_, taxmap, exp := np.empty((n, 4), dtype=int))
+            npt.assert_array_equal(obs, exp)
 
         # non-binary trees
         taxa = list("abcde")
         nwks = [
             "((a,b,c),(d,e));",  # internal node has 3 children
             "((a),b,(c,(d,e)));",  # internal node has 1 child
-            # "(((b,c),((d,e),a)));",  # root has 1 child  # TODO This doesn't work.
+            # "(((b,c),((d,e),a)));",  # root has 1 child  # TODO: This doesn't work.
             "((a,b),c,d,e);",  # root has 4 children
         ]
         for nwk in nwks:
@@ -870,35 +896,6 @@ class MeTests(TestCase):
         # make sure arrays are C-continuous
         for arr in tree, preodr, posodr:
             self.assertTrue(arr.flags.c_contiguous)
-
-    def test_init_tree(self):
-        """Initialize triplet tree."""
-        dm = np.array([[0, 1, 2], [1, 0, 3], [2, 3, 0]])
-        n = 3
-        tree, preodr, posodr = _allocate_tree(n)
-        ad2 = np.empty((2, n))
-        _init_tree(dm, tree, preodr, posodr, ad2)
-        npt.assert_array_equal(tree, np.array([
-            [1, 2, 0, 0, 2, 0, 0, 2],
-            [0, 1, 0, 2, 1, 1, 1, 0],
-            [0, 2, 0, 1, 1, 1, 2, 1],
-        ]))
-        npt.assert_array_equal(preodr, np.array([0, 1, 2]))
-        npt.assert_array_equal(posodr, np.array([1, 2, 0]))
-        npt.assert_array_equal(ad2, np.array([
-            [0, 3, 3],
-            [0, 1, 2],
-        ]))
-
-        tree, preodr, posodr = _allocate_tree(n)
-        adm = np.empty((n, n))
-        _init_tree(dm, tree, preodr, posodr, adm, matrix=True)
-        np.fill_diagonal(adm, 0)
-        npt.assert_array_equal(adm, np.array([
-            [0, 1, 2],
-            [1, 0, 3],
-            [2, 3, 0],
-        ]))
 
     def test_insert_taxon_treenode(self):
         """Insert a taxon between a target node and its parent."""

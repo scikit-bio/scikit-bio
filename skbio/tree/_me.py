@@ -398,14 +398,15 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     # generate tree array
     taxa = dm.ids
-    tree, preodr, posodr = _root_from_treenode(tree, taxa)
+    tree = _root_from_treenode(tree, taxa)
+    order = np.arange(tree.shape[0], dtype=int)
 
     # allocate lengths
     lens = np.empty(len(tree), dtype=dm.dtype)
 
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
-    func(dm.data, tree, preodr, lens)
+    func(dm.data, tree, order, lens)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -1038,7 +1039,17 @@ def _bnni(dm, tree, order, lens):
     _bal_lengths(lens, adm, tree)
 
 
-def _check_tree(tree, preodr, posodr):
+def _check_tree_x(
+    n,
+    tree,
+    preodr=None,
+    preidx=None,
+    posodr=None,
+    posidx=None,
+    tacts=None,
+    sizes=None,
+    depths=None,
+):
     r"""Check the integrity of an array-based tree structure.
 
     The greedy algorithms implemented in this module use a special array-based tree
@@ -1093,13 +1104,9 @@ def _check_tree(tree, preodr, posodr):
     used in the actual greedy algorithms.
 
     """
-    assert tree.shape[1] == 8
-    n = tree[0, 4] * 2 - 1
-    assert (tree[:n, 6].argsort() == preodr[:n]).all()
-    assert (tree[:n, 7].argsort() == posodr[:n]).all()
-
+    # check tree topology
     for i in range(n):
-        left, right, parent, sibling, size, depth, preidx, postidx = tree[i]
+        left, right = tree[i, 0], tree[i, 1]
         if left == 0:
             assert i == 0 or right != 0
         else:
@@ -1107,26 +1114,45 @@ def _check_tree(tree, preodr, posodr):
             assert tree[left, 3] == right
             assert tree[right, 3] == left
 
-    sizes = np.zeros((n,), dtype=int)
-    for i in range(n):
-        node = posodr[i]
-        if tree[node, 0] == 0:
-            sizes[node] = 1
-        else:
-            sizes[node] = sizes[tree[node, :2]].sum()
-    assert (sizes == tree[:n, 4]).all()
+    exp = np.empty(n, dtype=int)
 
-    depths = np.zeros((n,), dtype=int)
-    for i in range(1, n):
-        node = preodr[i]
-        depths[node] = depths[tree[node, 2]] + 1
-    assert (depths == tree[:n, 5]).all()
+    # Calculate preorder (we need this for multiple tests).
+    stack = np.empty(n, dtype=int)
+    _preorder(order := np.empty(n, dtype=int), tree, stack)
 
-    stack = np.zeros((n,), dtype=int)
-    _preorder(exp := np.zeros((n,), dtype=int), tree, stack)
-    assert (exp == preodr[:n]).all()
-    _postorder(exp := np.zeros((n,), dtype=int), tree, stack)
-    assert (exp == posodr[:n]).all()
+    # check preorder
+    if preodr is not None:
+        assert (order == preodr[:n]).all()
+
+    # check preorder index
+    if preidx is not None:
+        stack[preodr] = np.arange(n)
+        assert (stack == preidx[:n]).all()
+
+    # check postorder
+    if posodr is not None:
+        _postorder(exp, tree, stack)
+        assert (exp == posodr[:n]).all()
+
+        # check postorder index
+        if posidx is not None:
+            stack[posodr] = np.arange(n)
+            assert (stack == posidx[:n]).all()
+
+    # check taxon counts
+    if tacts is not None:
+        _calc_tacts(n, tree, order, exp)
+        assert (tacts[:n] == exp).all()
+
+    # check node counts
+    if sizes is not None:
+        _calc_sizes(n, tree, order, exp)
+        assert (sizes[:n] == exp).all()
+
+    # check node depths
+    if depths is not None:
+        _calc_depths(n, tree, order, exp)
+        assert (depths[:n] == exp).all()
 
 
 def _allocate_tree(n):
@@ -1206,7 +1232,7 @@ def _to_treenode(tree, taxa, lens=None, unroot=False):
     return tree
 
 
-def _from_treenode(obj, taxmap, tree, preodr, posodr, pos=0, depth=0):
+def _from_treenode(obj, taxmap, tree, pos=0):
     r"""Convert a TreeNode object into an array-based tree structure.
 
     Parameters
@@ -1215,16 +1241,15 @@ def _from_treenode(obj, taxmap, tree, preodr, posodr, pos=0, depth=0):
         Input tree. It must be strictly bifurcating.
     taxmap : dict of str : int
         Mapping of taxon names to indices.
-    tree : (n, 8) ndarray of int
+    tree : (n, 4) ndarray of int
         Tree structure.
-    preodr : (n,) ndarray of int
-        Nodes in preorder.
-    posodr : (n,) ndarray of int
-        Nodes in postorder.
     pos : int, optional
         Position (axis 0) in the tree array for new data.
-    depth : int, optional
-        Depth of the root node.
+
+    Returns
+    -------
+    int
+        Number of nodes in the tree.
 
     Raises
     ------
@@ -1233,83 +1258,62 @@ def _from_treenode(obj, taxmap, tree, preodr, posodr, pos=0, depth=0):
 
     See Also
     --------
-    _allocate_tree
     _root_from_treenode
 
     Notes
     -----
-    This function fills in pre-allocated tree arrays. It doesn't return any value.
+    This function fills in a pre-allocated tree array. It doesn't return any value.
 
-    Nodes in the resulting tree array are ordered by preorder traversal. This may not
-    agree with the order they were added to the original tree, if that ever happened.
-    Therefore, one shouldn't directly compare the original and generated tree arrays.
-    However, the topologies represented by the two tree arrays should be identical.
+    Nodes in the tree array follows preorder. This may not agree with the order they
+    were added to the original tree, if that ever happened. Therefore, one shouldn't
+    directly compare the original and generated tree arrays. However, the topologies
+    represented by the two tree arrays should be identical.
 
     The function doesn't fill branch lengths, which aren't required by the downstream
     algorithms. Adding this functionality should be straightforward.
 
-    Parameters ``pos`` and ``depth`` are typically set by :func:`_root_from_treenode`.
-    One doesn't need to specify them if working with this function alone. ``depth``
-    also impacts the position in ``posodr``. See ``_root_from_treenode`` for
-    rationales.
+    Parameter ``pos`` is typically set by :func:`_root_from_treenode`. One doesn't need
+    to specify it if working with this function alone.
 
     """
-    # determine position in postorder
-    post_pos = pos - depth
-
     # create root node
     tree[pos, 2] = 0
     tree[pos, 3] = 0
-    tree[pos, 5] = depth
 
     # if root node is a tip, just wrap up and return
     if not obj.children:
         tree[pos, 0] = 0
         tree[pos, 1] = taxmap[obj.name]
-        tree[pos, 4] = 1
-        preodr[pos] = tree[pos, 6] = pos
-        posodr[post_pos] = pos
-        tree[pos, 7] = post_pos
-        return
+        return 1
 
-    # perform preorder traversal, index nodes, fill parent (2), depth (5), taxon (1)
-    # and length
-    obj.i = pos
+    # Perform preorder traversal, index nodes, fill parent (2) and taxon (1).
+    obj._i = pos
     pos_1 = pos + 1
     for i, node in enumerate(obj.preorder(include_self=False)):
-        node.i = (ni := pos_1 + i)
-        tree[ni, 2] = (pi := node.parent.i)
-        tree[ni, 5] = tree[pi, 5] + 1
+        node._i = ni = pos_1 + i
+        tree[ni, 2] = node.parent._i
         if not node.children:
             tree[ni, 0] = 0
             tree[ni, 1] = taxmap[node.name]
 
-    # number of nodes in the current tree
-    n = i + 2
+    size = ni - pos + 1
 
-    # fill preorder and indices
-    end = pos + n
-    preodr[pos:end] = tree[pos:end, 6] = np.arange(pos, end)
-
-    # perform postorder traversal, fill children (0 and 1), sibling (3), and size (4)
+    # Perform postorder traversal, fill children (0 and 1) and sibling (3).
     for i, node in enumerate(obj.postorder()):
-        posodr[post_pos + i] = (ni := node.i)
-        tree[ni, 7] = post_pos + i
-        if not node.children:
-            tree[ni, 4] = 1
-        else:
+        ni = node._i
+        if node.children:
             try:
                 left, right = node.children
             except ValueError:
                 raise ValueError("Tree is not strictly bifurcating.")
-            li, ri = left.i, right.i
+            li, ri = left._i, right._i
             tree[ni, 0] = tree[ri, 3] = li
             tree[ni, 1] = tree[li, 3] = ri
-            tree[ni, 4] = tree[li, 4] + tree[ri, 4]
-            del left.i
-            del right.i
+            del left._i
+            del right._i
 
-    del obj.i
+    del obj._i
+    return size
 
 
 def _root_from_treenode(obj, taxa):
@@ -1320,18 +1324,12 @@ def _root_from_treenode(obj, taxa):
     tree : TreeNode
         Input tree. It must be strictly bifurcating.
     taxa : list of str
-        Taxon names in order.
-    tree : (n, 8) ndarray of int
-        Tree structure.
+        Taxon names in order (usually as in a distance matrix).
 
     Returns
     -------
-    (n, 8) ndarray of int
+    (n, 4) ndarray of int
         Tree structure.
-    (n,) ndarray of int
-        Nodes in preorder.
-    (n,) ndarray of int
-        Nodes in postorder.
 
     Raises
     ------
@@ -1368,14 +1366,11 @@ def _root_from_treenode(obj, taxa):
     m = len(taxa)  # number of taxa
     n = m * 2 - 3  # number of nodes
 
-    # allocate tree arrays
-    tree, preodr, posodr = _allocate_tree(n)
+    # allocate tree array
+    tree = np.empty((n, 4), dtype=int)
 
     # position of the current node
     pos = 0
-
-    # depth of the current node
-    depth = 0
 
     # position of the previous node
     prev_pos = 0
@@ -1384,20 +1379,9 @@ def _root_from_treenode(obj, taxa):
     # it will become the sibling of the current node
     sib_pos = 0
 
-    # number of tips under the current node
-    size = m - 1
-
-    n_1 = n - 1
-
     # helper to add the current node to the array
     def _add_current():
         tree[pos, 2] = prev_pos
-        tree[pos, 4] = size
-        tree[pos, 5] = depth
-        tree[pos, 6] = pos
-        preodr[pos] = pos
-        tree[pos, 7] = (post_pos := n_1 - depth)
-        posodr[post_pos] = pos
         tree[prev_pos, 1] = pos
         tree[sib_pos, 3] = pos
         tree[pos, 3] = sib_pos
@@ -1426,19 +1410,15 @@ def _root_from_treenode(obj, taxa):
             # other   prev      other   parent
             if parent is not None:
                 _add_current()
-
                 prev_pos = pos
                 pos += 1
 
                 # add the other child clade
-                _from_treenode(other, taxmap, tree, preodr, posodr, pos, depth + 1)
-
+                size = _from_treenode(other, taxmap, tree, pos)
                 tree[pos - 1, 0] = pos  # curr's left child
                 tree[pos, 2] = pos - 1  # parent (now missing sibling)
-
                 sib_pos = pos
-                size -= (k := tree[pos, 4])
-                pos += k * 2 - 1
+                pos += size
 
             # Current node is the root of a rooted tree (i.e., it has two children):
             # Don't add the current node, instead add the other child.
@@ -1446,13 +1426,11 @@ def _root_from_treenode(obj, taxa):
             #     /   \     =>      /
             # other   prev      other
             else:
-                _from_treenode(other, taxmap, tree, preodr, posodr, pos, depth)
-
+                _from_treenode(other, taxmap, tree, pos)
                 tree[pos, 2] = prev_pos
                 tree[prev_pos, 1] = pos
                 tree[sib_pos, 3] = pos
                 tree[pos, 3] = sib_pos
-
                 break
 
         elif n_sibs == 2:
@@ -1469,56 +1447,24 @@ def _root_from_treenode(obj, taxa):
                 pos += 1
 
                 left, right = siblings
-                _from_treenode(left, taxmap, tree, preodr, posodr, pos, depth + 1)
+                size = _from_treenode(left, taxmap, tree, pos)
                 tree[pos, 2] = curr_pos
                 left_pos = pos
                 tree[curr_pos, 0] = pos
-                pos += tree[pos, 4] * 2 - 1
+                pos += size
 
-                _from_treenode(right, taxmap, tree, preodr, posodr, pos, depth + 1)
+                _from_treenode(right, taxmap, tree, pos)
                 tree[pos, 2] = curr_pos
                 tree[curr_pos, 1] = pos
                 tree[left_pos, 3] = pos
                 tree[pos, 3] = left_pos
-
                 break
-
             else:
                 raise ValueError(errmsg)
         else:
             raise ValueError(errmsg)
 
-        # move up one level
-        depth += 1
-
-    return tree, preodr, posodr
-
-
-def _init_tree(dm, tree, preodr, posodr, ads, matrix=False):
-    """Initialize tree (triplet with taxa 0, 1 and 2)."""
-    # triplet tree
-    tree[:3] = [
-        [1, 2, 0, 0, 2, 0, 0, 2],  # 0: root
-        [0, 1, 0, 2, 1, 1, 1, 0],  # 1: left child
-        [0, 2, 0, 1, 1, 1, 2, 1],  # 2: right child
-    ]
-
-    # nodes in pre- and postorder
-    preodr[:3] = [0, 1, 2]
-    posodr[:3] = [1, 2, 0]
-
-    # average distance matrix between all subtrees
-    if matrix:
-        ads[0, 1] = ads[1, 0] = dm[0, 1]
-        ads[0, 2] = ads[2, 0] = dm[0, 2]
-        ads[1, 2] = ads[2, 1] = dm[1, 2]
-
-    # average distances between distant-2 subtrees
-    else:
-        ads[1, 1] = dm[0, 1]
-        ads[1, 2] = dm[0, 2]
-        ads[0, 1] = ads[0, 2] = dm[1, 2]
-        ads[1, 0] = ads[0, 0] = 0
+    return tree
 
 
 def _insert_taxon_treenode(taxon, target, tree):
@@ -1678,12 +1624,12 @@ def _swap_branches(
 
     Target must be an internal node. Root and tips are not allowed.
 
-    This function currently doesn't handle postorder, as subsequent algorithms don't
-    need this information.
-
     This function is specifically designed for nearest neighbor interchange (NNI). It
     may be generalized to swapping non-neighbor branches, but that is not currently
     implemented.
+
+    For FastNNI (OLS framework), provide `tacts`. For BNNI (balanced framework),
+    provide `sizes` and `depths`.
 
     """
     # This function can potentially be optimized using Cython. See `_insert_taxon`.
