@@ -122,7 +122,7 @@ def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
-def multi_replace(mat, delta=None):
+def multi_replace(mat: "ArrayLike", delta: bool=None) -> "StdArray":
     r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_, replacing zeros with
@@ -168,23 +168,24 @@ def multi_replace(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
+    xp,mat = ingest_array(mat)
     mat = closure(mat)
     z_mat = mat == 0
 
     num_feats = mat.shape[-1]
-    tot = z_mat.sum(axis=-1, keepdims=True)
+    tot = xp.sum(xp.astype(z_mat, mat.dtype), axis=-1, keepdims=True)
 
     if delta is None:
-        delta = (1.0 / num_feats) ** 2
+        delta = (xp.asarray(1.0, dtype = mat.dtype) / num_feats) ** 2
 
     zcnts = 1 - tot * delta
-    if (zcnts < 0).any():
+    if xp.any(zcnts < 0):
         raise ValueError(
             "Multiplicative replacement created negative proportions. Consider "
             "using a smaller `delta`."
         )
-    mat = np.where(z_mat, delta, zcnts * mat)
-    return mat.squeeze()
+    mat = xp.where(z_mat, delta, zcnts * mat)
+    return xp.squeeze(mat)
 
 
 def _closure_two(x, y, validate):
@@ -1009,7 +1010,7 @@ def centralize(mat: ArrayLike) -> StdArray:
     return perturb_inv(mat, cen)
 
 
-def _vlr(x, y, ddof):
+def _vlr(x: "ArrayLike", y: "ArrayLike", ddof: int) -> float:
     r"""Calculate variance log ratio.
 
     Parameters
@@ -1027,15 +1028,22 @@ def _vlr(x, y, ddof):
         Variance log ratio value.
 
     """
+    xp,x = ingest_array(x)
+    _, y = ingest_array(y)
+
+    if xp.any(x < 0) or xp.any(y < 0):
+        raise ValueError(
+            "Negative values detected. Compositions must be non-negative."
+        )
     # Log transformation
-    x = np.log(x)
-    y = np.log(y)
+    x = xp.log(x)
+    y = xp.log(y)
 
     # Variance log ratio
-    return np.var(x - y, ddof=ddof)
+    return xp.var(x - y, correction=ddof)
 
 
-def _robust_vlr(x, y, ddof):
+def _robust_vlr(x: "ArrayLike", y: "ArrayLike", ddof: int) -> float:
     r"""Calculate variance log ratio while masking zeros.
 
     Parameters
@@ -1054,18 +1062,14 @@ def _robust_vlr(x, y, ddof):
 
     """
     # Mask zeros
-    x = np.ma.masked_array(x, mask=x == 0)
-    y = np.ma.masked_array(y, mask=y == 0)
+    xp, x = ingest_array(x)
+    _, y = ingest_array(y)
+    mask = (x != 0) & (y != 0)
+    x = xp.log(x[mask])
+    y = xp.log(y[mask])
+    return xp.var(x - y, correction=ddof)
 
-    # Log transformation
-    x = np.ma.log(x)
-    y = np.ma.log(y)
-
-    # Variance log ratio
-    return np.ma.var(x - y, ddof=ddof)
-
-
-def vlr(x, y, ddof=1, robust=False):
+def vlr(x: "ArrayLike", y: "ArrayLike", ddof: int=1, robust: bool=False) ->float:
     r"""Calculate variance log ratio.
 
     Parameters
@@ -1109,9 +1113,6 @@ def vlr(x, y, ddof=1, robust=False):
     0.0
 
     """
-    # Convert array_like to numpy array
-    x = closure(x)
-    y = closure(y)
 
     # Set up input and parameters
     kwargs = {
