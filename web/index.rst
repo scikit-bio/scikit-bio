@@ -276,14 +276,13 @@
 
          .. card::
 
-            Latest release (2025-10-28):
+            Latest release (2026-02-11):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.1
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.2
                :color: success
                :shadow:
 
-               scikit-bio 0.7.1
-
+               scikit-bio 0.7.2
          .. card::
 
             `scikit-bio paper <https://www.nature.com/articles/s41592-025-02981-z>`_ published in *Nature Methods*. Full text `available <https://rdcu.be/eUcOO>`_.

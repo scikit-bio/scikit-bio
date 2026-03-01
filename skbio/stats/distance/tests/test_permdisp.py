@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+import platform
 
 import numpy as np
 import numpy.testing as npt
@@ -22,6 +23,7 @@ from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
+IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
 class PERMDISPTests(TestCase):
 
@@ -200,6 +202,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -218,6 +221,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -236,6 +240,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -254,6 +259,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
