@@ -8,7 +8,7 @@
 
 import functools
 
-from typing import Optional, Any, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING, Union
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
@@ -156,7 +156,7 @@ def brillouin_d(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts, finite=False):
+def dominance(counts: "ArrayLike", finite:Optional[bool]=False) -> float:
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -1015,7 +1015,7 @@ def osd(counts):
 
 
 @_validate_alpha()
-def pielou_e(counts: "ArrayLike", base: bool = None) -> "StdArray":
+def pielou_e(counts: "ArrayLike", base:Optional[bool] = None) -> float:
     r"""Calculate Pielou's evenness index.
 
     Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
@@ -1220,7 +1220,7 @@ def _perplexity(probs):
 
 
 @_validate_alpha(empty=np.nan)
-def shannon(counts: "ArrayLike", base: bool = None, exp: bool = False) -> "StdArray":
+def shannon(counts: "ArrayLike", base:Optional[Union[int, float]] = None, exp: bool = False) -> float:
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
@@ -1298,7 +1298,7 @@ def shannon(counts: "ArrayLike", base: bool = None, exp: bool = False) -> "StdAr
 
 
 
-def simpson(counts: "ArrayLike", finite: bool = False) ->"StdArray":
+def simpson(counts: "ArrayLike", finite: bool = False) ->float:
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
