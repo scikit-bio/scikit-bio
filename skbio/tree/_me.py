@@ -15,7 +15,6 @@ from ._c_me import (
     _preorder,
     _postorder,
     _insert_taxon,
-    _insert_taxon_x,
     _avgdist_taxon,
     _avgdist_taxon_c,
     _bal_avgdist_taxon,
@@ -543,7 +542,7 @@ def _gme(dm):
         _avgdist_d2_insert(ad2, itag, adk, tree, order, tacts)
 
         # Insert new taxon into tree.
-        _insert_taxon_x(k, itag, size, tree, order)
+        _insert_taxon(k, itag, size, tree, order)
 
     # Calculate branch lengths using an OLS framework.
     _ols_lengths_d2(lens, ad2, tree, tacts)
@@ -726,7 +725,7 @@ def _bme(dm, parallel=500, factor=16):
         _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
 
         # Update tree topology with the inserted taxon.
-        _insert_taxon_x(k, itag, sizes[order[itag]], tree, order)
+        _insert_taxon(k, itag, sizes[order[itag]], tree, order)
 
         n += 2
 
@@ -788,7 +787,7 @@ def _bme(dm, parallel=500, factor=16):
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon_x(k, itag, size, tree, order)
+        _insert_taxon(k, itag, size, tree, order)
         n += 2
 
     ### Phase 3: Parallel (nested and flat) ###
@@ -818,7 +817,7 @@ def _bme(dm, parallel=500, factor=16):
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
-        _insert_taxon_x(k, itag, size, tree, order)
+        _insert_taxon(k, itag, size, tree, order)
         n += 2
 
     # Output intermediate data for diagnosis
@@ -1153,35 +1152,6 @@ def _check_tree_x(
     if depths is not None:
         _calc_depths(n, tree, order, exp)
         assert (depths[:n] == exp).all()
-
-
-def _allocate_tree(n):
-    r"""Pre-allocate memory space for an array-based tree structure.
-
-    Parameters
-    ----------
-    n : int
-        Total number of nodes in the tree.
-
-    Returns
-    -------
-    (n, 8) ndarray of int
-        Tree structure.
-    (n,) ndarray of int
-        Nodes in preorder.
-    (n,) ndarray of int
-        Nodes in postorder.
-
-    See Also
-    --------
-    _check_tree
-
-    """
-    tree = np.empty((n, 8), dtype=int)
-    tree[:, 4] = -1
-    preodr = np.empty((n,), dtype=int)
-    posodr = np.empty((n,), dtype=int)
-    return tree, preodr, posodr
 
 
 def _to_treenode(tree, taxa, lens=None, unroot=False):
