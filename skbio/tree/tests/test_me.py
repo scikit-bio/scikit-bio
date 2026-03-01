@@ -30,6 +30,9 @@ from skbio.tree._me import (
 from skbio.tree._c_me import (
     _preorder,
     _postorder,
+    _calc_tacts,
+    _calc_sizes,
+    _calc_depths,
     _insert_taxon,
     _avgdist_matrix,
     _bal_avgdist_matrix,
@@ -54,8 +57,7 @@ from skbio.tree._c_me import (
     _bal_avgdist_chunk,
     _bal_update_spine,
     _bal_avgdist_nest,
-    _calc_tacts,
-    _calc_sizes,
+    _bal_avgdist_flat,
 )
 
 
@@ -963,7 +965,8 @@ class MeTests(TestCase):
         n = tree.shape[0] - 2
         k = len(taxa) - 1
         taxamap = {}
-        for node in self.posodr3:
+
+        for node in self.preodr3[:-2][::-1]:
             if tree[node, 0] == 0:
                 taxamap[node] = [taxa[tree[node, 1]]]
             else:
@@ -1234,19 +1237,22 @@ class MeTests(TestCase):
 
             npt.assert_allclose(obs, exp)
 
-    def test_bal_avgdist_insert(self):
-        """Update balanced average distance matrix after taxon insertion."""
+    def test_bal_avgdist_insert_1(self):
+        """Update balanced average distance matrix after taxon insertion.
+
+        Phase 1 (serial).
+
+        """
         # Test if the algorithm produces the same result as calculated from the full
         # matrix after taxon insertion.
         tree, order, sizes, depths = (
             self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1
         )
         n = tree.shape[0]
-        npots = 2.0 ** -np.arange(n)
+        npots = 2.0 ** -np.arange((n + 1) // 2)
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)
         ancx = np.zeros(n, dtype=int)
-        args = (diffs, npots, ancs, ancx)
         adm = np.array([
             [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
             [ 0. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
@@ -1263,7 +1269,8 @@ class MeTests(TestCase):
         # Insert e as a sibling of d. This should recover tree1.
         itag = 4
         _bal_avgdist_insert(
-            n - 2, itag, obs := adm, adk, tree, order, sizes, depths, *args
+            n - 2, itag, obs := adm, adk, tree, order, sizes, depths, diffs, npots,
+            ancs, ancx
         )
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
@@ -1289,14 +1296,13 @@ class MeTests(TestCase):
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)
         ancx = np.zeros(n, dtype=int)
-        args = (diffs, npots, ancs, ancx)
 
         for i in range(n - 2):
             # update matrix using the algorithm
             tree_, order_, sizes_ = tree.copy(), order.copy(), sizes.copy()
             _bal_avgdist_insert(
                 n - 2, i, obs := adm.copy(), adk.copy(), tree_, order_, sizes_,
-                depths.copy(), *args
+                depths.copy(), diffs, npots, ancs, ancx
             )
             # insert taxon and calculate full matrix
             _insert_taxon(m, i, sizes_[order_[i]], tree_, order_)
@@ -1305,19 +1311,30 @@ class MeTests(TestCase):
 
             npt.assert_allclose(obs, exp)
 
-    def test_bal_avgdist_insert_p2(self):
-        """Update balanced average distance matrix after taxon insertion."""
+    def test_bal_avgdist_insert_2(self):
+        """Update balanced average distance matrix after taxon insertion.
+
+        Phase 2 (flat serial, nested parallel).
+
+        """
         # Test if the algorithm produces the same result as calculated from the full
         # matrix after taxon insertion.
-        tree, order, sizes, depths = (
-            self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1
+        tree, order, sizes, depths, pairs = (
+            self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1,
+            self.pairs1m1
         )
         n = tree.shape[0]
-        npots = 2.0 ** -np.arange(5)
+        npots = 2.0 ** -np.arange((n + 1) // 2)
         diffs = np.zeros(n)
         ancs = np.zeros(n, dtype=int)
         ancx = np.zeros(n, dtype=int)
-        args = (diffs, npots, ancs, ancx)
+        segs = np.empty(n + 1, dtype=int)
+        lvls = np.empty(n, dtype=int)
+        oops = np.empty(n, dtype=int)
+        chunks = np.empty(n + 1, dtype=int)
+        chunks[0] = 0
+        chusegs = np.empty(n, dtype=int)
+        chusegs[0] = 0
         adm = np.array([
             [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
             [ 0. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
@@ -1333,27 +1350,24 @@ class MeTests(TestCase):
         ])
         # Insert e as a sibling of d. This should recover tree1.
         itag = 4
-
-        # _bal_insert_plan(
-        #     n, itag, adm, adk, tree, order, sizes, depths, pairs, diffs, ancs, ancx,
-        #     segs, lvls, oops, True
-        # )
-
-        # # Distribute nodes into chunks such that they have roughly even workloads.
-        # nc = _bal_avgdist_chunk(
-        #     n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
-        # )
-        # _bal_update_spine(tag, depth, sizes, pairs, ancs)
-
-        # # Update balanced average distance matrix through parallelization.
-        # _bal_avgdist_nest(
-        #     itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
-        # )
-
-
-        _bal_avgdist_insert(
-            n - 2, itag, obs := adm, adk, tree, order, sizes, depths, *args
-        )
+        tag = order[itag]
+        depth = depths[tag]
+        _bal_insert_plan(
+            n - 2, itag, adm, adk, tree, order, sizes, depths, pairs, diffs, ancs,
+            ancx, segs, lvls, oops, True)
+        
+        # This is an extremely simple case. Only the root node has 2 operations, while
+        # all other nodes have 0. Therefore, regardless how many chunks are desired,
+        # there will always be one chunk generated, which includes just the root.
+        npt.assert_array_equal(oops, np.array([2, 0, 0, 0, 0, 0, 0]))
+        enc = 3  # aim for 3 chunks (get 1)
+        nc = _bal_avgdist_chunk(
+            n - 2, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
+        self.assertEqual(nc, 1)
+        _bal_update_spine(tag, depth, sizes, pairs, ancs)
+        _bal_avgdist_nest(
+            itag, depth, obs := adm, order, sizes, depths, diffs, npots, ancs, ancx,
+            segs, lvls, nc, chunks, chusegs)
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
             [ 0.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
@@ -1365,83 +1379,69 @@ class MeTests(TestCase):
         ])
         npt.assert_allclose(obs, exp)
 
-    # def test_bal_avgdist_insert_p(self):
-    #     """Update balanced average distance matrix after taxon insertion."""
-    #     # Test if the algorithm produces the same result as calculated from the full
-    #     # matrix after taxon insertion.
-    #     tree, preodr, posodr = self.tree1m1, self.preodr1m1, self.posodr1m1
-    #     powers = 2.0 ** -np.arange(5)
-    #     stack = np.zeros(7, dtype=int)
-    #     paths = np.zeros(7, dtype=int)  #####
-    #     gens = np.zeros(7, dtype=int)  #####
-    #     # adm = np.array([
-    #     #     [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
-    #     #     [ 5. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  9.5,  0. ,  8. ,  0. ,  0. ],
-    #     #     [ 9. , 10. ,  9.5,  8. ,  0. ,  0. ,  0. ],
-    #     #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     #     [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     # ])
-    #     adm = np.array([
-    #         [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  9.5,  9.5,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. , 10. ,  0. ,  8. ,  0. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #         [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
-    #     ])
-    #     adk = np.array([[7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
-    #                     [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ]])
-    #     # Insert e as a sibling of d. This should recover tree1.
-    #     target = 4
-    #     _bal_avgdist_insert_p(
-    #         obs := adm, target, adk, tree, posodr, powers, stack, paths, gens
-    #     )
-    #     # exp = np.array([
-    #     #     [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
-    #     #     [ 5.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
-    #     #     [ 8.75,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
-    #     #     [ 9.  , 10.  ,  9.5 ,  0.  ,  8.  ,  7.5 ,  7.  ],
-    #     #     [ 9.  , 10.  ,  9.5 ,  8.  ,  0.  ,  8.75,  3.  ],
-    #     #     [ 8.5 ,  9.5 ,  9.  ,  7.5 ,  8.75,  0.  ,  7.75],
-    #     #     [ 8.  ,  9.  ,  8.5 ,  7.  ,  3.  ,  7.75,  0.  ],
-    #     # ])
-    #     exp = np.array([
-    #         [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
-    #         [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  ,  9.75,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
-    #         [ 0.  , 10.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  , 10.  ,  0.  ,  8.  ,  0.  ,  0.  ,  0.  ],
-    #         [ 0.  ,  9.5 ,  0.  ,  7.5 ,  8.75,  0.  ,  7.75],
-    #         [ 0.  ,  9.  ,  0.  ,  7.  ,  3.  ,  0.  ,  0.  ],
-    #     ])
-    #     npt.assert_allclose(obs, exp)
+    def test_bal_avgdist_insert_3(self):
+        """Update balanced average distance matrix after taxon insertion.
 
-    #     # another example: all possible insertions
-    #     dm, tree, preodr, posodr = self.dm3, self.tree3, self.preodr3, self.posodr3
-    #     n = tree.shape[0]
-    #     m = tree[0, 4] + 1
-    #     _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, posodr)
-    #     _bal_avgdist_taxon(adk := np.zeros((2, n)), m, dm, tree, preodr, posodr)
-    #     powers = 2.0 ** -np.arange(m)
-    #     stack = np.zeros(n, dtype=int)
-    #     _halve_adm(adm, tree, n - 2)  #####
+        Phase 3 (flat and nested both parallel).
 
-    #     for i in range(n - 2):
-    #         # update matrix using the algorithm
-    #         _bal_avgdist_insert_p(
-    #             obs := adm.copy(), i, adk.copy(), tree, posodr, powers, stack, paths, gens
-    #         )
-
-    #         # insert taxon and calculate full matrix
-    #         tree_, pre_, post_ = tree.copy(), preodr.copy(), posodr.copy()
-    #         _insert_taxon(m, i, tree_, pre_, post_)
-    #         _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
-    #         _halve_adm(exp, tree_, n)  #####
-
-    #         npt.assert_allclose(obs, exp)
+        """
+        # Test if the algorithm produces the same result as calculated from the full
+        # matrix after taxon insertion.
+        tree, order, sizes, depths, pairs = (
+            self.tree1m1, self.preodr1m1, self.sizes1m1, self.depths1m1,
+            self.pairs1m1
+        )
+        n = tree.shape[0]
+        npots = 2.0 ** -np.arange((n + 1) // 2)
+        diffs = np.zeros(n)
+        ancs = np.zeros(n, dtype=int)
+        ancx = np.zeros(n, dtype=int)
+        segs = np.empty(n + 1, dtype=int)
+        lvls = np.empty(n, dtype=int)
+        oops = np.empty(n, dtype=int)
+        chunks = np.empty(n + 1, dtype=int)
+        chunks[0] = 0
+        chusegs = np.empty(n, dtype=int)
+        chusegs[0] = 0
+        adm = np.array([
+            [ 0. ,  5. ,  9. ,  9. ,  9. ,  0. ,  0. ],
+            [ 0. ,  0. , 10. , 10. , 10. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  9.5,  9.5,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  8. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+            [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+        ])
+        adk = np.array([
+            [7.  , 9.  , 5.  , 7.  , 3.  , 0.  , 0.  ],
+            [8.  , 6.5 , 8.5 , 5.75, 7.75, 0.  , 0.  ],
+        ])
+        # Insert e as a sibling of d. This should recover tree1.
+        itag = 4
+        tag = order[itag]
+        size = sizes[tag]
+        depth = depths[tag]
+        _bal_insert_plan(
+            n - 2, itag, adm, adk, tree, order, sizes, depths, pairs, diffs, ancs,
+            ancx, segs, lvls, oops, False)
+        enc = 3
+        nc = _bal_avgdist_chunk(
+            n - 2, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
+        _bal_update_spine(tag, depth, sizes, pairs, ancs)
+        _bal_avgdist_flat(n - 2, itag, size, order, adm, adk, diffs, depths)
+        _bal_avgdist_nest(
+            itag, depth, obs := adm, order, sizes, depths, diffs, npots, ancs, ancx,
+            segs, lvls, nc, chunks, chusegs)
+        exp = np.array([
+            [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
+            [ 0.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
+            [ 0.  ,  0   ,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  8.  ,  7.5 ,  7.  ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  3.  ],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  8.75,  0.  ,  7.75],
+            [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
+        ])
+        npt.assert_allclose(obs, exp)
 
     def test_ols_lengths(self):
         """Calculate tree branch lengths using an OLS framework."""
@@ -1591,29 +1591,69 @@ class MeTests(TestCase):
 
     def test_swap_branches(self):
         # example 1: swap (e,d) with b
-        tree, preodr, posodr = self.tree1, self.preodr1, self.posodr1
-        _swap_branches(2, 1, tree, preodr, stack := np.full(tree.shape[0], 0))
+        # swap with tacts (for OLS framework)
+        tree, order, index, tacts = (
+            self.tree1.copy(), self.preodr1.copy(), self.preidx1.copy(),
+            self.tacts1.copy())
+        n = tree.shape[0]
+        stack = np.full(n, 0)
+        _swap_branches(2, 1, tree, order, index, stack, tacts=tacts)
 
-        # because _swap_branches doesn't handle postorder yet, weed need to manually
-        # reconstruct this information
-        _postorder(posodr, tree, stack)
-        tree[:, 7] = np.argsort(posodr)
-
-        # make sure tree structure is valid
-        _check_tree(tree, preodr, posodr)
+        # make sure tree topology, node order and attributes are valid
+        _check_tree(tree)
+        _preorder(order_ := np.empty(n, dtype=int), tree, stack)
+        npt.assert_array_equal(order, order_)
+        index_ = np.empty(n, dtype=int)
+        index_[order] = np.arange(n)
+        npt.assert_array_equal(index, index_)
+        _calc_tacts(n, tree, order, tacts_ := np.empty(n, dtype=int))
+        npt.assert_array_equal(tacts, tacts_)
 
         # check new parent mapping
         self.assertEqual(tree[4, 2], 0)
         self.assertEqual(tree[1, 2], 2)
 
+        # swap with sizes and depths (for balanced framework)
+        tree, order, index, sizes, depths = (
+            self.tree1.copy(), self.preodr1.copy(), self.preidx1.copy(),
+            self.sizes1.copy(), self.depths1.copy())
+        _swap_branches(2, 1, tree, order, index, stack, sizes=sizes, depths=depths)
+
+        _check_tree(tree)
+        _preorder(order_ := np.empty(n, dtype=int), tree, stack)
+        npt.assert_array_equal(order, order_)
+        index_ = np.empty(n, dtype=int)
+        index_[order] = np.arange(n)
+        npt.assert_array_equal(index, index_)
+        _calc_sizes(n, tree, order, sizes_ := np.empty(n, dtype=int))
+        npt.assert_array_equal(sizes, sizes_)
+        _calc_depths(n, tree, order, depths_ := np.empty(n, dtype=int))
+        npt.assert_array_equal(depths, depths_)
+
+        self.assertEqual(tree[4, 2], 0)
+        self.assertEqual(tree[1, 2], 2)
+
+        # neither tacts nor sizes provided
+        with self.assertRaises(ValueError) as cm:
+            _swap_branches(2, 1, tree, order, index, stack)
+        msg = "Must provide either tacts or sizes."
+        self.assertEqual(str(cm.exception), msg)
+
+        # both tacts and sizes provided
+        with self.assertRaises(ValueError) as cm:
+            _swap_branches(2, 1, tree, order, index, stack,
+                           tacts=tacts, sizes=sizes)
+        msg = "Cannot provide tacts and sizes simultaneously."
+        self.assertEqual(str(cm.exception), msg)
+
         # example 4: all possible swaps
-        tree, preodr, posodr = self.tree4, self.preodr4, self.posodr4
-        taxa = self.taxa4
+        taxa, tree, order, index, tacts = (
+            self.taxa4, self.tree4, self.preodr4, self.preidx4, self.tacts4)
         n = tree.shape[0]
         stack = np.full(n, 0)
 
         taxamap = {}
-        for node in posodr:
+        for node in order[::-1]:
             if tree[node, 0] == 0:
                 taxamap[node] = [taxa[tree[node, 1]]]
             else:
@@ -1624,15 +1664,14 @@ class MeTests(TestCase):
                 continue
             node1 = taxamap[tree[node, 3]]
             for side in range(2):
-                tree_, pre_, post_ = tree.copy(), preodr.copy(), posodr.copy()
+                tree_, order_, index_, tacts_ = (
+                    tree.copy(), order.copy(), index.copy(), tacts.copy())
                 node2 = taxamap[tree[node, side]]
                 exp = _to_treenode(tree_, taxa)
                 _swap_branches_treenode(exp.lca(node1), exp.lca(node2))
 
-                _swap_branches(node, side, tree_, pre_, stack)
-                _postorder(post_, tree_, stack)
-                tree_[:, 7] = np.argsort(post_)
-                _check_tree(tree_, pre_, post_)
+                _swap_branches(node, side, tree_, order_, index_, stack, tacts=tacts_)
+                _check_tree(tree_)
                 obs = _to_treenode(tree_, taxa)
 
                 self.assertEqual(obs.compare_rfd(exp), 0)
@@ -1647,31 +1686,30 @@ class MeTests(TestCase):
             self.dm1, self.tree1, self.preodr1, self.preidx1, self.tacts1)
         n = tree.shape[0]
         stack = np.full(n, 0)
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, index, tacts)
-        tacts[2] += tacts[tree[2, 3]] - tacts[tree[2, 1]]
-        _swap_branches(2, 1, tree, order, index, tacts, stack, False)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
+        _swap_branches(2, 1, tree, order, index, stack, tacts=tacts)
         _avgdist_swap(index[2], 1, obs := adm.copy(), tree, order, tacts)
-        _avgdist_matrix(exp := np.zeros((n, n)), dm, tree, order, index, tacts)
+        _avgdist_matrix(exp := np.zeros((n, n)), dm, tree, order, tacts)
+        npt.assert_allclose(obs, exp)
 
         # example 4: all possible swaps
         dm, tree, order, index, tacts = (
             self.dm4, self.tree4, self.preodr4, self.preidx4, self.tacts4)
         n = tree.shape[0]
         stack = np.full(n, 0)
-        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, index, tacts)
+        _avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, tacts)
         for node in range(1, n):
             if tree[node, 0] == 0:  # omit tips
                 continue
             for side in range(2):  # left and right
                 tree_, order_, index_, tacts_ = (
                     tree.copy(), order.copy(), index.copy(), tacts.copy())
-                tacts_[node] += tacts[tree[node, 3]] - tacts[tree[node, side]]
                 _swap_branches(
-                    node, side, tree_, order_, index_, tacts_, stack, False)
+                    node, side, tree_, order_, index_, stack, tacts=tacts_)
                 _avgdist_swap(
                     index_[node], side, obs := adm.copy(), tree_, order_, tacts_)
                 _avgdist_matrix(
-                    exp := np.zeros((n, n)), dm, tree_, order_, index_, tacts_)
+                    exp := np.zeros((n, n)), dm, tree_, order_, tacts_)
                 npt.assert_allclose(obs, exp)
 
     def test_bal_avgdist_swap(self):
@@ -1680,38 +1718,41 @@ class MeTests(TestCase):
         # matrix after branch swapping.
 
         # example 1: swap (e,d) with b
-        dm, tree, preodr, posodr = self.dm1, self.tree1, self.preodr1, self.posodr1
+        dm, tree, order, index, sizes, depths = (
+            self.dm1, self.tree1, self.preodr1, self.preidx1, self.sizes1, self.depths1
+        )
         n = tree.shape[0]
-        m = tree[0, 4] + 1
         stack = np.full(n, 0)
-        powers = np.ldexp(1.0, -np.arange(m))
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, posodr)
-        _swap_branches(2, 1, tree, preodr, stack)
-        _bal_avgdist_swap(obs := adm.copy(), 2, 1, tree, preodr, powers, stack)
-        _postorder(posodr, tree, stack)
-        tree[:, 7] = np.argsort(posodr)
-        _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree, preodr, posodr)
+        npots = np.ldexp(1.0, -np.arange((n + 1) // 2))
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, sizes)
+        _swap_branches(2, 1, tree, order, index, stack, sizes=sizes, depths=depths)
+        _bal_avgdist_swap(
+            obs := adm.copy(), 2, 1, tree, order, index, sizes, depths, npots, stack)
+        _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree, order, sizes)
         npt.assert_allclose(obs, exp)
 
         # example 4: all possible swaps
-        dm, tree, preodr, posodr = self.dm4, self.tree4, self.preodr4, self.posodr4
+        dm, tree, order, index, sizes, depths = (
+            self.dm4, self.tree4, self.preodr4, self.preidx4, self.sizes4, self.depths4
+        )
         n = tree.shape[0]
-        m = tree[0, 4] + 1
         stack = np.full(n, 0)
-        powers = np.ldexp(1.0, -np.arange(m))
-        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, preodr, posodr)
+        npots = np.ldexp(1.0, -np.arange((n + 1) // 2))
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, sizes)
         for node in range(1, n):
             if tree[node, 0] == 0:
                 continue
             for side in range(2):
-                tree_, pre_, post_ = tree.copy(), preodr.copy(), posodr.copy()
-                _swap_branches(node, side, tree_, pre_, stack)
+                tree_, order_, index_, sizes_, depths_ = (
+                    tree.copy(), order.copy(), index.copy(), sizes.copy(),
+                    depths.copy())
+                _swap_branches(
+                    node, side, tree_, order_, index_, stack, sizes=sizes_,
+                    depths=depths_)
                 _bal_avgdist_swap(
-                    obs := adm.copy(), node, side, tree_, pre_, powers, stack
-                )
-                _postorder(post_, tree_, stack)
-                tree_[:, 7] = np.argsort(post_)
-                _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, pre_, post_)
+                    obs := adm.copy(), node, side, tree_, order_, index_, sizes_,
+                    depths_, npots, stack)
+                _bal_avgdist_matrix(exp := np.zeros((n, n)), dm, tree_, order_, sizes_)
                 npt.assert_allclose(obs, exp)
 
     def test_ols_all_swaps(self):
@@ -1780,8 +1821,7 @@ class MeTests(TestCase):
             self.dm4, self.tree4, self.preodr4, self.preidx4, self.sizes4, self.depths4
         )
         n = tree.shape[0]
-        m = tree[0, 4] + 1
-        npots = np.ldexp(1.0, -np.arange(m))
+        npots = np.ldexp(1.0, -np.arange((n + 1) // 2))
         _bal_avgdist_matrix(adm := np.empty((n, n)), dm, tree, order, sizes)
         _bal_lengths(lens := np.empty(n), adm, tree)
         lensum = lens.sum()

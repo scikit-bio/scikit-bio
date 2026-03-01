@@ -12,8 +12,6 @@ import numpy as np
 
 from skbio.tree import TreeNode
 from ._c_me import (
-    _preorder,
-    _postorder,
     _insert_taxon,
     _avgdist_taxon,
     _avgdist_taxon_c,
@@ -46,6 +44,94 @@ from ._c_me import (
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
+
+
+r"""
+
+The greedy algorithms implemented in this module use a special array-based tree
+structure to improve efficiency.
+
+In this 2-D array, rows represent nodes in the order of insertion into the tree,
+with the root placed at row 0. There are four columns:
+
+    0. Left child index, or 0 if a tip.
+    1. Right child index, or taxon index if a tip.
+    2. Parent index, or 0 if root.
+    3. Sibling index, or 0 if root.
+
+For example, a tree with four taxa: a, b, c and d is like:
+
+      a
+     / \
+    b   x
+       / \
+      c   d
+
+This tree can be represented by the following 2-D array:
+
+    [[1, 2, 0, 0, 3, 0, 0, 4],  # a (root)
+     [0, 1, 0, 2, 1, 1, 1, 0],  # b (tip)
+     [3, 4, 0, 1, 2, 1, 2, 3],  # x (internal)
+     [0, 2, 2, 4, 1, 2, 3, 1],  # c (tip)
+     [0, 3, 2, 3, 1, 2, 4, 2]]  # d (tip)
+
+A separate 1D array stores node indices in a preorder traversal:
+
+    [0, 1, 2, 3, 4]
+
+In this example, the preorder is identical to the insertion order. But they can be
+different in real calculation.
+
+When a new taxon is inserted into the tree, the preorder array needs to be updated
+
+
+With the preorder array, one can easily look up the original node given its index.
+However,
+
+The preorder array is maintained by memmove
+
+    4. Size, i.e., number of taxa descending from the node, or 1 if a tip.
+    5. Depth, i.e., number of branches constituting the path to root.
+    6. Preorder index.
+    7. Postorder index.
+
+Meanwhile, node indices in preorder and postorder are stored in two separate 1-D
+arrays to facilitate traversals.
+
+Note: Columns 2-7 and the two separate arrays can be derived from columns 0 and 1.
+They are explicitly stored because of their frequent usage during the calculation.
+Also, they are updated iteratively as the tree grows, which is more efficient than
+de novo calculation on an existing tree.
+
+---
+
+For example, a tree with four taxa is like (see :func:`_gme`):
+
+        0
+        / \
+    1   y
+        / \
+        2   3
+
+This tree can be represented by the following 2-D array:
+
+    [[1, 2, 0, 0, 3, 0, 0, 4],
+        [0, 1, 0, 2, 1, 1, 1, 0],
+        [3, 4, 0, 1, 2, 1, 2, 3],
+        [0, 2, 2, 4, 1, 2, 3, 1],
+        [0, 3, 2, 3, 1, 2, 4, 2]]
+
+The separate pre- and postorder arrays are:
+
+    [0, 1, 2, 3, 4]
+    [1, 3, 4, 2, 0]
+
+---
+
+This function ensures that a tree array is valid. It is for test purpose, but not
+used in the actual greedy algorithms.
+
+"""
 
 
 def gme(dm, neg_as_zero=True, method=1):
@@ -971,35 +1057,18 @@ def _bnni(dm, tree, order, lens):
     depths = np.empty(n, dtype=int)
     _calc_depths(n, tree, order, depths)
 
-    # number of internal branches
-    # For a tree with m taxa (including root), there should be m - 3 internal branches.
-    nb = m - 3
-
-    # internal branch indices of nodes (only for internal nodes)
+    # Identify all internal branches (those above nodes that are not tips or root).
     # The association between nodes and internal branches are fixed, no matter how tree
     # is swapped.
-    brchs = np.empty(n, dtype=int)
+    # For a tree with m taxa (including root), there should be m - 3 internal branches.
+    nodes = np.flatnonzero(tree[1:, 0]) + 1
+    nb = nodes.shape[0]
 
-    # The following three arrays store information of internal branches.
     # overall tree length reduction (larger is better)
     gains = np.zeros(nb, dtype=dtype)
 
     # child side (left: 0, right: 1) of each node to swap
     sides = np.empty(nb, dtype=int)
-
-    # node index of each branch
-    nodes = np.empty(nb, dtype=int)
-
-    # identify all internal branches
-    branch = 0
-    for node in range(1, n):
-        if tree[node, 0]:
-            brchs[node] = branch
-            nodes[branch] = node
-            branch += 1
-
-    nodes2 = np.flatnonzero(tree[1:, 0]) + 1
-    assert (nodes == nodes2).all()
 
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
@@ -1009,9 +1078,6 @@ def _bnni(dm, tree, order, lens):
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
     stack = np.empty(n, dtype=int)
-
-    # Initialize branch swapping information.
-    # gains, sides, nodes = _init_swaps(tree, dtype=dtype)
 
     # Iteratively swap branches until there is no more beneficial swap.
     while True:
@@ -1036,122 +1102,6 @@ def _bnni(dm, tree, order, lens):
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
-
-
-def _check_tree_x(
-    n,
-    tree,
-    preodr=None,
-    preidx=None,
-    posodr=None,
-    posidx=None,
-    tacts=None,
-    sizes=None,
-    depths=None,
-):
-    r"""Check the integrity of an array-based tree structure.
-
-    The greedy algorithms implemented in this module use a special array-based tree
-    structure to improve efficiency.
-
-    In this 2-D array, rows represent nodes in the order of addition to the tree,
-    with the root placed at row 0. There are eight columns:
-
-        0. Left child index, or 0 if a tip.
-        1. Right child index, or taxon index if a tip.
-        2. Parent index, or 0 if root.
-        3. Sibling index, or 0 if root.
-        4. Size, i.e., number of taxa descending from the node, or 1 if a tip.
-        5. Depth, i.e., number of branches constituting the path to root.
-        6. Preorder index.
-        7. Postorder index.
-
-    Meanwhile, node indices in preorder and postorder are stored in two separate 1-D
-    arrays to facilitate traversals.
-
-    Note: Columns 2-7 and the two separate arrays can be derived from columns 0 and 1.
-    They are explicitly stored because of their frequent usage during the calculation.
-    Also, they are updated iteratively as the tree grows, which is more efficient than
-    de novo calculation on an existing tree.
-
-    ---
-
-    For example, a tree with four taxa is like (see :func:`_gme`):
-
-          0
-         / \
-        1   y
-           / \
-          2   3
-
-    This tree can be represented by the following 2-D array:
-
-        [[1, 2, 0, 0, 3, 0, 0, 4],
-         [0, 1, 0, 2, 1, 1, 1, 0],
-         [3, 4, 0, 1, 2, 1, 2, 3],
-         [0, 2, 2, 4, 1, 2, 3, 1],
-         [0, 3, 2, 3, 1, 2, 4, 2]]
-
-    The separate pre- and postorder arrays are:
-
-        [0, 1, 2, 3, 4]
-        [1, 3, 4, 2, 0]
-
-    ---
-
-    This function ensures that a tree array is valid. It is for test purpose, but not
-    used in the actual greedy algorithms.
-
-    """
-    # check tree topology
-    for i in range(n):
-        left, right = tree[i, 0], tree[i, 1]
-        if left == 0:
-            assert i == 0 or right != 0
-        else:
-            assert tree[left, 2] == tree[right, 2] == i
-            assert tree[left, 3] == right
-            assert tree[right, 3] == left
-
-    exp = np.empty(n, dtype=int)
-
-    # Calculate preorder (we need this for multiple tests).
-    stack = np.empty(n, dtype=int)
-    _preorder(order := np.empty(n, dtype=int), tree, stack)
-
-    # check preorder
-    if preodr is not None:
-        assert (order == preodr[:n]).all()
-
-    # check preorder index
-    if preidx is not None:
-        stack[preodr] = np.arange(n)
-        assert (stack == preidx[:n]).all()
-
-    # check postorder
-    if posodr is not None:
-        _postorder(exp, tree, stack)
-        assert (exp == posodr[:n]).all()
-
-        # check postorder index
-        if posidx is not None:
-            stack[posodr] = np.arange(n)
-            assert (stack == posidx[:n]).all()
-
-    # check taxon counts
-    if tacts is not None:
-        _calc_tacts(n, tree, order, exp)
-        assert (tacts[:n] == exp).all()
-
-    # check node counts
-    if sizes is not None:
-        _calc_sizes(n, tree, order, exp)
-        assert (sizes[:n] == exp).all()
-
-    # check node depths
-    if depths is not None:
-        _calc_depths(n, tree, order, exp)
-        assert (depths[:n] == exp).all()
 
 
 def _to_treenode(tree, taxa, lens=None, unroot=False):
@@ -1534,41 +1484,6 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, order, tacts):
         adku[node] = dk[list(taxa_upper)].mean()
 
 
-def _init_swaps(tree, dtype):
-    """Initialize branch swapping information.
-
-    It will create three 1-D arrays to store information of all internal branches of
-    the tree:
-
-    - `gains`: Overall tree length reduction (larger is better).
-    - `sides`: Which side (left: 0, right: 1) of the target node should be swapped.
-    - `nodes`: Corresponding node index of the branch.
-
-    Meanwhile, column 7 of the tree array will be filled with the branch index of the
-    each node, if it corresponds to one. This column was previous used to store
-    postorder index, but that information is not needed during swapping.
-
-    For a tree with n taxa, there should be n - 3 internal branches. The association
-    between nodes and internal branches are fixed, no matter how tree is swapped.
-
-    """
-    # number of internal branches
-    n = tree[0, 4] - 2
-    gains = np.zeros((n,), dtype=dtype)
-    sides = np.empty((n,), dtype=int)
-    nodes = np.empty((n,), dtype=int)
-
-    # identify all internal branches
-    branch = 0
-    for node in range(1, tree.shape[0]):
-        if tree[node, 0]:
-            tree[node, 7] = branch
-            nodes[branch] = node
-            branch += 1
-
-    return gains, sides, nodes
-
-
 def _swap_branches_treenode(node1, node2):
     """Swap two nodes in a TreeNode object.
 
@@ -1603,6 +1518,11 @@ def _swap_branches(
 
     """
     # This function can potentially be optimized using Cython. See `_insert_taxon`.
+
+    if tacts is None and sizes is None:
+        raise ValueError("Must provide either tacts or sizes.")
+    if tacts is not None and sizes is not None:
+        raise ValueError("Cannot provide tacts and sizes simultaneously.")
 
     child = tree[target, side]
     other = tree[target, 1 - side]  # other child
