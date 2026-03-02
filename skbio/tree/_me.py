@@ -6,6 +6,108 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+r"""Minimum evolution phylogenetic methods.
+
+This submodule implements four algorithms for distance-based phylogenetic inference and
+refinement under the minimum evolution (ME) criterion. They were originally introduced
+in:
+
+    Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
+    algorithms based on the minimum-evolution principle. J Comput Biol, 9(5), 687-705.
+
+The four algorithms are (named following the original publication):
+
+    De novo reconstruction of phylogenetic trees using an agglomerative clustering
+    strategy that iteratively inserts new taxa into a growing tree:
+
+    1. GME: Greedy minimum evolution (using an OLS framework).
+    2. BME: Balanced minimum evolution (using a balanced framework).
+
+    Rearrangement of existing phylogenetic trees using the nearest neighbor interchange
+    (NNI) strategy that iteratively swaps branches to improve optimality:
+
+    3. FastNNI: using an OLS framework.
+    4. BNNI: using a balanced framework.
+
+***
+
+These four algorithms share the same mathematical foundations with the algorithms
+provided by the FastME package:
+
+    1. GME: `-m O -w O`
+    2. BME: `-m B -w B`
+    3. GME with FastNNI: `-m O -w O -n O`
+    4. BME with BNNI: `-m B -w B -n B`
+
+The algorithms implemented here were designed from scratch based on the original paper.
+Multiple optimization strategies were incorporated to make them efficient.
+
+***
+
+Specifically, these algorithms use a flattened, incrementally maintained array data
+structure to represent the tree topology.
+
+In this 2-D array, rows represent nodes in the order of insertion into the tree,
+with the root placed at row 0. There are four columns:
+
+    0. Left child index, or 0 if a tip.
+    1. Right child index, or taxon index if a tip.
+    2. Parent index, or 0 if root.
+    3. Sibling index, or 0 if root.
+
+For example, a tree with four taxa: a, b, c and d is like:
+
+      a
+     / \
+    b   x
+       / \
+      c   d
+
+This tree can be represented by the following 2-D array:
+
+    [[1, 2, 0, 0],  # a (root)
+     [0, 1, 0, 2],  # b (tip)
+     [3, 4, 0, 1],  # x (internal)
+     [0, 2, 2, 4],  # c (tip)
+     [0, 3, 2, 3]]  # d (tip)
+
+In the agglomerative clustering methods, newly inserted taxa are appended to the end of
+the tree array, therefore existing nodes except for the connection do not need to be
+updated. In the rearrangement methods, all nodes stay still and only connections are
+updated.
+
+The average distances between nodes are stored in a matrix with the same order of node
+indices as in the tree array. Locating distances is via indexing and is efficient.
+
+***
+
+A separate 1-D array stores node indices visited through a preorder traversal:
+
+    [0, 1, 2, 3, 4]
+
+In this example, the preorder is identical to the insertion order. But they can be
+different in real calculation.
+
+When a new taxon is inserted into the tree, or two existing branches are swapped, the
+preorder array needs to be updated to reflect the change, and this operation is O(n).
+
+The preorder array permits convenient location of all nodes within a clade, without
+the need to traverse it. Therefore, it enables parallelization of per-node calculations
+in addition to enhanced memory locality.
+
+With the preorder array, one can easily look up the original node given its index.
+However, the opposite is not possible. The tree building algorithms were designed not
+to rely on the reverse lookup, whereas the tree rearrangement algorithms separately
+maintains a reverse lookup table.
+
+Meanwhile, postorder traversal is not involved in these algorithms. The original paper
+used postorder in multiple situations. This is replaced with reverse preorder in the
+algorithms here, as both orders suffice the parent-after-children pattern, which is all
+the algorithms need. Therefore, maintaining a single preorder array is sufficient for
+both top-down and bottom-up traversal.
+
+"""
+
 from heapq import heapify, heappop
 
 import numpy as np
@@ -46,95 +148,7 @@ from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
 
 
-r"""
-
-The greedy algorithms implemented in this module use a special array-based tree
-structure to improve efficiency.
-
-In this 2-D array, rows represent nodes in the order of insertion into the tree,
-with the root placed at row 0. There are four columns:
-
-    0. Left child index, or 0 if a tip.
-    1. Right child index, or taxon index if a tip.
-    2. Parent index, or 0 if root.
-    3. Sibling index, or 0 if root.
-
-For example, a tree with four taxa: a, b, c and d is like:
-
-      a
-     / \
-    b   x
-       / \
-      c   d
-
-This tree can be represented by the following 2-D array:
-
-    [[1, 2, 0, 0, 3, 0, 0, 4],  # a (root)
-     [0, 1, 0, 2, 1, 1, 1, 0],  # b (tip)
-     [3, 4, 0, 1, 2, 1, 2, 3],  # x (internal)
-     [0, 2, 2, 4, 1, 2, 3, 1],  # c (tip)
-     [0, 3, 2, 3, 1, 2, 4, 2]]  # d (tip)
-
-A separate 1D array stores node indices in a preorder traversal:
-
-    [0, 1, 2, 3, 4]
-
-In this example, the preorder is identical to the insertion order. But they can be
-different in real calculation.
-
-When a new taxon is inserted into the tree, the preorder array needs to be updated
-
-
-With the preorder array, one can easily look up the original node given its index.
-However,
-
-The preorder array is maintained by memmove
-
-    4. Size, i.e., number of taxa descending from the node, or 1 if a tip.
-    5. Depth, i.e., number of branches constituting the path to root.
-    6. Preorder index.
-    7. Postorder index.
-
-Meanwhile, node indices in preorder and postorder are stored in two separate 1-D
-arrays to facilitate traversals.
-
-Note: Columns 2-7 and the two separate arrays can be derived from columns 0 and 1.
-They are explicitly stored because of their frequent usage during the calculation.
-Also, they are updated iteratively as the tree grows, which is more efficient than
-de novo calculation on an existing tree.
-
----
-
-For example, a tree with four taxa is like (see :func:`_gme`):
-
-        0
-        / \
-    1   y
-        / \
-        2   3
-
-This tree can be represented by the following 2-D array:
-
-    [[1, 2, 0, 0, 3, 0, 0, 4],
-        [0, 1, 0, 2, 1, 1, 1, 0],
-        [3, 4, 0, 1, 2, 1, 2, 3],
-        [0, 2, 2, 4, 1, 2, 3, 1],
-        [0, 3, 2, 3, 1, 2, 4, 2]]
-
-The separate pre- and postorder arrays are:
-
-    [0, 1, 2, 3, 4]
-    [1, 3, 4, 2, 0]
-
----
-
-This function ensures that a tree array is valid. It is for test purpose, but not
-used in the actual greedy algorithms.
-
-"""
-
-
-def gme(dm, neg_as_zero=True, method=1):
+def gme(dm, neg_as_zero=True):
     r"""Perform greedy minimum evolution (GME) for phylogenetic reconstruction.
 
     .. versionadded:: 0.6.2
@@ -858,9 +872,7 @@ def _bme(dm, parallel=500, factor=16):
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
-        _bal_insert_plan(
-            n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, True
-        )
+        _bal_insert_plan(n, itag, *args1, *args2, pairs, diffs, *args3, oops, True)
 
         # Distribute nodes into chunks such that they have roughly even workloads.
         nc = _bal_avgdist_chunk(
@@ -887,9 +899,7 @@ def _bme(dm, parallel=500, factor=16):
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
-        _bal_insert_plan(
-            n, itag, *args1, *args2, pairs, diffs, ancs, ancx, segs, lvls, oops, False
-        )
+        _bal_insert_plan(n, itag, *args1, *args2, pairs, diffs, *args3, oops, False)
 
         # Distribute nodes into chunks such that they have roughly even workloads.
         nc = _bal_avgdist_chunk(
@@ -961,11 +971,13 @@ def _fastnni(dm, tree, order, lens):
     code isn't significantly faster than a naive `np.argmax` on then entire `lens`.
     Consider optimization.
 
-    TODO: It might be possible to use `index` only once during `_avgdist_matrix` and
-    stop maintaining it during swaps, which will save some time, while solely relying
-    on `order`. However, that would complicate the implementation, as the node indices
-    stored in `heap` must be updated after each swap. There might be a way to do this
-    without updating the heap, but it would require careful design and testing.
+    TODO: It should be feasible to rely on `order` alone without `index`, which will
+    save multiple O(n) operations (see `_swap_branches` for details). Implementation
+    will be less straightforward compared with `_gme` and `_bme`. This is because
+    branch length changes are associated with original nodes, not preorder. Updating
+    preorder will change this association. A workaround is to track the preorder of
+    a node via an O(n) search during each iteration, which should be cheaper than the
+    current method (updating `index` via memory reads / writes).
 
     """
     dtype = dm.dtype
@@ -1515,6 +1527,12 @@ def _swap_branches(
 
     For FastNNI (OLS framework), provide `tacts`. For BNNI (balanced framework),
     provide `sizes` and `depths`.
+
+    TODO: This function may be Cythonized to improve efficiency.
+
+    TODO: This function updates both preorder (`order`) and preorder index (`index`),
+    both of which are O(n). It is technically feasible to update `order` only, which
+    can be more efficiently done via `memmove`. Refer to `_insert_taxon`.
 
     """
     # This function can potentially be optimized using Cython. See `_insert_taxon`.
