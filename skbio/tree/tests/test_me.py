@@ -33,6 +33,7 @@ from skbio.tree._c_me import (
     _calc_tacts,
     _calc_sizes,
     _calc_depths,
+    _calc_pairs,
     _insert_taxon,
     _avgdist_matrix,
     _bal_avgdist_matrix,
@@ -389,6 +390,30 @@ class MeTests(TestCase):
         ], dtype=float)
         self.taxa5 = list("abcde")
         self.nwk5 = "(b:-129,(c:-95,(d:-130,e:133):101):102,a:134);"
+
+        # Example 6
+        # This is a relatively large example, used to demonstrate the parallelizaton
+        # planning process in BME.
+        self.nwk6 = "(((3,(5,6)4)2,(((10,11)9,(13,14)12)8,(16,17)15)7)1,18)0;"
+        #                               /-3
+        #                     /2-------|
+        #                    |         |          /-5
+        #                    |          \4-------|
+        #                    |                    \-6
+        #                    |
+        #           /1-------|                              /-10
+        #          |         |                    /9-------|
+        #          |         |                   |          \-11
+        #          |         |          /8-------|
+        #          |         |         |         |          /-13
+        #          |         |         |          \12------|
+        # -0-------|          \7-------|                    \-14
+        #          |                   |
+        #          |                   |          /-16
+        #          |                    \15------|
+        #          |                              \-17
+        #          |
+        #           \-18
 
     def test_gme(self):
         """The entire tree building workflow."""
@@ -1355,11 +1380,18 @@ class MeTests(TestCase):
         _bal_insert_plan(
             n - 2, itag, adm, adk, tree, order, sizes, depths, pairs, diffs, ancs,
             ancx, segs, lvls, oops, True)
-        
+
+        # The target node has a depth of 2. Therefore it has two ancestors (parent and
+        # root).
+        obs = (segs == n - 2).argmax()
+        self.assertEqual(obs, 3)
+        npt.assert_array_equal(segs[:obs + 1], [0, 2, 4, 5])
+        npt.assert_array_equal(lvls[:obs], [1, 0, -1])
+        npt.assert_array_equal(oops[:obs], [2, 0, 0])
+
         # This is an extremely simple case. Only the root node has 2 operations, while
         # all other nodes have 0. Therefore, regardless how many chunks are desired,
         # there will always be one chunk generated, which includes just the root.
-        npt.assert_array_equal(oops, np.array([2, 0, 0, 0, 0, 0, 0]))
         enc = 3  # aim for 3 chunks (get 1)
         nc = _bal_avgdist_chunk(
             n - 2, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
@@ -1442,6 +1474,135 @@ class MeTests(TestCase):
             [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ],
         ])
         npt.assert_allclose(obs, exp)
+
+    def test_bal_insert_plan(self):
+        """Navigate a tree and plan on subsequent parallelization."""
+        # This is a relatively large tree with 19 nodes and 10 tips.
+        obj = TreeNode.read([self.nwk6])
+        n = obj.count()
+        m = obj.count(tips=True)
+
+        # Generate tree topology array.
+        tree = np.empty((n + 2, 4), dtype=int)
+        taxmap = {x.name: int(x.name) for x in obj.tips()}
+        _from_treenode(obj, taxmap, tree)
+
+        # Generate tree properties based on the topology.
+        order = np.empty(n + 2, dtype=int)
+        order[:n] = np.arange(n)
+        sizes = np.empty(n + 2, dtype=int)
+        _calc_sizes(n, tree, order, sizes)
+        depths = np.empty(n + 2, dtype=int)
+        _calc_depths(n, tree, order, depths)
+        pairs = np.empty(n + 2, dtype=int)
+        _calc_pairs(n, tree, order, sizes, pairs)
+
+        # Fill the matrices with zeros, as this test primarily concerns parallelization
+        # planning, whereas numeric accuracy was assessed in `test_bal_avgdist_insert_
+        # 2`.
+        adm = np.zeros((n + 2, n + 2), dtype=float)
+        adk = np.zeros((2, n + 2), dtype=float)
+
+        # Allocate arrays that will be filled.
+        diffs = np.empty(n + 2, dtype=float)
+        ancs = np.empty(n + 2, dtype=int)
+        ancx = np.empty(n + 2, dtype=int)
+        segs = np.empty(n + 3, dtype=int)
+        lvls = np.empty(n + 2, dtype=int)
+        oops = np.empty(n + 2, dtype=int)
+
+        # We will insert a taxon into the branch above node 8. This node has a depth of
+        # 3, meaning it has three ancestors: 7 (parent), 1 (grandparent) and 0 (root).
+        # Meanwhile, 8 itself is the left child of its parent (7), therefore it has a
+        # right sibling: 15. Moving up, it has a left cousin 2 and a right cousin 18.
+        itag = 8
+        tag = order[itag]
+        size = sizes[tag]
+        depth = depths[tag]
+
+        # do the job
+        _bal_insert_plan(n, itag, adm, adk, tree, order, sizes, depths, pairs, diffs,
+                         ancs, ancx, segs, lvls, oops, True)
+
+        # ancestors
+        npt.assert_array_equal(ancs[:depth], [7, 1, 0])
+        npt.assert_array_equal(ancx[:depth], [147, 21, 0])  # == ancs * adm.shape[0]
+
+        # segments (ancestors high-to-low, self, right cousins low-to-high)
+        n_segs = (segs == n).argmax()
+        self.assertEqual(n_segs, 6)
+        npt.assert_array_equal(segs[:n_segs + 1], [0, 1, 7, 8, 15, 18, 19])
+
+        # levels up from parent
+        npt.assert_array_equal(lvls[:n_segs], [2, 1, 0, -1, 0, 2])
+
+        # numbers of operations
+        npt.assert_array_equal(oops[:n_segs], [22, 18, 6, 4, 2, 2])
+
+        # update sizes and pairs
+        _bal_update_spine(tag, depth, sizes, pairs, ancs)
+
+        # Update tree topoloy, then calculate sizes, depths and pairs from scratch, and
+        # compare them with the incrementally updated results.
+        _insert_taxon(m + 1, itag, size, tree, order)
+        exp = np.empty(n + 2, dtype=int)
+        _calc_sizes(n + 2, tree, order, exp)
+        npt.assert_array_equal(sizes, exp)
+        exp = np.empty(n + 2, dtype=int)
+        _calc_depths(n + 2, tree, order, exp)
+        npt.assert_array_equal(depths, exp)
+        exp = np.empty(n + 2, dtype=int)
+        _calc_pairs(n + 2, tree, order, sizes, exp)
+        npt.assert_array_equal(pairs, exp)
+
+    def test_bal_avgdist_chunk(self):
+        """Partition nodes into chunks with roughly even workloads."""
+        # Use the same example as above.
+        # preparation (which is long...)
+        obj = TreeNode.read([self.nwk6])
+        n = obj.count()
+        tree = np.empty((n + 2, 4), dtype=int)
+        taxmap = {x.name: int(x.name) for x in obj.tips()}
+        _from_treenode(obj, taxmap, tree)
+        order = np.empty(n + 2, dtype=int)
+        order[:n] = np.arange(n)
+        sizes = np.empty(n + 2, dtype=int)
+        _calc_sizes(n, tree, order, sizes)
+        depths = np.empty(n + 2, dtype=int)
+        _calc_depths(n, tree, order, depths)
+        pairs = np.empty(n + 2, dtype=int)
+        _calc_pairs(n, tree, order, sizes, pairs)
+        adm = np.zeros((n + 2, n + 2), dtype=float)
+        adk = np.zeros((2, n + 2), dtype=float)
+        diffs = np.empty(n + 2, dtype=float)
+        ancs = np.empty(n + 2, dtype=int)
+        ancx = np.empty(n + 2, dtype=int)
+        segs = np.empty(n + 3, dtype=int)
+        lvls = np.empty(n + 2, dtype=int)
+        oops = np.empty(n + 2, dtype=int)
+        itag = 8
+        _bal_insert_plan(n, itag, adm, adk, tree, order, sizes, depths, pairs, diffs,
+                         ancs, ancx, segs, lvls, oops, True)
+
+        # chunk boundaries and segment status per chunk
+        chunks = np.zeros(n + 1, dtype=int)
+        chunks[0] = 0
+        chusegs = np.zeros(n, dtype=int)
+        chusegs[0] = 0
+
+        # We aim at dividing the tree into 4 chunks, and eventually get 5.
+        enc = 4
+        obs = _bal_avgdist_chunk(
+            n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
+        self.assertEqual(obs, 5)
+
+        # chunk 0: nodes 0..2: two segs: 0, 1
+        # chunk 1: nodes 2..3: one seg: 2 (=1)
+        # chunk 2: nodes 3..6: one seg: 3 (=1)
+        # chunk 3: nodes 6..15: three segs: 6 (=1), 7, 8
+        # chunk 4: nodes 15..19: two segs: 15, 18
+        npt.assert_array_equal(chunks[:obs + 1], [0, 2, 3, 6, 15, 19])
+        npt.assert_array_equal(chusegs[:obs], [0, 2, 2, 2, 4])
 
     def test_ols_lengths(self):
         """Calculate tree branch lengths using an OLS framework."""
