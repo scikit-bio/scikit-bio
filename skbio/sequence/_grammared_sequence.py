@@ -22,26 +22,12 @@ class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
-        concrete_gap_chars = type(cls.gap_chars) is not abstractproperty
-        concrete_degenerate_map = type(cls.degenerate_map) is not abstractproperty
-        concrete_definite_chars = type(cls.definite_chars) is not abstractproperty
-        concrete_default_gap_char = type(cls.default_gap_char) is not abstractproperty
-        # degenerate_chars is not abstract but it depends on degenerate_map
-        # which is abstract.
-        concrete_degenerate_chars = concrete_degenerate_map
+        is_concrete = not getattr(cls, "__abstractmethods__", set())
 
-        # Only perform metaclass checks if none of the attributes on the class
-        # are abstract.
-        # TODO: Rather than hard-coding a list of attributes to check, we can
-        # probably check all the attributes on the class and make sure none of
-        # them are abstract.
-        if (
-            concrete_gap_chars
-            and concrete_degenerate_map
-            and concrete_definite_chars
-            and concrete_default_gap_char
-            and concrete_degenerate_chars
-        ):
+        # Perform metaclass validation only when the class is concrete.
+        # We rely on ABCMeta's __abstractmethods__ to determine whether
+        # any abstract attributes remain unimplemented.
+        if is_concrete:
             if cls.default_gap_char not in cls.gap_chars:
                 raise TypeError(
                     "default_gap_char must be in gap_chars for class %s" % name
