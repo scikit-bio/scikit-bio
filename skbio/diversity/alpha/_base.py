@@ -8,19 +8,17 @@
 
 import functools
 
-from typing import Optional, Any, TYPE_CHECKING, Union
+from typing import Optional, TYPE_CHECKING, Union
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
-from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import aliased
 
 from skbio.util._array import ingest_array
 
 if TYPE_CHECKING:
-    from types import ModuleType
     from skbio.util._typing import ArrayLike, StdArray
 
 
@@ -156,7 +154,7 @@ def brillouin_d(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts: "ArrayLike", finite:Optional[bool]=False) -> float:
+def dominance(counts: "ArrayLike", finite: Optional[bool] = False) -> float:
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -1015,7 +1013,7 @@ def osd(counts):
 
 
 @_validate_alpha()
-def pielou_e(counts: "ArrayLike", base:Optional[bool] = None) -> float:
+def pielou_e(counts: "ArrayLike", base: Optional[Union[int, float]] = None) -> float:
     r"""Calculate Pielou's evenness index.
 
     Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
@@ -1206,7 +1204,8 @@ def _entropy(probs):
     xp, probs = ingest_array(probs)
     mask = probs > 0
     probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
-    return -xp.sum(xp.where(mask, probs * xp.log(probs_safe), xp.asarray(0.0, dtype=probs.dtype)))
+    return -xp.sum(xp.where(mask, probs * xp.log(probs_safe),
+                            xp.asarray(0.0, dtype=probs.dtype)))
 
 
 def _perplexity(probs):
@@ -1216,11 +1215,13 @@ def _perplexity(probs):
     xp, probs = ingest_array(probs)
     mask = probs > 0
     probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
-    return xp.prod(xp.where(mask, probs_safe**(-probs_safe), xp.asarray(1.0, dtype=probs.dtype)))
+    return xp.prod(xp.where(mask, probs_safe**(-probs_safe),
+                            xp.asarray(1.0, dtype=probs.dtype)))
 
 
 @_validate_alpha(empty=np.nan)
-def shannon(counts: "ArrayLike", base:Optional[Union[int, float]] = None, exp: bool = False) -> float:
+def shannon(counts: "ArrayLike", base:Optional[Union[int, float]] = None,
+            exp: bool = False) -> float:
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
@@ -1298,7 +1299,7 @@ def shannon(counts: "ArrayLike", base:Optional[Union[int, float]] = None, exp: b
 
 
 
-def simpson(counts: "ArrayLike", finite: bool = False) ->float:
+def simpson(counts: "ArrayLike", finite: bool = False) -> float:
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,

@@ -122,7 +122,7 @@ def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
-def multi_replace(mat: "ArrayLike", delta: bool=None) -> "StdArray":
+def multi_replace(mat: "ArrayLike", delta: float| None = None) -> "StdArray":
     r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_, replacing zeros with
@@ -1028,8 +1028,7 @@ def _vlr(x: "ArrayLike", y: "ArrayLike", ddof: int) -> float:
         Variance log ratio value.
 
     """
-    xp,x = ingest_array(x)
-    _, y = ingest_array(y)
+    xp,x,y = ingest_array(x, y)
 
     if xp.any(x < 0) or xp.any(y < 0):
         raise ValueError(
@@ -1062,14 +1061,13 @@ def _robust_vlr(x: "ArrayLike", y: "ArrayLike", ddof: int) -> float:
 
     """
     # Mask zeros
-    xp, x = ingest_array(x)
-    _, y = ingest_array(y)
+    xp, x, y = ingest_array(x, y)
     mask = (x != 0) & (y != 0)
     x = xp.log(x[mask])
     y = xp.log(y[mask])
     return xp.var(x - y, correction=ddof)
 
-def vlr(x: "ArrayLike", y: "ArrayLike", ddof: int=1, robust: bool=False) ->float:
+def vlr(x: "ArrayLike", y: "ArrayLike", ddof: int = 1, robust: bool = False) -> float:
     r"""Calculate variance log ratio.
 
     Parameters
