@@ -133,7 +133,7 @@ def _postorder(
 
 def _avgdist_matrix(
     floating[:, ::1] adm,
-    floating[:, :] dm,
+    floating[:, ::1] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] tacts,
@@ -297,7 +297,7 @@ def _avgdist_matrix(
 
 def _bal_avgdist_matrix(
     floating[:, ::1] adm,
-    floating[:, :] dm,
+    floating[:, ::1] dm,
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
