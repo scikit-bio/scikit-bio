@@ -126,6 +126,7 @@ from ._c_me import (
     _bal_lengths,
     _ols_min_branch_d2,
     _bal_min_branch,
+    _bal_min_branch_p,
     _avgdist_matrix,
     _bal_avgdist_matrix,
     _avgdist_swap,
@@ -134,7 +135,6 @@ from ._c_me import (
     _ols_corner_swaps,
     _bal_all_swaps,
     _get_num_threads,
-    _calc_pairs,
     _bal_avgdist_chunk,
     _bal_update_spine,
     _bal_insert_plan,
@@ -142,6 +142,7 @@ from ._c_me import (
     _bal_avgdist_nest,
     _calc_tacts,
     _calc_sizes,
+    _calc_pairs,
     _calc_depths,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
@@ -890,9 +891,24 @@ def _bme(dm, parallel=500, factor=16):
 
     ### Phase 3: Parallel (nested and flat) ###
 
+    # index of node with minimum length change within each clade
+    roots = np.empty(N, dtype=int)
+    roots[0] = 0
+
+    # minimum length change within each clade.
+    rlens = np.empty(N, dtype=dtype)
+    rlens[0] = 0
+
+    # index of root that marks each clade
+    clades = np.empty(N, dtype=int)
+
     for k in range(flat_th, m):
         adk_func(n, k, dm, adk, tree, order)
-        itag = _bal_min_branch(n, lens, *args1, order)
+
+        # Find the branch with minimum length change (parallel).
+        itag = _bal_min_branch_p(
+            n, lens, *args1, order, sizes, enc, clades, chunks, roots, rlens
+        )
         tag = order[itag]
         size = sizes[tag]
         depth = depths[tag]
@@ -907,7 +923,8 @@ def _bme(dm, parallel=500, factor=16):
         )
         _bal_update_spine(tag, depth, sizes, pairs, ancs)
 
-        # Update balanced average distance matrix through parallelization.
+        # Update balanced average distance matrix through parallelization (both flat
+        # and nested).
         _bal_avgdist_flat(n, itag, size, order, adm, adk, diffs, depths)
         _bal_avgdist_nest(
             itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs

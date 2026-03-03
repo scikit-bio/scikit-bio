@@ -12,7 +12,7 @@ from cython cimport floating
 from cython.parallel cimport prange
 from openmp cimport omp_get_max_threads
 from libc.string cimport memmove
-from libc.math cimport ldexp, ldexpf
+# from libc.math cimport ldexp, ldexpf
 from heapq import heappush
 
 
@@ -45,19 +45,19 @@ def _get_num_threads():
     return omp_get_max_threads()
 
 
-cdef inline floating xldexp(floating x, int exp) noexcept nogil:
-    """Calculate power of 2.
+# cdef inline floating xldexp(floating x, int exp) noexcept nogil:
+#     """Calculate power of 2.
 
-    This function is not used because tests found it is slower than pre-calculating
-    all possible powers of 2 (`npots`) and lookup.
+#     This function is not used because tests found it is slower than pre-calculating
+#     all possible powers of 2 (`npots`) and lookup.
 
-    Additionally, there is a bit hacking method to make this calculation even faster.
+#     Additionally, there is a bit hacking method to make this calculation even faster.
 
-    """
-    if floating is float:
-        return ldexpf(x, exp)
-    else:
-        return ldexp(x, exp)
+#     """
+#     if floating is float:
+#         return ldexpf(x, exp)
+#     else:
+#         return ldexp(x, exp)
 
 
 def _preorder(
@@ -488,6 +488,15 @@ def _bal_avgdist_taxon(
 
     This function resembles :func:`_avgdist_taxon` but uses the balanced framework.
 
+    TODO: The 2nd half of this function (preorder traversal) can be merged into
+    `_bal_min_branch`, a move that will potentially save time.
+
+    TODO: This function can be parallelized too -- using a similar but more complex
+    strategy as `_bal_min_branch_p` does. This strategy will involve incrementally
+    maintaining a chunking scheme across outer iterations, instead of re-calculating
+    it each time (current code does it because it is natural for preorder traversal,
+    but this function starts with a reversed preorder traversal).
+
     """
     cdef Py_ssize_t i
     cdef Py_ssize_t node, left, right
@@ -826,7 +835,7 @@ def _bal_min_branch(
 
     """
     cdef Py_ssize_t i
-    cdef Py_ssize_t node, parent, sibling
+    cdef Py_ssize_t node, parent
     cdef floating length
 
     cdef floating* adkl = &adk[0, 0]
@@ -835,29 +844,66 @@ def _bal_min_branch(
     cdef Py_ssize_t min_i = 0
     cdef floating min_len = 0
 
-    cdef floating cell
-
     # Identify the smallest branch length change through a preorder traversal.
     # NOTE: Length change of root (`lens[0]`) has been set to zero.
     for i in range(1, n):
         node = order[i]
         parent = tree[node, 2]
-        sibling = tree[node, 3]
-        if tree[parent, 0] == node:
-            cell = adm[node, sibling]  # left child
-        else:
-            cell = adm[sibling, node]  # right child
-        length = lens[parent] + (
-            adm[parent, sibling] + adkl[node] - cell - adku[parent]
+        lens[node] = length = lens[parent] + (
+            adm[parent, tree[node, 3]]  # parent-sibling
+            + adkl[node]
+            - adm[tree[parent, 0], tree[parent, 1]]  # node-sibling
+            - adku[parent]
         )
-        lens[node] = length
+        # NOTE: In the above code, `node` and `sibling` are looked up again to
+        # make the calculation branchless.
         if length < min_len:
             min_len, min_i = length, i
 
     return min_i
 
 
-def _bal_min_branch2(
+# def _bal_min_branch2(
+#     Py_ssize_t n,
+#     floating[::1] lens,
+#     floating[:, ::1] adm,
+#     floating[:, ::1] adk,
+#     Py_ssize_t[:, ::1] tree,
+#     Py_ssize_t[::1] order,
+#     Py_ssize_t[::1] sizes,
+# ):
+#     """Find the branch with the minimum length change after inserting a new taxon.
+
+#     This is an alternative version that is faster, but it doesn't maintain strict
+#     preorder. Result may be different.
+
+#     """
+#     cdef Py_ssize_t i, node, left, right
+#     cdef floating L_intm, L_left, L_right
+
+#     cdef floating* adkl = &adk[0, 0]
+#     cdef floating* adku = &adk[1, 0]
+
+#     cdef Py_ssize_t min_i = 0
+#     cdef floating min_len = 0
+
+#     for i in range(n):
+#         node = order[i]
+#         if left := tree[node, 0]:
+#             right = tree[node, 1]
+#             L_intm = lens[node] - adm[left, right] - adku[node]
+#             lens[left] = L_left = L_intm + adm[node, right] + adkl[left]
+#             lens[right] = L_right = L_intm + adm[node, left] + adkl[right]
+#             if L_left <= L_right:
+#                 if L_left < min_len:
+#                     min_len, min_i = L_left, i + 1
+#             elif L_right < min_len:
+#                 min_len, min_i = L_right, i + sizes[left] + 1
+
+#     return min_i
+
+
+def _bal_min_branch_p(
     Py_ssize_t n,
     floating[::1] lens,
     floating[:, ::1] adm,
@@ -865,37 +911,154 @@ def _bal_min_branch2(
     Py_ssize_t[:, ::1] tree,
     Py_ssize_t[::1] order,
     Py_ssize_t[::1] sizes,
+    Py_ssize_t enc,
+    Py_ssize_t[::1] clades,
+    Py_ssize_t[::1] chunks,
+    Py_ssize_t[::1] roots,
+    floating[::1] rlens,
 ):
-    """Find the branch with the minimum length change after inserting a new taxon.
+    r"""Find the branch with the minimum length change after inserting a new taxon.
 
-    This is an alternative version that is faster, but it doesn't maintain strict
-    preorder. Result may be different.
+    This is the parallel version of `_bal_min_branch`. It divides the tree into chunks
+    of clades that are roughly even in size, and calculates the minimum length change
+    within each clade through parallelization.
+
+    Specifically, this function performs a preorder traversal of the tree, calculating
+    the length change of every node it visits, while determining whether the clade
+    descending from this node (excluding the node) can be placed into a chunk for
+    subsequent parallelization. If the clade can fit into a chunk, it will not be
+    traversed, and the node index will jump to the next clade. If the clade is too
+    large to fit, it will be decomposed into subclades by moving the node index forward
+    in the traversal.
+
+    This process generates a list of "roots" representing nodes that are already visited
+    and calculated, and a list of "clades" left to be calculated. The clades are placed
+    into chunks (one chunk can have one or multiple clades). Parallelization then starts
+    over the chunks of clades. Within each clade, all nodes are traversed and the node
+    with the minimum length change is determined.
+
+    Finally, the minimum length changes under all roots are compared and the global
+    minimum is determined. Because roots are in preorder, it is guaranteed that the
+    result is the first minimum in preorder.
+
+    In the following example, x and + are nodes visited and calculated during the serial
+    phase. o are nodes within clades (there are two) that are calculated during the
+    parallel phase. At the end of the serial phase, "roots" are x and +. In the parallel
+    phase, the two clades are traversed and each root can move from a + to an o if the
+    latter has a smaller length change. But roots at x don't need to be updated, since
+    they are either tips or ancestors of clades. Finally, x and the combo of either + or
+    o are compared to determine the global minimum.
+
+          x
+         / \
+        x   \
+       / \   \
+      +   x   +
+     / \     / \
+    o   o   o   o
+       / \
+      o   o
 
     """
-    cdef Py_ssize_t i
-    cdef Py_ssize_t node, left, right
-    cdef floating L_intm, L_left, L_right
+    cdef Py_ssize_t node, min_node, parent
+    cdef Py_ssize_t size, size_1
+    cdef Py_ssize_t min_i = 0
+    cdef floating length
+    cdef floating min_len = 0
 
     cdef floating* adkl = &adk[0, 0]
     cdef floating* adku = &adk[1, 0]
 
-    cdef Py_ssize_t min_i = 0
-    cdef floating min_len = 0
+    # chunk capacity
+    cdef Py_ssize_t capacity = max(1, sizes[0] // enc)
 
-    # Identify the smallest branch length change through a preorder traversal.
-    # NOTE: Length change of root (`lens[0]`) has been set to zero.
-    for i in range(n):
+    # remaining space of current chunk
+    cdef Py_ssize_t space = capacity
+
+    cdef Py_ssize_t i = 1     # current node index
+    cdef Py_ssize_t iroo = 1  # current root index
+    cdef Py_ssize_t icla = 0  # current clade index
+    cdef Py_ssize_t nchu = 1  # current number of chunks
+    cdef Py_ssize_t ichu      # current chunk index
+
+    # Serial phase: Traverse the tree from root and identify clades to parallelize on,
+    # while doing calculations for nodes outside those clades.
+
+    while i < n:
         node = order[i]
-        if left := tree[node, 0]:  # internal node
-            right = tree[node, 1]
-            L_intm = lens[node] - adm[left, right] - adku[node]
-            lens[left] = L_left = L_intm + adm[node, right] + adkl[left]
-            lens[right] = L_right = L_intm + adm[node, left] + adkl[right]
-            if L_left <= L_right:
-                if L_left < min_len:
-                    min_len, min_i = L_left, i + 1
-            elif L_right < min_len:
-                min_len, min_i = L_right, i + sizes[left] + 1
+        size = sizes[node]
+        size_1 = size - 1
+
+        # add current node to roots
+        roots[iroo] = i
+
+        # calculate length change of the current node
+        parent = tree[node, 2]
+        rlens[iroo] = lens[node] = lens[parent] + (
+            adm[parent, tree[node, 3]]
+            + adkl[node]
+            - adm[tree[parent, 0], tree[parent, 1]]
+            - adku[parent]
+        )
+
+        # current node is tip: already calculated, move on
+        if size == 1:
+            i += 1
+
+        # put in current chunk
+        elif size_1 <= space:
+            clades[icla] = iroo
+            icla += 1
+            space -= size_1
+            i += size
+
+        # put in next chunk
+        elif size_1 <= capacity:
+            chunks[nchu] = icla
+            nchu += 1
+            clades[icla] = iroo
+            icla += 1
+            space = capacity - size_1
+            i += size
+
+        # mark for decomposition
+        else:
+            i += 1
+
+        iroo += 1
+
+    chunks[nchu] = icla
+
+    # Parallel phase: Do calculations within chunks of clades.
+
+    for ichu in prange(nchu, nogil=True, schedule="dynamic"):
+        for icla in range(chunks[ichu], chunks[ichu + 1]):
+            i = clades[icla]
+            min_i = roots[i]
+            min_node = order[min_i]
+            min_len = lens[min_node]
+            for j in range(min_i + 1, min_i + sizes[min_node]):
+                node = order[j]
+                parent = tree[node, 2]
+                lens[node] = length = lens[parent] + (
+                    adm[parent, tree[node, 3]]
+                    + adkl[node]
+                    - adm[tree[parent, 0], tree[parent, 1]]
+                    - adku[parent]
+                )
+                if length < min_len:
+                    min_len, min_i = length, j
+            roots[i] = min_i
+            rlens[i] = min_len
+
+    # Finally, identify the global minimum length change by comparing the roots.
+    # Note that "roots" are no longer roots of clades, but can be replaced with
+    # nodes descending from them.
+    min_len, min_i = 0.0, 0
+    for i in range(iroo):
+        length = rlens[i]
+        if length < min_len:
+            min_len, min_i = length, roots[i]
 
     return min_i
 
