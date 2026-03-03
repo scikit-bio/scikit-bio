@@ -504,9 +504,14 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     # allocate lengths
     lens = np.empty(len(tree), dtype=dm.dtype)
 
+    # matrix data
+    # NOTE: current code assumes matrix is C-contiguous for efficient access (unlike
+    # `gme` and `bme`, which don't). This can be patch later to increase flexibility.
+    data = np.ascontiguousarray(dm.data)
+
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
-    func(dm.data, tree, order, lens)
+    func(data, tree, order, lens)
 
     if neg_as_zero:
         lens[lens < 0] = 0
