@@ -155,9 +155,10 @@ def svd_rank(M_shape, S, tol=None):
     (we're not using that function because it doesn't let us reuse a
     precomputed SVD).
     """
+    xp, S = ingest_array(S)
     if tol is None:
-        tol = S.max() * max(M_shape) * np.finfo(S.dtype).eps
-    return np.sum(S > tol)
+        tol = S.max() * max(M_shape) * xp.finfo(S.dtype).eps
+    return xp.sum(S > tol)
 
 
 def corr(x, y=None):

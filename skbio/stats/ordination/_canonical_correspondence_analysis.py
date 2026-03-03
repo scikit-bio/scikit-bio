@@ -231,16 +231,21 @@ def cca(
 
     # Residuals analysis
     u_res, s_res, vt_res = _xp_svd(xp, Y_res, full_matrices=False)
-    rank = svd_rank(Y_res.shape, s_res)
-    s_res = s_res[:rank]
-    u_res = u_res[:, :rank]
-    vt_res = vt_res[:rank]
+    rank_res = svd_rank(Y_res.shape, s_res)
 
-    eps_res = xp.finfo(s_res.dtype).eps
-    inv_s_res = xp.where(s_res > eps_res, 1.0 / s_res, 0.0)
-    U_hat_res = (Y_res @ U_res) * inv_s_res
-    U_res = vt_res.T
+    if rank_res > 0:
+        s_res = s_res[:rank_res]
+        vt_res = vt_res[:rank_res]
+        U_res = vt_res.T
 
+        eps_res = xp.finfo(s_res.dtype).eps
+        inv_s_res = xp.where(s_res > eps_res, 1.0 / s_res, 0.0)
+        U_hat_res = (Y_res @ U_res) * inv_s_res
+
+    else:
+        U_res = xp.zeros((Y.shape[1], 0), dtype=Y.dtype)
+        U_hat_res = xp.zeros((Y.shape[0], 0), dtype=Y.dtype)
+        s_res = xp.zeros((0,), dtype=Y.dtype)
 
     eigenvalues = xp.concatenate([s, s_res]) ** 2
 
