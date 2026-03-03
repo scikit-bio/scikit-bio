@@ -6,14 +6,59 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import numpy as np
-import pandas as pd
-from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
+from skbio.util._array import ingest_array
 
+
+def _xp_svd(xp, mat, full_matrices=False):
+    """Perform SVD using scipy, converting to/from xp arrays.
+
+    Parameters
+    ----------
+    xp : module
+        Array API compatible module.
+    mat : array
+        2-D array.
+    full_matrices : bool, optional
+        Whether to compute full or reduced SVD.
+
+    Returns
+    -------
+    u : array
+    s : array
+    vt : array
+
+    """
+    return xp.linalg.svd(mat, full_matrices=full_matrices)
+
+
+def _xp_lstsq(xp, a, b):
+    """Perform least squares using scipy, converting to/from xp arrays.
+
+    Parameters
+    ----------
+    xp : module
+        Array API compatible module.
+    a : array
+        2-D array (m, n).
+    b : array
+        2-D array (m, k).
+
+    Returns
+    -------
+    x : array
+        Least squares solution.
+    rank : int
+        Effective rank of `a`.
+
+    """
+    res= xp.linalg.lstsq(a, b, rcond=None)
+    result = res[0]
+    rank = res[2] if len(res) > 2 else None
+    return result, rank
 
 def cca(
     y,
@@ -119,6 +164,11 @@ def cca(
         x, sample_ids=sample_ids, feature_ids=constraint_ids
     )
 
+    xp, Y, X = ingest_array(Y, X)
+
+    Y = xp.astype(Y, xp.float64)
+    X = xp.astype(X, xp.float64)
+
     # Perform parameter sanity checks
     if X.shape[0] != Y.shape[0]:
         raise ValueError(
@@ -126,44 +176,48 @@ def cca(
             " constraints table 'x' must have the same number of "
             " rows. 'y': {0} 'x': {1}".format(X.shape[0], Y.shape[0])
         )
-    if Y.min() < 0:
-        raise ValueError("The samples by features table 'y' must be nonnegative")
-    row_max = Y.max(axis=1)
-    if np.any(row_max <= 0):
-        # Or else the lstsq call to compute Y_hat breaks
+    if xp.any(Y < 0):
         raise ValueError(
-            "The samples by features table 'y' cannot contain a row with only 0's"
+            "The samples by features table 'y' must be nonnegative"
+        )
+    row_max = xp.max(Y, axis=1)
+    if xp.any(row_max <= 0):
+        raise ValueError(
+            "The samples by features table 'y' cannot contain a row "
+            "with only 0's"
         )
     if scaling not in {1, 2}:
-        raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
+        raise NotImplementedError(
+            "Scaling {0} not implemented.".format(scaling)
+        )
 
     # Step 1 (similar to Pearson chi-square statistic)
-    grand_total = Y.sum()
-    Q = Y / grand_total  # Relative frequencies of Y (contingency table)
+    grand_total = xp.sum(Y)
+    Q = Y / grand_total
 
     # Features and sample weights (marginal totals)
-    column_marginals = Q.sum(axis=0)
-    row_marginals = Q.sum(axis=1)
+    column_marginals = xp.sum(Q, axis=0)
+    row_marginals = xp.sum(Q, axis=1)
 
-    # Formula 9.32 in Lagrange & Lagrange (1998). Notice that it's an
-    # scaled version of the contribution of each cell towards Pearson
-    # chi-square statistic.
-    expected = np.outer(row_marginals, column_marginals)
-    Q_bar = (Q - expected) / np.sqrt(expected)
+    # Formula 9.32 in Lagrange & Lagrange (1998)
+    expected = row_marginals[:, None] * column_marginals[None, :]
+    #column marginals can be zero to prevent that
+    mask = expected > 0
+    safe = xp.where(mask, expected, 1)
+    Q_bar = xp.where(mask, (Q - expected) / xp.sqrt(safe), 0)
 
-    # Step 2. Standardize columns of X with respect to sample weights,
-    # using the maximum likelihood variance estimator (Legendre &
-    # Legendre 1998, p. 595)
+    # Step 2. Standardize columns of X with respect to sample weights
     X = scale(X, weights=row_marginals, ddof=0)
 
-    # Step 3. Weighted multiple regression.
+
+    # Step 3. Weighted multiple regression
     X_weighted = row_marginals[:, None] ** 0.5 * X
-    B, _, rank_lstsq, _ = lstsq(X_weighted, Q_bar)
-    Y_hat = X_weighted.dot(B)
+    B, rank_lstsq = _xp_lstsq(xp, X_weighted, Q_bar)
+    Y_hat = X_weighted @ B
     Y_res = Q_bar - Y_hat
 
     # Step 4. Eigenvalue decomposition
-    u, s, vt = svd(Y_hat, full_matrices=False)
+    u, s, vt = _xp_svd(xp, Y_hat, full_matrices=False)
     rank = svd_rank(Y_hat.shape, s)
     s = s[:rank]
     u = u[:, :rank]
@@ -171,26 +225,31 @@ def cca(
     U = vt.T
 
     # Step 5. Eq. 9.38
-    U_hat = Q_bar.dot(U) * s**-1
+    eps = xp.finfo(s.dtype).eps
+    inv_s = xp.where(s > eps, 1.0 / s, 0.0)
+    U_hat = (Q_bar @ U) * inv_s
 
     # Residuals analysis
-    u_res, s_res, vt_res = svd(Y_res, full_matrices=False)
+    u_res, s_res, vt_res = _xp_svd(xp, Y_res, full_matrices=False)
     rank = svd_rank(Y_res.shape, s_res)
     s_res = s_res[:rank]
     u_res = u_res[:, :rank]
     vt_res = vt_res[:rank]
 
+    eps_res = xp.finfo(s_res.dtype).eps
+    inv_s_res = xp.where(s_res > eps_res, 1.0 / s_res, 0.0)
+    U_hat_res = (Y_res @ U_res) * inv_s_res
     U_res = vt_res.T
-    U_hat_res = Y_res.dot(U_res) * s_res**-1
 
-    eigenvalues = np.r_[s, s_res] ** 2
+
+    eigenvalues = xp.concatenate([s, s_res]) ** 2
 
     # Scalings (p. 596 L&L 1998):
     # feature scores, scaling 1
-    V = (column_marginals**-0.5)[:, None] * U
+    V = (column_marginals ** -0.5)[:, None] * U
 
     # sample scores, scaling 2
-    V_hat = (row_marginals**-0.5)[:, None] * U_hat
+    V_hat = (row_marginals ** -0.5)[:, None] * U_hat
 
     # sample scores, scaling 1
     F = V_hat * s
@@ -198,16 +257,15 @@ def cca(
     # feature scores, scaling 2
     F_hat = V * s
 
-    # Sample scores which are linear combinations of constraint
-    # variables
-    Z_scaling1 = (row_marginals**-0.5)[:, None] * Y_hat.dot(U)
-    Z_scaling2 = Z_scaling1 * s**-1
+    # Sample scores which are linear combinations of constraint variables
+    Z_scaling1 = (row_marginals ** -0.5)[:, None] * (Y_hat @ U)
+    Z_scaling2 = Z_scaling1 * inv_s
 
     # Feature residual scores, scaling 1
-    V_res = (column_marginals**-0.5)[:, None] * U_res
+    V_res = (column_marginals ** -0.5)[:, None] * U_res
 
     # Sample residual scores, scaling 2
-    V_hat_res = (row_marginals**-0.5)[:, None] * U_hat_res
+    V_hat_res = (row_marginals ** -0.5)[:, None] * U_hat_res
 
     # Sample residual scores, scaling 1
     F_res = V_hat_res * s_res
@@ -217,32 +275,35 @@ def cca(
 
     eigvals = eigenvalues
     if scaling == 1:
-        features_scores = np.hstack((V, V_res))
-        sample_scores = np.hstack((F, F_res))
-        sample_constraints = np.hstack((Z_scaling1, F_res))
+        features_scores = xp.concatenate([V, V_res], axis=1)
+        sample_scores = xp.concatenate([F, F_res], axis=1)
+        sample_constraints = xp.concatenate([Z_scaling1, F_res], axis=1)
     elif scaling == 2:
-        features_scores = np.hstack((F_hat, F_hat_res))
-        sample_scores = np.hstack((V_hat, V_hat_res))
-        sample_constraints = np.hstack((Z_scaling2, V_hat_res))
+        features_scores = xp.concatenate([F_hat, F_hat_res], axis=1)
+        sample_scores = xp.concatenate([V_hat, V_hat_res], axis=1)
+        sample_constraints = xp.concatenate([Z_scaling2, V_hat_res], axis=1)
 
     biplot_scores = corr(X_weighted, u)
 
-    pc_ids = ["CCA%d" % (i + 1) for i in range(len(eigenvalues))]
-    eigvals = _create_table_1d(eigenvalues, index=pc_ids, backend=output_format)
+    pc_ids = ["CCA%d" % (i + 1) for i in range(eigenvalues.shape[0])]
+    eigvals = _create_table_1d(eigvals, index=pc_ids, backend=output_format)
     samples = _create_table(
-        sample_scores, columns=pc_ids, index=y_sample_ids, backend=output_format
+        sample_scores, columns=pc_ids, index=y_sample_ids,
+        backend=output_format,
     )
     features = _create_table(
-        features_scores, columns=pc_ids, index=feature_ids, backend=output_format
+        features_scores, columns=pc_ids, index=feature_ids,
+        backend=output_format,
     )
     biplot_scores = _create_table(
         biplot_scores,
         index=constraint_ids,
-        columns=pc_ids[: biplot_scores.shape[1]],
+        columns=pc_ids[:biplot_scores.shape[1]],
         backend=output_format,
     )
     sample_constraints = _create_table(
-        sample_constraints, index=y_sample_ids, columns=pc_ids, backend=output_format
+        sample_constraints, index=y_sample_ids, columns=pc_ids,
+        backend=output_format,
     )
 
     return OrdinationResults(

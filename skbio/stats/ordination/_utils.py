@@ -7,9 +7,8 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-
 from ._cutils import center_distance_matrix_cy
-
+from skbio.util._array import ingest_array
 
 def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof=0):
     """Compute the weighted average and standard deviation along the specified axis.
@@ -46,33 +45,57 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
 
     """
     if not (with_mean or with_std):
-        raise ValueError("Either the mean or standard deviation need to be computed.")
-    a = np.asarray(a)
+        raise ValueError(
+            "Either the mean or standard deviation need to be computed."
+        )
+    xp, a = ingest_array(a)
+
     if weights is None:
-        avg = a.mean(axis=axis) if with_mean else None
-        std = a.std(axis=axis, ddof=ddof) if with_std else None
+        avg = xp.mean(a, axis=axis) if with_mean else None
+        if with_std:
+            # array API uses `correction` instead of `ddof`
+            variance = xp.var(a, axis=axis, correction=ddof)
+            std = xp.sqrt(variance)
+        else:
+            std = None
     else:
-        avg = np.average(a, axis=axis, weights=weights)
+        _, weights = ingest_array(weights)
+        weights = xp.astype(weights, xp.float64)
+
+        # weighted average
+        if axis is None:
+            avg = xp.sum(a * weights) / xp.sum(weights)
+        else:
+            # weights is 1-D along the given axis; reshape for broadcasting
+            shape = [1] * a.ndim
+            shape[axis] = weights.shape[0]
+            w = xp.reshape(weights, shape)
+            avg = xp.sum(a * w, axis=axis) / xp.sum(weights)
+
         if with_std:
             if axis is None:
-                variance = np.average((a - avg) ** 2, weights=weights)
+                variance = xp.sum(weights * (a - avg) ** 2) / xp.sum(weights)
             else:
-                # Make sure that the subtraction to compute variance works for
-                # multidimensional arrays
-                a_rolled = np.rollaxis(a, axis)
-                # Numpy doesn't have a weighted std implementation, but this is
-                # stable and fast
-                variance = np.average((a_rolled - avg) ** 2, axis=0, weights=weights)
-            if ddof != 0:  # Don't waste time if variance doesn't need scaling
+                # reshape avg for broadcasting
+                avg_expanded = xp.expand_dims(avg, axis=axis)
+                shape = [1] * a.ndim
+                shape[axis] = weights.shape[0]
+                w = xp.reshape(weights, shape)
+                variance = xp.sum(
+                    w * (a - avg_expanded) ** 2, axis=axis
+                ) / xp.sum(weights)
+            if ddof != 0:
                 if axis is None:
-                    variance *= a.size / (a.size - ddof)
+                    n = a.size
                 else:
-                    variance *= a.shape[axis] / (a.shape[axis] - ddof)
-            std = np.sqrt(variance)
+                    n = a.shape[axis]
+                variance = variance * n / (n - ddof)
+            std = xp.sqrt(variance)
         else:
             std = None
         avg = avg if with_mean else None
     return avg, std
+
 
 
 def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
@@ -109,7 +132,8 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     division by zero.
 
     """
-    a = np.asarray(a, dtype=np.float64)
+    xp, a = ingest_array(a)
+    a = xp.asarray(a, dtype=xp.float64)
     # Pandas 3.0+ returns read-only objects
     if copy or (not a.flags.writeable):
         a = a.copy()
@@ -160,9 +184,9 @@ def corr(x, y=None):
         not provided, else has shape (p, q).
 
     """
-    x = np.asarray(x)
+    xp, x = ingest_array(x)
     if y is not None:
-        y = np.asarray(y)
+        _, y = ingest_array(y)
         if y.shape[0] != x.shape[0]:
             raise ValueError("Both matrices must have the same number of rows")
         x, y = scale(x), scale(y)
