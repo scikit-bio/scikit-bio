@@ -43,12 +43,12 @@ from skbio.tree._c_me import (
     _bal_avgdist_taxon_c,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
-    # _bal_avgdist_insert_p,
     _ols_lengths,
     _ols_lengths_d2,
     _bal_lengths,
     _ols_min_branch_d2,
     _bal_min_branch,
+    _bal_min_branch_p,
     _avgdist_swap,
     _bal_avgdist_swap,
     _ols_all_swaps,
@@ -1749,6 +1749,96 @@ class MeTests(TestCase):
 
         npt.assert_allclose(obs, 4 * exp)
         self.assertEqual(order[res], exp[:n - 2].argmin())
+
+    def test_bal_min_branch_p(self):
+        """Find the branch with minimum length change (parallel version)."""
+        # Test if the parallel code can recover the output of the serial code.
+        dm = self.dm1
+        tree, order, sizes = self.tree1m1, self.preodr1m1, self.sizes1m1
+        n = tree.shape[0]
+        k = dm.shape[0] - 1
+        _bal_avgdist_matrix(adm := np.zeros((n, n)), dm, tree, order, sizes)
+        _bal_avgdist_taxon(n - 2, k, dm, adk := np.zeros((2, n)), tree, order)
+
+        # additional preparations
+        roots = np.empty(n, dtype=int)
+        roots[0] = 0
+        rlens = np.empty(n, dtype=float)
+        rlens[0] = 0
+        clades = np.empty(n, dtype=int)
+        chunks = np.empty(n + 1, dtype=int)
+        chunks[0] = 0
+        enc = 2
+
+        res = _bal_min_branch_p(
+            n - 2, obs := np.zeros(n), adm, adk, tree, order, sizes, enc, clades,
+            chunks, roots, rlens)
+        self.assertEqual(res, 4)
+        exp = np.array([0, 0, -2, -2, -3, 0, 0], dtype=float)
+        npt.assert_allclose(obs, 4 * exp)
+
+        # A large, complex example:
+        obj = TreeNode.read([self.nwk6])
+        n = obj.count()
+        m = obj.count(tips=True)
+        tree = np.empty((n + 2, 4), dtype=int)
+        taxmap = {x.name: i for i, x in enumerate(obj.tips())}
+        _from_treenode(obj, taxmap, tree)
+        order = np.empty(n + 2, dtype=int)
+        order[:n] = np.arange(n)
+        sizes = np.empty(n + 2, dtype=int)
+        _calc_sizes(n, tree, order, sizes)
+
+        # Fill it with random data.
+        rng = np.random.default_rng(42)
+        adm = np.zeros((n + 2, n + 2), dtype=float)
+        adm[np.triu_indices(n, 1)] = rng.random(n * (n - 1) // 2)
+        adm += adm.T
+        dm = rng.random(m).reshape(1, -1)  # we just need one row
+        adk = np.zeros((2, n + 2), dtype=float)
+        _bal_avgdist_taxon(n, 0, dm, adk, tree, order)
+        lens = np.zeros(n + 2, dtype=float)
+
+        roots = np.zeros(n, dtype=int)
+        roots[0] = 0
+        rlens = np.zeros(n, dtype=float)
+        rlens[0] = 0
+        clades = np.zeros(n, dtype=int)
+        chunks = np.zeros(n + 1, dtype=int)
+        chunks[0] = 0
+
+        # Trying to divide the tree into two chunks.
+        enc = 2
+        obs = _bal_min_branch_p(
+            n, lens, adm, adk, tree, order, sizes, enc, clades, chunks, roots, rlens)
+
+        # This will find node 5.
+        self.assertEqual(obs, 5)
+        exp = np.array([ 0.   , -0.336, -0.26 , -0.281, -0.14 , -0.832 , 0.104, -0.266,
+                        -0.265, -0.361, -0.793, -0.728,  0.38 ,  1.015,  1.502,  0.557,
+                         1.442,  0.84 ,  0.68 ])
+        npt.assert_array_equal(lens[:n].round(3), exp)
+
+        # Check if serial and parallel results are the same.
+        exp = _bal_min_branch(n, lens, adm, adk, tree, order)
+        self.assertEqual(obs, exp)
+
+        # This function doesn't return chunk count (unlike `_bal_avgdist_chunk`), so
+        # we will have to find it in an indirect way.
+        nr = (roots[1:] == 0).argmax() + 1  # number of roots
+        self.assertEqual(nr, 7)
+
+        # The initial roots after the serial phase should be: [0, 1, 2, 7, 8, 15, 18].
+        # During the parallel phase, nodes 2 and 8 were mutated into 5 and 10.
+        npt.assert_array_equal(roots[:nr], [0, 1, 5, 7, 10, 15, 18])
+
+        # There are three clades: 2, 4, and 5 (corresponding to root nodes 2, 8 and 15)
+        # (later becoming 5, 10 and 15).
+        npt.assert_array_equal(clades[:3], [2, 4, 5])
+
+        # There are two chunks. Clade 2 belongs to the first chunk. Clades 4 and 5
+        # belong to the second chunk.
+        npt.assert_array_equal(chunks[:3], [0, 1, 3])
 
     def test_swap_branches(self):
         # example 1: swap (e,d) with b
