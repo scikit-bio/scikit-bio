@@ -656,7 +656,7 @@ def _gme(dm):
     return tree, lens
 
 
-def _bme(dm, parallel=500, factor=16):
+def _bme(dm, parallel=500, factor=10):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
