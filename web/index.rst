@@ -283,6 +283,11 @@
                :shadow:
 
                scikit-bio 0.7.2
+
+         .. card::
+
+            scikit-bio is participating in `Google Summer of Code 2026 <https://github.com/scikit-bio/scikit-bio/discussions/2401>`_. Contributors are welcome!
+
          .. card::
 
             `scikit-bio paper <https://www.nature.com/articles/s41592-025-02981-z>`_ published in *Nature Methods*. Full text `available <https://rdcu.be/eUcOO>`_.
