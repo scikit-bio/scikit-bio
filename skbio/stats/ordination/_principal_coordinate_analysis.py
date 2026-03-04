@@ -551,10 +551,10 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     # Form a real nxl matrix G whose entries are independent, identically
     # distributed Gaussian random variables of zero mean and unit variance
-    rng = get_rng(seed)
-    G = rng.standard_normal(size=(n, k))
-
     xp, centered_distance_matrix = ingest_array(centered_distance_matrix)
+
+    rng = get_rng(seed)
+    G = xp.asarray(rng.standard_normal(size=(n, k)))
     # `use_power_method` is constantly False, so `if` won't start.
     if use_power_method:  # pragma: no cover
         # use only the given exponent
@@ -592,14 +592,14 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     # Using the pivoted QR-decomposition, form a real m * ((i+1)l) matrix Q
     # whose columns are orthonormal, s.t. there exists a real
     # ((i+1)l) * ((i+1)l) matrix R for which H = QR
-    xp_q, H = ingest_array(H)
-    Q, R = xp_q.qr(H)
+    # Q and center_distance_matrix share same bacnkend, so we can use the same xp
+    Q, R = xp.linalg.qr(H)
 
     # Compute the n * ((i+1)l) product matrix T = A^T Q
     T = xp.dot(centered_distance_matrix, Q)  # step 3
     # Form an SVD of T
-    xp_s, T = ingest_array(T)
-    Vt, St, W = xp_s.svd(T, full_matrices=False)
+    # T is same backend as Q, so we can use the same xp for both
+    Vt, St, W = xp.linalg.svd(T, full_matrices=False)
     W = W.transpose()
 
     # Compute the m * ((i+1)l) product matrix
