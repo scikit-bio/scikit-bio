@@ -27,7 +27,13 @@ from skbio.util._decorator import params_aliased
 from skbio.util._array import ingest_array
 
 
-# helpers
+# Double centering (Gower centering) of distance matrix for PCoA
+# Transforms squared distances to centered inner product matrix via:
+#   E_matrix: E = -D^2 / 2
+#   F_matrix: Double-centers E by removing row/column/grand means
+# This is required for eigendecomposition.
+#
+# Based on implementation by Igor Sfiligoi
 def e_matrix(distance_matrix):
     return distance_matrix * distance_matrix / -2
 
@@ -47,11 +53,15 @@ def center_distance_matrix(distance_matrix, inplace=False):
     always returns a centered array.
     """
     xp, distance_matrix = ingest_array(distance_matrix)
+    # For JAX/CuPy, we compute the double-centering on host,
+    # since they don't support in-place operations.
     if xp is not np:
         return f_matrix(e_matrix(distance_matrix))
     return center_distance_matrix_np(distance_matrix, inplace=inplace)
 
 
+# Compute partial eigendecomposition on host via SciPy LAPACK for JAX/CuPy.
+# Transfers to NumPy (JAX doesn't support subset_by_index), computes, returns to device.
 def _host_partial_eigh(matrix_any, subidx):
     """Compute partial eigendecomposition on host via SciPy LAPACK.
 
@@ -251,6 +261,8 @@ def pcoa(
             ndim = matrix_data.shape[0]
         subidx = [matrix_data.shape[0] - ndim, matrix_data.shape[0] - 1]
         xp, matrix_data = ingest_array(matrix_data)
+        # For JAX/CuPy, we compute the partial eigendecomposition on host via SciPy
+        # LAPACK, since they don't support subset_by_index.
         if ndim < matrix_data.shape[0]:
             eigvals, eigvecs = _host_partial_eigh(matrix_data, subidx)
         else:
@@ -328,6 +340,8 @@ def pcoa(
 
     # large negative eigenvalues suggest result inaccuracy
     # see: https://github.com/scikit-bio/scikit-bio/issues/1410
+    # convert to float because JAX may return a DeviceArray,
+    # which cannot be directly compared to a float
     if warn_neg_eigval and float(eigvals[-1]) < 0:
         if warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval:
             warn(
@@ -346,6 +360,8 @@ def pcoa(
     xp, eigvecs = ingest_array(eigvecs)
     # assume same backend for eigvals and eigvecs
     num_positive = (eigvals >= 0).sum()
+    # Create a mask to set negative eigenvalues to 0 and their corresponding
+    # eigenvectors to 0 because JAX does not have in-place operations.
     idx = xp.arange(eigvals.shape[0])
     mask = idx < num_positive
 
