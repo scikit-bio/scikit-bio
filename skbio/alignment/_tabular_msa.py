@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from collections import Counter, namedtuple
 import copy
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -23,6 +26,9 @@ from skbio.alignment._indexing import TabularMSAILoc, TabularMSALoc
 from skbio.io.descriptors import Read, Write
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 _Shape = namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
@@ -719,7 +725,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._iloc
 
     @classonlymethod
-    def from_dict(cls, dictionary: dict) -> "TabularMSA":
+    def from_dict(cls, dictionary: dict) -> Self:
         """Create a ``TabularMSA`` from a ``dict``.
 
         Parameters
@@ -2510,7 +2516,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self.shape.position
 
     @classonlymethod
-    def from_path_seqs(cls, path, seqs) -> "TabularMSA":
+    def from_path_seqs(cls, path, seqs) -> Self:
         """Create a tabular MSA from an alignment path and the original sequences.
 
         Parameters

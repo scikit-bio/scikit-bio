@@ -34,6 +34,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import matplotlib.figure
     from matplotlib.colors import Colormap
     from skbio.util._typing import SeedLike
+    from typing import Self
 
 
 class PairwiseMatrixError(Exception):
@@ -218,7 +219,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Any | None = None,
         keys: Iterable[Any] | None = None,
-    ) -> PairwiseMatrix:
+    ) -> Self:
         r"""Create a pairwise matrix from an iterable of objects given a metric.
 
         Parameters
@@ -1436,7 +1437,7 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | ArrayLike = 0.0,
-    ) -> SymmetricMatrix:
+    ) -> Self:
         r"""Create a symmetric matrix from an iterable given a metric.
 
         Parameters
