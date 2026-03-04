@@ -52,12 +52,15 @@ def center_distance_matrix(distance_matrix, inplace=False):
     argument is accepted for API compatibility but ignored — the function
     always returns a centered array.
     """
+    # For true NumPy arrays, use the Cython-accelerated implementation,
+    # which also supports in-place modification.
+    if isinstance(distance_matrix, np.ndarray):
+        return center_distance_matrix_np(distance_matrix, inplace=inplace)
+
+    # For JAX/CuPy and other array-API backends, use the generic
+    # double-centering path; `inplace` is ignored for these backends.
     xp, distance_matrix = ingest_array(distance_matrix)
-    # For JAX/CuPy, we compute the double-centering on host,
-    # since they don't support in-place operations.
-    if xp is not np:
-        return f_matrix(e_matrix(distance_matrix))
-    return center_distance_matrix_np(distance_matrix, inplace=inplace)
+    return f_matrix(e_matrix(distance_matrix))
 
 
 # Compute partial eigendecomposition on host via SciPy LAPACK for JAX/CuPy.
