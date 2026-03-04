@@ -667,7 +667,8 @@ def _bme(dm, parallel=500, factor=10):
         parallelization (int, default: 500).
     factor : int
         During parallelization, the program will try to partition the tree into chunks
-        of available thread count multiplied by this number. Default is 16.
+        of available thread count multiplied by this number. Default is 10, a number
+        empirically determined.
 
     Returns
     -------
