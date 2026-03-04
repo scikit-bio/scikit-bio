@@ -143,7 +143,7 @@ from ._c_me import (
     _calc_tacts,
     _calc_sizes,
     _calc_pairs,
-    _calc_depths,
+    _calc_deeps,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -276,6 +276,10 @@ def bme(dm, neg_as_zero=True, **kwargs):
 
     .. versionadded:: 0.6.3
 
+    .. versionchanged:: 0.7.3
+        Computational efficiency significantly improved. This is partly due to enabling
+        parallelization by default.
+
     Parameters
     ----------
     dm : skbio.DistanceMatrix
@@ -312,11 +316,6 @@ def bme(dm, neg_as_zero=True, **kwargs):
     implemented in :func:`nni` (with ``balanced=True``).
 
     The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
-
-    .. note::
-        Experimental feature: Add ``parallel=True`` will enable parallelization,
-        which may increase the performance of the algorithm. This feature may not
-        be stable and may be modified without notice in the future.
 
     References
     ----------
@@ -567,7 +566,7 @@ def _gme(dm):
     ---
 
     This implementation uses an array-based tree structure to improve efficiency. See
-    :func:`_check_tree` for details of this structure. Basically, the root node (taxon
+    top of this file for details of this structure. Basically, the root node (taxon
     0) is omitted, making the tree strictly binary. Instead, the unique descendant (x)
     is now treated as the root and marked with taxon 0:
 
@@ -604,7 +603,7 @@ def _gme(dm):
     # number of nodes in the final tree (note: taxon 0 is at root)
     n = 2 * m - 3
 
-    # tree topology (see `_check_tree`)
+    # tree topology
     tree = np.empty((n, 4), dtype=int)
     tree[:3] = [
         [1, 2, 0, 0],  # 0: root
@@ -742,23 +741,35 @@ def _bme(dm, parallel=500, factor=10):
         nest_th = min(nest_th, m)  # cap by target tree size
         flat_th = min(flat_th, m)
 
-    ### Pre-allocate array memory space. ###
+    ### Allocate array space and initiate a 3-taxon tree. ###
 
-    # tree topology
+    # tree topology (left, right, parent, sibling)
     tree = np.empty((N, 4), dtype=int)
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
 
     # node indices in preorder
     order = np.empty(N, dtype=int)
+    order[:3] = [0, 1, 2]
 
-    # number of nodes (tips and internal, incl. root) within each clade
+    # number of nodes (tips and internal, incl. root) within each clade (i.e., size)
     sizes = np.empty(N, dtype=int)
+    sizes[:3] = [3, 1, 1]
 
-    # number of branches from each node to root
-    depths = np.empty(N, dtype=int)
+    # number of branches from each node to root (i.e., depth) (named as `deeps` to be
+    # equal to other attributes in length)
+    deeps = np.empty(N, dtype=int)
+    deeps[:3] = [0, 1, 1]
 
     # average distances between all subtrees
     # (This is the dominant factor in BME, and what makes it more expensive than GME.)
     adm = np.empty((N, N), dtype=dtype)
+    adm[0, 1] = adm[1, 0] = dm[0, 1]
+    adm[0, 2] = adm[2, 0] = dm[0, 2]
+    adm[1, 2] = adm[2, 1] = dm[1, 2]
 
     # average distances from an added taxon (k) to each subtree (lower and upper).
     adk = np.empty((2, N), dtype=dtype)
@@ -794,30 +805,14 @@ def _bme(dm, parallel=500, factor=10):
     # usually below 100, making this optimization unnecessary.
     npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
-    ### Initialize tree with three taxa. ###
-
-    n = 3  # current number of nodes in the tree: n = 2 * k - 3
-
-    # 3-taxon tree topology
-    tree[:3] = [
-        [1, 2, 0, 0],  # 0: root
-        [0, 1, 0, 2],  # 1: left child
-        [0, 2, 0, 1],  # 2: right child
-    ]
-    sizes[:3] = [3, 1, 1]
-    depths[:3] = [0, 1, 1]
-    order[:3] = [0, 1, 2]
-
-    # balanced average distances between the 3 taxa
-    adm[0, 1] = adm[1, 0] = dm[0, 1]
-    adm[0, 2] = adm[2, 0] = dm[0, 2]
-    adm[1, 2] = adm[2, 1] = dm[1, 2]
+    ### Phase 1: Serial ###
 
     # group arguments to make it easier to write
     args1 = (adm, adk, tree)
-    args2 = (order, sizes, depths)
+    args2 = (order, sizes, deeps)
 
-    ### Phase 1: Serial ###
+    # current number of nodes in the tree (n = 2 * k - 3)
+    n = 3
 
     for k in range(3, nest_th):
         # Calculate balanced average distances from new taxon to existing subtrees.
@@ -874,7 +869,7 @@ def _bme(dm, parallel=500, factor=10):
         size = sizes[tag]
 
         # Get the depth of target, which equals to the number of ancestors of it.
-        depth = depths[tag]
+        deep = deeps[tag]
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
@@ -884,11 +879,11 @@ def _bme(dm, parallel=500, factor=10):
         nc = _bal_avgdist_chunk(
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
-        _bal_update_spine(tag, depth, sizes, pairs, ancs)
+        _bal_update_spine(tag, deep, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_nest(
-            itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
+            itag, deep, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
         _insert_taxon(k, itag, size, tree, order)
@@ -916,7 +911,7 @@ def _bme(dm, parallel=500, factor=10):
         )
         tag = order[itag]
         size = sizes[tag]
-        depth = depths[tag]
+        deep = deeps[tag]
 
         # Navigate the tree from target upward to root to identify the "spine", to
         # calculate special values and intermediates
@@ -926,20 +921,17 @@ def _bme(dm, parallel=500, factor=10):
         nc = _bal_avgdist_chunk(
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
-        _bal_update_spine(tag, depth, sizes, pairs, ancs)
+        _bal_update_spine(tag, deep, sizes, pairs, ancs)
 
         # Update balanced average distance matrix through parallelization (both flat
         # and nested).
-        _bal_avgdist_flat(n, itag, size, order, adm, adk, diffs, depths)
+        _bal_avgdist_flat(n, itag, size, order, adm, adk, diffs, deeps)
         _bal_avgdist_nest(
-            itag, depth, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
+            itag, deep, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
         )
 
         _insert_taxon(k, itag, size, tree, order)
         n += 2
-
-    # Output intermediate data for diagnosis
-    # np.savez('tree.npz', tree, order, sizes, pairs, depths, chunks[:nc])
 
     ### Calculate branch lengths. ###
 
@@ -1088,8 +1080,8 @@ def _bnni(dm, tree, order, lens):
     _calc_sizes(n, tree, order, sizes)
 
     # node depths
-    depths = np.empty(n, dtype=int)
-    _calc_depths(n, tree, order, depths)
+    deeps = np.empty(n, dtype=int)
+    _calc_deeps(n, tree, order, deeps)
 
     # Identify all internal branches (those above nodes that are not tips or root).
     # The association between nodes and internal branches are fixed, no matter how tree
@@ -1126,12 +1118,12 @@ def _bnni(dm, tree, order, lens):
 
         # Swap the branches in the tree.
         _swap_branches(
-            target, side, tree, order, index, stack, sizes=sizes, depths=depths
+            target, side, tree, order, index, stack, sizes=sizes, deeps=deeps
         )
 
         # Update balanced average distances after swapping.
         _bal_avgdist_swap(
-            adm, target, side, tree, order, index, sizes, depths, npots, stack
+            adm, target, side, tree, order, index, sizes, deeps, npots, stack
         )
 
     # Calculate branch lengths using a balanced framework.
@@ -1530,7 +1522,7 @@ def _swap_branches_treenode(node1, node2):
 
 
 def _swap_branches(
-    target, side, tree, order, index, stack, tacts=None, sizes=None, depths=None
+    target, side, tree, order, index, stack, tacts=None, sizes=None, deeps=None
 ):
     r"""Swap one child of the target node with its sibling.
 
@@ -1548,7 +1540,7 @@ def _swap_branches(
     implemented.
 
     For FastNNI (OLS framework), provide `tacts`. For BNNI (balanced framework),
-    provide `sizes` and `depths`.
+    provide `sizes` and `deeps`.
 
     TODO: This function may be Cythonized to improve efficiency.
 
@@ -1618,9 +1610,9 @@ def _swap_branches(
     o_clade = order[o_start:o_end]
 
     # update depths
-    if depths is not None:
-        depths[c_clade] -= 1
-        depths[s_clade] += 1
+    if deeps is not None:
+        deeps[c_clade] -= 1
+        deeps[s_clade] += 1
 
     # update preorder (naive)
     # _preorder(order, tree, stack)
