@@ -28,6 +28,7 @@ def _check_composition(
     axis: int = -1,
     nozero: bool = False,
     maxdim: int | None = None,
+    allnum: bool = True,
 ):
     r"""Check if the input matrix contain valid compositions.
 
@@ -43,6 +44,8 @@ def _check_composition(
         If True, matrix cannot have zero values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
+    allnum : bool, optionsl
+        If True, matrix cannot have NaN values.
 
     Raises
     ------
@@ -60,8 +63,14 @@ def _check_composition(
     """
     if not xp.isdtype(mat.dtype, "numeric"):
         raise TypeError("Input matrix must have a numeric data type.")
-    if not xp.all(xp.isfinite(mat)):
-        raise ValueError("Input matrix cannot have infinite or NaN values.")
+    if allnum:
+        # Don't allow infinite or NaN values.
+        if not xp.all(xp.isfinite(mat)):
+            raise ValueError("Input matrix cannot have infinite or NaN values.")
+    else:
+        # Allow NaN, but not infinite.
+        if xp.any(xp.isinf(mat)):
+            raise ValueError("Input matrix cannot have infinite values.")
     if nozero:
         if xp.any(mat <= 0):
             raise ValueError("Input matrix cannot have negative or zero components.")
@@ -118,7 +127,19 @@ def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
     """Perform closure."""
-    return mat / xp.sum(mat, axis=axis, keepdims=True)
+    row_sums = _nansum(xp, mat, axis=axis, keepdims=True)
+    return mat / row_sums
+
+
+def _nansum(
+    xp: ModuleType, arr: StdArray, axis: int, keepdims: bool = False
+) -> StdArray:
+    """Sum array elements along axis, ignoring NaN values."""
+    # Create mask of non-NaN values
+    nan_mask = xp.isnan(arr)
+    # Replace NaN with 0 for summation
+    arr_no_nan = xp.where(nan_mask, xp.asarray(0.0, dtype=arr.dtype), arr)
+    return xp.sum(arr_no_nan, axis=axis, keepdims=keepdims)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -544,6 +565,124 @@ def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     # for numerical stability, shift the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
     return _closure(xp, diff, axis)
+
+
+def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
+    r"""Perform robust centre log ratio (rclr) transformation.
+
+    The robust CLR transformation is similar to the standard CLR transformation,
+    but it only operates on observed (non-zero) values [1]_. This makes it suitable
+    for sparse compositional data.
+
+    For each composition, the transformation computes:
+
+    .. math::
+
+        rclr(x_i) = \ln(x_i) - \frac{1}{|S|} \sum_{j \in S} \ln(x_j)
+
+    where :math:`S` is the set of indices with non-zero values, and :math:`|S|`
+    is the number of non-zero values.
+
+    Parameters
+    ----------
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of non-negative values. Zeros are allowed and will become
+        NaN in the output. NaN values in the input are preserved (representing
+        missing entries).
+    axis : int, optional
+        Axis along which rclr transformation will be performed. Each vector
+        on this axis is considered as a composition. Default is the last
+        axis (-1).
+    validate : bool, default True
+        Check if the matrix consists of non-negative, finite values.
+        NaN values are allowed as missing entries.
+
+    Returns
+    -------
+    ndarray of shape (..., n_components, ...)
+        rclr-transformed matrix. Zero values in the input become NaN.
+
+    See Also
+    --------
+    clr
+
+    Notes
+    -----
+    The rclr transformation has several advantages for sparse compositional
+    data:
+
+    1. It does not require pseudocount addition, which can bias results
+    2. It preserves the zero/non-zero structure of the data
+    3. It allows for matrix completion methods to be applied
+
+    The geometric mean is computed only over non-zero values in each
+    composition, making it "robust" to the presence of zeros.
+
+    References
+    ----------
+    .. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+       Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+       microbial perturbations. MSystems, 4(1), 10-1128.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import rclr
+    >>> x = np.array([[1, 2, 0, 4],
+    ...               [0, 3, 3, 0],
+    ...               [2, 2, 2, 2]])
+    >>> result = rclr(x)
+    >>> np.round(result, 3)
+    array([[-0.693,  0.   ,    nan,  0.693],
+           [   nan,  0.   ,  0.   ,    nan],
+           [ 0.   ,  0.   ,  0.   ,  0.   ]])
+
+    """
+    xp, mat = ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat, allnum=False)
+    return _rclr(xp, mat, axis)
+
+
+def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
+    """Perform rclr transform."""
+    float_dtype = xp.float64
+    mat_float = xp.asarray(mat, dtype=float_dtype)
+
+    # Track which values were observed in the ORIGINAL input
+    observed_mask = (mat_float > 0) & ~xp.isnan(mat_float)
+
+    # Normalize to closure (using _nansum internally)
+    closed = _closure(xp, mat_float, axis)
+    closed_safe = xp.where(
+        closed > 0, closed, xp.asarray(float("nan"), dtype=float_dtype)
+    )
+
+    # Take log (will give -inf for zeros, NaN for NaN)
+    log_closed = xp.log(closed_safe)
+
+    # Count observed values from ORIGINAL mask
+    n_observed = xp.sum(observed_mask.astype(float_dtype), axis=axis, keepdims=True)
+
+    # Sum logs for observed values only
+    log_masked = xp.where(observed_mask, log_closed, xp.asarray(0.0, dtype=float_dtype))
+    log_sum = xp.sum(log_masked, axis=axis, keepdims=True)
+
+    # Geometric mean
+    n_observed_safe = xp.where(
+        n_observed > 0, n_observed, xp.asarray(1.0, dtype=float_dtype)
+    )
+    geo_mean_log = log_sum / n_observed_safe
+
+    # Center by geometric mean
+    result = log_closed - geo_mean_log
+
+    # Replace non-observed with NaN
+    result = xp.where(
+        observed_mask, result, xp.asarray(float("nan"), dtype=float_dtype)
+    )
+
+    return result
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
