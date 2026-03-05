@@ -24,9 +24,25 @@ from heapq import heappush
 # arrays for all operations. This improves computational efficiency.
 
 
+cdef extern from *:
+    """
+    #ifdef _OPENMP
+        #include <omp.h>
+        int _get_max_threads() { return omp_get_max_threads(); }
+    #else
+        int _get_max_threads() { return 1; }
+    #endif
+    """
+    int _get_max_threads()
+
+
 def _get_num_threads():
-    """Determine the number of threads that will be used by OpenMP."""
-    return omp_get_max_threads()
+    """Determine the number of threads that will be used by OpenMP.
+
+    If OpenMP is not installed in the system, it will return 1.
+
+    """
+    return _get_max_threads()
 
 
 # cdef inline floating xldexp(floating x, int exp) noexcept nogil:
