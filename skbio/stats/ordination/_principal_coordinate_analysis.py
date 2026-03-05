@@ -669,6 +669,9 @@ def pcoa_biplot(ordination, y):
     # align the descriptors and eigenvectors in a sample-wise fashion
     y = y.reindex(coordinates.index)
 
+    # Preserve original column names before converting to array
+    coord_columns = coordinates.columns.copy()
+
     # S_pc from equation 9.44
     # Represents the covariance matrix between the features matrix and the
     # column-centered eigenvectors of the pcoa.
@@ -687,7 +690,7 @@ def pcoa_biplot(ordination, y):
     )
 
     ordination.features = pd.DataFrame(
-        data=Uproj, index=y.columns.copy(), columns=coordinates.columns.copy()
+        data=Uproj, index=y.columns.copy(), columns=coord_columns
     )
     ordination.features.fillna(0.0, inplace=True)
 
