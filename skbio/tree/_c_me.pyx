@@ -10,7 +10,7 @@
 
 from cython cimport floating
 from cython.parallel cimport prange
-from openmp cimport omp_get_max_threads
+# from openmp cimport omp_get_max_threads
 from libc.string cimport memmove
 # from libc.math cimport ldexp, ldexpf
 from heapq import heappush
