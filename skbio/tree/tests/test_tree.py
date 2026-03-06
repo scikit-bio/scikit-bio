@@ -2958,53 +2958,57 @@ class TreeTests(TestCase):
         obs = TreeNode.from_taxonomy(df_)
         self.assertEqual(obs.compare_subsets(exp), 0.0)
 
-        # input as strings with ranks and unassigned taxa
+        # input as strings with Greengenes2/GTDB style ranks and unassigned taxa
         str_lineages = [
-            ("1", "k__Bacteria; p__Firmicutes; c__Clostridia"),
-            ("2", "k__Bacteria; p__Firmicutes; c__Bacilli"),
-            ("3", "k__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
-            ("4", "k__Archaea; p__Euryarchaeota; c__Thermoplasmata; s__"),
-            ("5", "k__Archaea; p__Euryarchaeota; c__Thermoplasmata"),
-            ("6", "k__Archaea; p__Euryarchaeota; c__Halobacteria"),
-            ("7", "k__Archaea; p__Euryarchaeota; c__Halobacteria; s__; t__"),
-            ("8", "k__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
-            ("9", "k__Bacteria; p__Bacteroidetes; c__Cytophagia; s__")]
-        
-        str_exp = TreeNode.read([
-            "((((1)Clostridia,(2)Bacilli)Firmicutes,"
-            "((3,8)Sphingobacteria,(9)Cytophagia)Bacteroidetes)Bacteria,"
-            "(((4,5)Thermoplasmata,(6,7)Halobacteria)Euryarchaeota)Archaea);"
+            ("1", "d__Bacteria; p__Bacillota; c__Clostridia"),
+            ("2", "d__Bacteria; p__Bacillota; c__Bacilli"),
+            ("3", "d__Bacteria; p__Bacteroidota; c__Sphingobacteriia"),
+            ("4", "d__Archaea; p__Halobacteriota; c__Thermoplasmata; s__"),
+            ("5", "d__Archaea; p__Halobacteriota; c__Thermoplasmata"),
+            ("6", "d__Archaea; p__Halobacteriota; c__Halobacteria"),
+            ("7", "d__Archaea; p__Halobacteriota; c__Halobacteria; s__"),
+            ("8", "d__Bacteria; p__Bacteroidota; c__Sphingobacteriia"),
+            ("9", "d__Bacteria; p__Bacteroidota; c__Cytophagia; s__")]
+
+        # By default extract_rank is False, so the node names include the rank
+        str_exp_no_extract = TreeNode.read([
+            "((((1)c__Clostridia,(2)c__Bacilli)p__Bacillota,"
+            "((3,8)c__Sphingobacteriia,(9)c__Cytophagia)p__Bacteroidota)d__Bacteria,"
+            "(((4,5)c__Thermoplasmata,(6,7)c__Halobacteria)p__Halobacteriota)d__Archaea);"
         ])
-        
-        obs_str = TreeNode.from_taxonomy(str_lineages)
-        self.assertEqual(obs_str.compare_subsets(str_exp), 0.0)
+
+        obs_str_no_extract = TreeNode.from_taxonomy(str_lineages)
+        self.assertEqual(obs_str_no_extract.compare_subsets(str_exp_no_extract), 0.0)
+
+        # verify rank attributes even when not extracted
+        self.assertEqual(obs_str_no_extract.find("d__Bacteria").rank, "d")
+        self.assertEqual(obs_str_no_extract.find("p__Bacillota").rank, "p")
+        self.assertEqual(obs_str_no_extract.find("c__Thermoplasmata").rank, "c")
+        self.assertFalse(hasattr(obs_str_no_extract.find("1"), "rank"))
+
+        # when extract_rank is True
+        str_exp_extract = TreeNode.read([
+            "((((1)Clostridia,(2)Bacilli)Bacillota,"
+            "((3,8)Sphingobacteriia,(9)Cytophagia)Bacteroidota)Bacteria,"
+            "(((4,5)Thermoplasmata,(6,7)Halobacteria)Halobacteriota)Archaea);"
+        ])
+
+        obs_str_extract = TreeNode.from_taxonomy(str_lineages, extract_rank=True)
+        self.assertEqual(obs_str_extract.compare_subsets(str_exp_extract), 0.0)
 
         # verify rank attributes
-        self.assertEqual(obs_str.find("Bacteria").rank, "k")
-        self.assertEqual(obs_str.find("Firmicutes").rank, "p")
-        self.assertEqual(obs_str.find("Thermoplasmata").rank, "c")
-        self.assertFalse(hasattr(obs_str.find("1"), "rank"))
+        self.assertEqual(obs_str_extract.find("Bacteria").rank, "d")
+        self.assertEqual(obs_str_extract.find("Bacillota").rank, "p")
+        self.assertEqual(obs_str_extract.find("Thermoplasmata").rank, "c")
+        self.assertFalse(hasattr(obs_str_extract.find("1"), "rank"))
 
-        # input as strings with generalized ranks (SILVA/GTDB style)
-        gen_lineages = [
-            ("1", "d__Bacteria; p__Firmicutes; c__Clostridia"),
-            ("2", "D_0__Bacteria; D_1__Firmicutes; D_2__Bacilli"),
-            ("3", "domain__Bacteria; phylum__Bacteroidetes; class__Sphingobacteria"),
-            ("4", "d__Archaea; p__Euryarchaeota; c__Thermoplasmata; s__"),
-            ("5", "D_0__Archaea; D_1__Euryarchaeota; D_2__Thermoplasmata"),
-            ("6", "domain__Archaea; phylum__Euryarchaeota; class__Halobacteria"),
-            ("7", "d__Archaea; p__Euryarchaeota; c__Halobacteria; s__; t__"),
-            ("8", "d__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
-            ("9", "D_0__Bacteria; D_1__Bacteroidetes; D_2__Cytophagia; D_3__")]
-
-        obs_gen = TreeNode.from_taxonomy(gen_lineages)
-        self.assertEqual(obs_gen.compare_subsets(str_exp), 0.0)
-
-        # verify rank attributes for generalized
-        self.assertEqual(obs_gen.find("Bacteria").rank, "d")
-        self.assertEqual(obs_gen.find("Firmicutes").rank, "p")
-        self.assertEqual(obs_gen.find("Thermoplasmata").rank, "c")
-        self.assertFalse(hasattr(obs_gen.find("1"), "rank"))
+        # verify mixture of ranked and unranked taxa raises ValueError
+        mixed_lineages = [
+            ("1", "d__Bacteria; p__Bacillota"),
+            ("2", "Archaea; Halobacteriota")
+        ]
+        with self.assertRaisesRegex(ValueError, "mixture is erroneous"):
+            TreeNode.from_taxonomy(mixed_lineages)
 
     def test_to_taxonomy(self):
         input_lineages = {"1": ["a", "b", "c", "d", "e", "f", "g"],
