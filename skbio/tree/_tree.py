@@ -5964,7 +5964,7 @@ class TreeNode(SkbioObject):
 
         import re
 
-        p_rank = re.compile(r"^([a-z])__")
+        p_rank = re.compile(r"^([a-zA-Z0-9_]+?)__")
 
         for id_, lineage in lineage_map:
             cur_node = root
@@ -5973,8 +5973,11 @@ class TreeNode(SkbioObject):
                 parsed_lineage = []
                 for taxon in lineage.split(";"):
                     taxon = taxon.strip()
-                    # Skip empty taxon or empty rank code (e.g., "s__")
-                    if not taxon or (len(taxon) == 3 and taxon.endswith("__")):
+                    if not taxon:
+                        continue
+                    m = p_rank.match(taxon)
+                    # Skip empty taxon or empty rank code (e.g., "s__" or "D_1__")
+                    if m and not taxon[m.end():].strip():
                         continue
                     parsed_lineage.append(taxon)
                 lineage = parsed_lineage

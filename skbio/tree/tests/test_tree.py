@@ -2985,6 +2985,27 @@ class TreeTests(TestCase):
         self.assertEqual(obs_str.find("Thermoplasmata").rank, "c")
         self.assertFalse(hasattr(obs_str.find("1"), "rank"))
 
+        # input as strings with generalized ranks (SILVA/GTDB style)
+        gen_lineages = [
+            ("1", "d__Bacteria; p__Firmicutes; c__Clostridia"),
+            ("2", "D_0__Bacteria; D_1__Firmicutes; D_2__Bacilli"),
+            ("3", "domain__Bacteria; phylum__Bacteroidetes; class__Sphingobacteria"),
+            ("4", "d__Archaea; p__Euryarchaeota; c__Thermoplasmata; s__"),
+            ("5", "D_0__Archaea; D_1__Euryarchaeota; D_2__Thermoplasmata"),
+            ("6", "domain__Archaea; phylum__Euryarchaeota; class__Halobacteria"),
+            ("7", "d__Archaea; p__Euryarchaeota; c__Halobacteria; s__; t__"),
+            ("8", "d__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
+            ("9", "D_0__Bacteria; D_1__Bacteroidetes; D_2__Cytophagia; D_3__")]
+
+        obs_gen = TreeNode.from_taxonomy(gen_lineages)
+        self.assertEqual(obs_gen.compare_subsets(str_exp), 0.0)
+
+        # verify rank attributes for generalized
+        self.assertEqual(obs_gen.find("Bacteria").rank, "d")
+        self.assertEqual(obs_gen.find("Firmicutes").rank, "p")
+        self.assertEqual(obs_gen.find("Thermoplasmata").rank, "c")
+        self.assertFalse(hasattr(obs_gen.find("1"), "rank"))
+
     def test_to_taxonomy(self):
         input_lineages = {"1": ["a", "b", "c", "d", "e", "f", "g"],
                           "2": ["a", "b", "c", None, None, "x", "y"],
