@@ -2,6 +2,10 @@
 
 ## Version 0.7.3-dev
 
+### Features
+
+* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
+
 
 ## Version 0.7.2
 
