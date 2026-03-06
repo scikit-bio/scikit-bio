@@ -131,13 +131,15 @@ def graphembed(
                     output=out_path,
                     **kwargs
                 )
-                
+
                 out_file = out_path if os.path.isfile(out_path) else f"{out_path}.txt"
                 if not os.path.exists(out_file):
                     if os.path.exists(out_path):
                         out_file = out_path
                     else:
-                        raise RuntimeError("graphembed_rs did not produce an output file.")
+                        raise RuntimeError(
+                            "graphembed_rs did not produce an output file."
+                        )
 
                 res_df = pd.read_csv(out_file, sep=r"\s+", header=None, index_col=0)
                 res_df.index = res_df.index.astype(str)
@@ -152,10 +154,10 @@ def graphembed(
                     nbiter=nbiter,
                     **kwargs
                 )
-                
+
                 if res is None:
                     raise RuntimeError("HOPE embedding didn't return in memory.")
-                    
+
                 if isinstance(res, dict):
                     coords = [res.get(node_id, np.zeros(dimensions)) for node_id in ids]
                     coordinates = np.array(coords)
@@ -174,14 +176,16 @@ def graphembed(
 
     long_method_name = f"Graph Embedding via {method.capitalize()}"
     axis_labels = [f"Dim{i}" for i in range(1, coordinates.shape[1] + 1)]
-    
+
     pseudo_eigvals = np.zeros(coordinates.shape[1])
     pseudo_prop = np.zeros(coordinates.shape[1])
 
     return OrdinationResults(
         short_method_name="GraphEmbed",
         long_method_name=long_method_name,
-        eigvals=_create_table_1d(pseudo_eigvals, index=axis_labels, backend=output_format),
+        eigvals=_create_table_1d(
+            pseudo_eigvals, index=axis_labels, backend=output_format
+        ),
         samples=_create_table(
             coordinates,
             index=ids,
