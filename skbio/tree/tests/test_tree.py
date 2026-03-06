@@ -2958,6 +2958,33 @@ class TreeTests(TestCase):
         obs = TreeNode.from_taxonomy(df_)
         self.assertEqual(obs.compare_subsets(exp), 0.0)
 
+        # input as strings with ranks and unassigned taxa
+        str_lineages = [
+            ("1", "k__Bacteria; p__Firmicutes; c__Clostridia"),
+            ("2", "k__Bacteria; p__Firmicutes; c__Bacilli"),
+            ("3", "k__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
+            ("4", "k__Archaea; p__Euryarchaeota; c__Thermoplasmata; s__"),
+            ("5", "k__Archaea; p__Euryarchaeota; c__Thermoplasmata"),
+            ("6", "k__Archaea; p__Euryarchaeota; c__Halobacteria"),
+            ("7", "k__Archaea; p__Euryarchaeota; c__Halobacteria; s__; t__"),
+            ("8", "k__Bacteria; p__Bacteroidetes; c__Sphingobacteria"),
+            ("9", "k__Bacteria; p__Bacteroidetes; c__Cytophagia; s__")]
+        
+        str_exp = TreeNode.read([
+            "((((1)Clostridia,(2)Bacilli)Firmicutes,"
+            "((3,8)Sphingobacteria,(9)Cytophagia)Bacteroidetes)Bacteria,"
+            "(((4,5)Thermoplasmata,(6,7)Halobacteria)Euryarchaeota)Archaea);"
+        ])
+        
+        obs_str = TreeNode.from_taxonomy(str_lineages)
+        self.assertEqual(obs_str.compare_subsets(str_exp), 0.0)
+
+        # verify rank attributes
+        self.assertEqual(obs_str.find("Bacteria").rank, "k")
+        self.assertEqual(obs_str.find("Firmicutes").rank, "p")
+        self.assertEqual(obs_str.find("Thermoplasmata").rank, "c")
+        self.assertFalse(hasattr(obs_str.find("1"), "rank"))
+
     def test_to_taxonomy(self):
         input_lineages = {"1": ["a", "b", "c", "d", "e", "f", "g"],
                           "2": ["a", "b", "c", None, None, "x", "y"],

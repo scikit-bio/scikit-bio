@@ -5962,15 +5962,38 @@ class TreeNode(SkbioObject):
         elif isinstance(lineage_map, pd.DataFrame):
             lineage_map = ((idx, row.tolist()) for idx, row in lineage_map.iterrows())
 
+        import re
+
+        p_rank = re.compile(r"^([a-z])__")
+
         for id_, lineage in lineage_map:
             cur_node = root
 
+            if isinstance(lineage, str):
+                parsed_lineage = []
+                for taxon in lineage.split(";"):
+                    taxon = taxon.strip()
+                    # Skip empty taxon or empty rank code (e.g., "s__")
+                    if not taxon or (len(taxon) == 3 and taxon.endswith("__")):
+                        continue
+                    parsed_lineage.append(taxon)
+                lineage = parsed_lineage
+
             # for each name, see if we've seen it, if not, add that puppy on
             for name in lineage:
+                rank = None
+                if isinstance(name, str):
+                    m = p_rank.match(name)
+                    if m:
+                        rank = m.group(1)
+                        name = name[len(m.group(0)) :]
+
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
                 else:
                     new_node = cls(name=name)
+                    if rank is not None:
+                        new_node.rank = rank
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
                     cur_node.append(new_node, uncache=False)
