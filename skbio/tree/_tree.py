@@ -5901,7 +5901,10 @@ class TreeNode(SkbioObject):
         return nodes[-1]
 
     @classonlymethod
-    def from_taxonomy(cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame) -> Self:
+    def from_taxonomy(
+        cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame,
+        extract_rank: bool = False
+    ) -> Self:
         r"""Construct a tree from a taxonomy.
 
         Parameters
@@ -5964,7 +5967,9 @@ class TreeNode(SkbioObject):
 
         import re
 
-        p_rank = re.compile(r"^([a-zA-Z0-9_]+?)__")
+        p_rank = re.compile(r"^([dpcofgs])__")
+
+        has_rank = None
 
         for id_, lineage in lineage_map:
             cur_node = root
@@ -5976,7 +5981,7 @@ class TreeNode(SkbioObject):
                     if not taxon:
                         continue
                     m = p_rank.match(taxon)
-                    # Skip empty taxon or empty rank code (e.g., "s__" or "D_1__")
+                    # Skip empty taxon or empty rank code (e.g., "s__")
                     if m and not taxon[m.end():].strip():
                         continue
                     parsed_lineage.append(taxon)
@@ -5989,7 +5994,22 @@ class TreeNode(SkbioObject):
                     m = p_rank.match(name)
                     if m:
                         rank = m.group(1)
-                        name = name[len(m.group(0)) :]
+                        if extract_rank:
+                            name = name[len(m.group(0)) :]
+
+                        if has_rank is False:
+                            raise ValueError(
+                                "All taxa must either have a rank or not have a rank. "
+                                "A mixture is erroneous."
+                            )
+                        has_rank = True
+                    else:
+                        if has_rank is True:
+                            raise ValueError(
+                                "All taxa must either have a rank or not have a rank. "
+                                "A mixture is erroneous."
+                            )
+                        has_rank = False
 
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
