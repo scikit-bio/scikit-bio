@@ -500,14 +500,14 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
 
     cdef floating dist, Dinvs, total, r, rinv, tmp, Di
     cdef size_t nzeros = n
-    cdef size_t iteration
+    cdef size_t iteration, i, j
 
     with nogil:
         iteration = 0
         while iteration < maxiters:
 
-            for i in range(n):
-                Di = _dist_euclidean(X[:, i], y)
+            for i in prange(n, schedule='static'):
+                Di = _dist_euclidean_col(X, i, y, p) 
                 D[i] = Di
                 if fabs(Di) > eps:
                     Dinv[i] = 1. / Di
@@ -516,14 +516,14 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
 
             Dinvs = _sum(Dinv)
 
-            for i in range(n):
+            for i in prange(n, schedule='static'):
                 W[i] = Dinv[i] / Dinvs
 
-            for j in range(p):
+            for j in prange(p, schedule='static'):
                 total = 0.
                 for i in range(n):
                     if fabs(D[i]) > eps:
-                        total += W[i] * X[j, i]
+                        total = total + W[i] * X[j, i]
                 T[j] = total
 
             nzeros = n
@@ -536,14 +536,14 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             elif nzeros == n:
                 break
             else:
-                for j in range(p):
+                for j in prange(p, schedule='static'):
                     R[j] = (T[j] - y[j]) * Dinvs
                 r = _norm_euclidean(R)
                 if r > eps:
                     rinv = nzeros/r
                 else:
                     rinv = 0.
-                for j in range(p):
+                for j in prange(p, schedule='static'):
                     y1[j] = max(0, 1-rinv)*T[j] + min(1, rinv)*y[j]
 
             dist = _dist_euclidean(y, y1)
@@ -554,6 +554,15 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             iteration = iteration + 1
             
     return y
+
+cdef floating _dist_euclidean_col(floating[:, :] X, size_t col, floating[:] y, size_t p) nogil:
+    cdef float64_t d = 0.
+    cdef float64_t tmp
+    cdef size_t j
+    for j in range(p):
+        tmp = X[j, col] - y[j]
+        d += tmp * tmp
+    return <floating>sqrt(d)
 
 cdef floating _dist_euclidean(floating[:] x, floating[:] y) nogil:
     cdef size_t n = x.shape[0]
