@@ -502,12 +502,15 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
     cdef size_t nzeros = n
     cdef size_t iteration, i, j
 
+    XT_np = np.ascontiguousarray(X.T, dtype=dtype)
+    cdef floating[:, ::1] XT = XT_np
+
     with nogil:
         iteration = 0
         while iteration < maxiters:
 
             for i in prange(n, schedule='static'):
-                Di = _dist_euclidean_col(X, i, y, p) 
+                Di = _dist_euclidean_col(XT, i, y, p) 
                 D[i] = Di
                 if fabs(Di) > eps:
                     Dinv[i] = 1. / Di
@@ -555,12 +558,12 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             
     return y
 
-cdef floating _dist_euclidean_col(floating[:, :] X, size_t col, floating[:] y, size_t p) nogil:
+cdef floating _dist_euclidean_col(floating[:, ::1] XT, size_t row, floating[:] y, size_t p) nogil:
     cdef float64_t d = 0.
     cdef float64_t tmp
     cdef size_t j
     for j in range(p):
-        tmp = X[j, col] - y[j]
+        tmp = XT[row, j] - y[j]
         d += tmp * tmp
     return <floating>sqrt(d)
 
