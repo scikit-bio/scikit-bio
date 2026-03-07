@@ -500,7 +500,8 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
 
     cdef floating dist, Dinvs, total, r, rinv, tmp, Di
     cdef size_t nzeros = n
-    cdef size_t iteration, i, j
+    cdef size_t iteration
+    cdef Py_ssize_t i, j
 
     XT_np = np.ascontiguousarray(X.T, dtype=dtype)
     cdef floating[:, ::1] XT = XT_np
@@ -558,10 +559,11 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
             
     return y
 
-cdef floating _dist_euclidean_col(floating[:, ::1] XT, size_t row, floating[:] y, size_t p) nogil:
+cdef floating _dist_euclidean_col(floating[:, ::1] XT, Py_ssize_t row, 
+                                    floating[:] y, Py_ssize_t p) nogil:
     cdef float64_t d = 0.
     cdef float64_t tmp
-    cdef size_t j
+    cdef Py_ssize_t j
     for j in range(p):
         tmp = XT[row, j] - y[j]
         d += tmp * tmp
