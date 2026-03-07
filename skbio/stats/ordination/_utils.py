@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
-
+from skbio.util._array import ingest_array
 from ._cutils import center_distance_matrix_cy
 
 
@@ -47,30 +47,32 @@ def mean_and_std(a, axis=None, weights=None, with_mean=True, with_std=True, ddof
     """
     if not (with_mean or with_std):
         raise ValueError("Either the mean or standard deviation need to be computed.")
-    a = np.asarray(a)
+    xp, a = ingest_array(a)
     if weights is None:
-        avg = a.mean(axis=axis) if with_mean else None
-        std = a.std(axis=axis, ddof=ddof) if with_std else None
+        avg = xp.mean(a,axis=axis) if with_mean else None
+        std = xp.std(a, axis=axis, correction=ddof) if with_std else None
     else:
-        avg = np.average(a, axis=axis, weights=weights)
+        weights, _ = ingest_array(weights)
+
+        sum_weights = xp.sum(weights, axis=axis)
+        avg = xp.sum(a * weights, axis=axis) / sum_weights
         if with_std:
             if axis is None:
-                variance = np.average((a - avg) ** 2, weights=weights)
+                diff_sq = (a - avg) ** 2
+                variance = xp.sum(diff_sq * weights, axis=axis) / sum_weights
             else:
                 # Make sure that the subtraction to compute variance works for
                 # multidimensional arrays
-                a_rolled = np.rollaxis(a, axis)
+                a_rolled = xp.rollaxis(a, axis)
                 # Numpy doesn't have a weighted std implementation, but this is
                 # stable and fast
-                variance = np.average((a_rolled - avg) ** 2, axis=0, weights=weights)
+                variance = xp.average((a_rolled - avg) ** 2, axis=0, weights=weights)
             if ddof != 0:  # Don't waste time if variance doesn't need scaling
-                if axis is None:
-                    variance *= a.size / (a.size - ddof)
-                else:
-                    variance *= a.shape[axis] / (a.shape[axis] - ddof)
-            std = np.sqrt(variance)
-        else:
-            std = None
+                n = a.size if axis is None else a.shape[axis]
+                variance *= n / (n - ddof)
+                std = xp.sqrt(variance)
+            else:
+                std = None
         avg = avg if with_mean else None
     return avg, std
 
@@ -109,18 +111,21 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     division by zero.
 
     """
-    a = np.asarray(a, dtype=np.float64)
+    xp, a = ingest_array(a)
     # Pandas 3.0+ returns read-only objects
-    if copy or (not a.flags.writeable):
-        a = a.copy()
+    if not xp.isdtype(a.dtype, "real floating"):
+        a = xp.astype(a, xp.float64)
+    if copy:
+        a = xp.asarray(a, copy=True)
+
     avg, std = mean_and_std(
         a, axis=0, weights=weights, with_mean=with_mean, with_std=with_std, ddof=ddof
     )
     if with_mean:
         a -= avg
     if with_std:
-        std[std == 0] = 1.0
-        a /= std
+        std = xp.where(std == 0, xp.ones_like(std), std)
+        a = a / std
     return a
 
 
@@ -131,11 +136,12 @@ def svd_rank(M_shape, S, tol=None):
     (we're not using that function because it doesn't let us reuse a
     precomputed SVD).
     """
+    xp, S = ingest_array(S) 
+    
     if tol is None:
-        tol = S.max() * max(M_shape) * np.finfo(S.dtype).eps
-    return np.sum(S > tol)
-
-
+        tol = float(xp.max(S)) * max(M_shape) * float(xp.finfo(S.dtype).eps)
+        
+    return int(float(xp.sum(S > tol)))
 def corr(x, y=None):
     """Compute correlation between columns of `x`, or `x` and `y`.
 
@@ -160,19 +166,19 @@ def corr(x, y=None):
         not provided, else has shape (p, q).
 
     """
-    x = np.asarray(x)
     if y is not None:
-        y = np.asarray(y)
+        # Pass both in at once to guarantee they share the same namespace
+        xp, x, y = ingest_array(x, y) 
         if y.shape[0] != x.shape[0]:
             raise ValueError("Both matrices must have the same number of rows")
-        x, y = scale(x), scale(y)
+        x = scale(x)
+        y = scale(y)
     else:
+        xp, x = ingest_array(x)
         x = scale(x)
         y = x
-    # Notice that scaling was performed with ddof=0 (dividing by n,
-    # the default), so now we need to remove it by also using ddof=0
-    # (dividing by n)
-    return x.T.dot(y) / x.shape[0]
+    
+    return (xp.permute_dims(x, (1, 0)) @ y) / x.shape[0]
 
 
 def e_matrix(distance_matrix):
@@ -181,6 +187,7 @@ def e_matrix(distance_matrix):
     Squares and divides by -2 the input elementwise. Eq. 9.20 in
     Legendre & Legendre 1998.
     """
+    distance_matrix, xp = ingest_array(distance_matrix)
     return distance_matrix * distance_matrix / -2
 
 
@@ -191,9 +198,10 @@ def f_matrix(E_matrix):
     row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
     """
-    row_means = E_matrix.mean(axis=1, keepdims=True)
-    col_means = E_matrix.mean(axis=0, keepdims=True)
-    matrix_mean = E_matrix.mean()
+    E_matrix, xp = ingest_array(E_matrix)
+    row_means = xp.mean(E_matrix, axis=1, keepdims=True)
+    col_means = xp.mean(E_matrix, axis=0, keepdims=True)
+    matrix_mean = xp.mean(E_matrix)
     return E_matrix - row_means - col_means + matrix_mean
 
 
@@ -216,17 +224,19 @@ def center_distance_matrix(distance_matrix, inplace=False):
         is more efficient in terms of memory and computation.
 
     """
-    if not distance_matrix.flags.c_contiguous:
-        # center_distance_matrix_cy requires c_contiguous, so make a copy
-        distance_matrix = np.asarray(distance_matrix, order="C")
-
-    if inplace:
-        center_distance_matrix_cy(distance_matrix, distance_matrix)
-        return distance_matrix
-    else:
-        centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
-        center_distance_matrix_cy(distance_matrix, centered)
-        return centered
+    distance_matrix, xp = ingest_array(distance_matrix)
+    if xp.__name__ == 'numpy': 
+        if not distance_matrix.flags.c_contiguous:
+            distance_matrix = np.asarray(distance_matrix, order="C")
+        
+        if inplace:
+            center_distance_matrix_cy(distance_matrix, distance_matrix)
+            return distance_matrix
+        else:
+            centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
+            center_distance_matrix_cy(distance_matrix, centered)
+            return centered
+        return f_matrix(e_matrix(distance_matrix))
 
 
 def _e_matrix_inplace(distance_matrix):
@@ -244,11 +254,10 @@ def _e_matrix_inplace(distance_matrix):
         Distance matrix.
 
     """
-    distance_matrix = distance_matrix.astype(float)
-
-    for i in np.arange(len(distance_matrix)):
-        distance_matrix[i] = (distance_matrix[i] * distance_matrix[i]) / -2
-    return distance_matrix
+    distance_matrix, xp = ingest_array(distance_matrix)
+    if not xp.isdtype(distance_matrix.dtype, "real floating"):
+        distance_matrix = xp.astype(distance_matrix, xp.float64)
+    return (distance_matrix * distance_matrix) / -2
 
 
 def _f_matrix_inplace(e_matrix):
@@ -267,11 +276,13 @@ def _f_matrix_inplace(e_matrix):
         A matrix representing the "E matrix" as described above.
 
     """
-    e_matrix = e_matrix.astype(float)
+    e_matrix, xp = ingest_array(e_matrix)
+    if not xp.isdtype(e_matrix.dtype, "real floating"):
+        e_matrix = xp.astype(e_matrix, xp.float64)
 
-    row_means = np.zeros(len(e_matrix), dtype=float)
-    col_means = np.zeros(len(e_matrix), dtype=float)
-    matrix_mean = 0.0
+    row_means = xp.mean(e_matrix, axis=1, keepdims=True)
+    col_means = xp.mean(e_matrix, axis=0, keepdims=True)
+    matrix_mean = xp.mean(e_matrix)
 
     for i in np.arange(len(e_matrix)):
         row_means[i] = e_matrix[i].mean()
