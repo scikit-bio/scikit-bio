@@ -115,14 +115,7 @@ def rda(
     X, x_rows, x_cols = _ingest_table(x)
 
     # Correct unpacking: the array comes first, then the namespace
-    xp_y, Y = ingest_array(Y)
-    xp_x, X = ingest_array(X)
-
-    # Compare the namespace names
-    if xp_y.__name__ != xp_x.__name__:
-        raise ValueError("Both input matrices must belong to the same Array API namespace.")
-
-    xp = xp_y
+    xp, X, Y = ingest_array(X, Y)
 
     # Now Y and X are arrays again, so .shape will work!
     n, p = Y.shape
@@ -137,11 +130,11 @@ def rda(
     feature_ids = y_cols
     # Centre response variables (they must be dimensionally
     # homogeneous)
-    Y = Y - xp.mean(Y, axis=0)
+    Y -= xp.mean(Y, axis=0)
     if scale_Y:
-        Y = Y / xp.std(Y, axis=0)
+        Y /= xp.std(Y, axis=0)
     # Centre explanatory variables
-    X = X - xp.mean(X, axis=0)
+    X -= xp.mean(X, axis=0)
     # Distribution of variables should be examined and transformed
     # if necessary (see paragraph 4 in p. 580 L&L 1998)
 
