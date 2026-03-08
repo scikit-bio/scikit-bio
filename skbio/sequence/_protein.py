@@ -179,12 +179,18 @@ class Protein(GrammaredSequence):
     @classproperty
     @overrides(GrammaredSequence)
     def alphabet(cls):
-        return super(Protein, cls).alphabet | cls.stop_chars
+        return (
+            cls.definite_chars
+            | cls.degenerate_chars
+            | cls.stop_chars
+            | cls.noncanonical_chars
+            | cls.gap_chars
+        )
 
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
-        return set("ACDEFGHIKLMNOPQRSTUVWY")
+        return set("ACDEFGHIKLMNOPQRSTUVWY") | cls.stop_chars
 
     @classproperty
     @overrides(GrammaredSequence)
