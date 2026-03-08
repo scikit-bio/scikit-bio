@@ -450,7 +450,7 @@ def _log_compare(matrix, labels, n, test):
 
     # run statistical test on the 2-D arrays in a vectorized manner
     _, pvals = test(*log_ratios)
-# run statistical test on the 2-D arrays in a vectorized manner
+    # run statistical test on the 2-D arrays in a vectorized manner
     _, pvals = test(*log_ratios)
 
     # CRITICAL FIX: Force floats! If matrix was integers, this was rounding p-values to 0.
