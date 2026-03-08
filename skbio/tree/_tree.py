@@ -5912,6 +5912,11 @@ class TreeNode(SkbioObject):
         lineage_map : dict, iterable of tuples, or pd.DataFrame
             Mapping of taxon IDs to lineages (iterables of taxonomic units
             from high to low in ranking).
+        extract_rank : bool, optional
+            Whether to extract rank information from taxon names (default: False).
+            If True, taxon names are expected to have rank prefixes (e.g.,
+            "d__Bacteria"). The prefixes will be removed from the names and
+            stored in the ``rank`` attribute of the created nodes.
 
         Returns
         -------
@@ -5967,7 +5972,7 @@ class TreeNode(SkbioObject):
 
         import re
 
-        p_rank = re.compile(r"^([dpcofgs])__")
+        p_rank = re.compile(r"^([a-z])__")
 
         has_rank = None
 
@@ -5980,36 +5985,31 @@ class TreeNode(SkbioObject):
                     taxon = taxon.strip()
                     if not taxon:
                         continue
-                    m = p_rank.match(taxon)
-                    # Skip empty taxon or empty rank code (e.g., "s__")
-                    if m and not taxon[m.end():].strip():
-                        continue
                     parsed_lineage.append(taxon)
                 lineage = parsed_lineage
 
             # for each name, see if we've seen it, if not, add that puppy on
             for name in lineage:
                 rank = None
-                if isinstance(name, str):
-                    m = p_rank.match(name)
-                    if m:
-                        rank = m.group(1)
-                        if extract_rank:
-                            name = name[len(m.group(0)) :]
+                m = p_rank.match(name) if isinstance(name, str) else None
+                if m:
+                    rank = m.group(1)
+                    if extract_rank:
+                        name = name[len(m.group(0)) :]
 
-                        if has_rank is False:
-                            raise ValueError(
-                                "All taxa must either have a rank or not have a rank. "
-                                "A mixture is erroneous."
-                            )
-                        has_rank = True
-                    else:
-                        if has_rank is True:
-                            raise ValueError(
-                                "All taxa must either have a rank or not have a rank. "
-                                "A mixture is erroneous."
-                            )
-                        has_rank = False
+                    if has_rank is False:
+                        raise ValueError(
+                            "All taxa must either have a rank or not have a rank. "
+                            "A mixture is erroneous."
+                        )
+                    has_rank = True
+                else:
+                    if has_rank is True:
+                        raise ValueError(
+                            "All taxa must either have a rank or not have a rank. "
+                            "A mixture is erroneous."
+                        )
+                    has_rank = False
 
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
