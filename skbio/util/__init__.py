@@ -20,6 +20,9 @@ Common functionality to support testing in skbio.
    assert_ordination_results_equal
    assert_ordination_results_equal_np
    assert_data_frame_almost_equal
+   xp_assert_close
+   xp_assert_equal
+   generate_array_api_tests
 
 
 Plotting utilities
@@ -53,6 +56,7 @@ Decorators
    aliased
    register_aliases
    params_aliased
+   array_api_compatible
 
 
 Miscellaneous utilities
@@ -84,6 +88,9 @@ from ._testing import (
     assert_ordination_results_equal,
     assert_ordination_results_equal_np,
     assert_data_frame_almost_equal,
+    xp_assert_close,
+    xp_assert_equal,
+    generate_array_api_tests,
     pytestrunner,
 )
 from ._decorator import (
@@ -94,6 +101,7 @@ from ._decorator import (
     aliased,
     register_aliases,
     params_aliased,
+    array_api_compatible,
 )
 from ._optionals import get_package
 from ._plotting import PlottableMixin
@@ -117,4 +125,8 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
+    "array_api_compatible",
+    "xp_assert_close",
+    "xp_assert_equal",
+    "generate_array_api_tests",
 ]

@@ -85,6 +85,69 @@ def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
     return arr
 
 
+_BACKEND_CHECKERS = {
+    "numpy": aac.is_numpy_namespace,
+    "cupy": aac.is_cupy_namespace,
+    "torch": aac.is_torch_namespace,
+    "jax": aac.is_jax_namespace,
+    "dask": aac.is_dask_namespace,
+}
+
+
+def _get_namespace_from_args(args, kwargs):
+    """Return the array namespace if any argument is an array API object.
+
+    Parameters
+    ----------
+    args : tuple
+        Positional arguments.
+    kwargs : dict
+        Keyword arguments.
+
+    Returns
+    -------
+    namespace or None
+        ``array_api_compat.array_namespace(*arrays)`` for all detected array
+        API objects, or ``None`` if none were found.
+
+    """
+    arrays = [
+        obj for obj in list(args) + list(kwargs.values()) if aac.is_array_api_obj(obj)
+    ]
+    if not arrays:
+        return None
+    return aac.array_namespace(*arrays)
+
+
+def _check_array_api_backend(xp, backends, func_name):
+    """Raise TypeError if xp is not among the declared supported backends.
+
+    Parameters
+    ----------
+    xp : namespace
+        Array namespace to check.
+    backends : list of str
+        Allowed backend names (e.g. ``['numpy', 'torch']``).
+    func_name : str
+        Name of the calling function, used in the error message.
+
+    Raises
+    ------
+    TypeError
+        If ``xp`` is not a supported backend.
+
+    """
+    for name in backends:
+        checker = _BACKEND_CHECKERS.get(name)
+        if checker is not None and checker(xp):
+            return
+    supported = ", ".join(backends)
+    raise TypeError(
+        f"{func_name}() received an array from an unsupported backend. "
+        f"Supported backends are: {supported}."
+    )
+
+
 def ingest_array(
     *arrays: ArrayLike, to_numpy: bool = False
 ) -> tuple[ModuleType, StdArray | ArrayLike]:

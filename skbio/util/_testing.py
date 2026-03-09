@@ -18,6 +18,161 @@ import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 
 
+def xp_assert_close(actual, desired, rtol=1e-7, atol=0):
+    """Assert that two arrays are element-wise equal within a tolerance.
+
+    Converts both arrays to NumPy then delegates to
+    ``numpy.testing.assert_allclose``. Works for any array API backend.
+
+    Parameters
+    ----------
+    actual : array_like
+        Array obtained.
+    desired : array_like
+        Array desired.
+    rtol : float, optional
+        Relative tolerance. Default is 1e-7.
+    atol : float, optional
+        Absolute tolerance. Default is 0.
+
+    Raises
+    ------
+    AssertionError
+        If ``actual`` and ``desired`` are not equal within the tolerance.
+
+    """
+    npt.assert_allclose(np.asarray(actual), np.asarray(desired), rtol=rtol, atol=atol)
+
+
+def xp_assert_equal(actual, desired):
+    """Assert that two arrays are element-wise equal.
+
+    Converts both arrays to NumPy then delegates to
+    ``numpy.testing.assert_array_equal``. Works for any array API backend.
+
+    Parameters
+    ----------
+    actual : array_like
+        Array obtained.
+    desired : array_like
+        Array desired.
+
+    Raises
+    ------
+    AssertionError
+        If ``actual`` and ``desired`` are not equal.
+
+    """
+    npt.assert_array_equal(np.asarray(actual), np.asarray(desired))
+
+
+def get_array_api_test_backends(supported=None):
+    """Resolve test backends from environment variables.
+
+    Reads ``SKBIO_ARRAY_API_BACKEND`` (default: ``'numpy'``) and
+    ``SKBIO_DEVICE`` (default: ``None``).
+
+    Parameters
+    ----------
+    supported : list of str, optional
+        Backend names that the function under test supports.
+        Result is intersected with this list.
+
+    Returns
+    -------
+    dict
+        Maps backend name to ``(namespace, device_str)`` pairs.
+
+    """
+    from ._optionals import get_package
+
+    env_backend = os.environ.get("SKBIO_ARRAY_API_BACKEND", "numpy")
+    device = os.environ.get("SKBIO_DEVICE", None)
+
+    _available = {"numpy": np}
+    for name, mod in [
+        ("torch", "torch"),
+        ("jax", "jax.numpy"),
+        ("dask", "dask.array"),
+        ("cupy", "cupy"),
+    ]:
+        pkg = get_package(mod, raise_error=False)
+        if pkg is not None:
+            _available[name] = pkg
+
+    if env_backend == "all":
+        candidates = dict(_available)
+    elif env_backend in _available:
+        candidates = {env_backend: _available[env_backend]}
+    elif env_backend not in _available and env_backend != "numpy":
+        import warnings
+
+        warnings.warn(
+            f"Array API backend '{env_backend}' is not installed; "
+            "falling back to NumPy.",
+            stacklevel=2,
+        )
+        candidates = {"numpy": np}
+    else:
+        candidates = {"numpy": np}
+
+    if supported is not None:
+        candidates = {k: v for k, v in candidates.items() if k in supported}
+
+    return {name: (xp, device) for name, xp in candidates.items()}
+
+
+def generate_array_api_tests(mixin_cls, backends=None):
+    """Generate ``TestCase`` subclasses for each active array API backend.
+
+    Parameters
+    ----------
+    mixin_cls : class
+        Mixin defining test methods. Must **not** inherit from
+        ``unittest.TestCase``. Methods receive ``self.xp`` (namespace) and
+        ``self.device`` (device string or ``None``).
+    backends : list of str, optional
+        Restrict to this subset (e.g. from ``func._array_api_backends``).
+
+    Returns
+    -------
+    dict
+        Class-name -> ``TestCase`` subclass. Pass to ``globals().update()``.
+
+    Notes
+    -----
+    Usage::
+
+        class _TestClosureArrayAPIMixin:
+            def test_basic(self):
+                mat = self.xp.asarray([[2., 2., 6.]])
+                xp_assert_close(closure(mat), self.xp.asarray([[0.2, 0.2, 0.6]]))
+
+        globals().update(generate_array_api_tests(
+            _TestClosureArrayAPIMixin,
+            backends=closure._array_api_backends,
+        ))
+
+    By default (``SKBIO_ARRAY_API_BACKEND`` unset) only a ``_Numpy`` class is
+    generated. Set ``SKBIO_ARRAY_API_BACKEND=jax`` for a JAX-only run, or
+    ``SKBIO_ARRAY_API_BACKEND=all`` to generate one class per installed backend.
+
+    """
+    from unittest import TestCase
+
+    active = get_array_api_test_backends(supported=backends)
+    classes = {}
+    for name, (xp_mod, device) in active.items():
+        cls_name = f"{mixin_cls.__name__}_{name.capitalize()}"
+        cls = type(
+            cls_name,
+            (mixin_cls, TestCase),
+            {"xp": xp_mod, "xp_name": name, "device": device},
+        )
+        classes[cls_name] = cls
+    return classes
+
+
 class ReallyEqualMixin:
     """Use this for testing __eq__/__ne__.
 

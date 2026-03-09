@@ -890,5 +890,37 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.2857382286903922)
 
 
+from skbio.util import xp_assert_close, generate_array_api_tests
+
+
+class _TestClosureArrayAPIMixin:
+    """Array API tests for closure(). self.xp and self.device set per backend."""
+
+    def test_closure_basic(self):
+        mat = self.xp.asarray([[2.0, 2.0, 6.0], [4.0, 4.0, 2.0]])
+        result = closure(mat)
+        xp_assert_close(result, self.xp.asarray([[0.2, 0.2, 0.6], [0.4, 0.4, 0.2]]))
+
+    def test_closure_1d(self):
+        mat = self.xp.asarray([2.0, 2.0, 6.0])
+        result = closure(mat)
+        xp_assert_close(result, self.xp.asarray([0.2, 0.2, 0.6]))
+
+    def test_closure_preserves_namespace(self):
+        import array_api_compat as aac
+
+        mat = self.xp.asarray([[2.0, 2.0, 6.0]])
+        result = closure(mat)
+        self.assertIs(aac.array_namespace(result), aac.array_namespace(mat))
+
+
+globals().update(
+    generate_array_api_tests(
+        _TestClosureArrayAPIMixin,
+        backends=closure._array_api_backends,
+    )
+)
+
+
 if __name__ == "__main__":
     main()
