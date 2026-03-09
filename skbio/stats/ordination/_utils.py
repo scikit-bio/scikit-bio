@@ -224,7 +224,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
         is more efficient in terms of memory and computation.
 
     """
-    distance_matrix, xp = ingest_array(distance_matrix)
+    xp, distance_matrix = ingest_array(distance_matrix)
     if xp.__name__ == 'numpy': 
         if not distance_matrix.flags.c_contiguous:
             distance_matrix = np.asarray(distance_matrix, order="C")
