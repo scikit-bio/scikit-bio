@@ -2,6 +2,10 @@
 
 ## Version 0.7.3-dev
 
+### Features
+
+* Support sparse matrix representations within the tree-based diversity calculation framework ([#2414](https://github.com/scikit-bio/scikit-bio/pull/2414)).
+
 
 ## Version 0.7.2
 
