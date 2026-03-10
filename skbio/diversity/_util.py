@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import scipy.sparse as sp
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
@@ -161,13 +162,60 @@ def vectorize_counts_and_tree(counts, taxa, tree):
     """
     tree_index = tree.to_array(nan_length_value=0.0)
     taxa = np.asarray(taxa)
-    counts = np.atleast_2d(counts)
-    counts_by_node = _nodes_by_counts(counts, taxa, tree_index)
+    is_sparse = sp.issparse(counts)
+    if is_sparse:
+        if counts.ndim == 1:
+            counts = counts.reshape(1, -1)
+    else:
+        counts = np.atleast_2d(counts)
+    if is_sparse:
+        counts_by_node = _nodes_by_counts_sparse(counts, taxa, tree_index, tree)
+    else:
+        counts_by_node = _nodes_by_counts(counts, taxa, tree_index)
     branch_lengths = tree_index["length"]
 
     # branch_lengths is just a reference to the array inside of tree_index,
     # but it's used so much that it's convenient to just pull it out here.
     return counts_by_node.T, tree_index, branch_lengths
+
+
+def _nodes_by_counts_sparse(counts, taxa, tree_index, tree):
+    """Construct the count array using sparse operations.
+
+    Parameters
+    ----------
+    counts : scipy.sparse matrix of shape (n_samples, n_taxa)
+        Sparse counts/abundances of taxa in samples.
+    taxa : array_like of shape (n_taxa,)
+        Taxon IDs.
+    tree_index : dict
+        Indexed tree from tree.to_array().
+    tree : skbio.TreeNode
+        The tree.
+
+    Returns
+    -------
+    ndarray of shape (n_nodes, n_samples)
+        Total counts/abundances of taxa descending from individual nodes.
+    """
+    nodes = tree_index['name']
+    tip_to_index = {name: i for i, name in enumerate(nodes)}
+    rows, cols, data = [], [], []
+    for i, tax in enumerate(taxa):
+        if tax not in tip_to_index:
+            raise ValueError(f"Taxon '{tax}' not found in tree tips.")
+        tip_node = tree.find(tax)
+        path = [tree] + tree.path(tip_node) + [tip_node]
+        for node in path:
+            j = tip_to_index[node.name]
+            rows.append(i)
+            cols.append(j)
+            data.append(1.0)
+    n_taxa = len(taxa)
+    n_nodes = len(nodes)
+    P = sp.csr_matrix((data, (rows, cols)), shape=(n_taxa, n_nodes))
+    counts_by_node = counts @ P  # (n_samples, n_nodes)
+    return counts_by_node.T.toarray()  # (n_nodes, n_samples)
 
 
 def _get_phylogenetic_kwargs(kwargs, taxa):

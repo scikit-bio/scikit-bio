@@ -10,6 +10,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 import numpy.testing as npt
 
 from skbio import TreeNode
@@ -31,6 +32,12 @@ class VectorizeTests(TestCase):
             vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
+
+        # test with sparse matrix
+        counts_sparse = sp.csr_matrix(counts)
+        count_array_sparse, _, _ = vectorize_counts_and_tree(
+            counts_sparse, np.array(['a', 'b']), tree)
+        npt.assert_equal(count_array_sparse, exp_counts.T)
 
 
 class ValidationTests(TestCase):
