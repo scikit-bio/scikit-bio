@@ -17,6 +17,7 @@ from skbio.stats import subsample_counts
 from skbio.util._decorator import aliased
 
 from skbio.util._array import ingest_array
+from skbio.diversity._util import _validate_counts_vector
 
 if TYPE_CHECKING:
     from skbio.util._typing import ArrayLike, StdArray
@@ -52,6 +53,7 @@ def _validate_alpha(empty=None, cast_int=False):
         @functools.wraps(func)
         def wrapper(counts, *args, **kwargs):
             xp, counts = ingest_array(counts)
+            counts = _validate_counts_vector(counts, cast_int)
 
             if not xp.isdtype(counts.dtype, "numeric"):
                 raise TypeError("Input counts must have a numeric data type.")
@@ -60,13 +62,12 @@ def _validate_alpha(empty=None, cast_int=False):
             if xp.any(counts < 0):
                 raise ValueError("Input counts cannot have negative values.")
 
-            if counts.ndim != 1:
-                raise ValueError("Input counts must be 1-D.")
-
             if cast_int:
                 if not xp.isdtype(counts.dtype, "integral"):
                     counts = xp.astype(counts, xp.int64)
 
+             # drop zero values, as these represent taxa that are absent from
+             # the community
             counts = counts[counts != 0]
 
             if empty is not None and xp.size(counts) == 0:
