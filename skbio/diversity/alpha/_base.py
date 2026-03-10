@@ -55,10 +55,6 @@ def _validate_alpha(empty=None, cast_int=False):
             xp, counts = ingest_array(counts)
             counts = _validate_counts_vector(counts, cast_int)
 
-            if not xp.isdtype(counts.dtype, "numeric"):
-                raise TypeError("Input counts must have a numeric data type.")
-            if not xp.all(xp.isfinite(counts)):
-                raise ValueError("Input counts cannot have infinite or NaN values.")
             if xp.any(counts < 0):
                 raise ValueError("Input counts cannot have negative values.")
 
