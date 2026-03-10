@@ -311,8 +311,8 @@ def dirmult_ttest(
         # The final lower and upper bounds are the minimum and maximum of all lower
         # and upper bounds seen during sampling, respectively.
         lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
-        xp.minimum(lower, lower_, out = lower)
-        xp.maximum(upper, upper_, out = upper)
+        lower = xp.minimum(lower, lower_)
+        upper = xp.maximum(upper, upper_)
 
     # Normalize metrics to averages over all replicates.
     delta /= draws
@@ -640,7 +640,7 @@ def dirmult_lme(
     upper = xp.full(shape, -xp.inf)  # 97.5% CI
 
     # number of replicates (draws) LME fitting is successful for each feature
-    fitted = xp.zeros(n_feats, dtype=int)
+    fitted = xp.zeros(n_feats, dtype=xp.int64)
 
     fit_fail_msg = "LME fit failed for feature {} in replicate {}, outputting NaNs."
 

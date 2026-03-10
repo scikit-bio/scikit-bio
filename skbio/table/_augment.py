@@ -98,7 +98,7 @@ def _validate_labels(labels: NDArray, n: int) -> tuple[NDArray, NDArray]:
                 "Labels must be consecutive integers from 0 to n_classes - 1."
             )
 
-        labels_one_hot = xp.eye(n_classes, dtype=int)[labels]
+        labels_one_hot = xp.eye(n_classes, dtype=labels.dtype)[labels]
         return labels, labels_one_hot
 
     # input as one-hot encoded labels
@@ -129,7 +129,11 @@ def _normalize_matrix(matrix: NDArray) -> NDArray:
     """
     xp, matrix = ingest_array(matrix)
     row_sums = xp.sum(matrix, axis=1)
-    if xp.all(xp.isclose(row_sums, xp.asarray(1, dtype=matrix.dtype))):
+    ones = xp.ones(matrix.shape[0], dtype=matrix.dtype)
+    tol = xp.asarray(1e-8, dtype=xp.float64)
+    diff = xp.abs(xp.astype(row_sums, xp.float64) - xp.astype(ones, xp.float64))
+
+    if bool(xp.all(diff < tol)):
         return matrix
     return closure(matrix, axis=1)
 
@@ -148,8 +152,7 @@ def _all_pairs(n: int) -> NDArray:
         Pairs of sample indices.
 
     """
-    xp, _ = ingest_array()
-    return xp.stack(xp.triu_indices(n, k=1))
+    return np.column_stack(np.triu_indices(n, k=1))
 
 
 def _intra_class_pairs(labels: ArrayLike) -> NDArray:
@@ -168,12 +171,12 @@ def _intra_class_pairs(labels: ArrayLike) -> NDArray:
     """
     xp, labels = ingest_array(labels)
     pairs = []
-    for label in xp.unique(labels):
+    for label in xp.unique_values(labels):
         idx = xp.where(labels == label)[0]
         m = idx.shape[0]
         if m > 1:
             i, j = xp.triu_indices(idx.size, k=1)
-            pairs.append(xp.stack((idx[i], idx[j])))
+            pairs.append(xp.stack((idx[i], idx[j]), axis= 1))
     if pairs:
         return xp.concatenate(pairs)
     else:
