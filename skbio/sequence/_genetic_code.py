@@ -191,7 +191,8 @@ class GeneticCode(SkbioObject):
         * -2 (reverse)
         * -3 (reverse)
 
-        This property can be passed into ``GeneticCode.translate(reading_frame)``.
+        This property can be passed into
+        ``GeneticCode.translate(reading_frame)``.
 
         Returns
         -------
@@ -226,13 +227,15 @@ class GeneticCode(SkbioObject):
 
         if len(amino_acids) != self._num_codons:
             raise ValueError(
-                "`amino_acids` must be length %d, not %d"
-                % (self._num_codons, len(amino_acids))
+                "`amino_acids` must be length {}, not {}".format(
+                    self._num_codons, len(amino_acids)
+                )
             )
         indices = (amino_acids.values == b"M").nonzero()[0]
         if indices.size < 1:
             raise ValueError(
-                "`amino_acids` must contain at least one M (methionine) character"
+                "`amino_acids` must contain at least one M "
+                "(methionine) character"
             )
         self._amino_acids = amino_acids
         self._m_character_codon = self._index_to_codon(indices[0])
@@ -242,9 +245,12 @@ class GeneticCode(SkbioObject):
 
         if len(starts) != self._num_codons:
             raise ValueError(
-                "`starts` must be length %d, not %d" % (self._num_codons, len(starts))
+                "`starts` must be length {}, not {}".format(
+                    self._num_codons, len(starts)
+                )
             )
-        if (starts.values == b"M").sum() + (starts.values == b"-").sum() != len(starts):
+        if (starts.values == b"M").sum() + (starts.values == b"-").sum() \
+                != len(starts):
             # to prevent the user from accidentally swapping `starts` and
             # `amino_acids` and getting a translation back
             raise ValueError("`starts` may only contain M and - characters")
@@ -262,12 +268,14 @@ class GeneticCode(SkbioObject):
         if not hasattr(self, "_degenerate_amino_acids_table"):
             # 15x15x15 table for degenerate codons (UCAGRYMKWSBDHVN)
             table = np.empty((15, 15, 15), dtype="|S1")
-            
+
             # Map of degenerate char to definite chars
             deg_map = {
                 'U': 'U', 'C': 'C', 'A': 'A', 'G': 'G',
-                'R': 'AG', 'Y': 'CU', 'M': 'AC', 'K': 'UG', 'W': 'AU', 'S': 'GC',
-                'B': 'CGU', 'D': 'AGU', 'H': 'ACU', 'V': 'ACG', 'N': 'ACGU'
+                'R': 'AG', 'Y': 'CU', 'M': 'AC', 'K': 'UG',
+                'W': 'AU', 'S': 'GC',
+                'B': 'CGU', 'D': 'AGU', 'H': 'ACU', 'V': 'ACG',
+                'N': 'ACGU'
             }
             chars = "UCAGRYMKWSBDHVN"
             definite_chars = "UCAG"
@@ -291,8 +299,9 @@ class GeneticCode(SkbioObject):
                                 for r3 in deg_map[c3]:
                                     off3 = definite_offsets[r3]
                                     idx = off1 * 16 + off2 * 4 + off3
-                                    possible_aas.add(self._amino_acids.values[idx])
-                        
+                                    aa = self._amino_acids.values[idx]
+                                    possible_aas.add(aa)
+
                         if len(possible_aas) == 1:
                             table[i, j, k] = list(possible_aas)[0]
                         else:
@@ -301,14 +310,16 @@ class GeneticCode(SkbioObject):
                             if b'*' in possible_aas:
                                 table[i, j, k] = b'X'
                                 continue
-                            
-                            # All possible definite versions of this degenerate codon
-                            # must be covered by a single degenerate AA character
-                            aas_str = {aa.decode('ascii') for aa in possible_aas}
+
+                            # All possible definite versions of this codon
+                            # must be covered by a single degenerate AA
+                            aas_str = {aa.decode('ascii') for aa in
+                                       possible_aas}
                             found_deg = False
                             for deg_aa, definite_set in aa_deg_map.items():
                                 if aas_str.issubset(definite_set):
-                                    table[i, j, k] = deg_aa.encode('ascii')
+                                    aa_enc = deg_aa.encode('ascii')
+                                    table[i, j, k] = aa_enc
                                     found_deg = True
                                     break
                             if not found_deg:
@@ -452,7 +463,8 @@ class GeneticCode(SkbioObject):
         """
         return not (self == other)
 
-    def translate(self, sequence, reading_frame=1, start="ignore", stop="ignore"):
+    def translate(self, sequence, reading_frame=1, start="ignore",
+                  stop="ignore"):
         r"""Translate RNA sequence into protein sequence.
 
         Parameters
@@ -634,7 +646,9 @@ class GeneticCode(SkbioObject):
                 self._raise_require_error("start", reading_frame)
 
         # Use the degenerate translation table
-        translated = self._degenerate_amino_acids[data[:, 0], data[:, 1], data[:, 2]]
+        translated = self._degenerate_amino_acids[
+            data[:, 0], data[:, 1], data[:, 2]
+        ]
 
         if stop in {"require", "optional"}:
             stop_codon_indices = (translated == b"*").nonzero()[0]
@@ -653,7 +667,9 @@ class GeneticCode(SkbioObject):
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):
             raise TypeError(
-                "Sequence to translate must be RNA, not %s" % type(sequence).__name__
+                "Sequence to translate must be RNA, not {}".format(
+                    type(sequence).__name__
+                )
             )
 
         if reading_frame not in self.reading_frames:
@@ -842,7 +858,8 @@ _ncbi_genetic_codes = {
     4: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "--MM---------------M------------MMMM---------------M------------",
-        "Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/Spiroplasma",
+        "Mold, Protozoan, and Coelenterate Mitochondrial, "
+        "and Mycoplasma/Spiroplasma",
     ),
     5: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG",
