@@ -21,6 +21,7 @@ from skbio.stats.composition import (
     ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
+from skbio.util._testing import ArrayAPITestMixin, backends, xp_assert_close
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -890,36 +891,62 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.2857382286903922)
 
 
-from skbio.util import xp_assert_close, generate_array_api_tests
+class TestClosureArrayAPI(TestCase, ArrayAPITestMixin):
+    """Array API backend tests for closure()."""
 
-
-class _TestClosureArrayAPIMixin:
-    """Array API tests for closure(). self.xp and self.device set per backend."""
-
-    def test_closure_basic(self):
-        mat = self.xp.asarray([[2.0, 2.0, 6.0], [4.0, 4.0, 2.0]])
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_closure_basic(self, xp, device):
+        mat = self.make_array(xp, device, [[2.0, 2.0, 6.0], [4.0, 4.0, 2.0]])
         result = closure(mat)
-        xp_assert_close(result, self.xp.asarray([[0.2, 0.2, 0.6], [0.4, 0.4, 0.2]]))
+        expected = self.make_array(xp, device, [[0.2, 0.2, 0.6], [0.4, 0.4, 0.2]])
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
 
-    def test_closure_1d(self):
-        mat = self.xp.asarray([2.0, 2.0, 6.0])
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_closure_1d(self, xp, device):
+        mat = self.make_array(xp, device, [2.0, 2.0, 6.0])
         result = closure(mat)
-        xp_assert_close(result, self.xp.asarray([0.2, 0.2, 0.6]))
+        expected = self.make_array(xp, device, [0.2, 0.2, 0.6])
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
 
-    def test_closure_preserves_namespace(self):
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_closure_preserves_namespace(self, xp, device):
         import array_api_compat as aac
 
-        mat = self.xp.asarray([[2.0, 2.0, 6.0]])
+        mat = self.make_array(xp, device, [[2.0, 2.0, 6.0]])
         result = closure(mat)
         self.assertIs(aac.array_namespace(result), aac.array_namespace(mat))
 
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_closure_axis(self, xp, device):
+        mat = self.make_array(xp, device, np.random.rand(4, 6, 3) + 1e-4)
+        axis = 1
+        result = closure(mat, axis=axis)
 
-globals().update(
-    generate_array_api_tests(
-        _TestClosureArrayAPIMixin,
-        backends=closure._array_api_backends,
-    )
-)
+        # Reference: compute expected with numpy
+        data_np = np.asarray(mat) if xp is np else np.random.rand(4, 6, 3) + 1e-4
+        expected_np = data_np / np.sum(data_np, keepdims=True, axis=axis)
+        expected = self.make_array(xp, device, expected_np)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
+
+
+class TestCLRArrayAPI(TestCase, ArrayAPITestMixin):
+    """Array API backend tests for clr()."""
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_clr_basic(self, xp, device):
+        mat = self.make_array(xp, device, [[1.0, 2.0, 3.0, 4.0]])
+        result = clr(closure(mat))
+        self.assert_type_preserved(result, xp, device)
+
+        # Verify CLR property: each row sums to ~0
+        result_np = np.asarray(result) if xp is np else result
+        # (use xp_assert_close for the sum check)
+        row_sums = np.sum(np.asarray(result_np), axis=-1)
+        npt.assert_allclose(row_sums, 0.0, atol=1e-10)
 
 
 if __name__ == "__main__":
