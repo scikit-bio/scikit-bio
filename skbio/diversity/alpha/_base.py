@@ -9,8 +9,9 @@
 import functools
 
 import numpy as np
-from scipy.special import gammaln
+from scipy.special import gammaln as xp_gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
+from skbio.util._array import ingest_array
 
 from skbio.stats import subsample_counts
 from skbio.diversity._util import _validate_counts_vector
@@ -43,31 +44,26 @@ def _validate_alpha(empty=None, cast_int=False):
     Additional arguments may follow.
 
     """
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(counts, *args, **kwargs):
-            counts = _validate_counts_vector(counts, cast_int)
+            from skbio.util._array import ingest_array
+            xp, counts = ingest_array(counts)
 
-            # drop zero values, as these represent taxa that are absent from
-            # the community
-            if not (nonzero := counts != 0).all():
-                counts = counts[nonzero]
+            if 'xp' not in kwargs or kwargs['xp'] is None:
+                kwargs['xp'] = xp
 
-            # return a value if community is empty (after dropping zeros)
+            counts = _validate_counts_vector(counts, cast_int=cast_int)
+            counts = counts[counts > 0]
             if empty is not None and counts.size == 0:
                 return empty
 
-            # call function to calculate alpha diversity metric
             return func(counts, *args, **kwargs)
-
         return wrapper
-
     return decorator
 
-
 @_validate_alpha(empty=np.nan)
-def berger_parker_d(counts):
+def berger_parker_d(counts,xp=None):
     r"""Calculate Berger-Parker dominance index.
 
     Berger-Parker dominance index :math:`d` is defined as the fraction of the
@@ -101,11 +97,11 @@ def berger_parker_d(counts):
        foraminifera in deep-sea sediments. Science, 168(3937), 1345-1347.
 
     """
-    return counts.max() / counts.sum()
+    return xp.max(counts) / xp.sum(counts)
 
 
 @_validate_alpha(empty=np.nan)
-def brillouin_d(counts):
+def brillouin_d(counts,xp=None):
     r"""Calculate Brillouin's diversity index.
 
     Brillouin's diversity index (:math:`H_B`) is defined as:
@@ -138,11 +134,18 @@ def brillouin_d(counts):
        Press. New York.
 
     """
-    return (gammaln((N := counts.sum()) + 1) - gammaln(counts + 1).sum()) / N
+    n_total = xp.sum(counts)
+    if 'numpy' in xp.__name__:
+        from scipy.special import gammaln as xp_gammaln
+    else:
+        xp_gammaln = xp.special.gammaln
+
+    numerator = xp_gammaln(n_total + 1) - xp.sum(xp_gammaln(counts + 1))
+    return numerator / n_total
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts, finite=False):
+def dominance(counts, finite=False,xp=None):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -208,15 +211,18 @@ def dominance(counts, finite=False):
        688-688.
 
     """
+    n_total = xp.sum(counts)
     if finite:
-        D = (counts * (counts - 1)).sum() / ((N := counts.sum()) * (N - 1))
+        numerator = xp.sum(counts * (counts - 1))
+        denominator = n_total * (n_total - 1)
+        return numerator / denominator
     else:
-        D = ((counts / counts.sum()) ** 2).sum()
-    return D
+        proportions = counts / n_total
+        return xp.sum(proportions ** 2)
 
 
 @_validate_alpha()
-def doubles(counts):
+def doubles(counts,xp=None):
     """Calculate number of double-occurrence taxa (doubletons).
 
     Parameters
@@ -230,10 +236,10 @@ def doubles(counts):
         Doubleton count.
 
     """
-    return (counts == 2).sum()
+    return xp.sum(counts == 2)
 
 
-def enspie(counts, finite=False):
+def enspie(counts, finite=False,xp=None):
     r"""Calculate ENS_pie alpha diversity measure.
 
     The effective number of species (ENS) derived from Hurlbert's probability
@@ -280,11 +286,11 @@ def enspie(counts, finite=False):
        critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    return inv_simpson(counts, finite=finite)
+    return inv_simpson(counts, finite=finite, xp=xp)
 
 
 @_validate_alpha(empty=np.nan)
-def esty_ci(counts):
+def esty_ci(counts,xp=None):
     r"""Calculate Esty's confidence interval of Good's coverage estimator.
 
     Esty's confidence interval is defined as:
@@ -331,16 +337,19 @@ def esty_ci(counts):
        estimator of the coverage of a random sample". Ann Statist 11: 905-912.
 
     """
-    N = counts.sum()
-    f1 = (counts == 1).sum()
-    f2 = (counts == 2).sum()
+
+    N = xp.sum(counts)
+    f1 = xp.sum(counts == 1)
+    f2 = xp.sum(counts == 2)
     z = 1.959963985
     W = (f1 * (N - f1) + 2 * N * f2) / (N**3)
-    return f1 / N - z * np.sqrt(W), f1 / N + z * np.sqrt(W)
+    margin = z * xp.sqrt(W)
+    point_est = f1 / N
+    return point_est - margin, point_est + margin
 
 
 @_validate_alpha(empty=np.nan)
-def fisher_alpha(counts):
+def fisher_alpha(counts,xp=None):
     r"""Calculate Fisher's alpha, a metric of diversity.
 
     Fisher's alpha is estimated by solving the following equation for
@@ -390,17 +399,19 @@ def fisher_alpha(counts):
 
     """
     # alpha = +inf when all taxa are singletons
-    if (N := counts.sum()) == (S := counts.size):
+    N = xp.sum(counts)
+    S = counts.size
+    if N == S:
         return np.inf
 
     # objective function to minimize:
     # S = alpha * ln (1 + N / alpha), where alpha > 0
     def f(x):
-        return (x * np.log(1 + (N / x)) - S) ** 2 if x > 0 else np.inf
+        if x <= 0:
+            return np.inf
+        return float((x * xp.log(1 + (N / x)) - S) ** 2)
 
-    # minimize the function using the default method (Brent's algorithm)
-    with np.errstate(invalid="ignore"):
-        res = minimize_scalar(f)
+    res = minimize_scalar(f)
 
     # there is a chance optimization could fail
     if res.success is False:
@@ -410,7 +421,7 @@ def fisher_alpha(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def goods_coverage(counts):
+def goods_coverage(counts,xp=None):
     r"""Calculate Good's coverage estimator.
 
     Good's coverage estimator :math:`C`, a.k.a. Turing estimator or Good-
@@ -449,11 +460,13 @@ def goods_coverage(counts):
        estimation of population parameters. Biometrika, 40(3-4), 237-264.
 
     """
-    return 1 - ((counts == 1).sum() / counts.sum())
+    n_total = xp.sum(counts)
+    f1 = xp.sum(counts == 1)
+    return 1 - (f1 / n_total)
 
 
 @_validate_alpha()
-def heip_e(counts):
+def heip_e(counts,xp=None):
     r"""Calculate Heip's evenness measure.
 
     Heip's evenness is defined as:
@@ -492,15 +505,18 @@ def heip_e(counts):
        UK., 54, 555-557.
 
     """
-    if (S := counts.size) == 0:
+    s_size = counts.size
+    if s_size == 0:
         return np.nan
-    elif S == 1:
+    elif s_size == 1:
         return 1.0
-    return (shannon(counts, exp=True) - 1) / (S - 1)
+
+    h_exp = shannon(counts, base=np.e, xp=xp)
+    return (xp.exp(h_exp) - 1) / (s_size - 1)
 
 
 @_validate_alpha(empty=np.nan)
-def hill(counts, order=2):
+def hill(counts, order=2,xp=None):
     r"""Calculate Hill number.
 
     Hill number (:math:`^qD`) is a generalized measure of the effective number
@@ -563,17 +579,18 @@ def hill(counts, order=2):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    probs = counts / counts.sum()
+    probs = counts / xp.sum(counts)
     if order == 1:
-        return _perplexity(probs)
-    elif np.isposinf(order):
-        return 1 / probs.max()
+        return _perplexity(probs, xp=xp)
+    elif xp.isposinf(xp.asarray(order)):
+        return 1 / xp.max(probs)
     else:
-        return (probs**order).sum() ** (1 / (1 - order))
+        sum_pq = xp.sum(probs**order)
+        return sum_pq ** (1 / (1 - order))
 
 
 @_validate_alpha(empty=np.nan)
-def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
+def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75,xp=None):
     r"""Calculate Kempton-Taylor Q index of alpha diversity.
 
     Kempton-Taylor Q index measures diversity based on the middle-ranking taxa
@@ -632,13 +649,15 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     """
     S = counts.size
-    lower = int(np.ceil(S * lower_quantile))
+    lower = int(xp.ceil(S * lower_quantile))
     upper = int(S * upper_quantile)
-    sorted_counts = np.sort(counts)
-    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
+    sorted_counts = xp.sort(counts)
+    numerator = upper - lower
+    denominator = xp.log(sorted_counts[upper] / sorted_counts[lower])
+    return numerator / denominator
 
 
-def inv_simpson(counts, finite=False):
+def inv_simpson(counts, finite=False,xp=None):
     r"""Calculate inverse Simpson index.
 
     The inverse Simpson index (:math:`1 / D`), a.k.a., Simpson's reciprocal
@@ -680,11 +699,14 @@ def inv_simpson(counts, finite=False):
        688-688.
 
     """
-    return 1 / dominance(counts, finite=finite)
+    if xp is None:
+        from skbio.util._array import ingest_array
+        xp = ingest_array(counts)[0]
+    return 1 / dominance(counts, finite=finite, xp=xp)
 
 
 @_validate_alpha(empty=np.nan)
-def margalef(counts):
+def margalef(counts,xp=None):
     r"""Calculate Margalef's richness index.
 
     Margalef's richness index :math:`D` is defined as:
@@ -722,13 +744,13 @@ def margalef(counts):
        3, 36-71.
 
     """
-    if (N := counts.sum()) == 1:
+    n_total = xp.sum(counts)
+    if n_total == 1:
         return np.nan
-    return (counts.size - 1) / np.log(N)
-
+    return (counts.size - 1) / xp.log(n_total)
 
 @_validate_alpha(empty=np.nan)
-def mcintosh_d(counts):
+def mcintosh_d(counts,xp=None):
     r"""Calculate McIntosh dominance index.
 
     McIntosh dominance index :math:`D` is defined as:
@@ -771,14 +793,15 @@ def mcintosh_d(counts):
        certain concepts to diversity. Ecology 48, 1115-1126.
 
     """
-    if (N := counts.sum()) == 1:
+    n_total = xp.sum(counts)
+    if n_total == 1:
         return np.nan
-    u = np.sqrt((counts**2).sum())
-    return (N - u) / (N - np.sqrt(N))
+    u = xp.sqrt(xp.sum(counts**2))
+    return (n_total - u) / (n_total - xp.sqrt(n_total))
 
 
 @_validate_alpha(empty=np.nan)
-def mcintosh_e(counts):
+def mcintosh_e(counts,xp=None):
     r"""Calculate McIntosh's evenness measure.
 
     McIntosh's evenness measure :math:`E` is defined as:
@@ -816,14 +839,15 @@ def mcintosh_e(counts):
 
     """
     S = counts.size
-    N = counts.sum()
-    numerator = np.sqrt((counts * counts).sum())
-    denominator = np.sqrt((N - S + 1) ** 2 + S - 1)
+    N = xp.sum(counts)
+    numerator = xp.sqrt(xp.sum(counts * counts))
+    denominator = xp.sqrt((N - S + 1) ** 2 + S - 1)
+
     return numerator / denominator
 
 
 @_validate_alpha(empty=np.nan)
-def menhinick(counts):
+def menhinick(counts,xp=None):
     r"""Calculate Menhinick's richness index.
 
     Menhinick's richness index is defined as:
@@ -861,11 +885,12 @@ def menhinick(counts):
        76-77.
 
     """
-    return counts.size / np.sqrt(counts.sum())
+
+    return counts.size / xp.sqrt(xp.sum(counts))
 
 
 @_validate_alpha(empty=np.nan)
-def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
+def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,xp=None):
     r"""Calculate Michaelis-Menten fit to rarefaction curve of observed taxa.
 
     The Michaelis-Menten equation estimates the asymptote of the rarefaction
@@ -920,14 +945,15 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
        Michaelis-Menten equation. Biometrics 43, 793-803.
 
     """
-    n_indiv = counts.sum()
+
+    n_indiv = xp.sum(counts)
     if params_guess is None:
         S_max_guess = sobs(counts)
-        B_guess = int(round(n_indiv / 2))
+        # Cast n_indiv to float/int to avoid backend tensor errors in math
+        B_guess = int(round(float(n_indiv) / 2))
         params_guess = (S_max_guess, B_guess)
 
-    # observed # of taxa vs # of individuals sampled, S vs n
-    xvals = np.arange(1, n_indiv + 1)
+    xvals = np.arange(1, float(n_indiv) + 1)
     ymtx = np.empty((num_repeats, len(xvals)), dtype=int)
     for i in range(num_repeats):
         ymtx[i] = np.asarray(
@@ -935,17 +961,15 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None):
         )
     yvals = ymtx.mean(0)
 
-    # Vectors of actual vals y and number of individuals n.
     def errfn(p, n, y):
         return (((p[0] * n / (p[1] + n)) - y) ** 2).sum()
 
-    # Return S_max.
-    return fmin_powell(errfn, params_guess, ftol=1e-5, args=(xvals, yvals), disp=False)[
-        0
-    ]
+    return fmin_powell(
+        errfn, params_guess, ftol=1e-5, args=(xvals, yvals), disp=False
+    )[0]
 
 
-def observed_features(counts):
+def observed_features(counts,xp=None):
     """Calculate the number of distinct features.
 
     Parameters
@@ -967,11 +991,11 @@ def observed_features(counts):
     ``observed_features`` is an alias for ``sobs``.
 
     """
-    return sobs(counts)
+    return sobs(counts, xp=xp)
 
 
 @_validate_alpha()
-def osd(counts):
+def osd(counts,xp=None):
     """Calculate observed taxa, singletons, and doubletons.
 
     Parameters
@@ -996,11 +1020,11 @@ def osd(counts):
     on these three measures.
 
     """
-    return counts.size, (counts == 1).sum(), (counts == 2).sum()
+    return counts.size, xp.sum(counts == 1), xp.sum(counts == 2)
 
 
 @_validate_alpha()
-def pielou_e(counts, base=None):
+def pielou_e(counts, base=None,xp=None):
     r"""Calculate Pielou's evenness index.
 
     Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
@@ -1046,19 +1070,23 @@ def pielou_e(counts, base=None):
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
 
     """
-    if (S := counts.size) == 0:
+
+    S = counts.size
+    if S == 0:
         return np.nan
     elif S == 1:
         return 1.0
-    H = shannon(counts, base=base)
-    H_max = np.log(S)
+    H = shannon(counts, base=base, xp=xp)
+
+    H_max = xp.log(xp.asarray(S, dtype=xp.float64))
+
     if base is not None:
-        H_max /= np.log(base)
+        H_max /= xp.log(xp.asarray(base, dtype=xp.float64))
+
     return H / H_max
 
-
 @_validate_alpha()
-def renyi(counts, order=2, base=None):
+def renyi(counts, order=2, base=None,xp=None):
     r"""Calculate Renyi entropy.
 
     Renyi entropy (:math:`^qH`) is a generalization of Shannon index, with an
@@ -1114,32 +1142,34 @@ def renyi(counts, order=2, base=None):
        statistics (Vol. 4, pp. 547-562). University of California Press.
 
     """
-    if (S := counts.size) == 0:
+
+    S = counts.size
+    if S == 0:
         return np.nan
     elif S == 1:
         return 0.0
 
-    probs = counts / counts.sum()
+    probs = counts / xp.sum(counts)
 
     # max-entropy
     if order == 0:
-        qH = np.log(S)
+        qH = xp.log(xp.asarray(S, dtype=xp.float64))
     # Shannon entropy
     elif order == 1:
-        qH = _entropy(probs)
+        qH = _entropy(probs, xp=xp)
     # min-entropy
-    elif np.isposinf(order):
-        qH = -np.log(probs.max())
+    elif xp.isposinf(xp.asarray(order)):
+        qH = -xp.log(xp.max(probs))
     else:
-        qH = np.log((probs**order).sum()) / (1 - order)
+        qH = xp.log(xp.sum(probs**order)) / (1 - order)
 
     if base is not None:
-        qH /= np.log(base)
+        qH /= xp.log(xp.asarray(base, dtype=xp.float64))
+
     return qH
 
-
 @_validate_alpha(empty=np.nan)
-def robbins(counts):
+def robbins(counts,xp=None):
     r"""Calculate Robbins' estimator for probability of unobserved outcomes.
 
     Robbins' estimator is defined as:
@@ -1179,21 +1209,28 @@ def robbins(counts):
        256-257.
 
     """
-    return (counts == 1).sum() / counts.sum()
+
+    return xp.sum(counts == 1) / xp.sum(counts)
 
 
-def _entropy(probs):
+def _entropy(probs,xp=None):
     """Calculate entropy."""
-    return (-probs * np.log(probs)).sum()
+    if xp is None:
+        xp = get_array_module(probs)
+
+    return xp.sum(-probs * xp.log(probs))
 
 
-def _perplexity(probs):
+def _perplexity(probs,xp=None):
     """Calculate perplexity."""
-    return (probs**-probs).prod()
+    if xp is None:
+        xp = get_array_module(probs)
+
+    return xp.prod(probs**-probs)
 
 
 @_validate_alpha(empty=np.nan)
-def shannon(counts, base=None, exp=False):
+def shannon(counts, base=None, exp=False,xp=None):
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
@@ -1254,21 +1291,22 @@ def shannon(counts, base=None, exp=False):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    probs = counts / counts.sum()
+
+    probs = counts / xp.sum(counts)
 
     # perplexity
     if exp is True:
-        return _perplexity(probs)
+        return _perplexity(probs, xp=xp)
 
     # entropy
     else:
-        H = _entropy(probs)
+        H = _entropy(probs, xp=xp)
         if base is not None:
-            H /= np.log(base)
+            H /= xp.log(xp.asarray(base, dtype=xp.float64))
         return H
 
 
-def simpson(counts, finite=False):
+def simpson(counts, finite=False,xp=None):
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
@@ -1319,10 +1357,10 @@ def simpson(counts, finite=False):
        critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    return 1 - dominance(counts, finite=finite)
+    return 1 - dominance(counts, finite=finite, xp=xp)
 
 
-def simpson_d(counts, finite=False):
+def simpson_d(counts, finite=False,xp=None):
     """Calculate Simpson's dominance index, a.k.a. Simpson's D.
 
     Parameters
@@ -1348,11 +1386,11 @@ def simpson_d(counts, finite=False):
     ``simpson_d`` is an alias for ``dominance``.
 
     """
-    return dominance(counts, finite=finite)
+    return dominance(counts, finite=finite, xp=xp)
 
 
 @_validate_alpha(empty=np.nan)
-def simpson_e(counts):
+def simpson_e(counts,xp=None):
     r"""Calculate Simpson's evenness index.
 
     Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as:
@@ -1402,11 +1440,11 @@ def simpson_e(counts):
     # S + 1 is the maximum possible finite D given S. Otherwise, the result can
     # be greater than 1 for small samples. However, I didn't find literature
     # stating this. Therefore, the `finite` parameter is not used here.
-    return 1 / (counts.size * dominance(counts))
+    return 1 / (counts.size * dominance(counts, xp=xp))
 
 
 @_validate_alpha()
-def singles(counts):
+def singles(counts,xp=None):
     """Calculate number of single-occurrence taxa (singletons).
 
     Parameters
@@ -1420,12 +1458,13 @@ def singles(counts):
         Singleton count.
 
     """
-    return (counts == 1).sum()
+
+    return xp.sum(counts == 1)
 
 
 @aliased("observed_otus", "0.6.0", True)
 @_validate_alpha()
-def sobs(counts):
+def sobs(counts,xp=None):
     """Calculate the observed species richness of a sample.
 
     Observed species richness, usually denoted as :math:`S_{obs}` or simply
@@ -1455,7 +1494,7 @@ def sobs(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def strong(counts):
+def strong(counts,xp=None):
     r"""Calculate Strong's dominance index.
 
     Strong's dominance index (:math:`D_w`) is defined as
@@ -1491,14 +1530,15 @@ def strong(counts):
        and between plant communities. Community Ecology, 3, 237-246.
 
     """
+
     S = counts.size
-    sorted_sum = np.sort(counts)[::-1].cumsum()
-    i = np.arange(1, S + 1)
-    return (sorted_sum / counts.sum() - (i / S)).max()
+    sorted_sum = xp.cumsum(xp.sort(counts)[::-1])
+    i = xp.arange(1, S + 1, dtype=xp.float64)
+    return xp.max((sorted_sum / xp.sum(counts)) - (i / S))
 
 
 @_validate_alpha()
-def tsallis(counts, order=2):
+def tsallis(counts, order=2,xp=None ):
     r"""Calculate Tsallis entropy.
 
     Tsallis entropy (:math:`^qH`), a.k.a. HCDT entropy, is a generalization of
@@ -1547,14 +1587,17 @@ def tsallis(counts, order=2):
        statistics. Journal of statistical physics, 52, 479-487.
 
     """
-    if (S := counts.size) == 0:
+
+    S = counts.size
+    if S == 0:
         return np.nan
     elif S == 1:
         return 0.0
-    probs = counts / counts.sum()
+
+    probs = counts / xp.sum(counts)
     if order == 1:
-        return _entropy(probs)
-    elif np.isposinf(order):
+        return _entropy(probs, xp=xp)
+    elif xp.isposinf(xp.asarray(order)):
         return 0.0
     else:
-        return (1 - (probs**order).sum()) / (order - 1)
+        return (1 - xp.sum(probs**order)) / (order - 1)
