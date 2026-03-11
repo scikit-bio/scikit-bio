@@ -22,7 +22,6 @@ Common functionality to support testing in skbio.
    assert_data_frame_almost_equal
    xp_assert_close
    xp_assert_equal
-   generate_array_api_tests
 
 
 Plotting utilities
@@ -90,7 +89,8 @@ from ._testing import (
     assert_data_frame_almost_equal,
     xp_assert_close,
     xp_assert_equal,
-    generate_array_api_tests,
+    backends,
+    ArrayAPITestMixin,
     pytestrunner,
 )
 from ._decorator import (
@@ -128,5 +128,6 @@ __all__ = [
     "array_api_compatible",
     "xp_assert_close",
     "xp_assert_equal",
-    "generate_array_api_tests",
+    "backends",
+    "ArrayAPITestMixin",
 ]
