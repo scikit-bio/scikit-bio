@@ -58,6 +58,8 @@ def _validate_alpha(empty=None, cast_int=False):
             if xp.any(counts < 0):
                 raise ValueError("Input counts cannot have negative values.")
 
+            # this check ensure counts are integer-typed when cast_int
+            # is requested
             if cast_int:
                 if not xp.isdtype(counts.dtype, "integral"):
                     counts = xp.astype(counts, xp.int64)
@@ -1199,7 +1201,10 @@ def _entropy(probs):
        Handles zeros safely: 0 * log(0) is defined as 0 in information theory.
     """
     xp, probs = ingest_array(probs)
+    # creates mask to identify where probs is greater than 0
     mask = probs > 0
+    # replaces probs with 1 where probs is not greater than 0
+    # to avoid issues with zero probabilities
     probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
     return -xp.sum(xp.where(mask, probs * xp.log(probs_safe),
                             xp.asarray(0.0, dtype=probs.dtype)))
@@ -1210,7 +1215,10 @@ def _perplexity(probs):
        Handles zeros safely: 0^(-0) = 1 by convention.
     """
     xp, probs = ingest_array(probs)
+    #creates mask to identify where probs is greater than 0
     mask = probs > 0
+    # replaces probs with 1 where probs is not greater than 0
+    # to avoid issues with zero probabilities
     probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
     return xp.prod(xp.where(mask, probs_safe**(-probs_safe),
                             xp.asarray(1.0, dtype=probs.dtype)))
