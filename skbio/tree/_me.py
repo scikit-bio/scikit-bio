@@ -859,7 +859,7 @@ def _bme(dm, parallel=500, factor=10):
 
     # segment index at the beginning of each chunk
     chusegs = np.empty(N, dtype=int)
-    chusegs[0] = 1
+    chusegs[0] = 0
 
     args3 = (ancs, ancx, segs, lvls)
 
@@ -881,6 +881,7 @@ def _bme(dm, parallel=500, factor=10):
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
         _bal_update_spine(tag, deep, sizes, pairs, ancs)
+        lvls[deep] = -1  # do this for target clade
 
         # Update balanced average distance matrix through parallelization.
         _bal_avgdist_nest(
@@ -923,6 +924,7 @@ def _bme(dm, parallel=500, factor=10):
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
         )
         _bal_update_spine(tag, deep, sizes, pairs, ancs)
+        lvls[deep] = -1
 
         # Update balanced average distance matrix through parallelization (both flat
         # and nested).

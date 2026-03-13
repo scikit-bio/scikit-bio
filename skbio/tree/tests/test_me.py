@@ -1598,7 +1598,7 @@ class MeTests(TestCase):
         # chunk 3: nodes 9..17: ops = 2 + 0 + 0 + 2 + 0 + 0 + 2 + 0 + 0 = 6
         # chunk 4: node 18: ops = 2 (remaining nodes; chunk not filled)
         npt.assert_array_equal(chunks[:obs + 1], [0, 2, 4, 9, 18, 19])
-        npt.assert_array_equal(chusegs[:obs], [1, 2, 2, 4, 6])
+        npt.assert_array_equal(chusegs[:obs], [1, 2, 2, 4, 5])
 
     def test_ols_lengths(self):
         """Calculate tree branch lengths using an OLS framework."""

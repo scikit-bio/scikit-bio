@@ -2029,7 +2029,7 @@ def _bal_avgdist_chunk(
 
     ### Initialization: Create the first chunk, and put the first node (root) in it.
     # chunks[0] = 0                # current chunk index (done already)
-    # chusegs[0] = 1               # next segment index of current chunk (done)
+    # chusegs[0] = 0               # segment index when current chunk starts (done)
     cdef Py_ssize_t i = 1          # current node index
     cdef Py_ssize_t nchu = 1       # current number of chunks
     cdef Py_ssize_t iseg = 1       # next segment index
@@ -2055,10 +2055,6 @@ def _bal_avgdist_chunk(
             else:
                 node_ops = size + lvl - 1
                 tree_ops = pairs[node] + size * lvl
-
-            # move to next segment
-            iseg += 1
-            seg = segs[iseg]
 
         # regular scenario (same as right cousin)
         else:
@@ -2102,10 +2098,11 @@ def _bal_avgdist_chunk(
         # the `bisect` module or code from scratch. However, it is anticipated that the
         # next segment is relatively close to the current node. So this optimization
         # may not be necessary.
+        # TODO: Revisit later.
         while seg < i:
-            lvl = lvls[iseg]
             iseg += 1
             seg = segs[iseg]
+        lvl = lvls[iseg - 1]
 
     chunks[nchu] = n  # upper bound of last chunk
     return nchu
@@ -2253,9 +2250,6 @@ def _bal_avgdist_nest(
     cdef floating* adm_a
     cdef floating* npots_2 = &npots[2]
 
-    # do this for target clade
-    lvls[deep] = -1
-
     # number of branches from insertion point to shared ancestor
     cdef Py_ssize_t lvl
 
@@ -2265,7 +2259,7 @@ def _bal_avgdist_nest(
     for ichu in prange(nchu, nogil=True, schedule="dynamic"):
         iseg = chusegs[ichu]  # next segment index
         seg = segs[iseg]
-        lvl = lvls[iseg - 1]  # current segment's level
+        lvl = lvls[iseg - 1] if iseg else -1  # current segment's level
         deg = 2 * lvl - dep2
 
         for i in range(chunks[ichu], chunks[ichu + 1]):
