@@ -578,7 +578,6 @@ def _pdist(seqs, mask, seqtype):
 
     """
     npos = seqs.shape[1]
-    masked = mask is not None
 
     def func1(seqs, i, out):
         # identify differing sites (substitutions)

@@ -6,17 +6,119 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+r"""Minimum evolution phylogenetic methods.
+
+This submodule implements four algorithms for distance-based phylogenetic inference and
+refinement under the minimum evolution (ME) criterion. They were originally introduced
+in:
+
+    Desper, R., & Gascuel, O. (2002). Fast and accurate phylogeny reconstruction
+    algorithms based on the minimum-evolution principle. J Comput Biol, 9(5), 687-705.
+
+The four algorithms are (named following the original publication):
+
+    De novo reconstruction of phylogenetic trees using an agglomerative clustering
+    strategy that iteratively inserts new taxa into a growing tree:
+
+    1. GME: Greedy minimum evolution (using an OLS framework).
+    2. BME: Balanced minimum evolution (using a balanced framework).
+
+    Rearrangement of existing phylogenetic trees using the nearest neighbor interchange
+    (NNI) strategy that iteratively swaps branches to improve optimality:
+
+    3. FastNNI: using an OLS framework.
+    4. BNNI: using a balanced framework.
+
+***
+
+These four algorithms share the same mathematical foundations with the algorithms
+provided by the FastME package:
+
+    1. GME: `-m O -w O`
+    2. BME: `-m B -w B`
+    3. GME with FastNNI: `-m O -w O -n O`
+    4. BME with BNNI: `-m B -w B -n B`
+
+The algorithms implemented here were designed from scratch based on the original paper.
+Multiple optimization strategies were incorporated to make them efficient.
+
+***
+
+Specifically, these algorithms use a flattened, incrementally maintained array data
+structure to represent the tree topology.
+
+In this 2-D array, rows represent nodes in the order of insertion into the tree,
+with the root placed at row 0. There are four columns:
+
+    0. Left child index, or 0 if a tip.
+    1. Right child index, or taxon index if a tip.
+    2. Parent index, or 0 if root.
+    3. Sibling index, or 0 if root.
+
+For example, a tree with four taxa: a, b, c and d is like:
+
+      a
+     / \
+    b   x
+       / \
+      c   d
+
+This tree can be represented by the following 2-D array:
+
+    [[1, 2, 0, 0],  # a (root)
+     [0, 1, 0, 2],  # b (tip)
+     [3, 4, 0, 1],  # x (internal)
+     [0, 2, 2, 4],  # c (tip)
+     [0, 3, 2, 3]]  # d (tip)
+
+In the agglomerative clustering methods, newly inserted taxa are appended to the end of
+the tree array, therefore existing nodes except for the connection do not need to be
+updated. In the rearrangement methods, all nodes stay still and only connections are
+updated.
+
+The average distances between nodes are stored in a matrix with the same order of node
+indices as in the tree array. Locating distances is via indexing and is efficient.
+
+***
+
+A separate 1-D array stores node indices visited through a preorder traversal:
+
+    [0, 1, 2, 3, 4]
+
+In this example, the preorder is identical to the insertion order. But they can be
+different in real calculation.
+
+When a new taxon is inserted into the tree, or two existing branches are swapped, the
+preorder array needs to be updated to reflect the change, and this operation is O(n).
+
+The preorder array permits convenient location of all nodes within a clade, without
+the need to traverse it. Therefore, it enables parallelization of per-node calculations
+in addition to enhanced memory locality.
+
+With the preorder array, one can easily look up the original node given its index.
+However, the opposite is not possible. The tree building algorithms were designed not
+to rely on the reverse lookup, whereas the tree rearrangement algorithms separately
+maintains a reverse lookup table.
+
+Meanwhile, postorder traversal is not involved in these algorithms. The original paper
+used postorder in multiple situations. This is replaced with reverse preorder in the
+algorithms here, as both orders suffice the parent-after-children pattern, which is all
+the algorithms need. Therefore, maintaining a single preorder array is sufficient for
+both top-down and bottom-up traversal.
+
+"""
+
 from heapq import heapify, heappop
 
 import numpy as np
 
 from skbio.tree import TreeNode
 from ._c_me import (
-    _preorder,
-    _postorder,
     _insert_taxon,
     _avgdist_taxon,
+    _avgdist_taxon_c,
     _bal_avgdist_taxon,
+    _bal_avgdist_taxon_c,
     _avgdist_d2_insert,
     _bal_avgdist_insert,
     _ols_lengths,
@@ -24,6 +126,7 @@ from ._c_me import (
     _bal_lengths,
     _ols_min_branch_d2,
     _bal_min_branch,
+    _bal_min_branch_p,
     _avgdist_matrix,
     _bal_avgdist_matrix,
     _avgdist_swap,
@@ -31,7 +134,16 @@ from ._c_me import (
     _ols_all_swaps,
     _ols_corner_swaps,
     _bal_all_swaps,
-    _bal_avgdist_insert_p,
+    _get_num_threads,
+    _bal_avgdist_chunk,
+    _bal_update_spine,
+    _bal_insert_plan,
+    _bal_avgdist_flat,
+    _bal_avgdist_nest,
+    _calc_tacts,
+    _calc_sizes,
+    _calc_pairs,
+    _calc_deeps,
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
@@ -164,6 +276,10 @@ def bme(dm, neg_as_zero=True, **kwargs):
 
     .. versionadded:: 0.6.3
 
+    .. versionchanged:: 0.7.3
+        Computational efficiency significantly improved. This is partly due to enabling
+        parallelization by default.
+
     Parameters
     ----------
     dm : skbio.DistanceMatrix
@@ -200,11 +316,6 @@ def bme(dm, neg_as_zero=True, **kwargs):
     implemented in :func:`nni` (with ``balanced=True``).
 
     The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
-
-    .. note::
-        Experimental feature: Add ``parallel=True`` will enable parallelization,
-        which may increase the performance of the algorithm. This feature may not
-        be stable and may be modified without notice in the future.
 
     References
     ----------
@@ -386,14 +497,20 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     # generate tree array
     taxa = dm.ids
-    tree, preodr, postodr = _root_from_treenode(tree, taxa)
+    tree = _root_from_treenode(tree, taxa)
+    order = np.arange(tree.shape[0], dtype=int)
 
     # allocate lengths
     lens = np.empty(len(tree), dtype=dm.dtype)
 
+    # matrix data
+    # NOTE: current code assumes matrix is C-contiguous for efficient access (unlike
+    # `gme` and `bme`, which don't). This can be patch later to increase flexibility.
+    data = np.ascontiguousarray(dm.data)
+
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
-    func(dm.data, tree, preodr, postodr, lens)
+    func(data, tree, order, lens)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -449,7 +566,7 @@ def _gme(dm):
     ---
 
     This implementation uses an array-based tree structure to improve efficiency. See
-    :func:`_check_tree` for details of this structure. Basically, the root node (taxon
+    top of this file for details of this structure. Basically, the root node (taxon
     0) is omitted, making the tree strictly binary. Instead, the unique descendant (x)
     is now treated as the root and marked with taxon 0:
 
@@ -477,55 +594,81 @@ def _gme(dm):
     """
     dtype = dm.dtype
 
-    # number of taxa
+    # faster processing for C-contiguous data
+    adk_func = _avgdist_taxon_c if dm.flags["C_CONTIGUOUS"] else _avgdist_taxon
+
+    # number of taxa in the input distance matrix
     m = dm.shape[0]
 
-    # number of nodes in the final tree
+    # number of nodes in the final tree (note: taxon 0 is at root)
     n = 2 * m - 3
 
-    # Pre-allocate memory spaces:
-    # tree structure
-    tree, preodr, postodr = _allocate_tree(n)
+    # tree topology
+    tree = np.empty((n, 4), dtype=int)
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
+
+    # node indices in preorder
+    order = np.empty(n, dtype=int)
+    order[:3] = [0, 1, 2]
+
+    # number of taxa (i.e., tips) descending from each node (=1 if a tip).
+    # NOTE: "tact" is an abbr for "taxon count".
+    tacts = np.full(n, -1, dtype=int)
+    tacts[:3] = [2, 1, 1]
 
     # average distances between distant-2 subtrees
-    ad2 = np.empty((n, 2), dtype=dtype)
+    ad2 = np.empty((2, n), dtype=dtype)
+    ad2[1, 1] = dm[0, 1]
+    ad2[1, 2] = dm[0, 2]
+    ad2[0, 1] = ad2[0, 2] = dm[1, 2]
+    ad2[1, 0] = ad2[0, 0] = 0
 
     # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=dtype)
+    adk = np.empty((2, n), dtype=dtype)
 
     # branch lengths or length changes
     lens = np.empty((n,), dtype=dtype)
-
-    # Initialize 3-taxon tree.
-    _init_tree(dm, tree, preodr, postodr, ad2, matrix=False)
+    lens[0] = 0
 
     # Iteratively add taxa to the tree.
     for k in range(3, m):
         # Calculate average distances from new taxon to existing subtrees.
-        _avgdist_taxon(adk, k, dm, tree, preodr, postodr)
+        adk_func(adk, k, dm, tree, order, tacts)
 
         # Find a branch with minimum length change.
-        target = _ols_min_branch_d2(lens, ad2, adk, tree, preodr)
+        itag = _ols_min_branch_d2(lens, ad2, adk, tree, order, tacts)
+        size = tacts[order[itag]] * 2 - 1
 
         # Update average distances between distant-2 subtrees.
-        _avgdist_d2_insert(ad2, target, adk, tree, preodr)
+        _avgdist_d2_insert(ad2, itag, adk, tree, order, tacts)
 
         # Insert new taxon into tree.
-        _insert_taxon(k, target, tree, preodr, postodr, use_depth=False)
+        _insert_taxon(k, itag, size, tree, order)
 
     # Calculate branch lengths using an OLS framework.
-    _ols_lengths_d2(lens, ad2, tree)
+    _ols_lengths_d2(lens, ad2, tree, tacts)
 
     return tree, lens
 
 
-def _bme(dm, parallel=False):
+def _bme(dm, parallel=500, factor=10):
     r"""Perform balanced minimum evolution (BME) for phylogenetic reconstruction.
 
     Parameters
     ----------
     dm : ndarray of float of shape (m, m)
         Input distance matrix containing distances between taxa.
+    parallel : bool or int
+        Whether to parallelize (bool) and since how many taxa in the tree to start
+        parallelization (int, default: 500).
+    factor : int
+        During parallelization, the program will try to partition the tree into chunks
+        of available thread count multiplied by this number. Default is 10, a number
+        empirically determined.
 
     Returns
     -------
@@ -544,58 +687,261 @@ def _bme(dm, parallel=False):
     on subtree sizes, which is simpler and more efficient than GME in individual
     calculations (but this cannot compensate for the former).
 
+    ***
+
+    This function utilizes parallelization. It is only worth to parallelize when the
+    tree has grown beyond certain size. Therefore, this function implements a three-
+    phase process:
+
     """
     dtype = dm.dtype
-    func = _bal_avgdist_insert_p if parallel else _bal_avgdist_insert
+
+    # faster processing for C-contiguous data
+    adk_func = _bal_avgdist_taxon_c if dm.flags["C_CONTIGUOUS"] else _bal_avgdist_taxon
 
     # numbers of taxa and nodes in the tree
     m = dm.shape[0]
-    n = 2 * m - 3
+    N = 2 * m - 3
 
-    # Pre-allocate memory spaces:
-    # tree structure
-    tree, preodr, postodr = _allocate_tree(n)
+    ### Determine parallelization plan. ###
+
+    # To disable parallelization, set parallel=False or 0
+    # To maximize the range of parallelization, set parallel=3
+
+    # The iteration is divided into three phases:
+    # - Phase 1: Serial.
+    # - Phase 2: Parallelize the update of average distance between pairs of subtrees,
+    #   which requires nested iterations. These calculations are between O(nlog(n))
+    #   and O(n^2), and therefore the dominant part of the algorith.
+    #   * If we assume a Yule process, the expected number of ancestor-descendant pairs
+    #     is approximately 4n * ln(n), which is close to the number of calculations.
+    # - Phase 3: Also parallelize flat iterations over all nodes (O(n)). These steps
+    #   are not dominant but still cost non-negligible time.
+
+    # The parameter `parallel` defines the threshold of current number of taxa (i.e.,
+    # tips) in the tree that triggers parallelization (entering phase 2). The threshold
+    # of entering phase 3 is 2n * ln(n) (derived from above).
+
+    # The default setting parallel=500 translates into: Enter phase 2 when the tree
+    # has grown to 500 taxa (999 nodes). Enter phase 3 when tree has 6,215 taxa.
+
+    # Number of threads available to OpenMP.
+    threads = _get_num_threads()
+
+    # Crossover point between serial and parallel phases. When the tree has grown to
+    # this number of taxa, parallelization becomes worth and is performed afterwards.
+
+    # never parallelize
+    if threads <= 1 or not parallel:
+        nest_th = flat_th = m
+
+    # parallelize beyond this taxon count
+    else:
+        nest_th = max(3, parallel)  # algorithm starts with 3 taxa
+        flat_th = 2 * nest_th * int(np.log(nest_th))  # calculate 2nd threshold
+        nest_th = min(nest_th, m)  # cap by target tree size
+        flat_th = min(flat_th, m)
+
+    ### Allocate array space and initiate a 3-taxon tree. ###
+
+    # tree topology (left, right, parent, sibling)
+    tree = np.empty((N, 4), dtype=int)
+    tree[:3] = [
+        [1, 2, 0, 0],  # 0: root
+        [0, 1, 0, 2],  # 1: left child
+        [0, 2, 0, 1],  # 2: right child
+    ]
+
+    # node indices in preorder
+    order = np.empty(N, dtype=int)
+    order[:3] = [0, 1, 2]
+
+    # number of nodes (tips and internal, incl. root) within each clade (i.e., size)
+    sizes = np.empty(N, dtype=int)
+    sizes[:3] = [3, 1, 1]
+
+    # number of branches from each node to root (i.e., depth) (named as `deeps` to be
+    # equal to other attributes in length)
+    deeps = np.empty(N, dtype=int)
+    deeps[:3] = [0, 1, 1]
 
     # average distances between all subtrees
     # (This is the dominant factor in BME, and what makes it more expensive than GME.)
-    adm = np.empty((n, n), dtype=dtype)
+    adm = np.empty((N, N), dtype=dtype)
+    adm[0, 1] = adm[1, 0] = dm[0, 1]
+    adm[0, 2] = adm[2, 0] = dm[0, 2]
+    adm[1, 2] = adm[2, 1] = dm[1, 2]
 
-    # average distances from a taxon to each subtree
-    adk = np.empty((n, 2), dtype=dtype)
+    # average distances from an added taxon (k) to each subtree (lower and upper).
+    adk = np.empty((2, N), dtype=dtype)
 
-    # branch lengths or length changes
-    lens = np.empty((n,), dtype=dtype)
+    # Branch lengths or length changes. The latter is relative to the root (i.e., start
+    # of preorder traversal). Therefore the first element is always zero.
+    lens = np.empty(N, dtype=dtype)
+    lens[0] = 0.0
 
-    # a stack for traversal operations
-    stack = np.empty((n,), dtype=int)
+    # intermediate
+    diffs = np.empty(N, dtype=dtype)
 
-    # initialize 3-taxon tree
-    _init_tree(dm, tree, preodr, postodr, adm, matrix=True)
+    # ancestors of target (nodes from its parent to root in ascending order)
+    ancs = np.empty(N, dtype=int)
 
-    # Pre-calculate negative powers of 2.
-    powers = np.ldexp(dtype.type(1.0), -np.arange(m))
+    # pointers to rows in `adm` representing individual ancestors
+    ancx = np.empty(N, dtype=int)
 
-    # Iteratively add taxa to the tree.
-    for k in range(3, m):
+    # Pre-calculate negative powers of 2 for quick lookup.
+    # NOTE: The maximum number of branches connecting any two nodes (i.e., diameter) is
+    # m (when tree is extremely skewed). Therefore m powers are sufficient.
+    # NOTE: This method appears to be faster than calling the C function `ldexp` each
+    # time. When m is large, the array may exceed cache size. However, the range of
+    # powers that are actually used is often closer to log2(m) (balanced tree) than to
+    # m (skewed tree). So lookup is often efficient.
+    # NOTE: When l >= certain threshold, 2^(-l) effectively becomes 0 in floating-point
+    # arithmetics. This threshold is 150 for float32 and 1075 for float64. So the array
+    # has a large proportion of zeros at the right end.
+    # NOTE: A potential optimization is to skip all calculations when path length goes
+    # beyond the above thresholds. However, in a binary tree the max. path length is at
+    # the logarithmic scale (more precisely, height ~= 4.31107 ln(n), according to
+    # Devroye et al. Bull Math Biol. 2025). So path lengths in a tree of 100k taxa are
+    # usually below 100, making this optimization unnecessary.
+    npots = np.ldexp(dtype.type(1.0), -np.arange(m))
+
+    ### Phase 1: Serial ###
+
+    # group arguments to make it easier to write
+    args1 = (adm, adk, tree)
+    args2 = (order, sizes, deeps)
+
+    # current number of nodes in the tree (n = 2 * k - 3)
+    n = 3
+
+    for k in range(3, nest_th):
         # Calculate balanced average distances from new taxon to existing subtrees.
-        _bal_avgdist_taxon(adk, k, dm, tree, preodr, postodr)
+        adk_func(n, k, dm, adk, tree, order)
 
-        # Find the branch with minimum length change.
-        target = _bal_min_branch(lens, adm, adk, tree, preodr)
+        # Find the branch with minimum length change, into which the new taxon will be
+        # inserted. Return value is the preorder index of the node under this branch.
+        itag = _bal_min_branch(n, lens, *args1, order)
 
         # Update balanced average distance matrix between all subtrees.
-        func(adm, target, adk, tree, postodr, powers, stack)
+        _bal_avgdist_insert(n, itag, *args1, *args2, diffs, npots, ancs, ancx)
 
-        # Insert new taxon into tree.
-        _insert_taxon(k, target, tree, preodr, postodr, use_depth=True)
+        # Update tree topology with the inserted taxon.
+        _insert_taxon(k, itag, sizes[order[itag]], tree, order)
 
-    # Calculate branch lengths using a balanced framework.
+        n += 2
+
+    ### Phase 2: Parallel (nested only) ###
+
+    # Expected number of chunks into which tree nodes will be evenly divided. Per-chunk
+    # capacity = total number of nodes / this number. The actual chunk count usually
+    # exceeds this number.
+    enc = threads * factor
+
+    # number of ancestor-descendant pairs (i.e., sum of depths) within each clade
+    pairs = np.empty(N, dtype=int)
+    _calc_pairs(n, tree, order, sizes, pairs)
+
+    # segment bounds (nodes within each segment has the same level)
+    segs = np.empty(N + 1, dtype=int)
+
+    # level (number of branches ascending from target's parent) of each segment
+    lvls = np.empty(N, dtype=int)
+
+    # workload of clade under each segment start
+    oops = np.empty(N, dtype=int)
+
+    # chunk bounds in preorder
+    # NOTE: The maximum number of chunks is n (i.e., one node per chunk), therefore
+    # n + 1 boundaries are needed. The first bound must be 0.
+    chunks = np.empty(N + 1, dtype=int)
+    chunks[0] = 0
+
+    # segment index at the beginning of each chunk
+    chusegs = np.empty(N, dtype=int)
+    chusegs[0] = 0
+
+    args3 = (ancs, ancx, segs, lvls)
+
+    for k in range(nest_th, flat_th):
+        adk_func(n, k, dm, adk, tree, order)
+        itag = _bal_min_branch(n, lens, *args1, order)
+        tag = order[itag]
+        size = sizes[tag]
+
+        # Get the depth of target, which equals to the number of ancestors of it.
+        deep = deeps[tag]
+
+        # Navigate the tree from target upward to root to identify the "spine", to
+        # calculate special values and intermediates
+        _bal_insert_plan(n, itag, *args1, *args2, pairs, diffs, *args3, oops, True)
+
+        # Distribute nodes into chunks such that they have roughly even workloads.
+        nc = _bal_avgdist_chunk(
+            n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
+        )
+        _bal_update_spine(tag, deep, sizes, pairs, ancs)
+
+        # Update balanced average distance matrix through parallelization.
+        _bal_avgdist_nest(
+            itag, deep, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
+        )
+
+        _insert_taxon(k, itag, size, tree, order)
+        n += 2
+
+    ### Phase 3: Parallel (nested and flat) ###
+
+    # index of node with minimum length change within each clade
+    roots = np.empty(N, dtype=int)
+    roots[0] = 0
+
+    # minimum length change within each clade.
+    rlens = np.empty(N, dtype=dtype)
+    rlens[0] = 0
+
+    # index of root that marks each clade
+    clades = np.empty(N, dtype=int)
+
+    for k in range(flat_th, m):
+        adk_func(n, k, dm, adk, tree, order)
+
+        # Find the branch with minimum length change (parallel).
+        itag = _bal_min_branch_p(
+            n, lens, *args1, order, sizes, enc, clades, chunks, roots, rlens
+        )
+        tag = order[itag]
+        size = sizes[tag]
+        deep = deeps[tag]
+
+        # Navigate the tree from target upward to root to identify the "spine", to
+        # calculate special values and intermediates
+        _bal_insert_plan(n, itag, *args1, *args2, pairs, diffs, *args3, oops, False)
+
+        # Distribute nodes into chunks such that they have roughly even workloads.
+        nc = _bal_avgdist_chunk(
+            n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs
+        )
+        _bal_update_spine(tag, deep, sizes, pairs, ancs)
+
+        # Update balanced average distance matrix through parallelization (both flat
+        # and nested).
+        _bal_avgdist_flat(n, itag, size, order, adm, adk, diffs, deeps)
+        _bal_avgdist_nest(
+            itag, deep, adm, *args2, diffs, npots, *args3, nc, chunks, chusegs
+        )
+
+        _insert_taxon(k, itag, size, tree, order)
+        n += 2
+
+    ### Calculate branch lengths. ###
+
     _bal_lengths(lens, adm, tree)
 
     return tree, lens
 
 
-def _fastnni(dm, tree, preodr, postodr, lens):
+def _fastnni(dm, tree, order, lens):
     r"""Perform fast nearest neighbor interchange (FastNNI) on a tree.
 
     To improve the tree under the minimum evolution (ME) criterion using an OLS
@@ -603,10 +949,10 @@ def _fastnni(dm, tree, preodr, postodr, lens):
 
     This algorithm was implemented following Section 2.2 and Appendix 4 of Desper and
     Gascuel (2002). Basically, it creates a full average distance matrix between all
-    pairs of subtrees, evaluates all possible swaps, then it iteratively perform
-    swaps that lead to the maximum reduction of overall branch lengths. During this
-    process, it needs to update the evaluation of the four corner branches after one
-    branch is swapped.
+    pairs of subtrees, evaluates all possible swaps, then iteratively performs swaps
+    that lead to the maximum reduction of overall branch lengths. During this process,
+    it needs to update the evaluation of the four corner branches after one branch is
+    swapped.
 
     ---
 
@@ -617,7 +963,7 @@ def _fastnni(dm, tree, preodr, postodr, lens):
 
         0. Length change (negative; smaller is better)
         1. Corresponding node index
-        2. Corresponding side (0: left, 1: right) child to be swapped with sibling
+        2. Corresponding side (0: left, 1: right) of child to swap with sibling
 
     For example, (-0.15, 7, 1) means that swapping the right child and the sibling of
     node 7 will reduce the overall branch length by 0.15.
@@ -626,13 +972,13 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     this value is 0. For internal nodes, this value is negative or 0. Only negative
     values are stored in the heap. 0 means this node is not useful.
 
-    Additionally, the "side" information is stored in column 7 of the tree array.
+    Additionally, the side information is stored in `sides`.
 
     When a swap is updated, the new length change (if negative) is pushed into the
     heap, but the old length change won't be deleted from the heap (which would be
     inefficient as O(n)). Instead, a "lazy deletion" mechanism is adopted: When the
     negative-most swap is popped out of the heap, it is checked against the stored
-    length change (in `lens`) and side (in `tree[:, 7]`). If they don't match, then
+    length change (in `lens`) and side (in `sides`). If they don't match, then
     it means that it is outdated and should be skipped. Otherwise, it is considered
     relevant and the swap will be performed.
 
@@ -640,20 +986,41 @@ def _fastnni(dm, tree, preodr, postodr, lens):
     code isn't significantly faster than a naive `np.argmax` on then entire `lens`.
     Consider optimization.
 
+    TODO: It should be feasible to rely on `order` alone without `index`, which will
+    save multiple O(n) operations (see `_swap_branches` for details). Implementation
+    will be less straightforward compared with `_gme` and `_bme`. This is because
+    branch length changes are associated with original nodes, not preorder. Updating
+    preorder will change this association. A workaround is to track the preorder of
+    a node via an O(n) search during each iteration, which should be cheaper than the
+    current method (updating `index` via memory reads / writes).
+
     """
     dtype = dm.dtype
     n = tree.shape[0]
+
+    # preorder index
+    index = np.empty(n, dtype=int)
+    index[order] = np.arange(n)
+
+    # taxon counts
+    tacts = np.empty(n, dtype=int)
+    _calc_tacts(n, tree, order, tacts)
+
+    # child side (left: 0, right: 1) of each node to swap
+    sides = np.empty(n, dtype=int)
+
+    # intermediate array
     stack = np.empty(n, dtype=int)
 
     # Calculate average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _avgdist_matrix(adm, dm, tree, preodr, postodr)
+    _avgdist_matrix(adm, dm, tree, order, tacts)
 
     # Calculate length changes of all possible swaps.
-    _ols_all_swaps(lens, tree, adm)
+    _ols_all_swaps(lens, adm, tree, tacts, sides)
 
     # Create a heap that stores negative length changes and their nodes and sides.
-    heap = [(lens[i], i, tree[i, 7]) for i in np.nonzero(lens)[0]]
+    heap = [(lens[i], i, sides[i]) for i in np.flatnonzero(lens)]
     heapify(heap)
 
     # Iteratively swap branches until there is no more beneficial swap.
@@ -662,26 +1029,26 @@ def _fastnni(dm, tree, preodr, postodr, lens):
         L, target, side = heappop(heap)
 
         # Skip if this swap is outdated.
-        if L != lens[target] or side != tree[target, 7]:
+        if L != lens[target] or side != sides[target]:
             continue
 
         # Reset this swap.
         lens[target] = 0
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, preodr, stack, use_depth=False)
+        _swap_branches(target, side, tree, order, index, stack, tacts=tacts)
 
         # Update average distances after swapping.
-        _avgdist_swap(adm, target, side, tree)
+        _avgdist_swap(index[target], side, adm, tree, order, tacts)
 
         # Update length reductions of swaps of the four corner branches.
-        _ols_corner_swaps(target, heap, lens, tree, adm)
+        _ols_corner_swaps(target, heap, lens, adm, tree, tacts, sides)
 
     # Calculate branch lengths using an OLS framework.
-    _ols_lengths(lens, adm, tree)
+    _ols_lengths(lens, adm, tree, tacts)
 
 
-def _bnni(dm, tree, preodr, postodr, lens):
+def _bnni(dm, tree, order, lens):
     r"""Perform balanced nearest neighbor interchange (BNNI) on a tree.
 
     To improve the tree under the balanced minimum evolution (BME) criterion given a
@@ -702,18 +1069,42 @@ def _bnni(dm, tree, preodr, postodr, lens):
 
     """
     dtype = dm.dtype
+    m = dm.shape[0]
     n = tree.shape[0]
-    stack = np.empty(n, dtype=int)
+
+    # preorder index
+    index = np.empty(n, dtype=int)
+    index[order] = np.arange(n)
+
+    # node counts
+    sizes = np.empty(n, dtype=int)
+    _calc_sizes(n, tree, order, sizes)
+
+    # node depths
+    deeps = np.empty(n, dtype=int)
+    _calc_deeps(n, tree, order, deeps)
+
+    # Identify all internal branches (those above nodes that are not tips or root).
+    # The association between nodes and internal branches are fixed, no matter how tree
+    # is swapped.
+    # For a tree with m taxa (including root), there should be m - 3 internal branches.
+    nodes = np.flatnonzero(tree[1:, 0]) + 1
+    nb = nodes.shape[0]
+
+    # overall tree length reduction (larger is better)
+    gains = np.zeros(nb, dtype=dtype)
+
+    # child side (left: 0, right: 1) of each node to swap
+    sides = np.empty(nb, dtype=int)
 
     # Calculate balanced average distances between all pairs of subtrees.
     adm = np.empty((n, n), dtype=dtype)
-    _bal_avgdist_matrix(adm, dm, tree, preodr, postodr)
+    _bal_avgdist_matrix(adm, dm, tree, order, sizes)
 
     # Pre-calculate negative powers of 2.
-    powers = np.ldexp(dtype.type(1.0), -np.arange(dm.shape[0]))
+    npots = np.ldexp(dtype.type(1.0), -np.arange(m))
 
-    # Initialize branch swapping information.
-    gains, sides, nodes = _init_swaps(tree, dtype=dtype)
+    stack = np.empty(n, dtype=int)
 
     # Iteratively swap branches until there is no more beneficial swap.
     while True:
@@ -724,136 +1115,20 @@ def _bnni(dm, tree, preodr, postodr, lens):
         branch = gains.argmax()
         if gains[branch] <= 0:
             break
-        side = sides[branch]
-        target = nodes[branch]
+        target, side = nodes[branch], sides[branch]
 
         # Swap the branches in the tree.
-        _swap_branches(target, side, tree, preodr, stack, use_depth=True)
+        _swap_branches(
+            target, side, tree, order, index, stack, sizes=sizes, deeps=deeps
+        )
 
         # Update balanced average distances after swapping.
-        _bal_avgdist_swap(adm, target, side, tree, preodr, powers, stack)
+        _bal_avgdist_swap(
+            adm, target, side, tree, order, index, sizes, deeps, npots, stack
+        )
 
     # Calculate branch lengths using a balanced framework.
     _bal_lengths(lens, adm, tree)
-
-
-def _check_tree(tree, preodr, postodr):
-    r"""Check the integrity of an array-based tree structure.
-
-    The greedy algorithms implemented in this module use a special array-based tree
-    structure to improve efficiency.
-
-    In this 2-D array, rows represent nodes in the order of addition to the tree,
-    with the root placed at row 0. There are eight columns:
-
-        0. Left child index, or 0 if a tip.
-        1. Right child index, or taxon index if a tip.
-        2. Parent index, or 0 if root.
-        3. Sibling index, or 0 if root.
-        4. Size, i.e., number of taxa descending from the node, or 1 if a tip.
-        5. Depth, i.e., number of branches constituting the path to root.
-        6. Preorder index.
-        7. Postorder index.
-
-    Meanwhile, node indices in preorder and postorder are stored in two separate 1-D
-    arrays to facilitate traversals.
-
-    Note: Columns 2-7 and the two separate arrays can be derived from columns 0 and 1.
-    They are explicitly stored because of their frequent usage during the calculation.
-    Also, they are updated iteratively as the tree grows, which is more efficient than
-    de novo calculation on an existing tree.
-
-    ---
-
-    For example, a tree with four taxa is like (see :func:`_gme`):
-
-          0
-         / \
-        1   y
-           / \
-          2   3
-
-    This tree can be represented by the following 2-D array:
-
-        [[1, 2, 0, 0, 3, 0, 0, 4],
-         [0, 1, 0, 2, 1, 1, 1, 0],
-         [3, 4, 0, 1, 2, 1, 2, 3],
-         [0, 2, 2, 4, 1, 2, 3, 1],
-         [0, 3, 2, 3, 1, 2, 4, 2]]
-
-    The separate pre- and postorder arrays are:
-
-        [0, 1, 2, 3, 4]
-        [1, 3, 4, 2, 0]
-
-    ---
-
-    This function ensures that a tree array is valid. It is for test purpose, but not
-    used in the actual greedy algorithms.
-
-    """
-    assert tree.shape[1] == 8
-    n = tree[0, 4] * 2 - 1
-    assert (tree[:n, 6].argsort() == preodr[:n]).all()
-    assert (tree[:n, 7].argsort() == postodr[:n]).all()
-
-    for i in range(n):
-        left, right, parent, sibling, size, depth, preidx, postidx = tree[i]
-        if left == 0:
-            assert i == 0 or right != 0
-        else:
-            assert tree[left, 2] == tree[right, 2] == i
-            assert tree[left, 3] == right
-            assert tree[right, 3] == left
-
-    sizes = np.zeros((n,), dtype=int)
-    for i in range(n):
-        node = postodr[i]
-        if tree[node, 0] == 0:
-            sizes[node] = 1
-        else:
-            sizes[node] = sizes[tree[node, :2]].sum()
-    assert (sizes == tree[:n, 4]).all()
-
-    depths = np.zeros((n,), dtype=int)
-    for i in range(1, n):
-        node = preodr[i]
-        depths[node] = depths[tree[node, 2]] + 1
-    assert (depths == tree[:n, 5]).all()
-
-    stack = np.zeros((n,), dtype=int)
-    _preorder(exp := np.zeros((n,), dtype=int), tree, stack)
-    assert (exp == preodr[:n]).all()
-    _postorder(exp := np.zeros((n,), dtype=int), tree, stack)
-    assert (exp == postodr[:n]).all()
-
-
-def _allocate_tree(n):
-    r"""Pre-allocate memory space for an array-based tree structure.
-
-    Parameters
-    ----------
-    n : int
-        Total number of nodes in the tree.
-
-    Returns
-    -------
-    (n, 8) ndarray of int
-        Tree structure.
-    (n,) ndarray of int
-        Nodes in preorder.
-    (n,) ndarray of int
-        Nodes in postorder.
-
-    See Also
-    --------
-    _check_tree
-
-    """
-    tree = np.empty((n, 8), dtype=int)
-    preodr = np.empty((n,), dtype=int)
-    postodr = np.empty((n,), dtype=int)
-    return tree, preodr, postodr
 
 
 def _to_treenode(tree, taxa, lens=None, unroot=False):
@@ -904,7 +1179,7 @@ def _to_treenode(tree, taxa, lens=None, unroot=False):
     return tree
 
 
-def _from_treenode(obj, taxmap, tree, preodr, postodr, pos=0, depth=0):
+def _from_treenode(obj, taxmap, tree, pos=0):
     r"""Convert a TreeNode object into an array-based tree structure.
 
     Parameters
@@ -913,16 +1188,15 @@ def _from_treenode(obj, taxmap, tree, preodr, postodr, pos=0, depth=0):
         Input tree. It must be strictly bifurcating.
     taxmap : dict of str : int
         Mapping of taxon names to indices.
-    tree : (n, 8) ndarray of int
+    tree : (n, 4) ndarray of int
         Tree structure.
-    preodr : (n,) ndarray of int
-        Nodes in preorder.
-    postodr : (n,) ndarray of int
-        Nodes in postorder.
     pos : int, optional
         Position (axis 0) in the tree array for new data.
-    depth : int, optional
-        Depth of the root node.
+
+    Returns
+    -------
+    int
+        Number of nodes in the tree.
 
     Raises
     ------
@@ -931,83 +1205,62 @@ def _from_treenode(obj, taxmap, tree, preodr, postodr, pos=0, depth=0):
 
     See Also
     --------
-    _allocate_tree
     _root_from_treenode
 
     Notes
     -----
-    This function fills in pre-allocated tree arrays. It doesn't return any value.
+    This function fills in a pre-allocated tree array. It doesn't return any value.
 
-    Nodes in the resulting tree array are ordered by preorder traversal. This may not
-    agree with the order they were added to the original tree, if that ever happened.
-    Therefore, one shouldn't directly compare the original and generated tree arrays.
-    However, the topologies represented by the two tree arrays should be identical.
+    Nodes in the tree array follows preorder. This may not agree with the order they
+    were added to the original tree, if that ever happened. Therefore, one shouldn't
+    directly compare the original and generated tree arrays. However, the topologies
+    represented by the two tree arrays should be identical.
 
     The function doesn't fill branch lengths, which aren't required by the downstream
     algorithms. Adding this functionality should be straightforward.
 
-    Parameters ``pos`` and ``depth`` are typically set by :func:`_root_from_treenode`.
-    One doesn't need to specify them if working with this function alone. ``depth``
-    also impacts the position in ``postodr``. See ``_root_from_treenode`` for
-    rationales.
+    Parameter ``pos`` is typically set by :func:`_root_from_treenode`. One doesn't need
+    to specify it if working with this function alone.
 
     """
-    # determine position in postorder
-    post_pos = pos - depth
-
     # create root node
     tree[pos, 2] = 0
     tree[pos, 3] = 0
-    tree[pos, 5] = depth
 
     # if root node is a tip, just wrap up and return
     if not obj.children:
         tree[pos, 0] = 0
         tree[pos, 1] = taxmap[obj.name]
-        tree[pos, 4] = 1
-        preodr[pos] = tree[pos, 6] = pos
-        postodr[post_pos] = pos
-        tree[pos, 7] = post_pos
-        return
+        return 1
 
-    # perform preorder traversal, index nodes, fill parent (2), depth (5), taxon (1)
-    # and length
-    obj.i = pos
+    # Perform preorder traversal, index nodes, fill parent (2) and taxon (1).
+    obj._i = pos
     pos_1 = pos + 1
     for i, node in enumerate(obj.preorder(include_self=False)):
-        node.i = (ni := pos_1 + i)
-        tree[ni, 2] = (pi := node.parent.i)
-        tree[ni, 5] = tree[pi, 5] + 1
+        node._i = ni = pos_1 + i
+        tree[ni, 2] = node.parent._i
         if not node.children:
             tree[ni, 0] = 0
             tree[ni, 1] = taxmap[node.name]
 
-    # number of nodes in the current tree
-    n = i + 2
+    size = ni - pos + 1
 
-    # fill preorder and indices
-    end = pos + n
-    preodr[pos:end] = tree[pos:end, 6] = np.arange(pos, end)
-
-    # perform postorder traversal, fill children (0 and 1), sibling (3), and size (4)
+    # Perform postorder traversal, fill children (0 and 1) and sibling (3).
     for i, node in enumerate(obj.postorder()):
-        postodr[post_pos + i] = (ni := node.i)
-        tree[ni, 7] = post_pos + i
-        if not node.children:
-            tree[ni, 4] = 1
-        else:
+        ni = node._i
+        if node.children:
             try:
                 left, right = node.children
             except ValueError:
                 raise ValueError("Tree is not strictly bifurcating.")
-            li, ri = left.i, right.i
+            li, ri = left._i, right._i
             tree[ni, 0] = tree[ri, 3] = li
             tree[ni, 1] = tree[li, 3] = ri
-            tree[ni, 4] = tree[li, 4] + tree[ri, 4]
-            del left.i
-            del right.i
+            del left._i
+            del right._i
 
-    del obj.i
+    del obj._i
+    return size
 
 
 def _root_from_treenode(obj, taxa):
@@ -1018,18 +1271,12 @@ def _root_from_treenode(obj, taxa):
     tree : TreeNode
         Input tree. It must be strictly bifurcating.
     taxa : list of str
-        Taxon names in order.
-    tree : (n, 8) ndarray of int
-        Tree structure.
+        Taxon names in order (usually as in a distance matrix).
 
     Returns
     -------
-    (n, 8) ndarray of int
+    (n, 4) ndarray of int
         Tree structure.
-    (n,) ndarray of int
-        Nodes in preorder.
-    (n,) ndarray of int
-        Nodes in postorder.
 
     Raises
     ------
@@ -1066,14 +1313,11 @@ def _root_from_treenode(obj, taxa):
     m = len(taxa)  # number of taxa
     n = m * 2 - 3  # number of nodes
 
-    # allocate tree arrays
-    tree, preodr, postodr = _allocate_tree(n)
+    # allocate tree array
+    tree = np.empty((n, 4), dtype=int)
 
     # position of the current node
     pos = 0
-
-    # depth of the current node
-    depth = 0
 
     # position of the previous node
     prev_pos = 0
@@ -1082,20 +1326,9 @@ def _root_from_treenode(obj, taxa):
     # it will become the sibling of the current node
     sib_pos = 0
 
-    # number of tips under the current node
-    size = m - 1
-
-    n_1 = n - 1
-
     # helper to add the current node to the array
     def _add_current():
         tree[pos, 2] = prev_pos
-        tree[pos, 4] = size
-        tree[pos, 5] = depth
-        tree[pos, 6] = pos
-        preodr[pos] = pos
-        tree[pos, 7] = (post_pos := n_1 - depth)
-        postodr[post_pos] = pos
         tree[prev_pos, 1] = pos
         tree[sib_pos, 3] = pos
         tree[pos, 3] = sib_pos
@@ -1124,19 +1357,15 @@ def _root_from_treenode(obj, taxa):
             # other   prev      other   parent
             if parent is not None:
                 _add_current()
-
                 prev_pos = pos
                 pos += 1
 
                 # add the other child clade
-                _from_treenode(other, taxmap, tree, preodr, postodr, pos, depth + 1)
-
+                size = _from_treenode(other, taxmap, tree, pos)
                 tree[pos - 1, 0] = pos  # curr's left child
                 tree[pos, 2] = pos - 1  # parent (now missing sibling)
-
                 sib_pos = pos
-                size -= (k := tree[pos, 4])
-                pos += k * 2 - 1
+                pos += size
 
             # Current node is the root of a rooted tree (i.e., it has two children):
             # Don't add the current node, instead add the other child.
@@ -1144,13 +1373,11 @@ def _root_from_treenode(obj, taxa):
             #     /   \     =>      /
             # other   prev      other
             else:
-                _from_treenode(other, taxmap, tree, preodr, postodr, pos, depth)
-
+                _from_treenode(other, taxmap, tree, pos)
                 tree[pos, 2] = prev_pos
                 tree[prev_pos, 1] = pos
                 tree[sib_pos, 3] = pos
                 tree[pos, 3] = sib_pos
-
                 break
 
         elif n_sibs == 2:
@@ -1167,56 +1394,24 @@ def _root_from_treenode(obj, taxa):
                 pos += 1
 
                 left, right = siblings
-                _from_treenode(left, taxmap, tree, preodr, postodr, pos, depth + 1)
+                size = _from_treenode(left, taxmap, tree, pos)
                 tree[pos, 2] = curr_pos
                 left_pos = pos
                 tree[curr_pos, 0] = pos
-                pos += tree[pos, 4] * 2 - 1
+                pos += size
 
-                _from_treenode(right, taxmap, tree, preodr, postodr, pos, depth + 1)
+                _from_treenode(right, taxmap, tree, pos)
                 tree[pos, 2] = curr_pos
                 tree[curr_pos, 1] = pos
                 tree[left_pos, 3] = pos
                 tree[pos, 3] = left_pos
-
                 break
-
             else:
                 raise ValueError(errmsg)
         else:
             raise ValueError(errmsg)
 
-        # move up one level
-        depth += 1
-
-    return tree, preodr, postodr
-
-
-def _init_tree(dm, tree, preodr, postodr, ads, matrix=False):
-    """Initialize tree (triplet with taxa 0, 1 and 2)."""
-    # triplet tree
-    tree[:3] = [
-        [1, 2, 0, 0, 2, 0, 0, 2],  # 0: root
-        [0, 1, 0, 2, 1, 1, 1, 0],  # 1: left child
-        [0, 2, 0, 1, 1, 1, 2, 1],  # 2: right child
-    ]
-
-    # nodes in pre- and postorder
-    preodr[:3] = [0, 1, 2]
-    postodr[:3] = [1, 2, 0]
-
-    # average distance matrix between all subtrees
-    if matrix:
-        ads[0, 1] = ads[1, 0] = dm[0, 1]
-        ads[0, 2] = ads[2, 0] = dm[0, 2]
-        ads[1, 2] = ads[2, 1] = dm[1, 2]
-
-    # average distances between distant-2 subtrees
-    else:
-        ads[1, 0] = dm[0, 1]
-        ads[2, 0] = dm[0, 2]
-        ads[1, 1] = ads[2, 1] = dm[1, 2]
-        ads[0, 0] = ads[0, 1] = 0
+    return tree
 
 
 def _insert_taxon_treenode(taxon, target, tree):
@@ -1242,7 +1437,7 @@ def _insert_taxon_treenode(taxon, target, tree):
             parent.children = parent.children[::-1]
 
 
-def _avgdist_matrix_naive(adm, dm, tree, postodr):
+def _avgdist_matrix_naive(adm, dm, tree, order, tacts):
     r"""Calculate a matrix of average distances between all pairs of subtrees.
 
     This function produces the same result as :func:`_avgdist_matrix`. However, it
@@ -1256,10 +1451,12 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
     used in the actual GME algorithm.
 
     """
-    n = tree[0, 4] * 2 - 1
+    n = tacts[0] * 2 - 1
     taxas = {}
-    for node in postodr[:n]:
-        left, right = tree[node, :2]
+
+    # iterate over nodes in reversed preorder (same outcome as postorder)
+    for node in order[n - 1 :: -1]:
+        left, right = tree[node, 0], tree[node, 1]
         if not left:
             taxas[node] = frozenset([right])
         else:
@@ -1280,7 +1477,7 @@ def _avgdist_matrix_naive(adm, dm, tree, postodr):
             # subset) of b.
 
 
-def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
+def _avgdist_taxon_naive(adk, taxon, dm, tree, order, tacts):
     """Calculate average distances between a new taxon and existing subtrees.
 
     This function produces the same result as :func:`_avgdist_taxon`, but it
@@ -1292,9 +1489,11 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
     used in the actual GME algorithm.
 
     """
-    n = tree[0, 4] * 2 - 1
+    n = tacts[0] * 2 - 1
     taxas = {}
-    for node in postodr[:n]:
+
+    # iterate over nodes in reversed preorder (same outcome as postorder)
+    for node in order[n - 1 :: -1]:
         left, right = tree[node, :2]
         if not left:
             taxas[node] = frozenset([right])
@@ -1303,47 +1502,13 @@ def _avgdist_taxon_naive(adk, taxon, dm, tree, postodr):
 
     full = taxas[0] | frozenset([0])
 
+    adkl, adku = adk[0], adk[1]
     dk = dm[taxon]
     for node in range(n):
         taxa_lower = taxas[node]
-        adk[node, 0] = dk[list(taxa_lower)].mean()
+        adkl[node] = dk[list(taxa_lower)].mean()
         taxa_upper = full - taxa_lower
-        adk[node, 1] = dk[list(taxa_upper)].mean()
-
-
-def _init_swaps(tree, dtype):
-    """Initialize branch swapping information.
-
-    It will create three 1-D arrays to store information of all internal branches of
-    the tree:
-
-    - `gains`: Overall tree length reduction (larger is better).
-    - `sides`: Which side (left: 0, right: 1) of the target node should be swapped.
-    - `nodes`: Corresponding node index of the branch.
-
-    Meanwhile, column 7 of the tree array will be filled with the branch index of the
-    each node, if it corresponds to one. This column was previous used to store
-    postorder index, but that information is not needed during swapping.
-
-    For a tree with n taxa, there should be n - 3 internal branches. The association
-    between nodes and internal branches are fixed, no matter how tree is swapped.
-
-    """
-    # number of internal branches
-    n = tree[0, 4] - 2
-    gains = np.zeros((n,), dtype=dtype)
-    sides = np.empty((n,), dtype=int)
-    nodes = np.empty((n,), dtype=int)
-
-    # identify all internal branches
-    branch = 0
-    for node in range(1, tree.shape[0]):
-        if tree[node, 0]:
-            tree[node, 7] = branch
-            nodes[branch] = node
-            branch += 1
-
-    return gains, sides, nodes
+        adku[node] = dk[list(taxa_upper)].mean()
 
 
 def _swap_branches_treenode(node1, node2):
@@ -1357,7 +1522,9 @@ def _swap_branches_treenode(node1, node2):
     parent2.append(node1, False)
 
 
-def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
+def _swap_branches(
+    target, side, tree, order, index, stack, tacts=None, sizes=None, deeps=None
+):
     r"""Swap one child of the target node with its sibling.
 
                  |                         |
@@ -1369,29 +1536,55 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
 
     Target must be an internal node. Root and tips are not allowed.
 
-    This function currently doesn't handle postorder, as subsequent algorithms don't
-    need this information.
-
     This function is specifically designed for nearest neighbor interchange (NNI). It
     may be generalized to swapping non-neighbor branches, but that is not currently
     implemented.
 
+    For FastNNI (OLS framework), provide `tacts`. For BNNI (balanced framework),
+    provide `sizes` and `deeps`.
+
+    TODO: This function may be Cythonized to improve efficiency.
+
+    TODO: This function updates both preorder (`order`) and preorder index (`index`),
+    both of which are O(n). It is technically feasible to update `order` only, which
+    can be more efficiently done via `memmove`. Refer to `_insert_taxon`.
+
     """
-    # This function can potentially optimized using Cython. See _insert_taxon.
+    # This function can potentially be optimized using Cython. See `_insert_taxon`.
+
+    if tacts is None and sizes is None:
+        raise ValueError("Must provide either tacts or sizes.")
+    if tacts is not None and sizes is not None:
+        raise ValueError("Cannot provide tacts and sizes simultaneously.")
 
     child = tree[target, side]
     other = tree[target, 1 - side]  # other child
     parent = tree[target, 2]
     sibling = tree[target, 3]
 
-    c_size = tree[child, 4]
-    o_size = tree[other, 4]
-    s_size = tree[sibling, 4]
-
     # update connections
     tree[target, side] = sibling
     tree[target, 3] = child
-    tree[target, 4] += s_size - c_size
+
+    # update taxon count
+    if tacts is not None:
+        c_tact = tacts[child]
+        o_tact = tacts[other]
+        s_tact = tacts[sibling]
+
+        tacts[target] += s_tact - c_tact
+
+        c_size = c_tact * 2 - 1
+        o_size = o_tact * 2 - 1
+        s_size = s_tact * 2 - 1
+
+    # update node count
+    if sizes is not None:
+        c_size = sizes[child]
+        o_size = sizes[other]
+        s_size = sizes[sibling]
+
+        sizes[target] += s_size - c_size
 
     p_side = int(tree[parent, 0] == target)  # sibling side of parent
     tree[parent, p_side] = child
@@ -1405,78 +1598,71 @@ def _swap_branches(target, side, tree, preodr, stack, use_depth=True):
     tree[other, 3] = sibling
 
     # locate the clades under the relevant nodes
-    c_start = tree[child, 6]
-    c_width = c_size * 2 - 1
-    c_end = c_start + c_width
-    c_clade = preodr[c_start:c_end]
+    c_start = index[child]
+    c_end = c_start + c_size
+    c_clade = order[c_start:c_end]
 
-    s_start = tree[sibling, 6]
-    s_width = s_size * 2 - 1
-    s_end = s_start + s_width
-    s_clade = preodr[s_start:s_end]
+    s_start = index[sibling]
+    s_end = s_start + s_size
+    s_clade = order[s_start:s_end]
 
-    o_start = tree[other, 6]
-    o_width = o_size * 2 - 1
-    o_end = o_start + o_width
-    o_clade = preodr[o_start:o_end]
+    o_start = index[other]
+    o_end = o_start + o_size
+    o_clade = order[o_start:o_end]
 
-    # update depth (if needed)
-    if use_depth:
-        tree[c_clade, 5] -= 1
-        tree[s_clade, 5] += 1
+    # update depths
+    if deeps is not None:
+        deeps[c_clade] -= 1
+        deeps[s_clade] += 1
 
     # update preorder (naive)
-    # _preorder(preodr, tree, stack)
-    # tree[:n, 6] = np.argsort(preodr[:n])
-
-    # update postorder (naive)
-    # _postorder(postodr, tree, stack)
-    # tree[:n, 7] = np.argsort(postodr[:n])
+    # _preorder(order, tree, stack)
+    # index[order[:n]] = np.arange(n)
 
     # update preorder
     # sibling is the left child of parent
     if p_side == 0:
-        tree[target, 6] += c_width - s_width
-        stack[:c_width] = c_clade
-        stack[c_width] = target
-        c1_width = c_width + 1
+        index[target] += c_size - s_size
+        stack[:c_size] = c_clade
+        stack[c_size] = target
+        c1_width = c_size + 1
 
         # sibling_clade, target, child_clade, other_clade =>
         # child_clade, target, sibling_clade, other_clade
         if side == 0:
-            tree[s_clade, 6] += c_width + 1
-            tree[c_clade, 6] -= s_width + 1
-            preodr[(sc1_start := s_start + c1_width) : c_end] = s_clade
-            preodr[s_start:sc1_start] = stack[:c1_width]
+            index[s_clade] += c_size + 1
+            index[c_clade] -= s_size + 1
+            order[(sc1_start := s_start + c1_width) : c_end] = s_clade
+            order[s_start:sc1_start] = stack[:c1_width]
 
         # sibling_clade, target, other_clade, child_clade =>
         # child_clade, target, other_clade, sibling_clade
         else:
-            tree[s_clade, 6] += c_width + o_width + 1
-            tree[c_clade, 6] -= s_width + o_width + 1
-            tree[o_clade, 6] += c_width - s_width
-            stack[c1_width : (c1o_width := c1_width + o_width)] = o_clade
-            preodr[(sc1o_start := s_start + c1o_width) : c_end] = s_clade
-            preodr[s_start:sc1o_start] = stack[:c1o_width]
+            index[s_clade] += c_size + o_size + 1
+            index[c_clade] -= s_size + o_size + 1
+            index[o_clade] += c_size - s_size
+            stack[c1_width : (c1o_width := c1_width + o_size)] = o_clade
+            order[(sc1o_start := s_start + c1o_width) : c_end] = s_clade
+            order[s_start:sc1o_start] = stack[:c1o_width]
 
     # sibling is the right child of parent
     else:
-        stack[:s_width] = s_clade
+        stack[:s_size] = s_clade
 
         # target, child_clade, other_clade, sibling_clade =>
         # target, sibling_clade, other_clade, child_clade
         if side == 0:
-            tree[c_clade, 6] += (so_width := s_width + o_width)
-            tree[s_clade, 6] -= c_width + o_width
-            tree[o_clade, 6] += s_width - c_width
-            stack[s_width:so_width] = o_clade
-            preodr[(cso_start := c_start + so_width) : s_end] = c_clade
-            preodr[c_start:cso_start] = stack[:so_width]
+            index[c_clade] += (so_width := s_size + o_size)
+            index[s_clade] -= c_size + o_size
+            index[o_clade] += s_size - c_size
+            stack[s_size:so_width] = o_clade
+            order[(cso_start := c_start + so_width) : s_end] = c_clade
+            order[c_start:cso_start] = stack[:so_width]
 
         # target, other_clade, child_clade, sibling_clade =>
         # target, other_clade, sibling_clade, child_clade
         else:
-            tree[c_clade, 6] += s_width
-            tree[s_clade, 6] -= c_width
-            preodr[(cs_start := c_start + s_width) : s_end] = c_clade
-            preodr[c_start:cs_start] = stack[:s_width]
+            index[c_clade] += s_size
+            index[s_clade] -= c_size
+            order[(cs_start := c_start + s_size) : s_end] = c_clade
+            order[c_start:cs_start] = stack[:s_size]

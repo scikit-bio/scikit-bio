@@ -13,7 +13,6 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
 from skbio.sequence.distance import _check_seqtype, _char_hash, _char_freqs
 import skbio.sequence.distance as sk_seqdist
@@ -21,7 +20,6 @@ import skbio.sequence.distance as sk_seqdist
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
     from skbio.alignment import TabularMSA
-    from numpy.typing import NDArray
 
 
 def align_dists(
