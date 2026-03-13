@@ -26,6 +26,7 @@ class Read:
 
     def _make_docstring(self, cls):
         name, supported_fmts, default, see = _docstring_vars(cls, "read")
+        constructor_param = _constructor_param(cls)
         return f"""Create a new ``{name}`` instance from a file.
 
 This is a convenience method for :func:`skbio.io.registry.read`. For more information
@@ -42,7 +43,7 @@ file : openable (filepath, URL, filehandle, etc.)
 format : str, optional
     The format of the file. The format must be a format name with a reader for
     ``{name}``. If None, the format will be inferred.
-kwargs : dict, optional
+{constructor_param}kwargs : dict, optional
     Additional arguments passed to :func:`skbio.io.registry.read()` and the reader for
     ``{name}``.
 
@@ -118,6 +119,19 @@ skbio.io.util.open
 {see}
 
 """
+
+
+def _constructor_param(cls):
+    """Generate constructor parameter docs if the class needs it."""
+    from skbio.alignment._tabular_msa import TabularMSA
+
+    if cls is TabularMSA:
+        return (
+            "constructor : type, required\n"
+            "    The type of sequence to read into. Must be a subclass of\n"
+            "    ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``).\n"
+        )
+    return ""
 
 
 def _docstring_vars(cls, func):

@@ -2,6 +2,9 @@
 
 ## Version 0.7.3-dev
 
+### Miscellaneous
+
+* Documented the `constructor` parameter in the auto-generated docstring for `TabularMSA.read()`, which is required to specify the sequence type (e.g., `DNA`, `RNA`, `Protein`) ([#2388](https://github.com/scikit-bio/scikit-bio/issues/2388)).
 
 ## Version 0.7.2
 
