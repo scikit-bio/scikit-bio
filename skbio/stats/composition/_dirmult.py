@@ -22,7 +22,7 @@ from ._utils import (
     _type_cast_to_float,
 )
 from skbio.util._array import ingest_array
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_config
 
 
 def _fit_with_fallbacks(model, primary_method='lbfgs', fit_kwargs=None):
@@ -73,30 +73,6 @@ def _spawn_rngs(parent_rng, n):
     """
     child_seeds = parent_rng.bit_generator._seed_seq.spawn(n)
     return [np.random.default_rng(s) for s in child_seeds]
-
-
-
-def _ttest_single_draw(matrix, child_rng, trt_idx, ref_idx, cm_params, m):
-    """Perform a single draw from the Dirichlet-multinomial distribution and compute statistics."""
-
-    from statsmodels.stats.weightstats import CompareMeans
-
-    dir_mat = _dirmult_draw(matrix, child_rng)
-    trt_mat = dir_mat[trt_idx]
-    ref_mat = dir_mat[ref_idx]
-
-    delta = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
-    cm = CompareMeans.from_data(np.asarray(trt_mat), np.asarray(ref_mat))
-    tstat, pval, _ = cm.ttest_ind(value=0, **cm_params)
-    lower, upper = cm.tconfint_diff(alpha=0.05, **cm_params)
-
-    return {
-        "delta": delta,
-        "tstat": tstat,
-        "pval": pval,
-        "lower": lower,
-        "upper": upper
-    }
 
 
 def _lme_single_draw(
@@ -267,7 +243,6 @@ def dirmult_ttest(
     draws=128,
     p_adjust="holm",
     seed=None,
-    n_jobs = 1,
 ):
     r"""Perform *t*-test using Dirichlet-multinomial distribution.
 
@@ -457,53 +432,41 @@ def dirmult_ttest(
 
     # initiate results
     m = matrix.shape[1]
+    delta = xp.zeros(m)  # inter-group difference
+    tstat = xp.zeros(m)  # t-test statistic
+    pval = xp.zeros(m)  # t-test p-value
+    lower = xp.full(m, xp.inf)  # 2.5% percentile of distribution
+    upper = xp.full(m, -xp.inf)  # 97.5% percentile of distribution
 
-    if n_jobs ==1 :
-         delta = xp.zeros(m)
-         tstat = xp.zeros(m)
-         pval = xp.zeros(m)
-         lower = xp.full(m, float('inf'))
-         upper = xp.full(m, float('-inf'))
+    for i in range(draws):
+        # Resample data in a Dirichlet-multinomial distribution.
+        dir_mat = _dirmult_draw(matrix, rng)
 
-         for i in range(draws):
-             dir_mat = _dirmult_draw(matrix, rng)
-             trt_mat = dir_mat[trt_idx]
-             ref_mat = dir_mat[ref_idx]
+        # Stratify data by group (treatment vs. reference).
+        trt_mat = dir_mat[trt_idx]
+        ref_mat = dir_mat[ref_idx]
 
-             delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
+        # Calculate the difference between the two means.
+        delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
 
-             cm = CompareMeans.from_data(np.asarray(trt_mat), np.asarray(ref_mat))
-             tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
-             tstat += tstat_
-             pval += pval_
+        # Create a CompareMeans object for statistical testing.
+        # Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_var=
+        # False`). The current code uses statsmodels' `CompareMeans` instead because
+        # it additionally returns confidence intervals.
+        cm = CompareMeans.from_data(np.asarray(trt_mat), np.asarray(ref_mat))
 
-             lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
-             lower = xp.minimum(lower, lower_)
-             upper = xp.maximum(upper, upper_)
+        # Perform Welch's t-test to assess the significance of difference.
+        tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
+        tstat += tstat_
+        pval += pval_
 
-    else:
-    # spawn independent RNGs for each draw to ensure reproducibility and avoid correlation between draws.
-        child_rngs = _spawn_rngs(rng, draws)
+        # Calculate confidence intervals.
+        # The final lower and upper bounds are the minimum and maximum of all lower
+        # and upper bounds seen during sampling, respectively.
+        lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
+        lower = xp.minimum(lower, lower_)
+        upper = xp.maximum(upper, upper_)
 
-        results = Parallel(n_jobs = n_jobs)(
-            delayed(_ttest_single_draw)(
-                matrix, child_rngs[i], trt_idx, ref_idx, cm_params, m
-            )
-            for i in range(draws)
-        )
-
-        delta = xp.zeros(m)  # inter-group difference
-        tstat = xp.zeros(m)  # t-test statistic
-        pval = xp.zeros(m)  # t-test p-value
-        lower = xp.full(m, xp.inf)  # 2.5% percentile of distribution
-        upper = xp.full(m, -xp.inf)  # 97.5% percentile of distribution
-
-        for res in results:
-            delta += res["delta"]
-            tstat += res["tstat"]
-            pval += res["pval"]
-            xp.minimum(lower, res["lower"], out=lower)
-            xp.maximum(upper, res["upper"], out=upper)
     # Normalize metrics to averages over all replicates.
     delta /= draws
     tstat /= draws
@@ -885,27 +848,29 @@ def dirmult_lme(
     else:
         child_rngs = _spawn_rngs(rng, draws)
 
-        results = Parallel(n_jobs = n_jobs)(
-            delayed(_lme_single_draw)(
-                matrix,
-                child_rngs[i],
-                exog_mat,
-                grouping,
-                exog_re,
-                exog_vc,
-                model_kwargs,
-                fit_method,
-                fit_converge,
-                fit_warnings,
-                fit_kwargs,
-                n_feats,
-                n_covars,
-                covar_range,
-                features,
-                i,
+        # To prevent compute resource oversubscription
+        with parallel_config(backend="loky", inner_max_num_threads=1):
+            results = Parallel(n_jobs=n_jobs)(
+                delayed(_lme_single_draw)(
+                    matrix,
+                    child_rngs[i],
+                    exog_mat,
+                    grouping,
+                    exog_re,
+                    exog_vc,
+                    model_kwargs,
+                    fit_method,
+                    fit_converge,
+                    fit_warnings,
+                    fit_kwargs,
+                    n_feats,
+                    n_covars,
+                    covar_range,
+                    features,
+                    i,
+                )
+                for i in range(draws)
             )
-            for i in range(draws)
-        )
 
         shape = (n_feats, n_covars)
         coef = xp.zeros(shape)  # coefficient (fold change)
