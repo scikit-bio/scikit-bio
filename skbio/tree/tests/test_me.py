@@ -1376,16 +1376,16 @@ class MeTests(TestCase):
         obs = (segs == n - 2).argmax()
         self.assertEqual(obs, 3)
         npt.assert_array_equal(segs[:obs + 1], [0, 2, 4, 5])
-        npt.assert_array_equal(lvls[:obs], [1, 0, -1])
+        npt.assert_array_equal(lvls[:obs], [1, 0, 0])
         npt.assert_array_equal(oops[:obs], [2, 0, 0])
 
         # This is an extremely simple case. Only the root node has 2 operations, while
         # all other nodes have 0. Therefore, regardless how many chunks are desired,
         # there will always be one chunk generated, which includes just the root.
-        enc = 3  # aim for 3 chunks (get 1)
+        enc = 3  # aim for 3 chunks (get 2)
         nc = _bal_avgdist_chunk(
             n - 2, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
-        self.assertEqual(nc, 1)
+        self.assertEqual(nc, 2)
         _bal_update_spine(tag, deep, sizes, pairs, ancs)
         _bal_avgdist_nest(
             itag, deep, obs := adm, order, sizes, deeps, diffs, npots, ancs, ancx,
@@ -1524,7 +1524,7 @@ class MeTests(TestCase):
         npt.assert_array_equal(segs[:n_segs + 1], [0, 1, 7, 8, 15, 18, 19])
 
         # levels up from parent
-        npt.assert_array_equal(lvls[:n_segs], [2, 1, 0, -1, 0, 2])
+        npt.assert_array_equal(lvls[:n_segs], [2, 1, 0, 0, 0, 2])
 
         # numbers of operations
         npt.assert_array_equal(oops[:n_segs], [22, 18, 6, 4, 2, 2])
@@ -1574,25 +1574,31 @@ class MeTests(TestCase):
         _bal_insert_plan(n, itag, adm, adk, tree, order, sizes, deeps, pairs, diffs,
                          ancs, ancx, segs, lvls, oops, True)
 
+        n_segs = (segs == n).argmax()
+        self.assertEqual(n_segs, 6)
+        npt.assert_array_equal(segs[:n_segs + 1], [0, 1, 7, 8, 15, 18, 19])
+
         # chunk boundaries and segment status per chunk
         chunks = np.zeros(n + 1, dtype=int)
         chunks[0] = 0
         chusegs = np.zeros(n, dtype=int)
-        chusegs[0] = 0
+        chusegs[0] = 1
 
-        # We aim at dividing the tree into 4 chunks, and eventually get 5.
+        # We aim at dividing the tree into 4 chunks (capacity per chunk: 6). Eventually
+        # we get 5.
         enc = 4
         obs = _bal_avgdist_chunk(
             n, itag, order, sizes, pairs, segs, lvls, oops, enc, chunks, chusegs)
         self.assertEqual(obs, 5)
 
-        # chunk 0: nodes 0..2: two segs: 0, 1
-        # chunk 1: nodes 2..3: one seg: 2 (=1)
-        # chunk 2: nodes 3..6: one seg: 3 (=1)
-        # chunk 3: nodes 6..15: three segs: 6 (=1), 7, 8
-        # chunk 4: nodes 15..19: two segs: 15, 18
-        npt.assert_array_equal(chunks[:obs + 1], [0, 2, 3, 6, 15, 19])
-        npt.assert_array_equal(chusegs[:obs], [0, 2, 2, 2, 4])
+        # chunk 0: nodes 0, 1: ops = 2 + 1 = 3 (next node has ops = 5 which exceeds
+        # remaining space, so move to new chunk)
+        # chunk 1: nodes 2, 3: ops = 5 + 1 = 6
+        # chunk 2: nodes 4..8: ops = 3 + 1 + 1 + 0 + 0 = 5
+        # chunk 3: nodes 9..17: ops = 2 + 0 + 0 + 2 + 0 + 0 + 2 + 0 + 0 = 6
+        # chunk 4: node 18: ops = 2 (remaining nodes; chunk not filled)
+        npt.assert_array_equal(chunks[:obs + 1], [0, 2, 4, 9, 18, 19])
+        npt.assert_array_equal(chusegs[:obs], [1, 2, 2, 4, 6])
 
     def test_ols_lengths(self):
         """Calculate tree branch lengths using an OLS framework."""
@@ -1816,19 +1822,19 @@ class MeTests(TestCase):
         # This function doesn't return chunk count (unlike `_bal_avgdist_chunk`), so
         # we will have to find it in an indirect way.
         nr = (roots[1:] == 0).argmax() + 1  # number of roots
-        self.assertEqual(nr, 7)
+        self.assertEqual(nr, 5)
 
-        # The initial roots after the serial phase should be: [0, 1, 2, 7, 8, 15, 18].
-        # During the parallel phase, nodes 2 and 8 were mutated into 5 and 10.
-        npt.assert_array_equal(roots[:nr], [0, 1, 5, 7, 10, 15, 18])
+        # The initial roots after the serial phase should be: [0, 1, 2, 7, 18].
+        # During the parallel phase, nodes 2 and 7 were mutated into 5 and 10.
+        npt.assert_array_equal(roots[:nr], [0, 1, 5, 10, 18])
 
-        # There are three clades: 2, 4, and 5 (corresponding to root nodes 2, 8 and 15)
-        # (later becoming 5, 10 and 15).
-        npt.assert_array_equal(clades[:3], [2, 4, 5])
+        # There are three clades: 2 and 3 (corresponding to root nodes 2 and 7, later
+        # becoming 5 and 10).
+        npt.assert_array_equal(clades[:2], [2, 3])
 
-        # There are two chunks. Clade 2 belongs to the first chunk. Clades 4 and 5
-        # belong to the second chunk.
-        npt.assert_array_equal(chunks[:3], [0, 1, 3])
+        # There are two chunks. Clade 2 belongs to the first chunk. Clade 3 belongs to
+        # the second chunk.
+        npt.assert_array_equal(chunks[:3], [0, 1, 2])
 
     def test_swap_branches(self):
         # example 1: swap (e,d) with b

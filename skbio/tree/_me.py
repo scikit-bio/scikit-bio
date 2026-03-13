@@ -859,7 +859,7 @@ def _bme(dm, parallel=500, factor=10):
 
     # segment index at the beginning of each chunk
     chusegs = np.empty(N, dtype=int)
-    chusegs[0] = 0
+    chusegs[0] = 1
 
     args3 = (ancs, ancx, segs, lvls)
 

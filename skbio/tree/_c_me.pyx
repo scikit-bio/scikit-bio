@@ -970,7 +970,7 @@ def _bal_min_branch_p(
     cdef floating* adku = &adk[1, 0]
 
     # chunk capacity
-    cdef Py_ssize_t capacity = max(1, sizes[0] // enc)
+    cdef Py_ssize_t capacity = max(1, (sizes[0] + enc - 1) // enc)
 
     # remaining space of current chunk
     cdef Py_ssize_t space = capacity
@@ -1369,7 +1369,7 @@ def _bal_avgdist_insert(
     cdef floating* adm_a  # arbitrary node
 
     cdef Py_ssize_t deg  # number of branches between two nodes
-    cdef Py_ssize_t lvl  # number of branches above target
+    cdef Py_ssize_t lvl  # number of branches above target's parent
     cdef Py_ssize_t stride = adm.shape[1]  # width of `adm`
     cdef floating* npots_2 = &npots[2]  # power array offset
 
@@ -1799,7 +1799,7 @@ def _bal_insert_plan(
         # There is only one segment, which is the entire tree.
         segs[0] = 0
         segs[1] = n
-        lvls[0] = -1
+        lvls[0] = 0
 
         # workload of entire tree (see below).
         oops[0] = pair - size + 1
@@ -1838,7 +1838,7 @@ def _bal_insert_plan(
     # Depth equals to the number of ancestors of target. Therefore, target is placed at
     # index = deep in the list of segment.
     segs[deep] = itag
-    lvls[deep] = -1
+    lvls[deep] = 0
     li = deep - 1
     ri = deep + 1
 
@@ -2023,21 +2023,19 @@ def _bal_avgdist_chunk(
     # workload (number of operations) per node and per clade (subtree)
     cdef Py_ssize_t node_ops, tree_ops
 
-    # Total workload of the tree was pre-calculated and stored at root.
-    cdef Py_ssize_t total_ops = oops[0]
-
-    # chunk capacity
-    # TODO: replace `1` with a minimum number
-    cdef Py_ssize_t capacity = max(1, total_ops // enc)
+    # Calculate chunk capacity. Total workload of the tree is `oops[0]`. A ceiling
+    # division is performed to divide it into `enc` number of chunks.
+    cdef Py_ssize_t capacity = max(1, (oops[0] + enc - 1) // enc)
 
     ### Initialization: Create the first chunk, and put the first node (root) in it.
-    # chusegs[0] = 0               # next segment start current chunk (done already)
+    # chunks[0] = 0                # current chunk index (done already)
+    # chusegs[0] = 1               # next segment index of current chunk (done)
     cdef Py_ssize_t i = 1          # current node index
     cdef Py_ssize_t nchu = 1       # current number of chunks
     cdef Py_ssize_t iseg = 1       # next segment index
     cdef Py_ssize_t seg = segs[1]  # next segment start (node)
     cdef Py_ssize_t lvl = lvls[0]  # current segment's level
-    cdef Py_ssize_t space = capacity - lvl + 1  # remaining space of current chunk
+    cdef Py_ssize_t space = capacity - lvl  # remaining space of current chunk
 
     while i < n:
         node = order[i]
@@ -2057,6 +2055,10 @@ def _bal_avgdist_chunk(
             else:
                 node_ops = size + lvl - 1
                 tree_ops = pairs[node] + size * lvl
+
+            # move to next segment
+            iseg += 1
+            seg = segs[iseg]
 
         # regular scenario (same as right cousin)
         else:
@@ -2100,11 +2102,10 @@ def _bal_avgdist_chunk(
         # the `bisect` module or code from scratch. However, it is anticipated that the
         # next segment is relatively close to the current node. So this optimization
         # may not be necessary.
-        # TODO: Revisit later.
         while seg < i:
+            lvl = lvls[iseg]
             iseg += 1
             seg = segs[iseg]
-        lvl = lvls[iseg - 1]
 
     chunks[nchu] = n  # upper bound of last chunk
     return nchu
@@ -2252,6 +2253,9 @@ def _bal_avgdist_nest(
     cdef floating* adm_a
     cdef floating* npots_2 = &npots[2]
 
+    # do this for target clade
+    lvls[deep] = -1
+
     # number of branches from insertion point to shared ancestor
     cdef Py_ssize_t lvl
 
@@ -2259,9 +2263,9 @@ def _bal_avgdist_nest(
     cdef Py_ssize_t deg
 
     for ichu in prange(nchu, nogil=True, schedule="dynamic"):
-        iseg = chusegs[ichu]  # target segment
+        iseg = chusegs[ichu]  # next segment index
         seg = segs[iseg]
-        lvl = lvls[iseg - 1] if iseg > 0 else -1
+        lvl = lvls[iseg - 1]  # current segment's level
         deg = 2 * lvl - dep2
 
         for i in range(chunks[ichu], chunks[ichu + 1]):
@@ -2273,7 +2277,7 @@ def _bal_avgdist_nest(
             # 1) It is before any ancestor lower than the ancestor shared between it
             #    and target. Therefore, the horizontally filled cell coordinates must
             #    be [a, anc].
-            # 2) Every change point it encounters is target or an ancestor, which are
+            # 2) Every segment start it encounters is target or an ancestor, which are
             #    skipped during vertical filling.
             # This `if` would cost little compute due to branch prediction.
             if i <= itag:
@@ -2301,7 +2305,7 @@ def _bal_avgdist_nest(
                     # adm_a[ancs[j]] += ldexp(diff, -2 - j)
 
             # Current node is after target. This means: 1) Horizontal Cell coordinates
-            # are [anc, a]. 2) Change points are right cousins.
+            # are [anc, a]. 2) Segment starts are right cousins.
             else:
                 if i == seg:
                     lvl = lvls[iseg]
