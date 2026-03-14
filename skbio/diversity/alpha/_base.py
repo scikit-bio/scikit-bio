@@ -9,7 +9,6 @@
 import functools
 
 import numpy as np
-from scipy.special import gammaln as xp_gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 from skbio.util._array import ingest_array
 
