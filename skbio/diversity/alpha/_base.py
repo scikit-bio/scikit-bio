@@ -96,7 +96,7 @@ def berger_parker_d(counts,xp=None):
        foraminifera in deep-sea sediments. Science, 168(3937), 1345-1347.
 
     """
-    return xp.max(counts) / xp.sum(counts)
+    return xp.max(counts) / counts.sum()
 
 
 @_validate_alpha(empty=np.nan)
@@ -133,7 +133,7 @@ def brillouin_d(counts,xp=None):
        Press. New York.
 
     """
-    n_total = xp.sum(counts)
+    n_total = counts.sum()
     if 'numpy' in xp.__name__:
         from scipy.special import gammaln as xp_gammaln
     elif 'cupy' in xp.__name__:
@@ -220,7 +220,7 @@ def dominance(counts, finite=False,xp=None):
        688-688.
 
     """
-    n_total = xp.sum(counts)
+    n_total = counts.sum()
     if finite:
         numerator = xp.sum(counts * (counts - 1))
         denominator = n_total * (n_total - 1)
@@ -347,7 +347,7 @@ def esty_ci(counts,xp=None):
 
     """
 
-    N = xp.sum(counts)
+    N = counts.sum()
     f1 = xp.sum(counts == 1)
     f2 = xp.sum(counts == 2)
     z = 1.959963985
@@ -408,7 +408,7 @@ def fisher_alpha(counts,xp=None):
 
     """
     # alpha = +inf when all taxa are singletons
-    N = xp.sum(counts)
+    N = counts.sum()
     S = counts.size
     if N == S:
         return np.inf
@@ -416,11 +416,11 @@ def fisher_alpha(counts,xp=None):
     # objective function to minimize:
     # S = alpha * ln (1 + N / alpha), where alpha > 0
     def f(x):
-        if x <= 0:
-            return np.inf
-        return float((x * xp.log(1 + (N / x)) - S) ** 2)
+        return (x * xp.log(1 + (N / x)) - S) ** 2 if x > 0 else np.inf
 
-    res = minimize_scalar(f)
+    # minimize the function using the default method (Brent's algorithm)
+    with np.errstate(invalid="ignore"):
+        res = minimize_scalar(f)
 
     # there is a chance optimization could fail
     if res.success is False:
@@ -469,7 +469,7 @@ def goods_coverage(counts,xp=None):
        estimation of population parameters. Biometrika, 40(3-4), 237-264.
 
     """
-    n_total = xp.sum(counts)
+    n_total = counts.sum()
     f1 = xp.sum(counts == 1)
     return 1 - (f1 / n_total)
 
@@ -588,7 +588,7 @@ def hill(counts, order=2,xp=None):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    probs = counts / xp.sum(counts)
+    probs = counts / counts.sum()
     if order == 1:
         return _perplexity(probs, xp=xp)
     elif xp.isposinf(xp.asarray(order)):
@@ -753,7 +753,7 @@ def margalef(counts,xp=None):
        3, 36-71.
 
     """
-    n_total = xp.sum(counts)
+    n_total = counts.sum()
     if n_total == 1:
         return np.nan
     return (counts.size - 1) / xp.log(n_total)
@@ -802,7 +802,7 @@ def mcintosh_d(counts,xp=None):
        certain concepts to diversity. Ecology 48, 1115-1126.
 
     """
-    n_total = xp.sum(counts)
+    n_total = counts.sum()
     if n_total == 1:
         return np.nan
     u = xp.sqrt(xp.sum(counts**2))
@@ -848,7 +848,7 @@ def mcintosh_e(counts,xp=None):
 
     """
     S = counts.size
-    N = xp.sum(counts)
+    N = counts.sum()
     numerator = xp.sqrt(xp.sum(counts * counts))
     denominator = xp.sqrt((N - S + 1) ** 2 + S - 1)
 
@@ -895,7 +895,7 @@ def menhinick(counts,xp=None):
 
     """
 
-    return counts.size / xp.sqrt(xp.sum(counts))
+    return counts.size / xp.sqrt(counts.sum())
 
 
 @_validate_alpha(empty=np.nan)
@@ -955,7 +955,7 @@ def michaelis_menten_fit(counts, num_repeats=1, params_guess=None,xp=None):
 
     """
 
-    n_indiv = xp.sum(counts)
+    n_indiv = counts.sum()
     if params_guess is None:
         S_max_guess = sobs(counts)
         # Cast n_indiv to float/int to avoid backend tensor errors in math
@@ -1158,7 +1158,7 @@ def renyi(counts, order=2, base=None,xp=None):
     elif S == 1:
         return 0.0
 
-    probs = counts / xp.sum(counts)
+    probs = counts / counts.sum()
 
     # max-entropy
     if order == 0:
@@ -1219,7 +1219,7 @@ def robbins(counts,xp=None):
 
     """
 
-    return xp.sum(counts == 1) / xp.sum(counts)
+    return xp.sum(counts == 1) / counts.sum()
 
 
 def _entropy(probs,xp=None):
@@ -1301,7 +1301,7 @@ def shannon(counts, base=None, exp=False,xp=None):
 
     """
 
-    probs = counts / xp.sum(counts)
+    probs = counts / counts.sum()
 
     # perplexity
     if exp is True:
@@ -1543,7 +1543,7 @@ def strong(counts,xp=None):
     S = counts.size
     sorted_sum = xp.cumsum(xp.sort(counts)[::-1])
     i = xp.arange(1, S + 1, dtype=xp.float64)
-    return xp.max((sorted_sum / xp.sum(counts)) - (i / S))
+    return xp.max((sorted_sum / counts.sum()) - (i / S))
 
 
 @_validate_alpha()
@@ -1603,7 +1603,7 @@ def tsallis(counts, order=2,xp=None ):
     elif S == 1:
         return 0.0
 
-    probs = counts / xp.sum(counts)
+    probs = counts / counts.sum()
     if order == 1:
         return _entropy(probs, xp=xp)
     elif xp.isposinf(xp.asarray(order)):
