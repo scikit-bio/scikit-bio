@@ -137,8 +137,18 @@ def brillouin_d(counts,xp=None):
     n_total = xp.sum(counts)
     if 'numpy' in xp.__name__:
         from scipy.special import gammaln as xp_gammaln
+    elif 'cupy' in xp.__name__:
+        from cupyx.scipy.special import gammaln as xp_gammaln
+    elif 'jax' in xp.__name__:
+        from jax.scipy.special import gammaln as xp_gammaln
+    elif 'torch' in xp.__name__:
+        import torch
+        xp_gammaln = torch.special.gammaln
     else:
-        xp_gammaln = xp.special.gammaln
+        try:
+            xp_gammaln = xp.special.gammaln
+        except AttributeError:
+            from scipy.special import gammaln as xp_gammaln
 
     numerator = xp_gammaln(n_total + 1) - xp.sum(xp_gammaln(counts + 1))
     return numerator / n_total
