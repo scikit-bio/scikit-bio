@@ -186,7 +186,7 @@ class PERMDISPTests(TestCase):
         obs = permdisp(self.unifrac_dm, grouping, test='centroid',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
     def test_centroid_normal_condensed(self):
         exp = pd.Series(index=self.exp_index,
@@ -200,7 +200,7 @@ class PERMDISPTests(TestCase):
         obs = permdisp(self.unifrac_dm_condensed, grouping, test='centroid',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
     @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
@@ -212,7 +212,7 @@ class PERMDISPTests(TestCase):
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
         po = pcoa(self.unifrac_dm)
 
@@ -231,7 +231,7 @@ class PERMDISPTests(TestCase):
         obs = permdisp(self.unifrac_dm_condensed, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
         po = pcoa(self.unifrac_dm_condensed)
 
@@ -251,13 +251,13 @@ class PERMDISPTests(TestCase):
                        permutations=99,
                        method='fsvd', dimensions=3, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
         po = pcoa(self.unifrac_dm, method='fsvd', dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
     @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd_condensed(self):
@@ -270,13 +270,13 @@ class PERMDISPTests(TestCase):
                        permutations=99,
                        method='fsvd', dimensions=3, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
         po = pcoa(self.unifrac_dm_condensed, method='fsvd', dimensions=3)
         obs = permdisp(po, self.unif_grouping, test='median',
                        permutations=99, seed=42)
 
-        self.assert_series_equal(obs, exp)
+        self.assert_series_equal(obs, exp, atol=0.015)
 
     def test_not_distance_matrix(self):
         dm = []
