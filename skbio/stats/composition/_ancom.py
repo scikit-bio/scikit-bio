@@ -288,8 +288,6 @@ def ancom(
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
     # validate percentiles
-   # validate percentiles
-    # validate percentiles
     if percentiles is None:
         percentiles = xp.asarray([0.0, 25.0, 50.0, 75.0, 100.0])
     else:
@@ -298,7 +296,7 @@ def ancom(
         _, percentiles = ingest_array(percentiles)
 
         # Now we can safely compare
-        if xp.any(percentiles < 0.0) or xp.any(percentiles > 100.0):
+        if(percentiles < 0.0).any() or (percentiles > 100.0).any():
             raise ValueError("Percentiles must be in the range [0, 100].")
         n_pcts = percentiles.shape[0]
         percentiles = xp.unique_values(percentiles)
@@ -339,13 +337,13 @@ def ancom(
             corrected_rows.append(row_res)
         pval_mat = xp.stack(corrected_rows)
 
-    # We missed properly replacing np.fill_diagonal(pval_mat, 1) here!
-    diag_mask = xp.astype(xp.eye(pval_mat.shape[0]), xp.bool)
-    pval_mat = xp.where(diag_mask, xp.asarray(1.0, dtype=pval_mat.dtype), pval_mat)
+    # Replace the diagonal with 1.0 safely for all backends (replaces np.fill_diagonal)
+    mask = xp.eye(pval_mat.shape[0], dtype=xp.bool)
+    pval_mat = xp.where(mask, 1.0, pval_mat)
 
     # calculate W-statistics
     n_feats = matrix.shape[1]
-    W = xp.sum(pval_mat < alpha, axis=1)
+    W = (pval_mat < alpha).sum(axis=1)
     c_start = xp.max(W) / n_feats
     if c_start < theta:
         reject = xp.zeros_like(W, dtype=xp.bool)
@@ -392,9 +390,8 @@ def ancom(
 
         for percentile in percentiles:
             # Cast percentile back to a standard Python float
-            pct_val = float(percentile)
-            columns.append((pct_val, group))
-            data.append(np.percentile(feat_dists_np, pct_val, axis=0))
+            columns.append((percentile, group))
+            data.append(np.percentile(feat_dists_np, percentile, axis=0))
 
     columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
     percentile_df = pd.DataFrame(np.asarray(data).T, columns=columns, index=features)
@@ -448,8 +445,6 @@ def _log_compare(matrix, labels, n, test):
 
     # run statistical test on the 2-D arrays in a vectorized manner
     _, pvals = test(*log_ratios)
-    # run statistical test on the 2-D arrays in a vectorized manner
-    _, pvals = test(*log_ratios)
 
     # CRITICAL FIX: Force floats! If matrix was integers, this was rounding p-values to 0.
     pvals = xp.asarray(pvals, dtype=xp.float64)
@@ -459,7 +454,7 @@ def _log_compare(matrix, labels, n, test):
     pval_mat[ii, jj] = pvals
     pval_mat[jj, ii] = pvals
 
-    diag_mask = xp.astype(xp.eye(m), xp.bool)
-    pval_mat = xp.where(diag_mask, xp.asarray(0.0, dtype=xp.float64), pval_mat)
+    diag_mask = xp.eye(m, dtype=xp.bool)
+    pval_mat = xp.where(diag_mask, 0.0, pval_mat)
 
     return pval_mat
