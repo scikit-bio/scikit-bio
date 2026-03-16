@@ -60,14 +60,19 @@ def ancom(
         :ref:`supported formats <table_like>`.
 
         .. note::
-            If the table contains zero values, one should add a pseudocount or apply
+            If the table contains zero values, one should add a
+            pseudocount or apply
             :func:`multi_replace` to convert all values into positive numbers.
 
     grouping : pd.Series or 1-D array_like
-        Vector indicating the assignment of samples to groups. These could be strings
-        or integers denoting which group a sample belongs to. If it is a pandas Series
-        and the table contains sample IDs, its index will be filtered and reordered to
-        match the sample IDs. Otherwise, it must be the same length as the samples in
+        Vector indicating the assignment of samples to groups.
+        These could be strings>
+        or integers denoting which group a sample belongs to.
+        If it is a pandas Series
+        and the table contains sample IDs,
+        its index will be filtered and reordered to
+        match the sample IDs.
+        Otherwise, it must be the same length as the samples in
         the table.
     alpha : float, optional
         Significance level for each of the statistical tests. This can can be
@@ -83,9 +88,11 @@ def ancom(
         exclusive.
     p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are
-        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
-        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
-        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default),
+        Benjamini-Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"),
+        or any method supported by
+        statsmodels ':func:`~statsmodels.stats.multitest.multipletests`
+        function.
         Case-insensitive. If None, no correction will be performed.
     sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
@@ -94,9 +101,10 @@ def ancom(
         by name. The default is one-way ANOVA ("f_oneway").
 
         .. versionchanged:: 0.7.0
-            Test function must accept 2-D arrays as input, perform batch testing, and
-            return 1-D arrays. SciPy functions have this capability. Custom functions
-            may need modification.
+            Test function must accept 2-D arrays as input,
+            perform batch testing, and
+            return 1-D arrays. SciPy functions have this capability.
+            Custom functions may need modification.
 
         .. versionchanged:: 0.6.0
             Accepts test names in addition to functions.
@@ -166,8 +174,9 @@ def ancom(
     of zero cannot be computed.  While this is an unsolved problem, many
     studies, including [1]_, have shown promising results by adding
     pseudocounts to all values in the matrix. In [1]_, a pseudocount of 0.001
-    was used, though the authors note that a pseudocount of 1.0 may also be
-    useful. Zero counts can also be addressed using the ``multi_replace`` method.
+    was used, though the authors note that a pseudocount of 1.0 may
+    also be useful. Zero counts can also be addressed using the
+    ``multi_replace`` method.
 
     References
     ----------
@@ -221,9 +230,10 @@ def ancom(
     to be significantly different against. In this scenario, ``b2`` was
     detected to have significantly different abundances compared to four of the
     other features. To summarize the results from the *W*-statistic, let's take
-    a look at the results from the hypothesis test. The ``Signif`` column in the
-    table indicates whether the null hypothesis was rejected, and that a feature
-    was therefore observed to be differentially abundant across the groups.
+    a look at the results from the hypothesis test.
+    The ``Signif`` column in the table indicates whether the
+    null hypothesis was rejected, and that a feature was therefore
+    observed to be differentially abundant across the groups.
 
     >>> ancom_df['Signif']
     b1    False
@@ -288,8 +298,6 @@ def ancom(
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
     # validate percentiles
-   # validate percentiles
-    # validate percentiles
     if percentiles is None:
         percentiles = xp.asarray([0.0, 25.0, 50.0, 75.0, 100.0])
     else:
@@ -341,7 +349,11 @@ def ancom(
 
     # We missed properly replacing np.fill_diagonal(pval_mat, 1) here!
     diag_mask = xp.astype(xp.eye(pval_mat.shape[0]), xp.bool)
-    pval_mat = xp.where(diag_mask, xp.asarray(1.0, dtype=pval_mat.dtype), pval_mat)
+    pval_mat = xp.where(
+        diag_mask,
+        xp.asarray(1.0, dtype=pval_mat.dtype),
+        pval_mat
+    )
 
     # calculate W-statistics
     n_feats = matrix.shape[1]
@@ -387,7 +399,8 @@ def ancom(
         feat_dists = matrix[xp_labels == i]
 
         # OFF-RAMP: Bring the slice back to standard CPU NumPy.
-        # This is required because xp.percentile does not exist, and Pandas needs NumPy.
+        # This is required because xp.percentile does not exist,
+        # Pandas needs NumPy.
         feat_dists_np = np.asarray(feat_dists)
 
         for percentile in percentiles:
@@ -397,7 +410,11 @@ def ancom(
             data.append(np.percentile(feat_dists_np, pct_val, axis=0))
 
     columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
-    percentile_df = pd.DataFrame(np.asarray(data).T, columns=columns, index=features)
+    percentile_df = pd.DataFrame(
+        np.asarray(data).T,
+        columns=columns,
+        index=features
+    )
 
     return ancom_df, percentile_df
 
@@ -405,9 +422,9 @@ def ancom(
 def _log_compare(matrix, labels, n, test):
     """Compare pairwise log ratios between sample groups.
 
-    Calculate pairwise log ratios between all features and perform a statistical test
-    to determine if there is a significant difference in feature ratios with respect
-    to the variable of interest.
+    Calculate pairwise log ratios between all features and perform a
+    statistical test to determine if there is a significant difference in
+    feature ratios with respect to the variable of interest.
 
     Parameters
     ----------
@@ -426,7 +443,8 @@ def _log_compare(matrix, labels, n, test):
         p-value matrix.
 
     """
-    # note: `n` can be simply computed with `labels.max()`. It is supplied instead to
+    # note: `n` can be simply computed with `labels.max()`.
+    # It is supplied instead to
     # save compute.
 
     # log-transform data
@@ -450,8 +468,8 @@ def _log_compare(matrix, labels, n, test):
     _, pvals = test(*log_ratios)
     # run statistical test on the 2-D arrays in a vectorized manner
     _, pvals = test(*log_ratios)
-
-    # CRITICAL FIX: Force floats! If matrix was integers, this was rounding p-values to 0.
+    # CRITICAL FIX: Force floats! If matrix was integers
+    # This was rounding p-values to 0.
     pvals = xp.asarray(pvals, dtype=xp.float64)
 
     pval_mat = xp.empty((m, m), dtype=xp.float64)
