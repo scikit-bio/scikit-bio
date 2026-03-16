@@ -11,7 +11,6 @@
 
 ### Features
 
-* Added `graphembed` to `skbio.stats.ordination` to support computing representation vectors via the `graphembed_rs` framework, if installed. ([#2212](https://github.com/scikit-bio/scikit-bio/issues/2212))
 * Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
 * `mantel` and `permanova` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322), [#2335](https://github.com/scikit-bio/scikit-bio/pull/2335)).
 * Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
