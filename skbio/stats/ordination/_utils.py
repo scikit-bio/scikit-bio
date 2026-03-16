@@ -187,7 +187,7 @@ def e_matrix(distance_matrix):
     Squares and divides by -2 the input elementwise. Eq. 9.20 in
     Legendre & Legendre 1998.
     """
-    distance_matrix, xp = ingest_array(distance_matrix)
+    xp, distance_matrix = ingest_array(distance_matrix)
     return distance_matrix * distance_matrix / -2
 
 
@@ -198,7 +198,10 @@ def f_matrix(E_matrix):
     row and column are subtracted, and the mean of the whole
     matrix is added. Eq. 9.21 in Legendre & Legendre 1998.
     """
-    E_matrix, xp = ingest_array(E_matrix)
+    xp, E_matrix = ingest_array(E_matrix)
+    if not xp.isdtype(E_matrix.dtype, "real floating"):
+        E_matrix = xp.astype(E_matrix, xp.float64)
+
     row_means = xp.mean(E_matrix, axis=1, keepdims=True)
     col_means = xp.mean(E_matrix, axis=0, keepdims=True)
     matrix_mean = xp.mean(E_matrix)
@@ -225,7 +228,7 @@ def center_distance_matrix(distance_matrix, inplace=False):
 
     """
     xp, distance_matrix = ingest_array(distance_matrix)
-    if xp.__name__ == 'numpy': 
+    if xp.__name__ in ('numpy', 'array_api_compat.numpy'): 
         if not distance_matrix.flags.c_contiguous:
             distance_matrix = np.asarray(distance_matrix, order="C")
         
@@ -236,7 +239,6 @@ def center_distance_matrix(distance_matrix, inplace=False):
             centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
             center_distance_matrix_cy(distance_matrix, centered)
             return centered
-        return f_matrix(e_matrix(distance_matrix))
 
 
 def _e_matrix_inplace(distance_matrix):
@@ -254,7 +256,7 @@ def _e_matrix_inplace(distance_matrix):
         Distance matrix.
 
     """
-    distance_matrix, xp = ingest_array(distance_matrix)
+    xp, distance_matrix = ingest_array(distance_matrix)
     if not xp.isdtype(distance_matrix.dtype, "real floating"):
         distance_matrix = xp.astype(distance_matrix, xp.float64)
     return (distance_matrix * distance_matrix) / -2
@@ -276,7 +278,7 @@ def _f_matrix_inplace(e_matrix):
         A matrix representing the "E matrix" as described above.
 
     """
-    e_matrix, xp = ingest_array(e_matrix)
+    xp, e_matrix = ingest_array(e_matrix)
     if not xp.isdtype(e_matrix.dtype, "real floating"):
         e_matrix = xp.astype(e_matrix, xp.float64)
 
@@ -284,17 +286,6 @@ def _f_matrix_inplace(e_matrix):
     col_means = xp.mean(e_matrix, axis=0, keepdims=True)
     matrix_mean = xp.mean(e_matrix)
 
-    for i in np.arange(len(e_matrix)):
-        row_means[i] = e_matrix[i].mean()
-        matrix_mean += e_matrix[i].sum()
-        col_means += e_matrix[i]
-    matrix_mean /= len(e_matrix) ** 2
-    col_means /= len(e_matrix)
-
-    for i in np.arange(len(e_matrix)):
-        v = e_matrix[i]
-        v -= row_means[i]
-        v -= col_means
-        v += matrix_mean
-        e_matrix[i] = v
+    e_matrix = e_matrix - row_means - col_means + matrix_mean
+    
     return e_matrix
