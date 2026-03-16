@@ -130,11 +130,11 @@ def rda(
     feature_ids = y_cols
     # Centre response variables (they must be dimensionally
     # homogeneous)
-    Y -= xp.mean(Y, axis=0)
+    Y = Y - xp.mean(Y, axis=0)
     if scale_Y:
-        Y /= xp.std(Y, axis=0)
+        Y =Y / xp.std(Y, axis=0)
     # Centre explanatory variables
-    X -= xp.mean(X, axis=0)
+    X = X - xp.mean(X, axis=0)
     # Distribution of variables should be examined and transformed
     # if necessary (see paragraph 4 in p. 580 L&L 1998)
 
