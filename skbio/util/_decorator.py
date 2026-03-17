@@ -52,11 +52,7 @@ def array_api_compatible(backends, devices=None):
     """
 
     def decorator(func):
-        func._array_api_backends = backends
-        func._array_api_devices = devices
-
         section = _array_api_compat_section(backends, devices)
-        func.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -65,8 +61,10 @@ def array_api_compatible(backends, devices=None):
                 _check_array_api_backend(xp, backends, func.__name__)
             return func(*args, **kwargs)
 
+        wrapper.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
         wrapper._array_api_backends = backends
         wrapper._array_api_devices = devices
+
         return wrapper
 
     return decorator

@@ -594,7 +594,7 @@ def backends(*backend_names, cpu_only=False):
     def decorator(test_func):
         @functools.wraps(test_func)
         def wrapper(self):
-            env_backend, _ = _read_env()
+            env_backend, env_device = _read_env()
 
             # Hard error when a specific backend was requested but is missing.
             if env_backend and env_backend != "all" and env_backend not in _BACKENDS:
@@ -623,8 +623,12 @@ def backends(*backend_names, cpu_only=False):
                             flush=True,
                         )
                         test_func(self, xp, device)
-
             if not ran_any:
+                if env_device:
+                    raise RuntimeError(
+                        f"SKBIO_DEVICE={env_device!r} was requested but no "
+                        f"backend has that device available."
+                    )
                 raise unittest.SkipTest(f"No matching backends for {backend_names}")
 
         return wrapper
