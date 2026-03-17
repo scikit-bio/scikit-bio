@@ -617,6 +617,11 @@ def backends(*backend_names, cpu_only=False):
 
                     ran_any = True
                     with self.subTest(backend=name, device=device):
+                        # Comment this print statement out when finished
+                        print(
+                            f"\n  → Running {test_func.__name__} [{name}, {device}]",
+                            flush=True,
+                        )
                         test_func(self, xp, device)
 
             if not ran_any:
