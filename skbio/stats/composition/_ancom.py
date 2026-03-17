@@ -307,7 +307,7 @@ def ancom(
         _, percentiles = ingest_array(percentiles)
 
         # Now we can safely compare
-        if xp.any(percentiles < 0.0) or xp.any(percentiles > 100.0):
+        if (percentiles < 0.0).any() or (percentiles > 100.0).any():
             raise ValueError("Percentiles must be in the range [0, 100].")
         n_pcts = percentiles.shape[0]
         percentiles = xp.unique_values(percentiles)
@@ -360,7 +360,7 @@ def ancom(
 
     # calculate W-statistics
     n_feats = matrix.shape[1]
-    W = xp.sum(pval_mat < alpha, axis=1)
+    W = (pval_mat < alpha).sum(axis=1)
     c_start = xp.max(W) / n_feats
     if c_start < theta:
         reject = xp.zeros_like(W, dtype=xp.bool)
