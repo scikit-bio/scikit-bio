@@ -669,8 +669,14 @@ class ArrayAPITestMixin:
         )
 
         if device not in ("cpu", None) and hasattr(result, "device"):
-            self.assertIn(
-                device,
-                str(result.device),
+            self.assertEqual(
+                self._normalize_device(result.device),
+                self._normalize_device(device),
                 f"Device not preserved: result on {result.device}, expected {device}",
             )
+
+    def _normalize_device(self, name):
+        name = str(name).lower()
+        if "cuda" in name or name == "gpu":
+            return "gpu"
+        return name
