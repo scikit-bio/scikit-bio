@@ -2,6 +2,9 @@
 
 ## Version 0.7.3-dev
 
+### Features
+
+* Added a general `_reader_kwargs` mechanism for documenting class-specific parameters in auto-generated `read()` docstrings. Applied to `TabularMSA` to document the required `constructor` parameter ([#2388](https://github.com/scikit-bio/scikit-bio/issues/2388)).
 
 ## Version 0.7.2
 
