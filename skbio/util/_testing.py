@@ -11,11 +11,15 @@
 import inspect
 import os
 import sys
+import functools
+import unittest
 
 import numpy as np
 import numpy.testing as npt
 import pandas.testing as pdt
 from scipy.spatial.distance import pdist
+
+from skbio.util._array import _to_numpy, _move_to_device, _get_backend_name
 
 
 class ReallyEqualMixin:
@@ -452,3 +456,231 @@ def pytestrunner():
 
     errno = pytest.main(args=["--pyargs", "skbio"] + sys.argv[1:])
     sys.exit(errno)
+
+
+# -------------------------------------------------------------------------------------
+# Array API test infrastructure
+#
+# Write one test method, run it against every supported array backend.
+# Uses unittest.subTest() for per-backend reporting — no pytest needed.
+#
+# Env vars:
+#   SKBIO_ARRAY_API_BACKEND  — "numpy" (default), "jax", "torch", "cupy", or "all"
+#   SKBIO_DEVICE             — "cpu" (default), "cuda", "gpu"
+#
+# Usage:
+#     class TestClosure(TestCase, ArrayAPITestMixin):
+#         @backends("numpy", "jax", "torch", "cupy")
+#         def test_basic(self, xp, device):
+#             data = self.make_array(xp, device, [[2.0, 2.0, 6.0]])
+#             result = closure(data)
+#             self.assert_type_preserved(result, xp, device)
+#             self.assert_close(result, self.make_array(xp, device, [[0.2, 0.2, 0.6]]))
+# -------------------------------------------------------------------------------------
+
+
+def _read_env():
+    """Read backend/device environment variables."""
+    backend = os.environ.get("SKBIO_ARRAY_API_BACKEND", "").strip()
+    device = os.environ.get("SKBIO_DEVICE", "").strip() or None
+    return backend, device
+
+
+def _get_available_backends():
+    """Return dict of {name: (namespace, [devices])} for installed backends."""
+    _backends = {"numpy": (np, ["cpu"])}
+
+    try:
+        import jax
+        import jax.numpy as jnp
+
+        jax.config.update("jax_enable_x64", True)
+        devices = ["cpu"]
+        try:
+            if jax.devices("gpu"):
+                devices.append("gpu")
+        except RuntimeError:
+            pass
+        _backends["jax"] = (jnp, devices)
+    except ImportError:
+        pass
+
+    try:
+        import torch
+
+        torch.set_default_dtype(torch.float64)
+        devices = ["cpu"]
+        if torch.cuda.is_available():
+            devices.append("cuda")
+        _backends["torch"] = (torch, devices)
+    except ImportError:
+        pass
+
+    try:
+        import cupy
+
+        _backends["cupy"] = (cupy, ["cuda"])
+    except ImportError:
+        pass
+
+    return _backends
+
+
+_BACKENDS = _get_available_backends()
+
+
+def _should_run(backend_name, device):
+    """Check whether a backend/device combo should execute."""
+    env_backend, env_device = _read_env()
+
+    if not env_backend:
+        return backend_name == "numpy" and device == "cpu"
+
+    if env_backend == "all":
+        if env_device and env_device != device:
+            return False
+        return True
+
+    if env_backend != backend_name:
+        return False
+
+    if env_device and env_device != device:
+        return False
+
+    return True
+
+
+def xp_assert_close(actual, desired, rtol=1e-7, atol=0):
+    """Assert two arrays are element-wise equal within a tolerance.
+
+    Converts both arrays to NumPy (handles GPU arrays), then delegates to
+    ``numpy.testing.assert_allclose``.
+
+    """
+    npt.assert_allclose(_to_numpy(actual), _to_numpy(desired), rtol=rtol, atol=atol)
+
+
+def xp_assert_equal(actual, desired):
+    """Assert two arrays are element-wise exactly equal.
+
+    Converts both arrays to NumPy (handles GPU arrays), then delegates to
+    ``numpy.testing.assert_array_equal``.
+
+    """
+    npt.assert_array_equal(_to_numpy(actual), _to_numpy(desired))
+
+
+def backends(*backend_names, cpu_only=False):
+    """Decorator: run a test method once per supported backend/device.
+
+    Uses ``unittest.subTest()`` for per-backend reporting.
+
+    Parameters
+    ----------
+    *backend_names : str
+        Backends to run on. Defaults to all if empty.
+    cpu_only : bool, optional
+        If True, skip GPU devices.
+
+    Raises
+    ------
+    RuntimeError
+        If ``SKBIO_ARRAY_API_BACKEND`` names a backend that is not installed.
+
+    """
+    if not backend_names:
+        backend_names = ("numpy", "jax", "torch", "cupy")
+
+    def decorator(test_func):
+        @functools.wraps(test_func)
+        def wrapper(self):
+            env_backend, env_device = _read_env()
+
+            # Hard error when a specific backend was requested but is missing.
+            if env_backend and env_backend != "all" and env_backend not in _BACKENDS:
+                raise RuntimeError(
+                    f"SKBIO_ARRAY_API_BACKEND={env_backend!r} but "
+                    f"{env_backend!r} is not installed. "
+                    f"Installed backends: {sorted(_BACKENDS.keys())}"
+                )
+
+            ran_any = False
+            for name in backend_names:
+                if name not in _BACKENDS:
+                    continue
+                xp, devices = _BACKENDS[name]
+                for device in devices:
+                    if cpu_only and device != "cpu":
+                        continue
+                    if not _should_run(name, device):
+                        continue
+
+                    ran_any = True
+                    with self.subTest(backend=name, device=device):
+                        # Comment this print statement out when finished
+                        print(
+                            f"\n  → Running {test_func.__name__} [{name}, {device}]",
+                            flush=True,
+                        )
+                        test_func(self, xp, device)
+            if not ran_any:
+                if env_device:
+                    raise RuntimeError(
+                        f"SKBIO_DEVICE={env_device!r} was requested but no "
+                        f"backend has that device available."
+                    )
+                raise unittest.SkipTest(f"No matching backends for {backend_names}")
+
+        return wrapper
+
+    return decorator
+
+
+class ArrayAPITestMixin:
+    """Mixin providing array-API test helpers for ``unittest.TestCase``.
+
+    Mix into your test class alongside ``TestCase``::
+
+        class TestMyFunc(unittest.TestCase, ArrayAPITestMixin):
+            ...
+
+    """
+
+    def make_array(self, xp, device, data, dtype=None):
+        """Create an array on the appropriate backend and device."""
+        if dtype is not None:
+            arr = xp.asarray(data, dtype=dtype)
+        else:
+            arr = xp.asarray(data)
+        return _move_to_device(arr, xp, device)
+
+    def assert_close(self, actual, expected, rtol=1e-7, atol=1e-7):
+        """Assert two arrays are numerically close (converts to numpy)."""
+        npt.assert_allclose(
+            _to_numpy(actual), _to_numpy(expected), rtol=rtol, atol=atol
+        )
+
+    def assert_type_preserved(self, result, xp, device):
+        """Assert result is from the correct backend and on the right device."""
+        import array_api_compat as aac
+
+        result_name = _get_backend_name(aac.array_namespace(result))
+        expected_name = _get_backend_name(xp)
+        self.assertEqual(
+            result_name,
+            expected_name,
+            f"Backend not preserved: result is {result_name}, expected {expected_name}",
+        )
+
+        if device not in ("cpu", None) and hasattr(result, "device"):
+            self.assertEqual(
+                self._normalize_device(result.device),
+                self._normalize_device(device),
+                f"Device not preserved: result on {result.device}, expected {device}",
+            )
+
+    def _normalize_device(self, name):
+        name = str(name).lower()
+        if "cuda" in name or name == "gpu":
+            return "gpu"
+        return name

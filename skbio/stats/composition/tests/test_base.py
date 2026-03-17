@@ -21,6 +21,7 @@ from skbio.stats.composition import (
     ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
+from skbio.util._testing import ArrayAPITestMixin, backends, xp_assert_close
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):

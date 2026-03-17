@@ -14,7 +14,12 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from skbio.util._decorator import aliased, register_aliases, params_aliased
+from skbio.util._decorator import (
+    aliased,
+    register_aliases,
+    params_aliased,
+    array_api_compatible,
+)
 from skbio.util._array import ingest_array
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -74,6 +79,10 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
+@array_api_compatible(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform closure to ensure that all components of each composition sum to 1.
 
