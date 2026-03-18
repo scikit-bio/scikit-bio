@@ -6,6 +6,10 @@
 
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 
+### Bug Fixes
+
+* Fixed a bug in `skbio.io.registry` where a `NoneType` AttributeError would be raised during program exit if a file parsing generator was left unconsumed. ([#2428](https://github.com/scikit-bio/scikit-bio/pull/2428))
+
 
 ## Version 0.7.2
 
