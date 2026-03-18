@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from skbio.util._decorator import params_aliased
+from skbio.util._array import ingest_array
 from skbio.table._tabular import _ingest_table
 from ._base import _check_composition
 from ._utils import _check_grouping, _check_sig_test, _check_p_adjust
@@ -271,7 +272,7 @@ def ancom(
 
     """
     matrix, samples, features = _ingest_table(table)
-
+    xp, matrix = ingest_array(matrix)
     groups, labels = _check_grouping(grouping, matrix, samples)
 
     _check_composition(np, matrix, nozero=True)
@@ -287,16 +288,21 @@ def ancom(
         raise ValueError("`theta`=%f is not within 0 and 1." % theta)
 
     # validate percentiles
+   # validate percentiles
+    # validate percentiles
     if percentiles is None:
-        percentiles = np.arange(0, 125, 25.0)
+        percentiles = xp.asarray([0.0, 25.0, 50.0, 75.0, 100.0])
     else:
-        if not isinstance(percentiles, np.ndarray):
-            percentiles = np.fromiter(percentiles, dtype=float)
-        if (percentiles < 0.0).any() or (percentiles > 100.0).any():
+        # CRITICAL FIX: Convert iterator to a list before array ingestion
+        percentiles = list(percentiles)
+        _, percentiles = ingest_array(percentiles)
+        
+        # Now we can safely compare
+        if xp.any(percentiles < 0.0) or xp.any(percentiles > 100.0):
             raise ValueError("Percentiles must be in the range [0, 100].")
-        n_pcts = len(percentiles)
-        percentiles = np.unique(percentiles)
-        if percentiles.size != n_pcts:
+        n_pcts = percentiles.shape[0]
+        percentiles = xp.unique_values(percentiles)
+        if percentiles.shape[0] != n_pcts:
             raise ValueError("Percentile values must be unique.")
 
     n_groups = len(groups)
@@ -324,23 +330,31 @@ def ancom(
     pval_mat = _log_compare(matrix, labels, n_groups, test_f)
 
     # correct for multiple testing problem
+    # correct for multiple testing problem
+    # correct for multiple testing problem
     if p_adjust is not None:
         func = _check_p_adjust(p_adjust)
-        pval_mat = np.apply_along_axis(func, 1, pval_mat)
-
-    np.fill_diagonal(pval_mat, 1)
+        n_rows = pval_mat.shape[0]
+        corrected_rows = []
+        for i in range(n_rows):
+            row_res = xp.asarray(func(pval_mat[i, :]), dtype=pval_mat.dtype)
+            corrected_rows.append(row_res)
+        pval_mat = xp.stack(corrected_rows)
+        
+    # We missed properly replacing np.fill_diagonal(pval_mat, 1) here!
+    diag_mask = xp.astype(xp.eye(pval_mat.shape[0]), xp.bool)
+    pval_mat = xp.where(diag_mask, xp.asarray(1.0, dtype=pval_mat.dtype), pval_mat)
 
     # calculate W-statistics
     n_feats = matrix.shape[1]
-    W = (pval_mat < alpha).sum(axis=1)
-    c_start = W.max() / n_feats
+    W = xp.sum(pval_mat < alpha, axis=1)
+    c_start = xp.max(W) / n_feats
     if c_start < theta:
-        reject = np.zeros_like(W, dtype=bool)
+        reject = xp.zeros_like(W, dtype=xp.bool)
     else:
-        # Select appropriate cutoff
-        cutoff = c_start - np.linspace(0.05, 0.25, 5)
-        prop_cut = (W[:, None] > n_feats * cutoff).mean(axis=0)
-        dels = np.abs(prop_cut - np.roll(prop_cut, -1))
+        cutoff = c_start - xp.linspace(0.05, 0.25, 5)
+        prop_cut = xp.mean(W[:, None] > n_feats * cutoff, axis=0) 
+        dels = xp.abs(prop_cut - xp.roll(prop_cut, -1))           
         dels[-1] = 0
 
         if (dels[0] < tau) and (dels[1] < tau) and (dels[2] < tau):
@@ -361,17 +375,32 @@ def ancom(
     )
 
     # calculate percentiles
-    if percentiles.size == 0:
+    if int(percentiles.size) == 0:
         return ancom_df, pd.DataFrame()
+        
     data = []
     columns = []
+    
+    # Ensure labels is in the xp namespace for safe boolean indexing
+    xp_labels = xp.asarray(labels)
+    
     for i, group in enumerate(groups):
-        feat_dists = matrix[labels == i]
+        # Slice using the hardware-agnostic arrays
+        feat_dists = matrix[xp_labels == i]
+        
+        # OFF-RAMP: Bring the slice back to standard CPU NumPy.
+        # This is required because xp.percentile does not exist, and Pandas needs NumPy.
+        feat_dists_np = np.asarray(feat_dists) 
+        
         for percentile in percentiles:
-            columns.append((percentile, group))
-            data.append(np.percentile(feat_dists, percentile, axis=0))
+            # Cast percentile back to a standard Python float
+            pct_val = float(percentile) 
+            columns.append((pct_val, group))
+            data.append(np.percentile(feat_dists_np, pct_val, axis=0))
+            
     columns = pd.MultiIndex.from_tuples(columns, names=["Percentile", "Group"])
     percentile_df = pd.DataFrame(np.asarray(data).T, columns=columns, index=features)
+    
     return ancom_df, percentile_df
 
 
@@ -403,24 +432,36 @@ def _log_compare(matrix, labels, n, test):
     # save compute.
 
     # log-transform data
-    log_mat = np.log(matrix)
-
+    xp, matrix = ingest_array(matrix)
+    
+    log_mat = xp.log(matrix)
+    xp_labels = xp.asarray(labels)
+    
     # divide data by sample group
-    grouped = [log_mat[labels == i] for i in range(n)]
+    grouped = [log_mat[xp_labels == i] for i in range(n)]
 
     # determine all pairs of feature indices
     m = matrix.shape[1]
-    ii, jj = np.triu_indices(m, k=1)
+    upper_tri_mask = xp.triu(xp.ones((m, m), dtype=xp.bool), k=1)
+    ii, jj = xp.nonzero(upper_tri_mask)
 
     # calculate all log ratios (pairwise difference of log values)
     log_ratios = [x[:, ii] - x[:, jj] for x in grouped]
 
     # run statistical test on the 2-D arrays in a vectorized manner
     _, pvals = test(*log_ratios)
+    # run statistical test on the 2-D arrays in a vectorized manner
+    _, pvals = test(*log_ratios)
 
-    # populate p-value matrix
-    pval_mat = np.empty((m, m))
-    pval_mat[ii, jj] = pval_mat[jj, ii] = pvals
-    np.fill_diagonal(pval_mat, 0)
+    # CRITICAL FIX: Force floats! If matrix was integers, this was rounding p-values to 0.
+    pvals = xp.asarray(pvals, dtype=xp.float64)
+    
+    pval_mat = xp.empty((m, m), dtype=xp.float64) 
+    
+    pval_mat[ii, jj] = pvals
+    pval_mat[jj, ii] = pvals
+    
+    diag_mask = xp.astype(xp.eye(m), xp.bool)
+    pval_mat = xp.where(diag_mask, xp.asarray(0.0, dtype=xp.float64), pval_mat)   
 
     return pval_mat
