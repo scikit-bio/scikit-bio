@@ -13,7 +13,6 @@ from pathlib import Path
 from itertools import chain
 from tempfile import NamedTemporaryFile
 
-import requests  # type: ignore[import-untyped]
 
 from skbio.io import IOSourceError
 from ._fileobject import (
@@ -98,16 +97,15 @@ class FilePathSource(IOSource):
 
 class HTTPSource(IOSource):
     def can_read(self):
+        import requests  # type: ignore[import-untyped]
         return isinstance(self.file, str) and requests.compat.urlparse(
             self.file
         ).scheme in {"http", "https"}
 
     def get_reader(self):
+        import requests  # type: ignore[import-untyped]
         req = requests.get(self.file)
-
-        # if the response is not 200, an exception will be raised
         req.raise_for_status()
-
         return io.BufferedReader(io.BytesIO(req.content))
 
 
