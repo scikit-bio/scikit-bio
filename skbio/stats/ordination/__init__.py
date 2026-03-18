@@ -59,7 +59,6 @@ Graph embedding
 
    graphembed
 
-
 Ordination results
 ------------------
 
