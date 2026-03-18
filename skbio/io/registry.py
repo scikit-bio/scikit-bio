@@ -561,11 +561,15 @@ class IORegistry:
         # _resolve_file and for verifying a format.
         # kwargs should still retain the contents of io_kwargs because the
         # actual reader will also need them.
-        with _resolve_file(file, **io_kwargs) as (file, _, _):
-            reader, kwargs = self._init_reader(
-                file, fmt, into, verify, kwargs, io_kwargs
-            )
-            yield from reader(file, cls=into, **kwargs)
+        try:
+            with _resolve_file(file, **io_kwargs) as (file, _, _):
+                reader, kwargs = self._init_reader(
+                    file, fmt, into, verify, kwargs, io_kwargs
+                )
+                yield from reader(file, cls=into, **kwargs)
+        except AttributeError as e:
+            if "'NoneType' object has no attribute 'exc_info'" not in str(e):
+                raise
 
     def _find_io_kwargs(self, kwargs):
         return {k: kwargs[k] for k in _open_kwargs if k in kwargs}
