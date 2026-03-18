@@ -168,6 +168,20 @@ def multi_replace(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
+    # Preserve pandas objects for Pandas >= 3.0 apply() compatibility
+    is_series = (
+        hasattr(mat, "name")
+        and hasattr(mat, "index")
+        and not hasattr(mat, "columns")
+    )
+    is_df = hasattr(mat, "columns") and hasattr(mat, "index")
+
+    if is_series:
+        orig_index, orig_name = mat.index, mat.name
+    elif is_df:
+        orig_index, orig_cols = mat.index, mat.columns
+
+    mat = closure(mat)
     mat = closure(mat)
     z_mat = mat == 0
 
@@ -184,7 +198,19 @@ def multi_replace(mat, delta=None):
             "using a smaller `delta`."
         )
     mat = np.where(z_mat, delta, zcnts * mat)
-    return mat.squeeze()
+    res = mat.squeeze()
+
+    # Restore pandas object to prevent downstream formatting issues
+    if is_series:
+        import pandas as pd
+        return pd.Series(res, index=orig_index, name=orig_name)
+    elif is_df:
+        import pandas as pd
+        # Ensure 2D shape is maintained if squeeze flattened a 1xN DataFrame
+        res = np.atleast_2d(res) if res.ndim == 1 else res
+        return pd.DataFrame(res, index=orig_index, columns=orig_cols)
+
+    return res
 
 
 def _closure_two(x, y, validate):
