@@ -2,10 +2,13 @@
 
 ## Version 0.7.3-dev
 
+### Features
+
+* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
+
 ### Bug Fixes
 
-* Fixed an issue where `composition.multi_replace` failed to expand into a DataFrame when used 
-
+* Fixed an issue where `composition.multi_replace` failed to expand into a DataFrame when used with Pandas 3.0 `apply(axis=1)` ([#2375](https://github.com/scikit-bio/scikit-bio/issues/2375)).
 
 ## Version 0.7.2
 
