@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added support for translating DNA and RNA sequences containing ambiguous characters. Codons with degeneracies are now resolved to the most specific possible residues, allowing for direct translation without manual sequence expansion. ([#2411](https://github.com/scikit-bio/scikit-bio/pull/2411))
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 
 
