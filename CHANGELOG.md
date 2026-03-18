@@ -2,6 +2,10 @@
 
 ## Version 0.7.3-dev
 
+### Bug Fixes
+
+* Fixed an issue where `composition.multi_replace` failed to expand into a DataFrame when used 
+
 
 ## Version 0.7.2
 
