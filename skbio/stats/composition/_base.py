@@ -979,13 +979,20 @@ def _alr_inv(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray
     return _closure(xp, comp, axis)
 
 
-def centralize(mat: ArrayLike) -> StdArray:
+def centralize(mat: ArrayLike, validate: bool = True) -> StdArray:
     r"""Center data around its geometric average.
+
+    .. versionchanged:: 0.7.3
+        The function now supports the Array API standard and no longer depends on SciPy.
 
     Parameters
     ----------
     mat : array_like of shape (n_compositions, n_components)
         A matrix of proportions.
+    validate : bool, default True
+        Check if the compositions are legitimate.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -998,26 +1005,31 @@ def centralize(mat: ArrayLike) -> StdArray:
     >>> from skbio.stats.composition import centralize
     >>> X = np.array([[.1, .3, .4, .2], [.2, .2, .2, .4]])
     >>> centralize(X)
-    array([[ 0.17445763,  0.30216948,  0.34891526,  0.17445763],
-           [ 0.32495488,  0.18761279,  0.16247744,  0.32495488]])
+    array([[0.17445763, 0.30216948, 0.34891526, 0.17445763],
+           [0.32495488, 0.18761279, 0.16247744, 0.32495488]])
 
     """
-    from scipy.stats import gmean
+    xp, mat = ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat)
+    mat = _closure(xp, mat)
+    # geometric mean across compositions (axis=0), implemented as
+    # exp(mean(log(x))) to stay within the Array API standard
+    cen = xp.exp(xp.mean(xp.log(mat), axis=0, keepdims=True))
+    return _closure(xp, mat / cen)
 
-    mat = closure(mat)
-    cen = gmean(mat, axis=0)
-    return perturb_inv(mat, cen)
 
-
-def _vlr(x, y, ddof):
+def _vlr(xp, x, y, ddof):
     r"""Calculate variance log ratio.
 
     Parameters
     ----------
-    x : array_like of shape (n_components,)
-        A vector of proportions.
-    y : array_like of shape (n_components,)
-        A vector of proportions.
+    xp : namespace
+        The array API compatible namespace.
+    x : array of shape (n_components,)
+        A vector of proportions (closed).
+    y : array of shape (n_components,)
+        A vector of proportions (closed).
     ddof : int
         Degrees of freedom.
 
@@ -1027,12 +1039,9 @@ def _vlr(x, y, ddof):
         Variance log ratio value.
 
     """
-    # Log transformation
-    x = np.log(x)
-    y = np.log(y)
-
-    # Variance log ratio
-    return np.var(x - y, ddof=ddof)
+    diff = xp.log(x) - xp.log(y)
+    n = diff.shape[0]
+    return float(xp.sum((diff - xp.mean(diff)) ** 2) / (n - ddof))
 
 
 def _robust_vlr(x, y, ddof):
@@ -1065,8 +1074,16 @@ def _robust_vlr(x, y, ddof):
     return np.ma.var(x - y, ddof=ddof)
 
 
-def vlr(x, y, ddof=1, robust=False):
+def vlr(
+    x: ArrayLike,
+    y: ArrayLike,
+    ddof: int = 1,
+    robust: bool = False,
+) -> float:
     r"""Calculate variance log ratio.
+
+    .. versionchanged:: 0.7.3
+        The non-robust path now supports the Array API standard.
 
     Parameters
     ----------
@@ -1077,7 +1094,8 @@ def vlr(x, y, ddof=1, robust=False):
     ddof : int
         Degrees of freedom.
     robust : bool
-        Whether to mask zeros at the cost of performance.
+        Whether to mask zeros at the cost of performance. This path requires NumPy and
+        does not support the Array API standard.
 
     Returns
     -------
@@ -1109,22 +1127,14 @@ def vlr(x, y, ddof=1, robust=False):
     0.0
 
     """
-    # Convert array_like to numpy array
-    x = closure(x)
-    y = closure(y)
-
-    # Set up input and parameters
-    kwargs = {
-        "x": x,
-        "y": y,
-        "ddof": ddof,
-    }
-
-    # Run backend function
     if robust:
-        return _robust_vlr(**kwargs)
-    else:
-        return _vlr(**kwargs)
+        # robust path uses NumPy masked arrays; keep on numpy
+        cx = closure(x)
+        cy = closure(y)
+        return _robust_vlr(cx, cy, ddof)
+
+    xp, cx, cy = _closure_two(x, y, validate=True)
+    return _vlr(xp, cx, cy, ddof)
 
 
 def _pairwise_vlr(mat, ddof):
