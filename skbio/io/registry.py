@@ -537,8 +537,21 @@ class IORegistry:
             # on the first call from __iter__
             # eta-reduction is possible, but we want to the type to be
             # GeneratorType
+            def wrapper(first, gen):
+                try:
+                    yield first
+                except Exception as e:
+                    try:
+                        yield from gen.throw(e)
+                    except StopIteration:
+                        return
+                try:
+                    yield from gen
+                finally:
+                    gen.close()
+
             try:
-                return (x for x in itertools.chain([next(gen)], gen))
+                return wrapper(next(gen), gen)
             except StopIteration:
                 # If the error was a StopIteration, then we want to return an
                 # empty generator as `next(gen)` failed.
