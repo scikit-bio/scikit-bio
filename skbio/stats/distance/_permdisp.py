@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from functools import partial
 from typing import TYPE_CHECKING
-
+import warnings
 import numpy as np
 import pandas as pd
 from scipy.stats import f_oneway
@@ -278,12 +278,19 @@ def permdisp(
         ids = distmat.ids
         sample_size = distmat.shape[0]
 
-        ordination = pcoa(
-            distmat,
-            method=method,
-            dimensions=dimensions,
-            warn_neg_eigval=warn_neg_eigval,
-        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="EIGH: since no value for dimensions is specified.*",
+                category=RuntimeWarning,
+            )
+            ordination = pcoa(
+                distmat,
+                method=method,
+                dimensions=dimensions,
+                warn_neg_eigval=warn_neg_eigval,
+            )
+
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
