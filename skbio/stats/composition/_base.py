@@ -1132,9 +1132,9 @@ def vlr(
         cx = closure(x)
         cy = closure(y)
         return _robust_vlr(cx, cy, ddof)
-
-    xp, cx, cy = _closure_two(x, y, validate=True)
-    return _vlr(xp, cx, cy, ddof)
+    else:
+        xp, cx, cy = _closure_two(x, y, validate=True)
+        return _vlr(xp, cx, cy, ddof)
 
 
 def _pairwise_vlr(mat, ddof):
