@@ -4,8 +4,8 @@
 
 ### Features
 
+* Added support for integer data types (`int8`, `int16`, `int32`) in distance matrices, utilizing a `scale` factor for fixed-point semantics to reduce memory usage ([#2432](https://github.com/scikit-bio/scikit-bio/pull/2432)).
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
-
 
 ## Version 0.7.2
 
