@@ -68,8 +68,13 @@ delimiter : str, optional
 
 dtype : str or dtype, optional
     The data type of the underlying matrix data. Only relevant when reading from a
-    file. Default is "float64", which maps to ``np.float64``. The only other available
-    option is "float32" (or ``np.float32``).
+    file. Default is "float64", which maps to ``np.float64``. Other available options
+    include "float32", "int8", "int16", and "int32".
+
+scale : float, optional
+    Multiplication factor for fixed-point integer matrices. Only relevant when writing
+    to a file. If the matrix has a ``scale`` attribute set, it will be written as a
+    comment line before the header.
 
 """  # noqa: D205, D415
 
@@ -86,6 +91,7 @@ import csv
 import numpy as np
 
 from skbio.stats.distance import PairwiseMatrix, DistanceMatrix, SymmetricMatrix
+from skbio.stats.distance._base import _ALLOWED_DTYPES
 from skbio.io import create_format, LSMatFormatError
 
 
@@ -165,8 +171,10 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     #     - populate the corresponding row in the ndarray with floats
 
     dtype = np.dtype(dtype)
-    if dtype not in (np.float64, np.float32):
+    if dtype not in _ALLOWED_DTYPES:
         raise TypeError(f"{dtype} is not a supported data type.")
+
+    scale = _find_scale(fh)
 
     header = _find_header(fh)
     if header is None:
@@ -179,8 +187,6 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=dtype)
 
-    # The default separator of str.split (consecutive whitespaces) is equivalent to " "
-    # in np.fromstring.
     sep = delimiter if delimiter else " "
 
     row_idx = -1
@@ -191,8 +197,6 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
 
         row_idx += 1
         if row_idx >= num_ids:
-            # We've hit a nonempty line after we already filled the data matrix. Raise
-            # an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
                 "Encountered extra row(s) without corresponding IDs in the header."
             )
@@ -206,13 +210,8 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
                 % (row_id.rstrip(), ids[row_idx])
             )
 
-        # np.fromstring is more efficient than str.split then float
         row_data = np.fromstring(row_data, dtype=dtype, sep=sep)
 
-        # The code `data[row_idx, :] = row_data` will raise a ValueError if length
-        # doesn't match. However there is an exception: when row_data contains only one
-        # element, it will be broadcasted to the entire data[row_idx, :]. Therefore, an
-        # explicit check appears to be necessary.
         if row_data.size != num_ids:
             raise LSMatFormatError(
                 "There are %d value(s) in row %d, which is not equal to the number of "
@@ -225,7 +224,7 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
             "Expected %d row(s) of data, but found %d." % (num_ids, row_idx + 1)
         )
 
-    return cls(data, ids)
+    return cls(data, ids, scale=scale)
 
 
 def _find_header(fh):
@@ -263,9 +262,28 @@ def _parse_data(fh, delimiter):
             yield tokens[0].strip(), tokens[1:]
 
 
+def _find_scale(fh):
+    scale = None
+    for line in fh:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("#"):
+            if stripped.lower().startswith("# scale:"):
+                scale = float(stripped.split(":", 1)[1].strip())
+        else:
+            break
+    fh.seek(0)
+    return scale
+
+
 def _matrix_to_lsmat(obj, fh, delimiter):
     delimiter = "%s" % delimiter
     ids = obj.ids
+
+    if getattr(obj, 'scale', None) is not None:
+        fh.write("# scale: %s\n" % obj.scale)
+
     fh.write(_format_ids(ids, delimiter))
     fh.write("\n")
 
