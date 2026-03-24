@@ -5,6 +5,8 @@
 ### Features
 
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
+* Added `find_orfs`, `start_codons`, and `stop_codons` to `GeneticCode` for open reading frame detection ([#2434](https://github.com/scikit-bio/scikit-bio/pull/2434)).
+
 
 
 ## Version 0.7.2
