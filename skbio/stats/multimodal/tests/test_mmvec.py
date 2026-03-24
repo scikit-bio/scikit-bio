@@ -29,9 +29,9 @@ class TestMMvecRecovery(unittest.TestCase):
         """Build small simulation matching original mmvec test."""
         np.random.seed(1)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=8,
-            num_samples=150,
+            n_microbes=8,
+            n_metabolites=8,
+            n_samples=150,
             latent_dim=2,
             sigmaQ=2,
             microbe_total=1000,
@@ -41,7 +41,7 @@ class TestMMvecRecovery(unittest.TestCase):
         (
             self.microbes,
             self.metabolites,
-            self.X,
+            self.design,
             self.B,
             self.U,
             self.Ubias,
@@ -241,9 +241,9 @@ class TestMMvecBasic(unittest.TestCase):
         """Check that output shapes are correct."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=10,
-            num_metabolites=15,
-            num_samples=50,
+            n_microbes=10,
+            n_metabolites=15,
+            n_samples=50,
             latent_dim=3,
             seed=42,
         )
@@ -276,9 +276,9 @@ class TestMMvecBasic(unittest.TestCase):
         """Check that ranks are row-centered."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         microbes, metabolites = res[0], res[1]
@@ -299,9 +299,9 @@ class TestMMvecBasic(unittest.TestCase):
         """Check that results are reproducible with same random state."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         microbes, metabolites = res[0], res[1]
@@ -330,9 +330,9 @@ class TestMMvecBasic(unittest.TestCase):
         """Test that both batch normalization modes work."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         microbes, metabolites = res[0], res[1]
@@ -374,9 +374,9 @@ class TestMMvecResults(unittest.TestCase):
         """Create test data."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         self.microbes, self.metabolites = res[0], res[1]
@@ -479,9 +479,9 @@ class TestMMvecValidation(unittest.TestCase):
         """Create valid test data."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         self.microbes, self.metabolites = res[0], res[1]
@@ -584,9 +584,9 @@ class TestMMvecInputTypes(unittest.TestCase):
         """Test with sparse pandas DataFrame."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         microbes_dense, metabolites_dense = res[0], res[1]
@@ -619,9 +619,9 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         """Create test data."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         self.microbes, self.metabolites = res[0], res[1]
@@ -687,9 +687,9 @@ class TestMMvecOutputVerification(unittest.TestCase):
         """Create test data with specific IDs."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             seed=42,
         )
         self.microbes, self.metabolites = res[0], res[1]
@@ -771,9 +771,9 @@ class TestMMvecLBFGS(unittest.TestCase):
         """Create test data."""
         np.random.seed(42)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=10,
-            num_samples=50,
+            n_microbes=8,
+            n_metabolites=10,
+            n_samples=50,
             latent_dim=2,
             seed=42,
         )
@@ -833,9 +833,9 @@ class TestMMvecLBFGS(unittest.TestCase):
         # Use more data for better recovery
         np.random.seed(1)
         res = random_multimodal(
-            num_microbes=8,
-            num_metabolites=8,
-            num_samples=150,
+            n_microbes=8,
+            n_metabolites=8,
+            n_samples=150,
             latent_dim=2,
             sigmaQ=2,
             microbe_total=1000,

@@ -123,7 +123,6 @@ class _MMvecModel:
             [b_V; 1; V]
         """
         d1 = self.n_microbes
-        p = self.n_components
 
         U_aug = np.hstack([np.ones((d1, 1)), self.b_U, self.U])
         V_aug = np.vstack(
@@ -529,6 +528,8 @@ class MMvecResults(SkbioObject):
     probabilities : Convert ranks to conditional probabilities.
     predict : Predict metabolite distributions for new samples.
     score : Evaluate predictive performance with Q².
+
+    .. versionadded:: 0.7.2
 
     """
 
@@ -1245,6 +1246,8 @@ def mmvec(
     ----------
     .. [1] Morton, J.T., et al. "Learning representations of
            microbe-metabolite interactions." Nature Methods, 2019.
+
+    .. versionadded:: 0.7.2
 
     Examples
     --------

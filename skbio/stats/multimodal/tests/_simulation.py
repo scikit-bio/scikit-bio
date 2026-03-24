@@ -17,9 +17,9 @@ from skbio.util import get_rng
 
 
 def random_multimodal(
-    num_microbes=20,
-    num_metabolites=100,
-    num_samples=100,
+    n_microbes=20,
+    n_metabolites=100,
+    n_samples=100,
     latent_dim=3,
     low=-1,
     high=1,
@@ -38,11 +38,11 @@ def random_multimodal(
 
     Parameters
     ----------
-    num_microbes : int
+    n_microbes : int
         Number of microbial species to simulate.
-    num_metabolites : int
+    n_metabolites : int
         Number of metabolites to simulate.
-    num_samples : int
+    n_samples : int
         Number of samples to generate.
     latent_dim : int
         Number of latent dimensions for the embedding.
@@ -74,69 +74,69 @@ def random_multimodal(
     Returns
     -------
     microbe_counts : pd.DataFrame
-        Count table of microbial abundances (num_samples, num_microbes).
+        Count table of microbial abundances (n_samples, n_microbes).
     metabolite_counts : pd.DataFrame
-        Count table of metabolite abundances (num_samples, num_metabolites).
-    X : np.ndarray
-        Design matrix (num_samples, 2).
+        Count table of metabolite abundances (n_samples, n_metabolites).
+    design : np.ndarray
+        Design matrix with intercept and gradient (n_samples, 2).
     beta : np.ndarray
-        Regression coefficients (2, num_microbes).
+        Regression coefficients (2, n_microbes).
     U : np.ndarray
-        True microbe embedding matrix (num_microbes, latent_dim).
+        True microbe embedding matrix (n_microbes, latent_dim).
     Ubias : np.ndarray
-        True microbe bias vector (num_microbes, 1).
+        True microbe bias vector (n_microbes, 1).
     V : np.ndarray
-        True metabolite embedding matrix (latent_dim, num_metabolites - 1).
+        True metabolite embedding matrix (latent_dim, n_metabolites - 1).
     Vbias : np.ndarray
-        True metabolite bias vector (1, num_metabolites - 1).
+        True metabolite bias vector (1, n_metabolites - 1).
 
     """
     rng = get_rng(seed)
 
     # Regression coefficients for gradient model
-    beta = rng.normal(uB, sigmaB, size=(2, num_microbes))
+    beta = rng.normal(uB, sigmaB, size=(2, n_microbes))
 
     # Design matrix: intercept + gradient
-    X = np.vstack(
-        (np.ones(num_samples), np.linspace(low, high, num_samples))
+    design = np.vstack(
+        (np.ones(n_samples), np.linspace(low, high, n_samples))
     ).T
 
     # Generate microbe compositions from ILR with noise
     microbes = ilr_inv(
         rng.multivariate_normal(
-            mean=np.zeros(num_microbes - 1),
-            cov=np.diag([sigmaQ] * (num_microbes - 1)),
-            size=num_samples,
+            mean=np.zeros(n_microbes - 1),
+            cov=np.diag([sigmaQ] * (n_microbes - 1)),
+            size=n_samples,
         )
     )
 
     # Generate latent embeddings
-    Umain = rng.normal(uU, sigmaU, size=(num_microbes, latent_dim))
-    Vmain = rng.normal(uV, sigmaV, size=(latent_dim, num_metabolites - 1))
+    Umain = rng.normal(uU, sigmaU, size=(n_microbes, latent_dim))
+    Vmain = rng.normal(uV, sigmaV, size=(latent_dim, n_metabolites - 1))
 
-    Ubias = rng.normal(uU, sigmaU, size=(num_microbes, 1))
-    Vbias = rng.normal(uV, sigmaV, size=(1, num_metabolites - 1))
+    Ubias = rng.normal(uU, sigmaU, size=(n_microbes, 1))
+    Vbias = rng.normal(uV, sigmaV, size=(1, n_metabolites - 1))
 
     # Augmented matrices for computing probabilities
-    U_ = np.hstack((np.ones((num_microbes, 1)), Ubias, Umain))
-    V_ = np.vstack((Vbias, np.ones((1, num_metabolites - 1)), Vmain))
+    U_ = np.hstack((np.ones((n_microbes, 1)), Ubias, Umain))
+    V_ = np.vstack((Vbias, np.ones((1, n_metabolites - 1)), Vmain))
 
     # Compute conditional probabilities P(metabolite | microbe)
-    phi = np.hstack((np.zeros((num_microbes, 1)), U_ @ V_))
+    phi = np.hstack((np.zeros((n_microbes, 1)), U_ @ V_))
     probs = softmax(phi)
 
     # Generate count data
-    microbe_counts = np.zeros((num_samples, num_microbes))
-    metabolite_counts = np.zeros((num_samples, num_metabolites))
+    microbe_counts = np.zeros((n_samples, n_microbes))
+    metabolite_counts = np.zeros((n_samples, n_metabolites))
 
     n1 = microbe_total
     n2 = metabolite_total // microbe_total
 
-    for n in range(num_samples):
+    for n in range(n_samples):
         # Draw microbe counts
         otu = rng.multinomial(n1, microbes[n, :])
         # For each microbe, draw metabolites conditional on that microbe
-        for i in range(num_microbes):
+        for i in range(n_microbes):
             ms = rng.multinomial(otu[i] * n2, probs[i, :])
             metabolite_counts[n, :] += ms
         microbe_counts[n, :] += otu
@@ -156,7 +156,7 @@ def random_multimodal(
     return (
         microbe_counts,
         metabolite_counts,
-        X,
+        design,
         beta,
         Umain,
         Ubias,
