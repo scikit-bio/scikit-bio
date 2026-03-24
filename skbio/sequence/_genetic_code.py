@@ -788,14 +788,14 @@ class GeneticCode(SkbioObject):
 
     def find_orfs(self, sequence, reading_frame=1):
         """Yield open reading frames (ORFs) from a sequence.
-        
+
         Parameters
         ----------
         sequence : Sequence
             Sequence to find ORFs in.
         reading_frame : {1, 2, 3, -1, -2, -3}
             The reading frame to search in.
-        
+
         Yields
         ------
         Sequence
