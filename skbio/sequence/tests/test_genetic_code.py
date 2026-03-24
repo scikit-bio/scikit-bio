@@ -498,6 +498,50 @@ class TestGeneticCode(unittest.TestCase):
             [Protein('M', metadata={'foo': 'bar', 'baz': 42}),
              Protein('', metadata={'foo': 'bar', 'baz': 42})])
 
+    def test_start_and_stop_codons(self):
+        self.assertEqual(self.sgc.start_codons, ('AUG', 'CUG', 'UUG'))
+        self.assertEqual(self.sgc.stop_codons, ('UAA', 'UAG', 'UGA'))
+
+        gc2 = GeneticCode.from_ncbi(2)
+        self.assertEqual(gc2.start_codons,
+                         ('AUA', 'AUC', 'AUG', 'AUU', 'GUG'))
+        self.assertEqual(gc2.stop_codons, ('AGA', 'AGG', 'UAA', 'UAG'))
+
+    def test_find_orfs(self):
+        # single orf
+        seq = RNA('AUGGUGUAA')
+        self.assertEqual(list(self.sgc.find_orfs(seq)), [RNA('AUGGUG')])
+
+        # multiple orfs
+        seq = RNA('AUGGUGUAAAUGUAG')
+        self.assertEqual(list(self.sgc.find_orfs(seq)),
+                         [RNA('AUGGUG'), RNA('AUG')])
+
+        # orfs in different frames
+        seq = RNA('AAUGGUGUAA')
+        self.assertEqual(list(self.sgc.find_orfs(seq, reading_frame=1)), [])
+        self.assertEqual(list(self.sgc.find_orfs(seq, reading_frame=2)),
+                         [RNA('AUGGUG')])
+
+        # orf without stop codon (should be ignored)
+        seq = RNA('AUGGUG')
+        self.assertEqual(list(self.sgc.find_orfs(seq)), [])
+
+        # orf with nested start codons
+        seq = RNA('AUGGUGAUGUAA')
+        self.assertEqual(list(self.sgc.find_orfs(seq)), [RNA('AUGGUGAUG')])
+
+        # orfs in reverse frames
+        seq = RNA('AUGGUGUAA')  # rc: UUACACCAU
+        self.assertEqual(list(self.sgc.find_orfs(seq, reading_frame=-1)), [])
+
+        seq = RNA('UUACACCAU')   # rc: AUGGUGAAG
+        seq_rc = RNA('AUGGUGAAG')
+        # adding a stop codon to rc
+        seq = RNA(str(seq_rc) + 'UAA').reverse_complement()
+        self.assertEqual(list(self.sgc.find_orfs(seq, reading_frame=-1)),
+                         [RNA('AUGGUGAAG')])
+
 
 if __name__ == '__main__':
     unittest.main()

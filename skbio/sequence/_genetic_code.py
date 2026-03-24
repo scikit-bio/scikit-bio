@@ -226,14 +226,21 @@ class GeneticCode(SkbioObject):
     def start_codons(self) -> tuple[str, ...]:
         """Start codons of the genetic code."""
         chars = ("U", "C", "A", "G")
-        return tuple("".join(chars[i] for i in codon) for codon in self._start_codons)
+        return tuple(
+            sorted("".join(chars[i] for i in codon) for codon in self._start_codons)
+        )
 
     @property
     def stop_codons(self) -> tuple[str, ...]:
         """Stop codons of the genetic code."""
         indices = (self._amino_acids.values == b"*").nonzero()[0]
         chars = ("U", "C", "A", "G")
-        return tuple("".join(chars[i] for i in self._index_to_codon(index)) for index in indices)
+        return tuple(
+            sorted(
+                "".join(chars[i] for i in self._index_to_codon(index))
+                for index in indices
+            )
+        )
 
     def __init__(self, amino_acids, starts, name=""):
         self._set_amino_acids(amino_acids)
@@ -813,13 +820,16 @@ class GeneticCode(SkbioObject):
         start_indices = start_mask.nonzero()[0]
         stop_indices = (translated == b"*").nonzero()[0]
 
+        last_stop_idx = -1
         for start in start_indices:
+            if start <= last_stop_idx:
+                continue
+
             valid_stops = stop_indices[stop_indices > start]
-            stop = valid_stops[0] + 1 if valid_stops.size > 0 else len(translated)
-            
-            start_pos = offset + start * 3
-            end_pos = offset + stop * 3
-            yield seq_to_search[start_pos:end_pos]
+            if valid_stops.size > 0:
+                stop = valid_stops[0]
+                yield seq_to_search[offset + start * 3 : offset + stop * 3]
+                last_stop_idx = stop
 
 
 # defined at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
