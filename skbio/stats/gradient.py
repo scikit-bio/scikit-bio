@@ -160,6 +160,9 @@ def _weight_by_vector(trajectories, w_vector):
     # elements
     optimal_gradient = total_length / (len(w_vector) - 1)
 
+    # Convert to float64 before performing calculations to avoid type errors
+    trajectories = trajectories.astype("float64")
+
     # for all elements apply the weighting function
     for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
@@ -170,7 +173,7 @@ def _weight_by_vector(trajectories, w_vector):
                 / np.abs((w_vector.iloc[i] - w_vector.iloc[i - 1]))
             )
 
-    return trajectories.astype("float64")
+    return trajectories
 
 
 def _ANOVA_trajectories(category, res_by_group):

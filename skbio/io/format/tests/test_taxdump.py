@@ -69,6 +69,7 @@ class TestTaxdumpReader(unittest.TestCase):
                  'inherited_MGC_flag', 'GenBank_hidden_flag',
                  'hidden_subtree_root_flag', 'comments']).set_index('tax_id')
         exp['comments'] = exp['comments'].astype('O')
+        obs['comments'] = obs['comments'].astype('O')
         _data_frame_to_default_int_type(exp)
         assert_data_frame_almost_equal(obs, exp)
 

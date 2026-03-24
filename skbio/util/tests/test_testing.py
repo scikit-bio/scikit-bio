@@ -200,7 +200,7 @@ class TestAssertDataFrameAlmostEqual(unittest.TestCase):
         # each df should compare equal to itself and a copy of itself
         for df in unequal_dfs:
             assert_data_frame_almost_equal(df, df)
-            assert_data_frame_almost_equal(df, pd.DataFrame(df, copy=True))
+            assert_data_frame_almost_equal(df, pd.DataFrame(df).copy())
 
         # every pair of dfs should not compare equal. use permutations instead
         # of combinations to test that comparing df1 to df2 and df2 to df1 are
@@ -255,7 +255,7 @@ class TestAssertSeriesAlmostEqual(unittest.TestCase):
         # all series should be equal to themselves and copies of themselves
         for s in self.series:
             assert_series_almost_equal(s, s)
-            assert_series_almost_equal(s, pd.Series(s, copy=True))
+            assert_series_almost_equal(s, pd.Series(s).copy())
 
 
 if __name__ == '__main__':
