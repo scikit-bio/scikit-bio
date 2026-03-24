@@ -427,6 +427,8 @@ class MMvecResults(SkbioObject):
     (which microbes co-occur with which metabolites) and prediction
     (expected metabolites given a microbial community).
 
+    .. versionadded:: 0.7.2
+
     Attributes
     ----------
     microbe_embeddings : pd.DataFrame
@@ -528,8 +530,6 @@ class MMvecResults(SkbioObject):
     probabilities : Convert ranks to conditional probabilities.
     predict : Predict metabolite distributions for new samples.
     score : Evaluate predictive performance with Q².
-
-    .. versionadded:: 0.7.2
 
     """
 
@@ -1162,6 +1162,8 @@ def mmvec(
     For example: microbes and host transcripts, proteins and metabolites, or
     any pair of feature tables sharing the same samples.
 
+    .. versionadded:: 0.7.2
+
     Parameters
     ----------
     microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
@@ -1246,8 +1248,6 @@ def mmvec(
     ----------
     .. [1] Morton, J.T., et al. "Learning representations of
            microbe-metabolite interactions." Nature Methods, 2019.
-
-    .. versionadded:: 0.7.2
 
     Examples
     --------
