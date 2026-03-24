@@ -61,7 +61,6 @@ Multimodal embedding
    MMvecResults
 
 
-
 Ordination results
 ------------------
 
