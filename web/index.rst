@@ -276,13 +276,17 @@
 
          .. card::
 
-            Latest release (2025-10-28):
+            Latest release (2026-02-11):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.1
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.2
                :color: success
                :shadow:
 
-               scikit-bio 0.7.1
+               scikit-bio 0.7.2
+
+         .. card::
+
+            scikit-bio is participating in `Google Summer of Code 2026 <https://github.com/scikit-bio/scikit-bio/discussions/2401>`_. Contributors are welcome!
 
          .. card::
 

@@ -179,8 +179,8 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
     num_ids = len(ids)
     data = np.empty((num_ids, num_ids), dtype=dtype)
 
-    # The default separator of `str.split` (consecutive whitespaces) is equivalent to
-    # " " in np.fromstring.
+    # The default separator of str.split (consecutive whitespaces) is equivalent to " "
+    # in np.fromstring.
     sep = delimiter if delimiter else " "
 
     row_idx = -1
@@ -191,8 +191,8 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
 
         row_idx += 1
         if row_idx >= num_ids:
-            # We've hit a nonempty line after we already filled the data
-            # matrix. Raise an error because we shouldn't ignore extra data.
+            # We've hit a nonempty line after we already filled the data matrix. Raise
+            # an error because we shouldn't ignore extra data.
             raise LSMatFormatError(
                 "Encountered extra row(s) without corresponding IDs in the header."
             )
@@ -206,7 +206,7 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
                 % (row_id.rstrip(), ids[row_idx])
             )
 
-        # np.fromstring is more efficient that str.split then float
+        # np.fromstring is more efficient than str.split then float
         row_data = np.fromstring(row_data, dtype=dtype, sep=sep)
 
         # The code `data[row_idx, :] = row_data` will raise a ValueError if length
