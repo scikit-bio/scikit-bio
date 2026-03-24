@@ -471,6 +471,67 @@ class TestMMvecResults(unittest.TestCase):
 
         self.assertIn("all-zero counts", str(ctx.exception))
 
+    def test_str(self):
+        """Test string representation of MMvecResults."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            max_iter=10,
+            random_state=42,
+        )
+        s = str(result)
+        self.assertIn("MMvecResults", s)
+        self.assertIn("Microbes", s)
+        self.assertIn("Metabolites", s)
+
+    def test_predict_numpy_array(self):
+        """Test predict with numpy array input (not DataFrame)."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            max_iter=50,
+            random_state=42,
+        )
+        predictions = result.predict(self.microbes.values[:5])
+        self.assertEqual(predictions.shape[0], 5)
+        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+
+    def test_score_numpy_array(self):
+        """Test score with numpy array inputs (not DataFrames)."""
+        train_microbes = self.microbes.iloc[:40]
+        test_microbes = self.microbes.iloc[40:]
+        train_metabolites = self.metabolites.iloc[:40]
+        test_metabolites = self.metabolites.iloc[40:]
+
+        result = mmvec(
+            train_microbes,
+            train_metabolites,
+            n_components=2,
+            max_iter=100,
+            random_state=42,
+        )
+        q2 = result.score(test_microbes.values, test_metabolites.values)
+        self.assertIsInstance(q2, float)
+        self.assertLessEqual(q2, 1.0)
+
+    def test_score_zero_metabolite_raises(self):
+        """Score with zero-count metabolite sample should raise ValueError."""
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            max_iter=10,
+            random_state=42,
+        )
+        zero_metabolites = self.metabolites.iloc[:5].copy()
+        zero_metabolites.iloc[0, :] = 0
+
+        with self.assertRaises(ValueError) as ctx:
+            result.score(self.microbes.iloc[:5], zero_metabolites)
+        self.assertIn("all-zero counts", str(ctx.exception))
+
 
 class TestMMvecValidation(unittest.TestCase):
     """Test input validation for MMvec."""
@@ -884,6 +945,61 @@ class TestMMvecLBFGS(unittest.TestCase):
         # Q² should be a valid float
         self.assertIsInstance(q2, float)
 
+    def test_lbfgs_verbose_output(self):
+        """L-BFGS verbose mode should produce output."""
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            mmvec(
+                self.microbes,
+                self.metabolites,
+                n_components=2,
+                optimizer="lbfgs",
+                max_iter=50,
+                verbose=True,
+                random_state=42,
+            )
+        finally:
+            sys.stdout = sys.__stdout__
+
+        output = captured.getvalue()
+        self.assertIn("Iteration", output)
+        self.assertIn("Loss", output)
+
+    def test_random_state_generator(self):
+        """random_state as np.random.Generator should work."""
+        rng = np.random.default_rng(42)
+        result = mmvec(
+            self.microbes,
+            self.metabolites,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=50,
+            random_state=rng,
+        )
+        self.assertIsInstance(result, MMvecResults)
+        self.assertEqual(result.ranks.shape, (8, 10))
+
+    def test_numpy_array_inputs(self):
+        """mmvec should accept numpy arrays (not just DataFrames)."""
+        result = mmvec(
+            self.microbes.values,
+            self.metabolites.values,
+            n_components=2,
+            optimizer="lbfgs",
+            max_iter=50,
+            random_state=42,
+        )
+        self.assertIsInstance(result, MMvecResults)
+        self.assertEqual(result.ranks.shape, (8, 10))
+        # Auto-generated IDs
+        self.assertTrue(
+            result.ranks.index[0].startswith("microbe_")
+        )
+        self.assertTrue(
+            result.ranks.columns[0].startswith("metabolite_")
+        )
+
     def test_invalid_optimizer_raises(self):
         """Invalid optimizer should raise ValueError."""
         with self.assertRaises(ValueError) as ctx:
@@ -895,6 +1011,45 @@ class TestMMvecLBFGS(unittest.TestCase):
             )
 
         self.assertIn("optimizer must be", str(ctx.exception))
+
+
+class TestMMvecValidationExtended(unittest.TestCase):
+    """Extended validation tests for coverage."""
+
+    def test_many_zero_microbe_columns(self):
+        """Validation message should truncate when >5 zero columns."""
+        np.random.seed(42)
+        res = random_multimodal(
+            n_microbes=10,
+            n_metabolites=10,
+            n_samples=50,
+            seed=42,
+        )
+        microbes = res[0].copy()
+        # Set 7 columns to zero
+        for i in range(7):
+            microbes.iloc[:, i] = 0
+
+        with self.assertRaises(ValueError) as ctx:
+            mmvec(microbes, res[1], max_iter=1)
+        self.assertIn("and 2 more", str(ctx.exception))
+
+    def test_many_zero_metabolite_columns(self):
+        """Validation message should truncate when >5 zero metabolite cols."""
+        np.random.seed(42)
+        res = random_multimodal(
+            n_microbes=10,
+            n_metabolites=10,
+            n_samples=50,
+            seed=42,
+        )
+        metabolites = res[1].copy()
+        for i in range(7):
+            metabolites.iloc[:, i] = 0
+
+        with self.assertRaises(ValueError) as ctx:
+            mmvec(res[0], metabolites, max_iter=1)
+        self.assertIn("and 2 more", str(ctx.exception))
 
 
 class TestMMvecCaseStudies(unittest.TestCase):
