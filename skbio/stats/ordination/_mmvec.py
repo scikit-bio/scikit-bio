@@ -594,7 +594,7 @@ class MMvecResults(SkbioObject):
 
         Examples
         --------
-        >>> from skbio.stats.multimodal import mmvec
+        >>> from skbio.stats.ordination import mmvec
         >>> import numpy as np
         >>> import pandas as pd
         >>> np.random.seed(42)
@@ -680,7 +680,7 @@ class MMvecResults(SkbioObject):
 
         Examples
         --------
-        >>> from skbio.stats.multimodal import mmvec
+        >>> from skbio.stats.ordination import mmvec
         >>> import numpy as np
         >>> import pandas as pd
         >>> np.random.seed(42)
@@ -1251,7 +1251,7 @@ def mmvec(
 
     Examples
     --------
-    >>> from skbio.stats.multimodal import mmvec
+    >>> from skbio.stats.ordination import mmvec
     >>> import numpy as np
     >>> import pandas as pd
     >>> # Create synthetic data

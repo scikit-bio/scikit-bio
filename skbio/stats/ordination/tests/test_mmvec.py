@@ -18,8 +18,8 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
 from skbio.stats.composition import clr_inv as softmax
-from skbio.stats.multimodal import mmvec, MMvecResults
-from skbio.stats.multimodal.tests._simulation import random_multimodal
+from skbio.stats.ordination import mmvec, MMvecResults
+from skbio.stats.ordination.tests._simulation import random_multimodal
 
 
 class TestMMvecRecovery(unittest.TestCase):
@@ -140,7 +140,7 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_multinomial_gradient(self):
         """Verify multinomial softmax gradient is correct."""
-        from skbio.stats.multimodal._mmvec import _multinomial_loglik_and_grad
+        from skbio.stats.ordination._mmvec import _multinomial_loglik_and_grad
 
         # Small test case
         logits = np.array([[0.0, 1.0, 2.0], [0.0, -1.0, 1.0]])
@@ -170,7 +170,7 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
-        from skbio.stats.multimodal._mmvec import _MMvecModel
+        from skbio.stats.ordination._mmvec import _MMvecModel
 
         np.random.seed(42)
         n_microbes = 5
