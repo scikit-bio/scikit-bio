@@ -659,7 +659,9 @@ class MMvecResults(SkbioObject):
         .. math::
 
             Q^2 = 1 - \frac{SS_{res}}{SS_{tot}}
-                = 1 - \frac{\sum(y - \hat{y})^2}{\sum(y - \bar{y})^2}
+                = 1 - \frac{\sum(y - \hat{y})^2}{\sum(y - \bar{y}_j)^2}
+
+        where :math:`\bar{y}_j` is the per-metabolite mean across samples.
 
         Parameters
         ----------
@@ -727,7 +729,7 @@ class MMvecResults(SkbioObject):
 
         # Q² = 1 - SS_res / SS_tot
         ss_res = np.sum((actual - predicted) ** 2)
-        ss_tot = np.sum((actual - actual.mean()) ** 2)
+        ss_tot = np.sum((actual - actual.mean(axis=0)) ** 2)
 
         if ss_tot == 0:
             # All actual values are the same - return 0 to avoid division by zero
