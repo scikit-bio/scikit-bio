@@ -7,6 +7,9 @@
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
 
+### Bug Fixes
+
+* Fixed an issue where `composition.multi_replace` failed to expand into a DataFrame when used with Pandas 3.0 `apply(axis=1)` ([#2375](https://github.com/scikit-bio/scikit-bio/issues/2375)).
 
 ## Version 0.7.2
 
