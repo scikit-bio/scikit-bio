@@ -8,23 +8,29 @@
 
 import functools
 
+from typing import Optional, TYPE_CHECKING, Union
 import numpy as np
 from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
-from skbio.diversity._util import _validate_counts_vector
 from skbio.util._decorator import aliased
+
+from skbio.util._array import ingest_array
+from skbio.diversity._util import _validate_counts_vector
+
+if TYPE_CHECKING:
+    from skbio.util._typing import ArrayLike, StdArray
+
 
 
 def _validate_alpha(empty=None, cast_int=False):
+
     """Validate counts vector for an alpha diversity metric.
 
     Parameters
     ----------
-    func : callable
-        Function that calculates an alpha diversity metric.
-    empty : any, optional
+    empty : Any, optional
         Return this value if set instead of calling the function when an input
         community is empty (i.e., no taxon, or all taxa have zero counts).
     cast_int : bool, optional
@@ -43,26 +49,31 @@ def _validate_alpha(empty=None, cast_int=False):
     Additional arguments may follow.
 
     """
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(counts, *args, **kwargs):
+            xp, counts = ingest_array(counts)
             counts = _validate_counts_vector(counts, cast_int)
 
-            # drop zero values, as these represent taxa that are absent from
-            # the community
-            if not (nonzero := counts != 0).all():
-                counts = counts[nonzero]
+            if xp.any(counts < 0):
+                raise ValueError("Input counts cannot have negative values.")
 
-            # return a value if community is empty (after dropping zeros)
-            if empty is not None and counts.size == 0:
+            # this check ensure counts are integer-typed when cast_int
+            # is requested
+            if cast_int:
+                if not xp.isdtype(counts.dtype, "integral"):
+                    counts = xp.astype(counts, xp.int64)
+
+             # drop zero values, as these represent taxa that are absent from
+             # the community
+            counts = counts[counts != 0]
+
+            if empty is not None and xp.size(counts) == 0:
                 return empty
 
-            # call function to calculate alpha diversity metric
             return func(counts, *args, **kwargs)
 
         return wrapper
-
     return decorator
 
 
@@ -142,7 +153,7 @@ def brillouin_d(counts):
 
 
 @_validate_alpha(empty=np.nan)
-def dominance(counts, finite=False):
+def dominance(counts: "ArrayLike", finite: Optional[bool] = False) -> float:
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -208,10 +219,11 @@ def dominance(counts, finite=False):
        688-688.
 
     """
+    xp, counts = ingest_array(counts)
     if finite:
-        D = (counts * (counts - 1)).sum() / ((N := counts.sum()) * (N - 1))
+        D = xp.sum(counts * (counts - 1)) / ((N := xp.sum(counts)) * (N - 1))
     else:
-        D = ((counts / counts.sum()) ** 2).sum()
+        D = xp.sum((counts / xp.sum(counts)) ** 2)
     return D
 
 
@@ -1000,7 +1012,7 @@ def osd(counts):
 
 
 @_validate_alpha()
-def pielou_e(counts, base=None):
+def pielou_e(counts: "ArrayLike", base: Optional[Union[int, float]] = None) -> float:
     r"""Calculate Pielou's evenness index.
 
     Pielou's evenness index (:math:`J'`), a.k.a., Shannon's equitability index
@@ -1046,14 +1058,16 @@ def pielou_e(counts, base=None):
        of biological collections. Journal of Theoretical Biology, 13, 131-44.
 
     """
+
+    xp, counts = ingest_array(counts)
     if (S := counts.size) == 0:
-        return np.nan
+        return xp.asarray(np.nan, dtype=xp.float64)
     elif S == 1:
         return 1.0
     H = shannon(counts, base=base)
-    H_max = np.log(S)
+    H_max = xp.log(xp.asarray(S, dtype=xp.float64))
     if base is not None:
-        H_max /= np.log(base)
+        H_max /= (xp.log(xp.asarray(base, dtype=xp.float64)))
     return H / H_max
 
 
@@ -1183,17 +1197,36 @@ def robbins(counts):
 
 
 def _entropy(probs):
-    """Calculate entropy."""
-    return (-probs * np.log(probs)).sum()
+    """Calculate entropy.
+       Handles zeros safely: 0 * log(0) is defined as 0 in information theory.
+    """
+    xp, probs = ingest_array(probs)
+    # creates mask to identify where probs is greater than 0
+    mask = probs > 0
+    # replaces probs with 1 where probs is not greater than 0
+    # to avoid issues with zero probabilities
+    probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
+    return -xp.sum(xp.where(mask, probs * xp.log(probs_safe),
+                            xp.asarray(0.0, dtype=probs.dtype)))
 
 
 def _perplexity(probs):
-    """Calculate perplexity."""
-    return (probs**-probs).prod()
+    """Calculate perplexity.
+       Handles zeros safely: 0^(-0) = 1 by convention.
+    """
+    xp, probs = ingest_array(probs)
+    #creates mask to identify where probs is greater than 0
+    mask = probs > 0
+    # replaces probs with 1 where probs is not greater than 0
+    # to avoid issues with zero probabilities
+    probs_safe = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
+    return xp.prod(xp.where(mask, probs_safe**(-probs_safe),
+                            xp.asarray(1.0, dtype=probs.dtype)))
 
 
 @_validate_alpha(empty=np.nan)
-def shannon(counts, base=None, exp=False):
+def shannon(counts: "ArrayLike", base:Optional[Union[int, float]] = None,
+            exp: bool = False) -> float:
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
@@ -1254,7 +1287,9 @@ def shannon(counts, base=None, exp=False):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    probs = counts / counts.sum()
+
+    xp, counts = ingest_array(counts)
+    probs = counts / xp.sum(counts)
 
     # perplexity
     if exp is True:
@@ -1264,11 +1299,12 @@ def shannon(counts, base=None, exp=False):
     else:
         H = _entropy(probs)
         if base is not None:
-            H /= np.log(base)
+            H = H/xp.log(xp.asarray(base, dtype=probs.dtype))
         return H
 
 
-def simpson(counts, finite=False):
+
+def simpson(counts: "ArrayLike", finite: bool = False) -> float:
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
@@ -1322,7 +1358,7 @@ def simpson(counts, finite=False):
     return 1 - dominance(counts, finite=finite)
 
 
-def simpson_d(counts, finite=False):
+def simpson_d(counts: "ArrayLike", finite: bool = False) -> "StdArray":
     """Calculate Simpson's dominance index, a.k.a. Simpson's D.
 
     Parameters
@@ -1352,7 +1388,7 @@ def simpson_d(counts, finite=False):
 
 
 @_validate_alpha(empty=np.nan)
-def simpson_e(counts):
+def simpson_e(counts: "ArrayLike") -> "StdArray":
     r"""Calculate Simpson's evenness index.
 
     Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as:
