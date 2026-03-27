@@ -26,6 +26,13 @@ class Read:
 
     def _make_docstring(self, cls):
         name, supported_fmts, default, see = _docstring_vars(cls, "read")
+        constructor_param = ""
+        if name == "TabularMSA":
+            constructor_param = """constructor : subclass of ``GrammaredSequence``
+    Sequence constructor (e.g., ``DNA``, ``RNA``, ``Protein``). This parameter
+    is required when reading ``TabularMSA`` from FASTA, FASTQ, Clustal,
+    PHYLIP, and Stockholm formats.
+"""
         return f"""Create a new ``{name}`` instance from a file.
 
 This is a convenience method for :func:`skbio.io.registry.read`. For more information
@@ -42,6 +49,7 @@ file : openable (filepath, URL, filehandle, etc.)
 format : str, optional
     The format of the file. The format must be a format name with a reader for
     ``{name}``. If None, the format will be inferred.
+{constructor_param}\
 kwargs : dict, optional
     Additional arguments passed to :func:`skbio.io.registry.read()` and the reader for
     ``{name}``.
