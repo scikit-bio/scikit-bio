@@ -57,3 +57,4 @@ web/_build
 # Cython files
 *.c
 !ssw.c
+skbio-venv/
