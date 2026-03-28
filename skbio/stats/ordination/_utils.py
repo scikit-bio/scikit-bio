@@ -7,6 +7,9 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import array_api_compat as aac
+
+from skbio.util._array import ingest_array
 
 from ._cutils import center_distance_matrix_cy
 
@@ -200,33 +203,46 @@ def f_matrix(E_matrix):
 def center_distance_matrix(distance_matrix, inplace=False):
     """Centers a distance matrix.
 
-    Note: If the used distance was euclidean, pairwise distances
-    needn't be computed from the data table Y because F_matrix =
-    Y.dot(Y.T) (if Y has been centered).
-    But since we're expecting distance_matrix to be non-euclidian,
-    we do the following computation as per
-    Numerical Ecology (Legendre & Legendre 1998).
+    Applies Gower centering (Eqs. 9.20 and 9.21 in Legendre & Legendre 1998)
+    to a distance matrix. For NumPy arrays, the optimized Cython
+    implementation is used. For other Array API-compatible arrays (e.g., CuPy,
+    JAX, PyTorch), a pure Python path using :func:`e_matrix` and
+    :func:`f_matrix` is used, keeping data on the original device.
 
     Parameters
     ----------
-    distance_matrix : 2D array_like
-        Distance matrix.
+    distance_matrix : array_like
+        Distance matrix. Can be a NumPy array or any Array API-compatible
+        array.
     inplace : bool, optional
         Whether or not to center the given distance matrix in-place, which
-        is more efficient in terms of memory and computation.
+        is more efficient in terms of memory and computation. Only supported
+        for NumPy arrays.
+
+    .. versionchanged:: 0.7.3
+        Now supports Array API standard arrays (CuPy, JAX, PyTorch).
 
     """
-    if not distance_matrix.flags.c_contiguous:
-        # center_distance_matrix_cy requires c_contiguous, so make a copy
-        distance_matrix = np.asarray(distance_matrix, order="C")
+    # Use the optimized Cython path for NumPy arrays.
+    if aac.is_numpy_array(distance_matrix):
+        if not distance_matrix.flags.c_contiguous:
+            distance_matrix = np.asarray(distance_matrix, order="C")
 
-    if inplace:
-        center_distance_matrix_cy(distance_matrix, distance_matrix)
-        return distance_matrix
-    else:
-        centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
-        center_distance_matrix_cy(distance_matrix, centered)
-        return centered
+        if inplace:
+            center_distance_matrix_cy(distance_matrix, distance_matrix)
+            return distance_matrix
+        else:
+            centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
+            center_distance_matrix_cy(distance_matrix, centered)
+            return centered
+
+    # Array API fallback for non-NumPy arrays (GPU backends, etc.).
+    xp, distance_matrix = ingest_array(distance_matrix)
+    E = distance_matrix * distance_matrix / -2
+    row_means = xp.mean(E, axis=1, keepdims=True)
+    col_means = xp.mean(E, axis=0, keepdims=True)
+    matrix_mean = xp.mean(E)
+    return E - row_means - col_means + matrix_mean
 
 
 def _e_matrix_inplace(distance_matrix):
