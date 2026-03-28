@@ -7,6 +7,10 @@
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
 
+### Performance enhancements
+
+* Reduced `import skbio` time by ~37% by making `requests` and `h5py` lazy imports. Both libraries are now only loaded when actually needed (`requests` when reading from an HTTP/HTTPS URL, `h5py` when working with HDF5 files), rather than unconditionally at module load time. ([#2170](https://github.com/scikit-bio/scikit-bio/issues/2170))
+
 
 ## Version 0.7.2
 
