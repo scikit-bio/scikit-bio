@@ -27,6 +27,13 @@ Or using ``pip``::
 
     pip install scikit-bio
 
+    ## Quick Start
+
+You can install scikit-bio using pip:
+
+```bash
+pip install scikit-bio
+
 See further `instructions on installing <https://scikit.bio/install.html>`_ scikit-bio on various platforms.
 
 
