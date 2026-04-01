@@ -39,6 +39,28 @@ class VectorizeTests(TestCase):
             counts_sparse, np.array(['a', 'b']), tree)
         npt.assert_equal(count_array_sparse, exp_counts.T)
 
+        # test with 1-D sparse matrix
+        counts_1d = np.array([1, 5])
+        counts_1d_sparse = sp.csr_matrix(counts_1d)
+        count_array_1d, _, _ = vectorize_counts_and_tree(
+            counts_1d_sparse, np.array(['a', 'b']), tree)
+        exp_counts_1d = np.array([[1, 5, 6, 6]])
+        npt.assert_equal(count_array_1d, exp_counts_1d)
+        # Ensure the dtype matches the input dtype when using sparse matrices
+        self.assertEqual(count_array_1d.dtype, counts_1d.dtype)
+
+        # test with subset of taxa
+        counts_sub = np.array([[0], [1], [10]])
+        counts_sub_sparse = sp.csr_matrix(counts_sub)
+        count_array_sub, _, _ = vectorize_counts_and_tree(
+            counts_sub_sparse, np.array(['a']), tree)
+        exp_counts_sub = np.array([[0, 0, 0, 0], [1, 0, 1, 1], [10, 0, 10, 10]])
+        npt.assert_equal(count_array_sub, exp_counts_sub)
+
+        # test missing taxa error
+        with self.assertRaisesRegex(ValueError, "Taxon 'x' not found in tree."):
+            vectorize_counts_and_tree(sp.csr_matrix([[1]]), np.array(['x']), tree)
+
 
 class ValidationTests(TestCase):
 
