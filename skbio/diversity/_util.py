@@ -208,28 +208,28 @@ def _nodes_by_counts_sparse(counts, taxa, tree_index, tree):
     """
     nodes = tree_index['name']
     node_to_index = {name: i for i, name in enumerate(nodes) if name is not None}
-    
+
     n_taxa = len(taxa)
     n_nodes = len(nodes)
-    
+
     taxa_under_node = [[] for _ in range(n_nodes)]
     for i, tax in enumerate(taxa):
         if tax not in node_to_index:
             raise ValueError(f"Taxon '{tax}' not found in tree.")
         taxa_under_node[node_to_index[tax]].append(i)
-        
+
     child_index = tree_index['child_index']
     for node, start, end in child_index:
         for child in range(start, end + 1):
             taxa_under_node[node].extend(taxa_under_node[child])
-            
+
     rows, cols, data = [], [], []
     for node, t_indices in enumerate(taxa_under_node):
         for t_idx in t_indices:
             rows.append(t_idx)
             cols.append(node)
             data.append(1.0)
-            
+
     P = sp.csr_matrix((data, (rows, cols)), shape=(n_taxa, n_nodes), dtype=counts.dtype)
     counts_by_node = counts @ P  # (n_samples, n_nodes)
     return counts_by_node.T.toarray()  # (n_nodes, n_samples)

@@ -17,9 +17,7 @@ from skbio.diversity._util import vectorize_counts_and_tree
 
 def create_star_tree(n_tips):
     """Create a simple star tree with n_tips tips."""
-    newick = "({})root;".format(
-        ",".join(f"t{i}:1.0" for i in range(n_tips))
-    )
+    newick = "({})root;".format(",".join(f"t{i}:1.0" for i in range(n_tips)))
     return TreeNode.read([newick])
 
 
@@ -42,8 +40,10 @@ def run_scaling_benchmark():
 
     results = {
         "tips": [],
-        "dense_time": [], "sparse_time": [],
-        "dense_mem": [], "sparse_mem": [],
+        "dense_time": [],
+        "sparse_time": [],
+        "dense_mem": [],
+        "sparse_mem": [],
     }
 
     print("=== Scaling benchmark (sparsity=5%) ===")
@@ -79,8 +79,10 @@ def run_sparsity_benchmark():
 
     results = {
         "sparsity": [],
-        "dense_time": [], "sparse_time": [],
-        "dense_mem": [], "sparse_mem": [],
+        "dense_time": [],
+        "sparse_time": [],
+        "dense_mem": [],
+        "sparse_mem": [],
     }
 
     print("\n=== Sparsity benchmark (n_tips=2000) ===")
@@ -104,7 +106,10 @@ def run_sparsity_benchmark():
         results["sparse_mem"].append(sm)
 
         nnz_pct = (counts_sparse.nnz / (n_samples * n_tips)) * 100
-        print(f"dense={dt:.3f}s/{dm:.1f}MB  sparse={st:.3f}s/{sm:.1f}MB  nnz={nnz_pct:.1f}%")
+        print(
+            f"dense={dt:.3f}s/{dm:.1f}MB  "
+            f"sparse={st:.3f}s/{sm:.1f}MB  nnz={nnz_pct:.1f}%"
+        )
 
     return results
 
@@ -136,8 +141,20 @@ def plot_results(scaling, sparsity_res, outdir="benchmark_results"):
 
     # Bottom-left: Runtime vs sparsity
     ax = axes[1, 0]
-    ax.plot(sparsity_res["sparsity"], sparsity_res["dense_time"], "o-", label="Dense", linewidth=2)
-    ax.plot(sparsity_res["sparsity"], sparsity_res["sparse_time"], "s-", label="Sparse", linewidth=2)
+    ax.plot(
+        sparsity_res["sparsity"],
+        sparsity_res["dense_time"],
+        "o-",
+        label="Dense",
+        linewidth=2,
+    )
+    ax.plot(
+        sparsity_res["sparsity"],
+        sparsity_res["sparse_time"],
+        "s-",
+        label="Sparse",
+        linewidth=2,
+    )
     ax.set_xlabel("Sparsity (fraction of non-zero entries)")
     ax.set_ylabel("Runtime (seconds)")
     ax.set_title("Runtime vs Sparsity (n_tips=2000)")
@@ -148,8 +165,20 @@ def plot_results(scaling, sparsity_res, outdir="benchmark_results"):
 
     # Bottom-right: Memory vs sparsity
     ax = axes[1, 1]
-    ax.plot(sparsity_res["sparsity"], sparsity_res["dense_mem"], "o-", label="Dense", linewidth=2)
-    ax.plot(sparsity_res["sparsity"], sparsity_res["sparse_mem"], "s-", label="Sparse", linewidth=2)
+    ax.plot(
+        sparsity_res["sparsity"],
+        sparsity_res["dense_mem"],
+        "o-",
+        label="Dense",
+        linewidth=2,
+    )
+    ax.plot(
+        sparsity_res["sparsity"],
+        sparsity_res["sparse_mem"],
+        "s-",
+        label="Sparse",
+        linewidth=2,
+    )
     ax.set_xlabel("Sparsity (fraction of non-zero entries)")
     ax.set_ylabel("Peak memory (MB)")
     ax.set_title("Peak Memory vs Sparsity (n_tips=2000)")
@@ -158,10 +187,16 @@ def plot_results(scaling, sparsity_res, outdir="benchmark_results"):
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    fig.suptitle("Sparse vs Dense: vectorize_counts_and_tree Performance",
-                 fontsize=14, fontweight="bold", y=1.01)
+    fig.suptitle(
+        "Sparse vs Dense: vectorize_counts_and_tree Performance",
+        fontsize=14,
+        fontweight="bold",
+        y=1.01,
+    )
     fig.tight_layout()
-    fig.savefig(os.path.join(outdir, "benchmark_comparison.png"), dpi=150, bbox_inches="tight")
+    fig.savefig(
+        os.path.join(outdir, "benchmark_comparison.png"), dpi=150, bbox_inches="tight"
+    )
     plt.close(fig)
 
     print(f"\nPlot saved to {outdir}/benchmark_comparison.png")
