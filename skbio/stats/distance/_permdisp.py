@@ -287,7 +287,7 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    samples = ordination.samples
+    samples = ordination.samples.copy()
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
