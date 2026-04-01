@@ -11,6 +11,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 from numpy.exceptions import AxisError
+from numpy.random import rand, randint
 import pandas as pd
 from scipy.sparse import coo_matrix
 
@@ -22,6 +23,10 @@ from skbio.stats.composition import (
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
 from skbio.util._testing import ArrayAPITestMixin, backends, xp_assert_close
+
+
+# Tolerance for functions that lose precision on some backends (ilr, alr, etc.)
+_RELAXED_RTOL = 1e-4
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -36,7 +41,7 @@ def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
     npt.assert_allclose(res_data, exp_data, rtol=rtol, atol=atol)
 
 
-class CompositionTests(TestCase):
+class CompositionTests(TestCase, ArrayAPITestMixin):
 
     def setUp(self):
         # Compositional data
@@ -264,6 +269,20 @@ class CompositionTests(TestCase):
                          [0.444, 0.167, 0.2  , 0.4  ]]])
         npt.assert_array_equal(obs.round(3), exp)
         npt.assert_allclose(obs.sum(axis=1), 1.)
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_closure_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            arr = self.make_array(xp, device, data)
+            result = closure(arr, axis)
+            expected = data / np.sum(data, keepdims=True, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assert_close(result, expected)
 
     def test_perturb(self):
         pmat = perturb(closure(self.cdata1),
@@ -493,6 +512,22 @@ class CompositionTests(TestCase):
         exp = np.vstack([np.expand_dims(clr(mat, axis=0), axis=0) for mat in ten])
         npt.assert_allclose(obs, exp)
 
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_clr_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            lmat = np.log(data)
+            expected = lmat - np.mean(lmat, axis=axis, keepdims=True)
+            arr = self.make_array(xp, device, data)
+            result = clr(arr, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(result.shape, arr.shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
     def test_clr_inv(self):
         mat = self.rdata1.copy()
         obs = clr_inv(mat)
@@ -520,6 +555,22 @@ class CompositionTests(TestCase):
         # input not centered
         with self.assertWarns(UserWarning):
             clr_inv(self.cdata1)
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_clr_inv_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            tmp = np.exp(data - np.max(data, axis=axis, keepdims=True))
+            expected = tmp / np.sum(tmp, axis=axis, keepdims=True)
+            arr = self.make_array(xp, device, data)
+            result = clr_inv(arr, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(result.shape, arr.shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
     def test_centralize(self):
         cmat = centralize(closure(self.cdata1))
@@ -670,6 +721,53 @@ class CompositionTests(TestCase):
         with self.assertRaises(ValueError):
             ilr_inv(table, basis=basis)
 
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_ilr_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        V = _gram_schmidt_basis(6)
+        for data in (data_int, data_real):
+            x = clr(data, axis)
+            x = np.moveaxis(x, axis, -1)
+            expected = np.moveaxis(x @ V.T, -1, axis)
+            expected_shape = [
+                d if i != axis else d - 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = ilr(arr, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_ilr_inv_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        V = _gram_schmidt_basis(7)
+        for data in (data_int, data_real):
+            y = np.moveaxis(data, axis, -1)
+            y = np.exp(y @ V)
+            y = y / np.sum(y, axis=-1, keepdims=True)
+            expected = np.moveaxis(y, -1, axis)
+            expected_shape = [
+                d if i != axis else d + 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = ilr_inv(arr, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
     def test_alr(self):
         # 2d-composition
         comp1 = closure(self.cdata1)
@@ -731,6 +829,53 @@ class CompositionTests(TestCase):
                                        -0.81649658, 0.],
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_alr_backends(self, xp, device):
+        ref_idx = 2
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        for data in (data_int, data_real):
+            denom = data[:, [ref_idx], :]
+            numerators = np.delete(data, ref_idx, axis=axis)
+            expected = np.log(numerators / denom)
+            expected_shape = [
+                d if i != axis else d - 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = alr(arr, ref_idx, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+    @backends("numpy", "jax", "torch", "cupy")
+    def test_alr_inv_backends(self, xp, device):
+        ref_idx = 2
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        for data in (data_int, data_real):
+            exp_mat = np.exp(data)
+            ones = np.ones_like(exp_mat[:, 0, :])
+            exp_mat = np.insert(exp_mat, ref_idx, ones, axis=axis)
+            expected = exp_mat / exp_mat.sum(axis=axis, keepdims=True)
+            expected_shape = [
+                d if i != axis else d + 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = alr_inv(arr, ref_idx, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = _gram_schmidt_basis(5)
