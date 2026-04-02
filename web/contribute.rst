@@ -165,19 +165,16 @@ When done, activate the environment::
 
 .. note:: This may be slightly different depending on the operating system. Refer to the `Conda documentation <https://docs.conda.io/>`_ to find instructions for your OS.
 
-.. rubric:: Alternative: using pip
+.. note::
 
-If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment (``.venv`` will become a hidden directory in the project directory, but you are free to choose a different name and path)::
+   If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment (``.venv`` will become a hidden directory in the project directory, but you are free to choose a different directory name and path)::
 
-    python -m venv .venv
-    source .venv/bin/activate
+       python -m venv .venv
+       source .venv/bin/activate
 
-Then install the dependencies::
+   Then install dependencies in the environment::
 
-    pip install -r ci/conda_requirements.txt \
-                -r ci/requirements.test.txt \
-                -r ci/requirements.lint.txt \
-                -r ci/requirements.doc.txt
+       pip install -r ci/conda_requirements.txt -r ci/requirements.test.txt -r ci/requirements.lint.txt -r ci/requirements.doc.txt
 
 4. Install scikit-bio from source code::
 
