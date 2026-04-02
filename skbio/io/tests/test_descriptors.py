@@ -89,6 +89,26 @@ class TestRead(unittest.TestCase):
         method = self.TestClass.read
         self.assertIsNotNone(method.__doc__)
         self.assertIn('TestClass', method.__doc__)
+
+    def test_tabular_msa_read_docstring_mentions_constructor(self):
+        """Test that TabularMSA read docstring mentions constructor."""
+        test_format = create_format('tabular_msa_docstring_test_format')
+
+        class TabularMSA:
+            read = Read()
+
+        @test_format.reader(TabularMSA)
+        def _reader(fh, cls=None):
+            if cls is None:
+                cls = TabularMSA
+            return cls()
+
+        try:
+            doc = TabularMSA.read.__doc__
+            self.assertIn('constructor', doc)
+            self.assertIn('GrammaredSequence', doc)
+        finally:
+            io_registry.remove_format('tabular_msa_docstring_test_format')
     
     def test_read_passes_kwargs(self):
         """Test that kwargs are passed through to the reader."""
