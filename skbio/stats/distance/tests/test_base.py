@@ -2282,6 +2282,20 @@ class IntDtypeTests(TestCase):
         filtered = dm.filter(['a', 'c'])
         self.assertEqual(filtered.scale, 0.5)
 
+    def test_scale_preserved_on_distance_matrix_reconstruction(self):
+        data = np.array([[0, 20], [20, 0]], dtype=np.int16)
+        dm = DistanceMatrix(data, ['a', 'b'], scale=0.05)
+        reconstructed = DistanceMatrix(dm)
+        self.assertEqual(reconstructed.scale, 0.05)
+        self.assertEqual(reconstructed.dtype, np.int16)
+
+    def test_scale_preserved_on_permute(self):
+        data = np.array([[0, 10, 20], [10, 0, 30], [20, 30, 0]],
+                        dtype=np.int16)
+        dm = DistanceMatrix(data, ['a', 'b', 'c'], scale=0.5)
+        permuted = dm.permute(seed=0)
+        self.assertEqual(permuted.scale, 0.5)
+
     def test_int_avoid_copy(self):
         for dtype in (np.int8, np.int16, np.int32):
             data = np.array([[0, 1, 2], [3, 0, 4], [5, 6, 0]], dtype=dtype)
