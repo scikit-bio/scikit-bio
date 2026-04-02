@@ -140,6 +140,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         validate: bool = True,
         scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
@@ -1131,6 +1134,9 @@ class SymmetricMatrix(PairwiseMatrix):
         diagonal: float | NDArray = None,
         scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         (
             data,
             ids,
@@ -1797,11 +1803,17 @@ class SymmetricMatrix(PairwiseMatrix):
             if self._flags["CONDENSED"]:
                 permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
-                    permuted, self.ids, validate=False, condensed=True
+                    permuted,
+                    self.ids,
+                    validate=False,
+                    condensed=True,
+                    scale=self._scale,
                 )
             else:
                 permuted = distmat_reorder(self._data, order)
-                return self.__class__(permuted, self.ids, validate=False)
+                return self.__class__(
+                    permuted, self.ids, validate=False, scale=self._scale
+                )
 
     def copy(self) -> SymmetricMatrix:
         r"""Return a deep copy of the symmetric matrix.
@@ -2000,6 +2012,9 @@ class DistanceMatrix(SymmetricMatrix):
         condensed: bool = False,
         scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         data, ids, validate_data, validate_ids, validate_shape = self._normalize_input(
             data, ids
         )
