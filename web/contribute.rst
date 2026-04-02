@@ -155,8 +155,6 @@ Add the official scikit-bio repo as the **upstream** of your fork::
 
    If you do not have Conda (or Mamba) in your computer, you may install one of the distributions such as `Miniconda <https://conda.io/miniconda.html>`_, `Miniforge <https://github.com/conda-forge/miniforge>`_ or `Anaconda <https://www.anaconda.com/download/>`_.
 
-   We recommend Conda over other approaches such as ``pip``, ``pyenv``, and ``virtualenv``. However, you are not blocked from using them in necessary situations.
-
 Execute the following command (``skbio-dev`` can be any name you like)::
 
     conda create -n skbio-dev -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt --file ci/requirements.lint.txt --file ci/requirements.doc.txt
