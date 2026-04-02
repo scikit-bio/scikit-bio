@@ -331,5 +331,6 @@ def _config_med(x):
 
     Transpose the vector to be compatible with hd.geomedian.
     """
-    Xt = np.ascontiguousarray(x.to_numpy(copy=True).T)
-    return pd.Series(np.array(geomedian_axis_one(Xt)), index=x.columns)
+    X = x.to_numpy(copy=True)
+    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns)
+
