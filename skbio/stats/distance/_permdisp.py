@@ -287,7 +287,7 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    samples = ordination.samples.copy()
+    samples = ordination.samples
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
@@ -305,17 +305,16 @@ def permdisp(
 def _compute_groups(samples, test_type, grouping):
     groups = []
 
-    samples["grouping"] = grouping
     if test_type == "centroid":
-        centroids = samples.groupby("grouping").aggregate("mean")
+        centroids = samples.groupby(grouping).aggregate("mean")
     else:  # median
         grouping_cols = samples.columns.to_list()
-        centroids = samples.groupby("grouping")[grouping_cols].apply(_config_med)
+        centroids = samples.groupby(grouping)[grouping_cols].apply(_config_med)
 
-    for label, df in samples.groupby("grouping"):
+    for label, df in samples.groupby(grouping):
         groups.append(
             cdist(
-                df.values[:, :-1].astype("float64"),
+                df.values.astype("float64"),
                 [centroids.loc[label].values],
                 metric="euclidean",
             )
@@ -328,10 +327,9 @@ def _compute_groups(samples, test_type, grouping):
 
 
 def _config_med(x):
-    """Slice and transpose the vector.
+    """Transpose the vector.
 
-    Slice the vector up to the last value to exclude grouping column
-    and transpose the vector to be compatible with hd.geomedian.
+    Transpose the vector to be compatible with hd.geomedian.
     """
-    X = x.values[:, :-1]
-    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns[:-1])
+    X = x.values
+    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns)
