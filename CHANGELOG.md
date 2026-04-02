@@ -9,6 +9,7 @@
 
 ### Bug Fixes
 
+* Fixed a bug in `skbio.io.registry` where a `NoneType` AttributeError would be raised during program exit if a file parsing generator was left unconsumed. ([#2428](https://github.com/scikit-bio/scikit-bio/pull/2428))
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
 
 ## Version 0.7.2
