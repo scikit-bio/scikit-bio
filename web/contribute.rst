@@ -169,10 +169,10 @@ When done, activate the environment::
 
 .. rubric:: Alternative: using pip
 
-If you prefer to use ``pip`` instead of Conda, you can create a virtual environment and install the dependencies manually::
+If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment (``.venv`` will become a hidden directory in the project directory, but you are free to choose a different name and path)::
 
-    python -m venv ~/virtualenvs/skbio-dev
-    source ~/virtualenvs/skbio-dev/bin/activate
+    python -m venv .venv
+    source .venv/bin/activate
 
 Then install the dependencies::
 
