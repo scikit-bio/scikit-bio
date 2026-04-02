@@ -19,7 +19,7 @@ from skbio.util._gpu import cuda_avail
 
 from skbio.stats.composition import (
     closure, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv)
+    ilr_inv, alr, alr_inv, centralize, vlr)
 from skbio.stats.composition._base import _gram_schmidt_basis
 
 
@@ -1874,6 +1874,68 @@ class Tests_ILR_INV_helmert_basis(TestCase):
                 f"In {class_name}.{test_name}: tolerance increased from 1e-8 to 1e-4.",
                 UserWarning
             )
+
+
+class Tests_Centralize(TestCase):
+    def setUp(self):
+        self.mat = np.array([[.1, .3, .4, .2], [.2, .2, .2, .4]])
+
+    def _expected(self, mat):
+        """Compute centralize reference using pure numpy."""
+        closed = mat / mat.sum(axis=-1, keepdims=True)
+        cen = np.exp(np.mean(np.log(closed), axis=0, keepdims=True))
+        result = closed / cen
+        return result / result.sum(axis=-1, keepdims=True)
+
+    def test_ndarray_numpy(self):
+        exp = self._expected(self.mat)
+        rst = centralize(self.mat)
+        npt.assert_allclose(rst, exp)
+
+    @skipIf(no_torch, "Skipping tests: no torch dependency")
+    def test_ndarray_torch(self):
+        mat = torch.tensor(self.mat)
+        exp = self._expected(self.mat)
+        rst = centralize(mat)
+
+        assert type(rst) == type(mat), "type is changed"
+        assert rst.device == mat.device, "different device"
+        npt.assert_allclose(rst.numpy(), exp, atol=1e-7)
+
+    @skipIf(no_jax, "Skipping tests: no jax dependency")
+    def test_ndarray_jnp(self):
+        mat = jnp.array(self.mat)
+        exp = self._expected(self.mat)
+        rst = centralize(mat)
+
+        assert type(rst) == type(mat), "type is changed"
+        assert rst.device == mat.device, "different device"
+        npt.assert_allclose(np.asarray(rst), exp, atol=1e-7)
+
+
+class Tests_VLR(TestCase):
+    def setUp(self):
+        self.x = np.array([1.0, 2.0, 3.0])
+        self.y = np.array([2.0, 3.0, 4.0])
+        self.expected = vlr(self.x, self.y, ddof=1)
+
+    def test_ndarray_numpy(self):
+        rst = vlr(self.x, self.y, ddof=1)
+        self.assertAlmostEqual(rst, self.expected)
+
+    @skipIf(no_torch, "Skipping tests: no torch dependency")
+    def test_ndarray_torch(self):
+        x = torch.tensor(self.x)
+        y = torch.tensor(self.y)
+        rst = vlr(x, y, ddof=1)
+        self.assertAlmostEqual(rst, self.expected, places=7)
+
+    @skipIf(no_jax, "Skipping tests: no jax dependency")
+    def test_ndarray_jnp(self):
+        x = jnp.array(self.x)
+        y = jnp.array(self.y)
+        rst = vlr(x, y, ddof=1)
+        self.assertAlmostEqual(rst, self.expected, places=7)
 
 
 if __name__ == "__main__":
