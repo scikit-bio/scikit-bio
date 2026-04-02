@@ -157,7 +157,7 @@ Add the official scikit-bio repo as the **upstream** of your fork::
 
 Execute the following command (``skbio-dev`` can be any name you like)::
 
-    conda create -n skbio-dev -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt --file ci/requirements.lint.txt --file ci/requirements.doc.txt
+    conda create -n skbio-dev -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt --file ci/requirements.lint.txt --file ci/requirements.doc.txt
 
 When done, activate the environment::
 
@@ -174,7 +174,7 @@ When done, activate the environment::
 
    Then install dependencies in the environment::
 
-       pip install -r ci/conda_requirements.txt -r ci/requirements.test.txt -r ci/requirements.lint.txt -r ci/requirements.doc.txt
+       pip install -r ci/requirements.txt -r ci/requirements.test.txt -r ci/requirements.lint.txt -r ci/requirements.doc.txt
 
 4. Install scikit-bio from source code::
 
