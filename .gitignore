@@ -56,3 +56,13 @@ web/_build
 
 # Cython files
 *.c
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
