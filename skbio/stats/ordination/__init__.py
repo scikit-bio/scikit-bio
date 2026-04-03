@@ -59,6 +59,15 @@ Graph embedding
 
    graphembed
 
+Multimodal embedding
+--------------------
+
+.. autosummary::
+   :toctree:
+
+   mmvec
+   MMvecResults
+
 Ordination results
 ------------------
 
@@ -176,6 +185,7 @@ from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._principal_component_analysis import pca
 from ._graphembed import graphembed
 from ._ordination_results import OrdinationResults
+from ._mmvec import mmvec, MMvecResults
 from ._utils import (
     mean_and_std,
     scale,
@@ -194,6 +204,8 @@ __all__ = [
     "pcoa",
     "pcoa_biplot",
     "graphembed",
+    "mmvec",
+    "MMvecResults",
     "OrdinationResults",
     "mean_and_std",
     "scale",

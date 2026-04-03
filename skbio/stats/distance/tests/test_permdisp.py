@@ -360,6 +360,15 @@ class PERMDISPTests(TestCase):
             permdisp(self.unifrac_dm, [], method='invalid')
         self.assertEqual(str(cm.exception), "Method must be eigh or fsvd.")
 
+    def test_no_mutation_of_ordination_results(self):
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        original_columns = po.samples.columns.tolist()
+        
+        permdisp(po, self.unif_grouping, permutations=0, warn_neg_eigval=False)
+        
+        self.assertEqual(po.samples.columns.tolist(), original_columns)
+        self.assertNotIn("grouping", po.samples.columns.tolist())
+
 
 if __name__ == '__main__':
     main()
