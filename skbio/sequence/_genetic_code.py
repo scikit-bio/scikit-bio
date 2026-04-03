@@ -129,19 +129,13 @@ class GeneticCode(SkbioObject):
     @classproperty
     def _offset_table(cls):
         if cls.__offset_table is None:
-            # create lookup table that is filled with 255 everywhere except for
-            # indices corresponding to U, C, A, and G. 255 was chosen to
-            # represent invalid character offsets because it will create an
-            # invalid (out of bounds) index into `amino_acids` which should
-            # error noisily. this is important in case the valid definite
-            # IUPAC RNA characters change in the future and the assumptions
-            # currently made by the code become invalid
-            table = np.empty(ord(b"U") + 1, dtype=np.uint8)
-            table.fill(255)
-            table[ord(b"U")] = 0
-            table[ord(b"C")] = 1
-            table[ord(b"A")] = 2
-            table[ord(b"G")] = 3
+            # table mapping IUPAC characters (including degenerates) to
+            # offsets 0-14 for the expanded translation table.
+            # 255 is used for invalid/gap characters.
+            table = np.full(128, 255, dtype=np.uint8)
+            iupac_order = "UCAGRYMKWSBDHVN"
+            for i, char in enumerate(iupac_order):
+                table[ord(char)] = i
             cls.__offset_table = table
         return cls.__offset_table
 
@@ -197,7 +191,8 @@ class GeneticCode(SkbioObject):
         * -2 (reverse)
         * -3 (reverse)
 
-        This property can be passed into ``GeneticCode.translate(reading_frame)``.
+        This property can be passed into
+        ``GeneticCode.translate(reading_frame)``.
 
         Returns
         -------
@@ -232,13 +227,15 @@ class GeneticCode(SkbioObject):
 
         if len(amino_acids) != self._num_codons:
             raise ValueError(
-                "`amino_acids` must be length %d, not %d"
-                % (self._num_codons, len(amino_acids))
+                "`amino_acids` must be length {}, not {}".format(
+                    self._num_codons, len(amino_acids)
+                )
             )
         indices = (amino_acids.values == b"M").nonzero()[0]
         if indices.size < 1:
             raise ValueError(
-                "`amino_acids` must contain at least one M (methionine) character"
+                "`amino_acids` must contain at least one M "
+                "(methionine) character"
             )
         self._amino_acids = amino_acids
         self._m_character_codon = self._index_to_codon(indices[0])
@@ -248,9 +245,12 @@ class GeneticCode(SkbioObject):
 
         if len(starts) != self._num_codons:
             raise ValueError(
-                "`starts` must be length %d, not %d" % (self._num_codons, len(starts))
+                "`starts` must be length {}, not {}".format(
+                    self._num_codons, len(starts)
+                )
             )
-        if (starts.values == b"M").sum() + (starts.values == b"-").sum() != len(starts):
+        if (starts.values == b"M").sum() + (starts.values == b"-").sum() \
+                != len(starts):
             # to prevent the user from accidentally swapping `starts` and
             # `amino_acids` and getting a translation back
             raise ValueError("`starts` may only contain M and - characters")
@@ -262,6 +262,70 @@ class GeneticCode(SkbioObject):
         for i, index in enumerate(indices):
             codons[i] = self._index_to_codon(index)
         self._start_codons = codons
+
+    @property
+    def _degenerate_amino_acids(self):
+        if not hasattr(self, "_degenerate_amino_acids_table"):
+            # 15x15x15 table for degenerate codons (UCAGRYMKWSBDHVN)
+            table = np.empty((15, 15, 15), dtype="|S1")
+
+            # Map of degenerate char to definite chars
+            deg_map = {
+                'U': 'U', 'C': 'C', 'A': 'A', 'G': 'G',
+                'R': 'AG', 'Y': 'CU', 'M': 'AC', 'K': 'UG',
+                'W': 'AU', 'S': 'GC',
+                'B': 'CGU', 'D': 'AGU', 'H': 'ACU', 'V': 'ACG',
+                'N': 'ACGU'
+            }
+            chars = "UCAGRYMKWSBDHVN"
+            definite_chars = "UCAG"
+            definite_offsets = {c: i for i, c in enumerate(definite_chars)}
+
+            # Amino acid degeneracy map
+            aa_deg_map = {
+                'B': set("DN"),
+                'Z': set("EQ"),
+                'J': set("IL"),
+            }
+
+            for i, c1 in enumerate(chars):
+                for j, c2 in enumerate(chars):
+                    for k, c3 in enumerate(chars):
+                        possible_aas = set()
+                        for r1 in deg_map[c1]:
+                            off1 = definite_offsets[r1]
+                            for r2 in deg_map[c2]:
+                                off2 = definite_offsets[r2]
+                                for r3 in deg_map[c3]:
+                                    off3 = definite_offsets[r3]
+                                    idx = off1 * 16 + off2 * 4 + off3
+                                    aa = self._amino_acids.values[idx]
+                                    possible_aas.add(aa)
+
+                        if len(possible_aas) == 1:
+                            table[i, j, k] = list(possible_aas)[0]
+                        else:
+                            # Try to find a specific degenerate amino acid
+                            # Remove stop if present, but mark as X
+                            if b'*' in possible_aas:
+                                table[i, j, k] = b'X'
+                                continue
+
+                            # All possible definite versions of this codon
+                            # must be covered by a single degenerate AA
+                            aas_str = {aa.decode('ascii') for aa in
+                                       possible_aas}
+                            found_deg = False
+                            for deg_aa, definite_set in aa_deg_map.items():
+                                if aas_str.issubset(definite_set):
+                                    aa_enc = deg_aa.encode('ascii')
+                                    table[i, j, k] = aa_enc
+                                    found_deg = True
+                                    break
+                            if not found_deg:
+                                table[i, j, k] = b'X'
+            self._degenerate_amino_acids_table = table
+        return self._degenerate_amino_acids_table
 
     def _index_to_codon(self, index):
         """Convert AA index (0-63) to codon encoded in offsets (0-3)."""
@@ -399,7 +463,8 @@ class GeneticCode(SkbioObject):
         """
         return not (self == other)
 
-    def translate(self, sequence, reading_frame=1, start="ignore", stop="ignore"):
+    def translate(self, sequence, reading_frame=1, start="ignore",
+                  stop="ignore"):
         r"""Translate RNA sequence into protein sequence.
 
         Parameters
@@ -558,6 +623,11 @@ class GeneticCode(SkbioObject):
 
         if start in {"require", "optional"}:
             start_codon_index = data.shape[0]
+            # Degenerate start codons: we only consider a degenerate codon
+            # a start codon if ALL its definite versions are start codons.
+            # This is because 'require' start = fMet, which is specific.
+            # For simplicity, we only match definite start codons here for now,
+            # as that was the previous behavior.
             for start_codon in self._start_codons:
                 indices = np.all(data == start_codon, axis=1).nonzero()[0]
 
@@ -568,12 +638,17 @@ class GeneticCode(SkbioObject):
 
             if start_codon_index != data.shape[0]:
                 data = data[start_codon_index:]
+                # M character codon offset for U, C, A, G is 0, 1, 2, 3
+                # but in our expanded table it's also 0, 1, 2, 3.
+                # self._m_character_codon is [offset1, offset2, offset3]
                 data[0] = self._m_character_codon
             elif start == "require":
                 self._raise_require_error("start", reading_frame)
 
-        indices = (data * self._radix_multiplier).sum(axis=1)
-        translated = self._amino_acids.values[indices]
+        # Use the degenerate translation table
+        translated = self._degenerate_amino_acids[
+            data[:, 0], data[:, 1], data[:, 2]
+        ]
 
         if stop in {"require", "optional"}:
             stop_codon_indices = (translated == b"*").nonzero()[0]
@@ -592,7 +667,9 @@ class GeneticCode(SkbioObject):
     def _validate_translate_inputs(self, sequence, reading_frame, start, stop):
         if not isinstance(sequence, RNA):
             raise TypeError(
-                "Sequence to translate must be RNA, not %s" % type(sequence).__name__
+                "Sequence to translate must be RNA, not {}".format(
+                    type(sequence).__name__
+                )
             )
 
         if reading_frame not in self.reading_frames:
@@ -614,13 +691,7 @@ class GeneticCode(SkbioObject):
             )
 
         if sequence.has_degenerates():
-            raise NotImplementedError(
-                "scikit-bio does not currently support "
-                "translation of degenerate sequences."
-                "`RNA.expand_degenerates` can be used "
-                "to obtain all definite versions "
-                "of a degenerate sequence."
-            )
+            pass
 
     def _raise_require_error(self, name, reading_frame):
         raise ValueError(
@@ -787,7 +858,8 @@ _ncbi_genetic_codes = {
     4: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "--MM---------------M------------MMMM---------------M------------",
-        "Mold, Protozoan, and Coelenterate Mitochondrial, and Mycoplasma/Spiroplasma",
+        "Mold, Protozoan, and Coelenterate Mitochondrial, "
+        "and Mycoplasma/Spiroplasma",
     ),
     5: GeneticCode(
         "FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG",
