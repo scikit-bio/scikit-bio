@@ -22,7 +22,7 @@ from skbio.stats.composition import (
     ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
-from skbio.util._testing import ArrayAPITestMixin, backends, xp_assert_close
+from skbio.util._testing import ArrayAPITestMixin, array_backends, xp_assert_close
 
 
 # Tolerance for functions that lose precision on some backends (ilr, alr, etc.)
@@ -270,7 +270,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         npt.assert_array_equal(obs.round(3), exp)
         npt.assert_allclose(obs.sum(axis=1), 1.)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_closure_backends(self, xp, device):
         axis = 1
         data_int = randint(1, 100, (4, 6, 3))
@@ -512,7 +512,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         exp = np.vstack([np.expand_dims(clr(mat, axis=0), axis=0) for mat in ten])
         npt.assert_allclose(obs, exp)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_clr_backends(self, xp, device):
         axis = 1
         data_int = randint(1, 100, (4, 6, 3))
@@ -556,7 +556,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         with self.assertWarns(UserWarning):
             clr_inv(self.cdata1)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_clr_inv_backends(self, xp, device):
         axis = 1
         data_int = randint(1, 100, (4, 6, 3))
@@ -721,7 +721,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         with self.assertRaises(ValueError):
             ilr_inv(table, basis=basis)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_ilr_backends(self, xp, device):
         axis = 1
         data_int = randint(1, 100, (4, 6, 3))
@@ -744,7 +744,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             self.assertEqual(list(result.shape), expected_shape)
             self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_ilr_inv_backends(self, xp, device):
         axis = 1
         data_int = randint(1, 100, (4, 6, 3))
@@ -830,7 +830,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_alr_backends(self, xp, device):
         ref_idx = 2
         axis = 1
@@ -853,7 +853,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             self.assertEqual(list(result.shape), expected_shape)
             self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
-    @backends("numpy", "jax", "torch", "cupy")
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_alr_inv_backends(self, xp, device):
         ref_idx = 2
         axis = 1

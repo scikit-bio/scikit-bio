@@ -5,9 +5,12 @@ on:
   schedule:
     - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
 
+env:
+  latest_python: "3.14"
+
 jobs:
   test:
-    name: Array API (${{ matrix.backend }}, Python 3.12)
+    name: Array API (${{ matrix.backend }})
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -23,12 +26,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.latest_python }}
       - name: Install scikit-bio + backend
         run: |
           pip install -e .
           pip install ${{ matrix.backend }}
       - name: Run tests
         env:
-          SKBIO_ARRAY_API_BACKEND: ${{ matrix.backend }}
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
         run: python -m skbio.test

@@ -465,12 +465,12 @@ def pytestrunner():
 # Uses unittest.subTest() for per-backend reporting — no pytest needed.
 #
 # Env vars:
-#   SKBIO_ARRAY_API_BACKEND  — "numpy" (default), "jax", "torch", "cupy", or "all"
+#   SKBIO_ARRAY_BACKEND  — "numpy" (default), "jax", "torch", "cupy", or "all"
 #   SKBIO_DEVICE             — "cpu" (default), "cuda", "gpu"
 #
 # Usage:
 #     class TestClosure(TestCase, ArrayAPITestMixin):
-#         @backends("numpy", "jax", "torch", "cupy")
+#         @array_backends("numpy", "jax", "torch", "cupy")
 #         def test_basic(self, xp, device):
 #             data = self.make_array(xp, device, [[2.0, 2.0, 6.0]])
 #             result = closure(data)
@@ -481,12 +481,12 @@ def pytestrunner():
 
 def _read_env():
     """Read backend/device environment variables."""
-    backend = os.environ.get("SKBIO_ARRAY_API_BACKEND", "").strip()
+    backend = os.environ.get("SKBIO_ARRAY_BACKEND", "").strip()
     device = os.environ.get("SKBIO_DEVICE", "").strip() or None
     return backend, device
 
 
-def _get_available_backends():
+def _get_array_backends():
     """Return dict of {name: (namespace, [devices])} for installed backends."""
     _backends = {"numpy": (np, ["cpu"])}
 
@@ -508,7 +508,6 @@ def _get_available_backends():
     try:
         import torch
 
-        torch.set_default_dtype(torch.float64)
         devices = ["cpu"]
         if torch.cuda.is_available():
             devices.append("cuda")
@@ -526,7 +525,7 @@ def _get_available_backends():
     return _backends
 
 
-_BACKENDS = _get_available_backends()
+_BACKENDS = _get_array_backends()
 
 
 def _should_run(backend_name, device):
@@ -570,7 +569,7 @@ def xp_assert_equal(actual, desired):
     npt.assert_array_equal(_to_numpy(actual), _to_numpy(desired))
 
 
-def backends(*backend_names, cpu_only=False):
+def array_backends(*backend_names, cpu_only=False):
     """Decorator: run a test method once per supported backend/device.
 
     Uses ``unittest.subTest()`` for per-backend reporting.
@@ -585,7 +584,7 @@ def backends(*backend_names, cpu_only=False):
     Raises
     ------
     RuntimeError
-        If ``SKBIO_ARRAY_API_BACKEND`` names a backend that is not installed.
+        If ``SKBIO_ARRAY_BACKEND`` names a backend that is not installed.
 
     """
     if not backend_names:
@@ -599,7 +598,7 @@ def backends(*backend_names, cpu_only=False):
             # Hard error when a specific backend was requested but is missing.
             if env_backend and env_backend != "all" and env_backend not in _BACKENDS:
                 raise RuntimeError(
-                    f"SKBIO_ARRAY_API_BACKEND={env_backend!r} but "
+                    f"SKBIO_ARRAY_BACKEND={env_backend!r} but "
                     f"{env_backend!r} is not installed. "
                     f"Installed backends: {sorted(_BACKENDS.keys())}"
                 )
@@ -618,10 +617,10 @@ def backends(*backend_names, cpu_only=False):
                     ran_any = True
                     with self.subTest(backend=name, device=device):
                         # Comment this print statement out when finished
-                        print(
-                            f"\n  → Running {test_func.__name__} [{name}, {device}]",
-                            flush=True,
-                        )
+                        # print(
+                        #     f"\n  → Running {test_func.__name__} [{name}, {device}]",
+                        #     flush=True,
+                        # )
                         test_func(self, xp, device)
             if not ran_any:
                 if env_device:
@@ -646,12 +645,19 @@ class ArrayAPITestMixin:
 
     """
 
+    # def make_array(self, xp, device, data, dtype=None):
+    #     """Create an array on the appropriate backend and device."""
+    #     if dtype is not None:
+    #         arr = xp.asarray(data, dtype=dtype)
+    #     else:
+    #         arr = xp.asarray(data)
+    #     return _move_to_device(arr, xp, device)
+
     def make_array(self, xp, device, data, dtype=None):
         """Create an array on the appropriate backend and device."""
-        if dtype is not None:
-            arr = xp.asarray(data, dtype=dtype)
-        else:
-            arr = xp.asarray(data)
+        if dtype is None:
+            dtype = xp.float64
+        arr = xp.asarray(data, dtype=dtype)
         return _move_to_device(arr, xp, device)
 
     def assert_close(self, actual, expected, rtol=1e-7, atol=1e-7):

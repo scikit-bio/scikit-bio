@@ -28,11 +28,11 @@ from skbio.util._testing import (
     _data_frame_to_default_int_type,
     ReallyEqualMixin,
     _read_env,
-    _get_available_backends,
+    _get_array_backends,
     _should_run,
     xp_assert_close,
     xp_assert_equal,
-    backends,
+    array_backends,
     ArrayAPITestMixin,
 )
 
@@ -581,21 +581,21 @@ class TestAssertIndexEqual(unittest.TestCase):
 class TestReadEnv(unittest.TestCase):
     def test_default_empty(self):
         with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop('SKBIO_ARRAY_API_BACKEND', None)
+            os.environ.pop('SKBIO_ARRAY_BACKEND', None)
             os.environ.pop('SKBIO_DEVICE', None)
             backend, device = _read_env()
             self.assertEqual(backend, '')
             self.assertIsNone(device)
 
     def test_custom_values(self):
-        with patch.dict(os.environ, {'SKBIO_ARRAY_API_BACKEND': ' jax ',
+        with patch.dict(os.environ, {'SKBIO_ARRAY_BACKEND': ' jax ',
                                      'SKBIO_DEVICE': ' cuda '}):
             backend, device = _read_env()
             self.assertEqual(backend, 'jax')
             self.assertEqual(device, 'cuda')
 
     def test_backend_only(self):
-        with patch.dict(os.environ, {'SKBIO_ARRAY_API_BACKEND': 'torch'},
+        with patch.dict(os.environ, {'SKBIO_ARRAY_BACKEND': 'torch'},
                         clear=False):
             os.environ.pop('SKBIO_DEVICE', None)
             backend, device = _read_env()
@@ -605,7 +605,7 @@ class TestReadEnv(unittest.TestCase):
 
 class TestGetAvailableBackends(unittest.TestCase):
     def test_numpy_always_present(self):
-        backends_dict = _get_available_backends()
+        backends_dict = _get_array_backends()
         self.assertIn('numpy', backends_dict)
         xp, devices = backends_dict['numpy']
         self.assertIs(xp, np)
@@ -682,7 +682,7 @@ class TestBackendsDecorator(unittest.TestCase):
         ran = []
 
         class FakeTest(unittest.TestCase):
-            @backends('numpy')
+            @array_backends('numpy')
             def test_it(self, xp, device):
                 ran.append((xp, device))
 
@@ -696,7 +696,7 @@ class TestBackendsDecorator(unittest.TestCase):
     def test_missing_backend_raises(self):
         """Requesting a non-installed backend should raise RuntimeError."""
         class FakeTest(unittest.TestCase):
-            @backends('numpy')
+            @array_backends('numpy')
             def test_it(self, xp, device):
                 pass
 
@@ -710,7 +710,7 @@ class TestBackendsDecorator(unittest.TestCase):
     def test_no_matching_backends_skips(self):
         """If no backends match, should raise SkipTest."""
         class FakeTest(unittest.TestCase):
-            @backends('jax')  # jax likely not installed in test env
+            @array_backends('jax')  # jax likely not installed in test env
             def test_it(self, xp, device):
                 pass
 
@@ -725,7 +725,7 @@ class TestBackendsDecorator(unittest.TestCase):
         ran = []
 
         class FakeTest(unittest.TestCase):
-            @backends('numpy', cpu_only=True)
+            @array_backends('numpy', cpu_only=True)
             def test_it(self, xp, device):
                 ran.append(device)
 
@@ -741,7 +741,7 @@ class TestBackendsDecorator(unittest.TestCase):
         ran = []
 
         class FakeTest(unittest.TestCase):
-            @backends()
+            @array_backends()
             def test_it(self, xp, device):
                 ran.append('ok')
 
@@ -756,7 +756,7 @@ class TestBackendsDecorator(unittest.TestCase):
     def test_no_matching_device_raises(self):
         """If SKBIO_DEVICE is set but no backend has it, RuntimeError."""
         class FakeTest(unittest.TestCase):
-            @backends('numpy')
+            @array_backends('numpy')
             def test_it(self, xp, device):
                 pass
 

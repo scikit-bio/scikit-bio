@@ -62,8 +62,8 @@ def array_api_compatible(backends, devices=None):
             return func(*args, **kwargs)
 
         wrapper.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
-        wrapper._array_api_backends = backends
-        wrapper._array_api_devices = devices
+        wrapper._array_backends = backends
+        wrapper._devices = devices
 
         return wrapper
 

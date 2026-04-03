@@ -89,7 +89,7 @@ from ._testing import (
     assert_data_frame_almost_equal,
     xp_assert_close,
     xp_assert_equal,
-    backends,
+    array_backends,
     ArrayAPITestMixin,
     pytestrunner,
 )
@@ -128,6 +128,6 @@ __all__ = [
     "array_api_compatible",
     "xp_assert_close",
     "xp_assert_equal",
-    "backends",
+    "array_backends",
     "ArrayAPITestMixin",
 ]
