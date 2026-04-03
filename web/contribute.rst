@@ -167,10 +167,12 @@ When done, activate the environment::
 
 .. note::
 
-   If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment (``.venv`` will become a hidden directory in the project directory, but you are free to choose a different directory name and path)::
+   If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment::
 
        python -m venv .venv
        source .venv/bin/activate
+
+   ``.venv`` will become a hidden directory in the project directory, and it will be ignored by Git. Alternatively, you may replace ``.venv`` with a location outside the project directory, such as ``~/.virtualenvs/skbio-dev``.
 
    Then install dependencies in the environment::
 
