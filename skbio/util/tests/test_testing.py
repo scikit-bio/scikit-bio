@@ -505,12 +505,13 @@ class TestDataFrameToDefaultIntType(unittest.TestCase):
         df = pd.DataFrame({'a': np.array([1, 2, 3], dtype=np.int64),
                            'b': [1.0, 2.0, 3.0],
                            'c': ['x', 'y', 'z']})
+        expected_c = df['c'].copy()
         _data_frame_to_default_int_type(df)
         # After conversion, int columns should have platform default int type
         self.assertEqual(df['a'].dtype, np.dtype(int))
         # Non-int columns should be unchanged
         self.assertEqual(df['b'].dtype, np.float64)
-        self.assertEqual(df['c'].dtype, object)
+        pd.testing.assert_series_equal(df['c'], expected_c)
 
     def test_no_int_columns(self):
         df = pd.DataFrame({'a': [1.0, 2.0], 'b': ['x', 'y']})

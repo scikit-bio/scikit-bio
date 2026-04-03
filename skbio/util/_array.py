@@ -54,11 +54,11 @@ def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
 
     Notes
     -----
-    When ``to_numpy=True``, this function's behavior is very similar to ``np.asarray``.
-    Therefore, in most legacy code, a simple ``np.asarray`` call can replace the
+    When `to_numpy=True`, this function's behavior is very similar to `np.asarray`.
+    Therefore, in most legacy code, a simple `np.asarray` call can replace the
     current function. However, there is a subtle difference that makes the current
-    function more suitable for GPU-oriented code: ``np.asarray`` forces a device-to-
-    host copy, whereas ``np.from_dlpack`` attempts to share the buffer without making
+    function more suitable for GPU-oriented code: `np.asarray` forces a device-to-
+    host copy, whereas `np.from_dlpack` attempts to share the buffer without making
     a copy, thereby improving performance.
 
     """
@@ -99,7 +99,7 @@ _BACKEND_CHECKERS = {
 
 
 def _get_namespace_from_args(args, kwargs):
-    """Return the array namespace if any argument is an array API object.
+    r"""Return the array namespace if any argument is an array object.
 
     Parameters
     ----------
@@ -111,8 +111,13 @@ def _get_namespace_from_args(args, kwargs):
     Returns
     -------
     namespace or None
-        ``array_api_compat.array_namespace(*arrays)`` for all detected array
-        API objects, or ``None`` if none were found.
+        A uniform array namespace for all detected array objects, or `None` if no array
+        object is found.
+
+    Raises
+    ------
+    TypeError
+        If `args` or `kwargs` contain arrays from different array libraries.
 
     """
     arrays = [
@@ -124,21 +129,21 @@ def _get_namespace_from_args(args, kwargs):
 
 
 def _check_array_api_backend(xp, backends, func_name):
-    """Raise TypeError if xp is not among the declared supported backends.
+    r"""Raise TypeError if xp is not among the declared supported backends.
 
     Parameters
     ----------
     xp : namespace
         Array namespace to check.
     backends : list of str
-        Allowed backend names (e.g. ``['numpy', 'torch']``).
+        Allowed backend names (e.g. `['numpy', 'torch']`).
     func_name : str
         Name of the calling function, used in the error message.
 
     Raises
     ------
     TypeError
-        If ``xp`` is not a supported backend.
+        If `xp` is not a supported backend.
 
     """
     for name in backends:
@@ -158,11 +163,11 @@ def _check_array_api_backend(xp, backends, func_name):
 
 
 def _to_numpy(arr):
-    """Convert any array-API-compatible array to a NumPy array on CPU.
+    r"""Convert any array-API-compatible array to a NumPy array on CPU.
 
-    Unlike ``_get_array(arr, to_numpy=True)``, this handles GPU arrays
-    explicitly without relying on ``__dlpack__`` or ``__array__``, which can
-    fail for device arrays (e.g., ``np.asarray`` raises ``RuntimeError`` on a
+    Unlike `_get_array(arr, to_numpy=True)`, this handles GPU arrays
+    explicitly without relying on `__dlpack__` or `__array__`, which can
+    fail for device arrays (e.g., `np.asarray` raises `RuntimeError` on a
     PyTorch CUDA tensor).
 
     Parameters
@@ -178,7 +183,7 @@ def _to_numpy(arr):
     Notes
     -----
     This is intended for use in **test assertions**, not in library functions.
-    Library functions should stay on the input device and use the ``xp``
+    Library functions should stay on the input device and use the `xp`
     namespace throughout.
 
     """
@@ -201,17 +206,17 @@ def _to_numpy(arr):
 
 
 def _move_to_device(arr, xp, device):
-    """Move an array to the specified device.
+    r"""Move an array to the specified device.
 
     Parameters
     ----------
     arr : array
         An array-API-compatible array.
     xp : module
-        The array namespace (e.g. ``numpy``, ``torch``, ``jax.numpy``).
+        The array namespace (e.g. `numpy`, `torch`, `jax.numpy`).
     device : str or None
-        Target device string (``'cpu'``, ``'cuda'``, ``'gpu'``, etc.).
-        If ``None`` or ``'cpu'``, the array is returned unchanged.
+        Target device string (`'cpu'`, `'cuda'`, `'gpu'`, etc.).
+        If `None` or `'cpu'`, the array is returned unchanged.
 
     Returns
     -------
@@ -243,7 +248,7 @@ def _move_to_device(arr, xp, device):
 
 
 def _get_backend_name(xp):
-    """Return a short backend name string for an array namespace.
+    r"""Return a short backend name string for an array namespace.
 
     Parameters
     ----------
@@ -253,7 +258,7 @@ def _get_backend_name(xp):
     Returns
     -------
     str
-        One of ``'numpy'``, ``'torch'``, ``'jax'``, ``'cupy'``, ``'dask'``,
+        One of `'numpy'`, `'torch'`, `'jax'`, `'cupy'`, `'dask'`,
         or the raw module name if unrecognized.
 
     """
@@ -283,9 +288,9 @@ def ingest_array(
     Returns
     -------
     xp : namespace
-        The array API compatible namespace corresponding ``arrays``.
+        The array API compatible namespace corresponding `arrays`.
     *arrays : object
-        One or more array objects that are consistent with ``xp``.
+        One or more array objects that are consistent with `xp`.
 
     See Also
     --------
@@ -308,9 +313,9 @@ def ingest_array(
 
         * Examples are numpy.ndarray, Python list, tuple, array, and scalar.
 
-    ``xp`` is the namespace wrapper for different array libraries.
+    `xp` is the namespace wrapper for different array libraries.
 
-    If the input ``arr`` is already a compatible object, it will be returned as-is.
+    If the input `arr` is already a compatible object, it will be returned as-is.
     Otherwise, it will be converted into a NumPy array.
 
     References

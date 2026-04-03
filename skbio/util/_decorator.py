@@ -26,15 +26,15 @@ from ._warning import _warn_deprecated, _warn_renamed, _warn_param_renamed
 
 
 def array_api_compatible(backends, devices=None):
-    """Mark a function as compatible with the Python array API standard.
+    r"""Mark a function as compatible with the Python array API standard.
 
     Parameters
     ----------
     backends : list of str
-        Supported backends: ``'numpy'``, ``'cupy'``, ``'torch'``, ``'jax'``,
-        ``'dask'``.
+        Supported backends: `'numpy'`, `'cupy'`, `'torch'`, `'jax'`,
+        `'dask'`.
     devices : list of str, optional
-        Supported devices: ``'cpu'``, ``'gpu'``. Defaults to per-backend
+        Supported devices: `'cpu'`, `'gpu'`. Defaults to per-backend
         defaults.
 
     Notes
@@ -44,10 +44,10 @@ def array_api_compatible(backends, devices=None):
     1. An array API compatibility table is inserted into the Notes section of
        the function's docstring.
     2. At runtime, if the caller passes an array API object from an unsupported
-       backend, a ``TypeError`` is raised.
+       backend, a `TypeError` is raised.
 
     The decorated function gains two attributes:
-    ``_array_api_backends`` and ``_array_api_devices``.
+    `_array_api_backends` and `_array_api_devices`.
 
     """
 
