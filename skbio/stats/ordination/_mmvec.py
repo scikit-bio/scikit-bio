@@ -12,6 +12,10 @@ This module implements MMvec for learning joint embeddings of microbes
 and metabolites from their co-occurrence patterns.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
@@ -21,6 +25,10 @@ from scipy.sparse import coo_matrix, issparse
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
 from skbio.util import get_rng
+
+if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import SeedLike
 
 
 def _multinomial_loglik_and_grad(logits, y):
@@ -534,17 +542,17 @@ class MMvecResults(SkbioObject):
 
     def __init__(
         self,
-        microbe_embeddings,
-        metabolite_embeddings,
-        ranks,
-        convergence,
+        microbe_embeddings: pd.DataFrame,
+        metabolite_embeddings: pd.DataFrame,
+        ranks: pd.DataFrame,
+        convergence: pd.DataFrame,
     ):
         self.microbe_embeddings = microbe_embeddings
         self.metabolite_embeddings = metabolite_embeddings
         self.ranks = ranks
         self.convergence = convergence
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return string representation of MMvecResults."""
         n_microbes, n_metabolites = self.ranks.shape
         n_components = self.microbe_embeddings.shape[1] - 1  # exclude bias
@@ -557,7 +565,7 @@ class MMvecResults(SkbioObject):
             f"  Iterations: {n_iterations}"
         )
 
-    def probabilities(self):
+    def probabilities(self) -> pd.DataFrame:
         """Convert ranks to probability matrix via softmax.
 
         Returns
@@ -569,7 +577,7 @@ class MMvecResults(SkbioObject):
         probs = softmax(self.ranks.values)
         return pd.DataFrame(probs, index=self.ranks.index, columns=self.ranks.columns)
 
-    def predict(self, microbes):
+    def predict(self, microbes: pd.DataFrame | ArrayLike) -> pd.DataFrame:
         """Predict metabolite distributions given microbe abundances.
 
         Computes the expected metabolite distribution for each sample by
@@ -645,7 +653,11 @@ class MMvecResults(SkbioObject):
             columns=self.ranks.columns,
         )
 
-    def score(self, microbes, metabolites):
+    def score(
+        self,
+        microbes: pd.DataFrame | ArrayLike,
+        metabolites: pd.DataFrame | ArrayLike,
+    ) -> float:
         r"""Compute Q² (coefficient of prediction) on held-out data.
 
         Q² measures predictive performance on test data, analogous to R²
@@ -1127,24 +1139,24 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
 
 
 def mmvec(
-    microbes,
-    metabolites,
-    n_components=3,
-    optimizer="lbfgs",
-    max_iter=1000,
-    learning_rate=1e-3,
-    batch_size=50,
-    u_prior_mean=0.0,
-    u_prior_scale=1.0,
-    v_prior_mean=0.0,
-    v_prior_scale=1.0,
-    beta_1=0.9,
-    beta_2=0.95,
-    clipnorm=10.0,
-    batch_normalization="unbiased",
-    seed=None,
-    verbose=False,
-):
+    microbes: pd.DataFrame | ArrayLike,
+    metabolites: pd.DataFrame | ArrayLike,
+    n_components: int = 3,
+    optimizer: str = "lbfgs",
+    max_iter: int = 1000,
+    learning_rate: float = 1e-3,
+    batch_size: int = 50,
+    u_prior_mean: float = 0.0,
+    u_prior_scale: float = 1.0,
+    v_prior_mean: float = 0.0,
+    v_prior_scale: float = 1.0,
+    beta_1: float = 0.9,
+    beta_2: float = 0.95,
+    clipnorm: float = 10.0,
+    batch_normalization: str = "unbiased",
+    seed: SeedLike | None = None,
+    verbose: bool = False,
+) -> MMvecResults:
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
 
     Learns joint embeddings of two feature sets from their co-occurrence
