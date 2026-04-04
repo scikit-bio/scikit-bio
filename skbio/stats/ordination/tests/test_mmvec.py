@@ -19,7 +19,59 @@ from scipy.stats import spearmanr
 
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvecResults
-from skbio.stats.ordination.tests._simulation import random_multimodal
+from skbio.stats.ordination._mmvec import random_multimodal
+
+
+class TestRandomMultimodal(unittest.TestCase):
+    """Tests for random_multimodal simulation helper."""
+
+    def test_output_shapes(self):
+        """Generated outputs should have expected shapes and IDs."""
+        res = random_multimodal(
+            n_microbes=4,
+            n_metabolites=6,
+            n_samples=8,
+            latent_dim=2,
+            seed=7,
+        )
+        microbes, metabolites, design, beta, U, Ubias, V, Vbias = res
+
+        self.assertEqual(microbes.shape, (8, 4))
+        self.assertEqual(metabolites.shape, (8, 6))
+        self.assertEqual(design.shape, (8, 2))
+        self.assertEqual(beta.shape, (2, 4))
+        self.assertEqual(U.shape, (4, 2))
+        self.assertEqual(Ubias.shape, (4, 1))
+        self.assertEqual(V.shape, (2, 5))
+        self.assertEqual(Vbias.shape, (1, 5))
+
+        self.assertEqual(microbes.index[0], "sample_0")
+        self.assertEqual(microbes.columns[0], "OTU_0")
+        self.assertEqual(metabolites.columns[0], "metabolite_0")
+
+    def test_reproducible_with_int_seed(self):
+        """Integer seeds should provide reproducible outputs."""
+        res1 = random_multimodal(seed=13)
+        res2 = random_multimodal(seed=13)
+
+        pd.testing.assert_frame_equal(res1[0], res2[0])
+        pd.testing.assert_frame_equal(res1[1], res2[1])
+        for i in range(2, len(res1)):
+            np.testing.assert_allclose(res1[i], res2[i])
+
+    def test_seed_interfaces(self):
+        """Generator and RandomState seeds should both be supported."""
+        gen = np.random.default_rng(21)
+        res_gen = random_multimodal(seed=gen)
+        self.assertEqual(res_gen[0].shape[0], 100)
+
+        rs1 = np.random.RandomState(21)
+        rs2 = np.random.RandomState(21)
+        res_rs1 = random_multimodal(seed=rs1)
+        res_rs2 = random_multimodal(seed=rs2)
+
+        pd.testing.assert_frame_equal(res_rs1[0], res_rs2[0])
+        pd.testing.assert_frame_equal(res_rs1[1], res_rs2[1])
 
 
 class TestMMvecRecovery(unittest.TestCase):
