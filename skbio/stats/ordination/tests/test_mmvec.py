@@ -8,6 +8,7 @@
 
 """Tests for MMvec implementation."""
 
+import os
 import io
 import sys
 import unittest
@@ -17,6 +18,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
+from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvecResults
 from skbio.stats.ordination._mmvec import random_multimodal
@@ -1128,25 +1130,6 @@ class TestMMvecCaseStudies(unittest.TestCase):
             os.path.join(soils_dir, "metabolites.biom")
         )
 
-        # Load CF dataset
-        cf_dir = os.path.join(test_dir, "data", "cf")
-        cls.cf_microbes = biom.load_table(
-            os.path.join(cf_dir, "otus_nt.biom")
-        )
-        cls.cf_metabolites = biom.load_table(
-            os.path.join(cf_dir, "lcms_nt.biom")
-        )
-        cls.cf_microbe_metadata = pd.read_csv(
-            os.path.join(cf_dir, "microbe-metadata.txt"),
-            sep="\t",
-            index_col=0,
-        )
-        cls.cf_metabolite_metadata = pd.read_csv(
-            os.path.join(cf_dir, "metabolite-metadata.txt"),
-            sep="\t",
-            index_col=0,
-        )
-
     def _biom_to_dataframe(self, table, axis="observation"):
         """Convert BIOM table to pandas DataFrame.
 
@@ -1280,66 +1263,36 @@ class TestMMvecCaseStudies(unittest.TestCase):
         )
 
     def test_cf_pseudomonas_rhamnolipids(self):
-        """Pseudomonas should co-occur with rhamnolipids in CF sputum.
-
-        This test reproduces the finding from the CF (cystic fibrosis)
-        example notebook: the model should learn that Pseudomonas
-        microbes co-occur with rhamnolipids and other Pseudomonas-
-        associated metabolites.
-
-        Reference: Morton et al. "Learning representations of
-        microbe-metabolite interactions." Nature Methods, 2019.
-        """
-        # Convert to DataFrames
-        microbes_df = self._biom_to_dataframe(self.cf_microbes)
-        metabolites_df = self._biom_to_dataframe(self.cf_metabolites)
-
-        # Filter to common samples
-        common_samples = list(
-            set(microbes_df.index) & set(metabolites_df.index)
+        """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum."""
+        # Load CF dataset
+        subdir = os.path.join("data", "cf")
+        microbes = pd.read_table(
+            get_data_path("microbes.tsv.gz", subdir), index_col=0
+        ).T
+        metabolites = pd.read_table(
+            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+        ).T
+        microbe_meta = pd.read_table(
+            get_data_path("microbe_meta.tsv.gz", subdir), index_col=0
         )
-        microbes_df = microbes_df.loc[common_samples]
-        metabolites_df = metabolites_df.loc[common_samples]
-
-        # Remove zero-sum columns
-        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
-        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
-
-        # Remove zero-sum rows
-        row_sums = microbes_df.sum(axis=1)
-        valid_samples = row_sums[row_sums > 0].index
-        microbes_df = microbes_df.loc[valid_samples]
-        metabolites_df = metabolites_df.loc[valid_samples]
-
-        # Find Pseudomonas microbes
-        microbe_metadata = self.cf_microbe_metadata.loc[
-            self.cf_microbe_metadata.index.isin(microbes_df.columns)
-        ]
-        pseudomonas_mask = microbe_metadata["Taxon"].str.contains(
-            "Pseudomonas", na=False
+        metabolite_meta = pd.read_table(
+            get_data_path("metabolite_meta.tsv.gz", subdir), index_col=0
         )
-        pseudomonas_ids = microbe_metadata[pseudomonas_mask].index.tolist()
 
-        # Get expert-annotated metabolites
-        metabolite_metadata = self.cf_metabolite_metadata.dropna(
-            subset=["expert_annotation"]
-        )
-        expert_metabolites = metabolite_metadata.index.tolist()
-        expert_metabolites = [
-            m for m in expert_metabolites if m in metabolites_df.columns
-        ]
+        # Find Pseudomonas microbes in the metadata (n=39)
+        pseudomonas = microbe_meta[
+            microbe_meta["Taxon"].str.contains("Pseudomonas")
+        ].index.tolist()
 
-        self.assertGreater(
-            len(pseudomonas_ids), 0, "No Pseudomonas microbes found"
-        )
-        self.assertGreater(
-            len(expert_metabolites), 0, "No expert-annotated metabolites found"
-        )
+        # Find expert-annotated metabolites in the metadata (n=20)
+        expert_metabolites = metabolite_meta[
+            metabolite_meta["expert_annotation"].notnull()
+        ].index.tolist()
 
         # Fit the model with parameters similar to the original
         result = mmvec(
-            microbes_df,
-            metabolites_df,
+            microbes,
+            metabolites,
             n_components=3,
             optimizer="lbfgs",
             max_iter=500,
@@ -1348,36 +1301,19 @@ class TestMMvecCaseStudies(unittest.TestCase):
             seed=42,
         )
 
+        # Calculate ranks
         ranks = result.ranks
 
-        # Check that Pseudomonas microbes are present
-        pseudomonas_in_ranks = [
-            p for p in pseudomonas_ids if p in ranks.index
-        ]
-        self.assertGreater(
-            len(pseudomonas_in_ranks),
-            0,
-            "No Pseudomonas microbes found in ranks",
-        )
+        # For the first Pseudomonas taxon in the ranks table, count expert-annotated
+        # metabolites with positive ranks.
+        ranks_pseudomonas = ranks[ranks.index.isin(pseudomonas)]
+        first_pseudomonas = ranks_pseudomonas.iloc[0]
 
-        # For the first Pseudomonas, count expert-annotated metabolites
-        # with positive ranks
-        first_pseudomonas = pseudomonas_in_ranks[0]
-        pseudomonas_ranks = ranks.loc[first_pseudomonas]
-
-        positive_count = sum(
-            1 for met in expert_metabolites if pseudomonas_ranks.get(met, 0) > 0
-        )
-
-        # The original notebook expects at least 19 metabolites with
-        # positive ranks. We use a slightly lower threshold for
-        # reproducibility.
-        self.assertGreaterEqual(
-            positive_count,
-            15,  # At least 15 of 20 expert-annotated metabolites
-            f"Expected at least 15 expert-annotated metabolites to have "
-            f"positive ranks for Pseudomonas, but only {positive_count} did.",
-        )
+        # The original analysis expects 19 out of 20 metabolites with positive ranks.
+        # A slightly lower threshold (15) is used here for reproducibility.
+        positive_count = (first_pseudomonas.loc[expert_metabolites] > 0).sum()
+        self.assertEqual(positive_count, 19)
+        self.assertGreaterEqual(positive_count, 15)
 
 
 if __name__ == "__main__":
