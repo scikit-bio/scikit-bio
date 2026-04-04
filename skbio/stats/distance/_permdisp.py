@@ -12,9 +12,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from scipy.stats import f_oneway
-from scipy.spatial.distance import cdist
 
 from ._cutils import geomedian_axis_one
 from ._base import (
@@ -28,6 +26,7 @@ from skbio.util._decorator import params_aliased
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
+    import pandas as pd
     from skbio.util._typing import SeedLike
 
 
@@ -287,11 +286,11 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    samples = ordination.samples
+    sample_data = ordination.samples.to_numpy(dtype=np.float64, copy=False)
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    test_stat_function = partial(_compute_groups, samples, test)
+    test_stat_function = partial(_compute_groups, sample_data, test)
 
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -303,34 +302,51 @@ def permdisp(
 
 
 def _compute_groups(samples, test_type, grouping):
+    if hasattr(samples, "to_numpy"):
+        data = samples.to_numpy(dtype=np.float64, copy=False)
+    else:
+        data = np.asarray(samples, dtype=np.float64)
     groups = []
 
-    if test_type == "centroid":
-        centroids = samples.groupby(grouping).aggregate("mean")
-    else:  # median
-        grouping_cols = samples.columns.to_list()
-        centroids = samples.groupby(grouping)[grouping_cols].apply(_config_med)
-
-    for label, df in samples.groupby(grouping):
-        groups.append(
-            cdist(
-                df.values.astype("float64"),
-                [centroids.loc[label].values],
-                metric="euclidean",
-            )
+    grouping_array = np.asarray(grouping)
+    if np.issubdtype(grouping_array.dtype, np.number):
+        group_masks = (
+            grouping_array == group_id for group_id in np.unique(grouping_array)
         )
+    else:
+        # Preserve mixed-label behavior (e.g., strings + ints) without dtype coercion.
+        group_codes = _encode_grouping_labels(grouping)
+        group_masks = (group_codes == group_id for group_id in np.unique(group_codes))
+
+    for group_mask in group_masks:
+        group_data = data[group_mask]
+
+        if test_type == "centroid":
+            center = group_data.mean(axis=0)
+        else:  # median
+            center = np.asarray(geomedian_axis_one(group_data.T), dtype=np.float64)
+
+        # Distances from each sample in this group to the group center.
+        groups.append(np.linalg.norm(group_data - center, axis=1))
 
     stat, _ = f_oneway(*groups)
-    stat = stat[0]
-
-    return stat
+    return float(np.ravel(stat)[0])
 
 
-def _config_med(x):
-    """Transpose the vector.
+def _encode_grouping_labels(grouping):
+    """Encode possibly mixed-type labels as integer group ids."""
+    labels = np.asarray(grouping, dtype=object)
+    codes = np.empty(labels.shape[0], dtype=np.intp)
+    mapping = {}
+    next_code = 0
 
-    Transpose the vector to be compatible with hd.geomedian.
-    """
-    X = x.to_numpy(copy=True)
-    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns)
+    for idx, label in enumerate(labels):
+        code = mapping.get(label)
+        if code is None:
+            code = next_code
+            mapping[label] = code
+            next_code += 1
+        codes[idx] = code
+
+    return codes
 
