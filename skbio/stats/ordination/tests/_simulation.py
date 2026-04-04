@@ -68,8 +68,9 @@ def random_multimodal(
         Mean of metabolite embedding distribution.
     sigmaV : float
         Standard deviation of metabolite embedding distribution.
-    seed : int
-        Random seed for reproducibility.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------

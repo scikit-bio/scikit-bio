@@ -69,7 +69,7 @@ class TestMMvecRecovery(unittest.TestCase):
             learning_rate=1e-3,
             beta_1=0.8,
             beta_2=0.9,
-            random_state=0,
+            seed=0,
         )
 
         # Check result type
@@ -102,8 +102,6 @@ class TestMMvecRecovery(unittest.TestCase):
             (self.Vbias, np.ones((1, self.V.shape[1])), self.V)
         )
         exp = softmax(np.hstack((np.zeros((d1, 1)), U_ @ V_)))
-
-        # Compute result probabilities
         res = softmax(result.ranks.values)
 
         s_r, s_p = spearmanr(np.ravel(res), np.ravel(exp))
@@ -124,7 +122,7 @@ class TestMMvecRecovery(unittest.TestCase):
             learning_rate=1e-3,
             beta_1=0.8,
             beta_2=0.9,
-            random_state=0,
+            seed=0,
         )
 
         # Compute Q² score on test data
@@ -254,7 +252,7 @@ class TestMMvecBasic(unittest.TestCase):
             metabolites,
             n_components=3,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
 
         # Check shapes
@@ -288,7 +286,7 @@ class TestMMvecBasic(unittest.TestCase):
             metabolites,
             n_components=2,
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
 
         # Ranks should be approximately row-centered
@@ -296,7 +294,7 @@ class TestMMvecBasic(unittest.TestCase):
         np.testing.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_reproducibility(self):
-        """Check that results are reproducible with same random state."""
+        """Check that results are reproducible with same seed."""
         np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
@@ -311,7 +309,7 @@ class TestMMvecBasic(unittest.TestCase):
             metabolites,
             n_components=2,
             max_iter=50,
-            random_state=123,
+            seed=123,
         )
 
         result2 = mmvec(
@@ -319,7 +317,7 @@ class TestMMvecBasic(unittest.TestCase):
             metabolites,
             n_components=2,
             max_iter=50,
-            random_state=123,
+            seed=123,
         )
 
         np.testing.assert_allclose(
@@ -345,7 +343,7 @@ class TestMMvecBasic(unittest.TestCase):
             optimizer="adam",
             max_iter=50,
             batch_normalization="legacy",
-            random_state=42,
+            seed=42,
         )
         self.assertIsInstance(result_legacy, MMvecResults)
 
@@ -357,7 +355,7 @@ class TestMMvecBasic(unittest.TestCase):
             optimizer="adam",
             max_iter=50,
             batch_normalization="unbiased",
-            random_state=42,
+            seed=42,
         )
         self.assertIsInstance(result_unbiased, MMvecResults)
 
@@ -388,7 +386,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
 
         probs = result.probabilities()
@@ -406,7 +404,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
 
         # Predict on new samples
@@ -441,7 +439,7 @@ class TestMMvecResults(unittest.TestCase):
             train_metabolites,
             n_components=2,
             max_iter=100,
-            random_state=42,
+            seed=42,
         )
 
         q2 = result.score(test_microbes, test_metabolites)
@@ -459,7 +457,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
 
         # Create microbes with a zero row
@@ -478,7 +476,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
         s = str(result)
         self.assertIn("MMvecResults", s)
@@ -492,7 +490,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
         predictions = result.predict(self.microbes.values[:5])
         self.assertEqual(predictions.shape[0], 5)
@@ -510,7 +508,7 @@ class TestMMvecResults(unittest.TestCase):
             train_metabolites,
             n_components=2,
             max_iter=100,
-            random_state=42,
+            seed=42,
         )
         q2 = result.score(test_microbes.values, test_metabolites.values)
         self.assertIsInstance(q2, float)
@@ -523,7 +521,7 @@ class TestMMvecResults(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
         zero_metabolites = self.metabolites.iloc[:5].copy()
         zero_metabolites.iloc[0, :] = 0
@@ -663,7 +661,7 @@ class TestMMvecInputTypes(unittest.TestCase):
             metabolites_sparse,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
 
         # Should produce valid results
@@ -696,7 +694,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             max_iter=50,
             u_prior_mean=0.0,
             v_prior_mean=0.0,
-            random_state=42,
+            seed=42,
         )
 
         result_nonzero = mmvec(
@@ -706,7 +704,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             max_iter=50,
             u_prior_mean=5.0,
             v_prior_mean=5.0,
-            random_state=42,
+            seed=42,
         )
 
         # Results should differ
@@ -731,7 +729,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
                 optimizer="adam",
                 max_iter=5,
                 verbose=True,
-                random_state=42,
+                seed=42,
             )
         finally:
             sys.stdout = sys.__stdout__
@@ -762,7 +760,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
 
         # Microbe IDs preserved
@@ -792,7 +790,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=10,
-            random_state=42,
+            seed=42,
         )
 
         # Check columns exist
@@ -812,7 +810,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             n_components=2,
             optimizer="adam",
             max_iter=100,
-            random_state=42,
+            seed=42,
         )
 
         losses = result.convergence["loss"].values
@@ -850,7 +848,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=100,
-            random_state=42,
+            seed=42,
         )
 
         # Check result type
@@ -873,7 +871,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=123,
+            seed=123,
         )
 
         result2 = mmvec(
@@ -882,7 +880,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=123,
+            seed=123,
         )
 
         np.testing.assert_allclose(
@@ -912,7 +910,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=500,
-            random_state=42,
+            seed=42,
         )
 
         # Check correlation of pairwise distances
@@ -936,7 +934,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=100,
-            random_state=42,
+            seed=42,
         )
 
         # Compute Q² score on test data
@@ -957,7 +955,7 @@ class TestMMvecLBFGS(unittest.TestCase):
                 optimizer="lbfgs",
                 max_iter=50,
                 verbose=True,
-                random_state=42,
+                seed=42,
             )
         finally:
             sys.stdout = sys.__stdout__
@@ -966,8 +964,8 @@ class TestMMvecLBFGS(unittest.TestCase):
         self.assertIn("Iteration", output)
         self.assertIn("Loss", output)
 
-    def test_random_state_generator(self):
-        """random_state as np.random.Generator should work."""
+    def test_seed_generator(self):
+        """seed as np.random.Generator should work."""
         rng = np.random.default_rng(42)
         result = mmvec(
             self.microbes,
@@ -975,7 +973,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=rng,
+            seed=rng,
         )
         self.assertIsInstance(result, MMvecResults)
         self.assertEqual(result.ranks.shape, (8, 10))
@@ -988,7 +986,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             n_components=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
         self.assertIsInstance(result, MMvecResults)
         self.assertEqual(result.ranks.shape, (8, 10))
@@ -1168,7 +1166,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
             max_iter=500,
             u_prior_scale=1.0,
             v_prior_scale=1.0,
-            random_state=42,
+            seed=42,
         )
 
         # Define expected Cyanobacteria-associated metabolites
@@ -1295,7 +1293,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
             max_iter=500,
             u_prior_scale=1.0,
             v_prior_scale=1.0,
-            random_state=42,
+            seed=42,
         )
 
         ranks = result.ranks

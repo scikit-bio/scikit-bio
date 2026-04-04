@@ -20,6 +20,7 @@ from scipy.sparse import coo_matrix, issparse
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
+from skbio.util import get_rng
 
 
 def _multinomial_loglik_and_grad(logits, y):
@@ -1141,7 +1142,7 @@ def mmvec(
     beta_2=0.95,
     clipnorm=10.0,
     batch_normalization="unbiased",
-    random_state=None,
+    seed=None,
     verbose=False,
 ):
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
@@ -1209,9 +1210,9 @@ def mmvec(
 
         - 'unbiased': Uses norm = sum(microbe_counts) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
-    random_state : int or numpy.random.Generator, optional
-        Seed for random number generation or a Generator instance.
-        If an int, creates a Generator with that seed. Default is None.
+    seed : int, Generator or RandomState, optional
+        A user-provided random seed or random generator instance. See
+        :func:`details <skbio.util.get_rng>`.
     verbose : bool, optional
         Print training progress. Default is False.
 
@@ -1262,11 +1263,8 @@ def mmvec(
     (10, 15)
 
     """
-    # Create RNG - accept either an int seed or an existing Generator
-    if isinstance(random_state, np.random.Generator):
-        rng = random_state
-    else:
-        rng = np.random.default_rng(random_state)
+    # Create RNG using scikit-bio's universal seed interface.
+    rng = get_rng(seed)
 
     # Validate and convert inputs
     X, Y, microbe_ids, metabolite_ids = _validate_inputs(
