@@ -1,0 +1,37 @@
+name: Array API Compatibility
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+
+env:
+  latest_python: "3.14"
+
+jobs:
+  test:
+    name: Array API (${{ matrix.backend }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - backend: torch
+            runs-on: ubuntu-latest
+          - backend: jax
+            runs-on: ubuntu-latest
+          - backend: cupy
+            runs-on: ubuntu-latest-gpu   # TODO: replace with your GPU runner label
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.latest_python }}
+      - name: Install scikit-bio + backend
+        run: |
+          pip install -e .
+          pip install ${{ matrix.backend }}
+      - name: Run tests
+        env:
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
+        run: python -m skbio.test
