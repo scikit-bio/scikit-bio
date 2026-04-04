@@ -1148,7 +1148,7 @@ def mmvec(
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
 
     Learns joint embeddings of two feature sets from their co-occurrence
-    patterns using a multinomial likelihood model.
+    patterns using a multinomial likelihood model [1]_.
 
     While the parameter names use "microbes" and "metabolites" following the
     original publication, this method is **generic** and can be applied to any
