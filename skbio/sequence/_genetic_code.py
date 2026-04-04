@@ -222,6 +222,26 @@ class GeneticCode(SkbioObject):
         """
         return self._name
 
+    @property
+    def start_codons(self) -> tuple[str, ...]:
+        """Start codons of the genetic code."""
+        chars = ("U", "C", "A", "G")
+        return tuple(
+            sorted("".join(chars[i] for i in codon) for codon in self._start_codons)
+        )
+
+    @property
+    def stop_codons(self) -> tuple[str, ...]:
+        """Stop codons of the genetic code."""
+        indices = (self._amino_acids.values == b"*").nonzero()[0]
+        chars = ("U", "C", "A", "G")
+        return tuple(
+            sorted(
+                "".join(chars[i] for i in self._index_to_codon(index))
+                for index in indices
+            )
+        )
+
     def __init__(self, amino_acids, starts, name=""):
         self._set_amino_acids(amino_acids)
         self._set_starts(starts)
@@ -765,6 +785,51 @@ class GeneticCode(SkbioObject):
             yield self.translate(
                 rc, reading_frame=reading_frame, start=start, stop=stop
             )
+
+    def find_orfs(self, sequence, reading_frame=1):
+        """Yield open reading frames (ORFs) from a sequence.
+
+        Parameters
+        ----------
+        sequence : Sequence
+            Sequence to find ORFs in.
+        reading_frame : {1, 2, 3, -1, -2, -3}
+            The reading frame to search in.
+
+        Yields
+        ------
+        Sequence
+            The sequence of each ORF found.
+        """
+        self._validate_translate_inputs(sequence, reading_frame, "ignore", "ignore")
+
+        offset = abs(reading_frame) - 1
+        seq_to_search = sequence.reverse_complement() if reading_frame < 0 else sequence
+
+        data = seq_to_search.values[offset:].view(np.uint8)
+        data = self._offset_table[data]
+        data = data[: data.size // 3 * 3].reshape((-1, 3))
+
+        indices = (data * self._radix_multiplier).sum(axis=1)
+        translated = self._amino_acids.values[indices]
+
+        start_mask = np.zeros(len(translated), dtype=bool)
+        for codon in self._start_codons:
+            start_mask |= np.all(data == codon, axis=1)
+
+        start_indices = start_mask.nonzero()[0]
+        stop_indices = (translated == b"*").nonzero()[0]
+
+        last_stop_idx = -1
+        for start in start_indices:
+            if start <= last_stop_idx:
+                continue
+
+            valid_stops = stop_indices[stop_indices > start]
+            if valid_stops.size > 0:
+                stop = valid_stops[0]
+                yield seq_to_search[offset + start * 3 : offset + stop * 3]
+                last_stop_idx = stop
 
 
 # defined at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
