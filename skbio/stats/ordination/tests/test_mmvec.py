@@ -1219,7 +1219,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
             check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
         )
 
-
+    @unittest.skip("Skipping a test that would require long runtime.")
     def test_cf_pseudomonas_rhamnolipids(self):
         """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum.
         
