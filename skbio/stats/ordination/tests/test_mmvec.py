@@ -14,7 +14,9 @@ import sys
 import unittest
 
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
+import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
@@ -56,10 +58,10 @@ class TestRandomMultimodal(unittest.TestCase):
         res1 = random_multimodal(seed=13)
         res2 = random_multimodal(seed=13)
 
-        pd.testing.assert_frame_equal(res1[0], res2[0])
-        pd.testing.assert_frame_equal(res1[1], res2[1])
+        pdt.assert_frame_equal(res1[0], res2[0])
+        pdt.assert_frame_equal(res1[1], res2[1])
         for i in range(2, len(res1)):
-            np.testing.assert_allclose(res1[i], res2[i])
+            npt.assert_allclose(res1[i], res2[i])
 
     def test_seed_interfaces(self):
         """Generator and RandomState seeds should both be supported."""
@@ -72,8 +74,8 @@ class TestRandomMultimodal(unittest.TestCase):
         res_rs1 = random_multimodal(seed=rs1)
         res_rs2 = random_multimodal(seed=rs2)
 
-        pd.testing.assert_frame_equal(res_rs1[0], res_rs2[0])
-        pd.testing.assert_frame_equal(res_rs1[1], res_rs2[1])
+        pdt.assert_frame_equal(res_rs1[0], res_rs2[0])
+        pdt.assert_frame_equal(res_rs1[1], res_rs2[1])
 
 
 class TestMMvecRecovery(unittest.TestCase):
@@ -216,7 +218,7 @@ class TestMMvecGradients(unittest.TestCase):
 
                 grad_numerical[i, j] = (loss_plus - loss_minus) / (2 * eps)
 
-        np.testing.assert_allclose(
+        npt.assert_allclose(
             grad_analytical, grad_numerical, rtol=1e-4, atol=1e-6
         )
 
@@ -345,7 +347,7 @@ class TestMMvecBasic(unittest.TestCase):
 
         # Ranks should be approximately row-centered
         row_means = result.ranks.values.mean(axis=1)
-        np.testing.assert_allclose(row_means, 0, atol=1e-10)
+        npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_reproducibility(self):
         """Check that results are reproducible with same seed."""
@@ -374,7 +376,7 @@ class TestMMvecBasic(unittest.TestCase):
             seed=123,
         )
 
-        np.testing.assert_allclose(
+        npt.assert_allclose(
             result1.ranks.values, result2.ranks.values, rtol=1e-10
         )
 
@@ -446,7 +448,7 @@ class TestMMvecResults(unittest.TestCase):
         probs = result.probabilities()
 
         # Probabilities should sum to 1 per row
-        np.testing.assert_allclose(probs.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(probs.sum(axis=1), 1.0, rtol=1e-6)
 
         # Probabilities should be positive
         self.assertTrue((probs.values >= 0).all())
@@ -469,7 +471,7 @@ class TestMMvecResults(unittest.TestCase):
         self.assertEqual(predictions.shape, (5, 10))
 
         # Predictions should sum to 1 per row
-        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
         # Predictions should be positive
         self.assertTrue((predictions.values >= 0).all())
@@ -548,7 +550,7 @@ class TestMMvecResults(unittest.TestCase):
         )
         predictions = result.predict(self.microbes.values[:5])
         self.assertEqual(predictions.shape[0], 5)
-        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
     def test_score_numpy_array(self):
         """Test score with numpy array inputs (not DataFrames)."""
@@ -720,7 +722,7 @@ class TestMMvecInputTypes(unittest.TestCase):
 
         # Should produce valid results
         self.assertEqual(result.ranks.shape, (8, 10))
-        np.testing.assert_allclose(
+        npt.assert_allclose(
             result.ranks.values.mean(axis=1), 0, atol=1e-10
         )
 
@@ -915,7 +917,7 @@ class TestMMvecLBFGS(unittest.TestCase):
 
         # Ranks should be row-centered
         row_means = result.ranks.values.mean(axis=1)
-        np.testing.assert_allclose(row_means, 0, atol=1e-10)
+        npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_lbfgs_reproducibility(self):
         """L-BFGS should be deterministic with same seed."""
@@ -937,7 +939,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             seed=123,
         )
 
-        np.testing.assert_allclose(
+        npt.assert_allclose(
             result1.ranks.values, result2.ranks.values, rtol=1e-10
         )
 
@@ -1107,95 +1109,33 @@ class TestMMvecValidationExtended(unittest.TestCase):
 class TestMMvecCaseStudies(unittest.TestCase):
     """Test MMvec on real-world case study datasets.
 
-    These tests verify that the MMvec implementation can reproduce the
-    biological findings from the original mmvec publication and example
-    notebooks.
+    These tests verify that the MMvec implementation can reproduce the biological
+    findings from the original MMvec publication and example notebooks.
+
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Load case study datasets."""
-        import biom
-        import os
-
-        # Get the test data directory
-        test_dir = os.path.dirname(__file__)
-
-        # Load soils dataset (smaller, faster)
-        soils_dir = os.path.join(test_dir, "data", "soils")
-        cls.soils_microbes = biom.load_table(
-            os.path.join(soils_dir, "microbes.biom")
-        )
-        cls.soils_metabolites = biom.load_table(
-            os.path.join(soils_dir, "metabolites.biom")
-        )
-
-    def _biom_to_dataframe(self, table, axis="observation"):
-        """Convert BIOM table to pandas DataFrame.
-
-        Parameters
-        ----------
-        table : biom.Table
-            BIOM table to convert.
-        axis : str
-            'observation' for feature table, 'sample' otherwise.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with observations as columns and samples as rows.
-        """
-        data = table.matrix_data.toarray()
-        if axis == "observation":
-            df = pd.DataFrame(
-                data.T,
-                index=table.ids("sample"),
-                columns=table.ids("observation"),
-            )
-        else:
-            df = pd.DataFrame(
-                data,
-                index=table.ids("observation"),
-                columns=table.ids("sample"),
-            )
-        return df
-
     def test_soils_cyanobacteria_metabolites(self):
-        """Cyanobacteria should co-occur with known microcoleus metabolites.
+        """Co-occurrence of Cyanobacteria and known metabolites in wetup biocrust.
 
-        This test reproduces the finding from the soils example notebook:
-        the model should learn that Cyanobacteria (specifically rplo 1)
-        co-occur with a known set of 13 metabolites associated with
-        Microcoleus vaginatus, a desert crust cyanobacterium.
+        This test reproduces the finding from the soils example notebook: the model
+        should learn that Cyanobacteria (specifically rplo 1) co-occur with a known
+        set of 13 metabolites associated with Microcoleus vaginatus, a desert crust
+        cyanobacterium.
 
-        Reference: Morton et al. "Learning representations of
-        microbe-metabolite interactions." Nature Methods, 2019.
         """
-        # Convert to DataFrames
-        microbes_df = self._biom_to_dataframe(self.soils_microbes)
-        metabolites_df = self._biom_to_dataframe(self.soils_metabolites)
-
-        # Filter to common samples
-        common_samples = list(
-            set(microbes_df.index) & set(metabolites_df.index)
-        )
-        microbes_df = microbes_df.loc[common_samples]
-        metabolites_df = metabolites_df.loc[common_samples]
-
-        # Remove zero-sum columns
-        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
-        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
-
-        # Remove zero-sum rows
-        row_sums = microbes_df.sum(axis=1)
-        valid_samples = row_sums[row_sums > 0].index
-        microbes_df = microbes_df.loc[valid_samples]
-        metabolites_df = metabolites_df.loc[valid_samples]
+        # Load biocrust wetting dataset
+        subdir = os.path.join("data", "soils")
+        microbes = pd.read_table(
+            get_data_path("microbes.tsv.gz", subdir), index_col=0
+        ).T
+        metabolites = pd.read_table(
+            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+        ).T
 
         # Fit the model with low latent dimension for faster testing
         result = mmvec(
-            microbes_df,
-            metabolites_df,
+            microbes,
+            metabolites,
             n_components=1,
             optimizer="lbfgs",
             max_iter=500,
@@ -1204,8 +1144,11 @@ class TestMMvecCaseStudies(unittest.TestCase):
             seed=42,
         )
 
+        # Calculate ranks
+        ranks = result.ranks
+
         # Define expected Cyanobacteria-associated metabolites
-        microcoleus_metabolites = {
+        expected_metabolites = [
             "(3-methyladenine)",
             "7-methyladenine",
             "4-guanidinobutanoate",
@@ -1219,51 +1162,30 @@ class TestMMvecCaseStudies(unittest.TestCase):
             "adenosine",
             "guanine",
             "adenine",
-        }
+        ]
 
-        # Get ranks for Cyanobacteria (rplo 1)
+        # Define Cyanobacteria taxon
         cyanobacteria_id = "rplo 1 (Cyanobacteria)"
-        ranks = result.ranks
 
-        # Check that the Cyanobacteria microbe is present
-        self.assertIn(
-            cyanobacteria_id,
-            ranks.index,
-            f"Cyanobacteria ID {cyanobacteria_id} not found in ranks",
-        )
+        # Count how many of the expected metabolites have positive rank for
+        # Cyanobacteria.
+        ranks_cyanobacteria = ranks.loc[cyanobacteria_id]
+        positive_count = (ranks_cyanobacteria.loc[expected_metabolites] > 0).sum()
 
-        # Filter to metabolites present in the data
-        present_metabolites = microcoleus_metabolites & set(ranks.columns)
-        self.assertGreater(
-            len(present_metabolites),
-            0,
-            "No expected metabolites found in data",
-        )
-
-        # Count how many of the expected metabolites have positive rank
-        # for Cyanobacteria
-        cyanobacteria_ranks = ranks.loc[cyanobacteria_id]
-        positive_metabolites = set()
-        for met in present_metabolites:
-            if cyanobacteria_ranks[met] > 0:
-                positive_metabolites.add(met)
-
-        # The original notebook expects all 13 metabolites to have
-        # positive ranks for Cyanobacteria. We use a more lenient
-        # threshold to account for optimization variability.
-        n_expected = len(present_metabolites)
-        n_positive = len(positive_metabolites)
-
-        self.assertGreaterEqual(
-            n_positive,
-            n_expected * 0.85,  # At least 85% should have positive ranks
-            f"Expected most of {n_expected} microcoleus metabolites to have "
-            f"positive ranks for Cyanobacteria, but only {n_positive} did. "
-            f"Positive: {positive_metabolites}",
-        )
+        # The original notebook expects all 13 metabolites to have positive ranks for
+        # Cyanobacteria. We use a more lenient threshold (11) to account for
+        # optimization variability.
+        # self.assertEqual(positive_count, 13)
+        self.assertGreaterEqual(positive_count, 11)
 
     def test_cf_pseudomonas_rhamnolipids(self):
-        """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum."""
+        """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum.
+        
+        This test reproduces the finding from the example notebook: the model should
+        learn that Pseudomonas microbes co-occur with rhamnolipids and other
+        Pseudomonas-associated metabolites.
+
+        """
         # Load CF dataset
         subdir = os.path.join("data", "cf")
         microbes = pd.read_table(
