@@ -26,10 +26,11 @@ from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
+from skbio.table._tabular import _ingest_table
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
-    from skbio.util._typing import SeedLike
+    from skbio.util._typing import SeedLike, TableLike
 
 
 def _multinomial_loglik_and_grad(logits, y):
@@ -978,99 +979,6 @@ def _clip_gradients(grads, clipnorm):
     return grads
 
 
-def _validate_inputs(microbes, metabolites, u_prior_scale, v_prior_scale):
-    """Validate and convert input data for MMvec.
-
-    Parameters
-    ----------
-    microbes : pd.DataFrame or array-like
-        Microbe abundance counts.
-    metabolites : pd.DataFrame or array-like
-        Metabolite abundance counts.
-    u_prior_scale : float
-        Scale of Gaussian prior on U.
-    v_prior_scale : float
-        Scale of Gaussian prior on V.
-
-    Returns
-    -------
-    X : np.ndarray
-        Microbe counts as float64 array.
-    Y : np.ndarray
-        Metabolite counts as float64 array.
-    microbe_ids : list
-        Microbe feature IDs.
-    metabolite_ids : list
-        Metabolite feature IDs.
-
-    Raises
-    ------
-    ValueError
-        If inputs are invalid.
-    """
-    # Convert to arrays
-    if hasattr(microbes, "values"):
-        X = microbes.values.astype(np.float64)
-        microbe_ids = list(microbes.columns)
-    else:
-        X = np.asarray(microbes, dtype=np.float64)
-        microbe_ids = [f"microbe_{i}" for i in range(X.shape[1])]
-
-    if hasattr(metabolites, "values"):
-        Y = metabolites.values.astype(np.float64)
-        metabolite_ids = list(metabolites.columns)
-    else:
-        Y = np.asarray(metabolites, dtype=np.float64)
-        metabolite_ids = [f"metabolite_{i}" for i in range(Y.shape[1])]
-
-    n_samples_X = X.shape[0]
-    n_samples_Y = Y.shape[0]
-
-    # Input validation
-    if n_samples_X != n_samples_Y:
-        raise ValueError(
-            f"microbes and metabolites must have the same number of samples. "
-            f"Got {n_samples_X} and {n_samples_Y}."
-        )
-
-    if u_prior_scale <= 0:
-        raise ValueError(f"u_prior_scale must be positive, got {u_prior_scale}.")
-
-    if v_prior_scale <= 0:
-        raise ValueError(f"v_prior_scale must be positive, got {v_prior_scale}.")
-
-    # Check for all-zero columns in microbes
-    microbe_sums = X.sum(axis=0)
-    zero_microbes = np.where(microbe_sums == 0)[0]
-    if len(zero_microbes) > 0:
-        zero_ids = [microbe_ids[i] for i in zero_microbes[:5]]
-        msg = f"microbes contains all-zero columns: {zero_ids}"
-        if len(zero_microbes) > 5:
-            msg += f" and {len(zero_microbes) - 5} more"
-        raise ValueError(msg + ". Remove these before calling mmvec.")
-
-    # Check for all-zero columns in metabolites
-    metabolite_sums = Y.sum(axis=0)
-    zero_metabolites = np.where(metabolite_sums == 0)[0]
-    if len(zero_metabolites) > 0:
-        zero_ids = [metabolite_ids[i] for i in zero_metabolites[:5]]
-        msg = f"metabolites contains all-zero columns: {zero_ids}"
-        if len(zero_metabolites) > 5:
-            msg += f" and {len(zero_metabolites) - 5} more"
-        raise ValueError(msg + ". Remove these before calling mmvec.")
-
-    # Check for all-zero rows (samples with no counts)
-    microbe_row_sums = X.sum(axis=1)
-    zero_samples = np.where(microbe_row_sums == 0)[0]
-    if len(zero_samples) > 0:
-        raise ValueError(
-            f"microbes contains {len(zero_samples)} samples with all-zero "
-            f"counts. Remove these samples before calling mmvec."
-        )
-
-    return X, Y, microbe_ids, metabolite_ids
-
-
 def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     """Train MMvec model using L-BFGS-B optimization.
 
@@ -1301,8 +1209,8 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
 
 
 def mmvec(
-    microbes: pd.DataFrame | ArrayLike,
-    metabolites: pd.DataFrame | ArrayLike,
+    microbes: TableLike,
+    metabolites: TableLike,
     n_components: int = 3,
     optimizer: str = "lbfgs",
     max_iter: int = 1000,
@@ -1334,14 +1242,19 @@ def mmvec(
 
     Parameters
     ----------
-    microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
-        Abundance counts for the first modality (e.g., microbes, proteins).
-        This modality is treated as the "conditioning" variable.
-    metabolites : pd.DataFrame or array-like of shape (n_samples, n_metabolites)
-        Abundance counts for the second modality (e.g., metabolites, transcripts).
-        This modality is treated as the "conditioned" variable.
+    microbes : table_like of shape (n_samples, n_microbes)
+        Abundance counts for the first modality (e.g., microbes, proteins). See
+        :ref:`supported formats <table_like>`. This modality is treated as the
+        "conditioning" variable.
+
+    metabolites : table_like of shape (n_samples, n_metabolites)
+        Abundance counts for the second modality (e.g., metabolites, transcripts). See
+        above. Must have the same number of samples as ``microbes``. This modality is
+        treated as the "conditioned" variable.
+
     n_components : int, optional
         Number of latent dimensions for embeddings. Default is 3.
+
     optimizer : {'lbfgs', 'adam'}, optional
         Optimization algorithm to use. Default is 'lbfgs'.
 
@@ -1437,21 +1350,40 @@ def mmvec(
     (10, 15)
 
     """
-    # Create RNG using scikit-bio's universal seed interface.
+    # Parse tabular inputs
+    X, _, microbe_ids = _ingest_table(microbes)
+    Y, _, metabolite_ids = _ingest_table(metabolites)
+
+    # Check for sample count consistency
+    if X.shape[0] != Y.shape[0]:
+        raise ValueError(
+            f"microbes and metabolites must have the same number of samples. "
+            f"Got {X.shape[0]} and {Y.shape[0]}."
+        )
+
+    # Check for all-zero columns / rows (features /samples with no counts)
+    for mod, name in (X, "microbes"), (Y, "metabolites"):
+        for i, axis in enumerate(("columns", "rows")):
+            if np.any(mod.sum(axis=i) == 0):
+                raise ValueError(
+                    f"{name} contains all-zero {axis}. Remove them before calling."
+                )
+    # Check for positive prior scales
+    if u_prior_scale <= 0:
+        raise ValueError(f"u_prior_scale must be positive, got {u_prior_scale}.")
+    if v_prior_scale <= 0:
+        raise ValueError(f"v_prior_scale must be positive, got {v_prior_scale}.")
+
+    # Create RNG
     rng = get_rng(seed)
-
-    # Validate and convert inputs
-    X, Y, microbe_ids, metabolite_ids = _validate_inputs(
-        microbes, metabolites, u_prior_scale, v_prior_scale
-    )
-
-    n_microbes = X.shape[1]
-    n_metabolites = Y.shape[1]
 
     # Validate optimizer
     optimizer = optimizer.lower()
     if optimizer not in ("lbfgs", "adam"):
         raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
+
+    n_microbes = X.shape[1]
+    n_metabolites = Y.shape[1]
 
     # Initialize model
     model = _MMvecModel(
