@@ -30,7 +30,6 @@ from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
     from skbio.util._typing import SeedLike, TableLike
 
 
@@ -61,7 +60,7 @@ def _multinomial_loglik_and_grad(logits, y):
 
     where N = sum(y) and pi = softmax(eta).
     """
-    N = y.sum(axis=1, keepdims=True)
+    N = np.sum(y, axis=1, keepdims=True)
     log_norm = logsumexp(logits, axis=1, keepdims=True)
     loglik = np.sum(y * logits) - np.sum(N * log_norm)
 
@@ -204,21 +203,21 @@ def random_multimodal(
 
     for n in range(n_samples):
         # Draw microbe counts
-        otu = rng.multinomial(n1, microbes[n, :])
+        microbe = rng.multinomial(n1, microbes[n, :])
         # For each microbe, draw metabolites conditional on that microbe
         for i in range(n_microbes):
-            ms = rng.multinomial(otu[i] * n2, probs[i, :])
-            metabolite_counts[n, :] += ms
-        microbe_counts[n, :] += otu
+            metabolite = rng.multinomial(microbe[i] * n2, probs[i, :])
+            metabolite_counts[n, :] += metabolite
+        microbe_counts[n, :] += microbe
 
     # Create DataFrames with meaningful IDs
-    otu_ids = [f"OTU_{d}" for d in range(microbe_counts.shape[1])]
-    ms_ids = [f"metabolite_{d}" for d in range(metabolite_counts.shape[1])]
+    micrbe_ids = [f"microbe_{d}" for d in range(microbe_counts.shape[1])]
+    metabolite_ids = [f"metabolite_{d}" for d in range(metabolite_counts.shape[1])]
     sample_ids = [f"sample_{d}" for d in range(metabolite_counts.shape[0])]
 
-    microbe_counts = pd.DataFrame(microbe_counts, index=sample_ids, columns=otu_ids)
+    microbe_counts = pd.DataFrame(microbe_counts, index=sample_ids, columns=micrbe_ids)
     metabolite_counts = pd.DataFrame(
-        metabolite_counts, index=sample_ids, columns=ms_ids
+        metabolite_counts, index=sample_ids, columns=metabolite_ids
     )
 
     return (
@@ -324,9 +323,9 @@ class _MMvecModel:
         self,
         X,
         Y,
+        rng,
         batch_size=50,
-        batch_normalization="legacy",
-        rng=None,
+        batch_norm="legacy",
     ):
         """Compute loss and gradients for a mini-batch.
 
@@ -338,7 +337,7 @@ class _MMvecModel:
             Metabolite counts.
         batch_size : int
             Mini-batch size.
-        batch_normalization : {'legacy', 'unbiased'}
+        batch_norm : {'legacy', 'unbiased'}
             Batch normalization mode.
         rng : numpy.random.Generator, optional
             Random number generator for batch sampling.
@@ -360,7 +359,7 @@ class _MMvecModel:
         total_count = X_coo.data.sum()
 
         # Compute normalization factor
-        if batch_normalization == "legacy":
+        if batch_norm == "legacy":
             norm = n_samples / batch_size
         else:  # unbiased
             norm = total_count / batch_size
@@ -369,8 +368,6 @@ class _MMvecModel:
         weights = X_coo.data.astype(np.float64)
         weights /= weights.sum()
 
-        if rng is None:
-            rng = np.random.default_rng()
         batch_idx = rng.choice(
             len(X_coo.data), size=batch_size, replace=True, p=weights
         )
@@ -1049,7 +1046,7 @@ def _train_adam(
     beta_1,
     beta_2,
     clipnorm,
-    batch_normalization,
+    batch_norm,
     verbose,
 ):
     """Train MMvec model using Adam optimization.
@@ -1078,8 +1075,8 @@ def _train_adam(
         Adam exponential decay rate for second moment.
     clipnorm : float
         Gradient clipping threshold.
-    batch_normalization : str
-        Batch normalization mode ('unbiased' or 'legacy').
+    batch_norm : {'legacy', 'unbiased'}
+        Batch normalization mode.
     verbose : bool
         Print training progress.
 
@@ -1109,11 +1106,7 @@ def _train_adam(
 
             # Compute loss and gradients
             loss, grads = model.loss_and_gradients(
-                X,
-                Y,
-                batch_size=batch_size,
-                batch_normalization=batch_normalization,
-                rng=rng,
+                X, Y, rng, batch_size=batch_size, batch_norm=batch_norm
             )
 
             # Gradient clipping
@@ -1219,7 +1212,7 @@ def mmvec(
     beta_1: float = 0.9,
     beta_2: float = 0.95,
     clipnorm: float = 10.0,
-    batch_normalization: str = "unbiased",
+    batch_norm: str = "unbiased",
     seed: SeedLike | None = None,
     verbose: bool = False,
     output_format: str | None = None,
@@ -1288,11 +1281,10 @@ def mmvec(
     clipnorm : float, optional
         Gradient clipping threshold for Adam (global L2 norm). Ignored for
         'lbfgs'. Default is 10.0.
-    batch_normalization : {'unbiased', 'legacy'}, optional
+    batch_norm : {'unbiased', 'legacy'}, optional
         Method for scaling mini-batch likelihood in Adam. Ignored for 'lbfgs'.
-        Default is 'unbiased'.
 
-        - 'unbiased': Uses norm = sum(microbe_counts) / batch_size.
+        - 'unbiased' (default): Uses norm = sum(microbe_counts) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
@@ -1307,10 +1299,10 @@ def mmvec(
     MMvecResults
         Object containing:
 
-        - microbe_embeddings: DataFrame (n_microbes, n_components + 1)
-        - metabolite_embeddings: DataFrame (n_metabolites, n_components + 1)
-        - ranks: DataFrame (n_microbes, n_metabolites)
-        - convergence: DataFrame with loss per iteration
+        - microbe_embeddings: table_like of shape (n_microbes, n_components + 1)
+        - metabolite_embeddings: table_like of shape (n_metabolites, n_components + 1)
+        - ranks: table_like of shape (n_microbes, n_metabolites)
+        - convergence: table_like with loss per iteration
 
     Notes
     -----
@@ -1415,7 +1407,7 @@ def mmvec(
             beta_1=beta_1,
             beta_2=beta_2,
             clipnorm=clipnorm,
-            batch_normalization=batch_normalization,
+            batch_norm=batch_norm,
             verbose=verbose,
         )
 

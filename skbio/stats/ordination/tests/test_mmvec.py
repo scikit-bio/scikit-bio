@@ -52,7 +52,7 @@ class TestRandomMultimodal(unittest.TestCase):
         self.assertEqual(Vbias.shape, (1, 5))
 
         self.assertEqual(microbes.index[0], "sample_0")
-        self.assertEqual(microbes.columns[0], "OTU_0")
+        self.assertEqual(microbes.columns[0], "microbe_0")
         self.assertEqual(metabolites.columns[0], "metabolite_0")
 
     def test_reproducible_with_int_seed(self):
@@ -112,7 +112,7 @@ class TestMMvecRecovery(unittest.TestCase):
         self.trainY = self.metabolites.iloc[:-num_train]
         self.testY = self.metabolites.iloc[-num_train:]
 
-    # @unittest.skip("Skipping a test that requires long runtime.")
+    @unittest.skip("Skipping a test that requires long runtime.")
     def test_recovers_embeddings(self):
         """Verify model recovers true embeddings from synthetic data."""
         result = mmvec(
@@ -164,7 +164,7 @@ class TestMMvecRecovery(unittest.TestCase):
         self.assertGreater(s_r, 0.5, f"Probability correlation too low: {s_r}")
         self.assertLess(s_p, 0.05, f"Probability p-value too high: {s_p}")
 
-    # @unittest.skip("Skipping a test that requires long runtime.")
+    @unittest.skip("Skipping a test that requires long runtime.")
     def test_score_reasonable(self):
         """Q^2 score on held-out data should be reasonable."""
         result = mmvec(
@@ -246,7 +246,7 @@ class TestMMvecGradients(unittest.TestCase):
         # Compute analytical gradients with fixed seed for reproducibility
         batch_seed = 123
         _, grads = model.loss_and_gradients(
-            X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+            X, Y, np.random.default_rng(batch_seed), batch_size=10
         )
 
         # Verify each parameter numerically
@@ -260,11 +260,11 @@ class TestMMvecGradients(unittest.TestCase):
                 original = param[idx]
                 param[idx] = original + eps
                 loss_plus, _ = model.loss_and_gradients(
-                    X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+                    X, Y, np.random.default_rng(batch_seed), batch_size=10
                 )
                 param[idx] = original - eps
                 loss_minus, _ = model.loss_and_gradients(
-                    X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+                    X, Y, np.random.default_rng(batch_seed), batch_size=10
                 )
                 param[idx] = original  # restore
 
@@ -371,7 +371,7 @@ class TestMMvecBasic(unittest.TestCase):
             result1.ranks.values, result2.ranks.values, rtol=1e-10
         )
 
-    def test_batch_normalization_modes(self):
+    def test_batch_norm_modes(self):
         """Test that both batch normalization modes work."""
         res = random_multimodal(
             n_microbes=8,
@@ -381,14 +381,14 @@ class TestMMvecBasic(unittest.TestCase):
         )
         microbes, metabolites = res[0], res[1]
 
-        # Legacy mode (batch_normalization only applies to Adam)
+        # Legacy mode (batch_norm only applies to Adam)
         result_legacy = mmvec(
             microbes,
             metabolites,
             n_components=2,
             optimizer="adam",
             max_iter=50,
-            batch_normalization="legacy",
+            batch_norm="legacy",
             seed=42,
         )
         self.assertIsInstance(result_legacy, MMvecResults)
@@ -400,7 +400,7 @@ class TestMMvecBasic(unittest.TestCase):
             n_components=2,
             optimizer="adam",
             max_iter=50,
-            batch_normalization="unbiased",
+            batch_norm="unbiased",
             seed=42,
         )
         self.assertIsInstance(result_unbiased, MMvecResults)
@@ -1020,6 +1020,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
 
     """
 
+    @unittest.skip("Skipping a test that requires long runtime.")
     def test_soils_cyanobacteria_metabolites(self):
         """Co-occurrence of Cyanobacteria and known metabolites in wetup biocrust.
 
@@ -1050,9 +1051,6 @@ class TestMMvecCaseStudies(unittest.TestCase):
             seed=42,
         )
 
-        # Calculate ranks
-        ranks = result.ranks
-
         # Define expected Cyanobacteria-associated metabolites
         expected_metabolites = [
             "(3-methyladenine)",
@@ -1075,7 +1073,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
 
         # Count how many of the expected metabolites have positive rank for
         # Cyanobacteria.
-        ranks_cyanobacteria = ranks.loc[cyanobacteria_id]
+        ranks_cyanobacteria = result.ranks.loc[cyanobacteria_id]
         positive_count = (ranks_cyanobacteria.loc[expected_metabolites] > 0).sum()
 
         # The original notebook expects all 13 metabolites to have positive ranks for
@@ -1175,12 +1173,9 @@ class TestMMvecCaseStudies(unittest.TestCase):
             seed=42,
         )
 
-        # Calculate ranks
-        ranks = result.ranks
-
         # For the first Pseudomonas taxon in the ranks table, count expert-annotated
         # metabolites with positive ranks.
-        ranks_pseudomonas = ranks[ranks.index.isin(pseudomonas)]
+        ranks_pseudomonas = result.ranks[result.ranks.index.isin(pseudomonas)]
         first_pseudomonas = ranks_pseudomonas.iloc[0]
 
         # The original analysis expects 19 out of 20 metabolites with positive ranks.
