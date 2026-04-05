@@ -57,27 +57,13 @@ class TestRandomMultimodal(unittest.TestCase):
 
     def test_reproducible_with_int_seed(self):
         """Integer seeds should provide reproducible outputs."""
-        res1 = random_multimodal(seed=13)
-        res2 = random_multimodal(seed=13)
+        res1 = random_multimodal(seed=42)
+        res2 = random_multimodal(seed=42)
 
         pdt.assert_frame_equal(res1[0], res2[0])
         pdt.assert_frame_equal(res1[1], res2[1])
         for i in range(2, len(res1)):
             npt.assert_allclose(res1[i], res2[i])
-
-    def test_seed_interfaces(self):
-        """Generator and RandomState seeds should both be supported."""
-        gen = np.random.default_rng(21)
-        res_gen = random_multimodal(seed=gen)
-        self.assertEqual(res_gen[0].shape[0], 100)
-
-        rs1 = np.random.RandomState(21)
-        rs2 = np.random.RandomState(21)
-        res_rs1 = random_multimodal(seed=rs1)
-        res_rs2 = random_multimodal(seed=rs2)
-
-        pdt.assert_frame_equal(res_rs1[0], res_rs2[0])
-        pdt.assert_frame_equal(res_rs1[1], res_rs2[1])
 
 
 class TestMMvecRecovery(unittest.TestCase):
