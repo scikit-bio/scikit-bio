@@ -789,14 +789,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             seed=42,
         )
 
-        # Check columns exist
-        self.assertIn("iteration", result.convergence.columns)
-        self.assertIn("loss", result.convergence.columns)
-
-        # Iterations should be sequential positive integers
-        iterations = result.convergence["iteration"].values
-        self.assertEqual(iterations[0], 1)
-        self.assertTrue(np.all(np.diff(iterations) == 1))
+        self.assertTupleEqual(result.convergence.shape, (11,))
 
     def test_loss_decreases(self):
         """Loss should generally decrease during training."""
@@ -809,7 +802,7 @@ class TestMMvecOutputVerification(unittest.TestCase):
             seed=42,
         )
 
-        losses = result.convergence["loss"].values
+        losses = result.convergence.to_numpy()
 
         # Compare first 10% average to last 10% average
         n = len(losses)

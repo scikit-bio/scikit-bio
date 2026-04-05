@@ -27,7 +27,7 @@ from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
-from skbio.table._tabular import _ingest_table, _create_table
+from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike, TableLike
@@ -211,11 +211,11 @@ def random_multimodal(
         microbe_counts[n, :] += microbe
 
     # Create DataFrames with meaningful IDs
-    micrbe_ids = [f"microbe_{d}" for d in range(microbe_counts.shape[1])]
+    microbe_ids = [f"microbe_{d}" for d in range(microbe_counts.shape[1])]
     metabolite_ids = [f"metabolite_{d}" for d in range(metabolite_counts.shape[1])]
     sample_ids = [f"sample_{d}" for d in range(metabolite_counts.shape[0])]
 
-    microbe_counts = pd.DataFrame(microbe_counts, index=sample_ids, columns=micrbe_ids)
+    microbe_counts = pd.DataFrame(microbe_counts, index=sample_ids, columns=microbe_ids)
     metabolite_counts = pd.DataFrame(
         metabolite_counts, index=sample_ids, columns=metabolite_ids
     )
@@ -633,11 +633,8 @@ class MMvecResults(SkbioObject):
         microbe-metabolite associations. Sorting each row reveals which
         metabolites are most strongly associated with each microbe.
 
-    convergence : pd.DataFrame
-        Training diagnostics with columns:
-
-        - ``iteration``: Iteration number (1-indexed).
-        - ``loss``: Negative log-posterior (lower is better).
+    convergence : table_like of shape (n_iterations,)
+        Losses (negative log-posterior, lower is better) over iterations.
 
         Use this to diagnose training issues. The loss should generally
         decrease and stabilize. If the loss is still decreasing at the
@@ -703,7 +700,7 @@ class MMvecResults(SkbioObject):
         microbe_embeddings: TableLike,
         metabolite_embeddings: TableLike,
         ranks: TableLike,
-        convergence: pd.DataFrame,
+        convergence: TableLike,
     ):
         self.microbe_embeddings = microbe_embeddings
         self.metabolite_embeddings = metabolite_embeddings
@@ -983,10 +980,11 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
     Returns
     -------
-    convergence_data : list of dict
-        Training metrics per iteration.
+    losses : list of float
+        Loss per iteration.
+
     """
-    convergence_data = []
+    losses = []
     it = 0  # Use list to allow modification in closure
 
     def objective(theta):
@@ -994,13 +992,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
         it += 1
-
-        convergence_data.append(
-            {
-                "iteration": it,
-                "loss": loss,
-            }
-        )
+        losses.append(loss)
 
         if verbose and it % 10 == 0:
             print(f"Iteration {it}, Loss: {loss:.4f}")
@@ -1032,7 +1024,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
             f"iterations: {result.nit}, message: {result.message}"
         )
 
-    return convergence_data
+    return losses
 
 
 def _train_adam(
@@ -1130,7 +1122,7 @@ def _train_adam(
                 setattr(model, param_name, param)
                 moments[param_name] = (m, v)
 
-            convergence_data.append({"iteration": it, "loss": loss})
+            convergence_data.append(loss)
 
         if verbose:
             print(f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}")
@@ -1138,7 +1130,7 @@ def _train_adam(
     return convergence_data
 
 
-def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend):
+def _build_results(model, microbe_ids, metabolite_ids, losses, backend):
     """Build MMvecResults from trained model.
 
     Parameters
@@ -1149,8 +1141,8 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend
         Microbe feature IDs.
     metabolite_ids : list
         Metabolite feature IDs.
-    convergence_data : list of dict
-        Training metrics.
+    losses : list of float
+        Loss per iteration.
     backend : str or None
         Output format backend for tables.
 
@@ -1158,6 +1150,7 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend
     -------
     MMvecResults
         Results object with embeddings and convergence data.
+
     """
     n_components = model.n_components
 
@@ -1189,7 +1182,7 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend
     )
 
     # Training convergence data
-    convergence = pd.DataFrame(convergence_data)
+    convergence = _create_table_1d(losses)
 
     return MMvecResults(
         microbe_embeddings=microbe_embeddings,
@@ -1395,9 +1388,9 @@ def mmvec(
 
     # Train model
     if optimizer == "lbfgs":
-        convergence_data = _train_lbfgs(model, X_coo, Y, max_iter, verbose)
+        losses = _train_lbfgs(model, X_coo, Y, max_iter, verbose)
     else:
-        convergence_data = _train_adam(
+        losses = _train_adam(
             model=model,
             X=X,
             Y=Y,
@@ -1413,6 +1406,4 @@ def mmvec(
             verbose=verbose,
         )
 
-    return _build_results(
-        model, microbe_ids, metabolite_ids, convergence_data, output_format
-    )
+    return _build_results(model, microbe_ids, metabolite_ids, losses, output_format)
