@@ -47,6 +47,9 @@ def _create_table(data, columns=None, index=None, backend=None):
         return np.array(data)
     elif backend == "polars":
         pl = get_package(backend)
+        # Polars doesn't support Pandas Index or Series as schema. Convertion needed.
+        if columns is not None and not isinstance(columns, Sequence):
+            columns = list(columns)
         return pl.DataFrame(data, schema=columns)
     else:
         raise ValueError(f"Unsupported backend: '{backend}'")

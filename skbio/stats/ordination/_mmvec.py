@@ -27,7 +27,7 @@ from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
-from skbio.table._tabular import _ingest_table
+from skbio.table._tabular import _ingest_table, _create_table
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
@@ -437,7 +437,7 @@ class _MMvecModel:
 
         return loss, grads
 
-    def ranks(self):
+    def calc_ranks(self):
         """Compute log conditional probabilities (ranks).
 
         Returns
@@ -602,9 +602,8 @@ class MMvecResults(SkbioObject):
 
     Attributes
     ----------
-    microbe_embeddings : pd.DataFrame
-        Microbe coordinates in latent space.
-        Shape: (n_microbes, n_components + 1) where +1 is the bias term.
+    microbe_embeddings : table_like of shape (n_microbes, n_components + 1)
+        Microbe coordinates in latent space (+1 is the bias term).
 
         Each row is a vector representation of a microbe. Microbes with
         similar embedding vectors tend to co-occur with similar sets of
@@ -613,9 +612,8 @@ class MMvecResults(SkbioObject):
         microbes. The final column ("bias") captures the baseline tendency
         of each microbe to associate with metabolites overall.
 
-    metabolite_embeddings : pd.DataFrame
-        Metabolite coordinates in latent space.
-        Shape: (n_metabolites, n_components + 1) where +1 is the bias term.
+    metabolite_embeddings : table_like of shape (n_metabolites, n_components + 1)
+        Metabolite coordinates in latent space (+1 is the bias term).
 
         Each row is a vector representation of a metabolite. Metabolites
         with similar embedding vectors tend to co-occur with similar sets
@@ -625,9 +623,8 @@ class MMvecResults(SkbioObject):
         associations. The final column ("bias") captures the baseline
         abundance of each metabolite.
 
-    ranks : pd.DataFrame
+    ranks : table_like of shape (n_microbes, n_metabolites)
         Log conditional probability matrix (co-occurrence scores).
-        Shape: (n_microbes, n_metabolites). Row-centered.
 
         Entry (i, j) represents the log-odds of observing metabolite j
         given microbe i, relative to the row mean. Higher values indicate
@@ -706,9 +703,9 @@ class MMvecResults(SkbioObject):
 
     def __init__(
         self,
-        microbe_embeddings: pd.DataFrame,
-        metabolite_embeddings: pd.DataFrame,
-        ranks: pd.DataFrame,
+        microbe_embeddings: TableLike,
+        metabolite_embeddings: TableLike,
+        ranks: TableLike,
         convergence: pd.DataFrame,
     ):
         self.microbe_embeddings = microbe_embeddings
@@ -729,19 +726,24 @@ class MMvecResults(SkbioObject):
             f"  Iterations: {n_iterations}"
         )
 
-    def probabilities(self) -> pd.DataFrame:
+    def probabilities(self, output_format: str | None = None) -> TableLike:
         """Convert ranks to probability matrix via softmax.
 
         Returns
         -------
-        probs : pd.DataFrame
-            Conditional probabilities P(metabolite | microbe).
-            Each row sums to 1.
-        """
-        probs = softmax(self.ranks.values)
-        return pd.DataFrame(probs, index=self.ranks.index, columns=self.ranks.columns)
+        probs : table_like of shape (n_microbes, n_metabolites)
+            Conditional probabilities P(metabolite | microbe). Each row sums to 1.
 
-    def predict(self, microbes: TableLike) -> pd.DataFrame:
+        """
+        ranks, sample_ids, feature_ids = _ingest_table(self.ranks)
+        probs = softmax(ranks)
+        return _create_table(
+            probs, columns=feature_ids, index=sample_ids, backend=output_format
+        )
+
+    def predict(
+        self, microbes: TableLike, output_format: str | None = None
+    ) -> TableLike:
         """Predict metabolite distributions given microbe abundances.
 
         Computes the expected metabolite distribution for each sample by
@@ -757,9 +759,8 @@ class MMvecResults(SkbioObject):
 
         Returns
         -------
-        predictions : pd.DataFrame
-            Predicted metabolite proportions for each sample.
-            Shape: (n_samples, n_metabolites). Each row sums to 1.
+        predictions : table_like of shape (n_samples, n_metabolites)
+            Predicted metabolite proportions for each sample. Each row sums to 1.
 
         Examples
         --------
@@ -805,7 +806,11 @@ class MMvecResults(SkbioObject):
         # Marginal: sum_microbe P(metabolite | microbe) * P(microbe)
         predicted = X_props @ cond_probs
 
-        return pd.DataFrame(predicted, index=sample_ids, columns=self.ranks.columns)
+        # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
+        ranks, microbe_ids, metabolite_ids = _ingest_table(self.ranks)
+        return _create_table(
+            predicted, columns=metabolite_ids, index=sample_ids, backend=output_format
+        )
 
     def score(self, microbes: TableLike, metabolites: TableLike) -> float:
         r"""Compute Q-squared (coefficient of prediction) on held-out data.
@@ -1139,7 +1144,7 @@ def _train_adam(
     return convergence_data
 
 
-def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
+def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend):
     """Build MMvecResults from trained model.
 
     Parameters
@@ -1152,6 +1157,8 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
         Metabolite feature IDs.
     convergence_data : list of dict
         Training metrics.
+    backend : str or None
+        Output format backend for tables.
 
     Returns
     -------
@@ -1160,13 +1167,13 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
     """
     n_components = model.n_components
 
-    # Compute ranks
-    ranks = model.ranks()
+    pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
 
     # Microbe embeddings: U with bias
     microbe_emb = np.hstack([model.U, model.b_U])
-    pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
-    microbe_embeddings = pd.DataFrame(microbe_emb, index=microbe_ids, columns=pc_cols)
+    microbe_embeddings = _create_table(
+        microbe_emb, columns=pc_cols, index=microbe_ids, backend=backend
+    )
 
     # Metabolite embeddings: V^T with bias
     # First row is reference (no embedding), rest are actual embeddings
@@ -1176,12 +1183,17 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
             np.hstack([model.V.T, model.b_V.T]),
         ]
     )
-    metabolite_embeddings = pd.DataFrame(
-        metabolite_emb, index=metabolite_ids, columns=pc_cols
+    metabolite_embeddings = _create_table(
+        metabolite_emb, columns=pc_cols, index=metabolite_ids, backend=backend
     )
 
-    ranks_df = pd.DataFrame(ranks, index=microbe_ids, columns=metabolite_ids)
+    # Row-centered log conditional probabilities
+    ranks = model.calc_ranks()
+    ranks_df = _create_table(
+        ranks, columns=metabolite_ids, index=microbe_ids, backend=backend
+    )
 
+    # Training convergence data
     convergence = pd.DataFrame(convergence_data)
 
     return MMvecResults(
@@ -1210,6 +1222,7 @@ def mmvec(
     batch_normalization: str = "unbiased",
     seed: SeedLike | None = None,
     verbose: bool = False,
+    output_format: str | None = None,
 ) -> MMvecResults:
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
 
@@ -1286,6 +1299,8 @@ def mmvec(
         :func:`details <skbio.util.get_rng>`.
     verbose : bool, optional
         Print training progress. Default is False.
+    output_format : str, optional
+        Output table format. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -1404,4 +1419,6 @@ def mmvec(
             verbose=verbose,
         )
 
-    return _build_results(model, microbe_ids, metabolite_ids, convergence_data)
+    return _build_results(
+        model, microbe_ids, metabolite_ids, convergence_data, output_format
+    )
