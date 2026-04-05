@@ -10,6 +10,7 @@ r"""MMvec - Microbe-Metabolite Vectors.
 
 This module implements MMvec for learning joint embeddings of microbes
 and metabolites from their co-occurrence patterns.
+
 """
 
 from __future__ import annotations
@@ -597,7 +598,7 @@ class MMvecResults(SkbioObject):
     (which microbes co-occur with which metabolites) and prediction
     (expected metabolites given a microbial community).
 
-    .. versionadded:: 0.7.2
+    .. versionadded:: 0.7.3
 
     Attributes
     ----------
@@ -1238,7 +1239,7 @@ def mmvec(
     For example: microbes and host transcripts, proteins and metabolites, or
     any pair of feature tables sharing the same samples.
 
-    .. versionadded:: 0.7.2
+    .. versionadded:: 0.7.3
 
     Parameters
     ----------
