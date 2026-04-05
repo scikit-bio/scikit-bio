@@ -192,7 +192,7 @@ def random_multimodal(
 
     # Compute conditional probabilities P(metabolite | microbe)
     phi = np.hstack((np.zeros((n_microbes, 1)), U_ @ V_))
-    probs = softmax(phi)
+    probs = softmax(phi, validate=False)
 
     # Generate count data
     microbe_counts = np.zeros((n_samples, n_microbes))
@@ -733,7 +733,7 @@ class MMvecResults(SkbioObject):
 
         """
         ranks, sample_ids, feature_ids = _ingest_table(self.ranks)
-        probs = softmax(ranks)
+        probs = softmax(ranks, validate=False)
         return _create_table(
             probs, columns=feature_ids, index=sample_ids, backend=output_format
         )
