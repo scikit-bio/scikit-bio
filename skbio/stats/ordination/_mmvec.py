@@ -588,12 +588,12 @@ class _MMvecModel:
 
 
 class MMvecResults(SkbioObject):
-    r"""Results from MMvec analysis.
+    r"""Results from an MMvec analysis.
 
-    This class contains the learned embeddings and co-occurrence patterns
-    from fitting an MMvec model. The key outputs enable both interpretation
-    (which microbes co-occur with which metabolites) and prediction
-    (expected metabolites given a microbial community).
+    This class contains the learned embeddings and co-occurrence patterns from fitting
+    an MMvec model. The key outputs enable both interpretation (which microbes co-occur
+    with which metabolites) and prediction (expected metabolites given a microbial
+    community).
 
     .. versionadded:: 0.7.3
 
@@ -987,22 +987,23 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         Training metrics per iteration.
     """
     convergence_data = []
-    iteration_count = [0]  # Use list to allow modification in closure
+    it = 0  # Use list to allow modification in closure
 
     def objective(theta):
+        nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
-        iteration_count[0] += 1
+        it += 1
 
         convergence_data.append(
             {
-                "iteration": iteration_count[0],
+                "iteration": it,
                 "loss": loss,
             }
         )
 
-        if verbose and iteration_count[0] % 10 == 0:
-            print(f"Iteration {iteration_count[0]}, Loss: {loss:.4f}")
+        if verbose and it % 10 == 0:
+            print(f"Iteration {it}, Loss: {loss:.4f}")
 
         return loss, grad
 
@@ -1097,12 +1098,12 @@ def _train_adam(
 
     # Compute number of iterations per epoch
     nnz = len(X_coo.data)
-    iterations_per_epoch = max(1, nnz // batch_size)
+    iter_per_epoch = max(1, nnz // batch_size)
 
-    t = 0
+    it = 0
     for epoch in range(max_iter):
-        for _ in range(iterations_per_epoch):
-            t += 1
+        for _ in range(iter_per_epoch):
+            it += 1
 
             # Compute loss and gradients
             loss, grads = model.loss_and_gradients(
@@ -1121,7 +1122,7 @@ def _train_adam(
                     grads[param_name],
                     m,
                     v,
-                    t,
+                    it,
                     learning_rate,
                     beta_1,
                     beta_2,
@@ -1129,7 +1130,7 @@ def _train_adam(
                 setattr(model, param_name, param)
                 moments[param_name] = (m, v)
 
-            convergence_data.append({"iteration": t, "loss": loss})
+            convergence_data.append({"iteration": it, "loss": loss})
 
         if verbose:
             print(f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}")
@@ -1160,7 +1161,8 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data, backend
     """
     n_components = model.n_components
 
-    pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
+    # TODO: Revisit naming of components
+    pc_cols = [f"PC{i + 1}" for i in range(n_components)] + ["bias"]
 
     # Microbe embeddings: U with bias
     microbe_emb = np.hstack([model.U, model.b_U])
