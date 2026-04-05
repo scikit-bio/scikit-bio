@@ -652,23 +652,23 @@ class MMvecResults(SkbioObject):
 
     Notes
     -----
-    **Detecting Overfitting with Q²**
+    **Detecting Overfitting with Q-squared**
 
     Overfitting occurs when the model memorizes training data rather than
     learning generalizable patterns. To detect overfitting:
 
     1. Split your data into training and test sets before fitting.
     2. Fit the model on training data only.
-    3. Use :meth:`score` to compute Q² on held-out test data.
+    3. Use :meth:`score` to compute :math:`Q^2` on held-out test data.
 
-    Interpretation of Q² values:
+    Interpretation of :math:`Q^2` values:
 
-    - **Q² close to 1**: Excellent predictive performance.
-    - **Q² close to 0**: Model predicts no better than the mean.
-    - **Q² negative**: Model performs worse than predicting the mean,
+    - **Close to 1**: Excellent predictive performance.
+    - **Close to 0**: Model predicts no better than the mean.
+    - **Negative**: Model performs worse than predicting the mean,
       indicating overfitting or model misspecification.
 
-    If Q² is much lower than expected, try:
+    If :math:`Q^2` is much lower than expected, try:
 
     - Reducing ``n_components`` (fewer latent dimensions).
     - Increasing regularization via smaller ``u_prior_scale`` and
@@ -700,7 +700,7 @@ class MMvecResults(SkbioObject):
     mmvec : Fit an MMvec model.
     probabilities : Convert ranks to conditional probabilities.
     predict : Predict metabolite distributions for new samples.
-    score : Evaluate predictive performance with Q².
+    score : Evaluate predictive performance with Q-squared.
 
     """
 
@@ -822,12 +822,12 @@ class MMvecResults(SkbioObject):
         microbes: pd.DataFrame | ArrayLike,
         metabolites: pd.DataFrame | ArrayLike,
     ) -> float:
-        r"""Compute Q² (coefficient of prediction) on held-out data.
+        r"""Compute Q-squared (coefficient of prediction) on held-out data.
 
-        Q² measures predictive performance on test data, analogous to R²
-        but for cross-validation. Values range from -inf to 1, where 1
-        indicates perfect prediction and 0 indicates prediction no better
-        than the mean.
+        :math:`Q^2` measures predictive performance on test data, analogous to
+        :math:`R^2` but for cross-validation. Values range from -inf to 1, where 1
+        indicates perfect prediction and 0 indicates prediction no better than the
+        mean.
 
         .. math::
 
@@ -846,7 +846,7 @@ class MMvecResults(SkbioObject):
         Returns
         -------
         q2 : float
-            Q² score. Higher is better, with 1.0 being perfect prediction.
+            Q-squared score. Higher is better, with 1.0 being perfect prediction.
 
         See Also
         --------
@@ -900,7 +900,7 @@ class MMvecResults(SkbioObject):
             )
         actual = Y / row_sums
 
-        # Q² = 1 - SS_res / SS_tot
+        # Q^2 = 1 - SS_res / SS_tot
         ss_res = np.sum((actual - predicted) ** 2)
         ss_tot = np.sum((actual - actual.mean(axis=0)) ** 2)
 

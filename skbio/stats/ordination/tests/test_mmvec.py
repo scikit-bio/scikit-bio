@@ -166,7 +166,7 @@ class TestMMvecRecovery(unittest.TestCase):
 
     # @unittest.skip("Skipping a test that requires long runtime.")
     def test_score_reasonable(self):
-        """Q² score on held-out data should be reasonable."""
+        """Q^2 score on held-out data should be reasonable."""
         result = mmvec(
             self.trainX,
             self.trainY,
@@ -180,12 +180,12 @@ class TestMMvecRecovery(unittest.TestCase):
             seed=0,
         )
 
-        # Compute Q² score on test data
+        # Compute Q^2 score on test data
         q2 = result.score(self.testX, self.testY)
 
-        # Q² should be positive for a reasonably trained model
+        # Q^2 should be positive for a reasonably trained model
         # (better than predicting the mean)
-        self.assertGreater(q2, -1.0, f"Q² score too low: {q2}")
+        self.assertGreater(q2, -1.0, f"Q-squared score too low: {q2}")
 
 
 class TestMMvecGradients(unittest.TestCase):
@@ -472,7 +472,7 @@ class TestMMvecResults(unittest.TestCase):
         )
 
     def test_score(self):
-        """Test score method returns valid Q² value."""
+        """Test score method returns valid Q-squared value."""
         # Split data
         train_microbes = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
@@ -489,10 +489,10 @@ class TestMMvecResults(unittest.TestCase):
 
         q2 = result.score(test_microbes, test_metabolites)
 
-        # Q² should be a float
+        # Q^2 should be a float
         self.assertIsInstance(q2, float)
 
-        # Q² should be <= 1.0 (perfect prediction)
+        # Q^2 should be <= 1.0 (perfect prediction)
         self.assertLessEqual(q2, 1.0)
 
     def test_predict_zero_sample_raises(self):
@@ -929,7 +929,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
 
     def test_lbfgs_score_on_test_data(self):
-        """L-BFGS model should produce reasonable Q² score on test data."""
+        """L-BFGS model should produce reasonable Q-squared score on test data."""
         # Split data
         train_microbes = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
@@ -945,10 +945,10 @@ class TestMMvecLBFGS(unittest.TestCase):
             seed=42,
         )
 
-        # Compute Q² score on test data
+        # Compute Q^2 score on test data
         q2 = result.score(test_microbes, test_metabolites)
 
-        # Q² should be a valid float
+        # Q^2 should be a valid float
         self.assertIsInstance(q2, float)
 
     def test_lbfgs_verbose_output(self):
