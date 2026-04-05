@@ -1336,7 +1336,6 @@ def mmvec(
     >>> from skbio.stats.ordination import mmvec
     >>> import numpy as np
     >>> import pandas as pd
-    >>> # Create synthetic data
     >>> np.random.seed(42)
     >>> microbes = pd.DataFrame(
     ...     np.random.randint(0, 100, size=(50, 10)),
@@ -1369,19 +1368,20 @@ def mmvec(
                 raise ValueError(
                     f"{name} contains all-zero {axis}. Remove them before calling."
                 )
+
     # Check for positive prior scales
     if u_prior_scale <= 0:
         raise ValueError(f"u_prior_scale must be positive, got {u_prior_scale}.")
     if v_prior_scale <= 0:
         raise ValueError(f"v_prior_scale must be positive, got {v_prior_scale}.")
 
-    # Create RNG
-    rng = get_rng(seed)
-
     # Validate optimizer
     optimizer = optimizer.lower()
     if optimizer not in ("lbfgs", "adam"):
         raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
+
+    # Create RNG
+    rng = get_rng(seed)
 
     n_microbes = X.shape[1]
     n_metabolites = Y.shape[1]

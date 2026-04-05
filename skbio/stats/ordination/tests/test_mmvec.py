@@ -23,7 +23,9 @@ from scipy.stats import spearmanr
 from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvecResults
-from skbio.stats.ordination._mmvec import random_multimodal
+from skbio.stats.ordination._mmvec import (
+    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad
+)
 
 
 class TestRandomMultimodal(unittest.TestCase):
@@ -83,7 +85,6 @@ class TestMMvecRecovery(unittest.TestCase):
 
     def setUp(self):
         """Build small simulation matching original mmvec test."""
-        np.random.seed(1)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=8,
@@ -111,11 +112,9 @@ class TestMMvecRecovery(unittest.TestCase):
         self.trainY = self.metabolites.iloc[:-num_train]
         self.testY = self.metabolites.iloc[-num_train:]
 
-    @unittest.skip("Skipping a test that requires long runtime.")
+    # @unittest.skip("Skipping a test that requires long runtime.")
     def test_recovers_embeddings(self):
         """Verify model recovers true embeddings from synthetic data."""
-        np.random.seed(1)
-
         result = mmvec(
             self.trainX,
             self.trainY,
@@ -165,11 +164,9 @@ class TestMMvecRecovery(unittest.TestCase):
         self.assertGreater(s_r, 0.5, f"Probability correlation too low: {s_r}")
         self.assertLess(s_p, 0.05, f"Probability p-value too high: {s_p}")
 
-    @unittest.skip("Skipping a test that requires long runtime.")
+    # @unittest.skip("Skipping a test that requires long runtime.")
     def test_score_reasonable(self):
         """Q² score on held-out data should be reasonable."""
-        np.random.seed(1)
-
         result = mmvec(
             self.trainX,
             self.trainY,
@@ -196,8 +193,6 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_multinomial_gradient(self):
         """Verify multinomial softmax gradient is correct."""
-        from skbio.stats.ordination._mmvec import _multinomial_loglik_and_grad
-
         # Small test case
         logits = np.array([[0.0, 1.0, 2.0], [0.0, -1.0, 1.0]])
         y = np.array([[5.0, 10.0, 15.0], [20.0, 5.0, 5.0]])
@@ -226,9 +221,6 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
-        from skbio.stats.ordination._mmvec import _MMvecModel
-
-        np.random.seed(42)
         n_microbes = 5
         n_metabolites = 8
         n_components = 2
@@ -295,7 +287,6 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_output_shapes(self):
         """Check that output shapes are correct."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=10,
             n_metabolites=15,
@@ -330,7 +321,6 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_ranks_row_centered(self):
         """Check that ranks are row-centered."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -353,7 +343,6 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_reproducibility(self):
         """Check that results are reproducible with same seed."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -384,7 +373,6 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_batch_normalization_modes(self):
         """Test that both batch normalization modes work."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -428,7 +416,6 @@ class TestMMvecResults(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -667,7 +654,6 @@ class TestMMvecInputTypes(unittest.TestCase):
 
     def test_sparse_pandas_input(self):
         """Test with sparse pandas DataFrame."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -702,7 +688,6 @@ class TestMMvecParameterBehavior(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -770,7 +755,6 @@ class TestMMvecOutputVerification(unittest.TestCase):
 
     def setUp(self):
         """Create test data with specific IDs."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -854,7 +838,6 @@ class TestMMvecLBFGS(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=10,
@@ -916,7 +899,6 @@ class TestMMvecLBFGS(unittest.TestCase):
     def test_lbfgs_recovers_structure(self):
         """L-BFGS should recover embedding structure from synthetic data."""
         # Use more data for better recovery
-        np.random.seed(1)
         res = random_multimodal(
             n_microbes=8,
             n_metabolites=8,
