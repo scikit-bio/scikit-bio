@@ -552,6 +552,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                     pass
             ids = found_ids
 
+        # Note: Skip validation, since we assume self was already validated
+        # But ids are new, so validate them explicitly
         if self._flags["CONDENSED"]:
             filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
