@@ -159,6 +159,49 @@ class TestPCoA(TestCase):
             assert_ordination_results_equal(results, expected_results,
                                             ignore_directionality=True)
 
+    def test_fixed_point_distance_matrix(self):
+        ids = ["a", "b", "c", "d"]
+        float_data = np.array(
+            [
+                [0.0, 1.2, 2.3, 1.7],
+                [1.2, 0.0, 1.5, 2.2],
+                [2.3, 1.5, 0.0, 1.1],
+                [1.7, 2.2, 1.1, 0.0],
+            ],
+            dtype=np.float64,
+        )
+        scale = 0.1
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+
+        expected = pcoa(DistanceMatrix(float_data, ids), warn_neg_eigval=False)
+        observed = pcoa(
+            DistanceMatrix(fixed_data, ids, scale=scale), warn_neg_eigval=False
+        )
+
+        assert_ordination_results_equal(
+            observed, expected, ignore_directionality=True
+        )
+
+    def test_integer_distance_matrix_without_scale(self):
+        ids = ["a", "b", "c"]
+        int_data = np.array(
+            [
+                [0, 4, 7],
+                [4, 0, 3],
+                [7, 3, 0],
+            ],
+            dtype=np.int16,
+        )
+
+        expected = pcoa(
+            DistanceMatrix(int_data.astype(np.float64), ids), warn_neg_eigval=False
+        )
+        observed = pcoa(DistanceMatrix(int_data, ids), warn_neg_eigval=False)
+
+        assert_ordination_results_equal(
+            observed, expected, ignore_directionality=True
+        )
+
     def test_book_example_dataset(self):
         # Adapted from PyCogent's `test_principal_coordinate_analysis`:
         #   "I took the example in the book (see intro info), and did

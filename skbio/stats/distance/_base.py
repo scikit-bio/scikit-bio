@@ -27,6 +27,10 @@ from skbio.io.descriptors import Read, Write
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
 
+_FLOAT_DTYPES = (np.float32, np.float64)
+_INT_DTYPES = (np.int8, np.int16, np.int32)
+_ALLOWED_DTYPES = _FLOAT_DTYPES + _INT_DTYPES
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Collection
     from numpy.typing import NDArray, ArrayLike
@@ -134,7 +138,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         data: NDArray | Sequence[float] | Sequence[Sequence[float]] | PairwiseMatrix,
         ids: Sequence[str] | None = None,
         validate: bool = True,
+        scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
@@ -156,6 +164,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self._id_index = self._index_list(self._ids)
         self._data = self._init_data(data)
         self._flags = self._init_flags()
+        self._scale = float(scale) if scale is not None else None
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
@@ -183,7 +192,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # data type.
         _issue_copy = True
         if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
+            if data.dtype in _ALLOWED_DTYPES:
                 _issue_copy = False
 
         if _issue_copy:
@@ -296,6 +305,19 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     def dtype(self) -> np.dtype:
         r"""Data type of the matrix values."""
         return self._data.dtype
+
+    @property
+    def scale(self) -> float | None:
+        r"""Multiplication factor for fixed-point integer matrices.
+
+        If set, this value can be multiplied with the integer matrix data to recover
+        the original floating-point distances. Returns ``None`` for standard
+        floating-point matrices.
+
+        .. versionadded:: 0.7.2
+
+        """
+        return self._scale
 
     @property
     def shape(self) -> tuple:
@@ -433,7 +455,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         data = self._data.copy()
         if transpose:
             data = data.T
-        return self.__class__(data, deepcopy(self.ids), validate=False)
+        return self.__class__(data, deepcopy(self.ids), validate=False,
+                              scale=self._scale)
 
     def rename(self, mapper: dict | Callable, strict: bool = True) -> None:
         r"""Rename IDs in the matrix.
@@ -508,9 +531,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if tuple(self._ids) == tuple(ids):
             if self._flags["CONDENSED"]:
-                return self.__class__(self._data, self._ids, condensed=True)
+                return self.__class__(
+                    self._data, self._ids, condensed=True, scale=self._scale
+                )
             else:
-                return self.__class__(self._data, self._ids)
+                return self.__class__(self._data, self._ids, scale=self._scale)
 
         if strict:
             idxs = [self.index(id_) for id_ in ids]
@@ -532,11 +557,16 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if self._flags["CONDENSED"]:
             filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
-            return self.__class__(filtered_data, ids, validate=False, condensed=True)
+            return self.__class__(
+                filtered_data, ids, validate=False, condensed=True,
+                scale=self._scale
+            )
         else:
             filtered_data = distmat_reorder(self.redundant_form(), idxs)
             self._validate_ids(filtered_data, ids)
-            return self.__class__(filtered_data, ids, validate=False)
+            return self.__class__(
+                filtered_data, ids, validate=False, scale=self._scale
+            )
 
     def _stable_order(self, ids: Iterable[str]) -> NDArray:
         """Obtain a stable ID order with respect to self.
@@ -1043,8 +1073,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise PairwiseMatrixError(
                 "Data must be square (i.e., have the same number of rows and columns)."
             )
-        if data.dtype not in (np.float32, np.float64):
-            raise PairwiseMatrixError("Data must contain only floating point values.")
+        if data.dtype not in _ALLOWED_DTYPES:
+            raise PairwiseMatrixError(
+                "Data must be one of the supported numeric types: "
+                "float32, float64, int8, int16, int32."
+            )
 
     def _index_list(self, list_: Sequence[str]) -> dict:
         return {id_: idx for idx, id_ in enumerate(list_)}
@@ -1101,7 +1134,11 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | NDArray = None,
+        scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         (
             data,
             ids,
@@ -1132,6 +1169,7 @@ class SymmetricMatrix(PairwiseMatrix):
         self._diagonal = self._init_diagonal(diagonal, data, condensed)
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
+        self._scale = float(scale) if scale is not None else None
 
     def _normalize_input(self, data, ids, diagonal):
         """Get input into standard numpy array format."""
@@ -1190,7 +1228,7 @@ class SymmetricMatrix(PairwiseMatrix):
         # data type.
         _issue_copy = True
         if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
+            if data.dtype in _ALLOWED_DTYPES:
                 _issue_copy = False
 
         if _issue_copy:
@@ -1382,8 +1420,11 @@ class SymmetricMatrix(PairwiseMatrix):
                 f"Found {data.ndim} dimensions."
             )
 
-        if data.dtype not in (np.float32, np.float64):
-            raise PairwiseMatrixError("Data must contain only floating point values.")
+        if data.dtype not in _ALLOWED_DTYPES:
+            raise PairwiseMatrixError(
+                "Data must be one of the supported numeric types: "
+                "float32, float64, int8, int16, int32."
+            )
 
     @property
     def T(self) -> SymmetricMatrix:
@@ -1764,11 +1805,17 @@ class SymmetricMatrix(PairwiseMatrix):
             if self._flags["CONDENSED"]:
                 permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
-                    permuted, self.ids, validate=False, condensed=True
+                    permuted,
+                    self.ids,
+                    validate=False,
+                    condensed=True,
+                    scale=self._scale,
                 )
             else:
                 permuted = distmat_reorder(self._data, order)
-                return self.__class__(permuted, self.ids, validate=False)
+                return self.__class__(
+                    permuted, self.ids, validate=False, scale=self._scale
+                )
 
     def copy(self) -> SymmetricMatrix:
         r"""Return a deep copy of the symmetric matrix.
@@ -1812,6 +1859,7 @@ class SymmetricMatrix(PairwiseMatrix):
             diagonal=deepcopy(self._diagonal),
             validate=False,
             condensed=condensed,
+            scale=self._scale,
         )
 
     def _subset_to_dataframe(
@@ -1964,7 +2012,11 @@ class DistanceMatrix(SymmetricMatrix):
         ids: Sequence[str] | None = None,
         validate: bool = True,
         condensed: bool = False,
+        scale: float | None = None,
     ):
+        if scale is None and isinstance(data, PairwiseMatrix):
+            scale = data.scale
+
         data, ids, validate_data, validate_ids, validate_shape = self._normalize_input(
             data, ids
         )
@@ -1987,6 +2039,7 @@ class DistanceMatrix(SymmetricMatrix):
         self._diagonal = 0.0
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
+        self._scale = float(scale) if scale is not None else None
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
@@ -2028,7 +2081,7 @@ class DistanceMatrix(SymmetricMatrix):
         # data type.
         _issue_copy = True
         if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
+            if data.dtype in _ALLOWED_DTYPES:
                 _issue_copy = False
 
         if _issue_copy:
@@ -2086,6 +2139,7 @@ class DistanceMatrix(SymmetricMatrix):
             deepcopy(self.ids),
             validate=False,
             condensed=condensed,
+            scale=self._scale,
         )
 
     def to_series(self) -> pd.Series:
