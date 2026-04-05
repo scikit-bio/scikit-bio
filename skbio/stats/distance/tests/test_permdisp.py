@@ -13,6 +13,7 @@ import platform
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import array_api_compat.numpy as xpnp
 from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway, ConstantInputWarning
 
@@ -162,6 +163,52 @@ class PERMDISPTests(TestCase):
 
         obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed)
         self.assertAlmostEqual(exp_stat, obs_mixed, places=6)
+
+    def test_centroids_array_input(self):
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False).samples
+        obs_df = _compute_groups(dm, 'centroid', self.grouping_uneq)
+        obs_np = _compute_groups(dm.to_numpy(dtype=np.float64), 'centroid',
+                                 self.grouping_uneq)
+        obs_xp = _compute_groups(xpnp.asarray(dm.to_numpy(dtype=np.float64)),
+                                 'centroid', self.grouping_uneq)
+        self.assertAlmostEqual(obs_df, obs_np, places=6)
+        self.assertAlmostEqual(obs_df, obs_xp, places=6)
+
+    def test_median_array_input(self):
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False).samples
+        obs_df = _compute_groups(dm, 'median', self.grouping_uneq)
+        obs_np = _compute_groups(dm.to_numpy(dtype=np.float64), 'median',
+                                 self.grouping_uneq)
+        obs_xp = _compute_groups(xpnp.asarray(dm.to_numpy(dtype=np.float64)),
+                                 'median', self.grouping_uneq)
+        self.assertAlmostEqual(obs_df, obs_np, places=6)
+        self.assertAlmostEqual(obs_df, obs_xp, places=6)
+
+    def test_permdisp_array_backed_ordination(self):
+        obs_c_df = permdisp(
+            pcoa(self.unifrac_dm, warn_neg_eigval=False),
+            self.unif_grouping,
+            test='centroid',
+            permutations=9,
+            seed=42)
+
+        obs_m_df = permdisp(
+            pcoa(self.unifrac_dm, warn_neg_eigval=False),
+            self.unif_grouping,
+            test='median',
+            permutations=9,
+            seed=42)
+
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        po.samples = xpnp.asarray(po.samples.to_numpy(dtype=np.float64))
+
+        obs_c_xp = permdisp(po, self.unif_grouping, test='centroid',
+                            permutations=9, seed=42)
+        obs_m_xp = permdisp(po, self.unif_grouping, test='median',
+                            permutations=9, seed=42)
+
+        self.assert_series_equal(obs_c_df, obs_c_xp)
+        self.assert_series_equal(obs_m_df, obs_m_xp)
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)

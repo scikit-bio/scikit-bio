@@ -13,8 +13,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from scipy.stats import f_oneway
-from scipy.spatial.distance import cdist
 
 from ._cutils import geomedian_axis_one
 from ._base import (
@@ -24,6 +22,7 @@ from ._base import (
     DistanceMatrix,
 )
 from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio.util._array import ingest_array
 from skbio.util._decorator import params_aliased
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -265,7 +264,7 @@ def permdisp(
 
     if isinstance(distmat, OrdinationResults):
         ordination = distmat
-        ids = ordination.samples.axes[0].to_list()
+        ids = _extract_sample_ids(ordination, grouping)
         sample_size = len(ids)
     elif isinstance(distmat, DistanceMatrix):
         if method == "eigh":
@@ -287,11 +286,11 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    samples = ordination.samples
+    sample_data = _extract_sample_data(ordination, sample_size)
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    test_stat_function = partial(_compute_groups, samples, test)
+    test_stat_function = partial(_compute_groups, sample_data, test)
 
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -303,34 +302,188 @@ def permdisp(
 
 
 def _compute_groups(samples, test_type, grouping):
+    xp, data = ingest_array(samples)
     groups = []
 
-    if test_type == "centroid":
-        centroids = samples.groupby(grouping).aggregate("mean")
-    else:  # median
-        grouping_cols = samples.columns.to_list()
-        centroids = samples.groupby(grouping)[grouping_cols].apply(_config_med)
+    grouping_array = np.asarray(grouping)
+    if np.issubdtype(grouping_array.dtype, np.number):
+        group_codes = grouping_array
+    else:
+        group_codes = _encode_grouping_labels(grouping)
 
-    for label, df in samples.groupby(grouping):
-        groups.append(
-            cdist(
-                df.values.astype("float64"),
-                [centroids.loc[label].values],
-                metric="euclidean",
-            )
+    for group_id in np.unique(group_codes):
+        group_data = data[group_codes == group_id]
+
+        if test_type == "centroid":
+            center = xp.mean(group_data, axis=0)
+        else:
+            if isinstance(group_data, np.ndarray):
+                center_np = np.asarray(
+                    geomedian_axis_one(group_data.T), dtype=np.float64
+                )
+                center = xp.asarray(center_np, dtype=group_data.dtype)
+            else:
+                center = _spatial_median(group_data, xp)
+
+        diff = group_data - center
+        distances = _vector_norm(xp, diff, axis=1)
+        groups.append(distances)
+
+    return _f_oneway_stat(xp, groups)
+
+
+def _extract_sample_ids(ordination, grouping):
+    sample_ids = ordination.sample_ids
+    if sample_ids is not None:
+        return list(sample_ids)
+
+    samples = ordination.samples
+    if hasattr(samples, "axes"):
+        return samples.axes[0].to_list()
+
+    if isinstance(grouping, (pd.DataFrame, pd.Series)):
+        raise ValueError(
+            "OrdinationResults with array-backed samples require `sample_ids` "
+            "when grouping is provided as a DataFrame or Series."
         )
 
-    stat, _ = f_oneway(*groups)
-    stat = stat[0]
-
-    return stat
+    _, sample_data = ingest_array(samples, to_numpy=True)
+    return [str(i) for i in range(sample_data.shape[0])]
 
 
-def _config_med(x):
-    """Transpose the vector.
+def _extract_sample_data(ordination, sample_size):
+    samples = ordination.samples
+    xp, sample_data = ingest_array(samples)
 
-    Transpose the vector to be compatible with hd.geomedian.
-    """
-    X = x.to_numpy(copy=True)
-    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns)
+    if sample_data.ndim != 2:
+        raise ValueError("Ordination sample coordinates must be two-dimensional.")
+    if sample_data.shape[0] != sample_size:
+        raise ValueError(
+            "Ordination sample coordinate count must match the number of sample IDs."
+        )
+
+    try:
+        dtype = np.dtype(sample_data.dtype)
+    except (TypeError, AttributeError):
+        dtype = None
+
+    if dtype is None or not np.issubdtype(dtype, np.floating):
+        sample_data = xp.asarray(sample_data, dtype=xp.float64)
+
+    return sample_data
+
+
+def _vector_norm(xp, arr, axis=None):
+    try:
+        return xp.linalg.vector_norm(arr, axis=axis)
+    except AttributeError:
+        return xp.sqrt(xp.sum(arr * arr, axis=axis))
+
+
+def _f_oneway_stat(xp, groups):
+    n_groups = len(groups)
+    total_n = 0
+    mean_num = 0.0
+    group_means = []
+    ss_within = None
+
+    for group in groups:
+        n_i = group.shape[0]
+        mean_i = xp.mean(group)
+        group_means.append((n_i, mean_i))
+        mean_num = mean_num + mean_i * n_i
+
+        centered = group - mean_i
+        ss_i = xp.sum(centered * centered)
+        ss_within = ss_i if ss_within is None else ss_within + ss_i
+        total_n += n_i
+
+    overall_mean = mean_num / total_n
+    ss_between = None
+    for n_i, mean_i in group_means:
+        diff = mean_i - overall_mean
+        term = n_i * diff * diff
+        ss_between = term if ss_between is None else ss_between + term
+
+    df_between = n_groups - 1
+    df_within = total_n - n_groups
+    ms_between = ss_between / df_between
+    ms_within = ss_within / df_within
+
+    ms_between_value = _to_python_scalar(ms_between)
+    ms_within_value = _to_python_scalar(ms_within)
+
+    if ms_within_value == 0.0:
+        if ms_between_value == 0.0:
+            return np.nan
+        return np.inf
+
+    return _to_python_scalar(ms_between / ms_within)
+
+
+def _spatial_median(data, xp, eps=1e-7, maxiters=500):
+    n = data.shape[0]
+    y = xp.mean(data, axis=0)
+
+    if n == 1:
+        return y
+
+    for _ in range(maxiters):
+        diffs = data - y
+        dists = _vector_norm(xp, diffs, axis=1)
+        mask = dists > eps
+        nzeros = int(_to_python_scalar(xp.sum(xp.logical_not(mask))))
+
+        if nzeros == n:
+            break
+
+        dinv = xp.where(mask, 1.0 / dists, 0.0)
+        dinvs = xp.sum(dinv)
+        dinvs_value = _to_python_scalar(dinvs)
+        if dinvs_value == 0.0:
+            break
+
+        weights = dinv / dinvs
+        weighted = data * xp.expand_dims(weights, axis=1)
+        T = xp.sum(weighted, axis=0)
+
+        if nzeros == 0:
+            y1 = T
+        else:
+            R = (T - y) * dinvs
+            r = _to_python_scalar(_vector_norm(xp, R))
+            if r > eps:
+                rinv = nzeros / r
+            else:
+                rinv = 0.0
+            y1 = max(0.0, 1.0 - rinv) * T + min(1.0, rinv) * y
+
+        if _to_python_scalar(_vector_norm(xp, y - y1)) < eps:
+            return y1
+
+        y = y1
+
+    return y
+
+
+def _to_python_scalar(value):
+    _, value_np = ingest_array(value, to_numpy=True)
+    return float(np.asarray(value_np, dtype=np.float64).reshape(-1)[0])
+
+
+def _encode_grouping_labels(grouping):
+    labels = np.asarray(grouping, dtype=object)
+    codes = np.empty(labels.shape[0], dtype=np.intp)
+    mapping = {}
+    next_code = 0
+
+    for idx, label in enumerate(labels):
+        code = mapping.get(label)
+        if code is None:
+            code = next_code
+            mapping[label] = code
+            next_code += 1
+        codes[idx] = code
+
+    return codes
 
