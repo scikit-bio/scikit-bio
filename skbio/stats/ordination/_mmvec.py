@@ -741,7 +741,7 @@ class MMvecResults(SkbioObject):
         probs = softmax(self.ranks.values)
         return pd.DataFrame(probs, index=self.ranks.index, columns=self.ranks.columns)
 
-    def predict(self, microbes: pd.DataFrame | ArrayLike) -> pd.DataFrame:
+    def predict(self, microbes: TableLike) -> pd.DataFrame:
         """Predict metabolite distributions given microbe abundances.
 
         Computes the expected metabolite distribution for each sample by
@@ -751,7 +751,7 @@ class MMvecResults(SkbioObject):
 
         Parameters
         ----------
-        microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
+        microbes : table_like of shape (n_samples, n_microbes)
             Microbe abundance counts. Columns must match the microbes used
             during training.
 
@@ -788,40 +788,26 @@ class MMvecResults(SkbioObject):
         True
 
         """
-        # Convert to array if needed
-        if hasattr(microbes, "values"):
-            X = microbes.values.astype(np.float64)
-            sample_ids = list(microbes.index)
-        else:
-            X = np.asarray(microbes, dtype=np.float64)
-            sample_ids = [f"sample_{i}" for i in range(X.shape[0])]
+        X, sample_ids, _ = _ingest_table(microbes)
 
-        # Normalize to proportions
-        row_sums = X.sum(axis=1, keepdims=True)
+        # Normalize abundances to proportions
+        row_sums = np.sum(X, axis=1, keepdims=True)
         if np.any(row_sums == 0):
             raise ValueError(
                 "microbes contains samples with all-zero counts. "
                 "Remove these samples before calling predict."
             )
-        microbe_props = X / row_sums
+        X_props = X / row_sums
 
         # Get conditional probabilities P(metabolite | microbe)
         cond_probs = self.probabilities().values  # (n_microbes, n_metabolites)
 
         # Marginal: sum_microbe P(metabolite | microbe) * P(microbe)
-        predicted = microbe_props @ cond_probs
+        predicted = X_props @ cond_probs
 
-        return pd.DataFrame(
-            predicted,
-            index=sample_ids,
-            columns=self.ranks.columns,
-        )
+        return pd.DataFrame(predicted, index=sample_ids, columns=self.ranks.columns)
 
-    def score(
-        self,
-        microbes: pd.DataFrame | ArrayLike,
-        metabolites: pd.DataFrame | ArrayLike,
-    ) -> float:
+    def score(self, microbes: TableLike, metabolites: TableLike) -> float:
         r"""Compute Q-squared (coefficient of prediction) on held-out data.
 
         :math:`Q^2` measures predictive performance on test data, analogous to
@@ -838,9 +824,9 @@ class MMvecResults(SkbioObject):
 
         Parameters
         ----------
-        microbes : pd.DataFrame or array-like of shape (n_samples, n_microbes)
+        microbes : table_like of shape (n_samples, n_microbes)
             Test microbe abundance counts.
-        metabolites : pd.DataFrame or array-like of shape (n_samples, n_metabolites)
+        metabolites : table_like of shape (n_samples, n_metabolites)
             Test metabolite abundance counts.
 
         Returns
@@ -883,29 +869,26 @@ class MMvecResults(SkbioObject):
         True
 
         """
+        Y, _, _ = _ingest_table(metabolites)
+
         # Get predictions
-        predicted = self.predict(microbes).values
+        Y_pred = self.predict(microbes).to_numpy()
 
-        # Convert actual metabolites to proportions
-        if hasattr(metabolites, "values"):
-            Y = metabolites.values.astype(np.float64)
-        else:
-            Y = np.asarray(metabolites, dtype=np.float64)
-
-        row_sums = Y.sum(axis=1, keepdims=True)
+        # Normalize abundances to proportions
+        row_sums = np.sum(Y, axis=1, keepdims=True)
         if np.any(row_sums == 0):
             raise ValueError(
                 "metabolites contains samples with all-zero counts. "
                 "Remove these samples before calling score."
             )
-        actual = Y / row_sums
+        Y_true = Y / row_sums
 
         # Q^2 = 1 - SS_res / SS_tot
-        ss_res = np.sum((actual - predicted) ** 2)
-        ss_tot = np.sum((actual - actual.mean(axis=0)) ** 2)
+        ss_res = np.sum((Y_true - Y_pred) ** 2)
+        ss_tot = np.sum((Y_true - Y_true.mean(axis=0)) ** 2)
 
+        # All true values are the same - return 0 to avoid division by zero
         if ss_tot == 0:
-            # All actual values are the same - return 0 to avoid division by zero
             return 0.0
 
         return 1 - ss_res / ss_tot
