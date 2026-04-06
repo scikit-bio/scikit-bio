@@ -8,6 +8,7 @@
 
 from functools import partial
 from unittest import TestCase, main, skipIf
+from unittest.mock import patch
 import platform
 
 import numpy as np
@@ -22,9 +23,12 @@ from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
 from skbio.stats.distance._permdisp import (
     _compute_groups,
+    _extract_sample_data,
+    _extract_sample_ids,
     _f_oneway_stat,
     _spatial_median,
 )
+import skbio.stats.distance._permdisp as _permdisp_mod
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
@@ -227,7 +231,56 @@ class PERMDISPTests(TestCase):
         )
         self.assertTrue(np.isinf(obs_inf))
 
+    def test_extract_helpers_edge_paths(self):
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        po.sample_ids = None
+        self.assertEqual(
+            _extract_sample_ids(po, self.unif_grouping),
+            po.samples.axes[0].to_list()
+        )
+        po.samples = xpnp.asarray(po.samples.to_numpy(dtype=np.float64))
+        self.assertEqual(
+            _extract_sample_ids(po, self.unif_grouping),
+            [str(i) for i in range(len(self.unif_grouping))]
+        )
+        with self.assertRaises(ValueError):
+            _extract_sample_ids(po, pd.Series(self.unif_grouping))
+
+        class Dummy:
+            pass
+
+        d = Dummy()
+        d.samples = np.ones((2, 2, 2), dtype=np.float64)
+        with self.assertRaises(ValueError):
+            _extract_sample_data(d, sample_size=2)
+
+        d.samples = np.ones((8, 2), dtype=np.float64)
+        with self.assertRaises(ValueError):
+            _extract_sample_data(d, sample_size=9)
+
+        d.samples = np.arange(18).reshape((9, 2))
+        out = _extract_sample_data(d, sample_size=9)
+        self.assertTrue(np.issubdtype(out.dtype, np.floating))
+        class BadDType:
+            ndim = 2
+            shape = (9, 2)
+            @property
+            def dtype(self):
+                raise TypeError("bad dtype")
+
+        with patch.object(_permdisp_mod, "ingest_array", return_value=(np, BadDType())):
+            with self.assertRaises(TypeError):
+                _extract_sample_data(d, sample_size=9)
+
     def test_spatial_median_iterative_path(self):
+        row = xpnp.asarray(np.array([[1.0, 2.0]], dtype=np.float64))
+        npt.assert_allclose(np.asarray(_spatial_median(row, xpnp)),
+                            np.array([1.0, 2.0]), atol=1e-6)
+
+        same = xpnp.asarray(np.array([[1.0, 1.0], [1.0, 1.0]], dtype=np.float64))
+        npt.assert_allclose(np.asarray(_spatial_median(same, xpnp)),
+                            np.array([1.0, 1.0]), atol=1e-6)
+
         data = xpnp.asarray(np.array([[0.0, 0.0], [2.0, 0.0], [0.0, 2.0]],
                                      dtype=np.float64))
         obs = _spatial_median(data, xpnp)
@@ -238,6 +291,17 @@ class PERMDISPTests(TestCase):
                                          dtype=np.float64))
             obs = _spatial_median(data, xpnp)
         npt.assert_allclose(np.asarray(obs), np.array([1.0, 1.0]), atol=1e-6)
+
+        data = xpnp.asarray(np.array([[1.0, 1.0], [3.0, 1.0], [1.0, 4.0], [-1.0, -2.0]],
+                                     dtype=np.float64))
+        obs = _spatial_median(data, xpnp)
+        self.assertEqual(np.asarray(obs).shape, (2,))
+
+        with np.errstate(over='ignore', divide='ignore', invalid='ignore'):
+            data = xpnp.asarray(np.array([[1e308, 0.0], [-1e308, 0.0], [0.0, 0.0]],
+                                         dtype=np.float64))
+            obs = _spatial_median(data, xpnp)
+        self.assertEqual(np.asarray(obs).shape, (2,))
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)
