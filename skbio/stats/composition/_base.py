@@ -49,7 +49,7 @@ def _check_composition(
         If True, matrix cannot have zero values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
-    allnum : bool, optionsl
+    allnum : bool, optional
         If True, matrix cannot have NaN values.
 
     Raises
