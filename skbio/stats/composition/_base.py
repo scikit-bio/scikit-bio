@@ -655,40 +655,32 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform rclr transform."""
-    float_dtype = xp.float64
-    mat_float = xp.asarray(mat, dtype=float_dtype)
+    mat_array = xp.asarray(mat)
 
-    # Track which values were observed in the ORIGINAL input
-    observed_mask = (mat_float > 0) & ~xp.isnan(mat_float)
+    # Track which values were observed in the original input
+    observed_mask = (mat_array > 0) & ~xp.isnan(mat_array)
 
     # Operate only on observed values (nonnegative)
-    mat_safe = xp.where(
-        observed_mask, mat_float, xp.asarray(float("nan"), dtype=float_dtype)
-    )
+    mat_safe = xp.where(observed_mask, mat_array, xp.asarray(float("nan")))
 
     # Take log (will give -inf for zeros, NaN for NaN)
-    log_safe = xp.log(mat_safe)
+    log_safe = xp.where(observed_mask, xp.log(mat_safe), xp.asarray(0.0))
 
-    # Count observed values from ORIGINAL mask
-    n_observed = xp.sum(observed_mask.astype(float_dtype), axis=axis, keepdims=True)
+    # Count observed values from original mask
+    n_observed = xp.sum(observed_mask, axis=axis, keepdims=True)
 
     # Sum logs for observed values only
-    log_masked = xp.where(observed_mask, log_safe, xp.asarray(0.0, dtype=float_dtype))
-    log_sum = xp.sum(log_masked, axis=axis, keepdims=True)
+    log_sum = xp.sum(log_safe, axis=axis, keepdims=True)
 
     # Geometric mean
-    n_observed_safe = xp.where(
-        n_observed > 0, n_observed, xp.asarray(1.0, dtype=float_dtype)
-    )
+    n_observed_safe = xp.where(n_observed > 0, n_observed, xp.asarray(1.0))
     geo_mean_log = log_sum / n_observed_safe
 
     # Center by geometric mean
     result = log_safe - geo_mean_log
 
     # Replace non-observed with NaN
-    result = xp.where(
-        observed_mask, result, xp.asarray(float("nan"), dtype=float_dtype)
-    )
+    result = xp.where(observed_mask, result, xp.asarray(float("nan")))
 
     return result
 
