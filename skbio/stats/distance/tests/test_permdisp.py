@@ -20,7 +20,11 @@ from scipy.stats import f_oneway, ConstantInputWarning
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups
+from skbio.stats.distance._permdisp import (
+    _compute_groups,
+    _f_oneway_stat,
+    _spatial_median,
+)
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
@@ -209,6 +213,31 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs_c_df, obs_c_xp)
         self.assert_series_equal(obs_m_df, obs_m_xp)
+
+    def test_f_oneway_stat_zero_within_cases(self):
+        obs_nan = _f_oneway_stat(
+            np,
+            [np.array([1.0, 1.0]), np.array([1.0, 1.0])]
+        )
+        self.assertTrue(np.isnan(obs_nan))
+
+        obs_inf = _f_oneway_stat(
+            np,
+            [np.array([1.0, 1.0]), np.array([2.0, 2.0])]
+        )
+        self.assertTrue(np.isinf(obs_inf))
+
+    def test_spatial_median_iterative_path(self):
+        data = xpnp.asarray(np.array([[0.0, 0.0], [2.0, 0.0], [0.0, 2.0]],
+                                     dtype=np.float64))
+        obs = _spatial_median(data, xpnp)
+        npt.assert_allclose(np.asarray(obs), np.array([0.42, 0.42]), atol=0.2)
+
+        with np.errstate(divide='ignore'):
+            data = xpnp.asarray(np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]],
+                                         dtype=np.float64))
+            obs = _spatial_median(data, xpnp)
+        npt.assert_allclose(np.asarray(obs), np.array([1.0, 1.0]), atol=1e-6)
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)
