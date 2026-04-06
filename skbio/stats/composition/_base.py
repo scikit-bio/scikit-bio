@@ -661,20 +661,19 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     # Track which values were observed in the ORIGINAL input
     observed_mask = (mat_float > 0) & ~xp.isnan(mat_float)
 
-    # Normalize to closure (using _nansum internally)
-    closed = _closure(xp, mat_float, axis)
-    closed_safe = xp.where(
-        closed > 0, closed, xp.asarray(float("nan"), dtype=float_dtype)
+    # Operate only on observed values (nonnegative)
+    mat_safe = xp.where(
+        observed_mask, mat_float, xp.asarray(float("nan"), dtype=float_dtype)
     )
 
     # Take log (will give -inf for zeros, NaN for NaN)
-    log_closed = xp.log(closed_safe)
+    log_safe = xp.log(mat_safe)
 
     # Count observed values from ORIGINAL mask
     n_observed = xp.sum(observed_mask.astype(float_dtype), axis=axis, keepdims=True)
 
     # Sum logs for observed values only
-    log_masked = xp.where(observed_mask, log_closed, xp.asarray(0.0, dtype=float_dtype))
+    log_masked = xp.where(observed_mask, log_safe, xp.asarray(0.0, dtype=float_dtype))
     log_sum = xp.sum(log_masked, axis=axis, keepdims=True)
 
     # Geometric mean
@@ -684,7 +683,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     geo_mean_log = log_sum / n_observed_safe
 
     # Center by geometric mean
-    result = log_closed - geo_mean_log
+    result = log_safe - geo_mean_log
 
     # Replace non-observed with NaN
     result = xp.where(
