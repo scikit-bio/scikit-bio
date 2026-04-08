@@ -202,6 +202,54 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    def test_fixed_point_distance_matrix(self):
+        scale = 0.1
+        fixed_data = self.eq_mat.data.astype(np.int16)
+        float_data = fixed_data.astype(np.float64) * scale
+
+        float_dm = DistanceMatrix(float_data, self.eq_mat.ids)
+        fixed_dm = DistanceMatrix(fixed_data, self.eq_mat.ids, scale=scale)
+        float_condensed = DistanceMatrix(float_data, self.eq_mat.ids, condensed=True)
+        fixed_condensed = DistanceMatrix(
+            fixed_data, self.eq_mat.ids, condensed=True, scale=scale
+        )
+
+        expected = permdisp(
+            float_dm,
+            self.grouping_eq,
+            test='centroid',
+            permutations=99,
+            seed=42,
+            warn_neg_eigval=False,
+        )
+        observed = permdisp(
+            fixed_dm,
+            self.grouping_eq,
+            test='centroid',
+            permutations=99,
+            seed=42,
+            warn_neg_eigval=False,
+        )
+        self.assert_series_equal(observed, expected)
+
+        expected = permdisp(
+            float_condensed,
+            self.grouping_eq,
+            test='centroid',
+            permutations=99,
+            seed=42,
+            warn_neg_eigval=False,
+        )
+        observed = permdisp(
+            fixed_condensed,
+            self.grouping_eq,
+            test='centroid',
+            permutations=99,
+            seed=42,
+            warn_neg_eigval=False,
+        )
+        self.assert_series_equal(observed, expected)
+
     @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
