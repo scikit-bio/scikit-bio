@@ -14,6 +14,7 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import _extract_distance_matrix_data
 from skbio.util._decorator import params_aliased
 
 
@@ -186,7 +187,7 @@ def bioenv(distmat, data_frame, columns=None):
     # columns within a tight loop and using a numpy array ends up being ~2x
     # faster.
     vars_array = _scale(vars_df).values
-    dm_flat = distmat.condensed_form()
+    dm_flat = _extract_distance_matrix_data(distmat, condensed=True)
 
     num_vars = len(columns)
     var_idxs = np.arange(num_vars)
