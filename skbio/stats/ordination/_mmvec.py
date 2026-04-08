@@ -264,8 +264,9 @@ class _MMvecModel:
             Mean of Gaussian prior on V.
         v_prior_scale : float
             Scale of Gaussian prior on V.
-        rng : numpy.random.Generator
+        rng : numpy.random.Generator, optional
             Random number generator.
+
         """
         self.n_microbes = n_microbes
         self.n_metabolites = n_metabolites
@@ -641,6 +642,9 @@ class MMvecResults(SkbioObject):
         final iteration, consider increasing ``max_iter``. If the loss
         oscillates (Adam optimizer), try reducing ``learning_rate``.
 
+    output_format : str or None
+        Output table format. See :ref:`table_params` for details.
+
     Notes
     -----
     **Detecting Overfitting with Q-squared**
@@ -701,11 +705,13 @@ class MMvecResults(SkbioObject):
         metabolite_embeddings: TableLike,
         ranks: TableLike,
         convergence: TableLike,
+        output_format: str | None,
     ):
         self.microbe_embeddings = microbe_embeddings
         self.metabolite_embeddings = metabolite_embeddings
         self.ranks = ranks
         self.convergence = convergence
+        self.output_format = output_format
 
     def __str__(self) -> str:
         """Return string representation of MMvecResults."""
@@ -720,7 +726,7 @@ class MMvecResults(SkbioObject):
             f"  Iterations: {n_iterations}"
         )
 
-    def probabilities(self, output_format: str | None = None) -> TableLike:
+    def probabilities(self) -> TableLike:
         """Convert ranks to probability matrix via softmax.
 
         Returns
@@ -732,12 +738,10 @@ class MMvecResults(SkbioObject):
         ranks, sample_ids, feature_ids = _ingest_table(self.ranks)
         probs = softmax(ranks, validate=False)
         return _create_table(
-            probs, columns=feature_ids, index=sample_ids, backend=output_format
+            probs, columns=feature_ids, index=sample_ids, backend=self.output_format
         )
 
-    def predict(
-        self, microbes: TableLike, output_format: str | None = None
-    ) -> TableLike:
+    def predict(self, microbes: TableLike) -> TableLike:
         """Predict metabolite distributions given microbe abundances.
 
         Computes the expected metabolite distribution for each sample by
@@ -795,7 +799,7 @@ class MMvecResults(SkbioObject):
         X_props = X / row_sums
 
         # Get conditional probabilities P(metabolite | microbe)
-        cond_probs = self.probabilities().values  # (n_microbes, n_metabolites)
+        cond_probs, _, _ = _ingest_table(self.probabilities())
 
         # Marginal: sum_microbe P(metabolite | microbe) * P(microbe)
         predicted = X_props @ cond_probs
@@ -803,7 +807,10 @@ class MMvecResults(SkbioObject):
         # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
         ranks, microbe_ids, metabolite_ids = _ingest_table(self.ranks)
         return _create_table(
-            predicted, columns=metabolite_ids, index=sample_ids, backend=output_format
+            predicted,
+            columns=metabolite_ids,
+            index=sample_ids,
+            backend=self.output_format,
         )
 
     def score(self, microbes: TableLike, metabolites: TableLike) -> float:
@@ -1189,6 +1196,7 @@ def _build_results(model, microbe_ids, metabolite_ids, losses, backend):
         metabolite_embeddings=metabolite_embeddings,
         ranks=ranks_df,
         convergence=convergence,
+        output_format=backend,
     )
 
 
@@ -1298,6 +1306,7 @@ def mmvec(
         - metabolite_embeddings: table_like of shape (n_metabolites, n_components + 1)
         - ranks: table_like of shape (n_microbes, n_metabolites)
         - convergence: table_like with loss per iteration
+        - output_format: format of table_like objects
 
     Notes
     -----

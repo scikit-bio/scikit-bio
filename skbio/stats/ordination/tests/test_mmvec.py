@@ -379,6 +379,10 @@ class TestMMvecBasic(unittest.TestCase):
         )
         self.assertIsInstance(result_legacy, MMvecResults)
 
+        # print(result_legacy.ranks.values.round(3)[:5, :5])
+        # print(result_legacy.microbe_embeddings.values.round(3)[:5])
+        # print(result_legacy.metabolite_embeddings.values.round(3)[:5])
+
         # Unbiased mode
         result_unbiased = mmvec(
             microbes,
@@ -999,7 +1003,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
 
     """
 
-    @unittest.skip("Skipping a test that requires long runtime.")
+    # @unittest.skip("Skipping a test that requires long runtime.")
     def test_soils_cyanobacteria_metabolites(self):
         """Co-occurrence of Cyanobacteria and known metabolites in wetup biocrust.
 
