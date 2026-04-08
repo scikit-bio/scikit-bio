@@ -309,17 +309,8 @@ def _compute_groups(samples, test_type, grouping):
     groups = []
 
     grouping_array = np.asarray(grouping)
-    if np.issubdtype(grouping_array.dtype, np.number):
-        group_masks = (
-            grouping_array == group_id for group_id in np.unique(grouping_array)
-        )
-    else:
-        # Preserve mixed-label behavior (e.g., strings + ints) without dtype coercion.
-        group_codes = _encode_grouping_labels(grouping)
-        group_masks = (group_codes == group_id for group_id in np.unique(group_codes))
-
-    for group_mask in group_masks:
-        group_data = data[group_mask]
+    for group_id in np.unique(grouping_array):
+        group_data = data[grouping_array == group_id]
 
         if test_type == "centroid":
             center = group_data.mean(axis=0)
@@ -331,22 +322,4 @@ def _compute_groups(samples, test_type, grouping):
 
     stat, _ = f_oneway(*groups)
     return float(np.ravel(stat)[0])
-
-
-def _encode_grouping_labels(grouping):
-    """Encode possibly mixed-type labels as integer group ids."""
-    labels = np.asarray(grouping, dtype=object)
-    codes = np.empty(labels.shape[0], dtype=np.intp)
-    mapping = {}
-    next_code = 0
-
-    for idx, label in enumerate(labels):
-        code = mapping.get(label)
-        if code is None:
-            code = next_code
-            mapping[label] = code
-            next_code += 1
-        codes[idx] = code
-
-    return codes
 
