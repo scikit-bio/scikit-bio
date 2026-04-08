@@ -2349,9 +2349,41 @@ def _preprocess_input(
     )
 
     tri_idxs = np.triu_indices(sample_size, k=1)
-    distances = distance_matrix.condensed_form()
+    distances = _extract_distance_matrix_data(distance_matrix, condensed=True)
 
     return sample_size, num_groups, grouping, tri_idxs, distances
+
+
+def _extract_distance_matrix_data(
+    distance_matrix: DistanceMatrix, *, condensed: bool = False
+) -> NDArray:
+    """Return values from a distance matrix with fixed-point scale applied.
+
+    Parameters
+    ----------
+    distance_matrix : DistanceMatrix
+        Distance matrix to extract values from.
+    condensed : bool, optional
+        If ``True``, return values in condensed form. Otherwise return values in
+        the underlying stored form.
+
+    Returns
+    -------
+    ndarray
+        Matrix values ready for numeric computation. Integer buffers and/or
+        fixed-point matrices are converted to floating point with scale applied.
+
+    """
+    distances = distance_matrix.condensed_form() if condensed else distance_matrix.data
+
+    if distance_matrix.scale is None and distances.dtype in _FLOAT_DTYPES:
+        return distances
+
+    distances = distances.astype(np.float64, copy=False)
+    if distance_matrix.scale is not None:
+        distances = distances * distance_matrix.scale
+
+    return distances
 
 
 def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:
