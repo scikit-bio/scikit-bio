@@ -655,16 +655,12 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform rclr transform."""
-    mat_array = xp.asarray(mat)
 
     # Track which values were observed in the original input
-    observed_mask = (mat_array > 0) & ~xp.isnan(mat_array)
-
-    # Operate only on observed values (nonnegative)
-    mat_safe = xp.where(observed_mask, mat_array, xp.asarray(float("nan")))
+    observed_mask = (mat > 0) & ~xp.isnan(mat)
 
     # Take log (will give -inf for zeros, NaN for NaN)
-    log_safe = xp.where(observed_mask, xp.log(mat_safe), xp.asarray(0.0))
+    log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
 
     # Count observed values from original mask
     n_observed = xp.sum(observed_mask, axis=axis, keepdims=True)
@@ -673,14 +669,13 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     log_sum = xp.sum(log_safe, axis=axis, keepdims=True)
 
     # Geometric mean
-    n_observed_safe = xp.where(n_observed > 0, n_observed, xp.asarray(1.0))
-    geo_mean_log = log_sum / n_observed_safe
+    geo_mean_log = log_sum / n_observed
 
     # Center by geometric mean
     result = log_safe - geo_mean_log
 
     # Replace non-observed with NaN
-    result = xp.where(observed_mask, result, xp.asarray(float("nan")))
+    result = xp.where(observed_mask, result, xp.nan)
 
     return result
 
