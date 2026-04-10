@@ -657,12 +657,12 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform rclr transform."""
 
     # Track which values were observed in the original input
-    observed_mask = (mat > 0) & ~xp.isnan(mat)
+    observed_mask = (mat != 0) & ~xp.isnan(mat)
 
     # Take log (will give -inf for zeros, NaN for NaN)
     log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
 
-    # Count observed values from original mask
+    # Count observed values from mask
     n_observed = xp.sum(observed_mask, axis=axis, keepdims=True)
 
     # Sum logs for observed values only
