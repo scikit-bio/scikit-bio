@@ -13,7 +13,7 @@ import numpy.testing as npt
 from numpy.exceptions import AxisError
 from numpy.random import rand, randint
 import pandas as pd
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 
 from skbio import TreeNode
 from skbio.stats.distance import DistanceMatrixError
@@ -920,7 +920,7 @@ class TestTreeBasis(TestCase):
         tree = u"(a,b);"
         t = TreeNode.read([tree])
 
-        exp_basis = coo_matrix(
+        exp_basis = coo_array(
             np.array([[-np.sqrt(1. / 2),
                        np.sqrt(1. / 2)]]))
         exp_keys = [t.name]
@@ -938,7 +938,7 @@ class TestTreeBasis(TestCase):
     def test_tree_basis_unbalanced(self):
         tree = u"((a,b)c, d);"
         t = TreeNode.read([tree])
-        exp_basis = coo_matrix(np.array(
+        exp_basis = coo_array(np.array(
             [[-np.sqrt(1. / 6), -np.sqrt(1. / 6), np.sqrt(2. / 3)],
              [-np.sqrt(1. / 2), np.sqrt(1. / 2), 0]]
         ))
@@ -953,7 +953,7 @@ class TestTreeBasis(TestCase):
 
         t = TreeNode.read([tree])
 
-        exp_basis = coo_matrix(np.array(
+        exp_basis = coo_array(np.array(
             [
                 [-np.sqrt(2. / 3), np.sqrt(1. / 6), np.sqrt(1. / 6)],
                 [0, -np.sqrt(1. / 2), np.sqrt(1. / 2)]

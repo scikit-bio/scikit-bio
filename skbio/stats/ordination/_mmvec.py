@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from scipy.sparse import coo_matrix, issparse
+from scipy.sparse import coo_array, issparse
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
@@ -125,9 +125,7 @@ class _MMvecModel:
         d1 = self.n_microbes
 
         U_aug = np.hstack([np.ones((d1, 1)), self.b_U, self.U])
-        V_aug = np.vstack(
-            [self.b_V, np.ones((1, self.n_metabolites - 1)), self.V]
-        )
+        V_aug = np.vstack([self.b_V, np.ones((1, self.n_metabolites - 1)), self.V])
         return U_aug, V_aug
 
     def forward(self, microbe_indices):
@@ -146,9 +144,7 @@ class _MMvecModel:
         U_aug, V_aug = self._build_augmented_matrices()
         u_batch = U_aug[microbe_indices, :]  # (B, p+2)
         logits_nonref = u_batch @ V_aug  # (B, d2-1)
-        logits = np.hstack(
-            [np.zeros((len(microbe_indices), 1)), logits_nonref]
-        )
+        logits = np.hstack([np.zeros((len(microbe_indices), 1)), logits_nonref])
         return logits
 
     def loss_and_gradients(
@@ -185,7 +181,7 @@ class _MMvecModel:
         if issparse(X):
             X_coo = X.tocoo()
         else:
-            X_coo = coo_matrix(X)
+            X_coo = coo_array(X)
 
         n_samples = X.shape[0]
         total_count = X_coo.data.sum()
@@ -249,17 +245,17 @@ class _MMvecModel:
 
         # Compute total loss (negative log posterior)
         prior_loss = 0.0
-        prior_loss += 0.5 * np.sum((self.U - self.u_prior_mean) ** 2) / (
-            self.u_prior_scale**2
+        prior_loss += (
+            0.5 * np.sum((self.U - self.u_prior_mean) ** 2) / (self.u_prior_scale**2)
         )
-        prior_loss += 0.5 * np.sum((self.b_U - self.u_prior_mean) ** 2) / (
-            self.u_prior_scale**2
+        prior_loss += (
+            0.5 * np.sum((self.b_U - self.u_prior_mean) ** 2) / (self.u_prior_scale**2)
         )
-        prior_loss += 0.5 * np.sum((self.V - self.v_prior_mean) ** 2) / (
-            self.v_prior_scale**2
+        prior_loss += (
+            0.5 * np.sum((self.V - self.v_prior_mean) ** 2) / (self.v_prior_scale**2)
         )
-        prior_loss += 0.5 * np.sum((self.b_V - self.v_prior_mean) ** 2) / (
-            self.v_prior_scale**2
+        prior_loss += (
+            0.5 * np.sum((self.b_V - self.v_prior_mean) ** 2) / (self.v_prior_scale**2)
         )
 
         loss = -norm * loglik + prior_loss
@@ -277,9 +273,7 @@ class _MMvecModel:
             Row-centered log conditional probabilities.
         """
         U_aug, V_aug = self._build_augmented_matrices()
-        logits = np.hstack(
-            [np.zeros((self.n_microbes, 1)), U_aug @ V_aug]
-        )
+        logits = np.hstack([np.zeros((self.n_microbes, 1)), U_aug @ V_aug])
         # Center each row
         ranks = logits - logits.mean(axis=1, keepdims=True)
         return ranks
@@ -292,12 +286,14 @@ class _MMvecModel:
         theta : np.ndarray
             Flattened parameters [U, b_U, V, b_V].
         """
-        return np.concatenate([
-            self.U.ravel(),
-            self.b_U.ravel(),
-            self.V.ravel(),
-            self.b_V.ravel(),
-        ])
+        return np.concatenate(
+            [
+                self.U.ravel(),
+                self.b_U.ravel(),
+                self.V.ravel(),
+                self.b_V.ravel(),
+            ]
+        )
 
     def unpack_params(self, theta):
         """Restore parameter matrices from flat vector.
@@ -312,20 +308,20 @@ class _MMvecModel:
         p = self.n_components
 
         idx = 0
-        self.U = theta[idx:idx + d1 * p].reshape(d1, p)
+        self.U = theta[idx : idx + d1 * p].reshape(d1, p)
         idx += d1 * p
-        self.b_U = theta[idx:idx + d1].reshape(d1, 1)
+        self.b_U = theta[idx : idx + d1].reshape(d1, 1)
         idx += d1
-        self.V = theta[idx:idx + p * (d2 - 1)].reshape(p, d2 - 1)
+        self.V = theta[idx : idx + p * (d2 - 1)].reshape(p, d2 - 1)
         idx += p * (d2 - 1)
-        self.b_V = theta[idx:idx + (d2 - 1)].reshape(1, d2 - 1)
+        self.b_V = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
     def full_batch_loss_and_gradient(self, X_coo, Y):
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
         ----------
-        X_coo : coo_matrix
+        X_coo : coo_array
             Microbe counts in COO format.
         Y : np.ndarray of shape (n_samples, n_metabolites)
             Metabolite counts.
@@ -409,12 +405,14 @@ class _MMvecModel:
         db_V += b_v_diff / self.v_prior_scale**2
 
         # Pack gradients
-        grad = np.concatenate([
-            dU.ravel(),
-            db_U.ravel(),
-            dV.ravel(),
-            db_V.ravel(),
-        ])
+        grad = np.concatenate(
+            [
+                dU.ravel(),
+                db_U.ravel(),
+                dV.ravel(),
+                db_V.ravel(),
+            ]
+        )
 
         return loss, grad
 
@@ -568,9 +566,7 @@ class MMvecResults(SkbioObject):
             Each row sums to 1.
         """
         probs = softmax(self.ranks.values)
-        return pd.DataFrame(
-            probs, index=self.ranks.index, columns=self.ranks.columns
-        )
+        return pd.DataFrame(probs, index=self.ranks.index, columns=self.ranks.columns)
 
     def predict(self, microbes):
         """Predict metabolite distributions given microbe abundances.
@@ -798,9 +794,7 @@ def _clip_gradients(grads, clipnorm):
     grads : dict
         Clipped gradients.
     """
-    global_norm = np.sqrt(
-        sum(np.sum(g**2) for g in grads.values())
-    )
+    global_norm = np.sqrt(sum(np.sum(g**2) for g in grads.values()))
 
     if global_norm > clipnorm:
         scale = clipnorm / global_norm
@@ -865,14 +859,10 @@ def _validate_inputs(microbes, metabolites, u_prior_scale, v_prior_scale):
         )
 
     if u_prior_scale <= 0:
-        raise ValueError(
-            f"u_prior_scale must be positive, got {u_prior_scale}."
-        )
+        raise ValueError(f"u_prior_scale must be positive, got {u_prior_scale}.")
 
     if v_prior_scale <= 0:
-        raise ValueError(
-            f"v_prior_scale must be positive, got {v_prior_scale}."
-        )
+        raise ValueError(f"v_prior_scale must be positive, got {v_prior_scale}.")
 
     # Check for all-zero columns in microbes
     microbe_sums = X.sum(axis=0)
@@ -913,7 +903,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     ----------
     model : _MMvecModel
         Initialized model to train.
-    X_coo : coo_matrix
+    X_coo : coo_array
         Microbe counts in sparse COO format.
     Y : np.ndarray
         Metabolite counts.
@@ -935,10 +925,12 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
         iteration_count[0] += 1
 
-        convergence_data.append({
-            "iteration": iteration_count[0],
-            "loss": loss,
-        })
+        convergence_data.append(
+            {
+                "iteration": iteration_count[0],
+                "loss": loss,
+            }
+        )
 
         if verbose and iteration_count[0] % 10 == 0:
             print(f"Iteration {iteration_count[0]}, Loss: {loss:.4f}")
@@ -966,8 +958,10 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     model.unpack_params(result.x)
 
     if verbose:
-        print(f"L-BFGS-B converged: {result.success}, "
-              f"iterations: {result.nit}, message: {result.message}")
+        print(
+            f"L-BFGS-B converged: {result.success}, "
+            f"iterations: {result.nit}, message: {result.message}"
+        )
 
     return convergence_data
 
@@ -997,7 +991,7 @@ def _train_adam(
         Microbe counts.
     Y : np.ndarray
         Metabolite counts.
-    X_coo : coo_matrix
+    X_coo : coo_array
         Microbe counts in sparse COO format.
     rng : np.random.Generator
         Random number generator.
@@ -1106,23 +1100,21 @@ def _build_results(model, microbe_ids, metabolite_ids, convergence_data):
     # Microbe embeddings: U with bias
     microbe_emb = np.hstack([model.U, model.b_U])
     pc_cols = [f"PC{i}" for i in range(n_components)] + ["bias"]
-    microbe_embeddings = pd.DataFrame(
-        microbe_emb, index=microbe_ids, columns=pc_cols
-    )
+    microbe_embeddings = pd.DataFrame(microbe_emb, index=microbe_ids, columns=pc_cols)
 
     # Metabolite embeddings: V^T with bias
     # First row is reference (no embedding), rest are actual embeddings
-    metabolite_emb = np.vstack([
-        np.zeros((1, n_components + 1)),  # Reference category
-        np.hstack([model.V.T, model.b_V.T]),
-    ])
+    metabolite_emb = np.vstack(
+        [
+            np.zeros((1, n_components + 1)),  # Reference category
+            np.hstack([model.V.T, model.b_V.T]),
+        ]
+    )
     metabolite_embeddings = pd.DataFrame(
         metabolite_emb, index=metabolite_ids, columns=pc_cols
     )
 
-    ranks_df = pd.DataFrame(
-        ranks, index=microbe_ids, columns=metabolite_ids
-    )
+    ranks_df = pd.DataFrame(ranks, index=microbe_ids, columns=metabolite_ids)
 
     convergence = pd.DataFrame(convergence_data)
 
@@ -1288,9 +1280,7 @@ def mmvec(
     # Validate optimizer
     optimizer = optimizer.lower()
     if optimizer not in ("lbfgs", "adam"):
-        raise ValueError(
-            f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'."
-        )
+        raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
 
     # Initialize model
     model = _MMvecModel(
@@ -1305,7 +1295,7 @@ def mmvec(
     )
 
     # Convert to sparse COO format
-    X_coo = coo_matrix(X)
+    X_coo = coo_array(X)
 
     # Train model
     if optimizer == "lbfgs":

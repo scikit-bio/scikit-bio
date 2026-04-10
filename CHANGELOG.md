@@ -11,6 +11,10 @@
 
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
 
+### Miscellaneous
+
+* Replaced SciPy sparse matrix constructors with sparse array constructors to align with SciPy's sparse array APIs. This affects `subsample_counts` (`csr_array`) (no public-facing effect) and `tree_basis` (`coo_array`).
+
 ## Version 0.7.2
 
 ### Features
