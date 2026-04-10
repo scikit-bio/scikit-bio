@@ -1255,7 +1255,7 @@ def tree_basis(tree):
 
     Returns
     -------
-    scipy.sparse.coo_matrix
+    scipy.sparse.coo_array
         The ilr basis required to perform the ilr_inv transform. This is also
         known as the sequential binary partition. Note that this matrix is
         represented in clr coordinates.
@@ -1278,7 +1278,7 @@ def tree_basis(tree):
            [-0.70710678,  0.70710678,  0.        ]])
 
     """
-    from scipy.sparse import coo_matrix
+    from scipy.sparse import coo_array
 
     # Specifies which child is numerator and denominator
     # within any given node in a tree.
@@ -1355,7 +1355,7 @@ def tree_basis(tree):
         i += 1
         nodes.append(n.name)
 
-    basis = coo_matrix((value, (row, col)), shape=(D - 1, D))
+    basis = coo_array((value, (row, col)), shape=(D - 1, D))
 
     return basis, nodes
 
