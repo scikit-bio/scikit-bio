@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from scipy.sparse import coo_matrix, issparse
+from scipy.sparse import coo_array, issparse
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
@@ -354,7 +354,7 @@ class _MMvecModel:
         if issparse(X):
             X_coo = X.tocoo()
         else:
-            X_coo = coo_matrix(X)
+            X_coo = coo_array(X)
 
         n_samples = X.shape[0]
         total_count = X_coo.data.sum()
@@ -492,7 +492,7 @@ class _MMvecModel:
 
         Parameters
         ----------
-        X_coo : coo_matrix
+        X_coo : coo_array
             Microbe counts in COO format.
         Y : np.ndarray of shape (n_samples, n_metabolites)
             Metabolite counts.
@@ -976,7 +976,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     ----------
     model : _MMvecModel
         Initialized model to train.
-    X_coo : coo_matrix
+    X_coo : coo_array
         Microbe counts in sparse COO format.
     Y : np.ndarray
         Metabolite counts.
@@ -1059,7 +1059,7 @@ def _train_adam(
         Microbe counts.
     Y : np.ndarray
         Metabolite counts.
-    X_coo : coo_matrix
+    X_coo : coo_array
         Microbe counts in sparse COO format.
     rng : np.random.Generator
         Random number generator.
@@ -1393,7 +1393,7 @@ def mmvec(
     )
 
     # Convert to sparse COO format
-    X_coo = coo_matrix(X)
+    X_coo = coo_array(X)
 
     # Train model
     if optimizer == "lbfgs":
