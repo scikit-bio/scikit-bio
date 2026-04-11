@@ -1060,7 +1060,18 @@ def _root_from_treenode(obj, taxa):
     always preordered.
 
     """
+    # If the root has a single child (unary root), promote the child to root
+    # to avoid generating invalid array mappings and infinite loops during NNI.
+    # This does not modify the caller's tree object.
+    if len(obj.children) == 1:
+        obj = obj.copy()
+        obj.prune()
+        while len(obj.children) == 1:
+            obj = obj.children[0]
+            obj.parent = None
+
     errmsg = "Tree is not strictly bifurcating."
+
     taxmap = {taxon: i for i, taxon in enumerate(taxa)}
 
     m = len(taxa)  # number of taxa
@@ -1112,6 +1123,7 @@ def _root_from_treenode(obj, taxa):
         if not siblings:  # singleton branch
             raise ValueError(errmsg)
         n_sibs = len(siblings)
+
         if n_sibs == 1:
             other = siblings[0]
 
@@ -1146,10 +1158,18 @@ def _root_from_treenode(obj, taxa):
             else:
                 _from_treenode(other, taxmap, tree, preodr, postodr, pos, depth)
 
-                tree[pos, 2] = prev_pos
-                tree[prev_pos, 1] = pos
-                tree[sib_pos, 3] = pos
-                tree[pos, 3] = sib_pos
+                # Guard: only link back when at least one internal node has
+                # been traversed (pos > 0). When pos == 0, taxa[0] is a
+                # direct child of a rooted-binary root; _from_treenode has
+                # already set tree[0] up correctly (parent=0, sibling=0), so
+                # the assignments below would overwrite the right-child index
+                # of tree[0] with 0 — creating a circular self-reference that
+                # causes infinite loops in the downstream NNI algorithms.
+                if pos > 0:
+                    tree[pos, 2] = prev_pos
+                    tree[prev_pos, 1] = pos
+                    tree[sib_pos, 3] = pos
+                    tree[pos, 3] = sib_pos
 
                 break
 
