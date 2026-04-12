@@ -599,21 +599,21 @@ class TestMMvecValidation(unittest.TestCase):
         self.assertIn("y contains all-zero rows", str(ctx.exception))
 
     def test_prior_scales(self):
-        """u_prior_scale and v_prior_scale must be positive."""
+        """x_prior_scale and y_prior_scale must be positive."""
         msg = "x_prior_scale must be positive"
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, self.metabolites, u_prior_scale=0, max_iter=1)
+            mmvec(self.microbes, self.metabolites, x_prior_scale=0, max_iter=1)
         self.assertIn(msg, str(ctx.exception))
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, self.metabolites, u_prior_scale=-0.5, max_iter=1)
+            mmvec(self.microbes, self.metabolites, x_prior_scale=-0.5, max_iter=1)
         self.assertIn(msg, str(ctx.exception))
 
         msg = "y_prior_scale must be positive"
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, self.metabolites, v_prior_scale=0, max_iter=1)
+            mmvec(self.microbes, self.metabolites, y_prior_scale=0, max_iter=1)
         self.assertIn(msg, str(ctx.exception))
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, self.metabolites, v_prior_scale=-0.5, max_iter=1)
+            mmvec(self.microbes, self.metabolites, y_prior_scale=-0.5, max_iter=1)
         self.assertIn(msg, str(ctx.exception))
 
 
@@ -671,8 +671,8 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=50,
-            u_prior_mean=0.0,
-            v_prior_mean=0.0,
+            x_prior_mean=0.0,
+            y_prior_mean=0.0,
             seed=42,
         )
 
@@ -681,8 +681,8 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             self.metabolites,
             n_components=2,
             max_iter=50,
-            u_prior_mean=5.0,
-            v_prior_mean=5.0,
+            x_prior_mean=5.0,
+            y_prior_mean=5.0,
             seed=42,
         )
 
@@ -1125,8 +1125,8 @@ class TestMMvecCaseStudies(unittest.TestCase):
             n_components=3,
             optimizer="lbfgs",
             max_iter=500,
-            u_prior_scale=1.0,
-            v_prior_scale=1.0,
+            x_prior_scale=1.0,
+            y_prior_scale=1.0,
             seed=42,
         )
 
