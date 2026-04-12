@@ -144,6 +144,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             scale = data.scale
 
         data, ids, validate_shape, validate_ids = self._normalize_input(data, ids)
+        if scale is None and data.dtype in _INT_DTYPES:
+            raise PairwiseMatrixError(
+                "Integer data require a scaling factor. Please provide `scale`."
+            )
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
@@ -164,7 +168,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         self._id_index = self._index_list(self._ids)
         self._data = self._init_data(data)
         self._flags = self._init_flags()
-        self._scale = float(scale) if scale is not None else None
+        self._scale = scale
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
@@ -1148,6 +1152,10 @@ class SymmetricMatrix(PairwiseMatrix):
             validate_shape,
             validate_diagonal,
         ) = self._normalize_input(data, ids, diagonal)
+        if scale is None and data.dtype in _INT_DTYPES:
+            raise PairwiseMatrixError(
+                "Integer data require a scaling factor. Please provide `scale`."
+            )
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1169,7 +1177,7 @@ class SymmetricMatrix(PairwiseMatrix):
         self._diagonal = self._init_diagonal(diagonal, data, condensed)
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
-        self._scale = float(scale) if scale is not None else None
+        self._scale = scale
 
     def _normalize_input(self, data, ids, diagonal):
         """Get input into standard numpy array format."""
@@ -2020,6 +2028,10 @@ class DistanceMatrix(SymmetricMatrix):
         data, ids, validate_data, validate_ids, validate_shape = self._normalize_input(
             data, ids
         )
+        if scale is None and data.dtype in _INT_DTYPES:
+            raise PairwiseMatrixError(
+                "Integer data require a scaling factor. Please provide `scale`."
+            )
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -2039,7 +2051,7 @@ class DistanceMatrix(SymmetricMatrix):
         self._diagonal = 0.0
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
-        self._scale = float(scale) if scale is not None else None
+        self._scale = scale
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
@@ -2349,12 +2361,12 @@ def _preprocess_input(
     )
 
     tri_idxs = np.triu_indices(sample_size, k=1)
-    distances = _extract_distance_matrix_data(distance_matrix, condensed=True)
+    distances = extract_distance_matrix_data(distance_matrix, condensed=True)
 
     return sample_size, num_groups, grouping, tri_idxs, distances
 
 
-def _extract_distance_matrix_data(
+def extract_distance_matrix_data(
     distance_matrix: DistanceMatrix, *, condensed: bool = False
 ) -> NDArray:
     """Return values from a distance matrix with fixed-point scale applied.
@@ -2374,16 +2386,31 @@ def _extract_distance_matrix_data(
         fixed-point matrices are converted to floating point with scale applied.
 
     """
-    distances = distance_matrix.condensed_form() if condensed else distance_matrix.data
+    if condensed:
+        if distance_matrix._flags["CONDENSED"]:
+            distances = distance_matrix.data
+        else:
+            data = distance_matrix.data
+            tri_idxs = np.triu_indices(data.shape[0], k=1)
+            distances = data[tri_idxs]
+    else:
+        distances = distance_matrix.data
 
     if distance_matrix.scale is None and distances.dtype in _FLOAT_DTYPES:
         return distances
 
-    distances = distances.astype(np.float64, copy=False)
-    if distance_matrix.scale is not None:
-        distances = distances * distance_matrix.scale
+    if distance_matrix.scale is None:
+        return distances.astype(np.float64, copy=False)
+
+    scale = distance_matrix.scale
+    out_dtype = np.result_type(distances.dtype, np.asarray(scale).dtype, np.float32)
+    distances = distances.astype(out_dtype, copy=False)
+    distances = distances * np.asarray(scale, dtype=out_dtype)
 
     return distances
+
+
+_extract_distance_matrix_data = extract_distance_matrix_data
 
 
 def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:

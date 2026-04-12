@@ -18,7 +18,7 @@ from ._base import (
     _preprocess_input_sng,
     _run_monte_carlo_stats,
     _build_results,
-    _extract_distance_matrix_data,
+    extract_distance_matrix_data,
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
@@ -207,7 +207,7 @@ def permanova(
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
     is_condensed = distmat._flags["CONDENSED"]
-    distance_data = _extract_distance_matrix_data(distmat, condensed=is_condensed)
+    distance_data = extract_distance_matrix_data(distmat, condensed=is_condensed)
     s_T = (distance_data**2).sum() / sample_size
     if not is_condensed:
         # we are going over the whole matrix, instead of just upper triangle

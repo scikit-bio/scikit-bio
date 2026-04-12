@@ -193,14 +193,8 @@ class TestPCoA(TestCase):
             dtype=np.int16,
         )
 
-        expected = pcoa(
-            DistanceMatrix(int_data.astype(np.float64), ids), warn_neg_eigval=False
-        )
-        observed = pcoa(DistanceMatrix(int_data, ids), warn_neg_eigval=False)
-
-        assert_ordination_results_equal(
-            observed, expected, ignore_directionality=True
-        )
+        with self.assertRaises(PairwiseMatrixError):
+            pcoa(DistanceMatrix(int_data, ids), warn_neg_eigval=False)
 
     def test_book_example_dataset(self):
         # Adapted from PyCogent's `test_principal_coordinate_analysis`:

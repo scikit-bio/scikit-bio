@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import pearsonr
 
 from skbio import DistanceMatrix
-from skbio.stats.distance._base import _extract_distance_matrix_data
+from skbio.stats.distance._base import extract_distance_matrix_data
 from skbio.util import get_rng
 
 
@@ -179,8 +179,8 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
     pars_k_labels, pars_t_labels = _gen_lists(pars)
     hosts_k_labels, hosts_t_labels = _gen_lists(hosts)
 
-    host_data = _extract_distance_matrix_data(host_dist)
-    par_data = _extract_distance_matrix_data(par_dist)
+    host_data = extract_distance_matrix_data(host_dist)
+    par_data = extract_distance_matrix_data(par_dist)
 
     # get a vector of pairwise distances for each interaction edge
     x = _get_dist(hosts_k_labels, hosts_t_labels, host_data, np.arange(num_hosts))

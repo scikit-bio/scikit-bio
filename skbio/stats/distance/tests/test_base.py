@@ -33,7 +33,11 @@ from skbio.stats.distance import (
     SymmetricMatrix,
     randdm,
 )
-from skbio.stats.distance._base import _preprocess_input, _run_monte_carlo_stats
+from skbio.stats.distance._base import (
+    _preprocess_input,
+    _run_monte_carlo_stats,
+    extract_distance_matrix_data,
+)
 from skbio.stats.distance._utils import is_symmetric_and_hollow
 from skbio.util import assert_data_frame_almost_equal
 from skbio.util._testing import assert_series_almost_equal
@@ -2238,23 +2242,28 @@ class IntDtypeTests(TestCase):
     def test_pairwise_matrix_int_construction(self):
         for dtype in (np.int8, np.int16, np.int32):
             data = np.array([[0, 1, 2], [3, 0, 4], [5, 6, 0]], dtype=dtype)
-            pm = PairwiseMatrix(data, ['a', 'b', 'c'])
+            pm = PairwiseMatrix(data, ['a', 'b', 'c'], scale=1.0)
             self.assertEqual(pm.dtype, dtype)
             npt.assert_array_equal(pm.data, data)
 
     def test_symmetric_matrix_int_construction(self):
         for dtype in (np.int8, np.int16, np.int32):
             data = np.array([[0, 10, 20], [10, 0, 30], [20, 30, 0]], dtype=dtype)
-            sm = SymmetricMatrix(data, ['a', 'b', 'c'])
+            sm = SymmetricMatrix(data, ['a', 'b', 'c'], scale=1.0)
             self.assertEqual(sm.dtype, dtype)
             npt.assert_array_equal(sm.data, data)
 
     def test_distance_matrix_int_construction(self):
         for dtype in (np.int8, np.int16, np.int32):
             data = np.array([[0, 10, 20], [10, 0, 30], [20, 30, 0]], dtype=dtype)
-            dm = DistanceMatrix(data, ['x', 'y', 'z'])
+            dm = DistanceMatrix(data, ['x', 'y', 'z'], scale=1.0)
             self.assertEqual(dm.dtype, dtype)
             npt.assert_array_equal(dm.data, data)
+
+    def test_int_requires_scale(self):
+        for ctor in (PairwiseMatrix, SymmetricMatrix, DistanceMatrix):
+            with self.assertRaises(PairwiseMatrixError):
+                ctor(np.array([[0, 1], [1, 0]], dtype=np.int16), ['a', 'b'])
 
     def test_scale_property(self):
         data = np.array([[0, 100, 200], [100, 0, 150], [200, 150, 0]],
@@ -2299,7 +2308,7 @@ class IntDtypeTests(TestCase):
     def test_int_avoid_copy(self):
         for dtype in (np.int8, np.int16, np.int32):
             data = np.array([[0, 1, 2], [3, 0, 4], [5, 6, 0]], dtype=dtype)
-            pm = PairwiseMatrix(data)
+            pm = PairwiseMatrix(data, scale=1.0)
             self.assertTrue(pm.data is data)
 
     def test_int64_still_cast_to_float(self):
@@ -2314,21 +2323,27 @@ class IntDtypeTests(TestCase):
 
     def test_int_getitem_by_id(self):
         data = np.array([[0, 5, 10], [5, 0, 15], [10, 15, 0]], dtype=np.int16)
-        dm = DistanceMatrix(data, ['a', 'b', 'c'])
+        dm = DistanceMatrix(data, ['a', 'b', 'c'], scale=1.0)
         self.assertEqual(dm['a', 'b'], 5)
         npt.assert_array_equal(dm['b'], np.array([5, 0, 15], dtype=np.int16))
 
     def test_int_to_data_frame(self):
         data = np.array([[0, 5], [5, 0]], dtype=np.int32)
-        dm = DistanceMatrix(data, ['a', 'b'])
+        dm = DistanceMatrix(data, ['a', 'b'], scale=1.0)
         df = dm.to_data_frame()
         self.assertEqual(df.loc['a', 'b'], 5)
 
     def test_int_condensed_form(self):
         data = np.array([[0, 5, 10], [5, 0, 15], [10, 15, 0]], dtype=np.int16)
-        dm = DistanceMatrix(data, ['a', 'b', 'c'])
+        dm = DistanceMatrix(data, ['a', 'b', 'c'], scale=1.0)
         condensed = dm.condensed_form()
         npt.assert_array_equal(condensed, np.array([5, 10, 15], dtype=np.int16))
+
+    def test_extract_distance_matrix_data_preserves_float32(self):
+        data = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.float32)
+        dm = DistanceMatrix(data, ['a', 'b'], scale=np.float32(0.5))
+        observed = extract_distance_matrix_data(dm, condensed=True)
+        self.assertEqual(observed.dtype, np.float32)
 
     def test_int_io_round_trip(self):
         data = np.array([[0, 100, 200], [100, 0, 150], [200, 150, 0]],

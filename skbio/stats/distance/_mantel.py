@@ -18,7 +18,7 @@ import scipy.special
 from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarning
 
 from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
-from ._base import _extract_distance_matrix_data
+from ._base import extract_distance_matrix_data
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
@@ -34,9 +34,12 @@ def _scaled_distance_values(values, scale):
     if scale is None and np.issubdtype(values.dtype, np.floating):
         return values
 
-    values = values.astype(np.float64, copy=False)
-    if scale is not None:
-        values = values * scale
+    if scale is None:
+        return values.astype(np.float64, copy=False)
+
+    out_dtype = np.result_type(values.dtype, np.asarray(scale).dtype, np.float32)
+    values = values.astype(out_dtype, copy=False)
+    values = values * np.asarray(scale, dtype=out_dtype)
 
     return values
 
@@ -327,8 +330,8 @@ def mantel(
             )
 
     else:
-        x_flat = _extract_distance_matrix_data(x, condensed=True)
-        y_flat = _extract_distance_matrix_data(y, condensed=True)
+        x_flat = extract_distance_matrix_data(x, condensed=True)
+        y_flat = extract_distance_matrix_data(y, condensed=True)
 
         orig_stat = comp_stat = corr_func(x_flat, y_flat)[0]
         del x_flat
@@ -394,7 +397,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
 
     """
     rng = get_rng(seed)
-    x_flat = _extract_distance_matrix_data(x, condensed=True)
+    x_flat = extract_distance_matrix_data(x, condensed=True)
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
@@ -434,7 +437,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     comp_stat = orig_stat
     if not (permutations == 0 or np.isnan(orig_stat)):
         # inline DistanceMatrix.permute, grouping them together
-        x_data = _extract_distance_matrix_data(x, condensed=x._flags["CONDENSED"])
+        x_data = extract_distance_matrix_data(x, condensed=x._flags["CONDENSED"])
         if not x_data.flags.c_contiguous:
             x_data = np.asarray(x_data, order="C")
 
@@ -489,7 +492,7 @@ def _mantel_stats_pearson(x, y, permutations, seed=None):
         Permuted correlation coefficients of the test.
 
     """
-    y_flat = _extract_distance_matrix_data(y, condensed=True)
+    y_flat = extract_distance_matrix_data(y, condensed=True)
     return _mantel_stats_pearson_flat(x, y_flat, permutations, seed)
 
 
@@ -521,8 +524,8 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
         Permuted correlation coefficients of the test.
 
     """
-    x_flat = _extract_distance_matrix_data(x, condensed=True)
-    y_flat = _extract_distance_matrix_data(y, condensed=True)
+    x_flat = extract_distance_matrix_data(x, condensed=True)
+    y_flat = extract_distance_matrix_data(y, condensed=True)
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
