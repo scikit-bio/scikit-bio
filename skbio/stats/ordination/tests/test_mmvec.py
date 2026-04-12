@@ -34,10 +34,10 @@ class TestRandomMultimodal(unittest.TestCase):
     def test_output_shapes(self):
         """Generated outputs should have expected shapes and IDs."""
         res = random_multimodal(
-            n_microbes=4,
-            n_metabolites=6,
+            n_features_x=4,
+            n_features_y=6,
             n_samples=8,
-            latent_dim=2,
+            n_components=2,
             seed=7,
         )
         microbes, metabolites, design, beta, U, Ubias, V, Vbias = res
@@ -72,13 +72,13 @@ class TestMMvecRecovery(unittest.TestCase):
     def setUp(self):
         """Build small simulation matching original mmvec test."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=8,
+            n_features_x=8,
+            n_features_y=8,
             n_samples=150,
-            latent_dim=2,
-            sigmaQ=2,
-            microbe_total=1000,
-            metabolite_total=10000,
+            n_components=2,
+            x_noise_std=2,
+            x_total=1000,
+            y_total=10000,
             seed=1,
         )
         (
@@ -104,7 +104,7 @@ class TestMMvecRecovery(unittest.TestCase):
         result = mmvec(
             self.trainX,
             self.trainY,
-            n_components=2,
+            dimensions=2,
             optimizer="adam",
             max_iter=1000,
             batch_size=50,
@@ -270,10 +270,10 @@ class TestMMvecBasic(unittest.TestCase):
     def test_output_shapes(self):
         """Check that output shapes are correct."""
         res = random_multimodal(
-            n_microbes=10,
-            n_metabolites=15,
+            n_features_x=10,
+            n_features_y=15,
             n_samples=50,
-            latent_dim=3,
+            n_components=3,
             seed=42,
         )
         microbes, metabolites = res[0], res[1]
@@ -281,7 +281,7 @@ class TestMMvecBasic(unittest.TestCase):
         result = mmvec(
             microbes,
             metabolites,
-            n_components=3,
+            dimensions=3,
             max_iter=10,
             seed=42,
         )
@@ -304,8 +304,8 @@ class TestMMvecBasic(unittest.TestCase):
     def test_ranks_row_centered(self):
         """Check that ranks are row-centered."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -314,7 +314,7 @@ class TestMMvecBasic(unittest.TestCase):
         result = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=50,
             seed=42,
         )
@@ -326,8 +326,8 @@ class TestMMvecBasic(unittest.TestCase):
     def test_reproducibility(self):
         """Check that results are reproducible with same seed."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -336,7 +336,7 @@ class TestMMvecBasic(unittest.TestCase):
         result1 = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=50,
             seed=123,
         )
@@ -344,7 +344,7 @@ class TestMMvecBasic(unittest.TestCase):
         result2 = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=50,
             seed=123,
         )
@@ -356,8 +356,8 @@ class TestMMvecBasic(unittest.TestCase):
     def test_batch_norm_modes(self):
         """Test that both batch normalization modes work."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -367,7 +367,7 @@ class TestMMvecBasic(unittest.TestCase):
         result_legacy = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="adam",
             max_iter=50,
             batch_norm="legacy",
@@ -379,7 +379,7 @@ class TestMMvecBasic(unittest.TestCase):
         result_unbiased = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="adam",
             max_iter=50,
             batch_norm="unbiased",
@@ -399,8 +399,8 @@ class TestMMvecEstimator(unittest.TestCase):
     def setUp(self):
         """Create test data."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -493,7 +493,7 @@ class TestMMvecEstimator(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=10,
             seed=42,
         )
@@ -550,8 +550,8 @@ class TestMMvecValidation(unittest.TestCase):
     def setUp(self):
         """Create valid test data."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -623,8 +623,8 @@ class TestMMvecInputTypes(unittest.TestCase):
     def test_sparse_pandas_input(self):
         """Test with sparse pandas DataFrame."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -639,7 +639,7 @@ class TestMMvecInputTypes(unittest.TestCase):
         result = mmvec(
             microbes_sparse,
             metabolites_sparse,
-            n_components=2,
+            dimensions=2,
             max_iter=10,
             seed=42,
         )
@@ -657,8 +657,8 @@ class TestMMvecParameterBehavior(unittest.TestCase):
     def setUp(self):
         """Create test data."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -669,7 +669,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         result_default = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=50,
             x_prior_mean=0.0,
             y_prior_mean=0.0,
@@ -679,7 +679,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         result_nonzero = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=50,
             x_prior_mean=5.0,
             y_prior_mean=5.0,
@@ -704,7 +704,7 @@ class TestMMvecParameterBehavior(unittest.TestCase):
             mmvec(
                 self.microbes,
                 self.metabolites,
-                n_components=2,
+                dimensions=2,
                 optimizer="adam",
                 max_iter=5,
                 verbose=True,
@@ -724,8 +724,8 @@ class TestMMvecResultVerification(unittest.TestCase):
     def setUp(self):
         """Create test data with specific IDs."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
             seed=42,
         )
@@ -736,7 +736,7 @@ class TestMMvecResultVerification(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=10,
             seed=42,
         )
@@ -766,7 +766,7 @@ class TestMMvecResultVerification(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             max_iter=10,
             seed=42,
         )
@@ -778,7 +778,7 @@ class TestMMvecResultVerification(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="adam",
             max_iter=100,
             seed=42,
@@ -800,10 +800,10 @@ class TestMMvecLBFGS(unittest.TestCase):
     def setUp(self):
         """Create test data."""
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
+            n_features_x=8,
+            n_features_y=10,
             n_samples=50,
-            latent_dim=2,
+            n_components=2,
             seed=42,
         )
         self.microbes, self.metabolites = res[0], res[1]
@@ -815,7 +815,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=100,
             seed=42,
@@ -838,7 +838,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result1 = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
             seed=123,
@@ -847,7 +847,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result2 = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
             seed=123,
@@ -861,13 +861,13 @@ class TestMMvecLBFGS(unittest.TestCase):
         """L-BFGS should recover embedding structure from synthetic data."""
         # Use more data for better recovery
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=8,
+            n_features_x=8,
+            n_features_y=8,
             n_samples=150,
-            latent_dim=2,
-            sigmaQ=2,
-            microbe_total=1000,
-            metabolite_total=10000,
+            n_components=2,
+            x_noise_std=2,
+            x_total=1000,
+            y_total=10000,
             seed=1,
         )
         microbes, metabolites = res[0], res[1]
@@ -876,7 +876,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result = mmvec(
             microbes,
             metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=500,
             seed=42,
@@ -918,7 +918,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             mmvec(
                 self.microbes,
                 self.metabolites,
-                n_components=2,
+                dimensions=2,
                 optimizer="lbfgs",
                 max_iter=50,
                 verbose=True,
@@ -937,7 +937,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result = mmvec(
             self.microbes,
             self.metabolites,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
             seed=rng,
@@ -950,7 +950,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         result = mmvec(
             self.microbes.values,
             self.metabolites.values,
-            n_components=2,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
             seed=42,
@@ -1122,7 +1122,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
         result = mmvec(
             microbes,
             metabolites,
-            n_components=3,
+            dimensions=3,
             optimizer="lbfgs",
             max_iter=500,
             x_prior_scale=1.0,

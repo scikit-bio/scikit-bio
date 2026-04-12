@@ -35,8 +35,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def mmvec(
     X: TableLike,
-    y: TableLike,
-    n_components: int = 3,
+    Y: TableLike,
+    dimensions: int = 3,
     optimizer: str = "lbfgs",
     max_iter: int = 1000,
     x_prior_mean: float = 0.0,
@@ -76,7 +76,7 @@ def mmvec(
         treated as the "conditioning" variable. See
         :ref:`supported formats <table_like>`.
 
-    y : table_like of shape (n_samples,) or (n_samples, n_targets)
+    Y : table_like of shape (n_samples,) or (n_samples, n_targets)
         Abundance counts for the second modality (e.g., metabolites). This modality is
         treated as the "conditioned" variable. See above. Must have the same number of
         samples as ``X``.
@@ -139,10 +139,15 @@ def mmvec(
         probabilities, and convergence history. It also provides methods for predicting
         target distributions, and scoring predictive performance.
 
+    See Also
+    --------
+    MMvecResult
+
     References
     ----------
-    .. [1] Morton, J.T., et al. "Learning representations of
-           microbe-metabolite interactions." Nature Methods, 2019.
+    .. [1] Morton, J. T., Aksenov, A. A., Nothias, L. F., Foulds, J. R., Quinn, R. A.,
+       Badri, M. H., ... & Knight, R. (2019). Learning representations of
+       microbe-metabolite interactions. Nature Methods, 16(12), 1306-1314.
 
     Examples
     --------
@@ -164,7 +169,7 @@ def mmvec(
 
     """
     estimator = MMvec(
-        n_components=n_components,
+        n_components=dimensions,
         optimizer=optimizer,
         max_iter=max_iter,
         x_prior_mean=x_prior_mean,
@@ -181,16 +186,17 @@ def mmvec(
         verbose=verbose,
         output_format=output_format,
     )
-    fitted = estimator.fit(X, y)
+    fitted = estimator.fit(X, Y)
     return MMvecResult(fitted)
 
 
 class MMvecResult(SkbioObject):
-    r"""Result of MMvec analysis.
+    r"""Result of an MMvec analysis.
 
     This class contains the learned embeddings and co-occurrence patterns from fitting
-    an MMvec model. It enables both interpretation (which X features co-occur with
-    which Y features) and prediction (expected Y composition given an X composition).
+    an MMvec model. It enables both interpretation (which conditioning (X) and
+    conditioned (Y) features co-occur with each other) and prediction (expected Y
+    composition given X composition).
 
     Attributes
     ----------
@@ -222,26 +228,54 @@ class MMvecResult(SkbioObject):
         increasing ``max_iter``. If the loss oscillates (Adam optimizer), try reducing
         ``learning_rate``.
 
+    See Also
+    --------
+    mmvec : Fit MMvec model and obtain ``MMvecResult``.
+
+    Notes
+    -----
+    **Detecting overfitting with Q-squared**
+
+    Overfitting occurs when the model memorizes training data rather than learning
+    generalizable patterns. To detect overfitting:
+
+    1. Split your data into training and test sets before fitting.
+    2. Fit the model on training data only.
+    3. Use :meth:`score` to compute :math:`Q^2` on held-out test data.
+
+    Interpretation of :math:`Q^2` values:
+
+    - **Close to 1**: Excellent predictive performance.
+    - **Close to 0**: Model predicts no better than the mean.
+    - **Negative**: Model performs worse than predicting the mean,
+      indicating overfitting or model misspecification.
+
+    If :math:`Q^2` is much lower than expected, try:
+
+    - Reducing ``n_components`` (fewer latent dimensions).
+    - Increasing regularization via smaller ``x_prior_scale`` and ``y_prior_scale``
+      values.
+    - Collecting more training samples.
+
+    **Embedding Interpretation**
+
+    The embeddings place X and Y features in the same latent space. The inner product
+    between an X embedding vector and a Y embedding vector (plus their bias terms)
+    gives the log-odds of their co-occurrence:
+
+    .. math::
+
+        \log \frac{P(m_j | \mu_i)}{P(m_{\text{ref}} | \mu_i)} =
+        X_i \cdot Y_j + b_{X_i} + b_{Y_j}
+
+    This means that X and Y features pointing in similar directions associate with each
+    other, and the angle between a pair of X and Y vectors indicates their association
+    strength.
+
     """
 
     def __init__(self, estimator: MMvec):
         self._estimator = estimator
-
-    @property
-    def ranks(self) -> TableLike:
-        return self._estimator.ranks_
-
-    @property
-    def convergence(self) -> TableLike:
-        return self._estimator.loss_curve_
-
-    @property
-    def x_embeddings(self) -> TableLike:
-        return self._estimator.x_embeddings_
-
-    @property
-    def y_embeddings(self) -> TableLike:
-        return self._estimator.y_embeddings_
 
     def __str__(self) -> str:
         n_features_x, n_features_y = self.ranks.shape
@@ -254,14 +288,36 @@ class MMvecResult(SkbioObject):
             f"  Iterations: {len(self.convergence)}"
         )
 
+    @property
+    def x_embeddings(self) -> TableLike:
+        r"""Learned coordinates of conditioning features (X) in latent space."""
+        return self._estimator.x_embeddings_
+
+    @property
+    def y_embeddings(self) -> TableLike:
+        r"""Learned coordinates of conditioned features (Y) in latent space."""
+        return self._estimator.y_embeddings_
+
+    @property
+    def ranks(self) -> TableLike:
+        r"""Log conditional probability matrix of co-occurrence of X and Y features."""
+        return self._estimator.ranks_
+
+    @property
+    def convergence(self) -> TableLike:
+        r"""Loss (negative log-posterior) over iterations during training."""
+        return self._estimator.loss_curve_
+
     def probabilities(self) -> TableLike:
+        r"""Convert ranks to probability matrix via softmax."""
         return self._estimator.probabilities()
 
     def predict(self, X: TableLike) -> TableLike:
-        r"""Predict Y distributions given X compositions.
+        r"""Predict conditioned feature compositions given conditioning features.
 
-        Computes the expected Y feature distribution for each sample by
-        marginalizing over X feature compositions:
+        The expected conditioned (Y) feature distribution for each sample is computed
+        by marginalizing over the given conditioning (X) feature composition and the
+        learned conditional probabilities:
 
         .. math::
 
@@ -270,18 +326,19 @@ class MMvecResult(SkbioObject):
         Parameters
         ----------
         X : table_like of shape (n_samples, n_features_x)
-            Feature abundance/count table. Columns must match the features used
-            during training.
+            Feature abundance table of the conditioning (X) modality. Columns must
+            match the features used during training.
 
         Returns
         -------
-        table_like of shape (n_samples, n_targets)
-            Predicted Y feature proportions for each sample. Each row sums to 1.
+        table_like of shape (n_samples, n_features_y)
+            Predicted feature proportions of the conditioned (Y) modality for each
+            sample. Each row sums to 1.
 
         """
         return self._estimator.predict(X)
 
-    def score(self, x: TableLike, y: TableLike) -> float:
+    def score(self, X: TableLike, Y: TableLike) -> float:
         r"""Compute Q-squared (coefficient of prediction) on held-out data.
 
         :math:`Q^2` measures predictive performance on test data, analogous to
@@ -298,11 +355,11 @@ class MMvecResult(SkbioObject):
 
         Parameters
         ----------
-        x : table_like of shape (n_samples, n_features_x)
-            Feature abundance table for the first (conditioning) modality. Columns must
+        X : table_like of shape (n_samples, n_features_x)
+            Feature abundance table of the conditioning (X) modality. Columns must
             match the features used during training.
-        y : table_like of shape (n_samples, n_features_y)
-            Feature abundance table for the second (conditioned) modality.
+        Y : table_like of shape (n_samples, n_features_y)
+            Feature abundance table of the conditioned (Y) modality.
 
         Returns
         -------
@@ -310,7 +367,7 @@ class MMvecResult(SkbioObject):
             Q-squared score. Higher is better, with 1.0 being perfect prediction.
 
         """
-        return self._estimator.score(x, y)
+        return self._estimator.score(X, Y)
 
 
 class MMvec(SkbioObject):
@@ -1364,21 +1421,21 @@ def _multinomial_loglik_and_grad(logits, y):
 
 
 def random_multimodal(
-    n_microbes: int = 20,
-    n_metabolites: int = 100,
+    n_features_x: int = 20,
+    n_features_y: int = 100,
     n_samples: int = 100,
-    latent_dim: int = 3,
-    low: float = -1,
-    high: float = 1,
-    microbe_total: int = 10,
-    metabolite_total: int = 100,
-    uB: float = 0,
-    sigmaB: float = 2,
-    sigmaQ: float = 0.1,
-    uU: float = 0,
-    sigmaU: float = 1,
-    uV: float = 0,
-    sigmaV: float = 1,
+    n_components: int = 3,
+    grad_low: float = -1,
+    grad_high: float = 1,
+    x_total: int = 10,
+    y_total: int = 100,
+    coef_mean: float = 0,
+    coef_std: float = 2,
+    x_noise_std: float = 0.1,
+    x_mean: float = 0,
+    x_std: float = 1,
+    y_mean: float = 0,
+    y_std: float = 1,
     seed: SeedLike | None = 0,
 ) -> tuple[
     pd.DataFrame,
@@ -1390,7 +1447,7 @@ def random_multimodal(
     np.ndarray,
     np.ndarray,
 ]:
-    """Generate synthetic microbe-metabolite co-occurrence data.
+    """Generate synthetic co-occurrence data of two modalities.
 
     This helper function is currently kept private because it is specific to MMvec
     tests. In the future, it may be promoted to a public and generalized simulation
@@ -1398,125 +1455,125 @@ def random_multimodal(
 
     Parameters
     ----------
-    n_microbes : int
-        Number of microbial species to simulate.
-    n_metabolites : int
-        Number of metabolites to simulate.
+    n_features_x : int
+        Number of conditioning (X) features to simulate.
+    n_features_y : int
+        Number of conditioned (Y) features to simulate.
     n_samples : int
         Number of samples to generate.
-    latent_dim : int
-        Number of latent dimensions for the embedding.
-    low : float
+    n_components : int
+        Number of latent dimensions for the embeddings.
+    grad_low : float
         Lower bound of the sample gradient.
-    high : float
+    grad_high : float
         Upper bound of the sample gradient.
-    microbe_total : int
-        Total microbial counts per sample.
-    metabolite_total : int
-        Total metabolite counts per sample.
-    uB : float
+    x_total : int
+        Total counts for X features per sample.
+    y_total : int
+        Total counts for Y features per sample.
+    coef_mean : float
         Mean of regression coefficient distribution.
-    sigmaB : float
+    coef_std : float
         Standard deviation of regression coefficient distribution.
-    sigmaQ : float
-        Standard deviation of noise in microbe composition.
-    uU : float
-        Mean of microbe embedding distribution.
-    sigmaU : float
-        Standard deviation of microbe embedding distribution.
-    uV : float
-        Mean of metabolite embedding distribution.
-    sigmaV : float
-        Standard deviation of metabolite embedding distribution.
+    x_noise_std : float
+        Standard deviation of noise in X composition.
+    x_mean : float
+        Mean of X embedding distribution.
+    x_std : float
+        Standard deviation of X embedding distribution.
+    y_mean : float
+        Mean of Y embedding distribution.
+    y_std : float
+        Standard deviation of Y embedding distribution.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
 
     Returns
     -------
-    microbe_counts : pd.DataFrame
-        Count table of microbial abundances (n_samples, n_microbes).
-    metabolite_counts : pd.DataFrame
-        Count table of metabolite abundances (n_samples, n_metabolites).
-    design : np.ndarray
-        Design matrix with intercept and gradient (n_samples, 2).
-    beta : np.ndarray
-        Regression coefficients (2, n_microbes).
-    U : np.ndarray
-        True microbe embedding matrix (n_microbes, latent_dim).
-    Ubias : np.ndarray
-        True microbe bias vector (n_microbes, 1).
-    V : np.ndarray
-        True metabolite embedding matrix (latent_dim, n_metabolites - 1).
-    Vbias : np.ndarray
-        True metabolite bias vector (1, n_metabolites - 1).
+    x_counts : pd.DataFrame of shape (n_samples, n_features_x)
+        Count table of X abundances.
+    y_counts : pd.DataFrame of shape (n_samples, n_features_y)
+        Count table of Y abundances.
+    design : np.ndarray of shape (n_samples, 2)
+        Design matrix with intercept and gradient.
+    coefs : np.ndarray of shape (2, n_features_x)
+        Regression coefficients.
+    x_main : np.ndarray of shape (n_features_x, n_dimensions)
+        True X embedding matrix.
+    x_bias : np.ndarray of shape (n_features_x, 1)
+        True X bias vector.
+    y_main : np.ndarray of shape (n_dimensions, n_features_y - 1)
+        True Y embedding matrix.
+    y_bias : np.ndarray of shape (1, n_features_y - 1)
+        True Y bias vector.
 
     """
     rng = get_rng(seed)
 
     # Regression coefficients for gradient model
-    beta = rng.normal(uB, sigmaB, size=(2, n_microbes))
+    coefs = rng.normal(coef_mean, coef_std, size=(2, n_features_x))
 
     # Design matrix: intercept + gradient
-    design = np.vstack((np.ones(n_samples), np.linspace(low, high, n_samples))).T
+    design = np.vstack(
+        (np.ones(n_samples), np.linspace(grad_low, grad_high, n_samples))
+    ).T
 
-    # Generate microbe compositions from ILR with noise
-    microbes = ilr_inv(
+    # Generate X compositions from ILR with noise
+    X = ilr_inv(
         rng.multivariate_normal(
-            mean=np.zeros(n_microbes - 1),
-            cov=np.diag([sigmaQ] * (n_microbes - 1)),
+            mean=np.zeros(n_features_x - 1),
+            cov=np.diag([x_noise_std] * (n_features_x - 1)),
             size=n_samples,
         )
     )
 
     # Generate latent embeddings
-    Umain = rng.normal(uU, sigmaU, size=(n_microbes, latent_dim))
-    Vmain = rng.normal(uV, sigmaV, size=(latent_dim, n_metabolites - 1))
+    x_main = rng.normal(x_mean, x_std, size=(n_features_x, n_components))
+    y_main = rng.normal(y_mean, y_std, size=(n_components, n_features_y - 1))
 
-    Ubias = rng.normal(uU, sigmaU, size=(n_microbes, 1))
-    Vbias = rng.normal(uV, sigmaV, size=(1, n_metabolites - 1))
+    x_bias = rng.normal(x_mean, x_std, size=(n_features_x, 1))
+    y_bias = rng.normal(y_mean, y_std, size=(1, n_features_y - 1))
 
     # Augmented matrices for computing probabilities
-    U_ = np.hstack((np.ones((n_microbes, 1)), Ubias, Umain))
-    V_ = np.vstack((Vbias, np.ones((1, n_metabolites - 1)), Vmain))
+    X_ = np.hstack((np.ones((n_features_x, 1)), x_bias, x_main))
+    Y_ = np.vstack((y_bias, np.ones((1, n_features_y - 1)), y_main))
 
-    # Compute conditional probabilities P(metabolite | microbe)
-    phi = np.hstack((np.zeros((n_microbes, 1)), U_ @ V_))
+    # Compute conditional probabilities P(Y|X)
+    phi = np.hstack((np.zeros((n_features_x, 1)), X_ @ Y_))
     probs = softmax(phi, validate=False)
 
     # Generate count data
-    microbe_counts = np.zeros((n_samples, n_microbes))
-    metabolite_counts = np.zeros((n_samples, n_metabolites))
+    x_counts = np.zeros((n_samples, n_features_x))
+    y_counts = np.zeros((n_samples, n_features_y))
 
-    n1 = microbe_total
-    n2 = metabolite_total // microbe_total
+    n1 = x_total
+    n2 = y_total // x_total
 
     for n in range(n_samples):
-        # Draw microbe counts
-        microbe = rng.multinomial(n1, microbes[n, :])
-        # For each microbe, draw metabolites conditional on that microbe
-        for i in range(n_microbes):
-            metabolite = rng.multinomial(microbe[i] * n2, probs[i, :])
-            metabolite_counts[n, :] += metabolite
-        microbe_counts[n, :] += microbe
+        # Draw X counts
+        x = rng.multinomial(n1, X[n, :])
+        # For each x, draw Y conditional on that x
+        for i in range(n_features_x):
+            y = rng.multinomial(x[i] * n2, probs[i, :])
+            y_counts[n, :] += y
+        x_counts[n, :] += x
 
     # Create DataFrames with meaningful IDs
-    microbe_ids = [f"microbe_{d}" for d in range(microbe_counts.shape[1])]
-    metabolite_ids = [f"metabolite_{d}" for d in range(metabolite_counts.shape[1])]
-    sample_ids = [f"sample_{d}" for d in range(metabolite_counts.shape[0])]
+    feature_ids_x = [f"microbe_{d}" for d in range(x_counts.shape[1])]
+    feature_ids_y = [f"metabolite_{d}" for d in range(y_counts.shape[1])]
+    sample_ids = [f"sample_{d}" for d in range(y_counts.shape[0])]
 
-    microbe_counts = pd.DataFrame(microbe_counts, index=sample_ids, columns=microbe_ids)
-    metabolite_counts = pd.DataFrame(
-        metabolite_counts, index=sample_ids, columns=metabolite_ids
-    )
+    x_counts = pd.DataFrame(x_counts, index=sample_ids, columns=feature_ids_x)
+    y_counts = pd.DataFrame(y_counts, index=sample_ids, columns=feature_ids_y)
 
     return (
-        microbe_counts,
-        metabolite_counts,
+        x_counts,
+        y_counts,
         design,
-        beta,
-        Umain,
-        Ubias,
-        Vmain,
-        Vbias,
+        coefs,
+        x_main,
+        x_bias,
+        y_main,
+        y_bias,
     )
