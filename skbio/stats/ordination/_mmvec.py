@@ -8,14 +8,14 @@
 
 r"""MMvec - Microbe-Metabolite Vectors.
 
-This module implements MMvec for learning joint embeddings of microbes
-and metabolites from their co-occurrence patterns.
+This module implements MMvec for learning joint embeddings of microbes and metabolites
+from their co-occurrence patterns.
 
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -31,6 +31,38 @@ from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike, TableLike
+
+
+class MMvecResult(NamedTuple):
+    """Output of the `mmvec` function.
+
+    Attributes
+    ----------
+    ranks : table_like
+        Row-centered log conditional probabilities.
+    convergence : table_like
+        Training loss over optimization steps.
+    x_embeddings : table_like
+        Learned embeddings for conditioning features.
+    y_embeddings : table_like
+        Learned embeddings for conditioned targets.
+    """
+
+    ranks: TableLike
+    convergence: TableLike
+    x_embeddings: TableLike
+    y_embeddings: TableLike
+
+    def __str__(self) -> str:
+        n_features, n_targets = self.ranks.shape
+        n_components = self.x_embeddings.shape[1] - 1
+        return (
+            f"MMvecResult\n"
+            f"  Features: {n_features}\n"
+            f"  Targets: {n_targets}\n"
+            f"  Components: {n_components}\n"
+            f"  Iterations: {len(self.convergence)}"
+        )
 
 
 def _multinomial_loglik_and_grad(logits, y):
@@ -240,7 +272,7 @@ class _MMvecModel:
         n_microbes,
         n_metabolites,
         n_components=3,
-        u_prior_mean=0.0,
+        x_prior_mean=0.0,
         u_prior_scale=1.0,
         v_prior_mean=0.0,
         v_prior_scale=1.0,
@@ -271,7 +303,7 @@ class _MMvecModel:
         self.n_microbes = n_microbes
         self.n_metabolites = n_metabolites
         self.n_components = n_components
-        self.u_prior_mean = u_prior_mean
+        self.u_prior_mean = x_prior_mean
         self.u_prior_scale = u_prior_scale
         self.v_prior_mean = v_prior_mean
         self.v_prior_scale = v_prior_scale
@@ -588,181 +620,286 @@ class _MMvecModel:
         return loss, grad
 
 
-class MMvecResults(SkbioObject):
-    r"""Results from an MMvec analysis.
+class MMvec(SkbioObject):
+    r"""MMvec estimator with sklearn-style fit/predict/score API.
 
-    This class contains the learned embeddings and co-occurrence patterns from fitting
-    an MMvec model. The key outputs enable both interpretation (which microbes co-occur
-    with which metabolites) and prediction (expected metabolites given a microbial
-    community).
+    `MMvec` models conditional target distributions given feature compositions.
+    In sklearn terms, `X` is the conditioning feature matrix and `y` is the
+    conditioned target matrix (or vector, expanded to a single-column matrix).
+    In the original MMvec domain language, features typically correspond to
+    microbes and targets to metabolites.
 
     .. versionadded:: 0.7.3
 
     Attributes
     ----------
-    microbe_embeddings : table_like of shape (n_microbes, n_components + 1)
-        Microbe coordinates in latent space (+1 is the bias term).
-
-        Each row is a vector representation of a microbe. Microbes with
-        similar embedding vectors tend to co-occur with similar sets of
-        metabolites. The Euclidean distance or cosine similarity between
-        microbe embeddings can be used to identify functionally related
-        microbes. The final column ("bias") captures the baseline tendency
-        of each microbe to associate with metabolites overall.
-
-    metabolite_embeddings : table_like of shape (n_metabolites, n_components + 1)
-        Metabolite coordinates in latent space (+1 is the bias term).
-
-        Each row is a vector representation of a metabolite. Metabolites
-        with similar embedding vectors tend to co-occur with similar sets
-        of microbes. The first row corresponds to the reference metabolite
-        (all zeros) used for identifiability. The distance between
-        metabolite embeddings indicates similarity in their microbial
-        associations. The final column ("bias") captures the baseline
-        abundance of each metabolite.
-
-    ranks : table_like of shape (n_microbes, n_metabolites)
-        Log conditional probability matrix (co-occurrence scores).
-
-        Entry (i, j) represents the log-odds of observing metabolite j
-        given microbe i, relative to the row mean. Higher values indicate
-        stronger positive associations. This matrix is row-centered (each
-        row sums to zero) for identifiability. To obtain actual conditional
-        probabilities, use the :meth:`probabilities` method.
-
-        The ranks matrix is the primary output for identifying
-        microbe-metabolite associations. Sorting each row reveals which
-        metabolites are most strongly associated with each microbe.
-
-    convergence : table_like of shape (n_iterations,)
-        Losses (negative log-posterior, lower is better) over iterations.
-
-        Use this to diagnose training issues. The loss should generally
-        decrease and stabilize. If the loss is still decreasing at the
-        final iteration, consider increasing ``max_iter``. If the loss
-        oscillates (Adam optimizer), try reducing ``learning_rate``.
-
-    output_format : str or None
-        Output table format. See :ref:`table_params` for details.
-
-    Notes
-    -----
-    **Detecting Overfitting with Q-squared**
-
-    Overfitting occurs when the model memorizes training data rather than
-    learning generalizable patterns. To detect overfitting:
-
-    1. Split your data into training and test sets before fitting.
-    2. Fit the model on training data only.
-    3. Use :meth:`score` to compute :math:`Q^2` on held-out test data.
-
-    Interpretation of :math:`Q^2` values:
-
-    - **Close to 1**: Excellent predictive performance.
-    - **Close to 0**: Model predicts no better than the mean.
-    - **Negative**: Model performs worse than predicting the mean,
-      indicating overfitting or model misspecification.
-
-    If :math:`Q^2` is much lower than expected, try:
-
-    - Reducing ``n_components`` (fewer latent dimensions).
-    - Increasing regularization via smaller ``u_prior_scale`` and
-      ``v_prior_scale`` values.
-    - Collecting more training samples.
-
-    **Embedding Interpretation**
-
-    The embeddings place microbes and metabolites in the same latent space.
-    The inner product between a microbe embedding and metabolite embedding
-    (plus bias terms) gives the log-odds of their co-occurrence:
-
-    .. math::
-
-        \log \frac{P(m_j | \mu_i)}{P(m_{\text{ref}} | \mu_i)} =
-        U_i \cdot V_j + b_{U_i} + b_{V_j}
-
-    This means:
-
-    - Microbes pointing in similar directions associate with similar
-      metabolites.
-    - Metabolites pointing in similar directions are produced/consumed
-      by similar microbes.
-    - The angle between a microbe and metabolite vector indicates their
-      association strength.
-
-    See Also
-    --------
-    mmvec : Fit an MMvec model.
-    probabilities : Convert ranks to conditional probabilities.
-    predict : Predict metabolite distributions for new samples.
-    score : Evaluate predictive performance with Q-squared.
-
+    x_embeddings_ : table_like of shape (n_features, n_components + 1)
+        Learned feature embeddings (+1 is the bias term).
+    y_embeddings_ : table_like of shape (n_targets, n_components + 1)
+        Learned target embeddings (+1 is the bias term).
+    ranks_ : table_like of shape (n_features, n_targets)
+        Row-centered log conditional probabilities.
+    loss_curve_ : table_like of shape (n_iterations,)
+        Optimization losses over training updates.
+    n_iter_ : int
+        Number of optimization iterations completed.
+    n_features_in_ : int
+        Number of features in `X` seen during :meth:`fit`.
+    x_feature_ids_ : tuple or None
+        Feature IDs captured from `X`, if available.
+    y_feature_ids_ : tuple or None
+        Target IDs captured from `y`, if available.
     """
 
     def __init__(
         self,
-        microbe_embeddings: TableLike,
-        metabolite_embeddings: TableLike,
-        ranks: TableLike,
-        convergence: TableLike,
-        output_format: str | None,
+        n_components: int = 3,
+        optimizer: str = "lbfgs",
+        max_iter: int = 1000,
+        learning_rate: float = 1e-3,
+        batch_size: int = 50,
+        x_prior_mean: float = 0.0,
+        x_prior_scale: float = 1.0,
+        y_prior_mean: float = 0.0,
+        y_prior_scale: float = 1.0,
+        beta_1: float = 0.9,
+        beta_2: float = 0.95,
+        clipnorm: float = 10.0,
+        batch_norm: str = "unbiased",
+        seed: SeedLike | None = None,
+        verbose: bool = False,
+        output_format: str | None = None,
     ):
-        self.microbe_embeddings = microbe_embeddings
-        self.metabolite_embeddings = metabolite_embeddings
-        self.ranks = ranks
-        self.convergence = convergence
+        self.n_components = n_components
+        self.optimizer = optimizer
+        self.max_iter = max_iter
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        self.x_prior_mean = x_prior_mean
+        self.x_prior_scale = x_prior_scale
+        self.y_prior_mean = y_prior_mean
+        self.y_prior_scale = y_prior_scale
+        self.beta_1 = beta_1
+        self.beta_2 = beta_2
+        self.clipnorm = clipnorm
+        self.batch_norm = batch_norm
+        self.seed = seed
+        self.verbose = verbose
         self.output_format = output_format
 
+    def fit(self, X: TableLike, y: TableLike) -> MMvec:
+        """Fit MMvec model.
+
+        Parameters
+        ----------
+        X : table_like of shape (n_samples, n_features)
+            Conditioning feature matrix (e.g., microbes).
+        y : table_like of shape (n_samples,) or (n_samples, n_targets)
+            Conditioned target matrix (e.g., metabolites) or vector.
+
+        Returns
+        -------
+        MMvec
+            Fitted estimator.
+        """
+        # Parse tabular inputs
+        X_arr, _, x_feature_ids = _ingest_table(X)
+        y_arr, _, y_feature_ids = _ingest_table(y)
+
+        # Check for sample count consistency
+        if X_arr.shape[0] != y_arr.shape[0]:
+            raise ValueError(
+                f"X and y must have the same number of samples. "
+                f"Got {X_arr.shape[0]} and {y_arr.shape[0]}."
+            )
+
+        # Check for all-zero columns / rows
+        for mod, name in (X_arr, "X"), (y_arr, "y"):
+            for i, axis in enumerate(("columns", "rows")):
+                if np.any(mod.sum(axis=i) == 0):
+                    raise ValueError(
+                        f"{name} contains all-zero {axis}. Remove them before calling."
+                    )
+
+        # Check for positive prior scales
+        if self.x_prior_scale <= 0:
+            raise ValueError(
+                f"x_prior_scale must be positive, got {self.x_prior_scale}."
+            )
+        if self.y_prior_scale <= 0:
+            raise ValueError(
+                f"y_prior_scale must be positive, got {self.y_prior_scale}."
+            )
+
+        # Validate optimizer
+        optimizer = self.optimizer.lower()
+        if optimizer not in ("lbfgs", "adam"):
+            raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
+
+        # Create RNG
+        rng = get_rng(self.seed)
+
+        n_microbes = X_arr.shape[1]
+        n_metabolites = y_arr.shape[1]
+
+        # Initialize model
+        model = _MMvecModel(
+            n_microbes=n_microbes,
+            n_metabolites=n_metabolites,
+            n_components=self.n_components,
+            x_prior_mean=self.x_prior_mean,
+            x_prior_scale=self.x_prior_scale,
+            y_prior_mean=self.y_prior_mean,
+            y_prior_scale=self.y_prior_scale,
+            rng=rng,
+        )
+
+        # Convert to sparse COO format
+        X_coo = coo_array(X_arr)
+
+        # Train model
+        if optimizer == "lbfgs":
+            losses = _train_lbfgs(model, X_coo, y_arr, self.max_iter, self.verbose)
+        else:
+            losses = _train_adam(
+                model=model,
+                X=X_arr,
+                Y=y_arr,
+                X_coo=X_coo,
+                rng=rng,
+                max_iter=self.max_iter,
+                learning_rate=self.learning_rate,
+                batch_size=self.batch_size,
+                beta_1=self.beta_1,
+                beta_2=self.beta_2,
+                clipnorm=self.clipnorm,
+                batch_norm=self.batch_norm,
+                verbose=self.verbose,
+            )
+
+        pc_cols = [f"PC{i + 1}" for i in range(model.n_components)] + ["bias"]
+        x_emb = np.hstack([model.U, model.b_U])
+        y_emb = np.vstack(
+            [
+                np.zeros((1, model.n_components + 1)),
+                np.hstack([model.V.T, model.b_V.T]),
+            ]
+        )
+        ranks = model.calc_ranks()
+
+        self.x_embeddings_ = _create_table(
+            x_emb, columns=pc_cols, index=x_feature_ids, backend=self.output_format
+        )
+        self.y_embeddings_ = _create_table(
+            y_emb, columns=pc_cols, index=y_feature_ids, backend=self.output_format
+        )
+        self.ranks_ = _create_table(
+            ranks,
+            columns=y_feature_ids,
+            index=x_feature_ids,
+            backend=self.output_format,
+        )
+        self.loss_curve_ = _create_table_1d(losses)
+
+        self.x_feature_ids_ = (
+            tuple(x_feature_ids) if x_feature_ids is not None else None
+        )
+        self.y_feature_ids_ = (
+            tuple(y_feature_ids) if y_feature_ids is not None else None
+        )
+        self.n_features_in_ = X_arr.shape[1]
+        self.n_iter_ = len(losses)
+        self.is_fitted_ = True
+
+        return self
+
+    def _check_is_fitted(self):
+        if not getattr(self, "is_fitted_", False):
+            raise ValueError("MMvec estimator is not fitted. Call fit(X, y) first.")
+
     def __str__(self) -> str:
-        """Return string representation of MMvecResults."""
-        n_microbes, n_metabolites = self.ranks.shape
-        n_components = self.microbe_embeddings.shape[1] - 1  # exclude bias
-        n_iterations = len(self.convergence)
+        """Return string representation of MMvec."""
+        self._check_is_fitted()
+        n_microbes, n_metabolites = self.ranks_.shape
+        n_components = self.x_embeddings_.shape[1] - 1  # exclude bias
+        n_iterations = len(self.loss_curve_)
         return (
-            f"MMvecResults\n"
-            f"  Microbes: {n_microbes}\n"
-            f"  Metabolites: {n_metabolites}\n"
+            f"MMvec\n"
+            f"  Features: {n_microbes}\n"
+            f"  Targets: {n_metabolites}\n"
             f"  Components: {n_components}\n"
             f"  Iterations: {n_iterations}"
         )
+
+    def get_params(self, deep: bool = True) -> dict:
+        """Get estimator parameters for sklearn compatibility."""
+        return {
+            "n_components": self.n_components,
+            "optimizer": self.optimizer,
+            "max_iter": self.max_iter,
+            "learning_rate": self.learning_rate,
+            "batch_size": self.batch_size,
+            "x_prior_mean": self.x_prior_mean,
+            "x_prior_scale": self.x_prior_scale,
+            "y_prior_mean": self.y_prior_mean,
+            "y_prior_scale": self.y_prior_scale,
+            "beta_1": self.beta_1,
+            "beta_2": self.beta_2,
+            "clipnorm": self.clipnorm,
+            "batch_norm": self.batch_norm,
+            "seed": self.seed,
+            "verbose": self.verbose,
+            "output_format": self.output_format,
+        }
+
+    def set_params(self, **params) -> MMvec:
+        """Set estimator parameters for sklearn compatibility."""
+        for key, value in params.items():
+            if not hasattr(self, key):
+                raise ValueError(f"Invalid parameter '{key}' for MMvec estimator.")
+            setattr(self, key, value)
+        return self
 
     def probabilities(self) -> TableLike:
         """Convert ranks to probability matrix via softmax.
 
         Returns
         -------
-        probs : table_like of shape (n_microbes, n_metabolites)
-            Conditional probabilities P(metabolite | microbe). Each row sums to 1.
+        probs : table_like of shape (n_features, n_targets)
+            Conditional probabilities P(target | feature). Each row sums to 1.
+            In microbiome-metabolome analyses this corresponds to
+            P(metabolite | microbe).
 
         """
-        ranks, sample_ids, feature_ids = _ingest_table(self.ranks)
+        self._check_is_fitted()
+        ranks, sample_ids, feature_ids = _ingest_table(self.ranks_)
         probs = softmax(ranks, validate=False)
         return _create_table(
             probs, columns=feature_ids, index=sample_ids, backend=self.output_format
         )
 
-    def predict(self, microbes: TableLike) -> TableLike:
-        """Predict metabolite distributions given microbe abundances.
+    def predict(self, X: TableLike) -> TableLike:
+        """Predict target distributions given feature compositions.
 
-        Computes the expected metabolite distribution for each sample by
-        marginalizing over microbe compositions:
+        Computes the expected target distribution for each sample by
+        marginalizing over feature compositions:
 
-        P(metabolite) = sum_i P(microbe_i) * P(metabolite | microbe_i)
+        P(target) = sum_i P(feature_i) * P(target | feature_i)
 
         Parameters
         ----------
-        microbes : table_like of shape (n_samples, n_microbes)
-            Microbe abundance counts. Columns must match the microbes used
+        X : table_like of shape (n_samples, n_features)
+            Feature abundance/count table. Columns must match the features used
             during training.
 
         Returns
         -------
-        predictions : table_like of shape (n_samples, n_metabolites)
-            Predicted metabolite proportions for each sample. Each row sums to 1.
+        predictions : table_like of shape (n_samples, n_targets)
+            Predicted target proportions for each sample. Each row sums to 1.
 
         Examples
         --------
-        >>> from skbio.stats.ordination import mmvec
+        >>> from skbio.stats.ordination import MMvec
         >>> import numpy as np
         >>> import pandas as pd
         >>> np.random.seed(42)
@@ -774,38 +911,39 @@ class MMvecResults(SkbioObject):
         ...     np.random.randint(1, 50, size=(20, 8)),
         ...     columns=[f'met_{i}' for i in range(8)]
         ... )
-        >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=10)
+        >>> model = MMvec(n_components=2, max_iter=10).fit(microbes, metabolites)
         >>> # Predict on new samples
         >>> new_microbes = pd.DataFrame(
         ...     np.random.randint(1, 50, size=(5, 5)),
         ...     columns=[f'OTU_{i}' for i in range(5)]
         ... )
-        >>> predictions = result.predict(new_microbes)
+        >>> predictions = model.predict(new_microbes)
         >>> predictions.shape
         (5, 8)
         >>> np.allclose(predictions.sum(axis=1), 1.0)
         True
 
         """
-        X, sample_ids, _ = _ingest_table(microbes)
+        self._check_is_fitted()
+        X, sample_ids, _ = _ingest_table(X)
 
         # Normalize abundances to proportions
         row_sums = np.sum(X, axis=1, keepdims=True)
         if np.any(row_sums == 0):
             raise ValueError(
-                "microbes contains samples with all-zero counts. "
+                "X contains samples with all-zero counts. "
                 "Remove these samples before calling predict."
             )
         X_props = X / row_sums
 
-        # Get conditional probabilities P(metabolite | microbe)
+        # Get conditional probabilities P(target | feature)
         cond_probs, _, _ = _ingest_table(self.probabilities())
 
-        # Marginal: sum_microbe P(metabolite | microbe) * P(microbe)
+        # Marginal: sum_feature P(target | feature) * P(feature)
         predicted = X_props @ cond_probs
 
         # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
-        ranks, microbe_ids, metabolite_ids = _ingest_table(self.ranks)
+        _, _, metabolite_ids = _ingest_table(self.ranks_)
         return _create_table(
             predicted,
             columns=metabolite_ids,
@@ -813,7 +951,7 @@ class MMvecResults(SkbioObject):
             backend=self.output_format,
         )
 
-    def score(self, microbes: TableLike, metabolites: TableLike) -> float:
+    def score(self, X: TableLike, y: TableLike) -> float:
         r"""Compute Q-squared (coefficient of prediction) on held-out data.
 
         :math:`Q^2` measures predictive performance on test data, analogous to
@@ -826,14 +964,14 @@ class MMvecResults(SkbioObject):
             Q^2 = 1 - \frac{SS_{res}}{SS_{tot}}
                 = 1 - \frac{\sum(y - \hat{y})^2}{\sum(y - \bar{y}_j)^2}
 
-        where :math:`\bar{y}_j` is the per-metabolite mean across samples.
+        where :math:`\bar{y}_j` is the per-target mean across samples.
 
         Parameters
         ----------
-        microbes : table_like of shape (n_samples, n_microbes)
-            Test microbe abundance counts.
-        metabolites : table_like of shape (n_samples, n_metabolites)
-            Test metabolite abundance counts.
+        X : table_like of shape (n_samples, n_features)
+            Test feature table.
+        y : table_like of shape (n_samples,) or (n_samples, n_targets)
+            Test target table (or vector).
 
         Returns
         -------
@@ -842,12 +980,12 @@ class MMvecResults(SkbioObject):
 
         See Also
         --------
-        predict : Predict metabolite distributions.
+        predict : Predict target distributions.
         probabilities : Get conditional probability matrix.
 
         Examples
         --------
-        >>> from skbio.stats.ordination import mmvec
+        >>> from skbio.stats.ordination import MMvec
         >>> import numpy as np
         >>> import pandas as pd
         >>> np.random.seed(42)
@@ -860,7 +998,7 @@ class MMvecResults(SkbioObject):
         ...     np.random.randint(1, 50, size=(30, 8)),
         ...     columns=[f'met_{i}' for i in range(8)]
         ... )
-        >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=50)
+        >>> model = MMvec(n_components=2, max_iter=50).fit(microbes, metabolites)
         >>> # Evaluate on test data
         >>> test_microbes = pd.DataFrame(
         ...     np.random.randint(1, 50, size=(10, 5)),
@@ -870,21 +1008,22 @@ class MMvecResults(SkbioObject):
         ...     np.random.randint(1, 50, size=(10, 8)),
         ...     columns=[f'met_{i}' for i in range(8)]
         ... )
-        >>> q2 = result.score(test_microbes, test_metabolites)
+        >>> q2 = model.score(test_microbes, test_metabolites)
         >>> isinstance(q2, float)
         True
 
         """
-        Y, _, _ = _ingest_table(metabolites)
+        self._check_is_fitted()
+        Y, _, _ = _ingest_table(y)
 
         # Get predictions
-        Y_pred = self.predict(microbes).to_numpy()
+        Y_pred = self.predict(X).to_numpy()
 
         # Normalize abundances to proportions
         row_sums = np.sum(Y, axis=1, keepdims=True)
         if np.any(row_sums == 0):
             raise ValueError(
-                "metabolites contains samples with all-zero counts. "
+                "y contains samples with all-zero counts. "
                 "Remove these samples before calling score."
             )
         Y_true = Y / row_sums
@@ -1137,72 +1276,9 @@ def _train_adam(
     return convergence_data
 
 
-def _build_results(model, microbe_ids, metabolite_ids, losses, backend):
-    """Build MMvecResults from trained model.
-
-    Parameters
-    ----------
-    model : _MMvecModel
-        Trained model.
-    microbe_ids : list
-        Microbe feature IDs.
-    metabolite_ids : list
-        Metabolite feature IDs.
-    losses : list of float
-        Loss per iteration.
-    backend : str or None
-        Output format backend for tables.
-
-    Returns
-    -------
-    MMvecResults
-        Results object with embeddings and convergence data.
-
-    """
-    n_components = model.n_components
-
-    # TODO: Revisit naming of components
-    pc_cols = [f"PC{i + 1}" for i in range(n_components)] + ["bias"]
-
-    # Microbe embeddings: U with bias
-    microbe_emb = np.hstack([model.U, model.b_U])
-    microbe_embeddings = _create_table(
-        microbe_emb, columns=pc_cols, index=microbe_ids, backend=backend
-    )
-
-    # Metabolite embeddings: V^T with bias
-    # First row is reference (no embedding), rest are actual embeddings
-    metabolite_emb = np.vstack(
-        [
-            np.zeros((1, n_components + 1)),  # Reference category
-            np.hstack([model.V.T, model.b_V.T]),
-        ]
-    )
-    metabolite_embeddings = _create_table(
-        metabolite_emb, columns=pc_cols, index=metabolite_ids, backend=backend
-    )
-
-    # Row-centered log conditional probabilities
-    ranks = model.calc_ranks()
-    ranks_df = _create_table(
-        ranks, columns=metabolite_ids, index=microbe_ids, backend=backend
-    )
-
-    # Training convergence data
-    convergence = _create_table_1d(losses)
-
-    return MMvecResults(
-        microbe_embeddings=microbe_embeddings,
-        metabolite_embeddings=metabolite_embeddings,
-        ranks=ranks_df,
-        convergence=convergence,
-        output_format=backend,
-    )
-
-
 def mmvec(
-    microbes: TableLike,
-    metabolites: TableLike,
+    X: TableLike,
+    y: TableLike,
     n_components: int = 3,
     optimizer: str = "lbfgs",
     max_iter: int = 1000,
@@ -1219,7 +1295,7 @@ def mmvec(
     seed: SeedLike | None = None,
     verbose: bool = False,
     output_format: str | None = None,
-) -> MMvecResults:
+) -> MMvecResult:
     r"""Multiomics Microbe-Metabolite Vectors (MMvec).
 
     Learns joint embeddings of two feature sets from their co-occurrence
@@ -1231,19 +1307,22 @@ def mmvec(
     For example: microbes and host transcripts, proteins and metabolites, or
     any pair of feature tables sharing the same samples.
 
+    This function is a convenience wrapper around :class:`MMvec` that fits the
+    estimator and returns a lightweight :class:`MMvecResult`.
+
     .. versionadded:: 0.7.3
 
     Parameters
     ----------
-    microbes : table_like of shape (n_samples, n_microbes)
-        Abundance counts for the first modality (e.g., microbes, proteins). See
-        :ref:`supported formats <table_like>`. This modality is treated as the
-        "conditioning" variable.
+    X : table_like of shape (n_samples, n_features)
+        Abundance counts for the first modality (e.g., microbes). This modality is
+        treated as the "conditioning" variable. See
+        :ref:`supported formats <table_like>`.
 
-    metabolites : table_like of shape (n_samples, n_metabolites)
-        Abundance counts for the second modality (e.g., metabolites, transcripts). See
-        above. Must have the same number of samples as ``microbes``. This modality is
-        treated as the "conditioned" variable.
+    y : table_like of shape (n_samples,) or (n_samples, n_targets)
+        Abundance counts for the second modality (e.g., metabolites). This modality is
+        treated as the "conditioned" variable. See above. Must have the same number of
+        samples as ``X``.
 
     n_components : int, optional
         Number of latent dimensions for embeddings. Default is 3.
@@ -1263,16 +1342,16 @@ def mmvec(
         Adam optimizer learning rate. Ignored for 'lbfgs'. Default is 1e-3.
     batch_size : int, optional
         Mini-batch size for Adam optimizer. Ignored for 'lbfgs'. Default is 50.
-    u_prior_mean : float, optional
-        Mean of Gaussian prior on first modality (microbes) embeddings.
+    x_prior_mean : float, optional
+        Mean of Gaussian prior on first modality embeddings.
         Default is 0.0.
-    u_prior_scale : float, optional
+    x_prior_scale : float, optional
         Scale (std) of Gaussian prior on first modality embeddings.
         Default is 1.0. Smaller values increase regularization.
-    v_prior_mean : float, optional
-        Mean of Gaussian prior on second modality (metabolites) embeddings.
+    y_prior_mean : float, optional
+        Mean of Gaussian prior on second modality embeddings.
         Default is 0.0.
-    v_prior_scale : float, optional
+    y_prior_scale : float, optional
         Scale (std) of Gaussian prior on second modality embeddings.
         Default is 1.0. Smaller values increase regularization.
     beta_1 : float, optional
@@ -1299,14 +1378,13 @@ def mmvec(
 
     Returns
     -------
-    MMvecResults
-        Object containing:
+    MMvecResult
+        Named tuple containing:
 
-        - microbe_embeddings: table_like of shape (n_microbes, n_components + 1)
-        - metabolite_embeddings: table_like of shape (n_metabolites, n_components + 1)
-        - ranks: table_like of shape (n_microbes, n_metabolites)
-        - convergence: table_like with loss per iteration
-        - output_format: format of table_like objects
+        - ``ranks``: row-centered conditional log-probability matrix.
+        - ``convergence``: optimization loss curve.
+        - ``x_embeddings``: learned feature embeddings.
+        - ``y_embeddings``: learned target embeddings.
 
     Notes
     -----
@@ -1317,8 +1395,8 @@ def mmvec(
         P(\text{metabolite}_j | \text{microbe}_i) =
         \text{softmax}(U_i \cdot V_j + b_{U_i} + b_{V_j})
 
-    To evaluate model performance on held-out data, use the ``score`` method
-    of the returned ``MMvecResults`` object.
+    For estimator-style APIs such as ``predict``, ``score``, ``get_params``, and
+    ``set_params``, use :class:`MMvec` directly.
 
     References
     ----------
@@ -1344,75 +1422,28 @@ def mmvec(
     (10, 15)
 
     """
-    # Parse tabular inputs
-    X, _, microbe_ids = _ingest_table(microbes)
-    Y, _, metabolite_ids = _ingest_table(metabolites)
-
-    # Check for sample count consistency
-    if X.shape[0] != Y.shape[0]:
-        raise ValueError(
-            f"microbes and metabolites must have the same number of samples. "
-            f"Got {X.shape[0]} and {Y.shape[0]}."
-        )
-
-    # Check for all-zero columns / rows (features /samples with no counts)
-    for mod, name in (X, "microbes"), (Y, "metabolites"):
-        for i, axis in enumerate(("columns", "rows")):
-            if np.any(mod.sum(axis=i) == 0):
-                raise ValueError(
-                    f"{name} contains all-zero {axis}. Remove them before calling."
-                )
-
-    # Check for positive prior scales
-    if u_prior_scale <= 0:
-        raise ValueError(f"u_prior_scale must be positive, got {u_prior_scale}.")
-    if v_prior_scale <= 0:
-        raise ValueError(f"v_prior_scale must be positive, got {v_prior_scale}.")
-
-    # Validate optimizer
-    optimizer = optimizer.lower()
-    if optimizer not in ("lbfgs", "adam"):
-        raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
-
-    # Create RNG
-    rng = get_rng(seed)
-
-    n_microbes = X.shape[1]
-    n_metabolites = Y.shape[1]
-
-    # Initialize model
-    model = _MMvecModel(
-        n_microbes=n_microbes,
-        n_metabolites=n_metabolites,
+    estimator = MMvec(
         n_components=n_components,
-        u_prior_mean=u_prior_mean,
-        u_prior_scale=u_prior_scale,
-        v_prior_mean=v_prior_mean,
-        v_prior_scale=v_prior_scale,
-        rng=rng,
+        optimizer=optimizer,
+        max_iter=max_iter,
+        learning_rate=learning_rate,
+        batch_size=batch_size,
+        x_prior_mean=u_prior_mean,
+        x_prior_scale=u_prior_scale,
+        y_prior_mean=v_prior_mean,
+        y_prior_scale=v_prior_scale,
+        beta_1=beta_1,
+        beta_2=beta_2,
+        clipnorm=clipnorm,
+        batch_norm=batch_norm,
+        seed=seed,
+        verbose=verbose,
+        output_format=output_format,
     )
-
-    # Convert to sparse COO format
-    X_coo = coo_array(X)
-
-    # Train model
-    if optimizer == "lbfgs":
-        losses = _train_lbfgs(model, X_coo, Y, max_iter, verbose)
-    else:
-        losses = _train_adam(
-            model=model,
-            X=X,
-            Y=Y,
-            X_coo=X_coo,
-            rng=rng,
-            max_iter=max_iter,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            beta_1=beta_1,
-            beta_2=beta_2,
-            clipnorm=clipnorm,
-            batch_norm=batch_norm,
-            verbose=verbose,
-        )
-
-    return _build_results(model, microbe_ids, metabolite_ids, losses, output_format)
+    fitted = estimator.fit(X, y)
+    return MMvecResult(
+        ranks=fitted.ranks_,
+        convergence=fitted.loss_curve_,
+        x_embeddings=fitted.x_embeddings_,
+        y_embeddings=fitted.y_embeddings_,
+    )
