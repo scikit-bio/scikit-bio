@@ -969,7 +969,7 @@ class TestMMvecLBFGS(unittest.TestCase):
                 max_iter=1,
             )
 
-        self.assertIn("optimizer must be", str(ctx.exception))
+        self.assertIn("Optimizer must be", str(ctx.exception))
 
 
 class TestMMvecCaseStudies(unittest.TestCase):

@@ -53,15 +53,20 @@ def mmvec(
     verbose: bool = False,
     output_format: str | None = None,
 ) -> MMvecResult:
-    r"""Multiomics Microbe-Metabolite Vectors (MMvec).
+    r"""Perform multiomics Microbe-Metabolite Vectors (MMvec) analysis.
 
     MMvec learns joint embeddings of two feature sets from their co-occurrence patterns
     using a multinomial likelihood model [1]_. The model learns:
 
     .. math::
 
-        P(\text{metabolite}_j | \text{microbe}_i) =
-        \text{softmax}(U_i \cdot V_j + b_{U_i} + b_{V_j})
+        P(Y_j | X_i) = \text{softmax}(\hat{X}_i \cdot \hat{Y}_j +
+        b_{\hat{X}_i} + b_{\hat{Y}_j})
+
+    where :math:`\hat{X}_i` is the learned embedding vector of feature :math:`i` in the
+    X modality (e.g., microbiome), :math:`\hat{Y}_j` is the learned embedding vector of
+    feature :math:`j` in the Y modality (e.g., metabolome), and :math:`b_{\hat{X}_i}`,
+    :math:`b_{\hat{Y}_j}` are learned bias terms.
 
     While MMvec was originally developed to analyze microbe-metabolite co-occurrence,
     this method is **generic** and can be applied to any two modalities that can be
@@ -78,8 +83,8 @@ def mmvec(
 
     Y : table_like of shape (n_samples,) or (n_samples, n_targets)
         Abundance counts for the second modality (e.g., metabolites). This modality is
-        treated as the "conditioned" variable. See above. Must have the same number of
-        samples as ``X``.
+        treated as the "conditioned" variable. See above. Must have the same samples as
+        ``X``.
 
     n_components : int, optional
         Number of latent dimensions for embeddings. Default is 3.
@@ -321,7 +326,7 @@ class MMvecResult(SkbioObject):
 
         .. math::
 
-            P(Y) = sum_i P(X_i) * P(Y | X_i)
+            P(Y) = \sum_i P(X_i)\,P(Y \mid X_i)
 
         Parameters
         ----------
@@ -373,10 +378,10 @@ class MMvecResult(SkbioObject):
 class MMvec(SkbioObject):
     r"""MMvec estimator with scikit-learn-style interface.
 
-    `MMvec` models conditional target distributions given feature compositions. In
-    scikit-learn terms, the first modality (``X``) are "features" and the second
-    modality (``y``, vector or matrix) are "targets". In the original MMvec language,
-    features typically correspond to microbes and targets to metabolites.
+    MMvec models conditional target distributions given feature compositions. In sklearn
+    terms, the first modality (``X``) are "features" and the second modality (``y``,
+    vector or matrix) are "targets". In the original MMvec work, features typically
+    correspond to microbes and targets to metabolites.
 
     .. versionadded:: 0.7.3
 
@@ -472,18 +477,14 @@ class MMvec(SkbioObject):
 
         # Check for positive prior scales
         if self.x_prior_scale <= 0:
-            raise ValueError(
-                f"x_prior_scale must be positive, got {self.x_prior_scale}."
-            )
+            raise ValueError("x_prior_scale must be positive.")
         if self.y_prior_scale <= 0:
-            raise ValueError(
-                f"y_prior_scale must be positive, got {self.y_prior_scale}."
-            )
+            raise ValueError("y_prior_scale must be positive.")
 
         # Validate optimizer
         optimizer = self.optimizer.lower()
         if optimizer not in ("lbfgs", "adam"):
-            raise ValueError(f"optimizer must be 'lbfgs' or 'adam', got '{optimizer}'.")
+            raise ValueError("Optimizer must be 'lbfgs' or 'adam'.")
 
         # Create RNG
         rng = get_rng(self.seed)
