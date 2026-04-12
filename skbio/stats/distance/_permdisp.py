@@ -286,7 +286,7 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    sample_data = ordination.samples.to_numpy(dtype=np.float64, copy=False)
+    sample_data = ordination.samples.to_numpy(copy=False)
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
@@ -302,10 +302,7 @@ def permdisp(
 
 
 def _compute_groups(samples, test_type, grouping):
-    if hasattr(samples, "to_numpy"):
-        data = samples.to_numpy(dtype=np.float64, copy=False)
-    else:
-        data = np.asarray(samples, dtype=np.float64)
+    data = np.asarray(samples)
     groups = []
 
     grouping_array = np.asarray(grouping)
@@ -315,7 +312,7 @@ def _compute_groups(samples, test_type, grouping):
         if test_type == "centroid":
             center = group_data.mean(axis=0)
         else:  # median
-            center = np.asarray(geomedian_axis_one(group_data.T), dtype=np.float64)
+            center = np.asarray(geomedian_axis_one(group_data.T))
 
         # Distances from each sample in this group to the group center.
         groups.append(np.linalg.norm(group_data - center, axis=1))
