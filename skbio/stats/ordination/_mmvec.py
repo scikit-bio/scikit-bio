@@ -121,7 +121,7 @@ def mmvec(
     batch_norm : {'unbiased', 'legacy'}, optional
         Method for scaling mini-batch likelihood in Adam. Ignored for 'lbfgs'.
 
-        - 'unbiased' (default): Uses norm = sum(microbe_counts) / batch_size.
+        - 'unbiased' (default): Uses norm = sum(n_features_x) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
 
     seed : int, Generator or RandomState, optional
@@ -371,13 +371,12 @@ class MMvecResult(SkbioObject):
 
 
 class MMvec(SkbioObject):
-    r"""MMvec estimator with sklearn-style fit/predict/score API.
+    r"""MMvec estimator with scikit-learn-style interface.
 
-    `MMvec` models conditional target distributions given feature compositions.
-    In sklearn terms, `X` is the conditioning feature matrix and `y` is the
-    conditioned target matrix (or vector, expanded to a single-column matrix).
-    In the original MMvec domain language, features typically correspond to
-    microbes and targets to metabolites.
+    `MMvec` models conditional target distributions given feature compositions. In
+    scikit-learn terms, the first modality (``X``) are "features" and the second
+    modality (``y``, vector or matrix) are "targets". In the original MMvec language,
+    features typically correspond to microbes and targets to metabolites.
 
     .. versionadded:: 0.7.3
 
@@ -489,13 +488,13 @@ class MMvec(SkbioObject):
         # Create RNG
         rng = get_rng(self.seed)
 
-        n_microbes = X_arr.shape[1]
-        n_metabolites = y_arr.shape[1]
+        n_features_x = X_arr.shape[1]
+        n_features_y = y_arr.shape[1]
 
         # Initialize model. Note the change of terminology.
         model = _MMvecModel(
-            n_microbes=n_microbes,
-            n_metabolites=n_metabolites,
+            n_features_x=n_features_x,
+            n_features_y=n_features_y,
             n_components=self.n_components,
             u_prior_mean=self.x_prior_mean,
             u_prior_scale=self.x_prior_scale,
@@ -570,13 +569,13 @@ class MMvec(SkbioObject):
     def __str__(self) -> str:
         """Return string representation of MMvec."""
         self._check_is_fitted()
-        n_microbes, n_metabolites = self.ranks_.shape
+        n_features_x, n_features_y = self.ranks_.shape
         n_components = self.x_embeddings_.shape[1] - 1  # exclude bias
         n_iterations = len(self.loss_curve_)
         return (
             f"MMvec\n"
-            f"  Features: {n_microbes}\n"
-            f"  Targets: {n_metabolites}\n"
+            f"  Features: {n_features_x}\n"
+            f"  Targets: {n_features_y}\n"
             f"  Components: {n_components}\n"
             f"  Iterations: {n_iterations}"
         )
@@ -617,8 +616,6 @@ class MMvec(SkbioObject):
         -------
         probs : table_like of shape (n_features, n_targets)
             Conditional probabilities P(target | feature). Each row sums to 1.
-            In microbiome-metabolome analyses this corresponds to
-            P(metabolite | microbe).
 
         """
         self._check_is_fitted()
@@ -631,11 +628,6 @@ class MMvec(SkbioObject):
     def predict(self, X: TableLike) -> TableLike:
         """Predict target distributions given feature compositions.
 
-        Computes the expected target distribution for each sample by
-        marginalizing over feature compositions:
-
-        P(target) = sum_i P(feature_i) * P(target | feature_i)
-
         Parameters
         ----------
         X : table_like of shape (n_samples, n_features)
@@ -646,32 +638,6 @@ class MMvec(SkbioObject):
         -------
         predictions : table_like of shape (n_samples, n_targets)
             Predicted target proportions for each sample. Each row sums to 1.
-
-        Examples
-        --------
-        >>> from skbio.stats.ordination import MMvec
-        >>> import numpy as np
-        >>> import pandas as pd
-        >>> np.random.seed(42)
-        >>> microbes = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(20, 5)),
-        ...     columns=[f'OTU_{i}' for i in range(5)]
-        ... )
-        >>> metabolites = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(20, 8)),
-        ...     columns=[f'met_{i}' for i in range(8)]
-        ... )
-        >>> model = MMvec(n_components=2, max_iter=10).fit(microbes, metabolites)
-        >>> # Predict on new samples
-        >>> new_microbes = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(5, 5)),
-        ...     columns=[f'OTU_{i}' for i in range(5)]
-        ... )
-        >>> predictions = model.predict(new_microbes)
-        >>> predictions.shape
-        (5, 8)
-        >>> np.allclose(predictions.sum(axis=1), 1.0)
-        True
 
         """
         self._check_is_fitted()
@@ -704,18 +670,6 @@ class MMvec(SkbioObject):
     def score(self, X: TableLike, y: TableLike) -> float:
         r"""Compute Q-squared (coefficient of prediction) on held-out data.
 
-        :math:`Q^2` measures predictive performance on test data, analogous to
-        :math:`R^2` but for cross-validation. Values range from -inf to 1, where 1
-        indicates perfect prediction and 0 indicates prediction no better than the
-        mean.
-
-        .. math::
-
-            Q^2 = 1 - \frac{SS_{res}}{SS_{tot}}
-                = 1 - \frac{\sum(y - \hat{y})^2}{\sum(y - \bar{y}_j)^2}
-
-        where :math:`\bar{y}_j` is the per-target mean across samples.
-
         Parameters
         ----------
         X : table_like of shape (n_samples, n_features)
@@ -727,40 +681,6 @@ class MMvec(SkbioObject):
         -------
         q2 : float
             Q-squared score. Higher is better, with 1.0 being perfect prediction.
-
-        See Also
-        --------
-        predict : Predict target distributions.
-        probabilities : Get conditional probability matrix.
-
-        Examples
-        --------
-        >>> from skbio.stats.ordination import MMvec
-        >>> import numpy as np
-        >>> import pandas as pd
-        >>> np.random.seed(42)
-        >>> # Training data
-        >>> microbes = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(30, 5)),
-        ...     columns=[f'OTU_{i}' for i in range(5)]
-        ... )
-        >>> metabolites = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(30, 8)),
-        ...     columns=[f'met_{i}' for i in range(8)]
-        ... )
-        >>> model = MMvec(n_components=2, max_iter=50).fit(microbes, metabolites)
-        >>> # Evaluate on test data
-        >>> test_microbes = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(10, 5)),
-        ...     columns=[f'OTU_{i}' for i in range(5)]
-        ... )
-        >>> test_metabolites = pd.DataFrame(
-        ...     np.random.randint(1, 50, size=(10, 8)),
-        ...     columns=[f'met_{i}' for i in range(8)]
-        ... )
-        >>> q2 = model.score(test_microbes, test_metabolites)
-        >>> isinstance(q2, float)
-        True
 
         """
         self._check_is_fitted()
@@ -794,23 +714,23 @@ class _MMvecModel:
 
     def __init__(
         self,
-        n_microbes,
-        n_metabolites,
-        n_components=3,
-        u_prior_mean=0.0,
-        u_prior_scale=1.0,
-        v_prior_mean=0.0,
-        v_prior_scale=1.0,
-        rng=None,
+        n_features_x,
+        n_features_y,
+        n_components,
+        u_prior_mean,
+        u_prior_scale,
+        v_prior_mean,
+        v_prior_scale,
+        rng,
     ):
         """Initialize MMvec model parameters.
 
         Parameters
         ----------
-        n_microbes : int
-            Number of microbes (d1).
-        n_metabolites : int
-            Number of metabolites (d2).
+        n_features_x : int
+            Number of features in the conditioning modality (X).
+        n_features_y : int
+            Number of features in the conditioned modality (Y).
         n_components : int
             Latent dimensionality (p).
         u_prior_mean : float
@@ -821,41 +741,38 @@ class _MMvecModel:
             Mean of Gaussian prior on V.
         v_prior_scale : float
             Scale of Gaussian prior on V.
-        rng : numpy.random.Generator, optional
+        rng : numpy.random.Generator
             Random number generator.
 
         """
-        self.n_microbes = n_microbes
-        self.n_metabolites = n_metabolites
+        self.n_features_x = n_features_x
+        self.n_features_y = n_features_y
         self.n_components = n_components
         self.u_prior_mean = u_prior_mean
         self.u_prior_scale = u_prior_scale
         self.v_prior_mean = v_prior_mean
         self.v_prior_scale = v_prior_scale
 
-        if rng is None:
-            rng = np.random.default_rng()
-
         # Initialize parameters with random normal
-        self.U = rng.standard_normal((n_microbes, n_components))
-        self.b_U = rng.standard_normal((n_microbes, 1))
-        self.V = rng.standard_normal((n_components, n_metabolites - 1))
-        self.b_V = rng.standard_normal((1, n_metabolites - 1))
+        self.U = rng.standard_normal((n_features_x, n_components))
+        self.b_U = rng.standard_normal((n_features_x, 1))
+        self.V = rng.standard_normal((n_components, n_features_y - 1))
+        self.b_V = rng.standard_normal((1, n_features_y - 1))
 
     def build_aug_matrices(self):
         """Build augmented U and V matrices for forward pass.
 
         Returns
         -------
-        U_aug : np.ndarray of shape (n_microbes, n_components + 2)
+        U_aug : np.ndarray of shape (n_features_x, n_components + 2)
             [1 | b_U | U]
-        V_aug : np.ndarray of shape (n_components + 2, n_metabolites - 1)
+        V_aug : np.ndarray of shape (n_components + 2, n_features_y - 1)
             [b_V; 1; V]
         """
-        d1 = self.n_microbes
+        d1 = self.n_features_x
 
         U_aug = np.hstack([np.ones((d1, 1)), self.b_U, self.U])
-        V_aug = np.vstack([self.b_V, np.ones((1, self.n_metabolites - 1)), self.V])
+        V_aug = np.vstack([self.b_V, np.ones((1, self.n_features_y - 1)), self.V])
         return U_aug, V_aug
 
     def forward(self, microbe_indices):
@@ -868,7 +785,7 @@ class _MMvecModel:
 
         Returns
         -------
-        logits : np.ndarray of shape (batch_size, n_metabolites)
+        logits : np.ndarray of shape (batch_size, n_features_y)
             Logits with first column (reference) set to 0.
         """
         U_aug, V_aug = self.build_aug_matrices()
@@ -877,21 +794,14 @@ class _MMvecModel:
         logits = np.hstack([np.zeros((len(microbe_indices), 1)), logits_nonref])
         return logits
 
-    def loss_and_gradients(
-        self,
-        X,
-        Y,
-        rng,
-        batch_size=50,
-        batch_norm="legacy",
-    ):
+    def loss_and_gradients(self, X, Y, rng, batch_size=50, batch_norm="legacy"):
         """Compute loss and gradients for a mini-batch.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_microbes)
+        X : array-like of shape (n_samples, n_features_x)
             Microbe counts.
-        Y : array-like of shape (n_samples, n_metabolites)
+        Y : array-like of shape (n_samples, n_features_y)
             Metabolite counts.
         batch_size : int
             Mini-batch size.
@@ -997,11 +907,11 @@ class _MMvecModel:
 
         Returns
         -------
-        ranks : np.ndarray of shape (n_microbes, n_metabolites)
+        ranks : np.ndarray of shape (n_features_x, n_features_y)
             Row-centered log conditional probabilities.
         """
         U_aug, V_aug = self.build_aug_matrices()
-        logits = np.hstack([np.zeros((self.n_microbes, 1)), U_aug @ V_aug])
+        logits = np.hstack([np.zeros((self.n_features_x, 1)), U_aug @ V_aug])
         # Center each row
         ranks = logits - logits.mean(axis=1, keepdims=True)
         return ranks
@@ -1031,8 +941,8 @@ class _MMvecModel:
         theta : np.ndarray
             Flattened parameters.
         """
-        d1 = self.n_microbes
-        d2 = self.n_metabolites
+        d1 = self.n_features_x
+        d2 = self.n_features_y
         p = self.n_components
 
         idx = 0
@@ -1051,7 +961,7 @@ class _MMvecModel:
         ----------
         X_coo : coo_array
             Microbe counts in COO format.
-        Y : np.ndarray of shape (n_samples, n_metabolites)
+        Y : np.ndarray of shape (n_samples, n_features_y)
             Metabolite counts.
 
         Returns
@@ -1071,7 +981,7 @@ class _MMvecModel:
 
         # Precompute all logits: (d1, d2) with reference column = 0
         logits_core = U_aug @ V_aug  # (d1, d2-1)
-        logits_all = np.hstack([np.zeros((self.n_microbes, 1)), logits_core])
+        logits_all = np.hstack([np.zeros((self.n_features_x, 1)), logits_core])
 
         # Stable softmax for all microbes
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
@@ -1153,9 +1063,9 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     model : _MMvecModel
         Initialized model to train.
     X_coo : coo_array
-        Microbe counts in sparse COO format.
+        X feature counts in sparse COO format.
     Y : np.ndarray
-        Metabolite counts.
+        Y feature counts.
     max_iter : int
         Maximum number of L-BFGS iterations.
     verbose : bool
@@ -1170,7 +1080,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     losses = []
     it = 0  # Use list to allow modification in closure
 
-    def objective(theta):
+    def func(theta):
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
@@ -1187,7 +1097,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
     # Run L-BFGS-B
     result = minimize(
-        objective,
+        func,
         theta0,
         method="L-BFGS-B",
         jac=True,
@@ -1560,20 +1470,10 @@ def random_multimodal(
         x_counts[n, :] += x
 
     # Create DataFrames with meaningful IDs
-    feature_ids_x = [f"microbe_{d}" for d in range(x_counts.shape[1])]
-    feature_ids_y = [f"metabolite_{d}" for d in range(y_counts.shape[1])]
+    feature_ids_x = [f"x_feature_{d}" for d in range(x_counts.shape[1])]
+    feature_ids_y = [f"y_feature_{d}" for d in range(y_counts.shape[1])]
     sample_ids = [f"sample_{d}" for d in range(y_counts.shape[0])]
 
     x_counts = pd.DataFrame(x_counts, index=sample_ids, columns=feature_ids_x)
     y_counts = pd.DataFrame(y_counts, index=sample_ids, columns=feature_ids_y)
-
-    return (
-        x_counts,
-        y_counts,
-        design,
-        coefs,
-        x_main,
-        x_bias,
-        y_main,
-        y_bias,
-    )
+    return x_counts, y_counts, design, coefs, x_main, x_bias, y_main, y_bias

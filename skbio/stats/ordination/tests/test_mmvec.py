@@ -22,41 +22,129 @@ from scipy.stats import spearmanr
 
 from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
-from skbio.stats.ordination import mmvec, MMvec
+from skbio.stats.ordination import mmvec, MMvec, MMvecResult
 from skbio.stats.ordination._mmvec import (
-    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad, MMvecResult
+    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad
 )
 
 
 class TestRandomMultimodal(unittest.TestCase):
     """Tests for random_multimodal simulation helper."""
 
+    def test_numerical_precision(self):
+        """Generated outputs that match expected values."""
+        res = random_multimodal(
+            n_features_x=4, n_features_y=6, n_samples=8, n_components=2, seed=7
+        )
+        x_counts, y_counts, design, coefs, x_main, x_bias, y_main, y_bias = res
+
+        x_counts_exp = pd.DataFrame([
+            [2, 3, 2, 3],
+            [1, 4, 2, 3],
+            [3, 3, 1, 3],
+            [1, 4, 2, 3],
+            [2, 4, 2, 2],
+            [2, 3, 3, 2],
+            [3, 3, 1, 3],
+            [1, 2, 3, 4],
+        ], index=[
+            f"sample_{i}" for i in range(8)
+        ], columns=[
+            f"x_feature_{j}" for j in range(4)
+        ], dtype=float)
+        pdt.assert_frame_equal(x_counts, x_counts_exp)
+
+        y_counts_exp = pd.DataFrame([
+            [14, 10, 12, 19, 20, 25],
+            [14, 13, 10, 11, 21, 31],
+            [ 7, 21, 14, 13, 25, 20],
+            [11, 15, 20,  9, 15, 30],
+            [11, 20, 12,  7, 24, 26],
+            [ 9, 13, 12,  9, 23, 34],
+            [14, 22,  9, 19, 19, 17],
+            [11,  7, 15, 14, 14, 39],
+        ], index=[
+            f"sample_{i}" for i in range(8)
+        ], columns=[
+            f"y_feature_{j}" for j in range(6)
+        ], dtype=float)
+        pdt.assert_frame_equal(y_counts, y_counts_exp)
+
+        design_exp = np.vstack([np.ones(8), np.array([
+            -1.0, -0.714, -0.429, -0.143, 0.143, 0.429, 0.714, 1.0
+        ])]).T
+        npt.assert_array_equal(design.round(3), design_exp)
+
+        coefs_exp = np.array([
+            [ 0.002,  0.597, -0.548, -1.781],
+            [-0.909, -1.983,  0.120,  2.680],
+        ])
+        npt.assert_array_equal(coefs.round(3), coefs_exp)
+
+        x_main_exp = np.array([
+            [-0.979, -0.809],
+            [ 1.061, -0.808],
+            [-0.033,  0.884],
+            [-0.584, -0.112]
+        ])
+        npt.assert_array_equal(x_main.round(3), x_main_exp)
+
+        x_bias_exp = np.array([ 0.762, -1.199, 0.075, 0.577]).reshape(-1, 1)
+        npt.assert_array_equal(x_bias.round(3), x_bias_exp)
+
+        y_main_exp = np.array([
+            [ 0.11 ,  0.064, -1.225,  0.076,  1.359],
+            [-1.547,  0.859,  0.119, -0.641,  2.   ],
+        ])
+        npt.assert_array_equal(y_main.round(3), y_main_exp)
+
+        y_bias_exp = np.array([-0.189,  0.683, -0.067,  0.667,  1.439]).reshape(1, -1)
+        npt.assert_array_equal(y_bias.round(3), y_bias_exp)
+
+        self.assertEqual(x_counts.shape, (8, 4))
+        self.assertEqual(y_counts.shape, (8, 6))
+        self.assertEqual(design.shape, (8, 2))
+        self.assertEqual(coefs.shape, (2, 4))
+        self.assertEqual(x_main.shape, (4, 2))
+        self.assertEqual(x_bias.shape, (4, 1))
+        self.assertEqual(y_main.shape, (2, 5))
+        self.assertEqual(y_bias.shape, (1, 5))
+
+        self.assertEqual(x_counts.index[0], "sample_0")
+        self.assertEqual(x_counts.columns[0], "x_feature_0")
+        self.assertEqual(y_counts.columns[0], "y_feature_0")
+
     def test_output_shapes(self):
         """Generated outputs should have expected shapes and IDs."""
+        nx = 123  # number of X features
+        ny = 456  # number of Y features
+        ns = 78   # number of samples
+        nd = 9    # number of dimensions
+
         res = random_multimodal(
-            n_features_x=4,
-            n_features_y=6,
-            n_samples=8,
-            n_components=2,
-            seed=7,
+            n_features_x=nx, n_features_y=ny, n_samples=ns, n_components=nd, seed=42
         )
-        microbes, metabolites, design, beta, U, Ubias, V, Vbias = res
+        x_counts, y_counts, design, coefs, x_main, x_bias, y_main, y_bias = res
 
-        self.assertEqual(microbes.shape, (8, 4))
-        self.assertEqual(metabolites.shape, (8, 6))
-        self.assertEqual(design.shape, (8, 2))
-        self.assertEqual(beta.shape, (2, 4))
-        self.assertEqual(U.shape, (4, 2))
-        self.assertEqual(Ubias.shape, (4, 1))
-        self.assertEqual(V.shape, (2, 5))
-        self.assertEqual(Vbias.shape, (1, 5))
+        self.assertEqual(x_counts.shape, (ns, nx))
+        self.assertEqual(y_counts.shape, (ns, ny))
+        self.assertEqual(design.shape, (ns, 2))
+        self.assertEqual(coefs.shape, (2, nx))
+        self.assertEqual(x_main.shape, (nx, nd))
+        self.assertEqual(x_bias.shape, (nx, 1))
+        self.assertEqual(y_main.shape, (nd, ny - 1))
+        self.assertEqual(y_bias.shape, (1, ny - 1))
 
-        self.assertEqual(microbes.index[0], "sample_0")
-        self.assertEqual(microbes.columns[0], "microbe_0")
-        self.assertEqual(metabolites.columns[0], "metabolite_0")
+        self.assertListEqual(list(x_counts.index), [f"sample_{i}" for i in range(ns)])
+        self.assertListEqual(
+            list(x_counts.columns), [f"x_feature_{j}" for j in range(nx)]
+        )
+        self.assertListEqual(
+            list(y_counts.columns), [f"y_feature_{k}" for k in range(ny)]
+        )
 
-    def test_reproducible_with_int_seed(self):
-        """Integer seeds should provide reproducible outputs."""
+    def test_reproducible_with_seed(self):
+        """Same seed should provide reproducible output."""
         res1 = random_multimodal(seed=42)
         res2 = random_multimodal(seed=42)
 
@@ -71,16 +159,6 @@ class TestMMvecRecovery(unittest.TestCase):
 
     def setUp(self):
         """Build small simulation matching original mmvec test."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=8,
-            n_samples=150,
-            n_components=2,
-            x_noise_std=2,
-            x_total=1000,
-            y_total=10000,
-            seed=1,
-        )
         (
             self.microbes,
             self.metabolites,
@@ -90,7 +168,16 @@ class TestMMvecRecovery(unittest.TestCase):
             self.Ubias,
             self.V,
             self.Vbias,
-        ) = res
+        ) = random_multimodal(
+            n_features_x=8,
+            n_features_y=8,
+            n_samples=150,
+            n_components=2,
+            x_noise_std=2,
+            x_total=1000,
+            y_total=10000,
+            seed=1,
+        )
 
         num_train = 10
         self.trainX = self.microbes.iloc[:-num_train]
@@ -203,25 +290,29 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
-        n_microbes = 5
-        n_metabolites = 8
+        n_features_x = 5
+        n_features_y = 8
         n_components = 2
         n_samples = 20
 
         # Create model
         rng = np.random.default_rng(42)
         model = _MMvecModel(
-            n_microbes=n_microbes,
-            n_metabolites=n_metabolites,
+            n_features_x=n_features_x,
+            n_features_y=n_features_y,
             n_components=n_components,
+            u_prior_mean=0.0,
+            u_prior_scale=1.0,
+            v_prior_mean=0.0,
+            v_prior_scale=1.0,
             rng=rng,
         )
 
         # Generate small test data
-        X = np.random.randint(0, 100, size=(n_samples, n_microbes)).astype(
+        X = np.random.randint(0, 100, size=(n_samples, n_features_x)).astype(
             np.float64
         )
-        Y = np.random.randint(0, 100, size=(n_samples, n_metabolites)).astype(
+        Y = np.random.randint(0, 100, size=(n_samples, n_features_y)).astype(
             np.float64
         )
 
@@ -269,128 +360,38 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_output_shapes(self):
         """Check that output shapes are correct."""
-        res = random_multimodal(
-            n_features_x=10,
-            n_features_y=15,
-            n_samples=50,
-            n_components=3,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        result = mmvec(
-            microbes,
-            metabolites,
-            dimensions=3,
-            max_iter=10,
-            seed=42,
-        )
-
-        # Check shapes
-        n_microbes = microbes.shape[1]
-        n_metabolites = metabolites.shape[1]
-        n_components = 3
-
-        self.assertEqual(
-            result.x_embeddings.shape,
-            (n_microbes, n_components + 1),  # +1 for bias
-        )
-        self.assertEqual(
-            result.y_embeddings.shape,
-            (n_metabolites, n_components + 1),  # +1 for bias
-        )
-        self.assertEqual(result.ranks.shape, (n_microbes, n_metabolites))
+        ndim = 3
+        X, Y, *_ = random_multimodal(10, 15, 50, ndim, seed=42)
+        res = mmvec(X, Y, dimensions=ndim, max_iter=10, seed=42)
+        n_features_x, n_features_y = X.shape[1], Y.shape[1]
+        self.assertEqual(res.x_embeddings.shape, (n_features_x, ndim + 1))
+        self.assertEqual(res.y_embeddings.shape, (n_features_y, ndim + 1))
+        self.assertEqual(res.ranks.shape, (n_features_x, n_features_y))
 
     def test_ranks_row_centered(self):
         """Check that ranks are row-centered."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        result = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            max_iter=50,
-            seed=42,
-        )
-
-        # Ranks should be approximately row-centered
-        row_means = result.ranks.values.mean(axis=1)
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        obs = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        row_means = obs.ranks.values.mean(axis=1)
         npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_reproducibility(self):
         """Check that results are reproducible with same seed."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        result1 = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            max_iter=50,
-            seed=123,
-        )
-
-        result2 = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            max_iter=50,
-            seed=123,
-        )
-
-        npt.assert_allclose(
-            result1.ranks.values, result2.ranks.values, rtol=1e-10
-        )
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        obs1 = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        obs2 = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        pdt.assert_frame_equal(obs1.ranks, obs2.ranks, rtol=1e-10)
 
     def test_batch_norm_modes(self):
         """Test that both batch normalization modes work."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        # Legacy mode (batch_norm only applies to Adam)
-        result_legacy = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            optimizer="adam",
-            max_iter=50,
-            batch_norm="legacy",
-            seed=42,
-        )
-        self.assertIsInstance(result_legacy, MMvecResult)
-
-        # Unbiased mode
-        result_unbiased = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            optimizer="adam",
-            max_iter=50,
-            batch_norm="unbiased",
-            seed=42,
-        )
-        self.assertIsInstance(result_unbiased, MMvecResult)
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        params = dict(dimensions=2, optimizer="adam", max_iter=50, seed=42)
+        obs1 = mmvec(X, Y, batch_norm="legacy", **params)
+        obs2 = mmvec(X, Y, batch_norm="unbiased", **params)
 
         # Results should differ due to different normalization
-        self.assertFalse(
-            np.allclose(result_legacy.ranks.values, result_unbiased.ranks.values)
-        )
+        with self.assertRaises(AssertionError):
+            pdt.assert_frame_equal(obs1.ranks, obs2.ranks, rtol=1e-10)
 
 
 class TestMMvecEstimator(unittest.TestCase):
@@ -452,16 +453,16 @@ class TestMMvecEstimator(unittest.TestCase):
     def test_score(self):
         """Test score method returns valid Q-squared value."""
         # Split data
-        train_microbes = self.microbes.iloc[:40]
+        train_features_x = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
+        train_features_y = self.metabolites.iloc[:40]
         test_metabolites = self.metabolites.iloc[40:]
 
         model = MMvec(
             n_components=2,
             max_iter=100,
             seed=42,
-        ).fit(train_microbes, train_metabolites)
+        ).fit(train_features_x, train_features_y)
 
         q2 = model.score(test_microbes, test_metabolites)
 
@@ -515,16 +516,16 @@ class TestMMvecEstimator(unittest.TestCase):
 
     def test_score_numpy_array(self):
         """Test score with numpy array inputs (not DataFrames)."""
-        train_microbes = self.microbes.iloc[:40]
+        train_features_x = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
+        train_features_y = self.metabolites.iloc[:40]
         test_metabolites = self.metabolites.iloc[40:]
 
         model = MMvec(
             n_components=2,
             max_iter=100,
             seed=42,
-        ).fit(train_microbes, train_metabolites)
+        ).fit(train_features_x, train_features_y)
         q2 = model.score(test_microbes.values, test_metabolites.values)
         self.assertIsInstance(q2, float)
         self.assertLessEqual(q2, 1.0)
@@ -892,9 +893,9 @@ class TestMMvecLBFGS(unittest.TestCase):
     def test_lbfgs_score_on_test_data(self):
         """L-BFGS model should produce reasonable Q-squared score on test data."""
         # Split data
-        train_microbes = self.microbes.iloc[:40]
+        train_features_x = self.microbes.iloc[:40]
         test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
+        train_features_y = self.metabolites.iloc[:40]
         test_metabolites = self.metabolites.iloc[40:]
 
         model = MMvec(
@@ -902,7 +903,7 @@ class TestMMvecLBFGS(unittest.TestCase):
             optimizer="lbfgs",
             max_iter=100,
             seed=42,
-        ).fit(train_microbes, train_metabolites)
+        ).fit(train_features_x, train_features_y)
 
         # Compute Q^2 score on test data
         q2 = model.score(test_microbes, test_metabolites)
