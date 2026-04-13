@@ -262,7 +262,7 @@ def mmvec(
     >>> plt.plot(res.convergence)  # doctest: +SKIP
 
     A fitted MMvec model can be used to predict metabolite abundances given new
-    microbiome data.
+    microbiome data using the ``predict`` method.
 
     >>> samples_test = ['S6', 'S7', 'S8']
     >>> microbiome_test = pd.DataFrame([
@@ -278,9 +278,10 @@ def mmvec(
     S8  0.131  0.171  0.129  0.124  0.318  0.128
 
     To evaluate the model's generalizability, one can compute the :math:`Q^2` statistic
-    on held-out test data. A positive :math:`Q^2` indicates better-than-mean predictive
-    performance (with 1.0 indicating perfect prediction). A negative or close-to-zero
-    :math:`Q^2` is a sign of model overfitting or poor generalization.
+    on held-out test data using the ``score`` method. A positive :math:`Q^2` indicates
+    better-than-mean predictive performance (with 1.0 indicating perfect prediction). A
+    negative or close-to-zero :math:`Q^2` is a sign of model overfitting or poor
+    generalization.
 
     >>> metabolome_test = pd.DataFrame([
     ...     [0, 5, 1, 1, 8, 0],
@@ -314,7 +315,7 @@ def mmvec(
     return MMvecResult(fitted)
 
 
-class MMvecResult(SkbioObject):
+class MMvecResult:
     r"""Result of an MMvec analysis.
 
     This class contains the learned embeddings and co-occurrence patterns from fitting
@@ -325,37 +326,13 @@ class MMvecResult(SkbioObject):
     Attributes
     ----------
     x_embeddings : table_like of shape (n_features_x, n_dimensions + 1)
-        Learned coordinates of conditioning features (X) in latent space, where +1 is
-        the bias term. Each row is a vector representation of an X feature. Features
-        with similar embeddings tend to co-occur with similar sets of Y features. The
-        Euclidean distance or cosine similarity between embeddings can be used to
-        identify feature relatedness. The last column ("bias") captures the baseline
-        tendency of each X feature to associate with Y features overall.
-
     y_embeddings : table_like of shape (n_features_y, n_dimensions + 1)
-        Learned coordinates of conditioned features (Y) in latent space. See above.
-        The first row is all zeros and represents the reference Y feature used for
-        identifiability. The last column ("bias") captures the baseline abundance of
-        each Y feature.
-
     ranks : table_like of shape (n_features_x, n_features_y)
-        Log conditional probability matrix of co-occurrence of X and Y features. Entry
-        (i, j) represents the log-odds of observing :math:`Y_j` given :math:`X_i`,
-        relative to the row mean. Higher values indicate stronger positive associations.
-        This matrix is row-centered (each row sums to zero) for identifiability.
-        To obtain actual conditional probabilities, transform the matrix using
-        :func:`skbio.stats.composition.clr_inv`.
-
     convergence : table_like of shape (n_iterations,)
-        Loss (negative log-posterior; lower is better) over iterations during training.
-        Use this to diagnose training issues. The loss should generally decrease and
-        stabilize. If the loss is still decreasing at the final iteration, consider
-        increasing ``max_iter``. If the loss oscillates (Adam optimizer), try reducing
-        ``learning_rate``.
 
     See Also
     --------
-    mmvec : Fit MMvec model and obtain ``MMvecResult``.
+    mmvec
 
     Notes
     -----
@@ -377,7 +354,7 @@ class MMvecResult(SkbioObject):
 
     If :math:`Q^2` is much lower than expected, try:
 
-    - Reducing ``n_components`` (fewer latent dimensions).
+    - Reducing ``dimensions`` (fewer latent dimensions).
     - Increasing regularization via smaller ``x_prior_scale`` and ``y_prior_scale``
       values.
     - Collecting more training samples.
@@ -415,22 +392,53 @@ class MMvecResult(SkbioObject):
 
     @property
     def x_embeddings(self) -> TableLike:
-        r"""Learned coordinates of conditioning features (X) in latent space."""
+        r"""Learned coordinates of conditioning features (X) in latent space.
+
+        Each row is a vector representation of an X feature. Features with similar
+        embeddings tend to co-occur with similar sets of Y features. The Euclidean
+        distance or cosine similarity between embeddings can be used to identify
+        feature relatedness. The last column (+1; "bias") captures the baseline
+        tendency of each X feature to associate with Y features overall.
+
+        """
         return self._estimator.x_embeddings_
 
     @property
     def y_embeddings(self) -> TableLike:
-        r"""Learned coordinates of conditioned features (Y) in latent space."""
+        r"""Learned coordinates of conditioned features (Y) in latent space.
+
+        See ``x_embeddings``. The first row is all zeros and represents the reference
+        Y feature used for identifiability. The last column (+1; "bias") captures the
+        baseline abundance of each Y feature.
+
+        """
         return self._estimator.y_embeddings_
 
     @property
     def ranks(self) -> TableLike:
-        r"""Log conditional probability matrix of co-occurrence of X and Y features."""
+        r"""Log conditional probability matrix of co-occurrence of X and Y features.
+
+        Entry (i, j) represents the log-odds of observing :math:`Y_j` given
+        :math:`X_i`, relative to the row mean. Higher values indicate stronger
+        positive associations. This matrix is row-centered (each row sums to zero)
+        for identifiability.
+
+        To obtain actual conditional probabilities, transform the matrix using
+        :func:`~skbio.stats.composition.clr_inv`.
+
+        """
         return self._estimator.ranks_
 
     @property
     def convergence(self) -> TableLike:
-        r"""Loss (negative log-posterior) over iterations during training."""
+        r"""Loss (negative log-posterior) over iterations during training.
+
+        Use this to diagnose training issues. The loss should generally decrease and
+        stabilize. If the loss is still decreasing at the final iteration, consider
+        increasing ``max_iter``. If the loss oscillates (Adam optimizer), try reducing
+        ``learning_rate``.
+
+        """
         return self._estimator.loss_curve_
 
     def probabilities(self) -> TableLike:
