@@ -147,6 +147,8 @@ class classproperty(property):
         self.__doc__ = doc
 
     def __get__(self, obj, owner=None):
+        if getattr(self.fget, "__isabstractmethod__", False):
+            return self
         if owner is None:
             owner = type(obj)
         return self.fget(owner)
