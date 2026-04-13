@@ -1102,6 +1102,9 @@ class _MMvecModel:
         grad : np.ndarray
             Flattened gradient vector.
         """
+        d1 = self.n_features_x
+        # d2 = self.n_features_y
+
         # Extract sparse indices and weights
         rows = X_coo.row  # sample indices (nnz,)
         cols = X_coo.col  # X feature indices (nnz,)
@@ -1112,7 +1115,7 @@ class _MMvecModel:
 
         # Precompute all logits: (d1, d2) with reference column = 0
         logits_core = U_aug @ V_aug  # (d1, d2-1)
-        logits_all = np.hstack([np.zeros((self.n_features_x, 1)), logits_core])
+        logits_all = np.hstack([np.zeros((d1, 1)), logits_core])
 
         # Stable softmax for all microbes
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
@@ -1146,13 +1149,20 @@ class _MMvecModel:
 
         # dU: scatter-add delta @ V.T to rows indexed by cols
         delta_V = delta @ self.V.T  # (nnz, p)
-        dU = np.zeros_like(self.U)
-        np.add.at(dU, cols, -delta_V)
+        # dU = np.zeros_like(self.U)
+        # np.add.at(dU, cols, -delta_V)
+        # Use bincount for grouped accumulation (faster than np.add.at for many unique
+        # indices)
+        dU = np.empty_like(self.U)
+        for k in range(self.n_components):
+            dU[:, k] = np.bincount(cols, weights=-delta_V[:, k], minlength=d1)
 
         # db_U: scatter-add delta.sum(axis=1) to rows indexed by cols
         delta_sum = delta.sum(axis=1)  # (nnz,)
-        db_U = np.zeros_like(self.b_U)
-        np.add.at(db_U, (cols, 0), -delta_sum)
+        # db_U = np.zeros_like(self.b_U)
+        # np.add.at(db_U, (cols, 0), -delta_sum)
+        db_U = np.empty_like(self.b_U)
+        db_U[:, 0] = np.bincount(cols, weights=-delta_sum, minlength=d1)
 
         # === Add prior terms (L2 regularization) ===
         u_diff = self.U - self.u_prior_mean
