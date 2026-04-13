@@ -441,6 +441,10 @@ class MMvecResult:
         """
         return self._estimator.loss_curve_
 
+    def probabilities(self) -> TableLike:
+        r"""Convert ranks to probability matrix via softmax."""
+        return self._estimator.probabilities()
+
     def predict(self, X: TableLike) -> TableLike:
         r"""Predict conditioned feature compositions given conditioning features.
 
@@ -734,6 +738,22 @@ class MMvec(SkbioObject):
             setattr(self, key, value)
         return self
 
+    def probabilities(self) -> TableLike:
+        """Convert ranks to probability matrix via softmax.
+
+        Returns
+        -------
+        probs : table_like of shape (n_features, n_targets)
+            Conditional probabilities P(target | feature). Each row sums to 1.
+
+        """
+        self._check_is_fitted()
+        ranks, sample_ids, feature_ids = _ingest_table(self.ranks_)
+        probs = softmax(ranks, validate=False)
+        return _create_table(
+            probs, columns=feature_ids, index=sample_ids, backend=self.output_format
+        )
+
     def predict(self, X: TableLike) -> TableLike:
         """Predict target distributions given feature compositions.
 
@@ -762,11 +782,10 @@ class MMvec(SkbioObject):
         X_props = X / row_sums
 
         # Get conditional probabilities P(target | feature)
-        ranks, _, _ = _ingest_table(self.ranks_)
-        probs = softmax(ranks, validate=False)
+        cond_probs, _, _ = _ingest_table(self.probabilities())
 
         # Marginal: sum_feature P(target | feature) * P(feature)
-        predicted = X_props @ probs
+        predicted = X_props @ cond_probs
 
         # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
         _, _, metabolite_ids = _ingest_table(self.ranks_)
@@ -1022,7 +1041,8 @@ class _MMvecModel:
         """
         U_aug, V_aug = self.build_aug_matrices()
         logits = np.hstack([np.zeros((self.n_features_x, 1)), U_aug @ V_aug])
-        ranks = logits - np.mean(logits, axis=1, keepdims=True)  # center by row
+        # Center each row
+        ranks = logits - logits.mean(axis=1, keepdims=True)
         return ranks
 
     def pack_params(self):
@@ -1063,15 +1083,17 @@ class _MMvecModel:
         idx += p * (d2 - 1)
         self.b_V = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
-    def full_batch_loss_and_gradient(self, X_coo, Y):
+    def full_batch_loss_and_gradient(self, X_coo, Y, N):
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
         ----------
         X_coo : coo_array
-            Microbe counts in COO format.
+            X counts in COO format.
         Y : np.ndarray of shape (n_samples, n_features_y)
-            Metabolite counts.
+            Y counts.
+        N : np.ndarray of shape (n_samples,)
+            Sum of Y counts for each sample.
 
         Returns
         -------
@@ -1082,8 +1104,8 @@ class _MMvecModel:
         """
         # Extract sparse indices and weights
         rows = X_coo.row  # sample indices (nnz,)
-        cols = X_coo.col  # microbe indices (nnz,)
-        weights = X_coo.data  # microbe counts (nnz,)
+        cols = X_coo.col  # X feature indices (nnz,)
+        weights = X_coo.data  # X counts (nnz,)
 
         # Build augmented matrices once
         U_aug, V_aug = self.build_aug_matrices()
@@ -1095,9 +1117,6 @@ class _MMvecModel:
         # Stable softmax for all microbes
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
         probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
-
-        # Sample totals
-        N = Y.sum(axis=1)  # (n_samples,)
 
         # === Vectorized loss computation ===
         # Gather logits and log_norm for each (sample, microbe) pair
@@ -1186,13 +1205,14 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         Loss per iteration.
 
     """
+    N = Y.sum(axis=1)
     losses = []
-    it = 0  # Use list to allow modification in closure
+    it = 0
 
     def func(theta):
         nonlocal it
         model.unpack_params(theta)
-        loss, grad = model.full_batch_loss_and_gradient(X_coo, Y)
+        loss, grad = model.full_batch_loss_and_gradient(X_coo, Y, N)
         it += 1
         losses.append(loss)
 
