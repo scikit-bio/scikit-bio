@@ -211,15 +211,13 @@ def mmvec(
 
     One can generate a biplot visualizing the co-occurrence patterns of microbes and
     metabolites. The distance and angle between features indicate their association
-    strength.
+    strength. Note that the origin of the plot alway lies on the first metabolite in
+    the dataset, which serves as a reference.
 
     >>> import matplotlib.pyplot as plt
     >>> plt.scatter('PC1', 'PC2', data=res.x_embeddings)  # doctest: +SKIP
     >>> plt.scatter('PC1', 'PC2', data=res.y_embeddings)  # doctest: +SKIP
     >>> plt.grid()  # doctest: +SKIP
-
-    Note that the origin of the plot alway lies on the first metabolite in the dataset,
-    which serves as a reference.
 
     The ``ranks`` matrix stores the log conditional probabilities of microbe-metabolite
     co-occurrences. Larger positive values indicate a stronger likelihood of
