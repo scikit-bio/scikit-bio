@@ -407,22 +407,6 @@ class TestMMvecEstimator(unittest.TestCase):
         )
         self.microbes, self.metabolites = res[0], res[1]
 
-    def test_probabilities(self):
-        """Test probability computation from ranks."""
-        model = MMvec(
-            n_components=2,
-            max_iter=50,
-            seed=42,
-        ).fit(self.microbes, self.metabolites)
-
-        probs = model.probabilities()
-
-        # Probabilities should sum to 1 per row
-        npt.assert_allclose(probs.sum(axis=1), 1.0, rtol=1e-6)
-
-        # Probabilities should be positive
-        self.assertTrue((probs.values >= 0).all())
-
     def test_predict(self):
         """Test predict method returns valid metabolite distributions."""
         model = MMvec(
@@ -1050,14 +1034,6 @@ class TestMMvecCaseStudies(unittest.TestCase):
         # ranks = pd.read_table(get_data_path("ranks.tsv", subdir), index_col=0)
         # pdt.assert_frame_equal(
         #     result.ranks_, ranks,
-        #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
-        # )
-
-        # probabilities = pd.read_table(
-        #     get_data_path("probabilities.tsv", subdir), index_col=0
-        # )
-        # pdt.assert_frame_equal(
-        #     result.probabilities(), probabilities,
         #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
         # )
 

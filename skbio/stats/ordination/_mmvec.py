@@ -441,10 +441,6 @@ class MMvecResult:
         """
         return self._estimator.loss_curve_
 
-    def probabilities(self) -> TableLike:
-        r"""Convert ranks to probability matrix via softmax."""
-        return self._estimator.probabilities()
-
     def predict(self, X: TableLike) -> TableLike:
         r"""Predict conditioned feature compositions given conditioning features.
 
@@ -738,22 +734,6 @@ class MMvec(SkbioObject):
             setattr(self, key, value)
         return self
 
-    def probabilities(self) -> TableLike:
-        """Convert ranks to probability matrix via softmax.
-
-        Returns
-        -------
-        probs : table_like of shape (n_features, n_targets)
-            Conditional probabilities P(target | feature). Each row sums to 1.
-
-        """
-        self._check_is_fitted()
-        ranks, sample_ids, feature_ids = _ingest_table(self.ranks_)
-        probs = softmax(ranks, validate=False)
-        return _create_table(
-            probs, columns=feature_ids, index=sample_ids, backend=self.output_format
-        )
-
     def predict(self, X: TableLike) -> TableLike:
         """Predict target distributions given feature compositions.
 
@@ -782,10 +762,11 @@ class MMvec(SkbioObject):
         X_props = X / row_sums
 
         # Get conditional probabilities P(target | feature)
-        cond_probs, _, _ = _ingest_table(self.probabilities())
+        ranks, _, _ = _ingest_table(self.ranks_)
+        probs = softmax(ranks, validate=False)
 
         # Marginal: sum_feature P(target | feature) * P(feature)
-        predicted = X_props @ cond_probs
+        predicted = X_props @ probs
 
         # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
         _, _, metabolite_ids = _ingest_table(self.ranks_)
@@ -1041,8 +1022,7 @@ class _MMvecModel:
         """
         U_aug, V_aug = self.build_aug_matrices()
         logits = np.hstack([np.zeros((self.n_features_x, 1)), U_aug @ V_aug])
-        # Center each row
-        ranks = logits - logits.mean(axis=1, keepdims=True)
+        ranks = logits - np.mean(logits, axis=1, keepdims=True)  # center by row
         return ranks
 
     def pack_params(self):
