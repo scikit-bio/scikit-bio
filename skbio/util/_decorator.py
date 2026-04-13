@@ -140,12 +140,16 @@ class classproperty(property):
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
-        super(classproperty, self).__init__(classmethod(func))
+        # Keep fget as a plain function so introspection tools (e.g. Sphinx)
+        # can inspect its signature without tripping on a classmethod object.
+        super(classproperty, self).__init__(func)
         self.__name__ = name
         self.__doc__ = doc
 
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+    def __get__(self, obj, owner=None):
+        if owner is None:
+            owner = type(obj)
+        return self.fget(owner)
 
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")
