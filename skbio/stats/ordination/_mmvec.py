@@ -76,17 +76,17 @@ def mmvec(
 
     Parameters
     ----------
-    X : table_like of shape (n_samples, n_features)
+    X : table_like of shape (n_samples, n_features_x)
         Abundance counts for the first modality (e.g., microbes). This modality is
         treated as the "conditioning" variable. See
         :ref:`supported formats <table_like>`.
 
-    Y : table_like of shape (n_samples,) or (n_samples, n_targets)
+    Y : table_like of shape (n_samples, n_features_y)
         Abundance counts for the second modality (e.g., metabolites). This modality is
         treated as the "conditioned" variable. See above. Must have the same samples as
         ``X``.
 
-    n_components : int, optional
+    dimensions : int, optional
         Number of latent dimensions for embeddings. Default is 3.
 
     optimizer : {'lbfgs', 'adam'}, optional
@@ -157,20 +157,136 @@ def mmvec(
     Examples
     --------
     >>> from skbio.stats.ordination import mmvec
-    >>> import numpy as np
+
+    Create a toy example of paired microbiome and metabolome datasets.
+
     >>> import pandas as pd
-    >>> np.random.seed(42)
-    >>> microbes = pd.DataFrame(
-    ...     np.random.randint(0, 100, size=(50, 10)),
-    ...     columns=[f'OTU_{i}' for i in range(10)]
-    ... )
-    >>> metabolites = pd.DataFrame(
-    ...     np.random.randint(0, 100, size=(50, 15)),
-    ...     columns=[f'metabolite_{i}' for i in range(15)]
-    ... )
-    >>> result = mmvec(microbes, metabolites, n_components=2, max_iter=10)
-    >>> result.ranks.shape
-    (10, 15)
+    >>> samples = ['S1', 'S2', 'S3', 'S4', 'S5']
+    >>> microbes = ['O1', 'O2', 'O3', 'O4', 'O5', 'O6', 'O7', 'O8']
+    >>> microbiome = pd.DataFrame([
+    ...     [1, 0, 0, 7, 0, 2, 1, 0],
+    ...     [0, 1, 2, 9, 1, 1, 0, 1],
+    ...     [2, 0, 1, 6, 0, 0, 2, 0],
+    ...     [1, 2, 1, 8, 3, 1, 0, 2],
+    ...     [0, 1, 3, 3, 1, 4, 1, 0],
+    ... ], index=samples, columns=microbes)
+    >>> metabolites = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6']
+    >>> metabolome = pd.DataFrame([
+    ...     [0, 1, 0, 1, 1, 2],
+    ...     [1, 0, 2, 1, 5, 0],
+    ...     [0, 3, 1, 0, 1, 1],
+    ...     [3, 1, 0, 2, 2, 0],
+    ...     [0, 0, 4, 1, 7, 3],
+    ... ], index=samples, columns=metabolites)
+
+    Fit the MMvec model to the data. This will perform numerical optimization for up to
+    100 iterations to learn the embeddings and co-occurrence patterns.
+
+    >>> res = mmvec(microbiome, metabolome, max_iter=100, seed=42)
+
+    Features of the two datasets (i.e., microbes and metabolites) are projected to the
+    same latent space. Their coordinates (i.e., embeddings) are stored in two matrices:
+    ``x_embeddings`` and ``y_embeddings``, respectively. The last column of each matrix
+    is the bias term.
+
+    >>> res.x_embeddings.round(3)
+          PC1    PC2    PC3   bias
+    O1 -0.442 -0.358  0.701  0.036
+    O2  0.136  0.378 -0.280 -0.304
+    O3  0.226 -0.206 -0.668  0.376
+    O4  0.036 -0.015  0.088  0.055
+    O5  0.137  0.490 -0.068 -0.423
+    O6 -0.268 -0.047 -0.899  0.622
+    O7  0.009 -0.924  0.025  1.099
+    O8  0.575  0.823  0.398 -0.593
+
+    >>> res.y_embeddings.round(3)
+          PC1    PC2    PC3   bias
+    C1  0.000  0.000  0.000  0.000
+    C2 -0.153 -0.861  0.936 -0.149
+    C3  0.186 -0.475 -0.742  0.102
+    C4 -0.079  0.429 -0.001  0.020
+    C5  0.266 -0.074 -0.541  1.028
+    C6 -0.743 -0.965 -0.525 -0.132
+
+    One can generate a biplot visualizing the co-occurrence patterns of microbes and
+    metabolites. The distance and angle between features indicate their association
+    strength.
+
+    >>> import matplotlib.pyplot as plt
+    >>> plt.scatter('PC1', 'PC2', data=res.x_embeddings)  # doctest: +SKIP
+    >>> plt.scatter('PC1', 'PC2', data=res.y_embeddings)  # doctest: +SKIP
+    >>> plt.grid()  # doctest: +SKIP
+
+    Note that the origin of the plot alway lies on the first metabolite in the dataset,
+    which serves as a reference.
+
+    The ``ranks`` matrix stores the log conditional probabilities of microbe-metabolite
+    co-occurrences. Larger positive values indicate a stronger likelihood of
+    co-occurrence. Low and negative values indicate no relationship, not necessarily a
+    negative correlation. Values are row-centered. One can sort each row to reveal
+    which metabolites are most strongly associated with each microbe.
+
+    >>> res.ranks.round(3)
+           C1     C2     C3     C4     C5     C6
+    O1 -0.228  0.691 -0.522 -0.291  0.366 -0.017
+    O2  0.202 -0.859  0.054  0.070  1.086 -0.553
+    O3 -0.602 -0.858  0.511 -0.313  1.239  0.023
+    O4 -0.180 -0.184 -0.074 -0.114  0.866 -0.314
+    O5  0.368 -0.710 -0.109  0.165  1.011 -0.725
+    O6 -0.833 -1.119  0.531 -0.189  1.236  0.373
+    O7 -1.355  0.411  0.266 -0.634  0.829  0.483
+    O8  0.725 -0.441 -0.347  0.459  1.036 -1.431
+
+    To obtain actual conditional probabilities, apply inverse CLR transform (a.k.a.
+    softmax) to the ranks matrix.
+
+    >>> from skbio.stats.composition import clr_inv
+    >>> probs = clr_inv(res.ranks)
+    >>> probs.round(3)
+    array([[ 0.121,  0.304,  0.09 ,  0.114,  0.22 ,  0.15 ],
+           [ 0.167,  0.058,  0.144,  0.147,  0.405,  0.079],
+           [ 0.07 ,  0.054,  0.212,  0.093,  0.44 ,  0.13 ],
+           [ 0.127,  0.126,  0.141,  0.135,  0.361,  0.111],
+           [ 0.2  ,  0.068,  0.124,  0.163,  0.379,  0.067],
+           [ 0.053,  0.04 ,  0.208,  0.101,  0.421,  0.177],
+           [ 0.034,  0.201,  0.174,  0.071,  0.305,  0.216],
+           [ 0.256,  0.08 ,  0.088,  0.197,  0.35 ,  0.03 ]])
+
+    The ``convergence`` vector stores the loss curve over iterations during model
+    training. If the model has converged, the curve should decrease and stabilize.
+
+    >>> plt.plot(res.convergence)  # doctest: +SKIP
+
+    A fitted MMvec model can be used to predict metabolite abundances given new
+    microbiome data.
+
+    >>> samples_test = ['S6', 'S7', 'S8']
+    >>> microbiome_test = pd.DataFrame([
+    ...     [3, 0, 2, 6, 1, 4, 4, 0],
+    ...     [2, 1, 5, 0, 0, 3, 6, 1],
+    ...     [8, 4, 1, 1, 5, 0, 5, 1],
+    ... ], index=samples_test, columns=microbes)
+    >>> metabolome_pred = res.predict(microbiome_test)
+    >>> metabolome_pred.round(3)
+           C1     C2     C3     C4     C5     C6
+    S6  0.091  0.140  0.160  0.109  0.349  0.151
+    S7  0.077  0.130  0.175  0.098  0.360  0.160
+    S8  0.131  0.171  0.129  0.124  0.318  0.128
+
+    To evaluate the model's generalizability, one can compute the :math:`Q^2` statistic
+    on held-out test data. A positive :math:`Q^2` indicates better-than-mean predictive
+    performance (with 1.0 indicating perfect prediction). A negative or close-to-zero
+    :math:`Q^2` is a sign of model overfitting or poor generalization.
+
+    >>> metabolome_test = pd.DataFrame([
+    ...     [0, 5, 1, 1, 8, 0],
+    ...     [1, 0, 5, 3, 2, 3],
+    ...     [4, 1, 0, 1, 6, 3],
+    ... ], index=samples_test, columns=metabolites)
+    >>> q2 = res.score(microbiome_test, metabolome_test)
+    >>> float(q2.round(5))
+    0.02291
 
     """
     estimator = MMvec(
@@ -224,9 +340,10 @@ class MMvecResult(SkbioObject):
         (i, j) represents the log-odds of observing :math:`Y_j` given :math:`X_i`,
         relative to the row mean. Higher values indicate stronger positive associations.
         This matrix is row-centered (each row sums to zero) for identifiability.
-        To obtain actual conditional probabilities, use the ``probabilities`` method.
+        To obtain actual conditional probabilities, transform the matrix using
+        :func:`skbio.stats.composition.clr_inv`.
 
-    convergence : table_like
+    convergence : table_like of shape (n_iterations,)
         Loss (negative log-posterior; lower is better) over iterations during training.
         Use this to diagnose training issues. The loss should generally decrease and
         stabilize. If the loss is still decreasing at the final iteration, consider
