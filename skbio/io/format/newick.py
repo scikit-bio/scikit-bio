@@ -28,17 +28,19 @@ Formal Grammar
 .. code-block:: none
 
           NEWICK ==> NODE ;
-            NODE ==> FORMATTING SUBTREE FORMATTING NODE_INFO FORMATTING
+            NODE ==> FORMATTING SUBTREE FORMATTING NODE_INFO FORMATTING EDGE_ID FORMATTING
          SUBTREE ==> ( CHILDREN ) | null
        NODE_INFO ==> LABEL | LENGTH | LABEL FORMATTING LENGTH | null
+         EDGE_ID ==> { INTEGER } | null
       FORMATTING ==> [ COMMENT_CHARS ] | whitespace | null
         CHILDREN ==> NODE | CHILDREN , NODE
            LABEL ==> ' ALL_CHARS ' | SAFE_CHARS
           LENGTH ==> : FORMATTING NUMBER
    COMMENT_CHARS ==> any
        ALL_CHARS ==> any
-      SAFE_CHARS ==> any except: ,;:()[] and whitespace
+      SAFE_CHARS ==> any except: ,;:()[]{} and whitespace
           NUMBER ==> a decimal or integer
+         INTEGER ==> a non-negative integer
 
 .. note:: The ``_`` character inside of SAFE_CHARS will be converted to a
    blank space in ``skbio.tree.TreeNode`` and vice versa.
@@ -48,6 +50,13 @@ Formal Grammar
 
    The implementation of newick in scikit-bio allows nested comments. To
    escape ``[`` or ``]`` from within COMMENT_CHARS, use a preceding ``'``.
+
+   Curly braces (``{ }``) define an edge identifier (EDGE_ID), an integer
+   used by the jplace format [3]_ for phylogenetic placement. Edge IDs are
+   parsed by default. When ``edge_id_in_comment=True`` is passed to the
+   reader, square brackets are used as edge ID delimiters instead (i.e.,
+   ``EDGE_ID ==> [ INTEGER ]`` and the ``[ COMMENT_CHARS ]`` production
+   of FORMATTING becomes unavailable).
 
 Explanation
 ^^^^^^^^^^^
@@ -147,6 +156,16 @@ Whitespace
 Whitespace is not allowed within any un-escaped label or in any length, but it
 is permitted anywhere else.
 
+Edge Identifiers
+~~~~~~~~~~~~~~~~
+Curly braces (``{ }``) define an edge identifier, an integer that uniquely
+labels each branch of the tree. This is used by the jplace format [3]_ for
+phylogenetic placement. Edge IDs appear after the branch length:
+``(A:0.1{0}, B:0.2{1}):0.0{2};``. By default, curly braces are recognized as
+edge ID delimiters. When ``edge_id_in_comment=True`` is passed to the reader,
+square brackets are used instead (and curly braces become regular characters).
+The parsed edge ID is stored in ``TreeNode.edge_id``.
+
 Caveats
 ~~~~~~~
 Newick cannot always provide a unique representation of any tree, in other
@@ -161,12 +180,28 @@ will always be rooted at the ``newick`` root (``;``).
 
 Format Parameters
 -----------------
-The only supported format parameter is `convert_underscores`. This is `True` by
-default. When `False`, underscores found in unescaped labels will not be
-converted to spaces. This is useful when reading the output of an external
-program in which the underscores were not escaped. This parameter only affects
-`read` operations. It does not exist for `write` operations; they will always
-properly escape underscores.
+The following format parameters are supported:
+
+``convert_underscores`` : bool (read only)
+    Default ``True``. When ``False``, underscores found in unescaped labels
+    will not be converted to spaces. This is useful when reading the output of
+    an external program in which the underscores were not escaped. This
+    parameter does not exist for write operations; they will always properly
+    escape underscores.
+
+``edge_id_in_comment`` : bool (read only)
+    Default ``False``. When ``True``, square brackets (``[]``) are repurposed
+    as edge ID delimiters instead of comments, and curly braces (``{}``) become
+    regular characters. This is useful for reading jplace-style files produced
+    by programs that encode edge IDs in square brackets rather than curly
+    braces. By default, curly braces are used as edge ID delimiters. Note that
+    enabling this option disables all Newick comment support; any non-integer
+    content within ``[]`` will raise a ``NewickFormatError``.
+
+``include_edge_id`` : bool (write only)
+    Default ``False``. When ``True``, edge IDs are emitted in curly braces
+    (``{N}``) after the branch length for each node that has a non-None
+    ``edge_id``.
 
 Examples
 --------
@@ -204,10 +239,45 @@ This is a complex Newick string.
 Notice that the node originally labeled ``d_d`` became ``d d``. Additionally
 ``'b_b'''`` became ``b_b'``. Note that the underscore was preserved in `b_b'`.
 
+This is a Newick string with edge IDs in curly braces, as used by the jplace
+format. Edge IDs are parsed by default.
+
+>>> f = StringIO("((A:0.1{0},B:0.2{1})C:0.3{2})D:0.0{3};")
+>>> tree = read(f, format="newick", into=TreeNode)
+>>> f.close()
+>>> tree.children[0].children[0].name
+'A'
+>>> tree.children[0].children[0].edge_id
+0
+>>> tree.edge_id
+3
+
+Writing a tree with edge IDs requires ``include_edge_id=True``.
+
+>>> tree = TreeNode(name="root", length=0.0, edge_id=2, children=[
+...     TreeNode(name="a", length=0.1, edge_id=0),
+...     TreeNode(name="b", length=0.2, edge_id=1),
+... ])
+>>> f = StringIO()
+>>> _ = tree.write(f, format="newick", include_edge_id=True)
+>>> print(f.getvalue())
+(a:0.1{0},b:0.2{1})root:0.0{2};
+<BLANKLINE>
+
+Some programs encode edge IDs in square brackets instead of curly braces. Use
+``edge_id_in_comment=True`` to parse these.
+
+>>> f = StringIO("(A:0.1[0],B:0.2[1])C:0.0[2];")
+>>> tree = read(f, format="newick", into=TreeNode, edge_id_in_comment=True)
+>>> f.close()
+>>> tree.children[0].edge_id
+0
+
 References
 ----------
 .. [1] http://evolution.genetics.washington.edu/phylip/newick_doc.html
 .. [2] http://evolution.genetics.washington.edu/phylip/newicktree.html
+.. [3] http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0031009
 
 
 """  # noqa: D205, D415
@@ -268,23 +338,28 @@ def _newick_sniffer(fh):
 
 
 @newick.reader(TreeNode)
-def _newick_to_tree_node(fh, cls=None, convert_underscores=True):
+def _newick_to_tree_node(fh, cls=None, convert_underscores=True,
+                         edge_id_in_comment=False):
     if cls is None:
         cls = TreeNode
     tree_stack = []
     current_depth = 0
     last_token = ""
     next_is_distance = False
+    was_edge_id = False
     root = cls()
     tree_stack.append((root, current_depth))
-    for token in _tokenize_newick(fh, convert_underscores=convert_underscores):
+    for token in _tokenize_newick(fh, convert_underscores=convert_underscores,
+                                  edge_id_in_comment=edge_id_in_comment):
         # Check for a label
-        if last_token not in "(,):":
-            if not next_is_distance:
+        if last_token not in "(,):{}":
+            if was_edge_id:
+                was_edge_id = False
+            elif not next_is_distance:
                 tree_stack[-1][0].name = last_token if last_token else None
             else:
                 next_is_distance = False
-        # Check for a distance
+        # Check for a distance or edge ID
         if token == ":":
             next_is_distance = True
         elif last_token == ":":
@@ -294,6 +369,19 @@ def _newick_to_tree_node(fh, cls=None, convert_underscores=True):
                 raise NewickFormatError(
                     "Could not read length as numeric type: %s." % token
                 )
+        elif last_token == "{":
+            try:
+                edge_id = int(token)
+            except ValueError:
+                raise NewickFormatError(
+                    "Could not read edge ID as integer type: %s." % token
+                )
+            if edge_id < 0:
+                raise NewickFormatError(
+                    "Edge ID must be non-negative, got: %d." % edge_id
+                )
+            tree_stack[-1][0].edge_id = edge_id
+            was_edge_id = True
 
         elif token == "(":
             current_depth += 1
@@ -337,8 +425,8 @@ def _newick_to_tree_node(fh, cls=None, convert_underscores=True):
 
 
 @newick.writer(TreeNode)
-def _tree_node_to_newick(obj, fh):
-    operators = set(",:_;()[]")
+def _tree_node_to_newick(obj, fh, include_edge_id=False):
+    operators = set(",:_;()[]{}")
     current_depth = 0
     nodes_left = [(obj, 0)]
     while len(nodes_left) > 0:
@@ -369,14 +457,22 @@ def _tree_node_to_newick(obj, fh):
             if node.length is not None:
                 fh.write(":")
                 fh.write("%s" % node.length)
+            if include_edge_id and node.edge_id is not None:
+                fh.write("{%d}" % node.edge_id)
             if nodes_left and nodes_left[-1][1] == current_depth:
                 fh.write(",")
 
     fh.write(";\n")
 
 
-def _tokenize_newick(fh, convert_underscores=True):
-    structure_tokens = set("(),;:")
+def _tokenize_newick(fh, convert_underscores=True, edge_id_in_comment=False):
+    if edge_id_in_comment:
+        structure_tokens = set("(),;:[]")
+    else:
+        structure_tokens = set("(),;:{}")
+    # When edge_id_in_comment is True, [ and ] are normalized to { and }
+    # so the reader handles both modes identically.
+    token_map = {"[": "{", "]": "}"}
     not_escaped = True
     label_start = False
     last_non_ws_char = ""
@@ -391,6 +487,8 @@ def _tokenize_newick(fh, convert_underscores=True):
     #
     # The following characters indicate structure:
     #      ( ) , ; :
+    # Additionally, { } are structure tokens for edge IDs (default), or
+    # [ ] when edge_id_in_comment is True.
     #
     # Whitespace is never allowed in a newick label, so an exception will be
     # thrown.
@@ -404,21 +502,24 @@ def _tokenize_newick(fh, convert_underscores=True):
             # Using a comment_depth we can handle nested comments.
             # Additionally if we are inside an escaped literal string, then
             # we don't want to consider it a comment.
-            if character == "[" and not_escaped:
-                # Sometimes we might not want to nest a comment, so we will use
-                # our escape character. This is not explicitly mentioned in
-                # any format specification, but seems like what a reasonable
-                # person might do.
-                if last_non_ws_char != "'" or comment_depth == 0:
-                    # Once again, only advance our depth if [ has not been
-                    # escaped inside our comment.
-                    comment_depth += 1
-            if comment_depth > 0:
-                # Same as above, but in reverse
-                if character == "]" and last_non_ws_char != "'":
-                    comment_depth -= 1
-                last_non_ws_char = character
-                continue
+            # When edge_id_in_comment is True, [] are repurposed as edge ID
+            # delimiters, so comment handling is skipped entirely.
+            if not edge_id_in_comment:
+                if character == "[" and not_escaped:
+                    # Sometimes we might not want to nest a comment, so we
+                    # will use our escape character. This is not explicitly
+                    # mentioned in any format specification, but seems like
+                    # what a reasonable person might do.
+                    if last_non_ws_char != "'" or comment_depth == 0:
+                        # Once again, only advance our depth if [ has not been
+                        # escaped inside our comment.
+                        comment_depth += 1
+                if comment_depth > 0:
+                    # Same as above, but in reverse
+                    if character == "]" and last_non_ws_char != "'":
+                        comment_depth -= 1
+                    last_non_ws_char = character
+                    continue
             # We are not in a comment block if we are below here.
 
             # If we are inside of an escaped string literal, then ( ) , ; are
@@ -442,7 +543,7 @@ def _tokenize_newick(fh, convert_underscores=True):
                 # Clear our buffer for the next metadata token and yield our
                 # current structure token.
                 metadata_buffer = []
-                yield character
+                yield token_map.get(character, character)
             # We will now handle escaped string literals.
             # They are inconvenient because any character inside of them is
             # valid, especially whitespace.
