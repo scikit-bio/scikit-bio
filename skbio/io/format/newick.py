@@ -28,15 +28,14 @@ Formal Grammar
 .. code-block:: none
 
           NEWICK ==> NODE ;
-            NODE ==> FORMATTING SUBTREE FORMATTING NODE_INFO FORMATTING EDGE_ID \
-FORMATTING
+            NODE ==> FMT SUBTREE FMT NODE_INFO FMT EDGE_ID FMT
          SUBTREE ==> ( CHILDREN ) | null
-       NODE_INFO ==> LABEL | LENGTH | LABEL FORMATTING LENGTH | null
+       NODE_INFO ==> LABEL | LENGTH | LABEL FMT LENGTH | null
          EDGE_ID ==> { INTEGER } | null
-      FORMATTING ==> [ COMMENT_CHARS ] | whitespace | null
+             FMT ==> [ COMMENT_CHARS ] | whitespace | null
         CHILDREN ==> NODE | CHILDREN , NODE
            LABEL ==> ' ALL_CHARS ' | SAFE_CHARS
-          LENGTH ==> : FORMATTING NUMBER
+          LENGTH ==> : FMT NUMBER
    COMMENT_CHARS ==> any
        ALL_CHARS ==> any
       SAFE_CHARS ==> any except: ,;:()[]{} and whitespace
