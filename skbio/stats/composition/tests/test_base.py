@@ -1036,7 +1036,7 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.2857382286903922)
 
 
-class TestRclr(TestCase):
+class TestRclr(TestCase, ArrayAPITestMixin):
     """Tests for the robust centered log-ratio transformation."""
 
     def test_basic_rclr(self):
@@ -1050,6 +1050,20 @@ class TestRclr(TestCase):
         for i in range(mat.shape[0]):
             observed = ~np.isnan(result[i])
             npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_rclr_backends(self, xp, device):
+        # Dense data (no zeros) — should match clr
+        data = rand(4, 6, 3) + 1e-4
+        lmat = np.log(data)
+        expected = lmat - np.mean(lmat, axis=-1, keepdims=True)
+
+        arr = self.make_array(xp, device, data)
+        result = rclr(arr)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assertEqual(result.shape, arr.shape)
+        self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
     def test_rclr_with_zeros(self):
         """Test rclr handles zeros by producing NaN."""
