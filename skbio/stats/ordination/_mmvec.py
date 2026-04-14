@@ -788,10 +788,10 @@ class MMvec(SkbioObject):
         predicted = X_props @ cond_probs
 
         # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
-        _, _, metabolite_ids = _ingest_table(self.ranks_)
+        _, _, Y_ids = _ingest_table(self.ranks_)
         return _create_table(
             predicted,
-            columns=metabolite_ids,
+            columns=Y_ids,
             index=sample_ids,
             backend=self.output_format,
         )
@@ -816,7 +816,7 @@ class MMvec(SkbioObject):
         Y, _, _ = _ingest_table(y)
 
         # Get predictions
-        Y_pred = self.predict(X).to_numpy()
+        Y_pred, _, _ = _ingest_table(self.predict(X))
 
         # Normalize abundances to proportions
         row_sums = np.sum(Y, axis=1, keepdims=True)
@@ -904,13 +904,13 @@ class _MMvecModel:
         V_aug = np.vstack([self.b_V, np.ones((1, self.n_features_y - 1)), self.V])
         return U_aug, V_aug
 
-    def forward(self, microbe_indices):
-        """Compute logits for given microbe indices.
+    def forward(self, X_idx):
+        """Compute logits for given X indices.
 
         Parameters
         ----------
-        microbe_indices : np.ndarray of shape (batch_size,)
-            Indices of microbes in the batch.
+        X_idx : np.ndarray of shape (batch_size,)
+            Indices of X samples in the batch.
 
         Returns
         -------
@@ -918,9 +918,9 @@ class _MMvecModel:
             Logits with first column (reference) set to 0.
         """
         U_aug, V_aug = self.build_aug_matrices()
-        u_batch = U_aug[microbe_indices, :]  # (B, p+2)
+        u_batch = U_aug[X_idx, :]  # (B, p+2)
         logits_nonref = u_batch @ V_aug  # (B, d2-1)
-        logits = np.hstack([np.zeros((len(microbe_indices), 1)), logits_nonref])
+        logits = np.hstack([np.zeros((len(X_idx), 1)), logits_nonref])
         return logits
 
     def loss_and_gradients(self, X, Y, rng, batch_size=50, batch_norm="legacy"):
@@ -970,12 +970,12 @@ class _MMvecModel:
         )
 
         sample_ids = X_coo.row[batch_idx]
-        microbe_ids = X_coo.col[batch_idx]
+        X_ids = X_coo.col[batch_idx]
 
         # Forward pass
         Y_arr = np.asarray(Y)
         Y_batch = Y_arr[sample_ids, :]  # (B, d2)
-        logits = self.forward(microbe_ids)  # (B, d2)
+        logits = self.forward(X_ids)  # (B, d2)
 
         # Compute likelihood and gradient w.r.t. logits
         loglik, delta_full = _multinomial_loglik_and_grad(logits, Y_batch)
@@ -983,7 +983,7 @@ class _MMvecModel:
 
         # Build augmented matrices
         U_aug, V_aug = self.build_aug_matrices()
-        u_batch = U_aug[microbe_ids, :]  # (B, p+2)
+        u_batch = U_aug[X_ids, :]  # (B, p+2)
 
         # Gradient w.r.t. V parameters
         # dV = -norm * (u_batch[:, 2:].T @ delta) + V / sigma^2
@@ -1002,7 +1002,7 @@ class _MMvecModel:
 
         # Scatter-add gradients
         for b in range(batch_size):
-            m = microbe_ids[b]
+            m = X_ids[b]
             dU[m, :] -= norm * du_batch[b, 2:]
             db_U[m, 0] -= norm * du_batch[b, 1]
 
@@ -1117,12 +1117,12 @@ class _MMvecModel:
         logits_core = U_aug @ V_aug  # (d1, d2-1)
         logits_all = np.hstack([np.zeros((d1, 1)), logits_core])
 
-        # Stable softmax for all microbes
+        # Stable softmax for all X features
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
         probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
 
         # === Vectorized loss computation ===
-        # Gather logits and log_norm for each (sample, microbe) pair
+        # Gather logits and log_norm for each (sample, X feature) pair
         logits_batch = logits_all[cols, :]  # (nnz, d2)
         log_norm_batch = log_norm[cols, 0]  # (nnz,)
         Y_batch = Y[rows, :]  # (nnz, d2)
@@ -1133,7 +1133,7 @@ class _MMvecModel:
         loss = -np.dot(weights, log_lik)  # weighted sum
 
         # === Vectorized gradient computation ===
-        # Delta: w * (y[1:] - N * pi[1:]) for each (sample, microbe) pair
+        # Delta: w * (y[1:] - N * pi[1:]) for each (sample, X feature) pair
         probs_batch = probs_all[cols, :]  # (nnz, d2)
         delta = weights[:, None] * (
             Y_batch[:, 1:] - N_batch[:, None] * probs_batch[:, 1:]
