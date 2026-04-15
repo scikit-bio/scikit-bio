@@ -1036,7 +1036,7 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.2857382286903922)
 
 
-class TestRclr(TestCase):
+class TestRclr(TestCase, ArrayAPITestMixin):
     """Tests for the robust centered log-ratio transformation."""
 
     def test_basic_rclr(self):
@@ -1050,6 +1050,39 @@ class TestRclr(TestCase):
         for i in range(mat.shape[0]):
             observed = ~np.isnan(result[i])
             npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_rclr_backends(self, xp, device):
+        # Dense data (no zeros) — should match clr
+        data = rand(4, 6, 3) + 1e-4
+        lmat = np.log(data)
+        expected = lmat - np.mean(lmat, axis=-1, keepdims=True)
+
+        arr = self.make_array(xp, device, data)
+        result = rclr(arr)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assertEqual(result.shape, arr.shape)
+        self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+        # Sparse data (with zeros) — zeros become NaN, observed values centered
+        data_sparse = np.array([[3.0, 3.0, 0.0],
+                                [0.0, 4.0, 2.0]])
+        expected_sparse = np.array([[0.0, 0.0, np.nan],
+                                    [np.nan, 0.34657359, -0.34657359]])
+
+        arr_sparse = self.make_array(xp, device, data_sparse)
+        result_sparse = rclr(arr_sparse)
+
+        self.assert_type_preserved(result_sparse, xp, device)
+        self.assertEqual(result_sparse.shape, arr_sparse.shape)
+
+        # Convert to numpy for NaN-aware comparison
+        result_np = np.asarray(result_sparse)
+        npt.assert_array_equal(np.isnan(result_np), np.isnan(expected_sparse))
+        npt.assert_allclose(result_np[~np.isnan(result_np)],
+                            expected_sparse[~np.isnan(expected_sparse)],
+                            rtol=_RELAXED_RTOL)
 
     def test_rclr_with_zeros(self):
         """Test rclr handles zeros by producing NaN."""
