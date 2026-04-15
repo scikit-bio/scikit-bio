@@ -338,7 +338,7 @@ class TestMMvecBasic(unittest.TestCase):
         """Check that ranks are row-centered."""
         X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
         obs = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
-        row_means = obs.ranks.values.mean(axis=1)
+        row_means = obs.ranks.to_numpy().mean(axis=1)
         npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_reproducibility(self):
@@ -392,7 +392,7 @@ class TestMMvecEstimator(unittest.TestCase):
         npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
         # Predictions should be positive
-        self.assertTrue((predictions.values >= 0).all())
+        self.assertTrue((predictions.to_numpy() >= 0).all())
 
         # Column names should match metabolites
         self.assertEqual(
@@ -460,7 +460,7 @@ class TestMMvecEstimator(unittest.TestCase):
             max_iter=50,
             seed=42,
         ).fit(self.microbes, self.metabolites)
-        predictions = model.predict(self.microbes.values[:5])
+        predictions = model.predict(self.microbes.to_numpy()[:5])
         self.assertEqual(predictions.shape[0], 5)
         npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
@@ -476,7 +476,7 @@ class TestMMvecEstimator(unittest.TestCase):
             max_iter=100,
             seed=42,
         ).fit(train_features_x, train_features_y)
-        q2 = model.score(test_microbes.values, test_metabolites.values)
+        q2 = model.score(test_microbes.to_numpy(), test_metabolites.to_numpy())
         self.assertIsInstance(q2, float)
         self.assertLessEqual(q2, 1.0)
 
@@ -493,6 +493,80 @@ class TestMMvecEstimator(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             model.score(self.microbes.iloc[:5], zero_metabolites)
         self.assertIn("all-zero counts", str(ctx.exception))
+
+    def test_check_is_fitted(self):
+        """Should raise if fit has not been called."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+        with self.assertRaises(ValueError) as ctx:
+            model._check_is_fitted()
+        self.assertIn("not fitted", str(ctx.exception))
+
+    def test_str(self):
+        """String representation of estimator should require fitted state."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+        model.fit(self.microbes, self.metabolites)
+        obs = str(model)
+        self.assertIn("MMvec", obs)
+        self.assertIn("Features", obs)
+        self.assertIn("Targets", obs)
+        self.assertIn("Components", obs)
+        self.assertIn("Iterations", obs)
+
+    def test_get_params(self):
+        """Estimator parameters should be returned as a dict."""
+        model = MMvec(
+            n_components=4,
+            optimizer="adam",
+            max_iter=123,
+            learning_rate=0.02,
+            batch_size=11,
+            x_prior_mean=1.5,
+            x_prior_scale=0.8,
+            y_prior_mean=-2.5,
+            y_prior_scale=1.2,
+            beta_1=0.8,
+            beta_2=0.85,
+            clipnorm=3.0,
+            batch_norm="legacy",
+            seed=7,
+            verbose=True,
+            output_format="numpy",
+        )
+
+        obs = model.get_params()
+        exp = {
+            "n_components": 4,
+            "optimizer": "adam",
+            "max_iter": 123,
+            "learning_rate": 0.02,
+            "batch_size": 11,
+            "x_prior_mean": 1.5,
+            "x_prior_scale": 0.8,
+            "y_prior_mean": -2.5,
+            "y_prior_scale": 1.2,
+            "beta_1": 0.8,
+            "beta_2": 0.85,
+            "clipnorm": 3.0,
+            "batch_norm": "legacy",
+            "seed": 7,
+            "verbose": True,
+            "output_format": "numpy",
+        }
+        self.assertDictEqual(obs, exp)
+
+    def test_set_params(self):
+        """set_params should update known parameters and reject unknown ones."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+
+        result = model.set_params(n_components=5, optimizer="adam", max_iter=20)
+        self.assertIs(result, model)
+        self.assertEqual(model.n_components, 5)
+        self.assertEqual(model.optimizer, "adam")
+        self.assertEqual(model.max_iter, 20)
+
+        with self.assertRaises(ValueError) as ctx:
+            model.set_params(not_a_real_param=1)
+        self.assertIn("Invalid parameter", str(ctx.exception))
 
 
 class TestMMvecValidation(unittest.TestCase):
@@ -598,7 +672,7 @@ class TestMMvecInputTypes(unittest.TestCase):
         # Should produce valid results
         self.assertEqual(result.ranks.shape, (8, 10))
         npt.assert_allclose(
-            result.ranks.values.mean(axis=1), 0, atol=1e-10
+            result.ranks.to_numpy().mean(axis=1), 0, atol=1e-10
         )
 
 
@@ -640,8 +714,8 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         # Results should differ
         self.assertFalse(
             np.allclose(
-                result_default.x_embeddings.values,
-                result_nonzero.x_embeddings.values,
+                result_default.x_embeddings.to_numpy(),
+                result_nonzero.x_embeddings.to_numpy(),
             )
         )
 
@@ -750,27 +824,13 @@ class TestMMvecLBFGS(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=10,
-            n_samples=50,
-            n_components=2,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
-        self.U = res[4]
-        self.V = res[6]
+        res = random_multimodal(8, 10, 50, 2, seed=42)
+        self.X, self.Y = res[0], res[1]
+        self.U, self.V = res[4], res[6]
 
     def test_lbfgs_produces_valid_results(self):
         """L-BFGS optimizer should produce valid results."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            dimensions=2,
-            optimizer="lbfgs",
-            max_iter=100,
-            seed=42,
-        )
+        result = mmvec(self.X, self.Y, 2, optimizer="lbfgs", max_iter=100, seed=42)
 
         # Check result type
         self.assertIsInstance(result, MMvecResult)
@@ -781,82 +841,47 @@ class TestMMvecLBFGS(unittest.TestCase):
         self.assertEqual(result.ranks.shape, (8, 10))
 
         # Ranks should be row-centered
-        row_means = result.ranks.values.mean(axis=1)
+        row_means = result.ranks.to_numpy().mean(axis=1)
         npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_lbfgs_reproducibility(self):
         """L-BFGS should be deterministic with same seed."""
-        result1 = mmvec(
-            self.microbes,
-            self.metabolites,
-            dimensions=2,
-            optimizer="lbfgs",
-            max_iter=50,
-            seed=123,
-        )
-
-        result2 = mmvec(
-            self.microbes,
-            self.metabolites,
-            dimensions=2,
-            optimizer="lbfgs",
-            max_iter=50,
-            seed=123,
-        )
-
-        npt.assert_allclose(
-            result1.ranks.values, result2.ranks.values, rtol=1e-10
-        )
+        args = dict(dimensions=2, optimizer="lbfgs", max_iter=50, seed=123)
+        res1 = mmvec(self.X, self.Y, **args)
+        res2 = mmvec(self.X, self.Y, **args)
+        pdt.assert_frame_equal(res1.ranks, res2.ranks, rtol=1e-10)
 
     def test_lbfgs_recovers_structure(self):
         """L-BFGS should recover embedding structure from synthetic data."""
         # Use more data for better recovery
         res = random_multimodal(
-            n_features_x=8,
-            n_features_y=8,
-            n_samples=150,
-            n_components=2,
-            x_noise_std=2,
-            x_total=1000,
-            y_total=10000,
-            seed=1,
+            8, 8, 150, 2, x_noise_std=2, x_total=1000, y_total=10000, seed=1
         )
-        microbes, metabolites = res[0], res[1]
+        X, Y = res[0], res[1]
         U_true = res[4]
 
-        result = mmvec(
-            microbes,
-            metabolites,
-            dimensions=2,
-            optimizer="lbfgs",
-            max_iter=500,
-            seed=42,
-        )
+        result = mmvec(X, Y, dimensions=2, optimizer="lbfgs", max_iter=500, seed=42)
 
         # Check correlation of pairwise distances
-        u_r, u_p = spearmanr(
-            pdist(result.x_embeddings.values[:, :-1]),
-            pdist(U_true),
+        u_r, _ = spearmanr(
+            pdist(result.x_embeddings.to_numpy()[:, :-1]), pdist(U_true)
         )
         self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
 
     def test_lbfgs_score_on_test_data(self):
         """L-BFGS model should produce reasonable Q-squared score on test data."""
         # Split data
-        train_features_x = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_features_y = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
+        X_train = self.X.iloc[:40]
+        X_test = self.X.iloc[40:]
+        Y_train = self.Y.iloc[:40]
+        Y_test = self.Y.iloc[40:]
 
         model = MMvec(
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=100,
-            seed=42,
-        ).fit(train_features_x, train_features_y)
+            n_components=2, optimizer="lbfgs", max_iter=100, seed=42
+        ).fit(X_train, Y_train)
 
         # Compute Q^2 score on test data
-        q2 = model.score(test_microbes, test_metabolites)
+        q2 = model.score(X_test, Y_test)
 
         # Q^2 should be a valid float
         self.assertIsInstance(q2, float)
@@ -867,8 +892,8 @@ class TestMMvecLBFGS(unittest.TestCase):
         sys.stdout = captured
         try:
             mmvec(
-                self.microbes,
-                self.metabolites,
+                self.X,
+                self.Y,
                 dimensions=2,
                 optimizer="lbfgs",
                 max_iter=50,
@@ -886,8 +911,8 @@ class TestMMvecLBFGS(unittest.TestCase):
         """seed as np.random.Generator should work."""
         rng = np.random.default_rng(42)
         result = mmvec(
-            self.microbes,
-            self.metabolites,
+            self.X,
+            self.Y,
             dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
@@ -899,8 +924,8 @@ class TestMMvecLBFGS(unittest.TestCase):
     def test_numpy_array_inputs(self):
         """mmvec should accept numpy arrays (not just DataFrames)."""
         result = mmvec(
-            self.microbes.values,
-            self.metabolites.values,
+            self.X.to_numpy(),
+            self.Y.to_numpy(),
             dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
@@ -913,8 +938,8 @@ class TestMMvecLBFGS(unittest.TestCase):
         """Invalid optimizer should raise ValueError."""
         with self.assertRaises(ValueError) as ctx:
             mmvec(
-                self.microbes,
-                self.metabolites,
+                self.X,
+                self.Y,
                 optimizer="invalid",
                 max_iter=1,
             )
