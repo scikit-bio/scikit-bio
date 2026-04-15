@@ -58,7 +58,6 @@ Multimodal embedding
    :toctree:
 
    mmvec
-   MMvec
    MMvecResult
 
 
