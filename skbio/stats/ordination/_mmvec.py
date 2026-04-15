@@ -907,13 +907,13 @@ class _MMvecModel:
         logits = np.hstack([np.zeros((len(X_idx), 1)), logits_nonref])
         return logits
 
-    def loss_and_gradients(self, X, Y, rng, batch_size=50, batch_norm="legacy"):
+    def loss_and_gradients(self, X_coo, Y, rng, batch_size=50, batch_norm="legacy"):
         """Compute loss and gradients for a mini-batch.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features_x)
-            Microbe counts.
+        X_coo : coo_array of shape (n_samples, n_features_x)
+            Microbe counts in COO format.
         Y : array-like of shape (n_samples, n_features_y)
             Metabolite counts.
         batch_size : int
@@ -931,12 +931,12 @@ class _MMvecModel:
             Gradients for U, b_U, V, b_V.
         """
         # Convert to sparse COO format if needed
-        if issparse(X):
-            X_coo = X.tocoo()
-        else:
-            X_coo = coo_array(X)
+        # if issparse(X):
+        #     X_coo = X.tocoo()
+        # else:
+        #     X_coo = coo_array(X)
 
-        n_samples = X.shape[0]
+        n_samples = X_coo.shape[0]
         total_count = X_coo.data.sum()
 
         # Compute normalization factor
@@ -1314,7 +1314,7 @@ def _train_adam(
 
             # Compute loss and gradients
             loss, grads = model.loss_and_gradients(
-                X, Y, rng, batch_size=batch_size, batch_norm=batch_norm
+                X_coo, Y, rng, batch_size=batch_size, batch_norm=batch_norm
             )
 
             # Gradient clipping

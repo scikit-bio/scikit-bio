@@ -220,6 +220,7 @@ class TestMMvecRecovery(unittest.TestCase):
         # Compute Q^2 score on test data. The value should be positive for a reasonably
         # trained model (better than predicting the mean).
         q2 = result.score(X_test, Y_test)
+        self.assertEqual(round(q2, 7), 0.2664482)  ######
         self.assertGreater(q2, -1.0, f"Q-squared score too low: {q2}")
 
 
