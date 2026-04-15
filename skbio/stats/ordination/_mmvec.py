@@ -813,10 +813,13 @@ class MMvec(SkbioObject):
         ss_tot = np.sum((Y_true - Y_true.mean(axis=0)) ** 2)
 
         # All true values are the same - return 0 to avoid division by zero
-        if ss_tot == 0:
+        # NOTE: Mathematically, this should happen when every feature has a uniform
+        # value across samples. But due to floating-point arithmetic issues, this
+        # won't happen.
+        if ss_tot == 0:  # pragma: no cover
             return 0.0
 
-        return 1 - ss_res / ss_tot
+        return 1.0 - ss_res / ss_tot
 
 
 class _MMvecModel:

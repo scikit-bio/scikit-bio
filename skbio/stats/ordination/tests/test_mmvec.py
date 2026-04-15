@@ -365,58 +365,35 @@ class TestMMvecEstimator(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        res = random_multimodal(
-            n_features_x=8,
-            n_features_y=10,
-            n_samples=50,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
+        self.X, self.Y, *_ = random_multimodal(8, 10, 50, seed=42)
 
     def test_predict(self):
         """Test predict method returns valid metabolite distributions."""
-        model = MMvec(
-            n_components=2,
-            max_iter=50,
-            seed=42,
-        ).fit(self.microbes, self.metabolites)
+        model = MMvec(n_components=2, max_iter=50, seed=42).fit(self.X, self.Y)
 
         # Predict on new samples
-        new_microbes = self.microbes.iloc[:5]
-        predictions = model.predict(new_microbes)
+        X_test = self.X.iloc[:5]
+        Y_pred = model.predict(X_test)
 
         # Predictions should have correct shape
-        self.assertEqual(predictions.shape, (5, 10))
+        self.assertEqual(Y_pred.shape, (5, 10))
 
         # Predictions should sum to 1 per row
-        npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(Y_pred.sum(axis=1), 1.0, rtol=1e-6)
 
         # Predictions should be positive
-        self.assertTrue((predictions.to_numpy() >= 0).all())
+        self.assertTrue((Y_pred.to_numpy() >= 0).all())
 
         # Column names should match metabolites
-        self.assertEqual(
-            list(predictions.columns),
-            list(self.metabolites.columns),
-        )
+        self.assertListEqual(list(Y_pred.columns), list(self.Y.columns))
 
     def test_score(self):
         """Test score method returns valid Q-squared value."""
-        # Split data
-        train_features_x = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_features_y = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
-
-        model = MMvec(
-            n_components=2,
-            max_iter=100,
-            seed=42,
-        ).fit(train_features_x, train_features_y)
-
-        q2 = model.score(test_microbes, test_metabolites)
-
-        # Q^2 should be a float
+        # Split data into train and test sets
+        X_train, X_test = self.X.iloc[:40], self.X.iloc[40:]
+        Y_train, Y_test = self.Y.iloc[:40], self.Y.iloc[40:]
+        model = MMvec(n_components=2, max_iter=100, seed=42).fit(X_train, Y_train)
+        q2 = model.score(X_test, Y_test)
         self.assertIsInstance(q2, float)
 
         # Q^2 should be <= 1.0 (perfect prediction)
@@ -428,10 +405,10 @@ class TestMMvecEstimator(unittest.TestCase):
             n_components=2,
             max_iter=10,
             seed=42,
-        ).fit(self.microbes, self.metabolites)
+        ).fit(self.X, self.Y)
 
         # Create microbes with a zero row
-        zero_microbes = self.microbes.iloc[:3].copy()
+        zero_microbes = self.X.iloc[:3].copy()
         zero_microbes.iloc[0, :] = 0
 
         with self.assertRaises(ValueError) as ctx:
@@ -442,8 +419,8 @@ class TestMMvecEstimator(unittest.TestCase):
     def test_str(self):
         """Test string representation of MMvec."""
         result = mmvec(
-            self.microbes,
-            self.metabolites,
+            self.X,
+            self.Y,
             dimensions=2,
             max_iter=10,
             seed=42,
@@ -459,17 +436,17 @@ class TestMMvecEstimator(unittest.TestCase):
             n_components=2,
             max_iter=50,
             seed=42,
-        ).fit(self.microbes, self.metabolites)
-        predictions = model.predict(self.microbes.to_numpy()[:5])
+        ).fit(self.X, self.Y)
+        predictions = model.predict(self.X.to_numpy()[:5])
         self.assertEqual(predictions.shape[0], 5)
         npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
     def test_score_numpy_array(self):
         """Test score with numpy array inputs (not DataFrames)."""
-        train_features_x = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_features_y = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
+        train_features_x = self.X.iloc[:40]
+        test_microbes = self.X.iloc[40:]
+        train_features_y = self.Y.iloc[:40]
+        test_metabolites = self.Y.iloc[40:]
 
         model = MMvec(
             n_components=2,
@@ -486,12 +463,12 @@ class TestMMvecEstimator(unittest.TestCase):
             n_components=2,
             max_iter=10,
             seed=42,
-        ).fit(self.microbes, self.metabolites)
-        zero_metabolites = self.metabolites.iloc[:5].copy()
+        ).fit(self.X, self.Y)
+        zero_metabolites = self.Y.iloc[:5].copy()
         zero_metabolites.iloc[0, :] = 0
 
         with self.assertRaises(ValueError) as ctx:
-            model.score(self.microbes.iloc[:5], zero_metabolites)
+            model.score(self.X.iloc[:5], zero_metabolites)
         self.assertIn("all-zero counts", str(ctx.exception))
 
     def test_check_is_fitted(self):
@@ -504,7 +481,7 @@ class TestMMvecEstimator(unittest.TestCase):
     def test_str(self):
         """String representation of estimator should require fitted state."""
         model = MMvec(n_components=2, max_iter=10, seed=42)
-        model.fit(self.microbes, self.metabolites)
+        model.fit(self.X, self.Y)
         obs = str(model)
         self.assertIn("MMvec", obs)
         self.assertIn("Features", obs)
