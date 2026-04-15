@@ -24,11 +24,12 @@ from ._docstring import (
 from ._warning import _warn_deprecated, _warn_renamed, _warn_param_renamed
 
 
-def array_api_compatible(backends, devices=None):
-    r"""Mark a function as compatible with the Python array API standard.
+def array_api_doc(backends, devices=None):
+    r"""Add an array API compatibility table to a function's documentation.
 
     An array API compatibility table is inserted into the Notes section of the
-    function's docstring.
+    function's docstring. If the docstring has no Notes section, the table is
+    inserted at the end of the docstring.
 
     Parameters
     ----------

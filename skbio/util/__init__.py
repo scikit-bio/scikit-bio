@@ -55,7 +55,7 @@ Decorators
    aliased
    register_aliases
    params_aliased
-   array_api_compatible
+   array_api_doc
 
 
 Miscellaneous utilities
@@ -101,7 +101,7 @@ from ._decorator import (
     aliased,
     register_aliases,
     params_aliased,
-    array_api_compatible,
+    array_api_doc,
 )
 from ._optionals import get_package
 from ._plotting import PlottableMixin
@@ -125,7 +125,7 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
-    "array_api_compatible",
+    "array_api_doc",
     "xp_assert_close",
     "xp_assert_equal",
     "array_backends",

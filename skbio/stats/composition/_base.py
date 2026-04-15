@@ -18,7 +18,7 @@ from skbio.util._decorator import (
     aliased,
     register_aliases,
     params_aliased,
-    array_api_compatible,
+    array_api_doc,
 )
 from skbio.util._array import ingest_array
 
@@ -88,7 +88,7 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -424,7 +424,7 @@ def inner(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     return xp.matmul(clrx, clry.T)
 
 
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -496,7 +496,7 @@ def _clr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
 
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -584,7 +584,7 @@ def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     return _closure(xp, diff, axis)
 
 
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -693,7 +693,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -816,7 +816,7 @@ def _ilr(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -924,7 +924,7 @@ def _ilr_inv(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdAr
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -1037,7 +1037,7 @@ def _alr(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
