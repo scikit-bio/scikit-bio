@@ -11,8 +11,8 @@
 This module implements MMvec for learning joint embeddings of two omics modalities from
 their co-occurrence patterns.
 
-This implementation was adapted and modified from the original mmvec package, licensed
-under BSD-3-Clause:
+This implementation was adopted, modified and improved from the original mmvec package,
+licensed under BSD-3-Clause:
 
 - https://github.com/biocore/mmvec
 
