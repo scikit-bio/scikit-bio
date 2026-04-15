@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from scipy.sparse import coo_array, issparse
+from scipy.sparse import coo_array
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
@@ -637,9 +637,8 @@ class MMvec(SkbioObject):
         else:
             losses = _train_adam(
                 model=model,
-                X=X_arr,
-                Y=y_arr,
                 X_coo=X_coo,
+                Y=y_arr,
                 rng=rng,
                 max_iter=self.max_iter,
                 learning_rate=self.learning_rate,
@@ -907,20 +906,22 @@ class _MMvecModel:
         logits = np.hstack([np.zeros((len(X_idx), 1)), logits_nonref])
         return logits
 
-    def loss_and_gradients(self, X_coo, Y, rng, batch_size=50, batch_norm="legacy"):
+    def loss_and_gradients(self, X_coo, Y, size, norm, weights, rng):
         """Compute loss and gradients for a mini-batch.
 
         Parameters
         ----------
         X_coo : coo_array of shape (n_samples, n_features_x)
             Microbe counts in COO format.
-        Y : array-like of shape (n_samples, n_features_y)
+        Y : np.ndarray of shape (n_samples, n_features_y)
             Metabolite counts.
-        batch_size : int
+        size : int
             Mini-batch size.
-        batch_norm : {'legacy', 'unbiased'}
-            Batch normalization mode.
-        rng : numpy.random.Generator, optional
+        norm : float
+            Batch normalization factor.
+        weights : np.ndarray of shape (n_samples,)
+            Sample weights for weighted batch sampling.
+        rng : numpy.random.Generator
             Random number generator for batch sampling.
 
         Returns
@@ -930,35 +931,13 @@ class _MMvecModel:
         grads : dict
             Gradients for U, b_U, V, b_V.
         """
-        # Convert to sparse COO format if needed
-        # if issparse(X):
-        #     X_coo = X.tocoo()
-        # else:
-        #     X_coo = coo_array(X)
-
-        n_samples = X_coo.shape[0]
-        total_count = X_coo.data.sum()
-
-        # Compute normalization factor
-        if batch_norm == "legacy":
-            norm = n_samples / batch_size
-        else:  # unbiased
-            norm = total_count / batch_size
-
-        # Sample batch weighted by abundance
-        weights = X_coo.data.astype(np.float64)
-        weights /= weights.sum()
-
-        batch_idx = rng.choice(
-            len(X_coo.data), size=batch_size, replace=True, p=weights
-        )
+        batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
         sample_ids = X_coo.row[batch_idx]
         X_ids = X_coo.col[batch_idx]
 
         # Forward pass
-        Y_arr = np.asarray(Y)
-        Y_batch = Y_arr[sample_ids, :]  # (B, d2)
+        Y_batch = Y[sample_ids, :]  # (B, d2)
         logits = self.forward(X_ids)  # (B, d2)
 
         # Compute likelihood and gradient w.r.t. logits
@@ -985,7 +964,7 @@ class _MMvecModel:
         db_U = np.zeros_like(self.b_U)
 
         # Scatter-add gradients
-        for b in range(batch_size):
+        for b in range(size):
             m = X_ids[b]
             dU[m, :] -= norm * du_batch[b, 2:]
             db_U[m, 0] -= norm * du_batch[b, 1]
@@ -1071,7 +1050,7 @@ class _MMvecModel:
 
         Parameters
         ----------
-        X_coo : coo_array
+        X_coo : coo_array of shape (n_samples, n_features_x)
             X counts in COO format.
         Y : np.ndarray of shape (n_samples, n_features_y)
             Y counts.
@@ -1183,9 +1162,9 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     ----------
     model : _MMvecModel
         Initialized model to train.
-    X_coo : coo_array
+    X_coo : coo_array of shape (n_samples, n_features_x)
         X feature counts in sparse COO format.
-    Y : np.ndarray
+    Y : np.ndarray of shape (n_samples, n_features_y)
         Y feature counts.
     max_iter : int
         Maximum number of L-BFGS iterations.
@@ -1244,9 +1223,8 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
 def _train_adam(
     model,
-    X,
-    Y,
     X_coo,
+    Y,
     rng,
     max_iter,
     learning_rate,
@@ -1263,12 +1241,10 @@ def _train_adam(
     ----------
     model : _MMvecModel
         Initialized model to train.
-    X : np.ndarray
-        Microbe counts.
-    Y : np.ndarray
-        Metabolite counts.
-    X_coo : coo_array
+    X_coo : coo_array of shape (n_samples, n_features_x)
         Microbe counts in sparse COO format.
+    Y : np.ndarray of shape (n_samples, n_features_y)
+        Metabolite counts.
     rng : np.random.Generator
         Random number generator.
     max_iter : int
@@ -1304,8 +1280,18 @@ def _train_adam(
     }
 
     # Compute number of iterations per epoch
-    nnz = len(X_coo.data)
+    data = X_coo.data
+    nnz = len(data)
     iter_per_epoch = max(1, nnz // batch_size)
+
+    # Compute normalization factor
+    if batch_norm == "legacy":
+        norm = X_coo.shape[0] / batch_size
+    else:  # unbiased
+        norm = data.sum() / batch_size
+
+    # Sample batch weighted by abundance
+    weights = data / data.sum()
 
     it = 0
     for epoch in range(max_iter):
@@ -1314,7 +1300,7 @@ def _train_adam(
 
             # Compute loss and gradients
             loss, grads = model.loss_and_gradients(
-                X_coo, Y, rng, batch_size=batch_size, batch_norm=batch_norm
+                X_coo, Y, batch_size, norm, weights, rng
             )
 
             # Gradient clipping
