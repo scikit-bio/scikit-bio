@@ -474,6 +474,75 @@ class MeTests(TestCase):
         for taxon in ("b", "c", "d"):
             self.assertEqual(obs.find(taxon).length, 0)
 
+    def test_gme_fixed_point_scale(self):
+        scale = 0.05
+        float_data = self.dm2.astype(np.float64)
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+        quantized_float_data = fixed_data.astype(np.float64) * scale
+
+        dm_float = DistanceMatrix(quantized_float_data, self.taxa2)
+        dm_fixed = DistanceMatrix(fixed_data, self.taxa2, scale=scale)
+        dm_fixed_condensed = DistanceMatrix(
+            fixed_data, self.taxa2, condensed=True, scale=scale
+        )
+
+        exp = gme(dm_float)
+        obs = gme(dm_fixed)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = gme(dm_fixed_condensed)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+    def test_bme_fixed_point_scale(self):
+        scale = 0.05
+        float_data = self.dm2.astype(np.float64)
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+        quantized_float_data = fixed_data.astype(np.float64) * scale
+
+        dm_float = DistanceMatrix(quantized_float_data, self.taxa2)
+        dm_fixed = DistanceMatrix(fixed_data, self.taxa2, scale=scale)
+        dm_fixed_condensed = DistanceMatrix(
+            fixed_data, self.taxa2, condensed=True, scale=scale
+        )
+
+        exp = bme(dm_float)
+        obs = bme(dm_fixed)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = bme(dm_fixed_condensed)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+    def test_nni_fixed_point_scale(self):
+        scale = 0.05
+        float_data = self.dm1.astype(np.float64)
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+
+        dm_float = DistanceMatrix(float_data, self.taxa1)
+        dm_fixed = DistanceMatrix(fixed_data, self.taxa1, scale=scale)
+        dm_fixed_condensed = DistanceMatrix(
+            fixed_data, self.taxa1, condensed=True, scale=scale
+        )
+
+        def _build_tree():
+            tree = TreeNode.read([self.nwk1v2])
+            tree.append(TreeNode(tree.name, tree.length))
+            tree.name, tree.length = None, None
+            return tree
+
+        exp = nni(_build_tree(), dm_float, balanced=False)
+
+        obs = nni(_build_tree(), dm_fixed, balanced=False)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
+        obs = nni(_build_tree(), dm_fixed_condensed, balanced=False)
+        self.assertEqual(obs.compare_rfd(exp), 0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp, ignore_self=True), 0)
+
     def test_check_tree(self):
         """Check the integrity of a tree structure."""
         _check_tree(self.tree1, self.preodr1, self.postodr1)
