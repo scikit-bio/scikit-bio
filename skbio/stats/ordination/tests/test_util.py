@@ -9,6 +9,7 @@
 from unittest import TestCase, main, skipIf
 import copy
 
+import array_api_strict as xps
 import numpy as np
 import numpy.testing as npt
 
@@ -172,6 +173,17 @@ class TestCenterDistanceMatrixArrayAPI(TestCase):
         assert type(rst) == type(mat), "type is changed"
         assert rst.device == mat.device, "different device"
         npt.assert_allclose(np.asarray(rst), self.expected, atol=1e-7)
+
+    def test_numpy_noncontiguous(self):
+        mat_f = np.asfortranarray(self.dist_mat)
+        self.assertFalse(mat_f.flags.c_contiguous)
+        rst = center_distance_matrix(mat_f)
+        npt.assert_allclose(rst, self.expected, atol=1e-10)
+
+    def test_xp_array_api_strict(self):
+        mat = xps.asarray(self.dist_mat)
+        rst = center_distance_matrix(mat)
+        npt.assert_allclose(np.asarray(rst), self.expected, atol=1e-10)
 
 
 if __name__ == '__main__':
