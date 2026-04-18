@@ -2409,10 +2409,6 @@ def extract_distance_matrix_data(
 
     return distances
 
-
-_extract_distance_matrix_data = extract_distance_matrix_data
-
-
 def _df_to_vector(ids: Sequence, df: pd.DataFrame, column: str) -> list:
     """Return a grouping vector from a ``DataFrame`` column.
 

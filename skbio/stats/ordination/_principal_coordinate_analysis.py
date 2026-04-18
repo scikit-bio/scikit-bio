@@ -17,6 +17,7 @@ from scipy.linalg import eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import extract_distance_matrix_data
 from skbio.table._tabular import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix, scale
@@ -148,14 +149,7 @@ def pcoa(
     """
     # this converts to redundant form, regardless of input type
     distmat = DistanceMatrix(distmat)
-    distance_data = distmat.data
-
-    # Fixed-point distance matrices are stored as integers with a scale factor.
-    # Convert to floating-point values before downstream linear algebra.
-    if distmat.scale is not None:
-        distance_data = distance_data.astype(np.float64, copy=False) * distmat.scale
-    elif distance_data.dtype not in (np.float32, np.float64):
-        distance_data = distance_data.astype(np.float64)
+    distance_data = extract_distance_matrix_data(distmat)
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
