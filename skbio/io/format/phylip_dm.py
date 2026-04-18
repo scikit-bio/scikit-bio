@@ -213,6 +213,7 @@ References
 import numpy as np
 
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import extract_distance_matrix_data
 from skbio.io import create_format, PhylipDMFormatError
 
 phylip_dm = create_format("phylip_dm")
@@ -369,18 +370,25 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
             " two samples in the matrix."
         )
     ids = obj.ids
+    data = extract_distance_matrix_data(obj)
+    if data.ndim == 1:
+        full = np.zeros((n_samples, n_samples), dtype=data.dtype)
+        tri = np.triu_indices(n_samples, k=1)
+        full[tri] = data
+        full[(tri[1], tri[0])] = data
+        data = full
     fh.write(f"{str(n_samples)}\n")
 
     # square layout
     if _check_layout(layout):
-        for id_, vals in zip(ids, obj.data):
+        for id_, vals in zip(ids, data):
             # Here we are replacing whitespace with underscore on write, but we still
             # need to be able to index the DistanceMatrix object by id (which may
             # contain whitespace) so create a separate variable for writing the id
             id_w = _remove_whitespace(id_)
             fh.write(id_w)
             fh.write(delimiter)
-            fh.write(delimiter.join(np.asarray(obj[id_], dtype=str)))
+            fh.write(delimiter.join(np.asarray(vals, dtype=str)))
             fh.write("\n")
 
     # lower triangular layout (default)
@@ -393,7 +401,7 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
             fh.write(id_w)
             if i > 0:
                 fh.write(delimiter)
-                fh.write(delimiter.join(np.asarray(obj[id_][:i], dtype=str)))
+                fh.write(delimiter.join(np.asarray(data[i, :i], dtype=str)))
             fh.write("\n")
 
 

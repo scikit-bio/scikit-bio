@@ -165,7 +165,13 @@ def _h5py_mat_to_skbio_mat(cls, f):
     if mat is None:
         mat = f.get("matrix:0")
     mat = np.asarray(mat)
-    dm = cls(mat, _parse_ids(f["order"]))
+    ids = _parse_ids(f["order"])
+    scale = f.get("scale")
+    if scale is None:
+        dm = cls(mat, ids)
+    else:
+        value = np.asarray(scale).ravel()
+        dm = cls(mat, ids, scale=float(value[0])) if value.size else cls(mat, ids)
     return dm
 
 
@@ -181,6 +187,9 @@ def _skbio_mat_to_h5py_mat(obj, f):
     np_ids = np.array(b_ids)
     f.create_dataset("order", data=np_ids)
     f.create_dataset("matrix", data=obj.data)
+    scale = getattr(obj, "scale", None)
+    if scale is not None:
+        f.create_dataset("scale", data=np.array([scale], dtype=np.float64))
 
 
 def _get_header(fh):

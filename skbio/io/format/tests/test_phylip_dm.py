@@ -276,6 +276,11 @@ class TestWriters(unittest.TestCase):
         self.dm_square = DistanceMatrix(
             [[0, 1, 2, 3], [1, 0, 4, 5], [2, 4, 0, 6], [3, 5, 6, 0]]
         )
+        self.dm_fixed = DistanceMatrix(
+            np.array([[0, 10, 20], [10, 0, 30], [20, 30, 0]], dtype=np.int16),
+            ["a", "b", "c"],
+            scale=0.1,
+        )
         self.exp_lower = (
             "4\n0\n1\t1.0\n2\t2.0\t4.0\n3\t3.0\t5.0\t6.0\n"
         )
@@ -315,6 +320,23 @@ class TestWriters(unittest.TestCase):
         result = fh.getvalue()
         fh.close()
         self.assertEqual(result, self.exp_square)
+
+    def test_fixed_point_scale_to_lower(self):
+        fh = io.StringIO()
+        self.dm_fixed.write(fh, format="phylip_dm", layout="lower")
+        result = fh.getvalue()
+        fh.close()
+        self.assertEqual(result, "3\na\nb\t1.0\nc\t2.0\t3.0\n")
+
+    def test_fixed_point_scale_to_square(self):
+        fh = io.StringIO()
+        self.dm_fixed.write(fh, format="phylip_dm", layout="square")
+        result = fh.getvalue()
+        fh.close()
+        self.assertEqual(
+            result,
+            "3\na\t0.0\t1.0\t2.0\nb\t1.0\t0.0\t3.0\nc\t2.0\t3.0\t0.0\n",
+        )
 
     def test_not_enough_objects(self):
         fh = io.StringIO()
