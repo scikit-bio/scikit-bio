@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added `graphembed` to `skbio.stats.ordination` to support computing representation vectors via the `graphembed_rs` framework, if installed. ([#2212](https://github.com/scikit-bio/scikit-bio/issues/2212))
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
 
