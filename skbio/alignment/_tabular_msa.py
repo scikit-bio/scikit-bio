@@ -155,9 +155,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         "constructor": (
             "type, required\n"
             "    The type of sequence to read each alignment entry into. Must be a\n"
-            "    subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``,\n"
-            "    ``Protein``). Required by most formats that read into a\n"
-            "    ``TabularMSA``."
+            "    subclass of :class:`~skbio.sequence.GrammaredSequence` (e.g., \n"
+            "    :class:`~skbio.sequence.DNA`, :class:`~skbio.sequence.RNA`,\n"
+            "    :class:`~skbio.sequence.Protein`). Required by most formats that \n"
+            "    read into a ``TabularMSA``."
         )
     }
 
