@@ -8,7 +8,7 @@
 
 import unittest
 from io import StringIO
-from skbio.io.descriptors import Read, Write, _docstring_vars
+from skbio.io.descriptors import Read, Write, _docstring_vars, _extra_kwargs_docs
 from skbio.io.registry import create_format, io_registry
 from skbio.io._exception import UnrecognizedFormatError
 
@@ -493,6 +493,99 @@ class TestInheritanceIntegration(unittest.TestCase):
                 io_registry.sniff(fh, into=self.ChildClass)
         finally:
             io_registry.remove_format('unrelated_format')
+
+
+class TestExtraKwargsDocs(unittest.TestCase):
+    """Tests for the _extra_kwargs_docs helper function."""
+
+    def test_returns_empty_string_when_attr_missing(self):
+        """Test that classes without the attribute produce empty string."""
+        class NoAttr:
+            pass
+
+        self.assertEqual(_extra_kwargs_docs(NoAttr, "_reader_kwargs"), "")
+
+    def test_returns_empty_string_for_empty_dict(self):
+        """Test that an empty dict produces empty string."""
+        class EmptyDict:
+            _reader_kwargs = {}
+
+        self.assertEqual(_extra_kwargs_docs(EmptyDict, "_reader_kwargs"), "")
+
+    def test_single_param(self):
+        """Test formatting of a single parameter."""
+        class OneParam:
+            _reader_kwargs = {
+                "constructor": "type, required\n    A sequence type."
+            }
+
+        result = _extra_kwargs_docs(OneParam, "_reader_kwargs")
+        self.assertEqual(
+            result,
+            "constructor : type, required\n    A sequence type.\n"
+        )
+
+    def test_multiple_params(self):
+        """Test formatting of multiple parameters."""
+        class MultiParam:
+            _reader_kwargs = {
+                "constructor": "type, required\n    A sequence type.",
+                "strict": "bool, optional\n    Enable strict mode.",
+            }
+
+        result = _extra_kwargs_docs(MultiParam, "_reader_kwargs")
+        self.assertIn("constructor : type, required", result)
+        self.assertIn("strict : bool, optional", result)
+        self.assertTrue(result.endswith("\n"))
+
+    def test_docstring_includes_reader_kwargs(self):
+        """Test that Read docstring includes _reader_kwargs parameters."""
+        test_format = create_format('reader_kwargs_test_format')
+
+        class WithReaderKwargs:
+            _reader_kwargs = {
+                "constructor": "type, required\n    A sequence type."
+            }
+            read = Read()
+
+            def __init__(self, data):
+                self.data = data
+
+        @test_format.reader(WithReaderKwargs)
+        def _reader(fh, cls=None):
+            if cls is None:
+                cls = WithReaderKwargs
+            return cls(fh.read())
+
+        try:
+            doc = WithReaderKwargs.read.__doc__
+            self.assertIn("constructor : type, required", doc)
+            self.assertIn("A sequence type.", doc)
+        finally:
+            io_registry.remove_format('reader_kwargs_test_format')
+
+    def test_docstring_without_reader_kwargs(self):
+        """Test that Read docstring works normally without _reader_kwargs."""
+        test_format = create_format('no_kwargs_test_format')
+
+        class WithoutReaderKwargs:
+            read = Read()
+
+            def __init__(self, data):
+                self.data = data
+
+        @test_format.reader(WithoutReaderKwargs)
+        def _reader(fh, cls=None):
+            if cls is None:
+                cls = WithoutReaderKwargs
+            return cls(fh.read())
+
+        try:
+            doc = WithoutReaderKwargs.read.__doc__
+            self.assertIn("kwargs : dict, optional", doc)
+            self.assertNotIn("constructor", doc)
+        finally:
+            io_registry.remove_format('no_kwargs_test_format')
 
 
 class TestInheritanceEdgeCases(unittest.TestCase):
