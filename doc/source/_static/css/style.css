@@ -14,11 +14,11 @@ Instructions:
 https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/styling.html
 */
 
-/* hide external link icon */
-
 html {
+  /* hide external link icon */
   --pst-icon-external-link: unset; 
 
+  /* custom font sizes for heading levels */
   --pst-font-size-h1: 2rem;
   --pst-font-size-h2: 1.5rem;
   --pst-font-size-h3: 1.25rem;
@@ -43,9 +43,6 @@ primary color (for links, default: teal)
 secondary color (for links on hover, default: violet)
 target color (for highlights, default: sunset)
 inline code color (default: violet)
-
-Color variables are not well documented; but some of them can be found here:
-https://github.com/pydata/pydata-sphinx-theme/blob/50fa47727af8d23757ddecd375c7a31cd282d248/pydata_sphinx_theme/static/css/theme.css#L43-L48
 */
 
 html[data-theme="light"] {
@@ -53,7 +50,7 @@ html[data-theme="light"] {
   --pst-color-target: #F5FDC6;
   --pst-color-secondary: var(--pst-color-primary);
   --pst-color-inline-code: var(--pst-color-accent);
-  --pst-color-inline-code-links: var(--pst-color-primary);
+  --pst-color-link-higher-contrast: var(--pst-color-primary);
   --pst-color-table-row-hover-bg: var(--pst-color-target);
 }
 
@@ -62,7 +59,7 @@ html[data-theme="dark"] {
   --pst-color-target: #2C1E7F;
   --pst-color-secondary: var(--pst-color-primary);
   --pst-color-inline-code: var(--pst-color-accent);
-  --pst-color-inline-code-links: var(--pst-color-primary);
+  --pst-color-link-higher-contrast: var(--pst-color-primary);
   --pst-color-table-row-hover-bg: var(--pst-color-target);
 }
 

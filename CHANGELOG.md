@@ -5,6 +5,16 @@
 ### Features
 
 * Added a general `_reader_kwargs` mechanism for documenting class-specific parameters in auto-generated `read()` docstrings. Applied to `TabularMSA` to document the required `constructor` parameter ([#2388](https://github.com/scikit-bio/scikit-bio/issues/2388)).
+* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
+* Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
+
+### Bug Fixes
+
+* Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
+
+### Miscellaneous
+
+* Replaced SciPy sparse matrix constructors with sparse array constructors to align with SciPy's sparse array APIs. This affects `subsample_counts` (`csr_array`) (no public-facing effect) and `tree_basis` (`coo_array`).
 
 ## Version 0.7.2
 
