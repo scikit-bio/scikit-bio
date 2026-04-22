@@ -80,7 +80,7 @@ def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
         # (e.g., cuda), `np.asarray` is called as a fallback, which should work for
         # objects that have an `__array__` protocol.
         except (AttributeError, TypeError, RuntimeError):
-            arr = np.asarray(arr)
+            arr = _to_numpy(arr)
 
     return arr
 
