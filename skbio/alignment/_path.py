@@ -6,17 +6,19 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
-from typing import Optional, Union, Tuple, List, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 
 from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
 
 if TYPE_CHECKING:  # pragma: no cover
+    from numpy.typing import ArrayLike, NDArray
     from skbio.sequence import Sequence
+    from typing import Self
 
 
 # CIGAR codes indexed by states in PairAlignPath
@@ -172,9 +174,9 @@ class AlignPath(SkbioObject):
         lengths: ArrayLike,
         states: ArrayLike,
         *,
-        ranges: Optional[ArrayLike] = None,
-        starts: Optional[ArrayLike] = None,
-        stops: Optional[ArrayLike] = None,
+        ranges: ArrayLike | None = None,
+        starts: ArrayLike | None = None,
+        stops: ArrayLike | None = None,
     ) -> None:
         self._lengths = np.asarray(lengths, dtype=np.intp)
         if self._lengths.ndim > 1:
@@ -266,7 +268,7 @@ class AlignPath(SkbioObject):
         return self._ranges[:, 1]
 
     @property
-    def shape(self) -> Tuple[int, int]:
+    def shape(self) -> tuple[int, int]:
         """Number of sequences (rows) and positions (columns)."""
         return self._shape
 
@@ -331,9 +333,7 @@ class AlignPath(SkbioObject):
         return np.repeat(bits, self._lengths, axis=1) if expand else bits
 
     @classonlymethod
-    def from_bits(
-        cls, bits: ArrayLike, starts: Optional[ArrayLike] = None
-    ) -> "AlignPath":
+    def from_bits(cls, bits: ArrayLike, starts: ArrayLike | None = None) -> Self:
         r"""Create an alignment path from a bit array (0 - character, 1 - gap).
 
         Parameters
@@ -496,7 +496,7 @@ class AlignPath(SkbioObject):
         return res
 
     @classonlymethod
-    def from_aligned(cls, aln, gap_chars="-", starts=None) -> "AlignPath":
+    def from_aligned(cls, aln, gap_chars="-", starts=None) -> Self:
         r"""Create an alignment path from aligned sequences.
 
         Parameters
@@ -616,7 +616,7 @@ class AlignPath(SkbioObject):
         return chars, gaps, bits, lens
 
     @classonlymethod
-    def from_tabular(cls, msa, starts=None) -> "AlignPath":
+    def from_tabular(cls, msa, starts=None) -> Self:
         r"""Create an alignment path from a `TabularMSA` object.
 
         Parameters
@@ -734,7 +734,7 @@ class AlignPath(SkbioObject):
             return np.where(pos, idx, gap)
 
     @classonlymethod
-    def from_indices(cls, indices, gap=-1) -> "AlignPath":
+    def from_indices(cls, indices, gap=-1) -> Self:
         r"""Create an alignment path from character indices in the original sequences.
 
         Parameters
@@ -892,7 +892,7 @@ class AlignPath(SkbioObject):
             return lens.cumsum(axis=1)
 
     @classonlymethod
-    def from_coordinates(cls, coords) -> "AlignPath":
+    def from_coordinates(cls, coords) -> Self:
         r"""Create an alignment path from an array of segment coordinates.
 
         Parameters
@@ -1086,9 +1086,9 @@ class PairAlignPath(AlignPath):
         lengths: ArrayLike,
         states: ArrayLike,
         *,
-        ranges: Optional[ArrayLike] = None,
-        starts: Optional[ArrayLike] = None,
-        stops: Optional[ArrayLike] = None,
+        ranges: ArrayLike | None = None,
+        starts: ArrayLike | None = None,
+        stops: ArrayLike | None = None,
     ):
         if ranges is None and starts is None and stops is None:
             starts = [0, 0]
@@ -1122,7 +1122,7 @@ class PairAlignPath(AlignPath):
         return f"<{repr_}, CIGAR: '{cigar}'>"
 
     @classonlymethod
-    def from_bits(cls, bits, starts=None) -> "PairAlignPath":
+    def from_bits(cls, bits, starts=None) -> Self:
         r"""Create a pairwise alignment path from a bit array.
 
         Refer to :meth:`AlignPath.from_bits` for usage.
@@ -1152,7 +1152,7 @@ class PairAlignPath(AlignPath):
             )
         return super().from_bits(bits, starts)
 
-    def to_cigar(self, seqs: Optional[List[Union["Sequence", str]]] = None):
+    def to_cigar(self, seqs: list["Sequence" | str] | None = None):
         r"""Generate a CIGAR string representing the pairwise alignment path.
 
         Parameters
@@ -1229,9 +1229,7 @@ class PairAlignPath(AlignPath):
             )
 
     @classonlymethod
-    def from_cigar(
-        cls, cigar: Union[str, bytes], starts: Optional[ArrayLike] = None
-    ) -> "PairAlignPath":
+    def from_cigar(cls, cigar: str | bytes, starts: ArrayLike | None = None) -> Self:
         r"""Create a pairwise alignment path from a CIGAR string.
 
         Parameters
@@ -1274,7 +1272,7 @@ class PairAlignPath(AlignPath):
         return cls(lens, gaps, starts=(starts or [0, 0]))
 
 
-def _parse_cigar(cigar: bytes) -> Tuple[NDArray, NDArray]:
+def _parse_cigar(cigar: bytes) -> tuple[NDArray, NDArray]:
     r"""Convert a CIGAR string into run-length vectors.
 
     Parameters
@@ -1290,7 +1288,8 @@ def _parse_cigar(cigar: bytes) -> Tuple[NDArray, NDArray]:
         Gap states.
 
     """
-    lens, gaps = [], []
+    lens: list[int] = []
+    gaps: list[int] = []
     L, no_ones, last = 0, 1, None
     for char in cigar:
         if char in _cigar_mapping:  # letter (operation)

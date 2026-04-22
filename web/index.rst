@@ -276,21 +276,29 @@
 
          .. card::
 
-            Latest release (2025-07-16):
+            Latest release (2026-02-11):
 
-            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.0
+            .. button-link:: https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.2
                :color: success
                :shadow:
 
-               scikit-bio 0.7.0
+               scikit-bio 0.7.2
 
          .. card::
 
-            Thrilled with completion of `scikit-bio workshop <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_ at ISMB 2024. Materials are `publicly available <https://github.com/scikit-bio/scikit-bio-tutorials>`_.
+            scikit-bio is participating in `Google Summer of Code 2026 <https://github.com/scikit-bio/scikit-bio/discussions/2401>`_. Contributors are welcome!
 
          .. card::
 
-            New `DOE award <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
+            `scikit-bio paper <https://www.nature.com/articles/s41592-025-02981-z>`_ published in *Nature Methods*. Full text `available <https://rdcu.be/eUcOO>`_.
+
+         .. card::
+
+            `scikit-bio workshop <https://www.iscb.org/ismb2024/programme-schedule/tutorials#ip3>`_ at ISMB 2024. Materials are `publicly available <https://github.com/scikit-bio/scikit-bio-tutorials>`_.
+
+         .. card::
+
+            `DOE grant <https://genomicscience.energy.gov/compbioawards2023/#Expanding>`_ for scikit-bio development in multi-omics and complex modeling.
 
          .. card::
 

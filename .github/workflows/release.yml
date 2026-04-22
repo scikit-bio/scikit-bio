@@ -25,18 +25,19 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python environment
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.latest_python }}
 
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements
+          python -m ensurepip
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/requirements.txt
           pip install --no-deps .
           pip list
 
@@ -50,7 +51,7 @@ jobs:
           python doc/editmap.py
 
       - name: Check out website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: scikit-bio/scikit-bio.github.io
           path: website

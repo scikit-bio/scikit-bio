@@ -6,15 +6,21 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Optional, Any, TYPE_CHECKING
+from __future__ import annotations
+
 from sys import modules
 from warnings import warn
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from skbio.util._decorator import aliased, register_aliases, params_aliased
+from skbio.util._decorator import (
+    aliased,
+    register_aliases,
+    params_aliased,
+    array_api_doc,
+)
 from skbio.util._array import ingest_array
-
 
 if TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType
@@ -22,11 +28,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _check_composition(
-    xp: "ModuleType",
-    mat: "StdArray",
+    xp: ModuleType,
+    mat: StdArray,
     axis: int = -1,
     nozero: bool = False,
-    maxdim: Optional[int] = None,
+    maxdim: int | None = None,
+    allnum: bool = True,
 ):
     r"""Check if the input matrix contain valid compositions.
 
@@ -42,6 +49,8 @@ def _check_composition(
         If True, matrix cannot have zero values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
+    allnum : bool, optional
+        If True, matrix cannot have NaN values.
 
     Raises
     ------
@@ -59,8 +68,14 @@ def _check_composition(
     """
     if not xp.isdtype(mat.dtype, "numeric"):
         raise TypeError("Input matrix must have a numeric data type.")
-    if not xp.all(xp.isfinite(mat)):
-        raise ValueError("Input matrix cannot have infinite or NaN values.")
+    if allnum:
+        # Don't allow infinite or NaN values.
+        if not xp.all(xp.isfinite(mat)):
+            raise ValueError("Input matrix cannot have infinite or NaN values.")
+    else:
+        # Allow NaN, but not infinite.
+        if xp.any(xp.isinf(mat)):
+            raise ValueError("Input matrix cannot have infinite values.")
     if nozero:
         if xp.any(mat <= 0):
             raise ValueError("Input matrix cannot have negative or zero components.")
@@ -73,7 +88,11 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform closure to ensure that all components of each composition sum to 1.
 
     .. versionchanged:: 0.7.0
@@ -115,9 +134,21 @@ def closure(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     return _closure(xp, mat, axis)
 
 
-def _closure(xp: "ModuleType", mat: "StdArray", axis: int = -1) -> "StdArray":
+def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
     """Perform closure."""
-    return mat / xp.sum(mat, axis=axis, keepdims=True)
+    row_sums = _nansum(xp, mat, axis=axis, keepdims=True)
+    return mat / row_sums
+
+
+def _nansum(
+    xp: ModuleType, arr: StdArray, axis: int, keepdims: bool = False
+) -> StdArray:
+    """Sum array elements along axis, ignoring NaN values."""
+    # Create mask of non-NaN values
+    nan_mask = xp.isnan(arr)
+    # Replace NaN with 0 for summation
+    arr_no_nan = xp.where(nan_mask, xp.asarray(0.0, dtype=arr.dtype), arr)
+    return xp.sum(arr_no_nan, axis=axis, keepdims=keepdims)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -194,7 +225,7 @@ def _closure_two(x, y, validate):
     return xp, _closure(xp, x), _closure(xp, y)
 
 
-def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def perturb(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Perform the perturbation operation.
 
     This operation is defined as:
@@ -254,7 +285,7 @@ def perturb(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray"
     return _closure(xp, cx * cy)
 
 
-def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def perturb_inv(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Perform the inverse perturbation operation.
 
     This operation is defined as:
@@ -302,7 +333,7 @@ def perturb_inv(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdAr
     return _closure(xp, cx / cy)
 
 
-def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
+def power(x: ArrayLike, a: float, validate: bool = True) -> StdArray:
     r"""Perform the power operation.
 
     This operation is defined as follows:
@@ -352,7 +383,7 @@ def power(x: "ArrayLike", a: float, validate: bool = True) -> "StdArray":
     return _closure(xp, cx**a).squeeze()
 
 
-def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
+def inner(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     r"""Calculate the Aitchson inner product.
 
     This inner product is defined as follows:
@@ -393,7 +424,11 @@ def inner(x: "ArrayLike", y: "ArrayLike", validate: bool = True) -> "StdArray":
     return xp.matmul(clrx, clry.T)
 
 
-def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def clr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform centre log ratio (CLR) transformation.
 
     This function transforms compositions from Aitchison geometry to the real
@@ -456,12 +491,16 @@ def clr(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
     return _clr(xp, mat, axis)
 
 
-def _clr(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+def _clr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform CLR transform."""
     return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
 
-def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArray":
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def clr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform inverse centre log ratio (CLR) transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -538,20 +577,132 @@ def clr_inv(mat: "ArrayLike", axis: int = -1, validate: bool = True) -> "StdArra
     return _clr_inv(xp, mat, axis)
 
 
-def _clr_inv(xp: "ModuleType", mat: "StdArray", axis: int) -> "StdArray":
+def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform inverse CLR transform."""
     # for numerical stability, shift the values < 1
     diff = xp.exp(mat - xp.max(mat, axis=axis, keepdims=True))
     return _closure(xp, diff, axis)
 
 
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
+    r"""Perform robust centre log ratio (rclr) transformation.
+
+    The robust CLR transformation is similar to the standard CLR transformation,
+    but it only operates on observed (non-zero) values [1]_. This makes it suitable
+    for sparse compositional data.
+
+    For each composition, the transformation computes:
+
+    .. math::
+
+        rclr(x_i) = \ln(x_i) - \frac{1}{|S|} \sum_{j \in S} \ln(x_j)
+
+    where :math:`S` is the set of indices with non-zero values, and :math:`|S|`
+    is the number of non-zero values.
+
+    Parameters
+    ----------
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of non-negative values. Zeros are allowed and will become
+        NaN in the output. NaN values in the input are preserved (representing
+        missing entries).
+    axis : int, optional
+        Axis along which rclr transformation will be performed. Each vector
+        on this axis is considered as a composition. Default is the last
+        axis (-1).
+    validate : bool, default True
+        Check if the matrix consists of non-negative, finite values.
+        NaN values are allowed as missing entries.
+
+    Returns
+    -------
+    ndarray of shape (..., n_components, ...)
+        rclr-transformed matrix. Zero values in the input become NaN.
+
+    See Also
+    --------
+    clr
+
+    Notes
+    -----
+    The rclr transformation has several advantages for sparse compositional
+    data:
+
+    1. It does not require pseudocount addition, which can bias results
+    2. It preserves the zero/non-zero structure of the data
+    3. It allows for matrix completion methods to be applied
+
+    The geometric mean is computed only over non-zero values in each
+    composition, making it "robust" to the presence of zeros.
+
+    References
+    ----------
+    .. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+       Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+       microbial perturbations. MSystems, 4(1), 10-1128.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import rclr
+    >>> x = np.array([[1, 2, 0, 4],
+    ...               [0, 3, 3, 0],
+    ...               [2, 2, 2, 2]])
+    >>> result = rclr(x)
+    >>> np.round(result, 3)
+    array([[-0.693,  0.   ,    nan,  0.693],
+           [   nan,  0.   ,  0.   ,    nan],
+           [ 0.   ,  0.   ,  0.   ,  0.   ]])
+
+    """
+    xp, mat = ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat, allnum=False)
+    return _rclr(xp, mat, axis)
+
+
+def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
+    """Perform rclr transform."""
+
+    # Track which values were observed in the original input
+    observed_mask = (mat != 0) & ~xp.isnan(mat)
+
+    # Take log (will give -inf for zeros, NaN for NaN)
+    log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
+
+    # Count observed values from mask
+    n_observed = xp.sum(observed_mask, axis=axis, keepdims=True)
+
+    # Sum logs for observed values only
+    log_sum = xp.sum(log_safe, axis=axis, keepdims=True)
+
+    # Geometric mean
+    geo_mean_log = log_sum / n_observed
+
+    # Center by geometric mean
+    result = log_safe - geo_mean_log
+
+    # Replace non-observed with NaN
+    result = xp.where(observed_mask, result, xp.nan)
+
+    return result
+
+
 @params_aliased([("validate", "check", "0.7.0", True)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def ilr(
-    mat: "ArrayLike",
-    basis: Optional["ArrayLike"] = None,
+    mat: ArrayLike,
+    basis: ArrayLike | None = None,
     axis: int = -1,
     validate: bool = True,
-) -> "StdArray":
+) -> StdArray:
     r"""Perform isometric log ratio (ILR) transformation.
 
     This function transforms compositions from Aitchison simplex to the real
@@ -654,7 +805,7 @@ def _swap_axis(ndim, axis):
     return res
 
 
-def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "StdArray":
+def _ilr(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
     """Perform ILR transform."""
     mat = _clr(xp, mat, axis)
     # tensordot return's shape consists of the non-contracted axes (dimensions) of
@@ -665,12 +816,16 @@ def _ilr(xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int) -> "St
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def ilr_inv(
-    mat: "ArrayLike",
-    basis: Optional["ArrayLike"] = None,
+    mat: ArrayLike,
+    basis: ArrayLike | None = None,
     axis: int = -1,
     validate: bool = True,
-) -> "StdArray":
+) -> StdArray:
     r"""Perform inverse isometric log ratio (ILR) transformation.
 
     This function transforms compositions from the real space to Aitchison
@@ -761,9 +916,7 @@ def ilr_inv(
     return _ilr_inv(xp, mat, basis, axis)
 
 
-def _ilr_inv(
-    xp: "ModuleType", mat: "StdArray", basis: "StdArray", axis: int
-) -> "StdArray":
+def _ilr_inv(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
     """Perform ILR transform."""
     prod = xp.tensordot(mat, basis, axes=([axis], [0]))
     perm = xp.permute_dims(prod, axes=_swap_axis(mat.ndim, axis))
@@ -771,9 +924,13 @@ def _ilr_inv(
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def alr(
-    mat: "ArrayLike", ref_idx: int = 0, axis: int = -1, validate: bool = True
-) -> "StdArray":
+    mat: ArrayLike, ref_idx: int = 0, axis: int = -1, validate: bool = True
+) -> StdArray:
     r"""Perform additive log ratio (ALR) transformation.
 
     This function transforms compositions from a D-part Aitchison simplex to
@@ -848,7 +1005,7 @@ def alr(
     return _alr(xp, mat, ref_idx, axis)
 
 
-def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
+def _alr(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
     # Given that: log(numerator / denominator) = log(numerator) - log(denominator)
     # The following code will perform logarithm on the entire matrix, then subtract
     # denominator from numerator. This is also for numerical stability.
@@ -880,7 +1037,11 @@ def _alr(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArra
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
-def alr_inv(mat: "ArrayLike", ref_idx: int = 0, axis: int = -1) -> "StdArray":
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def alr_inv(mat: ArrayLike, ref_idx: int = 0, axis: int = -1) -> StdArray:
     r"""Perform inverse additive log ratio (ALR) transform.
 
     This function transforms compositions from the non-isometric real space of
@@ -958,7 +1119,7 @@ def alr_inv(mat: "ArrayLike", ref_idx: int = 0, axis: int = -1) -> "StdArray":
     return _alr_inv(xp, mat, ref_idx, axis)
 
 
-def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "StdArray":
+def _alr_inv(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
     # The following code can be replaced with a single NumPy function call.
     #     comp = xp.insert(emat, ref_idx, 1.0, axis=axis)
     # However, `insert` is not in the Python array API standard. For compatibility with
@@ -980,7 +1141,7 @@ def _alr_inv(xp: "ModuleType", mat: "StdArray", ref_idx: int, axis: int) -> "Std
     return _closure(xp, comp, axis)
 
 
-def centralize(mat: "ArrayLike") -> "StdArray":
+def centralize(mat: ArrayLike) -> StdArray:
     r"""Center data around its geometric average.
 
     Parameters
@@ -1247,7 +1408,7 @@ def tree_basis(tree):
 
     Returns
     -------
-    scipy.sparse.coo_matrix
+    scipy.sparse.coo_array
         The ilr basis required to perform the ilr_inv transform. This is also
         known as the sequential binary partition. Note that this matrix is
         represented in clr coordinates.
@@ -1270,7 +1431,7 @@ def tree_basis(tree):
            [-0.70710678,  0.70710678,  0.        ]])
 
     """
-    from scipy.sparse import coo_matrix
+    from scipy.sparse import coo_array
 
     # Specifies which child is numerator and denominator
     # within any given node in a tree.
@@ -1347,7 +1508,7 @@ def tree_basis(tree):
         i += 1
         nodes.append(n.name)
 
-    basis = coo_matrix((value, (row, col)), shape=(D - 1, D))
+    basis = coo_array((value, (row, col)), shape=(D - 1, D))
 
     return basis, nodes
 
@@ -1449,10 +1610,10 @@ def sbp_basis(sbp):
 
 
 def _check_basis(
-    xp: "ModuleType",
-    basis: "StdArray",
+    xp: ModuleType,
+    basis: StdArray,
     orthonormal: bool = False,
-    subspace_dim: Optional[int] = None,
+    subspace_dim: int | None = None,
 ):
     r"""Check if basis is a valid basis for transformation.
 

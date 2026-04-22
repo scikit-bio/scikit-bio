@@ -6,14 +6,20 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 import operator
 import copy
 import functools
+from typing import TYPE_CHECKING
 
 from ._intersection import IntervalTree
 from skbio.util._decorator import classonlymethod
 from skbio.io.descriptors import Read, Write
 from .._base import SkbioObject
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class Interval:
@@ -509,6 +515,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
     write = Write()
 
     default_write_format = "gff3"
+    """Default write format for this object: ``gff3``."""
 
     def __init__(self, upper_bound, copy_from=None):
         self._upper_bound = upper_bound
@@ -590,7 +597,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagB'})
         self._is_stale_tree = True
 
     @classonlymethod
-    def concat(cls, interval_metadata) -> "IntervalMetadata":
+    def concat(cls, interval_metadata) -> Self:
         """Concatenate an iterable of ``IntervalMetadata`` objects.
 
         It concatenates the multiple ``IntervalMetadata`` objects into

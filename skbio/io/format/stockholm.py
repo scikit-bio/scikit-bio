@@ -293,14 +293,14 @@ Suppose we have a Stockholm file containing an MSA of protein sequences
 ...     ])
 >>> fh = StringIO(fs)
 >>> msa = TabularMSA.read(fh, constructor=Protein)
->>> msa # doctest: +NORMALIZE_WHITESPACE
+>>> msa # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
 TabularMSA[Protein]
 ----------------------------------------------------------------------
 Metadata:
     'CC': 'CBS domains are small intracellular modules mostly found in
            2 or four copies within a protein.'
 Positional metadata:
-    'SS_cons': <dtype: object>
+    'SS_cons': <dtype: ...>
 Stats:
     sequence count: 5
     position count: 37
@@ -313,10 +313,10 @@ EVMLTDIPRLHINDPIMK..GFGMVINN......GFV
 
 The sequence names are stored in the ``index``:
 
->>> msa.index
+>>> msa.index # doctest: +ELLIPSIS
 Index(['O83071/192-246', 'O83071/259-312', 'O31698/18-71', 'O31698/88-139',
        'O31699/88-139'],
-      dtype='object')
+      dtype='...')
 
 The ``TabularMSA`` has GF metadata stored in its ``metadata`` dictionary:
 
@@ -343,7 +343,7 @@ GC metadata is stored in the ``TabularMSA`` ``positional_metadata``:
 GS metadata is stored in the sequence-specific ``metadata`` dictionary:
 
 >>> list(msa[0].metadata.items())
-[('AC', 'O83071')]
+[('id', 'O83071/192-246'), ('AC', 'O83071')]
 
 GR metadata is stored in sequence-specific ``positional_metadata``:
 
@@ -591,7 +591,7 @@ class _SeqData:
     def __init__(self, name):
         self.name = name
         self._seq = None
-        self.metadata = None
+        self.metadata = {"id": name}
         self.positional_metadata = None
 
     @property
@@ -748,7 +748,10 @@ def _tabular_msa_to_stockholm(obj, fh):
 
         if seq.has_metadata():
             for gs_feature, gs_feature_data in seq.metadata.items():
-                fh.write("#=GS %s %s %s\n" % (seq_name, gs_feature, gs_feature_data))
+                if gs_feature != "id":
+                    fh.write(
+                        "#=GS %s %s %s\n" % (seq_name, gs_feature, gs_feature_data)
+                    )
 
         unpadded_data.append((seq_name, str(seq)))
         if seq.has_positional_metadata():

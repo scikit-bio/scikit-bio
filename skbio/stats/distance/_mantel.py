@@ -6,39 +6,38 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import combinations
+from __future__ import annotations
 
-from typing import Optional, Union, Tuple, Dict, Sequence, TYPE_CHECKING
+from itertools import combinations
+from warnings import warn
+from typing import TYPE_CHECKING
+
+import numpy as np
+import pandas as pd
+import scipy.special
+from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarning
+
+from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
+from skbio.stats.distance import DistanceMatrix
+from skbio.util import get_rng
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Sequence
     from ._base import DistanceMatrix
     from numpy.typing import ArrayLike
     from skbio.util._typing import SeedLike
 
-import warnings
-import numpy as np
-import pandas as pd
-import scipy.special
-from scipy.stats import kendalltau
-from scipy.stats import ConstantInputWarning
-from scipy.stats import NearConstantInputWarning
-
-from skbio.stats.distance import DistanceMatrix
-from skbio.util import get_rng
-
-from ._cutils import mantel_perm_pearsonr_cy
-
 
 def mantel(
-    x: Union["DistanceMatrix", "ArrayLike"],
-    y: Union["DistanceMatrix", "ArrayLike"],
+    x: DistanceMatrix | ArrayLike,
+    y: DistanceMatrix | ArrayLike,
     method: str = "pearson",
     permutations: int = 999,
     alternative: str = "two-sided",
     strict: bool = True,
-    lookup: Optional[Dict[str, str]] = None,
-    seed: Optional["SeedLike"] = None,
-) -> Tuple[float, float, int]:
+    lookup: dict[str, str] | None = None,
+    seed: SeedLike | None = None,
+) -> tuple[float, float, int]:
     r"""Compute correlation between distance matrices using the Mantel test.
 
     The Mantel test compares two distance matrices by computing the correlation
@@ -159,6 +158,10 @@ def mantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
@@ -276,12 +279,6 @@ def mantel(
     """
     rng = get_rng(seed)
 
-    # convert to redundant form for now
-    if isinstance(x, DistanceMatrix) and x._flags["CONDENSED"]:
-        x = DistanceMatrix(x)
-    if isinstance(y, DistanceMatrix) and y._flags["CONDENSED"]:
-        y = DistanceMatrix(y)
-
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -383,7 +380,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
-        warnings.warn(ConstantInputWarning())
+        warn(ConstantInputWarning())
         return np.nan, np.nan, []
 
     # inline pearsonr, condensed from scipy.stats.pearsonr
@@ -405,7 +402,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
         # If all the values in x (likewise y) are very close to the mean,
         # the loss of precision that occurs in the subtraction xm = x - xmean
         # might result in large errors in r.
-        warnings.warn(NearConstantInputWarning())
+        warn(NearConstantInputWarning())
 
     orig_stat = np.dot(xm_normalized, ym_normalized)
 
@@ -413,7 +410,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n = x._data.shape[0]
+    mat_n = x.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
     comp_stat = orig_stat
@@ -432,9 +429,14 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
             perm_order[row, :] = rng.permutation(mat_n)
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(
-            x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-        )
+        if x._flags["CONDENSED"]:
+            mantel_perm_pearsonr_condensed_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
+        else:
+            mantel_perm_pearsonr_cy(
+                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+            )
         comp_stat = permuted_stats[0]
         permuted_stats = permuted_stats[1:]
 
@@ -506,7 +508,7 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
-        warnings.warn(ConstantInputWarning())
+        warn(ConstantInputWarning())
         return np.nan, np.nan, []
 
     y_rank = scipy.stats.rankdata(y_flat)
@@ -523,14 +525,14 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
 
 
 def pwmantel(
-    dms: Sequence[Union["DistanceMatrix", "ArrayLike"]],
-    labels: Optional[Sequence[Union[str, int]]] = None,
+    dms: Sequence[DistanceMatrix | ArrayLike],
+    labels: Sequence[str | int] | None = None,
     method: str = "pearson",
     permutations: int = 999,
     alternative: str = "two-sided",
     strict: bool = True,
-    lookup: Optional[Dict[str, str]] = None,
-    seed: Optional["SeedLike"] = None,
+    lookup: dict[str, str] | None = None,
+    seed: SeedLike | None = None,
 ) -> pd.DataFrame:
     """Run Mantel tests for every pair of given distance matrices.
 
@@ -585,6 +587,10 @@ def pwmantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     Passing a list of filepaths can be useful as it allows for a smaller amount
     of memory consumption as it only loads two matrices at a time as opposed to
     loading all distance matrices into memory.

@@ -6,25 +6,18 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Any, Optional, Union, Iterable, Callable, TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
-    from skbio.util._typing import TableLike
+from __future__ import annotations
 
 from functools import partial
 from itertools import chain
 from inspect import signature, getmembers, isfunction
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from skbio.diversity import alpha
-from skbio.diversity.alpha._pd import (
-    _setup_pd,
-    _faith_pd,
-    _phydiv,
-)
+from skbio.diversity.alpha._pd import _setup_pd, _faith_pd, _phydiv
 from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac,
     _setup_multiple_weighted_unifrac,
@@ -39,6 +32,11 @@ from skbio.diversity._util import (
 from skbio.util._decorator import deprecated
 from skbio.table._tabular import _ingest_table
 
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Callable
+    from numpy.typing import ArrayLike
+    from skbio.util._typing import TableLike
+
 
 # Qualitative (absence/presence-based) metrics, which require Boolean input.
 _qualitative_metrics = {
@@ -47,7 +45,6 @@ _qualitative_metrics = {
     "matching",
     "rogerstanimoto",
     "russellrao",
-    "sokalmichener",
     "sokalsneath",
     "yule",
     "unweighted_unifrac",
@@ -73,7 +70,6 @@ _pdist_metrics = {
     "rogerstanimoto",
     "russellrao",
     "seuclidean",
-    "sokalmichener",
     "sokalsneath",
     "sqeuclidean",
     "yule",
@@ -131,9 +127,9 @@ def get_beta_diversity_metrics() -> list[str]:
 
 
 def alpha_diversity(
-    metric: Union[str, Callable],
-    counts: "TableLike",
-    ids: Optional["ArrayLike"] = None,
+    metric: str | Callable,
+    counts: TableLike,
+    ids: ArrayLike | None = None,
     validate: bool = True,
     **kwargs: Any,
 ) -> pd.Series:
@@ -200,37 +196,39 @@ def alpha_diversity(
             func = _phydiv
             kwargs.setdefault("rooted", tree._is_rooted())
             kwargs.setdefault("weight", False)
-        metric = partial(func, branch_lengths=lengths, **kwargs)
+        func = partial(func, branch_lengths=lengths, **kwargs)
 
     # other metrics (call on each sample)
     else:
-        if isinstance(metric, str):
-            metric = getattr(alpha, metric, None)
-            if metric is None or not isfunction(metric):
+        if callable(metric):
+            func = metric
+        elif isinstance(metric, str):
+            func = getattr(alpha, metric, None)
+            if func is None or not isfunction(func):
                 raise ValueError(
                     f'"{metric}" is not an available alpha diversity metric name. '
                     "Refer to `get_alpha_diversity_metrics` for a list of available "
                     "metrics."
                 )
-        elif not callable(metric):
+        else:
             raise ValueError(f"Invalid metric provided: {metric!r}.")
 
         # add "taxa" back to parameters
-        if taxa is not None and "taxa" in signature(metric).parameters:
+        if taxa is not None and "taxa" in signature(func).parameters:
             kwargs["taxa"] = taxa
-        metric = partial(metric, **kwargs)
+        func = partial(func, **kwargs)
 
     # kwargs is provided here so an error is raised on extra kwargs
-    results = [metric(c, **kwargs) for c in counts]
+    results = [func(c, **kwargs) for c in counts]
     return pd.Series(results, index=ids)
 
 
 def beta_diversity(
-    metric: Union[str, Callable],
-    counts: "TableLike",
-    ids: Optional["ArrayLike"] = None,
+    metric: str | Callable,
+    counts: TableLike,
+    ids: ArrayLike | None = None,
     validate: bool = True,
-    pairwise_func: Optional[Callable] = None,
+    pairwise_func: Callable | None = None,
     **kwargs: Any,
 ) -> DistanceMatrix:
     r"""Compute distances between all pairs of samples.
@@ -352,9 +350,9 @@ def beta_diversity(
     "and therefore can be misleading.",
 )
 def partial_beta_diversity(
-    metric: Union[str, Callable],
-    counts: "TableLike",
-    ids: Optional["ArrayLike"],
+    metric: str | Callable,
+    counts: TableLike,
+    ids: ArrayLike | None,
     id_pairs: Iterable[tuple[str, str]],
     validate: bool = True,
     **kwargs: Any,
@@ -418,7 +416,7 @@ def partial_beta_diversity(
 
     if metric == "unweighted_unifrac":
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
-        metric, counts = _setup_multiple_unweighted_unifrac(
+        func, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
     elif metric == "weighted_unifrac":
@@ -426,11 +424,11 @@ def partial_beta_diversity(
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
-        metric, counts = _setup_multiple_weighted_unifrac(
+        func, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
     elif callable(metric):
-        metric = partial(metric, **kwargs)
+        func = partial(metric, **kwargs)
         # remove all values from kwargs, since they have already been provided
         # through the partial
         kwargs = {}
@@ -440,11 +438,11 @@ def partial_beta_diversity(
             "optimized unifrac methods and callable functions."
         )
 
-    dm = np.zeros((len(ids), len(ids)), dtype=float)
+    dm = np.zeros((len(ids), len(ids)))
     id_index = {id_: idx for idx, id_ in enumerate(ids)}
     id_pairs_indexed = ((id_index[u], id_index[v]) for u, v in id_pairs)
 
     for u, v in id_pairs_indexed:
-        dm[u, v] = metric(counts[u], counts[v], **kwargs)
+        dm[u, v] = func(counts[u], counts[v], **kwargs)
 
     return DistanceMatrix(dm + dm.T, ids)

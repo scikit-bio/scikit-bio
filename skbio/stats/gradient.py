@@ -97,7 +97,6 @@ Control
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
-from typing import Optional
 
 import numpy as np
 from natsort import realsorted
@@ -161,6 +160,9 @@ def _weight_by_vector(trajectories, w_vector):
     # elements
     optimal_gradient = total_length / (len(w_vector) - 1)
 
+    # Convert to float64 before performing calculations to avoid type errors
+    trajectories = trajectories.astype("float64")
+
     # for all elements apply the weighting function
     for i, idx in enumerate(trajectories.index):
         # Skipping the first element is it doesn't need to be weighted
@@ -171,7 +173,7 @@ def _weight_by_vector(trajectories, w_vector):
                 / np.abs((w_vector.iloc[i] - w_vector.iloc[i - 1]))
             )
 
-    return trajectories.astype("float64")
+    return trajectories
 
 
 def _ANOVA_trajectories(category, res_by_group):
@@ -200,8 +202,7 @@ def _ANOVA_trajectories(category, res_by_group):
             category,
             None,
             None,
-            "This group can not be used. All groups "
-            "should have more than 1 element.",
+            "This group can not be used. All groups should have more than 1 element.",
         )
     # We are ok to run ANOVA
     _, p_val = f_oneway(*values)
@@ -404,7 +405,7 @@ class GradientANOVA:
     """
 
     # Should be defined by the derived classes
-    _alg_name: Optional[str] = None
+    _alg_name: str | None = None
 
     def __init__(
         self,
@@ -518,7 +519,7 @@ class GradientANOVA:
 
         # Check if they actually have sample ids in common
         if not sample_ids:
-            raise ValueError("Coordinates and metadata map had no samples " "in common")
+            raise ValueError("Coordinates and metadata map had no samples in common")
 
         # pandas no longer allows use of set with .loc
         sample_ids = list(sample_ids)
@@ -600,7 +601,7 @@ class GradientANOVA:
             # directly calls this method, which shouldn't be done
             # (that's why the method is private)
             raise RuntimeError(
-                "No samples to process, an empty list cannot " "be processed"
+                "No samples to process, an empty list cannot be processed"
             )
 
         # The weighting can only be done over trajectories with a length
@@ -613,9 +614,7 @@ class GradientANOVA:
                 )
             except (FloatingPointError, ValueError):
                 self._message_buffer.append(
-                    "Could not weight group, no "
-                    "gradient in the the "
-                    "weighting vector.\n"
+                    "Could not weight group, no gradient in the the weighting vector.\n"
                 )
                 trajectories = trajectories_copy
 
@@ -637,7 +636,7 @@ class GradientANOVA:
             This is the base class
 
         """
-        raise NotImplementedError("No algorithm is implemented on the base " "class.")
+        raise NotImplementedError("No algorithm is implemented on the base class.")
 
 
 class AverageGradientANOVA(GradientANOVA):

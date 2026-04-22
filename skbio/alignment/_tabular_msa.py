@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
+from __future__ import annotations
+
+from collections import Counter, namedtuple
 import copy
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -24,8 +27,11 @@ from skbio.io.descriptors import Read, Write
 
 from skbio.alignment._repr import _TabularMSAReprBuilder
 
+if TYPE_CHECKING:
+    from typing import Self
 
-_Shape = collections.namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
+
+_Shape = namedtuple("Shape", ["sequence", "position"])  # type: ignore[name-match]
 
 
 class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
@@ -136,13 +142,25 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     ACGT
     AG-T
     -C-T
-    >>> msa.index
-    Index(['seq1', 'seq2', 'seq3'], dtype='object')
+    >>> msa.index # doctest: +ELLIPSIS
+    Index(['seq1', 'seq2', 'seq3'], dtype='...')
 
     """
 
     default_write_format = "fasta"
+    """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
+
+    _reader_kwargs = {
+        "constructor": (
+            "type, required\n"
+            "    The type of sequence to read each alignment entry into. Must be a\n"
+            "    subclass of :class:`~skbio.sequence.GrammaredSequence` (e.g., \n"
+            "    :class:`~skbio.sequence.DNA`, :class:`~skbio.sequence.RNA`,\n"
+            "    :class:`~skbio.sequence.Protein`). Required by most formats that \n"
+            "    read into a ``TabularMSA``."
+        )
+    }
 
     read = Read()
     write = Write()
@@ -239,14 +257,14 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Retrieve index:
 
-        >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['a', 'b', 'c'], dtype='...')
 
         Set index:
 
         >>> msa.index = ['seq1', 'seq2', 'seq3']
-        >>> msa.index
-        Index(['seq1', 'seq2', 'seq3'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1', 'seq2', 'seq3'], dtype='...')
 
         Deleting the index resets it to the ``TabularMSA`` constructor's
         default:
@@ -340,8 +358,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         A-GT
         AC-T
         ACGA
-        >>> msa.index
-        Index(['a', 'b', 'c', 'd'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['a', 'b', 'c', 'd'], dtype='...')
 
 
         When we slice by a scalar we get the original sequence back out of the
@@ -718,7 +736,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self._iloc
 
     @classonlymethod
-    def from_dict(cls, dictionary: dict) -> "TabularMSA":
+    def from_dict(cls, dictionary: dict) -> Self:
         """Create a ``TabularMSA`` from a ``dict``.
 
         Parameters
@@ -1417,7 +1435,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             assert dtype.default_gap_char not in freqs
             freqs[dtype.default_gap_char] = gap_freq
 
-            consensus.append(collections.Counter(freqs).most_common(1)[0][0])
+            consensus.append(Counter(freqs).most_common(1)[0][0])
 
         return dtype("".join(consensus), positional_metadata=positional_metadata)
 
@@ -1695,8 +1713,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         Assign new index to the MSA using each sequence's ID as a label:
 
         >>> msa.reassign_index(minter='id')
-        >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['a', 'b', 'c'], dtype='...')
 
         Assign default index:
 
@@ -1708,8 +1726,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         via `mapping`:
 
         >>> msa.reassign_index(mapping={0: 'seq1', 1: 'seq2'})
-        >>> msa.index
-        Index(['seq1', 'seq2', 2], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1', 'seq2', 2], dtype='...')
 
         """
         if mapping is not None and minter is not None:
@@ -1791,8 +1809,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             position count: 4
         ---------------------
         ACGT
-        >>> msa.index
-        Index(['seq1'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1'], dtype='...')
 
         Append a new sequence to the MSA, providing its index label via
         `index`:
@@ -1807,8 +1825,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ---------------------
         ACGT
         AG-T
-        >>> msa.index
-        Index(['seq1', 'seq2'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1', 'seq2'], dtype='...')
 
         Append another sequence, this time resetting the MSA's index labels to
         the default with `reset_index`. Note that since the MSA's index is
@@ -1898,8 +1916,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             position count: 4
         ---------------------
         ACGT
-        >>> msa.index
-        Index(['seq1'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1'], dtype='...')
 
         Extend the MSA with sequences, providing their index labels via
         `index`:
@@ -1915,8 +1933,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACGT
         AG-T
         -G-T
-        >>> msa.index
-        Index(['seq1', 'seq2', 'seq3'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['seq1', 'seq2', 'seq3'], dtype='...')
 
         Extend with more sequences, this time resetting the MSA's index labels
         to the default with `reset_index`. Note that since the MSA's index is
@@ -2166,8 +2184,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ---------------------
         ACT--
         A-G-T
-        >>> joined.index
-        Index(['a', 'b'], dtype='object')
+        >>> joined.index # doctest: +ELLIPSIS
+        Index(['a', 'b'], dtype='...')
 
         By default both MSA indexes must match. Use ``how`` to specify an inner
         join:
@@ -2195,8 +2213,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         --------------------------
         ACT--
         A-G-T
-        >>> joined.index
-        Index(['a', 'b'], dtype='object')
+        >>> joined.index # doctest: +ELLIPSIS
+        Index(['a', 'b'], dtype='...')
         >>> joined.positional_metadata
            col2
         0     1
@@ -2211,13 +2229,13 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         >>> joined = msa1.join(msa2, how='outer')
         >>> joined.sort()  # unnecessary in practice, see note above
-        >>> joined
+        >>> joined # doctest: +ELLIPSIS
         TabularMSA[DNA]
         ----------------------------
         Positional metadata:
             'col1': <dtype: float64>
             'col2': <dtype: int64>
-            'col3': <dtype: object>
+            'col3': <dtype: ...>
         Stats:
             sequence count: 4
             position count: 5
@@ -2226,8 +2244,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         A-G-T
         -C---
         --ACG
-        >>> joined.index
-        Index(['a', 'b', 'c', 'z'], dtype='object')
+        >>> joined.index # doctest: +ELLIPSIS
+        Index(['a', 'b', 'c', 'z'], dtype='...')
         >>> joined.positional_metadata
            col1  col2 col3
         0  42.0     1  NaN
@@ -2267,6 +2285,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     ignore_index=True,
                     sort=True,
                 )
+                # Because left join, attempt to preserve dtypes of left MSA
+                self._preserve_dtypes(
+                    joined_positional_metadata, self.positional_metadata
+                )
             elif how == "right":
                 joined_positional_metadata = pd.concat(
                     [
@@ -2278,12 +2300,25 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
                     ignore_index=True,
                     sort=True,
                 )
+                # Because right join, attempt to preserve dtypes of right MSA
+                self._preserve_dtypes(
+                    joined_positional_metadata, other.positional_metadata
+                )
             else:
                 joined_positional_metadata = pd.concat(
                     [self.positional_metadata, other.positional_metadata],
                     ignore_index=True,
                     sort=True,
                     **concat_kwargs,
+                )
+                # This handles strict, inner, and outer joins. If the columns are the
+                # same then either one is sufficient. If it's an outer join then each
+                # column will attempt to preserve its dtype from its original MSA.
+                self._preserve_dtypes(
+                    joined_positional_metadata, self.positional_metadata
+                )
+                self._preserve_dtypes(
+                    joined_positional_metadata, other.positional_metadata
                 )
 
             if not self.has_positional_metadata():
@@ -2301,6 +2336,15 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
             del joined.positional_metadata
 
         return joined
+
+    def _preserve_dtypes(self, joined_pm, reference_pm):
+        """Coerce positional_metadata column dtypes to match a reference DataFrame."""
+        for col in reference_pm.columns:
+            if col in joined_pm.columns:
+                try:
+                    joined_pm[col] = joined_pm[col].astype(reference_pm[col].dtype)
+                except (ValueError, TypeError):
+                    pass
 
     def _assert_joinable(self, other):
         if not isinstance(other, TabularMSA):
@@ -2407,8 +2451,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         ACG
         AC-
         AC-
-        >>> msa.index
-        Index(['c', 'b', 'a'], dtype='object')
+        >>> msa.index # doctest: +ELLIPSIS
+        Index(['c', 'b', 'a'], dtype='...')
 
         Sort the sequences in alphabetical order by index label:
 
@@ -2423,8 +2467,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         AC-
         AC-
         ACG
-        >>> msa.index
-        Index(['a', 'b', 'c'], dtype='object')
+        >>> msa.index # # doctest: +ELLIPSIS
+        Index(['a', 'b', 'c'], dtype='...')
 
         Note that since the sort is in-place, the ``TabularMSA`` object is
         modified (a new object is *not* returned).
@@ -2483,7 +2527,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         return self.shape.position
 
     @classonlymethod
-    def from_path_seqs(cls, path, seqs) -> "TabularMSA":
+    def from_path_seqs(cls, path, seqs) -> Self:
         """Create a tabular MSA from an alignment path and the original sequences.
 
         Parameters

@@ -7,9 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import io
-import unittest
-from unittest import TestCase, main
-from typing import Optional, Type, Any, ClassVar
+from unittest import TestCase, main, skipUnless
 
 import numpy as np
 import numpy.testing as npt
@@ -592,7 +590,7 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.dm_3x3.filter([])
 
-    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_default(self):
         fig = self.dm_1x1.plot()
         self.assertIsInstance(fig, mpl.figure.Figure)
@@ -609,7 +607,7 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
             yticks.append(tick.get_text())
         self.assertEqual(yticks, ["a"])
 
-    @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
     def test_plot_no_default(self):
         ids = ["0", "one", "2", "three", "4.000"]
         data = (
@@ -1505,6 +1503,23 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         )
         self.assertEqual(res, exp)
 
+    def test_from_iterable_with_invalid_diagonal(self):
+        iterable = (x for x in range(4))
+        with self.assertRaises(DistanceMatrixError) as e:
+            self.matobj.from_iterable(iterable, lambda a, b: a * b, diagonal=1, validate=False)
+        self.assertEqual(
+            str(e.exception),
+            "Data must  be hollow (i.e., the diagonal can only contain zeros)."
+        )
+
+    def test_from_iterable_with_valid_diagonal(self):
+        iterable = (x for x in range(4))
+        exp = self.matobj(
+            [[0, 1, 2, 3], [1, 0, 2, 3], [2, 2, 0, 3], [3, 3, 3, 0]]
+        )
+        res = self.matobj.from_iterable(iterable, lambda a, b: a, diagonal=0, validate=False)
+        self.assertTrue((res.data == exp.data).all())
+
     def test_from_iterable_validate_non_hollow(self):
         iterable = (x for x in range(4))
         with self.assertRaises(DistanceMatrixError) as e:
@@ -1627,7 +1642,6 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
                 iterable, lambda a, b: abs(b - a), key=str, keys=["1", "2", "3", "4"]
             )
 
-    def test_from_iterable_with_key_and_keys(self):
         iterable = (x for x in range(4))
         with self.assertRaises(ValueError):
             self.matobj.from_iterable(
@@ -2221,4 +2235,4 @@ class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
 
 
 if __name__ == "__main__":
-    main(buffer=False)
+    main()

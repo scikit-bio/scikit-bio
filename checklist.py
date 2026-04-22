@@ -392,7 +392,7 @@ class GeneratedCythonValidator(RepoValidator):
 
         if retval != 0:
             raise RuntimeError(
-                "Could not execute 'git log' command to " "determine file timestamp."
+                "Could not execute 'git log' command to determine file timestamp."
             )
         return dateutil.parser.parse(stdout.strip())
 
@@ -408,7 +408,7 @@ class APIRegressionValidator(RepoValidator):
 
     """
 
-    reason = "The following tests import `A` but should import `B`" " (file: A => B):"
+    reason = "The following tests import `A` but should import `B` (file: A => B):"
 
     def __init__(self):
         """Initialize object for tests importing from non-minimized hierarchy."""

@@ -93,6 +93,7 @@ class TestStockholmReader(unittest.TestCase):
         msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
         exp = TabularMSA([Protein('MTCRAQLIAVPRASSLAE..AIACAQKM....'
                                   'RVSRVPVYERS',
+                                  metadata={'id': 'O83071/192-246'},
                                   positional_metadata={'SA': list('9998877564'
                                                                   '53524252..'
                                                                   '55152525..'
@@ -100,7 +101,8 @@ class TestStockholmReader(unittest.TestCase):
                                                                   '777')}),
                           Protein('EVMLTDIPRLHINDPIMK..GFGMVINN....'
                                   '..GFVCVENDE',
-                                  metadata={'OS': 'Bacillus subtilis'},
+                                  metadata={'id': 'O31698/88-139',
+                                            'OS': 'Bacillus subtilis'},
                                   positional_metadata={'SS': list('CCCCCCCHHHH'
                                                                   'HHHHHHH..HE'
                                                                   'EEEEEE....E'
@@ -108,6 +110,7 @@ class TestStockholmReader(unittest.TestCase):
                                                                   'EEEH')}),
                           Protein('EVMLTDIPRLHINDPIMK..GFGMVINN...'
                                   '...GFVCVENDE',
+                                  metadata={'id': 'O31699/88-139'},
                                   positional_metadata={'AS': list('___________'
                                                                   '_____*_____'
                                                                   '___________'
@@ -133,6 +136,7 @@ class TestStockholmReader(unittest.TestCase):
         msa = _stockholm_to_tabular_msa(fp, constructor=Protein)
         exp = TabularMSA([Protein('MTCRAQLIAVPRASSLAE..AIACAQKM....'
                                   'RVSRVPVYERS',
+                                  metadata={'id': 'O83071/192-246'},
                                   positional_metadata={'SA': list('9998877564'
                                                                   '53524252..'
                                                                   '55152525..'
@@ -140,7 +144,8 @@ class TestStockholmReader(unittest.TestCase):
                                                                   '777')}),
                           Protein('EVMLTDIPRLHINDPIMK..GFGMVINN....'
                                   '..GFVCVENDE',
-                                  metadata={'OS': 'Bacillus subtilis'},
+                                  metadata={'id': 'O31698/88-139',
+                                            'OS': 'Bacillus subtilis'},
                                   positional_metadata={'SS': list('CCCCCCCHHHH'
                                                                   'HHHHHHH..HE'
                                                                   'EEEEEE....E'
@@ -148,6 +153,7 @@ class TestStockholmReader(unittest.TestCase):
                                                                   'EEEH')}),
                           Protein('EVMLTDIPRLHINDPIMK..GFGMVINN...'
                                   '...GFVCVENDE',
+                                  metadata={'id': 'O31699/88-139'},
                                   positional_metadata={'AS': list('___________'
                                                                   '_____*_____'
                                                                   '___________'
@@ -171,16 +177,16 @@ class TestStockholmReader(unittest.TestCase):
     def test_stockholm_minimal(self):
         fp = get_data_path('stockholm_minimal')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG')], index=['0235244'])
+        exp = TabularMSA([DNA('TGTGTCGCAGTTGTCGTTTG', metadata={'id': '0235244'})], index=['0235244'])
         self.assertEqual(msa, exp)
 
     def test_stockholm_rna(self):
         fp = get_data_path('stockholm_rna')
         msa = _stockholm_to_tabular_msa(fp, constructor=RNA)
-        exp = TabularMSA([RNA('AAGGGUUAUUUAUAUACUUU'),
-                          RNA('UGCUAAGAGUGGGGAUGAUU'),
-                          RNA('GCCACAACCGAUUAGAUAGA'),
-                          RNA('UUAGAAACCGAUGGACCGAA')],
+        exp = TabularMSA([RNA('AAGGGUUAUUUAUAUACUUU', metadata={'id': 'RTC2231'}),
+                          RNA('UGCUAAGAGUGGGGAUGAUU', metadata={'id': 'RTF2124'}),
+                          RNA('GCCACAACCGAUUAGAUAGA', metadata={'id': 'RTH3322'}),
+                          RNA('UUAGAAACCGAUGGACCGAA', metadata={'id': 'RTB1512'})],
                          metadata={'AC': 'G2134T23', 'ID': 'ARD'},
                          positional_metadata=(
                          {'AC_cons': list('GGGACUGGACAUCUAUUCAG')}),
@@ -190,7 +196,7 @@ class TestStockholmReader(unittest.TestCase):
     def test_stockholm_runon_gf(self):
         fp = get_data_path('stockholm_runon_gf_no_whitespace')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
-        exp = TabularMSA([DNA('ACTGGTTCAATG')],
+        exp = TabularMSA([DNA('ACTGGTTCAATG', metadata={'id': 'GG1344'})],
                          metadata={'CC': 'CBS domains are small intracellular'
                                          ' modules mostly found in 2 or four '
                                          'copies within a protein.'},
@@ -204,7 +210,8 @@ class TestStockholmReader(unittest.TestCase):
         fp = get_data_path('stockholm_runon_gs_no_whitespace')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)
         exp = TabularMSA([DNA('ATCGTTCAGTG',
-                              metadata={'LN': 'This is a runon GS line.'})],
+                              metadata={'id': 'seq1', 
+                                        'LN': 'This is a runon GS line.'})],
                          index=['seq1'])
         self.assertEqual(msa, exp)
         fp = get_data_path('stockholm_runon_gs_with_whitespace')
@@ -358,10 +365,10 @@ class TestStockholmReader(unittest.TestCase):
     def test_multiple_msa_file(self):
         fp = get_data_path('stockholm_multiple_msa')
         msa = _stockholm_to_tabular_msa(fp, constructor=RNA)
-        exp = TabularMSA([RNA('AAGGGUUAUUUAUAUACUUU'),
-                          RNA('UGCUAAGAGUGGGGAUGAUU'),
-                          RNA('GCCACAACCGAUUAGAUAGA'),
-                          RNA('UUAGAAACCGAUGGACCGAA')],
+        exp = TabularMSA([RNA('AAGGGUUAUUUAUAUACUUU', metadata={'id': 'RTC2231'}),
+                          RNA('UGCUAAGAGUGGGGAUGAUU', metadata={'id': 'RTF2124'}),
+                          RNA('GCCACAACCGAUUAGAUAGA', metadata={'id': 'RTH3322'}),
+                          RNA('UUAGAAACCGAUGGACCGAA', metadata={'id': 'RTB1512'})],
                          metadata={'AC': 'G2134T23', 'ID': 'ARD'},
                          positional_metadata=(
                          {'AC_cons': list('GGGACUGGACAUCUAUUCAG')}),
@@ -375,7 +382,7 @@ class TestStockholmReader(unittest.TestCase):
         exp_order = [('NM', 'Kestrel Gorlick'), ('DT', 'February 5th, 2016')]
         self.assertEqual(msa_order, exp_order)
         msa_order = list(msa[0].metadata.items())
-        exp_order = [('AL', 'ABCD'), ('NS', '1234')]
+        exp_order = [('id', 'seq1'), ('AL', 'ABCD'), ('NS', '1234')]
         self.assertEqual(msa_order, exp_order)
         msa_order = list(msa.positional_metadata.columns)
         exp_order = ['SS_cons', 'AS_cons']

@@ -92,8 +92,8 @@ Stats:
 GCAUGCAUCUGCAUACGUACGUACGCAUGCAGUCGAUACAUACGUACGUCGGUACGU-CGAC
 ----------------------------------------------CGUGCAUGCAU-CGAU
 ------------------------------------------CAUUCGUACGUACGCAUGAC
->>> msa.index
-Index(['abc', 'def', 'xyz'], dtype='object')
+>>> msa.index # doctest: +ELLIPSIS
+Index(['abc', 'def', 'xyz'], dtype='...')
 
 We can use the following code to write a ``TabularMSA`` to a clustal-formatted
 file:
@@ -114,8 +114,8 @@ Stats:
 ACCGTTGTA-GTAGCT
 A--GTCGAA-GTACCT
 AGAGTTGAAGGTATCT
->>> msa.index
-Index(['seq1', 'sequence-2', '3'], dtype='object')
+>>> msa.index # doctest: +ELLIPSIS
+Index(['seq1', 'sequence-2', '3'], dtype='...')
 >>> fh = StringIO()
 >>> _ = msa.write(fh, format='clustal')
 >>> print(fh.getvalue()) # doctest: +NORMALIZE_WHITESPACE
@@ -349,5 +349,5 @@ def _clustal_to_tabular_msa(fh, cls=None, constructor=None):
         raise ClustalFormatError("Sequences not aligned properly")
     seqs = []
     for label in labels:
-        seqs.append(constructor("".join(data[label])))
+        seqs.append(constructor("".join(data[label]), metadata={"id": label}))
     return cls(seqs, index=labels)

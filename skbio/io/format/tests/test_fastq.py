@@ -434,7 +434,7 @@ class TestReaders(unittest.TestCase):
                             positional_metadata={'quality': np.array(c[3],
                                                  dtype=np.uint8)},
                             **expected_kwargs)
-                         for c in components])
+                         for c in components], minter='id')
 
                     observed = _fastq_to_tabular_msa(valid, **observed_kwargs)
                     self.assertEqual(observed, expected)

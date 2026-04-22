@@ -155,11 +155,9 @@ Add the official scikit-bio repo as the **upstream** of your fork::
 
    If you do not have Conda (or Mamba) in your computer, you may install one of the distributions such as `Miniconda <https://conda.io/miniconda.html>`_, `Miniforge <https://github.com/conda-forge/miniforge>`_ or `Anaconda <https://www.anaconda.com/download/>`_.
 
-   We recommend Conda over other approaches such as ``pip``, ``pyenv``, and ``virtualenv``. However, you are not blocked from using them in necessary situations.
-
 Execute the following command (``skbio-dev`` can be any name you like)::
 
-    conda create -n skbio-dev -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt --file ci/requirements.lint.txt --file ci/requirements.doc.txt
+    conda create -n skbio-dev -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt --file ci/requirements.lint.txt --file ci/requirements.doc.txt
 
 When done, activate the environment::
 
@@ -167,11 +165,28 @@ When done, activate the environment::
 
 .. note:: This may be slightly different depending on the operating system. Refer to the `Conda documentation <https://docs.conda.io/>`_ to find instructions for your OS.
 
+.. note::
+
+   If you prefer to use ``pip`` instead of Conda, you can create a Python virtual environment::
+
+       python -m venv .venv
+       source .venv/bin/activate
+
+   ``.venv`` will become a hidden directory in the project directory, and it will be ignored by Git. Alternatively, you may replace ``.venv`` with a location outside the project directory, such as ``~/.virtualenvs/skbio-dev``.
+
+   Then install dependencies in the environment::
+
+       pip install -r ci/requirements.txt -r ci/requirements.test.txt -r ci/requirements.lint.txt -r ci/requirements.doc.txt
+
 4. Install scikit-bio from source code::
 
     pip install --no-deps -e .
 
 This will install scikit-bio to the current conda environment. After this, you can use scikit-bio like a normal user (e.g., you can do ``import skbio`` in Python code). When you edit the code in the this directory, the changes will be immediately reflected as you use the software.
+
+.. note::
+    
+   If you run into OpenMP compile issues (or have other reasons to avoid OpenMP), you can avoid it by setting ``DISABLE_OPENMP=1`` in the build environment.
 
 5. Test the installation::
 

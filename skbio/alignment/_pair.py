@@ -6,7 +6,9 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import NamedTuple, Optional, Union, Tuple, List, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import Any, NamedTuple, TYPE_CHECKING
 
 import numpy as np
 
@@ -26,20 +28,20 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class PairAlignResult(NamedTuple):
     score: float
-    paths: Optional[List["PairAlignPath"]] = None
-    matrices: Optional[Tuple[np.ndarray, ...]] = None
+    paths: list[PairAlignPath] | None = None
+    matrices: tuple[np.ndarray, ...] | None = None
 
 
 def pair_align(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
     mode: str = "global",
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str] = (1.0, -1.0),
-    gap_cost: Union[float, Tuple[float, float]] = 2.0,
-    free_ends: Union[bool, Tuple[bool, bool], Tuple[bool, bool, bool, bool]] = True,
+    sub_score: tuple[float, float] | SubstitutionMatrix | str = (1.0, -1.0),
+    gap_cost: float | tuple[float, float] = 2.0,
+    free_ends: bool | tuple[bool, bool] | tuple[bool, bool, bool, bool] = True,
     trim_ends: bool = False,
-    max_paths: Optional[int] = 1,
+    max_paths: int | None = 1,
     atol: float = 1e-5,
     keep_matrices: bool = False,
 ) -> PairAlignResult:
@@ -466,10 +468,10 @@ def pair_align(
 
 
 def pair_align_nucl(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
-    **kwargs,
+    **kwargs: Any,
 ) -> PairAlignResult:
     r"""Align two nucleotide sequences.
 
@@ -505,16 +507,16 @@ def pair_align_nucl(
     ['GATCG-TC', '-ATCGCTC']
 
     """
-    params = dict(sub_score=(2.0, -3.0), gap_cost=(5.0, 2.0))
+    params: dict[str, Any] = dict(sub_score=(2.0, -3.0), gap_cost=(5.0, 2.0))
     params.update(kwargs)
     return pair_align(seq1, seq2, **params)
 
 
 def pair_align_prot(
-    seq1: "SequenceLike",
-    seq2: "SequenceLike",
+    seq1: SequenceLike,
+    seq2: SequenceLike,
     /,
-    **kwargs,
+    **kwargs: Any,
 ) -> PairAlignResult:
     r"""Align two protein sequences.
 
@@ -550,7 +552,7 @@ def pair_align_prot(
     ['PKKKRKV--', 'PAAKRVKLD']
 
     """
-    params = dict(sub_score="BLOSUM62", gap_cost=(11.0, 1.0))
+    params: dict[str, Any] = dict(sub_score="BLOSUM62", gap_cost=(11.0, 1.0))
     params.update(kwargs)
     return pair_align(seq1, seq2, **params)
 

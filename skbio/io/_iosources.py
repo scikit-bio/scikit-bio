@@ -9,11 +9,11 @@
 import io
 import gzip
 import bz2
-import tempfile
-import itertools
 from pathlib import Path
+from itertools import chain
+from tempfile import NamedTemporaryFile
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 from skbio.io import IOSourceError
 from ._fileobject import (
@@ -27,7 +27,7 @@ from ._fileobject import (
 # returns _TemporaryFileWrapper around a normal file object. Instead of
 # relying on this implementation, we take whatever the class of the result of
 # NamedTemporaryFile is.
-with tempfile.NamedTemporaryFile() as fh:
+with NamedTemporaryFile() as fh:
     _WrappedTemporaryFile = type(fh)
 
 
@@ -189,7 +189,7 @@ class IterableSource(IOSource):
                 self.repaired = []
                 return True
             if isinstance(head, str):
-                self.repaired = itertools.chain([head], iterator)
+                self.repaired = chain([head], iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort

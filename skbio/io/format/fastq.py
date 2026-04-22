@@ -443,7 +443,8 @@ def _fastq_to_tabular_msa(
             phred_offset=phred_offset,
             constructor=constructor,
             **kwargs,
-        )
+        ),
+        minter="id",
     )
 
 

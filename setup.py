@@ -50,6 +50,8 @@ def check_bin(ccbin, source, allow_dash):
     return found
 
 
+# Enable OpenMP during build
+
 # Note: We are looking for Apple/MacOS clang, which does not support omp
 #       Will treat "real clang" (e.g. llvm based) same as gcc
 clang = False
@@ -106,20 +108,33 @@ if gcc:
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
+# Determine if we want to use OpenMP
+
+# Enabled by default
+use_openpm = True
+
+if clang:
+    # Apple clang does not support OpenMP at all
+    use_openpm = False
+
+if os.getenv("DISABLE_OPENMP") in ("Y", "Yes", "YES", "1"):
+    # Developer explicity requested not to use OpenMP
+    use_openpm = False
 
 # Compiler flags
 extra_compile_args = ["-I."]  # search current directory
 extra_link_args = []
 
-# Enable OpenMP for parallelism.
-if platform.system() == "Windows":
-    extra_compile_args.append("/openmp")
-elif icc:
-    extra_compile_args.append("-qopenmp")
-    extra_link_args.append("-qopenmp")
-elif not clang:
-    extra_compile_args.append("-fopenmp")
-    extra_link_args.append("-fopenmp")
+if use_openpm:
+    # Enable OpenMP for parallelism.
+    if platform.system() == "Windows":
+        extra_compile_args.append("/openmp")
+    elif icc:
+        extra_compile_args.append("-qopenmp")
+        extra_link_args.append("-qopenmp")
+    else:
+        extra_compile_args.append("-fopenmp")
+        extra_link_args.append("-fopenmp")
 
 
 # Cython modules (*.pyx). They will be compiled into C code (*.c) during build.

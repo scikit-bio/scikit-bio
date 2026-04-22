@@ -6,15 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from functools import partial
-
-from typing import Optional, Tuple, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:  # pragma: no cover
-    from ._base import DistanceMatrix
-    from numpy.typing import ArrayLike, NDArray
-    import pandas as pd
-    from skbio.util._typing import SeedLike
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from scipy.stats import rankdata
@@ -22,15 +17,21 @@ from scipy.stats import rankdata
 from ._base import _preprocess_input, _run_monte_carlo_stats, _build_results
 from skbio.util._decorator import params_aliased
 
+if TYPE_CHECKING:  # pragma: no cover
+    from ._base import DistanceMatrix
+    from numpy.typing import ArrayLike, NDArray
+    import pandas as pd
+    from skbio.util._typing import SeedLike
+
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
 def anosim(
-    distmat: "DistanceMatrix",
-    grouping: Union["pd.DataFrame", "ArrayLike"],
-    column: Optional[str] = None,
+    distmat: DistanceMatrix,
+    grouping: pd.DataFrame | ArrayLike,
+    column: str | None = None,
     permutations: int = 999,
-    seed: Optional["SeedLike"] = None,
-) -> "pd.Series":
+    seed: SeedLike | None = None,
+) -> pd.Series:
     r"""Test for significant differences between groups using ANOSIM.
 
     Analysis of Similarities (ANOSIM) is a non-parametric method that tests
@@ -201,11 +202,11 @@ def anosim(
 
 
 def _compute_r_stat(
-    tri_idxs: Tuple["NDArray[np.int_]", "NDArray[np.int_]"],
-    ranked_dists: "NDArray[np.float64]",
+    tri_idxs: tuple[NDArray[np.int_], NDArray[np.int_]],
+    ranked_dists: NDArray[np.float64],
     divisor: float,
-    grouping: "NDArray[np.number]",
-) -> float:
+    grouping: NDArray[np.number],
+) -> np.floating[Any]:
     """Compute ANOSIM R statistic (between -1 and +1)."""
     # Create a matrix where True means that the two objects are in the same
     # group. This ufunc requires that grouping is a numeric vector (e.g., it
