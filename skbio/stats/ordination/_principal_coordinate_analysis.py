@@ -66,13 +66,10 @@ def center_distance_matrix(distance_matrix, inplace=False):
 # Compute partial eigendecomposition on host via SciPy LAPACK for JAX/CuPy.
 # Transfers to NumPy (JAX doesn't support subset_by_index), computes, returns to device.
 def _host_partial_eigh(matrix_any, subidx):
-    """Compute partial eigendecomposition on host via SciPy LAPACK.
-
-    Moves `matrix_any` to host (NumPy), ensures contiguous float64 layout,
-    runs SciPy's `eigh` with `subset_by_index`, then moves results back to
-    device for JAX/CuPy.
-    """
     xp, matrix_any = ingest_array(matrix_any)
+
+    device = getattr(matrix_any, "device", None)
+
     mat_np = _to_numpy(matrix_any)
     if mat_np.dtype != np.float64:
         mat_np = mat_np.astype(np.float64, copy=False)
@@ -80,6 +77,11 @@ def _host_partial_eigh(matrix_any, subidx):
 
     eigvals_np, eigvecs_np = scipy_eigh(mat_np, subset_by_index=subidx)
 
+    if device is not None:
+        return (
+            xp.asarray(eigvals_np, device=device),
+            xp.asarray(eigvecs_np, device=device),
+        )
     return xp.asarray(eigvals_np), xp.asarray(eigvecs_np)
 
 
