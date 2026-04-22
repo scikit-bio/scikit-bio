@@ -24,7 +24,7 @@ from skbio.binaries import (
     pcoa_fsvd as _skbb_pcoa_fsvd,
 )
 from skbio.util._decorator import params_aliased
-from skbio.util._array import ingest_array
+from skbio.util._array import ingest_array, _to_numpy
 
 
 # Double centering (Gower centering) of distance matrix for PCoA
@@ -73,7 +73,7 @@ def _host_partial_eigh(matrix_any, subidx):
     device for JAX/CuPy.
     """
     xp, matrix_any = ingest_array(matrix_any)
-    mat_np = np.asarray(matrix_any)
+    mat_np = _to_numpy(matrix_any)
     if mat_np.dtype != np.float64:
         mat_np = mat_np.astype(np.float64, copy=False)
     mat_np = np.ascontiguousarray(mat_np)
@@ -561,7 +561,9 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     xp, centered_distance_matrix = ingest_array(centered_distance_matrix)
 
     rng = get_rng(seed)
-    G = xp.asarray(rng.standard_normal(size=(n, k)))
+    G = xp.asarray(
+        rng.standard_normal(size=(n, k)), device=center_distance_matrix.device
+    )
     # `use_power_method` is constantly False, so `if` won't start.
     if use_power_method:  # pragma: no cover
         # use only the given exponent
