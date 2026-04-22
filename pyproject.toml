@@ -61,7 +61,7 @@ test = [
     "matplotlib"
 ]
 docs = [
-    "sphinx < 9",
+    "sphinx",
     "sphinx-design",
     "sphinx-copybutton",
     "pydata-sphinx-theme",
@@ -84,7 +84,7 @@ dev = [
     "coverage",
     "responses",
     "matplotlib",
-    "sphinx < 9",
+    "sphinx",
     "sphinx-design",
     "sphinx-copybutton",
     "pydata-sphinx-theme",

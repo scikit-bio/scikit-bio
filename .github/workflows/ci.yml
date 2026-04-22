@@ -65,8 +65,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          # Pin to 3.13 for now because no Sphinx is compatible with Python 3.14
-          python-version: "3.13"
+          python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -114,7 +113,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
           python -m ensurepip
           pip install --no-deps .
           conda list
@@ -175,7 +174,7 @@ jobs:
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
           python -m ensurepip
           pip install --no-deps .
           conda list
@@ -184,7 +183,7 @@ jobs:
         if: ${{ !matrix.use_conda }}
         run: |
           python -m ensurepip
-          pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
+          pip install --prefer-binary -r ci/requirements.txt -r ci/requirements.test.txt
           pip install --no-deps .
           pip list
       - name: Run unit tests
