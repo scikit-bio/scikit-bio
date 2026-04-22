@@ -215,7 +215,11 @@ def _parse_loc_str(loc_str):
     RPAREN = r"(?P<RPAREN>\))"
     COMMA = r"(?P<COMMA>,)"
     WS = r"(?P<WS>\s+)"
-    a = r"(?P<A>\d+)"
+    # A single base position, optionally prefixed with `<` or `>` to indicate
+    # that the exact boundary lies before or beyond the given base (issue #1666,
+    # e.g. "complement(<23231)" as seen in the NCBI lambda virus record
+    # J02459.1).
+    a = r"(?P<A>[<>]?\d+)"
     b = r"(?P<B>\d+\^\d+)"
     c = r"(?P<C>\d+\.\d+)"
     d = r"(?P<D><?\d+\.\.>?\d+)"
@@ -246,9 +250,16 @@ def _parse_loc_str(loc_str):
         if v == "complement":
             metadata["strand"] = "-"
         elif p == "A":
+            fuzzy_s = fuzzy_e = False
+            if v.startswith("<"):
+                v = v[1:]
+                fuzzy_s = True
+            elif v.startswith(">"):
+                v = v[1:]
+                fuzzy_e = True
             start = int(v)
             bounds.append((start - 1, start))
-            fuzzy.append((False, False))
+            fuzzy.append((fuzzy_s, fuzzy_e))
         elif p == "B":
             start, end = v.split("^")
             start = int(start)
@@ -341,7 +352,12 @@ def _serialize_location(intvl):
         start, end = bound
         start += 1
         if start == end:
-            s = str(start)
+            if fuzzy[0] and not fuzzy[1]:
+                s = "<%d" % start
+            elif fuzzy[1] and not fuzzy[0]:
+                s = ">%d" % start
+            else:
+                s = str(start)
         elif fuzzy[0] and fuzzy[1]:
             s = "<%d..>%d" % (start, end)
         elif fuzzy[0] and not fuzzy[1]:

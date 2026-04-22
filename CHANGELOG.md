@@ -10,6 +10,7 @@
 ### Bug Fixes
 
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
+* Fixed the GenBank/EMBL/GFF3 feature-location parser to accept single-base locations with a fuzzy boundary (e.g. `complement(<23231)` as found in the NCBI lambda virus record J02459.1). Previously such locations raised `FileFormatError: Could not parse location string`. The corresponding serializer was updated symmetrically to emit `<N`/`>N` instead of dropping the fuzzy marker ([#1666](https://github.com/scikit-bio/scikit-bio/issues/1666)).
 
 ### Miscellaneous
 
