@@ -562,7 +562,7 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     rng = get_rng(seed)
     G = xp.asarray(
-        rng.standard_normal(size=(n, k)), device=center_distance_matrix.device
+        rng.standard_normal(size=(n, k)), device=centered_distance_matrix.device
     )
     # `use_power_method` is constantly False, so `if` won't start.
     if use_power_method:  # pragma: no cover
