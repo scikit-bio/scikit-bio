@@ -446,7 +446,8 @@ class TestFMatrixBackends(TestCase, ArrayAPITestMixin):
         data = self.make_array(xp, device, _DM)
         result = f_matrix(e_matrix(data))
         # Double-centered matrix of a symmetric input should be symmetric.
-        self.assert_close(result, xp.matrix_transpose(result))
+        # Using .T instead of xp.matrix_transpose (not available in torch).
+        self.assert_close(result, result.T)
  
  
 class TestCenterDistanceMatrixBackends(TestCase, ArrayAPITestMixin):

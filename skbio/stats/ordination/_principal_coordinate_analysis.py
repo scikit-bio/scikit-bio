@@ -565,33 +565,43 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     # `use_power_method` is constantly False, so `if` won't start.
     if use_power_method:  # pragma: no cover
         # use only the given exponent
-        H = xp.dot(centered_distance_matrix, G)
+        H = xp.matmul(centered_distance_matrix, G)
 
         for x in range(2, num_levels + 2):
             # enhance decay of singular values
             # note: distance_matrix is no longer transposed, saves work
             # since we're expecting symmetric, square matrices anyway
             # (Daniel McDonald's changes)
-            H = xp.dot(centered_distance_matrix, xp.dot(centered_distance_matrix, H))
+            H = xp.matmul(
+                centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+            )
 
     else:
         # compute the m x l matrices H^{(0)}, ..., H^{(i)}
         # Note that this is done implicitly in each iteration below.
-        H = xp.dot(centered_distance_matrix, G)
+        H = xp.matmul(centered_distance_matrix, G)
         # to enhance performance
         H = xp.hstack(
-            (H, xp.dot(centered_distance_matrix, xp.dot(centered_distance_matrix, H)))
+            (
+                H,
+                xp.matmul(
+                    centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+                ),
+            )
         )
 
         # `num_levels` is constantly 1, so `for` loop won't start
         for x in range(3, num_levels + 2):  # pragma: no cover
-            tmp = xp.dot(centered_distance_matrix, xp.dot(centered_distance_matrix, H))
+            tmp = xp.matmul(
+                centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+            )
 
             H = xp.hstack(
                 (
                     H,
-                    xp.dot(
-                        centered_distance_matrix, xp.dot(centered_distance_matrix, tmp)
+                    xp.matmul(
+                        centered_distance_matrix,
+                        xp.matmul(centered_distance_matrix, tmp),
                     ),
                 )
             )
@@ -603,14 +613,14 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     Q, R = xp.linalg.qr(H)
 
     # Compute the n * ((i+1)l) product matrix T = A^T Q
-    T = xp.dot(centered_distance_matrix, Q)  # step 3
+    T = xp.matmul(centered_distance_matrix, Q)  # step 3
     # Form an SVD of T
     # T is same backend as Q, so we can use the same xp for both
     Vt, St, W = xp.linalg.svd(T, full_matrices=False)
-    W = W.transpose()
+    W = W.T
 
     # Compute the m * ((i+1)l) product matrix
-    Ut = xp.dot(Q, W)
+    Ut = xp.matmul(Q, W)
 
     U_fsvd = Ut[:, :dimensions]
 
@@ -683,13 +693,13 @@ def pcoa_biplot(ordination, y):
     # Represents the covariance matrix between the features matrix and the
     # column-centered eigenvectors of the pcoa.
     xp, coordinates = ingest_array(coordinates)
-    spc = (1 / (N - 1)) * xp.dot(y.values.T, scale(coordinates, ddof=1))
+    spc = (1 / (N - 1)) * xp.matmul(y.values.T, scale(coordinates, ddof=1))
 
     # U_proj from equation 9.55, is the matrix of descriptors to be projected.
     #
     # Only get the power of non-zero values, otherwise this will raise a
     # divide by zero warning. There shouldn't be negative eigenvalues(?)
-    Uproj = xp.sqrt(N - 1) * xp.dot(
+    Uproj = xp.sqrt(N - 1) * xp.matmul(
         spc,
         xp.diag(
             xp.where(eigvals > 0, xp.power(xp.where(eigvals > 0, eigvals, 1), -0.5), 0)
