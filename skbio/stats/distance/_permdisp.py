@@ -176,7 +176,8 @@ def permdisp(
     the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
+    >>> permdisp(dm, grouping, permutations=99, seed=42,
+    ...          dimensions=dm.shape[0]) # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -192,7 +193,7 @@ def permdisp(
     To suppress calculation of the p-value and only obtain the F statistic, specify
     zero permutations:
 
-    >>> permdisp(dm, grouping, permutations=0)
+    >>> permdisp(dm, grouping, permutations=0, dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -211,7 +212,8 @@ def permdisp(
     formula. As such the two different tests yield slightly different F
     statistics.
 
-    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42)
+    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42,
+    ...          dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -230,7 +232,8 @@ def permdisp(
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42)
+    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42,
+    ...          dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -268,12 +271,16 @@ def permdisp(
         ids = ordination.samples.axes[0].to_list()
         sample_size = len(ids)
     elif isinstance(distmat, DistanceMatrix):
-        if method == "eigh":
-            # eigh does not natively support specifying dimensions
-            # and pcoa expects it to be 0
-            dimensions = 0
-        elif method != "fsvd":
+        if method not in ("eigh", "fsvd"):
             raise ValueError("Method must be eigh or fsvd.")
+        # The `dimensions` argument is passed through to pcoa unchanged.
+        # Since #2285 the eigh path in pcoa honors `dimensions` and can
+        # yield substantial speedups on large distance matrices; the
+        # previous code here forced `dimensions=0`, which both discarded
+        # that speedup and tripped pcoa's "EIGH: since no value for
+        # dimensions..." RuntimeWarning on every call (#2430). Users who
+        # deliberately pass `dimensions=0` will still see that warning,
+        # as intended.
 
         ids = distmat.ids
         sample_size = distmat.shape[0]
