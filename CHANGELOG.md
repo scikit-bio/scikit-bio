@@ -14,6 +14,7 @@
 ### Bug Fixes
 
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
+* Fixed `permdisp` emitting pcoa's `"EIGH: since no value for dimensions..."` `RuntimeWarning` on every call with a distance matrix larger than 10 samples. `permdisp` was internally forcing `dimensions=0` before calling `pcoa`, which both tripped the warning and discarded the `eigh` speedup introduced in [#2285](https://github.com/scikit-bio/scikit-bio/pull/2285). The `dimensions` argument is now passed through to `pcoa` unchanged, matching the `fsvd` path; callers who deliberately pass `dimensions=0` on a large matrix still see the warning ([#2430](https://github.com/scikit-bio/scikit-bio/issues/2430)).
 
 ### Miscellaneous
 
