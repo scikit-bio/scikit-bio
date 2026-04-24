@@ -562,7 +562,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # Note: Skip validation, since we assume self was already validated
         # But ids are new, so validate them explicitly
         if self._flags["CONDENSED"]:
-            filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
+            filtered_data = distmat_reorder_condensed_py(
+                self.condensed_form(raw=True), idxs
+            )
             self._validate_ids(filtered_data, ids)
             return self.__class__(
                 filtered_data, ids, validate=False, condensed=True,
@@ -1717,8 +1719,17 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         return self._copy(condensed=True)
 
-    def condensed_form(self) -> NDArray:
+    def condensed_form(self, raw: bool = False) -> NDArray:
         r"""Return an array of distances in condensed format.
+
+        Parameters
+        ----------
+        raw : bool, optional
+            If False (default), the returned values have the matrix's scale
+            applied (and are cast to floating point when stored as integers).
+            If True, the underlying stored values are returned unchanged.
+            Only meaningful for matrices with a ``scale``; otherwise has no
+            effect.
 
         Returns
         -------
@@ -1752,10 +1763,11 @@ class SymmetricMatrix(PairwiseMatrix):
         .. [1] http://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 
         """
-        if self._flags["CONDENSED"]:
-            return self._data
-        else:
+        if raw or self._scale is None:
+            if self._flags["CONDENSED"]:
+                return self._data
             return squareform(self._data, force="tovector", checks=False)
+        return extract_distance_matrix_data(self, condensed=True)
 
     def permute(
         self,
