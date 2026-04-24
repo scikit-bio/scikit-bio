@@ -49,6 +49,7 @@ Canonical analysis
 
    cca
    rda
+   rpca
 
 
 Multimodal embedding
@@ -68,6 +69,7 @@ Ordination results
    :toctree:
 
    OrdinationResults
+   OptSpace
 
 
 Utility functions
@@ -178,6 +180,8 @@ from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._principal_component_analysis import pca
 from ._ordination_results import OrdinationResults
 from ._mmvec import mmvec, MMvecResults
+from ._optspace import OptSpace
+from ._rpca import rpca
 from ._utils import (
     mean_and_std,
     scale,
