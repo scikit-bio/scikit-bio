@@ -109,9 +109,10 @@ def scale(a, weights=None, with_mean=True, with_std=True, ddof=0, copy=True):
     division by zero.
 
     """
-    if copy:
-        a = a.copy()
     a = np.asarray(a, dtype=np.float64)
+    # Pandas 3.0+ returns read-only objects
+    if copy or (not a.flags.writeable):
+        a = a.copy()
     avg, std = mean_and_std(
         a, axis=0, weights=weights, with_mean=with_mean, with_std=with_std, ddof=ddof
     )

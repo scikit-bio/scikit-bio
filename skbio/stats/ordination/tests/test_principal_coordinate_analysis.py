@@ -13,11 +13,19 @@ from copy import deepcopy
 from warnings import catch_warnings
 from unittest import TestCase, main
 
-from skbio.stats.distance import DistanceMatrix, PairwiseMatrixError
-from skbio.stats.ordination import OrdinationResults, pcoa, pcoa_biplot
-from skbio.stats.ordination._principal_coordinate_analysis import _fsvd
+from skbio import DistanceMatrix, OrdinationResults
+from skbio.stats.distance import PairwiseMatrixError
+from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.util import (get_data_path, assert_ordination_results_equal,
-                        assert_data_frame_almost_equal)
+                        assert_data_frame_almost_equal, ArrayAPITestMixin,
+                        array_backends)
+from skbio.stats.ordination._principal_coordinate_analysis import (
+    e_matrix,
+    f_matrix,
+    center_distance_matrix,
+    _host_partial_eigh,
+    _fsvd,
+)
 
 
 class TestPCoA(TestCase):
@@ -392,6 +400,135 @@ class TestPCoABiplot(TestCase):
                                         ignore_directionality=True,
                                         ignore_axis_labels=True,
                                         ignore_method_names=True)
+
+
+# A small symmetric distance matrix used by most helpers.
+_DM = [
+    [0.0, 0.7, 0.6, 0.5],
+    [0.7, 0.0, 0.4, 0.3],
+    [0.6, 0.4, 0.0, 0.2],
+    [0.5, 0.3, 0.2, 0.0],
+]
+
+class TestEMatrixBackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_e_matrix_backends(self, xp, device):
+        data = self.make_array(xp, device, _DM)
+        result = e_matrix(data)
+ 
+        # Reference computed in numpy.
+        data_np = np.asarray(_DM, dtype=np.float64)
+        expected = -(data_np * data_np) / 2
+ 
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
+ 
+ 
+class TestFMatrixBackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_f_matrix_backends(self, xp, device):
+        data_np = np.asarray(_DM, dtype=np.float64)
+        e_np = -(data_np * data_np) / 2
+ 
+        e = self.make_array(xp, device, e_np.tolist())
+        result = f_matrix(e)
+ 
+        # Reference: manual double-centering in numpy.
+        row = e_np.mean(axis=1, keepdims=True)
+        col = e_np.mean(axis=0, keepdims=True)
+        expected = e_np - row - col + e_np.mean()
+ 
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
+ 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_f_matrix_is_symmetric(self, xp, device):
+        data = self.make_array(xp, device, _DM)
+        result = f_matrix(e_matrix(data))
+        # Double-centered matrix of a symmetric input should be symmetric.
+        # Using .T instead of xp.matrix_transpose (not available in torch).
+        self.assert_close(result, result.T)
+ 
+ 
+class TestCenterDistanceMatrixBackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_center_distance_matrix_backends(self, xp, device):
+        data = self.make_array(xp, device, _DM)
+        result = center_distance_matrix(data)
+ 
+        # Reference: run the numpy path.
+        data_np = np.asarray(_DM, dtype=np.float64)
+        expected = center_distance_matrix(data_np)
+ 
+        self.assert_type_preserved(result, xp, device)
+        self.assert_close(result, expected)
+ 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_center_distance_matrix_inplace_ignored_for_non_numpy(self, xp, device):
+        # `inplace=True` is documented to be ignored for non-numpy arrays;
+        # the call should still succeed and produce the centered matrix.
+        data = self.make_array(xp, device, _DM)
+        result = center_distance_matrix(data, inplace=True)
+ 
+        data_np = np.asarray(_DM, dtype=np.float64)
+        expected = center_distance_matrix(data_np)
+ 
+        self.assert_close(result, expected)
+ 
+ 
+class TestHostPartialEighBackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_host_partial_eigh_returns_to_device(self, xp, device):
+        # Build a symmetric positive-ish matrix on the backend.
+        centered_np = center_distance_matrix(np.asarray(_DM, dtype=np.float64))
+        centered = self.make_array(xp, device, centered_np.tolist())
+ 
+        n = centered_np.shape[0]
+        subidx = [n - 2, n - 1]  # top two eigenpairs
+ 
+        eigvals, eigvecs = _host_partial_eigh(centered, subidx)
+ 
+        # Results should live on the original backend/device.
+        self.assert_type_preserved(eigvals, xp, device)
+        self.assert_type_preserved(eigvecs, xp, device)
+ 
+        # And match a direct scipy call on the numpy reference.
+        from scipy.linalg import eigh as scipy_eigh
+ 
+        exp_vals, exp_vecs = scipy_eigh(centered_np, subset_by_index=subidx)
+        self.assert_close(eigvals, exp_vals)
+        # Eigenvectors can differ by sign; compare |vecs|.
+        self.assert_close(xp.abs(eigvecs), np.abs(exp_vecs))
+ 
+ 
+class TestFSVDBackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_fsvd_shape_and_backend(self, xp, device):
+        centered_np = center_distance_matrix(np.asarray(_DM, dtype=np.float64))
+        centered = self.make_array(xp, device, centered_np.tolist())
+ 
+        dims = 2
+        eigvals, eigvecs = _fsvd(centered, dimensions=dims, seed=42)
+ 
+        self.assert_type_preserved(eigvals, xp, device)
+        self.assert_type_preserved(eigvecs, xp, device)
+        self.assertEqual(tuple(eigvals.shape), (dims,))
+        self.assertEqual(tuple(eigvecs.shape), (centered_np.shape[0], dims))
+ 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_fsvd_matches_numpy(self, xp, device):
+        # Same seed on both paths → same (up to sign) subspace.
+        centered_np = center_distance_matrix(np.asarray(_DM, dtype=np.float64))
+        dims = 2
+ 
+        ref_vals, ref_vecs = _fsvd(centered_np, dimensions=dims, seed=0)
+ 
+        centered = self.make_array(xp, device, centered_np.tolist())
+        res_vals, res_vecs = _fsvd(centered, dimensions=dims, seed=0)
+ 
+        # Eigenvalues are unique; eigenvectors can flip sign per column.
+        self.assert_close(res_vals, ref_vals, rtol=1e-5, atol=1e-5)
+        self.assert_close(xp.abs(res_vecs), np.abs(ref_vecs), rtol=1e-5, atol=1e-5)
 
 
 if __name__ == "__main__":

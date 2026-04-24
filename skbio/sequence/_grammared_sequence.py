@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractmethod
 from itertools import product
 import re
 
@@ -22,10 +22,11 @@ class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
-        concrete_gap_chars = type(cls.gap_chars) is not abstractproperty
-        concrete_degenerate_map = type(cls.degenerate_map) is not abstractproperty
-        concrete_definite_chars = type(cls.definite_chars) is not abstractproperty
-        concrete_default_gap_char = type(cls.default_gap_char) is not abstractproperty
+        abstract_methods = cls.__abstractmethods__
+        concrete_gap_chars = "gap_chars" not in abstract_methods
+        concrete_degenerate_map = "degenerate_map" not in abstract_methods
+        concrete_definite_chars = "definite_chars" not in abstract_methods
+        concrete_default_gap_char = "default_gap_char" not in abstract_methods
         # degenerate_chars is not abstract but it depends on degenerate_map
         # which is abstract.
         concrete_degenerate_chars = concrete_degenerate_map
@@ -277,8 +278,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
 
-    @abstractproperty
     @classproperty
+    @abstractmethod
     def gap_chars(cls):
         """Return characters defined as gaps.
 
@@ -290,8 +291,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         raise NotImplementedError
 
-    @abstractproperty
     @classproperty
+    @abstractmethod
     def default_gap_char(cls):
         """Gap character to use when constructing a new gapped sequence.
 
@@ -343,8 +344,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         return cls.definite_chars
 
-    @abstractproperty
     @classproperty
+    @abstractmethod
     def definite_chars(cls):
         """Return definite characters.
 
@@ -368,8 +369,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return set()
 
-    @abstractproperty
     @classproperty
+    @abstractmethod
     def degenerate_map(cls):
         """Return mapping of degenerate to definite characters.
 

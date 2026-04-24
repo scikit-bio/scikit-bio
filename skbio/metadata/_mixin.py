@@ -281,7 +281,7 @@ class PositionalMetadataMixin(metaclass=ABCMeta):
     def positional_metadata(self, positional_metadata):
         try:
             # Pass copy=True to copy underlying data buffer.
-            positional_metadata = pd.DataFrame(positional_metadata, copy=True)
+            positional_metadata = pd.DataFrame(positional_metadata).copy()
         # Different versions of pandas will raise different error types. We
         # don't really care what the type of the error is, just its message, so
         # a blanket Exception will do.

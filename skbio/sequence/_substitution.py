@@ -20,6 +20,7 @@ from skbio.sequence._alphabet import _alphabet_to_hashes
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
     from numpy.typing import NDArray
+    from typing import Self
 
 
 class SubstitutionMatrix(PairwiseMatrix):
@@ -287,7 +288,7 @@ class SubstitutionMatrix(PairwiseMatrix):
     @classonlymethod
     def from_dict(
         cls, dictionary: dict[str, dict[str, float]], dtype: str = "float32"
-    ) -> "SubstitutionMatrix":
+    ) -> Self:
         """Create a substitution matrix from a 2D dictionary.
 
         Parameters
@@ -347,7 +348,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         match: int | float,
         mismatch: int | float,
         dtype: str = "float32",
-    ) -> "SubstitutionMatrix":
+    ) -> Self:
         r"""Create an identity substitution matrix.
 
         All matches and mismatches will have the identical scores,
@@ -389,7 +390,7 @@ class SubstitutionMatrix(PairwiseMatrix):
         return cls(alphabet, scores)
 
     @classonlymethod
-    def by_name(cls, name: str) -> "SubstitutionMatrix":
+    def by_name(cls, name: str) -> Self:
         """Load a pre-defined substitution matrix by its name.
 
         Parameters

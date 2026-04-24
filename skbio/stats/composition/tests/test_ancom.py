@@ -551,8 +551,9 @@ class AncomTests(TestCase):
         assert_data_frame_almost_equal(result[0], exp)
 
     def test_ancom_no_signal(self):
-        with self.assertWarns(ConstantInputWarning):
-            result = ancom(self.table3, self.cats3, p_adjust=None)
+        # TODO: Earlier versions of SciPy emitted ConstantInputWarning for this
+        # case; behavior changed around SciPy 1.17 so we no longer assert it here.
+        result = ancom(self.table3, self.cats3, p_adjust=None)
         exp = pd.DataFrame(
             {'W': np.array([0]*7),
              'Signif': np.array([False]*7, dtype=bool)})

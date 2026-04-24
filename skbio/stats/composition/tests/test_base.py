@@ -11,16 +11,23 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 from numpy.exceptions import AxisError
+from numpy.random import rand, randint
 import pandas as pd
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 
 from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
-    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, ilr,
-    ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
+    closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, rclr,
+    ilr, ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
+from skbio.util._testing import ArrayAPITestMixin, array_backends, xp_assert_close
+from skbio.util._array import _to_numpy
+
+
+# Tolerance for functions that lose precision on some backends (ilr, alr, etc.)
+_RELAXED_RTOL = 1e-4
 
 
 def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
@@ -35,7 +42,7 @@ def assert_coo_allclose(res, exp, rtol=1e-7, atol=1e-7):
     npt.assert_allclose(res_data, exp_data, rtol=rtol, atol=atol)
 
 
-class CompositionTests(TestCase):
+class CompositionTests(TestCase, ArrayAPITestMixin):
 
     def setUp(self):
         # Compositional data
@@ -134,31 +141,31 @@ class CompositionTests(TestCase):
         # as range
         basis_non_orthongnal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
         basis_non_orthonormal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
-        
+
         basis_unmatch_subspace_dim = np.array([[1, 0, 0]])
-        
+
         # generic basis, not necessarily the basis of unit ball subspace S^2
         basis_int = np.array([[1, 0, 0], [0, 1, 0]])
         basis_real= np.array([[1.0, 0, 0], [0, 1.0, 0]])
-        
+
         # action + assert
         with self.assertRaises(ValueError) as cm:
             _check_basis(np, basis_non_orthongnal, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
-        
+
         with self.assertRaises(ValueError) as cm:
             _check_basis(np, basis_non_orthonormal, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
-        
+
         msg = "Number of basis 1 not match to the subspace dim 2."
         with self.assertRaises(ValueError) as cm:
             _check_basis(np, basis_unmatch_subspace_dim, orthonormal=True,
                          subspace_dim=2)
         self.assertEqual(str(cm.exception), msg)
-        
+
         self.assertIsNone(_check_basis(np, basis_int, orthonormal=True))
         self.assertIsNone(_check_basis(np, basis_real, orthonormal=True))
-        
+
         # old test
         basis = np.array([[0.80442968, 0.19557032]])
         with self.assertRaises(ValueError) as cm:
@@ -263,6 +270,20 @@ class CompositionTests(TestCase):
                          [0.444, 0.167, 0.2  , 0.4  ]]])
         npt.assert_array_equal(obs.round(3), exp)
         npt.assert_allclose(obs.sum(axis=1), 1.)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_closure_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            arr = self.make_array(xp, device, data)
+            result = closure(arr, axis)
+            expected = data / np.sum(data, keepdims=True, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assert_close(result, expected)
 
     def test_perturb(self):
         pmat = perturb(closure(self.cdata1),
@@ -492,6 +513,22 @@ class CompositionTests(TestCase):
         exp = np.vstack([np.expand_dims(clr(mat, axis=0), axis=0) for mat in ten])
         npt.assert_allclose(obs, exp)
 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_clr_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            lmat = np.log(data)
+            expected = lmat - np.mean(lmat, axis=axis, keepdims=True)
+            arr = self.make_array(xp, device, data)
+            result = clr(arr, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(result.shape, arr.shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
     def test_clr_inv(self):
         mat = self.rdata1.copy()
         obs = clr_inv(mat)
@@ -519,6 +556,22 @@ class CompositionTests(TestCase):
         # input not centered
         with self.assertWarns(UserWarning):
             clr_inv(self.cdata1)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_clr_inv_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-4
+
+        for data in (data_int, data_real):
+            tmp = np.exp(data - np.max(data, axis=axis, keepdims=True))
+            expected = tmp / np.sum(tmp, axis=axis, keepdims=True)
+            arr = self.make_array(xp, device, data)
+            result = clr_inv(arr, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(result.shape, arr.shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
     def test_centralize(self):
         cmat = centralize(closure(self.cdata1))
@@ -669,6 +722,53 @@ class CompositionTests(TestCase):
         with self.assertRaises(ValueError):
             ilr_inv(table, basis=basis)
 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_ilr_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        V = _gram_schmidt_basis(6)
+        for data in (data_int, data_real):
+            x = clr(data, axis)
+            x = np.moveaxis(x, axis, -1)
+            expected = np.moveaxis(x @ V.T, -1, axis)
+            expected_shape = [
+                d if i != axis else d - 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = ilr(arr, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_ilr_inv_backends(self, xp, device):
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        V = _gram_schmidt_basis(7)
+        for data in (data_int, data_real):
+            y = np.moveaxis(data, axis, -1)
+            y = np.exp(y @ V)
+            y = y / np.sum(y, axis=-1, keepdims=True)
+            expected = np.moveaxis(y, -1, axis)
+            expected_shape = [
+                d if i != axis else d + 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = ilr_inv(arr, axis=axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
     def test_alr(self):
         # 2d-composition
         comp1 = closure(self.cdata1)
@@ -731,6 +831,53 @@ class CompositionTests(TestCase):
                                       [0.28867513, 0.28867513,
                                        0.28867513, -0.8660254]]))
 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_alr_backends(self, xp, device):
+        ref_idx = 2
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        for data in (data_int, data_real):
+            denom = data[:, [ref_idx], :]
+            numerators = np.delete(data, ref_idx, axis=axis)
+            expected = np.log(numerators / denom)
+            expected_shape = [
+                d if i != axis else d - 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = alr(arr, ref_idx, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_alr_inv_backends(self, xp, device):
+        ref_idx = 2
+        axis = 1
+        data_int = randint(1, 100, (4, 6, 3))
+        data_real = rand(4, 6, 3) + 1e-6
+
+        for data in (data_int, data_real):
+            exp_mat = np.exp(data)
+            ones = np.ones_like(exp_mat[:, 0, :])
+            exp_mat = np.insert(exp_mat, ref_idx, ones, axis=axis)
+            expected = exp_mat / exp_mat.sum(axis=axis, keepdims=True)
+            expected_shape = [
+                d if i != axis else d + 1
+                for i, d in enumerate(data.shape)
+            ]
+
+            arr = self.make_array(xp, device, data)
+            result = alr_inv(arr, ref_idx, axis)
+
+            self.assert_type_preserved(result, xp, device)
+            self.assertEqual(list(result.shape), expected_shape)
+            self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
     def test_sbp_basis_gram_schmidt(self):
         gsbasis = _gram_schmidt_basis(5)
         sbp = np.array([[1, -1, 0, 0, 0],
@@ -774,7 +921,7 @@ class TestTreeBasis(TestCase):
         tree = u"(a,b);"
         t = TreeNode.read([tree])
 
-        exp_basis = coo_matrix(
+        exp_basis = coo_array(
             np.array([[-np.sqrt(1. / 2),
                        np.sqrt(1. / 2)]]))
         exp_keys = [t.name]
@@ -792,7 +939,7 @@ class TestTreeBasis(TestCase):
     def test_tree_basis_unbalanced(self):
         tree = u"((a,b)c, d);"
         t = TreeNode.read([tree])
-        exp_basis = coo_matrix(np.array(
+        exp_basis = coo_array(np.array(
             [[-np.sqrt(1. / 6), -np.sqrt(1. / 6), np.sqrt(2. / 3)],
              [-np.sqrt(1. / 2), np.sqrt(1. / 2), 0]]
         ))
@@ -807,7 +954,7 @@ class TestTreeBasis(TestCase):
 
         t = TreeNode.read([tree])
 
-        exp_basis = coo_matrix(np.array(
+        exp_basis = coo_array(np.array(
             [
                 [-np.sqrt(2. / 3), np.sqrt(1. / 6), np.sqrt(1. / 6)],
                 [0, -np.sqrt(1. / 2), np.sqrt(1. / 2)]
@@ -888,6 +1035,263 @@ class VLRTests(TestCase):
         dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False, validate=False)
         output = dism.data.sum() / 2
         self.assertAlmostEqual(output, 0.2857382286903922)
+
+
+class TestRclr(TestCase, ArrayAPITestMixin):
+    """Tests for the robust centered log-ratio transformation."""
+
+    def test_basic_rclr(self):
+        """Test basic rclr transformation."""
+        # Simple matrix with no zeros
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+        result = rclr(mat)
+
+        # For each row, the mean of transformed values should be ~0
+        # (only over observed values)
+        for i in range(mat.shape[0]):
+            observed = ~np.isnan(result[i])
+            npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_rclr_backends(self, xp, device):
+        # Dense data (no zeros) — should match clr
+        data = rand(4, 6, 3) + 1e-4
+        lmat = np.log(data)
+        expected = lmat - np.mean(lmat, axis=-1, keepdims=True)
+
+        arr = self.make_array(xp, device, data)
+        result = rclr(arr)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assertEqual(result.shape, arr.shape)
+        self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+        # Sparse data (with zeros) — zeros become NaN, observed values centered
+        data_sparse = np.array([[3.0, 3.0, 0.0],
+                                [0.0, 4.0, 2.0]])
+        expected_sparse = np.array([[0.0, 0.0, np.nan],
+                                    [np.nan, 0.34657359, -0.34657359]])
+
+        arr_sparse = self.make_array(xp, device, data_sparse)
+        result_sparse = rclr(arr_sparse)
+
+        self.assert_type_preserved(result_sparse, xp, device)
+        self.assertEqual(result_sparse.shape, arr_sparse.shape)
+
+        # Convert to numpy for NaN-aware comparison
+        result_np = _to_numpy(result_sparse)
+        npt.assert_array_equal(np.isnan(result_np), np.isnan(expected_sparse))
+        npt.assert_allclose(result_np[~np.isnan(result_np)],
+                            expected_sparse[~np.isnan(expected_sparse)],
+                            rtol=_RELAXED_RTOL)
+
+    def test_rclr_with_zeros(self):
+        """Test rclr handles zeros by producing NaN."""
+        mat = np.array([[1, 0, 3], [4, 5, 0]])
+        result = rclr(mat)
+
+        # Zeros should become NaN
+        self.assertTrue(np.isnan(result[0, 1]))
+        self.assertTrue(np.isnan(result[1, 2]))
+
+        # Non-zero positions should not be NaN
+        self.assertFalse(np.isnan(result[0, 0]))
+        self.assertFalse(np.isnan(result[0, 2]))
+
+    def test_rclr_centering(self):
+        """Test that rclr centers each row correctly."""
+        mat = np.array([[1, 2, 0, 4], [0, 3, 3, 0], [2, 2, 2, 2]])
+        result = rclr(mat)
+
+        # For rows with observed values, mean should be 0
+        for i in range(mat.shape[0]):
+            observed = ~np.isnan(result[i])
+            if np.any(observed):
+                npt.assert_almost_equal(result[i, observed].mean(), 0.0)
+
+    def test_rclr_negative_values_error(self):
+        """Test that negative values raise an error."""
+        mat = np.array([[1, -2, 3], [4, 5, 6]])
+
+        with self.assertRaises(ValueError) as context:
+            rclr(mat)
+
+        self.assertIn("negative", str(context.exception))
+
+    def test_rclr_inf_error(self):
+        """Test that infinite values raise an error."""
+        mat = np.array([[1, np.inf, 3], [4, 5, 6]])
+
+        with self.assertRaises(ValueError) as context:
+            rclr(mat)
+
+        self.assertIn("infinite", str(context.exception))
+
+    def test_rclr_nan_preserved(self):
+        """Test that NaN values (missing entries) are preserved."""
+        mat = np.array([[1, np.nan, 3], [4, 5, 6]])
+        result = rclr(mat)
+
+        # NaN should remain NaN
+        self.assertTrue(np.isnan(result[0, 1]))
+
+        # Non-NaN values should be transformed
+        self.assertFalse(np.isnan(result[0, 0]))
+        self.assertFalse(np.isnan(result[0, 2]))
+
+    def test_rclr_1d_input(self):
+        """Test that 1D input works correctly."""
+        vec = np.array([1, 2, 3])
+        result = rclr(vec)
+
+        # Should handle 1D gracefully
+        self.assertEqual(result.shape, vec.shape)
+        npt.assert_almost_equal(np.nanmean(result), 0.0)
+
+    def test_rclr_uniform_row(self):
+        """Test rclr on uniform row (all same values)."""
+        mat = np.array([[2, 2, 2, 2]])
+        result = rclr(mat)
+
+        # Uniform row should have all zeros (log-ratio of equal values)
+        npt.assert_almost_equal(result[0], [0.0, 0.0, 0.0, 0.0])
+
+    def test_rclr_preserves_ratios(self):
+        """Test that rclr preserves log-ratios between features."""
+        mat = np.array([[1, 2, 4]])
+        result = rclr(mat)
+
+        # log(2) - log(1) = log(2)
+        expected_ratio = np.log(2)
+        observed_ratio = result[0, 1] - result[0, 0]
+        npt.assert_almost_equal(observed_ratio, expected_ratio)
+
+    def test_rclr_3d_tensor(self):
+        """Test rclr on 3D tensor."""
+        tensor = np.array([
+            [[1, 2, 3], [4, 5, 6]],
+            [[7, 8, 9], [10, 11, 12]]
+        ])
+        result = rclr(tensor)
+
+        # Shape should be preserved
+        self.assertEqual(result.shape, tensor.shape)
+
+        # Each sample's mean should be approximately 0
+        result_2d = result.reshape(-1, tensor.shape[-1])
+        for i in range(result_2d.shape[0]):
+            observed = ~np.isnan(result_2d[i])
+            if np.any(observed):
+                npt.assert_almost_equal(result_2d[i, observed].mean(), 0.0,
+                                        decimal=5)
+
+    def test_rclr_3d_with_zeros(self):
+        """Test rclr handles zeros in 3D tensor."""
+        tensor = np.array([
+            [[1, 0, 3], [0, 5, 6]],
+            [[7, 8, 0], [10, 0, 12]]
+        ])
+        result = rclr(tensor)
+
+        # Zeros should become NaN
+        self.assertTrue(np.isnan(result[0, 0, 1]))
+        self.assertTrue(np.isnan(result[0, 1, 0]))
+        self.assertTrue(np.isnan(result[1, 0, 2]))
+        self.assertTrue(np.isnan(result[1, 1, 1]))
+
+    def test_rclr_various_shapes(self):
+        """Test that various tensor shapes work correctly."""
+        shapes = [(2, 3, 4), (5, 2, 6), (3, 3, 3)]
+
+        for shape in shapes:
+            tensor = np.random.rand(*shape) + 0.1  # Avoid zeros
+            result = rclr(tensor)
+            self.assertEqual(result.shape, shape)
+
+    def test_rclr_dense_equals_clr(self):
+        """Test that rclr equals clr on dense data without zeros."""
+        # Dense count data with no zeros
+        count_data = np.array([[2, 2, 6], [4, 4, 2]])
+
+        # Apply rclr
+        rclr_result = rclr(count_data)
+
+        # Apply closure then clr
+        closed_data = closure(count_data)
+        clr_result = clr(closed_data)
+
+        # Results should be identical for dense data
+        npt.assert_allclose(rclr_result, clr_result, rtol=1e-10)
+
+    def test_rclr_sparse_expected_values(self):
+        """Test rclr on sparse data with known expected values."""
+        # Sparse count data with zeros
+        count_data = np.array([[3, 3, 0], [0, 4, 2]])
+
+        # Expected values (zeros become NaN, observed values centered)
+        expected = np.array([[0.0, 0.0, np.nan],
+                            [np.nan, 0.34657359, -0.34657359]])
+
+        result = rclr(count_data)
+
+        # Check non-NaN values match expected
+        npt.assert_allclose(result[~np.isnan(result)],
+                           expected[~np.isnan(expected)],
+                           rtol=1e-5)
+
+        # Check NaN positions match
+        npt.assert_array_equal(np.isnan(result), np.isnan(expected))
+
+    def test_rclr_axis_parameter(self):
+        """Test rclr with different axis values."""
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+
+        # Default axis=-1 (features on last axis)
+        result_default = rclr(mat)
+        result_last = rclr(mat, axis=-1)
+        npt.assert_array_equal(result_default, result_last)
+
+        # axis=0 (features on first axis)
+        result_axis0 = rclr(mat, axis=0)
+        self.assertEqual(result_axis0.shape, mat.shape)
+
+        # Each column should be centered
+        for j in range(mat.shape[1]):
+            observed = ~np.isnan(result_axis0[:, j])
+            if np.any(observed):
+                npt.assert_almost_equal(result_axis0[observed, j].mean(), 0.0)
+
+    def test_rclr_log_ratio_preservation(self):
+        """Test that log-ratios are preserved exactly."""
+        # Data where we can compute expected values analytically
+        data = np.array([[1, 2, 4, 8]])
+
+        result = rclr(data)
+
+        # Log-ratio between adjacent pairs should be log(2)
+        expected_ratio = np.log(2)
+        for i in range(3):
+            observed_ratio = result[0, i + 1] - result[0, i]
+            npt.assert_almost_equal(observed_ratio, expected_ratio)
+
+    def test_rclr_geometric_mean_centering(self):
+        """Test that each row is centered at geometric mean."""
+        np.random.seed(42)
+        data = np.random.rand(5, 10) * 100 + 1  # No zeros
+
+        result = rclr(data)
+
+        # Each row should have mean of 0 (centered at geometric mean)
+        for i in range(data.shape[0]):
+            row_mean = np.nanmean(result[i])
+            npt.assert_almost_equal(row_mean, 0.0, decimal=10)
+
+    def test_rclr_validate_false(self):
+        """Test that validation can be disabled."""
+        # This should work with validate=False even with potential edge cases
+        mat = np.array([[1, 2, 3], [4, 5, 6]])
+        result = rclr(mat, validate=False)
+        self.assertEqual(result.shape, mat.shape)
 
 
 if __name__ == "__main__":

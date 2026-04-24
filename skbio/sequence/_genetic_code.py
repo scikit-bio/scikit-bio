@@ -5,6 +5,9 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -12,6 +15,9 @@ from skbio.util._decorator import classproperty, classonlymethod
 from skbio._base import SkbioObject
 from skbio.sequence import Protein, RNA
 from skbio._base import ElasticLines
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class GeneticCode(SkbioObject):
@@ -140,7 +146,7 @@ class GeneticCode(SkbioObject):
         return cls.__offset_table
 
     @classonlymethod
-    def from_ncbi(cls, table_id=1) -> "GeneticCode":
+    def from_ncbi(cls, table_id=1) -> Self:
         r"""Return NCBI genetic code specified by table ID.
 
         Parameters

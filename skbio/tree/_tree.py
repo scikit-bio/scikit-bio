@@ -43,6 +43,7 @@ from ._compare import (
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Iterator
     from numpy.typing import ArrayLike
+    from typing import Self
 
 
 # ----------------------------------------------------------------------------
@@ -5785,7 +5786,7 @@ class TreeNode(SkbioObject):
             ("names", "id_list", "0.7.2", False),
         ]
     )
-    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: Iterable[str]) -> TreeNode:
+    def from_linkage_matrix(cls, lnkmat: ArrayLike, names: Iterable[str]) -> Self:
         r"""Construct tree from a SciPy linkage matrix.
 
         Parameters
@@ -5901,8 +5902,10 @@ class TreeNode(SkbioObject):
 
     @classonlymethod
     def from_taxonomy(
-        cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame
-    ) -> TreeNode:
+        cls,
+        lineage_map: dict | Iterable[tuple] | pd.DataFrame,
+        extract_rank: bool = False,
+    ) -> Self:
         r"""Construct a tree from a taxonomy.
 
         Parameters
@@ -5910,6 +5913,11 @@ class TreeNode(SkbioObject):
         lineage_map : dict, iterable of tuples, or pd.DataFrame
             Mapping of taxon IDs to lineages (iterables of taxonomic units
             from high to low in ranking).
+        extract_rank : bool, optional
+            Whether to extract rank information from taxon names (default: False).
+            If True, taxon names are expected to have rank prefixes (e.g.,
+            "d__Bacteria"). The prefixes will be removed from the names and
+            stored in the ``rank`` attribute of the created nodes.
 
         Returns
         -------
@@ -5963,15 +5971,53 @@ class TreeNode(SkbioObject):
         elif isinstance(lineage_map, pd.DataFrame):
             lineage_map = ((idx, row.tolist()) for idx, row in lineage_map.iterrows())
 
+        import re
+
+        p_rank = re.compile(r"^([a-z])__")
+
+        has_rank = None
+
         for id_, lineage in lineage_map:
             cur_node = root
 
+            if isinstance(lineage, str):
+                parsed_lineage = []
+                for taxon in lineage.split(";"):
+                    taxon = taxon.strip()
+                    if not taxon:
+                        continue
+                    parsed_lineage.append(taxon)
+                lineage = parsed_lineage
+
             # for each name, see if we've seen it, if not, add that puppy on
             for name in lineage:
+                rank = None
+                m = p_rank.match(name) if isinstance(name, str) else None
+                if m:
+                    rank = m.group(1)
+                    if extract_rank:
+                        name = name[len(m.group(0)) :]
+
+                    if has_rank is False:
+                        raise ValueError(
+                            "All taxa must either have a rank or not have a rank. "
+                            "A mixture is erroneous."
+                        )
+                    has_rank = True
+                else:
+                    if has_rank is True:
+                        raise ValueError(
+                            "All taxa must either have a rank or not have a rank. "
+                            "A mixture is erroneous."
+                        )
+                    has_rank = False
+
                 if name in cur_node._lookup:
                     cur_node = cur_node._lookup[name]
                 else:
                     new_node = cls(name=name)
+                    if rank is not None:
+                        new_node.rank = rank
                     new_node._lookup = {}
                     cur_node._lookup[name] = new_node
                     cur_node.append(new_node, uncache=False)
@@ -6074,7 +6120,7 @@ class TreeNode(SkbioObject):
     @classonlymethod
     def from_taxdump(
         cls, nodes: pd.DataFrame, names: pd.DataFrame | dict | None = None
-    ) -> TreeNode:
+    ) -> Self:
         r"""Construct a tree from the NCBI taxonomy database.
 
         Parameters

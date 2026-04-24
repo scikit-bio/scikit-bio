@@ -5,11 +5,13 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+from __future__ import annotations
 
 import re
 import collections
 import numbers
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -30,6 +32,10 @@ from skbio.sequence._alphabet import (
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
 from skbio.io.descriptors import Read, Write
+
+
+if TYPE_CHECKING:
+    from typing import Self, Iterable
 
 
 class Sequence(
@@ -441,7 +447,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    def concat(cls, sequences, how="strict") -> "Sequence":
+    def concat(cls, sequences: Iterable[Self], how: str = "strict") -> Self:
         r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters
