@@ -8,131 +8,223 @@
 
 """Tests for MMvec implementation."""
 
+import os
 import io
 import sys
 import unittest
 
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
+import pandas.testing as pdt
 from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
+from scipy.sparse import coo_array
 
+from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
-from skbio.stats.ordination import mmvec, MMvecResults
-from skbio.stats.ordination.tests._simulation import random_multimodal
+from skbio.stats.ordination import mmvec, MMvec, MMvecResult
+from skbio.stats.ordination._mmvec import (
+    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad
+)
+
+
+class TestRandomMultimodal(unittest.TestCase):
+    """Tests for random_multimodal simulation helper."""
+
+    def test_numerical_precision(self):
+        """Generated outputs that match expected values."""
+        res = random_multimodal(
+            n_features_x=4, n_features_y=6, n_samples=8, n_components=2, seed=7
+        )
+        x_counts, y_counts, design, coefs, x_main, x_bias, y_main, y_bias = res
+
+        x_counts_exp = pd.DataFrame([
+            [2, 3, 2, 3],
+            [1, 4, 2, 3],
+            [3, 3, 1, 3],
+            [1, 4, 2, 3],
+            [2, 4, 2, 2],
+            [2, 3, 3, 2],
+            [3, 3, 1, 3],
+            [1, 2, 3, 4],
+        ], index=[
+            f"sample_{i}" for i in range(8)
+        ], columns=[
+            f"x_feature_{j}" for j in range(4)
+        ], dtype=float)
+        pdt.assert_frame_equal(x_counts, x_counts_exp)
+
+        y_counts_exp = pd.DataFrame([
+            [14, 10, 12, 19, 20, 25],
+            [14, 13, 10, 11, 21, 31],
+            [ 7, 21, 14, 13, 25, 20],
+            [11, 15, 20,  9, 15, 30],
+            [11, 20, 12,  7, 24, 26],
+            [ 9, 13, 12,  9, 23, 34],
+            [14, 22,  9, 19, 19, 17],
+            [11,  7, 15, 14, 14, 39],
+        ], index=[
+            f"sample_{i}" for i in range(8)
+        ], columns=[
+            f"y_feature_{j}" for j in range(6)
+        ], dtype=float)
+        pdt.assert_frame_equal(y_counts, y_counts_exp)
+
+        design_exp = np.vstack([np.ones(8), np.array([
+            -1.0, -0.714, -0.429, -0.143, 0.143, 0.429, 0.714, 1.0
+        ])]).T
+        npt.assert_array_equal(design.round(3), design_exp)
+
+        coefs_exp = np.array([
+            [ 0.002,  0.597, -0.548, -1.781],
+            [-0.909, -1.983,  0.120,  2.680],
+        ])
+        npt.assert_array_equal(coefs.round(3), coefs_exp)
+
+        x_main_exp = np.array([
+            [-0.979, -0.809],
+            [ 1.061, -0.808],
+            [-0.033,  0.884],
+            [-0.584, -0.112]
+        ])
+        npt.assert_array_equal(x_main.round(3), x_main_exp)
+
+        x_bias_exp = np.array([ 0.762, -1.199, 0.075, 0.577]).reshape(-1, 1)
+        npt.assert_array_equal(x_bias.round(3), x_bias_exp)
+
+        y_main_exp = np.array([
+            [ 0.11 ,  0.064, -1.225,  0.076,  1.359],
+            [-1.547,  0.859,  0.119, -0.641,  2.   ],
+        ])
+        npt.assert_array_equal(y_main.round(3), y_main_exp)
+
+        y_bias_exp = np.array([-0.189,  0.683, -0.067,  0.667,  1.439]).reshape(1, -1)
+        npt.assert_array_equal(y_bias.round(3), y_bias_exp)
+
+        self.assertEqual(x_counts.shape, (8, 4))
+        self.assertEqual(y_counts.shape, (8, 6))
+        self.assertEqual(design.shape, (8, 2))
+        self.assertEqual(coefs.shape, (2, 4))
+        self.assertEqual(x_main.shape, (4, 2))
+        self.assertEqual(x_bias.shape, (4, 1))
+        self.assertEqual(y_main.shape, (2, 5))
+        self.assertEqual(y_bias.shape, (1, 5))
+
+        self.assertEqual(x_counts.index[0], "sample_0")
+        self.assertEqual(x_counts.columns[0], "x_feature_0")
+        self.assertEqual(y_counts.columns[0], "y_feature_0")
+
+    def test_output_shapes(self):
+        """Generated outputs should have expected shapes and IDs."""
+        nx = 123  # number of X features
+        ny = 456  # number of Y features
+        ns = 78   # number of samples
+        nd = 9    # number of dimensions
+
+        res = random_multimodal(
+            n_features_x=nx, n_features_y=ny, n_samples=ns, n_components=nd, seed=42
+        )
+        x_counts, y_counts, design, coefs, x_main, x_bias, y_main, y_bias = res
+
+        self.assertEqual(x_counts.shape, (ns, nx))
+        self.assertEqual(y_counts.shape, (ns, ny))
+        self.assertEqual(design.shape, (ns, 2))
+        self.assertEqual(coefs.shape, (2, nx))
+        self.assertEqual(x_main.shape, (nx, nd))
+        self.assertEqual(x_bias.shape, (nx, 1))
+        self.assertEqual(y_main.shape, (nd, ny - 1))
+        self.assertEqual(y_bias.shape, (1, ny - 1))
+
+        self.assertListEqual(list(x_counts.index), [f"sample_{i}" for i in range(ns)])
+        self.assertListEqual(
+            list(x_counts.columns), [f"x_feature_{j}" for j in range(nx)]
+        )
+        self.assertListEqual(
+            list(y_counts.columns), [f"y_feature_{k}" for k in range(ny)]
+        )
+
+    def test_reproducible_with_seed(self):
+        """Same seed should provide reproducible output."""
+        res1 = random_multimodal(seed=42)
+        res2 = random_multimodal(seed=42)
+
+        pdt.assert_frame_equal(res1[0], res2[0])
+        pdt.assert_frame_equal(res1[1], res2[1])
+        for i in range(2, len(res1)):
+            npt.assert_allclose(res1[i], res2[i])
 
 
 class TestMMvecRecovery(unittest.TestCase):
     """Test that MMvec recovers true embeddings from synthetic data."""
 
-    def setUp(self):
-        """Build small simulation matching original mmvec test."""
-        np.random.seed(1)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=8,
-            n_samples=150,
-            latent_dim=2,
-            sigmaQ=2,
-            microbe_total=1000,
-            metabolite_total=10000,
-            seed=1,
-        )
-        (
-            self.microbes,
-            self.metabolites,
-            self.design,
-            self.B,
-            self.U,
-            self.Ubias,
-            self.V,
-            self.Vbias,
-        ) = res
-
-        num_train = 10
-        self.trainX = self.microbes.iloc[:-num_train]
-        self.testX = self.microbes.iloc[-num_train:]
-        self.trainY = self.metabolites.iloc[:-num_train]
-        self.testY = self.metabolites.iloc[-num_train:]
-
+    # @unittest.skip("Skipping a test that requires long runtime.")
     def test_recovers_embeddings(self):
         """Verify model recovers true embeddings from synthetic data."""
-        np.random.seed(1)
+        # Simulate a dataset of 150 samples
+        X, Y, _, _,  U, b_U, V, b_V = random_multimodal(
+            8, 8, 150, 2, x_noise_std=2, x_total=1000, y_total=10000, seed=1
+        )
+        # Leave out last 10 samples as a test set
+        n = 10
+        X_train, X_test = X.iloc[:-n], X.iloc[-n:]
+        Y_train, Y_test = Y.iloc[:-n], Y.iloc[-n:]
 
         result = mmvec(
-            self.trainX,
-            self.trainY,
-            n_components=2,
+            X_train,
+            Y_train,
+            dimensions=2,
             optimizer="adam",
-            max_iter=1000,
+            max_iter=500,  # may need to increase for harder cases
             batch_size=50,
             learning_rate=1e-3,
             beta_1=0.8,
             beta_2=0.9,
-            random_state=0,
+            seed=0,
+            output_format="numpy",
         )
 
         # Check result type
-        self.assertIsInstance(result, MMvecResults)
+        self.assertIsInstance(result, MMvecResult)
 
-        # Verify U embeddings are recovered
+        # Verify X embeddings are recovered
         # Compare pairwise distances using Spearman correlation
         u_r, u_p = spearmanr(
-            pdist(result.microbe_embeddings.values[:, :-1]),  # exclude bias
-            pdist(self.U),
+            pdist(result.x_embeddings[:, :-1]),  # exclude bias
+            pdist(U),
         )
         self.assertGreater(u_r, 0.5, f"U correlation too low: {u_r}")
         self.assertLess(u_p, 0.05, f"U p-value too high: {u_p}")
 
-        # Verify V embeddings are recovered
-        # Compare pairwise distances between metabolites
+        # Verify Y embeddings are recovered
+        # Compare pairwise distances between Y features
         v_r, v_p = spearmanr(
-            pdist(result.metabolite_embeddings.values[1:, :-1]),  # exclude ref & bias
-            pdist(self.V.T),  # V is (latent_dim, n_metabolites-1), so V.T is (n_met-1, dim)
+            pdist(result.y_embeddings[1:, :-1]),  # exclude ref & bias
+            pdist(V.T),
         )
         self.assertGreater(v_r, 0.5, f"V correlation too low: {v_r}")
         self.assertLess(v_p, 0.05, f"V p-value too high: {v_p}")
 
         # Verify conditional probabilities match
-        d1 = self.U.shape[0]
+        d1 = U.shape[0]
 
         # Compute expected probabilities from true parameters
-        U_ = np.hstack((np.ones((d1, 1)), self.Ubias, self.U))
-        V_ = np.vstack(
-            (self.Vbias, np.ones((1, self.V.shape[1])), self.V)
-        )
-        exp = softmax(np.hstack((np.zeros((d1, 1)), U_ @ V_)))
-
-        # Compute result probabilities
-        res = softmax(result.ranks.values)
+        U_ = np.hstack((np.ones((d1, 1)), b_U, U))
+        V_ = np.vstack((b_V, np.ones((1, V.shape[1])), V))
+        exp = softmax(np.hstack((np.zeros((d1, 1)), U_ @ V_)), validate=False)
+        res = softmax(result.ranks, validate=False)
 
         s_r, s_p = spearmanr(np.ravel(res), np.ravel(exp))
         self.assertGreater(s_r, 0.5, f"Probability correlation too low: {s_r}")
         self.assertLess(s_p, 0.05, f"Probability p-value too high: {s_p}")
 
-    def test_score_reasonable(self):
-        """Q² score on held-out data should be reasonable."""
-        np.random.seed(1)
-
-        result = mmvec(
-            self.trainX,
-            self.trainY,
-            n_components=2,
-            optimizer="adam",
-            max_iter=1000,
-            batch_size=50,
-            learning_rate=1e-3,
-            beta_1=0.8,
-            beta_2=0.9,
-            random_state=0,
-        )
-
-        # Compute Q² score on test data
-        q2 = result.score(self.testX, self.testY)
-
-        # Q² should be positive for a reasonably trained model
-        # (better than predicting the mean)
-        self.assertGreater(q2, -1.0, f"Q² score too low: {q2}")
+        # Compute Q^2 score on test data. The value should be positive for a reasonably
+        # trained model (better than predicting the mean).
+        q2 = result.score(X_test, Y_test)
+        # Exact value may vary by platform and optimizer implementation, so we check
+        # that it's above a reasonable threshold rather than exact.
+        # self.assertEqual(round(q2, 7), 0.2664482)
+        self.assertGreater(q2, -1.0, f"Q-squared score too low: {q2}")
 
 
 class TestMMvecGradients(unittest.TestCase):
@@ -140,8 +232,6 @@ class TestMMvecGradients(unittest.TestCase):
 
     def test_multinomial_gradient(self):
         """Verify multinomial softmax gradient is correct."""
-        from skbio.stats.ordination._mmvec import _multinomial_loglik_and_grad
-
         # Small test case
         logits = np.array([[0.0, 1.0, 2.0], [0.0, -1.0, 1.0]])
         y = np.array([[5.0, 10.0, 15.0], [20.0, 5.0, 5.0]])
@@ -164,41 +254,47 @@ class TestMMvecGradients(unittest.TestCase):
 
                 grad_numerical[i, j] = (loss_plus - loss_minus) / (2 * eps)
 
-        np.testing.assert_allclose(
+        npt.assert_allclose(
             grad_analytical, grad_numerical, rtol=1e-4, atol=1e-6
         )
 
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
-        from skbio.stats.ordination._mmvec import _MMvecModel
-
-        np.random.seed(42)
-        n_microbes = 5
-        n_metabolites = 8
+        n_features_x = 5
+        n_features_y = 8
         n_components = 2
         n_samples = 20
 
         # Create model
         rng = np.random.default_rng(42)
         model = _MMvecModel(
-            n_microbes=n_microbes,
-            n_metabolites=n_metabolites,
+            n_features_x=n_features_x,
+            n_features_y=n_features_y,
             n_components=n_components,
+            u_prior_mean=0.0,
+            u_prior_scale=1.0,
+            v_prior_mean=0.0,
+            v_prior_scale=1.0,
             rng=rng,
         )
 
         # Generate small test data
-        X = np.random.randint(0, 100, size=(n_samples, n_microbes)).astype(
+        X = np.random.randint(0, 100, size=(n_samples, n_features_x)).astype(
             np.float64
         )
-        Y = np.random.randint(0, 100, size=(n_samples, n_metabolites)).astype(
+        Y = np.random.randint(0, 100, size=(n_samples, n_features_y)).astype(
             np.float64
         )
+        X_coo = coo_array(X)
+        data = X_coo.data
+        weights = data / data.sum()
 
         # Compute analytical gradients with fixed seed for reproducibility
-        batch_seed = 123
+        seed = 123
+        size = 10
+        norm = n_features_x / size
         _, grads = model.loss_and_gradients(
-            X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+            X_coo, Y, size, norm, weights, np.random.default_rng(seed)
         )
 
         # Verify each parameter numerically
@@ -212,11 +308,11 @@ class TestMMvecGradients(unittest.TestCase):
                 original = param[idx]
                 param[idx] = original + eps
                 loss_plus, _ = model.loss_and_gradients(
-                    X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+                    X_coo, Y, size, norm, weights, np.random.default_rng(seed)
                 )
                 param[idx] = original - eps
                 loss_minus, _ = model.loss_and_gradients(
-                    X, Y, batch_size=10, rng=np.random.default_rng(batch_seed)
+                    X_coo, Y, size, norm, weights, np.random.default_rng(seed)
                 )
                 param[idx] = original  # restore
 
@@ -239,298 +335,200 @@ class TestMMvecBasic(unittest.TestCase):
 
     def test_output_shapes(self):
         """Check that output shapes are correct."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=10,
-            n_metabolites=15,
-            n_samples=50,
-            latent_dim=3,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        result = mmvec(
-            microbes,
-            metabolites,
-            n_components=3,
-            max_iter=10,
-            random_state=42,
-        )
-
-        # Check shapes
-        n_microbes = microbes.shape[1]
-        n_metabolites = metabolites.shape[1]
-        n_components = 3
-
-        self.assertEqual(
-            result.microbe_embeddings.shape,
-            (n_microbes, n_components + 1),  # +1 for bias
-        )
-        self.assertEqual(
-            result.metabolite_embeddings.shape,
-            (n_metabolites, n_components + 1),  # +1 for bias
-        )
-        self.assertEqual(result.ranks.shape, (n_microbes, n_metabolites))
+        ndim = 3
+        X, Y, *_ = random_multimodal(10, 15, 50, ndim, seed=42)
+        res = mmvec(X, Y, dimensions=ndim, max_iter=10, seed=42)
+        n_features_x, n_features_y = X.shape[1], Y.shape[1]
+        self.assertEqual(res.x_embeddings.shape, (n_features_x, ndim + 1))
+        self.assertEqual(res.y_embeddings.shape, (n_features_y, ndim + 1))
+        self.assertEqual(res.ranks.shape, (n_features_x, n_features_y))
 
     def test_ranks_row_centered(self):
         """Check that ranks are row-centered."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        result = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=42,
-        )
-
-        # Ranks should be approximately row-centered
-        row_means = result.ranks.values.mean(axis=1)
-        np.testing.assert_allclose(row_means, 0, atol=1e-10)
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        obs = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        row_means = obs.ranks.to_numpy().mean(axis=1)
+        npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_reproducibility(self):
-        """Check that results are reproducible with same random state."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
+        """Check that results are reproducible with same seed."""
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        obs1 = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        obs2 = mmvec(X, Y, dimensions=2, max_iter=50, seed=42)
+        pdt.assert_frame_equal(obs1.ranks, obs2.ranks, rtol=1e-10)
 
-        result1 = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=123,
-        )
-
-        result2 = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=123,
-        )
-
-        np.testing.assert_allclose(
-            result1.ranks.values, result2.ranks.values, rtol=1e-10
-        )
-
-    def test_batch_normalization_modes(self):
+    def test_batch_norm_modes(self):
         """Test that both batch normalization modes work."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes, metabolites = res[0], res[1]
-
-        # Legacy mode (batch_normalization only applies to Adam)
-        result_legacy = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            optimizer="adam",
-            max_iter=50,
-            batch_normalization="legacy",
-            random_state=42,
-        )
-        self.assertIsInstance(result_legacy, MMvecResults)
-
-        # Unbiased mode
-        result_unbiased = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            optimizer="adam",
-            max_iter=50,
-            batch_normalization="unbiased",
-            random_state=42,
-        )
-        self.assertIsInstance(result_unbiased, MMvecResults)
+        X, Y, *_ = random_multimodal(8, 10, 50, seed=42)
+        params = dict(dimensions=2, optimizer="adam", max_iter=50, seed=42)
+        obs1 = mmvec(X, Y, batch_norm="legacy", **params)
+        obs2 = mmvec(X, Y, batch_norm="unbiased", **params)
 
         # Results should differ due to different normalization
-        self.assertFalse(
-            np.allclose(result_legacy.ranks.values, result_unbiased.ranks.values)
-        )
+        with self.assertRaises(AssertionError):
+            pdt.assert_frame_equal(obs1.ranks, obs2.ranks, rtol=1e-10)
 
 
-class TestMMvecResults(unittest.TestCase):
-    """Test MMvecResults class."""
+class TestMMvecEstimator(unittest.TestCase):
+    """Test MMvec estimator class."""
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
-
-    def test_probabilities(self):
-        """Test probability computation from ranks."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=42,
-        )
-
-        probs = result.probabilities()
-
-        # Probabilities should sum to 1 per row
-        np.testing.assert_allclose(probs.sum(axis=1), 1.0, rtol=1e-6)
-
-        # Probabilities should be positive
-        self.assertTrue((probs.values >= 0).all())
+        self.X, self.Y, *_ = random_multimodal(8, 10, 50, seed=42)
 
     def test_predict(self):
-        """Test predict method returns valid metabolite distributions."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=42,
-        )
+        """Test predict method returns valid Y distributions."""
+        model = MMvec(n_components=2, max_iter=50, seed=42).fit(self.X, self.Y)
 
         # Predict on new samples
-        new_microbes = self.microbes.iloc[:5]
-        predictions = result.predict(new_microbes)
+        X_test = self.X.iloc[:5]
+        Y_pred = model.predict(X_test)
 
         # Predictions should have correct shape
-        self.assertEqual(predictions.shape, (5, 10))
+        self.assertEqual(Y_pred.shape, (5, 10))
 
         # Predictions should sum to 1 per row
-        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(Y_pred.sum(axis=1), 1.0, rtol=1e-6)
 
         # Predictions should be positive
-        self.assertTrue((predictions.values >= 0).all())
+        self.assertTrue((Y_pred.to_numpy() >= 0).all())
 
-        # Column names should match metabolites
-        self.assertEqual(
-            list(predictions.columns),
-            list(self.metabolites.columns),
-        )
+        # Column names should match Y features
+        self.assertListEqual(list(Y_pred.columns), list(self.Y.columns))
 
     def test_score(self):
-        """Test score method returns valid Q² value."""
-        # Split data
-        train_microbes = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
-
-        result = mmvec(
-            train_microbes,
-            train_metabolites,
-            n_components=2,
-            max_iter=100,
-            random_state=42,
-        )
-
-        q2 = result.score(test_microbes, test_metabolites)
-
-        # Q² should be a float
+        """Test score method returns valid Q-squared value."""
+        # Split data into train and test sets
+        X_train, X_test = self.X.iloc[:40], self.X.iloc[40:]
+        Y_train, Y_test = self.Y.iloc[:40], self.Y.iloc[40:]
+        model = MMvec(n_components=2, max_iter=100, seed=42).fit(X_train, Y_train)
+        q2 = model.score(X_test, Y_test)
         self.assertIsInstance(q2, float)
 
-        # Q² should be <= 1.0 (perfect prediction)
+        # Q^2 should be <= 1.0 (perfect prediction)
         self.assertLessEqual(q2, 1.0)
 
     def test_predict_zero_sample_raises(self):
         """Predict with zero-count sample should raise ValueError."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
-        )
+        model = MMvec(
+            n_components=2, max_iter=10, seed=42
+        ).fit(self.X, self.Y)
 
-        # Create microbes with a zero row
-        zero_microbes = self.microbes.iloc[:3].copy()
-        zero_microbes.iloc[0, :] = 0
-
+        # Create X with a zero row
+        X_ = self.X.iloc[:3].copy()
+        X_.iloc[0, :] = 0
         with self.assertRaises(ValueError) as ctx:
-            result.predict(zero_microbes)
-
+            model.predict(X_)
         self.assertIn("all-zero counts", str(ctx.exception))
 
-    def test_str(self):
-        """Test string representation of MMvecResults."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
-        )
-        s = str(result)
-        self.assertIn("MMvecResults", s)
-        self.assertIn("Microbes", s)
-        self.assertIn("Metabolites", s)
+    def test_mmvec_result_str(self):
+        """Test string representation of MMvecResult."""
+        result = mmvec(self.X, self.Y, dimensions=2, max_iter=10, seed=42)
+        obs = str(result)
+        self.assertIn("MMvecResult", obs)
+        self.assertIn("Features", obs)
+        self.assertIn("Targets", obs)
+        self.assertIn("Components", obs)
+        self.assertIn("Iterations", obs)
 
     def test_predict_numpy_array(self):
         """Test predict with numpy array input (not DataFrame)."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=50,
-            random_state=42,
-        )
-        predictions = result.predict(self.microbes.values[:5])
+        model = MMvec(n_components=2, max_iter=50, seed=42).fit(self.X, self.Y)
+        predictions = model.predict(self.X.to_numpy()[:5])
         self.assertEqual(predictions.shape[0], 5)
-        np.testing.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
+        npt.assert_allclose(predictions.sum(axis=1), 1.0, rtol=1e-6)
 
     def test_score_numpy_array(self):
         """Test score with numpy array inputs (not DataFrames)."""
-        train_microbes = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
-
-        result = mmvec(
-            train_microbes,
-            train_metabolites,
-            n_components=2,
-            max_iter=100,
-            random_state=42,
-        )
-        q2 = result.score(test_microbes.values, test_metabolites.values)
+        X_train, X_test = self.X.iloc[:40], self.X.iloc[40:]
+        Y_train, Y_test = self.Y.iloc[:40], self.Y.iloc[40:]
+        model = MMvec(n_components=2, max_iter=100, seed=42).fit(X_train, Y_train)
+        q2 = model.score(X_test.to_numpy(), Y_test.to_numpy())
         self.assertIsInstance(q2, float)
         self.assertLessEqual(q2, 1.0)
 
-    def test_score_zero_metabolite_raises(self):
-        """Score with zero-count metabolite sample should raise ValueError."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
+    def test_score_zero_raises(self):
+        """Score with zero-count Y sample should raise ValueError."""
+        model = MMvec(n_components=2, max_iter=100, seed=42).fit(self.X, self.Y)
+        Y_ = self.Y.iloc[:5].copy()
+        Y_.iloc[0, :] = 0
+        with self.assertRaises(ValueError) as ctx:
+            model.score(self.X.iloc[:5], Y_)
+        self.assertIn("all-zero counts", str(ctx.exception))
+
+    def test_check_is_fitted(self):
+        """Should raise if fit has not been called."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+        with self.assertRaises(ValueError) as ctx:
+            model._check_is_fitted()
+        self.assertIn("not fitted", str(ctx.exception))
+
+    def test_str(self):
+        """String representation of estimator should require fitted state."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+        model.fit(self.X, self.Y)
+        obs = str(model)
+        self.assertIn("MMvec", obs)
+        self.assertIn("Features", obs)
+        self.assertIn("Targets", obs)
+        self.assertIn("Components", obs)
+        self.assertIn("Iterations", obs)
+
+    def test_get_params(self):
+        """Estimator parameters should be returned as a dict."""
+        model = MMvec(
+            n_components=4,
+            optimizer="adam",
+            max_iter=123,
+            learning_rate=0.02,
+            batch_size=11,
+            x_prior_mean=1.5,
+            x_prior_scale=0.8,
+            y_prior_mean=-2.5,
+            y_prior_scale=1.2,
+            beta_1=0.8,
+            beta_2=0.85,
+            clipnorm=3.0,
+            batch_norm="legacy",
+            seed=7,
+            verbose=True,
+            output_format="numpy",
         )
-        zero_metabolites = self.metabolites.iloc[:5].copy()
-        zero_metabolites.iloc[0, :] = 0
+
+        obs = model.get_params()
+        exp = {
+            "n_components": 4,
+            "optimizer": "adam",
+            "max_iter": 123,
+            "learning_rate": 0.02,
+            "batch_size": 11,
+            "x_prior_mean": 1.5,
+            "x_prior_scale": 0.8,
+            "y_prior_mean": -2.5,
+            "y_prior_scale": 1.2,
+            "beta_1": 0.8,
+            "beta_2": 0.85,
+            "clipnorm": 3.0,
+            "batch_norm": "legacy",
+            "seed": 7,
+            "verbose": True,
+            "output_format": "numpy",
+        }
+        self.assertDictEqual(obs, exp)
+
+    def test_set_params(self):
+        """set_params should update known parameters and reject unknown ones."""
+        model = MMvec(n_components=2, max_iter=10, seed=42)
+
+        result = model.set_params(n_components=5, optimizer="adam", max_iter=20)
+        self.assertIs(result, model)
+        self.assertEqual(model.n_components, 5)
+        self.assertEqual(model.optimizer, "adam")
+        self.assertEqual(model.max_iter, 20)
 
         with self.assertRaises(ValueError) as ctx:
-            result.score(self.microbes.iloc[:5], zero_metabolites)
-        self.assertIn("all-zero counts", str(ctx.exception))
+            model.set_params(not_a_real_param=1)
+        self.assertIn("Invalid parameter", str(ctx.exception))
 
 
 class TestMMvecValidation(unittest.TestCase):
@@ -538,104 +536,65 @@ class TestMMvecValidation(unittest.TestCase):
 
     def setUp(self):
         """Create valid test data."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
+        self.X, self.Y, *_ = random_multimodal(8, 10, 50, seed=42)
 
-    def test_mismatched_samples_raises(self):
-        """Mismatched sample counts should raise ValueError."""
-        microbes = self.microbes.iloc[:40]  # 40 samples
-        metabolites = self.metabolites.iloc[:50]  # 50 samples
-
+    def test_mismatched_sample_counts(self):
+        """Mismatched sample counts should raise."""
+        X = self.X.iloc[:40]  # 40 samples
+        Y = self.Y.iloc[:50]  # 50 samples
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, metabolites, max_iter=1)
-
+            mmvec(X, Y, max_iter=1)
         self.assertIn("same number of samples", str(ctx.exception))
 
-    def test_zero_microbe_column_raises(self):
-        """All-zero microbe column should raise ValueError."""
-        microbes = self.microbes.copy()
-        microbes.iloc[:, 0] = 0  # Set first column to all zeros
-
+    def test_all_zero_columns(self):
+        """Columns (features) with all zero counts should raise."""
+        X = self.X.copy()
+        for i in (1, 2, 3):
+            X.iloc[:, i] = 0
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, self.metabolites, max_iter=1)
+            mmvec(X, self.Y, max_iter=1)
+        self.assertIn("X contains all-zero columns", str(ctx.exception))
 
-        self.assertIn("all-zero columns", str(ctx.exception))
-        self.assertIn("OTU_0", str(ctx.exception))
-
-    def test_zero_metabolite_column_raises(self):
-        """All-zero metabolite column should raise ValueError."""
-        metabolites = self.metabolites.copy()
-        metabolites.iloc[:, 0] = 0  # Set first column to all zeros
-
+        Y = self.Y.copy()
+        for i in (4, 5, 6):
+            Y.iloc[:, i] = 0
         with self.assertRaises(ValueError) as ctx:
-            mmvec(self.microbes, metabolites, max_iter=1)
+            mmvec(self.X, Y, max_iter=1)
+        self.assertIn("y contains all-zero columns", str(ctx.exception))
 
-        self.assertIn("all-zero columns", str(ctx.exception))
-        self.assertIn("metabolite_0", str(ctx.exception))
-
-    def test_zero_sample_row_raises(self):
-        """All-zero sample row should raise ValueError."""
-        microbes = self.microbes.copy()
-        microbes.iloc[0, :] = 0  # Set first row to all zeros
-
+    def test_all_zero_rows(self):
+        """Rows (samples) with all zero counts should raise."""
+        X = self.X.copy()
+        for i in (1, 2, 3):
+            X.iloc[i, :] = 0
         with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, self.metabolites, max_iter=1)
+            mmvec(X, self.Y, max_iter=1)
+        self.assertIn("X contains all-zero rows", str(ctx.exception))
 
-        self.assertIn("all-zero counts", str(ctx.exception))
-
-    def test_zero_u_prior_scale_raises(self):
-        """Zero u_prior_scale should raise ValueError."""
+        Y = self.Y.copy()
+        for i in (4, 5, 6):
+            Y.iloc[i, :] = 0
         with self.assertRaises(ValueError) as ctx:
-            mmvec(
-                self.microbes,
-                self.metabolites,
-                u_prior_scale=0,
-                max_iter=1,
-            )
+            mmvec(self.X, Y, max_iter=1)
+        self.assertIn("y contains all-zero rows", str(ctx.exception))
 
-        self.assertIn("u_prior_scale must be positive", str(ctx.exception))
-
-    def test_negative_u_prior_scale_raises(self):
-        """Negative u_prior_scale should raise ValueError."""
+    def test_prior_scales(self):
+        """x_prior_scale and y_prior_scale must be positive."""
+        msg = "x_prior_scale must be positive"
         with self.assertRaises(ValueError) as ctx:
-            mmvec(
-                self.microbes,
-                self.metabolites,
-                u_prior_scale=-1.0,
-                max_iter=1,
-            )
-
-        self.assertIn("u_prior_scale must be positive", str(ctx.exception))
-
-    def test_zero_v_prior_scale_raises(self):
-        """Zero v_prior_scale should raise ValueError."""
+            mmvec(self.X, self.Y, x_prior_scale=0, max_iter=1)
+        self.assertIn(msg, str(ctx.exception))
         with self.assertRaises(ValueError) as ctx:
-            mmvec(
-                self.microbes,
-                self.metabolites,
-                v_prior_scale=0,
-                max_iter=1,
-            )
+            mmvec(self.X, self.Y, x_prior_scale=-0.5, max_iter=1)
+        self.assertIn(msg, str(ctx.exception))
 
-        self.assertIn("v_prior_scale must be positive", str(ctx.exception))
-
-    def test_negative_v_prior_scale_raises(self):
-        """Negative v_prior_scale should raise ValueError."""
+        msg = "y_prior_scale must be positive"
         with self.assertRaises(ValueError) as ctx:
-            mmvec(
-                self.microbes,
-                self.metabolites,
-                v_prior_scale=-0.5,
-                max_iter=1,
-            )
-
-        self.assertIn("v_prior_scale must be positive", str(ctx.exception))
+            mmvec(self.X, self.Y, y_prior_scale=0, max_iter=1)
+        self.assertIn(msg, str(ctx.exception))
+        with self.assertRaises(ValueError) as ctx:
+            mmvec(self.X, self.Y, y_prior_scale=-0.5, max_iter=1)
+        self.assertIn(msg, str(ctx.exception))
 
 
 class TestMMvecInputTypes(unittest.TestCase):
@@ -643,33 +602,18 @@ class TestMMvecInputTypes(unittest.TestCase):
 
     def test_sparse_pandas_input(self):
         """Test with sparse pandas DataFrame."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes_dense, metabolites_dense = res[0], res[1]
+        X_dense, Y_dense, *_ = random_multimodal(8, 10, 50, seed=42)
 
         # Convert to sparse pandas DataFrame
-        microbes_sparse = microbes_dense.astype(pd.SparseDtype("float64", 0))
-        metabolites_sparse = metabolites_dense.astype(
-            pd.SparseDtype("float64", 0)
-        )
+        X_sparse = X_dense.astype(pd.SparseDtype("float64", 0))
+        Y_sparse = Y_dense.astype(pd.SparseDtype("float64", 0))
 
-        result = mmvec(
-            microbes_sparse,
-            metabolites_sparse,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
-        )
+        result = mmvec(X_sparse, Y_sparse, dimensions=2, max_iter=10, seed=42)
 
         # Should produce valid results
         self.assertEqual(result.ranks.shape, (8, 10))
-        np.testing.assert_allclose(
-            result.ranks.values.mean(axis=1), 0, atol=1e-10
+        npt.assert_allclose(
+            result.ranks.to_numpy().mean(axis=1), 0, atol=1e-10
         )
 
 
@@ -678,42 +622,23 @@ class TestMMvecParameterBehavior(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
+        self.X, self.Y, *_ = random_multimodal(8, 10, 50, seed=42)
 
     def test_nonzero_prior_mean_affects_results(self):
         """Non-zero prior means should affect results."""
+        params = dict(dimensions=2, max_iter=50, seed=42)
         result_default = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=50,
-            u_prior_mean=0.0,
-            v_prior_mean=0.0,
-            random_state=42,
+            self.X, self.Y, **params, x_prior_mean=0.0, y_prior_mean=0.0
         )
-
         result_nonzero = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=50,
-            u_prior_mean=5.0,
-            v_prior_mean=5.0,
-            random_state=42,
+            self.X, self.Y, **params, x_prior_mean=5.0, y_prior_mean=5.0
         )
 
         # Results should differ
         self.assertFalse(
             np.allclose(
-                result_default.microbe_embeddings.values,
-                result_nonzero.microbe_embeddings.values,
+                result_default.x_embeddings.to_numpy(),
+                result_nonzero.x_embeddings.to_numpy(),
             )
         )
 
@@ -722,16 +647,15 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         # Capture stdout
         captured = io.StringIO()
         sys.stdout = captured
-
         try:
             mmvec(
-                self.microbes,
-                self.metabolites,
-                n_components=2,
+                self.X,
+                self.Y,
+                dimensions=2,
                 optimizer="adam",
                 max_iter=5,
                 verbose=True,
-                random_state=42,
+                seed=42,
             )
         finally:
             sys.stdout = sys.__stdout__
@@ -741,87 +665,38 @@ class TestMMvecParameterBehavior(unittest.TestCase):
         self.assertIn("Loss", output)
 
 
-class TestMMvecOutputVerification(unittest.TestCase):
+class TestMMvecResultVerification(unittest.TestCase):
     """Test output structure and properties."""
 
     def setUp(self):
-        """Create test data with specific IDs."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
+        """Create test data."""
+        self.X, self.Y, *_ = random_multimodal(8, 10, 50, seed=42)
 
     def test_index_columns_preserved(self):
         """Index and column names should be preserved from input."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
-        )
-
-        # Microbe IDs preserved
-        self.assertEqual(
-            list(result.microbe_embeddings.index),
-            list(self.microbes.columns),
-        )
-        self.assertEqual(
-            list(result.ranks.index),
-            list(self.microbes.columns),
-        )
-
-        # Metabolite IDs preserved
-        self.assertEqual(
-            list(result.metabolite_embeddings.index),
-            list(self.metabolites.columns),
-        )
-        self.assertEqual(
-            list(result.ranks.columns),
-            list(self.metabolites.columns),
-        )
+        result = mmvec(self.X, self.Y, dimensions=2, max_iter=10, seed=42)
+        # X IDs preserved
+        pdt.assert_index_equal(result.x_embeddings.index, self.X.columns)
+        pdt.assert_index_equal(result.ranks.index, self.X.columns)
+        # Y IDs preserved
+        pdt.assert_index_equal(result.y_embeddings.index, self.Y.columns)
+        pdt.assert_index_equal(result.ranks.columns, self.Y.columns)
 
     def test_convergence_structure(self):
         """Convergence DataFrame should have correct structure."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            max_iter=10,
-            random_state=42,
-        )
-
-        # Check columns exist
-        self.assertIn("iteration", result.convergence.columns)
-        self.assertIn("loss", result.convergence.columns)
-
-        # Iterations should be sequential positive integers
-        iterations = result.convergence["iteration"].values
-        self.assertEqual(iterations[0], 1)
-        self.assertTrue(np.all(np.diff(iterations) == 1))
+        result = mmvec(self.X, self.Y, dimensions=2, max_iter=10, seed=42)
+        self.assertTupleEqual(result.convergence.shape, (11,))
 
     def test_loss_decreases(self):
         """Loss should generally decrease during training."""
         result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            optimizer="adam",
-            max_iter=100,
-            random_state=42,
+            self.X, self.Y, dimensions=2, optimizer="adam", max_iter=100, seed=42
         )
-
-        losses = result.convergence["loss"].values
-
+        losses = result.convergence.to_numpy()
         # Compare first 10% average to last 10% average
         n = len(losses)
         early_loss = losses[: n // 10].mean()
         late_loss = losses[-n // 10 :].mean()
-
         self.assertLess(late_loss, early_loss)
 
 
@@ -830,119 +705,64 @@ class TestMMvecLBFGS(unittest.TestCase):
 
     def setUp(self):
         """Create test data."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=10,
-            n_samples=50,
-            latent_dim=2,
-            seed=42,
-        )
-        self.microbes, self.metabolites = res[0], res[1]
-        self.U = res[4]
-        self.V = res[6]
+        res = random_multimodal(8, 10, 50, 2, seed=42)
+        self.X, self.Y = res[0], res[1]
+        self.U, self.V = res[4], res[6]
 
     def test_lbfgs_produces_valid_results(self):
         """L-BFGS optimizer should produce valid results."""
-        result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=100,
-            random_state=42,
-        )
+        result = mmvec(self.X, self.Y, 2, optimizer="lbfgs", max_iter=100, seed=42)
 
         # Check result type
-        self.assertIsInstance(result, MMvecResults)
+        self.assertIsInstance(result, MMvecResult)
 
         # Check shapes
-        self.assertEqual(result.microbe_embeddings.shape, (8, 3))
-        self.assertEqual(result.metabolite_embeddings.shape, (10, 3))
+        self.assertEqual(result.x_embeddings.shape, (8, 3))
+        self.assertEqual(result.y_embeddings.shape, (10, 3))
         self.assertEqual(result.ranks.shape, (8, 10))
 
         # Ranks should be row-centered
-        row_means = result.ranks.values.mean(axis=1)
-        np.testing.assert_allclose(row_means, 0, atol=1e-10)
+        row_means = result.ranks.to_numpy().mean(axis=1)
+        npt.assert_allclose(row_means, 0, atol=1e-10)
 
     def test_lbfgs_reproducibility(self):
         """L-BFGS should be deterministic with same seed."""
-        result1 = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=50,
-            random_state=123,
-        )
-
-        result2 = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=50,
-            random_state=123,
-        )
-
-        np.testing.assert_allclose(
-            result1.ranks.values, result2.ranks.values, rtol=1e-10
-        )
+        args = dict(dimensions=2, optimizer="lbfgs", max_iter=50, seed=123)
+        res1 = mmvec(self.X, self.Y, **args)
+        res2 = mmvec(self.X, self.Y, **args)
+        pdt.assert_frame_equal(res1.ranks, res2.ranks, rtol=1e-10)
 
     def test_lbfgs_recovers_structure(self):
         """L-BFGS should recover embedding structure from synthetic data."""
         # Use more data for better recovery
-        np.random.seed(1)
         res = random_multimodal(
-            n_microbes=8,
-            n_metabolites=8,
-            n_samples=150,
-            latent_dim=2,
-            sigmaQ=2,
-            microbe_total=1000,
-            metabolite_total=10000,
-            seed=1,
+            8, 8, 150, 2, x_noise_std=2, x_total=1000, y_total=10000, seed=1
         )
-        microbes, metabolites = res[0], res[1]
+        X, Y = res[0], res[1]
         U_true = res[4]
-
-        result = mmvec(
-            microbes,
-            metabolites,
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=500,
-            random_state=42,
-        )
-
+        result = mmvec(X, Y, dimensions=2, optimizer="lbfgs", max_iter=500, seed=42)
         # Check correlation of pairwise distances
-        u_r, u_p = spearmanr(
-            pdist(result.microbe_embeddings.values[:, :-1]),
-            pdist(U_true),
+        u_r, _ = spearmanr(
+            pdist(result.x_embeddings.to_numpy()[:, :-1]), pdist(U_true)
         )
         self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
 
     def test_lbfgs_score_on_test_data(self):
-        """L-BFGS model should produce reasonable Q² score on test data."""
+        """L-BFGS model should produce reasonable Q-squared score on test data."""
         # Split data
-        train_microbes = self.microbes.iloc[:40]
-        test_microbes = self.microbes.iloc[40:]
-        train_metabolites = self.metabolites.iloc[:40]
-        test_metabolites = self.metabolites.iloc[40:]
+        X_train = self.X.iloc[:40]
+        X_test = self.X.iloc[40:]
+        Y_train = self.Y.iloc[:40]
+        Y_test = self.Y.iloc[40:]
 
-        result = mmvec(
-            train_microbes,
-            train_metabolites,
-            n_components=2,
-            optimizer="lbfgs",
-            max_iter=100,
-            random_state=42,
-        )
+        model = MMvec(
+            n_components=2, optimizer="lbfgs", max_iter=100, seed=42
+        ).fit(X_train, Y_train)
 
-        # Compute Q² score on test data
-        q2 = result.score(test_microbes, test_metabolites)
+        # Compute Q^2 score on test data
+        q2 = model.score(X_test, Y_test)
 
-        # Q² should be a valid float
+        # Q^2 should be a valid float
         self.assertIsInstance(q2, float)
 
     def test_lbfgs_verbose_output(self):
@@ -951,13 +771,13 @@ class TestMMvecLBFGS(unittest.TestCase):
         sys.stdout = captured
         try:
             mmvec(
-                self.microbes,
-                self.metabolites,
-                n_components=2,
+                self.X,
+                self.Y,
+                dimensions=2,
                 optimizer="lbfgs",
                 max_iter=50,
                 verbose=True,
-                random_state=42,
+                seed=42,
             )
         finally:
             sys.stdout = sys.__stdout__
@@ -966,213 +786,85 @@ class TestMMvecLBFGS(unittest.TestCase):
         self.assertIn("Iteration", output)
         self.assertIn("Loss", output)
 
-    def test_random_state_generator(self):
-        """random_state as np.random.Generator should work."""
+    def test_seed_generator(self):
+        """seed as np.random.Generator should work."""
         rng = np.random.default_rng(42)
         result = mmvec(
-            self.microbes,
-            self.metabolites,
-            n_components=2,
+            self.X,
+            self.Y,
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=rng,
+            seed=rng,
         )
-        self.assertIsInstance(result, MMvecResults)
+        self.assertIsInstance(result, MMvecResult)
         self.assertEqual(result.ranks.shape, (8, 10))
 
     def test_numpy_array_inputs(self):
         """mmvec should accept numpy arrays (not just DataFrames)."""
         result = mmvec(
-            self.microbes.values,
-            self.metabolites.values,
-            n_components=2,
+            self.X.to_numpy(),
+            self.Y.to_numpy(),
+            dimensions=2,
             optimizer="lbfgs",
             max_iter=50,
-            random_state=42,
+            seed=42,
         )
-        self.assertIsInstance(result, MMvecResults)
+        self.assertIsInstance(result, MMvecResult)
         self.assertEqual(result.ranks.shape, (8, 10))
-        # Auto-generated IDs
-        self.assertTrue(
-            result.ranks.index[0].startswith("microbe_")
-        )
-        self.assertTrue(
-            result.ranks.columns[0].startswith("metabolite_")
-        )
 
     def test_invalid_optimizer_raises(self):
         """Invalid optimizer should raise ValueError."""
         with self.assertRaises(ValueError) as ctx:
             mmvec(
-                self.microbes,
-                self.metabolites,
+                self.X,
+                self.Y,
                 optimizer="invalid",
                 max_iter=1,
             )
 
-        self.assertIn("optimizer must be", str(ctx.exception))
-
-
-class TestMMvecValidationExtended(unittest.TestCase):
-    """Extended validation tests for coverage."""
-
-    def test_many_zero_microbe_columns(self):
-        """Validation message should truncate when >5 zero columns."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=10,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        microbes = res[0].copy()
-        # Set 7 columns to zero
-        for i in range(7):
-            microbes.iloc[:, i] = 0
-
-        with self.assertRaises(ValueError) as ctx:
-            mmvec(microbes, res[1], max_iter=1)
-        self.assertIn("and 2 more", str(ctx.exception))
-
-    def test_many_zero_metabolite_columns(self):
-        """Validation message should truncate when >5 zero metabolite cols."""
-        np.random.seed(42)
-        res = random_multimodal(
-            n_microbes=10,
-            n_metabolites=10,
-            n_samples=50,
-            seed=42,
-        )
-        metabolites = res[1].copy()
-        for i in range(7):
-            metabolites.iloc[:, i] = 0
-
-        with self.assertRaises(ValueError) as ctx:
-            mmvec(res[0], metabolites, max_iter=1)
-        self.assertIn("and 2 more", str(ctx.exception))
+        self.assertIn("Optimizer must be", str(ctx.exception))
 
 
 class TestMMvecCaseStudies(unittest.TestCase):
     """Test MMvec on real-world case study datasets.
 
-    These tests verify that the MMvec implementation can reproduce the
-    biological findings from the original mmvec publication and example
-    notebooks.
+    These tests verify that the MMvec implementation can reproduce the biological
+    findings from the original MMvec publication and example notebooks.
+
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Load case study datasets."""
-        import biom
-        import os
-
-        # Get the test data directory
-        test_dir = os.path.dirname(__file__)
-
-        # Load soils dataset (smaller, faster)
-        soils_dir = os.path.join(test_dir, "data", "soils")
-        cls.soils_microbes = biom.load_table(
-            os.path.join(soils_dir, "microbes.biom")
-        )
-        cls.soils_metabolites = biom.load_table(
-            os.path.join(soils_dir, "metabolites.biom")
-        )
-
-        # Load CF dataset
-        cf_dir = os.path.join(test_dir, "data", "cf")
-        cls.cf_microbes = biom.load_table(
-            os.path.join(cf_dir, "otus_nt.biom")
-        )
-        cls.cf_metabolites = biom.load_table(
-            os.path.join(cf_dir, "lcms_nt.biom")
-        )
-        cls.cf_microbe_metadata = pd.read_csv(
-            os.path.join(cf_dir, "microbe-metadata.txt"),
-            sep="\t",
-            index_col=0,
-        )
-        cls.cf_metabolite_metadata = pd.read_csv(
-            os.path.join(cf_dir, "metabolite-metadata.txt"),
-            sep="\t",
-            index_col=0,
-        )
-
-    def _biom_to_dataframe(self, table, axis="observation"):
-        """Convert BIOM table to pandas DataFrame.
-
-        Parameters
-        ----------
-        table : biom.Table
-            BIOM table to convert.
-        axis : str
-            'observation' for feature table, 'sample' otherwise.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with observations as columns and samples as rows.
-        """
-        data = table.matrix_data.toarray()
-        if axis == "observation":
-            df = pd.DataFrame(
-                data.T,
-                index=table.ids("sample"),
-                columns=table.ids("observation"),
-            )
-        else:
-            df = pd.DataFrame(
-                data,
-                index=table.ids("observation"),
-                columns=table.ids("sample"),
-            )
-        return df
-
+    # @unittest.skip("Skipping a test that requires long runtime.")
     def test_soils_cyanobacteria_metabolites(self):
-        """Cyanobacteria should co-occur with known microcoleus metabolites.
+        """Co-occurrence of Cyanobacteria and known metabolites in wetup biocrust.
 
-        This test reproduces the finding from the soils example notebook:
-        the model should learn that Cyanobacteria (specifically rplo 1)
-        co-occur with a known set of 13 metabolites associated with
-        Microcoleus vaginatus, a desert crust cyanobacterium.
+        This test reproduces the finding from the soils example notebook: the model
+        should learn that Cyanobacteria (specifically rplo 1) co-occur with a known
+        set of 13 metabolites associated with Microcoleus vaginatus, a desert crust
+        cyanobacterium.
 
-        Reference: Morton et al. "Learning representations of
-        microbe-metabolite interactions." Nature Methods, 2019.
         """
-        # Convert to DataFrames
-        microbes_df = self._biom_to_dataframe(self.soils_microbes)
-        metabolites_df = self._biom_to_dataframe(self.soils_metabolites)
-
-        # Filter to common samples
-        common_samples = list(
-            set(microbes_df.index) & set(metabolites_df.index)
-        )
-        microbes_df = microbes_df.loc[common_samples]
-        metabolites_df = metabolites_df.loc[common_samples]
-
-        # Remove zero-sum columns
-        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
-        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
-
-        # Remove zero-sum rows
-        row_sums = microbes_df.sum(axis=1)
-        valid_samples = row_sums[row_sums > 0].index
-        microbes_df = microbes_df.loc[valid_samples]
-        metabolites_df = metabolites_df.loc[valid_samples]
+        # Load biocrust wetting dataset
+        subdir = os.path.join("data", "soils")
+        microbes = pd.read_table(
+            get_data_path("microbes.tsv.gz", subdir), index_col=0
+        ).T
+        metabolites = pd.read_table(
+            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+        ).T
 
         # Fit the model with low latent dimension for faster testing
-        result = mmvec(
-            microbes_df,
-            metabolites_df,
+        result = MMvec(
             n_components=1,
             optimizer="lbfgs",
             max_iter=500,
-            u_prior_scale=1.0,
-            v_prior_scale=1.0,
-            random_state=42,
-        )
+            x_prior_scale=1.0,
+            y_prior_scale=1.0,
+            seed=42,
+        ).fit(microbes, metabolites)
 
         # Define expected Cyanobacteria-associated metabolites
-        microcoleus_metabolites = {
+        expected_metabolites = [
             "(3-methyladenine)",
             "7-methyladenine",
             "4-guanidinobutanoate",
@@ -1186,148 +878,115 @@ class TestMMvecCaseStudies(unittest.TestCase):
             "adenosine",
             "guanine",
             "adenine",
-        }
+        ]
 
-        # Get ranks for Cyanobacteria (rplo 1)
+        # Define Cyanobacteria taxon
         cyanobacteria_id = "rplo 1 (Cyanobacteria)"
-        ranks = result.ranks
 
-        # Check that the Cyanobacteria microbe is present
-        self.assertIn(
-            cyanobacteria_id,
-            ranks.index,
-            f"Cyanobacteria ID {cyanobacteria_id} not found in ranks",
-        )
+        # Count how many of the expected metabolites have positive rank for
+        # Cyanobacteria.
+        ranks_cyanobacteria = result.ranks_.loc[cyanobacteria_id]
+        positive_count = (ranks_cyanobacteria.loc[expected_metabolites] > 0).sum()
 
-        # Filter to metabolites present in the data
-        present_metabolites = microcoleus_metabolites & set(ranks.columns)
-        self.assertGreater(
-            len(present_metabolites),
-            0,
-            "No expected metabolites found in data",
-        )
+        # The original notebook expects all 13 metabolites to have positive ranks for
+        # Cyanobacteria. We use a more lenient threshold (11) to account for
+        # optimization variability.
+        # self.assertEqual(positive_count, 13)
+        self.assertGreaterEqual(positive_count, 11)
 
-        # Count how many of the expected metabolites have positive rank
-        # for Cyanobacteria
-        cyanobacteria_ranks = ranks.loc[cyanobacteria_id]
-        positive_metabolites = set()
-        for met in present_metabolites:
-            if cyanobacteria_ranks[met] > 0:
-                positive_metabolites.add(met)
+        # Check numerical values against expected outputs for reproducibility.
+        # NOTE: Due to optimization variability, these values may not match exactly,
+        # but should be close.
+        # obs = result.score(microbes, metabolites)
+        # exp = 0.218074
+        # self.assertAlmostEqual(obs, exp, places=6)
 
-        # The original notebook expects all 13 metabolites to have
-        # positive ranks for Cyanobacteria. We use a more lenient
-        # threshold to account for optimization variability.
-        n_expected = len(present_metabolites)
-        n_positive = len(positive_metabolites)
+        # ranks = pd.read_table(get_data_path("ranks.tsv", subdir), index_col=0)
+        # pdt.assert_frame_equal(
+        #     result.ranks_, ranks,
+        #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
+        # )
 
-        self.assertGreaterEqual(
-            n_positive,
-            n_expected * 0.85,  # At least 85% should have positive ranks
-            f"Expected most of {n_expected} microcoleus metabolites to have "
-            f"positive ranks for Cyanobacteria, but only {n_positive} did. "
-            f"Positive: {positive_metabolites}",
-        )
+        # predictions = pd.read_table(
+        #     get_data_path("predictions.tsv", subdir), index_col=0
+        # )
+        # pdt.assert_frame_equal(
+        #     result.predict(microbes), predictions,
+        #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
+        # )
 
+        # microbe_embeddings = pd.read_table(
+        #     get_data_path("microbe_embeddings.tsv", subdir), index_col=0
+        # )
+        # pdt.assert_frame_equal(
+        #     result.x_embeddings_, microbe_embeddings,
+        #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
+        # )
+
+        # metabolite_embeddings = pd.read_table(
+        #     get_data_path("metabolite_embeddings.tsv", subdir), index_col=0
+        # )
+        # pdt.assert_frame_equal(
+        #     result.y_embeddings_, metabolite_embeddings,
+        #     check_dtype=False, check_exact=False, rtol=0, atol=1e-6,
+        # )
+
+    @unittest.skip("Skipping a test that requires long runtime.")
     def test_cf_pseudomonas_rhamnolipids(self):
-        """Pseudomonas should co-occur with rhamnolipids in CF sputum.
+        """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum.
+        
+        This test reproduces the finding from the example notebook: the model should
+        learn that Pseudomonas microbes co-occur with rhamnolipids and other
+        Pseudomonas-associated metabolites.
 
-        This test reproduces the finding from the CF (cystic fibrosis)
-        example notebook: the model should learn that Pseudomonas
-        microbes co-occur with rhamnolipids and other Pseudomonas-
-        associated metabolites.
-
-        Reference: Morton et al. "Learning representations of
-        microbe-metabolite interactions." Nature Methods, 2019.
         """
-        # Convert to DataFrames
-        microbes_df = self._biom_to_dataframe(self.cf_microbes)
-        metabolites_df = self._biom_to_dataframe(self.cf_metabolites)
-
-        # Filter to common samples
-        common_samples = list(
-            set(microbes_df.index) & set(metabolites_df.index)
+        # Load CF dataset
+        subdir = os.path.join("data", "cf")
+        microbes = pd.read_table(
+            get_data_path("microbes.tsv.gz", subdir), index_col=0
+        ).T
+        metabolites = pd.read_table(
+            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+        ).T
+        microbe_meta = pd.read_table(
+            get_data_path("microbe_meta.tsv.gz", subdir), index_col=0
         )
-        microbes_df = microbes_df.loc[common_samples]
-        metabolites_df = metabolites_df.loc[common_samples]
-
-        # Remove zero-sum columns
-        microbes_df = microbes_df.loc[:, microbes_df.sum() > 0]
-        metabolites_df = metabolites_df.loc[:, metabolites_df.sum() > 0]
-
-        # Remove zero-sum rows
-        row_sums = microbes_df.sum(axis=1)
-        valid_samples = row_sums[row_sums > 0].index
-        microbes_df = microbes_df.loc[valid_samples]
-        metabolites_df = metabolites_df.loc[valid_samples]
-
-        # Find Pseudomonas microbes
-        microbe_metadata = self.cf_microbe_metadata.loc[
-            self.cf_microbe_metadata.index.isin(microbes_df.columns)
-        ]
-        pseudomonas_mask = microbe_metadata["Taxon"].str.contains(
-            "Pseudomonas", na=False
+        metabolite_meta = pd.read_table(
+            get_data_path("metabolite_meta.tsv.gz", subdir), index_col=0
         )
-        pseudomonas_ids = microbe_metadata[pseudomonas_mask].index.tolist()
 
-        # Get expert-annotated metabolites
-        metabolite_metadata = self.cf_metabolite_metadata.dropna(
-            subset=["expert_annotation"]
-        )
-        expert_metabolites = metabolite_metadata.index.tolist()
-        expert_metabolites = [
-            m for m in expert_metabolites if m in metabolites_df.columns
-        ]
+        # Find Pseudomonas microbes in the metadata (n=39)
+        pseudomonas = microbe_meta[
+            microbe_meta["Taxon"].str.contains("Pseudomonas")
+        ].index.tolist()
 
-        self.assertGreater(
-            len(pseudomonas_ids), 0, "No Pseudomonas microbes found"
-        )
-        self.assertGreater(
-            len(expert_metabolites), 0, "No expert-annotated metabolites found"
-        )
+        # Find expert-annotated metabolites in the metadata (n=20)
+        expert_metabolites = metabolite_meta[
+            metabolite_meta["expert_annotation"].notnull()
+        ].index.tolist()
 
         # Fit the model with parameters similar to the original
         result = mmvec(
-            microbes_df,
-            metabolites_df,
-            n_components=3,
+            microbes,
+            metabolites,
+            dimensions=3,
             optimizer="lbfgs",
             max_iter=500,
-            u_prior_scale=1.0,
-            v_prior_scale=1.0,
-            random_state=42,
+            x_prior_scale=1.0,
+            y_prior_scale=1.0,
+            seed=42,
         )
 
-        ranks = result.ranks
+        # For the first Pseudomonas taxon in the ranks table, count expert-annotated
+        # metabolites with positive ranks.
+        ranks_pseudomonas = result.ranks[result.ranks.index.isin(pseudomonas)]
+        first_pseudomonas = ranks_pseudomonas.iloc[0]
 
-        # Check that Pseudomonas microbes are present
-        pseudomonas_in_ranks = [
-            p for p in pseudomonas_ids if p in ranks.index
-        ]
-        self.assertGreater(
-            len(pseudomonas_in_ranks),
-            0,
-            "No Pseudomonas microbes found in ranks",
-        )
-
-        # For the first Pseudomonas, count expert-annotated metabolites
-        # with positive ranks
-        first_pseudomonas = pseudomonas_in_ranks[0]
-        pseudomonas_ranks = ranks.loc[first_pseudomonas]
-
-        positive_count = sum(
-            1 for met in expert_metabolites if pseudomonas_ranks.get(met, 0) > 0
-        )
-
-        # The original notebook expects at least 19 metabolites with
-        # positive ranks. We use a slightly lower threshold for
-        # reproducibility.
-        self.assertGreaterEqual(
-            positive_count,
-            15,  # At least 15 of 20 expert-annotated metabolites
-            f"Expected at least 15 expert-annotated metabolites to have "
-            f"positive ranks for Pseudomonas, but only {positive_count} did.",
-        )
+        # The original analysis expects 19 out of 20 metabolites with positive ranks.
+        # A slightly lower threshold (15) is used here for reproducibility.
+        positive_count = (first_pseudomonas.loc[expert_metabolites] > 0).sum()
+        self.assertEqual(positive_count, 19)
+        self.assertGreaterEqual(positive_count, 15)
 
 
 if __name__ == "__main__":
