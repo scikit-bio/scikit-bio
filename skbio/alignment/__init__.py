@@ -135,7 +135,7 @@ sequences and the alignment parameters (discussed below).
 
 Likewise, we can align protein sequences with :func:`pair_align_prot`:
 
->>> from skbio import Protein
+>>> from skbio.sequence import Protein
 >>> from skbio.alignment import pair_align_prot
 >>> pair_align_prot(Protein("HEAGAWGHEE"), Protein("PAWHEAE"))  # doctest: +ELLIPSIS
 PairAlignResult(score=15.0, paths=[<PairAlignPath, positions: 13, segments: 3, ...

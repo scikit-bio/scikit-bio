@@ -207,7 +207,7 @@ Suppose we have the following GenBank file example modified from [5]_:
 Now we can read it as ``DNA`` object:
 
 >>> import io
->>> from skbio import DNA, RNA, Sequence
+>>> from skbio.sequence import DNA, RNA, Sequence
 >>> gb = io.StringIO(gb_str)
 >>> dna_seq = DNA.read(gb)
 >>> dna_seq

@@ -190,8 +190,8 @@ As an example, let's read a :mod:`~skbio.io.format.newick` file into a
 :class:`~skbio.tree.TreeNode` object using both interfaces. Here we will use Python's
 built-in :class:`~io.StringIO` class to mimic an open file:
 
->>> from skbio import read as sk_read
->>> from skbio import TreeNode
+>>> from skbio.io import read as sk_read
+>>> from skbio.tree import TreeNode
 >>> from io import StringIO
 >>> open_filehandle = StringIO('(a, b);')
 >>> tree = sk_read(open_filehandle, format='newick', into=TreeNode)

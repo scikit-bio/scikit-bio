@@ -95,7 +95,7 @@ Tutorial
 In scikit-bio, the :class:`TreeNode` class is the main and only data structure for tree
 representation. It is simple, flexible and powerful.
 
->>> from skbio import TreeNode
+>>> from skbio.tree import TreeNode
 
 Loading a tree
 ^^^^^^^^^^^^^^
@@ -383,7 +383,7 @@ extended to other fields (e.g., :wiki:`hierarchical clustering
 
 To begin with, let's create a distance matrix of seven taxa.
 
->>> from skbio import DistanceMatrix
+>>> from skbio.stats.distance import DistanceMatrix
 >>> dm = DistanceMatrix([
 ...     [0.   , 0.005, 0.033, 0.387, 0.626, 0.635, 0.665],
 ...     [0.005, 0.   , 0.028, 0.387, 0.626, 0.635, 0.665],

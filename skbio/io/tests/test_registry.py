@@ -8,7 +8,7 @@
 
 from io import StringIO
 import io
-import itertools
+from itertools import zip_longest
 import os
 import unittest
 import warnings
@@ -16,15 +16,26 @@ import types
 from tempfile import mkstemp
 from sys import platform
 
-from skbio.io import (FormatIdentificationWarning, UnrecognizedFormatError,
-                      ArgumentOverrideWarning, io_registry, sniff,
-                      create_format)
-from skbio.io.registry import (IORegistry, FileSentinel, Format,
-                               DuplicateRegistrationError,
-                               InvalidRegistrationError)
+from skbio.io import (
+    read,
+    write,
+    sniff,
+    io_registry,
+    create_format,
+    FormatIdentificationWarning,
+    UnrecognizedFormatError,
+    ArgumentOverrideWarning,
+)
+from skbio.io.registry import (
+    IORegistry,
+    FileSentinel,
+    Format,
+    DuplicateRegistrationError,
+    InvalidRegistrationError,
+)
 from skbio.util import get_data_path
 from skbio.util._exception import TestingUtilError
-from skbio import DNA, read, write
+from skbio.sequence import DNA
 
 
 class MockClass:
@@ -934,7 +945,7 @@ class TestRead(RegistryTest):
             yield from [int(x) for x in fh.read().split('\n')]
 
         generator = self.registry.read(fp, format='format1')
-        for a, b in itertools.zip_longest(generator, [1, 2, 3, 4]):
+        for a, b in zip_longest(generator, [1, 2, 3, 4]):
             self.assertEqual(a, b)
         self.assertTrue(self._test_fh.closed)
 

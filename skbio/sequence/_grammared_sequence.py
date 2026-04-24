@@ -463,7 +463,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('AC-G-')
         >>> s.gaps()
         array([False, False,  True, False,  True], dtype=bool)
@@ -482,7 +482,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACACGACGTT')
         >>> s.has_gaps()
         False
@@ -512,7 +512,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACWGN')
         >>> s.degenerates()
         array([False, False,  True, False,  True], dtype=bool)
@@ -537,7 +537,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACAC-GACGTT')
         >>> s.has_degenerates()
         False
@@ -566,7 +566,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACWGN')
         >>> s.definites()
         array([ True,  True, False,  True, False], dtype=bool)
@@ -596,7 +596,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACWGN')
         >>> s.nondegenerates()
         array([ True,  True, False,  True, False], dtype=bool)
@@ -624,7 +624,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('NWNNNNNN')
         >>> s.has_definites()
         False
@@ -659,7 +659,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('NWNNNNNN')
         >>> s.has_nondegenerates()
         False
@@ -695,7 +695,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('GGTC-C--ATT-C.',
         ...         positional_metadata={'quality':range(14)})
         >>> s.degap()
@@ -737,7 +737,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('TRG')
         >>> seq_generator = seq.expand_degenerates()
         >>> for s in sorted(seq_generator, key=str):
@@ -813,7 +813,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('TRG')
         >>> regex = seq.to_regex()
         >>> regex.match('TAG').string
@@ -920,7 +920,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('ACGGGGAGGCGGAG')
         >>> for motif_slice in s.find_motifs('purine-run', min_length=2):
         ...     motif_slice

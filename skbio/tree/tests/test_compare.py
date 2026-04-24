@@ -11,7 +11,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio import TreeNode
+from skbio.tree import TreeNode
 from skbio.tree._compare import rf_dists, wrf_dists, path_dists
 
 

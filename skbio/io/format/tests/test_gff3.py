@@ -11,7 +11,7 @@ import io
 
 from skbio.util import get_data_path
 from skbio.metadata import IntervalMetadata
-from skbio import DNA, Sequence
+from skbio.sequence import DNA, Sequence
 from skbio.io import GFF3FormatError
 from skbio.io.format.gff3 import (_yield_record,
                                   _parse_record,

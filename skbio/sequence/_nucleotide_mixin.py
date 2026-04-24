@@ -93,7 +93,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('TTCATT', positional_metadata={'quality':range(6)})
         >>> seq
         DNA
@@ -189,7 +189,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('TTCATT',
         ...           positional_metadata={'quality':range(6)})
         >>> seq = seq.reverse_complement()
@@ -239,7 +239,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> DNA('TTCATT').is_reverse_complement('AATGAA')
         True
         >>> DNA('TTCATT').is_reverse_complement('AATGTT')
@@ -278,7 +278,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> DNA('ACGT').gc_content()
         0.5
         >>> DNA('ACGTACGT').gc_content()
@@ -331,7 +331,7 @@ class NucleotideMixin(metaclass=ABCMeta):
 
         Examples
         --------
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> DNA('ACGT').gc_frequency()
         2
         >>> DNA('ACGT').gc_frequency(relative=True)

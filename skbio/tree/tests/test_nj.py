@@ -11,7 +11,8 @@ from unittest import TestCase, main
 
 import numpy.testing as npt
 
-from skbio import DistanceMatrix, TreeNode
+from skbio.stats.distance import DistanceMatrix
+from skbio.tree import TreeNode
 from skbio.tree._nj import nj, _tree_from_linkmat
 
 

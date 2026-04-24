@@ -96,7 +96,7 @@ class Sequence(
 
     Examples
     --------
-    >>> from skbio import Sequence
+    >>> from skbio.sequence import Sequence
     >>> from skbio.metadata import IntervalMetadata
 
     **Creating sequences:**
@@ -392,7 +392,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('AACGA')
         >>> s.values # doctest: +NORMALIZE_WHITESPACE
         array([b'A', b'A', b'C', b'G', b'A'],
@@ -415,7 +415,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Examples
         --------
         >>> import numpy as np
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> seq = Sequence('ABC123')
         >>> np.asarray(seq) # doctest: +NORMALIZE_WHITESPACE
         array([b'A', b'B', b'C', b'1', b'2', b'3'],
@@ -434,7 +434,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('AACGAC')
         >>> s.observed_chars == {'G', 'A', 'C'}
         True
@@ -492,7 +492,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         Concatenate two DNA sequences into a new DNA object:
 
-        >>> from skbio import DNA, Sequence
+        >>> from skbio.sequence import DNA, Sequence
         >>> s1 = DNA("ACGT")
         >>> s2 = DNA("GGAA")
         >>> DNA.concat([s1, s2])
@@ -720,7 +720,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
         >>> 'GGU' in s
         True
@@ -751,7 +751,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Define two ``Sequence`` objects that have the same underlying sequence
         of characters:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACGT')
         >>> t = Sequence('ACGT')
 
@@ -822,7 +822,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACGT')
         >>> t = Sequence('ACGT')
         >>> s != t
@@ -864,7 +864,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCGUGAAGGA')
 
         Obtain a single character from the sequence:
@@ -998,7 +998,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> len(s)
         4
@@ -1016,7 +1016,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> bool(Sequence(''))
         False
         >>> bool(Sequence('ACGT'))
@@ -1036,7 +1036,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in s:
         ...     str(c)
@@ -1060,7 +1060,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> for c in reversed(s):
         ...     str(c)
@@ -1087,7 +1087,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCGUAAAGGA', metadata={'id':'hello'})
         >>> str(s)
         'GGUCGUAAAGGA'
@@ -1128,7 +1128,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         Short sequence without metadata:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> from skbio.metadata._interval import IntervalMetadata
         >>> Sequence('ACGTAATGGATACGTAATGCA')
         Sequence
@@ -1300,7 +1300,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACGT')
         >>> s.lowercase([True, True, False, False])
         'acGT'
@@ -1353,7 +1353,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUCG')
         >>> s.count('G')
         3
@@ -1395,7 +1395,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         Let's create and display a Sequence:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> sequence = Sequence('GGTACCAACG')
         >>> str(sequence)
         'GGTACCAACG'
@@ -1486,7 +1486,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT-')
         >>> s.index('ACG')
         2
@@ -1534,7 +1534,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
 
@@ -1587,7 +1587,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.matches(t)
@@ -1630,7 +1630,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('GAUU')
         >>> s.mismatches(t)
@@ -1674,7 +1674,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.match_frequency(t)
@@ -1723,7 +1723,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('GGUC')
         >>> t = Sequence('AGUC')
         >>> s.mismatch_frequency(t)
@@ -1792,7 +1792,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         Compute character frequencies of a sequence:
 
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> seq = Sequence('AGAAGACC')
         >>> freqs = seq.frequencies()
         >>> dict(sorted(freqs.items())) # display dict in sorted order
@@ -1890,7 +1890,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACGACGTT')
         >>> for kmer in s.iter_kmers(4, overlap=False):
         ...     str(kmer)
@@ -1966,7 +1966,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('ACACATTTATTA')
         >>> freqs = s.kmer_frequencies(3, overlap=False)
         >>> freqs
@@ -2011,7 +2011,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Examples
         --------
-        >>> from skbio import Sequence
+        >>> from skbio.sequence import Sequence
         >>> s = Sequence('AATATACCGGTTATAA')
         >>> for match in s.find_with_regex('(TATA+)'):
         ...     match
@@ -2070,7 +2070,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Here we use `iter_contiguous` to find all of the contiguous ungapped
         sequences using a boolean vector derived from our DNA sequence.
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> s = DNA('AAA--TT-CCCC-G-')
         >>> no_gaps = ~s.gaps()
         >>> for ungapped_subsequence in s.iter_contiguous(no_gaps,
@@ -2086,7 +2086,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         We can also use `iter_contiguous` on a generator of slices as is
         produced by `find_motifs` (and `find_with_regex`).
 
-        >>> from skbio import Protein
+        >>> from skbio.sequence import Protein
         >>> s = Protein('ACDFNASANFTACGNPNRTESL')
         >>> for subseq in s.iter_contiguous(s.find_motifs('N-glycosylation')):
         ...     print(subseq)
@@ -2163,7 +2163,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Convert a protein sequence into indices of unique amino acids in it.
         Note that the unique characters are ordered.
 
-        >>> from skbio import Protein
+        >>> from skbio.sequence import Protein
         >>> seq = Protein('MEEPQSDPSV')
         >>> idx, uniq = seq.to_indices()
         >>> idx
@@ -2174,7 +2174,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Convert a DNA sequence into indices of nucleotides in an alphabet.
         Note that the order of characters is consistent with the alphabet.
 
-        >>> from skbio import DNA
+        >>> from skbio.sequence import DNA
         >>> seq = DNA('CTCAAAAGTC')
         >>> idx = seq.to_indices(alphabet='TCGA')
         >>> idx
@@ -2182,7 +2182,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Use the alphabet included in a substitution matrix.
 
-        >>> from skbio import SubstitutionMatrix
+        >>> from skbio.sequence import SubstitutionMatrix
         >>> sm = SubstitutionMatrix.by_name('NUC.4.4')
         >>> idx = seq.to_indices(alphabet=sm)
         >>> idx

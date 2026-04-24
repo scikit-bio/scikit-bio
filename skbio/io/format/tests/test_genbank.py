@@ -9,7 +9,7 @@
 import io
 from unittest import TestCase, main
 
-from skbio import Protein, DNA, RNA, Sequence
+from skbio.sequence import Protein, DNA, RNA, Sequence
 from skbio.metadata import IntervalMetadata
 from skbio.util import get_data_path
 from skbio.io import GenBankFormatError
