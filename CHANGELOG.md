@@ -6,6 +6,7 @@
 
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
+* Added Array API support to `center_distance_matrix()` in `skbio.stats.ordination`, enabling GPU-backed arrays (CuPy, JAX, PyTorch) to pass through the PCoA pipeline without device transfer. NumPy arrays continue using the optimized Cython path with no performance regression. ([#2436](https://github.com/scikit-bio/scikit-bio/pull/2436))
 
 ### Performance enhancements
 

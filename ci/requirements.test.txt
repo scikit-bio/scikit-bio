@@ -2,3 +2,4 @@ matplotlib
 pytest
 responses
 coverage
+array-api-strict
