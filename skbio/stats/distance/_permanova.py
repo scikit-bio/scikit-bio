@@ -177,17 +177,21 @@ def permanova(
         raise TypeError("Input must be a DistanceMatrix.")
 
     sample_size = distmat.shape[0]
+    is_condensed = distmat._flags["CONDENSED"]
+    distance_data = extract_distance_matrix_data(distmat, condensed=is_condensed)
 
     num_groups, grouping = _preprocess_input_sng(
         distmat.ids, sample_size, grouping, column
     )
 
     if _skbb_permanova_available(
-        distmat, grouping, permutations, seed
+        distance_data, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
         try:
-            stat, p_value = _skbb_permanova(distmat, grouping, permutations, seed)
+            stat, p_value = _skbb_permanova(
+                distance_data, grouping, permutations, seed
+            )
             return _build_results(
                 "PERMANOVA",
                 "pseudo-F",
@@ -206,8 +210,6 @@ def permanova(
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    is_condensed = distmat._flags["CONDENSED"]
-    distance_data = extract_distance_matrix_data(distmat, condensed=is_condensed)
     s_T = (distance_data**2).sum() / sample_size
     if not is_condensed:
         # we are going over the whole matrix, instead of just upper triangle

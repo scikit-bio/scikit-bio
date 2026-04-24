@@ -2405,11 +2405,8 @@ def extract_distance_matrix_data(
     else:
         distances = distance_matrix.data
 
-    if distance_matrix.scale is None and distances.dtype in _FLOAT_DTYPES:
-        return distances
-
     if distance_matrix.scale is None:
-        return distances.astype(np.float64, copy=False)
+        return distances
 
     scale = distance_matrix.scale
     out_dtype = np.result_type(distances.dtype, np.asarray(scale).dtype, np.float32)
