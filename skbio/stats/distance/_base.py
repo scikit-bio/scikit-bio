@@ -103,6 +103,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
     validate : bool, optional
         If True (default) and ``data`` is not a ``PairwiseMatrix`` object, the input
         data will be validated.
+    scale : float, optional
+        Multiplier for stored values. Required when ``data`` has an integer dtype.
+        For ``PairwiseMatrix`` inputs, defaults to the source matrix's scale.
 
     See Also
     --------
@@ -1122,6 +1125,9 @@ class SymmetricMatrix(PairwiseMatrix):
         objects in ``data``, or a single number representing a uniform diagonal.
         Default is zero. Can be provided when ``data`` is in condensed form. Otherwise,
         an error will be raised.
+    scale : float, optional
+        Multiplier for stored values. Required when ``data`` has an integer dtype.
+        For ``PairwiseMatrix`` inputs, defaults to the source matrix's scale.
 
     See Also
     --------
@@ -1980,6 +1986,9 @@ class DistanceMatrix(SymmetricMatrix):
     diagonal : 1-D array_like or float, optional
         Values along the diagonal of the matrix. Must be zero. This parameter is a
         placeholder for interface compatibility with ``SymmetricMatrix``.
+    scale : float, optional
+        Multiplier for stored values. Required when ``data`` has an integer dtype.
+        For ``PairwiseMatrix`` inputs, defaults to the source matrix's scale.
 
     See Also
     --------
