@@ -621,17 +621,38 @@ class MeTests(TestCase):
             for o, e in zip(obs, exp):
                 npt.assert_array_equal(o, e)
 
-        # non-binary trees
+        # non-binary trees (should now be automatically bifurcated)
         taxa = list("abcde")
         nwks = [
             "((a,b,c),(d,e));",  # internal node has 3 children
-            "((a),b,(c,(d,e)));",  # internal node has 1 child
-            # "(((b,c),((d,e),a)));",  # root has 1 child  # TODO This doesn't work.
             "((a,b),c,d,e);",  # root has 4 children
         ]
         for nwk in nwks:
             obj = TreeNode.read([nwk])
-            self.assertRaises(ValueError, _root_from_treenode, obj, taxa)
+            obs = _root_from_treenode(obj, taxa)
+            _check_tree(*obs)
+
+    def test_unary_root_conversion(self):
+        # unary root: should produce the same result as equivalent tree without it
+        taxa = list("abcde")
+        obj_unary = TreeNode.read(["(((b,c),((d,e),a)));"])
+        obj_normal = TreeNode.read(["((b,c),((d,e),a));"])
+        obs_unary = _root_from_treenode(obj_unary, taxa)
+        obs_normal = _root_from_treenode(obj_normal, taxa)
+        for o, e in zip(obs_unary, obs_normal):
+            npt.assert_array_equal(o, e)
+
+    def test_unary_root_nni(self):
+        # Unary root: tree with root having a single child should work the same
+        # as the equivalent tree without the unary root.
+        taxa = list("abcde")
+        dm = DistanceMatrix(self.dm1, taxa)
+        tree_unary = TreeNode.read(["(((b,(c,(e,d))),a));"])
+        tree_normal = TreeNode.read(["((b,(c,(e,d))),a);"])
+        for balanced in True, False:
+            obs_unary = nni(tree_unary, dm, balanced=balanced)
+            obs_normal = nni(tree_normal, dm, balanced=balanced)
+            self.assertEqual(obs_unary.compare_rfd(obs_normal), 0)
 
     def test_preorder(self):
         """Perform preorder traversal."""
