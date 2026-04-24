@@ -43,6 +43,15 @@ class PERMDISPTests(TestCase):
         self.grouping_uneq_relab = [12, 12, 7, 7, 7, 23, 23, 23, 23]
 
         self.grouping_un_mixed = ['a', 'a', 7, 7, 7, 'b', 'b', 'b', 'b']
+        self.grouping_eq_codes = np.unique(self.grouping_eq, return_inverse=True)[1]
+        self.grouping_eq_relab_codes = np.unique(
+            self.grouping_eq_relab, return_inverse=True
+        )[1]
+        self.grouping_uneq_codes = np.unique(self.grouping_uneq, return_inverse=True)[1]
+        self.grouping_uneq_relab_codes = np.unique(
+            self.grouping_uneq_relab, return_inverse=True
+        )[1]
+        self.grouping_un_mixed_codes = np.array([0, 0, 1, 1, 1, 2, 2, 2, 2])
 
         eq_ids = ['s1', 's2', 's3', 's4', 's5', 's6']
         uneq_ids = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']
@@ -123,10 +132,10 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.eq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
-        obs = _compute_groups(dm, 'centroid', self.grouping_eq)
+        obs = _compute_groups(dm, 'centroid', self.grouping_eq_codes)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_groups(dm, 'centroid', self.grouping_eq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', self.grouping_eq_relab_codes)
         self.assertAlmostEqual(obs_relab, obs, places=6)
 
     def test_centroids_uneq_groups(self):
@@ -143,10 +152,10 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.uneq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
-        obs = _compute_groups(dm, 'centroid', self.grouping_uneq)
+        obs = _compute_groups(dm, 'centroid', self.grouping_uneq_codes)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_groups(dm, 'centroid', self.grouping_uneq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', self.grouping_uneq_relab_codes)
         self.assertAlmostEqual(obs, obs_relab, places=6)
 
     def test_centroids_mixedgroups(self):
@@ -160,7 +169,7 @@ class PERMDISPTests(TestCase):
 
         exp_stat, _ = f_oneway(*exp)
 
-        obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed)
+        obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed_codes)
         self.assertAlmostEqual(exp_stat, obs_mixed, places=6)
 
     def test_centroids_null(self):
@@ -171,7 +180,7 @@ class PERMDISPTests(TestCase):
         # ConstantInputWarning may no longer be emitted for this case.
         # Once the expected behavior is clarified, consider reintroducing
         # an explicit warning assertion here.
-        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq_codes)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
