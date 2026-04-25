@@ -2416,6 +2416,8 @@ def extract_distance_matrix_data(
             distances = data[tri_idxs]
     else:
         distances = distance_matrix.data
+        if distances.ndim == 1:
+            distances = squareform(distances, force="tomatrix", checks=False)
 
     if distance_matrix.scale is None:
         return distances

@@ -371,12 +371,6 @@ def _matrix_to_phylip_dm(obj, fh, delimiter, layout):
         )
     ids = obj.ids
     data = extract_distance_matrix_data(obj)
-    if data.ndim == 1:
-        full = np.zeros((n_samples, n_samples), dtype=data.dtype)
-        tri = np.triu_indices(n_samples, k=1)
-        full[tri] = data
-        full[(tri[1], tri[0])] = data
-        data = full
     fh.write(f"{str(n_samples)}\n")
 
     # square layout
