@@ -69,7 +69,8 @@ delimiter : str, optional
 dtype : str or dtype, optional
     The data type of the underlying matrix data. Only relevant when reading from a
     file. Default is "float64", which maps to ``np.float64``. Other available options
-    include "float32", "int8", "int16", and "int32".
+    include "float32", "int8", "int16", and "int32". Integer dtypes are only valid
+    when the file also carries a ``scale``.
 
 scale : float, optional
     Multiplication factor for fixed-point integer matrices. Only relevant when writing
