@@ -345,6 +345,74 @@ class MantelTests(MantelTestData):
 
         self.assert_mantel_almost_equal(obs, [self.exp_x_vs_y, 0.843, 3])
 
+    def test_fixed_point_distance_matrices(self):
+        ids = ['a', 'b', 'c', 'd']
+        x_float_data = np.array(
+            [
+                [0.0, 1.2, 2.3, 1.7],
+                [1.2, 0.0, 1.5, 2.2],
+                [2.3, 1.5, 0.0, 1.1],
+                [1.7, 2.2, 1.1, 0.0],
+            ],
+            dtype=np.float64,
+        )
+        y_float_data = np.array(
+            [
+                [0.0, 0.9, 2.1, 1.4],
+                [0.9, 0.0, 1.8, 2.5],
+                [2.1, 1.8, 0.0, 1.3],
+                [1.4, 2.5, 1.3, 0.0],
+            ],
+            dtype=np.float64,
+        )
+        scale = 0.1
+        x_fixed_data = np.rint(x_float_data / scale).astype(np.int16)
+        y_fixed_data = np.rint(y_float_data / scale).astype(np.int16)
+
+        x_float = DistanceMatrix(x_float_data, ids)
+        y_float = DistanceMatrix(y_float_data, ids)
+        x_fixed = DistanceMatrix(x_fixed_data, ids, scale=scale)
+        y_fixed = DistanceMatrix(y_fixed_data, ids, scale=scale)
+        x_float_condensed = DistanceMatrix(x_float_data, ids, condensed=True)
+        x_fixed_condensed = DistanceMatrix(x_fixed_data, ids, condensed=True, scale=scale)
+
+        for method in self.methods:
+            expected = mantel(
+                x_float,
+                y_float,
+                method=method,
+                permutations=99,
+                alternative='two-sided',
+                seed=0,
+            )
+            observed = mantel(
+                x_fixed,
+                y_fixed,
+                method=method,
+                permutations=99,
+                alternative='two-sided',
+                seed=0,
+            )
+            self.assert_mantel_almost_equal(observed, expected)
+
+            expected = mantel(
+                x_float_condensed,
+                y_float,
+                method=method,
+                permutations=99,
+                alternative='two-sided',
+                seed=0,
+            )
+            observed = mantel(
+                x_fixed_condensed,
+                y_fixed,
+                method=method,
+                permutations=99,
+                alternative='two-sided',
+                seed=0,
+            )
+            self.assert_mantel_almost_equal(observed, expected)
+
     def test_distance_matrix_instances_with_reordering_and_nonmatching(self):
         x = self.minx_dm_extra.filter(['1', '0', 'foo', '2'])
         y = self.miny_dm.filter(['0', '2', '1'])

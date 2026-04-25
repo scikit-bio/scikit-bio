@@ -9,6 +9,7 @@
 import io
 from unittest import TestCase, main
 
+import numpy as np
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
@@ -118,8 +119,26 @@ class NjTests(TestCase):
         obs = nj(dm)
         self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
         dm._data = dm._data.astype("int32")
-        with self.assertRaises(TypeError):
-            _ = nj(dm)
+        obs = nj(dm)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+    def test_nj_fixed_point_scale(self):
+        scale = 0.25
+        float_data = self.dm3.data.astype(np.float64)
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+
+        dm_float = DistanceMatrix(float_data, self.dm3.ids)
+        dm_fixed = DistanceMatrix(fixed_data, self.dm3.ids, scale=scale)
+        dm_fixed_condensed = DistanceMatrix(
+            fixed_data, self.dm3.ids, condensed=True, scale=scale
+        )
+
+        exp = nj(dm_float)
+        obs = nj(dm_fixed)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+        obs = nj(dm_fixed_condensed)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
 
     def test_nj_zero_branch_length(self):
         # no nodes have negative branch length when we disallow negative

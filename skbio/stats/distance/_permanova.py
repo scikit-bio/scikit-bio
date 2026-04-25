@@ -18,6 +18,7 @@ from ._base import (
     _preprocess_input_sng,
     _run_monte_carlo_stats,
     _build_results,
+    extract_distance_matrix_data,
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
@@ -176,17 +177,21 @@ def permanova(
         raise TypeError("Input must be a DistanceMatrix.")
 
     sample_size = distmat.shape[0]
+    is_condensed = distmat._flags["CONDENSED"]
+    distance_data = extract_distance_matrix_data(distmat, condensed=is_condensed)
 
     num_groups, grouping = _preprocess_input_sng(
         distmat.ids, sample_size, grouping, column
     )
 
     if _skbb_permanova_available(
-        distmat, grouping, permutations, seed
+        distance_data, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
         try:
-            stat, p_value = _skbb_permanova(distmat, grouping, permutations, seed)
+            stat, p_value = _skbb_permanova(
+                distance_data, grouping, permutations, seed
+            )
             return _build_results(
                 "PERMANOVA",
                 "pseudo-F",
@@ -205,14 +210,20 @@ def permanova(
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distmat.data**2).sum() / sample_size
-    if not distmat._flags["CONDENSED"]:
+    s_T = (distance_data**2).sum() / sample_size
+    if not is_condensed:
         # we are going over the whole matrix, instead of just upper triangle
         # so cut in half
         s_T /= 2.0
 
     test_stat_function = partial(
-        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
+        _compute_f_stat,
+        sample_size,
+        num_groups,
+        distance_data,
+        is_condensed,
+        group_sizes,
+        s_T,
     )
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -224,16 +235,20 @@ def permanova(
 
 
 def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
+    sample_size,
+    num_groups,
+    distance_data,
+    is_condensed,
+    group_sizes,
+    s_T,
+    grouping,
 ):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
-    if distance_matrix._flags["CONDENSED"]:
-        s_W = permanova_f_stat_sW_condensed_cy(
-            distance_matrix.data, group_sizes, grouping
-        )
+    if is_condensed:
+        s_W = permanova_f_stat_sW_condensed_cy(distance_data, group_sizes, grouping)
     else:
-        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+        s_W = permanova_f_stat_sW_cy(distance_data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))

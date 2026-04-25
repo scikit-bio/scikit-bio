@@ -35,6 +35,7 @@ from ._c_me import (
 )
 from ._utils import _validate_dm, _validate_dm_and_tree
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import extract_distance_matrix_data
 
 
 def gme(dm, neg_as_zero=True):
@@ -151,7 +152,8 @@ def gme(dm, neg_as_zero=True):
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using GME
-    tree, lens = _gme(dm.data)
+    data = extract_distance_matrix_data(dm)
+    tree, lens = _gme(data)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -258,7 +260,8 @@ def bme(dm, neg_as_zero=True, **kwargs):
         dm = DistanceMatrix(dm)
 
     # reconstruct tree topology and branch lengths using BME
-    tree, lens = _bme(dm.data, **kwargs)
+    data = extract_distance_matrix_data(dm)
+    tree, lens = _bme(data, **kwargs)
 
     if neg_as_zero:
         lens[lens < 0] = 0
@@ -389,11 +392,12 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     tree, preodr, postodr = _root_from_treenode(tree, taxa)
 
     # allocate lengths
-    lens = np.empty(len(tree), dtype=dm.dtype)
+    data = extract_distance_matrix_data(dm)
+    lens = np.empty(len(tree), dtype=data.dtype)
 
     # perform BNNI or FastNNI
     func = _bnni if balanced else _fastnni
-    func(dm.data, tree, preodr, postodr, lens)
+    func(data, tree, preodr, postodr, lens)
 
     if neg_as_zero:
         lens[lens < 0] = 0

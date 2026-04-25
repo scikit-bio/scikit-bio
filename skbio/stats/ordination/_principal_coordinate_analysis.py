@@ -16,6 +16,7 @@ from scipy.linalg import eigh as scipy_eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import extract_distance_matrix_data
 from skbio.table._tabular import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
 from ._utils import center_distance_matrix as center_distance_matrix_np, scale
@@ -206,11 +207,12 @@ def pcoa(
     """
     # this converts to redundant form, regardless of input type
     distmat = DistanceMatrix(distmat)
+    distance_data = extract_distance_matrix_data(distmat)
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues
     if dimensions == 0:
-        if method == "fsvd" and distmat.data.shape[0] > 10:
+        if method == "fsvd" and distance_data.shape[0] > 10:
             warn(
                 "FSVD: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
@@ -218,7 +220,7 @@ def pcoa(
                 "distance matrix is large.",
                 RuntimeWarning,
             )
-        elif method == "eigh" and distmat.data.shape[0] > 10:
+        elif method == "eigh" and distance_data.shape[0] > 10:
             warn(
                 "EIGH: since no value for dimensions is specified, "
                 "PCoA for all dimensions will be computed, which may "
@@ -228,7 +230,7 @@ def pcoa(
             )
 
         # distmat is guaranteed to be square
-        dimensions = distmat.data.shape[0]
+        dimensions = distance_data.shape[0]
     elif dimensions < 0:
         raise ValueError(
             "Invalid operation: cannot reduce distance matrix "
@@ -237,7 +239,7 @@ def pcoa(
             "the dimensions equal to the "
             "dimensionality of the given distance matrix?"
         )
-    elif dimensions > distmat.data.shape[0]:
+    elif dimensions > distance_data.shape[0]:
         raise ValueError("Invalid operation: cannot extend distance matrix size.")
     elif not isinstance(dimensions, Integral) and dimensions > 1:
         raise ValueError(
@@ -259,7 +261,7 @@ def pcoa(
     if method == "eigh":
         long_method_name = "Principal Coordinate Analysis"
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(distance_data, inplace=inplace)
         if 0 < dimensions < 1:
             if matrix_data.shape[0] > 10:
                 warn(
@@ -282,7 +284,7 @@ def pcoa(
     elif method == "fsvd":
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         if 0 < dimensions < 1:
-            if distmat.data.shape[0] > 10:
+            if distance_data.shape[0] > 10:
                 warn(
                     "FSVD: since value for dimensions is specified as float,"
                     " PCoA for all dimensions will be computed, which may"
@@ -291,14 +293,14 @@ def pcoa(
                     " Consider specifying an integer value to optimize performance.",
                     RuntimeWarning,
                 )
-            ndim = distmat.data.shape[0]
+            ndim = distance_data.shape[0]
         if _skbb_pcoa_fsvd_available(
-            distmat.data, dimensions, inplace, seed
+            distance_data, dimensions, inplace, seed
         ):  # pragma: no cover
             # unlikely to throw here, but just in case
             try:
                 eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
-                    distmat.data, dimensions, inplace, seed
+                    distance_data, dimensions, inplace, seed
                 )
                 xp_eigvals, eigvals = ingest_array(eigvals)
                 xp_coordinates, coordinates = ingest_array(coordinates)
@@ -326,7 +328,7 @@ def pcoa(
                 )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(distance_data, inplace=inplace)
 
         eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:

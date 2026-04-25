@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added support for integer data types (`int8`, `int16`, `int32`) in distance matrices, utilizing a `scale` factor for fixed-point semantics to reduce memory usage ([#2432](https://github.com/scikit-bio/scikit-bio/pull/2432)).
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
 
