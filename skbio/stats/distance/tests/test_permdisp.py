@@ -8,18 +8,27 @@
 
 from functools import partial
 from unittest import TestCase, main, skipIf
+from unittest.mock import patch
 import platform
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
+import array_api_compat.numpy as xpnp
 from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway, ConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups
+from skbio.stats.distance._permdisp import (
+    _compute_groups,
+    _extract_sample_data,
+    _extract_sample_ids,
+    _f_oneway_stat,
+    _spatial_median,
+)
+import skbio.stats.distance._permdisp as _permdisp_mod
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
@@ -162,6 +171,137 @@ class PERMDISPTests(TestCase):
 
         obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed)
         self.assertAlmostEqual(exp_stat, obs_mixed, places=6)
+
+    def test_centroids_array_input(self):
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False).samples
+        obs_df = _compute_groups(dm, 'centroid', self.grouping_uneq)
+        obs_np = _compute_groups(dm.to_numpy(dtype=np.float64), 'centroid',
+                                 self.grouping_uneq)
+        obs_xp = _compute_groups(xpnp.asarray(dm.to_numpy(dtype=np.float64)),
+                                 'centroid', self.grouping_uneq)
+        self.assertAlmostEqual(obs_df, obs_np, places=6)
+        self.assertAlmostEqual(obs_df, obs_xp, places=6)
+
+    def test_median_array_input(self):
+        dm = pcoa(self.uneq_mat, warn_neg_eigval=False).samples
+        obs_df = _compute_groups(dm, 'median', self.grouping_uneq)
+        obs_np = _compute_groups(dm.to_numpy(dtype=np.float64), 'median',
+                                 self.grouping_uneq)
+        obs_xp = _compute_groups(xpnp.asarray(dm.to_numpy(dtype=np.float64)),
+                                 'median', self.grouping_uneq)
+        self.assertAlmostEqual(obs_df, obs_np, places=6)
+        self.assertAlmostEqual(obs_df, obs_xp, places=6)
+
+    def test_permdisp_array_backed_ordination(self):
+        obs_c_df = permdisp(
+            pcoa(self.unifrac_dm, warn_neg_eigval=False),
+            self.unif_grouping,
+            test='centroid',
+            permutations=9,
+            seed=42)
+
+        obs_m_df = permdisp(
+            pcoa(self.unifrac_dm, warn_neg_eigval=False),
+            self.unif_grouping,
+            test='median',
+            permutations=9,
+            seed=42)
+
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        po.samples = xpnp.asarray(po.samples.to_numpy(dtype=np.float64))
+
+        obs_c_xp = permdisp(po, self.unif_grouping, test='centroid',
+                            permutations=9, seed=42)
+        obs_m_xp = permdisp(po, self.unif_grouping, test='median',
+                            permutations=9, seed=42)
+
+        self.assert_series_equal(obs_c_df, obs_c_xp)
+        self.assert_series_equal(obs_m_df, obs_m_xp)
+
+    def test_f_oneway_stat_zero_within_cases(self):
+        obs_nan = _f_oneway_stat(
+            np,
+            [np.array([1.0, 1.0]), np.array([1.0, 1.0])]
+        )
+        self.assertTrue(np.isnan(obs_nan))
+
+        obs_inf = _f_oneway_stat(
+            np,
+            [np.array([1.0, 1.0]), np.array([2.0, 2.0])]
+        )
+        self.assertTrue(np.isinf(obs_inf))
+
+    def test_extract_helpers_edge_paths(self):
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        po.sample_ids = None
+        self.assertEqual(
+            _extract_sample_ids(po, self.unif_grouping),
+            po.samples.axes[0].to_list()
+        )
+        po.samples = xpnp.asarray(po.samples.to_numpy(dtype=np.float64))
+        self.assertEqual(
+            _extract_sample_ids(po, self.unif_grouping),
+            [str(i) for i in range(len(self.unif_grouping))]
+        )
+        with self.assertRaises(ValueError):
+            _extract_sample_ids(po, pd.Series(self.unif_grouping))
+
+        class Dummy:
+            pass
+
+        d = Dummy()
+        d.samples = np.ones((2, 2, 2), dtype=np.float64)
+        with self.assertRaises(ValueError):
+            _extract_sample_data(d, sample_size=2)
+
+        d.samples = np.ones((8, 2), dtype=np.float64)
+        with self.assertRaises(ValueError):
+            _extract_sample_data(d, sample_size=9)
+
+        d.samples = np.arange(18).reshape((9, 2))
+        out = _extract_sample_data(d, sample_size=9)
+        self.assertTrue(np.issubdtype(out.dtype, np.floating))
+        class BadDType:
+            ndim = 2
+            shape = (9, 2)
+            @property
+            def dtype(self):
+                raise TypeError("bad dtype")
+
+        with patch.object(_permdisp_mod, "ingest_array", return_value=(np, BadDType())):
+            with self.assertRaises(TypeError):
+                _extract_sample_data(d, sample_size=9)
+
+    def test_spatial_median_iterative_path(self):
+        row = xpnp.asarray(np.array([[1.0, 2.0]], dtype=np.float64))
+        npt.assert_allclose(np.asarray(_spatial_median(row, xpnp)),
+                            np.array([1.0, 2.0]), atol=1e-6)
+
+        same = xpnp.asarray(np.array([[1.0, 1.0], [1.0, 1.0]], dtype=np.float64))
+        npt.assert_allclose(np.asarray(_spatial_median(same, xpnp)),
+                            np.array([1.0, 1.0]), atol=1e-6)
+
+        data = xpnp.asarray(np.array([[0.0, 0.0], [2.0, 0.0], [0.0, 2.0]],
+                                     dtype=np.float64))
+        obs = _spatial_median(data, xpnp)
+        npt.assert_allclose(np.asarray(obs), np.array([0.42, 0.42]), atol=0.2)
+
+        with np.errstate(divide='ignore'):
+            data = xpnp.asarray(np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]],
+                                         dtype=np.float64))
+            obs = _spatial_median(data, xpnp)
+        npt.assert_allclose(np.asarray(obs), np.array([1.0, 1.0]), atol=1e-6)
+
+        data = xpnp.asarray(np.array([[1.0, 1.0], [3.0, 1.0], [1.0, 4.0], [-1.0, -2.0]],
+                                     dtype=np.float64))
+        obs = _spatial_median(data, xpnp)
+        self.assertEqual(np.asarray(obs).shape, (2,))
+
+        with np.errstate(over='ignore', divide='ignore', invalid='ignore'):
+            data = xpnp.asarray(np.array([[1e308, 0.0], [-1e308, 0.0], [0.0, 0.0]],
+                                         dtype=np.float64))
+            obs = _spatial_median(data, xpnp)
+        self.assertEqual(np.asarray(obs).shape, (2,))
 
     def test_centroids_null(self):
         dm = pcoa(self.null_mat)
