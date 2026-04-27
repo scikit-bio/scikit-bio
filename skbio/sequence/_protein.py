@@ -115,7 +115,8 @@ class Protein(GrammaredSequence):
     |``X``|Xaa      |All 20      |
     +-----+---------+------------+
 
-    Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and ``.``.
+    Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and
+    ```.```.
 
     Characters other than the above 27 are not allowed. If you intend to use
     additional characters to represent non-canonical amino acids, such as ``U``
@@ -130,8 +131,9 @@ class Protein(GrammaredSequence):
 
     References
     ----------
-    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified bases in
-       nucleic acid sequences: recommendations 1984. Nucleic Acids Res, 13(9), 3021.
+    .. [1] Cornish-Bowden, A. (1985). Nomenclature for incompletely specified
+       bases in nucleic acid sequences: recommendations 1984. Nucleic Acids
+       Res, 13(9), 3021.
 
     Examples
     --------
@@ -179,7 +181,13 @@ class Protein(GrammaredSequence):
     @classproperty
     @overrides(GrammaredSequence)
     def alphabet(cls):
-        return super(Protein, cls).alphabet | cls.stop_chars
+        return (
+            cls.definite_chars
+            | cls.degenerate_chars
+            | cls.stop_chars
+            | cls.noncanonical_chars
+            | cls.gap_chars
+        )
 
     @classproperty
     @overrides(GrammaredSequence)

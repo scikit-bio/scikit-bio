@@ -434,9 +434,20 @@ class TestGeneticCode(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'gapped'):
             self.sgc.translate(RNA('UU-G'))
 
-        # degenerate sequence
-        with self.assertRaisesRegex(NotImplementedError, r'degenerate'):
-            self.sgc.translate(RNA('RUG'))
+    def test_translate_degenerate_sequences(self):
+        # test translation of degenerate sequences
+        # RUG: R=AG (purine), U=U, G=G -> AUG (M) or GUG (V)
+        # Different codons translate to different amino acids, so result
+        # is ambiguous (X)
+        result = self.sgc.translate(RNA('RUG'))
+        self.assertEqual(result, Protein('X'))
+
+        # Single unambiguous degenerate codon
+        # All possible definite codons decode to same amino acid
+        # YCN where Y=CU and N=ACGU should all code for the same amino
+        # acid. GCN are all Alanine.
+        result = self.sgc.translate(RNA('GCN'))  # All GCN codons are Ala
+        self.assertEqual(result, Protein('A'))
 
     def test_translate_varied_genetic_codes(self):
         # spot check using a few NCBI and custom genetic codes to translate
