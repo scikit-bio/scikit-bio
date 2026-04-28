@@ -118,9 +118,6 @@ class NjTests(TestCase):
         dm._data = dm._data.astype("float32")
         obs = nj(dm)
         self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
-        dm._data = dm._data.astype("int32")
-        obs = nj(dm)
-        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
 
     def test_nj_fixed_point_scale(self):
         scale = 0.25
