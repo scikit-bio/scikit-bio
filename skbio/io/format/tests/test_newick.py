@@ -365,5 +365,206 @@ class TestNewick(unittest.TestCase):
             fh.close()
 
 
+class TestNewickEdgeId(unittest.TestCase):
+    # --- TreeNode.edge_id attribute ---
+
+    def test_tree_node_edge_id_default(self):
+        """edge_id is None by default."""
+        node = TreeNode()
+        self.assertIsNone(node.edge_id)
+
+    def test_tree_node_edge_id_constructor(self):
+        """edge_id can be set via constructor."""
+        node = TreeNode(edge_id=42)
+        self.assertEqual(node.edge_id, 42)
+
+    def test_tree_node_edge_id_copy(self):
+        """edge_id is preserved through copy and deepcopy."""
+        tree = TreeNode(name="root", edge_id=2, children=[
+            TreeNode(name="a", edge_id=0),
+            TreeNode(name="b", edge_id=1),
+        ])
+        for cp in (tree.copy(), tree.copy(deep=True)):
+            self.assertEqual(cp.edge_id, 2)
+            self.assertEqual(cp.children[0].edge_id, 0)
+            self.assertEqual(cp.children[1].edge_id, 1)
+
+    # --- Reader: curly braces (default) ---
+
+    def test_newick_to_tree_node_edge_id_curly_braces(self):
+        """Edge IDs in {} are parsed by default."""
+        fh = io.StringIO("((A:0.1{0},B:0.2{1})C:0.3{2})D:0.0{3};")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertEqual(tree.edge_id, 3)
+        self.assertEqual(tree.children[0].edge_id, 2)
+        self.assertEqual(tree.children[0].children[0].edge_id, 0)
+        self.assertEqual(tree.children[0].children[1].edge_id, 1)
+
+    def test_newick_to_tree_node_edge_id_no_length(self):
+        """Edge IDs without branch lengths."""
+        fh = io.StringIO("(A{0},B{1}){2};")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertEqual(tree.edge_id, 2)
+        self.assertEqual(tree.children[0].edge_id, 0)
+        self.assertEqual(tree.children[1].edge_id, 1)
+
+    def test_newick_to_tree_node_edge_id_no_label_no_length(self):
+        """Edge IDs without labels or lengths."""
+        fh = io.StringIO("({0},{1}){2};")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertEqual(tree.edge_id, 2)
+        self.assertIsNone(tree.name)
+        self.assertIsNone(tree.length)
+
+    def test_newick_to_tree_node_edge_id_mixed(self):
+        """Some nodes have edge IDs, some don't."""
+        fh = io.StringIO("(A:0.1{0},B:0.2):0.0;")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertEqual(tree.children[0].edge_id, 0)
+        self.assertIsNone(tree.children[1].edge_id)
+        self.assertIsNone(tree.edge_id)
+
+    def test_newick_to_tree_node_edge_id_invalid(self):
+        """Non-integer edge ID raises NewickFormatError."""
+        fh = io.StringIO("(A:0.1{abc});")
+        with self.assertRaises(NewickFormatError) as cm:
+            _newick_to_tree_node(fh)
+        self.assertIn("edge", str(cm.exception).lower())
+        fh.close()
+
+    def test_newick_to_tree_node_no_edge_id_backward_compat(self):
+        """Standard newick without {} -> edge_id is None everywhere."""
+        fh = io.StringIO("(A:0.1,B:0.2)C:0.0;")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertIsNone(tree.edge_id)
+        self.assertIsNone(tree.children[0].edge_id)
+        self.assertIsNone(tree.children[1].edge_id)
+
+    # --- Reader: edge_id_in_comment=True ---
+
+    def test_newick_to_tree_node_edge_id_in_comment(self):
+        """Edge IDs in [] parsed when edge_id_in_comment=True."""
+        fh = io.StringIO("((A:0.1[0],B:0.2[1])C:0.3[2])D:0.0[3];")
+        tree = _newick_to_tree_node(fh, edge_id_in_comment=True)
+        fh.close()
+        self.assertEqual(tree.edge_id, 3)
+        self.assertEqual(tree.children[0].edge_id, 2)
+        self.assertEqual(tree.children[0].children[0].edge_id, 0)
+        self.assertEqual(tree.children[0].children[1].edge_id, 1)
+
+    def test_newick_to_tree_node_comment_default_not_edge_id(self):
+        """[] are comments by default, not edge IDs."""
+        fh = io.StringIO("(A:0.1[comment],B:0.2):0.0;")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertIsNone(tree.children[0].edge_id)
+
+    # --- Writer ---
+
+    def test_tree_node_to_newick_include_edge_id(self):
+        """include_edge_id=True emits {N}."""
+        tree = TreeNode(name="root", length=0.0, edge_id=2, children=[
+            TreeNode(name="a", length=0.1, edge_id=0),
+            TreeNode(name="b", length=0.2, edge_id=1),
+        ])
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh, include_edge_id=True)
+        self.assertEqual(fh.getvalue(), "(a:0.1{0},b:0.2{1})root:0.0{2};\n")
+        fh.close()
+
+    def test_tree_node_to_newick_no_edge_id_default(self):
+        """Default: no {} in output even if edge_id is set."""
+        tree = TreeNode(name="root", edge_id=0, children=[
+            TreeNode(name="a", edge_id=1),
+        ])
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh)
+        self.assertNotIn("{", fh.getvalue())
+        fh.close()
+
+    def test_tree_node_to_newick_edge_id_no_length(self):
+        """Edge IDs written even without branch length."""
+        tree = TreeNode(name="root", edge_id=2, children=[
+            TreeNode(name="a", edge_id=0),
+            TreeNode(name="b", edge_id=1),
+        ])
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh, include_edge_id=True)
+        self.assertEqual(fh.getvalue(), "(a{0},b{1})root{2};\n")
+        fh.close()
+
+    def test_tree_node_to_newick_edge_id_some_missing(self):
+        """Nodes without edge_id don't get {}."""
+        tree = TreeNode(name="root", children=[
+            TreeNode(name="a", length=0.1, edge_id=0),
+            TreeNode(name="b", length=0.2),
+        ])
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh, include_edge_id=True)
+        self.assertEqual(fh.getvalue(), "(a:0.1{0},b:0.2)root;\n")
+        fh.close()
+
+    def test_tree_node_to_newick_label_with_curly_brace(self):
+        """Labels containing {} get single-quote escaped."""
+        tree = TreeNode(name="a{b}")
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh)
+        self.assertEqual(fh.getvalue(), "'a{b}';\n")
+        fh.close()
+
+    def test_newick_to_tree_node_quoted_label_with_curly_brace(self):
+        """Single-quoted labels containing {} are not parsed as edge IDs."""
+        fh = io.StringIO("'a{b}':0.1;")
+        tree = _newick_to_tree_node(fh)
+        fh.close()
+        self.assertEqual(tree.name, "a{b}")
+        self.assertIsNone(tree.edge_id)
+        self.assertEqual(tree.length, 0.1)
+
+    def test_newick_to_tree_node_edge_id_negative(self):
+        """Negative edge ID raises NewickFormatError."""
+        fh = io.StringIO("(A:0.1{-1});")
+        with self.assertRaises(NewickFormatError) as cm:
+            _newick_to_tree_node(fh)
+        self.assertIn("edge", str(cm.exception).lower())
+        fh.close()
+
+    # --- Roundtrip ---
+
+    def test_roundtrip_edge_id(self):
+        """Read then write preserves edge IDs."""
+        newick = "(A:0.1{0},B:0.2{1})C:0.0{2};\n"
+        fh = io.StringIO(newick)
+        tree = _newick_to_tree_node(fh)
+        fh2 = io.StringIO()
+        _tree_node_to_newick(tree, fh2, include_edge_id=True)
+        self.assertEqual(fh2.getvalue(), newick)
+        fh.close()
+        fh2.close()
+
+    def test_roundtrip_edge_id_in_comment_to_curly(self):
+        """Read from [] then write as {} (cross-format)."""
+        fh = io.StringIO("(A:0.1[0],B:0.2[1])C:0.0[2];")
+        tree = _newick_to_tree_node(fh, edge_id_in_comment=True)
+        fh2 = io.StringIO()
+        _tree_node_to_newick(tree, fh2, include_edge_id=True)
+        self.assertEqual(fh2.getvalue(), "(A:0.1{0},B:0.2{1})C:0.0{2};\n")
+        fh.close()
+        fh2.close()
+
+    # --- Sniffer ---
+
+    def test_newick_sniffer_jplace_edge_ids(self):
+        """Sniffer accepts newick strings with edge IDs in {}."""
+        fh = io.StringIO("((A:0.1{0},B:0.2{1}):0.3{2}){3};")
+        self.assertEqual(_newick_sniffer(fh), (True, {}))
+        fh.close()
+
+
 if __name__ == '__main__':
     unittest.main()

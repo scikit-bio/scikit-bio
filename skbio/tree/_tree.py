@@ -82,6 +82,10 @@ class TreeNode(SkbioObject):
     children : list of TreeNode or None
         Child nodes to which this node is connected. A node without any children is a
         tip (leaf) of the tree.
+    edge_id : int or None
+        Edge identifier for the branch connecting this node to its parent. Used by the
+        jplace format for phylogenetic placement. This is an integer that uniquely
+        identifies each branch in the tree.
 
     Notes
     -----
@@ -131,6 +135,7 @@ class TreeNode(SkbioObject):
         support: float | int | None = None,
         parent: TreeNode | None = None,
         children: list[TreeNode] | None = None,
+        edge_id: int | None = None,
     ):
         self.name = name
         self.length = length
@@ -139,6 +144,7 @@ class TreeNode(SkbioObject):
         self.support = support
         self.parent = parent
         self.children: list[TreeNode] = []
+        self.edge_id = edge_id
 
         # TODO: `id` doesn't need to be a default attribute.
         self.id = None
