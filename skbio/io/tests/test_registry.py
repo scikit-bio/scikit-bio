@@ -1476,6 +1476,43 @@ class TestRead(RegistryTest):
 
         self.assertEqual(list(gen), [])
 
+    def test_gen_teardown_attributeerror_suppressed(self):
+        format1 = self.registry.create_format('format1')
+
+        @format1.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @format1.reader(None)
+        def reader(fh, cls=None):
+            yield 1
+
+        fh = StringIO('data')
+        gen = self.registry.read(fh, format='format1')
+        next(gen)
+        with self.assertRaises(StopIteration):
+            gen.throw(AttributeError, AttributeError(
+                "'NoneType' object has no attribute 'exc_info'"
+            ))
+
+    def test_gen_other_attributeerror_propagates(self):
+        format1 = self.registry.create_format('format1')
+
+        @format1.sniffer()
+        def sniffer(fh):
+            return True, {}
+
+        @format1.reader(None)
+        def reader(fh, cls=None):
+            yield 1
+
+        fh = StringIO('data')
+        gen = self.registry.read(fh, format='format1')
+        next(gen)
+        # Verify that a different AttributeError is not suppressed.
+        with self.assertRaises(AttributeError):
+            gen.throw(AttributeError, AttributeError("some other attribute error"))
+
 
 class TestWrite(RegistryTest):
     def test_writer_does_not_exist(self):
