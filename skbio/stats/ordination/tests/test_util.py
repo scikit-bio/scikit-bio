@@ -6,16 +6,34 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 import copy
 
+import array_api_strict as xps
 import numpy as np
 import numpy.testing as npt
 
+from skbio.util import get_package
 from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
     center_distance_matrix
 
 from skbio.stats.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
+
+try:
+    jax = get_package("jax")
+except Exception:
+    no_jax = True
+else:
+    no_jax = False
+    jnp = get_package("jax.numpy")
+    jax.config.update("jax_enable_x64", True)
+
+try:
+    torch = get_package("torch")
+except Exception:
+    no_torch = True
+else:
+    no_torch = False
 
 
 class TestUtils(TestCase):
@@ -121,6 +139,51 @@ class TestUtils(TestCase):
 
         # and ensure that the result of inplace centering was correct
         npt.assert_almost_equal(dm_expected, dm_centered_inp)
+
+
+class TestCenterDistanceMatrixArrayAPI(TestCase):
+    """Test Array API support for center_distance_matrix."""
+
+    def setUp(self):
+        self.dist_mat = np.asarray(
+            [[0., 7., 5., 5.], [7., 0., 4., 9.],
+             [5., 4., 0., 3.], [5., 9., 3., 0.]],
+            dtype=np.float64,
+        )
+        self.expected = f_matrix(e_matrix(self.dist_mat))
+
+    def test_ndarray_numpy(self):
+        rst = center_distance_matrix(self.dist_mat)
+        npt.assert_almost_equal(rst, self.expected)
+
+    @skipIf(no_torch, "Skipping tests: no torch dependency")
+    def test_ndarray_torch(self):
+        mat = torch.tensor(self.dist_mat)
+        rst = center_distance_matrix(mat)
+
+        assert type(rst) == type(mat), "type is changed"
+        assert rst.device == mat.device, "different device"
+        npt.assert_allclose(rst.numpy(), self.expected, atol=1e-7)
+
+    @skipIf(no_jax, "Skipping tests: no jax dependency")
+    def test_ndarray_jnp(self):
+        mat = jnp.array(self.dist_mat)
+        rst = center_distance_matrix(mat)
+
+        assert type(rst) == type(mat), "type is changed"
+        assert rst.device == mat.device, "different device"
+        npt.assert_allclose(np.asarray(rst), self.expected, atol=1e-7)
+
+    def test_numpy_noncontiguous(self):
+        mat_f = np.asfortranarray(self.dist_mat)
+        self.assertFalse(mat_f.flags.c_contiguous)
+        rst = center_distance_matrix(mat_f)
+        npt.assert_allclose(rst, self.expected, atol=1e-10)
+
+    def test_xp_array_api_strict(self):
+        mat = xps.asarray(self.dist_mat)
+        rst = center_distance_matrix(mat)
+        npt.assert_allclose(np.asarray(rst), self.expected, atol=1e-10)
 
 
 if __name__ == '__main__':
