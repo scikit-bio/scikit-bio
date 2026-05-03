@@ -666,7 +666,7 @@ def jc69(seq1, seq2, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the JC69
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_,
+    substitution rates vary among sites and follow a gamma distribution [2]_,
     the observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
@@ -889,7 +889,7 @@ def f81(seq1, seq2, freqs=None, gamma=None):
     .. math::
         D = b\, \alpha \left[\left(1 - \frac{p}{b}\right)^{-\frac{1}{\alpha}} - 1\right]
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -1001,7 +1001,7 @@ def k2p(seq1, seq2, gamma=None):
         D = \frac{\alpha}{2} \left[\left(1 - 2P - Q\right)^{-\frac{1}{\alpha}}
         + \frac{1}{2}\left(1 - 2Q\right)^{-\frac{1}{\alpha}} - \frac{3}{2}\right]
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -1034,7 +1034,7 @@ def k2p(seq1, seq2, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the K2P
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_, the
+    substitution rates vary among sites and follow a gamma distribution [2]_, the
     observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
@@ -1326,7 +1326,7 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
             &\quad \left. -2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
         \end{aligned}
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -1359,7 +1359,7 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the TN93
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_, the
+    substitution rates vary among sites and follow a gamma distribution [2]_, the
     observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
