@@ -639,10 +639,11 @@ def jc69(seq1, seq2, gamma=None):
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the JC69 distance between.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, JC69 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -899,10 +900,11 @@ def f81(seq1, seq2, freqs=None, gamma=None):
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, F81 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1006,10 +1008,11 @@ def k2p(seq1, seq2, gamma=None):
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the K2P distance between.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, K2P distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1334,10 +1337,11 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, TN93 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
