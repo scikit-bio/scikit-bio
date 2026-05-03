@@ -6,7 +6,7 @@
 
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another. ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360))
-* Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models. Also added a `kwargs` parameter to `PairwiseMatrix.from_iterable` and `SymmetricMatrix.from_iterable` to allow optional arguments to be passed to distance models, such as the newly introduced `gamma` parameter. ([#2458](https://github.com/scikit-bio/scikit-bio/pull/2458))
+* Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models. ([#2458](https://github.com/scikit-bio/scikit-bio/pull/2458))
 
 ### Performance enhancements
 
