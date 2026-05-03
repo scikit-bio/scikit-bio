@@ -99,39 +99,18 @@ class TestGetArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    def test_to_numpy_dlpack_fallback_on_runtime_error(self):
-        # Simulate an array API object whose from_dlpack raises RuntimeError.
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([10, 20, 30])
+    def test_to_numpy_dlpack_fallback(self):
+        class FakeArr:
+            def __array__(self, dtype=None, copy=None):
+                return np.array([10, 20, 30])
 
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=RuntimeError("no dlpack")):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
-
-    def test_to_numpy_dlpack_fallback_on_attribute_error(self):
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([1])
-
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=AttributeError):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
-
-    def test_to_numpy_dlpack_fallback_on_type_error(self):
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([1])
-
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=TypeError):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
+        for exc in (AttributeError, TypeError, RuntimeError):
+            with self.subTest(exception=exc.__name__):
+                with patch.object(aac, "is_array_api_obj", return_value=True), \
+                    patch.object(aac, "is_numpy_array", return_value=False), \
+                    patch("skbio.util._array.np.from_dlpack", side_effect=exc):
+                    obs = _get_array(FakeArr(), to_numpy=True)
+                self.assertIsInstance(obs, np.ndarray)
 
 
 # =====================================================================
