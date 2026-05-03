@@ -634,7 +634,6 @@ def jc69(seq1, seq2, gamma=None):
 
     Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
-
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
@@ -644,7 +643,6 @@ def jc69(seq1, seq2, gamma=None):
         rate heterogeneity. If not provided, no gamma correction is applied.
         If a positive number, JC69 distance is computed under a gamma model with
         shape parameter :math:`\alpha = \text{gamma}`.
-
 
     Returns
     -------
@@ -1144,11 +1142,11 @@ def f84(seq1, seq2, freqs=None):
     respectively. And:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         &A = \frac{\pi_A\pi_G}{\pi_A+\pi_G} + \frac{\pi_C\pi_T}{\pi_C+\pi_T} \\
         &B = \pi_A\pi_G + \pi_C\pi_T \\
         &C = (\pi_A+\pi_G)(\pi_C+\pi_T)
-        \end{align}
+        \end{aligned}
 
     Parameters
     ----------
@@ -1296,14 +1294,14 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     as:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         D = &-2\frac{\pi_A\pi_G}{\pi_R}
             ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q) \\
             &-2\frac{\pi_C\pi_T}{\pi_Y}
             ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q) \\
             &-2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
             ln(1-\frac{1}{2\pi_R\pi_Y}Q)
-        \end{align}
+        \end{aligned}
 
     Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
     transitions, respectively. :math:`Q` is the proportion of transversions.
@@ -1312,15 +1310,18 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     evolutionary rates follow a gamma distribution:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         D = &\alpha\left[2\frac{\pi_A\pi_G}{\pi_R}
-            (1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q)^{-\frac{1}{\alpha}} \\
-            &+2\frac{\pi_C\pi_T}{\pi_Y}
-            (1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q)^{-\frac{1}{\alpha}} \\
-            &+2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
-            (1-\frac{1}{2\pi_R\pi_Y}Q)^{-\frac{1}{\alpha}} \\
-            &-2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
-        \end{align}
+            \left(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q\right)
+            ^{-\frac{1}{\alpha}} \right. \\
+            &\quad +2\frac{\pi_C\pi_T}{\pi_Y}
+            \left(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q\right)
+            ^{-\frac{1}{\alpha}} \\
+            &\quad +2\left(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-
+            \frac{\pi_C\pi_T\pi_R}{\pi_Y}\right)
+            \left(1-\frac{1}{2\pi_R\pi_Y}Q\right)^{-\frac{1}{\alpha}} \\
+            &\quad \left. -2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
+        \end{aligned}
 
     Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
 
