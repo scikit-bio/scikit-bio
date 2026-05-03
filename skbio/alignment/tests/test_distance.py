@@ -275,17 +275,6 @@ class AlignDistsTests(TestCase):
             align_dists(self.msa2, jc69)
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Parameter 'gamma' must be a real number."
-        with self.assertRaises(TypeError) as cm:
-            align_dists(self.msa1, "jc69", gamma="2.0")
-        self.assertEqual(str(cm.exception), msg)
-        with self.assertRaises(TypeError) as cm:
-            align_dists(self.msa1, "jc69", gamma=2.0j)
-        self.assertEqual(str(cm.exception), msg)
-        with self.assertRaises(TypeError) as cm:
-            align_dists(self.msa1, "jc69", gamma=0.5 + 1.5j)
-        self.assertEqual(str(cm.exception), msg)
-
         msg = "Parameter 'gamma' must be a positive number."
         with self.assertRaises(ValueError) as cm:
             align_dists(self.msa1, "jc69", gamma=-2.0)
@@ -370,11 +359,6 @@ class AlignDistsTests(TestCase):
         with self.assertRaises(TypeError):
             align_dists(self.msa2, "f81")
 
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "f81", gamma=2.0j)
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "f81", gamma="2.0")
-
         with self.assertRaises(ValueError):
             align_dists(self.msa1, "f81", gamma=-2.0)
         with self.assertRaises(ValueError):
@@ -441,11 +425,6 @@ class AlignDistsTests(TestCase):
 
         with self.assertRaises(TypeError):
             align_dists(self.msa2, "k2p")
-
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "k2p", gamma=2.0j)
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "k2p", gamma="2.0")
 
         with self.assertRaises(ValueError):
             align_dists(self.msa1, "k2p", gamma=-2.0)

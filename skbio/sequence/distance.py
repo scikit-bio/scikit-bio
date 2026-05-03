@@ -236,28 +236,6 @@ def _check_seqtype(name, this, valid=None):
     )
 
 
-def _check_gamma(gamma):
-    """Check if the gamma distribution shape parameter is a real positive number.
-
-    Parameters
-    ----------
-    gamma : float or int
-        Shape parameter of gamma distribution.
-
-    Raises
-    ------
-    TypeError
-        If gamma is not a real number.
-    ValueError
-        If gamma is negative or zero.
-
-    """
-    if not isinstance(gamma, numbers.Real):
-        raise TypeError("Parameter 'gamma' must be a real number.")
-    if gamma <= 0.0:
-        raise ValueError("Parameter 'gamma' must be a positive number.")
-
-
 def _char_hash(alphabet, seqtype):
     """Get a hash table of valid characters for sequence filtering.
 
@@ -876,7 +854,8 @@ def _p_gamma_correct(dists, coef, gamma):
 
     """
 
-    _check_gamma(gamma)
+    if gamma <= 0.0:
+        raise ValueError("Parameter 'gamma' must be a positive number.")
 
     dists[dists >= coef] = np.nan
     dists /= -coef
@@ -1137,12 +1116,11 @@ def _k2p(seqs, mask, seqtype, gamma=None):
             # the formula (Eq. 10 of Kimura, 1980)
             out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
         else:
-            _check_gamma(gamma)
-            out[:] = (
-                0.5
-                * gamma
-                * (np.power(a1, -1 / gamma) + 0.5 * np.power(a2, -1 / gamma) - 1.5)
-            )
+            if gamma <= 0.0:
+                raise ValueError("Parameter 'gamma' must be a positive number.")
+
+            gamma_power = -1 / gamma
+            out[:] = 0.5 * gamma * (a1**gamma_power + 0.5 * a2**gamma_power - 1.5)
 
     dm = _build_dm(func, seqs)
     dm += 0.0  # optional: set -0.0 to 0.0
@@ -1483,12 +1461,12 @@ def _tn93(seqs, mask, seqtype, freqs, gamma=None):
             # the formula (Eq. 3 of Tamura & Nei, 1993)
             out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
         else:
-            _check_gamma(gamma)
+            if gamma <= 0.0:
+                raise ValueError("Parameter 'gamma' must be a positive number.")
+
+            gamma_power = -1 / gamma
             out[:] = -gamma * (
-                c1 * np.power(a1, -1 / gamma)
-                + c2 * np.power(a2, -1 / gamma)
-                + c3 * np.power(a3, -1 / gamma)
-                + c4
+                c1 * a1**gamma_power + c2 * a2**gamma_power + c3 * a3**gamma_power + c4
             )
 
     dm = _build_dm(func, seqs)

@@ -219,7 +219,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Any | None = None,
         keys: Iterable[Any] | None = None,
-        **kwargs: Any,
     ) -> Self:
         r"""Create a pairwise matrix from an iterable of objects given a metric.
 
@@ -236,8 +235,6 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             for each object in the ``iterable``. If None, the default IDs will be used.
         keys : iterable of str, optional
             IDs of the objects. Must be the same length as ``iterable``.
-        kwargs : dict, optional
-            Metric-specific parameters. Refer to the documentation of the chosen metric.
 
         Returns
         -------
@@ -256,7 +253,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable):
-                dm[i, j] = metric(a, b, **kwargs)
+                dm[i, j] = metric(a, b)
 
         return cls(dm, keys_)  # type: ignore[operator]
 
@@ -1440,7 +1437,6 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | ArrayLike = 0.0,
-        **kwargs: Any,
     ) -> Self:
         r"""Create a symmetric matrix from an iterable given a metric.
 
@@ -1468,8 +1464,6 @@ class SymmetricMatrix(PairwiseMatrix):
         diagonal : float or array_like, optional
             Value(s) with which to fill the diagonal of the matrix. Relevant only when
             ``validate`` is False.
-        kwargs : dict, optional
-            Metric-specific parameters. Refer to the documentation of the chosen metric.
 
         Returns
         -------
@@ -1489,13 +1483,13 @@ class SymmetricMatrix(PairwiseMatrix):
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
-                    dm[i, j] = metric(a, b, **kwargs)
+                    dm[i, j] = metric(a, b)
         else:
             # This assumes that metric will return a symmetric matrix. That is, that
             # metric(a, b) is the same as metric(b, a)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
-                    dm[i, j] = dm[j, i] = metric(a, b, **kwargs)
+                    dm[i, j] = dm[j, i] = metric(a, b)
             np.fill_diagonal(dm, diagonal)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
