@@ -50,7 +50,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from inspect import signature
 import functools
-import numbers
 
 import numpy as np
 
@@ -234,6 +233,26 @@ def _check_seqtype(name, this, valid=None):
     raise TypeError(
         f"{name!r} is compatible with {types!r} sequences, not {this.__name__!r}."
     )
+
+
+def _check_gamma(gamma):
+    """Check if the gamma distribution shape parameter is a real positive number.
+
+    Parameters
+    ----------
+    gamma : float or int
+        Shape parameter of gamma distribution.
+
+    Raises
+    ------
+    TypeError
+        If gamma is not a real number.
+    ValueError
+        If gamma is negative or zero.
+
+    """
+    if not gamma > 0.0:
+        raise ValueError("Parameter 'gamma' must be a positive number.")
 
 
 def _char_hash(alphabet, seqtype):
@@ -853,8 +872,7 @@ def _p_gamma_correct(dists, coef, gamma):
 
     """
 
-    if gamma <= 0.0:
-        raise ValueError("Parameter 'gamma' must be a positive number.")
+    _check_gamma(gamma)
 
     dists[dists >= coef] = np.nan
     dists /= -coef
@@ -1117,8 +1135,7 @@ def _k2p(seqs, mask, seqtype, gamma=None):
             # the formula (Eq. 10 of Kimura, 1980)
             out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
         else:
-            if gamma <= 0.0:
-                raise ValueError("Parameter 'gamma' must be a positive number.")
+            _check_gamma(gamma)
 
             gamma_inv = -1 / gamma
             out[:] = 0.5 * gamma * (a1**gamma_inv + 0.5 * a2**gamma_inv - 1.5)
@@ -1466,8 +1483,7 @@ def _tn93(seqs, mask, seqtype, freqs, gamma=None):
             # the formula (Eq. 3 of Tamura & Nei, 1993)
             out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
         else:
-            if gamma <= 0.0:
-                raise ValueError("Parameter 'gamma' must be a positive number.")
+            _check_gamma(gamma)
 
             gamma_inv = -1 / gamma
             out[:] = -gamma * (
