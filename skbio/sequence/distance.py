@@ -1120,8 +1120,8 @@ def _k2p(seqs, mask, seqtype, gamma=None):
             if gamma <= 0.0:
                 raise ValueError("Parameter 'gamma' must be a positive number.")
 
-            gamma_power = -1 / gamma
-            out[:] = 0.5 * gamma * (a1**gamma_power + 0.5 * a2**gamma_power - 1.5)
+            gamma_inv = -1 / gamma
+            out[:] = 0.5 * gamma * (a1**gamma_inv + 0.5 * a2**gamma_inv - 1.5)
 
     dm = _build_dm(func, seqs)
     dm += 0.0  # optional: set -0.0 to 0.0
@@ -1469,9 +1469,9 @@ def _tn93(seqs, mask, seqtype, freqs, gamma=None):
             if gamma <= 0.0:
                 raise ValueError("Parameter 'gamma' must be a positive number.")
 
-            gamma_power = -1 / gamma
+            gamma_inv = -1 / gamma
             out[:] = -gamma * (
-                c1 * a1**gamma_power + c2 * a2**gamma_power + c3 * a3**gamma_power + c4
+                c1 * a1**gamma_inv + c2 * a2**gamma_inv + c3 * a3**gamma_inv + c4
             )
 
     dm = _build_dm(func, seqs)
