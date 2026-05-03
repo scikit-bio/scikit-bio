@@ -634,17 +634,16 @@ def jc69(seq1, seq2, gamma=None):
 
     Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
-
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the JC69 distance between.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, JC69 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
 
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -667,7 +666,7 @@ def jc69(seq1, seq2, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the JC69
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_,
+    substitution rates vary among sites and follow a gamma distribution [2]_,
     the observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
@@ -890,7 +889,7 @@ def f81(seq1, seq2, freqs=None, gamma=None):
     .. math::
         D = b\, \alpha \left[\left(1 - \frac{p}{b}\right)^{-\frac{1}{\alpha}} - 1\right]
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -901,10 +900,11 @@ def f81(seq1, seq2, freqs=None, gamma=None):
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, F81 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1001,17 +1001,18 @@ def k2p(seq1, seq2, gamma=None):
         D = \frac{\alpha}{2} \left[\left(1 - 2P - Q\right)^{-\frac{1}{\alpha}}
         + \frac{1}{2}\left(1 - 2Q\right)^{-\frac{1}{\alpha}} - \frac{3}{2}\right]
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the K2P distance between.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, K2P distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1033,7 +1034,7 @@ def k2p(seq1, seq2, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the K2P
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_, the
+    substitution rates vary among sites and follow a gamma distribution [2]_, the
     observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
@@ -1119,8 +1120,8 @@ def _k2p(seqs, mask, seqtype, gamma=None):
             if gamma <= 0.0:
                 raise ValueError("Parameter 'gamma' must be a positive number.")
 
-            gamma_power = -1 / gamma
-            out[:] = 0.5 * gamma * (a1**gamma_power + 0.5 * a2**gamma_power - 1.5)
+            gamma_inv = -1 / gamma
+            out[:] = 0.5 * gamma * (a1**gamma_inv + 0.5 * a2**gamma_inv - 1.5)
 
     dm = _build_dm(func, seqs)
     dm += 0.0  # optional: set -0.0 to 0.0
@@ -1144,11 +1145,11 @@ def f84(seq1, seq2, freqs=None):
     respectively. And:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         &A = \frac{\pi_A\pi_G}{\pi_A+\pi_G} + \frac{\pi_C\pi_T}{\pi_C+\pi_T} \\
         &B = \pi_A\pi_G + \pi_C\pi_T \\
         &C = (\pi_A+\pi_G)(\pi_C+\pi_T)
-        \end{align}
+        \end{aligned}
 
     Parameters
     ----------
@@ -1296,14 +1297,14 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     as:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         D = &-2\frac{\pi_A\pi_G}{\pi_R}
             ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q) \\
             &-2\frac{\pi_C\pi_T}{\pi_Y}
             ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q) \\
             &-2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
             ln(1-\frac{1}{2\pi_R\pi_Y}Q)
-        \end{align}
+        \end{aligned}
 
     Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
     transitions, respectively. :math:`Q` is the proportion of transversions.
@@ -1312,17 +1313,20 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     evolutionary rates follow a gamma distribution:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         D = &\alpha\left[2\frac{\pi_A\pi_G}{\pi_R}
-            (1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q)^{-\frac{1}{\alpha}} \\
-            &+2\frac{\pi_C\pi_T}{\pi_Y}
-            (1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q)^{-\frac{1}{\alpha}} \\
-            &+2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
-            (1-\frac{1}{2\pi_R\pi_Y}Q)^{-\frac{1}{\alpha}} \\
-            &-2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
-        \end{align}
+            \left(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q\right)
+            ^{-\frac{1}{\alpha}} \right. \\
+            &\quad +2\frac{\pi_C\pi_T}{\pi_Y}
+            \left(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q\right)
+            ^{-\frac{1}{\alpha}} \\
+            &\quad +2\left(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-
+            \frac{\pi_C\pi_T\pi_R}{\pi_Y}\right)
+            \left(1-\frac{1}{2\pi_R\pi_Y}Q\right)^{-\frac{1}{\alpha}} \\
+            &\quad \left. -2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
+        \end{aligned}
 
-    Where :math:`\alpha > 0` is a shape parameter of a Gamma distribution.
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -1333,10 +1337,11 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
     gamma : float, optional
-        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site
-        rate heterogeneity. If not provided, no gamma correction is applied.
-        If a positive number, TN93 distance is computed under a gamma model with
-        shape parameter :math:`\alpha = \text{gamma}`.
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1354,7 +1359,7 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
 
     Site heterogeneity in evolutionary rates can be incorporated by extending the TN93
     framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a Gamma distribution [2]_, the
+    substitution rates vary among sites and follow a gamma distribution [2]_, the
     observed genetic distance can be corrected by integrating over this rate
     heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
@@ -1464,9 +1469,9 @@ def _tn93(seqs, mask, seqtype, freqs, gamma=None):
             if gamma <= 0.0:
                 raise ValueError("Parameter 'gamma' must be a positive number.")
 
-            gamma_power = -1 / gamma
+            gamma_inv = -1 / gamma
             out[:] = -gamma * (
-                c1 * a1**gamma_power + c2 * a2**gamma_power + c3 * a3**gamma_power + c4
+                c1 * a1**gamma_inv + c2 * a2**gamma_inv + c3 * a3**gamma_inv + c4
             )
 
     dm = _build_dm(func, seqs)
