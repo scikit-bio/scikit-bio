@@ -236,7 +236,7 @@ def _check_seqtype(name, this, valid=None):
 
 
 def _check_gamma(gamma):
-    """Check if the gamma distribution shape parameter is a real positive number.
+    """Check if the gamma distribution shape parameter is a positive number.
 
     Parameters
     ----------
@@ -245,10 +245,8 @@ def _check_gamma(gamma):
 
     Raises
     ------
-    TypeError
-        If gamma is not a real number.
     ValueError
-        If gamma is negative or zero.
+        If gamma is not positive.
 
     """
     if not gamma > 0.0:
