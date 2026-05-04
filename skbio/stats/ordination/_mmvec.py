@@ -1052,19 +1052,17 @@ class _MMvecModel:
         idx += p * (d2 - 1)
         self.b_V = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
-    def full_batch_loss_and_gradient(self, cols, weights, Y_rows, N_rows):
+    def full_batch_loss_and_gradient(self, Y_weighted_by_col, N_weighted_by_col):
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
         ----------
-        cols : np.ndarray of shape (nnz,)
-            X feature indices from sparse X COO matrix.
-        weights : np.ndarray of shape (nnz,)
-            X counts from sparse X COO matrix.
-        Y_rows : np.ndarray of shape (nnz, n_features_y)
-            Rows of Y gathered by ``rows``.
-        N_rows : np.ndarray of shape (nnz,)
-            Rows of N gathered by ``rows``.
+        Y_weighted_by_col : np.ndarray of shape (n_features_x, n_features_y)
+            Weighted Y counts aggregated by X feature index ``col``:
+            ``sum_{k: col_k=c} weight_k * Y[row_k, :]``.
+        N_weighted_by_col : np.ndarray of shape (n_features_x,)
+            Weighted sample totals aggregated by X feature index ``col``:
+            ``sum_{k: col_k=c} weight_k * N[row_k]``.
 
         Returns
         -------
@@ -1089,48 +1087,33 @@ class _MMvecModel:
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
         probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
 
-        # === Vectorized loss computation ===
-        # Gather logits and log_norm for each (sample, X feature) pair
-        logits_batch = logits_all[cols, :]  # (nnz, d2)
-        log_norm_batch = log_norm[cols, 0]  # (nnz,)
-        Y_batch = Y_rows
-        N_batch = N_rows
+        # === Vectorized loss computation using feature-grouped sufficient stats ===
+        # For each X feature c:
+        #   S_c = sum_k w_k * Y[row_k,:],   T_c = sum_k w_k * N[row_k]
+        # Then: sum_k w_k * (Y_k dot eta_c - N_k logZ_c) = S_c dot eta_c - T_c logZ_c
+        loss_terms = (
+            np.sum(Y_weighted_by_col * logits_all, axis=1)
+            - N_weighted_by_col * log_norm[:, 0]
+        )
+        loss = -np.sum(loss_terms)
 
-        # Log-likelihood: sum_j y_j * eta_j - N * logsumexp(eta)
-        log_lik = (Y_batch * logits_batch).sum(axis=1) - N_batch * log_norm_batch
-        loss = -np.dot(weights, log_lik)  # weighted sum
+        # === Vectorized gradient computation on grouped residuals ===
+        # G_c = S_c[1:] - T_c * pi_c[1:]
+        grouped_delta = Y_weighted_by_col[:, 1:] - (
+            N_weighted_by_col[:, None] * probs_all[:, 1:]
+        )  # (d1, d2-1)
 
-        # === Vectorized gradient computation ===
-        # Delta: w * (y[1:] - N * pi[1:]) for each (sample, X feature) pair
-        probs_batch_nonref = probs_all[cols, 1:]  # (nnz, d2-1)
-        delta = weights[:, None] * (
-            Y_batch[:, 1:] - N_batch[:, None] * probs_batch_nonref
-        )  # (nnz, d2-1)
+        # dV: sum_c outer(U[c], G_c) with negative sign
+        dV = -self.U.T @ grouped_delta  # (p, d2-1)
 
-        # dV: sum over all entries of outer(U[m], delta)
-        # This is U[cols].T @ delta = (p, nnz) @ (nnz, d2-1) = (p, d2-1)
-        U_batch = self.U[cols, :]  # (nnz, p)
-        dV = -U_batch.T @ delta  # (p, d2-1)
+        # db_V: sum of grouped residuals with negative sign
+        db_V = -grouped_delta.sum(axis=0, keepdims=True)  # (1, d2-1)
 
-        # db_V: sum of delta over all entries
-        db_V = -delta.sum(axis=0, keepdims=True)  # (1, d2-1)
+        # dU: each row c gets -(G_c @ V.T)
+        dU = -(grouped_delta @ self.V.T)  # (d1, p)
 
-        # dU: scatter-add delta @ V.T to rows indexed by cols
-        delta_V = delta @ self.V.T  # (nnz, p)
-        # dU = np.zeros_like(self.U)
-        # np.add.at(dU, cols, -delta_V)
-        # Use bincount for grouped accumulation (faster than np.add.at for many unique
-        # indices)
-        dU = np.empty_like(self.U)
-        for k in range(self.n_components):
-            dU[:, k] = np.bincount(cols, weights=-delta_V[:, k], minlength=d1)
-
-        # db_U: scatter-add delta.sum(axis=1) to rows indexed by cols
-        delta_sum = delta.sum(axis=1)  # (nnz,)
-        # db_U = np.zeros_like(self.b_U)
-        # np.add.at(db_U, (cols, 0), -delta_sum)
-        db_U = np.empty_like(self.b_U)
-        db_U[:, 0] = np.bincount(cols, weights=-delta_sum, minlength=d1)
+        # db_U: each row c gets -sum_j G_cj
+        db_U = -grouped_delta.sum(axis=1, keepdims=True)  # (d1, 1)
 
         # === Add prior terms (L2 regularization) ===
         u_diff = self.U - self.u_prior_mean
@@ -1185,11 +1168,25 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     """
     rows, cols, data = X_coo.row, X_coo.col, X_coo.data
 
-    # Precompute sparse structure and indexed targets reused by every L-BFGS
+    # Precompute feature-grouped sufficient statistics reused by every L-BFGS
     # objective/gradient evaluation.
+    # Y_weighted_by_col[c, :] = sum_k weight_k * Y[row_k, :] for entries with col_k=c
+    d1 = model.n_features_x
+    d2 = model.n_features_y
+    agg_dtype = np.result_type(Y.dtype, data.dtype, np.float64)
     Y_rows = Y[rows, :]
+    Y_weighted_rows = data[:, None] * Y_rows
+    Y_weighted_by_col = np.empty((d1, d2), dtype=agg_dtype)
+    for j in range(d2):
+        Y_weighted_by_col[:, j] = np.bincount(
+            cols, weights=Y_weighted_rows[:, j], minlength=d1
+        )
+
+    # N_weighted_by_col[c] = sum_k weight_k * N[row_k] for entries with col_k=c
     N = Y.sum(axis=1)
-    N_rows = N[rows]
+    N_weighted_by_col = np.bincount(cols, weights=data * N[rows], minlength=d1).astype(
+        agg_dtype, copy=False
+    )
 
     losses = []
     it = 0
@@ -1198,10 +1195,8 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(
-            cols,
-            data,
-            Y_rows,
-            N_rows,
+            Y_weighted_by_col,
+            N_weighted_by_col,
         )
         it += 1
         losses.append(loss)
