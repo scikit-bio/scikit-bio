@@ -1312,36 +1312,38 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     as:
 
     .. math::
-        \begin{aligned}
-        D = &-2\frac{\pi_A\pi_G}{\pi_R}
-            ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q) \\
-            &-2\frac{\pi_C\pi_T}{\pi_Y}
-            ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q) \\
-            &-2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
-            ln(1-\frac{1}{2\pi_R\pi_Y}Q)
-        \end{aligned}
+        D = -2A\, ln\left(1-\frac{P_1}{2A}-\frac{Q}{2\pi_R}\right)
+        -2B\, ln\left(1-\frac{P_2}{2B}-\frac{Q}{2\pi_Y}\right)
+        -2C\, ln\left(1-\frac{Q}{2\pi_R\pi_Y}\right)
 
     Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
-    transitions, respectively. :math:`Q` is the proportion of transversions.
+    transitions, respectively. :math:`Q` is the proportion of transversions. And:
+
+    .. math::
+        \begin{aligned}
+        &A = \frac{\pi_A\pi_G}{\pi_R} \\
+        &B = \frac{\pi_C\pi_T}{\pi_Y} \\
+        &C = \pi_R\pi_Y - A\pi_Y - B\pi_R
+        \end{aligned}
+
 
     The TN93 model can be corrected for site-rate heterogeneity by assuming that
     evolutionary rates follow a gamma distribution:
 
     .. math::
         \begin{aligned}
-        D = &\alpha\left[2\frac{\pi_A\pi_G}{\pi_R}
-            \left(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q\right)
-            ^{-\frac{1}{\alpha}} \right. \\
-            &\quad +2\frac{\pi_C\pi_T}{\pi_Y}
-            \left(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q\right)
-            ^{-\frac{1}{\alpha}} \\
-            &\quad +2\left(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-
-            \frac{\pi_C\pi_T\pi_R}{\pi_Y}\right)
-            \left(1-\frac{1}{2\pi_R\pi_Y}Q\right)^{-\frac{1}{\alpha}} \\
-            &\quad \left. -2(\pi_A\pi_G+\pi_T\pi_C+\pi_R\pi_Y)\right]
+        D = 2\alpha\Bigg[
+            &A\left(1-\frac{P_1}{2A}-\frac{Q}{2\pi_R}\right)^{-\frac{1}{\alpha}}
+            +B\left(1-\frac{P_2}{2B}-\frac{Q}{2\pi_Y}\right)^{-\frac{1}{\alpha}} \\
+            &\quad +\; C\left(1-\frac{Q}{2\pi_R\pi_Y}\right)^{-\frac{1}{\alpha}}
+            - E\Bigg]
         \end{aligned}
 
-    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
+
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution. And:
+
+    .. math::
+        E = \pi_A\pi_G + \pi_T\pi_C + \pi_R\pi_Y
 
     Parameters
     ----------
