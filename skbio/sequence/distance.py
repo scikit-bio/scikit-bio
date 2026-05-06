@@ -249,7 +249,8 @@ def _check_gamma(gamma):
         If gamma is not positive.
 
     """
-    if not gamma > 0.0:
+
+    if gamma is not None and not gamma > 0.0:
         raise ValueError("Parameter 'gamma' must be a positive number.")
 
 
@@ -674,18 +675,13 @@ def jc69(seq1, seq2, gamma=None):
 
     Notes
     -----
-    The Jukes-Cantor 1969 (JC69) model was originally described in [1]_.
+    The Jukes-Cantor 1969 (JC69) model was originally described in [1]_ and its gamma
+    correction in [2]_.
 
     JC69 is a basic evolutionary model for nucleotide sequences. It assumes equal base
     frequencies and equal substitution rates between bases. It models sequence
     evolution as a continuous-time Markov chain, and corrects the observed distance
     (*p*-distance) for repeated substitutions to estimate the true distance.
-
-    Site heterogeneity in evolutionary rates can be incorporated by extending the JC69
-    framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a gamma distribution [2]_,
-    the observed genetic distance can be corrected by integrating over this rate
-    heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
     This function returns NaN if :math:`p \geq 0.75`. This happens when the two
     sequences are too divergent and substitutions are over-saturated for reliable
@@ -695,11 +691,13 @@ def jc69(seq1, seq2, gamma=None):
     ----------
     .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
        Mammalian Protein Metabolism, 3(21), 132.
-    .. [2] Nei, M., & Kumar, S. (2000). Molecular evolution and phylogenetics.
-       Oxford university press.
+    .. [2] Golding, G. B. (1983). Estimates of DNA and protein sequence divergence:
+       an examination of some assumptions. Molecular Biology and Evolution, 1(1),
+       125-142.
 
     """
 
+    _check_gamma(gamma)
     return _jc69(np.vstack((seq1._bytes, seq2._bytes)), None, None, gamma).item()
 
 
@@ -870,8 +868,6 @@ def _p_gamma_correct(dists, coef, gamma):
 
     """
 
-    _check_gamma(gamma)
-
     dists[dists >= coef] = np.nan
     dists /= -coef
     dists += 1.0
@@ -941,8 +937,6 @@ def f81(seq1, seq2, freqs=None, gamma=None):
     F81 is an extension of the JC69 model by allowing varying base frequencies. When
     the observed or user-provided based frequencies are equal (e.g., by specifying
     ``freqs=(.25, .25, .25, .25)``), the result will be identical to that of JC69.
-    Analogously to the JC69 model, it can be extended to incorporate site heterogeneity
-    for evolutionary rates.
 
     This function returns NaN if :math:`p \geq b`.
 
@@ -959,6 +953,7 @@ def f81(seq1, seq2, freqs=None, gamma=None):
 
     """
     seqs = np.vstack((seq1._bytes, seq2._bytes))
+    _check_gamma(gamma)
     return _f81(seqs, None, type(seq1), freqs=freqs, gamma=gamma).item()
 
 
@@ -1042,17 +1037,12 @@ def k2p(seq1, seq2, gamma=None):
 
     Notes
     -----
-    The Kimura 2-parameter model (K2P or K80) was originally described in [1]_.
+    The Kimura 2-parameter model (K2P or K80) was originally described in [1]_ and
+    its gamma correction in [2]_.
 
     K2P is an extension of the JC69 model by modeling differential transition and
     transversion rates. Meanwhile, K2P can be considered as a special case of the F84
     model by assuming equal base frequencies.
-
-    Site heterogeneity in evolutionary rates can be incorporated by extending the K2P
-    framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a gamma distribution [2]_, the
-    observed genetic distance can be corrected by integrating over this rate
-    heterogeneity, yielding a closed-form expression for the evolutionary distance.
 
     This function returns NaN if either :math:`1 - 2P - Q` or :math:`1 - 2Q` is zero or
     negative, which implicates over-saturation of substitutions.
@@ -1063,12 +1053,13 @@ def k2p(seq1, seq2, gamma=None):
        substitutions through comparative studies of nucleotide sequences. Journal of
        Molecular Evolution, 16(2), 111-120.
 
-    .. [2] Nei, M., & Kumar, S. (2000). Molecular evolution and phylogenetics.
-       Oxford university press.
+    .. [2] Jin, L., & Nei, M. (1990). Limitations of the evolutionary parsimony method
+       of phylogenetic analysis. Molecular biology and evolution, 7(1), 82-102.
 
     """
 
     seqs = np.vstack((seq1._bytes, seq2._bytes))
+    _check_gamma(gamma)
     return _k2p(seqs, None, type(seq1), gamma).item()
 
 
@@ -1133,8 +1124,6 @@ def _k2p(seqs, mask, seqtype, gamma=None):
             # the formula (Eq. 10 of Kimura, 1980)
             out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
         else:
-            _check_gamma(gamma)
-
             gamma_inv = -1 / gamma
             out[:] = 0.5 * gamma * (a1**gamma_inv + 0.5 * a2**gamma_inv - 1.5)
 
@@ -1372,13 +1361,8 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
 
     Notes
     -----
-    The Tamura and Nei 1993 (TN93) model was originally described in [1]_.
-
-    Site heterogeneity in evolutionary rates can be incorporated by extending the TN93
-    framework to allow rate variation across sites. Under the assumption that
-    substitution rates vary among sites and follow a gamma distribution [2]_, the
-    observed genetic distance can be corrected by integrating over this rate
-    heterogeneity, yielding a closed-form expression for the evolutionary distance.
+    The Tamura and Nei 1993 (TN93) model was originally described in [1]_
+    alongside with its gamma correction formula.
 
     This function returns NaN if any of the three logarithm arguments is zero or
     negative, which implicates over-saturation of substitutions.
@@ -1388,11 +1372,10 @@ def tn93(seq1, seq2, freqs=None, gamma=None):
     .. [1] Tamura, K., & Nei, M. (1993). Estimation of the number of nucleotide
        substitutions in the control region of mitochondrial DNA in humans and
        chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.
-    .. [2] Nei, M., & Kumar, S. (2000). Molecular evolution and phylogenetics.
-       Oxford university press.
 
     """
     seqs = np.vstack((seq1._bytes, seq2._bytes))
+    _check_gamma(gamma)
     return _tn93(seqs, None, type(seq1), freqs=freqs, gamma=gamma).item()
 
 
@@ -1483,8 +1466,6 @@ def _tn93(seqs, mask, seqtype, freqs, gamma=None):
             # the formula (Eq. 3 of Tamura & Nei, 1993)
             out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
         else:
-            _check_gamma(gamma)
-
             gamma_inv = -1 / gamma
             out[:] = -gamma * (
                 c1 * a1**gamma_inv + c2 * a2**gamma_inv + c3 * a3**gamma_inv + c4
