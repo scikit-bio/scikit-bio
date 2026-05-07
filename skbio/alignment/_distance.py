@@ -15,7 +15,12 @@ import numpy as np
 
 from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
-from skbio.sequence.distance import _check_seqtype, _char_hash, _char_freqs
+from skbio.sequence.distance import (
+    _check_seqtype,
+    _char_hash,
+    _char_freqs,
+    _check_gamma,
+)
 import skbio.sequence.distance as sk_seqdist
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -154,6 +159,10 @@ def align_dists(
     # Get character frequencies from the entire alignment.
     if getattr(func, "_has_freqs", None) is True and "freqs" not in kwargs:
         kwargs["freqs"] = _char_freqs(seqs, valid)
+
+    # validate gamma if present
+    if getattr(func, "_has_gamma", None) is True and "gamma" in kwargs:
+        _check_gamma(kwargs["gamma"])
 
     # Use a preset distance metric (efficient).
     if preset:

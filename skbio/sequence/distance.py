@@ -200,6 +200,7 @@ def _metric_specs(
         wrapper._equal = equal
         wrapper._alphabet = alphabet
         wrapper._has_freqs = has_freqs
+        wrapper._has_gamma = "gamma" in signature(func).parameters
 
         return wrapper
 

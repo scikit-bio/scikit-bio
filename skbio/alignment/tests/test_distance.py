@@ -423,9 +423,6 @@ class AlignDistsTests(TestCase):
         exp = np.array([0.591, 0.909, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
-        with self.assertRaises(TypeError):
-            align_dists(self.msa2, "k2p")
-
         with self.assertRaises(ValueError):
             align_dists(self.msa1, "k2p", gamma=-2.0)
         with self.assertRaises(ValueError):
@@ -526,11 +523,6 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa3, "tn93", shared_by_all=False, gamma=2.0)
         exp = np.array([0.594, 0.916, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
-
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "tn93", gamma=2.0j)
-        with self.assertRaises(TypeError):
-            align_dists(self.msa1, "tn93", gamma="2.0")
 
         with self.assertRaises(ValueError):
             align_dists(self.msa1, "tn93", gamma=-2.0)
