@@ -42,6 +42,9 @@ def is_symmetric_and_hollow(mat):
     if not mat.flags.c_contiguous:
         mat = np.asarray(mat, order="C")
 
+    if mat.dtype.kind == 'i':
+        mat = mat.astype(np.float64)
+
     return is_symmetric_and_hollow_cy(mat)
 
 
@@ -144,8 +147,16 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     if not in_mat.flags.c_contiguous:
         in_mat = np.asarray(in_mat, order="C")
 
+    orig_dtype = in_mat.dtype
+    if in_mat.dtype.kind == 'i':
+        in_mat = in_mat.astype(np.float64)
+
     out_mat = np.empty([np_reorder.size, np_reorder.size], in_mat.dtype)
     distmat_reorder_cy(in_mat, np_reorder, out_mat)
+
+    if out_mat.dtype != orig_dtype:
+        out_mat = out_mat.astype(orig_dtype)
+
     return out_mat
 
 
@@ -192,7 +203,15 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     if not in_mat.flags.c_contiguous:
         in_mat = np.asarray(in_mat, order="C")
 
+    orig_dtype = in_mat.dtype
+    if in_mat.dtype.kind == 'i':
+        in_mat = in_mat.astype(np.float64)
+
     csize = ((np_reorder.size - 1) * np_reorder.size) // 2
     out_mat_condensed = np.empty([csize], in_mat.dtype)
     distmat_reorder_condensed_cy(in_mat, np_reorder, out_mat_condensed)
+
+    if out_mat_condensed.dtype != orig_dtype:
+        out_mat_condensed = out_mat_condensed.astype(orig_dtype)
+
     return out_mat_condensed

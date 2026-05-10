@@ -8,6 +8,7 @@
 
 from scipy.cluster.hierarchy import linkage
 from skbio.tree import TreeNode
+from skbio.stats.distance._base import extract_distance_matrix_data
 from ._utils import _validate_dm
 
 
@@ -81,16 +82,17 @@ def upgma(dm, weighted=False):
     <BLANKLINE>
     """
     _validate_dm(dm)
+    condensed = extract_distance_matrix_data(dm, condensed=True)
 
     # If weighted is set to 'False', UPGMA is performed
     if weighted is False:
         linkage_matrix = linkage(
-            dm.condensed_form(), method="average", metric="euclidean"
+            condensed, method="average", metric="euclidean"
         )
     # Otherwise, WPGMA is performed
     else:
         linkage_matrix = linkage(
-            dm.condensed_form(), method="weighted", metric="euclidean"
+            condensed, method="weighted", metric="euclidean"
         )
 
     # Construct the TreeNode from the linkage matrix

@@ -110,6 +110,33 @@ class PERMANOVATests(TestCase):
         obs = permanova(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
 
+    def test_fixed_point_distance_matrix(self):
+        ids = ['s1', 's2', 's3', 's4']
+        float_data = np.array(
+            [
+                [0.0, 1.2, 2.3, 1.7],
+                [1.2, 0.0, 1.5, 2.2],
+                [2.3, 1.5, 0.0, 1.1],
+                [1.7, 2.2, 1.1, 0.0],
+            ],
+            dtype=np.float64,
+        )
+        scale = 0.1
+        fixed_data = np.rint(float_data / scale).astype(np.int16)
+
+        float_dm = DistanceMatrix(float_data, ids)
+        fixed_dm = DistanceMatrix(fixed_data, ids, scale=scale)
+        float_condensed = DistanceMatrix(float_data, ids, condensed=True)
+        fixed_condensed = DistanceMatrix(fixed_data, ids, condensed=True, scale=scale)
+
+        expected = permanova(float_dm, self.grouping_equal, permutations=99, seed=42)
+        observed = permanova(fixed_dm, self.grouping_equal, permutations=99, seed=42)
+        self.assert_series_equal(observed, expected)
+
+        expected = permanova(float_condensed, self.grouping_equal, permutations=99, seed=42)
+        observed = permanova(fixed_condensed, self.grouping_equal, permutations=99, seed=42)
+        self.assert_series_equal(observed, expected)
+
     def test_call_unequal_group_sizes(self):
         exp = pd.Series(
             index=self.exp_index,

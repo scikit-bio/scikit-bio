@@ -12,6 +12,7 @@ from skbio.tree import TreeNode
 from skbio.util._decorator import params_aliased
 from skbio.util._warning import _warn_deprecated
 from skbio.stats.distance import DistanceMatrix
+from skbio.stats.distance._base import extract_distance_matrix_data
 from ._c_nj import nj_minq_cy
 from ._utils import _validate_dm
 
@@ -149,7 +150,7 @@ def nj(
     if dm._flags["CONDENSED"]:
         dm = DistanceMatrix(dm)
 
-    dm_ = dm.data
+    dm_ = extract_distance_matrix_data(dm)
     if not inplace:
         dm_ = dm_.copy()
 

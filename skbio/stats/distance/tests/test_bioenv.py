@@ -151,6 +151,22 @@ class BIOENVTests(TestCase):
         obs = bioenv(self.dm, self.df, columns=['PH'])
         assert_data_frame_almost_equal(obs, self.exp_results_single_column)
 
+    def test_fixed_point_distance_matrix(self):
+        scale = 1e-6
+        fixed_data = np.rint(self.dm.data / scale).astype(np.int32)
+
+        fixed_dm = DistanceMatrix(fixed_data, self.dm.ids, scale=scale)
+        fixed_dm_condensed = DistanceMatrix(
+            fixed_data, self.dm.ids, condensed=True, scale=scale
+        )
+
+        expected = bioenv(self.dm, self.df)
+        observed = bioenv(fixed_dm, self.df)
+        assert_data_frame_almost_equal(observed, expected)
+
+        observed_condensed = bioenv(fixed_dm_condensed, self.df)
+        assert_data_frame_almost_equal(observed_condensed, expected)
+
     def test_bioenv_different_column_order(self):
         # Specifying columns in a different order will change the row labels in
         # the results data frame as the column subsets will be reordered, but

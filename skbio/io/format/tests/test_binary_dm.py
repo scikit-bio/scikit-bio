@@ -107,6 +107,18 @@ class BinaryMatrixTests(unittest.TestCase):
         obs = io_read(self.rw_fname,into=DistanceMatrix)
         self.assertEqual(obs, exp)
 
+    def test_io_mat_to_h5py_mat_fixed_point_scale(self):
+        scale = 0.1
+        fixed = np.rint(self.mat / scale).astype(np.int16)
+        mat = DistanceMatrix(fixed, self.ids, scale=scale)
+
+        mat.write(self.rw_fname, format='binary_dm')
+        obs = io_read(self.rw_fname, into=DistanceMatrix)
+
+        self.assertEqual(obs.scale, scale)
+        self.assertEqual(obs.dtype, np.int16)
+        npt.assert_array_equal(obs.data, fixed)
+
     def test_io_mat_to_h5py_mat_symmetric(self):
         # SymmetricMatrix
         mat = SymmetricMatrix(self.mat, self.ids)
