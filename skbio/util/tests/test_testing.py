@@ -10,6 +10,7 @@ import os
 import itertools
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 import pandas as pd
 import numpy as np
@@ -39,21 +40,7 @@ from skbio.util._testing import (
     _on_device
 )
 
-# import optional dependencies
-cp = get_package("cupy", raise_error=False)
-jax = get_package("jax", raise_error=False)
-torch = get_package("torch", raise_error=False)
-xr = get_package("xarray", raise_error=False)
-da = get_package("dask.array", raise_error=False)
-
-CUPY_OK = _is_usable(cp, lambda: cp.arange(1))
-TORCH_OK = _is_usable(torch, lambda: torch.arange(1))
-JAX_OK = _is_usable(jax, lambda: jax.numpy.arange(1))
-DASK_OK = _is_usable(da, lambda: da.arange(1, chunks=1).compute())
-XARRAY_OK = _is_usable(xr, lambda: xr.DataArray([1]))
-
 np_xp = aac.array_namespace(np.empty(0))
-
 
 class TestGetDataPath(unittest.TestCase):
     def test_get_data_path(self):
@@ -830,16 +817,16 @@ class TestArrayAPITestMixin(unittest.TestCase, ArrayAPITestMixin):
         self.assertFalse(_device_specs_match('cuda', None))
 
 class TestOnDevice(unittest.TestCase):
-    """Tests for ``_on_device``."""
+    """Tests for ``_on_device``. Uses mocking so it runs without optional
+    backends installed."""
 
-    # ---- NumPy: always CPU ----
+    # ---- NumPy: no mocking needed, numpy is always available ----
 
     def test_numpy_cpu_matches(self):
         arr = np.arange(5)
         self.assertTrue(_on_device(arr, np_xp, "cpu"))
 
     def test_numpy_none_matches(self):
-        # None is treated as "cpu".
         arr = np.arange(5)
         self.assertTrue(_on_device(arr, np_xp, None))
 
@@ -851,109 +838,97 @@ class TestOnDevice(unittest.TestCase):
         arr = np.arange(5)
         self.assertFalse(_on_device(arr, np_xp, "gpu"))
 
-    # ---- CuPy: always GPU ----
+    # ---- CuPy: always GPU. Mock the backend name. ----
 
-    @unittest.skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_cuda_matches(self):
-        arr = cp.arange(5)
-        xp = aac.array_namespace(arr)
-        self.assertTrue(_on_device(arr, xp, "cuda"))
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertTrue(_on_device(fake_arr, fake_xp, "cuda"))
 
-    @unittest.skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_gpu_matches(self):
-        # "gpu" is an alias for "cuda".
-        arr = cp.arange(5)
-        xp = aac.array_namespace(arr)
-        self.assertTrue(_on_device(arr, xp, "gpu"))
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertTrue(_on_device(fake_arr, fake_xp, "gpu"))
 
-    @unittest.skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_cpu_does_not_match(self):
-        arr = cp.arange(5)
-        xp = aac.array_namespace(arr)
-        self.assertFalse(_on_device(arr, xp, "cpu"))
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertFalse(_on_device(fake_arr, fake_xp, "cpu"))
 
-    @unittest.skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_none_does_not_match(self):
-        arr = cp.arange(5)
-        xp = aac.array_namespace(arr)
-        self.assertFalse(_on_device(arr, xp, None))
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertFalse(_on_device(fake_arr, fake_xp, None))
 
     # ---- PyTorch: inspects arr.device.type ----
 
-    @unittest.skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_cpu_matches(self):
-        ten = torch.arange(5)  # default device is cpu
-        xp = aac.array_namespace(ten)
-        self.assertTrue(_on_device(ten, xp, "cpu"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "cpu"))
 
-    @unittest.skipIf(not TORCH_OK, "PyTorch is not usable.")
-    def test_torch_none_matches_cpu(self):
-        ten = torch.arange(5)
-        xp = aac.array_namespace(ten)
-        self.assertTrue(_on_device(ten, xp, None))
+    def test_torch_cpu_none_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), None))
 
-    @unittest.skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_cpu_does_not_match_cuda(self):
-        ten = torch.arange(5)
-        xp = aac.array_namespace(ten)
-        self.assertFalse(_on_device(ten, xp, "cuda"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertFalse(_on_device(fake_arr, object(), "cuda"))
 
-    @unittest.skipIf(not TORCH_OK or not torch.cuda.is_available(),
-            "PyTorch CUDA is not usable.")
     def test_torch_cuda_matches(self):
-        ten = torch.arange(5).to("cuda")
-        xp = aac.array_namespace(ten)
-        self.assertTrue(_on_device(ten, xp, "cuda"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "cuda"))
 
-    @unittest.skipIf(not TORCH_OK or not torch.cuda.is_available(),
-            "PyTorch CUDA is not usable.")
     def test_torch_cuda_matches_gpu_alias(self):
-        ten = torch.arange(5).to("cuda")
-        xp = aac.array_namespace(ten)
-        self.assertTrue(_on_device(ten, xp, "gpu"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "gpu"))
 
-    @unittest.skipIf(not TORCH_OK or not torch.cuda.is_available(),
-            "PyTorch CUDA is not usable.")
     def test_torch_cuda_does_not_match_cpu(self):
-        ten = torch.arange(5).to("cuda")
-        xp = aac.array_namespace(ten)
-        self.assertFalse(_on_device(ten, xp, "cpu"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertFalse(_on_device(fake_arr, object(), "cpu"))
 
     # ---- JAX: inspects arr.device.platform ----
 
-    @unittest.skipIf(not JAX_OK, "JAX is not usable.")
     def test_jax_cpu_matches(self):
-        arr = jax.numpy.arange(5)
-        xp = aac.array_namespace(arr)
-        # JAX defaults to whatever device is available; on CPU-only
-        # machines this is "cpu".
-        if arr.device.platform == "cpu":
-            self.assertTrue(_on_device(arr, xp, "cpu"))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "cpu"))
 
-    @unittest.skipIf(not JAX_OK, "JAX is not usable.")
     def test_jax_none_matches_cpu(self):
-        arr = jax.numpy.arange(5)
-        xp = aac.array_namespace(arr)
-        if arr.device.platform == "cpu":
-            self.assertTrue(_on_device(arr, xp, None))
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), None))
 
-    @unittest.skipIf(not JAX_OK, "JAX is not usable.")
-    def test_jax_gpu_when_cpu_does_not_match(self):
-        arr = jax.numpy.arange(5)
-        xp = aac.array_namespace(arr)
-        if arr.device.platform == "cpu":
-            self.assertFalse(_on_device(arr, xp, "gpu"))
-            self.assertFalse(_on_device(arr, xp, "cuda"))
+    def test_jax_gpu_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="gpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "gpu"))
 
-    # ---- Unknown backend ----
+    def test_jax_gpu_matches_cuda_alias(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="gpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "cuda"))
+
+    def test_jax_cpu_does_not_match_gpu(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertFalse(_on_device(fake_arr, object(), "gpu"))
+
+    # ---- Unknown backend raises ----
 
     def test_unknown_backend_raises(self):
-        # Build a fake namespace that _get_backend_name doesn't recognize.
-        class FakeXP:
-            __name__ = "not_a_real_array_lib"
-
-        with self.assertRaises(NotImplementedError):
-            _on_device(np.arange(1), FakeXP(), "cpu")
+        with patch("skbio.util._testing._get_backend_name", return_value="weird_lib"):
+            with self.assertRaises(NotImplementedError):
+                _on_device(object(), object(), "cpu")
 
 if __name__ == '__main__':
     unittest.main()
