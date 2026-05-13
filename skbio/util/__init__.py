@@ -103,7 +103,7 @@ from ._decorator import (
     params_aliased,
     array_api_doc,
 )
-from ._optionals import get_package
+from ._optionals import get_package, _is_usable
 from ._plotting import PlottableMixin
 
 __all__ = [
@@ -117,7 +117,7 @@ __all__ = [
     "assert_data_frame_almost_equal",
     "pytestrunner",
     "get_package",
-    "PlottableMixin",
+    "_is_usablePlottableMixin",
     "overrides",
     "classproperty",
     "classonlymethod",

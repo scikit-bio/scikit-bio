@@ -14,7 +14,7 @@ import pandas as pd
 import numpy.testing as npt
 import array_api_compat as aac
 
-from skbio.util import get_package
+from skbio.util import get_package, _is_usable
 from skbio.util._array import (
     ingest_array,
     _get_array,
@@ -25,23 +25,12 @@ from skbio.util._array import (
     _get_backend_name,
 )
 
-
 # import optional dependencies
 cp = get_package("cupy", raise_error=False)
 jax = get_package("jax", raise_error=False)
 torch = get_package("torch", raise_error=False)
 xr = get_package("xarray", raise_error=False)
 da = get_package("dask.array", raise_error=False)
-
-def _is_usable(mod, probe):
-    """Return True if `mod` is importable AND `probe()` runs without error."""
-    if mod is None:
-        return False
-    try:
-        probe()
-        return True
-    except Exception:
-        return False
 
 CUPY_OK = _is_usable(cp, lambda: cp.arange(1))
 TORCH_OK = _is_usable(torch, lambda: torch.arange(1))

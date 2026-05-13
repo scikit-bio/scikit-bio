@@ -42,3 +42,14 @@ def get_package(name, raise_error=True):
     except (ImportError, ModuleNotFoundError):
         if raise_error:
             raise ImportError(msg)
+
+
+def _is_usable(mod, probe):
+    """Return True if `mod` is importable AND `probe()` runs without error."""
+    if mod is None:
+        return False
+    try:
+        probe()
+        return True
+    except Exception:
+        return False
