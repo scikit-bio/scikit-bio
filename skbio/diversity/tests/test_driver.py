@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import io
+import warnings
 from unittest import TestCase, main
 
 import pandas as pd
@@ -749,6 +750,22 @@ class BetaDiversityTests(TestCase):
                              pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
+
+    def test_callable_unifrac_warns(self):
+        # Passing the unifrac callables should warn that a faster string-keyed
+        # implementation is available (see issue #1342).
+        for func in (unweighted_unifrac, weighted_unifrac):
+            with self.assertWarnsRegex(UserWarning, func.__name__):
+                beta_diversity(func, self.table1,
+                               taxa=self.oids1, tree=self.tree1)
+
+    def test_string_unifrac_does_not_warn(self):
+        # The recommended string form should not emit the slow-callable warning.
+        for name in ("unweighted_unifrac", "weighted_unifrac"):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
+                beta_diversity(name, self.table1,
+                               taxa=self.oids1, tree=self.tree1)
 
 
 class MetricGetters(TestCase):

@@ -4,10 +4,11 @@
 
 ### Features
 
+* `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#1342](https://github.com/scikit-bio/scikit-bio/issues/1342)).
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406)).
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q² scores, and prediction of one modality from another ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360)).
 * Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models ([#2460](https://github.com/scikit-bio/scikit-bio/pull/2460)).
-* Added robust center log ratio (`rclr`) transformation for performing CLR like transformations on only observed (non-zero) values, making it suitable for sparse compositional data ([#2386](https://github.com/scikit-bio/scikit-bio/pull/2386))
+* Added robust center log ratio (`rclr`) transformation for performing CLR like transformations on only observed (non-zero) values, making it suitable for sparse compositional data ([#2386](https://github.com/scikit-bio/scikit-bio/pull/2386)).
 
 ### Performance enhancements
 
