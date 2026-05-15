@@ -3,7 +3,7 @@ Array API and GPU support
 
 Scikit-bio is gradually adopting the `Python array API standard
 <https://data-apis.org/array-api/latest/>`_ to allow functions to work
-across multiple array libraries (NumPy, PyTorch, JAX, CuPy) and run on
+across multiple array libraries (NumPy, PyTorch, JAX, CuPy, Dask) and run on
 GPUs where supported. This page covers what contributors need to know
 to write, test, and run array-API-compatible code.
 
@@ -18,17 +18,17 @@ on GPU via PyTorch or CuPy, or on TPU via JAX.
 
 Currently supported backends:
 
-- **numpy** (CPU only) — the default, always available
-- **torch** — CPU or CUDA
-- **jax** — CPU or GPU
-- **cupy** — CUDA only
+- **NumPy** (CPU only) — the default, always available
+- **Torch** — CPU or CUDA
+- **Jax** — CPU or GPU
+- **CuPy** — CUDA only
 
 Only a small fraction of scikit-bio currently has array-API support.
 Most functions still operate on NumPy arrays exclusively. This is being
 expanded over time.
 
 
-Writing array-API-compatible library code
+Writing array API compatible code
 -----------------------------------------
 
 Use ``ingest_array`` at function entry points to obtain the array
@@ -47,30 +47,24 @@ The returned ``xp`` is the namespace corresponding to the input array's
 backend. Use ``xp.func()`` for all array operations rather than
 ``np.func()`` — this is what makes the function backend-agnostic.
 
-If a function only supports certain backends, declare them explicitly:
-
 .. code-block:: python
-
-   from skbio.util._array import _check_array_api_backend
 
    def my_function(arr):
        xp, arr = ingest_array(arr)
-       _check_array_api_backend(xp, ["numpy", "torch"], "my_function")
+       return xp.sum(arr)
        ...
 
-This raises ``TypeError`` for unsupported backends with a clear error
-message.
 
 **Things to avoid:**
 
-- Hardcoded ``np.func()`` calls (use ``xp.func()`` instead)
-- Backend-specific methods like ``arr.numpy()`` or ``arr.get()``
-- In-place modification (JAX arrays are immutable)
+- Hardcoded ``np.func()`` calls (use ``xp.func()`` instead).
+- Backend-specific methods like ``torch.numpy()`` or ``cupy.get()`` (both return a NumPy array).
+- In-place modification when supporting JAX arrays. They are immutable.
 - Assuming ``float64`` is the default dtype (PyTorch defaults to
-  ``float32``)
+  ``float32``).
 
 
-Writing tests for array-API code
+Writing tests for array API code
 --------------------------------
 
 Tests that exercise array-API code paths use the
@@ -157,7 +151,7 @@ against the ``torch``, ``jax``, and ``cupy`` backends with CUDA.
 - **Weekly cron**: every Monday at 06:00 UTC, catching regressions
   from upstream changes in array libraries
 - **Manual dispatch**: via the Actions tab on GitHub
-- **``gpu-ci`` label on a PR**: applies the label to a PR to trigger
+- **`gpu-ci` label on a PR**: applies the label to a PR to trigger
   the workflow; pushes to the labeled PR will re-trigger it
 
 Reviewers should apply the ``gpu-ci`` label to any PR that modifies

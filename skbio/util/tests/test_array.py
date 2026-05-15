@@ -18,8 +18,6 @@ from skbio.util import get_package, _is_usable
 from skbio.util._array import (
     ingest_array,
     _get_array,
-    _get_namespace_from_args,
-    _check_array_api_backend,
     _to_numpy,
     _move_to_device,
     _get_backend_name,
@@ -114,93 +112,6 @@ class TestGetArray(TestCase):
                     patch("skbio.util._array.np.from_dlpack", side_effect=exc):
                     obs = _get_array(FakeArr(), to_numpy=True)
                 self.assertIsInstance(obs, np.ndarray)
-
-
-# =====================================================================
-# Tests for _get_namespace_from_args
-# =====================================================================
-
-
-class TestGetNamespaceFromArgs(TestCase):
-
-    def test_no_arrays_returns_none(self):
-        result = _get_namespace_from_args((1, "hello", [1, 2]), {})
-        self.assertIsNone(result)
-
-    def test_numpy_in_args(self):
-        arr = np.arange(3)
-        result = _get_namespace_from_args((arr,), {})
-        self.assertIs(result, np_xp)
-
-    def test_numpy_in_kwargs(self):
-        arr = np.arange(3)
-        result = _get_namespace_from_args((), {"x": arr})
-        self.assertIs(result, np_xp)
-
-    def test_mixed_args_and_kwargs(self):
-        a = np.arange(3)
-        b = np.ones(3)
-        result = _get_namespace_from_args((a,), {"b": b})
-        self.assertIs(result, np_xp)
-
-    @skipIf(not TORCH_OK, "PyTorch is not usable.")
-    def test_torch_in_args(self):
-        ten = torch.arange(3)
-        result = _get_namespace_from_args((ten,), {})
-        self.assertTrue(aac.is_torch_namespace(result))
-
-    def test_empty_args_and_kwargs(self):
-        result = _get_namespace_from_args((), {})
-        self.assertIsNone(result)
-
-
-# =====================================================================
-# Tests for _check_array_api_backend
-# =====================================================================
-
-
-class TestCheckArrayApiBackend(TestCase):
-
-    def test_numpy_allowed(self):
-        # Should not raise.
-        _check_array_api_backend(np_xp, ["numpy"], "my_func")
-
-    def test_numpy_not_allowed_raises(self):
-        with self.assertRaises(TypeError) as ctx:
-            _check_array_api_backend(np_xp, ["torch"], "my_func")
-        self.assertIn("my_func", str(ctx.exception))
-        self.assertIn("torch", str(ctx.exception))
-
-    def test_multiple_backends_allowed(self):
-        _check_array_api_backend(np_xp, ["numpy", "torch"], "my_func")
-
-    @skipIf(not TORCH_OK, "PyTorch is not usable.")
-    def test_torch_allowed(self):
-        xp = aac.array_namespace(torch.arange(1))
-        _check_array_api_backend(xp, ["torch"], "my_func")
-
-    @skipIf(not TORCH_OK, "PyTorch is not usable.")
-    def test_torch_not_allowed_raises(self):
-        xp = aac.array_namespace(torch.arange(1))
-        with self.assertRaises(TypeError):
-            _check_array_api_backend(xp, ["numpy"], "my_func")
-
-    def test_unknown_backend_in_list_ignored(self):
-        # "unknown_backend" isn't in _BACKEND_CHECKERS, so checker is None.
-        # numpy is also listed, so this should pass.
-        _check_array_api_backend(np_xp, ["unknown_backend", "numpy"], "f")
-
-    def test_only_unknown_backend_raises(self):
-        # No checker matches numpy if only "unknown_backend" is listed.
-        with self.assertRaises(TypeError):
-            _check_array_api_backend(np_xp, ["unknown_backend"], "f")
-
-    def test_error_message_lists_supported(self):
-        with self.assertRaises(TypeError) as ctx:
-            _check_array_api_backend(np_xp, ["torch", "jax"], "compute")
-        msg = str(ctx.exception)
-        self.assertIn("compute", msg)
-        self.assertIn("torch, jax", msg)
 
 
 # =====================================================================

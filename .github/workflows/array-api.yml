@@ -12,10 +12,12 @@ env:
 
 jobs:
   test:
+    # workflow will be triggered on PRs which have the 'gpu-ci' label added.
     if: |
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'gpu-ci')
     name: Array API (${{ matrix.backend }})
+    # gpu-t4-4-core is a runner specifically configured in the scikit-bio organization
     runs-on: gpu-t4-4-core
     strategy:
       fail-fast: false
@@ -37,6 +39,8 @@ jobs:
         run: nvidia-smi
 
       - name: Install scikit-bio + backend
+      # CUDA 12 is pinned for the libraries. To update CUDA versions check the
+      # installation guides for each package.
         run: |
           python -m ensurepip
           pip install -v .
