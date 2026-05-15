@@ -103,8 +103,9 @@ from ._decorator import (
     params_aliased,
     array_api_doc,
 )
-from ._optionals import get_package
+from ._optionals import get_package, _is_usable
 from ._plotting import PlottableMixin
+from ._array import ingest_array
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -117,6 +118,8 @@ __all__ = [
     "assert_data_frame_almost_equal",
     "pytestrunner",
     "get_package",
+    "_is_usable",
+    "ingest_array",
     "PlottableMixin",
     "overrides",
     "classproperty",
