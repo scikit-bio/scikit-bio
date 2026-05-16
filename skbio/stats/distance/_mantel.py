@@ -21,11 +21,138 @@ from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 
+try:
+    from numba import njit, prange
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence
     from ._base import DistanceMatrix
     from numpy.typing import ArrayLike
     from skbio.util._typing import SeedLike
+
+
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True)
+    def _mantel_perm_pearsonr_numba(
+        x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+    ):
+        """Fused permute, normalize, and Pearson correlation for Mantel test.
+
+        Replaces the following Python code::
+
+            def _mantel_perm_pearsonr_one(x_flat, xmean, normxm, ym_normalized):
+                xm_normalized = (x_flat - xmean) / normxm
+                one_stat = np.dot(xm_normalized, ym_normalized)
+                one_stat = max(min(one_stat, 1.0), -1.0)
+                return one_stat
+
+            permuted_stats = np.array([
+                _mantel_perm_pearsonr_one(
+                    distmat_reorder_condensed(x._data, perm_order[p]), ...
+                ) for p in range(permutations)
+            ])
+
+        Takes a pre-computed permutation order matrix and normalizes values on
+        the fly using mul and add (derived from xmean and normxm) instead of
+        materializing the full permuted matrix. Each permutation is independent
+        and computed in parallel via prange.
+
+        Parameters
+        ----------
+        x_data : 2D array_like
+            Full distance matrix (n x n).
+        perm_order : 2D array_like
+            Permutation index array (n_perm x n). Each row is a permutation
+            of range(n) specifying the reordering of rows and columns.
+        xmean : float
+            Mean of the condensed form of x.
+        normxm : float
+            Norm of (x_flat - xmean).
+        ym_normalized : 1D array_like
+            (y_flat - ymean) / normym, pre-normalized.
+        permuted_stats : 1D array_like
+            Output array (n_perm,) to write correlation coefficients into.
+
+        """
+        n = x_data.shape[0]
+        n_perm = perm_order.shape[0]
+        mul = 1.0 / normxm
+        add = -xmean / normxm
+
+        for p in prange(n_perm):
+            my_ps = 0.0
+            for row in range(n - 1):
+                vrow = perm_order[p, row]
+                row_start = row * (n - 1) - ((row - 1) * row) // 2
+                for icol in range(n - row - 1):
+                    col = icol + row + 1
+                    yval = ym_normalized[row_start + icol]
+                    xval = x_data[vrow, perm_order[p, col]] * mul + add
+                    my_ps = yval * xval + my_ps
+
+            if my_ps > 1.0:
+                my_ps = 1.0
+            elif my_ps < -1.0:
+                my_ps = -1.0
+            permuted_stats[p] = my_ps
+
+    @njit(parallel=True)
+    def _mantel_perm_pearsonr_condensed_numba(
+        x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+    ):
+        """Fused permute, normalize, and Pearson for condensed Mantel test.
+
+        Same as _mantel_perm_pearsonr_numba but accepts x_data in condensed
+        form (1D array of length n*(n-1)/2) instead of the full 2D matrix.
+        Uses condensed_index formula to map (vrow, vcol) pairs from the
+        permuted ordering back to the 1D condensed array.
+
+        Parameters
+        ----------
+        x_data : 1D array_like
+            Condensed distance matrix (lower triangle only).
+        perm_order : 2D array_like
+            Permutation index array (n_perm x n).
+        xmean : float
+            Mean of the condensed form of x.
+        normxm : float
+            Norm of (x_flat - xmean).
+        ym_normalized : 1D array_like
+            (y_flat - ymean) / normym, pre-normalized.
+        permuted_stats : 1D array_like
+            Output array (n_perm,) to write correlation coefficients into.
+
+        """
+        n_perm = perm_order.shape[0]
+        n = perm_order.shape[1]
+        mul = 1.0 / normxm
+        add = -xmean / normxm
+
+        for p in prange(n_perm):
+            my_ps = 0.0
+            for row in range(n - 1):
+                vrow = perm_order[p, row]
+                row_start = row * (n - 1) - ((row - 1) * row) // 2
+                for icol in range(n - row - 1):
+                    col = icol + row + 1
+                    vcol = perm_order[p, col]
+                    if vrow < vcol:
+                        x_idx = vrow * n + vcol - ((vrow + 2) * (vrow + 1)) // 2
+                    else:
+                        x_idx = vcol * n + vrow - ((vcol + 2) * (vcol + 1)) // 2
+                    yval = ym_normalized[row_start + icol]
+                    xval = x_data[x_idx] * mul + add
+                    my_ps = yval * xval + my_ps
+
+            if my_ps > 1.0:
+                my_ps = 1.0
+            elif my_ps < -1.0:
+                my_ps = -1.0
+            permuted_stats[p] = my_ps
 
 
 def mantel(
@@ -430,13 +557,23 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
         if x._flags["CONDENSED"]:
-            mantel_perm_pearsonr_condensed_cy(
-                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-            )
+            if NUMBA_AVAILABLE:
+                _mantel_perm_pearsonr_condensed_numba(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
+            else:
+                mantel_perm_pearsonr_condensed_cy(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
         else:
-            mantel_perm_pearsonr_cy(
-                x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-            )
+            if NUMBA_AVAILABLE:
+                _mantel_perm_pearsonr_numba(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
+            else:
+                mantel_perm_pearsonr_cy(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
         comp_stat = permuted_stats[0]
         permuted_stats = permuted_stats[1:]
 
