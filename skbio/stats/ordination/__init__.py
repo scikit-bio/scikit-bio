@@ -51,6 +51,14 @@ Canonical analysis
    rda
 
 
+Graph embedding
+---------------
+
+.. autosummary::
+   :toctree:
+
+   graphembed
+
 Multimodal embedding
 --------------------
 
@@ -59,7 +67,6 @@ Multimodal embedding
 
    mmvec
    MMvecResults
-
 
 Ordination results
 ------------------
@@ -176,6 +183,7 @@ from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._principal_component_analysis import pca
+from ._graphembed import graphembed
 from ._ordination_results import OrdinationResults
 from ._mmvec import mmvec, MMvecResults
 from ._utils import (
@@ -195,6 +203,7 @@ __all__ = [
     # "pca",
     "pcoa",
     "pcoa_biplot",
+    "graphembed",
     "mmvec",
     "MMvecResults",
     "OrdinationResults",
