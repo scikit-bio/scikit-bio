@@ -1,0 +1,76 @@
+name: Array API Compatibility (CPU)
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+
+env:
+  latest_python: "3.13"   # torch has no 3.14 wheels yet
+
+jobs:
+  test:
+    name: Array API (${{ matrix.backend }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - backend: torch
+            device: cpu
+          - backend: jax
+            device: cpu
+          - backend: numpy
+            device: cpu
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.latest_python }}
+
+      - name: Install scikit-bio + backend
+        run: |
+          python -m ensurepip
+          pip install -v .
+          case "${{ matrix.backend }}" in
+            torch)
+              pip install torch --index-url https://download.pytorch.org/whl/cpu
+              ;;
+            jax)
+              pip install -U jax
+              ;;
+            numpy)
+              pip install numpy
+              ;;
+          esac
+          pip install -r ci/requirements.txt -r ci/requirements.test.txt
+
+      - name: Verify backend is available
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          python - <<'PY'
+          import os
+          backend = os.environ["BACKEND"]
+          if backend == "torch":
+              import torch
+              print("torch:", torch.__version__, "CPU threads:", torch.get_num_threads())
+          elif backend == "jax":
+              import jax
+              cpus = jax.devices("cpu")
+              assert cpus, "jax sees no CPU devices"
+              print("jax:", jax.__version__, "devices:", cpus)
+          elif backend == "numpy":
+              import numpy
+              print("numpy:", numpy.__version__)
+          PY
+
+      - name: Run tests
+        env:
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
+          SKBIO_DEVICE: ${{ matrix.device }}
+        # This only runs tests which are decorated with the @array_backends decorator
+        run: cd ci && pytest -m array_api --pyargs skbio
