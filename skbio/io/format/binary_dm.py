@@ -44,15 +44,31 @@ Required datasets:
 |           |                     |as Binary DM format           |
 +-----------+---------------------+------------------------------+
 |version    |string               |The version of the current    |
-|           |                     |Binary DM format              |
+|           |                     |Binary DM format. ``2020.12`` |
+|           |                     |for float-only matrices;      |
+|           |                     |``2026.04`` when a ``scale``  |
+|           |                     |dataset is present            |
 +-----------+---------------------+------------------------------+
-|matrix     |float32 or float64   |A (N, N) dataset containing   |
-|           |                     |the values of the             |
-|           |                     |dissimilarity matrix          |
+|matrix     |float32, float64,    |A (N, N) dataset containing   |
+|           |int8, int16 or int32 |the values of the             |
+|           |                     |dissimilarity matrix. Integer |
+|           |                     |dtypes require ``scale``      |
 +-----------+---------------------+------------------------------+
 |order      |string               |A (N,) dataset of the sample  |
 |           |                     |IDs, where N is the total     |
 |           |                     |number of IDs                 |
++-----------+---------------------+------------------------------+
+
+Optional datasets:
+
++-----------+---------------------+------------------------------+
+|Datasets   |Value                |Description                   |
+|           |type                 |                              |
++===========+=====================+==============================+
+|scale      |float64              |Scalar multiplier applied to  |
+|           |                     |``matrix`` values when        |
+|           |                     |recovering real distances.    |
+|           |                     |Written as a length-1 array   |
 +-----------+---------------------+------------------------------+
 
 Optionally, the file can contain several matrices.
@@ -165,7 +181,13 @@ def _h5py_mat_to_skbio_mat(cls, f):
     if mat is None:
         mat = f.get("matrix:0")
     mat = np.asarray(mat)
-    dm = cls(mat, _parse_ids(f["order"]))
+    ids = _parse_ids(f["order"])
+    scale = f.get("scale")
+    if scale is None:
+        dm = cls(mat, ids)
+    else:
+        value = np.asarray(scale).ravel()
+        dm = cls(mat, ids, scale=float(value[0])) if value.size else cls(mat, ids)
     return dm
 
 
@@ -175,12 +197,15 @@ def _skbio_mat_to_h5py_mat_stream(obj, fh):
 
 
 def _skbio_mat_to_h5py_mat(obj, f):
-    _set_header(f)
+    scale = getattr(obj, "scale", None)
+    _set_header(f, has_scale=scale is not None)
 
     b_ids = [x.encode("utf-8") for x in obj.ids]
     np_ids = np.array(b_ids)
     f.create_dataset("order", data=np_ids)
     f.create_dataset("matrix", data=obj.data)
+    if scale is not None:
+        f.create_dataset("scale", data=np.array([scale], dtype=np.float64))
 
 
 def _get_header(fh):
@@ -220,7 +245,8 @@ def _passthrough_decoder(x):
     return x
 
 
-def _set_header(f):
+def _set_header(f, has_scale=False):
     """Set format spec header information."""
     f.create_dataset("format", data=np.array([b"BDSM"]))
-    f.create_dataset("version", data=np.array([b"2020.12"]))
+    version = b"2026.04" if has_scale else b"2020.12"
+    f.create_dataset("version", data=np.array([version]))

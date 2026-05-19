@@ -9,6 +9,7 @@
 import ctypes
 import numpy as np
 from numbers import Integral
+from ..stats.distance._base import extract_distance_matrix_data
 from ..binaries._util import (
     get_api_version as _skbb_get_api_version,
     get_dll as _get_skbb_dll,
@@ -146,8 +147,7 @@ def pcoa_fsvd(
             distance_matrix_data = distance_matrix
         else:
             # we are assuming it is a DistanceMatrix object
-            # get internal representations
-            distance_matrix_data = distance_matrix.data
+            distance_matrix_data = extract_distance_matrix_data(distance_matrix)
         distance_matrix_shape0 = distance_matrix_data.shape[0]
         if (
             len(distance_matrix_data.shape) != 2

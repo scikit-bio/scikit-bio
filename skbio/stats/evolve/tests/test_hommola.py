@@ -11,6 +11,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
+from skbio import DistanceMatrix
 from skbio.stats.distance import mantel
 from skbio.stats.evolve import hommola_cospeciation
 from skbio.stats.evolve._hommola import _get_dist, _gen_lists
@@ -116,6 +117,24 @@ class HommolaCospeciationTests(unittest.TestCase):
         npt.assert_equal(obs_p, exp_p)
         self.assertAlmostEqual(obs_r, exp_r)
         npt.assert_equal(obs_perm_stats, exp_perm_stats)
+
+    def test_fixed_point_distance_matrices(self):
+        scale = 0.1
+        host_float = DistanceMatrix(self.hdist.astype(np.float64) * scale)
+        par_float = DistanceMatrix(self.pdist.astype(np.float64) * scale)
+        host_fixed = DistanceMatrix(self.hdist.astype(np.int16), scale=scale)
+        par_fixed = DistanceMatrix(self.pdist.astype(np.int16), scale=scale)
+
+        expected = hommola_cospeciation(
+            host_float, par_float, self.interact, permutations=9, seed=123
+        )
+        observed = hommola_cospeciation(
+            host_fixed, par_fixed, self.interact, permutations=9, seed=123
+        )
+
+        self.assertAlmostEqual(observed[0], expected[0])
+        self.assertAlmostEqual(observed[1], expected[1])
+        npt.assert_allclose(observed[2], expected[2])
 
     def test_get_dist(self):
         labels = np.array([0, 1, 1, 2, 3])
