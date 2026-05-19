@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import scipy.sparse as sp
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
@@ -161,13 +162,77 @@ def vectorize_counts_and_tree(counts, taxa, tree):
     """
     tree_index = tree.to_array(nan_length_value=0.0)
     taxa = np.asarray(taxa)
-    counts = np.atleast_2d(counts)
-    counts_by_node = _nodes_by_counts(counts, taxa, tree_index)
+    is_sparse = sp.issparse(counts)
+    if is_sparse:
+        if counts.ndim == 1:
+            counts = counts.reshape(1, -1)
+    else:
+        counts = np.atleast_2d(counts)
+    if is_sparse:
+        counts_by_node = _nodes_by_counts_sparse(counts, taxa, tree_index, tree)
+    else:
+        counts_by_node = _nodes_by_counts(counts, taxa, tree_index)
     branch_lengths = tree_index["length"]
 
     # branch_lengths is just a reference to the array inside of tree_index,
     # but it's used so much that it's convenient to just pull it out here.
     return counts_by_node.T, tree_index, branch_lengths
+
+
+def _nodes_by_counts_sparse(counts, taxa, tree_index, tree):
+    """Construct the count array using sparse operations.
+
+    Parameters
+    ----------
+    counts : scipy.sparse matrix of shape (n_samples, n_taxa)
+        Sparse counts/abundances of taxa in samples.
+    taxa : array_like of shape (n_taxa,)
+        Taxon IDs.
+    tree_index : dict
+        Indexed tree from tree.to_array().
+    tree : skbio.TreeNode
+        The tree.
+
+    Returns
+    -------
+    ndarray of shape (n_nodes, n_samples)
+        Total counts/abundances of taxa descending from individual nodes.
+
+    Notes
+    -----
+    The resulting array is converted to a dense ndarray at the end to match
+    the return type of `_nodes_by_counts`. This limits the memory reduction
+    benefits of sparse matrices to the intermediate calculation of
+    `counts_by_node`. Densifying the result may cause memory issues if
+    the number of nodes and samples is extremely large.
+    """
+    nodes = tree_index['name']
+    node_to_index = {name: i for i, name in enumerate(nodes) if name is not None}
+
+    n_taxa = len(taxa)
+    n_nodes = len(nodes)
+
+    taxa_under_node = [[] for _ in range(n_nodes)]
+    for i, tax in enumerate(taxa):
+        if tax not in node_to_index:
+            raise ValueError(f"Taxon '{tax}' not found in tree.")
+        taxa_under_node[node_to_index[tax]].append(i)
+
+    child_index = tree_index['child_index']
+    for node, start, end in child_index:
+        for child in range(start, end + 1):
+            taxa_under_node[node].extend(taxa_under_node[child])
+
+    rows, cols, data = [], [], []
+    for node, t_indices in enumerate(taxa_under_node):
+        for t_idx in t_indices:
+            rows.append(t_idx)
+            cols.append(node)
+            data.append(1.0)
+
+    P = sp.csr_matrix((data, (rows, cols)), shape=(n_taxa, n_nodes), dtype=counts.dtype)
+    counts_by_node = counts @ P  # (n_samples, n_nodes)
+    return counts_by_node.T.toarray()  # (n_nodes, n_samples)
 
 
 def _get_phylogenetic_kwargs(kwargs, taxa):
