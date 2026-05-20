@@ -1,0 +1,31 @@
+name: Numba
+
+on:
+  pull_request:
+    branches: [ development_numba ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+
+env:
+  latest_python: "3.13"
+
+jobs:
+  test:
+    name: Numba CPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.latest_python }}
+
+      - name: Install scikit-bio + Numba
+        run: |
+          python -m ensurepip
+          pip install --prefer-binary -r ci/requirements.txt -r ci/requirements.test.txt
+          pip install numba
+          pip install --no-deps .
+          pip list
+
+      - name: Run Numba tests
+        run: cd ci && pytest -m numba_code --pyargs skbio

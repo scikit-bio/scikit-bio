@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import numpy as np
 import numpy.testing as npt
@@ -19,12 +20,13 @@ from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantI
 from skbio import DistanceMatrix
 from skbio.stats.distance import (PairwiseMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
+from skbio.stats.distance import _mantel as mantel_mod
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
 from skbio.stats.distance._mantel import _mantel_stats_spearman
 from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
 from skbio.stats.distance._utils import distmat_reorder_condensed
-from skbio.util import get_data_path, assert_data_frame_almost_equal
+from skbio.util import get_data_path, assert_data_frame_almost_equal, numba_code
 from skbio.util._testing import _data_frame_to_default_int_type
 
 
@@ -76,6 +78,90 @@ class InternalMantelTests(MantelTestData):
         one_stat = np.dot(xm_normalized, ym_normalized)
         one_stat = max(min(one_stat, 1.0), -1.0)
         return one_stat
+
+    def _numba_test_inputs(self):
+        x_data = np.asarray([[0., 1., 4., 7.],
+                             [1., 0., 2., 5.],
+                             [4., 2., 0., 3.],
+                             [7., 5., 3., 0.]])
+        y_data = np.asarray([[0., 2., 6., 8.],
+                             [2., 0., 1., 4.],
+                             [6., 1., 0., 9.],
+                             [8., 4., 9., 0.]])
+        perm_order = np.asarray([[0, 1, 2, 3],
+                                 [2, 0, 3, 1],
+                                 [3, 2, 1, 0]], dtype=np.intp)
+
+        x_flat = squareform(x_data, force='tovector', checks=False)
+        y_flat = squareform(y_data, force='tovector', checks=False)
+        xmean = x_flat.mean()
+        xm = x_flat - xmean
+        normxm = np.linalg.norm(xm)
+        ymean = y_flat.mean()
+        ym = y_flat - ymean
+        ym_normalized = ym / np.linalg.norm(ym)
+
+        return x_data, x_flat, perm_order, xmean, normxm, ym_normalized
+
+    @numba_code
+    def test_perm_pearsonr_numba_full(self):
+        x_data, _, perm_order, xmean, normxm, ym_normalized = \
+            self._numba_test_inputs()
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
+
+        mantel_mod._mantel_perm_pearsonr_numba(
+            x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+        )
+
+        exp = np.asarray([
+            self._compute_perf_one(x_data, order, xmean, normxm, ym_normalized)
+            for order in perm_order
+        ])
+        npt.assert_allclose(permuted_stats, exp)
+
+    @numba_code
+    def test_perm_pearsonr_numba_condensed(self):
+        x_data, x_flat, perm_order, xmean, normxm, ym_normalized = \
+            self._numba_test_inputs()
+        permuted_stats = np.empty(len(perm_order), dtype=x_flat.dtype)
+
+        mantel_mod._mantel_perm_pearsonr_condensed_numba(
+            x_flat, perm_order, xmean, normxm, ym_normalized, permuted_stats
+        )
+
+        exp = np.asarray([
+            self._compute_perf_one(x_data, order, xmean, normxm, ym_normalized)
+            for order in perm_order
+        ])
+        npt.assert_allclose(permuted_stats, exp)
+
+    @numba_code
+    def test_pearson_flat_dispatches_to_numba_helpers(self):
+        y_flat = self.miny_dm.condensed_form()
+        calls = []
+
+        def full_spy(x_data, perm_order, xmean, normxm,
+                     ym_normalized, permuted_stats):
+            calls.append("full")
+            permuted_stats[:] = 0.0
+
+        def condensed_spy(x_data, perm_order, xmean, normxm,
+                          ym_normalized, permuted_stats):
+            calls.append("condensed")
+            permuted_stats[:] = 0.0
+
+        with patch.object(mantel_mod, "_mantel_perm_pearsonr_numba",
+                          side_effect=full_spy), \
+             patch.object(mantel_mod, "_mantel_perm_pearsonr_condensed_numba",
+                          side_effect=condensed_spy):
+            mantel_mod._mantel_stats_pearson_flat(
+                self.minx_dm, y_flat, 1, seed=0
+            )
+            mantel_mod._mantel_stats_pearson_flat(
+                self.minx_cond, y_flat, 1, seed=0
+            )
+
+        self.assertEqual(calls, ["full", "condensed"])
 
     def test_perm_pearsonr3(self):
         # data pre-computed using released code
