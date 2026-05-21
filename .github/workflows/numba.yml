@@ -27,5 +27,8 @@ jobs:
           pip install --no-deps .
           pip list
 
-      - name: Run Numba tests
+      - name: Run Numba-marked tests
         run: cd ci && pytest -m numba_code --pyargs skbio
+
+      - name: Run full test suite with Numba installed
+        run: make test
