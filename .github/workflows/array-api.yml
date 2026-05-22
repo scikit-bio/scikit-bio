@@ -2,27 +2,36 @@ name: Array API Compatibility
 
 on:
   pull_request:
+    branches: [main]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
     types: [labeled, synchronize]
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
 env:
-  latest_python: "3.13"   # torch has no 3.14 wheels yet
+  latest_python: "3.13"  # torch has no 3.14 wheels yet
 
 jobs:
   test:
-    # workflow will be triggered on PRs which have the 'gpu-ci' label added.
+    name: Array API (${{ matrix.backend }}, ${{ matrix.device }})
+    runs-on: ${{ matrix.device == 'cuda' && 'gpu-t4-4-core' || 'ubuntu-latest' }}
+    # GPU jobs only run on PRs with the 'gpu-ci' label (or on schedule/dispatch).
+    # CPU jobs always run on PRs.
     if: |
+      matrix.device == 'cpu' ||
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'gpu-ci')
-    name: Array API (${{ matrix.backend }})
-    # gpu-t4-4-core is a runner specifically configured in the scikit-bio organization
-    runs-on: gpu-t4-4-core
     strategy:
       fail-fast: false
       matrix:
         include:
+          # CPU runners
+          - backend: torch
+            device: cpu
+          - backend: jax
+            device: cpu
+          # GPU runners
           - backend: torch
             device: cuda
           - backend: jax
@@ -36,20 +45,29 @@ jobs:
           python-version: ${{ env.latest_python }}
 
       - name: Check CUDA driver
+        if: matrix.device == 'cuda'
         run: nvidia-smi
 
       - name: Install scikit-bio + backend
-      # CUDA 12 is pinned for the libraries. To update CUDA versions check the
-      # installation guides for each package.
+        # CUDA 12 is pinned for the libraries. To update CUDA versions check the
+        # installation guides for each package.
         run: |
           python -m ensurepip
           pip install -v .
           case "${{ matrix.backend }}" in
             torch)
-              pip install torch --index-url https://download.pytorch.org/whl/cu128
+              if [ "${{ matrix.device }}" = "cuda" ]; then
+                pip install torch --index-url https://download.pytorch.org/whl/cu128
+              else
+                pip install torch --index-url https://download.pytorch.org/whl/cpu
+              fi
               ;;
             jax)
-              pip install -U "jax[cuda12]"
+              if [ "${{ matrix.device }}" = "cuda" ]; then
+                pip install -U "jax[cuda12]"
+              else
+                pip install -U jax
+              fi
               ;;
             cupy)
               pip install cupy-cuda12x[ctk]
@@ -58,6 +76,7 @@ jobs:
           pip install -r ci/requirements.txt -r ci/requirements.test.txt
 
       - name: Verify GPU is visible to backend
+        if: matrix.device == 'cuda'
         env:
           BACKEND: ${{ matrix.backend }}
         run: |
@@ -85,5 +104,4 @@ jobs:
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
           SKBIO_DEVICE: ${{ matrix.device }}
-        # This only runs tests which are decorated with the @array_backends decorator
         run: cd ci && pytest -m array_api --pyargs skbio
