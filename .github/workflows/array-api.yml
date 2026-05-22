@@ -13,15 +13,20 @@ env:
   latest_python: "3.13"  # torch has no 3.14 wheels yet
 
 jobs:
-  test:
-    name: Array API (${{ matrix.backend }}, ${{ matrix.device }})
-    runs-on: ${{ matrix.device == 'cuda' && 'gpu-t4-4-core' || 'ubuntu-latest' }}
-    # GPU jobs only run on PRs with the 'gpu-ci' label (or on schedule/dispatch).
-    # CPU jobs always run on PRs.
+  # Gate job: passes when the event is not a PR, or when the gpu-ci label is present.
+  # GPU matrix jobs depend on this; CPU jobs do not.
+  gpu-gate:
+    runs-on: ubuntu-latest
     if: |
-      matrix.device == 'cpu' ||
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'gpu-ci')
+    steps:
+      - run: echo "GPU gate passed"
+
+  test:
+    name: Array API (${{ matrix.backend }}, ${{ matrix.device }})
+    needs: ${{ matrix.device == 'cuda' && fromJSON('["gpu-gate"]') || fromJSON('[]') }}
+    runs-on: ${{ matrix.device == 'cuda' && 'gpu-t4-4-core' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
