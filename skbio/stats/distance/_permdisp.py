@@ -12,9 +12,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from scipy.stats import f_oneway
-from scipy.spatial.distance import cdist
 
 from ._cutils import geomedian_axis_one
 from ._base import (
@@ -28,6 +26,7 @@ from skbio.util._decorator import params_aliased
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
+    import pandas as pd
     from skbio.util._typing import SeedLike
 
 
@@ -176,7 +175,8 @@ def permdisp(
     the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
-    >>> permdisp(dm, grouping, permutations=99, seed=42) # doctest: +ELLIPSIS
+    >>> permdisp(dm, grouping, permutations=99, seed=42,
+    ...          dimensions=dm.shape[0]) # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -192,7 +192,7 @@ def permdisp(
     To suppress calculation of the p-value and only obtain the F statistic, specify
     zero permutations:
 
-    >>> permdisp(dm, grouping, permutations=0)
+    >>> permdisp(dm, grouping, permutations=0, dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -211,7 +211,8 @@ def permdisp(
     formula. As such the two different tests yield slightly different F
     statistics.
 
-    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42)
+    >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42,
+    ...          dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -230,7 +231,8 @@ def permdisp(
     >>> df = pd.DataFrame.from_dict(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
-    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42)
+    >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42,
+    ...          dimensions=dm.shape[0])
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -268,12 +270,16 @@ def permdisp(
         ids = ordination.samples.axes[0].to_list()
         sample_size = len(ids)
     elif isinstance(distmat, DistanceMatrix):
-        if method == "eigh":
-            # eigh does not natively support specifying dimensions
-            # and pcoa expects it to be 0
-            dimensions = 0
-        elif method != "fsvd":
+        if method not in ("eigh", "fsvd"):
             raise ValueError("Method must be eigh or fsvd.")
+        # The `dimensions` argument is passed through to pcoa unchanged.
+        # Since #2285 the eigh path in pcoa honors `dimensions` and can
+        # yield substantial speedups on large distance matrices; the
+        # previous code here forced `dimensions=0`, which both discarded
+        # that speedup and tripped pcoa's "EIGH: since no value for
+        # dimensions..." RuntimeWarning on every call (#2430). Users who
+        # deliberately pass `dimensions=0` will still see that warning,
+        # as intended.
 
         ids = distmat.ids
         sample_size = distmat.shape[0]
@@ -287,11 +293,11 @@ def permdisp(
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    samples = ordination.samples
+    sample_data = ordination.samples.to_numpy(copy=False)
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    test_stat_function = partial(_compute_groups, samples, test)
+    test_stat_function = partial(_compute_groups, sample_data, test)
 
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -303,34 +309,21 @@ def permdisp(
 
 
 def _compute_groups(samples, test_type, grouping):
+    data = np.asarray(samples)
     groups = []
 
-    if test_type == "centroid":
-        centroids = samples.groupby(grouping).aggregate("mean")
-    else:  # median
-        grouping_cols = samples.columns.to_list()
-        centroids = samples.groupby(grouping)[grouping_cols].apply(_config_med)
+    grouping_array = np.asarray(grouping)
+    for group_id in np.unique(grouping_array):
+        group_data = data[grouping_array == group_id]
 
-    for label, df in samples.groupby(grouping):
-        groups.append(
-            cdist(
-                df.values.astype("float64"),
-                [centroids.loc[label].values],
-                metric="euclidean",
-            )
-        )
+        if test_type == "centroid":
+            center = group_data.mean(axis=0)
+        else:  # median
+            center = np.asarray(geomedian_axis_one(group_data.T))
+
+        # Distances from each sample in this group to the group center.
+        groups.append(np.linalg.norm(group_data - center, axis=1))
 
     stat, _ = f_oneway(*groups)
-    stat = stat[0]
-
-    return stat
-
-
-def _config_med(x):
-    """Transpose the vector.
-
-    Transpose the vector to be compatible with hd.geomedian.
-    """
-    X = x.to_numpy(copy=True)
-    return pd.Series(np.array(geomedian_axis_one(X.T)), index=x.columns)
+    return float(np.ravel(stat)[0])
 

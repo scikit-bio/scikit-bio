@@ -55,7 +55,7 @@ Decorators
    aliased
    register_aliases
    params_aliased
-   array_api_compatible
+   array_api_doc
 
 
 Miscellaneous utilities
@@ -101,10 +101,11 @@ from ._decorator import (
     aliased,
     register_aliases,
     params_aliased,
-    array_api_compatible,
+    array_api_doc,
 )
-from ._optionals import get_package
+from ._optionals import get_package, _is_usable
 from ._plotting import PlottableMixin
+from ._array import ingest_array
 
 __all__ = [
     "cardinal_to_ordinal",
@@ -117,6 +118,8 @@ __all__ = [
     "assert_data_frame_almost_equal",
     "pytestrunner",
     "get_package",
+    "_is_usable",
+    "ingest_array",
     "PlottableMixin",
     "overrides",
     "classproperty",
@@ -125,7 +128,7 @@ __all__ = [
     "aliased",
     "register_aliases",
     "params_aliased",
-    "array_api_compatible",
+    "array_api_doc",
     "xp_assert_close",
     "xp_assert_equal",
     "array_backends",

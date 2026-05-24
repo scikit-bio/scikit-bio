@@ -11,20 +11,78 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
-from numpy import dot, hstack
-from numpy.linalg import qr, svd
-from scipy.linalg import eigh
+
+from scipy.linalg import eigh as scipy_eigh
 
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
 from ._ordination_results import OrdinationResults
-from ._utils import center_distance_matrix, scale
+from ._utils import center_distance_matrix as center_distance_matrix_np, scale
 from skbio.binaries import (
     pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
     pcoa_fsvd as _skbb_pcoa_fsvd,
 )
 from skbio.util._decorator import params_aliased
+from skbio.util._array import ingest_array, _to_numpy
+
+
+# Double centering (Gower centering) of distance matrix for PCoA
+# Transforms squared distances to centered inner product matrix via:
+#   E_matrix: E = -D^2 / 2
+#   F_matrix: Double-centers E by removing row/column/grand means
+# This is required for eigendecomposition.
+#
+# Based on implementation by Igor Sfiligoi
+def e_matrix(distance_matrix):
+    return distance_matrix * distance_matrix / -2
+
+
+def f_matrix(E_matrix):
+    row_means = E_matrix.mean(axis=1, keepdims=True)
+    col_means = E_matrix.mean(axis=0, keepdims=True)
+    matrix_mean = E_matrix.mean()
+    return E_matrix - row_means - col_means + matrix_mean
+
+
+def center_distance_matrix(distance_matrix, inplace=False):
+    """Center a distance matrix.
+
+    Note: For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
+    argument is accepted for API compatibility but ignored — the function
+    always returns a centered array.
+    """
+    # For true NumPy arrays, use the Cython-accelerated implementation,
+    # which also supports in-place modification.
+    if isinstance(distance_matrix, np.ndarray):
+        return center_distance_matrix_np(distance_matrix, inplace=inplace)
+
+    # For JAX/CuPy and other array-API backends, use the generic
+    # double-centering path; `inplace` is ignored for these backends.
+    xp, distance_matrix = ingest_array(distance_matrix)
+    return f_matrix(e_matrix(distance_matrix))
+
+
+# Compute partial eigendecomposition on host via SciPy LAPACK for JAX/CuPy.
+# Transfers to NumPy (JAX doesn't support subset_by_index), computes, returns to device.
+def _host_partial_eigh(matrix_any, subidx):
+    xp, matrix_any = ingest_array(matrix_any)
+
+    device = getattr(matrix_any, "device", None)
+
+    mat_np = _to_numpy(matrix_any)
+    if mat_np.dtype != np.float64:
+        mat_np = mat_np.astype(np.float64, copy=False)
+    mat_np = np.ascontiguousarray(mat_np)
+
+    eigvals_np, eigvecs_np = scipy_eigh(mat_np, subset_by_index=subidx)
+
+    if device is not None:
+        return (
+            xp.asarray(eigvals_np, device=device),
+            xp.asarray(eigvecs_np, device=device),
+        )
+    return xp.asarray(eigvals_np), xp.asarray(eigvecs_np)
 
 
 @params_aliased(
@@ -214,7 +272,13 @@ def pcoa(
                 )
             ndim = matrix_data.shape[0]
         subidx = [matrix_data.shape[0] - ndim, matrix_data.shape[0] - 1]
-        eigvals, eigvecs = eigh(matrix_data, subset_by_index=subidx)
+        xp, matrix_data = ingest_array(matrix_data)
+        # For JAX/CuPy, we compute the partial eigendecomposition on host via SciPy
+        # LAPACK, since they don't support subset_by_index.
+        if ndim < matrix_data.shape[0]:
+            eigvals, eigvecs = _host_partial_eigh(matrix_data, subidx)
+        else:
+            eigvals, eigvecs = xp.linalg.eigh(matrix_data)
     elif method == "fsvd":
         long_method_name = "Approximate Principal Coordinate Analysis using FSVD"
         if 0 < dimensions < 1:
@@ -235,6 +299,16 @@ def pcoa(
             try:
                 eigvals, coordinates, proportion_explained = _skbb_pcoa_fsvd(
                     distmat.data, dimensions, inplace, seed
+                )
+                xp_eigvals, eigvals = ingest_array(eigvals)
+                xp_coordinates, coordinates = ingest_array(coordinates)
+                xp_proportion_explained, proportion_explained = ingest_array(
+                    proportion_explained
+                )
+                eigvals, coordinates, proportion_explained = (
+                    xp_eigvals.asarray(eigvals),
+                    xp_coordinates.asarray(coordinates),
+                    xp_proportion_explained.asarray(proportion_explained),
                 )
                 return _encapsulate_pcoa_result(
                     long_method_name,
@@ -266,8 +340,9 @@ def pcoa(
     # abs value, but that doesn't seem to be an approach accepted
     # by L&L to deal with negative eigenvalues. We raise a warning
     # in that case. First, we make values close to 0 equal to 0.
-    negative_close_to_zero = np.isclose(eigvals, 0)
-    eigvals[negative_close_to_zero] = 0
+    xp, eigvals = ingest_array(eigvals)
+    negative_close_to_zero = xp.isclose(eigvals, 0)
+    eigvals = xp.where(negative_close_to_zero, 0, eigvals)
 
     # eigvals might not be ordered, so we first sort them, then analogously
     # sort the eigenvectors by the ordering of the eigenvalues too
@@ -277,7 +352,9 @@ def pcoa(
 
     # large negative eigenvalues suggest result inaccuracy
     # see: https://github.com/scikit-bio/scikit-bio/issues/1410
-    if warn_neg_eigval and eigvals[-1] < 0:
+    # convert to float because JAX may return a DeviceArray,
+    # which cannot be directly compared to a float
+    if warn_neg_eigval and float(eigvals[-1]) < 0:
         if warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval:
             warn(
                 "The result contains negative eigenvalues that are large in magnitude,"
@@ -292,9 +369,16 @@ def pcoa(
     # won't work as it expects all the OrdinationResults to have the same
     # number of coordinates. In order to solve this issue, we return the
     # coordinates that have a negative eigenvalue as 0
+    xp, eigvecs = ingest_array(eigvecs)
+    # assume same backend for eigvals and eigvecs
     num_positive = (eigvals >= 0).sum()
-    eigvecs[:, num_positive:] = np.zeros(eigvecs[:, num_positive:].shape)
-    eigvals[num_positive:] = np.zeros(eigvals[num_positive:].shape)
+    # Create a mask to set negative eigenvalues to 0 and their corresponding
+    # eigenvectors to 0 because JAX does not have in-place operations.
+    idx = xp.arange(eigvals.shape[0])
+    mask = idx < num_positive
+
+    eigvals = xp.where(mask, eigvals, 0)
+    eigvecs = eigvecs * mask
 
     if ndim != distmat.data.shape[0]:
         # Since the dimension parameter, hereafter referred to as 'd',
@@ -309,15 +393,17 @@ def pcoa(
         # An alternative method of calculating th sum of eigenvalues is by
         # computing the trace of the centered distance matrix.
         # See proof outlined here: https://goo.gl/VAYiXx
-        sum_eigenvalues = np.trace(matrix_data)
+        xp_mat, matrix_data = ingest_array(matrix_data)
+        sum_eigenvalues = xp_mat.trace(matrix_data)
     else:
         # Calculate proportions the usual way
-        sum_eigenvalues = np.sum(eigvals)
+        sum_eigenvalues = xp.sum(eigvals)
 
     proportion_explained = eigvals / sum_eigenvalues
     if 0 < dimensions < 1:
-        cumulative_variance = np.cumsum(proportion_explained)
-        ndim = np.searchsorted(cumulative_variance, dimensions, side="left") + 1
+        xp_prop, proportion_explained = ingest_array(proportion_explained)
+        cumulative_variance = xp_prop.cumsum(proportion_explained)
+        ndim = xp_prop.searchsorted(cumulative_variance, dimensions, side="left") + 1
         # gives the number of dimensions needed to reach specified variance
         # updates number of dimensions to reach the requirement of variance.
         dimensions = ndim
@@ -336,7 +422,7 @@ def pcoa(
     # objects in the space of principal coordinates. Note that at
     # least one eigenvalue is zero because only n-1 axes are
     # needed to represent n points in a euclidean space.
-    coordinates = eigvecs * np.sqrt(eigvals)
+    coordinates = eigvecs * xp.sqrt(eigvals)
 
     return _encapsulate_pcoa_result(
         long_method_name,
@@ -474,50 +560,71 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     # Form a real nxl matrix G whose entries are independent, identically
     # distributed Gaussian random variables of zero mean and unit variance
-    rng = get_rng(seed)
-    G = rng.standard_normal(size=(n, k))
+    xp, centered_distance_matrix = ingest_array(centered_distance_matrix)
 
+    rng = get_rng(seed)
+    G = xp.asarray(
+        rng.standard_normal(size=(n, k)), device=centered_distance_matrix.device
+    )
     # `use_power_method` is constantly False, so `if` won't start.
     if use_power_method:  # pragma: no cover
         # use only the given exponent
-        H = dot(centered_distance_matrix, G)
+        H = xp.matmul(centered_distance_matrix, G)
 
         for x in range(2, num_levels + 2):
             # enhance decay of singular values
             # note: distance_matrix is no longer transposed, saves work
             # since we're expecting symmetric, square matrices anyway
             # (Daniel McDonald's changes)
-            H = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
+            H = xp.matmul(
+                centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+            )
 
     else:
         # compute the m x l matrices H^{(0)}, ..., H^{(i)}
         # Note that this is done implicitly in each iteration below.
-        H = dot(centered_distance_matrix, G)
+        H = xp.matmul(centered_distance_matrix, G)
         # to enhance performance
-        H = hstack((H, dot(centered_distance_matrix, dot(centered_distance_matrix, H))))
+        H = xp.hstack(
+            (
+                H,
+                xp.matmul(
+                    centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+                ),
+            )
+        )
 
         # `num_levels` is constantly 1, so `for` loop won't start
         for x in range(3, num_levels + 2):  # pragma: no cover
-            tmp = dot(centered_distance_matrix, dot(centered_distance_matrix, H))
+            tmp = xp.matmul(
+                centered_distance_matrix, xp.matmul(centered_distance_matrix, H)
+            )
 
-            H = hstack(
-                (H, dot(centered_distance_matrix, dot(centered_distance_matrix, tmp)))
+            H = xp.hstack(
+                (
+                    H,
+                    xp.matmul(
+                        centered_distance_matrix,
+                        xp.matmul(centered_distance_matrix, tmp),
+                    ),
+                )
             )
 
     # Using the pivoted QR-decomposition, form a real m * ((i+1)l) matrix Q
     # whose columns are orthonormal, s.t. there exists a real
     # ((i+1)l) * ((i+1)l) matrix R for which H = QR
-    Q, R = qr(H)
+    # Q and center_distance_matrix share same bacnkend, so we can use the same xp
+    Q, R = xp.linalg.qr(H)
 
     # Compute the n * ((i+1)l) product matrix T = A^T Q
-    T = dot(centered_distance_matrix, Q)  # step 3
-
+    T = xp.matmul(centered_distance_matrix, Q)  # step 3
     # Form an SVD of T
-    Vt, St, W = svd(T, full_matrices=False)
-    W = W.transpose()
+    # T is same backend as Q, so we can use the same xp for both
+    Vt, St, W = xp.linalg.svd(T, full_matrices=False)
+    W = W.T
 
     # Compute the m * ((i+1)l) product matrix
-    Ut = dot(Q, W)
+    Ut = xp.matmul(Q, W)
 
     U_fsvd = Ut[:, :dimensions]
 
@@ -583,21 +690,28 @@ def pcoa_biplot(ordination, y):
     # align the descriptors and eigenvectors in a sample-wise fashion
     y = y.reindex(coordinates.index)
 
+    # Preserve original column names before converting to array
+    coord_columns = coordinates.columns.copy()
+
     # S_pc from equation 9.44
     # Represents the covariance matrix between the features matrix and the
     # column-centered eigenvectors of the pcoa.
-    spc = (1 / (N - 1)) * y.values.T.dot(scale(coordinates, ddof=1))
+    xp, coordinates = ingest_array(coordinates)
+    spc = (1 / (N - 1)) * xp.matmul(y.values.T, scale(coordinates, ddof=1))
 
     # U_proj from equation 9.55, is the matrix of descriptors to be projected.
     #
     # Only get the power of non-zero values, otherwise this will raise a
     # divide by zero warning. There shouldn't be negative eigenvalues(?)
-    Uproj = np.sqrt(N - 1) * spc.dot(
-        np.diag(np.power(eigvals, -0.5, where=eigvals > 0))
+    Uproj = xp.sqrt(N - 1) * xp.matmul(
+        spc,
+        xp.diag(
+            xp.where(eigvals > 0, xp.power(xp.where(eigvals > 0, eigvals, 1), -0.5), 0)
+        ),
     )
 
     ordination.features = pd.DataFrame(
-        data=Uproj, index=y.columns.copy(), columns=coordinates.columns.copy()
+        data=Uproj, index=y.columns.copy(), columns=coord_columns
     )
     ordination.features.fillna(0.0, inplace=True)
 

@@ -1,4 +1,4 @@
-sphinx < 9
+sphinx
 sphinx-design
 sphinx-copybutton
 pydata-sphinx-theme

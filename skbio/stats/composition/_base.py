@@ -18,7 +18,7 @@ from skbio.util._decorator import (
     aliased,
     register_aliases,
     params_aliased,
-    array_api_compatible,
+    array_api_doc,
 )
 from skbio.util._array import ingest_array
 
@@ -88,7 +88,7 @@ def _check_composition(
         raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
 
 
-@array_api_compatible(
+@array_api_doc(
     backends=["numpy", "cupy", "torch", "jax", "dask"],
     devices=["cpu", "gpu"],
 )
@@ -424,6 +424,10 @@ def inner(x: ArrayLike, y: ArrayLike, validate: bool = True) -> StdArray:
     return xp.matmul(clrx, clry.T)
 
 
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def clr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform centre log ratio (CLR) transformation.
 
@@ -492,6 +496,10 @@ def _clr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     return (lmat := xp.log(mat)) - xp.mean(lmat, axis=axis, keepdims=True)
 
 
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def clr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform inverse centre log ratio (CLR) transformation.
 
@@ -576,6 +584,10 @@ def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     return _closure(xp, diff, axis)
 
 
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform robust centre log ratio (rclr) transformation.
 
@@ -681,6 +693,10 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def ilr(
     mat: ArrayLike,
     basis: ArrayLike | None = None,
@@ -800,6 +816,10 @@ def _ilr(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdArray:
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def ilr_inv(
     mat: ArrayLike,
     basis: ArrayLike | None = None,
@@ -904,6 +924,10 @@ def _ilr_inv(xp: ModuleType, mat: StdArray, basis: StdArray, axis: int) -> StdAr
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def alr(
     mat: ArrayLike, ref_idx: int = 0, axis: int = -1, validate: bool = True
 ) -> StdArray:
@@ -1013,6 +1037,10 @@ def _alr(xp: ModuleType, mat: StdArray, ref_idx: int, axis: int) -> StdArray:
 
 
 @params_aliased([("ref_idx", "denominator_idx", "0.7.0", False)])
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
 def alr_inv(mat: ArrayLike, ref_idx: int = 0, axis: int = -1) -> StdArray:
     r"""Perform inverse additive log ratio (ALR) transform.
 

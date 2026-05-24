@@ -21,12 +21,15 @@ from ._docstring import (
     _array_api_compat_section,
     _insert_into_notes_section,
 )
-from ._array import _get_namespace_from_args, _check_array_api_backend
 from ._warning import _warn_deprecated, _warn_renamed, _warn_param_renamed
 
 
-def array_api_compatible(backends, devices=None):
-    r"""Mark a function as compatible with the Python array API standard.
+def array_api_doc(backends, devices=None):
+    r"""Add an array API compatibility table to a function's documentation.
+
+    An array API compatibility table is inserted into the Notes section of the
+    function's docstring. If the docstring has no Notes section, the table is
+    inserted at the end of the docstring.
 
     Parameters
     ----------
@@ -37,35 +40,12 @@ def array_api_compatible(backends, devices=None):
         Supported devices: `'cpu'`, `'gpu'`. Defaults to per-backend
         defaults.
 
-    Notes
-    -----
-    This decorator has two effects:
-
-    1. An array API compatibility table is inserted into the Notes section of
-       the function's docstring.
-    2. At runtime, if the caller passes an array API object from an unsupported
-       backend, a `TypeError` is raised.
-
-    The decorated function gains two attributes:
-    `_array_api_backends` and `_array_api_devices`.
-
     """
 
     def decorator(func):
         section = _array_api_compat_section(backends, devices)
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            xp = _get_namespace_from_args(args, kwargs)
-            if xp is not None:
-                _check_array_api_backend(xp, backends, func.__name__)
-            return func(*args, **kwargs)
-
-        wrapper.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
-        wrapper._array_backends = backends
-        wrapper._devices = devices
-
-        return wrapper
+        func.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
+        return func
 
     return decorator
 
@@ -140,12 +120,18 @@ class classproperty(property):
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
-        super(classproperty, self).__init__(classmethod(func))
+        # Keep fget as a plain function so introspection tools (e.g. Sphinx)
+        # can inspect its signature without tripping on a classmethod object.
+        super(classproperty, self).__init__(func)
         self.__name__ = name
         self.__doc__ = doc
 
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+    def __get__(self, obj, owner=None):
+        if getattr(self.fget, "__isabstractmethod__", False):
+            return self
+        if owner is None:
+            owner = type(obj)
+        return self.fget(owner)
 
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")
