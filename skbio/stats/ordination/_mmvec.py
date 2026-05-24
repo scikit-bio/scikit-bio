@@ -864,13 +864,6 @@ class _MMvecModel:
         self.u_prior_scale = u_prior_scale
         self.v_prior_mean = v_prior_mean
         self.v_prior_scale = v_prior_scale
-        # Cache squared scales used repeatedly in objective/gradient evaluation.
-        self._u_prior_scale_sq = u_prior_scale**2
-        self._v_prior_scale_sq = v_prior_scale**2
-
-        # Cache constant columns used to build augmented matrices.
-        self._ones_x = np.ones((n_features_x, 1))
-        self._ones_y = np.ones((1, n_features_y - 1))
 
         # Initialize parameters with random normal
         self.U = rng.standard_normal((n_features_x, n_components))
@@ -890,8 +883,8 @@ class _MMvecModel:
         """
         d1 = self.n_features_x
 
-        U_aug = np.hstack([self._ones_x, self.b_U, self.U])
-        V_aug = np.vstack([self.b_V, self._ones_y, self.V])
+        U_aug = np.hstack([np.ones((d1, 1)), self.b_U, self.U])
+        V_aug = np.vstack([self.b_V, np.ones((1, self.n_features_y - 1)), self.V])
         return U_aug, V_aug
 
     def forward(self, X_idx):
@@ -983,16 +976,16 @@ class _MMvecModel:
         # Compute total loss (negative log posterior)
         prior_loss = 0.0
         prior_loss += (
-            0.5 * np.sum((self.U - self.u_prior_mean) ** 2) / self._u_prior_scale_sq
+            0.5 * np.sum((self.U - self.u_prior_mean) ** 2) / (self.u_prior_scale**2)
         )
         prior_loss += (
-            0.5 * np.sum((self.b_U - self.u_prior_mean) ** 2) / self._u_prior_scale_sq
+            0.5 * np.sum((self.b_U - self.u_prior_mean) ** 2) / (self.u_prior_scale**2)
         )
         prior_loss += (
-            0.5 * np.sum((self.V - self.v_prior_mean) ** 2) / self._v_prior_scale_sq
+            0.5 * np.sum((self.V - self.v_prior_mean) ** 2) / (self.v_prior_scale**2)
         )
         prior_loss += (
-            0.5 * np.sum((self.b_V - self.v_prior_mean) ** 2) / self._v_prior_scale_sq
+            0.5 * np.sum((self.b_V - self.v_prior_mean) ** 2) / (self.v_prior_scale**2)
         )
 
         loss = -norm * loglik + prior_loss
@@ -1052,19 +1045,17 @@ class _MMvecModel:
         idx += p * (d2 - 1)
         self.b_V = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
-    def full_batch_loss_and_gradient(self, cols, weights, Y_rows, N_rows):
+    def full_batch_loss_and_gradient(self, X_coo, Y, N):
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
         ----------
-        cols : np.ndarray of shape (nnz,)
-            X feature indices from sparse X COO matrix.
-        weights : np.ndarray of shape (nnz,)
-            X counts from sparse X COO matrix.
-        Y_rows : np.ndarray of shape (nnz, n_features_y)
-            Rows of Y gathered by ``rows``.
-        N_rows : np.ndarray of shape (nnz,)
-            Rows of N gathered by ``rows``.
+        X_coo : coo_array of shape (n_samples, n_features_x)
+            X counts in COO format.
+        Y : np.ndarray of shape (n_samples, n_features_y)
+            Y counts.
+        N : np.ndarray of shape (n_samples,)
+            Sum of Y counts for each sample.
 
         Returns
         -------
@@ -1076,14 +1067,17 @@ class _MMvecModel:
         d1 = self.n_features_x
         # d2 = self.n_features_y
 
+        # Extract sparse indices and weights
+        rows = X_coo.row  # sample indices (nnz,)
+        cols = X_coo.col  # X feature indices (nnz,)
+        weights = X_coo.data  # X counts (nnz,)
+
         # Build augmented matrices once
         U_aug, V_aug = self.build_aug_matrices()
 
         # Precompute all logits: (d1, d2) with reference column = 0
         logits_core = U_aug @ V_aug  # (d1, d2-1)
-        logits_all = np.empty((d1, self.n_features_y), dtype=logits_core.dtype)
-        logits_all[:, 0] = 0.0
-        logits_all[:, 1:] = logits_core
+        logits_all = np.hstack([np.zeros((d1, 1)), logits_core])
 
         # Stable softmax for all X features
         log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
@@ -1093,8 +1087,8 @@ class _MMvecModel:
         # Gather logits and log_norm for each (sample, X feature) pair
         logits_batch = logits_all[cols, :]  # (nnz, d2)
         log_norm_batch = log_norm[cols, 0]  # (nnz,)
-        Y_batch = Y_rows
-        N_batch = N_rows
+        Y_batch = Y[rows, :]  # (nnz, d2)
+        N_batch = N[rows]  # (nnz,)
 
         # Log-likelihood: sum_j y_j * eta_j - N * logsumexp(eta)
         log_lik = (Y_batch * logits_batch).sum(axis=1) - N_batch * log_norm_batch
@@ -1102,9 +1096,9 @@ class _MMvecModel:
 
         # === Vectorized gradient computation ===
         # Delta: w * (y[1:] - N * pi[1:]) for each (sample, X feature) pair
-        probs_batch_nonref = probs_all[cols, 1:]  # (nnz, d2-1)
+        probs_batch = probs_all[cols, :]  # (nnz, d2)
         delta = weights[:, None] * (
-            Y_batch[:, 1:] - N_batch[:, None] * probs_batch_nonref
+            Y_batch[:, 1:] - N_batch[:, None] * probs_batch[:, 1:]
         )  # (nnz, d2-1)
 
         # dV: sum over all entries of outer(U[m], delta)
@@ -1138,15 +1132,15 @@ class _MMvecModel:
         v_diff = self.V - self.v_prior_mean
         b_v_diff = self.b_V - self.v_prior_mean
 
-        loss += 0.5 * np.sum(u_diff**2) / self._u_prior_scale_sq
-        loss += 0.5 * np.sum(b_u_diff**2) / self._u_prior_scale_sq
-        loss += 0.5 * np.sum(v_diff**2) / self._v_prior_scale_sq
-        loss += 0.5 * np.sum(b_v_diff**2) / self._v_prior_scale_sq
+        loss += 0.5 * np.sum(u_diff**2) / self.u_prior_scale**2
+        loss += 0.5 * np.sum(b_u_diff**2) / self.u_prior_scale**2
+        loss += 0.5 * np.sum(v_diff**2) / self.v_prior_scale**2
+        loss += 0.5 * np.sum(b_v_diff**2) / self.v_prior_scale**2
 
-        dU += u_diff / self._u_prior_scale_sq
-        db_U += b_u_diff / self._u_prior_scale_sq
-        dV += v_diff / self._v_prior_scale_sq
-        db_V += b_v_diff / self._v_prior_scale_sq
+        dU += u_diff / self.u_prior_scale**2
+        db_U += b_u_diff / self.u_prior_scale**2
+        dV += v_diff / self.v_prior_scale**2
+        db_V += b_v_diff / self.v_prior_scale**2
 
         # Pack gradients
         grad = np.concatenate(
@@ -1183,26 +1177,14 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         Loss per iteration.
 
     """
-    rows, cols, data = X_coo.row, X_coo.col, X_coo.data
-
-    # Precompute sparse structure and indexed targets reused by every L-BFGS
-    # objective/gradient evaluation.
-    Y_rows = Y[rows, :]
     N = Y.sum(axis=1)
-    N_rows = N[rows]
-
     losses = []
     it = 0
 
     def func(theta):
         nonlocal it
         model.unpack_params(theta)
-        loss, grad = model.full_batch_loss_and_gradient(
-            cols,
-            data,
-            Y_rows,
-            N_rows,
-        )
+        loss, grad = model.full_batch_loss_and_gradient(X_coo, Y, N)
         it += 1
         losses.append(loss)
 
