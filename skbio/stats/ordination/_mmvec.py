@@ -1085,19 +1085,16 @@ class _MMvecModel:
         Parameters
         ----------
         y_sums : np.ndarray of shape (n_features_x, n_features_y)
-            Weighted Y counts aggregated by X feature index ``col``.
-            Row ``c`` stores the weighted target totals for conditioning feature ``c``:
-            ``sum_{k: col_k=c} weight_k * Y[row_k, :]``.
+            Weighted Y counts aggregated by X feature index.
+            Each row stores the total Y counts contributed by all nonzero X entries
+            for one X feature.
         n_sums : np.ndarray of shape (n_features_x,)
-            Weighted sample totals aggregated by X feature index ``col``.
-            Entry ``c`` stores the weighted total target count paired with
-            conditioning feature ``c``:
-            ``sum_{k: col_k=c} weight_k * N[row_k]``.
+            Weighted Y sample totals aggregated by X feature index.
+            Each entry stores the total Y count paired with one X feature.
         logits : np.ndarray of shape (n_features_x, n_features_y - 1)
             Reusable workspace for non-reference logits.
         resids : np.ndarray of shape (n_features_x, n_features_y - 1)
-            Reusable workspace for grouped residuals and non-reference
-            probabilities.
+            Reusable workspace for grouped residuals and non-reference probabilities.
         row_max : np.ndarray of shape (n_features_x,)
             Reusable workspace for row-wise maxima.
         log_norm : np.ndarray of shape (n_features_x,)
@@ -1114,13 +1111,24 @@ class _MMvecModel:
 
         Notes
         -----
-        This algorithm has been optimized to avoid using the reference column in the
-        augmented matrices.
-        It computes logits directly as x_embed @ y_embed + x_bias + y_bias,
-        and performs stable logsumexp without materializing the reference column.
-        The sufficient statistics
-        are pre-aggregated by X feature index to enable vectorized computation of the
-        loss and gradients.
+        This routine evaluates the full negative log-posterior for the L-BFGS solver.
+
+        It first groups the data by X feature using two sufficient statistics:
+
+        - y_sums: grouped Y counts
+        - n_sums: grouped Y totals
+
+        With those grouped arrays in hand, the dense part of the objective is computed
+        from the non-reference logits:
+
+           x_embed @ y_embed + x_bias + y_bias
+
+        without materializing the reference Y column. The data term is then:
+
+            sum(n_sums * log_norm) - sum(y_sums[:, 1:] * logits)
+
+        followed by the Gaussian prior terms for the X-side and Y-side parameters.
+        The same grouped quantities are reused to form the gradient.
 
         """
         # Symbols used in comments below:
@@ -1156,8 +1164,8 @@ class _MMvecModel:
 
         # Compute the grouped negative log-likelihood (part of the loss).
         # For each X feature, we combine:
-        # - the weighted observed target totals (`y_sums`)
-        # - the weighted sample totals (`n_sums`)
+        # - the weighted observed Y totals (`y_sums`)
+        # - the weighted Y sample totals (`n_sums`)
         # - the corresponding log-normalizer (`log_norm`)
         # In compact form:
         #   loss_data = sum(n_sums * log_norm) - sum(y_sums[:, 1:] * logits)
@@ -1251,32 +1259,35 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     # But we should consider float32 support in the future.
     dtype = np.result_type(Y.dtype, data.dtype, np.float64)
 
-    # Precompute feature-grouped sufficient statistics reused by every L-BFGS
-    # objective/gradient evaluation.
-    # y_sums[c, :] stores the weighted target totals associated with X feature c.
-    # This is the sufficient statistic S_c = sum_k weight_k * Y[row_k, :].
+    # Precompute X feature-grouped sufficient statistics reused by every iteration.
+    # y_sums groups Y counts by X feature. Each row is the total Y abundance associated
+    # with one X feature across all nonzero X entries.
     prods_ = data[:, None] * Y[rows, :]  # (nnz, d2)
     y_sums = np.empty((d1, d2), dtype=dtype)
     for j in range(d2):
         y_sums[:, j] = np.bincount(cols, weights=prods_[:, j], minlength=d1)
 
-    # n_sums[c] stores the weighted total target count paired with X feature c.
-    # This is the sufficient statistic T_c = sum_k weight_k * N[row_k].
+    # n_sums stores the corresponding grouped Y totals. It is the row sum partner to
+    # y_sums and tells us how much total Y abundance is attached to each X feature.
     sums_ = Y.sum(axis=1)[rows]  # (nnz,)
     n_sums = np.bincount(cols, weights=data * sums_, minlength=d1).astype(
         dtype, copy=False
     )
 
-    # Reusable workspaces for each objective/gradient evaluation.
-    # logits: non-reference logits for each X feature.
+    # Reusable array workspaces for each iteration.
+    # Logits for each X feature, excluding the reference (first column, all zeros).
     logits = np.empty((d1, d2 - 1), dtype=dtype)
-    # resids: exp-shifted logits reused later as grouped residuals.
+
+    # Exponential-shifted logits reused later as grouped residuals.
     resids = np.empty((d1, d2 - 1), dtype=dtype)
-    # row_max: row-wise max over non-reference logits for stable normalization.
+
+    # Row-wise maximum over logits for numerically stable normalization.
     row_max = np.empty(d1, dtype=dtype)
-    # log_norm: row-wise log normalizer, i.e., log(1 + sum(exp(logits))).
+
+    # Row-wise log normalizer, i.e., log(1 + sum(exp(logits))).
     log_norm = np.empty(d1, dtype=dtype)
-    # row_scale: temporary row-wise scaling factors derived from row_max/log_norm.
+
+    # Row-wise scaling factors derived from row_max/log_norm.
     row_scale = np.empty(d1, dtype=dtype)
 
     losses = []
@@ -1286,13 +1297,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(
-            y_sums,
-            n_sums,
-            logits,
-            resids,
-            row_max,
-            log_norm,
-            row_scale,
+            y_sums, n_sums, logits, resids, row_max, log_norm, row_scale
         )
         it += 1
         losses.append(loss)
