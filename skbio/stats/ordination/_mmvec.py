@@ -24,9 +24,6 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
-from scipy.special import logsumexp
-from scipy.sparse import coo_array
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
@@ -580,6 +577,8 @@ class MMvec(SkbioObject):
         MMvec
             Fitted estimator.
         """
+        from scipy.sparse import coo_array
+
         # Parse tabular inputs
         X_arr, _, x_feature_ids = _ingest_table(X)
         y_arr, _, y_feature_ids = _ingest_table(y)
@@ -868,54 +867,11 @@ class _MMvecModel:
         self._x_prior_scale_sq = x_prior_scale**2
         self._y_prior_scale_sq = y_prior_scale**2
 
-        # Cache constant columns used to build augmented matrices.
-        self._ones_x = np.ones((n_features_x, 1))
-        self._ones_y = np.ones((1, n_features_y - 1))
-
         # Initialize parameters with random normal
         self.x_embed = rng.standard_normal((n_features_x, n_components))
         self.x_bias = rng.standard_normal((n_features_x, 1))
         self.y_embed = rng.standard_normal((n_components, n_features_y - 1))
         self.y_bias = rng.standard_normal((1, n_features_y - 1))
-
-    def build_aug_matrices(self):
-        """Build augmented X-side and Y-side matrices for forward pass.
-
-        Returns
-        -------
-        x_aug : np.ndarray of shape (n_features_x, n_components + 2)
-            [1 | x_bias | x_embed]
-        y_aug : np.ndarray of shape (n_components + 2, n_features_y - 1)
-            [y_bias; 1; y_embed]
-
-        Notes
-        -----
-        This method is used by non-critical paths (forward pass, rank computation).
-        The L-BFGS optimization path avoids this allocation by computing
-        logits directly as x_embed @ y_embed + x_bias + y_bias.
-        """
-        x_aug = np.hstack([self._ones_x, self.x_bias, self.x_embed])
-        y_aug = np.vstack([self.y_bias, self._ones_y, self.y_embed])
-        return x_aug, y_aug
-
-    def forward(self, X_idx):
-        """Compute logits for given X indices.
-
-        Parameters
-        ----------
-        X_idx : np.ndarray of shape (batch_size,)
-            Indices of X samples in the batch.
-
-        Returns
-        -------
-        logits : np.ndarray of shape (batch_size, n_features_y)
-            Logits with first column (reference) set to 0.
-        """
-        x_aug, y_aug = self.build_aug_matrices()
-        x_batch = x_aug[X_idx, :]  # (B, p+2)
-        logits_nonref = x_batch @ y_aug  # (B, d2-1)
-        logits = np.hstack([np.zeros((len(X_idx), 1)), logits_nonref])
-        return logits
 
     def loss_and_gradients(self, X_coo, Y, size, norm, weights, rng):
         """Compute loss and gradients for a mini-batch.
@@ -947,29 +903,45 @@ class _MMvecModel:
         sample_ids = X_coo.row[batch_idx]
         X_ids = X_coo.col[batch_idx]
 
-        # Forward pass
+        # Build the non-reference logits directly for the sampled X features.
         Y_batch = Y[sample_ids, :]  # (B, d2)
-        logits = self.forward(X_ids)  # (B, d2)
+        x_embed_batch = self.x_embed[X_ids, :]  # (B, p)
+        x_bias_batch = self.x_bias[X_ids, :]  # (B, 1)
+        logits_nonref = x_embed_batch @ self.y_embed  # (B, d2-1)
+        logits_nonref += x_bias_batch
+        logits_nonref += self.y_bias
 
-        # Compute likelihood and gradient w.r.t. logits
-        loglik, delta_full = _multinomial_loglik_and_grad(logits, Y_batch)
-        delta = delta_full[:, 1:]  # Exclude reference category (B, d2-1)
+        # Stable log(1 + sum(exp(logits_nonref))) with the reference Y category
+        # kept implicit as a zero logit.
+        row_max = np.max(logits_nonref, axis=1, keepdims=True)
+        np.maximum(row_max, 0.0, out=row_max)
+        exp_shifted = np.exp(logits_nonref - row_max)
+        log_norm = row_max + np.log(
+            np.exp(-row_max) + exp_shifted.sum(axis=1, keepdims=True)
+        )
 
-        # Build augmented matrices
-        x_aug, y_aug = self.build_aug_matrices()
-        x_batch = x_aug[X_ids, :]  # (B, p+2)
+        # Non-reference probabilities and grouped residuals for the sampled batch.
+        probs_nonref = exp_shifted / np.exp(log_norm - row_max)
+        total_counts = np.sum(Y_batch, axis=1, keepdims=True)
+        delta = Y_batch[:, 1:] - total_counts * probs_nonref
+
+        # The reference category has logit 0, so only non-reference logits appear in
+        # the inner-product term.
+        loglik = np.sum(Y_batch[:, 1:] * logits_nonref) - np.sum(
+            total_counts * log_norm
+        )
 
         # Gradient w.r.t. Y-side embedding parameters
-        # dy_embed = -norm * (x_batch[:, 2:].T @ delta) + y_embed / sigma^2
-        dy_embed = -norm * (x_batch[:, 2:].T @ delta)
+        dy_embed = -norm * (x_embed_batch.T @ delta)
         dy_embed += (self.y_embed - self.y_prior_mean) / (self.y_prior_scale**2)
 
-        # dy_bias = -norm * delta.sum(axis=0, keepdims=True) + y_bias / sigma^2
+        # Y-side bias gradient is the row-wise sum over non-reference residuals.
         dy_bias = -norm * delta.sum(axis=0, keepdims=True)
         dy_bias += (self.y_bias - self.y_prior_mean) / (self.y_prior_scale**2)
 
-        # Gradient w.r.t. X-side parameters (scatter-add)
-        dx_batch = delta @ y_aug.T  # (B, p+2)
+        # Project residuals back through the Y embeddings for the X-side gradients.
+        dx_embed_batch = delta @ self.y_embed.T  # (B, p)
+        dx_bias_batch = delta.sum(axis=1)  # (B,)
 
         dx_embed = np.zeros_like(self.x_embed)
         dx_bias = np.zeros_like(self.x_bias)
@@ -977,8 +949,8 @@ class _MMvecModel:
         # Scatter-add gradients
         for b in range(size):
             m = X_ids[b]
-            dx_embed[m, :] -= norm * dx_batch[b, 2:]
-            dx_bias[m, 0] -= norm * dx_batch[b, 1]
+            dx_embed[m, :] -= norm * dx_embed_batch[b, :]
+            dx_bias[m, 0] -= norm * dx_bias_batch[b]
 
         # Add prior gradients
         dx_embed += (self.x_embed - self.x_prior_mean) / (self.x_prior_scale**2)
@@ -1255,6 +1227,8 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         Loss per iteration.
 
     """
+    from scipy.optimize import minimize
+
     rows, cols, data = X_coo.row, X_coo.col, X_coo.data
     d1 = model.n_features_x
     d2 = model.n_features_y
@@ -1528,44 +1502,6 @@ def _adam_update(param, grad, m, v, t, lr, beta_1, beta_2, eps=1e-8):
     param = param - lr * m_hat / (np.sqrt(v_hat) + eps)
 
     return param, m, v
-
-
-def _multinomial_loglik_and_grad(logits, y):
-    """Compute multinomial log-likelihood and gradient w.r.t. logits.
-
-    Parameters
-    ----------
-    logits : np.ndarray of shape (batch_size, n_categories)
-        Log-odds for each category.
-    y : np.ndarray of shape (batch_size, n_categories)
-        Observed counts for each category.
-
-    Returns
-    -------
-    loglik : float
-        Sum of log-likelihoods across batch.
-    grad : np.ndarray of shape (batch_size, n_categories)
-        Gradient of log-likelihood w.r.t. logits.
-
-    Notes
-    -----
-    The log-likelihood (ignoring multinomial coefficient) is:
-        sum_j y_j * log(pi_j) = sum_j y_j * (eta_j - logsumexp(eta))
-
-    The gradient is:
-        d/d eta_j = y_j - N * pi_j
-
-    where N = sum(y) and pi = softmax(eta).
-    """
-    N = np.sum(y, axis=1, keepdims=True)
-    log_norm = logsumexp(logits, axis=1, keepdims=True)
-    loglik = np.sum(y * logits) - np.sum(N * log_norm)
-
-    # Gradient: y - N * softmax(logits)
-    probs = np.exp(logits - log_norm)
-    grad = y - N * probs
-
-    return loglik, grad
 
 
 def random_multimodal(

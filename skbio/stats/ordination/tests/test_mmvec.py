@@ -24,9 +24,7 @@ from scipy.sparse import coo_array
 from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvec, MMvecResult
-from skbio.stats.ordination._mmvec import (
-    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad
-)
+from skbio.stats.ordination._mmvec import random_multimodal, _MMvecModel
 
 
 class TestRandomMultimodal(unittest.TestCase):
@@ -229,34 +227,6 @@ class TestMMvecRecovery(unittest.TestCase):
 
 class TestMMvecGradients(unittest.TestCase):
     """Test that analytical gradients match numerical gradients."""
-
-    def test_multinomial_gradient(self):
-        """Verify multinomial softmax gradient is correct."""
-        # Small test case
-        logits = np.array([[0.0, 1.0, 2.0], [0.0, -1.0, 1.0]])
-        y = np.array([[5.0, 10.0, 15.0], [20.0, 5.0, 5.0]])
-
-        # Get analytical gradient
-        _, grad_analytical = _multinomial_loglik_and_grad(logits, y)
-
-        # Compute numerical gradient
-        eps = 1e-5
-        grad_numerical = np.zeros_like(logits)
-        for i in range(logits.shape[0]):
-            for j in range(logits.shape[1]):
-                logits_plus = logits.copy()
-                logits_plus[i, j] += eps
-                logits_minus = logits.copy()
-                logits_minus[i, j] -= eps
-
-                loss_plus, _ = _multinomial_loglik_and_grad(logits_plus, y)
-                loss_minus, _ = _multinomial_loglik_and_grad(logits_minus, y)
-
-                grad_numerical[i, j] = (loss_plus - loss_minus) / (2 * eps)
-
-        npt.assert_allclose(
-            grad_analytical, grad_numerical, rtol=1e-4, atol=1e-6
-        )
 
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
