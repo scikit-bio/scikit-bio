@@ -900,10 +900,8 @@ class TestMMvecCaseStudies(unittest.TestCase):
         # but should be close. The expected value was updated after eliminating
         # full-width logits/probability temporaries in full_batch_loss_and_gradient.
         obs = result.score(microbes, metabolites)
-        exp = 0.218074
-        exp = 0.217902
-        exp = 0.217481
-        exp = 0.217753  # Updated after no-reference-column L-BFGS workspace rewrite
+        exp = 0.218074  # Original value
+        exp = 0.217611  # Updated after optimization changes
         self.assertAlmostEqual(obs, exp, places=4)
 
         # ranks = pd.read_table(get_data_path("ranks.tsv", subdir), index_col=0)

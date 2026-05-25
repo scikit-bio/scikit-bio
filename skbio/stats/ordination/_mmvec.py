@@ -1061,10 +1061,10 @@ class _MMvecModel:
 
     def full_batch_loss_and_gradient(
         self,
-        Y_weighted_by_col,
-        N_weighted_by_col,
-        logits_core,
-        grouped_delta,
+        y_sums,
+        n_sums,
+        logits,
+        resids,
         row_max,
         log_norm,
         row_scale,
@@ -1073,15 +1073,18 @@ class _MMvecModel:
 
         Parameters
         ----------
-        Y_weighted_by_col : np.ndarray of shape (n_features_x, n_features_y)
-            Weighted Y counts aggregated by X feature index ``col``:
+        y_sums : np.ndarray of shape (n_features_x, n_features_y)
+            Weighted Y counts aggregated by X feature index ``col``.
+            Row ``c`` stores the weighted target totals for conditioning feature ``c``:
             ``sum_{k: col_k=c} weight_k * Y[row_k, :]``.
-        N_weighted_by_col : np.ndarray of shape (n_features_x,)
-            Weighted sample totals aggregated by X feature index ``col``:
+        n_sums : np.ndarray of shape (n_features_x,)
+            Weighted sample totals aggregated by X feature index ``col``.
+            Entry ``c`` stores the weighted total target count paired with
+            conditioning feature ``c``:
             ``sum_{k: col_k=c} weight_k * N[row_k]``.
-        logits_core : np.ndarray of shape (n_features_x, n_features_y - 1)
+        logits : np.ndarray of shape (n_features_x, n_features_y - 1)
             Reusable workspace for non-reference logits.
-        grouped_delta : np.ndarray of shape (n_features_x, n_features_y - 1)
+        resids : np.ndarray of shape (n_features_x, n_features_y - 1)
             Reusable workspace for grouped residuals and non-reference
             probabilities.
         row_max : np.ndarray of shape (n_features_x,)
@@ -1097,58 +1100,88 @@ class _MMvecModel:
             Negative log-posterior.
         grad : np.ndarray
             Flattened gradient vector.
+
+        Notes
+        -----
+        This algorithm has been optimized to avoid using the reference column in the
+        augmented matrices.
+        It computes logits directly as U @ V + b_U + b_V,
+        and performs stable logsumexp without materializing the reference column.
+        The sufficient statistics
+        are pre-aggregated by X feature index to enable vectorized computation of the
+        loss and gradients.
+
         """
-        d1 = self.n_features_x
+        # Symbols used in comments below:
+        # d1 : number of X features
+        # d2 : number of Y features
+        # p : number of latent dimensions
+        # nnz : number of non-zero entries in X
 
-        # Compute logits into a reusable narrow workspace.
-        np.matmul(self.U, self.V, out=logits_core)
-        logits_core += self.b_U
-        logits_core += self.b_V
+        # Compute the non-reference logits directly:
+        #   logits = U @ V + b_U + b_V
+        # This is algebraically the same as the old augmented-matrix product, but
+        # avoids the reference column (1).
+        np.matmul(self.U, self.V, out=logits)
+        logits += self.b_U
+        logits += self.b_V
 
-        # Stable logsumexp over [0, logits_core] without allocating the reference
-        # column. grouped_delta temporarily holds exp(logits_core - row_max).
-        np.max(logits_core, axis=1, out=row_max)
+        # Stable softmax for all X features (rows).
+        # Compute log_norm = log(1 + \sum exp(logits)) in a numerically stable way that
+        # resembles SciPy's logsumexp, but without allocating the reference column (0):
+        #   log_norm = m + log(exp(-m) + \sum exp(logits - m))
+        # In which m = max(0, max(logits))
+        # And exp(logits - m) is stored in resids for reuse.
+        np.max(logits, axis=1, out=row_max)
         np.maximum(row_max, 0.0, out=row_max)
-        np.subtract(logits_core, row_max[:, None], out=grouped_delta)
-        np.exp(grouped_delta, out=grouped_delta)
-        np.sum(grouped_delta, axis=1, out=log_norm)
+        np.subtract(logits, row_max[:, None], out=resids)
+        np.exp(resids, out=resids)
+        np.sum(resids, axis=1, out=log_norm)
         np.negative(row_max, out=row_scale)
         np.exp(row_scale, out=row_scale)
         log_norm += row_scale
         np.log(log_norm, out=log_norm)
         log_norm += row_max
 
-        # === Vectorized loss computation using feature-grouped sufficient stats ===
-        # For each X feature c:
-        #   S_c = sum_k w_k * Y[row_k,:],   T_c = sum_k w_k * N[row_k]
-        # Then: sum_k w_k * (Y_k dot eta_c - N_k logZ_c) = S_c dot eta_c - T_c logZ_c
-        loss = -(
-            np.einsum("ij,ij->", Y_weighted_by_col[:, 1:], logits_core)
-            - np.dot(N_weighted_by_col, log_norm)
-        )
+        # Compute the grouped negative log-likelihood (part of the loss).
+        # For each X feature, we combine:
+        # - the weighted observed target totals (`y_sums`)
+        # - the weighted sample totals (`n_sums`)
+        # - the corresponding log-normalizer (`log_norm`)
+        # In compact form:
+        #   loss_data = sum(n_sums * log_norm) - sum(y_sums[:, 1:] * logits)
+        # The reference category has logit 0, so only non-reference logits appear
+        # in the inner-product term.
+        loss = np.dot(n_sums, log_norm) - np.einsum("ij,ij->", y_sums[:, 1:], logits)
 
-        # === Vectorized gradient computation on grouped residuals ===
-        # G_c = S_c[1:] - T_c * pi_c[1:]
+        # Recover non-reference probabilities from the shifted exponentials.
+        # At this point resids holds exp(logits - row_max). Divide by
+        # exp(log_norm - row_max) to recover the non-reference probabilities.
         np.subtract(log_norm, row_max, out=row_scale)
         np.exp(row_scale, out=row_scale)
-        grouped_delta /= row_scale[:, None]
-        grouped_delta *= N_weighted_by_col[:, None]
-        grouped_delta *= -1.0
-        grouped_delta += Y_weighted_by_col[:, 1:]
+        resids /= row_scale[:, None]
 
-        # dV: sum_c outer(U[c], G_c) with negative sign
-        dV = -self.U.T @ grouped_delta  # (p, d2-1)
+        # Turn probabilities into grouped residuals: observed weighted totals
+        # minus expected weighted totals for each non-reference category.
+        resids *= n_sums[:, None]
+        resids *= -1.0
+        resids += y_sums[:, 1:]
 
-        # db_V: sum of grouped residuals with negative sign
-        db_V = -grouped_delta.sum(axis=0, keepdims=True)  # (1, d2-1)
+        # Gradient for V: sum over X features of outer(embedding, residual).
+        dV = -self.U.T @ resids  # (p, d2-1)
 
-        # dU: each row c gets -(G_c @ V.T)
-        dU = -(grouped_delta @ self.V.T)  # (d1, p)
+        # Gradient for Y-side biases: sum residuals across X features.
+        db_V = -resids.sum(axis=0, keepdims=True)  # (1, d2-1)
 
-        # db_U: each row c gets -sum_j G_cj
-        db_U = -grouped_delta.sum(axis=1, keepdims=True)  # (d1, 1)
+        # Gradient for U: project residuals back through V.
+        dU = -(resids @ self.V.T)  # (d1, p)
 
-        # === Add prior terms (L2 regularization) ===
+        # Gradient for X-side biases: sum residuals across Y categories.
+        db_U = -resids.sum(axis=1, keepdims=True)  # (d1, 1)
+
+        # Add prior terms (L2 regularization)
+        # These are exactly the Gaussian-prior contributions to the negative
+        # log-posterior and its gradient.
         u_diff = self.U - self.u_prior_mean
         b_u_diff = self.b_U - self.u_prior_mean
         v_diff = self.V - self.v_prior_mean
@@ -1200,32 +1233,40 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
     """
     rows, cols, data = X_coo.row, X_coo.col, X_coo.data
+    d1 = model.n_features_x
+    d2 = model.n_features_y
+
+    # Infer the data type for computation. Currently it promotes to at least float64.
+    # But we should consider float32 support in the future.
+    dtype = np.result_type(Y.dtype, data.dtype, np.float64)
 
     # Precompute feature-grouped sufficient statistics reused by every L-BFGS
     # objective/gradient evaluation.
-    # Y_weighted_by_col[c, :] = sum_k weight_k * Y[row_k, :] for entries with col_k=c
-    d1 = model.n_features_x
-    d2 = model.n_features_y
-    agg_dtype = np.result_type(Y.dtype, data.dtype, np.float64)
-    Y_rows = Y[rows, :]
-    Y_weighted_rows = data[:, None] * Y_rows
-    Y_weighted_by_col = np.empty((d1, d2), dtype=agg_dtype)
+    # y_sums[c, :] stores the weighted target totals associated with X feature c.
+    # This is the sufficient statistic S_c = sum_k weight_k * Y[row_k, :].
+    prods_ = data[:, None] * Y[rows, :]  # (nnz, d2)
+    y_sums = np.empty((d1, d2), dtype=dtype)
     for j in range(d2):
-        Y_weighted_by_col[:, j] = np.bincount(
-            cols, weights=Y_weighted_rows[:, j], minlength=d1
-        )
+        y_sums[:, j] = np.bincount(cols, weights=prods_[:, j], minlength=d1)
 
-    # N_weighted_by_col[c] = sum_k weight_k * N[row_k] for entries with col_k=c
-    N = Y.sum(axis=1)
-    N_weighted_by_col = np.bincount(cols, weights=data * N[rows], minlength=d1).astype(
-        agg_dtype, copy=False
+    # n_sums[c] stores the weighted total target count paired with X feature c.
+    # This is the sufficient statistic T_c = sum_k weight_k * N[row_k].
+    sums_ = Y.sum(axis=1)[rows]  # (nnz,)
+    n_sums = np.bincount(cols, weights=data * sums_, minlength=d1).astype(
+        dtype, copy=False
     )
 
-    logits_core = np.empty((d1, d2 - 1), dtype=agg_dtype)
-    grouped_delta = np.empty((d1, d2 - 1), dtype=agg_dtype)
-    row_max = np.empty(d1, dtype=agg_dtype)
-    log_norm = np.empty(d1, dtype=agg_dtype)
-    row_scale = np.empty(d1, dtype=agg_dtype)
+    # Reusable workspaces for each objective/gradient evaluation.
+    # logits: non-reference logits for each X feature.
+    logits = np.empty((d1, d2 - 1), dtype=dtype)
+    # resids: exp-shifted logits reused later as grouped residuals.
+    resids = np.empty((d1, d2 - 1), dtype=dtype)
+    # row_max: row-wise max over non-reference logits for stable normalization.
+    row_max = np.empty(d1, dtype=dtype)
+    # log_norm: row-wise log normalizer, i.e., log(1 + sum(exp(logits))).
+    log_norm = np.empty(d1, dtype=dtype)
+    # row_scale: temporary row-wise scaling factors derived from row_max/log_norm.
+    row_scale = np.empty(d1, dtype=dtype)
 
     losses = []
     it = 0
@@ -1234,10 +1275,10 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(
-            Y_weighted_by_col,
-            N_weighted_by_col,
-            logits_core,
-            grouped_delta,
+            y_sums,
+            n_sums,
+            logits,
+            resids,
             row_max,
             log_norm,
             row_scale,
