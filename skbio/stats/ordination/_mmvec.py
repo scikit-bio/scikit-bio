@@ -1025,11 +1025,15 @@ class _MMvecModel:
         -------
         ranks : np.ndarray of shape (n_features_x, n_features_y)
             Row-centered log conditional probabilities.
+
         """
-        # Compute logits directly: [0 | x_embed @ y_embed + x_bias + y_bias]
-        logits_nonref = self.x_embed @ self.y_embed + self.x_bias + self.y_bias
-        logits = np.hstack([np.zeros((self.n_features_x, 1)), logits_nonref])
-        ranks = logits - np.mean(logits, axis=1, keepdims=True)  # center by row
+        ranks = np.empty((self.n_features_x, self.n_features_y))
+        ranks[:, 0] = 0.0
+        ranks_nonref = ranks[:, 1:]
+        np.matmul(self.x_embed, self.y_embed, out=ranks_nonref)
+        ranks_nonref += self.x_bias
+        ranks_nonref += self.y_bias
+        ranks -= np.mean(ranks, axis=1, keepdims=True)
         return ranks
 
     def pack_params(self):
@@ -1121,7 +1125,7 @@ class _MMvecModel:
         With those grouped arrays in hand, the dense part of the objective is computed
         from the non-reference logits:
 
-           x_embed @ y_embed + x_bias + y_bias
+            x_embed @ y_embed + x_bias + y_bias
 
         without materializing the reference Y column. The data term is then:
 
