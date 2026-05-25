@@ -266,6 +266,7 @@ class TestMMvecGradients(unittest.TestCase):
         _, grads = model.loss_and_gradients(
             X_coo, Y, size, norm, weights, np.random.default_rng(seed)
         )
+        grads = dict(zip(["x_embed", "x_bias", "y_embed", "y_bias"], grads))
 
         # Verify each parameter numerically
         # Use same seed for each call to get consistent batch

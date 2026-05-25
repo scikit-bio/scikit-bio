@@ -895,8 +895,9 @@ class _MMvecModel:
         -------
         loss : float
             Negative log posterior.
-        grads : dict
-            Gradients for x_embed, x_bias, y_embed, y_bias.
+        grads : tuple of np.ndarray
+            Gradients in the fixed order
+            ``(dx_embed, dx_bias, dy_embed, dy_bias)``.
         """
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
@@ -946,11 +947,9 @@ class _MMvecModel:
         dx_embed = np.zeros_like(self.x_embed)
         dx_bias = np.zeros_like(self.x_bias)
 
-        # Scatter-add gradients
-        for b in range(size):
-            m = X_ids[b]
-            dx_embed[m, :] -= norm * dx_embed_batch[b, :]
-            dx_bias[m, 0] -= norm * dx_bias_batch[b]
+        # Scatter-add the sampled X-side contributions back to full parameter arrays.
+        np.add.at(dx_embed, X_ids, -norm * dx_embed_batch)
+        np.add.at(dx_bias[:, 0], X_ids, -norm * dx_bias_batch)
 
         # Add prior gradients
         dx_embed += (self.x_embed - self.x_prior_mean) / (self.x_prior_scale**2)
@@ -981,12 +980,7 @@ class _MMvecModel:
 
         loss = -norm * loglik + prior_loss
 
-        grads = {
-            "x_embed": dx_embed,
-            "x_bias": dx_bias,
-            "y_embed": dy_embed,
-            "y_bias": dy_bias,
-        }
+        grads = (dx_embed, dx_bias, dy_embed, dy_bias)
 
         return loss, grads
 
@@ -1364,24 +1358,14 @@ def _train_adam(
     convergence_data = []
 
     # Initialize Adam moments
-    moments = {
-        "x_embed": (
-            np.zeros_like(model.x_embed),
-            np.zeros_like(model.x_embed),
-        ),
-        "x_bias": (
-            np.zeros_like(model.x_bias),
-            np.zeros_like(model.x_bias),
-        ),
-        "y_embed": (
-            np.zeros_like(model.y_embed),
-            np.zeros_like(model.y_embed),
-        ),
-        "y_bias": (
-            np.zeros_like(model.y_bias),
-            np.zeros_like(model.y_bias),
-        ),
-    }
+    x_embed_m = np.zeros_like(model.x_embed)
+    x_embed_v = np.zeros_like(model.x_embed)
+    x_bias_m = np.zeros_like(model.x_bias)
+    x_bias_v = np.zeros_like(model.x_bias)
+    y_embed_m = np.zeros_like(model.y_embed)
+    y_embed_v = np.zeros_like(model.y_embed)
+    y_bias_m = np.zeros_like(model.y_bias)
+    y_bias_v = np.zeros_like(model.y_bias)
 
     # Compute number of iterations per epoch
     data = X_coo.data
@@ -1408,24 +1392,56 @@ def _train_adam(
             )
 
             # Gradient clipping
-            grads = _clip_gradients(grads, clipnorm)
+            dx_embed, dx_bias, dy_embed, dy_bias = _clip_gradients(grads, clipnorm)
 
             # Adam updates
-            for param_name in ["x_embed", "x_bias", "y_embed", "y_bias"]:
-                param = getattr(model, param_name)
-                m, v = moments[param_name]
-                param, m, v = _adam_update(
-                    param,
-                    grads[param_name],
-                    m,
-                    v,
-                    it,
-                    learning_rate,
-                    beta_1,
-                    beta_2,
-                )
-                setattr(model, param_name, param)
-                moments[param_name] = (m, v)
+            bias_correction_1 = 1 - beta_1**it
+            bias_correction_2 = 1 - beta_2**it
+
+            model.x_embed, x_embed_m, x_embed_v = _adam_update(
+                model.x_embed,
+                dx_embed,
+                x_embed_m,
+                x_embed_v,
+                learning_rate,
+                beta_1,
+                beta_2,
+                bias_correction_1,
+                bias_correction_2,
+            )
+            model.x_bias, x_bias_m, x_bias_v = _adam_update(
+                model.x_bias,
+                dx_bias,
+                x_bias_m,
+                x_bias_v,
+                learning_rate,
+                beta_1,
+                beta_2,
+                bias_correction_1,
+                bias_correction_2,
+            )
+            model.y_embed, y_embed_m, y_embed_v = _adam_update(
+                model.y_embed,
+                dy_embed,
+                y_embed_m,
+                y_embed_v,
+                learning_rate,
+                beta_1,
+                beta_2,
+                bias_correction_1,
+                bias_correction_2,
+            )
+            model.y_bias, y_bias_m, y_bias_v = _adam_update(
+                model.y_bias,
+                dy_bias,
+                y_bias_m,
+                y_bias_v,
+                learning_rate,
+                beta_1,
+                beta_2,
+                bias_correction_1,
+                bias_correction_2,
+            )
 
             convergence_data.append(loss)
 
@@ -1440,26 +1456,38 @@ def _clip_gradients(grads, clipnorm):
 
     Parameters
     ----------
-    grads : dict
-        Dictionary of gradients.
+    grads : tuple of np.ndarray
+        Gradients in the fixed order
+        ``(dx_embed, dx_bias, dy_embed, dy_bias)``.
     clipnorm : float
         Maximum gradient norm.
 
     Returns
     -------
-    grads : dict
-        Clipped gradients.
+    grads : tuple of np.ndarray
+        Clipped gradients in the same fixed order.
     """
-    global_norm = np.sqrt(sum(np.sum(g**2) for g in grads.values()))
+    global_norm = np.sqrt(sum(np.sum(g**2) for g in grads))
 
     if global_norm > clipnorm:
         scale = clipnorm / global_norm
-        grads = {k: v * scale for k, v in grads.items()}
+        grads = tuple(g * scale for g in grads)
 
     return grads
 
 
-def _adam_update(param, grad, m, v, t, lr, beta_1, beta_2, eps=1e-8):
+def _adam_update(
+    param,
+    grad,
+    m,
+    v,
+    lr,
+    beta_1,
+    beta_2,
+    bias_correction_1,
+    bias_correction_2,
+    eps=1e-8,
+):
     """Perform single Adam update step.
 
     Parameters
@@ -1472,14 +1500,16 @@ def _adam_update(param, grad, m, v, t, lr, beta_1, beta_2, eps=1e-8):
         First moment estimate.
     v : np.ndarray
         Second moment estimate.
-    t : int
-        Time step (1-indexed).
     lr : float
         Learning rate.
     beta_1 : float
         Exponential decay rate for first moment.
     beta_2 : float
         Exponential decay rate for second moment.
+    bias_correction_1 : float
+        First-moment bias-correction denominator, `1 - beta_1**t`.
+    bias_correction_2 : float
+        Second-moment bias-correction denominator, `1 - beta_2**t`.
     eps : float
         Small constant for numerical stability.
 
@@ -1496,8 +1526,8 @@ def _adam_update(param, grad, m, v, t, lr, beta_1, beta_2, eps=1e-8):
     v = beta_2 * v + (1 - beta_2) * grad**2
 
     # Bias correction
-    m_hat = m / (1 - beta_1**t)
-    v_hat = v / (1 - beta_2**t)
+    m_hat = m / bias_correction_1
+    v_hat = v / bias_correction_2
 
     param = param - lr * m_hat / (np.sqrt(v_hat) + eps)
 
