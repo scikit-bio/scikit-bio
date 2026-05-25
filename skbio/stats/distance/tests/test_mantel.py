@@ -90,6 +90,7 @@ class InternalMantelTests(MantelTestData):
             self.assertAlmostEqual(permuted_stats[i], exp_res)
 
     def _perm_pearsonr3_inputs(self):
+        # data pre-computed using released code
         x_data = np.asarray([[0., 1., 3.],
                              [1., 0., 2.],
                              [3., 2., 0.]])
@@ -104,6 +105,7 @@ class InternalMantelTests(MantelTestData):
         return x_data, perm_order, xmean, normxm, ym_normalized
 
     def _perm_pearsonr6_inputs(self):
+        # data pre-computed using released code
         x_data = np.asarray([[0., 0.62381864, 0.75001543,
                               0.58520119, 0.72902358, 0.65213559],
                              [0.62381864, 0., 0.97488122,
