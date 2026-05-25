@@ -621,10 +621,10 @@ class MMvec(SkbioObject):
             n_features_x=n_features_x,
             n_features_y=n_features_y,
             n_components=self.n_components,
-            u_prior_mean=self.x_prior_mean,
-            u_prior_scale=self.x_prior_scale,
-            v_prior_mean=self.y_prior_mean,
-            v_prior_scale=self.y_prior_scale,
+            x_prior_mean=self.x_prior_mean,
+            x_prior_scale=self.x_prior_scale,
+            y_prior_mean=self.y_prior_mean,
+            y_prior_scale=self.y_prior_scale,
             rng=rng,
         )
 
@@ -651,11 +651,11 @@ class MMvec(SkbioObject):
             )
 
         pc_cols = [f"PC{i + 1}" for i in range(model.n_components)] + ["bias"]
-        x_emb = np.hstack([model.U, model.b_U])
+        x_emb = np.hstack([model.x_embed, model.x_bias])
         y_emb = np.vstack(
             [
                 np.zeros((1, model.n_components + 1)),
-                np.hstack([model.V.T, model.b_V.T]),
+                np.hstack([model.y_embed.T, model.y_bias.T]),
             ]
         )
         ranks = model.calc_ranks()
@@ -829,10 +829,10 @@ class _MMvecModel:
         n_features_x,
         n_features_y,
         n_components,
-        u_prior_mean,
-        u_prior_scale,
-        v_prior_mean,
-        v_prior_scale,
+        x_prior_mean,
+        x_prior_scale,
+        y_prior_mean,
+        y_prior_scale,
         rng,
     ):
         """Initialize MMvec model parameters.
@@ -845,14 +845,14 @@ class _MMvecModel:
             Number of features in the conditioned modality (Y).
         n_components : int
             Latent dimensionality (p).
-        u_prior_mean : float
-            Mean of Gaussian prior on U.
-        u_prior_scale : float
-            Scale of Gaussian prior on U.
-        v_prior_mean : float
-            Mean of Gaussian prior on V.
-        v_prior_scale : float
-            Scale of Gaussian prior on V.
+        x_prior_mean : float
+            Mean of Gaussian prior on X-side embeddings and biases.
+        x_prior_scale : float
+            Scale of Gaussian prior on X-side embeddings and biases.
+        y_prior_mean : float
+            Mean of Gaussian prior on Y-side embeddings and biases.
+        y_prior_scale : float
+            Scale of Gaussian prior on Y-side embeddings and biases.
         rng : numpy.random.Generator
             Random number generator.
 
@@ -860,39 +860,43 @@ class _MMvecModel:
         self.n_features_x = n_features_x
         self.n_features_y = n_features_y
         self.n_components = n_components
-        self.u_prior_mean = u_prior_mean
-        self.u_prior_scale = u_prior_scale
-        self.v_prior_mean = v_prior_mean
-        self.v_prior_scale = v_prior_scale
+        self.x_prior_mean = x_prior_mean
+        self.x_prior_scale = x_prior_scale
+        self.y_prior_mean = y_prior_mean
+        self.y_prior_scale = y_prior_scale
         # Cache squared scales used repeatedly in objective/gradient evaluation.
-        self._u_prior_scale_sq = u_prior_scale**2
-        self._v_prior_scale_sq = v_prior_scale**2
+        self._x_prior_scale_sq = x_prior_scale**2
+        self._y_prior_scale_sq = y_prior_scale**2
 
         # Cache constant columns used to build augmented matrices.
         self._ones_x = np.ones((n_features_x, 1))
         self._ones_y = np.ones((1, n_features_y - 1))
 
         # Initialize parameters with random normal
-        self.U = rng.standard_normal((n_features_x, n_components))
-        self.b_U = rng.standard_normal((n_features_x, 1))
-        self.V = rng.standard_normal((n_components, n_features_y - 1))
-        self.b_V = rng.standard_normal((1, n_features_y - 1))
+        self.x_embed = rng.standard_normal((n_features_x, n_components))
+        self.x_bias = rng.standard_normal((n_features_x, 1))
+        self.y_embed = rng.standard_normal((n_components, n_features_y - 1))
+        self.y_bias = rng.standard_normal((1, n_features_y - 1))
 
     def build_aug_matrices(self):
-        """Build augmented U and V matrices for forward pass.
+        """Build augmented X-side and Y-side matrices for forward pass.
 
         Returns
         -------
-        U_aug : np.ndarray of shape (n_features_x, n_components + 2)
-            [1 | b_U | U]
-        V_aug : np.ndarray of shape (n_components + 2, n_features_y - 1)
-            [b_V; 1; V]
-        """
-        d1 = self.n_features_x
+        x_aug : np.ndarray of shape (n_features_x, n_components + 2)
+            [1 | x_bias | x_embed]
+        y_aug : np.ndarray of shape (n_components + 2, n_features_y - 1)
+            [y_bias; 1; y_embed]
 
-        U_aug = np.hstack([self._ones_x, self.b_U, self.U])
-        V_aug = np.vstack([self.b_V, self._ones_y, self.V])
-        return U_aug, V_aug
+        Notes
+        -----
+        This method is used by non-critical paths (forward pass, rank computation).
+        The L-BFGS optimization path avoids this allocation by computing
+        logits directly as x_embed @ y_embed + x_bias + y_bias.
+        """
+        x_aug = np.hstack([self._ones_x, self.x_bias, self.x_embed])
+        y_aug = np.vstack([self.y_bias, self._ones_y, self.y_embed])
+        return x_aug, y_aug
 
     def forward(self, X_idx):
         """Compute logits for given X indices.
@@ -907,9 +911,9 @@ class _MMvecModel:
         logits : np.ndarray of shape (batch_size, n_features_y)
             Logits with first column (reference) set to 0.
         """
-        U_aug, V_aug = self.build_aug_matrices()
-        u_batch = U_aug[X_idx, :]  # (B, p+2)
-        logits_nonref = u_batch @ V_aug  # (B, d2-1)
+        x_aug, y_aug = self.build_aug_matrices()
+        x_batch = x_aug[X_idx, :]  # (B, p+2)
+        logits_nonref = x_batch @ y_aug  # (B, d2-1)
         logits = np.hstack([np.zeros((len(X_idx), 1)), logits_nonref])
         return logits
 
@@ -936,7 +940,7 @@ class _MMvecModel:
         loss : float
             Negative log posterior.
         grads : dict
-            Gradients for U, b_U, V, b_V.
+            Gradients for x_embed, x_bias, y_embed, y_bias.
         """
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
@@ -952,52 +956,65 @@ class _MMvecModel:
         delta = delta_full[:, 1:]  # Exclude reference category (B, d2-1)
 
         # Build augmented matrices
-        U_aug, V_aug = self.build_aug_matrices()
-        u_batch = U_aug[X_ids, :]  # (B, p+2)
+        x_aug, y_aug = self.build_aug_matrices()
+        x_batch = x_aug[X_ids, :]  # (B, p+2)
 
-        # Gradient w.r.t. V parameters
-        # dV = -norm * (u_batch[:, 2:].T @ delta) + V / sigma^2
-        dV = -norm * (u_batch[:, 2:].T @ delta)
-        dV += (self.V - self.v_prior_mean) / (self.v_prior_scale**2)
+        # Gradient w.r.t. Y-side embedding parameters
+        # dy_embed = -norm * (x_batch[:, 2:].T @ delta) + y_embed / sigma^2
+        dy_embed = -norm * (x_batch[:, 2:].T @ delta)
+        dy_embed += (self.y_embed - self.y_prior_mean) / (self.y_prior_scale**2)
 
-        # db_V = -norm * delta.sum(axis=0, keepdims=True) + b_V / sigma^2
-        db_V = -norm * delta.sum(axis=0, keepdims=True)
-        db_V += (self.b_V - self.v_prior_mean) / (self.v_prior_scale**2)
+        # dy_bias = -norm * delta.sum(axis=0, keepdims=True) + y_bias / sigma^2
+        dy_bias = -norm * delta.sum(axis=0, keepdims=True)
+        dy_bias += (self.y_bias - self.y_prior_mean) / (self.y_prior_scale**2)
 
-        # Gradient w.r.t. U parameters (scatter-add)
-        du_batch = delta @ V_aug.T  # (B, p+2)
+        # Gradient w.r.t. X-side parameters (scatter-add)
+        dx_batch = delta @ y_aug.T  # (B, p+2)
 
-        dU = np.zeros_like(self.U)
-        db_U = np.zeros_like(self.b_U)
+        dx_embed = np.zeros_like(self.x_embed)
+        dx_bias = np.zeros_like(self.x_bias)
 
         # Scatter-add gradients
         for b in range(size):
             m = X_ids[b]
-            dU[m, :] -= norm * du_batch[b, 2:]
-            db_U[m, 0] -= norm * du_batch[b, 1]
+            dx_embed[m, :] -= norm * dx_batch[b, 2:]
+            dx_bias[m, 0] -= norm * dx_batch[b, 1]
 
         # Add prior gradients
-        dU += (self.U - self.u_prior_mean) / (self.u_prior_scale**2)
-        db_U += (self.b_U - self.u_prior_mean) / (self.u_prior_scale**2)
+        dx_embed += (self.x_embed - self.x_prior_mean) / (self.x_prior_scale**2)
+        dx_bias += (self.x_bias - self.x_prior_mean) / (self.x_prior_scale**2)
 
         # Compute total loss (negative log posterior)
         prior_loss = 0.0
         prior_loss += (
-            0.5 * np.sum((self.U - self.u_prior_mean) ** 2) / self._u_prior_scale_sq
+            0.5
+            * np.sum((self.x_embed - self.x_prior_mean) ** 2)
+            / self._x_prior_scale_sq
         )
         prior_loss += (
-            0.5 * np.sum((self.b_U - self.u_prior_mean) ** 2) / self._u_prior_scale_sq
+            0.5
+            * np.sum((self.x_bias - self.x_prior_mean) ** 2)
+            / self._x_prior_scale_sq
         )
         prior_loss += (
-            0.5 * np.sum((self.V - self.v_prior_mean) ** 2) / self._v_prior_scale_sq
+            0.5
+            * np.sum((self.y_embed - self.y_prior_mean) ** 2)
+            / self._y_prior_scale_sq
         )
         prior_loss += (
-            0.5 * np.sum((self.b_V - self.v_prior_mean) ** 2) / self._v_prior_scale_sq
+            0.5
+            * np.sum((self.y_bias - self.y_prior_mean) ** 2)
+            / self._y_prior_scale_sq
         )
 
         loss = -norm * loglik + prior_loss
 
-        grads = {"U": dU, "b_U": db_U, "V": dV, "b_V": db_V}
+        grads = {
+            "x_embed": dx_embed,
+            "x_bias": dx_bias,
+            "y_embed": dy_embed,
+            "y_bias": dy_bias,
+        }
 
         return loss, grads
 
@@ -1008,10 +1025,15 @@ class _MMvecModel:
         -------
         ranks : np.ndarray of shape (n_features_x, n_features_y)
             Row-centered log conditional probabilities.
+
         """
-        U_aug, V_aug = self.build_aug_matrices()
-        logits = np.hstack([np.zeros((self.n_features_x, 1)), U_aug @ V_aug])
-        ranks = logits - np.mean(logits, axis=1, keepdims=True)  # center by row
+        ranks = np.empty((self.n_features_x, self.n_features_y))
+        ranks[:, 0] = 0.0
+        ranks_nonref = ranks[:, 1:]
+        np.matmul(self.x_embed, self.y_embed, out=ranks_nonref)
+        ranks_nonref += self.x_bias
+        ranks_nonref += self.y_bias
+        ranks -= np.mean(ranks, axis=1, keepdims=True)
         return ranks
 
     def pack_params(self):
@@ -1020,14 +1042,14 @@ class _MMvecModel:
         Returns
         -------
         theta : np.ndarray
-            Flattened parameters [U, b_U, V, b_V].
+            Flattened parameters [x_embed, x_bias, y_embed, y_bias].
         """
         return np.concatenate(
             [
-                self.U.ravel(),
-                self.b_U.ravel(),
-                self.V.ravel(),
-                self.b_V.ravel(),
+                self.x_embed.ravel(),
+                self.x_bias.ravel(),
+                self.y_embed.ravel(),
+                self.y_bias.ravel(),
             ]
         )
 
@@ -1044,27 +1066,45 @@ class _MMvecModel:
         p = self.n_components
 
         idx = 0
-        self.U = theta[idx : idx + d1 * p].reshape(d1, p)
+        self.x_embed = theta[idx : idx + d1 * p].reshape(d1, p)
         idx += d1 * p
-        self.b_U = theta[idx : idx + d1].reshape(d1, 1)
+        self.x_bias = theta[idx : idx + d1].reshape(d1, 1)
         idx += d1
-        self.V = theta[idx : idx + p * (d2 - 1)].reshape(p, d2 - 1)
+        self.y_embed = theta[idx : idx + p * (d2 - 1)].reshape(p, d2 - 1)
         idx += p * (d2 - 1)
-        self.b_V = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
+        self.y_bias = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
-    def full_batch_loss_and_gradient(self, cols, weights, Y_rows, N_rows):
+    def full_batch_loss_and_gradient(
+        self,
+        y_sums,
+        n_sums,
+        logits,
+        resids,
+        row_max,
+        log_norm,
+        row_scale,
+    ):
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
         ----------
-        cols : np.ndarray of shape (nnz,)
-            X feature indices from sparse X COO matrix.
-        weights : np.ndarray of shape (nnz,)
-            X counts from sparse X COO matrix.
-        Y_rows : np.ndarray of shape (nnz, n_features_y)
-            Rows of Y gathered by ``rows``.
-        N_rows : np.ndarray of shape (nnz,)
-            Rows of N gathered by ``rows``.
+        y_sums : np.ndarray of shape (n_features_x, n_features_y)
+            Weighted Y counts aggregated by X feature index.
+            Each row stores the total Y counts contributed by all nonzero X entries
+            for one X feature.
+        n_sums : np.ndarray of shape (n_features_x,)
+            Weighted Y sample totals aggregated by X feature index.
+            Each entry stores the total Y count paired with one X feature.
+        logits : np.ndarray of shape (n_features_x, n_features_y - 1)
+            Reusable workspace for non-reference logits.
+        resids : np.ndarray of shape (n_features_x, n_features_y - 1)
+            Reusable workspace for grouped residuals and non-reference probabilities.
+        row_max : np.ndarray of shape (n_features_x,)
+            Reusable workspace for row-wise maxima.
+        log_norm : np.ndarray of shape (n_features_x,)
+            Reusable workspace for row-wise log normalizers.
+        row_scale : np.ndarray of shape (n_features_x,)
+            Reusable workspace for row-wise normalizing factors.
 
         Returns
         -------
@@ -1072,89 +1112,121 @@ class _MMvecModel:
             Negative log-posterior.
         grad : np.ndarray
             Flattened gradient vector.
+
+        Notes
+        -----
+        This routine evaluates the full negative log-posterior for the L-BFGS solver.
+
+        It first groups the data by X feature using two sufficient statistics:
+
+        - y_sums: grouped Y counts
+        - n_sums: grouped Y totals
+
+        With those grouped arrays in hand, the dense part of the objective is computed
+        from the non-reference logits:
+
+            x_embed @ y_embed + x_bias + y_bias
+
+        without materializing the reference Y column. The data term is then:
+
+            sum(n_sums * log_norm) - sum(y_sums[:, 1:] * logits)
+
+        followed by the Gaussian prior terms for the X-side and Y-side parameters.
+        The same grouped quantities are reused to form the gradient.
+
         """
-        d1 = self.n_features_x
-        # d2 = self.n_features_y
+        # Symbols used in comments below:
+        # d1 : number of X features
+        # d2 : number of Y features
+        # p : number of latent dimensions
+        # nnz : number of non-zero entries in X
 
-        # Build augmented matrices once
-        U_aug, V_aug = self.build_aug_matrices()
+        # Compute the non-reference logits directly:
+        #   logits = x_embed @ y_embed + x_bias + y_bias
+        # This is algebraically the same as the old augmented-matrix product, but
+        # avoids the reference column (1).
+        np.matmul(self.x_embed, self.y_embed, out=logits)
+        logits += self.x_bias
+        logits += self.y_bias
 
-        # Precompute all logits: (d1, d2) with reference column = 0
-        logits_core = U_aug @ V_aug  # (d1, d2-1)
-        logits_all = np.empty((d1, self.n_features_y), dtype=logits_core.dtype)
-        logits_all[:, 0] = 0.0
-        logits_all[:, 1:] = logits_core
+        # Stable softmax for all X features (rows).
+        # Compute log_norm = log(1 + \sum exp(logits)) in a numerically stable way that
+        # resembles SciPy's logsumexp, but without allocating the reference column (0):
+        #   log_norm = m + log(exp(-m) + \sum exp(logits - m))
+        # In which m = max(0, max(logits))
+        # And exp(logits - m) is stored in resids for reuse.
+        np.max(logits, axis=1, out=row_max)
+        np.maximum(row_max, 0.0, out=row_max)
+        np.subtract(logits, row_max[:, None], out=resids)
+        np.exp(resids, out=resids)
+        np.sum(resids, axis=1, out=log_norm)
+        np.negative(row_max, out=row_scale)
+        np.exp(row_scale, out=row_scale)
+        log_norm += row_scale
+        np.log(log_norm, out=log_norm)
+        log_norm += row_max
 
-        # Stable softmax for all X features
-        log_norm = logsumexp(logits_all, axis=1, keepdims=True)  # (d1, 1)
-        probs_all = np.exp(logits_all - log_norm)  # (d1, d2)
+        # Compute the grouped negative log-likelihood (part of the loss).
+        # For each X feature, we combine:
+        # - the weighted observed Y totals (`y_sums`)
+        # - the weighted Y sample totals (`n_sums`)
+        # - the corresponding log-normalizer (`log_norm`)
+        # In compact form:
+        #   loss_data = sum(n_sums * log_norm) - sum(y_sums[:, 1:] * logits)
+        # The reference category has logit 0, so only non-reference logits appear
+        # in the inner-product term.
+        loss = np.dot(n_sums, log_norm) - np.einsum("ij,ij->", y_sums[:, 1:], logits)
 
-        # === Vectorized loss computation ===
-        # Gather logits and log_norm for each (sample, X feature) pair
-        logits_batch = logits_all[cols, :]  # (nnz, d2)
-        log_norm_batch = log_norm[cols, 0]  # (nnz,)
-        Y_batch = Y_rows
-        N_batch = N_rows
+        # Recover non-reference probabilities from the shifted exponentials.
+        # At this point resids holds exp(logits - row_max). Divide by
+        # exp(log_norm - row_max) to recover the non-reference probabilities.
+        np.subtract(log_norm, row_max, out=row_scale)
+        np.exp(row_scale, out=row_scale)
+        resids /= row_scale[:, None]
 
-        # Log-likelihood: sum_j y_j * eta_j - N * logsumexp(eta)
-        log_lik = (Y_batch * logits_batch).sum(axis=1) - N_batch * log_norm_batch
-        loss = -np.dot(weights, log_lik)  # weighted sum
+        # Turn probabilities into grouped residuals: observed weighted totals
+        # minus expected weighted totals for each non-reference category.
+        resids *= n_sums[:, None]
+        resids *= -1.0
+        resids += y_sums[:, 1:]
 
-        # === Vectorized gradient computation ===
-        # Delta: w * (y[1:] - N * pi[1:]) for each (sample, X feature) pair
-        probs_batch_nonref = probs_all[cols, 1:]  # (nnz, d2-1)
-        delta = weights[:, None] * (
-            Y_batch[:, 1:] - N_batch[:, None] * probs_batch_nonref
-        )  # (nnz, d2-1)
+        # Gradient for the Y-side embedding matrix.
+        dy_embed = -self.x_embed.T @ resids  # (p, d2-1)
 
-        # dV: sum over all entries of outer(U[m], delta)
-        # This is U[cols].T @ delta = (p, nnz) @ (nnz, d2-1) = (p, d2-1)
-        U_batch = self.U[cols, :]  # (nnz, p)
-        dV = -U_batch.T @ delta  # (p, d2-1)
+        # Gradient for Y-side biases: sum residuals across X features.
+        dy_bias = -resids.sum(axis=0, keepdims=True)  # (1, d2-1)
 
-        # db_V: sum of delta over all entries
-        db_V = -delta.sum(axis=0, keepdims=True)  # (1, d2-1)
+        # Gradient for the X-side embedding matrix.
+        dx_embed = -(resids @ self.y_embed.T)  # (d1, p)
 
-        # dU: scatter-add delta @ V.T to rows indexed by cols
-        delta_V = delta @ self.V.T  # (nnz, p)
-        # dU = np.zeros_like(self.U)
-        # np.add.at(dU, cols, -delta_V)
-        # Use bincount for grouped accumulation (faster than np.add.at for many unique
-        # indices)
-        dU = np.empty_like(self.U)
-        for k in range(self.n_components):
-            dU[:, k] = np.bincount(cols, weights=-delta_V[:, k], minlength=d1)
+        # Gradient for X-side biases: sum residuals across Y categories.
+        dx_bias = -resids.sum(axis=1, keepdims=True)  # (d1, 1)
 
-        # db_U: scatter-add delta.sum(axis=1) to rows indexed by cols
-        delta_sum = delta.sum(axis=1)  # (nnz,)
-        # db_U = np.zeros_like(self.b_U)
-        # np.add.at(db_U, (cols, 0), -delta_sum)
-        db_U = np.empty_like(self.b_U)
-        db_U[:, 0] = np.bincount(cols, weights=-delta_sum, minlength=d1)
+        # Add prior terms (L2 regularization)
+        # These are exactly the Gaussian-prior contributions to the negative
+        # log-posterior and its gradient.
+        x_embed_diff = self.x_embed - self.x_prior_mean
+        x_bias_diff = self.x_bias - self.x_prior_mean
+        y_embed_diff = self.y_embed - self.y_prior_mean
+        y_bias_diff = self.y_bias - self.y_prior_mean
 
-        # === Add prior terms (L2 regularization) ===
-        u_diff = self.U - self.u_prior_mean
-        b_u_diff = self.b_U - self.u_prior_mean
-        v_diff = self.V - self.v_prior_mean
-        b_v_diff = self.b_V - self.v_prior_mean
+        loss += 0.5 * np.sum(x_embed_diff**2) / self._x_prior_scale_sq
+        loss += 0.5 * np.sum(x_bias_diff**2) / self._x_prior_scale_sq
+        loss += 0.5 * np.sum(y_embed_diff**2) / self._y_prior_scale_sq
+        loss += 0.5 * np.sum(y_bias_diff**2) / self._y_prior_scale_sq
 
-        loss += 0.5 * np.sum(u_diff**2) / self._u_prior_scale_sq
-        loss += 0.5 * np.sum(b_u_diff**2) / self._u_prior_scale_sq
-        loss += 0.5 * np.sum(v_diff**2) / self._v_prior_scale_sq
-        loss += 0.5 * np.sum(b_v_diff**2) / self._v_prior_scale_sq
-
-        dU += u_diff / self._u_prior_scale_sq
-        db_U += b_u_diff / self._u_prior_scale_sq
-        dV += v_diff / self._v_prior_scale_sq
-        db_V += b_v_diff / self._v_prior_scale_sq
+        dx_embed += x_embed_diff / self._x_prior_scale_sq
+        dx_bias += x_bias_diff / self._x_prior_scale_sq
+        dy_embed += y_embed_diff / self._y_prior_scale_sq
+        dy_bias += y_bias_diff / self._y_prior_scale_sq
 
         # Pack gradients
         grad = np.concatenate(
             [
-                dU.ravel(),
-                db_U.ravel(),
-                dV.ravel(),
-                db_V.ravel(),
+                dx_embed.ravel(),
+                dx_bias.ravel(),
+                dy_embed.ravel(),
+                dy_bias.ravel(),
             ]
         )
 
@@ -1184,12 +1256,43 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
     """
     rows, cols, data = X_coo.row, X_coo.col, X_coo.data
+    d1 = model.n_features_x
+    d2 = model.n_features_y
 
-    # Precompute sparse structure and indexed targets reused by every L-BFGS
-    # objective/gradient evaluation.
-    Y_rows = Y[rows, :]
-    N = Y.sum(axis=1)
-    N_rows = N[rows]
+    # Infer the data type for computation. Currently it promotes to at least float64.
+    # But we should consider float32 support in the future.
+    dtype = np.result_type(Y.dtype, data.dtype, np.float64)
+
+    # Precompute X feature-grouped sufficient statistics reused by every iteration.
+    # y_sums groups Y counts by X feature. Each row is the total Y abundance associated
+    # with one X feature across all nonzero X entries.
+    prods_ = data[:, None] * Y[rows, :]  # (nnz, d2)
+    y_sums = np.empty((d1, d2), dtype=dtype)
+    for j in range(d2):
+        y_sums[:, j] = np.bincount(cols, weights=prods_[:, j], minlength=d1)
+
+    # n_sums stores the corresponding grouped Y totals. It is the row sum partner to
+    # y_sums and tells us how much total Y abundance is attached to each X feature.
+    sums_ = Y.sum(axis=1)[rows]  # (nnz,)
+    n_sums = np.bincount(cols, weights=data * sums_, minlength=d1).astype(
+        dtype, copy=False
+    )
+
+    # Reusable array workspaces for each iteration.
+    # Logits for each X feature, excluding the reference (first column, all zeros).
+    logits = np.empty((d1, d2 - 1), dtype=dtype)
+
+    # Exponential-shifted logits reused later as grouped residuals.
+    resids = np.empty((d1, d2 - 1), dtype=dtype)
+
+    # Row-wise maximum over logits for numerically stable normalization.
+    row_max = np.empty(d1, dtype=dtype)
+
+    # Row-wise log normalizer, i.e., log(1 + sum(exp(logits))).
+    log_norm = np.empty(d1, dtype=dtype)
+
+    # Row-wise scaling factors derived from row_max/log_norm.
+    row_scale = np.empty(d1, dtype=dtype)
 
     losses = []
     it = 0
@@ -1198,10 +1301,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(
-            cols,
-            data,
-            Y_rows,
-            N_rows,
+            y_sums, n_sums, logits, resids, row_max, log_norm, row_scale
         )
         it += 1
         losses.append(loss)
@@ -1291,10 +1391,22 @@ def _train_adam(
 
     # Initialize Adam moments
     moments = {
-        "U": (np.zeros_like(model.U), np.zeros_like(model.U)),
-        "b_U": (np.zeros_like(model.b_U), np.zeros_like(model.b_U)),
-        "V": (np.zeros_like(model.V), np.zeros_like(model.V)),
-        "b_V": (np.zeros_like(model.b_V), np.zeros_like(model.b_V)),
+        "x_embed": (
+            np.zeros_like(model.x_embed),
+            np.zeros_like(model.x_embed),
+        ),
+        "x_bias": (
+            np.zeros_like(model.x_bias),
+            np.zeros_like(model.x_bias),
+        ),
+        "y_embed": (
+            np.zeros_like(model.y_embed),
+            np.zeros_like(model.y_embed),
+        ),
+        "y_bias": (
+            np.zeros_like(model.y_bias),
+            np.zeros_like(model.y_bias),
+        ),
     }
 
     # Compute number of iterations per epoch
@@ -1325,7 +1437,7 @@ def _train_adam(
             grads = _clip_gradients(grads, clipnorm)
 
             # Adam updates
-            for param_name in ["U", "b_U", "V", "b_V"]:
+            for param_name in ["x_embed", "x_bias", "y_embed", "y_bias"]:
                 param = getattr(model, param_name)
                 m, v = moments[param_name]
                 param, m, v = _adam_update(

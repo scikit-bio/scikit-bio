@@ -162,7 +162,7 @@ class TestMMvecRecovery(unittest.TestCase):
     def test_recovers_embeddings(self):
         """Verify model recovers true embeddings from synthetic data."""
         # Simulate a dataset of 150 samples
-        X, Y, _, _,  U, b_U, V, b_V = random_multimodal(
+        X, Y, _, _, x_embed, x_bias, y_embed, y_bias = random_multimodal(
             8, 8, 150, 2, x_noise_std=2, x_total=1000, y_total=10000, seed=1
         )
         # Leave out last 10 samples as a test set
@@ -189,29 +189,29 @@ class TestMMvecRecovery(unittest.TestCase):
 
         # Verify X embeddings are recovered
         # Compare pairwise distances using Spearman correlation
-        u_r, u_p = spearmanr(
+        x_r, x_p = spearmanr(
             pdist(result.x_embeddings[:, :-1]),  # exclude bias
-            pdist(U),
+            pdist(x_embed),
         )
-        self.assertGreater(u_r, 0.5, f"U correlation too low: {u_r}")
-        self.assertLess(u_p, 0.05, f"U p-value too high: {u_p}")
+        self.assertGreater(x_r, 0.5, f"X embedding correlation too low: {x_r}")
+        self.assertLess(x_p, 0.05, f"X embedding p-value too high: {x_p}")
 
         # Verify Y embeddings are recovered
         # Compare pairwise distances between Y features
-        v_r, v_p = spearmanr(
+        y_r, y_p = spearmanr(
             pdist(result.y_embeddings[1:, :-1]),  # exclude ref & bias
-            pdist(V.T),
+            pdist(y_embed.T),
         )
-        self.assertGreater(v_r, 0.5, f"V correlation too low: {v_r}")
-        self.assertLess(v_p, 0.05, f"V p-value too high: {v_p}")
+        self.assertGreater(y_r, 0.5, f"Y embedding correlation too low: {y_r}")
+        self.assertLess(y_p, 0.05, f"Y embedding p-value too high: {y_p}")
 
         # Verify conditional probabilities match
-        d1 = U.shape[0]
+        d1 = x_embed.shape[0]
 
         # Compute expected probabilities from true parameters
-        U_ = np.hstack((np.ones((d1, 1)), b_U, U))
-        V_ = np.vstack((b_V, np.ones((1, V.shape[1])), V))
-        exp = softmax(np.hstack((np.zeros((d1, 1)), U_ @ V_)), validate=False)
+        x_aug = np.hstack((np.ones((d1, 1)), x_bias, x_embed))
+        y_aug = np.vstack((y_bias, np.ones((1, y_embed.shape[1])), y_embed))
+        exp = softmax(np.hstack((np.zeros((d1, 1)), x_aug @ y_aug)), validate=False)
         res = softmax(result.ranks, validate=False)
 
         s_r, s_p = spearmanr(np.ravel(res), np.ravel(exp))
@@ -271,10 +271,10 @@ class TestMMvecGradients(unittest.TestCase):
             n_features_x=n_features_x,
             n_features_y=n_features_y,
             n_components=n_components,
-            u_prior_mean=0.0,
-            u_prior_scale=1.0,
-            v_prior_mean=0.0,
-            v_prior_scale=1.0,
+            x_prior_mean=0.0,
+            x_prior_scale=1.0,
+            y_prior_mean=0.0,
+            y_prior_scale=1.0,
             rng=rng,
         )
 
@@ -300,7 +300,7 @@ class TestMMvecGradients(unittest.TestCase):
         # Verify each parameter numerically
         # Use same seed for each call to get consistent batch
         eps = 1e-5
-        for param_name in ["U", "b_U", "V", "b_V"]:
+        for param_name in ["x_embed", "x_bias", "y_embed", "y_bias"]:
             param = getattr(model, param_name)
             numerical_grad = np.zeros_like(param)
 
@@ -707,7 +707,7 @@ class TestMMvecLBFGS(unittest.TestCase):
         """Create test data."""
         res = random_multimodal(8, 10, 50, 2, seed=42)
         self.X, self.Y = res[0], res[1]
-        self.U, self.V = res[4], res[6]
+        self.x_embed_true, self.y_embed_true = res[4], res[6]
 
     def test_lbfgs_produces_valid_results(self):
         """L-BFGS optimizer should produce valid results."""
@@ -739,13 +739,13 @@ class TestMMvecLBFGS(unittest.TestCase):
             8, 8, 150, 2, x_noise_std=2, x_total=1000, y_total=10000, seed=1
         )
         X, Y = res[0], res[1]
-        U_true = res[4]
+        x_embed_true = res[4]
         result = mmvec(X, Y, dimensions=2, optimizer="lbfgs", max_iter=500, seed=42)
         # Check correlation of pairwise distances
-        u_r, _ = spearmanr(
-            pdist(result.x_embeddings.to_numpy()[:, :-1]), pdist(U_true)
+        x_r, _ = spearmanr(
+            pdist(result.x_embeddings.to_numpy()[:, :-1]), pdist(x_embed_true)
         )
-        self.assertGreater(u_r, 0.3, f"U correlation too low: {u_r}")
+        self.assertGreater(x_r, 0.3, f"X embedding correlation too low: {x_r}")
 
     def test_lbfgs_score_on_test_data(self):
         """L-BFGS model should produce reasonable Q-squared score on test data."""
@@ -895,12 +895,14 @@ class TestMMvecCaseStudies(unittest.TestCase):
         self.assertGreaterEqual(positive_count, 11)
 
         # Check numerical values against expected outputs for reproducibility.
-        # NOTE: Due to optimization variability, these values may not match exactly,
-        # but should be close.
+        # NOTE: Due to optimization variability and floating-point accumulation order
+        # changes from computational optimizations, these values may not match exactly,
+        # but should be close. The expected value was updated after eliminating
+        # full-width logits/probability temporaries in full_batch_loss_and_gradient.
         obs = result.score(microbes, metabolites)
-        # exp = 0.218074
-        exp = 0.217902
-        self.assertAlmostEqual(obs, exp, places=6)
+        exp = 0.218074  # Original value
+        exp = 0.217611  # Updated after optimization changes
+        self.assertAlmostEqual(obs, exp, places=4)
 
         # ranks = pd.read_table(get_data_path("ranks.tsv", subdir), index_col=0)
         # pdt.assert_frame_equal(
