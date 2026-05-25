@@ -10,8 +10,22 @@ env:
   latest_python: "3.14"
 
 jobs:
+  conf:
+    # This job is needed to route the global environment variables into
+    # a context that's available for matrix (and name, but that's unimportant)
+    name: Prepare Numba Test Plan
+    runs-on: ubuntu-latest
+    outputs:
+      latest_python: ${{ steps.set-vars.outputs.latest_python }}
+    steps:
+      - name: Report Plan
+        id: set-vars
+        run: |
+          echo "latest_python=$latest_python" >> $GITHUB_OUTPUT
+
   test:
-    name: Numba (${{ env.latest_python }}, ${{ matrix.os }})
+    name: Numba (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
+    needs: conf
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -27,7 +41,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ env.latest_python }}
+          python-version: ${{ needs.conf.outputs.latest_python }}
 
       - name: Install scikit-bio + Numba
         run: |
