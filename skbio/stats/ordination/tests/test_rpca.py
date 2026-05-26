@@ -356,7 +356,7 @@ class TestRPCAIntegration(unittest.TestCase):
         Microbiome data typically has 70-90% zeros. RPCA should
         handle this gracefully.
         """
-        np.random.seed(456)
+        np.random.seed(456) #      change to get_rng
 
         n_samples, n_features = 25, 100
 
