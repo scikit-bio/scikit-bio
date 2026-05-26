@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+from scipy.sparse import coo_array
 
 from skbio._base import SkbioObject
 from skbio.stats.composition import clr_inv as softmax
@@ -113,9 +114,9 @@ def mmvec(
         Smaller values increase regularization.
 
     learning_rate : float, optional
-        Adam optimizer learning rate. Ignored for 'lbfgs'. Default is 1e-3.
+        Adam learning rate. Ignored for 'lbfgs'. Default is 1e-3.
     batch_size : int, optional
-        Mini-batch size for Adam optimizer. Ignored for 'lbfgs'. Default is 50.
+        Adam mini-batch size. Ignored for 'lbfgs'. Default is 50.
     beta_1 : float, optional
         Adam exponential decay rate for first moment. Ignored for 'lbfgs'.
         Default is 0.9.
@@ -123,8 +124,8 @@ def mmvec(
         Adam exponential decay rate for second moment. Ignored for 'lbfgs'.
         Default is 0.95.
     clipnorm : float, optional
-        Gradient clipping threshold for Adam (global L2 norm). Ignored for
-        'lbfgs'. Default is 10.0.
+        Adam gradient clipping threshold (global L2 norm). Ignored for 'lbfgs'.
+        Default is 10.0.
     batch_norm : {'unbiased', 'legacy'}, optional
         Method for scaling mini-batch likelihood in Adam. Ignored for 'lbfgs'.
 
@@ -377,7 +378,8 @@ class MMvecResult:
         self._estimator = estimator
 
     def __str__(self) -> str:
-        n_features_x, n_features_y = self.ranks.shape
+        n_features_x = self.x_embeddings.shape[0]
+        n_features_y = self.y_embeddings.shape[0]
         n_dimensions = self.x_embeddings.shape[1] - 1
         return (
             f"MMvecResult\n"
@@ -510,9 +512,9 @@ class MMvec(SkbioObject):
     ----------
     x_embeddings_ : table_like of shape (n_features, n_components + 1)
         Learned feature embeddings (+1 is the bias term).
-    y_embeddings_ : table_like of shape (n_targets, n_components + 1)
+    y_embeddings_ : table_like of shape (n_outputs, n_components + 1)
         Learned target embeddings (+1 is the bias term).
-    ranks_ : table_like of shape (n_features, n_targets)
+    ranks_ : table_like of shape (n_features, n_outputs)
         Row-centered log conditional probabilities.
     loss_curve_ : table_like of shape (n_iterations,)
         Optimization losses over training updates.
@@ -520,10 +522,12 @@ class MMvec(SkbioObject):
         Number of optimization iterations completed.
     n_features_in_ : int
         Number of features in `X` seen during :meth:`fit`.
+    n_outputs_ : int
+        Number of features in `y` seen during :meth:`fit`.
     x_feature_ids_ : tuple or None
-        Feature IDs captured from `X`, if available.
+        Feature IDs of `X`, if available.
     y_feature_ids_ : tuple or None
-        Target IDs captured from `y`, if available.
+        Feature IDs of `y`, if available.
     """
 
     def __init__(
@@ -544,7 +548,7 @@ class MMvec(SkbioObject):
         seed: SeedLike | None = None,
         verbose: bool = False,
         output_format: str | None = None,
-    ):
+    ) -> None:
         self.n_components = n_components
         self.optimizer = optimizer
         self.max_iter = max_iter
@@ -569,16 +573,15 @@ class MMvec(SkbioObject):
         ----------
         X : table_like of shape (n_samples, n_features)
             Conditioning feature matrix (e.g., microbes).
-        y : table_like of shape (n_samples,) or (n_samples, n_targets)
-            Conditioned target matrix (e.g., metabolites) or vector.
+        y : table_like of shape (n_samples,) or (n_samples, n_outputs)
+            Conditioned feature matrix or vector (e.g., metabolites).
 
         Returns
         -------
         MMvec
             Fitted estimator.
-        """
-        from scipy.sparse import coo_array
 
+        """
         # Parse tabular inputs
         X_arr, _, x_feature_ids = _ingest_table(X)
         y_arr, _, y_feature_ids = _ingest_table(y)
@@ -650,28 +653,30 @@ class MMvec(SkbioObject):
             )
 
         pc_cols = [f"PC{i + 1}" for i in range(model.n_components)] + ["bias"]
-        x_emb = np.hstack([model.x_embed, model.x_bias])
-        y_emb = np.vstack(
+        x_embed = np.hstack([model.x_main, model.x_bias])
+        y_embed = np.vstack(
             [
                 np.zeros((1, model.n_components + 1)),
-                np.hstack([model.y_embed.T, model.y_bias.T]),
+                np.hstack([model.y_main.T, model.y_bias.T]),
             ]
         )
-        ranks = model.calc_ranks()
-
         self.x_embeddings_ = _create_table(
-            x_emb, columns=pc_cols, index=x_feature_ids, backend=self.output_format
+            x_embed, columns=pc_cols, index=x_feature_ids, backend=self.output_format
         )
         self.y_embeddings_ = _create_table(
-            y_emb, columns=pc_cols, index=y_feature_ids, backend=self.output_format
-        )
-        self.ranks_ = _create_table(
-            ranks,
-            columns=y_feature_ids,
-            index=x_feature_ids,
-            backend=self.output_format,
+            y_embed, columns=pc_cols, index=y_feature_ids, backend=self.output_format
         )
         self.loss_curve_ = _create_table_1d(losses)
+
+        # Keep the learned low-rank parameters available for lazy post-fit views.
+        # `ranks_` and `probs` are both dense (n_features_x, n_features_y) matrices,
+        # so we avoid materializing either one until a user actually needs it.
+        self._x_main = model.x_main
+        self._x_bias = model.x_bias
+        self._y_main = model.y_main
+        self._y_bias = model.y_bias
+        self._ranks = None
+        self._probs = None
 
         self.x_feature_ids_ = (
             tuple(x_feature_ids) if x_feature_ids is not None else None
@@ -680,19 +685,21 @@ class MMvec(SkbioObject):
             tuple(y_feature_ids) if y_feature_ids is not None else None
         )
         self.n_features_in_ = X_arr.shape[1]
+        self.n_outputs_ = y_arr.shape[1]
         self.n_iter_ = len(losses)
         self.is_fitted_ = True
 
         return self
 
-    def _check_is_fitted(self):
+    def _check_is_fitted(self) -> None:
         if not getattr(self, "is_fitted_", False):
             raise ValueError("MMvec estimator is not fitted. Call fit(X, y) first.")
 
     def __str__(self) -> str:
         """Return string representation of MMvec."""
         self._check_is_fitted()
-        n_features_x, n_features_y = self.ranks_.shape
+        n_features_x = self.x_embeddings_.shape[0]
+        n_features_y = self.y_embeddings_.shape[0]
         n_components = self.x_embeddings_.shape[1] - 1  # exclude bias
         n_iterations = len(self.loss_curve_)
         return (
@@ -703,7 +710,7 @@ class MMvec(SkbioObject):
             f"  Iterations: {n_iterations}"
         )
 
-    def get_params(self, deep: bool = True) -> dict:
+    def get_params(self, deep: bool = True) -> dict[str, object]:
         """Get estimator parameters for sklearn compatibility."""
         return {
             "n_components": self.n_components,
@@ -724,7 +731,7 @@ class MMvec(SkbioObject):
             "output_format": self.output_format,
         }
 
-    def set_params(self, **params) -> MMvec:
+    def set_params(self, **params: object) -> MMvec:
         """Set estimator parameters for sklearn compatibility."""
         for key, value in params.items():
             if not hasattr(self, key):
@@ -732,45 +739,79 @@ class MMvec(SkbioObject):
             setattr(self, key, value)
         return self
 
+    @property
+    def ranks_(self) -> TableLike:
+        """Row-centered log conditional probabilities.
+
+        This dense matrix is cached lazily because it can be very large for
+        high-dimensional multiomics data and is primarily used for inspection.
+        """
+        self._check_is_fitted()
+        if self._ranks is None:
+            ranks = self._compute_logits()
+            ranks -= np.mean(ranks, axis=1, keepdims=True)
+            self._ranks = _create_table(
+                ranks,
+                columns=self.y_feature_ids_,
+                index=self.x_feature_ids_,
+                backend=self.output_format,
+            )
+        return self._ranks
+
+    def _compute_logits(self) -> np.ndarray:
+        """Construct full Y logits from the learned low-rank parameters.
+
+        The first Y feature is the reference category and is fixed at zero logits.
+        Remaining columns are computed directly from the fitted X/Y embeddings and
+        bias terms.
+        """
+        logits = np.empty((self.n_features_in_, self.n_outputs_))
+        logits[:, 0] = 0.0
+        logits_nr = logits[:, 1:]
+        np.matmul(self._x_main, self._y_main, out=logits_nr)
+        logits_nr += self._x_bias
+        logits_nr += self._y_bias
+        return logits
+
+    def _get_probs(self) -> np.ndarray:
+        """Lazily cache the dense conditional probability matrix P(Y | X)."""
+        if self._probs is None:
+            self._probs = softmax(self._compute_logits(), validate=False)
+        return self._probs
+
+    def _predict(self, X: np.ndarray) -> np.ndarray:
+        """Predict Y proportions given X, without table I/O."""
+        # Normalize abundances to proportions before applying P(Y | X).
+        row_sums = np.sum(X, axis=1, keepdims=True)
+        if np.any(row_sums == 0):
+            raise ValueError(
+                "X contains samples with all-zero counts. Remove these samples before "
+                "calling predict."
+            )
+        X_props = X / row_sums
+        return X_props @ self._get_probs()
+
     def predict(self, X: TableLike) -> TableLike:
         """Predict target distributions given feature compositions.
 
         Parameters
         ----------
         X : table_like of shape (n_samples, n_features)
-            Feature abundance/count table. Columns must match the features used
-            during training.
+            Feature abundance/count table. Columns must match the features used during
+            training.
 
         Returns
         -------
-        predictions : table_like of shape (n_samples, n_targets)
-            Predicted target proportions for each sample. Each row sums to 1.
+        y_pred : table_like of shape (n_samples, n_outputs)
+            Predicted target (y) proportions for each sample. Each row sums to 1.
 
         """
         self._check_is_fitted()
         X, sample_ids, _ = _ingest_table(X)
-
-        # Normalize abundances to proportions
-        row_sums = np.sum(X, axis=1, keepdims=True)
-        if np.any(row_sums == 0):
-            raise ValueError(
-                "X contains samples with all-zero counts. "
-                "Remove these samples before calling predict."
-            )
-        X_props = X / row_sums
-
-        # Get conditional probabilities P(target | feature)
-        ranks, _, _ = _ingest_table(self.ranks_)
-        probs = softmax(ranks, validate=False)
-
-        # Marginal: sum_feature P(target | feature) * P(feature)
-        predicted = X_props @ probs
-
-        # TODO: Store IDs in the model to avoid re-ingesting ranks every time.
-        _, _, Y_ids = _ingest_table(self.ranks_)
+        y_pred = self._predict(X)
         return _create_table(
-            predicted,
-            columns=Y_ids,
+            y_pred,
+            columns=self.y_feature_ids_,
             index=sample_ids,
             backend=self.output_format,
         )
@@ -782,7 +823,7 @@ class MMvec(SkbioObject):
         ----------
         X : table_like of shape (n_samples, n_features)
             Test feature table.
-        y : table_like of shape (n_samples,) or (n_samples, n_targets)
+        y : table_like of shape (n_samples,) or (n_samples, n_outputs)
             Test target table (or vector).
 
         Returns
@@ -792,10 +833,11 @@ class MMvec(SkbioObject):
 
         """
         self._check_is_fitted()
+        X, _, _ = _ingest_table(X)
         Y, _, _ = _ingest_table(y)
 
-        # Get predictions
-        Y_pred, _, _ = _ingest_table(self.predict(X))
+        # Predict directly into an array to avoid a table round-trip.
+        Y_pred = self._predict(X)
 
         # Normalize abundances to proportions
         row_sums = np.sum(Y, axis=1, keepdims=True)
@@ -825,15 +867,15 @@ class _MMvecModel:
 
     def __init__(
         self,
-        n_features_x,
-        n_features_y,
-        n_components,
-        x_prior_mean,
-        x_prior_scale,
-        y_prior_mean,
-        y_prior_scale,
-        rng,
-    ):
+        n_features_x: int,
+        n_features_y: int,
+        n_components: int,
+        x_prior_mean: float,
+        x_prior_scale: float,
+        y_prior_mean: float,
+        y_prior_scale: float,
+        rng: np.random.Generator,
+    ) -> None:
         """Initialize MMvec model parameters.
 
         Parameters
@@ -868,12 +910,23 @@ class _MMvecModel:
         self._y_prior_scale_sq = y_prior_scale**2
 
         # Initialize parameters with random normal
-        self.x_embed = rng.standard_normal((n_features_x, n_components))
+        self.x_main = rng.standard_normal((n_features_x, n_components))
         self.x_bias = rng.standard_normal((n_features_x, 1))
-        self.y_embed = rng.standard_normal((n_components, n_features_y - 1))
+        self.y_main = rng.standard_normal((n_components, n_features_y - 1))
         self.y_bias = rng.standard_normal((1, n_features_y - 1))
 
-    def loss_and_gradients(self, X_coo, Y, size, norm, weights, rng):
+    def loss_and_gradients(
+        self,
+        X_coo: coo_array,
+        Y: np.ndarray,
+        size: int,
+        norm: float,
+        weights: np.ndarray,
+        rng: np.random.Generator,
+    ) -> tuple[
+        float,
+        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    ]:
         """Compute loss and gradients for a mini-batch.
 
         Parameters
@@ -897,7 +950,7 @@ class _MMvecModel:
             Negative log posterior.
         grads : tuple of np.ndarray
             Gradients in the fixed order
-            ``(dx_embed, dx_bias, dy_embed, dy_bias)``.
+            ``(dx_main, dx_bias, dy_main, dy_bias)``.
         """
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
@@ -906,60 +959,58 @@ class _MMvecModel:
 
         # Build the non-reference logits directly for the sampled X features.
         Y_batch = Y[sample_ids, :]  # (B, d2)
-        x_embed_batch = self.x_embed[X_ids, :]  # (B, p)
+        x_main_batch = self.x_main[X_ids, :]  # (B, p)
         x_bias_batch = self.x_bias[X_ids, :]  # (B, 1)
-        logits_nonref = x_embed_batch @ self.y_embed  # (B, d2-1)
-        logits_nonref += x_bias_batch
-        logits_nonref += self.y_bias
+        logits_nr = x_main_batch @ self.y_main  # (B, d2-1)
+        logits_nr += x_bias_batch
+        logits_nr += self.y_bias
 
-        # Stable log(1 + sum(exp(logits_nonref))) with the reference Y category
+        # Stable log(1 + sum(exp(logits_nr))) with the reference Y category
         # kept implicit as a zero logit.
-        row_max = np.max(logits_nonref, axis=1, keepdims=True)
+        row_max = np.max(logits_nr, axis=1, keepdims=True)
         np.maximum(row_max, 0.0, out=row_max)
-        exp_shifted = np.exp(logits_nonref - row_max)
+        exp_shifted = np.exp(logits_nr - row_max)
         log_norm = row_max + np.log(
             np.exp(-row_max) + exp_shifted.sum(axis=1, keepdims=True)
         )
 
         # Non-reference probabilities and grouped residuals for the sampled batch.
-        probs_nonref = exp_shifted / np.exp(log_norm - row_max)
-        total_counts = np.sum(Y_batch, axis=1, keepdims=True)
-        delta = Y_batch[:, 1:] - total_counts * probs_nonref
+        probs_nr = exp_shifted / np.exp(log_norm - row_max)
+        totals = np.sum(Y_batch, axis=1, keepdims=True)
+        delta = Y_batch[:, 1:] - totals * probs_nr
 
         # The reference category has logit 0, so only non-reference logits appear in
         # the inner-product term.
-        loglik = np.sum(Y_batch[:, 1:] * logits_nonref) - np.sum(
-            total_counts * log_norm
-        )
+        loglik = np.sum(Y_batch[:, 1:] * logits_nr) - np.sum(totals * log_norm)
 
         # Gradient w.r.t. Y-side embedding parameters
-        dy_embed = -norm * (x_embed_batch.T @ delta)
-        dy_embed += (self.y_embed - self.y_prior_mean) / (self.y_prior_scale**2)
+        dy_main = -norm * (x_main_batch.T @ delta)
+        dy_main += (self.y_main - self.y_prior_mean) / (self.y_prior_scale**2)
 
         # Y-side bias gradient is the row-wise sum over non-reference residuals.
         dy_bias = -norm * delta.sum(axis=0, keepdims=True)
         dy_bias += (self.y_bias - self.y_prior_mean) / (self.y_prior_scale**2)
 
         # Project residuals back through the Y embeddings for the X-side gradients.
-        dx_embed_batch = delta @ self.y_embed.T  # (B, p)
+        dx_main_batch = delta @ self.y_main.T  # (B, p)
         dx_bias_batch = delta.sum(axis=1)  # (B,)
 
-        dx_embed = np.zeros_like(self.x_embed)
+        dx_main = np.zeros_like(self.x_main)
         dx_bias = np.zeros_like(self.x_bias)
 
         # Scatter-add the sampled X-side contributions back to full parameter arrays.
-        np.add.at(dx_embed, X_ids, -norm * dx_embed_batch)
+        np.add.at(dx_main, X_ids, -norm * dx_main_batch)
         np.add.at(dx_bias[:, 0], X_ids, -norm * dx_bias_batch)
 
         # Add prior gradients
-        dx_embed += (self.x_embed - self.x_prior_mean) / (self.x_prior_scale**2)
+        dx_main += (self.x_main - self.x_prior_mean) / (self.x_prior_scale**2)
         dx_bias += (self.x_bias - self.x_prior_mean) / (self.x_prior_scale**2)
 
         # Compute total loss (negative log posterior)
         prior_loss = 0.0
         prior_loss += (
             0.5
-            * np.sum((self.x_embed - self.x_prior_mean) ** 2)
+            * np.sum((self.x_main - self.x_prior_mean) ** 2)
             / self._x_prior_scale_sq
         )
         prior_loss += (
@@ -969,7 +1020,7 @@ class _MMvecModel:
         )
         prior_loss += (
             0.5
-            * np.sum((self.y_embed - self.y_prior_mean) ** 2)
+            * np.sum((self.y_main - self.y_prior_mean) ** 2)
             / self._y_prior_scale_sq
         )
         prior_loss += (
@@ -980,46 +1031,28 @@ class _MMvecModel:
 
         loss = -norm * loglik + prior_loss
 
-        grads = (dx_embed, dx_bias, dy_embed, dy_bias)
+        grads = (dx_main, dx_bias, dy_main, dy_bias)
 
         return loss, grads
 
-    def calc_ranks(self):
-        """Compute log conditional probabilities (ranks).
-
-        Returns
-        -------
-        ranks : np.ndarray of shape (n_features_x, n_features_y)
-            Row-centered log conditional probabilities.
-
-        """
-        ranks = np.empty((self.n_features_x, self.n_features_y))
-        ranks[:, 0] = 0.0
-        ranks_nonref = ranks[:, 1:]
-        np.matmul(self.x_embed, self.y_embed, out=ranks_nonref)
-        ranks_nonref += self.x_bias
-        ranks_nonref += self.y_bias
-        ranks -= np.mean(ranks, axis=1, keepdims=True)
-        return ranks
-
-    def pack_params(self):
+    def pack_params(self) -> np.ndarray:
         """Flatten all parameters into a single vector.
 
         Returns
         -------
         theta : np.ndarray
-            Flattened parameters [x_embed, x_bias, y_embed, y_bias].
+            Flattened parameters [x_main, x_bias, y_main, y_bias].
         """
         return np.concatenate(
             [
-                self.x_embed.ravel(),
+                self.x_main.ravel(),
                 self.x_bias.ravel(),
-                self.y_embed.ravel(),
+                self.y_main.ravel(),
                 self.y_bias.ravel(),
             ]
         )
 
-    def unpack_params(self, theta):
+    def unpack_params(self, theta: np.ndarray) -> None:
         """Restore parameter matrices from flat vector.
 
         Parameters
@@ -1032,24 +1065,24 @@ class _MMvecModel:
         p = self.n_components
 
         idx = 0
-        self.x_embed = theta[idx : idx + d1 * p].reshape(d1, p)
+        self.x_main = theta[idx : idx + d1 * p].reshape(d1, p)
         idx += d1 * p
         self.x_bias = theta[idx : idx + d1].reshape(d1, 1)
         idx += d1
-        self.y_embed = theta[idx : idx + p * (d2 - 1)].reshape(p, d2 - 1)
+        self.y_main = theta[idx : idx + p * (d2 - 1)].reshape(p, d2 - 1)
         idx += p * (d2 - 1)
         self.y_bias = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
     def full_batch_loss_and_gradient(
         self,
-        y_sums,
-        n_sums,
-        logits,
-        resids,
-        row_max,
-        log_norm,
-        row_scale,
-    ):
+        y_sums: np.ndarray,
+        n_sums: np.ndarray,
+        logits: np.ndarray,
+        resids: np.ndarray,
+        row_max: np.ndarray,
+        log_norm: np.ndarray,
+        row_scale: np.ndarray,
+    ) -> tuple[float, np.ndarray]:
         """Compute full-batch loss and gradient for L-BFGS.
 
         Parameters
@@ -1091,7 +1124,7 @@ class _MMvecModel:
         With those grouped arrays in hand, the dense part of the objective is computed
         from the non-reference logits:
 
-            x_embed @ y_embed + x_bias + y_bias
+            x_main @ y_main + x_bias + y_bias
 
         without materializing the reference Y column. The data term is then:
 
@@ -1108,10 +1141,10 @@ class _MMvecModel:
         # nnz : number of non-zero entries in X
 
         # Compute the non-reference logits directly:
-        #   logits = x_embed @ y_embed + x_bias + y_bias
+        #   logits = x_main @ y_main + x_bias + y_bias
         # This is algebraically the same as the old augmented-matrix product, but
         # avoids the reference column (1).
-        np.matmul(self.x_embed, self.y_embed, out=logits)
+        np.matmul(self.x_main, self.y_main, out=logits)
         logits += self.x_bias
         logits += self.y_bias
 
@@ -1157,13 +1190,13 @@ class _MMvecModel:
         resids += y_sums[:, 1:]
 
         # Gradient for the Y-side embedding matrix.
-        dy_embed = -self.x_embed.T @ resids  # (p, d2-1)
+        dy_main = -self.x_main.T @ resids  # (p, d2-1)
 
         # Gradient for Y-side biases: sum residuals across X features.
         dy_bias = -resids.sum(axis=0, keepdims=True)  # (1, d2-1)
 
         # Gradient for the X-side embedding matrix.
-        dx_embed = -(resids @ self.y_embed.T)  # (d1, p)
+        dx_main = -(resids @ self.y_main.T)  # (d1, p)
 
         # Gradient for X-side biases: sum residuals across Y categories.
         dx_bias = -resids.sum(axis=1, keepdims=True)  # (d1, 1)
@@ -1171,27 +1204,27 @@ class _MMvecModel:
         # Add prior terms (L2 regularization)
         # These are exactly the Gaussian-prior contributions to the negative
         # log-posterior and its gradient.
-        x_embed_diff = self.x_embed - self.x_prior_mean
+        x_main_diff = self.x_main - self.x_prior_mean
         x_bias_diff = self.x_bias - self.x_prior_mean
-        y_embed_diff = self.y_embed - self.y_prior_mean
+        y_main_diff = self.y_main - self.y_prior_mean
         y_bias_diff = self.y_bias - self.y_prior_mean
 
-        loss += 0.5 * np.sum(x_embed_diff**2) / self._x_prior_scale_sq
+        loss += 0.5 * np.sum(x_main_diff**2) / self._x_prior_scale_sq
         loss += 0.5 * np.sum(x_bias_diff**2) / self._x_prior_scale_sq
-        loss += 0.5 * np.sum(y_embed_diff**2) / self._y_prior_scale_sq
+        loss += 0.5 * np.sum(y_main_diff**2) / self._y_prior_scale_sq
         loss += 0.5 * np.sum(y_bias_diff**2) / self._y_prior_scale_sq
 
-        dx_embed += x_embed_diff / self._x_prior_scale_sq
+        dx_main += x_main_diff / self._x_prior_scale_sq
         dx_bias += x_bias_diff / self._x_prior_scale_sq
-        dy_embed += y_embed_diff / self._y_prior_scale_sq
+        dy_main += y_main_diff / self._y_prior_scale_sq
         dy_bias += y_bias_diff / self._y_prior_scale_sq
 
         # Pack gradients
         grad = np.concatenate(
             [
-                dx_embed.ravel(),
+                dx_main.ravel(),
                 dx_bias.ravel(),
-                dy_embed.ravel(),
+                dy_main.ravel(),
                 dy_bias.ravel(),
             ]
         )
@@ -1199,7 +1232,13 @@ class _MMvecModel:
         return loss, grad
 
 
-def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
+def _train_lbfgs(
+    model: _MMvecModel,
+    X_coo: coo_array,
+    Y: np.ndarray,
+    max_iter: int,
+    verbose: bool,
+) -> list[float]:
     """Train MMvec model using L-BFGS-B optimization.
 
     Parameters
@@ -1265,7 +1304,7 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
     losses = []
     it = 0
 
-    def func(theta):
+    def func(theta: np.ndarray) -> tuple[float, np.ndarray]:
         nonlocal it
         model.unpack_params(theta)
         loss, grad = model.full_batch_loss_and_gradient(
@@ -1308,19 +1347,19 @@ def _train_lbfgs(model, X_coo, Y, max_iter, verbose):
 
 
 def _train_adam(
-    model,
-    X_coo,
-    Y,
-    rng,
-    max_iter,
-    learning_rate,
-    batch_size,
-    beta_1,
-    beta_2,
-    clipnorm,
-    batch_norm,
-    verbose,
-):
+    model: _MMvecModel,
+    X_coo: coo_array,
+    Y: np.ndarray,
+    rng: np.random.Generator,
+    max_iter: int,
+    learning_rate: float,
+    batch_size: int,
+    beta_1: float,
+    beta_2: float,
+    clipnorm: float,
+    batch_norm: str,
+    verbose: bool,
+) -> list[float]:
     """Train MMvec model using Adam optimization.
 
     Parameters
@@ -1352,18 +1391,19 @@ def _train_adam(
 
     Returns
     -------
-    convergence_data : list of dict
+    losses : list of dict
         Training metrics per iteration.
+
     """
-    convergence_data = []
+    losses = []
 
     # Initialize Adam moments
-    x_embed_m = np.zeros_like(model.x_embed)
-    x_embed_v = np.zeros_like(model.x_embed)
+    x_main_m = np.zeros_like(model.x_main)
+    x_main_v = np.zeros_like(model.x_main)
     x_bias_m = np.zeros_like(model.x_bias)
     x_bias_v = np.zeros_like(model.x_bias)
-    y_embed_m = np.zeros_like(model.y_embed)
-    y_embed_v = np.zeros_like(model.y_embed)
+    y_main_m = np.zeros_like(model.y_main)
+    y_main_v = np.zeros_like(model.y_main)
     y_bias_m = np.zeros_like(model.y_bias)
     y_bias_v = np.zeros_like(model.y_bias)
 
@@ -1381,6 +1421,7 @@ def _train_adam(
     # Sample batch weighted by abundance
     weights = data / data.sum()
 
+    params = (learning_rate, beta_1, beta_2)
     it = 0
     for epoch in range(max_iter):
         for _ in range(iter_per_epoch):
@@ -1392,73 +1433,44 @@ def _train_adam(
             )
 
             # Gradient clipping
-            dx_embed, dx_bias, dy_embed, dy_bias = _clip_gradients(grads, clipnorm)
+            dx_main, dx_bias, dy_main, dy_bias = _clip_gradients(grads, clipnorm)
 
             # Adam updates
-            bias_correction_1 = 1 - beta_1**it
-            bias_correction_2 = 1 - beta_2**it
+            bc1 = 1 - beta_1**it
+            bc2 = 1 - beta_2**it
 
-            model.x_embed, x_embed_m, x_embed_v = _adam_update(
-                model.x_embed,
-                dx_embed,
-                x_embed_m,
-                x_embed_v,
-                learning_rate,
-                beta_1,
-                beta_2,
-                bias_correction_1,
-                bias_correction_2,
+            model.x_main, x_main_m, x_main_v = _adam_update(
+                model.x_main, dx_main, x_main_m, x_main_v, bc1, bc2, *params
             )
             model.x_bias, x_bias_m, x_bias_v = _adam_update(
-                model.x_bias,
-                dx_bias,
-                x_bias_m,
-                x_bias_v,
-                learning_rate,
-                beta_1,
-                beta_2,
-                bias_correction_1,
-                bias_correction_2,
+                model.x_bias, dx_bias, x_bias_m, x_bias_v, bc1, bc2, *params
             )
-            model.y_embed, y_embed_m, y_embed_v = _adam_update(
-                model.y_embed,
-                dy_embed,
-                y_embed_m,
-                y_embed_v,
-                learning_rate,
-                beta_1,
-                beta_2,
-                bias_correction_1,
-                bias_correction_2,
+            model.y_main, y_main_m, y_main_v = _adam_update(
+                model.y_main, dy_main, y_main_m, y_main_v, bc1, bc2, *params
             )
             model.y_bias, y_bias_m, y_bias_v = _adam_update(
-                model.y_bias,
-                dy_bias,
-                y_bias_m,
-                y_bias_v,
-                learning_rate,
-                beta_1,
-                beta_2,
-                bias_correction_1,
-                bias_correction_2,
+                model.y_bias, dy_bias, y_bias_m, y_bias_v, bc1, bc2, *params
             )
 
-            convergence_data.append(loss)
+            losses.append(loss)
 
         if verbose:
             print(f"Epoch {epoch + 1}/{max_iter}, Loss: {loss:.4f}")
 
-    return convergence_data
+    return losses
 
 
-def _clip_gradients(grads, clipnorm):
+def _clip_gradients(
+    grads: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    clipnorm: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Apply global norm gradient clipping.
 
     Parameters
     ----------
     grads : tuple of np.ndarray
         Gradients in the fixed order
-        ``(dx_embed, dx_bias, dy_embed, dy_bias)``.
+        ``(dx_main, dx_bias, dy_main, dy_bias)``.
     clipnorm : float
         Maximum gradient norm.
 
@@ -1477,17 +1489,17 @@ def _clip_gradients(grads, clipnorm):
 
 
 def _adam_update(
-    param,
-    grad,
-    m,
-    v,
-    lr,
-    beta_1,
-    beta_2,
-    bias_correction_1,
-    bias_correction_2,
-    eps=1e-8,
-):
+    param: np.ndarray,
+    grad: np.ndarray,
+    m: np.ndarray,
+    v: np.ndarray,
+    bc1: float,
+    bc2: float,
+    lr: float,
+    beta_1: float,
+    beta_2: float,
+    eps: float = 1e-8,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Perform single Adam update step.
 
     Parameters
@@ -1500,16 +1512,16 @@ def _adam_update(
         First moment estimate.
     v : np.ndarray
         Second moment estimate.
+    bc1 : float
+        First-moment bias-correction denominator.
+    bc2 : float
+        Second-moment bias-correction denominator.
     lr : float
         Learning rate.
     beta_1 : float
         Exponential decay rate for first moment.
     beta_2 : float
         Exponential decay rate for second moment.
-    bias_correction_1 : float
-        First-moment bias-correction denominator, `1 - beta_1**t`.
-    bias_correction_2 : float
-        Second-moment bias-correction denominator, `1 - beta_2**t`.
     eps : float
         Small constant for numerical stability.
 
@@ -1526,9 +1538,8 @@ def _adam_update(
     v = beta_2 * v + (1 - beta_2) * grad**2
 
     # Bias correction
-    m_hat = m / bias_correction_1
-    v_hat = v / bias_correction_2
-
+    m_hat = m / bc1
+    v_hat = v / bc2
     param = param - lr * m_hat / (np.sqrt(v_hat) + eps)
 
     return param, m, v

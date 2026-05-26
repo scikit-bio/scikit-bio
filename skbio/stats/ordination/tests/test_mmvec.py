@@ -266,12 +266,12 @@ class TestMMvecGradients(unittest.TestCase):
         _, grads = model.loss_and_gradients(
             X_coo, Y, size, norm, weights, np.random.default_rng(seed)
         )
-        grads = dict(zip(["x_embed", "x_bias", "y_embed", "y_bias"], grads))
+        grads = dict(zip(["x_main", "x_bias", "y_main", "y_bias"], grads))
 
         # Verify each parameter numerically
         # Use same seed for each call to get consistent batch
         eps = 1e-5
-        for param_name in ["x_embed", "x_bias", "y_embed", "y_bias"]:
+        for param_name in ["x_main", "x_bias", "y_main", "y_bias"]:
             param = getattr(model, param_name)
             numerical_grad = np.zeros_like(param)
 
@@ -366,6 +366,16 @@ class TestMMvecEstimator(unittest.TestCase):
 
         # Column names should match Y features
         self.assertListEqual(list(Y_pred.columns), list(self.Y.columns))
+
+    def test_predict_match(self):
+        """Check if results match the old ranks path."""
+        model = MMvec(n_components=2, max_iter=50, seed=42).fit(self.X, self.Y)
+        X_test = self.X.iloc[:5].to_numpy()
+        obs = model._predict(X_test)
+        X_props = X_test / X_test.sum(axis=1, keepdims=True)
+        probs = softmax(model.ranks_.to_numpy(), validate=False)
+        exp = X_props @ probs
+        npt.assert_allclose(obs, exp)
 
     def test_score(self):
         """Test score method returns valid Q-squared value."""
