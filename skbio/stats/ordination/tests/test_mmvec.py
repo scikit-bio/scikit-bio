@@ -24,9 +24,7 @@ from scipy.sparse import coo_array
 from skbio.util import get_data_path
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvec, MMvecResult
-from skbio.stats.ordination._mmvec import (
-    random_multimodal, _MMvecModel, _multinomial_loglik_and_grad
-)
+from skbio.stats.ordination._mmvec import random_multimodal, _MMvecModel
 
 
 class TestRandomMultimodal(unittest.TestCase):
@@ -230,34 +228,6 @@ class TestMMvecRecovery(unittest.TestCase):
 class TestMMvecGradients(unittest.TestCase):
     """Test that analytical gradients match numerical gradients."""
 
-    def test_multinomial_gradient(self):
-        """Verify multinomial softmax gradient is correct."""
-        # Small test case
-        logits = np.array([[0.0, 1.0, 2.0], [0.0, -1.0, 1.0]])
-        y = np.array([[5.0, 10.0, 15.0], [20.0, 5.0, 5.0]])
-
-        # Get analytical gradient
-        _, grad_analytical = _multinomial_loglik_and_grad(logits, y)
-
-        # Compute numerical gradient
-        eps = 1e-5
-        grad_numerical = np.zeros_like(logits)
-        for i in range(logits.shape[0]):
-            for j in range(logits.shape[1]):
-                logits_plus = logits.copy()
-                logits_plus[i, j] += eps
-                logits_minus = logits.copy()
-                logits_minus[i, j] -= eps
-
-                loss_plus, _ = _multinomial_loglik_and_grad(logits_plus, y)
-                loss_minus, _ = _multinomial_loglik_and_grad(logits_minus, y)
-
-                grad_numerical[i, j] = (loss_plus - loss_minus) / (2 * eps)
-
-        npt.assert_allclose(
-            grad_analytical, grad_numerical, rtol=1e-4, atol=1e-6
-        )
-
     def test_full_model_gradients(self):
         """Verify all model gradients against numerical differentiation."""
         n_features_x = 5
@@ -296,11 +266,12 @@ class TestMMvecGradients(unittest.TestCase):
         _, grads = model.loss_and_gradients(
             X_coo, Y, size, norm, weights, np.random.default_rng(seed)
         )
+        grads = dict(zip(["x_main", "x_bias", "y_main", "y_bias"], grads))
 
         # Verify each parameter numerically
         # Use same seed for each call to get consistent batch
         eps = 1e-5
-        for param_name in ["x_embed", "x_bias", "y_embed", "y_bias"]:
+        for param_name in ["x_main", "x_bias", "y_main", "y_bias"]:
             param = getattr(model, param_name)
             numerical_grad = np.zeros_like(param)
 
@@ -395,6 +366,16 @@ class TestMMvecEstimator(unittest.TestCase):
 
         # Column names should match Y features
         self.assertListEqual(list(Y_pred.columns), list(self.Y.columns))
+
+    def test_predict_match(self):
+        """Check if results match the old ranks path."""
+        model = MMvec(n_components=2, max_iter=50, seed=42).fit(self.X, self.Y)
+        X_test = self.X.iloc[:5].to_numpy()
+        obs = model._predict(X_test)
+        X_props = X_test / X_test.sum(axis=1, keepdims=True)
+        probs = softmax(model.ranks_.to_numpy(), validate=False)
+        exp = X_props @ probs
+        npt.assert_allclose(obs, exp)
 
     def test_score(self):
         """Test score method returns valid Q-squared value."""
