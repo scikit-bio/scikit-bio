@@ -90,6 +90,7 @@ from ._testing import (
     xp_assert_close,
     xp_assert_equal,
     array_backends,
+    numba_code,
     ArrayAPITestMixin,
     pytestrunner,
 )
@@ -132,5 +133,6 @@ __all__ = [
     "xp_assert_close",
     "xp_assert_equal",
     "array_backends",
+    "numba_code",
     "ArrayAPITestMixin",
 ]

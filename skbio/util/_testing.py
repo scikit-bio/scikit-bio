@@ -730,6 +730,23 @@ def array_backends(*backend_names, cpu_only=False):
     return decorator
 
 
+def numba_code(test_func):
+    """Decorator: mark a test as requiring optional Numba support."""
+    try:
+        import pytest
+
+        test_func = pytest.mark.numba_code(test_func)
+    except ImportError:
+        pass
+
+    try:
+        import numba  # noqa: F401
+    except ImportError:
+        test_func = unittest.skip("Numba is not installed.")(test_func)
+
+    return test_func
+
+
 class ArrayAPITestMixin:
     """Mixin providing array-API test helpers for ``unittest.TestCase``.
 
