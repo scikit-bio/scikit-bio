@@ -129,7 +129,6 @@ _BACKEND_DISPLAY = {
     "dask": "Dask",
 }
 
-
 def _array_api_compat_section(backends, devices=None):
     """Generate an RST compatibility table for the Array API notes section.
 
@@ -194,14 +193,21 @@ def _array_api_compat_section(backends, devices=None):
     for display, cells in rows:
         lines.append(row_line(display, cells))
         lines.append(normal_sep)
-    table = "\n".join(lines)
 
-    intro = (
+    intro_text = (
         "This function supports the `Python array API standard"
         " <https://data-apis.org/array-api/latest/>`_."
-        " Compatible array backends:\n\n"
+        " Compatible array backends:"
     )
-    return intro + table + "\n"
+
+    # Build a self-contained ``.. note::`` admonition. Every body line (the
+    # intro sentence and all table rows) is indented three spaces relative to
+    # the directive; blank lines are left empty.
+    note_body_lines = [intro_text, ""] + lines
+    indented_body = "\n".join(
+        "   " + ln if ln.strip() else ln for ln in note_body_lines
+    )
+    return ".. note::\n\n" + indented_body + "\n"
 
 
 def _insert_into_notes_section(note, doc):
@@ -233,6 +239,14 @@ def _insert_into_notes_section(note, doc):
     else:
         indent = ""
 
+    # Re-indent the entire note block (directive line AND body together) by the
+    # section indent, preserving the relative nesting inside the directive.
+    # Blank lines are left empty so the directive body parses correctly.
+    indented_note = "".join(
+        indent + line if line.strip() else line
+        for line in note.splitlines(keepends=True)
+    )
+
     # Look for an existing Notes section "Notes\n-----"
     notes_match = re.search(r"^(\s*)Notes\s*\n\s*-{3,}", doc, re.MULTILINE)
     if notes_match:
@@ -242,17 +256,140 @@ def _insert_into_notes_section(note, doc):
         rest = doc[header_end:]
         skip = re.match(r"\n*", rest)
         insert_pos = header_end + (skip.end() if skip else 0)
-        # Re-indent the note to match section body indentation
-        indented_note = "".join(
-            indent + line if line.strip() else line
-            for line in note.splitlines(keepends=True)
-        )
-        return doc[:insert_pos] + indented_note + "\n" + doc[insert_pos:]
+        return doc[:insert_pos] + "\n" + indented_note + "\n" + doc[insert_pos:]
 
     # No Notes section: append one at the end
     doc_stripped = doc.rstrip()
-    notes_section = f"\n\n{indent}Notes\n{indent}-----\n{indent}" + note.rstrip() + "\n"
+    notes_section = (
+        f"\n\n{indent}Notes\n{indent}-----\n\n" + indented_note.rstrip() + "\n"
+    )
     return doc_stripped + notes_section
+
+
+# def _array_api_compat_section(backends, devices=None):
+#     """Generate an RST compatibility table for the Array API notes section.
+
+#     Parameters
+#     ----------
+#     backends : list of str
+#         Supported backends.
+#     devices : list of str, optional
+#         Supported devices. Defaults to per-backend defaults.
+
+#     Returns
+#     -------
+#     str
+#         RST-formatted compatibility table paragraph.
+
+#     """
+#     # Collect the set of all devices to display as columns
+#     if devices is not None:
+#         all_devices = list(dict.fromkeys(devices))
+#     else:
+#         all_devices = []
+#         for b in backends:
+#             for d in _BACKEND_DEVICES.get(b, ["cpu"]):
+#                 if d not in all_devices:
+#                     all_devices.append(d)
+
+#     col_headers = [d.upper() for d in all_devices]
+
+#     # Build rows
+#     rows = []
+#     for b in backends:
+#         display = _BACKEND_DISPLAY.get(b, b.capitalize())
+#         supported = _BACKEND_DEVICES.get(b, ["cpu"])
+#         if devices is not None:
+#             supported = [d for d in devices if d in supported]
+#         cells = ["\u2713" if d in supported else "n/a" for d in all_devices]
+#         rows.append((display, cells))
+
+#     # Compute column widths
+#     backend_col_w = max(len("Backend"), max(len(r[0]) for r in rows))
+#     device_col_ws = [
+#         max(len(h), max(len(r[1][i]) for r in rows)) for i, h in enumerate(col_headers)
+#     ]
+
+#     def hline(left, mid, right, fill="-"):
+#         parts = [fill * (backend_col_w + 2)]
+#         for w in device_col_ws:
+#             parts.append(fill * (w + 2))
+#         return "+" + "+".join(parts) + "+"
+
+#     def row_line(backend, cells, fill=" "):
+#         parts = [f" {backend:<{backend_col_w}} "]
+#         for val, w in zip(cells, device_col_ws):
+#             parts.append(f" {val:<{w}} ")
+#         return "|" + "|".join(parts) + "|"
+
+#     header_sep = hline("+", "+", "+", "=")
+#     normal_sep = hline("+", "+", "+", "-")
+#     header_row = row_line("Backend", col_headers)
+
+#     lines = [normal_sep, header_row, header_sep]
+#     for display, cells in rows:
+#         lines.append(row_line(display, cells))
+#         lines.append(normal_sep)
+#     table = "\n".join(lines)
+
+#     intro = (
+#         ".. note::\n\n"
+#         "This function supports the `Python array API standard"
+#         " <https://data-apis.org/array-api/latest/>`_."
+#         " Compatible array backends:\n\n"
+#     )
+#     return intro + table + "\n"
+
+
+# def _insert_into_notes_section(note, doc):
+#     """Insert a note into the Notes section of a docstring.
+
+#     Parameters
+#     ----------
+#     note : str
+#         Text to insert.
+#     doc : str
+#         Docstring to modify.
+
+#     Returns
+#     -------
+#     str
+#         Modified docstring with note prepended inside Notes section.
+
+#     Notes
+#     -----
+#     If a Notes section is found, the note is prepended inside it. Otherwise,
+#     a new Notes section is appended at the end of the docstring.
+
+#     """
+#     note = note.rstrip() + "\n"
+
+#     # Determine indentation from the second non-empty line (same as _note_into_doc)
+#     if match := re.search(r"\n+(\s*)\S*", doc):
+#         indent = match.group(1)
+#     else:
+#         indent = ""
+
+#     # Look for an existing Notes section "Notes\n-----"
+#     notes_match = re.search(r"^(\s*)Notes\s*\n\s*-{3,}", doc, re.MULTILINE)
+#     if notes_match:
+#         # Insert after the section header (and any blank lines following it)
+#         header_end = notes_match.end()
+#         # Skip any leading blank lines inside the section
+#         rest = doc[header_end:]
+#         skip = re.match(r"\n*", rest)
+#         insert_pos = header_end + (skip.end() if skip else 0)
+#         # Re-indent the note to match section body indentation
+#         indented_note = "".join(
+#             indent + line if line.strip() else line
+#             for line in note.splitlines(keepends=True)
+#         )
+#         return doc[:insert_pos] + indented_note + "\n" + doc[insert_pos:]
+
+#     # No Notes section: append one at the end
+#     doc_stripped = doc.rstrip()
+#     notes_section = f"\n\n{indent}Notes\n{indent}-----\n{indent}" + note.rstrip() + "\n"
+#     return doc_stripped + notes_section
 
 
 def _deprecation_note(ver=None, msg=None):
