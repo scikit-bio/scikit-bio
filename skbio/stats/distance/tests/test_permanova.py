@@ -9,6 +9,7 @@
 import io
 from functools import partial
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,10 @@ from scipy.spatial.distance import squareform
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
-from skbio.util import get_data_path
+from skbio.stats.distance import _permanova as permanova_mod
+from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
+                                          permanova_f_stat_sW_condensed_cy)
+from skbio.util import get_data_path, numba_code
 from skbio.stats.distance._base import _preprocess_input_sng
 
 
@@ -406,6 +410,70 @@ class PERMANOVACondensedTests(TestCase):
 
         self.assertEqual(len(self.dm_ties_condensed.data), expected_condensed_length)
         self.assertEqual(self.dm_ties_redundant.data.shape, (n, n))
+
+
+class PERMANOVANumbaTests(TestCase):
+    """Tests for the Numba-accelerated s_W helpers and dispatch."""
+
+    def setUp(self):
+        # Same numbers as dm_unequal in PERMANOVATests (3 groups, sizes 3/2/1).
+        self.dm_full = np.asarray(
+            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
+             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
+             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
+             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
+             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
+             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]])
+        self.dm_condensed = squareform(self.dm_full, force='tovector',
+                                       checks=False)
+        self.grouping = np.asarray([0, 1, 2, 1, 0, 0], dtype=np.intp)
+        self.group_sizes = np.bincount(self.grouping).astype(np.intp)
+        self.ids = ['s1', 's2', 's3', 's4', 's5', 's6']
+        self.grouping_labels = ['Control', 'Treatment1', 'Treatment2',
+                                'Treatment1', 'Control', 'Control']
+
+    def _expected_sW(self):
+        n = self.dm_full.shape[0]
+        s_W = 0.0
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                if self.grouping[i] == self.grouping[j]:
+                    g = self.grouping[i]
+                    s_W += self.dm_full[i, j] ** 2 / self.group_sizes[g]
+        return s_W
+
+    def _assert_sW(self, func, dm):
+        obs = func(dm, self.group_sizes, self.grouping)
+        self.assertAlmostEqual(obs, self._expected_sW())
+
+    def test_sW_full_cy(self):
+        self._assert_sW(permanova_f_stat_sW_cy, self.dm_full)
+
+    @numba_code
+    def test_sW_full_numba(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_numba, self.dm_full)
+
+    def test_sW_condensed_cy(self):
+        self._assert_sW(permanova_f_stat_sW_condensed_cy, self.dm_condensed)
+
+    @numba_code
+    def test_sW_condensed_numba(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_condensed_numba,
+                        self.dm_condensed)
+
+    @numba_code
+    def test_permanova_numba_matches_cython_fallback(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42)
+
+        # Force the fallback path so the Numba dispatch result is compared
+        # with Cython using the same input matrix and permutation seed.
+        with patch.object(permanova_mod, "NUMBA_AVAILABLE", False):
+            exp = permanova(dm, self.grouping_labels, permutations=99, seed=42)
+
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
 
 
 if __name__ == '__main__':
