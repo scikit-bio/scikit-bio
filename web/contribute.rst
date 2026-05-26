@@ -34,6 +34,7 @@ In addition, there are separate documents covering advanced topics:
    devdoc/new_module
    devdoc/review
    devdoc/release
+   devdoc/array_api
 
 
 Ask a question
@@ -283,6 +284,11 @@ Alternatively, you may run all unit tests in a Python session (including Jupyter
 
     >>> from skbio.test import pytestrunner
     >>> pytestrunner()
+
+GPU Tests
+.........
+
+If you are incorporating Python Array API support or GPU support into scikit-bio, please review the :doc:`devdoc/array_api` page for specific information.
 
 Code coverage
 ^^^^^^^^^^^^^

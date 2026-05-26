@@ -44,7 +44,7 @@ class TestMetricSpecs(TestCase):
         @_metric_specs()
         def metric1(seq1, seq2):
             return 1
-        
+
         seq1, seq2 = DNA("ACGT"), DNA("AGTC")
         self.assertEqual(metric1(seq1, seq2), 1)
 
@@ -186,7 +186,7 @@ class TestMetricSpecs(TestCase):
     def test_char_freqs(self):
         # DNA characters
         valid = _char_hash("definite", DNA)
-        
+
         # one 1D array
         seq1 = DNA("CGATCATCTA")
         obs = _char_freqs(seq1._bytes, valid)
@@ -247,7 +247,7 @@ class TestMetricSpecs(TestCase):
             _check_freqs([-0.5, 0.3, 0.5, 0.7])
         msg = "Character frequencies must all be non-negative."
         self.assertEqual(str(cm.exception), msg)
-            
+
         obs = _check_freqs([0.0, 0.3, 0.7])
         self.assertIsInstance(obs, np.ndarray)
         with self.assertRaises(ValueError) as cm:
@@ -604,33 +604,51 @@ class TestJC69(TestCase):
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.23262)
 
+        obs = jc69(seq1, seq2, gamma=2.0)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.25162)
+
         # RNA sequences
         seq1, seq2 = RNA("AUCG"), RNA("UACG")
         self.assertEqual(round(jc69(seq1, seq2), 5), 0.82396)
+
+        self.assertEqual(round(jc69(seq1, seq2, gamma=2.0), 5), 1.09808)
 
         # sequences with gaps
         seq1, seq2 = DNA("A--ACGG"), DNA("AGAAT-G")
         self.assertEqual(round(jc69(seq1, seq2), 5), 0.30410)
 
+        self.assertEqual(round(jc69(seq1, seq2, gamma=2.0), 5), 0.33712)
+
         # sequences with degenerate characters
         seq1, seq2 = DNA("ANGCRT"), DNA("CCSMTT")
         self.assertEqual(round(jc69(seq1, seq2), 5), 0.82396)
+
+        self.assertEqual(round(jc69(seq1, seq2, gamma=2.0), 5), 1.09808)
 
         # identical sequences
         seq1, seq2 = DNA("ACGT"), DNA("ACGT")
         self.assertEqual(jc69(seq1, seq2), 0.0)
 
+        self.assertEqual(jc69(seq1, seq2, gamma=2.0), 0.0)
+
         # distinct sequences
         seq1, seq2 = DNA("ACGT"), DNA("TGCA")
         self.assertTrue(np.isnan(jc69(seq1, seq2)))
+
+        self.assertTrue(np.isnan(jc69(seq1, seq2, gamma=2.0)))
 
         # highly divergent sequences (p = 0.7)
         seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
         self.assertEqual(round(jc69(seq1, seq2), 5), 2.03104)
 
+        self.assertEqual(round(jc69(seq1, seq2, gamma=2.0), 5), 4.30948)
+
         # overly divergent sequences (p = 0.8)
         seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
         self.assertTrue(np.isnan(jc69(seq1, seq2)))
+
+        self.assertTrue(np.isnan(jc69(seq1, seq2, gamma=2.0)))
 
         # protein sequences
         seq1, seq2 = Protein("-PYCRNG"), Protein("MPYAKC-")
@@ -641,6 +659,12 @@ class TestJC69(TestCase):
         seq1, seq2 = Sequence("AGCNT"), Sequence("CG-AT")
         with self.assertRaises(TypeError):
             jc69(seq1, seq2)
+
+        seq1, seq2 = DNA("A--ACGG"), DNA("AGAAT-G")
+        with self.assertRaises(ValueError):
+            jc69(seq1, seq2, gamma=-1.0)
+        with self.assertRaises(ValueError):
+            jc69(seq1, seq2, gamma=0.0)
 
     def test_jc69_correct(self):
         # scalar input
@@ -703,32 +727,55 @@ class TestF81(TestCase):
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.53708)
 
+        obs = f81(seq1, seq2, gamma=2.0)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.65464)
+
         # even base frequencies (equivalent to JC69)
         obs = f81(seq1, seq2, freqs=(.25, .25, .25, .25))
         self.assertEqual(round(obs, 5), 0.51986)
         exp = jc69(seq1, seq2)
         self.assertAlmostEqual(obs, exp)
 
+        obs = f81(seq1, seq2, freqs=(.25, .25, .25, .25), gamma=2.0)
+        self.assertEqual(round(obs, 5), 0.62132)
+        exp = jc69(seq1, seq2, gamma=2.0)
+        self.assertAlmostEqual(obs, exp)
+
         # identical sequences after trimming
         self.assertEqual(f81(DNA("AACGTY"), DNA("WACGTT")), 0.0)
+
+        self.assertEqual(f81(DNA("AACGTY"), DNA("WACGTT"), gamma=2.0), 0.0)
 
         # highly divergent sequences
         seq1, seq2 = DNA("ACGAGCTCCT"), DNA("GCTTGAGTCA")
         self.assertEqual(round(f81(seq1, seq2), 5), 2.09101)
 
+        self.assertEqual(round(f81(seq1, seq2, gamma=2.0), 5), 4.57259)
+
         # overly divergent sequences
         seq1, seq2 = DNA("GACTA"), DNA("CTCAG")
         self.assertTrue(np.isnan(f81(seq1, seq2)))
 
+        self.assertTrue(np.isnan(f81(seq1, seq2, gamma=2.0)))
+
         # RNA sequences
         seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
         self.assertEqual(round(f81(seq1, seq2), 5), 0.83539)
+
+        self.assertEqual(round(f81(seq1, seq2, gamma=2.0), 5), 1.1236)
 
         # non-nucleotide sequences
         with self.assertRaises(TypeError):
             f81(Protein("-PYCRNG"), Protein("MPYAKC-"))
         with self.assertRaises(TypeError):
             f81(Sequence("AGCNT"), Sequence("CG-AT"))
+
+        seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
+        with self.assertRaises(ValueError):
+            f81(seq1, seq2, gamma=-1.0)
+        with self.assertRaises(ValueError):
+            f81(seq1, seq2, gamma=0.0)
 
 
 class TestK2P(TestCase):
@@ -740,6 +787,10 @@ class TestK2P(TestCase):
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.56234)
 
+        obs = k2p(seq1, seq2, gamma=2.0)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 0.71034)
+
         # identical sequences after trimming
         self.assertEqual(k2p(DNA("AACGTY"), DNA("WACGTT")), 0.0)
 
@@ -748,20 +799,32 @@ class TestK2P(TestCase):
         seq2 = DNA("AGCATATT")
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
+        self.assertTrue(np.isnan(k2p(seq1, seq2, gamma=2.0)))
+
         # too many transitions (2P + Q > 1)
         seq1 = DNA("ACGTATGT")
         seq2 = DNA("GTCTACAT")
         self.assertTrue(np.isnan(k2p(seq1, seq2)))
 
+        self.assertTrue(np.isnan(k2p(seq1, seq2, gamma=2.0)))
+
         # RNA sequences
         seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
         self.assertEqual(round(k2p(seq1, seq2), 5), 0.82396)
+
+        self.assertEqual(round(k2p(seq1, seq2, gamma=2.0), 5), 1.09808)
 
         # non-nucleotide sequences
         with self.assertRaises(TypeError):
             k2p(Protein("-PYCRNG"), Protein("MPYAKC-"))
         with self.assertRaises(TypeError):
             k2p(Sequence("AGCNT"), Sequence("CG-AT"))
+
+        seq1, seq2 = RNA("AUCU-CGGU"), RNA("AGGUUCA--")
+        with self.assertRaises(ValueError):
+            k2p(seq1, seq2, gamma=-1.0)
+        with self.assertRaises(ValueError):
+            k2p(seq1, seq2, gamma=0.0)
 
 
 class TestF84(TestCase):
@@ -821,46 +884,76 @@ class TestTN93(TestCase):
         self.assertIsInstance(obs, float)
         self.assertEqual(round(obs, 5), 0.99700)
 
+        obs = tn93(seq1, seq2, gamma=2.0)
+        self.assertIsInstance(obs, float)
+        self.assertEqual(round(obs, 5), 3.01441)
+
         # specify base frequencies
         obs = tn93(seq1, seq2, freqs=(.2, .2, .3, .3))
         self.assertEqual(round(obs, 5), 0.57303)
+
+        obs = tn93(seq1, seq2, freqs=(.2, .2, .3, .3), gamma=2.0)
+        self.assertEqual(round(obs, 5), 0.73357)
 
         # even base frequencies
         obs = tn93(seq1, seq2, freqs=(.25, .25, .25, .25))
         self.assertEqual(round(obs, 5), 0.56234)
 
+        obs = tn93(seq1, seq2, freqs=(.25, .25, .25, .25), gamma=2.0)
+        self.assertEqual(round(obs, 5), 0.71034)
+
         # zero base frequency
         obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5))
         self.assertTrue(np.isnan(obs))
 
+        obs = tn93(seq1, seq2, freqs=(.0, .2, .3, .5), gamma=2.0)
+        self.assertTrue(np.isnan(obs))
+
         # identical sequences after trimming
         self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT")), 0.0)
+
+        self.assertEqual(tn93(DNA("AACGTY"), DNA("WACGTT"), gamma=2.0), 0.0)
 
         # too many purine transitions (a1 < 0)
         seq1 = DNA("ACGTATGT")
         seq2 = DNA("GCATGCAT")
         self.assertTrue(np.isnan(tn93(seq1, seq2)))
 
+        self.assertTrue(np.isnan(tn93(seq1, seq2, gamma=2.0)))
+
         # too many pyrimidine transitions (a2 < 0)
         seq1 = DNA("ACCTTGCC")
         seq2 = DNA("ATTTCGCT")
         self.assertTrue(np.isnan(tn93(seq1, seq2)))
+
+        self.assertTrue(np.isnan(tn93(seq1, seq2, gamma=2.0)))
 
         # too many transversions (a3 < 0)
         seq1 = DNA("ACGTACGT")
         seq2 = DNA("AGCATATT")
         self.assertTrue(np.isnan(tn93(seq1, seq2)))
 
+        self.assertTrue(np.isnan(tn93(seq1, seq2, gamma=2.0)))
+
         # RNA sequences
         seq1 = RNA("AUCU-CGCAGU")
         seq2 = RNA("AGGUUCAUA--")
         self.assertEqual(round(tn93(seq1, seq2), 5), 0.88543)
+
+        self.assertEqual(round(tn93(seq1, seq2, gamma=2.0), 5), 1.25798)
 
         # non-nucleotide sequences
         with self.assertRaises(TypeError):
             tn93(Protein("-PYCRNG"), Protein("MPYAKC-"))
         with self.assertRaises(TypeError):
             tn93(Sequence("AGCNT"), Sequence("CG-AT"))
+
+        seq1 = RNA("AUCU-CGCAGU")
+        seq2 = RNA("AGGUUCAUA--")
+        with self.assertRaises(ValueError):
+            tn93(seq1, seq2, gamma=-1.0)
+        with self.assertRaises(ValueError):
+            tn93(seq1, seq2, gamma=0.0)
 
 
 class TestLogDet(TestCase):

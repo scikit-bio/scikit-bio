@@ -10,14 +10,16 @@ import os
 import itertools
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 import pandas as pd
 import numpy as np
 import numpy.testing as npt
+import array_api_compat as aac
 
 from skbio import OrdinationResults
 from skbio.util import (get_data_path, assert_ordination_results_equal,
-                        assert_data_frame_almost_equal)
+                        assert_data_frame_almost_equal, get_package, _is_usable)
 from skbio.util._testing import (
     _normalize_signs,
     assert_series_almost_equal,
@@ -34,8 +36,11 @@ from skbio.util._testing import (
     xp_assert_equal,
     array_backends,
     ArrayAPITestMixin,
+    _device_specs_match,
+    _on_device
 )
 
+np_xp = aac.array_namespace(np.empty(0))
 
 class TestGetDataPath(unittest.TestCase):
     def test_get_data_path(self):
@@ -789,12 +794,141 @@ class TestArrayAPITestMixin(unittest.TestCase, ArrayAPITestMixin):
         with self.assertRaises(AssertionError):
             self.assert_close(a, b)
 
-    def test_normalize_device(self):
-        self.assertEqual(self._normalize_device('cuda:0'), 'gpu')
-        self.assertEqual(self._normalize_device('gpu'), 'gpu')
-        self.assertEqual(self._normalize_device('CUDA'), 'gpu')
-        self.assertEqual(self._normalize_device('cpu'), 'cpu')
+    def test_device_specs_match(self):
+        # Same string matches itself.
+        self.assertTrue(_device_specs_match('cuda', 'cuda'))
+        self.assertTrue(_device_specs_match('cpu', 'cpu'))
 
+        # GPU aliases match each other.
+        self.assertTrue(_device_specs_match('gpu', 'cuda'))
+        self.assertTrue(_device_specs_match('cuda', 'gpu'))
+
+        # Case-insensitive.
+        self.assertTrue(_device_specs_match('CUDA', 'cuda'))
+        self.assertTrue(_device_specs_match('GPU', 'CUDA'))
+
+        # Different hardware doesn't match.
+        self.assertFalse(_device_specs_match('cpu', 'cuda'))
+        self.assertFalse(_device_specs_match('cpu', 'gpu'))
+
+        # None handling: matches only None.
+        self.assertTrue(_device_specs_match(None, None))
+        self.assertFalse(_device_specs_match(None, 'cpu'))
+        self.assertFalse(_device_specs_match('cuda', None))
+
+class TestOnDevice(unittest.TestCase):
+    """Tests for ``_on_device``. Uses mocking so it runs without optional
+    backends installed."""
+
+    # ---- NumPy: no mocking needed, numpy is always available ----
+
+    def test_numpy_cpu_matches(self):
+        arr = np.arange(5)
+        self.assertTrue(_on_device(arr, np_xp, "cpu"))
+
+    def test_numpy_none_matches(self):
+        arr = np.arange(5)
+        self.assertTrue(_on_device(arr, np_xp, None))
+
+    def test_numpy_cuda_does_not_match(self):
+        arr = np.arange(5)
+        self.assertFalse(_on_device(arr, np_xp, "cuda"))
+
+    def test_numpy_gpu_does_not_match(self):
+        arr = np.arange(5)
+        self.assertFalse(_on_device(arr, np_xp, "gpu"))
+
+    # ---- CuPy: always GPU. Mock the backend name. ----
+
+    def test_cupy_cuda_matches(self):
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertTrue(_on_device(fake_arr, fake_xp, "cuda"))
+
+    def test_cupy_gpu_matches(self):
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertTrue(_on_device(fake_arr, fake_xp, "gpu"))
+
+    def test_cupy_cpu_does_not_match(self):
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertFalse(_on_device(fake_arr, fake_xp, "cpu"))
+
+    def test_cupy_none_does_not_match(self):
+        fake_xp = object()
+        fake_arr = object()
+        with patch("skbio.util._testing._get_backend_name", return_value="cupy"):
+            self.assertFalse(_on_device(fake_arr, fake_xp, None))
+
+    # ---- PyTorch: inspects arr.device.type ----
+
+    def test_torch_cpu_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "cpu"))
+
+    def test_torch_cpu_none_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), None))
+
+    def test_torch_cpu_does_not_match_cuda(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertFalse(_on_device(fake_arr, object(), "cuda"))
+
+    def test_torch_cuda_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "cuda"))
+
+    def test_torch_cuda_matches_gpu_alias(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertTrue(_on_device(fake_arr, object(), "gpu"))
+
+    def test_torch_cuda_does_not_match_cpu(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(type="cuda"))
+        with patch("skbio.util._testing._get_backend_name", return_value="torch"):
+            self.assertFalse(_on_device(fake_arr, object(), "cpu"))
+
+    # ---- JAX: inspects arr.device.platform ----
+
+    def test_jax_cpu_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "cpu"))
+
+    def test_jax_none_matches_cpu(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), None))
+
+    def test_jax_gpu_matches(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="gpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "gpu"))
+
+    def test_jax_gpu_matches_cuda_alias(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="gpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertTrue(_on_device(fake_arr, object(), "cuda"))
+
+    def test_jax_cpu_does_not_match_gpu(self):
+        fake_arr = SimpleNamespace(device=SimpleNamespace(platform="cpu"))
+        with patch("skbio.util._testing._get_backend_name", return_value="jax"):
+            self.assertFalse(_on_device(fake_arr, object(), "gpu"))
+
+    # ---- Unknown backend raises ----
+
+    def test_unknown_backend_raises(self):
+        with patch("skbio.util._testing._get_backend_name", return_value="weird_lib"):
+            with self.assertRaises(NotImplementedError):
+                _on_device(object(), object(), "cpu")
 
 if __name__ == '__main__':
     unittest.main()

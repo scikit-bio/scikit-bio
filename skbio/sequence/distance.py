@@ -200,6 +200,7 @@ def _metric_specs(
         wrapper._equal = equal
         wrapper._alphabet = alphabet
         wrapper._has_freqs = has_freqs
+        wrapper._has_gamma = "gamma" in signature(func).parameters
 
         return wrapper
 
@@ -233,6 +234,25 @@ def _check_seqtype(name, this, valid=None):
     raise TypeError(
         f"{name!r} is compatible with {types!r} sequences, not {this.__name__!r}."
     )
+
+
+def _check_gamma(gamma):
+    """Check if the gamma distribution shape parameter is a positive number.
+
+    Parameters
+    ----------
+    gamma : float or int
+        Shape parameter of gamma distribution.
+
+    Raises
+    ------
+    ValueError
+        If gamma is not positive.
+
+    """
+
+    if gamma is not None and not gamma > 0.0:
+        raise ValueError("Parameter 'gamma' must be a positive number.")
 
 
 def _char_hash(alphabet, seqtype):
@@ -611,7 +631,7 @@ def _pdist(seqs, mask, seqtype):
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
-def jc69(seq1, seq2):
+def jc69(seq1, seq2, gamma=None):
     r"""Calculate the JC69 distance between two aligned nucleotide sequences.
 
     .. versionadded:: 0.7.2
@@ -624,10 +644,25 @@ def jc69(seq1, seq2):
     .. math::
         D = -\frac{3}{4} ln(1 - \frac{4}{3} p)
 
+    The JC69 model can be corrected for site-rate heterogeneity by assuming that
+    evolutionary rates follow a gamma distribution:
+
+    .. math::
+        D = \frac{3}{4}\alpha
+        \left[\left(1 - \frac{4}{3} p\right)^{-\frac{1}{\alpha}} - 1\right]
+
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
+
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the JC69 distance between.
+    gamma : float, optional
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -641,7 +676,8 @@ def jc69(seq1, seq2):
 
     Notes
     -----
-    The Jukes-Cantor 1969 (JC69) model was originally described in [1]_.
+    The Jukes-Cantor 1969 (JC69) model was originally described in [1]_ and its gamma
+    correction in [2]_.
 
     JC69 is a basic evolutionary model for nucleotide sequences. It assumes equal base
     frequencies and equal substitution rates between bases. It models sequence
@@ -656,12 +692,17 @@ def jc69(seq1, seq2):
     ----------
     .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
        Mammalian Protein Metabolism, 3(21), 132.
+    .. [2] Golding, G. B. (1983). Estimates of DNA and protein sequence divergence:
+       an examination of some assumptions. Molecular Biology and Evolution, 1(1),
+       125-142.
 
     """
-    return _jc69(np.vstack((seq1._bytes, seq2._bytes)), None, None).item()
+
+    _check_gamma(gamma)
+    return _jc69(np.vstack((seq1._bytes, seq2._bytes)), None, None, gamma).item()
 
 
-def _jc69(seqs, mask, seqtype):
+def _jc69(seqs, mask, seqtype, gamma=None):
     """Compute pairwise JC69 distances between sequences.
 
     Parameters
@@ -672,6 +713,8 @@ def _jc69(seqs, mask, seqtype):
         Boolean mask of valid sites.
     seqtype : type
         A placeholder.
+    gamma : float, optional
+        Gamma distribution shape parameter (alpha).
 
     Returns
     -------
@@ -680,7 +723,10 @@ def _jc69(seqs, mask, seqtype):
 
     """
     dm = _pdist(seqs, mask, None)
-    _p_correct(dm, 0.75)
+    if gamma is None:
+        _p_correct(dm, 0.75)
+    else:
+        _p_gamma_correct(dm, 0.75, gamma)
     return dm
 
 
@@ -794,7 +840,6 @@ def _p_correct(dists, coef):
         Correction coefficient.
 
     """
-    # TODO: Add gamma distribution.
 
     # There are three categories of values:
     # 1. Values exceeding frac become NaN, as these sites are saturated and the
@@ -809,8 +854,32 @@ def _p_correct(dists, coef):
     dists += 0.0  # optional: set -0.0 to 0.0
 
 
+def _p_gamma_correct(dists, coef, gamma):
+    """Correct p-distances in place to account for multiple substitutions
+    and also do gamma-correction.
+
+    Parameters
+    ----------
+    dists : ndarray of float
+        Raw p-distances to correct.
+    coef : float
+        Correction coefficient.
+    gamma : float
+        Gamma distribution shape parameter (alpha).
+
+    """
+
+    dists[dists >= coef] = np.nan
+    dists /= -coef
+    dists += 1.0
+    np.power(dists, -1 / gamma, out=dists)
+    dists -= 1.0
+    dists *= coef * gamma
+    dists += 0.0  # optional: set -0.0 to 0.0
+
+
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
-def f81(seq1, seq2, freqs=None):
+def f81(seq1, seq2, freqs=None, gamma=None):
     r"""Calculate the F81 distance between two aligned nucleotide sequences.
 
     .. versionadded:: 0.7.2
@@ -819,13 +888,21 @@ def f81(seq1, seq2, freqs=None):
     differential base frequencies (:math:`\pi`). The distance is calculated as:
 
     .. math::
-        D = -\alpha ln(1 - \frac{p}{\alpha})
+        D = -b\, ln(1 - \frac{p}{b})
 
     Where :math:`p` is the proportion of differing sites (i.e., *p*-distance). Factor
-    :math:`\alpha` is calculated as:
+    :math:`b` is calculated as:
 
     .. math::
-        \alpha = 1 - \pi_A^2 - \pi_C^2 - \pi_G^2 - \pi_T^2
+        b = 1 - \pi_A^2 - \pi_C^2 - \pi_G^2 - \pi_T^2
+
+    The F81 model can be corrected for site-rate heterogeneity by assuming that
+    evolutionary rates follow a gamma distribution:
+
+    .. math::
+        D = b\, \alpha \left[\left(1 - \frac{p}{b}\right)^{-\frac{1}{\alpha}} - 1\right]
+
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
@@ -835,6 +912,12 @@ def f81(seq1, seq2, freqs=None):
         Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
+    gamma : float, optional
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -856,7 +939,7 @@ def f81(seq1, seq2, freqs=None):
     the observed or user-provided based frequencies are equal (e.g., by specifying
     ``freqs=(.25, .25, .25, .25)``), the result will be identical to that of JC69.
 
-    This function returns NaN if :math:`p \geq \alpha`.
+    This function returns NaN if :math:`p \geq b`.
 
     References
     ----------
@@ -871,10 +954,11 @@ def f81(seq1, seq2, freqs=None):
 
     """
     seqs = np.vstack((seq1._bytes, seq2._bytes))
-    return _f81(seqs, None, type(seq1), freqs=freqs).item()
+    _check_gamma(gamma)
+    return _f81(seqs, None, type(seq1), freqs=freqs, gamma=gamma).item()
 
 
-def _f81(seqs, mask, seqtype, freqs):
+def _f81(seqs, mask, seqtype, freqs, gamma=None):
     """Compute pairwise F81 distances between sequences.
 
     Parameters
@@ -887,6 +971,8 @@ def _f81(seqs, mask, seqtype, freqs):
         A placeholder.
     freqs : ndarray of float of shape (4,)
         Relative frequencies of the four nucleobases.
+    gamma : float, optional
+        Gamma distribution shape parameter (alpha).
 
     Returns
     -------
@@ -896,12 +982,15 @@ def _f81(seqs, mask, seqtype, freqs):
     """
     coef = 1.0 - np.sum(np.asarray(freqs) ** 2)
     arr = _pdist(seqs, mask, None)
-    _p_correct(arr, coef)
+    if gamma is None:
+        _p_correct(arr, coef)
+    else:
+        _p_gamma_correct(arr, coef, gamma)
     return arr
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
-def k2p(seq1, seq2):
+def k2p(seq1, seq2, gamma=None):
     r"""Calculate the K2P distance between two aligned nucleotide sequences.
 
     .. versionadded:: 0.7.2
@@ -912,15 +1001,30 @@ def k2p(seq1, seq2):
     equal base frequencies. The distance is calculated as:
 
     .. math::
-        D = -\frac{1}{2} ln((1 - 2P - Q) \sqrt{1 - 2Q})
+        D = -\frac{1}{2} ln\left((1 - 2P - Q) \sqrt{1 - 2Q}\right)
 
     Where :math:`P` and :math:`Q` are the proportions of transitions and transversions,
     respectively.
+
+    The K2P model can be corrected for site-rate heterogeneity by assuming that
+    evolutionary rates follow a gamma distribution:
+
+    .. math::
+        D = \frac{\alpha}{2} \left[\left(1 - 2P - Q\right)^{-\frac{1}{\alpha}}
+        + \frac{1}{2}\left(1 - 2Q\right)^{-\frac{1}{\alpha}} - \frac{3}{2}\right]
+
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution.
 
     Parameters
     ----------
     seq1, seq2 : {DNA, RNA}
         Sequences to compute the K2P distance between.
+    gamma : float, optional
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -934,7 +1038,8 @@ def k2p(seq1, seq2):
 
     Notes
     -----
-    The Kimura 2-parameter model (K2P or K80) was originally described in [1]_.
+    The Kimura 2-parameter model (K2P or K80) was originally described in [1]_ and
+    its gamma correction in [2]_.
 
     K2P is an extension of the JC69 model by modeling differential transition and
     transversion rates. Meanwhile, K2P can be considered as a special case of the F84
@@ -949,12 +1054,17 @@ def k2p(seq1, seq2):
        substitutions through comparative studies of nucleotide sequences. Journal of
        Molecular Evolution, 16(2), 111-120.
 
+    .. [2] Jin, L., & Nei, M. (1990). Limitations of the evolutionary parsimony method
+       of phylogenetic analysis. Molecular biology and evolution, 7(1), 82-102.
+
     """
+
     seqs = np.vstack((seq1._bytes, seq2._bytes))
-    return _k2p(seqs, None, type(seq1)).item()
+    _check_gamma(gamma)
+    return _k2p(seqs, None, type(seq1), gamma).item()
 
 
-def _k2p(seqs, mask, seqtype):
+def _k2p(seqs, mask, seqtype, gamma=None):
     """Compute pairwise K2P distances between sequences.
 
     Parameters
@@ -965,6 +1075,8 @@ def _k2p(seqs, mask, seqtype):
         Boolean mask of valid sites.
     seqtype : type
         Sequence type (DNA or RNA).
+    gamma : float, optional
+        Gamma distribution shape parameter (alpha).
 
     Returns
     -------
@@ -1009,8 +1121,12 @@ def _k2p(seqs, mask, seqtype):
         a2 = 1.0 - 2.0 * Q
         a2[a2 <= 0] = np.nan
 
-        # the formula (Eq. 10 of Kimura, 1980)
-        out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
+        if gamma is None:
+            # the formula (Eq. 10 of Kimura, 1980)
+            out[:] = -0.5 * np.log(a1) - 0.25 * np.log(a2)
+        else:
+            gamma_inv = -1 / gamma
+            out[:] = 0.5 * gamma * (a1**gamma_inv + 0.5 * a2**gamma_inv - 1.5)
 
     dm = _build_dm(func, seqs)
     dm += 0.0  # optional: set -0.0 to 0.0
@@ -1034,11 +1150,11 @@ def f84(seq1, seq2, freqs=None):
     respectively. And:
 
     .. math::
-        \begin{align}
+        \begin{aligned}
         &A = \frac{\pi_A\pi_G}{\pi_A+\pi_G} + \frac{\pi_C\pi_T}{\pi_C+\pi_T} \\
         &B = \pi_A\pi_G + \pi_C\pi_T \\
         &C = (\pi_A+\pi_G)(\pi_C+\pi_T)
-        \end{align}
+        \end{aligned}
 
     Parameters
     ----------
@@ -1174,7 +1290,7 @@ def _f84(seqs, mask, seqtype, freqs):
 
 
 @_metric_specs(equal=True, seqtype=(DNA, RNA), alphabet="canonical")
-def tn93(seq1, seq2, freqs=None):
+def tn93(seq1, seq2, freqs=None, gamma=None):
     r"""Calculate the TN93 distance between two aligned nucleotide sequences.
 
     .. versionadded:: 0.7.2
@@ -1186,17 +1302,38 @@ def tn93(seq1, seq2, freqs=None):
     as:
 
     .. math::
-        \begin{align}
-        D = &-2\frac{\pi_A\pi_G}{\pi_R}
-            ln(1-\frac{\pi_R}{2\pi_A\pi_G}P_1-\frac{1}{2\pi_R}Q) \\
-            &-2\frac{\pi_C\pi_T}{\pi_Y}
-            ln(1-\frac{\pi_Y}{2\pi_C\pi_T}P_2-\frac{1}{2\pi_Y}Q) \\
-            &-2(\pi_R\pi_Y-\frac{\pi_A\pi_G\pi_Y}{\pi_R}-\frac{\pi_C\pi_T\pi_R}{\pi_Y})
-            ln(1-\frac{1}{2\pi_R\pi_Y}Q)
-        \end{align}
+        D = -2A\, ln\left(1-\frac{P_1}{2A}-\frac{Q}{2\pi_R}\right)
+        -2B\, ln\left(1-\frac{P_2}{2B}-\frac{Q}{2\pi_Y}\right)
+        -2C\, ln\left(1-\frac{Q}{2\pi_R\pi_Y}\right)
 
     Where :math:`P_1` and :math:`P_2` are the proportions of purine and pyrimidine
-    transitions, respectively. :math:`Q` is the proportion of transversions.
+    transitions, respectively. :math:`Q` is the proportion of transversions. And:
+
+    .. math::
+        \begin{aligned}
+        &A = \frac{\pi_A\pi_G}{\pi_R} \\
+        &B = \frac{\pi_C\pi_T}{\pi_Y} \\
+        &C = \pi_R\pi_Y - A\pi_Y - B\pi_R
+        \end{aligned}
+
+
+    The TN93 model can be corrected for site-rate heterogeneity by assuming that
+    evolutionary rates follow a gamma distribution:
+
+    .. math::
+        \begin{aligned}
+        D = 2\alpha\Bigg[
+            &A\left(1-\frac{P_1}{2A}-\frac{Q}{2\pi_R}\right)^{-\frac{1}{\alpha}}
+            +B\left(1-\frac{P_2}{2B}-\frac{Q}{2\pi_Y}\right)^{-\frac{1}{\alpha}} \\
+            &\quad +\; C\left(1-\frac{Q}{2\pi_R\pi_Y}\right)^{-\frac{1}{\alpha}}
+            - E\Bigg]
+        \end{aligned}
+
+
+    Where :math:`\alpha > 0` is the shape parameter of the gamma distribution. And:
+
+    .. math::
+        E = \pi_A\pi_G + \pi_T\pi_C + \pi_R\pi_Y
 
     Parameters
     ----------
@@ -1206,6 +1343,12 @@ def tn93(seq1, seq2, freqs=None):
         Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
         to 1. If not provided, the observed frequencies from the two input sequences
         combined will be used.
+    gamma : float, optional
+        Shape parameter (:math:`\alpha`) of the gamma distribution for among-site rate
+        heterogeneity. Must be a positive number. If not provided, no gamma correction
+        will be applied.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
@@ -1219,7 +1362,8 @@ def tn93(seq1, seq2, freqs=None):
 
     Notes
     -----
-    The Tamura and Nei 1993 (TN93) model was originally described in [1]_.
+    The Tamura and Nei 1993 (TN93) model was originally described in [1]_
+    alongside with its gamma correction formula.
 
     This function returns NaN if any of the three logarithm arguments is zero or
     negative, which implicates over-saturation of substitutions.
@@ -1232,10 +1376,11 @@ def tn93(seq1, seq2, freqs=None):
 
     """
     seqs = np.vstack((seq1._bytes, seq2._bytes))
-    return _tn93(seqs, None, type(seq1), freqs=freqs).item()
+    _check_gamma(gamma)
+    return _tn93(seqs, None, type(seq1), freqs=freqs, gamma=gamma).item()
 
 
-def _tn93(seqs, mask, seqtype, freqs):
+def _tn93(seqs, mask, seqtype, freqs, gamma=None):
     """Compute pairwise TN93 distances between sequences.
 
     Parameters
@@ -1248,6 +1393,8 @@ def _tn93(seqs, mask, seqtype, freqs):
         Sequence type (DNA or RNA).
     freqs : ndarray of float of shape (4,)
         Relative frequencies of the four nucleobases.
+    gamma : float, optional
+        Gamma distribution shape parameter (alpha).
 
     Returns
     -------
@@ -1277,6 +1424,7 @@ def _tn93(seqs, mask, seqtype, freqs):
     c1 = -piAxG / piR
     c2 = -piCxT / piY
     c3 = piY / piR_AxG + piR / piY_CxT - piRxY
+    c4 = piAxG + piCxT + piRxY
 
     piR *= 2.0
     piY *= 2.0
@@ -1315,8 +1463,14 @@ def _tn93(seqs, mask, seqtype, freqs):
         a3 = 1.0 - Q / piRxY
         a3[a3 <= 0] = np.nan
 
-        # the formula (Eq. 3 of Tamura & Nei, 1993)
-        out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
+        if gamma is None:
+            # the formula (Eq. 3 of Tamura & Nei, 1993)
+            out[:] = c1 * np.log(a1) + c2 * np.log(a2) + c3 * np.log(a3)
+        else:
+            gamma_inv = -1 / gamma
+            out[:] = -gamma * (
+                c1 * a1**gamma_inv + c2 * a2**gamma_inv + c3 * a3**gamma_inv + c4
+            )
 
     dm = _build_dm(func, seqs)
     dm += 0.0
