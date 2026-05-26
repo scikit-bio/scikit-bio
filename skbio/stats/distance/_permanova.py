@@ -156,7 +156,10 @@ if NUMBA_AVAILABLE:
             local_sum = 0.0
             for col_idx in range(row_idx + 1, n):
                 if grouping[col_idx] == group_idx:
-                    condensed_idx = row_idx * n + col_idx - ((row_idx + 2) * (row_idx + 1)) // 2
+                    condensed_idx = (
+                        row_idx * n + col_idx
+                        - ((row_idx + 2) * (row_idx + 1)) // 2
+                    )
                     val = condensed_matrix[condensed_idx]
                     local_sum += val * val
 
@@ -168,7 +171,10 @@ if NUMBA_AVAILABLE:
                 local_sum = 0.0
                 for col_idx in range(mirror_row + 1, n):
                     if grouping[col_idx] == group_idx:
-                        condensed_idx = mirror_row * n + col_idx - ((mirror_row + 2) * (mirror_row + 1)) // 2
+                        condensed_idx = (
+                            mirror_row * n + col_idx
+                            - ((mirror_row + 2) * (mirror_row + 1)) // 2
+                        )
                         val = condensed_matrix[condensed_idx]
                         local_sum += val * val
                 group_sum += local_sum / group_sizes[group_idx]
