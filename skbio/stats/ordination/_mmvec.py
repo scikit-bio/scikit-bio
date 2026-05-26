@@ -35,6 +35,13 @@ from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike, TableLike
 
+    Grad4Tuple = tuple[
+        np.ndarray,  # dx_main
+        np.ndarray,  # dx_bias
+        np.ndarray,  # dy_main
+        np.ndarray,  # dy_bias
+    ]
+
 
 def mmvec(
     X: TableLike,
@@ -239,20 +246,18 @@ def mmvec(
     O7 -1.355  0.411  0.266 -0.634  0.829  0.483
     O8  0.725 -0.441 -0.347  0.459  1.036 -1.431
 
-    To obtain actual conditional probabilities, apply inverse CLR transform (a.k.a.
-    softmax) to the ranks matrix.
+    The actual conditional probabilities are provided by ``probs``.
 
-    >>> from skbio.stats.composition import clr_inv
-    >>> probs = clr_inv(res.ranks)
-    >>> probs.round(3)
-    array([[ 0.121,  0.304,  0.09 ,  0.114,  0.22 ,  0.15 ],
-           [ 0.167,  0.058,  0.144,  0.147,  0.405,  0.079],
-           [ 0.07 ,  0.054,  0.212,  0.093,  0.44 ,  0.13 ],
-           [ 0.127,  0.126,  0.141,  0.135,  0.361,  0.111],
-           [ 0.2  ,  0.068,  0.124,  0.163,  0.379,  0.067],
-           [ 0.053,  0.04 ,  0.208,  0.101,  0.421,  0.177],
-           [ 0.034,  0.201,  0.174,  0.071,  0.305,  0.216],
-           [ 0.256,  0.08 ,  0.088,  0.197,  0.35 ,  0.03 ]])
+    >>> res.probs.round(3)
+           C1     C2     C3     C4     C5     C6
+    O1  0.121  0.304  0.090  0.114  0.220  0.150
+    O2  0.167  0.058  0.144  0.147  0.405  0.079
+    O3  0.070  0.054  0.212  0.093  0.440  0.130
+    O4  0.127  0.126  0.141  0.135  0.361  0.111
+    O5  0.200  0.068  0.124  0.163  0.379  0.067
+    O6  0.053  0.040  0.208  0.101  0.421  0.177
+    O7  0.034  0.201  0.174  0.071  0.305  0.216
+    O8  0.256  0.080  0.088  0.197  0.350  0.030
 
     The ``convergence`` vector stores the loss curve over iterations during model
     training. If the model has converged, the curve should decrease and stabilize.
@@ -326,6 +331,7 @@ class MMvecResult:
     x_embeddings : table_like of shape (n_features_x, n_dimensions + 1)
     y_embeddings : table_like of shape (n_features_y, n_dimensions + 1)
     ranks : table_like of shape (n_features_x, n_features_y)
+    probs : table_like of shape (n_features_x, n_features_y)
     convergence : table_like of shape (n_iterations,)
 
     See Also
@@ -415,18 +421,30 @@ class MMvecResult:
 
     @property
     def ranks(self) -> TableLike:
-        r"""Log conditional probability matrix of co-occurrence of X and Y features.
+        r"""Row-centered log conditional probability matrix.
 
         Entry (i, j) represents the log-odds of observing :math:`Y_j` given
         :math:`X_i`, relative to the row mean. Higher values indicate stronger
-        positive associations. This matrix is row-centered (each row sums to zero)
+        positive associations. This matrix is row-centered (each row sums to 0)
         for identifiability.
 
-        To obtain actual conditional probabilities, transform the matrix using
-        :func:`~skbio.stats.composition.clr_inv`.
+        The actual conditional probabilities (see :attr:`probs`) can be obtained by
+        transforming this matrix with :func:`~skbio.stats.composition.clr_inv`
+        (a.k.a. softmax).
 
         """
         return self._estimator.ranks_
+
+    @property
+    def probs(self) -> TableLike:
+        r"""Conditional probability matrix of co-occurrence of X and Y features.
+
+        Entry (i, j) represents the probability of observing :math:`Y_j` given
+        :math:`X_i`. Each row sums to 1. This matrix is derived from the softmax
+        transformation of the ``ranks`` matrix and is cached lazily.
+
+        """
+        return self._estimator.probs_
 
     @property
     def convergence(self) -> TableLike:
@@ -515,7 +533,9 @@ class MMvec(SkbioObject):
     y_embeddings_ : table_like of shape (n_outputs, n_components + 1)
         Learned target embeddings (+1 is the bias term).
     ranks_ : table_like of shape (n_features, n_outputs)
-        Row-centered log conditional probabilities.
+        Row-centered log conditional probabilities (lazy, cached on first access).
+    probs_ : table_like of shape (n_features, n_outputs)
+        Conditional probability matrix P(Y | X) (lazy, cached on first access).
     loss_curve_ : table_like of shape (n_iterations,)
         Optimization losses over training updates.
     n_iter_ : int
@@ -618,7 +638,7 @@ class MMvec(SkbioObject):
         n_features_x = X_arr.shape[1]
         n_features_y = y_arr.shape[1]
 
-        # Initialize model. Note the change of terminology.
+        # Initialize model
         model = _MMvecModel(
             n_features_x=n_features_x,
             n_features_y=n_features_y,
@@ -630,10 +650,10 @@ class MMvec(SkbioObject):
             rng=rng,
         )
 
-        # Convert to sparse COO format
+        # Convert X to sparse COO format
         X_coo = coo_array(X_arr)
 
-        # Train model
+        # Train model using choice of L-BFGS-B or Adam optimizer
         if optimizer == "lbfgs":
             losses = _train_lbfgs(model, X_coo, y_arr, self.max_iter, self.verbose)
         else:
@@ -662,19 +682,22 @@ class MMvec(SkbioObject):
         )
         self.x_embeddings_ = _create_table(
             x_embed, columns=pc_cols, index=x_feature_ids, backend=self.output_format
-        )
+        )  # (n_features_x, n_components + 1)
         self.y_embeddings_ = _create_table(
             y_embed, columns=pc_cols, index=y_feature_ids, backend=self.output_format
-        )
-        self.loss_curve_ = _create_table_1d(losses)
+        )  # (n_features_x, n_components + 1)
 
-        # Keep the learned low-rank parameters available for lazy post-fit views.
+        # Loss curve for diagnosis
+        self.loss_curve_ = _create_table_1d(losses)  # (n_iterations,)
+
+        # Keep the learned low-rank parameters available for post-fit analysis.
+        self._x_main = model.x_main  # (n_features_x, n_components)
+        self._x_bias = model.x_bias  # (n_features_x, 1)
+        self._y_main = model.y_main  # (n_components, n_features_y - 1)
+        self._y_bias = model.y_bias  # (n_features_y - 1, 1)
+
         # `ranks_` and `probs` are both dense (n_features_x, n_features_y) matrices,
         # so we avoid materializing either one until a user actually needs it.
-        self._x_main = model.x_main
-        self._x_bias = model.x_bias
-        self._y_main = model.y_main
-        self._y_bias = model.y_bias
         self._ranks = None
         self._probs = None
 
@@ -758,6 +781,25 @@ class MMvec(SkbioObject):
             )
         return self._ranks
 
+    @property
+    def probs_(self) -> TableLike:
+        """Conditional probability matrix P(Y | X).
+
+        Entry (i, j) is the probability of observing target j given feature i. Each row
+        sums to 1. This dense matrix is cached lazily because it can be very large for
+        high-dimensional multiomics data.
+        """
+        self._check_is_fitted()
+        if self._probs is None:
+            probs_array = self._get_probs()
+            self._probs = _create_table(
+                probs_array,
+                columns=self.y_feature_ids_,
+                index=self.x_feature_ids_,
+                backend=self.output_format,
+            )
+        return self._probs
+
     def _compute_logits(self) -> np.ndarray:
         """Construct full Y logits from the learned low-rank parameters.
 
@@ -774,13 +816,15 @@ class MMvec(SkbioObject):
         return logits
 
     def _get_probs(self) -> np.ndarray:
-        """Lazily cache the dense conditional probability matrix P(Y | X)."""
-        if self._probs is None:
-            self._probs = softmax(self._compute_logits(), validate=False)
-        return self._probs
+        """Compute conditional probability matrix P(Y | X) as numpy array.
+
+        This computes the raw probability array without table wrapping.
+        Used internally by probs_ and predict.
+        """
+        return softmax(self._compute_logits(), validate=False)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
-        """Predict Y proportions given X, without table I/O."""
+        """Predict Y proportions given X data."""
         # Normalize abundances to proportions before applying P(Y | X).
         row_sums = np.sum(X, axis=1, keepdims=True)
         if np.any(row_sums == 0):
@@ -905,11 +949,12 @@ class _MMvecModel:
         self.x_prior_scale = x_prior_scale
         self.y_prior_mean = y_prior_mean
         self.y_prior_scale = y_prior_scale
-        # Cache squared scales used repeatedly in objective/gradient evaluation.
+
+        # Cache squared scales
         self._x_prior_scale_sq = x_prior_scale**2
         self._y_prior_scale_sq = y_prior_scale**2
 
-        # Initialize parameters with random normal
+        # Initialize parameters with random normal distribution
         self.x_main = rng.standard_normal((n_features_x, n_components))
         self.x_bias = rng.standard_normal((n_features_x, 1))
         self.y_main = rng.standard_normal((n_components, n_features_y - 1))
@@ -923,18 +968,15 @@ class _MMvecModel:
         norm: float,
         weights: np.ndarray,
         rng: np.random.Generator,
-    ) -> tuple[
-        float,
-        tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-    ]:
+    ) -> tuple[float, Grad4Tuple]:
         """Compute loss and gradients for a mini-batch.
 
         Parameters
         ----------
         X_coo : coo_array of shape (n_samples, n_features_x)
-            Microbe counts in COO format.
+            Conditioning (X) feature counts in COO format.
         Y : np.ndarray of shape (n_samples, n_features_y)
-            Metabolite counts.
+            Conditioned (Y) feature counts.
         size : int
             Mini-batch size.
         norm : float
@@ -949,8 +991,7 @@ class _MMvecModel:
         loss : float
             Negative log posterior.
         grads : tuple of np.ndarray
-            Gradients in the fixed order
-            ``(dx_main, dx_bias, dy_main, dy_bias)``.
+            Gradients in the order of (dx_main, dx_bias, dy_main, dy_bias).
         """
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
@@ -1367,9 +1408,9 @@ def _train_adam(
     model : _MMvecModel
         Initialized model to train.
     X_coo : coo_array of shape (n_samples, n_features_x)
-        Microbe counts in sparse COO format.
+        Conditioning (X) feature counts in sparse COO format.
     Y : np.ndarray of shape (n_samples, n_features_y)
-        Metabolite counts.
+        Conditioned (Y) feature counts.
     rng : np.random.Generator
         Random number generator.
     max_iter : int
@@ -1421,7 +1462,6 @@ def _train_adam(
     # Sample batch weighted by abundance
     weights = data / data.sum()
 
-    params = (learning_rate, beta_1, beta_2)
     it = 0
     for epoch in range(max_iter):
         for _ in range(iter_per_epoch):
@@ -1438,18 +1478,19 @@ def _train_adam(
             # Adam updates
             bc1 = 1 - beta_1**it
             bc2 = 1 - beta_2**it
+            params = (bc1, bc2, learning_rate, beta_1, beta_2)
 
             model.x_main, x_main_m, x_main_v = _adam_update(
-                model.x_main, dx_main, x_main_m, x_main_v, bc1, bc2, *params
+                model.x_main, dx_main, x_main_m, x_main_v, *params
             )
             model.x_bias, x_bias_m, x_bias_v = _adam_update(
-                model.x_bias, dx_bias, x_bias_m, x_bias_v, bc1, bc2, *params
+                model.x_bias, dx_bias, x_bias_m, x_bias_v, *params
             )
             model.y_main, y_main_m, y_main_v = _adam_update(
-                model.y_main, dy_main, y_main_m, y_main_v, bc1, bc2, *params
+                model.y_main, dy_main, y_main_m, y_main_v, *params
             )
             model.y_bias, y_bias_m, y_bias_v = _adam_update(
-                model.y_bias, dy_bias, y_bias_m, y_bias_v, bc1, bc2, *params
+                model.y_bias, dy_bias, y_bias_m, y_bias_v, *params
             )
 
             losses.append(loss)
@@ -1460,17 +1501,13 @@ def _train_adam(
     return losses
 
 
-def _clip_gradients(
-    grads: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-    clipnorm: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _clip_gradients(grads: Grad4Tuple, clipnorm: float) -> Grad4Tuple:
     """Apply global norm gradient clipping.
 
     Parameters
     ----------
     grads : tuple of np.ndarray
-        Gradients in the fixed order
-        ``(dx_main, dx_bias, dy_main, dy_bias)``.
+        Gradients in the order of (dx_main, dx_bias, dy_main, dy_bias).
     clipnorm : float
         Maximum gradient norm.
 
@@ -1533,6 +1570,7 @@ def _adam_update(
         Updated first moment.
     v : np.ndarray
         Updated second moment.
+
     """
     m = beta_1 * m + (1 - beta_1) * grad
     v = beta_2 * v + (1 - beta_2) * grad**2
