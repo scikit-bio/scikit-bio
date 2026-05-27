@@ -15,6 +15,7 @@
 
 ### Bug Fixes
 
+* Fixed a bug in `skbio.io.registry` where a `NoneType` AttributeError would be raised during program exit if a file parsing generator was left unconsumed. ([#2428](https://github.com/scikit-bio/scikit-bio/pull/2428))
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
 * Fixed `permdisp` emitting pcoa's `RuntimeWarning` on every call with a distance matrix larger than 10 samples ([#2456](https://github.com/scikit-bio/scikit-bio/pull/2456)).
 
