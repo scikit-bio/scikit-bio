@@ -160,9 +160,10 @@ def rpca(
 
     # Apply OptSpace for matrix completion
     optspace = OptSpace(n_components=dimensions, max_iterations=max_iter)
-    optspace.fit(rclr_table)
-    rclr_table = optspace.transform()
+    optspace.fit(X)
+    X = optspace.transform()
 
+    # Perform PCA on the completed matrix
     output = _pca(X, method="svd", dimensions=dimensions)
 
     # Build the OrdinationResults object
@@ -175,7 +176,7 @@ def rpca(
         backend=output_format,
     )
     features = _create_table(
-        output["components"], index=pc_ids, columns=column_ids, backend=output_format
+        output["components"], index=column_ids, columns=pc_ids, backend=output_format
     )
 
     return OrdinationResults(
@@ -185,7 +186,7 @@ def rpca(
         samples=samples,
         sample_ids=row_ids,
         features=features,
-        feature_ids=pc_ids,
+        feature_ids=column_ids,
         proportion_explained=eigvals / output["total_variance"],
     )
 

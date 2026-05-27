@@ -163,7 +163,7 @@ def pca(
         backend=output_format,
     )
     features = _create_table(
-        output["components"], index=pc_ids, columns=column_ids, backend=output_format
+        output["components"], index=column_ids, columns=pc_ids, backend=output_format
     )
 
     return OrdinationResults(
@@ -173,7 +173,7 @@ def pca(
         samples=samples,
         sample_ids=row_ids,
         features=features,
-        feature_ids=pc_ids,
+        feature_ids=column_ids,
         proportion_explained=eigvals / output["total_variance"],
     )
 
@@ -260,8 +260,11 @@ def _pca(X, method="eigh", iterative=False, dimensions=None):
         variances = variances[idx]
         components = components[idx, :]
 
+    # Components should be (features by PCs)
+    components = components.T
+
     # Project samples onto principal components
-    projected_samples = np.dot(X_centered, components.T)
+    projected_samples = np.dot(X_centered, components)
 
     pca_result = {
         "components": components,
