@@ -322,6 +322,12 @@ class TestPolars(TestCase):
         exp = pl.DataFrame(self.data)
         plt.assert_frame_equal(obs, exp)
 
+    def test_create_table_pandas_columns(self):
+        columns = pd.Series(self.columns)
+        obs = _create_table(data=self.data, columns=columns, index=self.index)
+        exp = pl.DataFrame(self.data, schema=self.columns)
+        plt.assert_frame_equal(obs, exp)
+
     def test_create_table_same_backend(self):
         obs = _create_table(
             data=self.data, columns=self.columns, index=self.index, backend="polars"
