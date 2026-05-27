@@ -208,7 +208,7 @@ class TestArrayApiCompatSection(unittest.TestCase):
         result = _array_api_compat_section(["numpy"])
         lines = result.strip().splitlines()
         # Table lines start with + or |
-        table_lines = [l for l in lines if l.startswith("+") or l.startswith("|")]
+        table_lines = [l for l in lines if l.lstrip().startswith(("+", "|"))]
         self.assertTrue(len(table_lines) >= 5)
         # Header separator uses =
         header_seps = [l for l in table_lines if "=" in l]
@@ -219,6 +219,15 @@ class TestArrayApiCompatSection(unittest.TestCase):
         result = _array_api_compat_section(["numpy"], devices=["cpu", "gpu"])
         # NumPy only supports cpu, so gpu should show n/a
         self.assertIn("n/a", result)
+
+    def test_note_directive(self):
+        """Output should be wrapped in a note admonition with an indented body."""
+        result = _array_api_compat_section(["numpy"])
+        self.assertTrue(result.startswith(".. note::"))
+        # Table rows must be indented (inside the note body), not flush-left
+        table_lines = [l for l in result.splitlines() if l.lstrip().startswith(("+", "|"))]
+        self.assertTrue(len(table_lines) >= 5)
+        self.assertTrue(all(l.startswith("   ") for l in table_lines))
 
 
 class TestInsertIntoNotesSection(unittest.TestCase):
