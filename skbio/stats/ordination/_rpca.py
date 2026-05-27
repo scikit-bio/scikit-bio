@@ -56,22 +56,17 @@ def rpca(
 
     Parameters
     ----------
-    table : pd.DataFrame                             <<< change to tabular
-        A feature table with samples as rows and features as columns.
+    X : table_like
+        Samples by features table (n, p). See :ref:`supported formats <table_like>`.
         Values should be non-negative counts or abundances.
-    n_components : int, optional
-        Number of principal components to compute. Default is 3.
-    min_sample_count : int, optional
-        Minimum total count per sample. Samples with lower counts
-        are removed. Default is 0 (no filtering).
-    min_feature_count : int, optional
-        Minimum total count per feature. Features with lower counts
-        are removed. Default is 0 (no filtering).
-    min_feature_frequency : float, optional
-        Minimum proportion of samples a feature must appear in.
-        Features appearing in fewer samples are removed. Default is 0.
-    max_iterations : int, optional
+    dimensions : int, optional
+            dimensions : int, optional
+        Number of principal components to compute. Must be a positive integer less
+        than or equal to min(n, p). Default is 3.
+    max_iter : int, optional
         Maximum iterations for OptSpace algorithm. Default is 5.
+    sample_ids, feature_ids, output_format : optional
+        Standard table parameters. See :ref:`table_params` for details.
 
     Returns
     -------
@@ -87,6 +82,7 @@ def rpca(
 
     See Also
     --------
+    pca
     ctf
     pcoa
     rclr
@@ -133,7 +129,7 @@ def rpca(
 
     Perform RPCA:
 
-    >>> ordination = rpca(table, n_components=3)
+    >>> ordination = rpca(table, dimensions=3)
     >>> print(ordination.proportion_explained[:3])  # doctest: +SKIP
     PC1    0.35...
     PC2    0.20...
@@ -155,7 +151,7 @@ def rpca(
     if X.shape[1] < dimensions:
         raise ValueError(
             f"Table has only {X.shape[1]} features. "
-            f"This is fewer than n_components ({dimensions})."
+            f"This is fewer than dimensions ({dimensions})."
         )
 
     # Apply OptSpace for matrix completion
@@ -191,6 +187,7 @@ def rpca(
     )
 
 
+'''
 def rpca_draft(
     table,
     n_components=3,
@@ -394,3 +391,4 @@ def rpca_draft(
     )
 
     return ordination_results"""
+'''
