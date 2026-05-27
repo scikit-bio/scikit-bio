@@ -960,7 +960,7 @@ class _MMvecModel:
         self.y_main = rng.standard_normal((n_components, n_features_y - 1))
         self.y_bias = rng.standard_normal((1, n_features_y - 1))
 
-    def loss_and_gradients(
+    def loss_and_grad(
         self,
         X_coo: coo_array,
         Y: np.ndarray,
@@ -1114,7 +1114,7 @@ class _MMvecModel:
         idx += p * (d2 - 1)
         self.y_bias = theta[idx : idx + (d2 - 1)].reshape(1, d2 - 1)
 
-    def full_batch_loss_and_gradient(
+    def loss_and_grad_fb(
         self,
         y_sums: np.ndarray,
         n_sums: np.ndarray,
@@ -1348,7 +1348,7 @@ def _train_lbfgs(
     def func(theta: np.ndarray) -> tuple[float, np.ndarray]:
         nonlocal it
         model.unpack_params(theta)
-        loss, grad = model.full_batch_loss_and_gradient(
+        loss, grad = model.loss_and_grad_fb(
             y_sums, n_sums, logits, resids, row_max, log_norm, row_scale
         )
         it += 1
@@ -1468,9 +1468,7 @@ def _train_adam(
             it += 1
 
             # Compute loss and gradients
-            loss, grads = model.loss_and_gradients(
-                X_coo, Y, batch_size, norm, weights, rng
-            )
+            loss, grads = model.loss_and_grad(X_coo, Y, batch_size, norm, weights, rng)
 
             # Gradient clipping
             dx_main, dx_bias, dy_main, dy_bias = _clip_gradients(grads, clipnorm)

@@ -263,7 +263,7 @@ class TestMMvecGradients(unittest.TestCase):
         seed = 123
         size = 10
         norm = n_features_x / size
-        _, grads = model.loss_and_gradients(
+        _, grads = model.loss_and_grad(
             X_coo, Y, size, norm, weights, np.random.default_rng(seed)
         )
         grads = dict(zip(["x_main", "x_bias", "y_main", "y_bias"], grads))
@@ -278,11 +278,11 @@ class TestMMvecGradients(unittest.TestCase):
             for idx in np.ndindex(param.shape):
                 original = param[idx]
                 param[idx] = original + eps
-                loss_plus, _ = model.loss_and_gradients(
+                loss_plus, _ = model.loss_and_grad(
                     X_coo, Y, size, norm, weights, np.random.default_rng(seed)
                 )
                 param[idx] = original - eps
-                loss_minus, _ = model.loss_and_gradients(
+                loss_minus, _ = model.loss_and_grad(
                     X_coo, Y, size, norm, weights, np.random.default_rng(seed)
                 )
                 param[idx] = original  # restore
@@ -815,8 +815,7 @@ class TestMMvecCaseStudies(unittest.TestCase):
 
     """
 
-    # @unittest.skip("Skipping a test that requires long runtime.")
-    def test_soils_cyanobacteria_metabolites(self):
+    def test_biocrust_wetting(self):
         """Co-occurrence of Cyanobacteria and known metabolites in wetup biocrust.
 
         This test reproduces the finding from the soils example notebook: the model
@@ -825,13 +824,13 @@ class TestMMvecCaseStudies(unittest.TestCase):
         cyanobacterium.
 
         """
-        # Load biocrust wetting dataset
+        # Load the biocrust wetting dataset
         subdir = os.path.join("data", "soils")
         microbes = pd.read_table(
-            get_data_path("microbes.tsv.gz", subdir), index_col=0
+            get_data_path("microbes.tsv", subdir), index_col=0
         ).T
         metabolites = pd.read_table(
-            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+            get_data_path("metabolites.tsv", subdir), index_col=0
         ).T
 
         # Fit the model with low latent dimension for faster testing
@@ -884,27 +883,31 @@ class TestMMvecCaseStudies(unittest.TestCase):
         # self.assertAlmostEqual(obs, exp, places=4)
 
     @unittest.skip("Skipping a test that requires long runtime.")
-    def test_cf_pseudomonas_rhamnolipids(self):
+    def test_cystic_fibrosis(self):
         """Co-occurrence of Pseudomonas and rhamnolipids in cystic fibrosis sputum.
         
         This test reproduces the finding from the example notebook: the model should
         learn that Pseudomonas microbes co-occur with rhamnolipids and other
         Pseudomonas-associated metabolites.
 
+        Note: The actual data files are not kept in the codebase due to their sizes. To
+        run this test, place the local data files in the expected directory. It is
+        anticipated that the test will cost several to dozens of seconds.
+
         """
-        # Load CF dataset
+        # Load the cystic fibrosis dataset
         subdir = os.path.join("data", "cf")
         microbes = pd.read_table(
-            get_data_path("microbes.tsv.gz", subdir), index_col=0
+            get_data_path("microbes.tsv", subdir), index_col=0
         ).T
         metabolites = pd.read_table(
-            get_data_path("metabolites.tsv.gz", subdir), index_col=0
+            get_data_path("metabolites.tsv", subdir), index_col=0
         ).T
         microbe_meta = pd.read_table(
-            get_data_path("microbe_meta.tsv.gz", subdir), index_col=0
+            get_data_path("microbe_meta.tsv", subdir), index_col=0
         )
         metabolite_meta = pd.read_table(
-            get_data_path("metabolite_meta.tsv.gz", subdir), index_col=0
+            get_data_path("metabolite_meta.tsv", subdir), index_col=0
         )
 
         # Find Pseudomonas microbes in the metadata (n=39)

@@ -15,3 +15,7 @@ The original dataset was published in:
 This dataset contains 172 samples, 2720 microbes (16S rRNA V4 ASVs), and 462 metabolites (LC-MS/MS)
 
 The MMvec analysis revealed a strong association between _Pseudomonas aeruginosa_, a major pathogen responsible for lung infections in CF, and rhamnolipids, which are key virulence factors produced by this organism.
+
+***
+
+Note: The actual data files are not kept in the codebase due to their sizes.
