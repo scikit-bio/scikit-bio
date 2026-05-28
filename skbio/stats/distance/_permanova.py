@@ -113,10 +113,7 @@ if NUMBA_AVAILABLE:
 
             partials[row_idx] = group_sum
 
-        s_W = 0.0
-        for i in range(n_half):
-            s_W += partials[i]
-        return s_W
+        return partials.sum()
 
     @njit(parallel=True)
     def _permanova_f_stat_sW_condensed_numba(condensed_matrix, group_sizes, grouping):
@@ -181,10 +178,7 @@ if NUMBA_AVAILABLE:
 
             partials[row_idx] = group_sum
 
-        s_W = 0.0
-        for i in range(n_half):
-            s_W += partials[i]
-        return s_W
+        return partials.sum()
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
