@@ -767,6 +767,24 @@ class BetaDiversityTests(TestCase):
                 beta_diversity(name, self.table1,
                                taxa=self.oids1, tree=self.tree1)
 
+    def test_custom_callable_does_not_warn(self):
+        # Callables whose __name__ is not in the slow-callables set should
+        # not trigger the slow-callable warning.
+        def custom_metric(u, v):
+            return 0.0
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            beta_diversity(custom_metric, self.table1, self.sids1)
+
+    def test_callable_without_taxa_param(self):
+        # Callables that do not declare a 'taxa' parameter must not have
+        # taxa injected into their kwargs, even when taxa is provided.
+        def no_taxa_metric(u, v):
+            return 0.0
+        dm = beta_diversity(no_taxa_metric, self.table1, self.sids1,
+                            taxa=self.oids1)
+        self.assertEqual(dm.shape, (3, 3))
+
 
 class MetricGetters(TestCase):
 
