@@ -320,7 +320,7 @@ class TestCAResults_NumPy(TestCase):
         euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies)
-        transformed_sites = ca(self.X, 1).samples
+        transformed_sites = ca(self.X, 1, sample_ids=self.sample_ids, feature_ids=self.feature_ids).samples
         euclidean_distances = pdist(transformed_sites, "euclidean")
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 

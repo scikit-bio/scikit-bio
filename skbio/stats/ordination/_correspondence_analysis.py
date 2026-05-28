@@ -11,6 +11,7 @@ from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
 from ._utils import svd_rank
+from skbio.util._array import ingest_array
 from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
@@ -102,7 +103,8 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     X, row_ids, column_ids = _ingest_table(
         X, sample_ids=sample_ids, feature_ids=feature_ids
     )
-
+    # Convert to array API compatible format and get the namespace
+    xp, X = ingest_array(X) 
     # Correspondence Analysis
     r, c = X.shape
 
@@ -113,17 +115,17 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     grand_total = X.sum()
     Q = X / grand_total
 
-    column_marginals = Q.sum(axis=0)
-    row_marginals = Q.sum(axis=1)
+    column_marginals = xp.sum(Q,axis=0)
+    row_marginals = xp.sum(Q,axis=1)
 
     # Formula 9.32 in Lagrange & Lagrange (1998). Notice that it's
     # an scaled version of the contribution of each cell towards
     # Pearson chi-square statistic.
-    expected = np.outer(row_marginals, column_marginals)
-    Q_bar = (Q - expected) / np.sqrt(expected)  # Eq. 9.32
+    expected = xp.outer(row_marginals, column_marginals)
+    Q_bar = (Q - expected) / xp.sqrt(expected)  # Eq. 9.32
 
     # Step 2 (Singular Value Decomposition)
-    U_hat, W, Ut = svd(Q_bar, full_matrices=False)
+    U_hat, W, Ut = xp.linalg.svd(Q_bar, full_matrices=False)
     # Due to the centering, there are at most min(r, c) - 1 non-zero
     # eigenvalues (which are all positive)
     rank = svd_rank(Q_bar.shape, W)
