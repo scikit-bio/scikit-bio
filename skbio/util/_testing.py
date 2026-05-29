@@ -461,12 +461,16 @@ def pytestrunner():
 # -------------------------------------------------------------------------------------
 # Array API test infrastructure
 #
-# Write one test method, run it against every supported array backend.
-# Uses unittest.subTest() for per-backend reporting — no pytest needed.
+# Write one test method, run it against every supported array backend
+# (numpy, jax, torch, cupy). Uses ``unittest.subTest()`` for per-backend
+# reporting — no pytest required.
 #
 # Env vars:
 #   SKBIO_ARRAY_BACKEND  — "numpy" (default), "jax", "torch", "cupy", or "all"
-#   SKBIO_DEVICE             — "cpu" (default), "cuda", "gpu"
+#   SKBIO_DEVICE         — "cpu" (default), "cuda", "gpu"
+#
+# Note: ``"gpu"`` (JAX's native string) and ``"cuda"`` (Torch/CuPy's native
+# string) refer to the same hardware and are treated as equivalent.
 #
 # Usage:
 #     class TestClosure(TestCase, ArrayAPITestMixin):
@@ -479,6 +483,88 @@ def pytestrunner():
 # -------------------------------------------------------------------------------------
 
 
+# Two device-name spellings that refer to the same hardware. Used only to
+# decide whether a requested ``SKBIO_DEVICE`` matches a backend's advertised
+# device — never to inspect a real array (see ``_on_device`` for that).
+_GPU_ALIASES = frozenset({"cuda", "gpu"})
+
+
+def _device_specs_match(a, b):
+    """True if two device-spec strings refer to the same hardware.
+
+    Both inputs are expected to be the per-backend strings stored in
+    ``_BACKENDS`` or read from ``SKBIO_DEVICE`` — short labels like ``"cpu"``,
+    ``"cuda"``, or ``"gpu"``. This is *not* for inspecting a real array's
+    device; use ``_on_device`` for that.
+    """
+    if a is None or b is None:
+        return a == b
+    a, b = a.lower(), b.lower()
+    if a == b:
+        return True
+    return a in _GPU_ALIASES and b in _GPU_ALIASES
+
+
+def _on_device(arr, xp, device):
+    """Return whether ``arr`` lives on ``device`` according to its backend.
+
+    Asks each backend a structured question rather than parsing the
+    ``__repr__`` of a device object, so it doesn't break when a backend
+    changes how it prints devices.
+
+    Parameters
+    ----------
+    arr : array
+        An array produced by ``xp``.
+    xp : module
+        The array namespace that produced ``arr`` (e.g. ``numpy``,
+        ``jax.numpy``, ``torch``, ``cupy``).
+    device : str or None
+        The expected device: ``"cpu"``, ``"cuda"``, ``"gpu"``, or ``None``
+        (treated as ``"cpu"``).
+
+    Returns
+    -------
+    bool
+
+    Raises
+    ------
+    NotImplementedError
+        If ``xp`` is not a recognized backend.
+    """
+    backend = _get_backend_name(xp)
+    want_gpu = device is not None and device.lower() in _GPU_ALIASES
+    want_cpu = device is None or device.lower() == "cpu"
+
+    if backend == "numpy":
+        # NumPy is CPU-only; "cuda"/"gpu" never matches.
+        return want_cpu
+
+    if backend == "cupy":
+        # CuPy arrays are always on CUDA.
+        return want_gpu
+
+    if backend == "torch":
+        # arr.device.type is "cpu" or "cuda" (or "mps", etc.)
+        kind = arr.device.type
+        if want_cpu:
+            return kind == "cpu"
+        if want_gpu:
+            return kind == "cuda"
+        return False
+
+    if backend == "jax":
+        # JAX device objects expose .platform: "cpu", "gpu", or "tpu".
+        platform = arr.device.platform
+        if want_cpu:
+            return platform == "cpu"
+        if want_gpu:
+            return platform == "gpu"
+        return False
+
+    raise NotImplementedError(f"_on_device: unknown backend {backend!r}")
+
+
 def _read_env():
     """Read backend/device environment variables."""
     backend = os.environ.get("SKBIO_ARRAY_BACKEND", "").strip()
@@ -487,7 +573,12 @@ def _read_env():
 
 
 def _get_array_backends():
-    """Return dict of {name: (namespace, [devices])} for installed backends."""
+    """Return dict of {name: (namespace, [devices])} for installed backends.
+
+    The device strings stored here are each backend's *native* form — JAX uses
+    ``"gpu"``, Torch and CuPy use ``"cuda"`` — because they get passed back to
+    the backend (e.g. via ``_move_to_device``).
+    """
     _backends = {"numpy": (np, ["cpu"])}
 
     try:
@@ -536,14 +627,14 @@ def _should_run(backend_name, device):
         return backend_name == "numpy" and device == "cpu"
 
     if env_backend == "all":
-        if env_device and env_device != device:
+        if env_device and not _device_specs_match(env_device, device):
             return False
         return True
 
     if env_backend != backend_name:
         return False
 
-    if env_device and env_device != device:
+    if env_device and not _device_specs_match(env_device, device):
         return False
 
     return True
@@ -616,11 +707,6 @@ def array_backends(*backend_names, cpu_only=False):
 
                     ran_any = True
                     with self.subTest(backend=name, device=device):
-                        # Comment this print statement out when finished
-                        # print(
-                        #     f"\n  → Running {test_func.__name__} [{name}, {device}]",
-                        #     flush=True,
-                        # )
                         test_func(self, xp, device)
             if not ran_any:
                 if env_device:
@@ -629,6 +715,15 @@ def array_backends(*backend_names, cpu_only=False):
                         f"backend has that device available."
                     )
                 raise unittest.SkipTest(f"No matching backends for {backend_names}")
+
+        # Tag with a pytest marker so we can filter for CI with
+        # `pytest -m array_api`. Falls back silently if pytest not installed.
+        try:
+            import pytest
+
+            wrapper = pytest.mark.array_api(wrapper)
+        except ImportError:
+            pass
 
         return wrapper
 
@@ -645,16 +740,8 @@ class ArrayAPITestMixin:
 
     """
 
-    # def make_array(self, xp, device, data, dtype=None):
-    #     """Create an array on the appropriate backend and device."""
-    #     if dtype is not None:
-    #         arr = xp.asarray(data, dtype=dtype)
-    #     else:
-    #         arr = xp.asarray(data)
-    #     return _move_to_device(arr, xp, device)
-
     def make_array(self, xp, device, data, dtype=None):
-        """Create an array on the appropriate backend and device."""
+        """Create an array on the given backend and device."""
         if dtype is None:
             dtype = xp.float64
         arr = xp.asarray(data, dtype=dtype)
@@ -662,9 +749,7 @@ class ArrayAPITestMixin:
 
     def assert_close(self, actual, expected, rtol=1e-7, atol=1e-7):
         """Assert two arrays are numerically close (converts to numpy)."""
-        npt.assert_allclose(
-            _to_numpy(actual), _to_numpy(expected), rtol=rtol, atol=atol
-        )
+        xp_assert_close(actual, expected, rtol=rtol, atol=atol)
 
     def assert_type_preserved(self, result, xp, device):
         """Assert result is from the correct backend and on the right device."""
@@ -678,15 +763,13 @@ class ArrayAPITestMixin:
             f"Backend not preserved: result is {result_name}, expected {expected_name}",
         )
 
-        if device not in ("cpu", None) and hasattr(result, "device"):
-            self.assertEqual(
-                self._normalize_device(result.device),
-                self._normalize_device(device),
-                f"Device not preserved: result on {result.device}, expected {device}",
-            )
+        # Skip the device check on CPU: not every backend exposes a useful
+        # device attribute for CPU arrays, and CPU/CPU is the trivial case.
+        if device in (None, "cpu"):
+            return
 
-    def _normalize_device(self, name):
-        name = str(name).lower()
-        if "cuda" in name or name == "gpu":
-            return "gpu"
-        return name
+        self.assertTrue(
+            _on_device(result, xp, device),
+            f"Device not preserved: result on "
+            f"{getattr(result, 'device', '<unknown>')}, expected {device}",
+        )

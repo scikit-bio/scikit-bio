@@ -1,37 +1,110 @@
 name: Array API Compatibility
 
 on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+    types: [labeled, synchronize]
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
 env:
-  latest_python: "3.14"
+  latest_python: "3.13"  # torch has no 3.14 wheels yet
 
 jobs:
-  test:
-    name: Array API (${{ matrix.backend }})
-    runs-on: ${{ matrix.runs-on }}
+  test-cpu:
+    name: Array API (${{ matrix.backend }}, cpu)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [torch, jax]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.latest_python }}
+
+      - name: Install scikit-bio + backend
+        run: |
+          pip install .
+          case "${{ matrix.backend }}" in
+            torch) pip install torch --index-url https://download.pytorch.org/whl/cpu ;;
+            jax)   pip install -U jax ;;
+          esac
+          pip install -r ci/requirements.txt -r ci/requirements.test.txt
+
+      - name: Run tests
+        env:
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
+          SKBIO_DEVICE: cpu
+        run: cd ci && pytest -m array_api --pyargs skbio
+
+  test-gpu:
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'gpu-ci')
+    name: Array API (${{ matrix.backend }}, cuda)
+    runs-on: gpu-t4-4-core
     strategy:
       fail-fast: false
       matrix:
         include:
           - backend: torch
-            runs-on: ubuntu-latest
+            device: cuda
           - backend: jax
-            runs-on: ubuntu-latest
+            device: cuda
           - backend: cupy
-            runs-on: ubuntu-latest-gpu   # TODO: replace with your GPU runner label
+            device: cuda
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.latest_python }}
+
+      - name: Check CUDA driver
+        run: nvidia-smi
+
       - name: Install scikit-bio + backend
+        # CUDA 12 is pinned for the libraries. To update CUDA versions check the
+        # installation guides for each package.
         run: |
-          pip install -e .
-          pip install ${{ matrix.backend }}
+          python -m ensurepip
+          pip install -v .
+          case "${{ matrix.backend }}" in
+            torch) pip install torch --index-url https://download.pytorch.org/whl/cu128 ;;
+            jax)   pip install -U "jax[cuda12]" ;;
+            cupy)  pip install cupy-cuda12x[ctk] ;;
+          esac
+          pip install -r ci/requirements.txt -r ci/requirements.test.txt
+
+      - name: Verify GPU is visible to backend
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          python - <<'PY'
+          import os
+          backend = os.environ["BACKEND"]
+          if backend == "torch":
+              import torch
+              assert torch.cuda.is_available(), "torch installed without CUDA"
+              print("torch:", torch.__version__, "CUDA:", torch.version.cuda,
+                    "device:", torch.cuda.get_device_name(0))
+          elif backend == "jax":
+              import jax
+              gpus = jax.devices("gpu")
+              assert gpus, "jax sees no GPU"
+              print("jax:", jax.__version__, "devices:", gpus)
+          elif backend == "cupy":
+              import cupy
+              n = cupy.cuda.runtime.getDeviceCount()
+              assert n > 0, "cupy sees no GPU"
+              print("cupy:", cupy.__version__, "devices:", n)
+          PY
+
       - name: Run tests
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
-        run: python -m skbio.test
+          SKBIO_DEVICE: ${{ matrix.device }}
+        run: cd ci && pytest -m array_api --pyargs skbio

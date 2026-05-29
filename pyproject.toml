@@ -147,6 +147,9 @@ doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
 ]
+markers = [
+    "array_api: tests that exercise the Array API across backends",
+]
 
 [tool.check-manifest]
 ignore = [

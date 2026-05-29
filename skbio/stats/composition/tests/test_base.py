@@ -23,6 +23,7 @@ from skbio.stats.composition import (
 from skbio.stats.composition._base import (
     _check_composition, _check_basis, _gram_schmidt_basis)
 from skbio.util._testing import ArrayAPITestMixin, array_backends, xp_assert_close
+from skbio.util._array import _to_numpy
 
 
 # Tolerance for functions that lose precision on some backends (ilr, alr, etc.)
@@ -1078,7 +1079,7 @@ class TestRclr(TestCase, ArrayAPITestMixin):
         self.assertEqual(result_sparse.shape, arr_sparse.shape)
 
         # Convert to numpy for NaN-aware comparison
-        result_np = np.asarray(result_sparse)
+        result_np = _to_numpy(result_sparse)
         npt.assert_array_equal(np.isnan(result_np), np.isnan(expected_sparse))
         npt.assert_allclose(result_np[~np.isnan(result_np)],
                             expected_sparse[~np.isnan(expected_sparse)],

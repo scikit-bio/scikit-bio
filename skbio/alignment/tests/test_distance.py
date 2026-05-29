@@ -97,7 +97,7 @@ class AlignDistsTests(TestCase):
         # wrong metric name
         with self.assertRaises(ValueError) as cm:
             align_dists(self.msa_prot, "hello")
-        msg = ("'hello' is not an available sequence distance metric name. " 
+        msg = ("'hello' is not an available sequence distance metric name. "
                "Refer to `skbio.sequence.distance` for a list of available metrics.")
         self.assertEqual(str(cm.exception), msg)
 
@@ -214,8 +214,16 @@ class AlignDistsTests(TestCase):
         exp = np.array([0.6734562, 0.6734562, 0.9122965])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
+        obs = align_dists(self.msa_nucl, "jc69", gamma=2.0)
+        exp = np.array([0.8500484, 0.8500484, 1.255676])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
         obs = align_dists(self.msa_nucl, "jc69", shared_by_all=False)
         exp = np.array([0.5818792, 0.6430877, 1.0012508])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "jc69", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.7108666, 0.8029484, 1.4240383])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         obs = align_dists(self.msa1, "jc69")
@@ -225,6 +233,13 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa1, jc69)
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "jc69", gamma=2.0)
+        exp = np.array([0.252, 1.854, nan, 0.696, 1.854, 0.696])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, jc69, gamma=2.0)
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         obs = align_dists(self.msa1, "jc69", shared_by_all=False)
         exp = np.array([0.360, 0.635, 0.824, 0.635, 1.076, 0.304])
         npt.assert_allclose(obs.condensed_form().round(3), exp)
@@ -232,19 +247,40 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa1, jc69, shared_by_all=False)
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "jc69", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.406, 0.791, 1.098, 0.791, 1.574, 0.337])
+        npt.assert_allclose(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, "jc69", shared_by_all=False, gamma=2)
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, jc69, shared_by_all=False, gamma=2.0)
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         obs = align_dists(self.msa3, "jc69")
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+        obs = align_dists(self.msa3, "jc69", gamma=2.0)
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
         obs = align_dists(self.msa3, "jc69", shared_by_all=False)
         exp = np.array([0.441, 0.572, 0.824])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
-        msg = ("'jc69' is compatible with ('DNA', 'RNA') sequences, not 'Protein'.")
+        msg = "'jc69' is compatible with ('DNA', 'RNA') sequences, not 'Protein'."
         with self.assertRaises(TypeError) as cm:
             align_dists(self.msa2, "jc69")
         self.assertEqual(str(cm.exception), msg)
         with self.assertRaises(TypeError) as cm:
             align_dists(self.msa2, jc69)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Parameter 'gamma' must be a positive number."
+        with self.assertRaises(ValueError) as cm:
+            align_dists(self.msa1, "jc69", gamma=-2.0)
+        self.assertEqual(str(cm.exception), msg)
+        with self.assertRaises(ValueError) as cm:
+            align_dists(self.msa1, "jc69", gamma=0.0)
         self.assertEqual(str(cm.exception), msg)
 
     def test_align_dists_f81(self):
@@ -257,11 +293,22 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa_nucl, f81)
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
+        obs = align_dists(self.msa_nucl, "f81", gamma=2.0)
+        exp = np.array([0.8892592, 0.8892592, 1.3508859])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, f81, gamma=2.0)
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
         obs = align_dists(self.msa_nucl, "f81", shared_by_all=False)
         exp = np.array([0.5951889, 0.6599422, 1.0526322])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
-        obs = align_dists(self.msa_nucl, "f81", freqs=np.full(4, .25))
+        obs = align_dists(self.msa_nucl, "f81", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.7373042, 0.8375044, 1.5520988])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "f81", freqs=np.full(4, 0.25))
         exp = np.array([0.6734562, 0.6734562, 0.9122965])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
@@ -269,25 +316,53 @@ class AlignDistsTests(TestCase):
         exp = align_dists(self.msa_nucl, "jc69")
         npt.assert_allclose(obs.condensed_form(), exp.condensed_form())
 
+        obs = align_dists(self.msa_nucl, "f81", freqs=np.full(4, 0.25), gamma=2.0)
+        exp = np.array([0.8500484, 0.8500484, 1.255676])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        # F81 is equivalent to JC69 when base frequencies are equal.
+        exp = align_dists(self.msa_nucl, "jc69", gamma=2.0)
+        npt.assert_allclose(obs.condensed_form(), exp.condensed_form())
+
         # short DNA sequences with ambiguity
         obs = align_dists(self.msa1, "f81")
         exp = np.array([0.233, 1.234, nan, 0.576, 1.234, 0.576])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, "f81", gamma=2.0)
+        exp = np.array([0.253, 1.928, nan, 0.704, 1.928, 0.704])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
         obs = align_dists(self.msa1, "f81", shared_by_all=False)
         exp = np.array([0.361, 0.641, 0.834, 0.641, 1.096, 0.305])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "f81", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.409, 0.802, 1.121, 0.802, 1.625, 0.339])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         # short, hollow RNA sequences
         obs = align_dists(self.msa3, "f81")
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+        obs = align_dists(self.msa3, "f81", gamma=2.0)
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
         obs = align_dists(self.msa3, "f81", shared_by_all=False)
         exp = np.array([0.442, 0.574, 0.829])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa3, "f81", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.514, 0.7, 1.108])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         with self.assertRaises(TypeError):
             align_dists(self.msa2, "f81")
+
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "f81", gamma=-2.0)
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "f81", gamma=0.0)
 
     def test_align_dists_k2p(self):
         """K2P distance."""
@@ -300,8 +375,20 @@ class AlignDistsTests(TestCase):
         exp = np.array([0.6962528, 0.6749634, 0.9547713])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
+        obs = align_dists(self.msa_nucl, "k2p", gamma=2.0)
+        exp = np.array([0.9028712, 0.8535675, 1.3713203])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, k2p, gamma=2.0)
+        exp = np.array([0.9028712, 0.8535675, 1.3713203])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
         obs = align_dists(self.msa_nucl, "k2p", shared_by_all=False)
         exp = np.array([0.5921321, 0.6440233, 1.0287045])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "k2p", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.7332483, 0.8050918, 1.5032039])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         # short DNA sequences with ambiguity
@@ -309,20 +396,37 @@ class AlignDistsTests(TestCase):
         exp = np.array([0.255, nan, nan, 0.586, 1.207, 0.586])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "k2p", gamma=2.0)
+        exp = np.array([0.291, nan, nan, 0.727, 1.854, 0.727])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         obs = align_dists(self.msa1, "k2p", shared_by_all=False)
         exp = np.array([0.364, 0.710, 0.866, 0.710, 1.185, 0.307])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa1, "k2p", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.414, 0.962, 1.207, 0.962, 1.91, 0.342])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
         # short, hollow RNA sequences
         obs = align_dists(self.msa3, "k2p")
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
+        obs = align_dists(self.msa3, "k2p", gamma=2.0)
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
         obs = align_dists(self.msa3, "k2p", shared_by_all=False)
         exp = np.array([0.477, 0.658, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
-        with self.assertRaises(TypeError):
-            align_dists(self.msa2, "k2p")
+        obs = align_dists(self.msa3, "k2p", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.591, 0.909, nan])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "k2p", gamma=-2.0)
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "k2p", gamma=0.0)
 
     def test_align_dists_f84(self):
         """F84 distance."""
@@ -375,24 +479,55 @@ class AlignDistsTests(TestCase):
         obs = align_dists(self.msa_nucl, tn93)
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
+        obs = align_dists(self.msa_nucl, "tn93", gamma=2.0)
+        exp = np.array([1.0093559, 1.0793108, 1.6223118])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, tn93, gamma=2.0)
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
         obs = align_dists(self.msa_nucl, "tn93", shared_by_all=False)
         exp = np.array([0.6164222, 0.6757994, 1.1236656])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
-        obs = align_dists(self.msa_nucl, "tn93", freqs=np.full(4, .25))
+        obs = align_dists(self.msa_nucl, "tn93", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.78596, 0.8764643, 1.7801847])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "tn93", freqs=np.full(4, 0.25))
         exp = np.array([0.7256986, 0.7737915, 0.9709059])
+        npt.assert_array_equal(obs.condensed_form().round(7), exp)
+
+        obs = align_dists(self.msa_nucl, "tn93", freqs=np.full(4, 0.25), gamma=2.0)
+        exp = np.array([0.9814806, 1.114347, 1.4234282])
         npt.assert_array_equal(obs.condensed_form().round(7), exp)
 
         obs = align_dists(self.msa1, "tn93")
         exp = np.array([0.357, nan, nan, nan, nan, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
 
+        obs = align_dists(self.msa1, "tn93", gamma=2.0)
+        exp = np.array([0.503, nan, nan, nan, nan, nan])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
         obs = align_dists(self.msa3, "tn93")
+        self.assertTrue(np.isnan(obs.condensed_form()).all())
+
+        obs = align_dists(self.msa3, "tn93", gamma=2.0)
         self.assertTrue(np.isnan(obs.condensed_form()).all())
 
         obs = align_dists(self.msa3, "tn93", shared_by_all=False)
         exp = np.array([0.479, 0.661, nan])
         npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        obs = align_dists(self.msa3, "tn93", shared_by_all=False, gamma=2.0)
+        exp = np.array([0.594, 0.916, nan])
+        npt.assert_array_equal(obs.condensed_form().round(3), exp)
+
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "tn93", gamma=-2.0)
+        with self.assertRaises(ValueError):
+            align_dists(self.msa1, "tn93", gamma=0.0)
 
     def test_align_dists_logdet(self):
         """LogDet distance."""

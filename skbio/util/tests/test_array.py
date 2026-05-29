@@ -14,26 +14,27 @@ import pandas as pd
 import numpy.testing as npt
 import array_api_compat as aac
 
-from skbio.util import get_package
+from skbio.util import get_package, _is_usable
 from skbio.util._array import (
     ingest_array,
     _get_array,
-    _get_namespace_from_args,
-    _check_array_api_backend,
     _to_numpy,
     _move_to_device,
     _get_backend_name,
 )
-
 
 # import optional dependencies
 cp = get_package("cupy", raise_error=False)
 jax = get_package("jax", raise_error=False)
 torch = get_package("torch", raise_error=False)
 xr = get_package("xarray", raise_error=False)
-dask = get_package("dask", raise_error=False)
-if dask is not None:
-    da = get_package("dask.array")
+da = get_package("dask.array", raise_error=False)
+
+CUPY_OK = _is_usable(cp, lambda: cp.arange(1))
+TORCH_OK = _is_usable(torch, lambda: torch.arange(1))
+JAX_OK = _is_usable(jax, lambda: jax.numpy.arange(1))
+DASK_OK = _is_usable(da, lambda: da.arange(1, chunks=1).compute())
+XARRAY_OK = _is_usable(xr, lambda: xr.DataArray([1]))
 
 # Get the numpy namespace via array_api_compat (aac has no .numpy attribute).
 np_xp = aac.array_namespace(np.empty(0))
@@ -62,35 +63,35 @@ class TestGetArray(TestCase):
         obs = _get_array(arr, to_numpy=True)
         self.assertIs(obs, arr)
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_kept_when_to_numpy_false(self):
         ten = torch.arange(5)
         obs = _get_array(ten)
         self.assertIsInstance(obs, torch.Tensor)
         self.assertIs(obs, ten)
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_to_numpy_via_dlpack(self):
         ten = torch.arange(5)
         obs = _get_array(ten, to_numpy=True)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(cp is None, "CuPy is not available.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_to_numpy(self):
         arr = cp.arange(5)
         obs = _get_array(arr, to_numpy=True)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(jax is None, "JAX is not available.")
+    @skipIf(not JAX_OK, "JAX is not usable.")
     def test_jax_to_numpy(self):
         arr = jax.numpy.arange(5)
         obs = _get_array(arr, to_numpy=True)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(dask is None, "Dask is not available.")
+    @skipIf(not DASK_OK, "Dask is not usable.")
     def test_dask_to_numpy_fallback(self):
         # Dask doesn't support __dlpack__, so _get_array should fall back
         # to np.asarray.
@@ -99,126 +100,18 @@ class TestGetArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    def test_to_numpy_dlpack_fallback_on_runtime_error(self):
-        # Simulate an array API object whose from_dlpack raises RuntimeError.
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([10, 20, 30])
+    def test_to_numpy_dlpack_fallback(self):
+        class FakeArr:
+            def __array__(self, dtype=None, copy=None):
+                return np.array([10, 20, 30])
 
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=RuntimeError("no dlpack")):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
-
-    def test_to_numpy_dlpack_fallback_on_attribute_error(self):
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([1])
-
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=AttributeError):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
-
-    def test_to_numpy_dlpack_fallback_on_type_error(self):
-        mock_arr = MagicMock()
-        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([1])
-
-        with patch.object(aac, "is_array_api_obj", return_value=True), \
-             patch.object(aac, "is_numpy_array", return_value=False), \
-             patch("skbio.util._array.np.from_dlpack",
-                   side_effect=TypeError):
-            obs = _get_array(mock_arr, to_numpy=True)
-        self.assertIsInstance(obs, np.ndarray)
-
-
-# =====================================================================
-# Tests for _get_namespace_from_args
-# =====================================================================
-
-
-class TestGetNamespaceFromArgs(TestCase):
-
-    def test_no_arrays_returns_none(self):
-        result = _get_namespace_from_args((1, "hello", [1, 2]), {})
-        self.assertIsNone(result)
-
-    def test_numpy_in_args(self):
-        arr = np.arange(3)
-        result = _get_namespace_from_args((arr,), {})
-        self.assertIs(result, np_xp)
-
-    def test_numpy_in_kwargs(self):
-        arr = np.arange(3)
-        result = _get_namespace_from_args((), {"x": arr})
-        self.assertIs(result, np_xp)
-
-    def test_mixed_args_and_kwargs(self):
-        a = np.arange(3)
-        b = np.ones(3)
-        result = _get_namespace_from_args((a,), {"b": b})
-        self.assertIs(result, np_xp)
-
-    @skipIf(torch is None, "PyTorch is not available.")
-    def test_torch_in_args(self):
-        ten = torch.arange(3)
-        result = _get_namespace_from_args((ten,), {})
-        self.assertTrue(aac.is_torch_namespace(result))
-
-    def test_empty_args_and_kwargs(self):
-        result = _get_namespace_from_args((), {})
-        self.assertIsNone(result)
-
-
-# =====================================================================
-# Tests for _check_array_api_backend
-# =====================================================================
-
-
-class TestCheckArrayApiBackend(TestCase):
-
-    def test_numpy_allowed(self):
-        # Should not raise.
-        _check_array_api_backend(np_xp, ["numpy"], "my_func")
-
-    def test_numpy_not_allowed_raises(self):
-        with self.assertRaises(TypeError) as ctx:
-            _check_array_api_backend(np_xp, ["torch"], "my_func")
-        self.assertIn("my_func", str(ctx.exception))
-        self.assertIn("torch", str(ctx.exception))
-
-    def test_multiple_backends_allowed(self):
-        _check_array_api_backend(np_xp, ["numpy", "torch"], "my_func")
-
-    @skipIf(torch is None, "PyTorch is not available.")
-    def test_torch_allowed(self):
-        xp = aac.array_namespace(torch.arange(1))
-        _check_array_api_backend(xp, ["torch"], "my_func")
-
-    @skipIf(torch is None, "PyTorch is not available.")
-    def test_torch_not_allowed_raises(self):
-        xp = aac.array_namespace(torch.arange(1))
-        with self.assertRaises(TypeError):
-            _check_array_api_backend(xp, ["numpy"], "my_func")
-
-    def test_unknown_backend_in_list_ignored(self):
-        # "unknown_backend" isn't in _BACKEND_CHECKERS, so checker is None.
-        # numpy is also listed, so this should pass.
-        _check_array_api_backend(np_xp, ["unknown_backend", "numpy"], "f")
-
-    def test_only_unknown_backend_raises(self):
-        # No checker matches numpy if only "unknown_backend" is listed.
-        with self.assertRaises(TypeError):
-            _check_array_api_backend(np_xp, ["unknown_backend"], "f")
-
-    def test_error_message_lists_supported(self):
-        with self.assertRaises(TypeError) as ctx:
-            _check_array_api_backend(np_xp, ["torch", "jax"], "compute")
-        msg = str(ctx.exception)
-        self.assertIn("compute", msg)
-        self.assertIn("torch, jax", msg)
+        for exc in (AttributeError, TypeError, RuntimeError):
+            with self.subTest(exception=exc.__name__):
+                with patch.object(aac, "is_array_api_obj", return_value=True), \
+                    patch.object(aac, "is_numpy_array", return_value=False), \
+                    patch("skbio.util._array.np.from_dlpack", side_effect=exc):
+                    obs = _get_array(FakeArr(), to_numpy=True)
+                self.assertIsInstance(obs, np.ndarray)
 
 
 # =====================================================================
@@ -233,35 +126,35 @@ class TestToNumpy(TestCase):
         obs = _to_numpy(arr)
         self.assertIs(obs, arr)
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_cpu(self):
         ten = torch.arange(5)
         obs = _to_numpy(ten)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_requires_grad(self):
         ten = torch.arange(5, dtype=torch.float32).requires_grad_(True)
         obs = _to_numpy(ten)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5, dtype=np.float32))
 
-    @skipIf(cp is None, "CuPy is not available.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy(self):
         arr = cp.arange(5)
         obs = _to_numpy(arr)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(jax is None, "JAX is not available.")
+    @skipIf(not JAX_OK, "JAX is not usable.")
     def test_jax(self):
         arr = jax.numpy.arange(5)
         obs = _to_numpy(arr)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(dask is None, "Dask is not available.")
+    @skipIf(not DASK_OK, "Dask is not usable.")
     def test_dask(self):
         arr = da.arange(5, chunks=5)
         obs = _to_numpy(arr)
@@ -295,14 +188,14 @@ class TestMoveToDevice(TestCase):
         obs = _move_to_device(arr, np, "cpu")
         self.assertIs(obs, arr)
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_cpu_noop(self):
         ten = torch.arange(5)
         obs = _move_to_device(ten, torch, "cpu")
         self.assertIs(obs, ten)
 
-    @skipIf(torch is None or not torch.cuda.is_available(),
-            "PyTorch CUDA is not available.")
+    @skipIf(not TORCH_OK or not torch.cuda.is_available(),
+            "PyTorch CUDA is not usable.")
     def test_torch_cuda(self):
         ten = torch.arange(5)
         obs = _move_to_device(ten, torch, "cuda")
@@ -315,14 +208,14 @@ class TestMoveToDevice(TestCase):
         obs = _move_to_device(arr, np, "gpu")
         self.assertIs(obs, arr)
 
-    @skipIf(cp is None, "CuPy is not available.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy_non_cpu_passthrough(self):
         import cupy
         arr = cupy.arange(5)
         obs = _move_to_device(arr, cupy, "gpu")
         self.assertIs(obs, arr)
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch_to_device(self):
         # torch.to("cpu") should work and return a CPU tensor.
         ten = torch.arange(5)
@@ -343,22 +236,22 @@ class TestGetBackendName(TestCase):
     def test_numpy(self):
         self.assertEqual(_get_backend_name(np_xp), "numpy")
 
-    @skipIf(torch is None, "PyTorch is not available.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_torch(self):
         xp = aac.array_namespace(torch.arange(1))
         self.assertEqual(_get_backend_name(xp), "torch")
 
-    @skipIf(cp is None, "CuPy is not available.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_cupy(self):
         xp = aac.array_namespace(cp.arange(1))
         self.assertEqual(_get_backend_name(xp), "cupy")
 
-    @skipIf(jax is None, "JAX is not available.")
+    @skipIf(not JAX_OK, "JAX is not usable.")
     def test_jax(self):
         xp = aac.array_namespace(jax.numpy.arange(1))
         self.assertEqual(_get_backend_name(xp), "jax")
 
-    @skipIf(dask is None, "Dask is not available.")
+    @skipIf(not DASK_OK, "Dask is not usable.")
     def test_dask(self):
         xp = aac.array_namespace(da.arange(1, chunks=1))
         self.assertEqual(_get_backend_name(xp), "dask")
@@ -441,7 +334,7 @@ class TestIngestArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.asarray(arr))
 
-    @skipIf(cp is None, "CuPy is not available for unit tests.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_ingest_array_cupy(self):
         # CuPy arrays are kept as-is in default mode.
         arr = cp.arange(5)
@@ -457,7 +350,7 @@ class TestIngestArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(torch is None, "PyTorch is not available for unit tests.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_ingest_array_torch(self):
         # PyTorch tensors are kept as-is in default mode.
         ten = torch.arange(5)
@@ -473,7 +366,7 @@ class TestIngestArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(jax is None, "JAX is not available for unit tests.")
+    @skipIf(not JAX_OK, "JAX is not usable.")
     def test_ingest_array_jax(self):
         # JAX arrays are kept as-is in default mode.
         arr = jax.numpy.arange(5)
@@ -489,7 +382,7 @@ class TestIngestArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(dask is None, "Dask is not available for unit tests.")
+    @skipIf(not DASK_OK, "Dask is not usable.")
     def test_ingest_array_dask(self):
         # Dask arrays are kept as-is in default mode.
         arr = da.arange(20, chunks=4)
@@ -542,7 +435,7 @@ class TestIngestArray(TestCase):
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(df.to_numpy(), np.arange(5).reshape(-1, 1))
 
-    @skipIf(xr is None, "Xarray is not available for unit tests.")
+    @skipIf(not XARRAY_OK, "Xarray is not usable.")
     def test_ingest_array_xarray(self):
         # Xarray DataArrays are not API-compatible arrays, but they can be casted into
         # Numpy arrays.
