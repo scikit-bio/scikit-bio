@@ -62,7 +62,7 @@ def _wrap_vector_tpm_function(
     """
     Transforms distance d so it is always is a vector for the internal
     interface and transition probability matrix output so it is always a
-    valid PairwiseMatrix.
+    valid SubstitutionMatrix.
     Parameters
     ----------
     function : function
@@ -129,11 +129,11 @@ def jc69(
     seqtype : str
         String that holds type of the sequence. "DNA" (default) and "RNA"
         are valid options. Needed to assign proper nucleotide letters to
-        PairwiseMatrix ids.
+        SubstitutionMatrix dimensions.
 
     Returns
     -------
-    PairwiseMatrix
+    SubstitutionMatrix
         Transition probability matrix. Rows are ancestral nucleotides,
         columns are descendant nucleotides.
 
@@ -215,11 +215,11 @@ def k2p(
     seqtype : str
         String that holds type of the sequence. "DNA" (default) and "RNA"
         are valid options. Needed to assign proper nucleotide letters to
-        PairwiseMatrix ids.
+        SubstitutionMatrix dimensions.
 
     Returns
     -------
-    PairwiseMatrix
+    SubstitutionMatrix
         Transition probability matrix. Rows are ancestral nucleotides,
         columns are descendant nucleotides.
 
