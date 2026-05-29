@@ -98,21 +98,6 @@ def _half_adm(adm, order, n=None):
             adm[order[j], order[i]] = 0
 
 
-# def _full_adm(adm, order, n=None):
-#     """Fill the invalid half of an average distance matrix with values.
-
-#     A cell [j, i] that suffices i < j in preorder traversal is filled with [i, j].
-
-#     """
-#     if n is None:
-#         n = adm.shape[0]
-#     for i in range(n):
-#         a = order[i]
-#         for j in range(i + 1, n):
-#             b = order[j]
-#             adm[b, a] = adm[a, b]
-
-
 def _halve_adm(adm, tree, n=None):
     """Replace the invalid half of an average distance matrix with zero.
 
@@ -1133,8 +1118,8 @@ class MeTests(TestCase):
         _avgdist_taxon_naive(
             obs, taxon, self.dm1, self.tree1m1, self.preodr1m1, self.tacts1m1
         )
-        exp = np. array([[6.333, 9.   , 5.   , 7.   , 3.   , 0.   , 0.   ],
-                         [8.   , 6.   , 8.5  , 6.667, 8.   , 0.   , 0.   ]])
+        exp = np.array([[6.333, 9.   , 5.   , 7.   , 3.   , 0.   , 0.   ],
+                        [8.   , 6.   , 8.5  , 6.667, 8.   , 0.   , 0.   ]])
         npt.assert_array_equal(obs.round(3), exp)
 
     def test_avgdist_taxon(self):
@@ -1290,7 +1275,7 @@ class MeTests(TestCase):
         exp = np.array([
             [ 0.  ,  5.  ,  8.75,  9.  ,  9.  ,  8.5 ,  8.  ],
             [ 0.  ,  0.  ,  9.75, 10.  , 10.  ,  9.5 ,  9.  ],
-            [ 0.  ,  0   ,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
+            [ 0.  ,  0.  ,  0.  ,  9.5 ,  9.5 ,  9.  ,  8.5 ],
             [ 0.  ,  0.  ,  0.  ,  0.  ,  8.  ,  7.5 ,  7.  ],
             [ 0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  0.  ,  3.  ],
             [ 0.  ,  0.  ,  0.  ,  0.  ,  8.75,  0.  ,  7.75],

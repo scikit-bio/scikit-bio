@@ -693,6 +693,11 @@ def _bme(dm, parallel=500, factor=10):
     tree has grown beyond certain size. Therefore, this function implements a three-
     phase process:
 
+    1. Serial processing for small trees.
+    2. Parallelize the update of average distances between pairs of subtrees, which
+       involve nested iterations and is the dominant part of the algorithm.
+    3. Also parallelize flat iterations (e.g., calculating branch lengths).
+
     """
     dtype = dm.dtype
 
