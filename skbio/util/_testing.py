@@ -11,11 +11,15 @@
 import inspect
 import os
 import sys
+import functools
+import unittest
 
 import numpy as np
 import numpy.testing as npt
 import pandas.testing as pdt
 from scipy.spatial.distance import pdist
+
+from skbio.util._array import _to_numpy, _move_to_device, _get_backend_name
 
 
 class ReallyEqualMixin:
@@ -452,3 +456,320 @@ def pytestrunner():
 
     errno = pytest.main(args=["--pyargs", "skbio"] + sys.argv[1:])
     sys.exit(errno)
+
+
+# -------------------------------------------------------------------------------------
+# Array API test infrastructure
+#
+# Write one test method, run it against every supported array backend
+# (numpy, jax, torch, cupy). Uses ``unittest.subTest()`` for per-backend
+# reporting — no pytest required.
+#
+# Env vars:
+#   SKBIO_ARRAY_BACKEND  — "numpy" (default), "jax", "torch", "cupy", or "all"
+#   SKBIO_DEVICE         — "cpu" (default), "cuda", "gpu"
+#
+# Note: ``"gpu"`` (JAX's native string) and ``"cuda"`` (Torch/CuPy's native
+# string) refer to the same hardware and are treated as equivalent.
+#
+# Usage:
+#     class TestClosure(TestCase, ArrayAPITestMixin):
+#         @array_backends("numpy", "jax", "torch", "cupy")
+#         def test_basic(self, xp, device):
+#             data = self.make_array(xp, device, [[2.0, 2.0, 6.0]])
+#             result = closure(data)
+#             self.assert_type_preserved(result, xp, device)
+#             self.assert_close(result, self.make_array(xp, device, [[0.2, 0.2, 0.6]]))
+# -------------------------------------------------------------------------------------
+
+
+# Two device-name spellings that refer to the same hardware. Used only to
+# decide whether a requested ``SKBIO_DEVICE`` matches a backend's advertised
+# device — never to inspect a real array (see ``_on_device`` for that).
+_GPU_ALIASES = frozenset({"cuda", "gpu"})
+
+
+def _device_specs_match(a, b):
+    """True if two device-spec strings refer to the same hardware.
+
+    Both inputs are expected to be the per-backend strings stored in
+    ``_BACKENDS`` or read from ``SKBIO_DEVICE`` — short labels like ``"cpu"``,
+    ``"cuda"``, or ``"gpu"``. This is *not* for inspecting a real array's
+    device; use ``_on_device`` for that.
+    """
+    if a is None or b is None:
+        return a == b
+    a, b = a.lower(), b.lower()
+    if a == b:
+        return True
+    return a in _GPU_ALIASES and b in _GPU_ALIASES
+
+
+def _on_device(arr, xp, device):
+    """Return whether ``arr`` lives on ``device`` according to its backend.
+
+    Asks each backend a structured question rather than parsing the
+    ``__repr__`` of a device object, so it doesn't break when a backend
+    changes how it prints devices.
+
+    Parameters
+    ----------
+    arr : array
+        An array produced by ``xp``.
+    xp : module
+        The array namespace that produced ``arr`` (e.g. ``numpy``,
+        ``jax.numpy``, ``torch``, ``cupy``).
+    device : str or None
+        The expected device: ``"cpu"``, ``"cuda"``, ``"gpu"``, or ``None``
+        (treated as ``"cpu"``).
+
+    Returns
+    -------
+    bool
+
+    Raises
+    ------
+    NotImplementedError
+        If ``xp`` is not a recognized backend.
+    """
+    backend = _get_backend_name(xp)
+    want_gpu = device is not None and device.lower() in _GPU_ALIASES
+    want_cpu = device is None or device.lower() == "cpu"
+
+    if backend == "numpy":
+        # NumPy is CPU-only; "cuda"/"gpu" never matches.
+        return want_cpu
+
+    if backend == "cupy":
+        # CuPy arrays are always on CUDA.
+        return want_gpu
+
+    if backend == "torch":
+        # arr.device.type is "cpu" or "cuda" (or "mps", etc.)
+        kind = arr.device.type
+        if want_cpu:
+            return kind == "cpu"
+        if want_gpu:
+            return kind == "cuda"
+        return False
+
+    if backend == "jax":
+        # JAX device objects expose .platform: "cpu", "gpu", or "tpu".
+        platform = arr.device.platform
+        if want_cpu:
+            return platform == "cpu"
+        if want_gpu:
+            return platform == "gpu"
+        return False
+
+    raise NotImplementedError(f"_on_device: unknown backend {backend!r}")
+
+
+def _read_env():
+    """Read backend/device environment variables."""
+    backend = os.environ.get("SKBIO_ARRAY_BACKEND", "").strip()
+    device = os.environ.get("SKBIO_DEVICE", "").strip() or None
+    return backend, device
+
+
+def _get_array_backends():
+    """Return dict of {name: (namespace, [devices])} for installed backends.
+
+    The device strings stored here are each backend's *native* form — JAX uses
+    ``"gpu"``, Torch and CuPy use ``"cuda"`` — because they get passed back to
+    the backend (e.g. via ``_move_to_device``).
+    """
+    _backends = {"numpy": (np, ["cpu"])}
+
+    try:
+        import jax
+        import jax.numpy as jnp
+
+        jax.config.update("jax_enable_x64", True)
+        devices = ["cpu"]
+        try:
+            if jax.devices("gpu"):
+                devices.append("gpu")
+        except RuntimeError:
+            pass
+        _backends["jax"] = (jnp, devices)
+    except ImportError:
+        pass
+
+    try:
+        import torch
+
+        devices = ["cpu"]
+        if torch.cuda.is_available():
+            devices.append("cuda")
+        _backends["torch"] = (torch, devices)
+    except ImportError:
+        pass
+
+    try:
+        import cupy
+
+        _backends["cupy"] = (cupy, ["cuda"])
+    except ImportError:
+        pass
+
+    return _backends
+
+
+_BACKENDS = _get_array_backends()
+
+
+def _should_run(backend_name, device):
+    """Check whether a backend/device combo should execute."""
+    env_backend, env_device = _read_env()
+
+    if not env_backend:
+        return backend_name == "numpy" and device == "cpu"
+
+    if env_backend == "all":
+        if env_device and not _device_specs_match(env_device, device):
+            return False
+        return True
+
+    if env_backend != backend_name:
+        return False
+
+    if env_device and not _device_specs_match(env_device, device):
+        return False
+
+    return True
+
+
+def xp_assert_close(actual, desired, rtol=1e-7, atol=0):
+    """Assert two arrays are element-wise equal within a tolerance.
+
+    Converts both arrays to NumPy (handles GPU arrays), then delegates to
+    ``numpy.testing.assert_allclose``.
+
+    """
+    npt.assert_allclose(_to_numpy(actual), _to_numpy(desired), rtol=rtol, atol=atol)
+
+
+def xp_assert_equal(actual, desired):
+    """Assert two arrays are element-wise exactly equal.
+
+    Converts both arrays to NumPy (handles GPU arrays), then delegates to
+    ``numpy.testing.assert_array_equal``.
+
+    """
+    npt.assert_array_equal(_to_numpy(actual), _to_numpy(desired))
+
+
+def array_backends(*backend_names, cpu_only=False):
+    """Decorator: run a test method once per supported backend/device.
+
+    Uses ``unittest.subTest()`` for per-backend reporting.
+
+    Parameters
+    ----------
+    *backend_names : str
+        Backends to run on. Defaults to all if empty.
+    cpu_only : bool, optional
+        If True, skip GPU devices.
+
+    Raises
+    ------
+    RuntimeError
+        If ``SKBIO_ARRAY_BACKEND`` names a backend that is not installed.
+
+    """
+    if not backend_names:
+        backend_names = ("numpy", "jax", "torch", "cupy")
+
+    def decorator(test_func):
+        @functools.wraps(test_func)
+        def wrapper(self):
+            env_backend, env_device = _read_env()
+
+            # Hard error when a specific backend was requested but is missing.
+            if env_backend and env_backend != "all" and env_backend not in _BACKENDS:
+                raise RuntimeError(
+                    f"SKBIO_ARRAY_BACKEND={env_backend!r} but "
+                    f"{env_backend!r} is not installed. "
+                    f"Installed backends: {sorted(_BACKENDS.keys())}"
+                )
+
+            ran_any = False
+            for name in backend_names:
+                if name not in _BACKENDS:
+                    continue
+                xp, devices = _BACKENDS[name]
+                for device in devices:
+                    if cpu_only and device != "cpu":
+                        continue
+                    if not _should_run(name, device):
+                        continue
+
+                    ran_any = True
+                    with self.subTest(backend=name, device=device):
+                        test_func(self, xp, device)
+            if not ran_any:
+                if env_device:
+                    raise RuntimeError(
+                        f"SKBIO_DEVICE={env_device!r} was requested but no "
+                        f"backend has that device available."
+                    )
+                raise unittest.SkipTest(f"No matching backends for {backend_names}")
+
+        # Tag with a pytest marker so we can filter for CI with
+        # `pytest -m array_api`. Falls back silently if pytest not installed.
+        try:
+            import pytest
+
+            wrapper = pytest.mark.array_api(wrapper)
+        except ImportError:
+            pass
+
+        return wrapper
+
+    return decorator
+
+
+class ArrayAPITestMixin:
+    """Mixin providing array-API test helpers for ``unittest.TestCase``.
+
+    Mix into your test class alongside ``TestCase``::
+
+        class TestMyFunc(unittest.TestCase, ArrayAPITestMixin):
+            ...
+
+    """
+
+    def make_array(self, xp, device, data, dtype=None):
+        """Create an array on the given backend and device."""
+        if dtype is None:
+            dtype = xp.float64
+        arr = xp.asarray(data, dtype=dtype)
+        return _move_to_device(arr, xp, device)
+
+    def assert_close(self, actual, expected, rtol=1e-7, atol=1e-7):
+        """Assert two arrays are numerically close (converts to numpy)."""
+        xp_assert_close(actual, expected, rtol=rtol, atol=atol)
+
+    def assert_type_preserved(self, result, xp, device):
+        """Assert result is from the correct backend and on the right device."""
+        import array_api_compat as aac
+
+        result_name = _get_backend_name(aac.array_namespace(result))
+        expected_name = _get_backend_name(xp)
+        self.assertEqual(
+            result_name,
+            expected_name,
+            f"Backend not preserved: result is {result_name}, expected {expected_name}",
+        )
+
+        # Skip the device check on CPU: not every backend exposes a useful
+        # device attribute for CPU arrays, and CPU/CPU is the trivial case.
+        if device in (None, "cpu"):
+            return
+
+        self.assertTrue(
+            _on_device(result, xp, device),
+            f"Device not preserved: result on "
+            f"{getattr(result, 'device', '<unknown>')}, expected {device}",
+        )

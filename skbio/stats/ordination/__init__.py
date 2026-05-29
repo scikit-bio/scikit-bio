@@ -51,6 +51,16 @@ Canonical analysis
    rda
 
 
+Multimodal embedding
+--------------------
+
+.. autosummary::
+   :toctree:
+
+   mmvec
+   MMvecResult
+
+
 Ordination results
 ------------------
 
@@ -167,6 +177,7 @@ from ._canonical_correspondence_analysis import cca
 from ._principal_coordinate_analysis import pcoa, pcoa_biplot
 from ._principal_component_analysis import pca
 from ._ordination_results import OrdinationResults
+from ._mmvec import mmvec, MMvec, MMvecResult
 from ._utils import (
     mean_and_std,
     scale,
@@ -184,6 +195,9 @@ __all__ = [
     # "pca",
     "pcoa",
     "pcoa_biplot",
+    "mmvec",
+    "MMvec",
+    "MMvecResult",
     "OrdinationResults",
     "mean_and_std",
     "scale",

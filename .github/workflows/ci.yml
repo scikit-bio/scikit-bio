@@ -36,7 +36,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
@@ -59,14 +59,13 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # to prevent a "Git clone too shallow" warning by Sphinx
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          # Pin to 3.13 for now because no Sphinx is compatible with Python 3.14
-          python-version: "3.13"
+          python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
@@ -85,7 +84,7 @@ jobs:
           python doc/editmap.py
       - name: Save documentation
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docpack
           path: doc/build/html/
@@ -106,7 +105,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm, macos-15-intel]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
@@ -114,7 +113,7 @@ jobs:
           environment-file: ci/conda_host_env.yml
       - name: Install dependencies
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
           python -m ensurepip
           pip install --no-deps .
           conda list
@@ -136,7 +135,7 @@ jobs:
           cd ci && coverage lcov --rcfile ../.coveragerc
       - name: Upload coverage reports to Codecov
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: codecov/codecov-action@v4.2.0
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
@@ -156,7 +155,7 @@ jobs:
         python_version: ${{ fromJSON(needs.conf.outputs.supported_pythons) }}
         use_conda: [true, false]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # set up conda environment
       - name: Setup conda environment
         if: ${{ matrix.use_conda }}
@@ -168,14 +167,14 @@ jobs:
       # set up CPython environment (pip)
       - name: Setup CPython environment
         if: ${{ !matrix.use_conda }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python_version }}
       # conda installation
       - name: Install dependencies (conda)
         if: ${{ matrix.use_conda }}
         run: |
-          conda install -q --yes -c conda-forge --file ci/conda_requirements.txt --file ci/requirements.test.txt
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
           python -m ensurepip
           pip install --no-deps .
           conda list
@@ -184,7 +183,7 @@ jobs:
         if: ${{ !matrix.use_conda }}
         run: |
           python -m ensurepip
-          pip install --prefer-binary -r ci/conda_requirements.txt -r ci/requirements.test.txt
+          pip install --prefer-binary -r ci/requirements.txt -r ci/requirements.test.txt
           pip install --no-deps .
           pip list
       - name: Run unit tests
@@ -205,13 +204,13 @@ jobs:
     steps:
       # load documentation built by job "doc"
       - name: Load documentation
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docpack
           path: docpack
       # checkout website repo
       - name: Check out website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: scikit-bio/scikit-bio.github.io
           path: website
