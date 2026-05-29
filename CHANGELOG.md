@@ -18,6 +18,7 @@
 
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
 * Fixed `permdisp` emitting pcoa's `RuntimeWarning` on every call with a distance matrix larger than 10 samples ([#2456](https://github.com/scikit-bio/scikit-bio/pull/2456)).
+* Fixed the GenBank/EMBL/GFF3 feature-location parser to accept single-base locations with a fuzzy boundary (e.g. `complement(<23231)` as found in the NCBI lambda virus record J02459.1). Previously such locations raised `FileFormatError: Could not parse location string`. The corresponding serializer was updated symmetrically to emit `<N`/`>N` instead of dropping the fuzzy marker ([#2473](https://github.com/scikit-bio/scikit-bio/pull/2473)).
 
 ### Miscellaneous
 
