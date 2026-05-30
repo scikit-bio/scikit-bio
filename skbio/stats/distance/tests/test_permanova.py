@@ -25,13 +25,17 @@ from skbio.util import get_data_path, numba_code
 from skbio.stats.distance._base import _preprocess_input_sng
 
 
-class PERMANOVATests(TestCase):
-    """All results were verified with R (vegan::adonis)."""
+class PERMANOVATestData(TestCase):
+    """Shared fixtures for the PERMANOVA test classes.
+
+    Subclasses (``PERMANOVATests``, ``PERMANOVACondensedTests``,
+    ``InternalPERMANOVATests``) call ``super().setUp()`` and add their
+    own class-specific derivatives.
+    """
 
     def setUp(self):
-        # Distance matrices with and without ties in the ranks, with 2 groups
-        # of equal size.
-        dm_ids = ['s1', 's2', 's3', 's4']
+        # 4-sample, 2-group equal-size data.
+        dm_ids_equal = ['s1', 's2', 's3', 's4']
         self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
         self.df = pd.read_csv(
             io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
@@ -40,14 +44,15 @@ class PERMANOVATests(TestCase):
         self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
                                        [1, 0, 3, 2],
                                        [1, 3, 0, 3],
-                                       [4, 2, 3, 0]], dm_ids)
+                                       [4, 2, 3, 0]], dm_ids_equal)
 
         self.dm_no_ties = DistanceMatrix([[0, 1, 5, 4],
                                           [1, 0, 3, 2],
                                           [5, 3, 0, 3],
-                                          [4, 2, 3, 0]], dm_ids)
+                                          [4, 2, 3, 0]], dm_ids_equal)
 
-        # Test with 3 groups of unequal size.
+        # 6-sample, 3-group unequal-size data.
+        dm_ids_unequal = ['s1', 's2', 's3', 's4', 's5', 's6']
         self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
                                  'Treatment1', 'Control', 'Control']
 
@@ -62,7 +67,7 @@ class PERMANOVATests(TestCase):
              [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
              [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
              [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
-            ['s1', 's2', 's3', 's4', 's5', 's6'])
+            dm_ids_unequal)
 
         # Expected series index is the same across all tests.
         self.exp_index = ['method name', 'test statistic name', 'sample size',
@@ -73,6 +78,10 @@ class PERMANOVATests(TestCase):
         self.assert_series_equal = partial(assert_series_equal,
                                            check_index_type=True,
                                            check_series_type=True)
+
+
+class PERMANOVATests(PERMANOVATestData):
+    """All results were verified with R (vegan::adonis)."""
 
     def test_call_ties(self):
         # Ensure we get the same results if we rerun the method using the same
@@ -194,73 +203,37 @@ class PERMANOVATests(TestCase):
             permanova(self.dm_ties.data, self.grouping_equal, seed=42)
 
 
-class PERMANOVACondensedTests(TestCase):
+class PERMANOVACondensedTests(PERMANOVATestData):
     """Tests for PERMANOVA with condensed distance matrices.
-    
+
     These tests verify that condensed and redundant forms of the same
     distance matrix produce identical results.
     """
 
     def setUp(self):
-        # Distance matrices with and without ties in the ranks, with 2 groups
-        # of equal size.
-        dm_ids = ['s1', 's2', 's3', 's4']
-        self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
-        self.df = pd.read_csv(
-            io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
-                        's1,Control'), index_col=0)
-
-        # Create both redundant and condensed versions
-        self.dm_ties_redundant = DistanceMatrix([[0, 1, 1, 4],
-                                                  [1, 0, 3, 2],
-                                                  [1, 3, 0, 3],
-                                                  [4, 2, 3, 0]], dm_ids)
-        
+        super().setUp()
+        # Build condensed forms from the inherited matrices. The
+        # ``_redundant`` aliases let this class's existing test methods
+        # reuse the inherited DistanceMatrix objects without renaming
+        # every call site.
+        self.dm_ties_redundant = self.dm_ties
         self.dm_ties_condensed = DistanceMatrix(
-            squareform(self.dm_ties_redundant.data), #, checks=False),
-            dm_ids,
+            squareform(self.dm_ties.data),
+            self.dm_ties.ids,
             condensed=True
         )
-
-        self.dm_no_ties_redundant = DistanceMatrix([[0, 1, 5, 4],
-                                                     [1, 0, 3, 2],
-                                                     [5, 3, 0, 3],
-                                                     [4, 2, 3, 0]], dm_ids)
-        
+        self.dm_no_ties_redundant = self.dm_no_ties
         self.dm_no_ties_condensed = DistanceMatrix(
-            squareform(self.dm_no_ties_redundant.data), #, checks=False),
-            dm_ids,
+            squareform(self.dm_no_ties.data),
+            self.dm_no_ties.ids,
             condensed=True
         )
-
-        # Test with 3 groups of unequal size.
-        self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
-                                 'Treatment1', 'Control', 'Control']
-
-        self.dm_unequal_redundant = DistanceMatrix(
-            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
-             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
-             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
-             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
-             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
-             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
-            ['s1', 's2', 's3', 's4', 's5', 's6'])
-        
+        self.dm_unequal_redundant = self.dm_unequal
         self.dm_unequal_condensed = DistanceMatrix(
-            squareform(self.dm_unequal_redundant.data), #, checks=False),
-            ['s1', 's2', 's3', 's4', 's5', 's6'],
+            squareform(self.dm_unequal.data),
+            self.dm_unequal.ids,
             condensed=True
         )
-
-        # Expected series index is the same across all tests.
-        self.exp_index = ['method name', 'test statistic name', 'sample size',
-                          'number of groups', 'test statistic', 'p-value',
-                          'number of permutations']
-
-        # Stricter series equality testing than the default.
-        self.assert_series_equal = partial(assert_series_equal,
-                                           check_index_type=True,
-                                           check_series_type=True)
 
     def test_condensed_vs_redundant_ties(self):
         """Test that condensed and redundant forms give identical results with ties."""
@@ -412,25 +385,24 @@ class PERMANOVACondensedTests(TestCase):
         self.assertEqual(self.dm_ties_redundant.data.shape, (n, n))
 
 
-class PERMANOVANumbaTests(TestCase):
+class InternalPERMANOVATests(PERMANOVATestData):
     """Tests for the Numba-accelerated s_W helpers and dispatch."""
 
     def setUp(self):
-        # Same numbers as dm_unequal in PERMANOVATests (3 groups, sizes 3/2/1).
-        self.dm_full = np.asarray(
-            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
-             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
-             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
-             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
-             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
-             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]])
-        self.dm_condensed = squareform(self.dm_full, force='tovector',
-                                       checks=False)
+        super().setUp()
+        # The internal _cy/_numba helpers take raw np arrays rather than
+        # DistanceMatrix wrappers, so derive those forms from the inherited
+        # dm_unequal. The integer grouping is hand-encoded to match
+        # grouping_unequal's first-seen order
+        # (Control=0, Treatment1=1, Treatment2=2).
+        self.dm_full = np.ascontiguousarray(self.dm_unequal.data)
+        self.dm_condensed = squareform(
+            self.dm_full, force='tovector', checks=False
+        )
         self.grouping = np.asarray([0, 1, 2, 1, 0, 0], dtype=np.intp)
         self.group_sizes = np.bincount(self.grouping).astype(np.intp)
-        self.ids = ['s1', 's2', 's3', 's4', 's5', 's6']
-        self.grouping_labels = ['Control', 'Treatment1', 'Treatment2',
-                                'Treatment1', 'Control', 'Control']
+        self.ids = self.dm_unequal.ids
+        self.grouping_labels = self.grouping_unequal
 
     def _expected_sW(self):
         n = self.dm_full.shape[0]
