@@ -12,6 +12,7 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from skbio import DistanceMatrix, TreeNode
+from skbio.util import get_data_path
 from skbio.tree._nj import nj, _tree_from_linkmat
 
 
@@ -95,6 +96,13 @@ class NjTests(TestCase):
         actual_TreeNode = nj(self.dm3)
         self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected3_TreeNode), 0.0)
+
+    def test_nj_real(self):
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = nj(dm, neg_as_zero=False)
+        exp = TreeNode.read(get_data_path("mp100.nj.nwk"))
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
 
     def test_nj_inplace(self):
         dm = self.dm3.copy()

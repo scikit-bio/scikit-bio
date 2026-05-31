@@ -72,7 +72,7 @@ def nj(
     the cost of accuracy. Therefore, one is guaranteed to obtain an optimal tree. The
     algorithm is *O*\(*n*:sup:`3`) in time and *O*\(*n*:sup:`2`) in space.
 
-    NJ creates an **unrooted** tree with varying tip heights. This contrasts UPGMA
+    NJ generates an **unrooted** tree with varying tip heights. This contrasts UPGMA
     (:func:`upgma`), which always produces ultrametric trees. One may subsequently use
     choice of strategies such as midpoint rooting (:meth:`~TreeNode.root_at_midpoint`)
     or outgroup rooting (:meth:`~TreeNode.root_by_outgroup`) to convert the result into
@@ -87,8 +87,8 @@ def nj(
 
     Gascuel and Steel (2006) provide a detailed overview of neighbor joining in terms
     of its biological relevance and limitations [2]_. They proved that NJ is a greedy
-    heuristic to the balanced minimum evolution (BME) problem. An alternative method
-    to this problem is provided by :func:`bme`.
+    heuristic to the balanced minimum evolution (BME) problem. An alternative heuristic
+    solution to this problem is provided by :func:`bme`.
 
     The example presented here is derived from the Wikipedia page on neighbor joining
     [3]_.

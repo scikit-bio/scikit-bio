@@ -12,7 +12,7 @@ from cython cimport floating
 from libc.math cimport INFINITY
 
 
-def nj_minq_cy(floating[:, :] dm, floating[:] sums):
+def nj_minq_cy(floating[:, :] dm, floating[::1] sums):
     r"""Find the minimum value in a Q-matrix during the NJ algorithm.
 
     Parameters
