@@ -179,7 +179,7 @@ def gme(dm, neg_as_zero=True):
     -----
     Greedy Minimum Evolution (GME) [1]_ is a distance-based algorithm for phylogenetic
     reconstruction. It utilizes the minimum evolution (ME) principle [2]_ for selecting
-    a tree topology with the lowest sum of branch lengths, as calculated using an
+    a tree topology with the smallest sum of branch lengths, as calculated using an
     ordinary least squares (OLS) framework [3]_.
 
     GME is *O*\(*n*:sup:`2`) in time and *O*\(*n*) in space, making it a more scalable
@@ -194,17 +194,17 @@ def gme(dm, neg_as_zero=True):
     A GME-generated tree may be further improved by executing the FastNNI algorithm
     implemented in :func:`nni` (with ``balanced=False``).
 
-    A similar but less scalable algorithm using the balanced instead of OLS framework
-    is provided in :func:`bme`.
-
-    The same methods underlying :func:`gme`, :func:`bme` and :func:`nni` were also
-    provided by the software package FastME [4]_.
+    This algorithm is mathematically equivalent to the "TaxAdd_OLSME" method provided
+    by the FastME program [4]_.
 
     .. note::
-        These scikit-bio functions were implemented following the original paper [1]_.
-        It is not guaranteed that they will precisely mirror FastME's output. Although
-        in practices they usually generate identical or equally optimal phylogenetic
-        trees as FastME does.
+        This function was implemented following the original paper [1]_. It is not
+        guaranteed that it will precisely mirror FastME's output. Although in practices
+        it usually generates identical or equally optimal phylogenetic trees as FastME
+        does.
+
+    A similar but less scalable algorithm using the balanced instead of OLS framework
+    is provided in :func:`bme`.
 
     References
     ----------
@@ -303,30 +303,48 @@ def bme(dm, neg_as_zero=True, **kwargs):
     Balanced Minimum Evolution (BME) [1]_ is a refinement of the distance-based minimum
     evolution problem where the average distances between subtrees are independent of
     the sizes of the subtrees. This is referred to as a balanced (or simply BME)
-    framework [2]_, as in contrast to the OLS framework used by GME (:func:`gme`).
+    framework [2]_, as in contrast to the OLS framework used by GME (:func:`gme`). The
+    BME problem aims to find a tree topology that minimizes the balanced tree length:
 
-    The BME algorithm implemented here uses a similar greedy algorithm as implemented
-    in :func:`gme`, but less scalable due to the need to update subtree distances as
-    the tree topology changes. The algorithm is sub-*O*\(*n*:sup:`3`) in time and
-    *O*\(*n*:sup:`2`) in space.
+    .. math::
 
-    Refer to :func:`gme` for the format of the output tree and subsequent treatments.
+       L(T) = \sum 2^{1-p_{i,j}(T)} d_{i,j}
+
+    In which :math:`d_{i,j}` is the distance between each pair of taxa :math:`i` and
+    :math:`j` in the input distance matrix. :math:`p_{i,j}(T)` is the number of
+    branches along the path connecting the two taxa in the output tree :math:`T`.
+
+    This function is an improved implementation of the original BME algorithm described
+    in [1]_. It is an additive heuristic algorithm that iteratively grows a tree by
+    inserting taxa while minimizing the balanced tree length at each step. This process
+    is similar to GME, but uses the balanced framework. It is mathematically equivalent
+    to the "TaxAdd_BalME" method provided by FastME [3]_. It has an average case time
+    complexity of *O*\(*n*:sup:`2` log(*n*)) and a worst case of *O*\(*n*:sup:`3`), and
+    its space complexity is *O*\(*n*:sup:`2`).
+
+    .. note::
+        This function was implemented following the original paper [1]_. It is not
+        guaranteed that it will precisely mirror FastME's output. Although in practices
+        it usually generates identical or equally optimal phylogenetic trees as FastME
+        does.
+
+    BME generates an unrooted tree with variable tip heights and potentially some
+    negative branch lengths. The first taxon in the distance matrix is always placed as
+    a child of the root node. See the notes of :func:`nj` for how to deal with unrooted
+    trees and negative branch lengths..
 
     A BME-generated tree may be further improved by executing the BNNI algorithm
     implemented in :func:`nni` (with ``balanced=True``).
 
-    The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
-
     **Parallelization**
 
-    This algorithm utilizes parallelization to improve efficiency. By default, it
-    starts to parallelize when the tree has grown to 500 taxa, an empirically
-    determined threshold that can be modified by setting the hidden parameter
-    ``parallel`` (e.g., ``parallel=100``). Setting it to ``True`` always enables
-    parallelization regardless of tree size. Setting it to ``False`` disables
-    parallelization completely. See also `this guideline
-    <https://scikit.bio/install.html#parallelization>`_ on how to specify the
-    number of threads to use for parallelization.
+    This function utilizes parallelization to improve efficiency. By default, it starts
+    to parallelize when the tree has grown to 500 taxa, an empirically determined
+    threshold that can be modified by setting the hidden parameter ``parallel`` (e.g.,
+    ``parallel=100``). Setting it to ``True`` always enables parallelization regardless
+    of tree size. Setting it to ``False`` disables parallelization completely. See also
+    `this section <https://scikit.bio/install.html#parallelization>`_ on how to specify
+    the number of threads to use for parallelization.
 
     **Floating-point precision**
 
@@ -433,6 +451,13 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
     squares (OLS) framework (see also :func:`gme`) and the BNNI algorithm
     (``balanced=True``) based on a balanced framework (see also :func:`bme`). The
     former is more scalable than the latter.
+
+    .. note::
+        The FastNNI and BNNI algorithms are mathematically equivalent to the "NNI_OLS"
+        and "NNI_BalME" methods provided by the FastME program [2]_, respectively. This
+        function was implemented following the original paper [1]_, and there is no
+        guarantee that it will precisely mirror FastME's output. Although in practices
+        it usually generates identical or equally optimal trees as FastME does.
 
     The input tree may be rooted or unrooted, and it must be strictly bifurcating. One
     can apply :meth:`~TreeNode.is_bifurcating` or :meth:`~TreeNode.bifurcate` to check
