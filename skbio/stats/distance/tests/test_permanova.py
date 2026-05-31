@@ -388,6 +388,11 @@ class PERMANOVACondensedTests(PERMANOVATestData):
 class InternalPERMANOVATests(PERMANOVATestData):
     """Tests for the Numba-accelerated s_W helpers and dispatch."""
 
+    # Expected within-group sum-of-squares for self.dm_unequal with
+    # grouping [0, 1, 2, 1, 0, 0]. Pre-computed using the existing
+    # scikit-bio Cython implementation.
+    EXPECTED_SW = 0.8382
+
     def setUp(self):
         super().setUp()
         # The internal _cy/_numba helpers take raw np arrays rather than
@@ -404,19 +409,9 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self.ids = self.dm_unequal.ids
         self.grouping_labels = self.grouping_unequal
 
-    def _expected_sW(self):
-        n = self.dm_full.shape[0]
-        s_W = 0.0
-        for i in range(n - 1):
-            for j in range(i + 1, n):
-                if self.grouping[i] == self.grouping[j]:
-                    g = self.grouping[i]
-                    s_W += self.dm_full[i, j] ** 2 / self.group_sizes[g]
-        return s_W
-
     def _assert_sW(self, func, dm):
         obs = func(dm, self.group_sizes, self.grouping)
-        self.assertAlmostEqual(obs, self._expected_sW())
+        self.assertAlmostEqual(obs, self.EXPECTED_SW)
 
     def test_sW_full_cy(self):
         self._assert_sW(permanova_f_stat_sW_cy, self.dm_full)
