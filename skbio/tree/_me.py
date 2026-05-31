@@ -277,8 +277,8 @@ def bme(dm, neg_as_zero=True, **kwargs):
     .. versionadded:: 0.6.3
 
     .. versionchanged:: 0.7.3
-        Computational efficiency significantly improved. This is partly due to enabling
-        parallelization by default.
+        Computational efficiency significantly improved. Parallelization is enabled by
+        default.
 
     Parameters
     ----------
@@ -316,6 +316,25 @@ def bme(dm, neg_as_zero=True, **kwargs):
     implemented in :func:`nni` (with ``balanced=True``).
 
     The same method was provided by FastME [3]_. See :func:`gme` for notes on this.
+
+    **Parallelization**
+
+    This algorithm utilizes parallelization to improve efficiency. By default, it
+    starts to parallelize when the tree has grown to 500 taxa, an empirically
+    determined threshold that can be modified by setting the hidden parameter
+    ``parallel`` (e.g., ``parallel=100``). Setting it to ``True`` always enables
+    parallelization regardless of tree size. Setting it to ``False`` disables
+    parallelization completely. See also `this guideline
+    <https://scikit.bio/install.html#parallelization>`_ on how to specify the
+    number of threads to use for parallelization.
+
+    **Floating-point precision**
+
+    This algorithm natively supports float32 and float64 calculations without casting.
+    The former has half memory cost and moderately faster runtime compared to the
+    latter, at the cost of reduced precision. To control the floating-point precision,
+    simply supply a distance matrix of the desired type (e.g.,
+    ``bme(DistanceMatrix.read(file, dtype='float32'))``).
 
     References
     ----------
@@ -711,7 +730,7 @@ def _bme(dm, parallel=500, factor=10):
     ### Determine parallelization plan. ###
 
     # To disable parallelization, set parallel=False or 0
-    # To maximize the range of parallelization, set parallel=3
+    # To always enable parallelization, set parallel=True or 3
 
     # The iteration is divided into three phases:
     # - Phase 1: Serial.
