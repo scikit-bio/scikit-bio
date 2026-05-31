@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import math
 from functools import partial
 from warnings import warn
 from typing import TYPE_CHECKING
@@ -27,10 +28,157 @@ from skbio.binaries import (
 )
 from skbio.util._decorator import params_aliased
 
+try:
+    from numba import njit, prange
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
     import pandas as pd
     from skbio.util._typing import SeedLike
+
+
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_numba(distance_matrix, group_sizes, grouping):
+        """Compute s_W for full (non-condensed) distance matrix using Numba.
+
+        Replaces the following natural Numba code, which triggers a parfor
+        cycle bug in Numba 0.65.x when the scalar reduction variable is read
+        inside the inner loop::
+
+            @njit(parallel=True)
+            def _permanova_f_stat_sW_numba(
+                distance_matrix, group_sizes, grouping
+            ):
+                n = distance_matrix.shape[0]
+                s_W = 0.0
+                for row_idx in prange(n - 1):
+                    group_idx = grouping[row_idx]
+                    local_sum = 0.0
+                    for col_idx in range(row_idx + 1, n):
+                        if grouping[col_idx] == group_idx:
+                            val = distance_matrix[row_idx, col_idx]
+                            local_sum += val * val
+                    s_W += local_sum / group_sizes[group_idx]
+                return s_W
+
+        Instead, each parallel iteration writes its row-pair contribution to
+        a partials array and the final sum is performed sequentially. The
+        loop also pairs row_idx with its mirror (n - row_idx - 2) so each
+        prange iteration handles a comparable amount of work, matching the
+        Cython implementation's load-balancing pattern.
+
+        Parameters
+        ----------
+        distance_matrix : np.ndarray, shape (n, n)
+            Full symmetric distance matrix.
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects in each group (precomputed via np.bincount).
+        grouping : np.ndarray, shape (n,)
+            Integer group label for each object (values 0 to num_groups - 1).
+
+        Returns
+        -------
+        float
+            The within-group sum of squares s_W.
+
+        """
+        n = distance_matrix.shape[0]
+        n_half = n // 2
+        partials = np.zeros(n_half, np.float64)
+
+        for row_idx in prange(n_half):
+            group_idx = grouping[row_idx]
+            local_sum = 0.0
+            for col_idx in range(row_idx + 1, n):
+                if grouping[col_idx] == group_idx:
+                    val = distance_matrix[row_idx, col_idx]
+                    local_sum += val * val
+
+            group_sum = local_sum / group_sizes[group_idx]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                group_idx = grouping[mirror_row]
+                local_sum = 0.0
+                for col_idx in range(mirror_row + 1, n):
+                    if grouping[col_idx] == group_idx:
+                        val = distance_matrix[mirror_row, col_idx]
+                        local_sum += val * val
+                group_sum += local_sum / group_sizes[group_idx]
+
+            partials[row_idx] = group_sum
+
+        return partials.sum()
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_condensed_numba(condensed_matrix, group_sizes, grouping):
+        """Compute s_W for condensed distance matrix using Numba.
+
+        Same as ``_permanova_f_stat_sW_numba`` but accepts ``condensed_matrix``
+        in condensed form (1-D array of length ``n * (n - 1) // 2``) instead
+        of the full 2-D matrix. Uses the standard condensed-index formula to
+        map ``(row_idx, col_idx)`` pairs back to the 1-D array. The same
+        Numba 0.65.x parfor cycle workaround applies (partials array + final
+        sequential sum); see the full version for the equivalent natural
+        Numba code.
+
+        Parameters
+        ----------
+        condensed_matrix : np.ndarray, shape (k,)
+            Condensed (upper triangle) distance matrix where
+            k = n * (n - 1) // 2.
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects in each group.
+        grouping : np.ndarray, shape (n,)
+            Integer group label for each object.
+
+        Returns
+        -------
+        float
+            The within-group sum of squares s_W.
+
+        """
+        k = condensed_matrix.shape[0]
+        n = int((1.0 + math.sqrt(1.0 + 8.0 * k)) / 2.0)
+        n_half = n // 2
+        partials = np.zeros(n_half, np.float64)
+
+        for row_idx in prange(n_half):
+            group_idx = grouping[row_idx]
+            local_sum = 0.0
+            for col_idx in range(row_idx + 1, n):
+                if grouping[col_idx] == group_idx:
+                    condensed_idx = (
+                        row_idx * n + col_idx
+                        - ((row_idx + 2) * (row_idx + 1)) // 2
+                    )
+                    val = condensed_matrix[condensed_idx]
+                    local_sum += val * val
+
+            group_sum = local_sum / group_sizes[group_idx]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                group_idx = grouping[mirror_row]
+                local_sum = 0.0
+                for col_idx in range(mirror_row + 1, n):
+                    if grouping[col_idx] == group_idx:
+                        condensed_idx = (
+                            mirror_row * n + col_idx
+                            - ((mirror_row + 2) * (mirror_row + 1)) // 2
+                        )
+                        val = condensed_matrix[condensed_idx]
+                        local_sum += val * val
+                group_sum += local_sum / group_sizes[group_idx]
+
+            partials[row_idx] = group_sum
+
+        return partials.sum()
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
@@ -229,11 +377,23 @@ def _compute_f_stat(
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        s_W = permanova_f_stat_sW_condensed_cy(
-            distance_matrix.data, group_sizes, grouping
-        )
+        if NUMBA_AVAILABLE:
+            s_W = _permanova_f_stat_sW_condensed_numba(
+                distance_matrix.data, group_sizes, grouping
+            )
+        else:
+            s_W = permanova_f_stat_sW_condensed_cy(
+                distance_matrix.data, group_sizes, grouping
+            )
     else:
-        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+        if NUMBA_AVAILABLE:
+            s_W = _permanova_f_stat_sW_numba(
+                distance_matrix.data, group_sizes, grouping
+            )
+        else:
+            s_W = permanova_f_stat_sW_cy(
+                distance_matrix.data, group_sizes, grouping
+            )
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
