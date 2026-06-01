@@ -4,28 +4,31 @@
 
 ### Features
 
-* `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#2462](https://github.com/scikit-bio/scikit-bio/pull/2462)).
-* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406)).
+* Implemented a global mechanism to document, dispatch and test functions supporting the Python array API standard. The documentation pages of those functions now display a support grid of five array libraries (NumPy, CuPy, PyTorch, JAX and Dask) by two devices (CPU and GPU). An example is `clr`. A new developer documentation page (https://scikit.bio/devdoc/array_api.html) was added to introduce this mechanism ([#2412](https://github.com/scikit-bio/scikit-bio/pull/2412) and [#2459](https://github.com/scikit-bio/scikit-bio/pull/2459)).
 * Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q-squared scores, and prediction of one modality from another ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360)). Interface modernized and computational performance significantly enhanced ([#2448](https://github.com/scikit-bio/scikit-bio/pull/2448)).
-* Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models ([#2460](https://github.com/scikit-bio/scikit-bio/pull/2460)).
-* Added robust center log ratio (`rclr`) transformation for performing CLR like transformations on only observed (non-zero) values, making it suitable for sparse compositional data ([#2386](https://github.com/scikit-bio/scikit-bio/pull/2386)).
+* Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models ([#2460](https://github.com/scikit-bio/scikit-bio/pull/2460)). Thank @keder for this contribution.
+* Added robust center log ratio (`rclr`) transformation for performing CLR-like transformation on only observed (non-zero) values, making it suitable for sparse compositional data ([#2386](https://github.com/scikit-bio/scikit-bio/pull/2386)).
+* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406)). Thank @r0hansaxena for this and other contributions to this release.
 
 ### Performance enhancements
 
-* Reduced `import skbio` time by ~37% by making `requests` and `h5py` lazy imports ([#2427](https://github.com/scikit-bio/scikit-bio/pull/2427)).
+* Reduced `import skbio` time by ~37% by making `requests` and `h5py` lazy imports ([#2427](https://github.com/scikit-bio/scikit-bio/pull/2427)). Thank @MAUK9086 for contributing this.
+* Significantly accelerated `gme`, `bme` and `nni` of the `skbio.tree` module. Of which, `bme` received the most rigorous optimization. Parallelization is now enabled by default for this function ([#2404](https://github.com/scikit-bio/scikit-bio/pull/2404)).
 
 ### Bug Fixes
 
+* Fixed `nni`'s parsing of tree with single-child root node by explicitly raising in this situation ([#2446](https://github.com/scikit-bio/scikit-bio/pull/2446)).
 * Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
-* Fixed `permdisp` emitting pcoa's `RuntimeWarning` on every call with a distance matrix larger than 10 samples ([#2456](https://github.com/scikit-bio/scikit-bio/pull/2456)).
+* Fixed `permdisp` emitting pcoa's `RuntimeWarning` on every call with a distance matrix larger than 10 samples ([#2456](https://github.com/scikit-bio/scikit-bio/pull/2456)). Thank @jissen706 for this fix and the one below.
 * Fixed the GenBank/EMBL/GFF3 feature-location parser to accept single-base locations with a fuzzy boundary (e.g. `complement(<23231)` as found in the NCBI lambda virus record J02459.1). Previously such locations raised `FileFormatError: Could not parse location string`. The corresponding serializer was updated symmetrically to emit `<N`/`>N` instead of dropping the fuzzy marker ([#2473](https://github.com/scikit-bio/scikit-bio/pull/2473)).
 
 ### Miscellaneous
 
 * Replaced SciPy sparse matrix constructors with sparse array constructors to align with SciPy's sparse array APIs. This affects `subsample_counts` (`csr_array`) (no public-facing effect) and `tree_basis` (`coo_array`) ([#2444](https://github.com/scikit-bio/scikit-bio/pull/2444)).
-* Added a general `_reader_kwargs` mechanism for documenting class-specific parameters in auto-generated `read()` docstrings. Applied to `TabularMSA` to document the required `constructor` parameter ([#2421](https://github.com/scikit-bio/scikit-bio/pull/2421)).
-* Added native GPU testing architecture for JAX, CuPy, and Torch ([#2459](https://github.com/scikit-bio/scikit-bio/pull/2459)).
-* Improved documentation for pip bases contribution instructions ([#2433](https://github.com/scikit-bio/scikit-bio/pull/2433)).
+* Added a general `_reader_kwargs` mechanism for documenting class-specific parameters in auto-generated `read()` docstrings. Applied to `TabularMSA` to document the required `constructor` parameter ([#2421](https://github.com/scikit-bio/scikit-bio/pull/2421)). Thank @LiudengZhang for this addition.
+* `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#2462](https://github.com/scikit-bio/scikit-bio/pull/2462)). Thank @SAY-5 for this patch.
+* Improved documentation for `pip`-based contribution instructions ([#2433](https://github.com/scikit-bio/scikit-bio/pull/2433)). Thank @AhmedKhairy22 for this and other contributions.
+
 
 ## Version 0.7.2
 
