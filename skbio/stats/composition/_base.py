@@ -1477,7 +1477,7 @@ def tree_basis(tree):
             n._r = n.children[NUMERATOR]._tip_count
             n._s = n.children[DENOMINATOR]._tip_count
             n._t = n.parent._t
-        else:
+        else:  # pragma: no cover
             raise ValueError("Tree topology is not correct.")
 
     # navigate through tree to build the basis in a sparse matrix form
