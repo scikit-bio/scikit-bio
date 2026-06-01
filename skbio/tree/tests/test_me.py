@@ -823,7 +823,7 @@ class MeTests(TestCase):
         nwks = [
             "((a,b,c),(d,e));",  # internal node has 3 children
             "((a),b,(c,(d,e)));",  # internal node has 1 child
-            # "(((b,c),((d,e),a)));",  # root has 1 child  # TODO: This doesn't work.
+            "(((b,c),((d,e),a)));",  # root has 1 child
             "((a,b),c,d,e);",  # root has 4 children
         ]
         for nwk in nwks:
