@@ -182,8 +182,10 @@ def align_dists(
     else:
         dm = np.empty(size)
 
-        # no deletion (TODO: unit test)
-        if site_mat is None:
+        # no deletion
+        # TODO: This code block cannot be reached with the current implementation.
+        # Needs refactoring.
+        if site_mat is None:  # pragma: no cover
             pos = -1
             for i in range(nseq - 1):
                 seq_i = alignment[i]

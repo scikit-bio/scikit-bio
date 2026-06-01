@@ -299,6 +299,8 @@ class UtilsTests(TestCase):
         obs = _check_sig_test(kruskal, n_groups=5)
 
     def test_check_p_adjust(self):
+        self.assertIsNone(_check_p_adjust(None))
+
         p = [0.005, 0.011, 0.02, 0.04, 0.13]
         obs = _check_p_adjust("holm-bonferroni")(p)
         exp = p * np.arange(1, 6)[::-1]
@@ -310,6 +312,11 @@ class UtilsTests(TestCase):
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
+
+        msg = '"hello" is not an available FDR correction method.'
+        with self.assertRaises(ValueError) as cm:
+            _check_p_adjust("hello")(p)
+        self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":

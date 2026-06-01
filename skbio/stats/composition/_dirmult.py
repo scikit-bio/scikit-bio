@@ -648,7 +648,7 @@ def dirmult_lme(
                 # It is common that model fitting successfully finished (no error) but
                 # the optimizer did not converge, making the calculated statistics less
                 # reliable. The `fit_converge` flag can discard these runs.
-                if fit_converge and not result.converged:
+                if fit_converge and not result.converged:  # pragma: no cover
                     warn(fit_fail_msg.format(features[j], i), UserWarning)
                     continue
 
@@ -671,7 +671,7 @@ def dirmult_lme(
     if n_failed == 0:
         mask = slice(None)
     # some failed
-    elif n_failed < n_feats:
+    elif n_failed < n_feats:  # pragma: no cover
         warn(all_fail_msg.format(n_failed), UserWarning)
         for x in (coef, pval, lower, upper):
             x[~mask] = np.nan
