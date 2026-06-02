@@ -1,5 +1,7 @@
 # scikit-bio changelog
 
+## Version 0.7.4-dev
+
 ## Version 0.7.3
 
 ### Features
