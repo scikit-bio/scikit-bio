@@ -164,7 +164,11 @@ def rpca(
 
     # Build the OrdinationResults object
     pc_ids = ["%s%d" % ("PC", i + 1) for i in range(output["variances"].shape[0])]
-    eigvals = _create_table_1d(output["variances"], index=pc_ids, backend=output_format)
+    eigvals = _create_table_1d(
+        output["variances"],
+        index=pc_ids,
+        backend=output_format,
+    )
     samples = _create_table(
         output["projected_samples"],
         index=row_ids,
@@ -172,7 +176,10 @@ def rpca(
         backend=output_format,
     )
     features = _create_table(
-        output["components"], index=column_ids, columns=pc_ids, backend=output_format
+        output["components"],
+        index=column_ids,
+        columns=pc_ids,
+        backend=output_format,
     )
 
     return OrdinationResults(
