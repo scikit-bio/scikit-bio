@@ -151,6 +151,41 @@ def pca(
     # Ingestion of input data matrix
     X, row_ids, column_ids = _ingest_table(X, sample_ids, feature_ids)
 
+    output = _pca(X, method, iterative, dimensions)
+
+    # Build the OrdinationResults object
+    pc_ids = ["%s%d" % ("PC", i + 1) for i in range(output["variances"].shape[0])]
+    eigvals = _create_table_1d(
+        output["variances"],
+        index=pc_ids,
+        backend=output_format,
+    )
+    samples = _create_table(
+        output["projected_samples"],
+        index=row_ids,
+        columns=pc_ids,
+        backend=output_format,
+    )
+    features = _create_table(
+        output["components"],
+        index=column_ids,
+        columns=pc_ids,
+        backend=output_format,
+    )
+
+    return OrdinationResults(
+        short_method_name="PCA",
+        long_method_name="Principal Component Analysis",
+        eigvals=eigvals,
+        samples=samples,
+        sample_ids=row_ids,
+        features=features,
+        feature_ids=column_ids,
+        proportion_explained=eigvals / output["total_variance"],
+    )
+
+
+def _pca(X, method="eigh", iterative=False, dimensions=None):
     # Center the data matrix
     X_centered = X - np.mean(X, axis=0)
     n = X.shape[0]
@@ -232,26 +267,17 @@ def pca(
         variances = variances[idx]
         components = components[idx, :]
 
+    # Components should be (features by PCs)
+    components = components.T
+
     # Project samples onto principal components
-    projected_samples = np.dot(X_centered, components.T)
+    projected_samples = np.dot(X_centered, components)
 
-    # Build the OrdinationResults object
-    pc_ids = ["%s%d" % ("PC", i + 1) for i in range(variances.shape[0])]
-    eigvals = _create_table_1d(variances, index=pc_ids, backend=output_format)
-    samples = _create_table(
-        projected_samples, index=row_ids, columns=pc_ids, backend=output_format
-    )
-    features = _create_table(
-        components, index=pc_ids, columns=column_ids, backend=output_format
-    )
+    pca_result = {
+        "components": components,
+        "projected_samples": projected_samples,
+        "variances": variances,
+        "total_variance": total_variance,
+    }
 
-    return OrdinationResults(
-        short_method_name="PCA",
-        long_method_name="Principal Component Analysis",
-        eigvals=eigvals,
-        samples=samples,
-        sample_ids=row_ids,
-        features=features,
-        feature_ids=pc_ids,
-        proportion_explained=eigvals / total_variance,
-    )
+    return pca_result
