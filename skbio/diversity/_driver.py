@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import warnings
 from functools import partial
 from itertools import chain
 from inspect import signature, getmembers, isfunction
@@ -49,6 +50,10 @@ _qualitative_metrics = {
     "yule",
     "unweighted_unifrac",
 }
+
+# Names of beta diversity callables that have a faster string-keyed equivalent.
+_slow_beta_callables = {"unweighted_unifrac", "weighted_unifrac"}
+
 
 # Beta diversity metrics implemented in SciPy's pdist.
 _pdist_metrics = {
@@ -321,6 +326,13 @@ def beta_diversity(
                 f"The input has {nrow} samples and {ncol} features."
             )
     elif callable(metric):
+        if getattr(metric, "__name__", None) in _slow_beta_callables:
+            warnings.warn(
+                f"Passing `{metric.__name__}` as a callable invokes a much slower "
+                "implementation. Pass the metric name as a string "
+                f"(e.g., metric='{metric.__name__}') to use the optimized version.",
+                stacklevel=2,
+            )
         # add "taxa" back to parameters
         if taxa is not None and "taxa" in signature(metric).parameters:
             kwargs["taxa"] = taxa

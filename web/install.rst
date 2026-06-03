@@ -115,9 +115,9 @@ Many scikit-bio functions automatically take advantage of parallel processing to
 If more granular control over thread use is desired, we recommend using `threadpoolctl <https://github.com/joblib/threadpoolctl>`_::
 
     from skbio import some_function
-    from threadpoolctl import thread_limits
+    from threadpoolctl import threadpool_limits
 
-    with thread_limits(limits=4):
+    with threadpool_limits(limits=4):
         some_function()
 
 
