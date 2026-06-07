@@ -13,7 +13,8 @@ from scipy.special import gammaln
 from scipy.optimize import fmin_powell, minimize_scalar
 
 from skbio.stats import subsample_counts
-from skbio.diversity._util import _validate_counts_vector
+from skbio.diversity._util import _validate_counts_vector, _validate_counts
+from skbio.util._array import ingest_array
 from skbio.util._decorator import aliased
 
 
@@ -141,8 +142,7 @@ def brillouin_d(counts):
     return (gammaln((N := counts.sum()) + 1) - gammaln(counts + 1).sum()) / N
 
 
-@_validate_alpha(empty=np.nan)
-def dominance(counts, finite=False):
+def dominance(counts, finite=False, axis=-1):
     r"""Calculate Simpson's dominance index.
 
     Simpson's dominance index, a.k.a. Simpson's :math:`D`, measures the degree
@@ -184,14 +184,16 @@ def dominance(counts, finite=False):
 
     Parameters
     ----------
-    counts : 1-D array_like, int
-        Vector of counts.
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
     finite : bool, optional
         If True, correct for finite sampling.
+    axis : int, optional
+        Axis along which to compute. Default is -1 (last axis).
 
     Returns
     -------
-    float
+    float or ndarray
         Simpson's dominance index.
 
     See Also
@@ -208,10 +210,21 @@ def dominance(counts, finite=False):
        688-688.
 
     """
+    counts = _validate_counts(counts)
+    xp, counts = ingest_array(counts)
+    counts = counts * 1.0
+    N = xp.sum(counts, axis=axis)
     if finite:
-        D = (counts * (counts - 1)).sum() / ((N := counts.sum()) * (N - 1))
+        numer = xp.sum(counts * (counts - 1), axis=axis)
+        denom = N * (N - 1)
+        safe = xp.where(denom > 0, denom, xp.asarray(1.0, dtype=counts.dtype))
+        D = xp.where(denom > 0, numer / safe, xp.asarray(np.nan, dtype=counts.dtype))
     else:
-        D = ((counts / counts.sum()) ** 2).sum()
+        N_kd = xp.sum(counts, axis=axis, keepdims=True)
+        safe = xp.where(N_kd > 0, N_kd, xp.asarray(1.0, dtype=counts.dtype))
+        probs = counts / safe
+        D = xp.sum(probs ** 2, axis=axis)
+        D = xp.where(N > 0, D, xp.asarray(np.nan, dtype=D.dtype))
     return D
 
 
@@ -1192,8 +1205,7 @@ def _perplexity(probs):
     return (probs**-probs).prod()
 
 
-@_validate_alpha(empty=np.nan)
-def shannon(counts, base=None, exp=False):
+def shannon(counts, base=None, exp=False, axis=-1):
     r"""Calculate Shannon's diversity index.
 
     Shannon's diversity index, :math:`H'`, a.k.a., Shannon index, or Shannon-
@@ -1222,8 +1234,8 @@ def shannon(counts, base=None, exp=False):
 
     Parameters
     ----------
-    counts : 1-D array_like, int
-        Vector of counts.
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
     base : int or float, optional
         Logarithm base to use in the calculation. Default is ``e``.
 
@@ -1234,10 +1246,12 @@ def shannon(counts, base=None, exp=False):
 
     exp : bool, optional
         If True, return the exponential of Shannon index.
+    axis : int, optional
+        Axis along which to compute. Default is -1 (last axis).
 
     Returns
     -------
-    float
+    float or ndarray
         Shannon's diversity index.
 
     Notes
@@ -1254,21 +1268,26 @@ def shannon(counts, base=None, exp=False):
     .. [2] Jost, L. (2006). Entropy and diversity. Oikos, 113(2), 363-375.
 
     """
-    probs = counts / counts.sum()
-
-    # perplexity
-    if exp is True:
-        return _perplexity(probs)
-
-    # entropy
+    counts = _validate_counts(counts)
+    xp, counts = ingest_array(counts)
+    counts = counts * 1.0
+    N = xp.sum(counts, axis=axis)
+    N_kd = xp.sum(counts, axis=axis, keepdims=True)
+    safe_N = xp.where(N_kd > 0, N_kd, xp.asarray(1.0, dtype=counts.dtype))
+    probs = counts / safe_N
+    mask = probs > 0
+    safe_probs = xp.where(mask, probs, xp.asarray(1.0, dtype=probs.dtype))
+    H = -xp.sum(probs * xp.log(safe_probs), axis=axis)
+    if exp:
+        res = xp.exp(H)
+    elif base is not None:
+        res = H / xp.log(xp.asarray(base, dtype=H.dtype))
     else:
-        H = _entropy(probs)
-        if base is not None:
-            H /= np.log(base)
-        return H
+        res = H
+    return xp.where(N > 0, res, xp.asarray(np.nan, dtype=res.dtype))
 
 
-def simpson(counts, finite=False):
+def simpson(counts, finite=False, axis=-1):
     r"""Calculate Simpson's diversity index.
 
     Simpson's diversity index, a.k.a., Gini-Simpson index, or Gini impurity,
@@ -1290,14 +1309,16 @@ def simpson(counts, finite=False):
 
     Parameters
     ----------
-    counts : 1-D array_like, int
-        Vector of counts.
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
     finite : bool, optional
         If True, correct for finite sampling when calculating :math:`D`.
+    axis : int, optional
+        Axis along which to compute. Default is -1 (last axis).
 
     Returns
     -------
-    float
+    float or ndarray
         Simpson's diversity index.
 
     See Also
@@ -1319,22 +1340,24 @@ def simpson(counts, finite=False):
        critique and alternative parameters. Ecology, 52(4), 577-586.
 
     """
-    return 1 - dominance(counts, finite=finite)
+    return 1 - dominance(counts, finite=finite, axis=axis)
 
 
-def simpson_d(counts, finite=False):
+def simpson_d(counts, finite=False, axis=-1):
     """Calculate Simpson's dominance index, a.k.a. Simpson's D.
 
     Parameters
     ----------
-    counts : 1-D array_like, int
-        Vector of counts.
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
     finite : bool, optional
         If True, correct for finite sampling.
+    axis : int, optional
+        Axis along which to compute. Default is -1 (last axis).
 
     Returns
     -------
-    int
+    float or ndarray
         Simpson's dominance index.
 
     See Also
@@ -1348,11 +1371,10 @@ def simpson_d(counts, finite=False):
     ``simpson_d`` is an alias for ``dominance``.
 
     """
-    return dominance(counts, finite=finite)
+    return dominance(counts, finite=finite, axis=axis)
 
 
-@_validate_alpha(empty=np.nan)
-def simpson_e(counts):
+def simpson_e(counts, axis=-1):
     r"""Calculate Simpson's evenness index.
 
     Simpson's evenness (a.k.a., equitability) index :math:`E_D` is defined as:
@@ -1371,12 +1393,14 @@ def simpson_e(counts):
 
     Parameters
     ----------
-    counts : 1-D array_like, int
-        Vector of counts.
+    counts : array_like of shape (n_taxa,) or (n_samples, n_taxa)
+        Vector or matrix of counts.
+    axis : int, optional
+        Axis along which to compute. Default is -1 (last axis).
 
     Returns
     -------
-    float
+    float or ndarray
         Simpson's evenness index.
 
     See Also
@@ -1402,7 +1426,16 @@ def simpson_e(counts):
     # S + 1 is the maximum possible finite D given S. Otherwise, the result can
     # be greater than 1 for small samples. However, I didn't find literature
     # stating this. Therefore, the `finite` parameter is not used here.
-    return 1 / (counts.size * dominance(counts))
+    counts = _validate_counts(counts)
+    xp, counts = ingest_array(counts)
+    counts = counts * 1.0
+    S = xp.sum(xp.asarray(counts > 0, dtype=counts.dtype), axis=axis)
+    D = dominance(counts, axis=axis)
+    denom = D * S
+    safe = xp.where(denom > 0, denom, xp.asarray(1.0, dtype=D.dtype))
+    E = 1 / safe
+    N = xp.sum(counts, axis=axis)
+    return xp.where(N > 0, E, xp.asarray(np.nan, dtype=E.dtype))
 
 
 @_validate_alpha()
