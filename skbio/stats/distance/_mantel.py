@@ -20,6 +20,7 @@ from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarni
 from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
+from skbio._config import _resolve_engine
 
 try:
     from numba import njit, prange
@@ -37,7 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover
 if NUMBA_AVAILABLE:
 
     @njit(parallel=True)
-    def _mantel_perm_pearsonr_numba(
+    def _mantel_perm_pearsonr_nb(
         x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
     ):
         """Fused permute, normalize, and Pearson correlation for Mantel test.
@@ -101,12 +102,12 @@ if NUMBA_AVAILABLE:
             permuted_stats[p] = my_ps
 
     @njit(parallel=True)
-    def _mantel_perm_pearsonr_condensed_numba(
+    def _mantel_perm_pearsonr_condensed_nb(
         x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
     ):
         """Fused permute, normalize, and Pearson for condensed Mantel test.
 
-        Same as _mantel_perm_pearsonr_numba but accepts x_data in condensed
+        Same as _mantel_perm_pearsonr_nb but accepts x_data in condensed
         form (1D array of length n*(n-1)/2) instead of the full 2D matrix.
         Uses condensed_index formula to map (vrow, vcol) pairs from the
         permuted ordering back to the 1D condensed array.
@@ -164,6 +165,7 @@ def mantel(
     strict: bool = True,
     lookup: dict[str, str] | None = None,
     seed: SeedLike | None = None,
+    engine: str | None = None,
 ) -> tuple[float, float, int]:
     r"""Compute correlation between distance matrices using the Mantel test.
 
@@ -252,6 +254,12 @@ def mantel(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
+    engine : {"cython", "numba"}, optional
+        Compute engine to use. ``"cython"`` (default) uses the Cython
+        implementation. ``"numba"`` uses the optional Numba implementation
+        and requires Numba to be installed. If not provided, the global
+        default is used (see :func:`skbio.set_config`). Only applies to the
+        ``"pearson"`` and ``"spearman"`` methods.
 
     Returns
     -------
@@ -414,6 +422,8 @@ def mantel(
     else:
         raise ValueError("Invalid correlation method '%s'." % method)
 
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
     if permutations < 0:
         raise ValueError(
             "Number of permutations must be greater than or equal to zero."
@@ -433,11 +443,11 @@ def mantel(
     if special:
         if method == "pearson":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
-                x, y, permutations, rng
+                x, y, permutations, rng, engine
             )
         else:
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
-                x, y, permutations, rng
+                x, y, permutations, rng, engine
             )
 
     else:
@@ -472,7 +482,7 @@ def mantel(
     return orig_stat, p_value, n
 
 
-def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
+def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -557,8 +567,8 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
         if x._flags["CONDENSED"]:
-            if NUMBA_AVAILABLE:
-                _mantel_perm_pearsonr_condensed_numba(
+            if engine == "numba":
+                _mantel_perm_pearsonr_condensed_nb(
                     x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
                 )
             else:
@@ -566,8 +576,8 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
                     x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
                 )
         else:
-            if NUMBA_AVAILABLE:
-                _mantel_perm_pearsonr_numba(
+            if engine == "numba":
+                _mantel_perm_pearsonr_nb(
                     x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
                 )
             else:
@@ -580,7 +590,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     return orig_stat, comp_stat, permuted_stats
 
 
-def _mantel_stats_pearson(x, y, permutations, seed=None):
+def _mantel_stats_pearson(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -609,10 +619,10 @@ def _mantel_stats_pearson(x, y, permutations, seed=None):
 
     """
     y_flat = y.condensed_form()
-    return _mantel_stats_pearson_flat(x, y_flat, permutations, seed)
+    return _mantel_stats_pearson_flat(x, y_flat, permutations, seed, engine)
 
 
-def _mantel_stats_spearman(x, y, permutations, seed=None):
+def _mantel_stats_spearman(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using spearmanr.
 
     Parameters
@@ -658,7 +668,7 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
     del x_rank
 
     # for our purposes, spearman is just pearson on rankdata
-    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations, seed)
+    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations, seed, engine)
 
 
 def pwmantel(

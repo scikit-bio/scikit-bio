@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from unittest.mock import patch
 
 import numpy as np
 import numpy.testing as npt
@@ -189,9 +188,9 @@ class InternalMantelTests(MantelTestData):
             mantel_perm_pearsonr_cy, *self._perm_pearsonr3_inputs())
 
     @numba_code
-    def test_perm_pearsonr3_numba(self):
+    def test_perm_pearsonr3_nb(self):
         self._assert_perm_pearsonr(
-            mantel_mod._mantel_perm_pearsonr_numba,
+            mantel_mod._mantel_perm_pearsonr_nb,
             *self._perm_pearsonr3_inputs())
 
     def test_perm_pearsonr6_cy(self):
@@ -199,9 +198,9 @@ class InternalMantelTests(MantelTestData):
             mantel_perm_pearsonr_cy, *self._perm_pearsonr6_inputs())
 
     @numba_code
-    def test_perm_pearsonr6_numba(self):
+    def test_perm_pearsonr6_nb(self):
         self._assert_perm_pearsonr(
-            mantel_mod._mantel_perm_pearsonr_numba,
+            mantel_mod._mantel_perm_pearsonr_nb,
             *self._perm_pearsonr6_inputs())
 
     def test_perm_pearsonr_full_cy(self):
@@ -209,9 +208,9 @@ class InternalMantelTests(MantelTestData):
             mantel_perm_pearsonr_cy, *self._perm_pearsonr_full_inputs())
 
     @numba_code
-    def test_perm_pearsonr_full_numba(self):
+    def test_perm_pearsonr_full_nb(self):
         self._assert_perm_pearsonr(
-            mantel_mod._mantel_perm_pearsonr_numba,
+            mantel_mod._mantel_perm_pearsonr_nb,
             *self._perm_pearsonr_full_inputs())
 
     def test_perm_pearsonr_condensed_cy(self):
@@ -220,26 +219,34 @@ class InternalMantelTests(MantelTestData):
             *self._perm_pearsonr_full_inputs())
 
     @numba_code
-    def test_perm_pearsonr_condensed_numba(self):
+    def test_perm_pearsonr_condensed_nb(self):
         self._assert_perm_pearsonr_condensed(
-            mantel_mod._mantel_perm_pearsonr_condensed_numba,
+            mantel_mod._mantel_perm_pearsonr_condensed_nb,
             *self._perm_pearsonr_full_inputs())
 
     @numba_code
-    def test_pearson_flat_numba_matches_cython_fallback(self):
+    def test_pearson_flat_engine_numba_matches_cython(self):
         y_flat = self.miny_dm.condensed_form()
 
         for x in (self.minx_dm, self.minx_cond):
-            obs = mantel_mod._mantel_stats_pearson_flat(x, y_flat, 3, seed=0)
-
-            # Force the fallback path so the Numba dispatch result is compared
-            # with Cython using the same input matrix and permutation seed.
-            with patch.object(mantel_mod, "NUMBA_AVAILABLE", False):
-                exp = mantel_mod._mantel_stats_pearson_flat(x, y_flat, 3, seed=0)
+            # The numba and cython engines should agree for the same input
+            # matrix and permutation seed.
+            obs = mantel_mod._mantel_stats_pearson_flat(
+                x, y_flat, 3, seed=0, engine="numba")
+            exp = mantel_mod._mantel_stats_pearson_flat(
+                x, y_flat, 3, seed=0, engine="cython")
 
             self.assertAlmostEqual(obs[0], exp[0])
             self.assertAlmostEqual(obs[1], exp[1])
             npt.assert_allclose(obs[2], exp[2])
+
+    def test_bad_engine_raises_for_all_methods(self):
+        # An unsupported engine is rejected up front, regardless of method
+        # (including kendalltau, which has no numba path).
+        for method in ("pearson", "spearman", "kendalltau"):
+            with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+                mantel(self.minx_dm, self.miny_dm, method=method,
+                       permutations=0, engine="julia")
 
     def test_pearsonr_full(self):
         """

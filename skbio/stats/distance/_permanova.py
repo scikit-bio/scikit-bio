@@ -27,6 +27,7 @@ from skbio.binaries import (
     permanova as _skbb_permanova,
 )
 from skbio.util._decorator import params_aliased
+from skbio._config import _resolve_engine
 
 try:
     from numba import njit, prange
@@ -43,7 +44,7 @@ if TYPE_CHECKING:  # pragma: no cover
 if NUMBA_AVAILABLE:
 
     @njit(parallel=True)
-    def _permanova_f_stat_sW_numba(distance_matrix, group_sizes, grouping):
+    def _permanova_f_stat_sW_nb(distance_matrix, group_sizes, grouping):
         """Compute s_W for full (non-condensed) distance matrix using Numba.
 
         Replaces the following natural Numba code, which triggers a parfor
@@ -51,7 +52,7 @@ if NUMBA_AVAILABLE:
         inside the inner loop::
 
             @njit(parallel=True)
-            def _permanova_f_stat_sW_numba(
+            def _permanova_f_stat_sW_nb(
                 distance_matrix, group_sizes, grouping
             ):
                 n = distance_matrix.shape[0]
@@ -116,10 +117,10 @@ if NUMBA_AVAILABLE:
         return partials.sum()
 
     @njit(parallel=True)
-    def _permanova_f_stat_sW_condensed_numba(condensed_matrix, group_sizes, grouping):
+    def _permanova_f_stat_sW_condensed_nb(condensed_matrix, group_sizes, grouping):
         """Compute s_W for condensed distance matrix using Numba.
 
-        Same as ``_permanova_f_stat_sW_numba`` but accepts ``condensed_matrix``
+        Same as ``_permanova_f_stat_sW_nb`` but accepts ``condensed_matrix``
         in condensed form (1-D array of length ``n * (n - 1) // 2``) instead
         of the full 2-D matrix. Uses the standard condensed-index formula to
         map ``(row_idx, col_idx)`` pairs back to the 1-D array. The same
@@ -188,6 +189,7 @@ def permanova(
     column: str | None = None,
     permutations: int = 999,
     seed: SeedLike | None = None,
+    engine: str | None = None,
 ) -> pd.Series:
     r"""Test for significant differences between groups using PERMANOVA.
 
@@ -256,6 +258,11 @@ def permanova(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
+    engine : {"cython", "numba"}, optional
+        Compute engine to use. ``"cython"`` (default) uses the Cython
+        implementation. ``"numba"`` uses the optional Numba implementation
+        and requires Numba to be installed. If not provided, the global
+        default is used (see :func:`skbio.set_config`).
 
     Returns
     -------
@@ -329,6 +336,8 @@ def permanova(
         distmat.ids, sample_size, grouping, column
     )
 
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
     if _skbb_permanova_available(
         distmat, grouping, permutations, seed
     ):  # pragma: no cover
@@ -360,7 +369,7 @@ def permanova(
         s_T /= 2.0
 
     test_stat_function = partial(
-        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
+        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
     )
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -372,13 +381,13 @@ def permanova(
 
 
 def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, engine, grouping
 ):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        if NUMBA_AVAILABLE:
-            s_W = _permanova_f_stat_sW_condensed_numba(
+        if engine == "numba":
+            s_W = _permanova_f_stat_sW_condensed_nb(
                 distance_matrix.data, group_sizes, grouping
             )
         else:
@@ -386,8 +395,8 @@ def _compute_f_stat(
                 distance_matrix.data, group_sizes, grouping
             )
     else:
-        if NUMBA_AVAILABLE:
-            s_W = _permanova_f_stat_sW_numba(
+        if engine == "numba":
+            s_W = _permanova_f_stat_sW_nb(
                 distance_matrix.data, group_sizes, grouping
             )
         else:

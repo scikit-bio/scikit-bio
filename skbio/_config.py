@@ -18,10 +18,14 @@ Functions
 
 Configuration options
 ---------------------
-At present, only one configuration option is available:
 
 **table_output** : *{"pandas", "numpy", "polars"}, default="pandas"*
     The preferred output format of tables. See :ref:`details <table_output>`.
+
+**engine** : *{"cython", "numba"}, default="cython"*
+    The default compute engine for functions that support multiple engines.
+    Functions accept an ``engine`` argument to override this per call. The
+    ``"numba"`` engine requires the optional Numba dependency.
 
 """  # noqa: D205, D415
 
@@ -38,6 +42,7 @@ from typing import Any
 
 _SKBIO_OPTIONS = {
     "table_output": "pandas",
+    "engine": "cython",
 }
 
 
@@ -74,6 +79,10 @@ def set_config(option: str, value: Any):
             pos_opts = ["pandas", "polars", "numpy"]  # , "biom"]
             if value not in pos_opts:
                 raise ValueError(f"Unsupported value '{value}' for '{option}'.")
+        case "engine":
+            pos_opts = ["cython", "numba"]
+            if value not in pos_opts:
+                raise ValueError(f"Unsupported value '{value}' for '{option}'.")
 
     _SKBIO_OPTIONS[option] = value
 
@@ -96,3 +105,43 @@ def get_config(option: str) -> Any:
         return _SKBIO_OPTIONS[option]
     except KeyError:
         raise KeyError(f"Unknown option: '{option}'.")
+
+
+def _resolve_engine(engine, supported):
+    """Resolve the compute engine for a function call.
+
+    Parameters
+    ----------
+    engine : str or None
+        The engine requested by the caller. If None, the global default
+        (``get_config("engine")``) is used.
+    supported : tuple of str
+        The engines this function supports (e.g. ``("cython", "numba")``).
+
+    Returns
+    -------
+    str
+        The resolved engine name.
+
+    Raises
+    ------
+    ValueError
+        If the resolved engine is not in ``supported``.
+    ImportError
+        If ``"numba"`` is requested but Numba is not installed.
+
+    """
+    if engine is None:
+        engine = get_config("engine")
+    if engine not in supported:
+        raise ValueError(
+            f"engine='{engine}' is not supported here; choose from {supported}."
+        )
+    if engine == "numba":
+        try:
+            import numba  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "engine='numba' requires the optional numba dependency."
+            )
+    return engine
