@@ -482,7 +482,7 @@ def mantel(
     return orig_stat, p_value, n
 
 
-def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine="cython"):
+def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -590,7 +590,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine="cytho
     return orig_stat, comp_stat, permuted_stats
 
 
-def _mantel_stats_pearson(x, y, permutations, seed=None, engine="cython"):
+def _mantel_stats_pearson(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -622,7 +622,7 @@ def _mantel_stats_pearson(x, y, permutations, seed=None, engine="cython"):
     return _mantel_stats_pearson_flat(x, y_flat, permutations, seed, engine)
 
 
-def _mantel_stats_spearman(x, y, permutations, seed=None, engine="cython"):
+def _mantel_stats_spearman(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using spearmanr.
 
     Parameters
