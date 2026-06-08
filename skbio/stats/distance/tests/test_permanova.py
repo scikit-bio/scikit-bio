@@ -9,7 +9,6 @@
 import io
 from functools import partial
 from unittest import TestCase, main
-from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -417,30 +416,35 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self._assert_sW(permanova_f_stat_sW_cy, self.dm_full)
 
     @numba_code
-    def test_sW_full_numba(self):
-        self._assert_sW(permanova_mod._permanova_f_stat_sW_numba, self.dm_full)
+    def test_sW_full_nb(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_nb, self.dm_full)
 
     def test_sW_condensed_cy(self):
         self._assert_sW(permanova_f_stat_sW_condensed_cy, self.dm_condensed)
 
     @numba_code
-    def test_sW_condensed_numba(self):
-        self._assert_sW(permanova_mod._permanova_f_stat_sW_condensed_numba,
+    def test_sW_condensed_nb(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_condensed_nb,
                         self.dm_condensed)
 
     @numba_code
-    def test_permanova_numba_matches_cython_fallback(self):
+    def test_permanova_engine_numba_matches_cython(self):
         dm = DistanceMatrix(self.dm_full, self.ids)
 
-        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42)
-
-        # Force the fallback path so the Numba dispatch result is compared
-        # with Cython using the same input matrix and permutation seed.
-        with patch.object(permanova_mod, "NUMBA_AVAILABLE", False):
-            exp = permanova(dm, self.grouping_labels, permutations=99, seed=42)
+        # The numba and cython engines should produce the same result for
+        # the same input matrix and permutation seed.
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="cython")
 
         self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    def test_bad_engine_raises(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+            permanova(dm, self.grouping_labels, permutations=0, engine="julia")
 
 
 if __name__ == '__main__':
