@@ -31,6 +31,9 @@
 * `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#2462](https://github.com/scikit-bio/scikit-bio/pull/2462)). Thank @SAY-5 for this patch.
 * Improved documentation for `pip`-based contribution instructions ([#2433](https://github.com/scikit-bio/scikit-bio/pull/2433)). Thank @AhmedKhairy22 for this and other contributions.
 
+### Bug Fixes
+
+* Fixed an issue where `composition.multi_replace` failed to expand into a DataFrame when used with Pandas 3.0 `apply(axis=1)` ([#2375](https://github.com/scikit-bio/scikit-bio/issues/2375)).
 
 ## Version 0.7.2
 
