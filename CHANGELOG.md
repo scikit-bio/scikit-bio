@@ -31,6 +31,10 @@
 * `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#2462](https://github.com/scikit-bio/scikit-bio/pull/2462)). Thank @SAY-5 for this patch.
 * Improved documentation for `pip`-based contribution instructions ([#2433](https://github.com/scikit-bio/scikit-bio/pull/2433)). Thank @AhmedKhairy22 for this and other contributions.
 
+### Bug Fixes
+
+* Fixed incompatibility issues between the `skbio.metadata` module and Pandas >= 3.0 ([#2387](https://github.com/scikit-bio/scikit-bio/pull/2387))
+
 
 ## Version 0.7.2
 

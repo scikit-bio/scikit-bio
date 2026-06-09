@@ -553,7 +553,6 @@ class TestLoadSuccess(unittest.TestCase):
         self.assertEqual(obs_md, exp_md)
 
     def test_missing_data(self):
-        print(f"Running things...!")
         fp = get_data_path('valid/missing-data.tsv')
 
         obs_md = SampleMetadata.load(fp)
@@ -567,7 +566,6 @@ class TestLoadSuccess(unittest.TestCase):
             ('col4', np.array([np.nan, np.nan, np.nan], dtype=object))]),
             index=exp_index)
         exp_md = SampleMetadata(exp_df)
-        print(f"obs_md: {obs_md}, exp_md: {exp_md}")
 
         self.assertEqual(obs_md, exp_md)
 
@@ -633,7 +631,6 @@ class TestLoadSuccess(unittest.TestCase):
         ]
         self.assertEqual(obs_columns, exp_columns)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_insdc_override(self):
         fp = get_data_path('valid/override-insdc.tsv')
 
@@ -1103,7 +1100,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_missing_schemes(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1127,10 +1123,8 @@ class TestSave(unittest.TestCase):
             "id2\t\tnot applicable\n"
             "id3\t-3.5\trestricted access\n"
         )
-
         self.assertEqual(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_default_missing_scheme(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1155,7 +1149,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_default_missing_scheme_override(self):
         md = SampleMetadata(
             pd.DataFrame({'col1': [42.0, np.nan, -3.5],
@@ -1410,7 +1403,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_categorical_metadata_column_insdc_missing(self):
         mdc = CategoricalMetadataColumn(pd.Series(
             ['foo', 'missing', '42.50'], name='categorical-column',
@@ -1475,7 +1467,6 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(obs, exp)
 
-    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_numeric_metadata_column_insdc_missing(self):
         mdc = NumericMetadataColumn(pd.Series(
             [1e-15, 'missing', -999.0], name='numeric-column',
