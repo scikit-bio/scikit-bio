@@ -609,6 +609,16 @@ from ._exception import (
     MissingNodeError,
     NoParentError,
 )
+from .bp import (
+    BP,
+    parse_newick,
+    write_newick,
+    parse_jplace,
+    to_skbio_treenode,
+    from_skbio_treenode,
+    to_skbio_treearray,
+    insert_fully_resolved,
+)
 
 __all__ = [
     "TreeNode",
@@ -626,4 +636,12 @@ __all__ = [
     "DuplicateNodeError",
     "MissingNodeError",
     "NoParentError",
+    "BP",
+    "parse_newick",
+    "write_newick",
+    "parse_jplace",
+    "to_skbio_treenode",
+    "from_skbio_treenode",
+    "to_skbio_treearray",
+    "insert_fully_resolved",
 ]
