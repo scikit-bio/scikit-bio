@@ -56,6 +56,8 @@ web/_build
 
 # Cython files
 *.c
+# keep the vendored BitArray C source (hand-written, not Cython-generated)
+!skbio/tree/bp/_bitarray/bit_array.c
 
 # Environments
 .env
