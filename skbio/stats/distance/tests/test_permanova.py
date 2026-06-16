@@ -446,6 +446,68 @@ class InternalPERMANOVATests(PERMANOVATestData):
         with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
             permanova(dm, self.grouping_labels, permutations=0, engine="julia")
 
+    @numba_code
+    def test_permanova_float32_matches_cython(self):
+        # On float32 input the Numba kernel must agree with Cython: both
+        # promote distances to float64 before squaring. Guards against a
+        # float32-accumulation regression in the squaring step.
+        dm32 = DistanceMatrix(self.dm_full.astype(np.float32), self.ids)
+        obs = permanova(dm32, self.grouping_labels, permutations=99,
+                        seed=42, engine="numba")
+        exp = permanova(dm32, self.grouping_labels, permutations=99,
+                        seed=42, engine="cython")
+        # float32 input -> agreement at float32 precision (Cython returns a
+        # float32 statistic; Numba accumulates in float64). 5 places is well
+        # within float32's ~7 significant digits.
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'],
+                               places=5)
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_parallel_nb_no_permutations(self):
+        # permutations=0 must yield a nan p-value, matching the cython path
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=0,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=0,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertTrue(np.isnan(obs['p-value']))
+        self.assertTrue(np.isnan(exp['p-value']))
+
+    @numba_code
+    def test_permanova_parallel_nb_negative_permutations_raises(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        with self.assertRaisesRegex(ValueError, "greater than or equal to zero"):
+            permanova(dm, self.grouping_labels, permutations=-1,
+                      engine="numba")
+
+    @numba_code
+    def test_permanova_parallel_nb_condensed_falls_back(self):
+        # condensed matrix must use the single-perm path, not the parallel path
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=99,
+                        seed=42, engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=99,
+                        seed=42, engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_parallel_nb_crosses_chunk_boundary(self):
+        # permutations > the driver's internal CHUNK (512) exercises multiple
+        # batches; the RNG must stay in sync across chunks so the result is
+        # still identical to the cython engine.
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=600, seed=42,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=600, seed=42,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
 
 if __name__ == '__main__':
     main()

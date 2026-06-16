@@ -26,11 +26,12 @@ from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
 )
+from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
 from skbio._config import _resolve_engine
 
 try:
-    from numba import njit, prange
+    from numba import njit, prange, get_num_threads
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -97,7 +98,9 @@ if NUMBA_AVAILABLE:
             local_sum = 0.0
             for col_idx in range(row_idx + 1, n):
                 if grouping[col_idx] == group_idx:
-                    val = distance_matrix[row_idx, col_idx]
+                    # promote to float64 before squaring to match the Cython
+                    # ``double`` accumulator (matters for float32 input)
+                    val = np.float64(distance_matrix[row_idx, col_idx])
                     local_sum += val * val
 
             group_sum = local_sum / group_sizes[group_idx]
@@ -108,7 +111,7 @@ if NUMBA_AVAILABLE:
                 local_sum = 0.0
                 for col_idx in range(mirror_row + 1, n):
                     if grouping[col_idx] == group_idx:
-                        val = distance_matrix[mirror_row, col_idx]
+                        val = np.float64(distance_matrix[mirror_row, col_idx])
                         local_sum += val * val
                 group_sum += local_sum / group_sizes[group_idx]
 
@@ -158,7 +161,7 @@ if NUMBA_AVAILABLE:
                         row_idx * n + col_idx
                         - ((row_idx + 2) * (row_idx + 1)) // 2
                     )
-                    val = condensed_matrix[condensed_idx]
+                    val = np.float64(condensed_matrix[condensed_idx])
                     local_sum += val * val
 
             group_sum = local_sum / group_sizes[group_idx]
@@ -180,6 +183,125 @@ if NUMBA_AVAILABLE:
             partials[row_idx] = group_sum
 
         return partials.sum()
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_parallel_nb(
+        distance_matrix, group_sizes, groupings_2d, out_sW
+    ):
+        """Compute s_W for all permutations in parallel over the permutation axis.
+
+        Parallelises across permutations rather than within a single
+        permutation, matching the primary optimisation in scikit-bio-binaries
+        (the ``#pragma omp parallel for`` over ``gblock`` in
+        ``permanova_dyn_impl.hpp``).  Each parallel worker computes one
+        complete f_stat independently with no cross-thread dependency.
+
+        Parameters
+        ----------
+        distance_matrix : np.ndarray, shape (n, n)
+            Full symmetric distance matrix.
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects per group.
+        groupings_2d : np.ndarray, shape (n_perm, n)
+            Pre-generated permuted groupings for this batch, row-major. The
+            driver may call this kernel on successive chunks of permutations.
+        out_sW : np.ndarray, shape (n_perm,)
+            Output array; ``out_sW[i]`` receives the within-group sum of
+            squares for permutation ``i`` of the batch.
+
+        """
+        n = distance_matrix.shape[0]
+
+        for perm_idx in prange(groupings_2d.shape[0]):
+            s_W = 0.0
+            for row in range(n - 1):
+                group_idx = groupings_2d[perm_idx, row]
+                local_sum = 0.0
+                for col in range(row + 1, n):
+                    if groupings_2d[perm_idx, col] == group_idx:
+                        # promote to float64 before squaring to match the
+                        # Cython ``double`` accumulator (matters for float32)
+                        val = np.float64(distance_matrix[row, col])
+                        local_sum += val * val
+                s_W += local_sum / group_sizes[group_idx]
+            out_sW[perm_idx] = s_W
+
+    def _run_permanova_parallel_nb(
+        distmat, grouping, group_sizes, s_T, num_groups, sample_size,
+        permutations, seed
+    ):
+        """Run PERMANOVA with parallelism across the permutation axis.
+
+        Generates the ``permutations + 1`` groupings in fixed-size chunks and
+        computes s_W for each chunk in parallel via
+        ``_permanova_f_stat_sW_parallel_nb``, then assembles the F-statistics
+        and p-value in NumPy. Chunking bounds peak memory to ``CHUNK x n``
+        independent of the permutation count; permutations are drawn in the
+        same RNG order as the sequential Monte Carlo path, so results match.
+
+        Parameters
+        ----------
+        distmat : DistanceMatrix
+            Full (non-condensed) distance matrix.
+        grouping : np.ndarray, shape (n,)
+            Integer group labels (0-indexed).
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects per group.
+        s_T : float
+            Total sum of squares, precomputed by the caller.
+        num_groups : int
+            Number of distinct groups.
+        sample_size : int
+            Number of objects (n).
+        permutations : int
+            Number of Monte Carlo permutations.
+        seed : int, Generator, or None
+            Random seed passed to ``get_rng``.
+
+        Returns
+        -------
+        stat : float
+            Observed pseudo-F statistic.
+        p_value : float
+            Permutation p-value.
+
+        """
+        if permutations < 0:
+            raise ValueError(
+                "Number of permutations must be greater than or equal to zero."
+            )
+
+        rng = get_rng(seed)
+        n_total = permutations + 1
+        out_sW = np.empty(n_total, np.float64)
+
+        # Process permutations in chunks sized to the available parallelism so
+        # each worker handles a small batch whose active grouping rows stay
+        # resident in its per-core cache (scikit-bio-binaries uses 32
+        # permutations per worker). Chunking also bounds peak memory to
+        # (CHUNK x n) rather than the full permutation count (n_total x n).
+        # Permutations are generated in the same RNG order as the sequential
+        # Monte Carlo path, so p-values are unchanged.
+        CHUNK = 32 * get_num_threads()
+        buf = np.empty((min(CHUNK, n_total), sample_size), dtype=np.intp)
+        for start in range(0, n_total, CHUNK):
+            end = min(start + CHUNK, n_total)
+            for i in range(start, end):
+                if i == 0:
+                    buf[0] = grouping
+                else:
+                    buf[i - start] = rng.permutation(grouping)
+            _permanova_f_stat_sW_parallel_nb(
+                distmat.data, group_sizes, buf[: end - start], out_sW[start:end]
+            )
+
+        s_A = s_T - out_sW
+        f_stats = (s_A / (num_groups - 1)) / (out_sW / (sample_size - num_groups))
+        stat = f_stats[0]
+        if permutations == 0:
+            return stat, np.nan
+        p_value = (1.0 + np.sum(f_stats[1:] >= stat)) / (1.0 + permutations)
+        return stat, p_value
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
@@ -368,12 +490,18 @@ def permanova(
         # so cut in half
         s_T /= 2.0
 
-    test_stat_function = partial(
-        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
-    )
-    stat, p_value = _run_monte_carlo_stats(
-        test_stat_function, grouping, permutations, seed
-    )
+    if engine == "numba" and not distmat._flags["CONDENSED"]:
+        stat, p_value = _run_permanova_parallel_nb(
+            distmat, grouping, group_sizes, s_T,
+            num_groups, sample_size, permutations, seed
+        )
+    else:
+        test_stat_function = partial(
+            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
+        )
+        stat, p_value = _run_monte_carlo_stats(
+            test_stat_function, grouping, permutations, seed
+        )
 
     return _build_results(
         "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
