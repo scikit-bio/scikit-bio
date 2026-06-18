@@ -56,3 +56,23 @@ jobs:
 
       - name: Run full test suite with Numba installed
         run: make test
+
+      # coverage.py cannot trace JIT-compiled kernels, so re-run the suite
+      # with the JIT disabled (kernels run as plain Python). Linux x86_64 only,
+      # matching ci.yml; Codecov merges this report with the main one.
+      - name: Run unit tests with coverage (Numba JIT disabled)
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        env:
+          WITH_COVERAGE: "TRUE"
+          NUMBA_DISABLE_JIT: "1"
+        run: make test
+      - name: Generate coverage reports
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        run: |
+          cd ci && coverage lcov --rcfile ../.coveragerc
+      - name: Upload coverage reports to Codecov
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
