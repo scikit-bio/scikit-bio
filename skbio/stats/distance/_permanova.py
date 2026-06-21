@@ -185,59 +185,98 @@ if NUMBA_AVAILABLE:
         return partials.sum()
 
     @njit(parallel=True)
-    def _permanova_f_stat_sW_parallel_nb(
-        distance_matrix, group_sizes, groupings_2d, out_sW
+    def _permanova_f_stat_sW_rowtile_nb(
+        distance_matrix, groupings_T, inv_group_sizes, partials
     ):
-        """Compute s_W for all permutations in parallel over the permutation axis.
+        """Compute partial s_W for a chunk of permutations in one matrix pass.
 
-        Parallelises across permutations rather than within a single
-        permutation, matching the primary optimisation in scikit-bio-binaries
-        (the ``#pragma omp parallel for`` over ``gblock`` in
-        ``permanova_dyn_impl.hpp``).  Each parallel worker computes one
-        complete f_stat independently with no cross-thread dependency.
+        Parallelises over distance-matrix rows (each paired with its mirror row
+        ``n - row - 2`` for load balance, as in ``_permanova_f_stat_sW_nb``)
+        rather than over permutations. Each row is owned by one worker, so the
+        matrix is read from memory only once per chunk, whereas the
+        per-permutation kernel has every worker stream the whole matrix. This
+        follows the cross-thread cache reuse of scikit-bio-binaries'
+        ``pmn_f_stat_sW_cpu`` in ``permanova_dyn_impl.hpp``.
+
+        The permutation loop is branchless so Numba can vectorise it, and
+        ``groupings_T`` is sample-major ``int32`` so the loop reads contiguous,
+        low-bandwidth windows.
 
         Parameters
         ----------
         distance_matrix : np.ndarray, shape (n, n)
             Full symmetric distance matrix.
-        group_sizes : np.ndarray, shape (num_groups,)
-            Number of objects per group.
-        groupings_2d : np.ndarray, shape (n_perm, n)
-            Pre-generated permuted groupings for this batch, row-major. The
-            driver may call this kernel on successive chunks of permutations.
-        out_sW : np.ndarray, shape (n_perm,)
-            Output array; ``out_sW[i]`` receives the within-group sum of
-            squares for permutation ``i`` of the batch.
+        groupings_T : np.ndarray, shape (n, n_perm), int32
+            Permuted groupings, sample-major (transposed) and C-contiguous.
+        inv_group_sizes : np.ndarray, shape (num_groups,)
+            Reciprocal group sizes (``1.0 / group_sizes``), precomputed so the
+            hot loop multiplies instead of dividing.
+        partials : np.ndarray, shape (n // 2, n_perm)
+            Output, zeroed by the caller; ``partials[i]`` receives the s_W
+            contribution of the mirror-pair handled by iteration ``i``. The
+            caller sums over axis 0 to obtain s_W per permutation.
 
         """
         n = distance_matrix.shape[0]
+        n_perm = groupings_T.shape[1]
+        n_half = n // 2
 
-        for perm_idx in prange(groupings_2d.shape[0]):
-            s_W = 0.0
-            for row in range(n - 1):
-                group_idx = groupings_2d[perm_idx, row]
-                local_sum = 0.0
-                for col in range(row + 1, n):
-                    if groupings_2d[perm_idx, col] == group_idx:
-                        # promote to float64 before squaring to match the
-                        # Cython ``double`` accumulator (matters for float32)
-                        val = np.float64(distance_matrix[row, col])
-                        local_sum += val * val
-                s_W += local_sum / group_sizes[group_idx]
-            out_sW[perm_idx] = s_W
+        # Each worker owns one row (and its mirror for load balance), so the
+        # distance matrix is read from memory only once per chunk.
+        for row_idx in prange(n_half):
+            local_sW = partials[row_idx]
+            rsum = np.empty(n_perm, np.float64)
 
-    def _run_permanova_parallel_nb(
+            for p in range(n_perm):
+                rsum[p] = 0.0
+            for col in range(row_idx + 1, n):
+                # promote to float64 before squaring to match the Cython
+                # ``double`` accumulator (matters for float32 input)
+                val = np.float64(distance_matrix[row_idx, col])
+                val2 = val * val
+                # branchless: add val2 only where both ends share a group
+                # (multiply by the 0/1 comparison) so Numba vectorises the loop
+                for p in range(n_perm):
+                    rsum[p] += val2 * np.float64(
+                        groupings_T[col, p] == groupings_T[row_idx, p]
+                    )
+            for p in range(n_perm):
+                local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[row_idx, p]]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                for p in range(n_perm):
+                    rsum[p] = 0.0
+                for col in range(mirror_row + 1, n):
+                    val = np.float64(distance_matrix[mirror_row, col])
+                    val2 = val * val
+                    for p in range(n_perm):
+                        rsum[p] += val2 * np.float64(
+                            groupings_T[col, p] == groupings_T[mirror_row, p]
+                        )
+                for p in range(n_perm):
+                    local_sW[p] += (
+                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
+                    )
+
+    def _run_permanova_rowtile_nb(
         distmat, grouping, group_sizes, s_T, num_groups, sample_size,
         permutations, seed
     ):
-        """Run PERMANOVA with parallelism across the permutation axis.
+        """Run PERMANOVA with the row-tile (single matrix pass) strategy.
 
-        Generates the ``permutations + 1`` groupings in fixed-size chunks and
-        computes s_W for each chunk in parallel via
-        ``_permanova_f_stat_sW_parallel_nb``, then assembles the F-statistics
-        and p-value in NumPy. Chunking bounds peak memory to ``CHUNK x n``
-        independent of the permutation count; permutations are drawn in the
-        same RNG order as the sequential Monte Carlo path, so results match.
+        Generates the ``permutations + 1`` groupings in fixed-size chunks and,
+        for each chunk, computes s_W via ``_permanova_f_stat_sW_rowtile_nb``,
+        which reads the distance matrix only once per chunk (parallelism is over
+        matrix rows, not permutations).  This is the cross-thread cache-reuse
+        path of scikit-bio-binaries; it is markedly faster than the
+        per-permutation kernel on large matrices, which are memory-bound.
+
+        Groupings are transposed to sample-major ``int32`` once per chunk so the
+        kernel's permutation loop reads contiguous, low-bandwidth windows; the
+        transpose costs a small fraction of the matrix scan.  Permutations are
+        drawn in the same RNG order as the sequential Monte Carlo path, so
+        p-values are unchanged.
 
         Parameters
         ----------
@@ -274,26 +313,36 @@ if NUMBA_AVAILABLE:
         rng = get_rng(seed)
         n_total = permutations + 1
         out_sW = np.empty(n_total, np.float64)
+        inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
+        n_half = sample_size // 2
 
-        # Process permutations in chunks sized to the available parallelism so
-        # each worker handles a small batch whose active grouping rows stay
-        # resident in its per-core cache (scikit-bio-binaries uses 32
-        # permutations per worker). Chunking also bounds peak memory to
-        # (CHUNK x n) rather than the full permutation count (n_total x n).
-        # Permutations are generated in the same RNG order as the sequential
-        # Monte Carlo path, so p-values are unchanged.
+        # Same chunk size as the per-permutation path (32 per worker), which on
+        # this kernel keeps each worker's active grouping window in L1; chunks
+        # larger than this were measurably slower. Chunking also bounds peak
+        # memory to (CHUNK x n) regardless of the permutation count.
         CHUNK = 32 * get_num_threads()
+        # Perm-major buffer for generation: rng.permutation fills a row, so row
+        # writes are sequential. Transposed to sample-major int32 per chunk for
+        # the kernel (see _permanova_f_stat_sW_rowtile_nb).
         buf = np.empty((min(CHUNK, n_total), sample_size), dtype=np.intp)
         for start in range(0, n_total, CHUNK):
             end = min(start + CHUNK, n_total)
+            chunk_size = end - start
             for i in range(start, end):
                 if i == 0:
                     buf[0] = grouping
                 else:
                     buf[i - start] = rng.permutation(grouping)
-            _permanova_f_stat_sW_parallel_nb(
-                distmat.data, group_sizes, buf[: end - start], out_sW[start:end]
+
+            groupings_T = np.ascontiguousarray(
+                buf[:chunk_size].T, dtype=np.int32
             )
+            partials = np.zeros((n_half, chunk_size), np.float64)
+            _permanova_f_stat_sW_rowtile_nb(
+                distmat.data, groupings_T, inv_group_sizes, partials
+            )
+            # sum each row-pair's partial contribution into s_W per permutation
+            out_sW[start:end] = partials.sum(axis=0)
 
         s_A = s_T - out_sW
         f_stats = (s_A / (num_groups - 1)) / (out_sW / (sample_size - num_groups))
@@ -491,7 +540,7 @@ def permanova(
         s_T /= 2.0
 
     if engine == "numba" and not distmat._flags["CONDENSED"]:
-        stat, p_value = _run_permanova_parallel_nb(
+        stat, p_value = _run_permanova_rowtile_nb(
             distmat, grouping, group_sizes, s_T,
             num_groups, sample_size, permutations, seed
         )
