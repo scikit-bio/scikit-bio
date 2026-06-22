@@ -980,6 +980,7 @@ def _bal_min_branch_p(
     cdef Py_ssize_t icla = 0  # current clade index
     cdef Py_ssize_t nchu = 1  # current number of chunks
     cdef Py_ssize_t ichu      # current chunk index
+    cdef Py_ssize_t j
 
     # Serial phase: Traverse the tree from root and identify clades to parallelize on,
     # while doing calculations for nodes outside those clades.
@@ -2245,7 +2246,7 @@ def _bal_avgdist_nest(
     cdef Py_ssize_t iseg  # segment index
     cdef Py_ssize_t seg   # segment bound
 
-    cdef floating diff
+    cdef floating npot, diff
     cdef floating* adm_0 = &adm[0, 0]
     cdef floating* adm_a
     cdef floating* npots_2 = &npots[2]
