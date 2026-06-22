@@ -2125,7 +2125,7 @@ def _bal_update_spine(
     This trivial function has to be executed after chunking and before filling.
 
     """
-    cdef Py_ssize_t i
+    cdef Py_ssize_t i, anc
     cdef Py_ssize_t size_3 = sizes[tag] + 3
 
     for i in range(deep):
@@ -2896,6 +2896,7 @@ def _ols_corner_swaps(
 
     """
     cdef Py_ssize_t m = tacts[0] + 1
+    cdef Py_ssize_t node
     cdef Py_ssize_t i, left, right, parent, sibling
 
     # update four corner branches if they are internal
