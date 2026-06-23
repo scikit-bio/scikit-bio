@@ -31,7 +31,7 @@ from skbio.util._decorator import params_aliased
 from skbio._config import _resolve_engine
 
 try:
-    from numba import njit, prange, get_num_threads
+    from numba import njit, prange
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -192,15 +192,18 @@ if NUMBA_AVAILABLE:
 
         Parallelises over distance-matrix rows (each paired with its mirror row
         ``n - row - 2`` for load balance, as in ``_permanova_f_stat_sW_nb``)
-        rather than over permutations. Each row is owned by one worker, so the
-        matrix is read from memory only once per chunk, whereas the
-        per-permutation kernel has every worker stream the whole matrix. This
-        follows the cross-thread cache reuse of scikit-bio-binaries'
-        ``pmn_f_stat_sW_cpu`` in ``permanova_dyn_impl.hpp``.
+        rather than over permutations. Each row is owned by one worker, so each
+        distance is read from memory once per chunk and reused across all
+        permutations of the chunk, instead of streaming the whole matrix once
+        per permutation. The kernel is memory-bound, so this reuse -- not the
+        arithmetic -- is what determines its speed; it mirrors the cache reuse
+        of scikit-bio-binaries' ``pmn_f_stat_sW_cpu`` in
+        ``permanova_dyn_impl.hpp``.
 
-        The permutation loop is branchless so Numba can vectorise it, and
-        ``groupings_T`` is sample-major ``int32`` so the loop reads contiguous,
-        low-bandwidth windows.
+        The permutation loop is kept branchless (a uniform read-and-accumulate
+        over the grouping windows, with no data-dependent control flow), and
+        ``groupings_T`` is sample-major ``int32`` so each permutation's labels
+        are read as a contiguous, low-bandwidth window.
 
         Parameters
         ----------
@@ -211,20 +214,25 @@ if NUMBA_AVAILABLE:
         inv_group_sizes : np.ndarray, shape (num_groups,)
             Reciprocal group sizes (``1.0 / group_sizes``), precomputed so the
             hot loop multiplies instead of dividing.
-        partials : np.ndarray, shape (n // 2, n_perm)
-            Output, zeroed by the caller; ``partials[i]`` receives the s_W
-            contribution of the mirror-pair handled by iteration ``i``. The
-            caller sums over axis 0 to obtain s_W per permutation.
+        partials : np.ndarray, shape (n // 2, C) with C >= n_perm
+            Reused scratch (allocated once by the caller). Each iteration zeros
+            and fills the first ``n_perm`` entries of its own row ``partials[i]``
+            with the s_W contribution of the mirror-pair it handles. The caller
+            sums the first ``n_perm`` columns over axis 0 to obtain s_W per
+            permutation.
 
         """
         n = distance_matrix.shape[0]
         n_perm = groupings_T.shape[1]
         n_half = n // 2
 
-        # Each worker owns one row (and its mirror for load balance), so the
-        # distance matrix is read from memory only once per chunk.
+        # Each worker owns one row (and its mirror for load balance), so each
+        # distance is read once per chunk and reused across all permutations.
         for row_idx in prange(n_half):
+            # partials is reused across chunks, so zero this row's accumulator.
             local_sW = partials[row_idx]
+            for p in range(n_perm):
+                local_sW[p] = 0.0
             rsum = np.empty(n_perm, np.float64)
 
             for p in range(n_perm):
@@ -234,8 +242,10 @@ if NUMBA_AVAILABLE:
                 # ``double`` accumulator (matters for float32 input)
                 val = np.float64(distance_matrix[row_idx, col])
                 val2 = val * val
-                # branchless: add val2 only where both ends share a group
-                # (multiply by the 0/1 comparison) so Numba vectorises the loop
+                # branchless: scale val2 by the 0/1 group-match instead of an
+                # if, so the loop is a uniform read-accumulate over the grouping
+                # window (no data-dependent control flow) -- val2 stays in a
+                # register and is reused for every permutation
                 for p in range(n_perm):
                     rsum[p] += val2 * np.float64(
                         groupings_T[col, p] == groupings_T[row_idx, p]
@@ -316,15 +326,21 @@ if NUMBA_AVAILABLE:
         inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
         n_half = sample_size // 2
 
-        # Same chunk size as the per-permutation path (32 per worker), which on
-        # this kernel keeps each worker's active grouping window in L1; chunks
-        # larger than this were measurably slower. Chunking also bounds peak
-        # memory to (CHUNK x n) regardless of the permutation count.
-        CHUNK = 32 * get_num_threads()
-        # Perm-major buffer for generation: rng.permutation fills a row, so row
-        # writes are sequential. Transposed to sample-major int32 per chunk for
-        # the kernel (see _permanova_f_stat_sW_rowtile_nb).
-        buf = np.empty((min(CHUNK, n_total), sample_size), dtype=np.intp)
+        # CHUNK is the number of permutations processed per pass over the
+        # matrix. It is not a parallelism knob (the kernel parallelises over
+        # matrix rows); it sizes each worker's private working set -- its rsum
+        # accumulator and the grouping windows it reads -- so it is a fixed
+        # constant chosen to keep that set in L1, not scaled with the thread
+        # count. It also bounds peak memory to (CHUNK x n) regardless of the
+        # permutation count.
+        CHUNK = 256
+        width = min(CHUNK, n_total)
+        # Permutation-major int32 buffer; rng.permutation fills a row, so the
+        # writes are sequential. Allocated once and reused across chunks.
+        buf = np.empty((width, sample_size), dtype=np.int32)
+        # Kernel scratch, allocated once and reused (the kernel zeros its own
+        # rows); max width is CHUNK.
+        partials = np.empty((n_half, width), np.float64)
         for start in range(0, n_total, CHUNK):
             end = min(start + CHUNK, n_total)
             chunk_size = end - start
@@ -334,15 +350,16 @@ if NUMBA_AVAILABLE:
                 else:
                     buf[i - start] = rng.permutation(grouping)
 
-            groupings_T = np.ascontiguousarray(
-                buf[:chunk_size].T, dtype=np.int32
-            )
-            partials = np.zeros((n_half, chunk_size), np.float64)
+            # Transpose to sample-major so the kernel reads each permutation's
+            # labels as a contiguous window; buf is permutation-major and buf.T
+            # is a non-contiguous view, so this materialises the C-contiguous
+            # copy the kernel needs.
+            groupings_T = np.ascontiguousarray(buf[:chunk_size].T)
             _permanova_f_stat_sW_rowtile_nb(
                 distmat.data, groupings_T, inv_group_sizes, partials
             )
             # sum each row-pair's partial contribution into s_W per permutation
-            out_sW[start:end] = partials.sum(axis=0)
+            out_sW[start:end] = partials[:, :chunk_size].sum(axis=0)
 
         s_A = s_T - out_sW
         f_stats = (s_A / (num_groups - 1)) / (out_sW / (sample_size - num_groups))
