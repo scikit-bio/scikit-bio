@@ -464,7 +464,7 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
 
     @numba_code
-    def test_permanova_parallel_nb_no_permutations(self):
+    def test_permanova_rowtile_nb_no_permutations(self):
         # permutations=0 must yield a nan p-value, matching the cython path
         dm = DistanceMatrix(self.dm_full, self.ids)
         obs = permanova(dm, self.grouping_labels, permutations=0,
@@ -476,15 +476,15 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self.assertTrue(np.isnan(exp['p-value']))
 
     @numba_code
-    def test_permanova_parallel_nb_negative_permutations_raises(self):
+    def test_permanova_rowtile_nb_negative_permutations_raises(self):
         dm = DistanceMatrix(self.dm_full, self.ids)
         with self.assertRaisesRegex(ValueError, "greater than or equal to zero"):
             permanova(dm, self.grouping_labels, permutations=-1,
                       engine="numba")
 
     @numba_code
-    def test_permanova_parallel_nb_condensed_falls_back(self):
-        # condensed matrix must use the single-perm path, not the parallel path
+    def test_permanova_rowtile_nb_condensed_falls_back(self):
+        # condensed matrix must use the single-perm path, not the row-tile path
         dm_condensed = DistanceMatrix(
             squareform(self.dm_full), self.ids, condensed=True
         )
@@ -496,10 +496,10 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
 
     @numba_code
-    def test_permanova_parallel_nb_crosses_chunk_boundary(self):
-        # permutations > the driver's internal CHUNK (512) exercises multiple
-        # batches; the RNG must stay in sync across chunks so the result is
-        # still identical to the cython engine.
+    def test_permanova_rowtile_nb_crosses_chunk_boundary(self):
+        # permutations exceeding the driver's internal chunk size exercises
+        # multiple batches; the RNG must stay in sync across chunks so the
+        # result is still identical to the cython engine.
         dm = DistanceMatrix(self.dm_full, self.ids)
         obs = permanova(dm, self.grouping_labels, permutations=600, seed=42,
                         engine="numba")
