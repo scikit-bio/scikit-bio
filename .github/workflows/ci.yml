@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
   pull_request:
-    branches: [ main, development_numba ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
