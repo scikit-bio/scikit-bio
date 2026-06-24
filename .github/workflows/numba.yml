@@ -2,7 +2,7 @@ name: Numba
 
 on:
   pull_request:
-    branches: [ development_numba ]
+    branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
   workflow_dispatch:
 
