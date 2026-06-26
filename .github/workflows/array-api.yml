@@ -12,6 +12,11 @@ on:
 env:
   latest_python: "3.13"  # torch has no 3.14 wheels yet
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). This workflow only checks out the repo and runs tests.
+permissions:
+  contents: read
+
 jobs:
   test-cpu:
     name: Array API (${{ matrix.backend }}, cpu)

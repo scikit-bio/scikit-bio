@@ -11,6 +11,12 @@ on:
 env:
   latest_python: "3.14"
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). The website is deployed to the website repo via an SSH
+# deploy key, not the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
 
   build:

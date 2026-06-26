@@ -12,6 +12,12 @@ on:
 env:
   latest_python: "3.14"
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). This workflow only checks out the repo, runs tests, and
+# uploads coverage to Codecov via CODECOV_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   conf:
     # This job is needed to route the global environment variables into

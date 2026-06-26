@@ -12,6 +12,12 @@ env:
   latest_python: "3.14"
   supported_pythons: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). No job uses the token to write to this repository:
+# documentation is deployed to the website repo via an SSH deploy key.
+permissions:
+  contents: read
+
 jobs:
   conf:
     # This job is needed to route the global environment variables into

@@ -9,6 +9,13 @@ env:
   earliest_python: "3.10"
   latest_python: "3.14"
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). No job uses the token to write to this repository:
+# documentation is deployed to the website repo via an SSH deploy key and the
+# package is published to PyPI via an API token (see wheels.yml).
+permissions:
+  contents: read
+
 jobs:
   # Trigger wheel building workflow
   build_and_publish:
