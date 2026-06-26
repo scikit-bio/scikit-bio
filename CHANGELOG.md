@@ -2,6 +2,10 @@
 
 ## Version 0.7.4-dev
 
+### Miscellaneous
+
+* Clarified the error message raised when an `Embedding` does not have one row per id. The message now states "The number of rows in the embedding (X) must match the number of ids (Y).", and `SequenceEmbedding`/`ProteinEmbedding` report "characters in the sequence" instead of "ids". The `ids` parameter is also better documented ([#2494](https://github.com/scikit-bio/scikit-bio/pull/2494)).
+
 ## Version 0.7.3
 
 ### Features
