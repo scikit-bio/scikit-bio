@@ -735,7 +735,7 @@ def numba_code(test_func):
     try:
         import pytest
 
-        test_func = pytest.mark.numba_code(test_func)
+        test_func = pytest.mark.numba(test_func)
     except ImportError:
         pass
 

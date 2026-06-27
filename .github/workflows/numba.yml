@@ -1,6 +1,9 @@
 name: Numba
 
 on:
+  push:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
   pull_request:
     branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
@@ -33,9 +36,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-15-intel is omitted: Numba and llvmlite no longer ship macOS
-        # x86_64 wheels, so `pip install numba` would fall back to a source
-        # build requiring an LLVM toolchain.
+        # macos-15-intel and windows-11-arm are omitted: Numba and llvmlite
+        # do not ship wheels for those targets (macOS x86_64 or Windows ARM64),
+        # so `pip install numba` would fall back to a source build requiring an
+        # LLVM toolchain.
         os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@v6
@@ -52,7 +56,7 @@ jobs:
           pip list
 
       - name: Run Numba-marked tests
-        run: cd ci && pytest -m numba_code --pyargs skbio
+        run: cd ci && pytest -m numba --pyargs skbio
 
       - name: Run full test suite with Numba installed
         run: make test
