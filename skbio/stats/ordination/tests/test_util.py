@@ -16,6 +16,7 @@ from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
     center_distance_matrix
 
 from skbio.stats.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
+from skbio.util import numba_code
 
 
 class TestUtils(TestCase):
@@ -122,6 +123,75 @@ class TestUtils(TestCase):
         # and ensure that the result of inplace centering was correct
         npt.assert_almost_equal(dm_expected, dm_centered_inp)
 
+    def test_center_distance_matrix_invalid_engine(self):
+        with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+            center_distance_matrix(self.dist_mat, engine="julia")
 
-if __name__ == '__main__':
+
+class CenterDistanceMatrixNumbaTests(TestCase):
+    """Tests for the CPU Numba center-distance-matrix helper and dispatch."""
+
+    def setUp(self):
+        self.dist_mat = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
+                                    [5., 4., 0., 3.], [5., 9., 3., 0.]],
+                                   dtype=np.float64)
+        self.dist_mat_fp32 = np.asarray([[0., 7., 5., 5.], [7., 0., 4., 9.],
+                                         [5., 4., 0., 3.], [5., 9., 3., 0.]],
+                                        dtype=np.float32)
+
+    def _assert_center_distance_matrix(self, func, mat, rtol, atol):
+        dm_expected = f_matrix(e_matrix(mat))
+        centered = np.empty_like(mat)
+
+        func(mat, centered)
+
+        npt.assert_allclose(dm_expected, centered, rtol=rtol, atol=atol)
+
+    @numba_code
+    def test_center_distance_matrix_float64_numba(self):
+        from skbio.stats.ordination._center_distance_matrix_numba import (
+            center_distance_matrix_nb,
+        )
+
+        self._assert_center_distance_matrix(
+            center_distance_matrix_nb, self.dist_mat, rtol=1e-7, atol=1e-7
+        )
+
+    @numba_code
+    def test_center_distance_matrix_float32_numba(self):
+        from skbio.stats.ordination._center_distance_matrix_numba import (
+            center_distance_matrix_nb,
+        )
+
+        self._assert_center_distance_matrix(
+            center_distance_matrix_nb, self.dist_mat_fp32, rtol=1e-5, atol=1e-5
+        )
+
+    @numba_code
+    def test_center_distance_matrix_engine_numba_matches_cython(self):
+        for mat, rtol, atol in (
+            (self.dist_mat, 1e-7, 1e-7),
+            (self.dist_mat_fp32, 1e-5, 1e-5),
+        ):
+            matrix_copy = copy.deepcopy(mat)
+
+            obs = center_distance_matrix(matrix_copy, engine="numba")
+            exp = center_distance_matrix(mat, engine="cython")
+
+            self.assertTrue(np.array_equal(matrix_copy, mat))
+            npt.assert_allclose(obs, exp, rtol=rtol, atol=atol)
+
+    @numba_code
+    def test_center_distance_matrix_engine_numba_inplace_matches_cython(self):
+        obs = copy.deepcopy(self.dist_mat)
+        exp = copy.deepcopy(self.dist_mat)
+
+        obs_centered = center_distance_matrix(obs, inplace=True, engine="numba")
+        exp_centered = center_distance_matrix(exp, inplace=True, engine="cython")
+
+        npt.assert_allclose(obs_centered, exp_centered, rtol=1e-7, atol=1e-7)
+        npt.assert_allclose(obs, exp, rtol=1e-7, atol=1e-7)
+
+
+if __name__ == "__main__":
     main()

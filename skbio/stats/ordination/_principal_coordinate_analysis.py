@@ -45,7 +45,7 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix(distance_matrix, inplace=False):
+def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     """Center a distance matrix.
 
     Note: For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
@@ -55,7 +55,9 @@ def center_distance_matrix(distance_matrix, inplace=False):
     # For true NumPy arrays, use the Cython-accelerated implementation,
     # which also supports in-place modification.
     if isinstance(distance_matrix, np.ndarray):
-        return center_distance_matrix_np(distance_matrix, inplace=inplace)
+        return center_distance_matrix_np(
+            distance_matrix, inplace=inplace, engine=engine
+        )
 
     # For JAX/CuPy and other array-API backends, use the generic
     # double-centering path; `inplace` is ignored for these backends.
@@ -99,6 +101,7 @@ def pcoa(
     seed=None,
     warn_neg_eigval=0.01,
     output_format=None,
+    engine=None,
 ):
     r"""Perform Principal Coordinate Analysis (PCoA).
 
@@ -141,6 +144,10 @@ def pcoa(
 
     output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
+    engine : {"cython", "numba"}, optional
+        Compute engine to use for centering NumPy-backed distance matrices.
+        ``"cython"`` (default) uses the Cython implementation. ``"numba"``
+        uses the Numba implementation.
 
     Returns
     -------
@@ -259,7 +266,9 @@ def pcoa(
     if method == "eigh":
         long_method_name = "Principal Coordinate Analysis"
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(
+            distmat.data, inplace=inplace, engine=engine
+        )
         if 0 < dimensions < 1:
             if matrix_data.shape[0] > 10:
                 warn(
@@ -326,7 +335,9 @@ def pcoa(
                 )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(
+            distmat.data, inplace=inplace, engine=engine
+        )
 
         eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:

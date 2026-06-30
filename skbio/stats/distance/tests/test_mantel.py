@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import numpy as np
 import numpy.testing as npt
@@ -240,13 +241,23 @@ class InternalMantelTests(MantelTestData):
             self.assertAlmostEqual(obs[1], exp[1])
             npt.assert_allclose(obs[2], exp[2])
 
-    def test_bad_engine_raises_for_all_methods(self):
-        # An unsupported engine is rejected up front, regardless of method
-        # (including kendalltau, which has no numba path).
-        for method in ("pearson", "spearman", "kendalltau"):
+    def test_bad_engine_raises_for_special_methods(self):
+        for method in ("pearson", "spearman"):
             with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
                 mantel(self.minx_dm, self.miny_dm, method=method,
                        permutations=0, engine="julia")
+
+    def test_kendalltau_only_supports_cython_engine(self):
+        with self.assertRaisesRegex(ValueError, "engine='numba' is not supported"):
+            mantel(self.minx_dm, self.miny_dm, method="kendalltau",
+                   permutations=0, engine="numba")
+
+    def test_kendalltau_does_not_resolve_engine(self):
+        with patch(
+            "skbio.stats.distance._mantel._resolve_engine",
+            side_effect=AssertionError("_resolve_engine should not be called"),
+        ):
+            mantel(self.minx_dm, self.miny_dm, method="kendalltau", permutations=0)
 
     def test_pearsonr_full(self):
         """

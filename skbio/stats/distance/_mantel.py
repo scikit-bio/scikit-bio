@@ -416,13 +416,17 @@ def mantel(
 
     if method in ("pearson", "spearman"):
         special = True
+        engine = _resolve_engine(engine, ("cython", "numba"))
     elif method == "kendalltau":
         corr_func = kendalltau
         special = False  # set to true, if we have a dedicated implementation
+        if engine not in (None, "cython"):
+            raise ValueError(
+                f"engine='{engine}' is not supported here; choose from ('cython',)."
+            )
+        engine = "cython"
     else:
         raise ValueError("Invalid correlation method '%s'." % method)
-
-    engine = _resolve_engine(engine, ("cython", "numba"))
 
     if permutations < 0:
         raise ValueError(

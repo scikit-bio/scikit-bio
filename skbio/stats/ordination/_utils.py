@@ -8,6 +8,8 @@
 
 import numpy as np
 
+from skbio._config import _resolve_engine
+
 from ._cutils import center_distance_matrix_cy
 
 
@@ -197,7 +199,7 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix(distance_matrix, inplace=False):
+def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     """Centers a distance matrix.
 
     Note: If the used distance was euclidean, pairwise distances
@@ -214,11 +216,31 @@ def center_distance_matrix(distance_matrix, inplace=False):
     inplace : bool, optional
         Whether or not to center the given distance matrix in-place, which
         is more efficient in terms of memory and computation.
+    engine : {"cython", "numba"}, optional
+        Compute engine to use. ``"cython"`` (default) uses the Cython
+        implementation. ``"numba"`` uses the Numba implementation.
 
     """
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
     if not distance_matrix.flags.c_contiguous:
         # center_distance_matrix_cy requires c_contiguous, so make a copy
         distance_matrix = np.asarray(distance_matrix, order="C")
+
+    if engine == "numba":
+        try:
+            from ._center_distance_matrix_numba import center_distance_matrix_nb
+        except ImportError as e:
+            raise ImportError(
+                "engine='numba' requires the optional numba dependency."
+            ) from e
+
+        if inplace:
+            center_distance_matrix_nb(distance_matrix, distance_matrix)
+            return distance_matrix
+        centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
+        center_distance_matrix_nb(distance_matrix, centered)
+        return centered
 
     if inplace:
         center_distance_matrix_cy(distance_matrix, distance_matrix)
