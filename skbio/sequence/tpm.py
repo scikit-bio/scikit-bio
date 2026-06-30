@@ -61,7 +61,7 @@ from skbio.sequence import (
 )
 import skbio.sequence as sk_seqtype
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
 
 
