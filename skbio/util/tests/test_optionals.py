@@ -11,7 +11,7 @@ import importlib
 
 from unittest import mock
 
-from skbio.util import get_package
+from skbio.util import get_package, _is_usable
 
 
 class TestGetPackage(TestCase):
@@ -37,6 +37,23 @@ class TestGetPackage(TestCase):
             with self.assertRaises(ImportError) as cm:
                 get_package("polars")
             self.assertEqual(str(cm.exception), msg)
+
+
+class TestIsUsable(TestCase):
+    def test_returns_false_when_mod_is_none(self):
+        assert _is_usable(None, lambda: "anything") is False
+
+    def test_returns_true_when_probe_succeeds(self):
+        mod = mock.MagicMock()
+        probe = mock.MagicMock(return_value="ok")
+        assert _is_usable(mod, probe) is True
+        probe.assert_called_once()
+
+    def test_returns_false_when_probe_raises(self):
+        mod = mock.MagicMock()
+        def probe():
+            raise RuntimeError("boom")
+        assert _is_usable(mod, probe) is False
 
 
 if __name__ == "__main__":

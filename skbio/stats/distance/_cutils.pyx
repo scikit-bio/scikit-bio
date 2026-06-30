@@ -435,7 +435,7 @@ def permanova_f_stat_sW_condensed_cy(TReal[::1] distance_matrix,
     cdef double local_s_W
     cdef double val
 
-    cdef Py_ssize_t row, col, rowi, coli, row1
+    cdef Py_ssize_t row, col, rowi, coli, row1, idx_
     cdef Py_ssize_t in_n_2 = n//2
 
     for rowi in prange(in_n_2, nogil=True):

@@ -1603,7 +1603,7 @@ class TreeNode(SkbioObject):
             if func(node):
                 node.parent.remove(node, uncache=False)  # type: ignore[union-attr]
 
-    def prune(self, uncache: bool = True):
+    def prune(self, inplace: bool = True, uncache: bool = True) -> TreeNode:
         r"""Collapse single-child nodes in the tree.
 
         Internal nodes with only one child will be removed, and direct connections will
@@ -1613,11 +1613,25 @@ class TreeNode(SkbioObject):
 
         Parameters
         ----------
+        inplace : bool, optional
+            Whether to modify the tree in place (True, default) or to create a modified
+            copy of the tree (False).
+
+            .. versionadded:: 0.7.4
+
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
-            :meth:`details <has_caches>`.
+            :meth:`details <has_caches>`. Only applicable when ``inplace`` is True.
 
             .. versionadded:: 0.6.3
+
+        Returns
+        -------
+        TreeNode
+            The resulting tree.
+
+            .. versionchanged:: 0.7.4
+                Now returns the tree. Previously the method returned nothing.
 
         See Also
         --------
@@ -1649,7 +1663,7 @@ class TreeNode(SkbioObject):
                   \k------- /j-------|
                                       \-i
 
-        >>> tree.prune()
+        >>> tree = tree.prune()
         >>> print(tree.ascii_art())
                                       /-a
                             /c-------|
@@ -1662,14 +1676,15 @@ class TreeNode(SkbioObject):
                             \-i
 
         """
-        if uncache:
-            self.clear_caches()
+        tree = self if inplace else self.copy()
+        if inplace and uncache:
+            tree.clear_caches()
 
         # build up the list of nodes to remove so the topology is not altered
         # while traversing
         nodes_to_remove: list[TreeNode] = []
         nodes_to_remove_append = nodes_to_remove.append
-        for node in self.traverse(include_self=False):
+        for node in tree.traverse(include_self=False):
             if len(node.children) == 1:
                 nodes_to_remove_append(node)
 
@@ -1688,18 +1703,20 @@ class TreeNode(SkbioObject):
 
         # If there is a single descendent from the root, the root will adopt the
         # child's properties. We can't "delete" the root as that would be deleting
-        # self.
-        if len(self.children) == 1:
-            child = self.children[0]
-            if child.length is None or self.length is None:
-                self.length = self.length or child.length
+        # the tree itself.
+        if len(tree.children) == 1:
+            child = tree.children[0]
+            if child.length is None or tree.length is None:
+                tree.length = tree.length or child.length
             else:
-                self.length += child.length
+                tree.length += child.length
             for key, value in child.__dict__.items():
                 if key not in ("length", "parent", "children"):
-                    self.__dict__[key] = value
-            self.remove(child, uncache=False)
-            self.extend(child.children, uncache=False)
+                    tree.__dict__[key] = value
+            tree.remove(child, uncache=False)
+            tree.extend(child.children, uncache=False)
+
+        return tree
 
     def shear(
         self,
@@ -1942,8 +1959,9 @@ class TreeNode(SkbioObject):
         self,
         insert_length: int | None = None,
         include_self: bool = True,
+        inplace: bool = True,
         uncache: bool = True,
-    ):
+    ) -> TreeNode:
         r"""Convert the tree into a bifurcating tree.
 
         All nodes that have more than two children will have additional intermediate
@@ -1959,11 +1977,25 @@ class TreeNode(SkbioObject):
 
             .. versionadded:: 0.6.3
 
+        inplace : bool, optional
+            Whether to modify the tree in place (True, default) or to create a modified
+            copy of the tree (False).
+
+            .. versionadded:: 0.7.4
+
         uncache : bool, optional
             Whether to clear caches of the tree if present (default: True). See
-            :meth:`details <has_caches>`.
+            :meth:`details <has_caches>`. Only applicable when ``inplace`` is True.
 
             .. versionadded:: 0.6.3
+
+        Returns
+        -------
+        TreeNode
+            The resulting tree.
+
+            .. versionchanged:: 0.7.4
+                Now returns the tree. Previously the method returned nothing.
 
         See Also
         --------
@@ -1994,7 +2026,7 @@ class TreeNode(SkbioObject):
                   \f-------|
                             \-e
 
-        >>> tree.bifurcate()
+        >>> tree = tree.bifurcate()
         >>> print(tree.ascii_art())
                             /-h
                   /c-------|
@@ -2009,10 +2041,11 @@ class TreeNode(SkbioObject):
                             \-e
 
         """
-        if uncache:
-            self.clear_caches()
-        treenode = self.__class__
-        for node in self.traverse(include_self=include_self):
+        tree = self if inplace else self.copy()
+        if inplace and uncache:
+            tree.clear_caches()
+        treenode = tree.__class__
+        for node in tree.traverse(include_self=include_self):
             if len(node.children) > 2:
                 stack = node.children
                 while len(stack) > 2:
@@ -2022,6 +2055,8 @@ class TreeNode(SkbioObject):
                     for child in stack:
                         node.remove(child, uncache=False)
                     node.extend([ind, interm], uncache=False)
+
+        return tree
 
     @params_aliased([("shuffler", "shuffle_f", "0.6.3", True)])
     def shuffle(

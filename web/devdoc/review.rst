@@ -81,6 +81,7 @@ Continuous integration (CI)
 
 - Make sure GitHub Actions CI is passing before merging a pull request.
 - Make sure coverage doesn't drop. Strive to have 100% coverage for new code being merged.
+- If changes involve Python Array API support, consider adding the `gpu-ci` label to the PR. See :doc:`array_api` for more details.
 
 
 Unit testing

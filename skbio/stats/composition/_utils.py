@@ -155,7 +155,7 @@ def _check_p_adjust(name):
         except ValueError as e:
             if "method not recognized" in str(e):
                 raise ValueError(f'"{name}" is not an available FDR correction method.')
-            else:
+            else:  # pragma: no cover
                 raise ValueError(
                     f"Cannot perform FDR correction using the {name} method."
                 )

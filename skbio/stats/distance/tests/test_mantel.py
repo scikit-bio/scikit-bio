@@ -19,12 +19,14 @@ from scipy.stats import pearsonr, spearmanr, ConstantInputWarning, NearConstantI
 from skbio import DistanceMatrix
 from skbio.stats.distance import (PairwiseMatrixError,
                                   DistanceMatrixError, mantel, pwmantel)
+from skbio.stats.distance import _mantel as mantel_mod
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
 from skbio.stats.distance._mantel import _mantel_stats_spearman
-from skbio.stats.distance._cutils import mantel_perm_pearsonr_cy
+from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
+                                          mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
-from skbio.util import get_data_path, assert_data_frame_almost_equal
+from skbio.util import get_data_path, assert_data_frame_almost_equal, numba_code
 from skbio.util._testing import _data_frame_to_default_int_type
 
 
@@ -77,7 +79,16 @@ class InternalMantelTests(MantelTestData):
         one_stat = max(min(one_stat, 1.0), -1.0)
         return one_stat
 
-    def test_perm_pearsonr3(self):
+    def _assert_perm_pearsonr(self, func, x_data, perm_order, xmean, normxm,
+                              ym_normalized):
+        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
+        func(x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats)
+        for i in range(len(perm_order)):
+            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
+                                             xmean, normxm, ym_normalized)
+            self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def _perm_pearsonr3_inputs(self):
         # data pre-computed using released code
         x_data = np.asarray([[0., 1., 3.],
                              [1., 0., 2.],
@@ -90,16 +101,9 @@ class InternalMantelTests(MantelTestData):
         xmean = 2.0
         normxm = 1.4142135623730951
         ym_normalized = np.asarray([-0.80178373, 0.26726124, 0.53452248])
+        return x_data, perm_order, xmean, normxm, ym_normalized
 
-        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
-                                ym_normalized, permuted_stats)
-        for i in range(len(perm_order)):
-            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
-                                             xmean, normxm, ym_normalized)
-            self.assertAlmostEqual(permuted_stats[i], exp_res)
-
-    def test_perm_pearsonr6(self):
+    def _perm_pearsonr6_inputs(self):
         # data pre-computed using released code
         x_data = np.asarray([[0., 0.62381864, 0.75001543,
                               0.58520119, 0.72902358, 0.65213559],
@@ -126,16 +130,9 @@ class InternalMantelTests(MantelTestData):
                                     -0.08230374, 0.33992794, -0.14964257,
                                     0.04340053, -0.35527798, 0.15597541,
                                     -0.0523679, -0.04451187, 0.35308828])
+        return x_data, perm_order, xmean, normxm, ym_normalized
 
-        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
-                                ym_normalized, permuted_stats)
-        for i in range(len(perm_order)):
-            exp_res = self._compute_perf_one(x_data, perm_order[i, :],
-                                             xmean, normxm, ym_normalized)
-            self.assertAlmostEqual(permuted_stats[i], exp_res)
-
-    def test_perm_pearsonr_full(self):
+    def _perm_pearsonr_full_inputs(self):
         x = DistanceMatrix.read(get_data_path('dm2.txt'))
         y = DistanceMatrix.read(get_data_path('dm3.txt'))
         x_data = x._data
@@ -174,14 +171,82 @@ class InternalMantelTests(MantelTestData):
                                  [5, 0, 2, 3, 1, 4]], dtype=np.intp)
 
         ym_normalized = ym/normym
+        return x_data, perm_order, xmean, normxm, ym_normalized
 
-        permuted_stats = np.empty(len(perm_order), dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(x_data, perm_order, xmean, normxm,
-                                ym_normalized, permuted_stats)
+    def _assert_perm_pearsonr_condensed(self, func, x_data, perm_order, xmean,
+                                        normxm, ym_normalized):
+        x_flat = squareform(x_data, force='tovector', checks=False)
+        permuted_stats = np.empty(len(perm_order), dtype=x_flat.dtype)
+        func(x_flat, perm_order, xmean, normxm, ym_normalized, permuted_stats)
         for i in range(len(perm_order)):
             exp_res = self._compute_perf_one(x_data, perm_order[i, :],
                                              xmean, normxm, ym_normalized)
             self.assertAlmostEqual(permuted_stats[i], exp_res)
+
+    def test_perm_pearsonr3_cy(self):
+        self._assert_perm_pearsonr(
+            mantel_perm_pearsonr_cy, *self._perm_pearsonr3_inputs())
+
+    @numba_code
+    def test_perm_pearsonr3_nb(self):
+        self._assert_perm_pearsonr(
+            mantel_mod._mantel_perm_pearsonr_nb,
+            *self._perm_pearsonr3_inputs())
+
+    def test_perm_pearsonr6_cy(self):
+        self._assert_perm_pearsonr(
+            mantel_perm_pearsonr_cy, *self._perm_pearsonr6_inputs())
+
+    @numba_code
+    def test_perm_pearsonr6_nb(self):
+        self._assert_perm_pearsonr(
+            mantel_mod._mantel_perm_pearsonr_nb,
+            *self._perm_pearsonr6_inputs())
+
+    def test_perm_pearsonr_full_cy(self):
+        self._assert_perm_pearsonr(
+            mantel_perm_pearsonr_cy, *self._perm_pearsonr_full_inputs())
+
+    @numba_code
+    def test_perm_pearsonr_full_nb(self):
+        self._assert_perm_pearsonr(
+            mantel_mod._mantel_perm_pearsonr_nb,
+            *self._perm_pearsonr_full_inputs())
+
+    def test_perm_pearsonr_condensed_cy(self):
+        self._assert_perm_pearsonr_condensed(
+            mantel_perm_pearsonr_condensed_cy,
+            *self._perm_pearsonr_full_inputs())
+
+    @numba_code
+    def test_perm_pearsonr_condensed_nb(self):
+        self._assert_perm_pearsonr_condensed(
+            mantel_mod._mantel_perm_pearsonr_condensed_nb,
+            *self._perm_pearsonr_full_inputs())
+
+    @numba_code
+    def test_pearson_flat_engine_numba_matches_cython(self):
+        y_flat = self.miny_dm.condensed_form()
+
+        for x in (self.minx_dm, self.minx_cond):
+            # The numba and cython engines should agree for the same input
+            # matrix and permutation seed.
+            obs = mantel_mod._mantel_stats_pearson_flat(
+                x, y_flat, 3, seed=0, engine="numba")
+            exp = mantel_mod._mantel_stats_pearson_flat(
+                x, y_flat, 3, seed=0, engine="cython")
+
+            self.assertAlmostEqual(obs[0], exp[0])
+            self.assertAlmostEqual(obs[1], exp[1])
+            npt.assert_allclose(obs[2], exp[2])
+
+    def test_bad_engine_raises_for_all_methods(self):
+        # An unsupported engine is rejected up front, regardless of method
+        # (including kendalltau, which has no numba path).
+        for method in ("pearson", "spearman", "kendalltau"):
+            with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+                mantel(self.minx_dm, self.miny_dm, method=method,
+                       permutations=0, engine="julia")
 
     def test_pearsonr_full(self):
         """

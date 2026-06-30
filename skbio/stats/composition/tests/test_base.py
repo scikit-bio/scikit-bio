@@ -99,11 +99,20 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         self.assertEqual(str(cm.exception), msg)
 
         msg = "Input matrix cannot have infinite or NaN values."
+        arr = np.array([1., np.nan, 2.])
         with self.assertRaises(ValueError) as cm:
-            _check_composition(np, np.array([1., np.nan, 2.]))
+            _check_composition(np, arr)
         self.assertEqual(str(cm.exception), msg)
+        _check_composition(np, arr, allnum=False)
+
+        arr = np.array([1., np.inf, 2.])
         with self.assertRaises(ValueError) as cm:
-            _check_composition(np, np.array([1., np.inf, 2.]))
+            _check_composition(np, arr)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix cannot have infinite values."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, arr, allnum=False)
         self.assertEqual(str(cm.exception), msg)
 
         msg = "Input matrix cannot have negative components."
@@ -137,6 +146,19 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             _check_composition(np, np.array(0))
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "Input matrix cannot have negative or zero components."
+        self.assertIsNone(_check_composition(np, self.cdata3))
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, self.cdata3, nozero=True)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input matrix can only have 2 dimensions or less."
+        self.assertIsNone(_check_composition(np, self.cdata9))
+        self.assertIsNone(_check_composition(np, self.cdata9, maxdim=3))
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, self.cdata9, maxdim=2)
+        self.assertEqual(str(cm.exception), msg)
+
     def test_check_basis(self):
         # as range
         basis_non_orthongnal = np.array([[2, -2, 0], [2, 2, 4], [2, 2, -1]])
@@ -149,10 +171,12 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         basis_real= np.array([[1.0, 0, 0], [0, 1.0, 0]])
 
         # action + assert
+        self.assertIsNone(_check_basis(np, basis_non_orthongnal))
         with self.assertRaises(ValueError) as cm:
             _check_basis(np, basis_non_orthongnal, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
 
+        self.assertIsNone(_check_basis(np, basis_non_orthonormal))
         with self.assertRaises(ValueError) as cm:
             _check_basis(np, basis_non_orthonormal, orthonormal=True)
         self.assertEqual(str(cm.exception), "Basis is not orthonormal.")
@@ -174,6 +198,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
 
         basis = clr(basis)
         self.assertIsNone(_check_basis(np, basis, orthonormal=True))
+        self.assertIsNone(_check_basis(np, basis.squeeze(), orthonormal=True))
 
     def test_closure(self):
         # 2-D matrix
@@ -201,6 +226,16 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
 
         # invalid axis
         self.assertRaises(AxisError, closure, mat, axis=3)
+
+        # skip validation
+        msg = "Input matrix cannot have negative components."
+        arr = np.array([[1, 2, 3], [4, -5, 6]])
+        with self.assertRaises(ValueError) as cm:
+            closure(arr)
+        self.assertEqual(str(cm.exception), msg)
+        obs = closure(arr, validate=False)
+        exp = np.array([[0.167, 0.333, 0.5], [0.8, -1.0, 1.2]])
+        npt.assert_array_equal(obs.round(3), exp)
 
         # 1-D vector
         vec = self.cdata2
@@ -693,7 +728,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
                           [1.42424242, 9.72727273],
                           [1.56565657, 9.63636364]])
 
-        res = ilr_inv(ilr(table, basis=basis), basis=basis)
+        res = ilr_inv(ilr(table, basis=basis), basis=basis, validate=False)
         npt.assert_allclose(res, closure(table.squeeze()))
 
     def test_ilr_inv_basis(self):
@@ -784,13 +819,24 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         alr1d_method = alr(comp2, ref_idx=1)
         npt.assert_allclose(alr1d_byhand, alr1d_method)
 
+        # reference out of bounds
+        msg = "Invalid index 5 on dimension 1."
+        with self.assertRaises(IndexError) as cm:
+            alr(self.cdata1, ref_idx=5)
+        self.assertEqual(str(cm.exception), msg)
+        msg = "Invalid index -5 on dimension 1."
+        with self.assertRaises(IndexError) as cm:
+            alr(self.cdata1, ref_idx=-5)
+        self.assertEqual(str(cm.exception), msg)
+
+        # bad input matrix
         with self.assertRaises(ValueError):
             alr(self.bad1)
         with self.assertRaises(ValueError):
             alr(self.bad2)
 
         # make sure that inplace modification is not occurring
-        alr(self.cdata2)
+        alr(self.cdata2, validate=False)
         npt.assert_allclose(self.cdata2, np.array([2, 2, 6]))
 
         # matrix must be 1d or 2d
@@ -823,13 +869,26 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         npt.assert_allclose(alrinv1d_byhand, alrinv1d_method)
 
         # make sure that inplace modification is not occurring
+        exp = self.rdata1.copy()
         alr_inv(self.rdata1)
-        npt.assert_allclose(self.rdata1,
-                            np.array([[0.70710678, -0.70710678, 0., 0.],
-                                      [0.40824829, 0.40824829,
-                                       -0.81649658, 0.],
-                                      [0.28867513, 0.28867513,
-                                       0.28867513, -0.8660254]]))
+        npt.assert_allclose(self.rdata1, exp)
+
+        # reference out of bounds
+        msg = "Invalid index 6 on dimension 1."
+        with self.assertRaises(IndexError) as cm:
+            alr_inv(self.rdata1, ref_idx=6)
+        self.assertEqual(str(cm.exception), msg)
+        msg = "Invalid index -6 on dimension 1."
+        with self.assertRaises(IndexError) as cm:
+            alr_inv(self.rdata1, ref_idx=-6)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Dimension 1 of the input matrix has zero length."
+        arr = np.array([[]])
+        with self.assertRaises(ValueError) as cm:
+            alr_inv(arr, axis=1)
+        self.assertEqual(str(cm.exception), msg)
+
 
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_alr_backends(self, xp, device):
@@ -918,51 +977,48 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
 class TestTreeBasis(TestCase):
 
     def test_tree_basis_base_case(self):
-        tree = u"(a,b);"
-        t = TreeNode.read([tree])
-
+        tree = TreeNode.read(["(a,b);"])
         exp_basis = coo_array(
             np.array([[-np.sqrt(1. / 2),
                        np.sqrt(1. / 2)]]))
-        exp_keys = [t.name]
-        res_basis, res_keys = tree_basis(t)
+        exp_keys = [tree.name]
+        res_basis, res_keys = tree_basis(tree)
 
         assert_coo_allclose(exp_basis, res_basis)
         self.assertListEqual(exp_keys, res_keys)
 
     def test_tree_basis_invalid(self):
+        tree = TreeNode.read(["(a,b,c);"])
         with self.assertRaises(ValueError):
-            tree = u"(a,b,c);"
-            t = TreeNode.read([tree])
-            tree_basis(t)
+            tree_basis(tree)
+        tree = TreeNode.read(["(a,(b,c,d));"])
+        with self.assertRaises(ValueError):
+            tree_basis(tree)
+        tree = TreeNode.read(["(a,b,(c,d));"])
+        with self.assertRaises(ValueError):
+            tree_basis(tree)
 
     def test_tree_basis_unbalanced(self):
-        tree = u"((a,b)c, d);"
-        t = TreeNode.read([tree])
+        tree = TreeNode.read(["((a,b)c, d);"])
         exp_basis = coo_array(np.array(
             [[-np.sqrt(1. / 6), -np.sqrt(1. / 6), np.sqrt(2. / 3)],
              [-np.sqrt(1. / 2), np.sqrt(1. / 2), 0]]
         ))
-        exp_keys = [t.name, t[0].name]
-        res_basis, res_keys = tree_basis(t)
-
+        exp_keys = [tree.name, tree[0].name]
+        res_basis, res_keys = tree_basis(tree)
         assert_coo_allclose(exp_basis, res_basis)
         self.assertListEqual(exp_keys, res_keys)
 
     def test_tree_basis_unbalanced2(self):
-        tree = u"(d, (a,b)c);"
-
-        t = TreeNode.read([tree])
-
+        tree = TreeNode.read(["(d,(a,b)c);"])
         exp_basis = coo_array(np.array(
             [
                 [-np.sqrt(2. / 3), np.sqrt(1. / 6), np.sqrt(1. / 6)],
                 [0, -np.sqrt(1. / 2), np.sqrt(1. / 2)]
             ]
         ))
-
-        exp_keys = [t.name, t[1].name]
-        res_basis, res_keys = tree_basis(t)
+        exp_keys = [tree.name, tree[1].name]
+        res_basis, res_keys = tree_basis(tree)
         assert_coo_allclose(exp_basis, res_basis, atol=1e-7, rtol=1e-7)
         self.assertListEqual(exp_keys, res_keys)
 

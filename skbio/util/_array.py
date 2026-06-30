@@ -98,65 +98,6 @@ _BACKEND_CHECKERS = {
 }
 
 
-def _get_namespace_from_args(args, kwargs):
-    r"""Return the array namespace if any argument is an array object.
-
-    Parameters
-    ----------
-    args : tuple
-        Positional arguments.
-    kwargs : dict
-        Keyword arguments.
-
-    Returns
-    -------
-    namespace or None
-        A uniform array namespace for all detected array objects, or `None` if no array
-        object is found.
-
-    Raises
-    ------
-    TypeError
-        If `args` or `kwargs` contain arrays from different array libraries.
-
-    """
-    arrays = [
-        obj for obj in list(args) + list(kwargs.values()) if aac.is_array_api_obj(obj)
-    ]
-    if not arrays:
-        return None
-    return aac.array_namespace(*arrays)
-
-
-def _check_array_api_backend(xp, backends, func_name):
-    r"""Raise TypeError if xp is not among the declared supported backends.
-
-    Parameters
-    ----------
-    xp : namespace
-        Array namespace to check.
-    backends : list of str
-        Allowed backend names (e.g. `['numpy', 'torch']`).
-    func_name : str
-        Name of the calling function, used in the error message.
-
-    Raises
-    ------
-    TypeError
-        If `xp` is not a supported backend.
-
-    """
-    for name in backends:
-        checker = _BACKEND_CHECKERS.get(name)
-        if checker is not None and checker(xp):
-            return
-    supported = ", ".join(backends)
-    raise TypeError(
-        f"{func_name}() received an array from an unsupported backend. "
-        f"Supported backends are: {supported}."
-    )
-
-
 # -------------------------------------------------------------------------------------
 # Conversion and device helpers (used primarily in testing)
 # -------------------------------------------------------------------------------------

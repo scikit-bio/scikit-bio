@@ -13,7 +13,6 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from skbio.sequence import RNA
 from skbio.stats.distance import DistanceMatrix
 from skbio.sequence.distance import (
     _check_seqtype,
@@ -26,7 +25,6 @@ import skbio.sequence.distance as sk_seqdist
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
     from skbio.alignment import TabularMSA
-    from numpy.typing import NDArray
 
 
 def align_dists(
@@ -184,8 +182,10 @@ def align_dists(
     else:
         dm = np.empty(size)
 
-        # no deletion (TODO: unit test)
-        if site_mat is None:
+        # no deletion
+        # TODO: This code block cannot be reached with the current implementation.
+        # Needs refactoring.
+        if site_mat is None:  # pragma: no cover
             pos = -1
             for i in range(nseq - 1):
                 seq_i = alignment[i]

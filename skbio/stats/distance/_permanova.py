@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import math
 from functools import partial
 from warnings import warn
 from typing import TYPE_CHECKING
@@ -25,12 +26,348 @@ from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
 )
+from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
+from skbio._config import _resolve_engine
+
+try:
+    from numba import njit, prange
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
     import pandas as pd
     from skbio.util._typing import SeedLike
+
+
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_nb(distance_matrix, group_sizes, grouping):
+        """Compute s_W for full (non-condensed) distance matrix using Numba.
+
+        Replaces the following natural Numba code, which triggers a parfor
+        cycle bug in Numba 0.65.x when the scalar reduction variable is read
+        inside the inner loop::
+
+            @njit(parallel=True)
+            def _permanova_f_stat_sW_nb(
+                distance_matrix, group_sizes, grouping
+            ):
+                n = distance_matrix.shape[0]
+                s_W = 0.0
+                for row_idx in prange(n - 1):
+                    group_idx = grouping[row_idx]
+                    local_sum = 0.0
+                    for col_idx in range(row_idx + 1, n):
+                        if grouping[col_idx] == group_idx:
+                            val = distance_matrix[row_idx, col_idx]
+                            local_sum += val * val
+                    s_W += local_sum / group_sizes[group_idx]
+                return s_W
+
+        Instead, each parallel iteration writes its row-pair contribution to
+        a partials array and the final sum is performed sequentially. The
+        loop also pairs row_idx with its mirror (n - row_idx - 2) so each
+        prange iteration handles a comparable amount of work, matching the
+        Cython implementation's load-balancing pattern.
+
+        Parameters
+        ----------
+        distance_matrix : np.ndarray, shape (n, n)
+            Full symmetric distance matrix.
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects in each group (precomputed via np.bincount).
+        grouping : np.ndarray, shape (n,)
+            Integer group label for each object (values 0 to num_groups - 1).
+
+        Returns
+        -------
+        float
+            The within-group sum of squares s_W.
+
+        """
+        n = distance_matrix.shape[0]
+        n_half = n // 2
+        partials = np.zeros(n_half, np.float64)
+
+        for row_idx in prange(n_half):
+            group_idx = grouping[row_idx]
+            local_sum = 0.0
+            for col_idx in range(row_idx + 1, n):
+                if grouping[col_idx] == group_idx:
+                    # promote to float64 before squaring to match the Cython
+                    # ``double`` accumulator (matters for float32 input)
+                    val = np.float64(distance_matrix[row_idx, col_idx])
+                    local_sum += val * val
+
+            group_sum = local_sum / group_sizes[group_idx]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                group_idx = grouping[mirror_row]
+                local_sum = 0.0
+                for col_idx in range(mirror_row + 1, n):
+                    if grouping[col_idx] == group_idx:
+                        val = np.float64(distance_matrix[mirror_row, col_idx])
+                        local_sum += val * val
+                group_sum += local_sum / group_sizes[group_idx]
+
+            partials[row_idx] = group_sum
+
+        return partials.sum()
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_condensed_nb(condensed_matrix, group_sizes, grouping):
+        """Compute s_W for condensed distance matrix using Numba.
+
+        Same as ``_permanova_f_stat_sW_nb`` but accepts ``condensed_matrix``
+        in condensed form (1-D array of length ``n * (n - 1) // 2``) instead
+        of the full 2-D matrix. Uses the standard condensed-index formula to
+        map ``(row_idx, col_idx)`` pairs back to the 1-D array. The same
+        Numba 0.65.x parfor cycle workaround applies (partials array + final
+        sequential sum); see the full version for the equivalent natural
+        Numba code.
+
+        Parameters
+        ----------
+        condensed_matrix : np.ndarray, shape (k,)
+            Condensed (upper triangle) distance matrix where
+            k = n * (n - 1) // 2.
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects in each group.
+        grouping : np.ndarray, shape (n,)
+            Integer group label for each object.
+
+        Returns
+        -------
+        float
+            The within-group sum of squares s_W.
+
+        """
+        k = condensed_matrix.shape[0]
+        n = int((1.0 + math.sqrt(1.0 + 8.0 * k)) / 2.0)
+        n_half = n // 2
+        partials = np.zeros(n_half, np.float64)
+
+        for row_idx in prange(n_half):
+            group_idx = grouping[row_idx]
+            local_sum = 0.0
+            for col_idx in range(row_idx + 1, n):
+                if grouping[col_idx] == group_idx:
+                    condensed_idx = (
+                        row_idx * n + col_idx
+                        - ((row_idx + 2) * (row_idx + 1)) // 2
+                    )
+                    val = np.float64(condensed_matrix[condensed_idx])
+                    local_sum += val * val
+
+            group_sum = local_sum / group_sizes[group_idx]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                group_idx = grouping[mirror_row]
+                local_sum = 0.0
+                for col_idx in range(mirror_row + 1, n):
+                    if grouping[col_idx] == group_idx:
+                        condensed_idx = (
+                            mirror_row * n + col_idx
+                            - ((mirror_row + 2) * (mirror_row + 1)) // 2
+                        )
+                        val = condensed_matrix[condensed_idx]
+                        local_sum += val * val
+                group_sum += local_sum / group_sizes[group_idx]
+
+            partials[row_idx] = group_sum
+
+        return partials.sum()
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_rowtile_nb(
+        distance_matrix, groupings_T, inv_group_sizes, partials
+    ):
+        """Compute partial s_W for a chunk of permutations in one matrix pass.
+
+        Parallelises over distance-matrix rows (each paired with its mirror row
+        ``n - row - 2`` for load balance, as in ``_permanova_f_stat_sW_nb``)
+        rather than over permutations. Each row is owned by one worker, so each
+        distance is read from memory once per chunk and reused across all
+        permutations of the chunk, instead of streaming the whole matrix once
+        per permutation. The kernel is memory-bound, so this reuse -- not the
+        arithmetic -- is what determines its speed; it mirrors the cache reuse
+        of scikit-bio-binaries' ``pmn_f_stat_sW_cpu`` in
+        ``permanova_dyn_impl.hpp``.
+
+        The permutation loop is kept branchless (a uniform read-and-accumulate
+        over the grouping windows, with no data-dependent control flow), and
+        ``groupings_T`` is sample-major ``int32`` so each permutation's labels
+        are read as a contiguous, low-bandwidth window.
+
+        Parameters
+        ----------
+        distance_matrix : np.ndarray, shape (n, n)
+            Full symmetric distance matrix.
+        groupings_T : np.ndarray, shape (n, n_perm), int32
+            Permuted groupings, sample-major (transposed) and C-contiguous.
+        inv_group_sizes : np.ndarray, shape (num_groups,)
+            Reciprocal group sizes (``1.0 / group_sizes``), precomputed so the
+            hot loop multiplies instead of dividing.
+        partials : np.ndarray, shape (n // 2, C) with C >= n_perm
+            Reused scratch (allocated once by the caller). Each iteration zeros
+            and fills the first ``n_perm`` entries of its own row ``partials[i]``
+            with the s_W contribution of the mirror-pair it handles. The caller
+            sums the first ``n_perm`` columns over axis 0 to obtain s_W per
+            permutation.
+
+        """
+        n = distance_matrix.shape[0]
+        n_perm = groupings_T.shape[1]
+        n_half = n // 2
+
+        # Each worker owns one row (and its mirror for load balance), so each
+        # distance is read once per chunk and reused across all permutations.
+        for row_idx in prange(n_half):
+            # partials is reused across chunks, so zero this row's accumulator.
+            local_sW = partials[row_idx]
+            for p in range(n_perm):
+                local_sW[p] = 0.0
+            rsum = np.empty(n_perm, np.float64)
+
+            for p in range(n_perm):
+                rsum[p] = 0.0
+            for col in range(row_idx + 1, n):
+                # promote to float64 before squaring to match the Cython
+                # ``double`` accumulator (matters for float32 input)
+                val = np.float64(distance_matrix[row_idx, col])
+                val2 = val * val
+                # branchless: scale val2 by the 0/1 group-match instead of an
+                # if, so the loop is a uniform read-accumulate over the grouping
+                # window (no data-dependent control flow) -- val2 stays in a
+                # register and is reused for every permutation
+                for p in range(n_perm):
+                    rsum[p] += val2 * np.float64(
+                        groupings_T[col, p] == groupings_T[row_idx, p]
+                    )
+            for p in range(n_perm):
+                local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[row_idx, p]]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                for p in range(n_perm):
+                    rsum[p] = 0.0
+                for col in range(mirror_row + 1, n):
+                    val = np.float64(distance_matrix[mirror_row, col])
+                    val2 = val * val
+                    for p in range(n_perm):
+                        rsum[p] += val2 * np.float64(
+                            groupings_T[col, p] == groupings_T[mirror_row, p]
+                        )
+                for p in range(n_perm):
+                    local_sW[p] += (
+                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
+                    )
+
+    def _run_permanova_rowtile_nb(
+        distmat, grouping, group_sizes, s_T, num_groups, sample_size,
+        permutations, seed
+    ):
+        """Run PERMANOVA with the row-tile (single matrix pass) strategy.
+
+        Generates the ``permutations + 1`` groupings in fixed-size chunks and,
+        for each chunk, computes s_W via ``_permanova_f_stat_sW_rowtile_nb``,
+        which reads the distance matrix only once per chunk (parallelism is over
+        matrix rows, not permutations).  This is the cross-thread cache-reuse
+        path of scikit-bio-binaries; it is markedly faster than the
+        per-permutation kernel on large matrices, which are memory-bound.
+
+        Groupings are transposed to sample-major ``int32`` once per chunk so the
+        kernel's permutation loop reads contiguous, low-bandwidth windows; the
+        transpose costs a small fraction of the matrix scan.  Permutations are
+        drawn in the same RNG order as the sequential Monte Carlo path, so
+        p-values are unchanged.
+
+        Parameters
+        ----------
+        distmat : DistanceMatrix
+            Full (non-condensed) distance matrix.
+        grouping : np.ndarray, shape (n,)
+            Integer group labels (0-indexed).
+        group_sizes : np.ndarray, shape (num_groups,)
+            Number of objects per group.
+        s_T : float
+            Total sum of squares, precomputed by the caller.
+        num_groups : int
+            Number of distinct groups.
+        sample_size : int
+            Number of objects (n).
+        permutations : int
+            Number of Monte Carlo permutations.
+        seed : int, Generator, or None
+            Random seed passed to ``get_rng``.
+
+        Returns
+        -------
+        stat : float
+            Observed pseudo-F statistic.
+        p_value : float
+            Permutation p-value.
+
+        """
+        if permutations < 0:
+            raise ValueError(
+                "Number of permutations must be greater than or equal to zero."
+            )
+
+        rng = get_rng(seed)
+        n_total = permutations + 1
+        out_sW = np.empty(n_total, np.float64)
+        inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
+        n_half = sample_size // 2
+
+        # CHUNK is the number of permutations processed per pass over the
+        # matrix. It is not a parallelism knob (the kernel parallelises over
+        # matrix rows); it sizes each worker's private working set -- its rsum
+        # accumulator and the grouping windows it reads -- so it is a fixed
+        # constant chosen to keep that set in L1, not scaled with the thread
+        # count. It also bounds peak memory to (CHUNK x n) regardless of the
+        # permutation count.
+        CHUNK = 256
+        width = min(CHUNK, n_total)
+        # Permutation-major int32 buffer; rng.permutation fills a row, so the
+        # writes are sequential. Allocated once and reused across chunks.
+        buf = np.empty((width, sample_size), dtype=np.int32)
+        # Kernel scratch, allocated once and reused (the kernel zeros its own
+        # rows); max width is CHUNK.
+        partials = np.empty((n_half, width), np.float64)
+        for start in range(0, n_total, CHUNK):
+            end = min(start + CHUNK, n_total)
+            chunk_size = end - start
+            for i in range(start, end):
+                if i == 0:
+                    buf[0] = grouping
+                else:
+                    buf[i - start] = rng.permutation(grouping)
+
+            # Transpose to sample-major so the kernel reads each permutation's
+            # labels as a contiguous window; buf is permutation-major and buf.T
+            # is a non-contiguous view, so this materialises the C-contiguous
+            # copy the kernel needs.
+            groupings_T = np.ascontiguousarray(buf[:chunk_size].T)
+            _permanova_f_stat_sW_rowtile_nb(
+                distmat.data, groupings_T, inv_group_sizes, partials
+            )
+            # sum each row-pair's partial contribution into s_W per permutation
+            out_sW[start:end] = partials[:, :chunk_size].sum(axis=0)
+
+        s_A = s_T - out_sW
+        f_stats = (s_A / (num_groups - 1)) / (out_sW / (sample_size - num_groups))
+        stat = f_stats[0]
+        if permutations == 0:
+            return stat, np.nan
+        p_value = (1.0 + np.sum(f_stats[1:] >= stat)) / (1.0 + permutations)
+        return stat, p_value
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
@@ -40,6 +377,7 @@ def permanova(
     column: str | None = None,
     permutations: int = 999,
     seed: SeedLike | None = None,
+    engine: str | None = None,
 ) -> pd.Series:
     r"""Test for significant differences between groups using PERMANOVA.
 
@@ -108,6 +446,11 @@ def permanova(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
+    engine : {"cython", "numba"}, optional
+        Compute engine to use. ``"cython"`` (default) uses the Cython
+        implementation. ``"numba"`` uses the optional Numba implementation
+        and requires Numba to be installed. If not provided, the global
+        default is used (see :func:`skbio.set_config`).
 
     Returns
     -------
@@ -181,6 +524,8 @@ def permanova(
         distmat.ids, sample_size, grouping, column
     )
 
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
     if _skbb_permanova_available(
         distmat, grouping, permutations, seed
     ):  # pragma: no cover
@@ -211,12 +556,18 @@ def permanova(
         # so cut in half
         s_T /= 2.0
 
-    test_stat_function = partial(
-        _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
-    )
-    stat, p_value = _run_monte_carlo_stats(
-        test_stat_function, grouping, permutations, seed
-    )
+    if engine == "numba" and not distmat._flags["CONDENSED"]:
+        stat, p_value = _run_permanova_rowtile_nb(
+            distmat, grouping, group_sizes, s_T,
+            num_groups, sample_size, permutations, seed
+        )
+    else:
+        test_stat_function = partial(
+            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
+        )
+        stat, p_value = _run_monte_carlo_stats(
+            test_stat_function, grouping, permutations, seed
+        )
 
     return _build_results(
         "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
@@ -224,16 +575,28 @@ def permanova(
 
 
 def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, engine, grouping
 ):
     """Compute PERMANOVA pseudo-F statistic."""
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        s_W = permanova_f_stat_sW_condensed_cy(
-            distance_matrix.data, group_sizes, grouping
-        )
+        if engine == "numba":
+            s_W = _permanova_f_stat_sW_condensed_nb(
+                distance_matrix.data, group_sizes, grouping
+            )
+        else:
+            s_W = permanova_f_stat_sW_condensed_cy(
+                distance_matrix.data, group_sizes, grouping
+            )
     else:
-        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
+        if engine == "numba":
+            s_W = _permanova_f_stat_sW_nb(
+                distance_matrix.data, group_sizes, grouping
+            )
+        else:
+            s_W = permanova_f_stat_sW_cy(
+                distance_matrix.data, group_sizes, grouping
+            )
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))

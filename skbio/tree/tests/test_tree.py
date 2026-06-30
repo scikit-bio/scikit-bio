@@ -723,6 +723,30 @@ class TreeTests(TestCase):
         self.assertIs(n.parent, c)
         self.assertAlmostEqual(n.length, 6)
 
+    def test_prune_inplace(self):
+        """prune supports the inplace parameter and returns the tree."""
+        exp_before = "((a,b)c)extra;\n"
+        exp_after = "(a,b)c;\n"
+
+        # inplace=True (default): mutates self and returns self
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune()
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=True explicitly
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune(inplace=True)
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=False: original is untouched and a pruned copy is returned
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune(inplace=False)
+        self.assertIsNot(obs, t)
+        self.assertEqual(str(t), exp_before)
+        self.assertEqual(str(obs), exp_after)
+
     def test_shear(self):
         """Shear tree to keep given tips."""
         # LCA is root, and root is retained
@@ -951,6 +975,30 @@ class TreeTests(TestCase):
 
         for node in tree.traverse():
             self.assertIs(type(node), TreeNodeSubclass)
+
+    def test_bifurcate_inplace(self):
+        """bifurcate supports the inplace parameter and returns the tree."""
+        exp_before = "((a,b,c));\n"
+        exp_after = "((c,(a,b)));\n"
+
+        # inplace=True (default): mutates self and returns self
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate()
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=True explicitly
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate(inplace=True)
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=False: original is untouched and a bifurcated copy is returned
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate(inplace=False)
+        self.assertIsNot(obs, t)
+        self.assertEqual(str(t), exp_before)
+        self.assertEqual(str(obs), exp_after)
 
     def test_shuffle(self):
         # default behavior: all tips are shuffled, only one tree is yielded
