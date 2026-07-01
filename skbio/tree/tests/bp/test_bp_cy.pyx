@@ -338,7 +338,7 @@ def test_rmm():
     exp = np.array([[0, 1, 0, 1, 1, 0, 0, 1, 2, 1, 1, 2, 0],   # m
                     [4, 4, 4, 4, 4, 4, 0, 3, 4, 3, 4, 4, 1]],  # M
                    dtype=np.intp).T
-    obs = mM(bp.B, bp.B.size)
+    obs = mM(bp.data, bp.data.size)
 
     assert exp.shape[0] == obs.mM.shape[0]
     assert exp.shape[1] == obs.mM.shape[1]

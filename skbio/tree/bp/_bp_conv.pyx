@@ -31,11 +31,11 @@ def to_skbio_treenode(BPTree bp):
     """
     cdef int i
 
-    nodes = [skbio.TreeNode() for i in range(bp.B.sum())]
+    nodes = [skbio.TreeNode() for i in range(bp.data.sum())]
 
     root = nodes[0]
 
-    for i in range(bp.B.sum()):
+    for i in range(bp.data.sum()):
         node_idx = bp.preorderselect(i)
         nodes[i].name = bp.name(node_idx)
         nodes[i].length = bp.length(node_idx)
@@ -113,16 +113,16 @@ def to_skbio_treearray(BPTree bp):
         def is_tip(self):
             return self.is_tip_
 
-    child_index = np.zeros((int(bp.B.sum()) - bp.ntips(), 3), dtype=np.int64)
-    length = np.zeros(bp.B.sum(), dtype=np.double)
-    node_ids = np.zeros(bp.B.size, dtype=np.uint32)
-    name = np.full(bp.B.sum(), None, dtype=object)
+    child_index = np.zeros((int(bp.data.sum()) - bp.ntips(), 3), dtype=np.int64)
+    length = np.zeros(bp.data.sum(), dtype=np.double)
+    node_ids = np.zeros(bp.data.size, dtype=np.uint32)
+    name = np.full(bp.data.sum(), None, dtype=object)
 
     # TreeNode.assign_ids, decompose target
     chi_ptr = 0
     cur_index = 0  # the index into node_ids, equivalent to TreeNode.assign_ids
-    id_index = dict.fromkeys(set(range(bp.B.sum())))  # map a node's "id" to an object which indicates if it is a leaf or not
-    for i in range(bp.B.sum()):
+    id_index = dict.fromkeys(set(range(bp.data.sum())))  # map a node's "id" to an object which indicates if it is a leaf or not
+    for i in range(bp.data.sum()):
         node_idx = bp.postorderselect(i + 1)  # the index within the BP of the node
 
         if not bp.isleaf(node_idx):
@@ -143,7 +143,7 @@ def to_skbio_treearray(BPTree bp):
             chi_ptr += 1
 
     # make sure to capture root
-    id_index[bp.B.sum() - 1] = mock_node(cur_index, False)
+    id_index[bp.data.sum() - 1] = mock_node(cur_index, False)
 
     node_ids[0] = cur_index
     child_index[:, 0] = node_ids[child_index[:, 0]]

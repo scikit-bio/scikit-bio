@@ -192,7 +192,7 @@ cdef class BPTree:
 
         # the tree is only valid if it is balanced
         assert B.sum() == (float(B.size) / 2)
-        self.B = B
+        self.data = B
         self._b_ptr = &B[0]
         self.size = B.size
 
@@ -201,17 +201,17 @@ cdef class BPTree:
         if names is not None:
             self._names = names
         else:
-            self._names = np.full(self.B.size, None, dtype=object)
+            self._names = np.full(self.data.size, None, dtype=object)
 
         if lengths is not None:
             self._lengths = lengths
         else:
-            self._lengths = np.zeros(self.B.size, dtype=DOUBLE)
+            self._lengths = np.zeros(self.data.size, dtype=DOUBLE)
 
         if edges is not None:
             self._set_edges(edges)
         else:
-            self._edges = np.full(self.B.size, 0, dtype=INT32)
+            self._edges = np.full(self.data.size, 0, dtype=INT32)
             self._edge_lookup = None
 
         # precursor for select index cache
@@ -237,7 +237,7 @@ cdef class BPTree:
 
     def write(self, object fname):
         np.savez_compressed(fname, names=self._names, lengths=self._lengths,
-                            B=self.B)
+                            B=self.data)
 
     @staticmethod
     def read(object fname):
@@ -258,7 +258,7 @@ cdef class BPTree:
             cnp.ndarray[SIZE_t, ndim=1] _edge_lookup
             cnp.ndarray[BOOL_t, ndim=1] b
 
-        b = self.B
+        b = self.data
         n = b.size
 
         _edge_lookup = np.full(n, 0, dtype=SIZE)
@@ -429,7 +429,7 @@ cdef class BPTree:
                 (self.name(0), total_nodes - tip_count, tip_count)
 
     def __reduce__(self):
-        return (BPTree, (self.B, self._lengths, self._names))
+        return (BPTree, (self.data, self._lengths, self._names))
 
     cpdef SIZE_t depth(self, SIZE_t i) nogil:
         """The depth of node i"""
@@ -770,11 +770,11 @@ cdef class BPTree:
             BIT_ARRAY* mask
             BPTree new_bp
 
-        mask = bit_array_create(self.B.size)
+        mask = bit_array_create(self.data.size)
         bit_array_set_bit(mask, self.root())
         bit_array_set_bit(mask, self.close(self.root()))
 
-        for i in range(self.B.size):
+        for i in range(self.data.size):
             # isleaf is only defined on the open parenthesis
             if self.isleaf(i):
                 if self.name(i) in tips:  # gil is required for set operation
@@ -837,14 +837,14 @@ cdef class BPTree:
 
     cpdef BPTree collapse(self):
         cdef:
-            SIZE_t i, n = self.B.sum()
+            SIZE_t i, n = self.data.sum()
             SIZE_t current, first, last
             cnp.ndarray[DOUBLE_t, ndim=1] new_lengths
             BIT_ARRAY* mask
             DOUBLE_t* new_lengths_ptr
             BPTree new_bp
 
-        mask = bit_array_create(self.B.size)
+        mask = bit_array_create(self.data.size)
         bit_array_set_bit(mask, self.root())
         bit_array_set_bit(mask, self.close(self.root()))
 

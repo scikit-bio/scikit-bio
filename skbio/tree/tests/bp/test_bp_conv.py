@@ -48,8 +48,8 @@ class ConversionTests(TestCase):
         obs_bp = from_skbio_treenode(self.sktn)
         exp_bp = self.bp
 
-        npt.assert_equal(obs_bp.B, exp_bp.B)
-        for i in range(len(self.bp.B)):
+        npt.assert_equal(obs_bp.data, exp_bp.data)
+        for i in range(len(self.bp.data)):
             self.assertEqual(exp_bp.name(i), obs_bp.name(i))
             self.assertEqual(exp_bp.length(i), obs_bp.length(i))
 

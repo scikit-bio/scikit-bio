@@ -28,7 +28,7 @@ cdef class mM:
 @cython.final
 cdef class BPTree:
     cdef:
-        public cnp.ndarray B
+        public cnp.ndarray data
         BOOL_t* _b_ptr
         SIZE_t[:] _e_index
         SIZE_t[:] _k_index_0

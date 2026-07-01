@@ -131,7 +131,7 @@ class NewickTests(TestCase):
 
         obs_bp = parse_newick(in_)
 
-        npt.assert_equal(obs_bp.B, np.asarray(exp_bp, dtype=bool))
+        npt.assert_equal(obs_bp.data, np.asarray(exp_bp, dtype=bool))
 
         for i, (e_n, e_l) in enumerate(zip(exp_n, exp_l)):
             self.assertEqual(obs_bp.name(i), e_n)
@@ -149,7 +149,7 @@ class NewickTests(TestCase):
 
         obs_bp = parse_newick(in_)
 
-        npt.assert_equal(obs_bp.B, np.asarray(exp_bp, dtype=bool))
+        npt.assert_equal(obs_bp.data, np.asarray(exp_bp, dtype=bool))
 
         for i, (e_n, e_l) in enumerate(zip(exp_n, exp_l)):
             self.assertEqual(obs_bp.name(i), e_n)
@@ -163,7 +163,7 @@ class NewickTests(TestCase):
 
         obs_bp = parse_newick(in_)
 
-        npt.assert_equal(obs_bp.B, np.asarray(exp_bp, dtype=bool))
+        npt.assert_equal(obs_bp.data, np.asarray(exp_bp, dtype=bool))
 
         for i, e_n in enumerate(exp_n):
             self.assertEqual(obs_bp.name(i), e_n)
@@ -177,7 +177,7 @@ class NewickTests(TestCase):
 
         obs_bp = parse_newick(in_)
 
-        npt.assert_equal(obs_bp.B, np.asarray(exp_bp, dtype=bool))
+        npt.assert_equal(obs_bp.data, np.asarray(exp_bp, dtype=bool))
 
         for i, e_n in enumerate(exp_n):
             self.assertEqual(obs_bp.name(i), e_n)
@@ -192,7 +192,7 @@ class NewickTests(TestCase):
 
         obs_bp = parse_newick(in_)
 
-        npt.assert_equal(obs_bp.B, np.asarray(exp_bp, dtype=bool))
+        npt.assert_equal(obs_bp.data, np.asarray(exp_bp, dtype=bool))
 
         for i, (e_n, e_l) in enumerate(zip(exp_n, exp_l)):
             self.assertEqual(obs_bp.name(i), e_n)

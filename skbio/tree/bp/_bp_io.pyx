@@ -110,7 +110,7 @@ def write_newick(BPTree tree, object output, bint include_edge):
     open_paren_stack = []
     root_close = tree.close(0)
 
-    for idx, v in enumerate(tree.B):
+    for idx, v in enumerate(tree.data):
         if v:
             if not tree.isleaf(idx):
                 output.write('(')
@@ -161,12 +161,12 @@ cpdef parse_newick(unicode data):
     datalen = len(data)
     topology = _newick_to_bp(data)
 
-    if len(topology.B) <= 2:
+    if len(topology.data) <= 2:
         raise ValueError("Only trees with more than 1 node supported")
 
-    names = np.full(len(topology.B), None, dtype=object)
-    lengths = np.zeros(len(topology.B), dtype=np.double)
-    edges = np.full(len(topology.B), 0, dtype=np.int32)
+    names = np.full(len(topology.data), None, dtype=object)
+    lengths = np.zeros(len(topology.data), dtype=np.double)
+    edges = np.full(len(topology.data), 0, dtype=np.int32)
 
     ptr = 0
     token_ptr = _ctoken(data, datalen, 0)
@@ -373,7 +373,7 @@ def parse_jplace(object data):
                 placements.append(entry)
 
     tree = parse_newick(newick)
-    edges = {tree.edge(i) for i, v in enumerate(tree.B) if v}
+    edges = {tree.edge(i) for i, v in enumerate(tree.data) if v}
     df = pd.DataFrame(placements, columns=fields)
     df = df[df['edge_num'].isin(edges)]
 

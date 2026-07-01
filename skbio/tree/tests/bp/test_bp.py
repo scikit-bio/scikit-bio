@@ -205,7 +205,7 @@ class BPTests(TestCase):
 
     def test_close(self):
         exp = [21, 10, 3, 5, 9, 8, 12, 20, 19, 16, 18]
-        for i, e in zip(np.argwhere(self.bptree.B == 1).squeeze(), exp):
+        for i, e in zip(np.argwhere(self.bptree.data == 1).squeeze(), exp):
             npt.assert_equal(self.bptree.close(i), e)
 
     def test_lca(self):
@@ -253,15 +253,15 @@ class BPTests(TestCase):
                           None, None, None])
         exp_l = np.array([0, 1, 3, 0, 4, 5, 0, 0, 0, 6, 0, 7, 8, 9, 0, 10, 0, 0, 0, 0], dtype=np.double)
         obs = self.bptree.shear(in_)
-        npt.assert_equal(exp, obs.B)
+        npt.assert_equal(exp, obs.data)
 
-        for i in range(len(obs.B)):
+        for i in range(len(obs.data)):
             self.assertEqual(obs.name(i), exp_n[i])
             self.assertEqual(obs.length(i), exp_l[i])
 
         in_ = {'10', '11'}
         exp = np.array([1, 1, 1, 1, 0, 1, 0, 0, 0, 0], dtype=np.uint32)
-        obs = self.bptree.shear(in_).B
+        obs = self.bptree.shear(in_).data
         npt.assert_equal(obs, exp)
 
     def test_shear_raise_tree_is_empty(self):
@@ -286,28 +286,28 @@ class BPTests(TestCase):
 
         obs = self.bptree.collapse()
 
-        npt.assert_equal(obs.B, exp)
-        for i in range(len(obs.B)):
+        npt.assert_equal(obs.data, exp)
+        for i in range(len(obs.data)):
             self.assertEqual(obs.name(i), exp_n[i])
             self.assertEqual(obs.length(i), exp_l[i])
 
         bp = BPTree(np.array([1, 1, 1, 0, 0, 1, 0, 0], dtype=np.uint8))
         exp = np.array([1, 1, 0, 1, 0, 0])
-        obs = bp.collapse().B
+        obs = bp.collapse().data
 
         npt.assert_equal(obs, exp)
 
     def test_name_unset(self):
-        for i in range(self.bptree.B.size):
+        for i in range(self.bptree.data.size):
             self.assertEqual(self.bptree.name(i), None)
 
     def test_length_unset(self):
-        for i in range(self.bptree.B.size):
+        for i in range(self.bptree.data.size):
             self.assertEqual(self.bptree.length(i), 0.0)
 
     def test_name_length_set(self):
-        names = np.full(self.bptree.B.size, None, dtype=object)
-        lengths = np.zeros(self.bptree.B.size, dtype=np.double)
+        names = np.full(self.bptree.data.size, None, dtype=object)
+        lengths = np.zeros(self.bptree.data.size, dtype=np.double)
 
         names[0] = 'root'
         names[self.bptree.preorderselect(7)] = 'other'
