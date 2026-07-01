@@ -93,6 +93,27 @@ cdef void _set_node_metadata(cnp.uint32_t ptr, unicode token,
 
 
 def write_newick(BPTree tree, object output, bint include_edge):
+    """Write a BPTree as a Newick string.
+
+    Parameters
+    ----------
+    tree : BPTree
+        The tree to serialize.
+    output : file-like object
+        An open, writable handle (anything with a ``write`` method) that the
+        Newick string is written to.
+    include_edge : bool
+        If ``True``, write each node's edge number alongside its branch length
+        using the ``:length{edge}`` convention. If ``False``, write the branch
+        length only.
+
+    Notes
+    -----
+    The string is written in place to ``output``; the function returns nothing.
+    Node names containing any of the characters ``;``, ``,``, ``(``, ``)``,
+    ``:``, or ``_`` are wrapped in single quotes.
+
+    """
     cdef:
         list name_stack
         list edge_stack
@@ -145,6 +166,28 @@ def write_newick(BPTree tree, object output, bint include_edge):
 
 
 cpdef parse_newick(unicode data):
+    """Parse a Newick string into a BPTree.
+
+    Parameters
+    ----------
+    data : str
+        A Newick-formatted string, terminated with a semicolon (``;``). Branch
+        lengths and edge numbers (delimited by ``{}`` or ``[]``) are parsed if
+        present.
+
+    Returns
+    -------
+    BPTree
+        The tree topology, with names, branch lengths, and edge numbers
+        attached.
+
+    Raises
+    ------
+    ValueError
+        If ``data`` is not terminated with a semicolon, or if it describes a
+        tree with only a single node.
+
+    """
     cdef:
         cnp.uint32_t ptr, open_ptr
         Py_ssize_t token_ptr, tmp, lag, datalen
@@ -321,18 +364,38 @@ cdef inline Py_ssize_t _ctoken(unicode data, Py_ssize_t datalen, Py_ssize_t star
 
 
 def parse_jplace(object data):
-    """Takes a jplace string, returns a DataFrame of placements and the tree
+    """Parse a jplace string into a placement table and a tree.
 
-    Implementation specific caveats:
+    Parameters
+    ----------
+    data : str
+        A jplace-formatted JSON string, as produced by phylogenetic placement
+        tools.
 
-    1) we do not support multiplicities. placements are required to have an "n"
-        entry, and we ignore "nm"
-    2) Matsen et al (https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0031009)
-        define [] for denoting edge labels and {} for denoting edge numbers. We
-        currently support either [] OR {}, we do not support edges with both.
-        In addition, we REQUIRE the edge labels if specified to be integer.
+    Returns
+    -------
+    pandas.DataFrame
+        The placements, with one row per (fragment, placement) pair. Columns
+        are ``fragment`` followed by the ``fields`` declared in the jplace
+        document. Rows are restricted to edges present in the tree.
+    BPTree
+        The reference tree parsed from the jplace ``tree`` entry.
 
-    If either of these caveats are problems, then we need to modify the code.
+    Notes
+    -----
+    Implementation-specific caveats:
+
+    1. Multiplicities are not supported. Placements are required to have an
+       ``"n"`` entry, and any ``"nm"`` entry is ignored.
+    2. Matsen et al. [1]_ define ``[]`` for edge labels and ``{}`` for edge
+       numbers. Either ``[]`` or ``{}`` is supported, but not edges with both.
+       Edge labels, if specified, are required to be integers.
+
+    References
+    ----------
+    .. [1] Matsen FA, Hoffman NG, Gallagher A, Stamatakis A. (2012). A format
+       for phylogenetic placements. PLoS ONE 7(2): e31009.
+
     """
     cdef:
         dict as_json

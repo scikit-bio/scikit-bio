@@ -74,6 +74,36 @@ Tree utilities
     majority_rule
 
 
+Balanced parentheses (BP) representation
+----------------------------------------
+
+A succinct, memory-efficient encoding of tree topology, ported from
+improved-octo-waddle. Suited to very large trees and phylogenetic placement.
+The public objects below live in :mod:`skbio.tree.bp` and are also importable
+directly from :mod:`skbio.tree`.
+
+.. autosummary::
+   :toctree: generated/
+   :template: BP.rst
+
+    BPTree
+
+
+BP input/output and conversion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+
+    parse_newick
+    write_newick
+    parse_jplace
+    to_skbio_treenode
+    from_skbio_treenode
+    to_skbio_treearray
+    insert_fully_resolved
+
+
 Exceptions
 ^^^^^^^^^^
 

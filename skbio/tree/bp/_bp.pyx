@@ -146,15 +146,15 @@ cdef class mM:
 
 @cython.final
 cdef class BPTree:
-    """A balanced parentheses succinct data structure tree representation
+    """A balanced parentheses succinct data structure tree representation.
 
     The basis for this implementation is the data structure described by
     Cordova and Navarro [1]. In some instances, some docstring text was copied
     verbatim from the manuscript. This does not implement the bucket-based
-    trees, although that would be a very interesting next step.
+    trees.
 
     A node in this data structure is represented by 2 bits, an open parenthesis
-    and a close parenthesis. The implementation uses a numpy uint8 type where
+    and a close parenthesis. The implementation uses a NumPy uint8 type where
     an open parenthesis is a 1 and a close is a 0. In general, operations on
     this tree are best suited for passing in the opening parenthesis index, so
     for instance, if you'd like to use BPTree.isleaf to determine if a node is a
@@ -168,6 +168,12 @@ cdef class BPTree:
     time. As such, there is minimal sanity checking. It is advised to use this
     structure with care, and ideally within a framework which can assure
     sanity.
+
+    Attributes
+    ----------
+    data : numpy.ndarray of uint8
+        The parentheses bit array encoding the tree topology, where an open
+        parenthesis is 1 and a close parenthesis is 0.
 
     References
     ----------
@@ -236,11 +242,42 @@ cdef class BPTree:
         self._e_index = _e_index
 
     def write(self, object fname):
+        """Save the tree to a compressed NumPy ``.npz`` archive.
+
+        The parentheses bit array, node names, and branch lengths are stored.
+
+        Parameters
+        ----------
+        fname : str or file-like object
+            Path or open file handle to write to.
+
+        See Also
+        --------
+        read
+
+        """
         np.savez_compressed(fname, names=self._names, lengths=self._lengths,
                             B=self.data)
 
     @staticmethod
     def read(object fname):
+        """Load a tree from a NumPy ``.npz`` archive written by ``write``.
+
+        Parameters
+        ----------
+        fname : str or file-like object
+            Path or open file handle to read from.
+
+        Returns
+        -------
+        BPTree
+            The reconstructed tree, with node names and branch lengths.
+
+        See Also
+        --------
+        write
+
+        """
         data = np.load(fname)
         bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
         return bp
@@ -390,7 +427,7 @@ cdef class BPTree:
         return min_k
 
     cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil:
-        """The leftmost maximmum excess in i -> j"""
+        """The leftmost maximmum excess in i -> j."""
         cdef:
             SIZE_t k, max_k
             SIZE_t max_v, obs_v
@@ -406,16 +443,16 @@ cdef class BPTree:
         return max_k
 
     def __len__(self):
-        """The number of nodes in the tree"""
+        """The number of nodes in the tree."""
         return self.size / 2
 
     def __repr__(self):
-        """Returns summary of the tree
+        """Returns summary of the tree.
 
         Returns
         -------
         str
-            A summary of this node and all descendants
+            A summary of this tree
 
         Notes
         -----
@@ -432,26 +469,37 @@ cdef class BPTree:
         return (BPTree, (self.data, self._lengths, self._names))
 
     cpdef SIZE_t depth(self, SIZE_t i) nogil:
-        """The depth of node i"""
+        """The depth of given node."""
         return self._e_index[i]
 
     cpdef SIZE_t root(self) nogil:
-        """The root of the tree"""
+        """The index of the root node of the tree."""
         return 0
 
     cpdef SIZE_t parent(self, SIZE_t i) nogil:
-        """The parent of node i"""
+        """The parent of node.
+
+        Parameters
+        -------
+        i : int
+            Index of node.
+
+        Returns
+        -------
+        int
+            Index of parent node. Returns -1 if node does not have a parent.
+        """
         if i == self.root() or i == (self.size - 1):
             return -1
         else:
             return self.enclose(i)
 
     cpdef BOOL_t isleaf(self, SIZE_t i) nogil:
-        """Whether the node is a leaf"""
+        """Whether the node is a leaf."""
         return self._b_ptr[i] and (not self._b_ptr[i + 1])
 
     cpdef SIZE_t fchild(self, SIZE_t i) nogil:
-        """The first child of i (i.e., the left child)
+        """The first child of i (i.e., the left child).
 
         fchild(i) = i + 1 (if i is not a leaf)
 
@@ -467,7 +515,7 @@ cdef class BPTree:
             return self.fchild(self.open(i))
 
     cpdef SIZE_t lchild(self, SIZE_t i) nogil:
-        """The last child of i (i.e., the right child)
+        """The last child of i (i.e., the right child).
 
         lchild(i) = open(close(i) - 1) (if i is not a leaf)
 
@@ -545,7 +593,9 @@ cdef class BPTree:
             return 0
 
     cpdef SIZE_t preorder(self, SIZE_t i) nogil:
-        """Preorder rank of node i
+        """Preorder rank of given node.
+
+        The inverse of preorderselect().
 
         Parameters
         ----------
@@ -555,7 +605,7 @@ cdef class BPTree:
         Returns
         -------
         int
-            The nodes order of evaluation in a preorder traversal of the tree.
+            The node's order of evaluation in a preorder traversal of the tree.
         """
         if self._b_ptr[i]:
             return self.rank(1, i)
@@ -563,7 +613,9 @@ cdef class BPTree:
             return self.preorder(self.open(i))
 
     cpdef SIZE_t preorderselect(self, SIZE_t k) nogil:
-        """The index of the node with preorder k
+        """The index of the node with given preorder rank.
+
+        The inverse of preorder().
 
         Parameters
         ----------
@@ -578,7 +630,9 @@ cdef class BPTree:
         return self.select(1, k)
 
     cpdef SIZE_t postorder(self, SIZE_t i) nogil:
-        """Postorder rank of node i
+        """Postorder rank of given node.
+
+        The inverse of postorderselect().
 
         Parameters
         ----------
@@ -588,7 +642,7 @@ cdef class BPTree:
         Returns
         -------
         int
-            The nodes order of evaluation in a postorder traversal of the tree.
+            The node's order of evaluation in a postorder traversal of the tree.
         """
         if self._b_ptr[i]:
             return self.rank(0, self.close(i))
@@ -596,7 +650,7 @@ cdef class BPTree:
             return self.rank(0, i)
 
     cpdef SIZE_t postorderselect(self, SIZE_t k) nogil:
-        """The index of the node with postorder k
+        """The index of the node with given postorder rank.
 
         Parameters
         ----------
@@ -611,7 +665,7 @@ cdef class BPTree:
         return self.open(self.select(0, k))
 
     cpdef BOOL_t isancestor(self, SIZE_t i, SIZE_t j) nogil:
-        """Whether i is an ancestor of j
+        """Whether a node is an ancestor of another node.
 
         Parameters
         ----------
@@ -638,12 +692,12 @@ cdef class BPTree:
         return i <= j < self.close(i)
 
     cpdef SIZE_t subtree(self, SIZE_t i) nogil:
-        """The number of nodes in the subtree of i
+        """The number of nodes in the subtree of given node.
 
         Parameters
         ----------
         i : int
-            The node to evaluate
+            The index of node to evaluate
 
         Returns
         -------
@@ -656,12 +710,12 @@ cdef class BPTree:
         return (self.close(i) - i + 1) / 2
 
     cpdef SIZE_t levelancestor(self, SIZE_t i, SIZE_t d) nogil:
-        """The ancestor j of i such that depth(j) = depth(i) - d
+        """The index of the ancestor of the given node's ancestor that is `d` steps away.
 
         Parameters
         ----------
         i : int
-            The node to evaluate
+            The index of node to evaluate
 
         d : int
             How many ancestors back to evaluate
@@ -669,7 +723,7 @@ cdef class BPTree:
         Returns
         -------
         int
-            The node index of the ancestor to search for
+            The node index of the ancestor to search for. Returns -1 if `d` is non-positive.
         """
         if d <= 0:
             return -1
@@ -680,7 +734,7 @@ cdef class BPTree:
         return self.bwdsearch(i, -d - 1) + 1
 
     cpdef SIZE_t levelnext(self, SIZE_t i) nogil:
-        """The next node with the same depth
+        """The next node with the same depth.
 
         Parameters
         ----------
@@ -695,14 +749,14 @@ cdef class BPTree:
         return self.fwdsearch(self.close(i), 1)
 
     cpdef SIZE_t lca(self, SIZE_t i, SIZE_t j) nogil:
-        """The lowest common ancestor of i and j
+        """The lowest common ancestor of two nodes.
 
         Parameters
         ----------
         i : int
             A node index to evaluate
         j : int
-            A node index to evalute
+            A node index to evaluate
 
         Returns
         -------
@@ -717,7 +771,7 @@ cdef class BPTree:
             return self.parent(self.rmq(i, j) + 1)
 
     cpdef SIZE_t deepestnode(self, SIZE_t i) nogil:
-        """The index of the deepestnode which descends from i
+        """The index of the deepest node which descends from a given node.
 
         Parameters
         ----------
@@ -751,7 +805,7 @@ cdef class BPTree:
         return self.excess(self.deepestnode(i)) - self.excess(self.open(i))
 
     cpdef BPTree shear(self, set tips):
-        """Remove all nodes from the tree except tips and ancestors of tips
+        """Remove all nodes from the tree except tips and ancestors of tips.
 
         Parameters
         ----------
@@ -836,6 +890,26 @@ cdef class BPTree:
         return BPTree(np.asarray(new_b), names=new_names, lengths=new_lengths)
 
     cpdef BPTree collapse(self):
+        """Collapse single-child internal nodes.
+
+        Every internal node with exactly one child is removed from the tree,
+        and the removed node's branch length is added to that of its single
+        child so that root-to-tip path lengths are preserved. The root and all
+        tips are always retained, as are internal nodes with two or more
+        children.
+
+        Returns
+        -------
+        BPTree
+            A new tree with all single-child internal nodes removed. Node names
+            and the merged branch lengths are carried over; edge numbers are
+            not retained.
+
+        Notes
+        -----
+        A new ``BPTree`` is returned; the original tree is not modified.
+
+        """
         cdef:
             SIZE_t i, n = self.data.sum()
             SIZE_t current, first, last
@@ -874,6 +948,14 @@ cdef class BPTree:
         return new_bp
 
     cpdef inline SIZE_t ntips(self) nogil:
+        """The number of tips (leaves) in the tree.
+
+        Returns
+        -------
+        int
+            The count of leaf nodes.
+
+        """
         cdef:
             SIZE_t i = 0
             SIZE_t count = 0
@@ -888,7 +970,7 @@ cdef class BPTree:
         return count
 
     cdef int scan_block_forward(self, int i, int k, int b, int d) nogil:
-        """Scan a block forward from i
+        """Scan a block forward from i.
 
         Parameters
         ----------
@@ -925,7 +1007,7 @@ cdef class BPTree:
         return -1
 
     cdef int scan_block_backward(self, int i, int k, int b, int d) nogil:
-        """Scan a block backward from i
+        """Scan a block backward from i.
 
         Parameters
         ----------
@@ -971,7 +1053,7 @@ cdef class BPTree:
         return -1
 
     cdef SIZE_t fwdsearch(self, SIZE_t i, int d) nogil:
-        """Search forward from i for desired excess
+        """Search forward from i for desired excess.
 
         Parameters
         ----------
