@@ -216,7 +216,7 @@ def unpack(x, U_shape, V_shape):
     return dU, dV
 
 
-def solve_gauss_newton_step(U, V, S, observed_mask, R, tol):
+def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
     """Solve (J_UV* J_UV)dx = -J_UV* R.
 
     The Gauss-Newton step is the vector dx = (dU, dV), where dU and dV are
@@ -243,7 +243,7 @@ def solve_gauss_newton_step(U, V, S, observed_mask, R, tol):
         dtype=U.dtype,
     )
 
-    step = lsmr(J_UV, -R.ravel(), atol=tol, btol=tol)[0]
+    step = lsmr(J_UV, -R.ravel(), atol=tol, btol=tol, damp=damp)[0]
 
     return unpack(step, U.shape, V.shape)
 
@@ -401,8 +401,9 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
 
     # Iteratively solve for U, V, and S by minimizing the objective
     prev_obj = np.inf
+    damp = n_observed / (m * n)
 
-    for _ in range(max_iter):
+    for i in range(max_iter):
         # Compute optimal S given current U, V
         S = _solve_S(U, V, b, observed_mask, tol)
 
@@ -412,6 +413,8 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
         # Current objective (Frobenius norm of error over observed entries)
         obj = np.sum(R**2)
 
+        print(f"Iteration: {i}, obj: {obj}")
+
         # Check convergence
         if np.abs(prev_obj - obj) < tol:
             break
@@ -419,7 +422,7 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
         prev_obj = obj
 
         # Compute Gauss-Newton step
-        dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol)
+        dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp)
 
         # Retract updates back to Grassmann manifold
         U = retract_grassmann(U, dU)
