@@ -11,7 +11,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._bp cimport BP
+from ._bp cimport BPTree
 from ._bp_conv import to_skbio_treenode
 import pandas as pd
 import json
@@ -77,15 +77,15 @@ def _insert_setup(placements, bptree, insert_type):
 
 
 # pd.DataFrame is not a resolved type so we cannot use it here for cython
-def insert_fully_resolved(object placements, BP bptree):
+def insert_fully_resolved(object placements, BPTree bptree):
     """Update the backbone, fully resolving edges with multiple queries
 
     Parameters
     ----------
     placements : pd.DataFrame
         jplace data represented as a DataFrame
-    bptree : bp.BP
-        An instance of a BP tree, this is expected to contain edge numbers
+    bptree : bp.BPTree
+        An instance of a BPTree, this is expected to contain edge numbers
         and correspond to the backbone for the jplace data
 
     Returns

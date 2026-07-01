@@ -13,16 +13,16 @@ import skbio
 import numpy as np
 cimport numpy as cnp
 
-from ._bp cimport BP
+from ._bp cimport BPTree
 
 
-def to_skbio_treenode(BP bp):
-    """Convert BP to TreeNode
+def to_skbio_treenode(BPTree bp):
+    """Convert BPTree to TreeNode
 
     Parameters
     ----------
-    bp : BP
-        A BP tree
+    bp : BPTree
+        A BPTree
 
     Returns
     -------
@@ -53,7 +53,7 @@ def to_skbio_treenode(BP bp):
 
 
 def from_skbio_treenode(tree):
-    """Convert a skbio TreeNode into BP
+    """Convert a skbio TreeNode into BPTree
 
     Parameters
     ----------
@@ -63,7 +63,7 @@ def from_skbio_treenode(tree):
     Returns
     -------
     tuple
-        (BP, np.array of str, np.array of double)
+        (BPTree, np.array of str, np.array of double)
     """
     n_nodes = len(list(tree.traverse(include_self=True)))
 
@@ -87,16 +87,16 @@ def from_skbio_treenode(tree):
             seen.add(n)
 
         ptr += 1
-    return BP(topo, names=names, lengths=lengths, edges=edges)
+    return BPTree(topo, names=names, lengths=lengths, edges=edges)
 
 
-def to_skbio_treearray(BP bp):
+def to_skbio_treearray(BPTree bp):
     """Convert to a tree array comparable to TreeNode.to_array
 
     Parameters
     ----------
-    bp : BP
-        A BP tree
+    bp : BPTree
+        A BPTree
 
     Returns
     -------

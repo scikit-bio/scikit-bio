@@ -610,7 +610,7 @@ from ._exception import (
     NoParentError,
 )
 from .bp import (
-    BP,
+    BPTree,
     parse_newick,
     write_newick,
     parse_jplace,
@@ -636,7 +636,7 @@ __all__ = [
     "DuplicateNodeError",
     "MissingNodeError",
     "NoParentError",
-    "BP",
+    "BPTree",
     "parse_newick",
     "write_newick",
     "parse_jplace",

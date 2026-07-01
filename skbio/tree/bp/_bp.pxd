@@ -26,7 +26,7 @@ cdef class mM:
 
 
 @cython.final
-cdef class BP:
+cdef class BPTree:
     cdef:
         public cnp.ndarray B
         BOOL_t* _b_ptr
@@ -50,7 +50,7 @@ cdef class BP:
     cdef inline SIZE_t open(self, SIZE_t i) nogil
     cpdef inline BOOL_t isleaf(self, SIZE_t i) nogil
     cdef inline SIZE_t enclose(self, SIZE_t i) nogil
-    cdef BP _mask_from_self(self, BIT_ARRAY* mask, cnp.ndarray[DOUBLE_t, ndim=1] lengths)
+    cdef BPTree _mask_from_self(self, BIT_ARRAY* mask, cnp.ndarray[DOUBLE_t, ndim=1] lengths)
     cpdef SIZE_t nsibling(self, SIZE_t i) nogil
     cpdef SIZE_t psibling(self, SIZE_t i) nogil
     cpdef SIZE_t lchild(self, SIZE_t i) nogil
@@ -75,8 +75,8 @@ cdef class BP:
     cpdef BOOL_t isancestor(self, SIZE_t i, SIZE_t j) nogil
     cpdef SIZE_t levelancestor(self, SIZE_t i, SIZE_t d) nogil
     cpdef SIZE_t subtree(self, SIZE_t i) nogil
-    cpdef BP shear(self, set tips)
-    cpdef BP collapse(self)
+    cpdef BPTree shear(self, set tips)
+    cpdef BPTree collapse(self)
     cpdef SIZE_t ntips(self) nogil
     cpdef SIZE_t levelnext(self, SIZE_t i) nogil
     cpdef SIZE_t height(self, SIZE_t i) nogil

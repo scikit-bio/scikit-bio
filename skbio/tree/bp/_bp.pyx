@@ -145,7 +145,7 @@ cdef class mM:
 
 
 @cython.final
-cdef class BP:
+cdef class BPTree:
     """A balanced parentheses succinct data structure tree representation
 
     The basis for this implementation is the data structure described by
@@ -157,7 +157,7 @@ cdef class BP:
     and a close parenthesis. The implementation uses a numpy uint8 type where
     an open parenthesis is a 1 and a close is a 0. In general, operations on
     this tree are best suited for passing in the opening parenthesis index, so
-    for instance, if you'd like to use BP.isleaf to determine if a node is a
+    for instance, if you'd like to use BPTree.isleaf to determine if a node is a
     leaf, the operation is defined only for using the opening parenthesis. At
     this time, there is some ambiguity over what methods can handle a closing
     parenthesis.
@@ -242,7 +242,7 @@ cdef class BP:
     @staticmethod
     def read(object fname):
         data = np.load(fname)
-        bp = BP(data['B'], names=data['names'], lengths=data['lengths'])
+        bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
         return bp
 
     def set_names(self, cnp.ndarray[object, ndim=1] names):
@@ -425,11 +425,11 @@ cdef class BP:
         cdef total_nodes = len(self)
         cdef tip_count = self.ntips()
 
-        return "<BP, name: %s, internal node count: %d, tips count: %d>" % \
+        return "<BPTree, name: %s, internal node count: %d, tips count: %d>" % \
                 (self.name(0), total_nodes - tip_count, tip_count)
 
     def __reduce__(self):
-        return (BP, (self.B, self._lengths, self._names))
+        return (BPTree, (self.B, self._lengths, self._names))
 
     cpdef SIZE_t depth(self, SIZE_t i) nogil:
         """The depth of node i"""
@@ -750,7 +750,7 @@ cdef class BP:
         """
         return self.excess(self.deepestnode(i)) - self.excess(self.open(i))
 
-    cpdef BP shear(self, set tips):
+    cpdef BPTree shear(self, set tips):
         """Remove all nodes from the tree except tips and ancestors of tips
 
         Parameters
@@ -760,15 +760,15 @@ cdef class BP:
 
         Returns
         -------
-        BP
-            A new BP tree corresponding to only the described tips and their
+        BPTree
+            A new BPTree corresponding to only the described tips and their
             ancestors.
         """
         cdef:
             SIZE_t i, n = len(tips)
             SIZE_t p, t, count = 0
             BIT_ARRAY* mask
-            BP new_bp
+            BPTree new_bp
 
         mask = bit_array_create(self.B.size)
         bit_array_set_bit(mask, self.root())
@@ -798,7 +798,7 @@ cdef class BP:
         bit_array_free(mask)
         return new_bp
 
-    cdef BP _mask_from_self(self, BIT_ARRAY* mask,
+    cdef BPTree _mask_from_self(self, BIT_ARRAY* mask,
                             cnp.ndarray[DOUBLE_t, ndim=1] lengths):
         cdef:
             SIZE_t i, k, n, mask_sum
@@ -833,16 +833,16 @@ cdef class BP:
                 new_lengths_ptr[k] = lengths_ptr[i]
                 k += 1
 
-        return BP(np.asarray(new_b), names=new_names, lengths=new_lengths)
+        return BPTree(np.asarray(new_b), names=new_names, lengths=new_lengths)
 
-    cpdef BP collapse(self):
+    cpdef BPTree collapse(self):
         cdef:
             SIZE_t i, n = self.B.sum()
             SIZE_t current, first, last
             cnp.ndarray[DOUBLE_t, ndim=1] new_lengths
             BIT_ARRAY* mask
             DOUBLE_t* new_lengths_ptr
-            BP new_bp
+            BPTree new_bp
 
         mask = bit_array_create(self.B.size)
         bit_array_set_bit(mask, self.root())

@@ -10,18 +10,18 @@ import numpy.testing as npt
 import numpy as np
 cimport numpy as cnp
 
-from skbio.tree.bp._bp cimport BP, mM
+from skbio.tree.bp._bp cimport BPTree, mM
 
 fig1_B = np.array([1, 1, 1, 0, 1, 0, 1, 1 ,0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0,
                    0, 0, 0], dtype=np.uint8)
 
 
 def get_test_obj():
-    return BP(fig1_B)
+    return BPTree(fig1_B)
 
 
 def test_rank():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     counts_1 = fig1_B.cumsum()
     counts_0 = (1 - fig1_B).cumsum()
     for exp, t in zip((counts_1, counts_0), (1, 0)):
@@ -30,7 +30,7 @@ def test_rank():
 
 
 def test_select():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
     pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
 
@@ -40,13 +40,13 @@ def test_select():
 
 
 def test_rank_property():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     for i in range(len(fig1_B)):
         npt.assert_equal(obj.rank(1, i) + obj.rank(0, i), i+1)
 
 
 def test_rank_select_property():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
     pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
     for t, pos in zip((0, 1), (pos_0, pos_1)):
@@ -56,7 +56,7 @@ def test_rank_select_property():
 
 
 def test_excess():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     # from fig 2
     exp = [1, 2, 3, 2, 3, 2, 3, 4, 3, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 2, 1, 0]
     for idx, e in enumerate(exp):
@@ -64,7 +64,7 @@ def test_excess():
 
 
 def test_depth():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     # from fig 2
     exp = [1, 2, 3, 2, 3, 2, 3, 4, 3, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 2, 1, 0]
     for idx, e in enumerate(exp):
@@ -72,7 +72,7 @@ def test_depth():
 
 
 def test_close():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [21, 10, 3, 5, 9, 8, 12, 20, 19, 16, 18]
     for i, e in zip(np.argwhere(fig1_B == 1).squeeze(), exp):
         npt.assert_equal(obj.close(i), e)
@@ -80,7 +80,7 @@ def test_close():
 
 
 def test_open():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [2, 4, 7, 6, 1, 11, 15, 17, 14, 13, 0]
     for i, e in zip(np.argwhere(fig1_B == 0).squeeze(), exp):
         npt.assert_equal(obj.open(i), e)
@@ -89,7 +89,7 @@ def test_open():
 
 
 def test_enclose():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     # i > 0 and i < (len(B) - 1)
     exp = [0, 1, 1, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 13, 14, 14, 14, 14, 13, 0]
     for i, e in zip(range(1, len(fig1_B) - 1), exp):
@@ -97,7 +97,7 @@ def test_enclose():
 
 
 def test_parent():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [-1, 0, 1, 1, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 13, 14, 14, 14, 14, 13,
            0, -1]
     for i, e in zip(range(len(fig1_B)), exp):
@@ -105,12 +105,12 @@ def test_parent():
 
 
 def test_root():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     npt.assert_equal(obj.root(), 0)
 
 
 def test_isleaf():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
 
     exp = [0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
     for i, e in enumerate(exp):
@@ -118,7 +118,7 @@ def test_isleaf():
 
 
 def test_fchild():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [1, 2, 0, 0, 0, 0, 7, 0, 0, 7, 2, 0, 0, 14, 15, 0, 0, 0, 0, 15, 14,
            1]
     for i, e in enumerate(exp):
@@ -126,7 +126,7 @@ def test_fchild():
 
 
 def test_lchild():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [obj.preorderselect(7),
            obj.preorderselect(4),
            0,
@@ -154,7 +154,7 @@ def test_lchild():
 
 
 def test_nsibling():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [0, 11, 4, 4, 6, 6, 0, 0, 0, 0, 11, 13, 13, 0, 0, 17, 17, 0, 0, 0, 0,
            0]
     for i, e in enumerate(exp):
@@ -162,7 +162,7 @@ def test_nsibling():
 
 
 def test_psibling():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = [0, 0, 0, 0, 2, 2, 4, 0, 0, 4, 0, 1, 1, 11, 0, 0, 0, 15, 15, 0, 11,
            0]
     for i, e in enumerate(exp):
@@ -170,7 +170,7 @@ def test_psibling():
 
 
 def test_fwdsearch():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = {(0, 0): 10,   # close of first child
            (3, -2): 21,  # close of root
            (11, 2): 15}  # from one tip to the next
@@ -180,7 +180,7 @@ def test_fwdsearch():
 
 
 def test_bwdsearch():
-    cdef BP obj = get_test_obj()
+    cdef BPTree obj = get_test_obj()
     exp = {(3, 0): 1,  # open of parent
            (21, 4): 17,  # nested tip
            (9, 2): 7}  # open of the node
@@ -190,7 +190,7 @@ def test_bwdsearch():
 
 
 def test_fwdsearch_more():
-    cdef BP bp
+    cdef BPTree bp
     from skbio.tree import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
@@ -224,7 +224,7 @@ def test_fwdsearch_more():
 
 
 def test_bwdsearch_more():
-    cdef BP bp
+    cdef BPTree bp
     from skbio.tree import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
@@ -255,7 +255,7 @@ def test_bwdsearch_more():
 
 
 def test_scan_block_forward():
-    cdef BP bp
+    cdef BPTree bp
     from skbio.tree import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
@@ -292,7 +292,7 @@ def test_scan_block_forward():
 
 
 def test_scan_block_backward():
-    cdef BP bp
+    cdef BPTree bp
     from skbio.tree import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
@@ -329,7 +329,7 @@ def test_scan_block_backward():
 
 
 def test_rmm():
-    cdef BP bp
+    cdef BPTree bp
     from skbio.tree import parse_newick
     # test tree is ((a,b,(c)),d,((e,f)));
     # this is from fig 2 of Cordova and Navarro:

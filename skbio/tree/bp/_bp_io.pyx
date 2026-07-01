@@ -11,7 +11,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._bp cimport BP
+from ._bp cimport BPTree
 import numpy as np
 import pandas as pd
 import json
@@ -92,7 +92,7 @@ cdef void _set_node_metadata(cnp.uint32_t ptr, unicode token,
     edges[ptr] = edge
 
 
-def write_newick(BP tree, object output, bint include_edge):
+def write_newick(BPTree tree, object output, bint include_edge):
     cdef:
         list name_stack
         list edge_stack
@@ -148,7 +148,7 @@ cpdef parse_newick(unicode data):
     cdef:
         cnp.uint32_t ptr, open_ptr
         Py_ssize_t token_ptr, tmp, lag, datalen
-        BP topology
+        BPTree topology
         unicode token, last_token
         cnp.ndarray[object, ndim=1] names
         cnp.ndarray[cnp.double_t, ndim=1] lengths
@@ -262,7 +262,7 @@ cdef object _newick_to_bp(unicode data):
                 # ignore non-structure
                 pass
 
-    return BP(topology[:topology_ptr])
+    return BPTree(topology[:topology_ptr])
 
 
 cdef inline int _ccheck(Py_UCS4 c):
@@ -341,7 +341,7 @@ def parse_jplace(object data):
         unicode frag, newick
         Py_ssize_t placement_idx, placement_inner_idx, fragment_idx,
         Py_ssize_t n_fragments
-        BP tree
+        BPTree tree
         object df
         set edges
 

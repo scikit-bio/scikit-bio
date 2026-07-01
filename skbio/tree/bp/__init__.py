@@ -17,13 +17,13 @@ public objects are re-exported from :mod:`skbio.tree`.
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._bp import BP
+from ._bp import BPTree
 from ._bp_io import parse_newick, write_newick, parse_jplace
 from ._bp_conv import to_skbio_treenode, from_skbio_treenode, to_skbio_treearray
 from ._bp_insert import insert_fully_resolved
 
 __all__ = [
-    "BP",
+    "BPTree",
     "parse_newick",
     "write_newick",
     "parse_jplace",
