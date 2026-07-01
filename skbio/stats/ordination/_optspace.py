@@ -146,8 +146,8 @@ def jacobian_S_adj(U, V, w, observed_mask):
 
     W = np.zeros_like(observed_mask, dtype=U.dtype)
     W[observed_mask] = w
-    w = U.T @ W @ V
-    return w.ravel()
+    ds = U.T @ W @ V
+    return ds.ravel()
 
 
 def jacobian_UV(U, V, S, dU, dV, rows, cols):
@@ -167,10 +167,10 @@ def jacobian_UV(U, V, S, dU, dV, rows, cols):
     space of (U, V).
     """
 
-    dU -= U @ U.T @ dU
-    dV -= V @ V.T @ dV
-    W = dU @ S @ V.T
-    W += U @ S @ dV.T
+    dU_t = dU - U @ (U.T @ dU)
+    dV_t = dV - V @ (V.T @ dV)
+    W = dU_t @ S @ V.T
+    W += U @ S @ dV_t.T
 
     return W[rows, cols]
 
