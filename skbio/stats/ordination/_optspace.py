@@ -401,7 +401,7 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
 
     # Iteratively solve for U, V, and S by minimizing the objective
     prev_obj = np.inf
-    damp = n_observed / (m * n)
+    damp = tol * np.sqrt(1 - density)
 
     for i in range(max_iter):
         # Compute optimal S given current U, V
@@ -416,7 +416,7 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
         print(f"Iteration: {i}, obj: {obj}")
 
         # Check convergence
-        if np.abs(prev_obj - obj) < tol:
+        if np.abs(prev_obj - obj) / obj < tol:
             break
 
         prev_obj = obj
