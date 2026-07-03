@@ -250,8 +250,7 @@ def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
 
 def retract_grassmann(X, dX):
     """Retract the updated matrix X + dX back to the Grassmann manifold."""
-    Q, _ = np.linalg.qr(X + dX)
-    return Q[:, : X.shape[1]]
+    return np.linalg.qr(X + dX, mode="reduced")[0]
 
 
 def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
