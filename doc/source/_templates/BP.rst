@@ -53,6 +53,7 @@
    .. rubric:: Tree manipulation
 
    .. autosummary::
+      :toctree:
 
       ~{{ name }}.shear
       ~{{ name }}.collapse
