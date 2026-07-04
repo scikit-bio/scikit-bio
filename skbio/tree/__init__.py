@@ -89,21 +89,6 @@ directly from :mod:`skbio.tree`.
     BPTree
 
 
-BP input/output and conversion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autosummary::
-   :toctree: generated/
-
-    parse_newick
-    write_newick
-    parse_jplace
-    to_skbio_treenode
-    from_skbio_treenode
-    to_skbio_treearray
-    insert_fully_resolved
-
-
 Exceptions
 ^^^^^^^^^^
 
@@ -639,16 +624,7 @@ from ._exception import (
     MissingNodeError,
     NoParentError,
 )
-from .bp import (
-    BPTree,
-    parse_newick,
-    write_newick,
-    parse_jplace,
-    to_skbio_treenode,
-    from_skbio_treenode,
-    to_skbio_treearray,
-    insert_fully_resolved,
-)
+from .bp import BPTree
 
 __all__ = [
     "TreeNode",
@@ -667,11 +643,4 @@ __all__ = [
     "MissingNodeError",
     "NoParentError",
     "BPTree",
-    "parse_newick",
-    "write_newick",
-    "parse_jplace",
-    "to_skbio_treenode",
-    "from_skbio_treenode",
-    "to_skbio_treearray",
-    "insert_fully_resolved",
 ]

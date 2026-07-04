@@ -18,7 +18,7 @@ import pandas as pd
 import pandas.testing as pdt
 import skbio
 
-from skbio.tree import parse_newick, to_skbio_treenode, write_newick, parse_jplace
+from skbio.tree.bp import parse_newick, to_skbio_treenode, write_newick, parse_jplace
 
 
 def get_data_path(filename):

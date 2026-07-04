@@ -12,7 +12,7 @@ import unittest
 import skbio
 import pandas as pd
 
-from skbio.tree import parse_jplace, insert_fully_resolved
+from skbio.tree.bp import parse_jplace, insert_fully_resolved
 
 
 def get_data_path(filename):

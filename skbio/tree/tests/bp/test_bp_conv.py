@@ -13,8 +13,8 @@ import skbio
 import numpy.testing as npt
 import numpy as np
 
-from skbio.tree import (to_skbio_treenode, from_skbio_treenode, parse_newick,
-                        to_skbio_treearray)
+from skbio.tree.bp import (to_skbio_treenode, from_skbio_treenode, parse_newick,
+                           to_skbio_treearray)
 
 
 class ConversionTests(TestCase):

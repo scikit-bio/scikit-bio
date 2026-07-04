@@ -191,7 +191,7 @@ def test_bwdsearch():
 
 def test_fwdsearch_more():
     cdef BPTree bp
-    from skbio.tree import parse_newick
+    from skbio.tree.bp import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
     # simulating close so only testing open parentheses. A "close" on a closed
@@ -225,7 +225,7 @@ def test_fwdsearch_more():
 
 def test_bwdsearch_more():
     cdef BPTree bp
-    from skbio.tree import parse_newick
+    from skbio.tree.bp import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
     # simulating open so only testing closed parentheses.
@@ -256,7 +256,7 @@ def test_bwdsearch_more():
 
 def test_scan_block_forward():
     cdef BPTree bp
-    from skbio.tree import parse_newick
+    from skbio.tree.bp import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
     # [(open, close), ...]
@@ -293,7 +293,7 @@ def test_scan_block_forward():
 
 def test_scan_block_backward():
     cdef BPTree bp
-    from skbio.tree import parse_newick
+    from skbio.tree.bp import parse_newick
     bp = parse_newick('((a,b,(c)),d,((e,f)));')
 
     # adding +1 to simluate "open" so calls on open parentheses are weird
@@ -330,7 +330,7 @@ def test_scan_block_backward():
 
 def test_rmm():
     cdef BPTree bp
-    from skbio.tree import parse_newick
+    from skbio.tree.bp import parse_newick
     # test tree is ((a,b,(c)),d,((e,f)));
     # this is from fig 2 of Cordova and Navarro:
     # http://www.dcc.uchile.cl/~gnavarro/ps/tcs16.2.pdf

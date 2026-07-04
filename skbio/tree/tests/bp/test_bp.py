@@ -14,7 +14,8 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.tree import BPTree, parse_newick
+from skbio.tree import BPTree
+from skbio.tree.bp import parse_newick
 import skbio.tree.tests.bp.test_bp_cy as tbc
 
 
