@@ -36,14 +36,14 @@ def to_skbio_treenode(BPTree bp):
     root = nodes[0]
 
     for i in range(bp.data.sum()):
-        node_idx = bp.preorderselect(i)
+        node_idx = bp.preorder_select(i)
         nodes[i].name = bp.name(node_idx)
         nodes[i].length = bp.length(node_idx)
         nodes[i].edge_num = bp.edge(node_idx)
 
         if node_idx != bp.root():
             # preorder starts at 1 annoyingly
-            parent = bp.preorder(bp.parent(node_idx)) - 1
+            parent = bp.preorder_rank(bp.parent(node_idx)) - 1
             # uncache=False avoids repeated cache clearing during bulk construction
             nodes[parent].append(nodes[i], uncache=False)
 
@@ -123,23 +123,23 @@ def to_skbio_treearray(BPTree bp):
     cur_index = 0  # the index into node_ids, equivalent to TreeNode.assign_ids
     id_index = dict.fromkeys(set(range(bp.data.sum())))  # map a node's "id" to an object which indicates if it is a leaf or not
     for i in range(bp.data.sum()):
-        node_idx = bp.postorderselect(i + 1)  # the index within the BP of the node
+        node_idx = bp.postorder_select(i + 1)  # the index within the BP of the node
 
-        if not bp.isleaf(node_idx):
-            fchild = bp.fchild(node_idx)
-            lchild = bp.lchild(node_idx)
+        if not bp.is_tip(node_idx):
+            first_child = bp.first_child(node_idx)
+            last_child = bp.last_child(node_idx)
 
-            sib_idx = fchild  # the sibling index wtihin the BP of the node
-            while sib_idx != 0 and sib_idx <= lchild:
+            sib_idx = first_child  # the sibling index wtihin the BP of the node
+            while sib_idx != 0 and sib_idx <= last_child:
                 node_ids[sib_idx] = cur_index
-                id_index[cur_index] = mock_node(cur_index, bp.isleaf(sib_idx))
+                id_index[cur_index] = mock_node(cur_index, bp.is_tip(sib_idx))
                 length[cur_index] = bp.length(sib_idx)
                 name[cur_index] = bp.name(sib_idx)
 
                 cur_index += 1
-                sib_idx = bp.nsibling(sib_idx)
+                sib_idx = bp.next_sibling(sib_idx)
 
-            child_index[chi_ptr] = [node_idx, node_ids[fchild], node_ids[lchild]]
+            child_index[chi_ptr] = [node_idx, node_ids[first_child], node_ids[last_child]]
             chi_ptr += 1
 
     # make sure to capture root

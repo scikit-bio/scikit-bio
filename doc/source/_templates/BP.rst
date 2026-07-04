@@ -19,35 +19,35 @@
 
       ~{{ name }}.root
       ~{{ name }}.parent
-      ~{{ name }}.fchild
-      ~{{ name }}.lchild
-      ~{{ name }}.nsibling
-      ~{{ name }}.psibling
+      ~{{ name }}.first_child
+      ~{{ name }}.last_child
+      ~{{ name }}.next_sibling
+      ~{{ name }}.previous_sibling
       ~{{ name }}.lca
-      ~{{ name }}.isancestor
-      ~{{ name }}.deepestnode
+      ~{{ name }}.is_ancestor
+      ~{{ name }}.deepest_node
 
    .. rubric:: Tree traversal
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.preorder
-      ~{{ name }}.postorder
-      ~{{ name }}.preorderselect
-      ~{{ name }}.postorderselect
-      ~{{ name }}.levelancestor
-      ~{{ name }}.levelnext
+      ~{{ name }}.preorder_rank
+      ~{{ name }}.postorder_rank
+      ~{{ name }}.preorder_select
+      ~{{ name }}.postorder_select
+      ~{{ name }}.level_ancestor
+      ~{{ name }}.level_next
 
    .. rubric:: Tree analysis
 
    .. autosummary::
       :toctree:
 
-      ~{{ name }}.isleaf
+      ~{{ name }}.is_tip
       ~{{ name }}.depth
       ~{{ name }}.height
-      ~{{ name }}.subtree
+      ~{{ name }}.subtree_size
       ~{{ name }}.ntips
 
    .. rubric:: Tree manipulation

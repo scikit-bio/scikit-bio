@@ -133,7 +133,7 @@ def write_newick(BPTree tree, object output, bint include_edge):
 
     for idx, v in enumerate(tree.data):
         if v:
-            if not tree.isleaf(idx):
+            if not tree.is_tip(idx):
                 output.write('(')
             name_stack.append(tree.name(idx))
             length_stack.append(tree.length(idx))
@@ -156,7 +156,7 @@ def write_newick(BPTree tree, object output, bint include_edge):
             else:
                 output.write(':%f' % length)
 
-            if tree.nsibling(open_paren_stack.pop()) == 0:
+            if tree.next_sibling(open_paren_stack.pop()) == 0:
                 if idx != root_close:
                     output.write(')')
             else:
@@ -236,7 +236,7 @@ cpdef parse_newick(unicode data):
             open_ptr = topology.open(ptr)
             _set_node_metadata(open_ptr, token, names, lengths, edges)
 
-            if topology.isleaf(ptr):
+            if topology.is_tip(ptr):
                 ptr += 2
             else:
                 ptr += 1

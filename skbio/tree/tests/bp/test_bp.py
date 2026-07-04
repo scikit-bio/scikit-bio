@@ -138,27 +138,27 @@ class BPTests(TestCase):
         for (i, j, q), e in exp.items():
             self.assertEqual(self.bptree.minselect(i, j, q), e)
 
-    def test_preorder(self):
+    def test_preorder_rank(self):
         exp = [1, 2, 3, 3, 4, 4, 5, 6, 6, 5, 2, 7, 7, 8, 9, 10, 10, 11, 11, 9, 8, 1]
         for i, e in enumerate(exp):
-            self.assertEqual(self.bptree.preorder(i), e)
+            self.assertEqual(self.bptree.preorder_rank(i), e)
 
-    def test_preorderselect(self):
+    def test_preorder_select(self):
         exp = [0, 1, 2, 4, 6, 7, 11, 13, 14, 15, 17]
         for k, e in enumerate(exp):
-            self.assertEqual(self.bptree.preorderselect(k), e)
+            self.assertEqual(self.bptree.preorder_select(k), e)
 
-    def test_postorder(self):
+    def test_postorder_rank(self):
         exp = [11, 5, 1, 1, 2, 2, 4, 3, 3, 4, 5, 6, 6, 10, 9, 7, 7, 8, 8, 9, 10, 11]
         for i, e in enumerate(exp):
-            self.assertEqual(self.bptree.postorder(i), e)
+            self.assertEqual(self.bptree.postorder_rank(i), e)
 
-    def test_postorderselect(self):
+    def test_postorder_select(self):
         exp = [2, 4, 7, 6, 1, 11, 15, 17, 14, 13, 0]
         for k, e in enumerate(exp):
-            self.assertEqual(self.bptree.postorderselect(k + 1), e)
+            self.assertEqual(self.bptree.postorder_select(k + 1), e)
 
-    def test_isancestor(self):
+    def test_is_ancestor(self):
         exp = {(0, 0): False,  # identity test
                (2, 1): False,  # tip test
                (1, 2): True,   # open test
@@ -167,14 +167,14 @@ class BPTests(TestCase):
                (1, 7): True}   # nested test
 
         for (i, j), e in exp.items():
-            self.assertEqual(self.bptree.isancestor(i, j), e)
+            self.assertEqual(self.bptree.is_ancestor(i, j), e)
 
-    def test_subtree(self):
+    def test_subtree_size(self):
         exp = [11, 5, 1, 1, 1, 1, 2, 1, 1, 2, 5, 1, 1, 4, 3, 1, 1, 1, 1, 3, 4, 11]
         for i, e in enumerate(exp):
-            self.assertEqual(self.bptree.subtree(i), e)
+            self.assertEqual(self.bptree.subtree_size(i), e)
 
-    def test_levelancestor(self):
+    def test_level_ancestor(self):
         exp = {(2, 1): 1,  # first tip to its parent
                (2, 2): 0,  # first tip to root
                (4, 1): 1,  # second tip to its parent
@@ -186,7 +186,7 @@ class BPTests(TestCase):
                (10, 0): -1}  # can't be an ancestor of yourself
 
         for (i, d), e in exp.items():
-            self.assertEqual(self.bptree.levelancestor(i, d), e)
+            self.assertEqual(self.bptree.level_ancestor(i, d), e)
 
     def _testinator(self, exp, f, verbose=False):
         self.assertEqual(len(exp), len(self.fig1_B))
@@ -195,13 +195,13 @@ class BPTests(TestCase):
                 print(i, e)
             self.assertEqual(f(i), e)
 
-    def test_levelnext(self):
+    def test_level_next(self):
         #       (   (  (  )  (  )   (   (   )   )   )  (    )   (   (   (   )   (   )   )   )   )
         exp = [-1, 11, 4, 4, 6, 6, 14, 15, 15, 14, 11, 13, 13, -1, -1, 17, 17, -1, -1, -1, -1, -1]
         self.assertEqual(len(exp), len(self.fig1_B))
 
         for i, e in enumerate(exp):
-            self.assertEqual(self.bptree.levelnext(i), e)
+            self.assertEqual(self.bptree.level_next(i), e)
 
     def test_close(self):
         exp = [21, 10, 3, 5, 9, 8, 12, 20, 19, 16, 18]
@@ -210,9 +210,9 @@ class BPTests(TestCase):
 
     def test_lca(self):
         # lca(i, j) = parent(rmq(i, j) + 1)
-        # unless isancestor(i, j)
-        # (so lca(i, j) = i) or isancestor(j, i) (so lca(i, j) = j),
-        nodes = [self.bptree.preorderselect(k) for k in range(self.fig1_B.sum())]
+        # unless is_ancestor(i, j)
+        # (so lca(i, j) = i) or is_ancestor(j, i) (so lca(i, j) = j),
+        nodes = [self.bptree.preorder_select(k) for k in range(self.fig1_B.sum())]
         exp = {(nodes[2], nodes[3]): nodes[1],
                (nodes[2], nodes[5]): nodes[1],
                (nodes[2], nodes[9]): nodes[0],
@@ -221,13 +221,13 @@ class BPTests(TestCase):
         for (i, j), e in exp.items():
             self.assertEqual(self.bptree.lca(i, j), e)
 
-    def test_deepestnode(self):
-        # deepestnode(i) = rMq(i, close(i)),
+    def test_deepest_node(self):
+        # deepest_node(i) = rMq(i, close(i)),
         exp = [7, 7, 2, 2, 4, 4, 7, 7, 7, 7, 7, 11, 11, 15, 15, 15, 15, 17, 17, 15, 15, 7]
-        self._testinator(exp, self.bptree.deepestnode)
+        self._testinator(exp, self.bptree.deepest_node)
 
     def test_height(self):
-        # height(i) = excess(deepestnode(i)) - excess(i).
+        # height(i) = excess(deepest_node(i)) - excess(i).
         exp = [3, 2, 0, 0, 0, 0, 1, 0, 0, 1, 2, 0, 0, 2, 1, 0, 0, 0, 0, 1, 2, 3]
         self._testinator(exp, self.bptree.height)
 
@@ -310,10 +310,10 @@ class BPTests(TestCase):
         lengths = np.zeros(self.bptree.data.size, dtype=np.double)
 
         names[0] = 'root'
-        names[self.bptree.preorderselect(7)] = 'other'
+        names[self.bptree.preorder_select(7)] = 'other'
 
         lengths[1] = 1.23
-        lengths[self.bptree.preorderselect(5)] = 5.43
+        lengths[self.bptree.preorder_select(5)] = 5.43
 
         self.bptree.set_names(names)
         self.bptree.set_lengths(lengths)

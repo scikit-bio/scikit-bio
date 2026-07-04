@@ -157,7 +157,7 @@ cdef class BPTree:
     and a close parenthesis. The implementation uses a NumPy uint8 type where
     an open parenthesis is a 1 and a close is a 0. In general, operations on
     this tree are best suited for passing in the opening parenthesis index, so
-    for instance, if you'd like to use BPTree.isleaf to determine if a node is a
+    for instance, if you'd like to use BPTree.is_tip to determine if a node is a
     leaf, the operation is defined only for using the opening parenthesis. At
     this time, there is some ambiguity over what methods can handle a closing
     parenthesis.
@@ -469,7 +469,18 @@ cdef class BPTree:
         return (BPTree, (self.data, self._lengths, self._names))
 
     cpdef SIZE_t depth(self, SIZE_t i) nogil:
-        """The depth of given node."""
+        """The depth of given node.
+        
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+        
+        Returns
+        -------
+        int
+            Depth of node relative to the root of tree.
+        """
         return self._e_index[i]
 
     cpdef SIZE_t root(self) nogil:
@@ -480,9 +491,9 @@ cdef class BPTree:
         """The parent of node.
 
         Parameters
-        -------
+        ----------
         i : int
-            Index of node.
+            Index of node to evaluate.
 
         Returns
         -------
@@ -494,41 +505,86 @@ cdef class BPTree:
         else:
             return self.enclose(i)
 
-    cpdef BOOL_t isleaf(self, SIZE_t i) nogil:
-        """Whether the node is a leaf."""
+    cpdef BOOL_t is_tip(self, SIZE_t i) nogil:
+        """Whether the node is a tip of a tree.
+        
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        bool
+            Whether the node is a tip of a tree or not.
+        """
         return self._b_ptr[i] and (not self._b_ptr[i + 1])
 
-    cpdef SIZE_t fchild(self, SIZE_t i) nogil:
-        """The first child of i (i.e., the left child).
+    cpdef SIZE_t first_child(self, SIZE_t i) nogil:
+        """Index of the first (leftmost) child of a node.
 
-        fchild(i) = i + 1 (if i is not a leaf)
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
 
-        Returns 0 if the node is a leaf as the root cannot be a child by
-        definition.
+        Returns
+        -------
+        int
+            Index of the first child of node ``i``, or 0 if ``i`` is a tip
+            (0 is the root, which can never be a child).
+
+        See Also
+        --------
+        last_child
+        skbio.tree.TreeNode
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. Corresponds to accessing ``children[0]`` on a
+        :class:`~skbio.tree.TreeNode`.
         """
         if self._b_ptr[i]:
-            if self.isleaf(i):
+            if self.is_tip(i):
                 return 0
             else:
                 return i + 1
         else:
-            return self.fchild(self.open(i))
+            return self.first_child(self.open(i))
 
-    cpdef SIZE_t lchild(self, SIZE_t i) nogil:
-        """The last child of i (i.e., the right child).
+    cpdef SIZE_t last_child(self, SIZE_t i) nogil:
+        """Index of the last (rightmost) child of a node.
 
-        lchild(i) = open(close(i) - 1) (if i is not a leaf)
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
 
-        Returns 0 if the node is a leaf as the root cannot be a child by
-        definition.
+        Returns
+        -------
+        int
+            Index of the last child of node ``i``, or 0 if ``i`` is a tip
+            (0 is the root, which can never be a child).
+
+        See Also
+        --------
+        first_child
+        skbio.tree.TreeNode
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. Corresponds to accessing ``children[-1]`` on a
+        :class:`~skbio.tree.TreeNode`.
         """
         if self._b_ptr[i]:
-            if self.isleaf(i):
+            if self.is_tip(i):
                 return 0
             else:
                 return self.open(self.close(i) - 1)
         else:
-            return self.lchild(self.open(i))
+            return self.last_child(self.open(i))
 
     def mincount(self, SIZE_t i, SIZE_t j):
         """number of occurrences of the minimum in excess(i), excess(i + 1), . . . , excess(j)."""
@@ -545,20 +601,37 @@ cdef class BPTree:
         else:
             return i + index.nonzero()[0][q - 1]
 
-    cpdef SIZE_t nsibling(self, SIZE_t i) nogil:
-        """The next sibling of i (i.e., the sibling to the right)
+    cpdef SIZE_t next_sibling(self, SIZE_t i) nogil:
+        """Index of the next (right) sibling of a node.
 
-        nsibling(i) = close(i) + 1 (if the result j holds B[j] = 0 then i has no next sibling)
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
 
-        Will return 0 if there is no sibling. This makes sense as the root
-        cannot have a sibling by definition
+        Returns
+        -------
+        int
+            Index of the next sibling of node ``i``, or 0 if ``i`` has no
+            next sibling (0 is the root, which can never be a sibling).
+
+        See Also
+        --------
+        previous_sibling
+        skbio.tree.TreeNode.siblings
+
+        Notes
+        -----
+        Returns the integer index of a single sibling, unlike
+        :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
+        sibling nodes.
         """
         cdef SIZE_t pos
 
         if self._b_ptr[i]:
             pos = self.close(i) + 1
         else:
-            pos = self.nsibling(self.open(i))
+            pos = self.next_sibling(self.open(i))
 
         if pos >= self.size:
             return 0
@@ -567,13 +640,30 @@ cdef class BPTree:
         else:
             return 0
 
-    cpdef SIZE_t psibling(self, SIZE_t i) nogil:
-        """The previous sibling of i (i.e., the sibling to the left)
+    cpdef SIZE_t previous_sibling(self, SIZE_t i) nogil:
+        """Index of the previous (left) sibling of a node.
 
-        psibling(i) = open(i - 1) (if B[i - 1] = 1 then i has no previous sibling)
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
 
-        Will return 0 if there is no sibling. This makes sense as the root
-        cannot have a sibling by definition
+        Returns
+        -------
+        int
+            Index of the previous sibling of node ``i``, or 0 if ``i`` has no
+            previous sibling (0 is the root, which can never be a sibling).
+
+        See Also
+        --------
+        next_sibling
+        skbio.tree.TreeNode.siblings
+
+        Notes
+        -----
+        Returns the integer index of a single sibling, unlike
+        :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
+        sibling nodes.
         """
         cdef SIZE_t pos
 
@@ -583,7 +673,7 @@ cdef class BPTree:
 
             pos = self.open(i - 1)
         else:
-            pos = self.psibling(self.open(i))
+            pos = self.previous_sibling(self.open(i))
 
         if pos < 0:
             return 0
@@ -592,79 +682,119 @@ cdef class BPTree:
         else:
             return 0
 
-    cpdef SIZE_t preorder(self, SIZE_t i) nogil:
-        """Preorder rank of given node.
-
-        The inverse of preorderselect().
+    cpdef SIZE_t preorder_rank(self, SIZE_t i) nogil:
+        """Preorder rank of a node.
 
         Parameters
         ----------
         i : int
-            The node index to assess the preorder order of.
+            Index of the node to evaluate.
 
         Returns
         -------
         int
-            The node's order of evaluation in a preorder traversal of the tree.
+            The position of node ``i`` in a preorder traversal of the tree.
+
+        See Also
+        --------
+        preorder_select
+        skbio.tree.TreeNode.preorder
+
+        Notes
+        -----
+        Returns the node's integer position in preorder, not a node object.
+        This differs from :meth:`~skbio.tree.TreeNode.preorder`, which yields
+        the nodes of the tree in preorder. The inverse of
+        :meth:`preorder_select`.
         """
         if self._b_ptr[i]:
             return self.rank(1, i)
         else:
-            return self.preorder(self.open(i))
+            return self.preorder_rank(self.open(i))
 
-    cpdef SIZE_t preorderselect(self, SIZE_t k) nogil:
-        """The index of the node with given preorder rank.
-
-        The inverse of preorder().
+    cpdef SIZE_t preorder_select(self, SIZE_t k) nogil:
+        """Index of the node with a given preorder rank.
 
         Parameters
         ----------
         k : int
-            The preorder evaluation order to search for.
+            Preorder rank to look up.
 
         Returns
         -------
         int
-            The index position of the node in the tree.
+            Index of the node whose preorder rank is ``k``.
+
+        See Also
+        --------
+        preorder_rank
+        skbio.tree.TreeNode.preorder
+
+        Notes
+        -----
+        The inverse of :meth:`preorder_rank`. Returns an integer index into
+        the parentheses bit array, not a node object.
+        :meth:`~skbio.tree.TreeNode.preorder` yields the nodes in this order.
         """
         return self.select(1, k)
 
-    cpdef SIZE_t postorder(self, SIZE_t i) nogil:
-        """Postorder rank of given node.
-
-        The inverse of postorderselect().
+    cpdef SIZE_t postorder_rank(self, SIZE_t i) nogil:
+        """Postorder rank of a node.
 
         Parameters
         ----------
         i : int
-            The node index to assess the postorder order of.
+            Index of the node to evaluate.
 
         Returns
         -------
         int
-            The node's order of evaluation in a postorder traversal of the tree.
+            The position of node ``i`` in a postorder traversal of the tree.
+
+        See Also
+        --------
+        postorder_select
+        skbio.tree.TreeNode.postorder
+
+        Notes
+        -----
+        Returns the node's integer position in postorder, not a node object.
+        This differs from :meth:`~skbio.tree.TreeNode.postorder`, which yields
+        the nodes of the tree in postorder. The inverse of
+        :meth:`postorder_select`.
         """
         if self._b_ptr[i]:
             return self.rank(0, self.close(i))
         else:
             return self.rank(0, i)
 
-    cpdef SIZE_t postorderselect(self, SIZE_t k) nogil:
-        """The index of the node with given postorder rank.
+    cpdef SIZE_t postorder_select(self, SIZE_t k) nogil:
+        """Index of the node with a given postorder rank.
 
         Parameters
         ----------
         k : int
-            The postorder evaluation order to search for.
+            Postorder rank to look up.
 
         Returns
         -------
         int
-            The index position of the node in the tree.
+            Index of the node whose postorder rank is ``k``.
+
+        See Also
+        --------
+        postorder_rank
+        skbio.tree.TreeNode.postorder
+
+        Notes
+        -----
+        The inverse of :meth:`postorder_rank`. Returns an integer index into
+        the parentheses bit array, not a node object.
+        :meth:`~skbio.tree.TreeNode.postorder` yields the nodes in this order.
         """
         return self.open(self.select(0, k))
 
-    cpdef BOOL_t isancestor(self, SIZE_t i, SIZE_t j) nogil:
+    cpdef BOOL_t is_ancestor(self, SIZE_t i, SIZE_t j) nogil:
         """Whether a node is an ancestor of another node.
 
         Parameters
@@ -691,39 +821,59 @@ cdef class BPTree:
 
         return i <= j < self.close(i)
 
-    cpdef SIZE_t subtree(self, SIZE_t i) nogil:
-        """The number of nodes in the subtree of given node.
+    cpdef SIZE_t subtree_size(self, SIZE_t i) nogil:
+        """Number of nodes in the subtree rooted at a node.
 
         Parameters
         ----------
         i : int
-            The index of node to evaluate
+            Index of the node to evaluate.
 
         Returns
         -------
         int
-            The number of nodes in the subtree of i
+            The number of nodes in the subtree rooted at node ``i``, including
+            ``i`` itself.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.count
+
+        Notes
+        -----
+        Returns a node count, not a subtree.
         """
         if not self._b_ptr[i]:
             i = self.open(i)
 
         return (self.close(i) - i + 1) / 2
 
-    cpdef SIZE_t levelancestor(self, SIZE_t i, SIZE_t d) nogil:
-        """The index of the ancestor of the given node's ancestor that is `d` steps away.
+    cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil:
+        """Index of the ancestor a given number of levels above a node.
 
         Parameters
         ----------
         i : int
-            The index of node to evaluate
-
+            Index of the node to evaluate.
         d : int
-            How many ancestors back to evaluate
+            Number of levels to ascend toward the root.
 
         Returns
         -------
         int
-            The node index of the ancestor to search for. Returns -1 if `d` is non-positive.
+            Index of the ancestor ``d`` levels above node ``i``, or -1 if
+            ``d`` is not positive.
+
+        See Also
+        --------
+        level_next
+        skbio.tree.TreeNode.ancestors
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. :meth:`~skbio.tree.TreeNode.ancestors` returns the full list
+        of ancestor nodes from a node toward the root.
         """
         if d <= 0:
             return -1
@@ -733,18 +883,30 @@ cdef class BPTree:
 
         return self.bwdsearch(i, -d - 1) + 1
 
-    cpdef SIZE_t levelnext(self, SIZE_t i) nogil:
-        """The next node with the same depth.
+    cpdef SIZE_t level_next(self, SIZE_t i) nogil:
+        """Index of the next node at the same depth.
 
         Parameters
         ----------
         i : int
-            The node to evaluate
+            Index of the node to evaluate.
 
         Returns
         -------
         int
-            The node index of the next node or -1 if there isn't one
+            Index of the next node at the same depth as node ``i``, or -1 if
+            there is no such node.
+
+        See Also
+        --------
+        level_ancestor
+        skbio.tree.TreeNode.levelorder
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. :meth:`~skbio.tree.TreeNode.levelorder` traverses all nodes
+        depth by depth.
         """
         return self.fwdsearch(self.close(i), 1)
 
@@ -763,25 +925,36 @@ cdef class BPTree:
         int
            The index of the lowest common ancestor
         """
-        if self.isancestor(i, j):
+        if self.is_ancestor(i, j):
             return i
-        elif self.isancestor(j, i):
+        elif self.is_ancestor(j, i):
             return j
         else:
             return self.parent(self.rmq(i, j) + 1)
 
-    cpdef SIZE_t deepestnode(self, SIZE_t i) nogil:
-        """The index of the deepest node which descends from a given node.
+    cpdef SIZE_t deepest_node(self, SIZE_t i) nogil:
+        """Index of the deepest node descending from a node.
 
         Parameters
         ----------
         i : int
-            The node to evaluate
+            Index of the node to evaluate.
 
         Returns
         -------
         int
-            The index of the deepest node which descends from i
+            Index of the deepest (most distant) tip descending from node ``i``.
+
+        See Also
+        --------
+        height
+        skbio.tree.TreeNode.height
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. This is the tip that :meth:`~skbio.tree.TreeNode.height`
+        returns as the second element of its ``(height, tip)`` result.
         """
         return self.rMq(self.open(i), self.close(i))
 
@@ -802,7 +975,7 @@ cdef class BPTree:
         int
             The number of edges between node i and its deepest node
         """
-        return self.excess(self.deepestnode(i)) - self.excess(self.open(i))
+        return self.excess(self.deepest_node(i)) - self.excess(self.open(i))
 
     cpdef BPTree shear(self, set tips):
         """Remove all nodes from the tree except tips and ancestors of tips.
@@ -829,8 +1002,8 @@ cdef class BPTree:
         bit_array_set_bit(mask, self.close(self.root()))
 
         for i in range(self.data.size):
-            # isleaf is only defined on the open parenthesis
-            if self.isleaf(i):
+            # is_tip is only defined on the open parenthesis
+            if self.is_tip(i):
                 if self.name(i) in tips:  # gil is required for set operation
                     with nogil:
                         count += 1
@@ -927,14 +1100,14 @@ cdef class BPTree:
 
         with nogil:
             for i in range(n):
-                current = self.preorderselect(i)
+                current = self.preorder_select(i)
 
-                if self.isleaf(current):
+                if self.is_tip(current):
                     bit_array_set_bit(mask, current)
                     bit_array_set_bit(mask, self.close(current))
                 else:
-                    first = self.fchild(current)
-                    last = self.lchild(current)
+                    first = self.first_child(current)
+                    last = self.last_child(current)
 
                     if first == last:
                         new_lengths_ptr[first] = new_lengths_ptr[first] + \

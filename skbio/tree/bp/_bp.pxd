@@ -48,13 +48,13 @@ cdef class BPTree:
     cdef SIZE_t bwdsearch(self, SIZE_t i, int d) nogil
     cpdef inline SIZE_t close(self, SIZE_t i) nogil
     cdef inline SIZE_t open(self, SIZE_t i) nogil
-    cpdef inline BOOL_t isleaf(self, SIZE_t i) nogil
+    cpdef inline BOOL_t is_tip(self, SIZE_t i) nogil
     cdef inline SIZE_t enclose(self, SIZE_t i) nogil
     cdef BPTree _mask_from_self(self, BIT_ARRAY* mask, cnp.ndarray[DOUBLE_t, ndim=1] lengths)
-    cpdef SIZE_t nsibling(self, SIZE_t i) nogil
-    cpdef SIZE_t psibling(self, SIZE_t i) nogil
-    cpdef SIZE_t lchild(self, SIZE_t i) nogil
-    cpdef SIZE_t fchild(self, SIZE_t i) nogil
+    cpdef SIZE_t next_sibling(self, SIZE_t i) nogil
+    cpdef SIZE_t previous_sibling(self, SIZE_t i) nogil
+    cpdef SIZE_t last_child(self, SIZE_t i) nogil
+    cpdef SIZE_t first_child(self, SIZE_t i) nogil
     cpdef SIZE_t parent(self, SIZE_t i) nogil
     cpdef SIZE_t depth(self, SIZE_t i) nogil
     cpdef SIZE_t root(self) nogil
@@ -68,17 +68,17 @@ cdef class BPTree:
     cpdef SIZE_t edge_from_number(self, INT32_t n)
     cpdef SIZE_t rmq(self, SIZE_t i, SIZE_t j) nogil
     cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil
-    cpdef SIZE_t postorderselect(self, SIZE_t k) nogil
-    cpdef SIZE_t postorder(self, SIZE_t i) nogil
-    cpdef SIZE_t preorderselect(self, SIZE_t k) nogil
-    cpdef SIZE_t preorder(self, SIZE_t i) nogil
-    cpdef BOOL_t isancestor(self, SIZE_t i, SIZE_t j) nogil
-    cpdef SIZE_t levelancestor(self, SIZE_t i, SIZE_t d) nogil
-    cpdef SIZE_t subtree(self, SIZE_t i) nogil
+    cpdef SIZE_t postorder_select(self, SIZE_t k) nogil
+    cpdef SIZE_t postorder_rank(self, SIZE_t i) nogil
+    cpdef SIZE_t preorder_select(self, SIZE_t k) nogil
+    cpdef SIZE_t preorder_rank(self, SIZE_t i) nogil
+    cpdef BOOL_t is_ancestor(self, SIZE_t i, SIZE_t j) nogil
+    cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil
+    cpdef SIZE_t subtree_size(self, SIZE_t i) nogil
     cpdef BPTree shear(self, set tips)
     cpdef BPTree collapse(self)
     cpdef SIZE_t ntips(self) nogil
-    cpdef SIZE_t levelnext(self, SIZE_t i) nogil
+    cpdef SIZE_t level_next(self, SIZE_t i) nogil
     cpdef SIZE_t height(self, SIZE_t i) nogil
-    cpdef SIZE_t deepestnode(self, SIZE_t i) nogil
+    cpdef SIZE_t deepest_node(self, SIZE_t i) nogil
     cpdef SIZE_t lca(self, SIZE_t i, SIZE_t j) nogil

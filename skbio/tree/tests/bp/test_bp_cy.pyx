@@ -109,64 +109,64 @@ def test_root():
     npt.assert_equal(obj.root(), 0)
 
 
-def test_isleaf():
+def test_is_tip():
     cdef BPTree obj = get_test_obj()
 
     exp = [0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
     for i, e in enumerate(exp):
-        npt.assert_equal(obj.isleaf(i), e)
+        npt.assert_equal(obj.is_tip(i), e)
 
 
-def test_fchild():
+def test_first_child():
     cdef BPTree obj = get_test_obj()
     exp = [1, 2, 0, 0, 0, 0, 7, 0, 0, 7, 2, 0, 0, 14, 15, 0, 0, 0, 0, 15, 14,
            1]
     for i, e in enumerate(exp):
-        npt.assert_equal(obj.fchild(i), e)
+        npt.assert_equal(obj.first_child(i), e)
 
 
-def test_lchild():
+def test_last_child():
     cdef BPTree obj = get_test_obj()
-    exp = [obj.preorderselect(7),
-           obj.preorderselect(4),
+    exp = [obj.preorder_select(7),
+           obj.preorder_select(4),
            0,
            0,
            0,
            0,
-           obj.preorderselect(5),
+           obj.preorder_select(5),
            0,
            0,
-           obj.preorderselect(5),
-           obj.preorderselect(4),
+           obj.preorder_select(5),
+           obj.preorder_select(4),
            0,
            0,
-           obj.preorderselect(8),
-           obj.preorderselect(10),
+           obj.preorder_select(8),
+           obj.preorder_select(10),
            0,
            0,
            0,
            0,
-           obj.preorderselect(10),
-           obj.preorderselect(8),
-           obj.preorderselect(7)]
+           obj.preorder_select(10),
+           obj.preorder_select(8),
+           obj.preorder_select(7)]
     for i, e in enumerate(exp):
-        npt.assert_equal(obj.lchild(i), e)
+        npt.assert_equal(obj.last_child(i), e)
 
 
-def test_nsibling():
+def test_next_sibling():
     cdef BPTree obj = get_test_obj()
     exp = [0, 11, 4, 4, 6, 6, 0, 0, 0, 0, 11, 13, 13, 0, 0, 17, 17, 0, 0, 0, 0,
            0]
     for i, e in enumerate(exp):
-        npt.assert_equal(obj.nsibling(i), e)
+        npt.assert_equal(obj.next_sibling(i), e)
 
 
-def test_psibling():
+def test_previous_sibling():
     cdef BPTree obj = get_test_obj()
     exp = [0, 0, 0, 0, 2, 2, 4, 0, 0, 4, 0, 1, 1, 11, 0, 0, 0, 15, 15, 0, 11,
            0]
     for i, e in enumerate(exp):
-        npt.assert_equal(obj.psibling(i), e)
+        npt.assert_equal(obj.previous_sibling(i), e)
 
 
 def test_fwdsearch():
