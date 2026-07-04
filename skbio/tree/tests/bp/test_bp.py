@@ -9,6 +9,9 @@
 # line length is useful here, so disabling check
 # flake8: noqa: E501
 
+import io
+import os
+import tempfile
 from unittest import TestCase, main
 
 import numpy as np
@@ -325,6 +328,55 @@ class BPTests(TestCase):
         self.assertEqual(self.bptree.length(1), 1.23)
         self.assertEqual(self.bptree.length(5), 0.0)
         self.assertEqual(self.bptree.length(7), 5.43)
+
+    def test_write_read_roundtrip(self):
+        # give the tree names and lengths so the round-trip has data to preserve
+        names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None,
+                          None, '7', None, '8', '9', '10', None, '11', None,
+                          None, None, None])
+        lengths = np.array([0, 1, 2, 0, 3, 0, 4, 5, 0, 0, 0, 6, 0, 7, 8, 9, 0,
+                            10, 0, 0, 0, 0], dtype=np.double)
+        self.bptree.set_names(names)
+        self.bptree.set_lengths(lengths)
+
+        # round-trip through a file-like object
+        buf = io.BytesIO()
+        self.bptree.write(buf)
+        buf.seek(0)
+        obs = BPTree.read(buf)
+
+        # topology, names, and lengths are preserved (edges are not stored)
+        npt.assert_equal(obs.data, self.bptree.data)
+        for i in range(obs.data.size):
+            self.assertEqual(obs.name(i), self.bptree.name(i))
+            self.assertEqual(obs.length(i), self.bptree.length(i))
+
+        # and the reconstructed tree answers queries identically
+        self.assertEqual(obs.ntips(), self.bptree.ntips())
+
+    def test_write_read_roundtrip_file(self):
+        names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None,
+                          None, '7', None, '8', '9', '10', None, '11', None,
+                          None, None, None])
+        lengths = np.array([0, 1, 2, 0, 3, 0, 4, 5, 0, 0, 0, 6, 0, 7, 8, 9, 0,
+                            10, 0, 0, 0, 0], dtype=np.double)
+        self.bptree.set_names(names)
+        self.bptree.set_lengths(lengths)
+
+        # np.savez_compressed appends ".npz" to a bare filename, so the path
+        # must already carry that suffix to round-trip via read()
+        fd, path = tempfile.mkstemp(suffix='.npz')
+        os.close(fd)
+        try:
+            self.bptree.write(path)
+            obs = BPTree.read(path)
+        finally:
+            os.remove(path)
+
+        npt.assert_equal(obs.data, self.bptree.data)
+        for i in range(obs.data.size):
+            self.assertEqual(obs.name(i), self.bptree.name(i))
+            self.assertEqual(obs.length(i), self.bptree.length(i))
 
 
 if __name__ == '__main__':

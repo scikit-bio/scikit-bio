@@ -278,7 +278,9 @@ cdef class BPTree:
         write
 
         """
-        data = np.load(fname)
+        # names is an object array pickled by ``write``, so unpickling must be
+        # allowed to restore it
+        data = np.load(fname, allow_pickle=True)
         bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
         return bp
 
