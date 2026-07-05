@@ -1,0 +1,20 @@
+BitArray -- bit array C library
+https://github.com/noporpoise/BitArray/
+Maintainer: Isaac Turner <turner.isaac@gmail.com>
+
+License: Public Domain, no warranty
+
+The following files under skbio/tree/bp/_bitarray/ are vendored from the
+BitArray project and are distributed as Public Domain:
+
+    bit_array.c
+    bit_array.h
+    bit_macros.h
+
+Each file retains the project's original attribution/license header, which
+states:
+
+    project: bit array C library
+    url: https://github.com/noporpoise/BitArray/
+    maintainer: Isaac Turner <turner.isaac@gmail.com>
+    license: Public Domain, no warranty
