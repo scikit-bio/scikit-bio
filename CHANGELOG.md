@@ -2,6 +2,10 @@
 
 ## Version 0.7.4-dev
 
+### Features
+
+* Added `BPTree`, a succinct balanced-parentheses representation of trees for memory-efficient storage and fast topological queries on very large trees. Ported from [improved-octo-waddle](https://github.com/biocore/improved-octo-waddle) ([#2498](https://github.com/scikit-bio/scikit-bio/pull/2498)).
+
 ## Version 0.7.3
 
 ### Features
