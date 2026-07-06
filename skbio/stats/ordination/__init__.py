@@ -174,7 +174,7 @@ References
 from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
-from ._principal_coordinate_analysis import pcoa, pcoa_biplot
+from ._principal_coordinate_analysis import pcoa, pcoa_biplot, pcoa_project
 from ._principal_component_analysis import pca
 from ._ordination_results import OrdinationResults
 from ._mmvec import mmvec, MMvec, MMvecResult
@@ -195,6 +195,7 @@ __all__ = [
     # "pca",
     "pcoa",
     "pcoa_biplot",
+    "pcoa_project",
     "mmvec",
     "MMvec",
     "MMvecResult",

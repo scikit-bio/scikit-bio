@@ -326,7 +326,7 @@ def pcoa(
                 )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(distmat.copy(), inplace=inplace)
 
         eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:
@@ -641,6 +641,96 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
     eigenvectors = U_fsvd.real
 
     return eigenvalues, eigenvectors
+
+
+def pcoa_project(ordination, distances_to_reference, reference_distmat=None, sample_squared_distance_to_centroid=None):
+    r"""Project point(s) to a reference PCoA
+
+    More specifally it uses Gower's Projection formula [1] to add a point to an existing PCoA.
+    The benefit is that the reference PCoA stays stable. Indexes of ordination and reference_distmat
+    or ordination and sample_squared_distance_to_centroid has to align. We dont check alignment at the
+    moment.
+
+        Parameters
+    ----------
+    ordination : OrdinationResults
+        Existing PCoA result, usually returned by ``pcoa``. Calculated from the reference
+        distances.
+    distances_to_reference : pandas.Series or pandas.DataFrame
+        Distances from the new sample(s) to the reference samples used to compute
+        ``ordination``.
+        If a Series is provided, it represents one new sample, with one distance per
+        reference sample. If a DataFrame is provided, each column represents one new
+        sample and each row represents one reference sample.
+
+        The order of distances must match the order of ``ordination.samples`` and
+        ``sample_squared_distance_to_centroid``. No reordering is currently
+        performed.
+    reference_distmat : pandas.DataFrame, optional
+        Original square distance matrix used to compute the reference PCoA. This is
+        used to compute the diagonal of the centered inner-product matrix when
+        ``sample_squared_distance_to_centroid`` is not provided.
+    sample_squared_distance_to_centroid : array_like or pandas.Series, optional
+        Squared distances of the reference samples to the centroid of the reference
+        configuration. Equivalently, this is the diagonal of the centered
+        inner-product matrix obtained from the original reference distance matrix.
+        Supplying this avoids recomputing it from ``reference_distmat``
+
+    Returns
+    -------
+    pandas.DataFrame
+        Projected coordinates of the new sample(s) in the existing PCoA space. Rows
+        correspond to new samples and columns correspond to the PCoA axes in
+        ``ordination.samples``.
+
+    References
+    ----------
+    [1] Gower, J. C. (1968). Adding a point to vector diagrams in multivariate
+    analysis. Biometrika, 55(3), 582-585.
+    """
+    eigvals_obj = ordination.eigvals
+    if sample_squared_distance_to_centroid is None:
+        if reference_distmat is None:
+            raise ValueError(
+                "Need either `reference_distmat` or `b_diag`. "
+                "`ordination.samples` alone is not enough for exact Gower "
+                "projection when the PCoA was truncated."
+            )
+        # Double center the distance matrix/ first step of regular PCoaA
+        B = center_distance_matrix(reference_distmat.to_numpy(), inplace=False)
+
+        # Get the diagonal of the double centered matrix
+        B = np.asarray(B, dtype=float)
+        sample_squared_distance_to_centroid = np.diag(B).astype(float)
+    elif not isinstance(sample_squared_distance_to_centroid, np.array):
+        raise ValueError(
+            "sample_squared_distance_to_centroid has to be np.array"
+        )
+    # Gower projection:
+    #
+    # q_i = B_ii - delta_i^2
+    # x_new,k = sum_i X_ik q_i / (2 lambda_k)
+    # We use matrix multiplication to realize the multiplication sum, divided by eigenvalues times 2
+    X = ordination.samples.to_numpy(dtype=float)
+    if isinstance(distances_to_reference, pd.DataFrame):
+        X_new_projected = []
+        for col in distances_to_reference.columns:
+            delta_squared = distances_to_reference[col] ** 2
+            q = sample_squared_distance_to_centroid - delta_squared
+            X_new_projected.append((q.T @ X) / (2 * eigvals_obj))
+        X_new = np.vstack(X_new_projected)
+        return pd.DataFrame(X_new, index=distances_to_reference.columns, columns=ordination.samples.columns)
+    elif isinstance(distances_to_reference, pd.Series):
+        delta_squared = distances_to_reference ** 2
+        q = sample_squared_distance_to_centroid - delta_squared
+        X_new = (q.T @ X) / (2 * eigvals_obj)
+        return pd.DataFrame(X_new, columns=[distances_to_reference.name]).T
+    else:
+        raise ValueError(
+            "`distances_to_reference` must be a pandas Series or DataFrame. "
+            "Use a Series for one new sample with distances to all reference samples, "
+            "or a DataFrame with one column per new sample."
+        )
 
 
 def pcoa_biplot(ordination, y):
