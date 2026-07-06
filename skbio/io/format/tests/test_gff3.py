@@ -190,6 +190,41 @@ class ReaderTests(GFF3IOTests):
             obs = list(_gff3_to_generator(empty_fp))
             self.assertEqual(obs, [])
 
+    def test_yield_record_noncontiguous(self):
+        # GFF3 does not require features to be grouped by seq id; features for
+        # the same seq id must be merged even when interleaved with others
+        s = ('seqid1\taaa\n'
+             'seqid2\tbbb\n'
+             'seqid1\tccc\n')
+        exp = [('data', 'seqid1', ['seqid1\taaa', 'seqid1\tccc']),
+               ('data', 'seqid2', ['seqid2\tbbb'])]
+        with io.StringIO(s) as fh:
+            self.assertEqual(list(_yield_record(fh)), exp)
+
+    def test_gff3_to_interval_metadata_noncontiguous(self):
+        # reading a specific seq id must return all of its features, even those
+        # that appear after features of other seq ids (see issue #1842)
+        s = ('##gff-version 3\n'
+             'ctg1\t.\tgene\t1\t10\t.\t+\t.\tID=g1\n'
+             'ctg2\t.\tgene\t1\t10\t.\t+\t.\tID=g2\n'
+             'ctg1\t.\tmRNA\t1\t10\t.\t+\t.\tID=m1\n')
+        with io.StringIO(s) as fh:
+            obs = _gff3_to_interval_metadata(fh, seq_id='ctg1')
+        self.assertEqual([i.metadata['ID'] for i in obs._intervals],
+                         ['g1', 'm1'])
+
+    def test_gff3_to_generator_noncontiguous(self):
+        # each seq id is yielded exactly once, with all of its features merged
+        s = ('##gff-version 3\n'
+             'ctg1\t.\tgene\t1\t10\t.\t+\t.\tID=g1\n'
+             'ctg2\t.\tgene\t1\t10\t.\t+\t.\tID=g2\n'
+             'ctg1\t.\tmRNA\t1\t10\t.\t+\t.\tID=m1\n')
+        with io.StringIO(s) as fh:
+            obs = [(sid, [i.metadata['ID'] for i in im._intervals])
+                   for sid, im in _gff3_to_generator(fh)]
+        exp = [('ctg1', ['g1', 'm1']), ('ctg2', ['g2'])]
+        self.assertEqual(obs, exp)
+
     def test_gff3_to_sequence(self):
         obs = _gff3_to_sequence(self.seq_fp)
         self.assertEqual(obs, self.seq)
