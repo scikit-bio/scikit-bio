@@ -37,6 +37,7 @@ from skbio.stats.distance._base import _preprocess_input, _run_monte_carlo_stats
 from skbio.stats.distance._utils import is_symmetric_and_hollow
 from skbio.util import assert_data_frame_almost_equal
 from skbio.util._testing import assert_series_almost_equal
+from skbio.util._testing import ArrayAPITestMixin, array_backends
 
 
 class PairwiseMatrixTestData:
@@ -2232,6 +2233,70 @@ class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
 
     def setUp(self):
         super(DistanceMatrixTests, self).setUp()
+
+
+class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
+    """A DistanceMatrix can hold a non-NumPy (e.g. GPU-resident) array-API buffer."""
+
+    def setUp(self):
+        rng = np.random.default_rng(0)
+        a = rng.random((5, 5))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        self.data = a
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_constructor_preserves_buffer(self, xp, device):
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        self.assert_type_preserved(dm.data, xp, device)
+        self.assertEqual(tuple(dm.shape), (5, 5))
+        self.assert_close(dm.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_replace_data_buffer(self, xp, device):
+        dm = DistanceMatrix(self.data)
+        dm._data = self.make_array(xp, device, self.data)
+        self.assert_type_preserved(dm.data, xp, device)
+        self.assert_close(dm.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_nonsymmetric_rejected(self, xp, device):
+        bad = self.data.copy()
+        bad[0, 1] = bad[0, 1] + 5.0
+        with self.assertRaises(DistanceMatrixError):
+            DistanceMatrix(self.make_array(xp, device, bad))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_nonhollow_rejected(self, xp, device):
+        bad = self.data.copy()
+        bad[2, 2] = 1.0
+        with self.assertRaises(DistanceMatrixError):
+            DistanceMatrix(self.make_array(xp, device, bad))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permute_backend(self, xp, device):
+        ref = DistanceMatrix(self.data).permute(condensed=True, seed=0)
+        got = DistanceMatrix(
+            self.make_array(xp, device, self.data)
+        ).permute(condensed=True, seed=0)
+        self.assert_close(got, ref)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_copy_backend(self, xp, device):
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        cp = dm.copy()
+        self.assert_type_preserved(cp.data, xp, device)
+        self.assert_close(cp.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_filter_backend(self, xp, device):
+        ids = list("abcde")
+        dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=ids)
+        sub = dm.filter(["a", "c", "e"])
+        self.assert_type_preserved(sub.data, xp, device)
+        self.assertEqual(tuple(sub.ids), ("a", "c", "e"))
+        ref = DistanceMatrix(self.data, ids=ids).filter(["a", "c", "e"])
+        self.assert_close(sub.data, ref.data)
 
 
 if __name__ == "__main__":

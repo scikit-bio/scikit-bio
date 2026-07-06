@@ -26,6 +26,9 @@ from skbio.io.descriptors import Read, Write
 
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
+from skbio.util._array import ingest_array
+
+import array_api_compat as _aac
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Collection
@@ -534,7 +537,16 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             self._validate_ids(filtered_data, ids)
             return self.__class__(filtered_data, ids, validate=False, condensed=True)
         else:
-            filtered_data = distmat_reorder(self.redundant_form(), idxs)
+            if _aac.is_numpy_array(self._data):
+                filtered_data = distmat_reorder(self.redundant_form(), idxs)
+            else:
+                # non-NumPy (e.g. GPU) buffer: reorder rows/cols via an xp gather
+                xp = _aac.array_namespace(self._data)
+                idx = xp.asarray(
+                    np.asarray(idxs, dtype=int),
+                    device=getattr(self._data, "device", None),
+                )
+                filtered_data = self._data[idx][:, idx]
             self._validate_ids(filtered_data, ids)
             return self.__class__(filtered_data, ids, validate=False)
 
@@ -1188,18 +1200,24 @@ class SymmetricMatrix(PairwiseMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer as-is so
+            # the DistanceMatrix can hold GPU data. NumPy / list / tuple inputs
+            # are still normalized to a NumPy array below.
+            _xp, data = ingest_array(data)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return (
             data_,
@@ -1308,7 +1326,18 @@ class SymmetricMatrix(PairwiseMatrix):
         be symmetric.
 
         """
-        if (data.ndim != 1) and (not is_symmetric(data)):
+        if data.ndim == 1:
+            return
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # xp-aware symmetry check for a non-NumPy buffer (a NaN makes the
+            # inequality True, so this also rejects NaNs, matching is_symmetric).
+            xp = _aac.array_namespace(data)
+            if bool(xp.any(xp.matrix_transpose(data) != data)):
+                raise DistanceMatrixError(
+                    "Data must be symmetric and cannot contain NaNs."
+                )
+            return
+        if not is_symmetric(data):
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
 
     def _validate_diagonal(
@@ -1382,7 +1411,13 @@ class SymmetricMatrix(PairwiseMatrix):
                 f"Found {data.ndim} dimensions."
             )
 
-        if data.dtype not in (np.float32, np.float64):
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # array-API (e.g. GPU) buffer: check the float dtype via the namespace
+            if not _aac.array_namespace(data).isdtype(data.dtype, "real floating"):
+                raise PairwiseMatrixError(
+                    "Data must contain only floating point values."
+                )
+        elif data.dtype not in (np.float32, np.float64):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     @property
@@ -1751,6 +1786,20 @@ class SymmetricMatrix(PairwiseMatrix):
         rng = get_rng(seed)
         order = rng.permutation(self.shape[0])
 
+        if not _aac.is_numpy_array(self._data):
+            # Non-NumPy (e.g. GPU-resident) buffer: reorder rows and columns with
+            # an xp fancy-index gather instead of the Cython reorder helpers.
+            xp = _aac.array_namespace(self._data)
+            dev = getattr(self._data, "device", None)
+            order_xp = xp.asarray(order, device=dev)
+            permuted = self._data[order_xp][:, order_xp]
+            if condensed:
+                n = permuted.shape[0]
+                idx = xp.arange(n, device=dev)
+                # row-major upper triangle == condensed_form order
+                return permuted[idx[:, None] < idx[None, :]]
+            return self.__class__(permuted, self.ids, validate=False)
+
         if condensed:
             # if self.__class__ != DistanceMatrix:
             #     raise TypeError("Only distance matrices can return condensed.")
@@ -1802,7 +1851,11 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        if _aac.is_numpy_array(self._data):
+            data = self._data.copy()
+        else:
+            # non-NumPy (e.g. GPU) buffer: copy via the array-API namespace
+            data = _aac.array_namespace(self._data).asarray(self._data, copy=True)
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
@@ -2026,18 +2079,24 @@ class DistanceMatrix(SymmetricMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer as-is so
+            # the DistanceMatrix can hold GPU data. NumPy / list / tuple inputs
+            # are still normalized to a NumPy array below.
+            _xp, data = ingest_array(data)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return data_, ids, validate_data, validate_ids, validate_shape
 
@@ -2048,16 +2107,24 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # if the input data is 1D, we don't need to check for hollowness or symmetry
-        if data.ndim == 2:
+        if data.ndim != 2:
+            return
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # xp-aware symmetry + hollowness for a non-NumPy buffer (a NaN makes
+            # the inequality True, so this also rejects NaNs, like is_symmetric).
+            xp = _aac.array_namespace(data)
+            data_sym = not bool(xp.any(xp.matrix_transpose(data) != data))
+            data_hol = not bool(xp.any(xp.linalg.diagonal(data) != 0))
+        else:
             data_sym, data_hol = is_symmetric_and_hollow(data)
-            if not data_sym:
-                raise DistanceMatrixError(
-                    "Data must be symmetric and cannot contain NaNs."
-                )
-            if not data_hol:
-                raise DistanceMatrixError(
-                    "Data must  be hollow (i.e., the diagonal can only contain zeros)."
-                )
+        if not data_sym:
+            raise DistanceMatrixError(
+                "Data must be symmetric and cannot contain NaNs."
+            )
+        if not data_hol:
+            raise DistanceMatrixError(
+                "Data must  be hollow (i.e., the diagonal can only contain zeros)."
+            )
 
     def _copy(self, transpose: bool = False, condensed: bool = False) -> DistanceMatrix:
         """Copy support.
@@ -2075,7 +2142,11 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        if _aac.is_numpy_array(self._data):
+            data = self._data.copy()
+        else:
+            # non-NumPy (e.g. GPU) buffer: copy via the array-API namespace
+            data = _aac.array_namespace(self._data).asarray(self._data, copy=True)
         if transpose:
             data = data.T
         # We deepcopy IDs in case the tuple contains mutable objects at some
