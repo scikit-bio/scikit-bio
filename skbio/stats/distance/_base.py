@@ -1333,9 +1333,7 @@ class SymmetricMatrix(PairwiseMatrix):
         be symmetric.
 
         """
-        if data.ndim == 1:
-            return
-        if not is_symmetric(data):
+        if (data.ndim != 1) and (not is_symmetric(data)):
             raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
 
     def _validate_diagonal(
@@ -2089,15 +2087,16 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # if the input data is 1D, we don't need to check for hollowness or symmetry
-        if data.ndim != 2:
-            return
-        data_sym, data_hol = is_symmetric_and_hollow(data)
-        if not data_sym:
-            raise DistanceMatrixError("Data must be symmetric and cannot contain NaNs.")
-        if not data_hol:
-            raise DistanceMatrixError(
-                "Data must  be hollow (i.e., the diagonal can only contain zeros)."
-            )
+        if data.ndim == 2:
+            data_sym, data_hol = is_symmetric_and_hollow(data)
+            if not data_sym:
+                raise DistanceMatrixError(
+                    "Data must be symmetric and cannot contain NaNs."
+                )
+            if not data_hol:
+                raise DistanceMatrixError(
+                    "Data must  be hollow (i.e., the diagonal can only contain zeros)."
+                )
 
     def _copy(self, transpose: bool = False, condensed: bool = False) -> DistanceMatrix:
         """Copy support.
