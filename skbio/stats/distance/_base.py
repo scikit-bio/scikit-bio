@@ -26,6 +26,9 @@ from skbio.io.descriptors import Read, Write
 
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
+from skbio.util._array import ingest_array, copy_array
+
+import array_api_compat as _aac
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Collection
@@ -1188,18 +1191,28 @@ class SymmetricMatrix(PairwiseMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # DistanceMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return (
             data_,
@@ -1281,6 +1294,18 @@ class SymmetricMatrix(PairwiseMatrix):
             1-D or 2-D array containing the values of the matrix.
 
         """
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Array-API (e.g. GPU-resident) buffers are stored in redundant (2-D)
+            # form only. Condensed storage relies on scipy.squareform, which is
+            # NumPy-only, so a condensed or 1-D non-NumPy buffer could not be
+            # reordered/converted without a silent copy back to the host.
+            if condensed or data.ndim != 2:
+                raise SymmetricMatrixError(
+                    "Condensed form is not supported for non-NumPy (array-API) "
+                    "arrays. Provide a 2-D array to store the matrix on a "
+                    "non-NumPy device."
+                )
+            return data
         if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
@@ -1382,7 +1407,11 @@ class SymmetricMatrix(PairwiseMatrix):
                 f"Found {data.ndim} dimensions."
             )
 
-        if data.dtype not in (np.float32, np.float64):
+        # isdtype works for NumPy and non-NumPy (e.g. GPU) buffers alike, via each
+        # array's own namespace. Restrict to single/double precision (as the legacy
+        # NumPy check did) so both paths accept exactly the same dtypes.
+        xp = _aac.array_namespace(data)
+        if not xp.isdtype(data.dtype, (xp.float32, xp.float64)):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     @property
@@ -1802,7 +1831,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        data = copy_array(self._data)
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
@@ -2026,18 +2055,28 @@ class DistanceMatrix(SymmetricMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # DistanceMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return data_, ids, validate_data, validate_ids, validate_shape
 
@@ -2075,7 +2114,7 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        data = copy_array(self._data)
         if transpose:
             data = data.T
         # We deepcopy IDs in case the tuple contains mutable objects at some
