@@ -11,6 +11,7 @@ from unittest import TestCase, main, skipUnless
 
 import numpy as np
 import numpy.testing as npt
+import array_api_compat as aac
 import pandas as pd
 import pandas.testing as pdt
 import scipy.spatial.distance
@@ -2297,6 +2298,53 @@ class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assertEqual(tuple(sub.ids), ("a", "c", "e"))
         ref = DistanceMatrix(self.data, ids=ids).filter(["a", "c", "e"])
         self.assert_close(sub.data, ref.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_integer_buffer_cast_to_float(self, xp, device):
+        # A non-floating buffer must be cast to float64 (matching the NumPy path,
+        # which casts non-float input to float), while keeping the backend/device.
+        idata = [
+            [0, 1, 2, 3, 4],
+            [1, 0, 5, 6, 7],
+            [2, 5, 0, 8, 9],
+            [3, 6, 8, 0, 1],
+            [4, 7, 9, 1, 0],
+        ]
+        dm = DistanceMatrix(self.make_array(xp, device, idata, dtype=xp.int64))
+        self.assert_type_preserved(dm.data, xp, device)
+        ns = aac.array_namespace(dm.data)
+        self.assertTrue(
+            ns.isdtype(dm.data.dtype, (ns.float32, ns.float64)),
+            f"integer buffer not cast to float64, got {dm.data.dtype}",
+        )
+        self.assert_close(dm.data, np.asarray(idata, dtype=float))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_float16_cast_to_supported_precision(self, xp, device):
+        # float16 must be cast to single/double precision (matching the NumPy path,
+        # which upcasts float16 to float64), not preserved as float16.
+        buf = self.make_array(xp, device, self.data, dtype=xp.float16)
+        dm = DistanceMatrix(buf)
+        self.assert_type_preserved(dm.data, xp, device)
+        ns = aac.array_namespace(dm.data)
+        self.assertTrue(ns.isdtype(dm.data.dtype, (ns.float32, ns.float64)))
+        self.assertFalse(ns.isdtype(dm.data.dtype, xp.float16))
+
+    @array_backends("jax", "torch", "cupy")
+    def test_condensed_rejected_for_non_numpy(self, xp, device):
+        # Condensed storage is NumPy-only (scipy.squareform); a non-NumPy 2-D
+        # buffer with condensed=True must raise rather than silently host-copy.
+        buf = self.make_array(xp, device, self.data)
+        with self.assertRaises(SymmetricMatrixError):
+            DistanceMatrix(buf, condensed=True)
+
+    @array_backends("jax", "torch", "cupy")
+    def test_1d_buffer_rejected_for_non_numpy(self, xp, device):
+        # A 1-D (condensed-form) non-NumPy buffer must be rejected: expanding it
+        # to redundant form would require scipy.squareform (NumPy-only).
+        cond = self.make_array(xp, device, np.array([1.0, 2.0, 3.0]))
+        with self.assertRaises(SymmetricMatrixError):
+            DistanceMatrix(cond)
 
 
 if __name__ == "__main__":
