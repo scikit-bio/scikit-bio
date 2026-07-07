@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import numpy as np
+import array_api_compat as _aac
 
 from ._cutils import is_symmetric_and_hollow_cy
 from ._cutils import distmat_reorder_cy, distmat_reorder_condensed_cy
@@ -31,11 +32,23 @@ def is_symmetric_and_hollow(mat):
 
     Notes
     -----
+    A non-NumPy array-API buffer (e.g. GPU-resident) is checked via its own array
+    namespace; a NumPy array uses the parallel Cython kernel.
+
     This function uses parallel computation for improved performance.
     See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """
+    if _aac.is_array_api_obj(mat) and not _aac.is_numpy_array(mat):
+        # Non-NumPy (e.g. GPU-resident) buffer: check symmetry and hollowness via
+        # the array-API namespace. A NaN makes the inequality True, so this also
+        # rejects NaNs, matching the Cython path.
+        xp = _aac.array_namespace(mat)
+        is_symmetric = not bool(xp.any(xp.matrix_transpose(mat) != mat))
+        is_hollow = not bool(xp.any(xp.linalg.diagonal(mat) != 0))
+        return is_symmetric, is_hollow
+
     # is_symmetric_and_hollow_cy is optimized
     # for the common cas of c_contiguous.
     # For all other cases, make a copy.
@@ -132,11 +145,26 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
 
     Notes
     -----
+    A non-NumPy array-API buffer (e.g. GPU-resident) is reordered on its own device
+    via the array namespace; a NumPy array uses the parallel Cython kernel.
+
     This function uses parallel computation for improved performance.
     See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """
+    if _aac.is_array_api_obj(in_mat) and not _aac.is_numpy_array(in_mat):
+        # Non-NumPy (e.g. GPU-resident) buffer: reorder rows and columns with an
+        # xp fancy-index gather, keeping the result on the input's device.
+        if validate:
+            _validate_order(np.asarray(reorder_vec, dtype=np.intp), in_mat)
+        xp = _aac.array_namespace(in_mat)
+        order = xp.asarray(
+            np.asarray(reorder_vec, dtype=int),
+            device=getattr(in_mat, "device", None),
+        )
+        return in_mat[order][:, order]
+
     np_reorder = np.asarray(reorder_vec, dtype=np.intp)
     if validate:
         _validate_order(np_reorder, in_mat)
@@ -180,11 +208,29 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
 
     Notes
     -----
+    A non-NumPy array-API buffer (e.g. GPU-resident) is reordered on its own device
+    via the array namespace; a NumPy array uses the parallel Cython kernel.
+
     This function uses parallel computation for improved performance.
     See the :install:`parallelization guide <#parallelization>` for information on
     controlling the number of threads used.
 
     """
+    if _aac.is_array_api_obj(in_mat) and not _aac.is_numpy_array(in_mat):
+        # Non-NumPy (e.g. GPU-resident) buffer: reorder then take the row-major
+        # upper triangle (the condensed_form order), on the input's device.
+        # Note: the boolean-mask gather relies on library-specific boolean
+        # indexing (supported by numpy/torch/jax/cupy), not the strict array API.
+        if validate:
+            _validate_order(np.asarray(reorder_vec, dtype=np.intp), in_mat)
+        xp = _aac.array_namespace(in_mat)
+        dev = getattr(in_mat, "device", None)
+        order = xp.asarray(np.asarray(reorder_vec, dtype=int), device=dev)
+        reordered = in_mat[order][:, order]
+        n = reordered.shape[0]
+        idx = xp.arange(n, device=dev)
+        return reordered[idx[:, None] < idx[None, :]]
+
     np_reorder = np.asarray(reorder_vec, dtype=np.intp)
     if validate:
         _validate_order(np_reorder, in_mat)
