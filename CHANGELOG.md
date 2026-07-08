@@ -11,6 +11,10 @@
 
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 
+### Bug Fixes
+
+* Fixed the GenBank/EMBL/GFF3 feature-location parser raising `FileFormatError` on remote entry references with fuzzy boundaries (e.g. `AB000684.1:<1..>275`). Such references are now dropped consistently with other remote entry references (whose coordinates refer to a different sequence), rather than raising ([#2502](https://github.com/scikit-bio/scikit-bio/pull/2502)).
+
 ## Version 0.7.3
 
 ### Features
