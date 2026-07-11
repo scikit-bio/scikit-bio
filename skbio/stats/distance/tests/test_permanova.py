@@ -21,6 +21,7 @@ from skbio.stats.distance import _permanova as permanova_mod
 from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
                                           permanova_f_stat_sW_condensed_cy)
 from skbio.util import get_data_path, numba_code
+from skbio.util._testing import ArrayAPITestMixin, array_backends
 from skbio.stats.distance._base import _preprocess_input_sng
 
 
@@ -507,6 +508,31 @@ class InternalPERMANOVATests(PERMANOVATestData):
                         engine="cython")
         self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+
+class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
+    """permanova on a DistanceMatrix backed by a non-NumPy array-API buffer."""
+
+    def setUp(self):
+        rng = np.random.default_rng(1)
+        a = rng.random((12, 12))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        self.data = a
+        self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
+                         'c', 'c', 'c', 'd', 'd', 'd']
+        self.ref = permanova(
+            DistanceMatrix(a), self.grouping, permutations=99, seed=0
+        )
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_backends(self, xp, device):
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        res = permanova(dm, self.grouping, permutations=99, seed=0)
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=10
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
 
 
 if __name__ == '__main__':
