@@ -11,6 +11,10 @@
 
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 
+### Bug Fixes
+
+* Fixed `pair_align` raising `TypeError` when called with `atol=None`, a documented valid value equivalent to `atol=0` ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
+
 ## Version 0.7.3
 
 ### Features

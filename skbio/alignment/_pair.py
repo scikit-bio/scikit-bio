@@ -396,6 +396,13 @@ def pair_align(
     # in Cython, this function retains as many steps as possible in Python, thereby
     # "outsourcing" computation and optimization to the upstream library (NumPy).
 
+    # Normalize `atol=None` to 0.0. Per the docstring, None is equivalent to 0 (exact
+    # score comparison), but downstream code (both the `<=` comparisons below and the
+    # Cython traceback routines, which take a typed `floating eps`) requires a real
+    # number and will raise a TypeError if `atol` is left as None.
+    if atol is None:
+        atol = 0.0
+
     # Determine alignment mode (False - global, True - local)
     local = _prep_mode(mode)
 
