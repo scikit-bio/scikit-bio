@@ -13,7 +13,7 @@
 
 ### Bug Fixes
 
-* Fixed `pair_align` raising `TypeError` when called with `atol=None`, a documented valid value equivalent to `atol=0` ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
+* Fixed `pair_align` raising `TypeError` when called with `atol=None`, a documented valid value equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 
 ## Version 0.7.3
 
