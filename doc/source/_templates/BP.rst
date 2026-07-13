@@ -58,4 +58,12 @@
       ~{{ name }}.shear
       ~{{ name }}.collapse
 
+   .. rubric:: Tree conversion
+
+   .. autosummary::
+      :toctree:
+
+      ~{{ name }}.from_treenode
+      ~{{ name }}.to_array
+
    {% endblock %}

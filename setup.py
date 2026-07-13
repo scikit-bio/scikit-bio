@@ -205,11 +205,6 @@ extensions += [
         include_dirs=_bp_includes,
     ),
     Extension(
-        "skbio.tree.bp._bp_conv",
-        ["skbio/tree/bp/_bp_conv.pyx"],
-        include_dirs=_bp_includes,
-    ),
-    Extension(
         "skbio.tree.bp._bp_insert",
         ["skbio/tree/bp/_bp_insert.pyx"],
         include_dirs=_bp_includes,

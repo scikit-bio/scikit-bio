@@ -13,8 +13,8 @@ import skbio
 import numpy.testing as npt
 import numpy as np
 
-from skbio.tree.bp import (to_skbio_treenode, from_skbio_treenode, parse_newick,
-                           to_skbio_treearray)
+from skbio.tree import BPTree, TreeNode
+from skbio.tree.bp import parse_newick
 
 
 class ConversionTests(TestCase):
@@ -23,18 +23,18 @@ class ConversionTests(TestCase):
         self.bp = parse_newick(self.tstr)
         self.sktn = skbio.TreeNode.read(StringIO(self.tstr))
 
-    def test_to_skbio_treenode_with_edge_numbers(self):
+    def test_from_bptree_with_edge_numbers(self):
         in_ = '((A:.01{0}, B:.01{1})D:.01{3}, C:.01{4}) {5};'
         obs = parse_newick(in_)
-        obs_sk = to_skbio_treenode(obs)
+        obs_sk = TreeNode.from_bptree(obs)
         self.assertEqual(obs_sk.find('A').edge_num, 0)
         self.assertEqual(obs_sk.find('B').edge_num, 1)
         self.assertEqual(obs_sk.find('D').edge_num, 3)
         self.assertEqual(obs_sk.find('C').edge_num, 4)
         self.assertEqual(obs_sk.edge_num, 5)
 
-    def test_to_skbio_treenode(self):
-        obs = to_skbio_treenode(self.bp)
+    def test_from_bptree(self):
+        obs = TreeNode.from_bptree(self.bp)
         for o, e in zip(obs.traverse(), self.sktn.traverse()):
             if e.length is None:
                 self.assertEqual(o.length, None if e.is_root() else 0.0)
@@ -44,8 +44,8 @@ class ConversionTests(TestCase):
 
         self.assertEqual(obs.ascii_art(), self.sktn.ascii_art())
 
-    def test_from_skbio_treenode(self):
-        obs_bp = from_skbio_treenode(self.sktn)
+    def test_from_treenode(self):
+        obs_bp = BPTree.from_treenode(self.sktn)
         exp_bp = self.bp
 
         npt.assert_equal(obs_bp.data, exp_bp.data)
@@ -64,7 +64,7 @@ class ConversionTests(TestCase):
                         6: True, 7: True, 8: False, 9: False, 10: False}
         exp_name = np.array(['a', 'b', 'c', 'd', 'x', 'y', 'e', 'f', 'z', 'z',
                             None])
-        obs = to_skbio_treearray(t)
+        obs = t.to_array()
 
         obs_child_index = obs['child_index']
         obs_length = obs['length']
@@ -78,6 +78,34 @@ class ConversionTests(TestCase):
 
         for k in obs_id_index:
             self.assertEqual(obs_id_index[k].is_tip(), exp_id_index[k])
+
+    def test_from_treenode_returns_bptree(self):
+        obs_bp = BPTree.from_treenode(self.sktn)
+        self.assertIsInstance(obs_bp, BPTree)
+        npt.assert_equal(obs_bp.data, self.bp.data)
+
+    def test_treenode_from_bptree(self):
+        obs_tn = TreeNode.from_bptree(self.bp)
+        self.assertIsInstance(obs_tn, TreeNode)
+        self.assertEqual(obs_tn.ascii_art(), self.sktn.ascii_art())
+
+    def test_roundtrip_methods(self):
+        # BPTree -> TreeNode -> BPTree preserves topology
+        rt = BPTree.from_treenode(TreeNode.from_bptree(self.bp))
+        npt.assert_equal(rt.data, self.bp.data)
+
+        # TreeNode -> BPTree -> TreeNode preserves structure
+        rt_tn = TreeNode.from_bptree(BPTree.from_treenode(self.sktn))
+        self.assertEqual(rt_tn.ascii_art(), self.sktn.ascii_art())
+
+    def test_from_bptree_preserves_subclass(self):
+        class MyTree(TreeNode):
+            pass
+
+        obs = MyTree.from_bptree(self.bp)
+        self.assertIsInstance(obs, MyTree)
+        for node in obs.traverse(include_self=True):
+            self.assertIsInstance(node, MyTree)
 
 
 if __name__ == '__main__':

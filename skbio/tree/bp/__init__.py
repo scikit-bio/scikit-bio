@@ -19,7 +19,6 @@ public objects are re-exported from :mod:`skbio.tree`.
 
 from ._bp import BPTree
 from ._bp_io import parse_newick, write_newick, parse_jplace
-from ._bp_conv import to_skbio_treenode, from_skbio_treenode, to_skbio_treearray
 from ._bp_insert import insert_fully_resolved
 
 __all__ = [
@@ -27,8 +26,5 @@ __all__ = [
     "parse_newick",
     "write_newick",
     "parse_jplace",
-    "to_skbio_treenode",
-    "from_skbio_treenode",
-    "to_skbio_treearray",
     "insert_fully_resolved",
 ]

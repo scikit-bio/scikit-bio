@@ -284,6 +284,114 @@ cdef class BPTree:
         bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
         return bp
 
+    @classmethod
+    def from_treenode(cls, tree):
+        """Construct a BPTree from a :class:`~skbio.tree.TreeNode`.
+
+        Parameters
+        ----------
+        tree : skbio.tree.TreeNode
+            The tree to convert.
+
+        Returns
+        -------
+        BPTree
+            The tree represented in balanced-parentheses form.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.from_bptree
+
+        """
+        n_nodes = len(list(tree.traverse(include_self=True)))
+
+        topo = np.zeros(n_nodes * 2, dtype=np.uint8)
+        names = np.full(n_nodes * 2, None, dtype=object)
+        lengths = np.zeros(n_nodes * 2, dtype=np.double)
+        edges = np.zeros(n_nodes * 2, dtype=np.int32)
+
+        ptr = 0
+        seen = set()
+        for n in tree.pre_and_postorder(include_self=True):
+            if n not in seen:
+                topo[ptr] = 1
+                names[ptr] = n.name
+                lengths[ptr] = n.length or 0.0
+                edges[ptr] = getattr(n, 'edge_num', None) or 0
+
+                if n.is_tip():
+                    ptr += 1
+
+                seen.add(n)
+
+            ptr += 1
+        return cls(topo, names=names, lengths=lengths, edges=edges)
+
+    def to_array(self):
+        """Return an array representation of the tree.
+
+        This mirrors :meth:`skbio.tree.TreeNode.to_array`.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys ``'child_index'``, ``'length'``,
+            ``'id_index'`` and ``'name'``.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.to_array
+
+        """
+        cdef int i
+
+        class mock_node:
+            def __init__(self, id, is_tip):
+                self.is_tip_ = is_tip
+                self.id = id
+
+            def is_tip(self):
+                return self.is_tip_
+
+        child_index = np.zeros((int(self.data.sum()) - self.ntips(), 3), dtype=np.int64)
+        length = np.zeros(self.data.sum(), dtype=np.double)
+        node_ids = np.zeros(self.data.size, dtype=np.uint32)
+        name = np.full(self.data.sum(), None, dtype=object)
+
+        # TreeNode.assign_ids, decompose target
+        chi_ptr = 0
+        cur_index = 0  # the index into node_ids, equivalent to TreeNode.assign_ids
+        id_index = dict.fromkeys(set(range(self.data.sum())))  # map a node's "id" to an object which indicates if it is a leaf or not
+        for i in range(self.data.sum()):
+            node_idx = self.postorder_select(i + 1)  # the index within the BP of the node
+
+            if not self.is_tip(node_idx):
+                first_child = self.first_child(node_idx)
+                last_child = self.last_child(node_idx)
+
+                sib_idx = first_child  # the sibling index wtihin the BP of the node
+                while sib_idx != 0 and sib_idx <= last_child:
+                    node_ids[sib_idx] = cur_index
+                    id_index[cur_index] = mock_node(cur_index, self.is_tip(sib_idx))
+                    length[cur_index] = self.length(sib_idx)
+                    name[cur_index] = self.name(sib_idx)
+
+                    cur_index += 1
+                    sib_idx = self.next_sibling(sib_idx)
+
+                child_index[chi_ptr] = [node_idx, node_ids[first_child], node_ids[last_child]]
+                chi_ptr += 1
+
+        # make sure to capture root
+        id_index[self.data.sum() - 1] = mock_node(cur_index, False)
+
+        node_ids[0] = cur_index
+        child_index[:, 0] = node_ids[child_index[:, 0]]
+        child_index = child_index[np.argsort(child_index[:, 0])]
+
+        return {'child_index': child_index, 'length': length, 'id_index': id_index,
+                'name': name}
+
     def set_names(self, cnp.ndarray[object, ndim=1] names):
         self._names = names
 

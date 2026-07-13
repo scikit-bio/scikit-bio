@@ -136,6 +136,7 @@
       :toctree:
 
       ~{{ name }}.assign_supports
+      ~{{ name }}.from_bptree
       ~{{ name }}.from_linkage_matrix
       ~{{ name }}.from_taxdump
       ~{{ name }}.from_taxonomy

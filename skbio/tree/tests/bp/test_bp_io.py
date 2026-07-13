@@ -18,7 +18,7 @@ import pandas as pd
 import pandas.testing as pdt
 import skbio
 
-from skbio.tree.bp import parse_newick, to_skbio_treenode, write_newick, parse_jplace
+from skbio.tree.bp import parse_newick, write_newick, parse_jplace
 
 
 def get_data_path(filename):
@@ -30,7 +30,7 @@ class NewickTests(TestCase):
         in_ = '((A:.01{0}, B:.01{1})D:.01{3}, C:.01{4}) {5};'
         exp_sk = '((A:.01, B:.01)D:.01, C:.01);'
         obs = parse_newick(in_)
-        obs_sk = to_skbio_treenode(obs)
+        obs_sk = skbio.TreeNode.from_bptree(obs)
         exp_sk = skbio.TreeNode.read([exp_sk])
         self.assertEqual(obs_sk.compare_rfd(exp_sk), 0)
 
@@ -71,7 +71,7 @@ class NewickTests(TestCase):
         buf = io.StringIO()
         obs = write_newick(parse_newick(test_a), buf, True)
         buf.seek(0)
-        obs = to_skbio_treenode(parse_newick(buf.read()))
+        obs = skbio.TreeNode.from_bptree(parse_newick(buf.read()))
         self.assertEqual(obs.find('foo"bar"').edge_num, 0)
         self.assertEqual(obs.find('baz').edge_num, 1)
         self.assertEqual(obs.find('x').edge_num, 2)
@@ -79,7 +79,7 @@ class NewickTests(TestCase):
         buf = io.StringIO()
         obs = write_newick(parse_newick(test_b), buf, True)
         buf.seek(0)
-        obs = to_skbio_treenode(parse_newick(buf.read()))
+        obs = skbio.TreeNode.from_bptree(parse_newick(buf.read()))
         for o in obs.traverse():
             self.assertEqual(o.edge_num, 0)
 
@@ -106,19 +106,19 @@ class NewickTests(TestCase):
     def test_parse_newick_nested_quotes(self):
         in_ = '((foo"bar":1,baz:2)x:3)r;'
         exp = skbio.TreeNode.read([in_])
-        obs = to_skbio_treenode(parse_newick(in_))
+        obs = skbio.TreeNode.from_bptree(parse_newick(in_))
         self.assertEqual(obs.compare_rfd(exp), 0.0)
 
     def test_parse_newick_with_commas(self):
         in_ = "(('foo,bar':1,baz:2)x:3)r;"
         exp = skbio.TreeNode.read([in_])
-        obs = to_skbio_treenode(parse_newick(in_))
+        obs = skbio.TreeNode.from_bptree(parse_newick(in_))
         self.assertEqual(obs.compare_rfd(exp), 0.0)
 
     def test_parse_newick_with_parens(self):
         in_ = "(('foo(b)ar':1,baz:2)x:3)r;"
         exp = skbio.TreeNode.read([in_])
-        obs = to_skbio_treenode(parse_newick(in_))
+        obs = skbio.TreeNode.from_bptree(parse_newick(in_))
         self.assertEqual(obs.compare_rfd(exp), 0.0)
 
     def test_parse_newick(self):
@@ -215,7 +215,7 @@ class JPlaceParseTests(TestCase):
 
         exp_tree = self.tree
         obs_df, obs_tree = parse_jplace(jplacedata)
-        obs_tree = to_skbio_treenode(obs_tree)
+        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
         self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
         for n in obs_tree.traverse(include_self=False):
             self.assertTrue(n.edge_num >= 0)
@@ -246,7 +246,7 @@ class JPlaceParseTests(TestCase):
         exp_df = pd.DataFrame(exp_df, columns=columns)
         exp_tree = self.tree
         obs_df, obs_tree = parse_jplace(self.jplacedata)
-        obs_tree = to_skbio_treenode(obs_tree)
+        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
         pdt.assert_frame_equal(obs_df, exp_df)
         self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
 
@@ -284,14 +284,14 @@ class JPlaceParseTests(TestCase):
         data = json.dumps(data)
         exp_tree = self.tree
         obs_df, obs_tree = parse_jplace(data)
-        obs_tree = to_skbio_treenode(obs_tree)
+        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
         pdt.assert_frame_equal(obs_df, exp_df)
         self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
 
     def test_parse_newick_linear_tree(self):
         test = '((b:3)a:2)root:1;'
         topology = parse_newick(test)
-        skbio_tree = to_skbio_treenode(topology)
+        skbio_tree = skbio.TreeNode.from_bptree(topology)
         self.assertEqual(skbio_tree.name, "root")
         self.assertEqual([n.name for n in skbio_tree.children], ["a"])
         self.assertEqual([n.name for n in skbio_tree.non_tips()], ["a"])

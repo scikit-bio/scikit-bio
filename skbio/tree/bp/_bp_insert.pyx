@@ -12,7 +12,6 @@
 # ----------------------------------------------------------------------------
 
 from ._bp cimport BPTree
-from ._bp_conv import to_skbio_treenode
 import pandas as pd
 import json
 import skbio
@@ -33,7 +32,7 @@ def _insert_setup(placements, bptree, insert_type):
     # * placement ordering
     # * preallocation of objects where "easy"
 
-    sktree = to_skbio_treenode(bptree)
+    sktree = skbio.TreeNode.from_bptree(bptree)
     node_lookup = {n.edge_num: n for n in sktree.traverse(include_self=True)}
 
     # we are only setup to handle a single placement per fragment, so pull

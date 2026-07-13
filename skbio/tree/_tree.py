@@ -5902,8 +5902,9 @@ class TreeNode(SkbioObject):
 
     @classonlymethod
     def from_taxonomy(
-        cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame,
-        extract_rank: bool = False
+        cls,
+        lineage_map: dict | Iterable[tuple] | pd.DataFrame,
+        extract_rank: bool = False,
     ) -> Self:
         r"""Construct a tree from a taxonomy.
 
@@ -6327,3 +6328,43 @@ class TreeNode(SkbioObject):
             length_v = results["length"]
             length_v[np.isnan(length_v)] = nan_length_value
         return results
+
+    @classonlymethod
+    def from_bptree(cls, bp):
+        """Construct a tree from a balanced-parentheses ``BPTree``.
+
+        Parameters
+        ----------
+        bp : skbio.tree.BPTree
+            The balanced-parentheses tree to convert.
+
+        Returns
+        -------
+        TreeNode
+            The tree represented as a ``TreeNode``. The type matches the class
+            on which this method is called, so subclasses are preserved.
+
+        See Also
+        --------
+        skbio.tree.BPTree.from_treenode
+
+        """
+        nodes = [cls() for _ in range(bp.data.sum())]
+
+        root = nodes[0]
+
+        for i in range(bp.data.sum()):
+            node_idx = bp.preorder_select(i)
+            nodes[i].name = bp.name(node_idx)
+            nodes[i].length = bp.length(node_idx)
+            nodes[i].edge_num = bp.edge(node_idx)
+
+            if node_idx != bp.root():
+                # preorder starts at 1 annoyingly
+                parent = bp.preorder_rank(bp.parent(node_idx)) - 1
+                # uncache=False avoids repeated cache clearing during bulk construction
+                nodes[parent].append(nodes[i], uncache=False)
+
+        root.length = None
+
+        return root
