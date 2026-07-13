@@ -204,11 +204,6 @@ extensions += [
         ["skbio/tree/bp/_bp_io.pyx"],
         include_dirs=_bp_includes,
     ),
-    Extension(
-        "skbio.tree.bp._bp_insert",
-        ["skbio/tree/bp/_bp_insert.pyx"],
-        include_dirs=_bp_includes,
-    ),
     # Cython test module exercising BP's cdef (C-level) methods, which are not
     # reachable from Python
     Extension(
