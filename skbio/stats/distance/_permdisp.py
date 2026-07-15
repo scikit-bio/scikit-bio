@@ -26,7 +26,7 @@ from skbio.util._decorator import params_aliased
 from skbio._config import _resolve_engine
 
 try:
-    from numba import njit, prange
+    from numba import njit
 
     NUMBA_AVAILABLE = True
 except ImportError:
@@ -40,17 +40,19 @@ if TYPE_CHECKING:  # pragma: no cover
 
 if NUMBA_AVAILABLE:
 
-    @njit(parallel=True, cache=True)
+    @njit(cache=True)
     def _geomedian_axis_one_nb(X, eps, maxiters):
         """Compute geometric median along axis 1 using Numba.
 
         This is a Numba port of the Weiszfeld algorithm implemented by the
         Cython ``geomedian_axis_one`` (see ``_cutils.pyx``). It always
-        operates in float64. The outer iteration is inherently sequential
-        (each iteration depends on the previous ``y``), so it cannot be
-        parallelized; only the inner per-point and per-dimension loops
-        (independent writes, no cross-iteration reduction) are wrapped in
-        ``prange``.
+        operates in float64. All loops run sequentially (no ``prange``):
+        profiling showed that at the problem sizes involved here (tens to
+        low hundreds of points per group, called thousands of times per
+        ``permdisp`` call for the Monte Carlo permutations), the fixed
+        per-entry dispatch overhead of Numba's parallel regions dominates
+        the actual compute time, making ``parallel=True`` several times
+        *slower* than a plain sequential ``@njit`` function.
         """
         p = X.shape[0]
         n = X.shape[1]
@@ -73,8 +75,7 @@ if NUMBA_AVAILABLE:
         y1 = np.empty(p, dtype=np.float64)
 
         for _ in range(maxiters):
-            # independent per-point writes: safe to parallelize
-            for i in prange(n):
+            for i in range(n):
                 d = 0.0
                 for j in range(p):
                     tmp = X[j, i] - y[j]
@@ -94,8 +95,7 @@ if NUMBA_AVAILABLE:
             for i in range(n):
                 W[i] = Dinv[i] / Dinvs
 
-            # independent per-dimension writes: safe to parallelize
-            for j in prange(p):
+            for j in range(p):
                 total = 0.0
                 for i in range(n):
                     if abs(D[i]) > eps:
