@@ -226,7 +226,7 @@ def dirmult_ttest(
     b7     7.600734  1.480232 -0.601277  4.043888  0.017077  0.068310   False
 
     """
-    from statsmodels.stats.weightstats import CompareMeans
+    from scipy.stats import t as t_dist
 
     rng = get_rng(seed)
 
@@ -241,15 +241,15 @@ def dirmult_ttest(
     groups, labels = _check_grouping(grouping, matrix, samples)
     trt_idx, ref_idx = _check_trt_ref_groups(treatment, reference, groups, labels)
 
-    cm_params = dict(alternative="two-sided", usevar="unequal")
-
     # initiate results
     m = matrix.shape[1]
-    delta = np.zeros(m)  # inter-group difference
-    tstat = np.zeros(m)  # t-test statistic
-    pval = np.zeros(m)  # t-test p-value
-    lower = np.full(m, np.inf)  # 2.5% percentile of distribution
-    upper = np.full(m, -np.inf)  # 97.5% percentile of distribution
+    n1 = len(trt_idx)
+    n2 = len(ref_idx)
+
+    # Per-draw sufficient statistics for Welch's t-test.
+    diff = np.empty((draws, m))  # mean(treatment) - mean(reference)
+    se = np.empty((draws, m))  # Welch standard error
+    dof = np.empty((draws, m))  # Welch-Satterthwaite degrees of freedom
 
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
@@ -259,31 +259,31 @@ def dirmult_ttest(
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        # Calculate the difference between the two means.
-        delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
+        # Welch's (unequal-variance) t-test sufficient statistics. This is the
+        # closed form of statsmodels' CompareMeans.ttest_ind / tconfint_diff with
+        # usevar="unequal"; sample variances use ddof=1.
+        vn1 = trt_mat.var(axis=0, ddof=1) / n1
+        vn2 = ref_mat.var(axis=0, ddof=1) / n2
+        diff[i] = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
+        se[i] = np.sqrt(vn1 + vn2)
+        dof[i] = (vn1 + vn2) ** 2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
 
-        # Create a CompareMeans object for statistical testing.
-        # Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_var=
-        # False`). The current code uses statsmodels' `CompareMeans` instead because
-        # it additionally returns confidence intervals.
-        cm = CompareMeans.from_data(trt_mat, ref_mat)
+    # Vectorized two-sided Welch's t-test across all draws at once.
+    tstat_ = diff / se
+    pval_ = 2.0 * t_dist.sf(np.abs(tstat_), dof)
 
-        # Perform Welch's t-test to assess the significance of difference.
-        tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
-        tstat += tstat_
-        pval += pval_
+    # 95% confidence intervals of the difference (alpha=0.05, two-sided).
+    tcrit = t_dist.ppf(0.975, dof)
+    lower_ = diff - tcrit * se
+    upper_ = diff + tcrit * se
 
-        # Calculate confidence intervals.
-        # The final lower and upper bounds are the minimum and maximum of all lower
-        # and upper bounds seen during sampling, respectively.
-        lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
-        np.minimum(lower, lower_, out=lower)
-        np.maximum(upper, upper_, out=upper)
-
-    # Normalize metrics to averages over all replicates.
-    delta /= draws
-    tstat /= draws
-    pval /= draws
+    # Aggregate across draws: averages for point estimates, and the widest
+    # interval (min lower / max upper) across draws, matching prior behavior.
+    delta = diff.mean(axis=0)
+    tstat = tstat_.mean(axis=0)
+    pval = pval_.mean(axis=0)
+    lower = lower_.min(axis=0)
+    upper = upper_.max(axis=0)
 
     # Correct p-values for multiple comparison.
     if p_adjust is not None:

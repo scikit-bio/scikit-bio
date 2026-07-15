@@ -125,6 +125,44 @@ class DirMultTTestTests(TestCase):
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
+    def test_dirmult_ttest_welch_closed_form_parity(self):
+        # The vectorized closed-form Welch's t-test must reproduce statsmodels'
+        # CompareMeans (usevar="unequal", two-sided, alpha=0.05) exactly.
+        try:
+            from statsmodels.stats.weightstats import CompareMeans
+        except ImportError:
+            self.skipTest("statsmodels is not installed.")
+        from scipy.stats import t as t_dist
+
+        rng = np.random.default_rng(0)
+        n1, n2, m = 5, 4, 6
+        trt = rng.normal(size=(n1, m))
+        ref = rng.normal(size=(n2, m))
+
+        # closed form (mirrors the implementation)
+        vn1 = trt.var(axis=0, ddof=1) / n1
+        vn2 = ref.var(axis=0, ddof=1) / n2
+        diff = trt.mean(axis=0) - ref.mean(axis=0)
+        se = np.sqrt(vn1 + vn2)
+        dof = (vn1 + vn2) ** 2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
+        tstat = diff / se
+        pval = 2.0 * t_dist.sf(np.abs(tstat), dof)
+        tcrit = t_dist.ppf(0.975, dof)
+        lower = diff - tcrit * se
+        upper = diff + tcrit * se
+
+        # statsmodels reference
+        cm = CompareMeans.from_data(trt, ref)
+        t_sm, p_sm, _ = cm.ttest_ind(value=0, alternative="two-sided", usevar="unequal")
+        lo_sm, hi_sm = cm.tconfint_diff(
+            alpha=0.05, alternative="two-sided", usevar="unequal"
+        )
+
+        npt.assert_allclose(tstat, t_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(pval, p_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(lower, lo_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(upper, hi_sm, rtol=1e-12, atol=1e-12)
+
     def test_dirmult_ttest_output(self):
         exp_lfc = np.log2(self.p2 / self.p1)
         exp_lfc = exp_lfc - exp_lfc.mean()
