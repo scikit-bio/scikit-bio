@@ -12,6 +12,7 @@ import os
 import io
 import sys
 import unittest
+from unittest import mock
 
 import numpy as np
 import numpy.testing as npt
@@ -21,10 +22,15 @@ from scipy.spatial.distance import pdist
 from scipy.stats import spearmanr
 from scipy.sparse import coo_array
 
-from skbio.util import get_data_path
+from skbio.util import get_data_path, numba_code
 from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.ordination import mmvec, MMvec, MMvecResult
-from skbio.stats.ordination._mmvec import random_multimodal, _MMvecModel
+from skbio.stats.ordination._mmvec import (
+    random_multimodal,
+    _MMvecModel,
+    _scatter_add_grad,
+    _scatter_add_grad_nb,
+)
 
 
 class TestRandomMultimodal(unittest.TestCase):
@@ -942,6 +948,140 @@ class TestMMvecCaseStudies(unittest.TestCase):
         positive_count = (first_pseudomonas.loc[expert_metabolites] > 0).sum()
         self.assertEqual(positive_count, 19)
         self.assertGreaterEqual(positive_count, 15)
+
+
+class TestScatterAddGrad(unittest.TestCase):
+    """Tests for the fused Numba scatter-accumulation gradient kernel."""
+
+    @numba_code
+    def test_scatter_add_grad_matches_np_add_at(self):
+        """Numba kernel matches np.add.at bit-for-bit for the general case."""
+        rng = np.random.default_rng(0)
+        d1, p, B = 12, 3, 40
+        ids = rng.integers(0, d1, size=B)
+        contrib = rng.standard_normal((B, p))
+        scale = -1.7
+
+        out_ref = np.zeros((d1, p))
+        np.add.at(out_ref, ids, scale * contrib)
+
+        out_nb = np.zeros((d1, p))
+        _scatter_add_grad_nb(
+            out_nb, ids.astype(np.intp), np.ascontiguousarray(contrib), scale
+        )
+
+        npt.assert_array_equal(out_nb, out_ref)
+
+    @numba_code
+    def test_scatter_add_grad_bias_column_case(self):
+        """Numba kernel matches np.add.at for the single-column bias shape."""
+        rng = np.random.default_rng(0)
+        d1, B = 12, 40
+        ids = rng.integers(0, d1, size=B)
+        contrib = rng.standard_normal((B, 1))
+        scale = -1.7
+
+        out_ref = np.zeros((d1, 1))
+        np.add.at(out_ref, ids, scale * contrib)
+
+        out_nb = np.zeros((d1, 1))
+        _scatter_add_grad_nb(
+            out_nb, ids.astype(np.intp), np.ascontiguousarray(contrib), scale
+        )
+
+        npt.assert_array_equal(out_nb, out_ref)
+
+    @numba_code
+    def test_scatter_add_grad_all_repeated_indices(self):
+        """All contributions target the same row and must all be accumulated."""
+        rng = np.random.default_rng(0)
+        d1, p, B = 12, 3, 40
+        ids = np.zeros(B, dtype=np.intp)
+        contrib = rng.standard_normal((B, p))
+        scale = -1.7
+
+        out_ref = np.zeros((d1, p))
+        np.add.at(out_ref, ids, scale * contrib)
+
+        out_nb = np.zeros((d1, p))
+        _scatter_add_grad_nb(out_nb, ids, np.ascontiguousarray(contrib), scale)
+
+        npt.assert_array_equal(out_nb, out_ref)
+        # Summing then scaling (as opposed to the kernel's scale-then-accumulate
+        # order) is mathematically equivalent but not bit-identical under
+        # IEEE-754, so this comparison uses a tight tolerance rather than exact
+        # equality.
+        npt.assert_allclose(out_nb[0], scale * contrib.sum(axis=0), rtol=0, atol=1e-13)
+
+    @numba_code
+    def test_scatter_add_grad_empty_batch(self):
+        """An empty batch leaves the accumulator untouched and does not raise."""
+        d1, p = 12, 3
+        ids = np.empty(0, dtype=np.intp)
+        contrib = np.empty((0, p))
+        scale = -1.7
+
+        out_nb = np.zeros((d1, p))
+        _scatter_add_grad_nb(out_nb, ids, contrib, scale)
+
+        npt.assert_array_equal(out_nb, np.zeros((d1, p)))
+
+    def test_dispatch_fallback_matches_numpy(self):
+        """The np.add.at fallback path is exact when Numba is unavailable."""
+        rng = np.random.default_rng(0)
+        d1, p, B = 12, 3, 40
+        ids = rng.integers(0, d1, size=B)
+        contrib = rng.standard_normal((B, p))
+        scale = -1.7
+
+        with mock.patch("skbio.stats.ordination._mmvec.NUMBA_AVAILABLE", False):
+            out = np.zeros((d1, p))
+            _scatter_add_grad(out, ids, contrib, scale)
+
+        ref = np.zeros((d1, p))
+        np.add.at(ref, ids, scale * contrib)
+
+        npt.assert_array_equal(out, ref)
+
+    @numba_code
+    def test_loss_and_grad_numba_matches_fallback(self):
+        """loss_and_grad gives identical gradients via Numba and np.add.at."""
+        n_features_x = 5
+        n_features_y = 8
+        n_components = 2
+
+        rng = np.random.default_rng(42)
+        model = _MMvecModel(
+            n_features_x=n_features_x,
+            n_features_y=n_features_y,
+            n_components=n_components,
+            x_prior_mean=0.0,
+            x_prior_scale=1.0,
+            y_prior_mean=0.0,
+            y_prior_scale=1.0,
+            rng=rng,
+        )
+
+        data_rng = np.random.default_rng(0)
+        n_samples = 20
+        X = data_rng.integers(0, 100, size=(n_samples, n_features_x)).astype(np.float64)
+        Y = data_rng.integers(0, 100, size=(n_samples, n_features_y)).astype(np.float64)
+        X_coo = coo_array(X)
+        weights = X_coo.data / X_coo.data.sum()
+        size = 10
+        norm = 5 / size
+
+        _, g_nb = model.loss_and_grad(
+            X_coo, Y, size, norm, weights, np.random.default_rng(123)
+        )
+
+        with mock.patch("skbio.stats.ordination._mmvec.NUMBA_AVAILABLE", False):
+            _, g_ref = model.loss_and_grad(
+                X_coo, Y, size, norm, weights, np.random.default_rng(123)
+            )
+
+        for a, b in zip(g_nb, g_ref):
+            npt.assert_array_equal(a, b)
 
 
 if __name__ == "__main__":

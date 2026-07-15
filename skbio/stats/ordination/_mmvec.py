@@ -32,6 +32,13 @@ from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
+try:
+    from numba import njit, prange
+
+    NUMBA_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    NUMBA_AVAILABLE = False
+
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike, TableLike
 
@@ -906,6 +913,78 @@ class MMvec(SkbioObject):
         return 1.0 - ss_res / ss_tot
 
 
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True, cache=True)
+    def _scatter_add_grad_nb(out, ids, contrib, scale):
+        """Fused scatter-accumulation of ``scale * contrib`` rows into ``out``.
+
+        Numba replacement for ``np.add.at(out, ids, scale * contrib)`` that
+        preserves ``np.add.at`` semantics exactly, including repeated indices
+        (every contribution for a given row is accumulated, not overwritten).
+
+        Parallelism is over the *output rows* (the "row-owner" pattern): each
+        ``prange`` iteration owns one output row and is the only writer to it,
+        so there are no data races and no atomics. Within a row, contributions
+        are summed in increasing batch order (the same order ``np.add.at``
+        uses), which makes the result bit-for-bit identical to ``np.add.at``
+        under IEEE-754 (float addition is not associative, so the order is
+        load-bearing). ``fastmath`` is deliberately NOT enabled so the compiler
+        cannot reassociate or contract the multiply-add.
+
+        Parameters
+        ----------
+        out : ndarray of shape (n_rows, n_cols), float64
+            Pre-zeroed accumulator, modified in place.
+        ids : ndarray of shape (n_batch,), integer
+            Target row index for each batch contribution. Values must lie in
+            ``[0, n_rows)``; out-of-range ids are silently skipped.
+        contrib : ndarray of shape (n_batch, n_cols), float64
+            Per-batch contributions before scaling.
+        scale : float
+            Scalar multiplier applied to every contribution.
+
+        """
+        n_rows = out.shape[0]
+        n_cols = out.shape[1]
+        n_batch = ids.shape[0]
+        for r in prange(n_rows):
+            for b in range(n_batch):
+                if ids[b] == r:
+                    for j in range(n_cols):
+                        out[r, j] += scale * contrib[b, j]
+
+else:  # pragma: no cover
+    _scatter_add_grad_nb = None
+
+
+def _scatter_add_grad(out, ids, contrib, scale):
+    """Dispatch scatter-add to the Numba kernel if available, else ``np.add.at``.
+
+    Both branches implement ``out += scale * contrib`` scattered by ``ids`` with
+    ``np.add.at`` accumulation semantics and produce numerically identical
+    (bit-for-bit) results.
+
+    Parameters
+    ----------
+    out : ndarray of shape (n_rows, n_cols), float64
+        Pre-zeroed accumulator, modified in place.
+    ids : ndarray of shape (n_batch,), integer
+        Target row index for each batch contribution.
+    contrib : ndarray of shape (n_batch, n_cols), float64
+        Per-batch contributions before scaling.
+    scale : float
+        Scalar multiplier applied to every contribution.
+
+    """
+    if NUMBA_AVAILABLE:
+        ids = np.ascontiguousarray(ids, dtype=np.intp)
+        contrib = np.ascontiguousarray(contrib)
+        _scatter_add_grad_nb(out, ids, contrib, scale)
+    else:
+        np.add.at(out, ids, scale * contrib)
+
+
 class _MMvecModel:
     """Internal model class for MMvec optimization."""
 
@@ -1039,9 +1118,11 @@ class _MMvecModel:
         dx_main = np.zeros_like(self.x_main)
         dx_bias = np.zeros_like(self.x_bias)
 
-        # Scatter-add the sampled X-side contributions back to full parameter arrays.
-        np.add.at(dx_main, X_ids, -norm * dx_main_batch)
-        np.add.at(dx_bias[:, 0], X_ids, -norm * dx_bias_batch)
+        # Scatter-add the sampled X-side contributions back to full parameter
+        # arrays. Fused numba kernel (falls back to np.add.at if numba is absent);
+        # both paths are bit-for-bit identical, including repeated X_ids.
+        _scatter_add_grad(dx_main, X_ids, dx_main_batch, -norm)
+        _scatter_add_grad(dx_bias, X_ids, dx_bias_batch[:, None], -norm)
 
         # Add prior gradients
         dx_main += (self.x_main - self.x_prior_mean) / (self.x_prior_scale**2)
