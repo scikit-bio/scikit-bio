@@ -24,6 +24,7 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
     _unweighted_unifrac_pdist_numba,
+    _weighted_unifrac_pdist_numba,
 )
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
@@ -267,11 +268,11 @@ def beta_diversity(
         :func:`~sklearn.metrics.pairwise_distances`.
     engine : {"cython", "numba"}, optional
         Compute engine for metrics that support it. Currently only
-        ``"unweighted_unifrac"`` honors this; the ``"numba"`` engine requires
-        the optional Numba dependency and computes the full distance matrix in
-        one parallel pass. If not provided, the global default is used (see
-        :func:`~skbio.set_config`). Ignored by metrics without a Numba
-        implementation.
+        ``"unweighted_unifrac"`` and ``"weighted_unifrac"`` honor this; the
+        ``"numba"`` engine requires the optional Numba dependency and computes
+        the full distance matrix in one parallel pass. If not provided, the
+        global default is used (see :func:`~skbio.set_config`). Ignored by
+        metrics without a Numba implementation.
     kwargs : dict, optional
         Metric-specific parameters. Refer to the documentation of the chosen metric.
         A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
@@ -329,6 +330,16 @@ def beta_diversity(
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
+        resolved_engine = _resolve_engine(engine, ("cython", "numba"))
+        if resolved_engine == "numba":
+            distances = _weighted_unifrac_pdist_numba(
+                counts,
+                taxa=taxa,
+                tree=tree,
+                normalized=normalized,
+                validate=validate,
+            )
+            return DistanceMatrix(distances, ids)
         metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )

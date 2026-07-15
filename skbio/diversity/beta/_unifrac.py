@@ -599,6 +599,121 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
     return _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths)
 
 
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True, cache=True)
+    def _weighted_unifrac_pdist_nb(
+        counts_by_node,
+        branch_lengths,
+        sample_totals,
+        node_to_root_distances,
+        normalized,
+    ):
+        """Full weighted UniFrac distance matrix (condensed) via Numba.
+
+        Computes the condensed pairwise weighted UniFrac distance vector in a
+        single parallel pass, replacing the O(n^2) SciPy ``pdist`` Python-callable
+        dispatch. Parallelised over the first sample index ``i`` (``prange``); the
+        inner ``j`` and node loops are sequential. Each ``(i, j)`` pair writes a
+        unique condensed index, so there are no write races.
+
+        Reproduces exactly the reference algorithms in ``_weighted_unifrac`` and
+        ``_weighted_unifrac_normalized``: node proportions are the per-sample
+        node counts divided by the sample's tip-count total (``0.0`` when the
+        total is ``0``); the unnormalized distance is the sum of branch lengths
+        weighted by the absolute difference of proportions. When ``normalized``
+        is ``True``, the distance is additionally divided by the branch length
+        correction ``sum(node_to_root_distances * (up + vp))``, except when both
+        samples are entirely empty, in which case the distance is ``0.0``.
+
+        Parameters
+        ----------
+        counts_by_node : np.ndarray of shape (n_samples, n_nodes)
+            Per-node counts (tips + internal), summed up the tree.
+        branch_lengths : np.ndarray of shape (n_nodes,), float64
+            Branch length of each node, postorder.
+        sample_totals : np.ndarray of shape (n_samples,), float64
+            Per-sample sum of tip counts.
+        node_to_root_distances : np.ndarray of shape (n_nodes,) or (0,), float64
+            Root distance of each node, used only when ``normalized`` is
+            ``True``. May be a length-0 placeholder otherwise.
+        normalized : bool
+            Whether to apply the branch length normalization.
+
+        Returns
+        -------
+        np.ndarray of shape (n_samples * (n_samples - 1) // 2,), float64
+            Condensed (upper-triangle) distance vector, ordered as
+            ``scipy.spatial.distance.pdist``.
+
+        """
+        n_samples = counts_by_node.shape[0]
+        n_nodes = counts_by_node.shape[1]
+        n_pairs = n_samples * (n_samples - 1) // 2
+        out = np.empty(n_pairs, np.float64)
+
+        for i in prange(n_samples - 1):
+            # base condensed offset for row i so that idx = base_i + j
+            base_i = i * n_samples - (i * (i + 1)) // 2 - i - 1
+            u_total = sample_totals[i]
+            for j in range(i + 1, n_samples):
+                v_total = sample_totals[j]
+                wu = 0.0
+                c = 0.0
+                for k in range(n_nodes):
+                    if u_total > 0.0:
+                        up = counts_by_node[i, k] / u_total
+                    else:
+                        up = 0.0
+                    if v_total > 0.0:
+                        vp = counts_by_node[j, k] / v_total
+                    else:
+                        vp = 0.0
+                    wu += branch_lengths[k] * abs(up - vp)
+                    if normalized:
+                        c += node_to_root_distances[k] * (up + vp)
+                idx = base_i + j
+                if normalized:
+                    if u_total == 0.0 and v_total == 0.0:
+                        out[idx] = 0.0
+                    else:
+                        out[idx] = wu / c
+                else:
+                    out[idx] = wu
+
+        return out
+
+
+def _weighted_unifrac_pdist_numba(counts, taxa, tree, normalized, validate):
+    """Compute the condensed weighted UniFrac distance vector (Numba engine).
+
+    Builds the per-node counts, branch lengths, sample totals, and (when
+    ``normalized`` is ``True``) root distances (reusing ``_setup_multiple_unifrac``,
+    ``_get_tip_indices``, and ``_tip_distances``), then dispatches to the parallel
+    Numba kernel. Returns a condensed distance vector consumable by
+    ``DistanceMatrix``.
+
+    """
+    counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(
+        counts, taxa, tree, validate
+    )
+    tip_indices = _get_tip_indices(tree_index)
+    sample_totals = counts_by_node[:, tip_indices].sum(axis=1).astype(np.float64)
+    if normalized:
+        node_to_root_distances = _tip_distances(
+            branch_lengths, tree, tip_indices
+        ).ravel()
+    else:
+        node_to_root_distances = np.zeros(0, dtype=np.float64)
+    return _weighted_unifrac_pdist_nb(
+        counts_by_node,
+        branch_lengths,
+        sample_totals,
+        node_to_root_distances,
+        normalized,
+    )
+
+
 def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
     r"""Create optimized pdist-compatible weighted UniFrac function.
 

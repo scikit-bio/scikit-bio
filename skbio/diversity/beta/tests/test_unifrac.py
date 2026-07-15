@@ -731,6 +731,72 @@ class UnifracTests(TestCase):
         self.assertEqual(dm_nb.shape, (1, 1))
         self.assertEqual(dm_nb.data[0, 0], 0.0)
 
+    @numba_code
+    def test_weighted_unifrac_engine_numba_matches_cython(self):
+        dm_cy = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        # weighted UniFrac involves a division and a sum whose ordering
+        # differs between NumPy's pairwise summation (Cython/pdist path)
+        # and the kernel's sequential accumulation, so use a looser
+        # tolerance than the unweighted comparison.
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_normalized_matches_cython(self):
+        dm_cy = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython", normalized=True)
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba", normalized=True)
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+        self.assertTrue((dm_nb.data <= 1.0 + 1e-9).all())
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_larger_random(self):
+        rng = np.random.default_rng(0)
+        counts = rng.integers(0, 10, size=(12, 5))
+        # cover both the unnormalized zero-total path and the normalized
+        # both-empty 0/0 guard
+        counts[0] = 0
+        counts[1] = 0
+        ids = [f"S{i}" for i in range(counts.shape[0])]
+
+        for normalized in (False, True):
+            dm_cy = beta_diversity(
+                "weighted_unifrac", counts, ids=ids, taxa=self.oids1,
+                tree=self.t1, engine="cython", normalized=normalized)
+            dm_nb = beta_diversity(
+                "weighted_unifrac", counts, ids=ids, taxa=self.oids1,
+                tree=self.t1, engine="numba", normalized=normalized)
+
+            np.testing.assert_allclose(
+                dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+
+        # both rows 0 and 1 are all-zero -> normalized 0/0 guard -> 0.0
+        self.assertEqual(dm_nb.data[0, 1], 0.0)
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_single_sample(self):
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1[:1], ids=self.sids1[:1],
+            taxa=self.oids1, tree=self.t1, engine="numba")
+
+        self.assertEqual(dm_nb.shape, (1, 1))
+        self.assertEqual(dm_nb.data[0, 0], 0.0)
+
     def test_beta_diversity_engine_invalid(self):
         with self.assertRaisesRegex(
                 ValueError, "engine='julia' is not supported"):
