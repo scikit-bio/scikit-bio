@@ -23,11 +23,143 @@ from ._base import (
 )
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util._decorator import params_aliased
+from skbio._config import _resolve_engine
+
+try:
+    from numba import njit, prange
+
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
     import pandas as pd
     from skbio.util._typing import SeedLike
+
+
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True, cache=True)
+    def _geomedian_axis_one_nb(X, eps, maxiters):
+        """Compute geometric median along axis 1 using Numba.
+
+        This is a Numba port of the Weiszfeld algorithm implemented by the
+        Cython ``geomedian_axis_one`` (see ``_cutils.pyx``). It always
+        operates in float64. The outer iteration is inherently sequential
+        (each iteration depends on the previous ``y``), so it cannot be
+        parallelized; only the inner per-point and per-dimension loops
+        (independent writes, no cross-iteration reduction) are wrapped in
+        ``prange``.
+        """
+        p = X.shape[0]
+        n = X.shape[1]
+
+        # initial guess = row means (mean along axis 1)
+        y = np.empty(p, dtype=np.float64)
+        for j in range(p):
+            s = 0.0
+            for i in range(n):
+                s += X[j, i]
+            y[j] = s / n
+
+        if n == 1:
+            return y
+
+        D = np.empty(n, dtype=np.float64)
+        Dinv = np.empty(n, dtype=np.float64)
+        W = np.empty(n, dtype=np.float64)
+        T = np.empty(p, dtype=np.float64)
+        y1 = np.empty(p, dtype=np.float64)
+
+        for _ in range(maxiters):
+            # independent per-point writes: safe to parallelize
+            for i in prange(n):
+                d = 0.0
+                for j in range(p):
+                    tmp = X[j, i] - y[j]
+                    d += tmp * tmp
+                Di = np.sqrt(d)
+                D[i] = Di
+                if abs(Di) > eps:
+                    Dinv[i] = 1.0 / Di
+                else:
+                    Dinv[i] = 0.0
+
+            # sequential reduction, same order as Cython's _sum
+            Dinvs = 0.0
+            for i in range(n):
+                Dinvs += Dinv[i]
+
+            for i in range(n):
+                W[i] = Dinv[i] / Dinvs
+
+            # independent per-dimension writes: safe to parallelize
+            for j in prange(p):
+                total = 0.0
+                for i in range(n):
+                    if abs(D[i]) > eps:
+                        total += W[i] * X[j, i]
+                T[j] = total
+
+            nzeros = n
+            for i in range(n):
+                if abs(D[i]) > eps:
+                    nzeros -= 1
+
+            if nzeros == 0:
+                for j in range(p):
+                    y1[j] = T[j]
+            elif nzeros == n:
+                break
+            else:
+                r = 0.0
+                for j in range(p):
+                    Rj = (T[j] - y[j]) * Dinvs
+                    r += Rj * Rj
+                r = np.sqrt(r)
+                if r > eps:
+                    rinv = nzeros / r
+                else:
+                    rinv = 0.0
+                a = max(0.0, 1.0 - rinv)
+                b = min(1.0, rinv)
+                for j in range(p):
+                    y1[j] = a * T[j] + b * y[j]
+
+            dist = 0.0
+            for j in range(p):
+                tmp = y[j] - y1[j]
+                dist += tmp * tmp
+            dist = np.sqrt(dist)
+            if dist < eps:
+                break
+
+            for j in range(p):
+                y[j] = y1[j]
+
+        return y
+
+
+def _geomedian_axis_one(X, engine):
+    """Compute the geometric median along axis 1 using the given engine.
+
+    Parameters
+    ----------
+    X : array_like
+        Array of shape ``(p, n)`` (``p`` dimensions, ``n`` points).
+    engine : str
+        Already-resolved compute engine, either ``"cython"`` or ``"numba"``.
+
+    Returns
+    -------
+    numpy.ndarray
+        The length-``p`` geometric median.
+    """
+    if engine == "numba":
+        Xc = np.ascontiguousarray(X, dtype=np.float64)
+        return np.asarray(_geomedian_axis_one_nb(Xc, 1e-7, 500))
+    return np.asarray(geomedian_axis_one(X))
 
 
 @params_aliased(
@@ -46,6 +178,7 @@ def permdisp(
     dimensions: int = 10,
     seed: SeedLike | None = None,
     warn_neg_eigval: bool | float = 0.01,
+    engine: str | None = None,
 ) -> pd.Series:
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
@@ -103,6 +236,13 @@ def permdisp(
 
         .. versionadded:: 0.6.3
 
+    engine : {"cython", "numba"}, optional
+        Compute engine to use for the geometric median (``test="median"``).
+        ``"cython"`` (default) uses the Cython implementation. ``"numba"``
+        uses the optional Numba implementation and requires Numba to be
+        installed. If not provided, the global default is used (see
+        :func:`skbio.set_config`). Ignored when ``test="centroid"``.
+
     Returns
     -------
     pandas.Series
@@ -129,6 +269,10 @@ def permdisp(
         If all of the values in the grouping vector are unique.
     KeyError
         If there are ids in grouping that are not in distmat.
+    ValueError
+        If ``engine`` is not one of the supported compute engines.
+    ImportError
+        If ``engine="numba"`` is specified but Numba is not installed.
 
     See Also
     --------
@@ -304,7 +448,9 @@ def permdisp(
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    test_stat_function = partial(_compute_groups, sample_data, test)
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
+    test_stat_function = partial(_compute_groups, sample_data, test, engine)
 
     stat, p_value = _run_monte_carlo_stats(
         test_stat_function, grouping, permutations, seed
@@ -315,7 +461,7 @@ def permdisp(
     )
 
 
-def _compute_groups(samples, test_type, grouping):
+def _compute_groups(samples, test_type, engine, grouping):
     data = np.asarray(samples)
     groups = []
 
@@ -326,7 +472,7 @@ def _compute_groups(samples, test_type, grouping):
         if test_type == "centroid":
             center = group_data.mean(axis=0)
         else:  # median
-            center = np.asarray(geomedian_axis_one(group_data.T))
+            center = _geomedian_axis_one(group_data.T, engine)
 
         # Distances from each sample in this group to the group center.
         groups.append(np.linalg.norm(group_data - center, axis=1))

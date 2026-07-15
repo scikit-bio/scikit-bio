@@ -19,9 +19,9 @@ from scipy.stats import f_oneway, ConstantInputWarning
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups
+from skbio.stats.distance._permdisp import _compute_groups, _geomedian_axis_one
 from skbio.stats.distance._cutils import geomedian_axis_one
-from skbio.util import get_data_path
+from skbio.util import get_data_path, numba_code
 
 IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
@@ -123,10 +123,10 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.eq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
-        obs = _compute_groups(dm, 'centroid', self.grouping_eq)
+        obs = _compute_groups(dm, 'centroid', 'cython', self.grouping_eq)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_groups(dm, 'centroid', self.grouping_eq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', 'cython', self.grouping_eq_relab)
         self.assertAlmostEqual(obs_relab, obs, places=6)
 
     def test_centroids_uneq_groups(self):
@@ -143,10 +143,10 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.uneq_mat, warn_neg_eigval=False)
         dm = dm.samples
 
-        obs = _compute_groups(dm, 'centroid', self.grouping_uneq)
+        obs = _compute_groups(dm, 'centroid', 'cython', self.grouping_uneq)
         self.assertAlmostEqual(obs, exp_stat, places=6)
 
-        obs_relab = _compute_groups(dm, 'centroid', self.grouping_uneq_relab)
+        obs_relab = _compute_groups(dm, 'centroid', 'cython', self.grouping_uneq_relab)
         self.assertAlmostEqual(obs, obs_relab, places=6)
 
     def test_centroids_mixedgroups(self):
@@ -160,7 +160,7 @@ class PERMDISPTests(TestCase):
 
         exp_stat, _ = f_oneway(*exp)
 
-        obs_mixed = _compute_groups(dm, 'centroid', self.grouping_un_mixed)
+        obs_mixed = _compute_groups(dm, 'centroid', 'cython', self.grouping_un_mixed)
         self.assertAlmostEqual(exp_stat, obs_mixed, places=6)
 
     def test_centroids_null(self):
@@ -171,7 +171,7 @@ class PERMDISPTests(TestCase):
         # ConstantInputWarning may no longer be emitted for this case.
         # Once the expected behavior is clarified, consider reintroducing
         # an explicit warning assertion here.
-        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        obs_null = _compute_groups(dm, 'centroid', 'cython', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
@@ -334,6 +334,44 @@ class PERMDISPTests(TestCase):
                         1.76214416, 1.69943057])
         obs = np.array(geomedian_axis_one(self.eq_mat.data))
         npt.assert_almost_equal(obs, exp, decimal=6)
+
+    @numba_code
+    def test_geomedian_numba(self):
+        exp = np.array([2.01956244, 1.53164546, 2.60571752, 0.91424179,
+                        1.76214416, 1.69943057])
+        obs = _geomedian_axis_one(self.eq_mat.data, "numba")
+        npt.assert_almost_equal(obs, exp, decimal=6)
+
+    @numba_code
+    def test_geomedian_numba_parity(self):
+        rng = np.random.default_rng(0)
+        shapes = [(6, 12), (3, 5), (10, 4), (1, 7), (4, 9), (8, 1)]
+        for shape in shapes:
+            X = rng.standard_normal(shape)
+            cy = np.asarray(geomedian_axis_one(X.copy()))
+            nb = _geomedian_axis_one(X.copy(), "numba")
+            npt.assert_allclose(nb, cy, rtol=0, atol=1e-10)
+
+        # also on the real fixture matrix
+        cy = np.asarray(geomedian_axis_one(self.eq_mat.data))
+        nb = _geomedian_axis_one(self.eq_mat.data, "numba")
+        npt.assert_allclose(nb, cy, rtol=0, atol=1e-10)
+
+    @numba_code
+    def test_permdisp_engine_equivalence(self):
+        exp = permdisp(self.eq_mat, self.grouping_eq, test='median',
+                       dimensions=self.eq_mat.shape[0], warn_neg_eigval=False,
+                       seed=42, engine='cython')
+        obs = permdisp(self.eq_mat, self.grouping_eq, test='median',
+                       dimensions=self.eq_mat.shape[0], warn_neg_eigval=False,
+                       seed=42, engine='numba')
+        self.assert_series_equal(obs.astype('object'), exp.astype('object'))
+
+    def test_permdisp_engine_invalid(self):
+        with self.assertRaises(ValueError):
+            permdisp(self.eq_mat, self.grouping_eq,
+                    dimensions=self.eq_mat.shape[0], warn_neg_eigval=False,
+                    engine='bogus')
 
     def test_confirm_betadispr_results(self):
         mp_dm = DistanceMatrix.read(get_data_path('moving_pictures_dm.tsv'))
