@@ -74,10 +74,9 @@ cdef class BPTree:
     cpdef SIZE_t preorder_rank(self, SIZE_t i) nogil
     cpdef BOOL_t is_ancestor(self, SIZE_t i, SIZE_t j) nogil
     cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil
-    cpdef SIZE_t subtree_size(self, SIZE_t i) nogil
+    cpdef SIZE_t count(self, SIZE_t i=*, bint tips=*) nogil
     cpdef BPTree shear(self, set tips)
     cpdef BPTree collapse(self)
-    cpdef SIZE_t ntips(self) nogil
     cpdef SIZE_t level_next(self, SIZE_t i) nogil
     cpdef SIZE_t height(self, SIZE_t i) nogil
     cpdef SIZE_t deepest_node(self, SIZE_t i) nogil

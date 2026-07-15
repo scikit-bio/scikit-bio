@@ -353,7 +353,7 @@ cdef class BPTree:
             def is_tip(self):
                 return self.is_tip_
 
-        child_index = np.zeros((int(self.data.sum()) - self.ntips(), 3), dtype=np.int64)
+        child_index = np.zeros((int(self.data.sum()) - self.count(tips=True), 3), dtype=np.int64)
         length = np.zeros(self.data.sum(), dtype=np.double)
         node_ids = np.zeros(self.data.size, dtype=np.uint32)
         name = np.full(self.data.sum(), None, dtype=object)
@@ -570,7 +570,7 @@ cdef class BPTree:
         number of internal nodes in the tree.
         """
         cdef total_nodes = len(self)
-        cdef tip_count = self.ntips()
+        cdef tip_count = self.count(tips=True)
 
         return "<BPTree, name: %s, internal node count: %d, tips count: %d>" % \
                 (self.name(0), total_nodes - tip_count, tip_count)
@@ -931,19 +931,23 @@ cdef class BPTree:
 
         return i <= j < self.close(i)
 
-    cpdef SIZE_t subtree_size(self, SIZE_t i) nogil:
-        """Number of nodes in the subtree rooted at a node.
+    cpdef SIZE_t count(self, SIZE_t i=0, bint tips=False) nogil:
+        """Get the count of nodes in the subtree rooted at a node.
 
         Parameters
         ----------
-        i : int
-            Index of the node to evaluate.
+        i : int, optional
+            Index of the node whose subtree is evaluated. Defaults to the root
+            (``0``), i.e., the whole tree.
+        tips : bool, optional
+            If True, only count the tips (leaves) in the subtree (default:
+            False).
 
         Returns
         -------
         int
-            The number of nodes in the subtree rooted at node ``i``, including
-            ``i`` itself.
+            The number of nodes (or tips, if ``tips`` is True) in the subtree
+            rooted at node ``i``, including ``i`` itself.
 
         See Also
         --------
@@ -952,11 +956,29 @@ cdef class BPTree:
         Notes
         -----
         Returns a node count, not a subtree.
+
         """
+        cdef:
+            SIZE_t last, j, c
+
         if not self._b_ptr[i]:
             i = self.open(i)
 
-        return (self.close(i) - i + 1) / 2
+        if not tips:
+            return (self.close(i) - i + 1) / 2
+
+        # a tip is an open parenthesis immediately followed by a close; count
+        # them within the span [i, close(i)] of the subtree
+        last = self.close(i)
+        j = i
+        c = 0
+        while j < last:
+            if self._b_ptr[j] and not self._b_ptr[j + 1]:
+                c += 1
+                j += 1
+            j += 1
+
+        return c
 
     cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil:
         """Index of the ancestor a given number of levels above a node.
@@ -1229,28 +1251,6 @@ cdef class BPTree:
         new_bp = self._mask_from_self(mask, new_lengths)
         bit_array_free(mask)
         return new_bp
-
-    cpdef inline SIZE_t ntips(self) nogil:
-        """The number of tips (leaves) in the tree.
-
-        Returns
-        -------
-        int
-            The count of leaf nodes.
-
-        """
-        cdef:
-            SIZE_t i = 0
-            SIZE_t count = 0
-            SIZE_t n = self.size
-
-        while i < (n - 1):
-            if self._b_ptr[i] and not self._b_ptr[i+1]:
-                count += 1
-                i += 1
-            i += 1
-
-        return count
 
     cdef int scan_block_forward(self, int i, int k, int b, int d) nogil:
         """Scan a block forward from i.

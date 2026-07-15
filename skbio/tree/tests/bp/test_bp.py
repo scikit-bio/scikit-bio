@@ -173,10 +173,23 @@ class BPTests(TestCase):
         for (i, j), e in exp.items():
             self.assertEqual(self.bptree.is_ancestor(i, j), e)
 
-    def test_subtree_size(self):
+    def test_count(self):
+        # node counts per subtree (count(i) == former subtree_size(i))
         exp = [11, 5, 1, 1, 1, 1, 2, 1, 1, 2, 5, 1, 1, 4, 3, 1, 1, 1, 1, 3, 4, 11]
         for i, e in enumerate(exp):
-            self.assertEqual(self.bptree.subtree_size(i), e)
+            self.assertEqual(self.bptree.count(i), e)
+
+        # the index defaults to the root, i.e. the whole tree
+        self.assertEqual(self.bptree.count(), exp[0])
+
+        # tip counts per subtree (count(i, tips=True))
+        exp_tips = [6, 3, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 2, 2, 1, 1, 1, 1, 2,
+                    2, 6]
+        for i, e in enumerate(exp_tips):
+            self.assertEqual(self.bptree.count(i, tips=True), e)
+
+        # whole-tree tip count (former ntips)
+        self.assertEqual(self.bptree.count(tips=True), 6)
 
     def test_level_ancestor(self):
         exp = {(2, 1): 1,  # first tip to its parent
@@ -234,11 +247,6 @@ class BPTests(TestCase):
         # height(i) = excess(deepest_node(i)) - excess(i).
         exp = [3, 2, 0, 0, 0, 0, 1, 0, 0, 1, 2, 0, 0, 2, 1, 0, 0, 0, 0, 1, 2, 3]
         self._testinator(exp, self.bptree.height)
-
-    def test_ntips(self):
-        exp = 6
-        obs = self.bptree.ntips()
-        self.assertEqual(obs, exp)
 
     def test_shear(self):
         #       r  2  3     4     5  6             7       8   9  10      11
@@ -352,7 +360,7 @@ class BPTests(TestCase):
             self.assertEqual(obs.length(i), self.bptree.length(i))
 
         # and the reconstructed tree answers queries identically
-        self.assertEqual(obs.ntips(), self.bptree.ntips())
+        self.assertEqual(obs.count(tips=True), self.bptree.count(tips=True))
 
     def test_write_read_roundtrip_file(self):
         names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None,

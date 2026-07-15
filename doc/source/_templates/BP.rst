@@ -47,8 +47,7 @@
       ~{{ name }}.is_tip
       ~{{ name }}.depth
       ~{{ name }}.height
-      ~{{ name }}.subtree_size
-      ~{{ name }}.ntips
+      ~{{ name }}.count
 
    .. rubric:: Tree manipulation
 
