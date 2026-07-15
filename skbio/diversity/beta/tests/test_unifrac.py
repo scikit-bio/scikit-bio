@@ -11,12 +11,14 @@ from unittest import main, TestCase
 
 import numpy as np
 
-from skbio import TreeNode
+from skbio import TreeNode, DistanceMatrix
 from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.diversity import beta_diversity
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.diversity.beta._unifrac import (_unweighted_unifrac,
                                            _weighted_unifrac,
                                            _weighted_unifrac_branch_correction)
+from skbio.util import numba_code
 
 
 class UnifracTests(TestCase):
@@ -685,6 +687,56 @@ class UnifracTests(TestCase):
             _weighted_unifrac(m[:, 0], m[:, 2], m0s, m2s, bl)[0], 6.0)
         self.assertAlmostEqual(
             _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl)[0], 4.5)
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_matches_cython(self):
+        dm_cy = beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_larger_random(self):
+        rng = np.random.default_rng(0)
+        counts = rng.integers(0, 10, size=(12, 5))
+        # cover the "both samples empty" (observed == 0) branch
+        counts[0] = 0
+        ids = [f"S{i}" for i in range(counts.shape[0])]
+
+        dm_cy = beta_diversity(
+            "unweighted_unifrac", counts, ids=ids, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", counts, ids=ids, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
+        # row 0 is all-zero, so every distance from it must be 0
+        np.testing.assert_allclose(dm_nb.data[0], dm_cy.data[0])
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_single_sample(self):
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", self.b1[:1], ids=self.sids1[:1],
+            taxa=self.oids1, tree=self.t1, engine="numba")
+
+        self.assertEqual(dm_nb.shape, (1, 1))
+        self.assertEqual(dm_nb.data[0, 0], 0.0)
+
+    def test_beta_diversity_engine_invalid(self):
+        with self.assertRaisesRegex(
+                ValueError, "engine='julia' is not supported"):
+            beta_diversity(
+                "unweighted_unifrac", self.b1, ids=self.sids1,
+                taxa=self.oids1, tree=self.t1, engine="julia")
 
 
 if __name__ == '__main__':

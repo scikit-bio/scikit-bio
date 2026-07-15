@@ -14,6 +14,7 @@
 
 ### Performance enhancements
 
+* `beta_diversity` gained an optional Numba engine (`engine="numba"`) for the `unweighted_unifrac` metric, computing the full distance matrix in a single parallel pass and avoiding the per-pair Python-callable overhead of the SciPy `pdist` path.
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
 * On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).

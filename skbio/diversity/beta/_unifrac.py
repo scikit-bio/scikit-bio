@@ -18,6 +18,13 @@ from skbio.diversity._phylogenetic import _tip_distances
 from skbio.util._decorator import params_aliased
 from skbio.tree._utils import _validate_taxa_and_tree
 
+try:
+    from numba import njit, prange
+
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+
 
 # The default value indicating whether normalization should be applied
 # for weighted UniFrac. This is used in two locations, so set in a single
@@ -516,6 +523,80 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
     f = partial(_unweighted_unifrac, branch_lengths=branch_lengths)
 
     return f, counts_by_node
+
+
+if NUMBA_AVAILABLE:
+
+    @njit(parallel=True, cache=True)
+    def _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths):
+        """Full unweighted UniFrac distance matrix (condensed) via Numba.
+
+        Computes the condensed pairwise unweighted UniFrac distance vector in a
+        single parallel pass, replacing the O(n^2) SciPy ``pdist`` Python-callable
+        dispatch. Parallelised over the first sample index ``i`` (``prange``); the
+        inner ``j`` and node loops are sequential. Each ``(i, j)`` pair writes a
+        unique condensed index, so there are no write races.
+
+        Reproduces exactly the reference algorithm in ``_unweighted_unifrac``:
+        for each pair, sum branch lengths of nodes present in exactly one sample
+        (``unique``) and of nodes present in either sample (``observed``); the
+        distance is ``unique / observed``, or ``0.0`` when ``observed == 0``.
+
+        Parameters
+        ----------
+        counts_by_node : np.ndarray of shape (n_samples, n_nodes)
+            Per-node counts (tips + internal), summed up the tree. Only
+            presence (> 0) is used. Integer dtype.
+        branch_lengths : np.ndarray of shape (n_nodes,), float64
+            Branch length of each node, postorder.
+
+        Returns
+        -------
+        np.ndarray of shape (n_samples * (n_samples - 1) // 2,), float64
+            Condensed (upper-triangle) distance vector, ordered as
+            ``scipy.spatial.distance.pdist``.
+
+        """
+        n_samples = counts_by_node.shape[0]
+        n_nodes = counts_by_node.shape[1]
+        n_pairs = n_samples * (n_samples - 1) // 2
+        out = np.empty(n_pairs, np.float64)
+
+        for i in prange(n_samples - 1):
+            # base condensed offset for row i so that idx = base_i + j
+            base_i = i * n_samples - (i * (i + 1)) // 2 - i - 1
+            for j in range(i + 1, n_samples):
+                unique = 0.0
+                observed = 0.0
+                for k in range(n_nodes):
+                    u_present = counts_by_node[i, k] > 0
+                    v_present = counts_by_node[j, k] > 0
+                    if u_present or v_present:
+                        bl = branch_lengths[k]
+                        observed += bl
+                        if u_present != v_present:
+                            unique += bl
+                idx = base_i + j
+                if observed == 0.0:
+                    out[idx] = 0.0
+                else:
+                    out[idx] = unique / observed
+
+        return out
+
+
+def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
+    """Compute the condensed unweighted UniFrac distance vector (Numba engine).
+
+    Builds the per-node counts and branch lengths (reusing
+    ``_setup_multiple_unifrac``) and dispatches to the parallel Numba kernel.
+    Returns a condensed distance vector consumable by ``DistanceMatrix``.
+
+    """
+    counts_by_node, _, branch_lengths = _setup_multiple_unifrac(
+        counts, taxa, tree, validate
+    )
+    return _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths)
 
 
 def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
