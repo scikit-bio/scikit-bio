@@ -1,4 +1,4 @@
-# cython: boundscheck=False, wraparound=False, cdivision=True, linetrace=False
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

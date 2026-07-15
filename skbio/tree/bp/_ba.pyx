@@ -1,3 +1,4 @@
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #
@@ -9,11 +10,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-cimport libc.stdlib
-from cpython cimport Py_INCREF, Py_DECREF, bool
-cimport numpy as cnp
-
-cnp.import_array()
+from libc.stdlib cimport malloc, free
+from cpython cimport bool
 
 
 cdef class bitarray:
@@ -32,9 +30,9 @@ cdef class bitarray:
         cdef char* str_
         cdef object result
 
-        str_ = <char*>libc.stdlib.malloc(self.nbits + 1)
+        str_ = <char*>malloc(self.nbits + 1)
         result = tounicode(bit_array_to_str(self.bitarr, str_))
-        libc.stdlib.free(str_)
+        free(str_)
 
         return result
 

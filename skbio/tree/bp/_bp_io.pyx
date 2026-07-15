@@ -1,5 +1,5 @@
 # encoding: utf-8
-# cython: profile=False, boundscheck=False, wraparound=False
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
 #

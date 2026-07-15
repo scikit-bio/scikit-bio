@@ -1,6 +1,14 @@
-# cython: cdivision=True
-# cython: boundscheck=False
-# cython: wraparound=False
+# cython: cdivision=True, boundscheck=False, wraparound=False
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Derived from improved-octo-waddle (https://github.com/biocore/improved-octo-waddle)
+# originally authored by Daniel McDonald, distributed under the Modified BSD License.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
 
 # An implementation of a complete binary tree in breadth first order adapted
 # from https://github.com/jfuentess/sea2015/blob/master/binary_trees.h
