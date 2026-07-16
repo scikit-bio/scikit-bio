@@ -281,6 +281,13 @@ cdef class BPTree:
         --------
         write
 
+        Warnings
+        --------
+        This method calls :func:`numpy.load` with ``allow_pickle=True`` in
+        order to restore the object-dtype ``names`` array. Loading a pickled
+        array can execute arbitrary code, so only read ``.npz`` archives from
+        trusted sources.
+
         """
         # names is an object array pickled by ``write``, so unpickling must be
         # allowed to restore it
