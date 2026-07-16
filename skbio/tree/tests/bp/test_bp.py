@@ -22,9 +22,14 @@ from skbio.tree.bp import parse_newick
 import skbio.tree.tests.bp.test_bp_cy as tbc
 
 
-for name in dir(tbc):
-    if name.startswith('test_'):
-        getattr(tbc, name)()
+class BPCythonTests(TestCase):
+    def test_cython_level(self):
+        # exercise the cdef-level tests in test_bp_cy under the test runner
+        # rather than at import time
+        for name in dir(tbc):
+            if name.startswith('test_'):
+                with self.subTest(name=name):
+                    getattr(tbc, name)()
 
 
 class BPTests(TestCase):
