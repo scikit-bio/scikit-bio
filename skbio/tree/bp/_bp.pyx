@@ -196,8 +196,12 @@ cdef class BPTree:
         cdef cnp.ndarray[INT32_t, ndim=1] _edges
         cdef cnp.ndarray[SIZE_t, ndim=1] _edge_lookup
 
-        # the tree is only valid if it is balanced
-        assert B.sum() == (float(B.size) / 2)
+        # the tree is only valid if it is balanced (equal opens and closes)
+        if B.sum() * 2 != B.size:
+            raise ValueError(
+                "The topology array is unbalanced; it must contain an equal "
+                "number of opening (1) and closing (0) parentheses."
+            )
         self.data = B
         self._b_ptr = &B[0]
         self.size = B.size

@@ -33,6 +33,10 @@ class BPTests(TestCase):
         self.fig1_B = np.array([1, 1, 1, 0, 1, 0, 1, 1 ,0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], dtype=np.uint8)
         self.bptree = BPTree(self.fig1_B)
 
+    def test_init_unbalanced_raises(self):
+        with self.assertRaises(ValueError):
+            BPTree(np.array([1, 1, 0], dtype=np.uint8))
+
     def test_rmq(self):
         #       (  (  (  )  (  )  (  (  )  )   )   (   )   (   (   (   )   (   )   )   )   )
         #excess 1  2  3  2  3  2  3  4  3  2   1   2   1   2   3   4   3   4   3   2   1   0
