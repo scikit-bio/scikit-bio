@@ -399,10 +399,10 @@ def parse_jplace(object data):
     """
     cdef:
         dict as_json
-        list fields, placements, fragments, p, placement_data,
+        list fields, placements, fragments, p, placement_data
         list placement_inner_data, pquery, entry
         unicode frag, newick
-        Py_ssize_t placement_idx, placement_inner_idx, fragment_idx,
+        Py_ssize_t placement_idx, placement_inner_idx, fragment_idx
         Py_ssize_t n_fragments
         BPTree tree
         object df

@@ -10,7 +10,7 @@
 # ----------------------------------------------------------------------------
 
 cdef extern from "<inttypes.h>":
-    ctypedef unsigned int uint64_t
+    ctypedef unsigned long long uint64_t
 
 cdef extern from "bit_array.h":
     struct BIT_ARRAY:
@@ -37,7 +37,7 @@ cdef extern from "bit_array.h":
     void bit_array_and(BIT_ARRAY* dest, const BIT_ARRAY* src1, const BIT_ARRAY* src2)
     void bit_array_or(BIT_ARRAY* dest, const BIT_ARRAY* src1, const BIT_ARRAY* src2)
     void bit_array_xor(BIT_ARRAY* dest, const BIT_ARRAY* src1, const BIT_ARRAY* src2)
-    void bit_array_not(BIT_ARRAY* dest, const BIT_ARRAY* src1, const BIT_ARRAY* src2)
+    void bit_array_not(BIT_ARRAY* dest, const BIT_ARRAY* src)
 
     # cyclic shifting
     void bit_array_cycle_right(BIT_ARRAY* bitarr, bit_index_t dist)
