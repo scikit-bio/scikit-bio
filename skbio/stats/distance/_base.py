@@ -26,7 +26,7 @@ from skbio.io.descriptors import Read, Write
 
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
-from skbio.util._array import ingest_array, copy_array, _to_numpy
+from skbio.util._array import ingest_array, copy_array, _to_numpy, _get_backend_name
 
 import array_api_compat as _aac
 
@@ -1338,12 +1338,32 @@ class SymmetricMatrix(PairwiseMatrix):
     def _condensed_to_redundant(self, condensed: NDArray) -> NDArray:
         """Expand a non-NumPy condensed vector to a redundant 2-D buffer on its device.
 
-        Uses a single host round-trip because scattering values into a matrix needs
-        item-assignment, which some backends (e.g. JAX) do not support.
+        Mutable backends (e.g. PyTorch, CuPy) scatter the values into the matrix
+        on-device via item-assignment. Immutable backends (e.g. JAX), which do not
+        support item-assignment, go through a single host round-trip instead.
 
         """
         xp = _aac.array_namespace(condensed)
         dev = getattr(condensed, "device", None)
+
+        if _get_backend_name(xp) in ("torch", "cupy"):
+            # scatter on-device (no host round-trip): place the values in the
+            # row-major upper triangle (matching the condensed order), mirror to
+            # the lower triangle, then set the diagonal.
+            k = condensed.shape[0]
+            n = int((1.0 + (1.0 + 8.0 * k) ** 0.5) / 2.0)
+            idx = xp.arange(n, device=dev)
+            upper = idx[:, None] < idx[None, :]
+            mat = xp.zeros((n, n), dtype=condensed.dtype, device=dev)
+            mat[upper] = condensed
+            mat = mat + xp.matrix_transpose(mat)  # symmetric; diagonal stays zero
+            if self._diagonal is not None:
+                mat[idx, idx] = xp.asarray(
+                    self._diagonal, dtype=condensed.dtype, device=dev
+                )
+            return mat
+
+        # immutable backends (e.g. JAX): build the matrix via one host round-trip.
         mat_np = squareform(_to_numpy(condensed), force="tomatrix", checks=False)
         diag = self._diagonal if self._diagonal is not None else 0.0
         if _aac.is_array_api_obj(diag) and not _aac.is_numpy_array(diag):
