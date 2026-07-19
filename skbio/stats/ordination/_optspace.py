@@ -38,6 +38,7 @@ from scipy.sparse.linalg import svds
 from scipy.linalg import svd
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse.linalg import lsmr
+from warnings import warn
 
 
 def _trim(X, observed_mask, m, n, n_observed):
@@ -62,19 +63,31 @@ def _trim(X, observed_mask, m, n, n_observed):
     return np.where(trim_mask & observed_mask, X, 0.0)
 
 
-def _estimate_rank(S, epsilon):
-    """Estimate rank r\\hat by minimizing the cost function of singular
-    values from Keshavan et al. (2010):
+def _svd_init(X_trimmed, r):
+    try:
+        # Sparse SVDS
+        U, s, Vt = svds(X_trimmed, k=r, solver="propack")
+        V = Vt.T
 
-    R(i) = (\\sigma_{i+1} + \\sigma_1 \\sqrt{i / \\epsilon}) / \\sigma_i
-    """
+        # Sort unsorted singular values from SVDS
+        idx = np.argsort(s)[::-1]
+        U = U[:, idx]
+        V = Vt[idx, :].T
 
-    # Indices i = 1, 2, ... , len(S) - 1
-    # The last element is excluded because S[i] would be out of bounds
-    i = np.arange(1, len(S))  # 1 , ... , k-1
-    cost = (S[0] * np.sqrt(i / epsilon) + S[i]) / S[i - 1]
+    except Exception as e:
+        # SVDS may fail to converge for sparse matrices, in which
+        # case we fall back to dense SVD
+        warn(
+            "Sparse SVD failed. Falling back to dense SVD instead.",
+            RuntimeWarning,
+        )
 
-    return i[np.argmin(cost)]
+        # Dense SVD
+        U, _, Vt = svd(X_trimmed, full_matrices=False)
+        U = U[:, :r]
+        V = Vt[:r, :].T
+
+    return U, V
 
 
 def _solve_S(U, V, b, observed_mask, tol):
@@ -253,7 +266,49 @@ def retract_grassmann(X, dX):
     return np.linalg.qr(X + dX, mode="reduced")[0]
 
 
-def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
+def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
+    """Backtracking line search"""
+
+    # Maximum depth of line search (no greater than 1e-16)
+    max_ls = 16
+
+    # Directional derivative of objective along search direction
+    deriv = np.sum(dU**2) + np.sum(dV**2)
+
+    # Initialize step size one update prior
+    alpha = alpha0 / tau
+
+    # Best pair (U, V)
+    best = (U, V, obj0, alpha0)
+
+    for _ in range(max_ls):
+        # Retract step to Grassmann manifold
+        U_try = retract_grassmann(U, alpha * dU)
+        V_try = retract_grassmann(V, alpha * dV)
+
+        # Recompute objective
+        obj_try = obj_fn(U_try, V_try)
+
+        # print(f"Alpha: {alpha}, obj_try: {obj_try}")
+
+        # Update best pair (U, V)
+        if obj_try < best[2]:
+            best = (U_try, V_try, obj_try, alpha)
+
+        # Armijo-Goldstein condition for sufficient decrease
+        if obj_try < obj0 - c * alpha * deriv:
+            return U_try, V_try, obj_try, alpha
+
+        # Update step
+        alpha *= tau
+
+    # Note: Perhaps there should be a warning here that sufficient decrease was
+    #       not satisfied even though the depth limit was reached
+
+    return best
+
+
+def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
     r"""Matrix completion using the OptSpace algorithm.
 
     OptSpace is an algorithm for recovering a low-rank matrix from a
@@ -279,7 +334,12 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
     Raises
     ------
     ValueError
-        If input is not 2D or dimensions exceeds matrix dimensions.
+        If input is not 2D.
+    ValueError
+        If ``dimensions`` is not a positive integer less than or equal to
+        min(n_samples, n_features)
+    ValueError
+        If ``method`` is not one of "GN" or "LS"
 
     See Also
     --------
@@ -321,16 +381,25 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
 
     X = np.asarray(X, dtype=np.float64)
 
+    # Validate input
+
     if X.ndim != 2:
         raise ValueError(f"Input must be 2D, got {X.ndim}D array.")
 
+    elif type(dimensions) is not int:
+        raise ValueError("Dimensions must be a positive integer")
+
+    elif dimensions < 1 or dimensions > min(X.shape):
+        raise ValueError(
+            "Dimensions must be a positive integer less than or equal to "
+            "min(n_samples, n_features)"
+        )
+
+    elif method not in ("GN", "LS"):
+        raise ValueError("Method must be 'GN' or 'LS'")
+
     m, n = X.shape
     r = dimensions
-
-    if r > min(m, n):
-        raise ValueError(
-            f"dimensions ({r}) cannot exceed min matrix dimension ({min(m, n)})."
-        )
 
     # Create observed mask (1 for observed, 0 for missing)
     observed_mask = ~np.isnan(X)
@@ -345,62 +414,33 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
     # Rescale observed values for sparse initialization
     X_trimmed /= density
 
-    """
-    Note:
-    The original OptSpace paper gives a method for estimating the rank
-    of a matrix, but I couldn't get this working accurately for all
-    matrices. Depending on the singular value structure of the matrix,
-    it seemed to drastically underestimate the rank in some
-    cases, which in turn gives a very inaccurate reconstruction.
-    This section seems optional, so it can safely be ignored for now.
-    """
-    """
-    # Estimate rank
-    U, s, Vt = svd(X_trimmed, full_matrices=False)
-    #U, s, Vt = svds(X_trimmed, k=min(m, n) * 0.2) # Assume rank r < 0.2 min(m,n)
-    V = Vt.T
-    U, s, V = _svd_sort(U, s, V)
-
-    epsilon = n_observed / np.sqrt(m * n)
-    rhat = _estimate_rank(s, epsilon)
-
-    # Compute the rank-rhat projection of the trimmed matrix
-    U = U[:, :rhat]
-    V = V[:, :rhat]
-    """
-
     # Initialize with truncated SVD
-    dense = True
-    try:
-        # Use sparse SVDS if possible, since typically r << min(m,n)
-        if r < min(m, n) - 1:
-            # Sparse SVDS
-            U, s, Vt = svds(X_trimmed, k=r)
-            V = Vt.T
-
-            # If SVDS succeeds, do not proceed to dense SVD
-            dense = False
-
-            # Sort unsorted singular values from SVDS
-            idx = np.argsort(s)[::-1]
-            U = U[:, idx]
-            V = Vt[idx, :].T
-    finally:
-        # SVDS may fail to converge for sparse matrices, in which
-        # case we fall back to dense SVD
-        if dense:
-            # Dense SVD
-            U, _, Vt = svd(X_trimmed, full_matrices=False)
-            U = U[:, :r]
-            V = Vt[:r, :].T
+    U, V = _svd_init(X_trimmed, r)
 
     # Vectorize data matrix over observed entries
     rows, cols = np.where(observed_mask)
     b = X[rows, cols]
 
     # Iteratively solve for U, V, and S by minimizing the objective
+
     prev_obj = np.inf
-    damp = tol * np.sqrt(1 - density)
+
+    # Convergence parameters
+    damp = 0  # tol * np.sqrt(1 - density)
+    alpha, tau, c = 1, 0.1, 1e-4
+
+    def _compute_obj(U, V):
+
+        # Compute optimal S given current U, V
+        S_curr = _solve_S(U, V, b, observed_mask, tol)
+
+        # Compute current error
+        R_curr = jacobian_S(U, V, S_curr, rows, cols) - b
+
+        # Current objective (Frobenius norm of error over observed entries)
+        obj_curr = np.sum(R_curr**2)
+
+        return obj_curr
 
     for i in range(max_iter):
         # Compute optimal S given current U, V
@@ -416,16 +456,38 @@ def optspace(X, dimensions=3, max_iter=20, tol=1e-5):
 
         # Check convergence
         if np.abs(prev_obj - obj) / obj < tol:
-            break
+            # Gradient descent has a hierarchical convergence criterion
+            # which incrementally sharpens the resolution of line search
+            if method == "LS":
+                if c < 1:
+                    c *= 100
+                else:
+                    break
+
+            # Gauss-Newton exits immediately upon convergence
+            if method == "GN":
+                break
 
         prev_obj = obj
 
-        # Compute Gauss-Newton step
-        dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp)
+        # Update via gradient descent with line search
+        if method == "LS":
+            # Compute gradient directions
+            dU, dV = jacobian_UV_adj(U, V, S, -R, observed_mask)
 
-        # Retract updates back to Grassmann manifold
-        U = retract_grassmann(U, dU)
-        V = retract_grassmann(V, dV)
+            # Perform backtracking line search
+            U, V, obj, alpha = line_search(
+                U, V, dU, dV, obj, _compute_obj, alpha, tau, c
+            )
+
+        # Update via Gauss-Newton
+        elif method == "GN":
+            # Compute Gauss-Newton step
+            dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp)
+
+            # Retract updates back to Grassmann manifold
+            U = retract_grassmann(U, dU)
+            V = retract_grassmann(V, dV)
 
     # Form reconstructed matrix
     X_hat = U @ S @ V.T
