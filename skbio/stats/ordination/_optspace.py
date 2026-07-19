@@ -33,12 +33,11 @@ References
 
 """
 
-import numpy as np
-from scipy.sparse.linalg import svds
-from scipy.linalg import svd
-from scipy.sparse.linalg import LinearOperator
-from scipy.sparse.linalg import lsmr
 from warnings import warn
+
+import numpy as np
+from scipy.linalg import svd
+from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
 def _trim(X, observed_mask, m, n, n_observed):
@@ -64,6 +63,9 @@ def _trim(X, observed_mask, m, n, n_observed):
 
 
 def _svd_init(X_trimmed, r):
+    """Initialize U and V with an SVD of the trimmed observation matrix."""
+
+    # Attempt sparse SVDS
     try:
         # Sparse SVDS
         U, s, Vt = svds(X_trimmed, k=r, solver="propack")
@@ -74,9 +76,9 @@ def _svd_init(X_trimmed, r):
         U = U[:, idx]
         V = Vt[idx, :].T
 
+    # Sparse SVDS may fail to converge for sparse matrices, in which
+    # case we fall back to dense SVD
     except Exception as e:
-        # SVDS may fail to converge for sparse matrices, in which
-        # case we fall back to dense SVD
         warn(
             "Sparse SVD failed. Falling back to dense SVD instead.",
             RuntimeWarning,
@@ -280,8 +282,9 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
 
     # Best pair (U, V)
     best = (U, V, obj0, alpha0)
+    converged = False
 
-    for _ in range(max_ls):
+    for i in range(max_ls):
         # Retract step to Grassmann manifold
         U_try = retract_grassmann(U, alpha * dU)
         V_try = retract_grassmann(V, alpha * dV)
@@ -295,13 +298,18 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
 
         # Armijo-Goldstein condition for sufficient decrease
         if obj_try < obj0 - c * alpha * deriv:
-            return U_try, V_try, obj_try, alpha
+            converged = True
+            break  # return U_try, V_try, obj_try, alpha
 
         # Update step
         alpha *= tau
 
-    # Note: Perhaps there should be a warning here that sufficient decrease was
-    #       not satisfied even though the depth limit was reached
+    if not converged:
+        warn(
+            "Sufficient decrease was not satisfied in line search even though the"
+            f"depth limit was reached (1e-{max_ls}).",
+            RuntimeWarning,
+        )
 
     return best
 
@@ -422,6 +430,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
     # Iteratively solve for U, V, and S by minimizing the objective
 
     prev_obj = np.inf
+    converged = False
 
     # Convergence parameters
     damp = 0
@@ -439,7 +448,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
 
         return obj_curr
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         # Compute optimal S given current U, V
         S = _solve_S(U, V, b, observed_mask, tol)
 
@@ -457,10 +466,12 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
                 if c < 1:
                     c *= 100
                 else:
+                    converged = True
                     break
 
             # Gauss-Newton exits immediately upon convergence
             if method == "GN":
+                converged = True
                 break
 
         prev_obj = obj
@@ -476,13 +487,19 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
             )
 
         # Update via Gauss-Newton
-        elif method == "GN":
+        if method == "GN":
             # Compute Gauss-Newton step
             dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp)
 
             # Retract updates back to Grassmann manifold
             U = retract_grassmann(U, dU)
             V = retract_grassmann(V, dV)
+
+    if not converged:
+        warn(
+            f"OptSpace did not converge after 'max_iter' ({max_iter}) iterations.",
+            RuntimeWarning,
+        )
 
     # Form reconstructed matrix
     X_hat = U @ S @ V.T

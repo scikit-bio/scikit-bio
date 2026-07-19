@@ -12,7 +12,7 @@ from unittest.mock import patch
 import numpy as np
 import numpy.testing as npt
 
-from skbio.stats.ordination._optspace import optspace
+from skbio.stats.ordination._optspace import optspace, line_search
 
 
 class TestOptSpace(unittest.TestCase):
@@ -25,9 +25,9 @@ class TestOptSpace(unittest.TestCase):
 
         # Create a low-rank matrix
         self.m, self.n, self.r = 100, 100, 3
-        U_true = rng.normal(size=(self.m, self.r))
-        V_true = rng.normal(size=(self.n, self.r))
-        self.M_true = U_true @ V_true.T
+        self.U_true = rng.normal(size=(self.m, self.r))
+        self.V_true = rng.normal(size=(self.n, self.r))
+        self.M_true = self.U_true @ self.V_true.T
 
         # Introduce noise
         noise_level = 0.01
@@ -91,20 +91,39 @@ class TestOptSpace(unittest.TestCase):
     def test_non_2d_error(self):
         """Test error on non-2D input."""
         with self.assertRaises(ValueError) as context:
-            M_hat = optspace(np.random.randn(5, 5, 5))
+            _ = optspace(np.random.randn(5, 5, 5))
         self.assertIn("2D", str(context.exception))
 
     def test_invalid_method(self):
         """Test invalid method parameter."""
         with self.assertRaises(ValueError) as context:
-            M_hat = optspace(self.M_obs, dimensions=self.r, method=1)
+            _ = optspace(self.M_obs, dimensions=self.r, method=1)
         self.assertIn("Method", str(context.exception))
 
     def test_svds_exception(self):
         with patch("skbio.stats.ordination._optspace.svds",
-               side_effect=RuntimeError("PROPACK failed")):
-            with self.assertWarns(RuntimeWarning):
+            side_effect=RuntimeError("PROPACK failed")
+        ):
+            with self.assertWarns(RuntimeWarning) as cm:
                 _ = optspace(self.M_obs, self.r)
+
+        self.assertIn("Sparse SVD failed", str(cm.warning))
+
+    def test_max_iter(self):
+        with self.assertWarns(RuntimeWarning) as cm:
+            _ = optspace(self.M_obs, self.r, max_iter=1)
+
+        self.assertIn("did not converge", str(cm.warning))
+
+    def test_max_ls(self):
+        with patch(
+            "skbio.stats.ordination._optspace.retract_grassmann",
+            side_effect=lambda X, dX: X
+        ):
+            with self.assertWarns(RuntimeWarning) as cm:
+                _ = optspace(self.M_obs, self.r, method='LS')
+
+        self.assertIn("depth limit was reached", str(cm.warning))
 
 # TODO: More varied sizes, shapes, and missingness among matrices
 # Vary total size (m*n), ratio (m/n), and portion p of observed entries
