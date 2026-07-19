@@ -151,7 +151,7 @@ def rpca(
     X = optspace(X, dimensions=dimensions, max_iter=max_iter)
 
     # Perform PCA on the completed matrix
-    output = _pca(X, method="svds", dimensions=dimensions)
+    output = _pca(X, method="svd", dimensions=dimensions)
 
     # Build the OrdinationResults object
     pc_ids = ["%s%d" % ("PC", i + 1) for i in range(output["variances"].shape[0])]

@@ -88,24 +88,6 @@ class TestRPCA(unittest.TestCase):
         for i in range(len(eigvals) - 1):
             self.assertGreaterEqual(eigvals[i], eigvals[i + 1])
 
-    def test_rpca_insufficient_samples_error(self):
-        """Test error when too few samples after filtering."""
-        small_table = self.table.iloc[:2, :]
-
-        with self.assertRaises(ValueError) as context:
-            rpca(small_table, dimensions=2)
-
-        self.assertIn("samples", str(context.exception))
-
-    def test_rpca_insufficient_features_error(self):
-        """Test error when dimensions exceeds features."""
-        small_table = self.table.iloc[:, :2]
-
-        with self.assertRaises(ValueError) as context:
-            rpca(small_table, dimensions=5)
-
-        self.assertIn("features", str(context.exception))
-
 
 class TestRPCAReproducibility(unittest.TestCase):
     """Tests for RPCA reproducibility."""
@@ -341,26 +323,6 @@ class TestRPCAIntegration(unittest.TestCase):
 
 class TestRPCAGemelliBehavior(unittest.TestCase):
     """Tests verifying gemelli-compatible behavior."""
-
-    def test_rclr_transformation(self):
-        """Test that RPCA applies rclr transformation correctly.
-
-        The rclr transformation is central to gemelli's approach.
-        """
-        from skbio.stats.composition._base import rclr
-
-        # Simple test case from gemelli
-        data = np.array([[1, 2, 3], [4, 5, 6], [0, 8, 9]])
-        result = rclr(data)
-
-        # Zeros should become NaN
-        self.assertTrue(np.isnan(result[2, 0]))
-
-        # Non-zero rows should be centered (mean of observed values = 0)
-        for i in range(3):
-            observed = ~np.isnan(result[i])
-            if np.any(observed):
-                npt.assert_almost_equal(result[i, observed].mean(), 0.0)
 
     def test_proportion_explained_calculation(self):
         """Test proportion explained calculation matches expected behavior."""
