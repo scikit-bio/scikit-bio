@@ -289,8 +289,6 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
         # Recompute objective
         obj_try = obj_fn(U_try, V_try)
 
-        # print(f"Alpha: {alpha}, obj_try: {obj_try}")
-
         # Update best pair (U, V)
         if obj_try < best[2]:
             best = (U_try, V_try, obj_try, alpha)
@@ -426,11 +424,10 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
     prev_obj = np.inf
 
     # Convergence parameters
-    damp = 0  # tol * np.sqrt(1 - density)
+    damp = 0
     alpha, tau, c = 1, 0.1, 1e-4
 
     def _compute_obj(U, V):
-
         # Compute optimal S given current U, V
         S_curr = _solve_S(U, V, b, observed_mask, tol)
 
@@ -451,8 +448,6 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
 
         # Current objective (Frobenius norm of error over observed entries)
         obj = np.sum(R**2)
-
-        print(f"Iteration: {i}, obj: {obj}")
 
         # Check convergence
         if np.abs(prev_obj - obj) / obj < tol:
