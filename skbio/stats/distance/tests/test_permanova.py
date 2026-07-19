@@ -534,6 +534,21 @@ class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
         )
         self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
 
+    def test_permanova_array_api_numpy_backend(self):
+        # NumPy is array-API compatible, so the array-API compute path runs on a
+        # NumPy array. The dispatch routes a NumPy DistanceMatrix to the
+        # cython/numba path, so a normal permanova() call never reaches these
+        # helpers; call them directly here so the array-API path is exercised
+        # under ordinary (NumPy-only) CI, matching the reference result.
+        ids = [str(i) for i in range(self.data.shape[0])]
+        res = permanova_mod._permanova_array_api(
+            self.data, self.grouping, None, 99, 0, ids=ids
+        )
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=10
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
+
 
 if __name__ == '__main__':
     main()

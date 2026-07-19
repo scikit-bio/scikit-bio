@@ -26,7 +26,8 @@ from skbio.stats.distance._mantel import _mantel_stats_spearman
 from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
                                           mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
-from skbio.util import get_data_path, assert_data_frame_almost_equal, numba_code
+from skbio.util import (get_data_path, assert_data_frame_almost_equal, numba_code,
+                        get_rng)
 from skbio.util._testing import _data_frame_to_default_int_type
 from skbio.util._testing import ArrayAPITestMixin, array_backends
 
@@ -1258,11 +1259,19 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assertAlmostEqual(p, p_ref, places=10)
 
     @array_backends("jax", "torch", "cupy")  # non-NumPy only, to force a mix
-    def test_mixed_backend_raises(self, xp, device):
-        with self.assertRaises(ValueError):
-            mantel(DistanceMatrix(self.x),
-                   DistanceMatrix(self.make_array(xp, device, self.y)),
-                   method="pearson", permutations=0)
+    def test_mixed_backend_warns_and_falls_back(self, xp, device):
+        # a NumPy x with a non-NumPy y is a mixed backend: warn and fall back to
+        # the NumPy path (matching the all-NumPy result) rather than hard-failing.
+        mx = DistanceMatrix(self.x)
+        my = DistanceMatrix(self.make_array(xp, device, self.y))
+        with self.assertWarns(UserWarning):
+            r, p, _ = mantel(mx, my, method="pearson", permutations=99, seed=0)
+        r_ref, p_ref, _ = mantel(
+            DistanceMatrix(self.x), DistanceMatrix(self.y),
+            method="pearson", permutations=99, seed=0,
+        )
+        self.assertAlmostEqual(r, r_ref, places=10)
+        self.assertAlmostEqual(p, p_ref, places=10)
 
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_id_reorder_backends(self, xp, device):
@@ -1291,6 +1300,43 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
                             ids=['z' + str(i) for i in range(10)])
         with self.assertRaises(ValueError):
             mantel(mx, my, method="pearson", permutations=0)
+
+    def test_mantel_stats_pearson_xp_numpy_backend(self):
+        # NumPy is array-API compatible; call the array-API compute helper
+        # directly with NumPy arrays (a normal mantel() with NumPy DMs takes the
+        # host path, not the xp one) so the array-API path is exercised under
+        # ordinary (NumPy-only) CI, matching the reference result.
+        for spearman in (False, True):
+            method = "spearman" if spearman else "pearson"
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                method=method, permutations=99, seed=0,
+            )
+            r, p, n = mantel_mod._mantel_stats_pearson_xp(
+                self.x, self.y, 99, get_rng(0), "two-sided", spearman=spearman,
+            )
+            self.assertEqual(n, self.x.shape[0])
+            self.assertAlmostEqual(r, r_ref, places=10)
+            self.assertAlmostEqual(p, p_ref, places=10)
+
+    def test_mantel_stats_pearson_xp_validation_numpy(self):
+        # exercise the array-API validation/warning branches on NumPy input.
+        with self.assertRaises(ValueError):  # shape mismatch
+            mantel_mod._mantel_stats_pearson_xp(
+                self.x, self.y[:9, :9], 0, get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # not square
+            mantel_mod._mantel_stats_pearson_xp(
+                np.zeros((3, 4)), np.zeros((3, 4)), 0, get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # fewer than 3 objects
+            mantel_mod._mantel_stats_pearson_xp(
+                np.zeros((2, 2)), np.zeros((2, 2)), 0, get_rng(0), "two-sided")
+        # constant input -> ConstantInputWarning and a NaN statistic
+        const = np.ones((5, 5))
+        np.fill_diagonal(const, 0.0)
+        with self.assertWarns(ConstantInputWarning):
+            r, p, _ = mantel_mod._mantel_stats_pearson_xp(
+                const, self.x[:5, :5], 0, get_rng(0), "two-sided")
+        self.assertTrue(np.isnan(r))
 
 
 if __name__ == '__main__':
