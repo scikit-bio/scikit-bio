@@ -442,24 +442,30 @@ def mantel(
     y_is_xp = isinstance(y, DistanceMatrix) and not _aac.is_numpy_array(y.data)
 
     if special and (x_is_xp or y_is_xp):
-        # both inputs must be non-NumPy DistanceMatrix objects on the same backend
         if not (x_is_xp and y_is_xp) or (
             _aac.array_namespace(x.data) is not _aac.array_namespace(y.data)
         ):
-            raise ValueError(
-                "x and y must both be DistanceMatrix objects backed by the same "
-                "array backend for the array-API path."
+            # mixed or mismatched backends: fall back to the NumPy path below with
+            # a warning rather than a hard failure.
+            warn(
+                "x and y are not both DistanceMatrix objects on the same array "
+                "backend; falling back to the NumPy path.",
+                UserWarning,
             )
-        # align ids exactly like the NumPy path; the reorder/filter stays on
-        # the input's device (distmat_reorder is array-API aware).
-        x, y = _order_dms(x, y, strict=strict, lookup=lookup)
-        return _mantel_stats_pearson_xp(
-            x.data, y.data, permutations, rng, alternative,
-            spearman=(method == "spearman"),
-        )
+        else:
+            # both are non-NumPy DistanceMatrix objects on the same backend: align
+            # ids exactly like the NumPy path; the reorder/filter stays on the
+            # input's device (distmat_reorder is array-API aware).
+            x, y = _order_dms(x, y, strict=strict, lookup=lookup)
+            return _mantel_stats_pearson_xp(
+                x.data, y.data, permutations, rng, alternative,
+                spearman=(method == "spearman"),
+            )
 
-    # kendalltau has no xp path; materialize a non-NumPy DistanceMatrix on the
-    # host (SciPy's kendalltau is host-only).
+    # Default NumPy path: reached for kendalltau (no xp path), when neither input
+    # is a non-NumPy array, or when the inputs were not all on the same backend
+    # (the fallback above). A non-NumPy DistanceMatrix is materialized on the host
+    # here (SciPy's kendalltau is host-only, and _order_dms runs on host).
     if x_is_xp:
         x = DistanceMatrix(_to_numpy(x.data), x.ids)
     if y_is_xp:
@@ -557,7 +563,7 @@ def _mantel_stats_pearson_xp(x, y, permutations, rng, alternative, spearman=Fals
     xp, X, Y = ingest_array(x, y)
     if X.shape != Y.shape:
         raise ValueError("Distance matrices must have the same shape.")
-    if X.ndim != 2 or X.shape[0] != X.shape[1]:
+    if (X.ndim != 2) or (X.shape[0] != X.shape[1]):
         raise ValueError("Distance matrix must be a square 2-D array.")
     n = X.shape[0]
     if n < 3:
