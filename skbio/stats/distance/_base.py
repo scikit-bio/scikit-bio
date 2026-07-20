@@ -26,7 +26,7 @@ from skbio.io.descriptors import Read, Write
 
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
-from skbio.util._array import ingest_array, copy_array
+from skbio.util._array import ingest_array, copy_array, _to_numpy, _get_backend_name
 
 import array_api_compat as _aac
 
@@ -776,7 +776,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
-        heatmap = ax.pcolormesh(self.redundant_form(), cmap=cmap)
+        # matplotlib needs a host array; a non-NumPy (e.g. GPU-resident)
+        # buffer is materialized here since a heatmap is inherently host-side.
+        heatmap = ax.pcolormesh(_to_numpy(self.redundant_form()), cmap=cmap)
         fig.colorbar(heatmap)
 
         # center labels within each cell
@@ -822,8 +824,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         c  2.0  3.0  0.0
 
         """
+        # pandas needs a host array; a non-NumPy (e.g. GPU-resident) buffer is
+        # materialized here since a DataFrame is inherently host-side.
         return pd.DataFrame(
-            data=self.redundant_form(), index=self.ids, columns=self.ids
+            data=_to_numpy(self.redundant_form()), index=self.ids, columns=self.ids
         )
 
     def __str__(self) -> str:
@@ -1256,6 +1260,9 @@ class SymmetricMatrix(PairwiseMatrix):
             if data.ndim == 1:
                 return 0.0
             elif data.ndim == 2:
+                if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+                    xp = _aac.array_namespace(data)
+                    return xp.linalg.diagonal(data)
                 return np.diagonal(data)
         return None
 
@@ -1295,16 +1302,18 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
-            # Array-API (e.g. GPU-resident) buffers are stored in redundant (2-D)
-            # form only. Condensed storage relies on scipy.squareform, which is
-            # NumPy-only, so a condensed or 1-D non-NumPy buffer could not be
-            # reordered/converted without a silent copy back to the host.
-            if condensed or data.ndim != 2:
-                raise SymmetricMatrixError(
-                    "Condensed form is not supported for non-NumPy (array-API) "
-                    "arrays. Provide a 2-D array to store the matrix on a "
-                    "non-NumPy device."
-                )
+            if condensed:
+                if data.ndim == 1:
+                    # Already condensed; store as-is, no conversion needed.
+                    return data
+                # 2-D non-NumPy input requested in condensed form: extract the
+                # row-major upper triangle on-device (identity-reordered), the
+                # same operation condensed_form() uses.
+                n = data.shape[0]
+                return distmat_reorder_condensed(data, np.arange(n))
+            if data.ndim == 1:
+                # Redundant form requested from a condensed non-NumPy vector.
+                return self._condensed_to_redundant(data)
             return data
         if condensed:
             # case where input is 1d and stays 1d
@@ -1325,6 +1334,42 @@ class SymmetricMatrix(PairwiseMatrix):
             # case where input is 2d and stays 2d
             else:
                 return data
+
+    def _condensed_to_redundant(self, condensed: NDArray) -> NDArray:
+        """Expand a non-NumPy condensed vector to a redundant 2-D buffer on its device.
+
+        Mutable backends (e.g. PyTorch, CuPy) scatter the values into the matrix
+        on-device via item-assignment. Immutable backends (e.g. JAX), which do not
+        support item-assignment, go through a single host round-trip instead.
+
+        """
+        xp = _aac.array_namespace(condensed)
+        dev = getattr(condensed, "device", None)
+
+        if _get_backend_name(xp) in ("torch", "cupy"):
+            # scatter on-device (no host round-trip): place the values in the
+            # row-major upper triangle (matching the condensed order), mirror to
+            # the lower triangle, then set the diagonal.
+            k = condensed.shape[0]
+            n = int((1.0 + (1.0 + 8.0 * k) ** 0.5) / 2.0)
+            idx = xp.arange(n, device=dev)
+            upper = idx[:, None] < idx[None, :]
+            mat = xp.zeros((n, n), dtype=condensed.dtype, device=dev)
+            mat[upper] = condensed
+            mat = mat + xp.matrix_transpose(mat)  # symmetric; diagonal stays zero
+            if self._diagonal is not None:
+                mat[idx, idx] = xp.asarray(
+                    self._diagonal, dtype=condensed.dtype, device=dev
+                )
+            return mat
+
+        # immutable backends (e.g. JAX): build the matrix via one host round-trip.
+        mat_np = squareform(_to_numpy(condensed), force="tomatrix", checks=False)
+        diag = self._diagonal if self._diagonal is not None else 0.0
+        if _aac.is_array_api_obj(diag) and not _aac.is_numpy_array(diag):
+            diag = _to_numpy(diag)
+        np.fill_diagonal(mat_np, diag)
+        return xp.asarray(mat_np, device=dev)
 
     def _validate_data(self, data: NDArray) -> None:
         """Validate the data array.
@@ -1651,6 +1696,10 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if self._flags["CONDENSED"]:
+            if _aac.is_array_api_obj(self._data) and not _aac.is_numpy_array(
+                self._data
+            ):
+                return self._condensed_to_redundant(self._data)
             mat = squareform(self._data, force="tomatrix", checks=False)
             np.fill_diagonal(mat, self._diagonal)
             return mat
@@ -1728,6 +1777,9 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         if self._flags["CONDENSED"]:
             return self._data
+        elif _aac.is_array_api_obj(self._data) and not _aac.is_numpy_array(self._data):
+            n = self._data.shape[0]
+            return distmat_reorder_condensed(self._data, np.arange(n))
         else:
             return squareform(self._data, force="tovector", checks=False)
 

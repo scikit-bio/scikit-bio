@@ -2342,21 +2342,93 @@ class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assertTrue(ns.isdtype(dm.data.dtype, (ns.float32, ns.float64)))
         self.assertFalse(ns.isdtype(dm.data.dtype, xp.float16))
 
-    @array_backends("jax", "torch", "cupy")
-    def test_condensed_rejected_for_non_numpy(self, xp, device):
-        # Condensed storage is NumPy-only (scipy.squareform); a non-NumPy 2-D
-        # buffer with condensed=True must raise rather than silently host-copy.
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_condensed_2d_buffer_backend(self, xp, device):
+        # A non-NumPy 2-D buffer with condensed=True is stored as a 1-D
+        # condensed buffer on-device (extracted via distmat_reorder_condensed),
+        # matching the NumPy path's condensed_form() output.
         buf = self.make_array(xp, device, self.data)
-        with self.assertRaises(SymmetricMatrixError):
-            DistanceMatrix(buf, condensed=True)
+        dm = DistanceMatrix(buf, condensed=True)
+        self.assertEqual(dm.data.ndim, 1)
+        self.assert_type_preserved(dm.data, xp, device)
+        ref = DistanceMatrix(self.data).condensed_form()
+        self.assert_close(dm.data, ref)
 
-    @array_backends("jax", "torch", "cupy")
-    def test_1d_buffer_rejected_for_non_numpy(self, xp, device):
-        # A 1-D (condensed-form) non-NumPy buffer must be rejected: expanding it
-        # to redundant form would require scipy.squareform (NumPy-only).
-        cond = self.make_array(xp, device, np.array([1.0, 2.0, 3.0]))
-        with self.assertRaises(SymmetricMatrixError):
-            DistanceMatrix(cond)
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_condensed_1d_buffer_backend(self, xp, device):
+        # A 1-D non-NumPy (condensed-form) buffer is stored as-is, no
+        # conversion needed.
+        ref_dm = DistanceMatrix(self.data)
+        cond = self.make_array(xp, device, ref_dm.condensed_form())
+        dm = DistanceMatrix(cond, condensed=True)
+        self.assertEqual(dm.data.ndim, 1)
+        self.assert_type_preserved(dm.data, xp, device)
+        self.assert_close(dm.data, ref_dm.condensed_form())
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_1d_buffer_redundant_form_backend(self, xp, device):
+        # A 1-D non-NumPy buffer requesting redundant storage (condensed=False,
+        # the default) is expanded to a 2-D matrix on-device.
+        ref_dm = DistanceMatrix(self.data)
+        cond = self.make_array(xp, device, ref_dm.condensed_form())
+        dm = DistanceMatrix(cond)
+        self.assertEqual(dm.data.ndim, 2)
+        self.assert_type_preserved(dm.data, xp, device)
+        self.assert_close(dm.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_condensed_redundant_round_trip_backend(self, xp, device):
+        # condensed_form() and redundant_form() round-trip correctly for a
+        # non-NumPy DistanceMatrix, on both storage forms.
+        buf_2d = self.make_array(xp, device, self.data)
+        dm_2d = DistanceMatrix(buf_2d)
+        self.assert_type_preserved(dm_2d.condensed_form(), xp, device)
+        self.assert_close(dm_2d.condensed_form(), dm_2d.condensed_form())
+
+        ref_dm = DistanceMatrix(self.data)
+        cond = self.make_array(xp, device, ref_dm.condensed_form())
+        dm_1d = DistanceMatrix(cond, condensed=True)
+        self.assert_type_preserved(dm_1d.redundant_form(), xp, device)
+        self.assert_close(dm_1d.redundant_form(), self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_plot_and_to_data_frame_backend(self, xp, device):
+        # plot() and to_data_frame() hand off to matplotlib/pandas, which are
+        # host-only; a non-NumPy buffer must be materialized rather than
+        # erroring or silently misbehaving.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=list("abcde"))
+        df = dm.to_data_frame()
+        self.assertEqual(df.shape, (5, 5))
+        self.assert_close(df.to_numpy(), self.data)
+        fig = dm.plot()
+        self.assertEqual(len(fig.axes), 2)  # heatmap axis + colorbar axis
+
+
+class SymmetricMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
+    """A SymmetricMatrix supports condensed form on a non-NumPy buffer.
+
+    A SymmetricMatrix (unlike a DistanceMatrix) can carry a non-zero diagonal,
+    which is stored separately from the condensed off-diagonal values.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(0)
+        a = rng.random((5, 5))
+        a = (a + a.T) / 2.0
+        # non-zero diagonal, which a SymmetricMatrix keeps
+        np.fill_diagonal(a, rng.random(5))
+        self.data = a
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_condensed_2d_preserves_diagonal(self, xp, device):
+        # Building condensed from a 2-D buffer stores the diagonal separately;
+        # redundant_form must reconstruct it (the diagonal is materialized to
+        # the host for the scatter, then moved back to the buffer's device).
+        sm = SymmetricMatrix(self.make_array(xp, device, self.data), condensed=True)
+        self.assertEqual(sm.data.ndim, 1)
+        red = sm.redundant_form()
+        self.assert_type_preserved(red, xp, device)
+        self.assert_close(red, self.data)
 
 
 if __name__ == "__main__":
