@@ -1328,13 +1328,16 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         ] * 2
 
     def test_init_from_readonly_array(self):
-        # A read-only NumPy array (e.g. one shared from an immutable JAX array)
-        # must still construct: is_symmetric_and_hollow makes a writable copy for
-        # the Cython validator rather than failing on the read-only buffer.
+        # A read-only NumPy array (e.g. one materialized from an immutable JAX
+        # array) is stored as a writable copy, so the Cython kernels work: the
+        # matrix constructs, and can be validated and permuted/reordered, which
+        # would otherwise fail with "buffer source array is read-only".
         data = np.array(self.dm_3x3_data, dtype=float)
         data.flags.writeable = False
         obs = self.matobj(data, ["a", "b", "c"])
         self.assertEqual(obs, self.dm_3x3)
+        self.assertTrue(obs.data.flags.writeable)
+        obs.permute(condensed=True, seed=0)  # exercises distmat_reorder_condensed
 
     def test_matrix_from_matrix(self):
         # distance from distance
