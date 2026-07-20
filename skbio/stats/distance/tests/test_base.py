@@ -1327,6 +1327,15 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.01, 4.2, 12.0]),
         ] * 2
 
+    def test_init_from_readonly_array(self):
+        # A read-only NumPy array (e.g. one shared from an immutable JAX array)
+        # must still construct: is_symmetric_and_hollow makes a writable copy for
+        # the Cython validator rather than failing on the read-only buffer.
+        data = np.array(self.dm_3x3_data, dtype=float)
+        data.flags.writeable = False
+        obs = self.matobj(data, ["a", "b", "c"])
+        self.assertEqual(obs, self.dm_3x3)
+
     def test_matrix_from_matrix(self):
         # distance from distance
         sm = DistanceMatrix(self.dm_3x3)

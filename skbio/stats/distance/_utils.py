@@ -49,11 +49,13 @@ def is_symmetric_and_hollow(mat):
         is_hollow = not bool(xp.any(xp.linalg.diagonal(mat) != 0))
         return is_symmetric, is_hollow
 
-    # is_symmetric_and_hollow_cy is optimized
-    # for the common cas of c_contiguous.
-    # For all other cases, make a copy.
-    if not mat.flags.c_contiguous:
-        mat = np.asarray(mat, order="C")
+    # is_symmetric_and_hollow_cy reads through a C-contiguous, writable typed
+    # memoryview. For any other case (non-contiguous, or a read-only buffer such
+    # as a NumPy array shared from an immutable JAX array) make a single
+    # C-contiguous, writable copy; the kernel only reads it, but the memoryview
+    # still requires a writable buffer.
+    if not (mat.flags.c_contiguous and mat.flags.writeable):
+        mat = np.array(mat, order="C")
 
     return is_symmetric_and_hollow_cy(mat)
 
