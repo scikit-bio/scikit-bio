@@ -20,7 +20,7 @@ from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarni
 from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
-from skbio.util._array import ingest_array, _to_numpy
+from skbio.util._array import ingest_array, _get_array
 from skbio._config import _resolve_engine
 
 import array_api_compat as _aac
@@ -467,9 +467,9 @@ def mantel(
     # (the fallback above). A non-NumPy DistanceMatrix is materialized on the host
     # here (SciPy's kendalltau is host-only, and _order_dms runs on host).
     if x_is_xp:
-        x = DistanceMatrix(_to_numpy(x.data), x.ids)
+        x = DistanceMatrix(_get_array(x.data, to_numpy=True), x.ids)
     if y_is_xp:
-        y = DistanceMatrix(_to_numpy(y.data), y.ids)
+        y = DistanceMatrix(_get_array(y.data, to_numpy=True), y.ids)
 
     x, y = _order_dms(x, y, strict=strict, lookup=lookup)
 
@@ -581,8 +581,8 @@ def _mantel_stats_pearson_xp(x, y, permutations, rng, alternative, spearman=Fals
         y_flat = _xp_rank_average(xp, y_flat)
         # rebuild the ranked symmetric matrix so permuted pairs can be gathered
         # (one-time host assembly; on-device gather is a possible follow-up).
-        xr = _to_numpy(x_flat)
-        i0, j0 = _to_numpy(iu0), _to_numpy(iu1)
+        xr = _get_array(x_flat, to_numpy=True)
+        i0, j0 = _get_array(iu0, to_numpy=True), _get_array(iu1, to_numpy=True)
         full = np.zeros((n, n), dtype=np.float64)
         full[i0, j0] = xr
         full[j0, i0] = xr
