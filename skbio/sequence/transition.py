@@ -1,7 +1,7 @@
 r"""Transition probability models (:mod:`skbio.sequence.tpm`)
 ==========================================================
 
-.. currentmodule:: skbio.sequence.tpm
+.. currentmodule:: skbio.sequence.transition
 
 This module provides functions for calculating transition probability
 matrices (TPMs) under several substitution models for a specified
@@ -47,7 +47,6 @@ from inspect import signature
 import functools
 
 import numpy as np
-import numpy.typing as npt
 
 from skbio.sequence.distance import _char_hash, _check_freqs
 from collections.abc import Callable
@@ -62,7 +61,7 @@ from skbio.sequence import (
 import skbio.sequence as sk_seqtype
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
+    from numpy.typing import ArrayLike, NDArray
 
 
 def _wrap_vector_tpm_function(
@@ -141,7 +140,7 @@ def jc69(
     r"""
     Calculate the JC69 transition probability matrix for a given distance.
 
-    .. versionadded:: 0.7.3
+    .. versionadded:: 0.7.4
 
     The Jukes-Cantor 1969 (JC69) model assumes equal nucleotide frequencies
     and equal substitution rates between all nucleotides.
@@ -194,8 +193,8 @@ def jc69(
 
 
 def _jc69(
-    d: npt.NDArray[np.float64],
-) -> npt.NDArray[np.float64]:
+    d: NDArray,
+) -> NDArray:
     r"""
     Computes series of matrices for vector of distances d.
 
@@ -232,7 +231,7 @@ def k2p(
     r"""
     Calculate the K2P transition probability matrix for a given distance.
 
-    .. versionadded:: 0.7.3
+    .. versionadded:: 0.7.4
 
     The Kimura 2-parameter (K2P, a.k.a. K80) model assumes separate rates for
     transitions :math:`(A \leftrightarrow G, C \leftrightarrow T/U)` and
@@ -270,7 +269,6 @@ def k2p(
         Transition probability matrix. Rows are ancestral nucleotides,
         columns are descendant nucleotides.
 
-
     Notes
     -----
     The Kimura 2-parameter model (K2P or K80) was originally described in [1]_.
@@ -297,9 +295,9 @@ def k2p(
 
 
 def _k2p(
-    d: npt.NDArray[np.float64],
+    d: NDArray,
     kappa: float,
-) -> npt.NDArray[np.float64]:
+) -> NDArray:
     e1 = np.exp(-4.0 * d / 3.0)
     e2 = np.exp(-2.0 * (kappa + 1) * d / 3.0)
 
@@ -331,7 +329,7 @@ def f81(
     r"""
     Calculate the F81 transition probability matrix for a given distance.
 
-    .. versionadded:: 0.7.3
+    .. versionadded:: 0.7.4
 
     The Felsenstein 1981 (F81) model assumes equal substitution rates among
     nucleotide pairs but allows unequal equilibrium base frequencies :math:`\pi`.
@@ -402,9 +400,9 @@ def f81(
 
 
 def _f81(
-    d: npt.NDArray[np.float64],
-    freqs: npt.NDArray[np.float64],
-) -> npt.NDArray[np.float64]:
+    d: NDArray,
+    freqs: NDArray,
+) -> NDArray:
     r"""
     F81 transition probability matrix for branch length d.
 
@@ -443,7 +441,7 @@ def hky85(
     r"""
     Calculate the HKY85 transition probability matrix for a given distance.
 
-    .. versionadded:: 0.7.3
+    .. versionadded:: 0.7.4
 
     The Hasegawa, Kishino, and Yano 1985 (HKY85) allows differential base
     frequencies (:math:`\pi`) and assumes fixed ratio :math:`\kappa` between
@@ -523,9 +521,7 @@ def hky85(
     )
 
 
-def _hky85(
-    d: npt.NDArray[np.float64], freqs: npt.NDArray[np.float64], kappa: float
-) -> npt.NDArray[np.float64]:
+def _hky85(d: NDArray, freqs: NDArray, kappa: float) -> NDArray:
     r"""
     HKY85 transition probability matrix for branch length d.
 
@@ -554,7 +550,7 @@ def tn93(
     r"""
     Calculate the TN93 transition probability matrix for a given distance.
 
-    .. versionadded:: 0.7.3
+    .. versionadded:: 0.7.4
 
     The Tamura-Nei 1993 (TN93) allows differential base
     frequencies (:math:`\pi`) and assumes different ratios :math:`\kappa` between
@@ -640,11 +636,11 @@ def tn93(
 
 
 def _tn93(
-    d: npt.NDArray[np.float64],
-    freqs: npt.NDArray[np.float64],
+    d: NDArray,
+    freqs: NDArray,
     kappa_r: float,
     kappa_y: float,
-) -> npt.NDArray[np.float64]:
+) -> NDArray:
     r"""
     F81 transition probability matrix for branch length d.
 

@@ -10,7 +10,7 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 
-from skbio.sequence.tpm import jc69, k2p, f81, hky85, tn93
+from skbio.sequence.transition import jc69, k2p, f81, hky85, tn93
 
 
 class TestJC69(TestCase):

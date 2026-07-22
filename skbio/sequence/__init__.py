@@ -55,7 +55,7 @@ Transition probability models
 .. autosummary::
    :toctree: generated/
 
-    tpm
+    transition
 
 
 Abstract classes
