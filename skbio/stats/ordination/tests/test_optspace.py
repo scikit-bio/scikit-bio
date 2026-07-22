@@ -61,7 +61,7 @@ class TestOptSpace(unittest.TestCase):
 
     def test_gradient_descent(self):
         """Test low-rank matrix completion with gradient descent"""
-        M_hat = optspace(self.M_obs, self.r, method='LS', tol=self.tol)
+        M_hat = optspace(self.M_obs, self.r, method='GD', tol=self.tol)
         rmse = self.compute_rmse(M_hat)
         true_rmse = 0.0041953807728951865
         rel_error = (rmse - true_rmse) / true_rmse
@@ -121,7 +121,7 @@ class TestOptSpace(unittest.TestCase):
             side_effect=lambda X, dX: X
         ):
             with self.assertWarns(RuntimeWarning) as cm:
-                _ = optspace(self.M_obs, self.r, method='LS')
+                _ = optspace(self.M_obs, self.r, method='GD')
 
         self.assertIn("depth limit was reached", str(cm.warning))
 

@@ -40,6 +40,31 @@ from scipy.linalg import svd
 from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
+def _check_unobserved(X, observed_mask):
+
+    # Check for fully unobserved rows or columns
+    keep_rows = np.any(observed_mask, axis=1)
+    keep_cols = np.any(observed_mask, axis=0)
+
+    # Warn if any row or column is fully unobserved
+    if np.any(~keep_rows) or np.any(~keep_cols):
+        warn(
+            "Input contains rows or columns which are fully unobserved. "
+            "These rows or columns will be ignored for matrix completion. "
+            "Fully unobserved rows or columns will remain as NaNs in the output.",
+            RuntimeWarning,
+        )
+
+    # Check that input is not completely unobserved
+    if np.all(~keep_rows):
+        raise ValueError(
+            "Matrix completion requires at least one observed row "
+            "and one observed column."
+        )
+
+    return keep_rows, keep_cols
+
+
 def _trim(X, observed_mask, m, n, n_observed):
     """Trim over-represented rows and columns.
 
@@ -299,11 +324,12 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
         # Armijo-Goldstein condition for sufficient decrease
         if obj_try < obj0 - c * alpha * deriv:
             converged = True
-            break  # return U_try, V_try, obj_try, alpha
+            break
 
         # Update step
         alpha *= tau
 
+    # Check convergence
     if not converged:
         warn(
             "Sufficient decrease was not satisfied in line search even though the"
@@ -314,7 +340,7 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
     return best
 
 
-def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
+def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     r"""Matrix completion using the OptSpace algorithm.
 
     OptSpace is an algorithm for recovering a low-rank matrix from a
@@ -343,9 +369,11 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
         If input is not 2D.
     ValueError
         If ``dimensions`` is not a positive integer less than or equal to
-        min(n_samples, n_features)
+        min(n_samples, n_features).
     ValueError
-        If ``method`` is not one of "GN" or "LS"
+        If ``method`` is not one of "GN" or "GD".
+    ValueError
+        If input is fully unobserved.
 
     See Also
     --------
@@ -401,18 +429,25 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
             "min(n_samples, n_features)"
         )
 
-    elif method not in ("GN", "LS"):
-        raise ValueError("Method must be 'GN' or 'LS'")
+    elif method not in ("GN", "GD"):
+        raise ValueError("Method must be 'GN' or 'GD'")
 
-    m, n = X.shape
+    # Create observed mask
+    observed_mask = ~np.isnan(X)
+
+    # Check for unobserved rows or columns
+    keep_rows, keep_cols = _check_unobserved(X, observed_mask)
+
+    # Update matrix
+    X_keep = X[np.ix_(keep_rows, keep_cols)]
+    observed_mask = observed_mask[np.ix_(keep_rows, keep_cols)]
+
+    n_observed = np.sum(observed_mask)
+    m, n = X_keep.shape
     r = dimensions
 
-    # Create observed mask (1 for observed, 0 for missing)
-    observed_mask = ~np.isnan(X)
-    n_observed = np.sum(observed_mask)
-
     # Trim over-represented rows and columns
-    X_trimmed = _trim(X, observed_mask, m, n, n_observed)
+    X_trimmed = _trim(X_keep, observed_mask, m, n, n_observed)
 
     # Compute density for rescaling
     density = n_observed / (n * m)
@@ -425,17 +460,17 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
 
     # Vectorize data matrix over observed entries
     rows, cols = np.where(observed_mask)
-    b = X[rows, cols]
+    b = X_keep[rows, cols]
 
     # Iteratively solve for U, V, and S by minimizing the objective
 
+    # Convergence parameters
     prev_obj = np.inf
     converged = False
-
-    # Convergence parameters
     damp = 0
     alpha, tau, c = 1, 0.1, 1e-4
 
+    # Objective function
     def _compute_obj(U, V):
         # Compute optimal S given current U, V
         S_curr = _solve_S(U, V, b, observed_mask, tol)
@@ -448,7 +483,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
 
         return obj_curr
 
-    for _ in range(max_iter):
+    for i in range(max_iter):
         # Compute optimal S given current U, V
         S = _solve_S(U, V, b, observed_mask, tol)
 
@@ -462,7 +497,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
         if np.abs(prev_obj - obj) / obj < tol:
             # Gradient descent has a hierarchical convergence criterion
             # which incrementally sharpens the resolution of line search
-            if method == "LS":
+            if method == "GD":
                 if c < 1:
                     c *= 100
                 else:
@@ -477,7 +512,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
         prev_obj = obj
 
         # Update via gradient descent with line search
-        if method == "LS":
+        if method == "GD":
             # Compute gradient directions
             dU, dV = jacobian_UV_adj(U, V, S, -R, observed_mask)
 
@@ -495,13 +530,15 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="LS"):
             U = retract_grassmann(U, dU)
             V = retract_grassmann(V, dV)
 
+    # Check convergence
     if not converged:
         warn(
             f"OptSpace did not converge after 'max_iter' ({max_iter}) iterations.",
             RuntimeWarning,
         )
 
-    # Form reconstructed matrix
-    X_hat = U @ S @ V.T
+    # Form reconstructed matrix, and expand back to original shape
+    X_hat = np.full(X.shape, np.nan)
+    X_hat[np.ix_(keep_rows, keep_cols)] = U @ S @ V.T
 
     return X_hat
