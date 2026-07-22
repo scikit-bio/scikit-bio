@@ -9,9 +9,10 @@
 r"""Robust Principal Component Analysis (RPCA).
 
 This module implements Robust PCA for sparse compositional data analysis.
-RPCA combines the robust centered log-ratio (rclr) transformation with
-OptSpace matrix completion to perform dimensionality reduction on
-compositional data with many zeros.
+RPCA utilizes matrix completion with OptSpace as a pre-processing step
+to handle missing entries before dimensionality reduction. This may be used
+to analyze compositional data which has already been processed using the
+robust centered log-ratio (rclr) transformation.
 
 References
 ----------
@@ -39,32 +40,28 @@ from skbio.table._tabular import (
 def rpca(
     X,
     dimensions=3,
+    max_iter=10000,
     sample_ids=None,
     feature_ids=None,
-    max_iter=10000,
     output_format=None,
 ):
     r"""Perform Robust Principal Component Analysis.
 
-    \/ Rewrite this, and mention the application of rclr for preprocessing
-    link to rclr
-
-    Robust PCA (RPCA) is an ordination method for sparse compositional data.
-    It applies the robust centered log-ratio (rclr) transformation followed
-    by OptSpace matrix completion to handle the zeros introduced by the
-    log transformation.
+    Robust PCA (RPCA) is an ordination method for data with missing entries.
+    In the context of compositional data, RPCA is used to analyze data that has
+    been transformed via the robust centered log-ratio (rclr) transformation,
+    in which zeros become missing entries. In RPCA, OptSpace matrix completion is
+    applied to impute missing entries, and PCA is performed on the completed matrix.
 
     Parameters
     ----------
     X : table_like
         Samples by features table (n, p). See :ref:`supported formats <table_like>`.
-        Values should be non-negative counts or abundances.
     dimensions : int, optional
-            dimensions : int, optional
         Number of principal components to compute. Must be a positive integer less
         than or equal to min(n, p). Default is 3.
     max_iter : int, optional
-        Maximum iterations for OptSpace algorithm. Default is 5.
+        Maximum iterations for OptSpace algorithm. Default is 10000.
     sample_ids, feature_ids, output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
 
@@ -77,8 +74,12 @@ def rpca(
     Raises
     ------
     ValueError
-        If input is not a DataFrame, contains negative values,
-        or has insufficient samples/features after filtering.
+        If ``dimensions`` is not a positive integer less than or equal to
+        min(n_samples, n_features)
+    ValueError
+        If ``method`` is not one of "eigh" or "svd"
+    ValueError
+        If any row or column is fully unobserved.
 
     See Also
     --------
@@ -91,23 +92,16 @@ def rpca(
     Notes
     -----
 
-    Show how to preprocess data with rclr, and show how to use with
+    For compositional data, RPCA is most often preceded by the robust
+    centered log-ratio (rclr) transform. For more details, see
+    :ref:`rclr`.
 
     RPCA is designed for cross-sectional studies where each sample
     represents an independent observation. For repeated-measures or
     longitudinal data, consider using CTF instead.
 
-    The method proceeds as follows:
-
-    1. Filter the table by minimum counts and frequency (optional)
-    2. Apply robust CLR transformation (log-ratio with geometric mean)
-    3. Use OptSpace to complete the matrix (fill NaN values)
-    4. Perform SVD on the completed matrix to extract principal components
-
     References
     ----------
-    \/ Add citation for RPCA in general
-
     .. [1] Martino C, Morton JT, Marotz CA, Thompson LR, Tripathi A,
        Knight R, Zengler K. 2019. A Novel Sparse Compositional Technique
        Reveals Microbial Perturbations. mSystems 4:e00016-19.
@@ -141,8 +135,14 @@ def rpca(
     # Ingestion of input data matrix
     X, row_ids, column_ids = _ingest_table(X, sample_ids, feature_ids)
 
-    # Note:
-    # Input validation may be redundant here, since optspace already performs this
+    # Check observed entries
+    obs_mask = ~np.isnan(X)
+    obs_rows, obs_cols = np.any(obs_mask, axis=1), np.any(obs_mask, axis=0)
+
+    if np.any(~obs_rows) or np.any(~obs_cols):
+        raise ValueError(
+            "Input to RPCA must not contain any fully unobserved rows or columns"
+        )
 
     # Apply OptSpace for matrix completion
     X = optspace(X, dimensions=dimensions, max_iter=max_iter)

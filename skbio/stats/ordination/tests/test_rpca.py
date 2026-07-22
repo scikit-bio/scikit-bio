@@ -88,6 +88,27 @@ class TestRPCA(unittest.TestCase):
         for i in range(len(eigvals) - 1):
             self.assertGreaterEqual(eigvals[i], eigvals[i + 1])
 
+    def test_unobserved_row(self):
+        """Test error for fully unobserved row"""
+        nan_table = self.table
+        nan_row = 1
+        nan_table.loc[nan_row, :] =  np.nan
+
+        with self.assertRaises(ValueError) as context:
+            _ = rpca(nan_table, dimensions=3)
+        self.assertIn("must not contain", str(context.exception))
+
+    def test_unobserved_col(self):
+        """Test error for fully unobserved column"""
+        nan_table = self.table
+        nan_col = 1
+        nan_table.loc[:, nan_col] =  np.nan
+
+        with self.assertRaises(ValueError) as context:
+            _ = rpca(nan_table, dimensions=3)
+        self.assertIn("must not contain", str(context.exception))
+
+
 
 class TestRPCAReproducibility(unittest.TestCase):
     """Tests for RPCA reproducibility."""

@@ -46,6 +46,13 @@ def _check_unobserved(X, observed_mask):
     keep_rows = np.any(observed_mask, axis=1)
     keep_cols = np.any(observed_mask, axis=0)
 
+    # Check that input is not completely unobserved
+    if np.all(~keep_rows):
+        raise ValueError(
+            "Matrix completion requires at least one observed row "
+            "and one observed column."
+        )
+
     # Warn if any row or column is fully unobserved
     if np.any(~keep_rows) or np.any(~keep_cols):
         warn(
@@ -53,13 +60,6 @@ def _check_unobserved(X, observed_mask):
             "These rows or columns will be ignored for matrix completion. "
             "Fully unobserved rows or columns will remain as NaN in the output.",
             RuntimeWarning,
-        )
-
-    # Check that input is not completely unobserved
-    if np.all(~keep_rows):
-        raise ValueError(
-            "Matrix completion requires at least one observed row "
-            "and one observed column."
         )
 
     return keep_rows, keep_cols

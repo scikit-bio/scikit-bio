@@ -144,13 +144,13 @@ class TestOptSpace(unittest.TestCase):
         """Test warning when a column is not observed"""
         M_obs_col = self.M_obs
         nan_col = 1
-        M_obs_col[nan_col, :] = np.nan
+        M_obs_col[:, nan_col] = np.nan
 
         with self.assertWarns(RuntimeWarning) as context:
             M_hat = optspace(M_obs_col, self.r)
 
         self.assertIn("remain as NaN", str(context.warning))
-        self.assertTrue(np.all(np.isnan(M_hat[nan_col, :])))
+        self.assertTrue(np.all(np.isnan(M_hat[:, nan_col])))
 
     def test_fully_unobserved_error(self):
         """Test error when input is fully unobserved."""
