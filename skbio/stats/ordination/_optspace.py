@@ -40,7 +40,7 @@ from scipy.linalg import svd
 from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
-def _check_unobserved(X, observed_mask):
+def _check_unobserved(observed_mask):
 
     # Check for fully unobserved rows or columns
     keep_rows = np.any(observed_mask, axis=1)
@@ -117,6 +117,41 @@ def _svd_init(X_trimmed, r):
     return U, V
 
 
+def jacobian_S(U, V, S, rows, cols):
+    """Compute J_S(dS).
+
+    The Jacobian is
+
+    J(dU, dV, dS) = J_S(dS) + J_U(dU) + J_V(dV).
+
+    The S component of the Jacobian determines how changes in S (dS) contribute to
+    the reconstruction error over the observed entries.
+
+    J_S(dS) = P_\\Omega(U dS V^T).
+    """
+
+    W = U @ S @ V.T
+    return W[rows, cols]
+
+
+def jacobian_S_adj(U, V, w, observed_mask):
+    """Compute J_S*(W).
+
+    The Jacobian adjoint is defined with respect to the inner product by
+
+    <J(dU, dV, dS), W> = <(dU, dV, dS), J*(W)>
+
+    Thus,
+
+    J_S*(W) = U^T P_\\Omega(W) V.
+    """
+
+    W = np.zeros_like(observed_mask, dtype=U.dtype)
+    W[observed_mask] = w
+    ds = U.T @ W @ V
+    return ds.ravel()
+
+
 def _solve_S(U, V, b, observed_mask, tol):
     """Compute optimal S given U and V.
 
@@ -153,41 +188,6 @@ def _solve_S(U, V, b, observed_mask, tol):
     s = lsmr(J_S, b, atol=tol, btol=tol)[0]
 
     return s.reshape(r, r)
-
-
-def jacobian_S(U, V, S, rows, cols):
-    """Compute J_S(dS).
-
-    The Jacobian is
-
-    J(dU, dV, dS) = J_S(dS) + J_U(dU) + J_V(dV).
-
-    The S component of the Jacobian determines how changes in S (dS) contribute to
-    the reconstruction error over the observed entries.
-
-    J_S(dS) = P_\\Omega(U dS V^T).
-    """
-
-    W = U @ S @ V.T
-    return W[rows, cols]
-
-
-def jacobian_S_adj(U, V, w, observed_mask):
-    """Compute J_S*(W).
-
-    The Jacobian adjoint is defined with respect to the inner product by
-
-    <J(dU, dV, dS), W> = <(dU, dV, dS), J*(W)>
-
-    Thus,
-
-    J_S*(W) = U^T P_\\Omega(W) V.
-    """
-
-    W = np.zeros_like(observed_mask, dtype=U.dtype)
-    W[observed_mask] = w
-    ds = U.T @ W @ V
-    return ds.ravel()
 
 
 def jacobian_UV(U, V, S, dU, dV, rows, cols):
@@ -288,11 +288,6 @@ def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
     return unpack(step, U.shape, V.shape)
 
 
-def retract_grassmann(X, dX):
-    """Retract the updated matrix X + dX back to the Grassmann manifold."""
-    return np.linalg.qr(X + dX, mode="reduced")[0]
-
-
 def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
     """Backtracking line search"""
 
@@ -338,6 +333,11 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
         )
 
     return best
+
+
+def retract_grassmann(X, dX):
+    """Retract the updated matrix X + dX back to the Grassmann manifold."""
+    return np.linalg.qr(X + dX, mode="reduced")[0]
 
 
 def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
@@ -436,7 +436,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     observed_mask = ~np.isnan(X)
 
     # Check for unobserved rows or columns
-    keep_rows, keep_cols = _check_unobserved(X, observed_mask)
+    keep_rows, keep_cols = _check_unobserved(observed_mask)
 
     # Update matrix
     X_keep = X[np.ix_(keep_rows, keep_cols)]

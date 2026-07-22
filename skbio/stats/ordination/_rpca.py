@@ -23,11 +23,8 @@ References
 """
 
 import numpy as np
-import pandas as pd
-from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
-from skbio.stats.composition._base import rclr
 from ._optspace import optspace
 from ._principal_component_analysis import _pca
 from skbio.table._tabular import (

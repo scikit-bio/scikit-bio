@@ -10,9 +10,8 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-import numpy.testing as npt
 
-from skbio.stats.ordination._optspace import optspace, line_search
+from skbio.stats.ordination._optspace import optspace
 
 
 class TestOptSpace(unittest.TestCase):
