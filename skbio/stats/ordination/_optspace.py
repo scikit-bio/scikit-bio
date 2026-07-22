@@ -51,7 +51,7 @@ def _check_unobserved(X, observed_mask):
         warn(
             "Input contains rows or columns which are fully unobserved. "
             "These rows or columns will be ignored for matrix completion. "
-            "Fully unobserved rows or columns will remain as NaNs in the output.",
+            "Fully unobserved rows or columns will remain as NaN in the output.",
             RuntimeWarning,
         )
 

@@ -101,29 +101,61 @@ class TestOptSpace(unittest.TestCase):
         self.assertIn("Method", str(context.exception))
 
     def test_svds_exception(self):
+        """Test sparse SVDS failure and fallback to dense SVD."""
         with patch("skbio.stats.ordination._optspace.svds",
             side_effect=RuntimeError("PROPACK failed")
         ):
-            with self.assertWarns(RuntimeWarning) as cm:
+            with self.assertWarns(RuntimeWarning) as context:
                 _ = optspace(self.M_obs, self.r)
 
-        self.assertIn("Sparse SVD failed", str(cm.warning))
+        self.assertIn("Sparse SVD failed", str(context.warning))
 
-    def test_max_iter(self):
-        with self.assertWarns(RuntimeWarning) as cm:
+    def test_max_iter_exception(self):
+        """Test manifold optimization warning when convergence is not achieved."""
+        with self.assertWarns(RuntimeWarning) as context:
             _ = optspace(self.M_obs, self.r, max_iter=1)
 
-        self.assertIn("did not converge", str(cm.warning))
+        self.assertIn("did not converge", str(context.warning))
 
-    def test_max_ls(self):
+    def test_max_ls_exception(self):
+        """Test line search warning when convergence is not achieved."""
         with patch(
             "skbio.stats.ordination._optspace.retract_grassmann",
             side_effect=lambda X, dX: X
         ):
-            with self.assertWarns(RuntimeWarning) as cm:
+            with self.assertWarns(RuntimeWarning) as context:
                 _ = optspace(self.M_obs, self.r, method='GD')
 
-        self.assertIn("depth limit was reached", str(cm.warning))
+        self.assertIn("depth limit was reached", str(context.warning))
+
+    def test_unobserved_exception(self):
+        """Test warning when a row or column is not observed"""
+        M_obs_row = self.M_obs
+        nan_row = 1
+        M_obs_row[nan_row, :] = np.nan
+
+        with self.assertWarns(RuntimeWarning) as context:
+            M_hat = optspace(M_obs_row, self.r)
+
+        self.assertIn("remain as NaN", str(context.warning))
+        self.assertTrue(np.all(np.isnan(M_hat[nan_row, :])))
+
+        M_obs_col = self.M_obs
+        nan_col = 1
+        M_obs_col[nan_col, :] = np.nan
+
+        with self.assertWarns(RuntimeWarning) as context:
+            M_hat = optspace(M_obs_col, self.r)
+
+        self.assertIn("remain as NaN", str(context.warning))
+        self.assertTrue(np.all(np.isnan(M_hat[nan_col, :])))
+
+    def test_fully_unobserved_error(self):
+        """Test error when input is fully unobserved."""
+        M_obs = self.M_obs * np.nan
+        with self.assertRaises(ValueError) as context:
+            _ = optspace(M_obs, dimensions=self.r)
+        self.assertIn("requires at least", str(context.exception))
 
 # TODO: More varied sizes, shapes, and missingness among matrices
 # Vary total size (m*n), ratio (m/n), and portion p of observed entries
