@@ -128,8 +128,8 @@ class TestOptSpace(unittest.TestCase):
 
         self.assertIn("depth limit was reached", str(context.warning))
 
-    def test_unobserved_exception(self):
-        """Test warning when a row or column is not observed"""
+    def test_unobserved_row_exception(self):
+        """Test warning when a row is not observed"""
         M_obs_row = self.M_obs
         nan_row = 1
         M_obs_row[nan_row, :] = np.nan
@@ -139,7 +139,9 @@ class TestOptSpace(unittest.TestCase):
 
         self.assertIn("remain as NaN", str(context.warning))
         self.assertTrue(np.all(np.isnan(M_hat[nan_row, :])))
-
+    
+    def test_unobserved_col_exception(self):
+        """Test warning when a column is not observed"""
         M_obs_col = self.M_obs
         nan_col = 1
         M_obs_col[nan_col, :] = np.nan
@@ -158,7 +160,8 @@ class TestOptSpace(unittest.TestCase):
         self.assertIn("requires at least", str(context.exception))
 
 # TODO: More varied sizes, shapes, and missingness among matrices
-# Vary total size (m*n), ratio (m/n), and portion p of observed entries
+# Vary total size (m*n), ratio (m/n), portion p of observed entries,
+# and different singular value structures.
 
 
 if __name__ == '__main__':
