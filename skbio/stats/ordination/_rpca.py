@@ -77,8 +77,6 @@ def rpca(
         If ``dimensions`` is not a positive integer less than or equal to
         min(n_samples, n_features)
     ValueError
-        If ``method`` is not one of "eigh" or "svd"
-    ValueError
         If any row or column is fully unobserved.
 
     See Also
@@ -125,9 +123,9 @@ def rpca(
 
     >>> ordination = rpca(table, dimensions=3)
     >>> print(ordination.proportion_explained[:3])  # doctest: +SKIP
-    PC1    0.35...
-    PC2    0.20...
-    PC3    0.15...
+    PC1    0.498532
+    PC2    0.410859
+    PC3    0.090609
     dtype: float64
 
     """
