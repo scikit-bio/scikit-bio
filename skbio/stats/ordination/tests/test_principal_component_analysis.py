@@ -24,15 +24,15 @@ class TestPCA(TestCase):
             [2, 5, 1, 7],
             [1, 5, 2, 4],
             [3, 4, 3, 6]
-        ])
+            ])
 
         # Full dimensionality expected results
 
         components = np.array([
-            [0.48260815, -0.12451597, -0.06637759, 0.86439526],
-            [0.51789148, -0.33553222, 0.73499837, -0.28104082],
-            [0.63156772, 0.6869599, -0.23531131, -0.27172945],
-            [-0.31622777, 0.63245553, 0.63245553, 0.31622777]
+            [0.48260815, 0.51789148, 0.63156772, -0.31622777],
+            [-0.12451597, -0.33553222, 0.6869599, 0.63245553],
+            [-0.06637759, 0.73499837, -0.23531131, 0.63245553],
+            [ 0.86439526, -0.28104082, -0.27172945, 0.31622777]
             ])
         
         variances = np.array([1.95862455, 1.18116419, 0.36021126, 0])
@@ -57,7 +57,7 @@ class TestPCA(TestCase):
             projected_samples, index=row_ids, columns=pc_ids, backend=None
             )
         features = _create_table(
-            components, index=pc_ids, columns=column_ids, backend=None
+            components, index=column_ids, columns=pc_ids, backend=None
             )
         proportion_explained = _create_table_1d(
             variance_proportion, index=pc_ids, backend=None
@@ -70,15 +70,17 @@ class TestPCA(TestCase):
             samples=samples,
             sample_ids=row_ids,
             features=features,
-            feature_ids=pc_ids,
+            feature_ids=column_ids,
             proportion_explained=proportion_explained,
         )
 
         # Reduced dimensionality expected results (2D)
 
         components = np.array([
-            [0.48260815, -0.12451597, -0.06637759, 0.86439526],
-            [0.51789148, -0.33553222, 0.73499837, -0.28104082]
+            [0.48260815, 0.51789148],
+            [-0.12451597, -0.33553222],
+            [-0.06637759, 0.73499837],
+            [ 0.86439526, -0.28104082]
             ])
         
         variances = np.array([1.95862455, 1.18116419])
@@ -103,7 +105,7 @@ class TestPCA(TestCase):
             projected_samples, index=row_ids, columns=pc_ids, backend=None
             )
         features = _create_table(
-            components, index=pc_ids, columns=column_ids, backend=None
+            components, index=column_ids, columns=pc_ids, backend=None
             )
         proportion_explained = _create_table_1d(
             variance_proportion, index=pc_ids, backend=None
@@ -116,7 +118,7 @@ class TestPCA(TestCase):
             samples=samples,
             sample_ids=row_ids,
             features=features,
-            feature_ids=pc_ids,
+            feature_ids=column_ids,
             proportion_explained=proportion_explained,
         )
 
