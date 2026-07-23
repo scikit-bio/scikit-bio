@@ -26,8 +26,10 @@ from skbio.stats.distance._mantel import _mantel_stats_spearman
 from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
                                           mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
-from skbio.util import get_data_path, assert_data_frame_almost_equal, numba_code
+from skbio.util import (get_data_path, assert_data_frame_almost_equal, numba_code,
+                        get_rng)
 from skbio.util._testing import _data_frame_to_default_int_type
+from skbio.util._testing import ArrayAPITestMixin, array_backends
 
 
 class MantelTestData(TestCase):
@@ -1197,6 +1199,144 @@ class MantelCondensedTests(TestCase):
         full_size = dm_full._data.nbytes
         cond_size = dm_cond._data.nbytes
         self.assertLess(cond_size, full_size / 2 + 1)  # +1 for rounding
+
+
+class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
+    """mantel on DistanceMatrices backed by non-NumPy array-API buffers."""
+
+    def setUp(self):
+        def sym(seed):
+            g = np.random.default_rng(seed)
+            a = g.random((10, 10))
+            a = (a + a.T) / 2.0
+            np.fill_diagonal(a, 0.0)
+            return a
+        self.x = sym(2)
+        self.y = sym(3)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_backends(self, xp, device):
+        for method in ("pearson", "spearman"):
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                method=method, permutations=99, seed=0,
+            )
+            mx = DistanceMatrix(self.make_array(xp, device, self.x))
+            my = DistanceMatrix(self.make_array(xp, device, self.y))
+            r, p, _ = mantel(mx, my, method=method, permutations=99, seed=0)
+            self.assertAlmostEqual(r, r_ref, places=10)
+            self.assertAlmostEqual(p, p_ref, places=10)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_spearman_ties_backends(self, xp, device):
+        # integer distances with repeats -> tied ranks, exercising the
+        # average-tie ranking on the xp path (matches scipy rankdata 'average').
+        def sym_int(seed):
+            r = np.random.default_rng(seed)
+            a = r.integers(1, 4, size=(8, 8)).astype(float)
+            a = np.triu(a, 1)
+            return a + a.T
+        dx, dy = sym_int(11), sym_int(12)
+        r_ref, p_ref, _ = mantel(
+            DistanceMatrix(dx), DistanceMatrix(dy),
+            method="spearman", permutations=99, seed=0,
+        )
+        mx = DistanceMatrix(self.make_array(xp, device, dx))
+        my = DistanceMatrix(self.make_array(xp, device, dy))
+        r, p, _ = mantel(mx, my, method="spearman", permutations=99, seed=0)
+        self.assertAlmostEqual(r, r_ref, places=10)
+        self.assertAlmostEqual(p, p_ref, places=10)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_kendalltau_backends(self, xp, device):
+        # kendalltau has no xp path; a non-NumPy buffer is host-converted.
+        r_ref, p_ref, _ = mantel(DistanceMatrix(self.x), DistanceMatrix(self.y),
+                                 method="kendalltau", permutations=99, seed=0)
+        mx = DistanceMatrix(self.make_array(xp, device, self.x))
+        my = DistanceMatrix(self.make_array(xp, device, self.y))
+        r, p, _ = mantel(mx, my, method="kendalltau", permutations=99, seed=0)
+        self.assertAlmostEqual(r, r_ref, places=10)
+        self.assertAlmostEqual(p, p_ref, places=10)
+
+    @array_backends("jax", "torch", "cupy")  # non-NumPy only, to force a mix
+    def test_mixed_backend_warns_and_falls_back(self, xp, device):
+        # a NumPy x with a non-NumPy y is a mixed backend: warn and fall back to
+        # the NumPy path (matching the all-NumPy result) rather than hard-failing.
+        mx = DistanceMatrix(self.x)
+        my = DistanceMatrix(self.make_array(xp, device, self.y))
+        with self.assertWarns(UserWarning):
+            r, p, _ = mantel(mx, my, method="pearson", permutations=99, seed=0)
+        r_ref, p_ref, _ = mantel(
+            DistanceMatrix(self.x), DistanceMatrix(self.y),
+            method="pearson", permutations=99, seed=0,
+        )
+        self.assertAlmostEqual(r, r_ref, places=10)
+        self.assertAlmostEqual(p, p_ref, places=10)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_id_reorder_backends(self, xp, device):
+        # ids in a different order are reordered on-device (via _order_dms),
+        # matching the numpy path exactly.
+        ids = [str(i) for i in range(10)]
+        perm = [7, 2, 9, 0, 4, 1, 8, 3, 6, 5]
+        ids_p = [ids[i] for i in perm]
+        y_p = self.y[np.ix_(perm, perm)]
+        r_ref, p_ref, _ = mantel(
+            DistanceMatrix(self.x, ids), DistanceMatrix(y_p, ids_p),
+            method="pearson", permutations=99, seed=0,
+        )
+        mx = DistanceMatrix(self.make_array(xp, device, self.x), ids=ids)
+        my = DistanceMatrix(self.make_array(xp, device, y_p), ids=ids_p)
+        r, p, _ = mantel(mx, my, method="pearson", permutations=99, seed=0)
+        self.assertAlmostEqual(r, r_ref, places=10)
+        self.assertAlmostEqual(p, p_ref, places=10)
+
+    @array_backends("jax", "torch", "cupy")  # non-NumPy only
+    def test_disjoint_ids_raise(self, xp, device):
+        # fully disjoint ids raise (via _order_dms, same as the numpy path)
+        mx = DistanceMatrix(self.make_array(xp, device, self.x),
+                            ids=[str(i) for i in range(10)])
+        my = DistanceMatrix(self.make_array(xp, device, self.y),
+                            ids=['z' + str(i) for i in range(10)])
+        with self.assertRaises(ValueError):
+            mantel(mx, my, method="pearson", permutations=0)
+
+    def test_mantel_stats_pearson_xp_numpy_backend(self):
+        # NumPy is array-API compatible; call the array-API compute helper
+        # directly with NumPy arrays (a normal mantel() with NumPy DMs takes the
+        # host path, not the xp one) so the array-API path is exercised under
+        # ordinary (NumPy-only) CI, matching the reference result.
+        for spearman in (False, True):
+            method = "spearman" if spearman else "pearson"
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                method=method, permutations=99, seed=0,
+            )
+            r, p, n = mantel_mod._mantel_stats_pearson_xp(
+                self.x, self.y, 99, get_rng(0), "two-sided", spearman=spearman,
+            )
+            self.assertEqual(n, self.x.shape[0])
+            self.assertAlmostEqual(r, r_ref, places=10)
+            self.assertAlmostEqual(p, p_ref, places=10)
+
+    def test_mantel_stats_pearson_xp_validation_numpy(self):
+        # exercise the array-API validation/warning branches on NumPy input.
+        with self.assertRaises(ValueError):  # shape mismatch
+            mantel_mod._mantel_stats_pearson_xp(
+                self.x, self.y[:9, :9], 0, get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # not square
+            mantel_mod._mantel_stats_pearson_xp(
+                np.zeros((3, 4)), np.zeros((3, 4)), 0, get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # fewer than 3 objects
+            mantel_mod._mantel_stats_pearson_xp(
+                np.zeros((2, 2)), np.zeros((2, 2)), 0, get_rng(0), "two-sided")
+        # constant input -> ConstantInputWarning and a NaN statistic
+        const = np.ones((5, 5))
+        np.fill_diagonal(const, 0.0)
+        with self.assertWarns(ConstantInputWarning):
+            r, p, _ = mantel_mod._mantel_stats_pearson_xp(
+                const, self.x[:5, :5], 0, get_rng(0), "two-sided")
+        self.assertTrue(np.isnan(r))
 
 
 if __name__ == '__main__':
