@@ -148,6 +148,31 @@ def pca(
        into principal components. Journal of Educational Psychology, 24(6),
        417-441, 498-520.
 
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> from skbio.stats.ordination import pca
+
+    Create a simple count table:
+
+    >>> rng = np.random.default_rng(42)
+    >>> counts = rng.poisson(5, size=(10, 20))
+    >>> table = pd.DataFrame(
+    ...     counts,
+    ...     index=[f'S{i}' for i in range(10)],
+    ...     columns=[f'F{i}' for i in range(20)],
+    ... )
+
+    Perform PCA:
+
+    >>> ordination = pca(table, dimensions=3)
+    >>> print(ordination.proportion_explained[:3])  # doctest: +SKIP
+    PC1    0.218539
+    PC2    0.201997
+    PC3    0.170482
+    dtype: float64
+
     """
 
     # Ingestion of input data matrix

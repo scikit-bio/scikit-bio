@@ -6,11 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-r"""OptSpace Matrix Completion Algorithm.
+r"""OptSpace matrix completion algorithm.
 
-This module provides the OptSpace algorithm for low-rank matrix completion
-from partially observed entries. It is used by the Robust PCA (RPCA)
-ordination method.
+This module provides the OptSpace algorithm for low-rank matrix completion from
+partially observed entries. It is used by the Robust PCA (RPCA) ordination method.
 
 The algorithm minimizes the objective:
 
@@ -403,25 +402,30 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     --------
     >>> import numpy as np
     >>> from skbio.stats.ordination import optspace
-    >>> # Create a low-rank matrix
-    >>> m, n, r = 600, 600, 5
-    >>> rng = np.random.default_rng(0)
+
+    Create a low-rank matrix.
+
+    >>> m, n, r = 100, 100, 5
+    >>> rng = np.random.default_rng(42)
     >>> U_true = rng.normal(size=(m,r))
     >>> V_true = rng.normal(size=(n,r))
     >>> M_true = U_true @ V_true.T
-    >>> # Mask some entries
-    >>> M_obs = M_true.copy()
-    >>> p_observe = 0.4  # 40% observed
-    >>> mask = rng.random((m, n)) < p_observe
-    >>> M_obs[~mask] = np.nan
-    >>> # Recover the matrix
-    >>> M_hat = optspace(M_obs, dimensions=r)
-    """
 
+    Mask some entries.
+
+    >>> M_obs = M_true.copy()
+    >>> p_obs = 0.4  # 40% observed
+    >>> mask = rng.random((m, n)) < p_obs
+    >>> M_obs[~mask] = np.nan
+
+    Recover the matrix.
+
+    >>> M_hat = optspace(M_obs, dimensions=r)
+
+    """
     X = np.asarray(X, dtype=np.float64)
 
     # Validate input
-
     if X.ndim != 2:
         raise ValueError(f"Input must be 2D, got {X.ndim}D array.")
 

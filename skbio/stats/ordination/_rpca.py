@@ -88,7 +88,6 @@ def rpca(
     centered log-ratio (RCLR) transformation. See :func:`~skbio.stats.composition.rclr`
     for details. The entire procedure is referred to as robust Aitchison PCA.
 
-
     References
     ----------
     .. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
@@ -103,20 +102,22 @@ def rpca(
 
     Create a simple count table:
 
-    >>> np.random.seed(42)
-    >>> counts = np.random.poisson(5, size=(10, 20))
+    >>> rng = np.random.default_rng(42)
+    >>> counts = rng.poisson(5, size=(10, 20))
     >>> counts[counts < 2] = 0  # Add some zeros
-    >>> table = pd.DataFrame(counts,
-    ...                      index=['sample_%d' % i for i in range(10)],
-    ...                      columns=['feature_%d' % i for i in range(20)])
+    >>> table = pd.DataFrame(
+    ...     counts,
+    ...     index=[f'S{i}' for i in range(10)],
+    ...     columns=[f'F{i}' for i in range(20)],
+    ... )
 
     Perform RPCA:
 
     >>> ordination = rpca(table, dimensions=3)
     >>> print(ordination.proportion_explained[:3])  # doctest: +SKIP
-    PC1    0.498532
-    PC2    0.410859
-    PC3    0.090609
+    PC1    0.497464
+    PC2    0.435214
+    PC3    0.067322
     dtype: float64
 
     """
