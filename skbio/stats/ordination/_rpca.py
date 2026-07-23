@@ -8,17 +8,16 @@
 
 r"""Robust Principal Component Analysis (RPCA).
 
-This module implements Robust PCA for sparse compositional data analysis.
-RPCA utilizes matrix completion with OptSpace as a pre-processing step
-to handle missing entries before dimensionality reduction. This may be used
-to analyze compositional data which has already been processed using the
-robust centered log-ratio (rclr) transformation.
+This module implements Robust PCA for sparse compositional data analysis. RPCA utilizes
+matrix completion with OptSpace as a pre-processing step to handle missing entries
+before dimensionality reduction. This may be used to analyze compositional data which
+has already been processed using the robust centered log-ratio (rclr) transformation.
 
 References
 ----------
-.. [1] Martino C, Morton JT, Marotz CA, Thompson LR, Tripathi A,
-   Knight R, Zengler K. 2019. A Novel Sparse Compositional Technique
-   Reveals Microbial Perturbations. mSystems 4:e00016-19.
+.. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+   Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+   microbial perturbations. mSystems, 4(1), 10-1128.
 
 """
 
@@ -52,8 +51,8 @@ def rpca(
 
     Parameters
     ----------
-    X : table_like
-        Samples by features table (n, p). See :ref:`supported formats <table_like>`.
+    X : table_like of shape (n_samples, n_features)
+        Input data table. See :ref:`supported formats <table_like>`.
     dimensions : int, optional
         Number of principal components to compute. Must be a positive integer less
         than or equal to min(n, p). Default is 3.
@@ -65,8 +64,8 @@ def rpca(
     Returns
     -------
     OrdinationResults
-        The ordination results including sample coordinates, feature
-        loadings, eigenvalues, and proportion explained.
+        The ordination results including sample coordinates, feature loadings,
+        eigenvalues, and proportion explained.
 
     Raises
     ------
@@ -79,27 +78,22 @@ def rpca(
     See Also
     --------
     pca
-    ctf
     pcoa
-    rclr
-    OptSpace
+    optspace
+    skbio.stats.composition.rclr
 
     Notes
     -----
+    For compositional data with zero values, RPCA is most often preceded by the robust
+    centered log-ratio (RCLR) transformation. See :func:`~skbio.stats.composition.rclr`
+    for details. The entire procedure is referred to as robust Aitchison PCA.
 
-    For compositional data, RPCA is most often preceded by the robust
-    centered log-ratio (rclr) transform. For more details, see
-    :ref:`rclr`.
-
-    RPCA is designed for cross-sectional studies where each sample
-    represents an independent observation. For repeated-measures or
-    longitudinal data, consider using CTF instead.
 
     References
     ----------
-    .. [1] Martino C, Morton JT, Marotz CA, Thompson LR, Tripathi A,
-       Knight R, Zengler K. 2019. A Novel Sparse Compositional Technique
-       Reveals Microbial Perturbations. mSystems 4:e00016-19.
+    .. [1] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+       Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+       microbial perturbations. mSystems, 4(1), 10-1128.
 
     Examples
     --------
