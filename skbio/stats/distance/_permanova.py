@@ -28,7 +28,10 @@ from skbio.binaries import (
 )
 from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
+from skbio.util._array import ingest_array
 from skbio._config import _resolve_engine
+
+import array_api_compat as _aac
 
 try:
     from numba import njit, prange
@@ -518,6 +521,14 @@ def permanova(
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
+    # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer is
+    # dispatched to the backend-agnostic xp path; a NumPy-backed DM keeps the
+    # existing Cython/Numba engine path below.
+    if not _aac.is_numpy_array(distmat.data):
+        return _permanova_array_api(
+            distmat.data, grouping, column, permutations, seed, ids=distmat.ids
+        )
+
     sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
@@ -600,3 +611,52 @@ def _compute_f_stat(
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
+
+
+def _permanova_sW_xp(xp, dm, grouping, inv_group_sizes):
+    """Within-group sum of squares s_W for a full distance matrix, in ``xp``.
+
+    Backend-agnostic equivalent of ``permanova_f_stat_sW_cy`` for the
+    non-condensed (full 2-D) case: sum over upper-triangle pairs ``i < j`` in
+    the same group of ``d[i, j] ** 2`` divided by the group size of row ``i``.
+    """
+    n = dm.shape[0]
+    idx = xp.arange(n, device=dm.device)
+    upper = idx[:, None] < idx[None, :]
+    same = grouping[:, None] == grouping[None, :]
+    mask = xp.astype(upper & same, dm.dtype)
+    row_w = xp.take(inv_group_sizes, grouping)
+    return xp.sum(dm * dm * mask * row_w[:, None])
+
+
+def _permanova_array_api(distmat, grouping, column, permutations, seed, ids=None):
+    """PERMANOVA on an array-API (e.g. GPU-resident) full distance matrix.
+
+    Mirrors the DistanceMatrix path but computes the pseudo-F statistic with
+    the ``xp`` namespace so the distance matrix stays on its device. ``ids``
+    align a DataFrame/Series grouping to the matrix rows. Permutations reuse the
+    shared Monte-Carlo driver so the p-value matches the NumPy path exactly.
+    """
+    xp, dm = ingest_array(distmat)
+    sample_size = dm.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
+
+    group_sizes = np.bincount(grouping)
+    inv_group_sizes = xp.asarray(
+        1.0 / group_sizes, dtype=dm.dtype, device=dm.device
+    )
+    # full 2-D matrix (array-API input is never condensed); halve to count each
+    # unordered pair once, matching the DistanceMatrix full-matrix path.
+    s_T = xp.sum(dm * dm) / sample_size / 2.0
+
+    def _test_stat(grp):
+        grp = xp.asarray(grp, device=dm.device)
+        s_W = _permanova_sW_xp(xp, dm, grp, inv_group_sizes)
+        s_A = s_T - s_W
+        return float((s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups)))
+
+    stat, p_value = _run_monte_carlo_stats(_test_stat, grouping, permutations, seed)
+    return _build_results(
+        "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
+    )
