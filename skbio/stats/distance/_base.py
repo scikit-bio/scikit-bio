@@ -2050,6 +2050,16 @@ class DistanceMatrix(SymmetricMatrix):
             data, ids
         )
 
+        # The Cython kernels (validation, permutation, reordering) read through a
+        # C-contiguous, writable typed memoryview. A read-only buffer (e.g. one
+        # materialized from an immutable JAX array via __dlpack__) or a
+        # non-contiguous one gets a single writable copy here; non-NumPy
+        # (array-API) buffers stay on their own device untouched.
+        if _aac.is_numpy_array(data) and not (
+            data.flags.c_contiguous and data.flags.writeable
+        ):
+            data = np.array(data, order="C")
+
         if ids is None:
             ids = self._generate_ids(data)
         else:
