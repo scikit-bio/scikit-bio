@@ -5,6 +5,7 @@
 ### Features
 
 * Add optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
+* `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
 
 ### Performance enhancements
 
