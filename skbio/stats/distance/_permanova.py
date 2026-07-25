@@ -561,7 +561,9 @@ def permanova(
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distmat.data**2).sum() / sample_size
+    # accumulate in float64: for a float32 matrix s_T and s_W nearly cancel in
+    # the pseudo-F, so a float32 sum here loses accuracy in the s_A = s_T - s_W step
+    s_T = (distmat.data**2).sum(dtype=np.float64) / sample_size
     if not distmat._flags["CONDENSED"]:
         # we are going over the whole matrix, instead of just upper triangle
         # so cut in half
@@ -648,7 +650,7 @@ def _permanova_array_api(distmat, grouping, column, permutations, seed, ids=None
     )
     # full 2-D matrix (array-API input is never condensed); halve to count each
     # unordered pair once, matching the DistanceMatrix full-matrix path.
-    s_T = xp.sum(dm * dm) / sample_size / 2.0
+    s_T = xp.sum(dm * dm, dtype=xp.float64) / sample_size / 2.0
 
     def _test_stat(grp):
         grp = xp.asarray(grp, device=dm.device)
