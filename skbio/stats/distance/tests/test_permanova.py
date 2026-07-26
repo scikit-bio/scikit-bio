@@ -202,6 +202,25 @@ class PERMANOVATests(PERMANOVATestData):
         with self.assertRaises(TypeError):
             permanova(self.dm_ties.data, self.grouping_equal, seed=42)
 
+    def test_float32_matches_float64(self):
+        # A float32 distance matrix must give the same pseudo-F as its float64
+        # equivalent. s_T is accumulated in float64; a float32 sum there loses
+        # accuracy because s_T and s_W nearly cancel in the ratio, which showed
+        # up as a several-percent error on real (float32) UniFrac matrices. Weak
+        # grouping (F ~ 1) makes the cancellation strongest.
+        rng = np.random.default_rng(1)
+        n = 2000
+        a = rng.random((n, n)).astype(np.float32)
+        a = ((a + a.T) / 2).astype(np.float32)
+        np.fill_diagonal(a, 0.0)
+        grouping = rng.integers(0, 3, n).astype(str).tolist()
+        f32 = permanova(
+            DistanceMatrix(a), grouping, permutations=0)['test statistic']
+        f64 = permanova(
+            DistanceMatrix(a.astype(np.float64)), grouping,
+            permutations=0)['test statistic']
+        self.assertAlmostEqual(float(f32), float(f64), places=5)
+
 
 class PERMANOVACondensedTests(PERMANOVATestData):
     """Tests for PERMANOVA with condensed distance matrices.
