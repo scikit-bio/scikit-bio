@@ -19,6 +19,10 @@
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 
+### Bug fixes
+
+* Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
+
 ## Version 0.7.3
 
 ### Features
