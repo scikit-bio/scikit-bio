@@ -18,7 +18,7 @@ from skbio.stats.distance import PairwiseMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal, ArrayAPITestMixin,
-                        array_backends)
+                        array_backends, numba_code)
 from skbio.stats.ordination._principal_coordinate_analysis import (
     e_matrix,
     f_matrix,
@@ -60,6 +60,15 @@ class TestPCoA(TestCase):
 
         results = pcoa(self.dm3)
 
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True)
+
+    @numba_code
+    def test_engine_numba_matches_cython(self):
+        # Selecting the numba centering engine must give the same PCoA as the
+        # default cython engine.
+        expected_results = pcoa(self.dm3, engine="cython")
+        results = pcoa(self.dm3, engine="numba")
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
 
