@@ -8,6 +8,8 @@
 * Introduced transition probability matrix computation ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
 * Added inverse robust center log ratio (`rclr_inv`) transformation ([#2527](https://github.com/scikit-bio/scikit-bio/pull/2527)).
 * `TreeNode.prune` and `TreeNode.bifurcate` now accept an `inplace` parameter (default `True`, preserving the previous in-place behavior) and return the resulting tree. This makes them consistent with other whole-tree methods such as `shear` and `root_at_midpoint`. Set `inplace=False` to leave the original tree unchanged and operate on a copy ([#2495](https://github.com/scikit-bio/scikit-bio/pull/2495)).
+* Transition probability matrix computation has been introduced ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
+* `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
 
 ### Performance enhancements
 
