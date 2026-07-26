@@ -21,6 +21,10 @@
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
 
 
+### Bug fixes
+
+* Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
+
 ## Version 0.7.3
 
 ### Features
