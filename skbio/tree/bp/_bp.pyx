@@ -314,6 +314,14 @@ cdef class BPTree:
         skbio.tree.TreeNode.from_bptree
 
         """
+        cdef:
+            Py_ssize_t n_nodes, ptr
+            cnp.ndarray[BOOL_t, ndim=1] topo
+            cnp.ndarray[object, ndim=1] names
+            cnp.ndarray[DOUBLE_t, ndim=1] lengths
+            cnp.ndarray[INT32_t, ndim=1] edges
+            set seen
+
         n_nodes = len(list(tree.traverse(include_self=True)))
 
         topo = np.zeros(n_nodes * 2, dtype=np.uint8)
@@ -354,7 +362,14 @@ cdef class BPTree:
         skbio.tree.TreeNode.to_array
 
         """
-        cdef int i
+        cdef:
+            Py_ssize_t i, n
+            Py_ssize_t chi_ptr, cur_index
+            SIZE_t node_idx, first_child, last_child, sib_idx
+            cnp.ndarray[DOUBLE_t, ndim=1] length
+            cnp.ndarray[UINT32_t, ndim=1] node_ids
+            cnp.ndarray[object, ndim=1] name
+            dict id_index
 
         class mock_node:
             def __init__(self, id, is_tip):
@@ -364,16 +379,18 @@ cdef class BPTree:
             def is_tip(self):
                 return self.is_tip_
 
-        child_index = np.zeros((int(self.data.sum()) - self.count(tips=True), 3), dtype=np.int64)
-        length = np.zeros(self.data.sum(), dtype=np.double)
+        n = <Py_ssize_t>self.data.sum()
+
+        child_index = np.zeros((n - self.count(tips=True), 3), dtype=np.int64)
+        length = np.zeros(n, dtype=np.double)
         node_ids = np.zeros(self.data.size, dtype=np.uint32)
-        name = np.full(self.data.sum(), None, dtype=object)
+        name = np.full(n, None, dtype=object)
 
         # TreeNode.assign_ids, decompose target
         chi_ptr = 0
         cur_index = 0  # the index into node_ids, equivalent to TreeNode.assign_ids
-        id_index = dict.fromkeys(set(range(self.data.sum())))  # map a node's "id" to an object which indicates if it is a leaf or not
-        for i in range(self.data.sum()):
+        id_index = dict.fromkeys(set(range(n)))  # map a node's "id" to an object which indicates if it is a leaf or not
+        for i in range(n):
             node_idx = self.postorder_select(i + 1)  # the index within the BP of the node
 
             if not self.is_tip(node_idx):
@@ -394,7 +411,7 @@ cdef class BPTree:
                 chi_ptr += 1
 
         # make sure to capture root
-        id_index[self.data.sum() - 1] = mock_node(cur_index, False)
+        id_index[n - 1] = mock_node(cur_index, False)
 
         node_ids[0] = cur_index
         child_index[:, 0] = node_ids[child_index[:, 0]]
