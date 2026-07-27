@@ -390,7 +390,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     1. Initialize `U`, `V` using trimmed SVD of the observed matrix.
     2. Iteratively:
        a. Compute optimal `S` given current `U`, `V`.
-       b. Update `U`, `V` with the Gauss-Newton step `dU`, `dV`.
+       b. Update `U`, `V` with the manifold optimization step `dU`, `dV`.
        c. Project `U`, `V` back to Grassmann manifold.
 
     References
