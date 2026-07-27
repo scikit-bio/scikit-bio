@@ -343,7 +343,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     r"""Matrix completion using the OptSpace algorithm.
 
     OptSpace is an algorithm for recovering a low-rank matrix from a subset of observed
-    entries. It uses gradient descent on the Grassmann manifold to find the optimal
+    entries. It uses optimization on the Grassmann manifold to find the optimal
     low-rank approximation.
 
     Parameters
