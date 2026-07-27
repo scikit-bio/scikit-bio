@@ -22,6 +22,8 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
+from ._gpu import _mark_gpu_unavailable
+from ._permanova_gpu import _numba_gpu_module_for, _run_permanova_gpu
 from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
@@ -453,7 +455,11 @@ def permanova(
         Compute engine to use. ``"cython"`` (default) uses the Cython
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`).
+        default is used (see :func:`skbio.set_config`). When the distance
+        matrix is resident on a CUDA device (e.g. a CuPy- or CUDA-PyTorch-backed
+        matrix) and ``engine="numba"``, a fused GPU kernel is used. Matrices on
+        other backends, and ROCm-PyTorch matrices (see Notes), use the
+        array-API path instead.
 
     Returns
     -------
@@ -475,6 +481,12 @@ def permanova(
 
     Low-level acceleration is available for this function. See
     :install:`scikit-bio-binaries <#acceleration>` for more information.
+
+    On a GPU-resident distance matrix with ``engine="numba"``, a fused GPU kernel
+    is used on CUDA devices. It is not used for ROCm-PyTorch matrices: a Numba HIP
+    kernel cannot be compiled once ROCm-PyTorch has been imported in the same
+    process, so such matrices fall back to the array-API path, which runs on the
+    device regardless. The result is identical across all paths.
 
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
@@ -521,10 +533,25 @@ def permanova(
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
-    # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer is
-    # dispatched to the backend-agnostic xp path; a NumPy-backed DM keeps the
-    # existing Cython/Numba engine path below.
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
+    # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer: with
+    # engine="numba" and a matching Numba GPU backend it runs the fused GPU
+    # kernel on the device-resident matrix; otherwise it takes the backend-
+    # agnostic xp path. A NumPy-backed DM keeps the Cython/Numba engine path.
     if not _aac.is_numpy_array(distmat.data):
+        gpu = _numba_gpu_module_for(distmat.data) if engine == "numba" else None
+        if gpu is not None:
+            try:
+                return _run_permanova_gpu(
+                    gpu, distmat.data, grouping, column, permutations, seed,
+                    ids=distmat.ids,
+                )
+            except Exception:
+                # The fused kernel could not build/run on this stack (e.g. a
+                # numba-hip build that fails to compile); record it and fall
+                # back to the array-API path, which is correct on any backend.
+                _mark_gpu_unavailable(distmat.data)
         return _permanova_array_api(
             distmat.data, grouping, column, permutations, seed, ids=distmat.ids
         )
@@ -534,8 +561,6 @@ def permanova(
     num_groups, grouping = _preprocess_input_sng(
         distmat.ids, sample_size, grouping, column
     )
-
-    engine = _resolve_engine(engine, ("cython", "numba"))
 
     if _skbb_permanova_available(
         distmat, grouping, permutations, seed
