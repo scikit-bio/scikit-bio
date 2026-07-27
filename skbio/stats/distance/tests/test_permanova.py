@@ -8,7 +8,7 @@
 
 import io
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, mock
 
 import numpy as np
 import pandas as pd
@@ -122,6 +122,18 @@ class PERMANOVATests(PERMANOVATestData):
                         name='PERMANOVA results')
         obs = permanova(self.dm_no_ties, self.grouping_equal, permutations=0)
         self.assert_series_equal(obs, exp)
+
+    @numba_code
+    def test_engine_numba_skips_binaries(self):
+        # A numba request must not enter the scikit-bio-binaries path (the
+        # Cython-equivalent), so its availability is not even checked; a cython
+        # request still consults it.
+        with mock.patch.object(permanova_mod, "_skbb_permanova_available",
+                               return_value=False) as avail:
+            permanova(self.dm_ties, self.grouping_equal, seed=42, engine="numba")
+            avail.assert_not_called()
+            permanova(self.dm_ties, self.grouping_equal, seed=42, engine="cython")
+            avail.assert_called()
 
     def test_call_unequal_group_sizes(self):
         exp = pd.Series(

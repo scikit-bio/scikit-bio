@@ -14,6 +14,7 @@ import pandas as pd
 
 from scipy.linalg import eigh as scipy_eigh
 
+from skbio._config import _resolve_engine
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
@@ -149,7 +150,8 @@ def pcoa(
         ``"cython"`` (default) uses the Cython implementation. ``"numba"``
         uses the optional Numba implementation and requires Numba to be
         installed. If not provided, the global default is used (see
-        :func:`skbio.set_config`).
+        :func:`skbio.set_config`). When ``"numba"`` is selected, the optional
+        scikit-bio-binaries acceleration is not used.
 
     Returns
     -------
@@ -260,6 +262,10 @@ def pcoa(
             "and 1."
         )
 
+    # Resolve the compute engine once. When "numba" is requested, the
+    # scikit-bio-binaries fsvd path (the Cython-equivalent) is skipped below.
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
     # new parameter for ndim = number of dimensions (accounting for
     # non-int values)
     ndim = dimensions
@@ -303,7 +309,7 @@ def pcoa(
                     RuntimeWarning,
                 )
             ndim = distmat.data.shape[0]
-        if _skbb_pcoa_fsvd_available(
+        if engine != "numba" and _skbb_pcoa_fsvd_available(
             distmat.data, dimensions, inplace, seed
         ):  # pragma: no cover
             # unlikely to throw here, but just in case
