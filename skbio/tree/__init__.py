@@ -74,6 +74,21 @@ Tree utilities
     majority_rule
 
 
+Balanced parentheses (BP) representation
+----------------------------------------
+
+A succinct, memory-efficient encoding of tree topology, ported from
+improved-octo-waddle. Suited to very large trees and phylogenetic placement.
+The public objects below live in :mod:`skbio.tree.bp` and are also importable
+directly from :mod:`skbio.tree`.
+
+.. autosummary::
+   :toctree: generated/
+   :template: BP.rst
+
+    BPTree
+
+
 Exceptions
 ^^^^^^^^^^
 
@@ -609,6 +624,7 @@ from ._exception import (
     MissingNodeError,
     NoParentError,
 )
+from .bp import BPTree
 
 __all__ = [
     "TreeNode",
@@ -626,4 +642,5 @@ __all__ = [
     "DuplicateNodeError",
     "MissingNodeError",
     "NoParentError",
+    "BPTree",
 ]
