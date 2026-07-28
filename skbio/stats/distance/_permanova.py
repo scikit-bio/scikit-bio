@@ -453,7 +453,8 @@ def permanova(
         Compute engine to use. ``"cython"`` (default) uses the Cython
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`).
+        default is used (see :func:`skbio.set_config`). When ``"numba"`` is
+        selected, the optional scikit-bio-binaries acceleration is not used.
 
     Returns
     -------
@@ -537,7 +538,9 @@ def permanova(
 
     engine = _resolve_engine(engine, ("cython", "numba"))
 
-    if _skbb_permanova_available(
+    # When "numba" is requested, skip the scikit-bio-binaries path (the
+    # Cython-equivalent), matching the engine selection for the compute below.
+    if engine != "numba" and _skbb_permanova_available(
         distmat, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
