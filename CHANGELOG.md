@@ -26,6 +26,7 @@
 ### Bug fixes
 
 * Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
+* `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
 
 ## Version 0.7.3
 
