@@ -110,7 +110,7 @@ def pcoa(
     ----------
     distmat : DistanceMatrix
         The input distance matrix.
-    method : str, optional
+    method : {'eigh', 'fsvd'}, optional
         Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
         which computes exact eigenvectors and eigenvalues for all dimensions. The
         alternate is "fsvd" (fast singular value decomposition), a heuristic that can

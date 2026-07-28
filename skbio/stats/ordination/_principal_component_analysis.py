@@ -67,9 +67,9 @@ def pca(
 
     Parameters
     ----------
-    X : table_like
-        Samples by features table (n, p). See :ref:`supported formats <table_like>`.
-    method : str, optional
+    X : table_like of shape (n_samples, n_features)
+        Input data table. See :ref:`supported formats <table_like>`.
+    method : {'eigh', 'svd'}, optional
         Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
         which computes exact eigenvectors and eigenvalues of the covariance matrix.
         The alternative is "svd" (singular value decomposition), which bypasses
@@ -82,8 +82,8 @@ def pca(
         specified; otherwise, dense algorithms are used regardless.
     dimensions : int, optional
         Number of principal components to compute. Must be a positive integer less
-        than or equal to min(n, p). If not provided, all principal components will
-        be computed.
+        than or equal to ``min(n_samples, n_features)``. If not provided, all
+        principal components will be computed.
     sample_ids, feature_ids, output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
 
@@ -98,9 +98,9 @@ def pca(
     ------
     ValueError
         If ``dimensions`` is not a positive integer less than or equal to
-        min(n_samples, n_features)
+        ``min(n_samples, n_features)``.
     ValueError
-        If ``method`` is not one of "eigh" or "svd"
+        If ``method`` is not one of "eigh" or "svd".
 
     See Also
     --------
@@ -133,18 +133,45 @@ def pca(
     algorithms are used regardless.
 
     If ``iterative`` is specified as False, ``svd`` is computed by SciPy's
-    dense "svd" function, and ``eigh`` is computed by SciPy's dense "eigh"
-    function. If ``iterative`` is specified as True, the methods are computed
-    by SciPy's sparse "svds" and "eigsh" functions respectively.
+    dense :func:`~scipy.linalg.svd` function, and ``eigh`` is computed by
+    SciPy's dense :func:`~scipy.linalg.eigh` function. If ``iterative`` is
+    specified as True, the methods are computed by SciPy's sparse
+    :func:`~scipy.sparse.linalg.svds` and :func:`~scipy.sparse.linalg.eigsh`
+    functions respectively.
 
     References
     ----------
     .. [1] Pearson, K. (1901). On lines and planes of closest fit to systems of
-       points in space. Philosophical Magazine, 2(11), 559–572.
+       points in space. Philosophical Magazine, 2(11), 559-572.
 
     .. [2] Hotelling, H. (1933). Analysis of a complex of statistical variables
        into principal components. Journal of Educational Psychology, 24(6),
-       417–441, 498–520.
+       417-441, 498-520.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> from skbio.stats.ordination import pca
+
+    Create a simple count table:
+
+    >>> rng = np.random.default_rng(42)
+    >>> counts = rng.poisson(5, size=(10, 20))
+    >>> table = pd.DataFrame(
+    ...     counts,
+    ...     index=[f'S{i}' for i in range(10)],
+    ...     columns=[f'F{i}' for i in range(20)],
+    ... )
+
+    Perform PCA:
+
+    >>> ordination = pca(table, dimensions=3)
+    >>> print(ordination.proportion_explained[:3])  # doctest: +SKIP
+    PC1    0.218539
+    PC2    0.201997
+    PC3    0.170482
+    dtype: float64
 
     """
 

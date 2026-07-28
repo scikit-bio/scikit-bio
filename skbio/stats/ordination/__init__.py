@@ -27,9 +27,15 @@ Multidimensional scaling
    pcoa_biplot
 
 
-..
-   TODO: re-add "Dimensionality reduction" (PCA) section when RCLR and RPCA are
-   finished.
+Dimensionality reduction
+------------------------
+
+.. autosummary::
+   :toctree:
+
+   pca
+   rpca
+   optspace
 
 
 Correspondence analysis
@@ -49,7 +55,6 @@ Canonical analysis
 
    cca
    rda
-   rpca
 
 
 Multimodal embedding
@@ -69,7 +74,6 @@ Ordination results
    :toctree:
 
    OrdinationResults
-   optspace
 
 
 Utility functions
@@ -196,7 +200,9 @@ __all__ = [
     "ca",
     "rda",
     "cca",
-    # "pca",
+    "pca",
+    "rpca",
+    "optspace",
     "pcoa",
     "pcoa_biplot",
     "mmvec",
