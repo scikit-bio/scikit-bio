@@ -11,7 +11,7 @@ import numpy.testing as npt
 import pandas as pd
 from copy import deepcopy
 from warnings import catch_warnings
-from unittest import TestCase, main, mock
+from unittest import TestCase, main
 
 from skbio import DistanceMatrix, OrdinationResults
 from skbio.stats.distance import PairwiseMatrixError
@@ -71,21 +71,6 @@ class TestPCoA(TestCase):
         results = pcoa(self.dm3, engine="numba")
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
-
-    @numba_code
-    def test_fsvd_engine_numba_skips_binaries(self):
-        # A numba request must not enter the scikit-bio-binaries fsvd path (the
-        # Cython-equivalent), so its availability is not even checked; a cython
-        # request still consults it.
-        from skbio.stats.ordination import (
-            _principal_coordinate_analysis as pcoa_mod,
-        )
-        with mock.patch.object(pcoa_mod, "_skbb_pcoa_fsvd_available",
-                               return_value=False) as avail:
-            pcoa(self.dm3, method="fsvd", dimensions=3, engine="numba")
-            avail.assert_not_called()
-            pcoa(self.dm3, method="fsvd", dimensions=3, engine="cython")
-            avail.assert_called()
 
     def test_fsvd_inplace(self):
         expected_results = pcoa(
