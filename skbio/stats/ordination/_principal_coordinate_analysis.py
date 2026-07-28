@@ -14,7 +14,6 @@ import pandas as pd
 
 from scipy.linalg import eigh as scipy_eigh
 
-from skbio._config import _resolve_engine
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
@@ -261,10 +260,6 @@ def pcoa(
             "warn_neg_eigval must be Boolean or a floating-point number between 0 "
             "and 1."
         )
-
-    # Resolve the compute engine once. When "numba" is requested, the
-    # scikit-bio-binaries fsvd path (the Cython-equivalent) is skipped below.
-    engine = _resolve_engine(engine, ("cython", "numba"))
 
     # new parameter for ndim = number of dimensions (accounting for
     # non-int values)
