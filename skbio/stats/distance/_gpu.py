@@ -40,8 +40,8 @@ def _numba_gpu_module_for(arr):
     unavailable backend, when Numba GPU support is not installed, or when this
     backend's fused kernel has already failed once in this process (see
     :func:`_mark_gpu_unavailable`); the caller then takes the array-API path. A
-    CuPy (CUDA) array is never routed to ``numba.hip`` (mixing the two crashes on
-    the array handoff).
+    CuPy array is routed to ``numba.cuda``, never ``numba.hip`` (the two target
+    different GPU vendors).
 
     Parameters
     ----------

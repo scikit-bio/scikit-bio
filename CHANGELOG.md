@@ -11,7 +11,7 @@
 ### Performance enhancements
 
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
-* On a GPU-resident matrix, the fused Numba kernel runs `permanova` and `mantel` much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
+* On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Bug fixes
 
