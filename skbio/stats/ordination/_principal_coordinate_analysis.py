@@ -149,7 +149,8 @@ def pcoa(
         ``"cython"`` (default) uses the Cython implementation. ``"numba"``
         uses the optional Numba implementation and requires Numba to be
         installed. If not provided, the global default is used (see
-        :func:`skbio.set_config`).
+        :func:`skbio.set_config`). When ``"numba"`` is selected, the optional
+        scikit-bio-binaries acceleration is not used.
 
     Returns
     -------
@@ -303,7 +304,7 @@ def pcoa(
                     RuntimeWarning,
                 )
             ndim = distmat.data.shape[0]
-        if _skbb_pcoa_fsvd_available(
+        if engine != "numba" and _skbb_pcoa_fsvd_available(
             distmat.data, dimensions, inplace, seed
         ):  # pragma: no cover
             # unlikely to throw here, but just in case

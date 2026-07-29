@@ -455,11 +455,12 @@ def permanova(
         Compute engine to use. ``"cython"`` (default) uses the Cython
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`). When the distance
-        matrix is resident on a CUDA device (e.g. a CuPy- or CUDA-PyTorch-backed
-        matrix) and ``engine="numba"``, a fused GPU kernel is used. Matrices on
-        other backends, and ROCm-PyTorch matrices (see Notes), use the
-        array-API path instead.
+        default is used (see :func:`skbio.set_config`). When ``"numba"`` is
+        selected, the optional scikit-bio-binaries acceleration is not used.
+        When the distance matrix is resident on a CUDA device (e.g. a CuPy- or
+        CUDA-PyTorch-backed matrix) and ``engine="numba"``, a fused GPU kernel
+        is used. Matrices on other backends, and ROCm-PyTorch matrices (see
+        Notes), use the array-API path instead.
 
     Returns
     -------
@@ -562,7 +563,9 @@ def permanova(
         distmat.ids, sample_size, grouping, column
     )
 
-    if _skbb_permanova_available(
+    # When "numba" is requested, skip the scikit-bio-binaries path (the
+    # Cython-equivalent), matching the engine selection for the compute below.
+    if engine != "numba" and _skbb_permanova_available(
         distmat, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
