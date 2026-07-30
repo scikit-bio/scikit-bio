@@ -55,7 +55,6 @@ Canonical analysis
 
    cca
    rda
-   rpca
 
 
 Multimodal embedding
@@ -75,7 +74,6 @@ Ordination results
    :toctree:
 
    OrdinationResults
-   optspace
 
 
 Utility functions
