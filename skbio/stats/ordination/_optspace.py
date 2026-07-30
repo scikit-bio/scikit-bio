@@ -189,7 +189,7 @@ def _solve_S(U, V, b, observed_mask, tol):
     return s.reshape(r, r)
 
 
-def jacobian_UV(U, V, S, dU, dV, rows, cols):
+def jacobian_UV(U, V, S, dU, dV, observed_mask, tol):
     """Compute J_UV(dU, dV).
 
     The Jacobian is
@@ -206,15 +206,25 @@ def jacobian_UV(U, V, S, dU, dV, rows, cols):
     space of (U, V).
     """
 
+    rows, cols = np.where(observed_mask)
+
+    # Project input onto (U, V) tangent space
     dU_t = dU - U @ (U.T @ dU)
     dV_t = dV - V @ (V.T @ dV)
+
+    # Compute Jacobian
     W = dU_t @ S @ V.T
     W += U @ S @ dV_t.T
 
-    return W[rows, cols]
+    # Project output onto complement of S tangent space
+    w = W[rows, cols]
+    s = _solve_S(U, V, w, observed_mask, tol)
+    w -= jacobian_S(U, V, s, rows, cols)
+
+    return w
 
 
-def jacobian_UV_adj(U, V, S, w, observed_mask):
+def jacobian_UV_adj(U, V, S, w, observed_mask, tol):
     """Compute J*(W).
 
     The Jacobian adjoint is defined with respect to the inner product by
@@ -228,12 +238,18 @@ def jacobian_UV_adj(U, V, S, w, observed_mask):
     This is projected back to the tangent space of (U, V).
     """
 
-    W = np.zeros_like(observed_mask, dtype=U.dtype)
-    W[observed_mask] = w
+    rows, cols = np.where(observed_mask)
 
+    # Project input onto complement of S tangent space
+    W = np.zeros_like(observed_mask, dtype=U.dtype)
+    s = _solve_S(U, V, w, observed_mask, tol)
+    W[observed_mask] = w - jacobian_S(U, V, s, rows, cols)
+
+    # Compute Jacobian adjoint
     dU = W @ V @ S.T
     dV = W.T @ U @ S
 
+    # Project output onto (U, V) tangent space
     dU -= U @ (U.T @ dU)
     dV -= V @ (V.T @ dV)
 
@@ -265,14 +281,13 @@ def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
     """
 
     nvars = U.size + V.size
-    rows, cols = np.where(observed_mask)
 
     def matvec(x):
         dU, dV = unpack(x, U.shape, V.shape)
-        return jacobian_UV(U, V, S, dU, dV, rows, cols)
+        return jacobian_UV(U, V, S, dU, dV, observed_mask, tol)
 
     def rmatvec(y):
-        dU, dV = jacobian_UV_adj(U, V, S, y, observed_mask)
+        dU, dV = jacobian_UV_adj(U, V, S, y, observed_mask, tol)
         return pack(dU, dV)
 
     J_UV = LinearOperator(
@@ -492,7 +507,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
         return obj_curr
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         # Compute optimal S given current U, V
         S = _solve_S(U, V, b, observed_mask, tol)
 
@@ -523,7 +538,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         # Update via gradient descent with line search
         if method == "GD":
             # Compute gradient directions
-            dU, dV = jacobian_UV_adj(U, V, S, -R, observed_mask)
+            dU, dV = jacobian_UV_adj(U, V, S, -R, observed_mask, tol)
 
             # Perform backtracking line search
             U, V, obj, alpha = line_search(
