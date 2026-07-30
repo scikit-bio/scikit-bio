@@ -6,11 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-r"""OptSpace Matrix Completion Algorithm.
+r"""OptSpace matrix completion algorithm.
 
-This module provides the OptSpace algorithm for low-rank matrix completion
-from partially observed entries. It is used by the Robust PCA (RPCA)
-ordination method.
+This module provides the OptSpace algorithm for low-rank matrix completion from
+partially observed entries. It is used by the Robust PCA (RPCA) ordination method.
 
 The algorithm minimizes the objective:
 
@@ -24,12 +23,12 @@ of singular values, and :math:`P_\Omega` projects onto the observed entries.
 
 References
 ----------
-.. [1] Keshavan RH, Montanari A, Oh S. 2010. Matrix Completion from a
-   Few Entries. IEEE Transactions on Information Theory 56(6):2980-2998.
+.. [1] Keshavan, R. H., Montanari, A., & Oh, S. (2010). Matrix completion from a
+   few entries. IEEE transactions on information theory, 56(6), 2980-2998.
 
-.. [2] Martino C, Morton JT, Marotz CA, Thompson LR, Tripathi A,
-   Knight R, Zengler K. 2019. A Novel Sparse Compositional Technique
-   Reveals Microbial Perturbations. mSystems 4:e00016-19.
+.. [2] Martino, C., Morton, J. T., Marotz, C. A., Thompson, L. R., Tripathi, A.,
+   Knight, R., & Zengler, K. (2019). A novel sparse compositional technique reveals
+   microbial perturbations. mSystems, 4(1), 10-1128.
 
 """
 
@@ -289,7 +288,7 @@ def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
 
 
 def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
-    """Backtracking line search"""
+    """Backtracking line search."""
 
     # Maximum depth of line search (no greater than 1e-16)
     max_ls = 16
@@ -304,7 +303,7 @@ def line_search(U, V, dU, dV, obj0, obj_fn, alpha0, tau, c):
     best = (U, V, obj0, alpha0)
     converged = False
 
-    for i in range(max_ls):
+    for _ in range(max_ls):
         # Retract step to Grassmann manifold
         U_try = retract_grassmann(U, alpha * dU)
         V_try = retract_grassmann(V, alpha * dV)
@@ -343,24 +342,27 @@ def retract_grassmann(X, dX):
 def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     r"""Matrix completion using the OptSpace algorithm.
 
-    OptSpace is an algorithm for recovering a low-rank matrix from a
-    subset of observed entries. It uses gradient descent on the
-    Grassmann manifold to find the optimal low-rank approximation.
+    OptSpace is an algorithm for recovering a low-rank matrix from a subset of observed
+    entries. It uses optimization on the Grassmann manifold to find the optimal
+    low-rank approximation.
 
     Parameters
     ----------
-    X : ndarray
-        A 2D array with observed values and NaN for missing entries.
+    X : array_like of shape (n_samples, n_features)
+        A matrix with observed values and NaN for missing entries.
     dimensions : int, optional
         The rank of the matrix to recover. Default is 3.
     max_iter : int, optional
-        Maximum number of iterations. Default is 20.
+        Maximum number of iterations. Default is 10000.
     tol : float, optional
         Convergence tolerance. Default is 1e-5.
+    method : {'GD', 'GN'}, optional
+        The optimization method to use. Options are gradient descent ("GD", default)
+        and Gauss-Newton ("GN").
 
     Returns
     -------
-    X_hat
+    ndarray of shape (n_samples, n_dimensions)
         The reconstructed optimal low-rank matrix.
 
     Raises
@@ -369,7 +371,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         If input is not 2D.
     ValueError
         If ``dimensions`` is not a positive integer less than or equal to
-        min(n_samples, n_features).
+        ``min(n_samples, n_features)``.
     ValueError
         If ``method`` is not one of "GN" or "GD".
     ValueError
@@ -381,42 +383,49 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
     Notes
     -----
+    OptSpace was first described in [1]_.
+
     The algorithm proceeds as follows:
 
-    1. Initialize U, V using trimmed SVD of the observed matrix
+    1. Initialize `U`, `V` using trimmed SVD of the observed matrix.
     2. Iteratively:
-       a. Compute optimal S given current U, V
-       b. Update U, V with the Gauss-Newton step dU, dV
-       c. Project U, V back to Grassmann manifold
+       a. Compute optimal `S` given current `U`, `V`.
+       b. Update `U`, `V` with the manifold optimization step `dU`, `dV`.
+       c. Project `U`, `V` back to Grassmann manifold.
 
     References
     ----------
-    .. [1] Keshavan RH, Montanari A, Oh S. 2010. Matrix Completion from a
-       Few Entries. IEEE Transactions on Information Theory 56(6):2980-2998.
+    .. [1] Keshavan, R. H., Montanari, A., & Oh, S. (2010). Matrix completion from a
+       few entries. IEEE transactions on information theory, 56(6), 2980-2998.
 
     Examples
     --------
     >>> import numpy as np
     >>> from skbio.stats.ordination import optspace
-    >>> # Create a low-rank matrix
-    >>> m, n, r = 600, 600, 5
-    >>> rng = np.random.default_rng(0)
+
+    Create a low-rank matrix.
+
+    >>> m, n, r = 100, 100, 5
+    >>> rng = np.random.default_rng(42)
     >>> U_true = rng.normal(size=(m,r))
     >>> V_true = rng.normal(size=(n,r))
     >>> M_true = U_true @ V_true.T
-    >>> # Mask some entries
-    >>> M_obs = M_true.copy()
-    >>> p_observe = 0.4  # 40% observed
-    >>> mask = rng.random((m, n)) < p_observe
-    >>> M_obs[~mask] = np.nan
-    >>> # Recover the matrix
-    >>> M_hat = optspace(M_obs, dimensions=r)
-    """
 
+    Mask some entries.
+
+    >>> M_obs = M_true.copy()
+    >>> p_obs = 0.4  # 40% observed
+    >>> mask = rng.random((m, n)) < p_obs
+    >>> M_obs[~mask] = np.nan
+
+    Recover the matrix.
+
+    >>> M_hat = optspace(M_obs, dimensions=r)
+
+    """
     X = np.asarray(X, dtype=np.float64)
 
     # Validate input
-
     if X.ndim != 2:
         raise ValueError(f"Input must be 2D, got {X.ndim}D array.")
 
