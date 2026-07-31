@@ -128,7 +128,10 @@ class TestIngest(TestCase):
     def test_ingest_torch(self):
         table = torch.tensor(self.data)
         obs = _ingest_table(table)
-        npt.assert_array_equal(obs[0], self.data)
+
+        self.assertIsInstance(obs[0], torch.Tensor)
+        self.assertIs(obs[0], table)
+        npt.assert_array_equal(obs[0].cpu().numpy(), self.data)
         self.assertIsNone(obs[1])
         self.assertIsNone(obs[2])
 
@@ -136,7 +139,32 @@ class TestIngest(TestCase):
     def test_ingest_jax(self):
         table = jnp.asarray(self.data)
         obs = _ingest_table(table)
-        npt.assert_array_equal(obs[0], self.data)
+
+        self.assertEqual(type(obs[0]), type(table))
+        self.assertIs(obs[0], table)
+        npt.assert_array_equal(np.asarray(obs[0]), self.data)
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+    @skipIf(torch is None, "PyTorch is not available for unit tests.")
+    def test_ingest_torch_1d(self):
+        table = torch.tensor(self.data_1d)
+        obs = _ingest_table(table)
+
+        self.assertIsInstance(obs[0], torch.Tensor)
+        self.assertEqual(tuple(obs[0].shape), (1, 3))
+        npt.assert_array_equal(obs[0].cpu().numpy(), self.data_1d[None, :])
+        self.assertIsNone(obs[1])
+        self.assertIsNone(obs[2])
+
+    @skipIf(jnp is None, "JAX is not available for unit tests.")
+    def test_ingest_jax_1d(self):
+        table = jnp.asarray(self.data_1d)
+        obs = _ingest_table(table)
+
+        self.assertEqual(type(obs[0]), type(table))
+        self.assertEqual(obs[0].shape, (1, 3))
+        npt.assert_array_equal(np.asarray(obs[0]), self.data_1d[None, :])
         self.assertIsNone(obs[1])
         self.assertIsNone(obs[2])
 
