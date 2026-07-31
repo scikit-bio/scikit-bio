@@ -48,7 +48,9 @@ def _build_kernel(gpu):
         # Each thread sums the contribution of a strided subset of rows; the row's
         # upper-triangle entries pair the (permuted) x value with the fixed y value
         # at the matching condensed index, normalized on the fly via mul/add.
-        acc = 0.0
+        # Only the accumulator is float64; the per-element products stay in the
+        # matrix dtype (float32 on consumer GPUs, whose fp64 throughput is poor).
+        acc = nb_f64(0.0)
         row = t
         while row < n_dims - 1:
             vrow = perm_order[p, row]
@@ -58,7 +60,7 @@ def _build_kernel(gpu):
             while col < n_dims:
                 vcol = perm_order[p, col]
                 y = ym_norm[row_start + icol]
-                x = nb_f64(mat[vrow, vcol]) * mul + add
+                x = mat[vrow, vcol] * mul + add
                 acc += y * x
                 col += 1
                 icol += 1
@@ -177,6 +179,11 @@ def _run_mantel_gpu(gpu, x, y, permutations, rng, alternative, spearman=False):
 
     mul = 1.0 / normxm
     add = -xmean / normxm
+    # Keep the kernel's per-element math in the matrix dtype (float32 on consumer
+    # GPUs); only its accumulator is float64. Match the scalars and y to Xsrc.
+    if Xsrc.dtype == xp.float32:
+        mul, add = np.float32(mul), np.float32(add)
+        ym_norm = xp.astype(ym_norm, xp.float32)
     perm_order = _perm_order(n, permutations, rng)
 
     kernel = _get_kernel(_kernels, _build_kernel, gpu, _get_backend_name(xp))

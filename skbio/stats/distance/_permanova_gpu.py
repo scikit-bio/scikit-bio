@@ -50,7 +50,9 @@ def _build_kernel(gpu):
         s_W_arr = gpu.shared.array(_TPB, nb_f64)
         row_grouping = gpu.shared.array(_TPB, nb_i64)
 
-        s_W = 0.0
+        # Only the accumulators are float64; the per-element products stay in the
+        # matrix dtype (float32 on consumer GPUs, whose fp64 throughput is poor).
+        s_W = nb_f64(0.0)
         trow = 0
         while trow < n_dims - 1:
             tcol = trow + 1
@@ -63,7 +65,7 @@ def _build_kernel(gpu):
                     row_grouping[icol] = groupings[gel, rc]
                 gpu.syncthreads()
 
-                local = 0.0
+                local = nb_f64(0.0)
                 row = trow
                 while row < max_row:
                     min_col = max(tcol, row + 1)
@@ -71,7 +73,7 @@ def _build_kernel(gpu):
                     col = min_col + icol      # thread -> column: coalesced read
                     if col < max_col:
                         if groupings[gel, col] == gidx:
-                            v = nb_f64(mat[row, col])
+                            v = mat[row, col]
                             local += v * v * inv_gs[gidx]
                     row += 1
                 s_W += local
@@ -153,7 +155,10 @@ def _run_permanova_gpu(gpu, distmat, grouping, column, permutations, seed, ids=N
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
     group_sizes = np.bincount(grouping)
-    inv_gs = (1.0 / group_sizes).astype(np.float64)
+    # Match the matrix dtype so the kernel's per-element math stays in that
+    # precision (float32 on consumer GPUs); the kernel accumulates in float64.
+    elem_dtype = np.float32 if dm.dtype == xp.float32 else np.float64
+    inv_gs = (1.0 / group_sizes).astype(elem_dtype)
     # full 2-D matrix (array-API input is never condensed); halve to count each
     # unordered pair once, matching the DistanceMatrix full-matrix path.
     s_T = float(xp.sum(dm * dm, dtype=xp.float64) / sample_size / 2.0)
