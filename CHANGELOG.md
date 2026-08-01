@@ -6,10 +6,12 @@
 
 * Add optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
 * `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
+* Added a Numba GPU backend for `permanova` and `mantel`. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused single-source kernel runs on the device (`numba.cuda` on NVIDIA, `numba.hip` on AMD), falling back to the array-API path when the kernel is unavailable [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Performance enhancements
 
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
+* On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Bug fixes
 
