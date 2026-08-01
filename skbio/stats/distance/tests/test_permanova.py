@@ -20,9 +20,11 @@ from skbio.stats.distance import permanova
 from skbio.stats.distance import _permanova as permanova_mod
 from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
                                           permanova_f_stat_sW_condensed_cy)
-from skbio.util import get_data_path, numba_code
+from skbio.util import get_data_path, numba_code, get_rng
 from skbio.util._testing import ArrayAPITestMixin, array_backends
 from skbio.stats.distance._base import _preprocess_input_sng
+from skbio.stats.distance import _gpu as gpu_mod
+from skbio.stats.distance._permanova_gpu import _assemble_fp, _permutation_batch
 
 
 class PERMANOVATestData(TestCase):
@@ -567,6 +569,72 @@ class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
             res['test statistic'], self.ref['test statistic'], places=10
         )
         self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
+
+
+class PermanovaGpuHostTests(TestCase):
+    """Host-side helpers of the GPU permanova path, exercised without a GPU.
+
+    These cover the pieces that are the same regardless of how the GPU buffer is
+    obtained: the permutation batch follows the CPU Monte-Carlo RNG order, and the
+    pseudo-F / p-value assembly reproduces the cython engine.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(3)
+        a = rng.random((40, 40))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        self.dm = DistanceMatrix(a)
+        self.grouping = np.repeat(np.arange(4), 10).astype(str).tolist()
+
+    def test_permutation_batch_matches_cpu_rng_order(self):
+        # observed grouping first, then permutations drawn with get_rng(seed) in
+        # the same order as _run_monte_carlo_stats, so the p-value agrees.
+        n = self.dm.shape[0]
+        _, grouping = _preprocess_input_sng(self.dm.ids, n, self.grouping, None)
+        batch = _permutation_batch(grouping, 50, 0)
+        self.assertEqual(batch.shape, (51, n))
+        np.testing.assert_array_equal(batch[0], grouping)
+        rng = get_rng(0)
+        for i in range(50):
+            np.testing.assert_array_equal(batch[i + 1], rng.permutation(grouping))
+
+    def test_assemble_fp_matches_cython(self):
+        # build s_W on the host exactly as the kernel does (upper triangle,
+        # inverse group-size weight) for the observed grouping and the permutation
+        # batch, then check _assemble_fp reproduces the cython pseudo-F and p-value.
+        dm = self.dm
+        n = dm.shape[0]
+        num_groups, grouping = _preprocess_input_sng(dm.ids, n, self.grouping, None)
+        inv_gs = 1.0 / np.bincount(grouping)
+        s_T = (dm.data ** 2).sum() / n / 2.0
+        i0, j0 = np.triu_indices(n, 1)
+        d2 = dm.data[i0, j0] ** 2
+        batch = _permutation_batch(grouping, 99, 0)
+        s_W = np.array(
+            [(d2 * (g[i0] == g[j0]) * inv_gs[g[i0]]).sum() for g in batch]
+        )
+        f, p = _assemble_fp(s_W, s_T, n, num_groups, 99)
+        ref = permanova(dm, self.grouping, permutations=99, seed=0, engine="cython")
+        self.assertAlmostEqual(f, ref['test statistic'], places=10)
+        self.assertEqual(p, ref['p-value'])
+
+    def test_mark_gpu_unavailable_warns_once(self):
+        # The first failure for a backend warns and records it; later calls are
+        # silent. Uses a real NumPy array (backend name "numpy"), no patching.
+        import warnings
+
+        arr = np.zeros((3, 3))
+        gpu_mod._unavailable.discard("numpy")
+        try:
+            with self.assertWarns(UserWarning):
+                gpu_mod._mark_gpu_unavailable(arr)
+            self.assertIn("numpy", gpu_mod._unavailable)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                gpu_mod._mark_gpu_unavailable(arr)  # must not warn again
+        finally:
+            gpu_mod._unavailable.discard("numpy")
 
 
 if __name__ == '__main__':
