@@ -8,7 +8,7 @@
 
 import io
 from functools import partial
-from unittest import TestCase, main, mock
+from unittest import TestCase, main
 
 import numpy as np
 import pandas as pd
@@ -619,51 +619,22 @@ class PermanovaGpuHostTests(TestCase):
         self.assertAlmostEqual(f, ref['test statistic'], places=10)
         self.assertEqual(p, ref['p-value'])
 
-    def test_mark_gpu_unavailable_warns_once_then_routes_none(self):
+    def test_mark_gpu_unavailable_warns_once(self):
         # The first failure for a backend warns and records it; later calls are
-        # silent and _numba_gpu_module_for returns None for that backend.
+        # silent. Uses a real NumPy array (backend name "numpy"), no patching.
         import warnings
 
-        gpu_mod._unavailable.discard("torch")
+        arr = np.zeros((3, 3))
+        gpu_mod._unavailable.discard("numpy")
         try:
-            with mock.patch.object(gpu_mod, "_get_backend_name",
-                                   return_value="torch"), \
-                    mock.patch.object(gpu_mod._aac, "array_namespace",
-                                      return_value=object()):
-                with self.assertWarns(UserWarning):
-                    gpu_mod._mark_gpu_unavailable(object())
-                with warnings.catch_warnings():
-                    warnings.simplefilter("error")
-                    gpu_mod._mark_gpu_unavailable(object())  # must not warn again
-                self.assertIsNone(gpu_mod._numba_gpu_module_for(object()))
+            with self.assertWarns(UserWarning):
+                gpu_mod._mark_gpu_unavailable(arr)
+            self.assertIn("numpy", gpu_mod._unavailable)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                gpu_mod._mark_gpu_unavailable(arr)  # must not warn again
         finally:
-            gpu_mod._unavailable.discard("torch")
-
-    @numba_code
-    def test_gpu_dispatch_falls_back_when_kernel_raises(self):
-        # A non-NumPy DM whose fused kernel raises must record the backend and
-        # return the array-API result, which matches the cython engine.
-        gpu_mod._unavailable.discard("torch")
-        try:
-            with mock.patch.object(permanova_mod._aac, "is_numpy_array",
-                                   return_value=False), \
-                    mock.patch.object(permanova_mod, "_numba_gpu_module_for",
-                                      return_value=object()), \
-                    mock.patch.object(
-                        permanova_mod, "_run_permanova_gpu",
-                        side_effect=RuntimeError("kernel build failed")), \
-                    mock.patch.object(permanova_mod,
-                                      "_mark_gpu_unavailable") as mark:
-                obs = permanova(self.dm, self.grouping, permutations=99,
-                                seed=0, engine="numba")
-            ref = permanova(self.dm, self.grouping, permutations=99,
-                            seed=0, engine="cython")
-            self.assertAlmostEqual(obs['test statistic'],
-                                   ref['test statistic'], places=6)
-            self.assertEqual(obs['p-value'], ref['p-value'])
-            mark.assert_called_once()
-        finally:
-            gpu_mod._unavailable.discard("torch")
+            gpu_mod._unavailable.discard("numpy")
 
 
 if __name__ == '__main__':

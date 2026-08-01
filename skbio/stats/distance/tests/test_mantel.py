@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main, mock
+from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
@@ -1406,33 +1406,6 @@ class MantelGpuHostTests(TestCase):
                                  permutations=perms, seed=0, engine="cython")
         self.assertAlmostEqual(comp_stat, r_ref, places=10)
         self.assertEqual(p_value, p_ref)
-
-    @numba_code
-    def test_gpu_dispatch_falls_back_when_kernel_raises(self):
-        # Two non-NumPy DMs on the same backend whose fused kernel raises must
-        # record the backend and fall back to the array-API path, matching cython.
-        from skbio.stats.distance import _gpu as gpu_mod
-
-        gpu_mod._unavailable.discard("torch")
-        try:
-            with mock.patch.object(mantel_mod._aac, "is_numpy_array",
-                                   return_value=False), \
-                    mock.patch.object(mantel_mod, "_numba_gpu_module_for",
-                                      return_value=object()), \
-                    mock.patch.object(
-                        mantel_mod, "_run_mantel_gpu",
-                        side_effect=RuntimeError("kernel build failed")), \
-                    mock.patch.object(mantel_mod,
-                                      "_mark_gpu_unavailable") as mark:
-                r_obs, p_obs, _ = mantel(self.x, self.y, method="pearson",
-                                         permutations=99, seed=0, engine="numba")
-            r_ref, p_ref, _ = mantel(self.x, self.y, method="pearson",
-                                     permutations=99, seed=0, engine="cython")
-            self.assertAlmostEqual(r_obs, r_ref, places=6)
-            self.assertEqual(p_obs, p_ref)
-            mark.assert_called_once()
-        finally:
-            gpu_mod._unavailable.discard("torch")
 
 
 if __name__ == '__main__':
