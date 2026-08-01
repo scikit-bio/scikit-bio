@@ -18,6 +18,8 @@ import scipy.special
 from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarning
 
 from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
+from ._gpu import _numba_gpu_module_for, _mark_gpu_unavailable
+from ._mantel_gpu import _run_mantel_gpu
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 from skbio.util._array import ingest_array, _get_array
@@ -457,6 +459,20 @@ def mantel(
             # ids exactly like the NumPy path; the reorder/filter stays on the
             # input's device (distmat_reorder is array-API aware).
             x, y = _order_dms(x, y, strict=strict, lookup=lookup)
+            # With engine="numba" and a matching Numba GPU backend, run the fused
+            # GPU kernel on the device-resident matrices; otherwise take the
+            # backend-agnostic array-API path.
+            gpu = _numba_gpu_module_for(x.data) if engine == "numba" else None
+            if gpu is not None:
+                try:
+                    return _run_mantel_gpu(
+                        gpu, x.data, y.data, permutations, rng, alternative,
+                        spearman=(method == "spearman"),
+                    )
+                except Exception:
+                    # The fused kernel could not build/run on this stack; record
+                    # it and fall back to the array-API path (correct anywhere).
+                    _mark_gpu_unavailable(x.data)
             return _mantel_stats_pearson_xp(
                 x.data, y.data, permutations, rng, alternative,
                 spearman=(method == "spearman"),

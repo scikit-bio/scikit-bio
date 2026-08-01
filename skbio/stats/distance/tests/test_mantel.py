@@ -23,6 +23,7 @@ from skbio.stats.distance import _mantel as mantel_mod
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
 from skbio.stats.distance._mantel import _mantel_stats_spearman
+from skbio.stats.distance._mantel_gpu import _perm_order
 from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
                                           mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
@@ -1337,6 +1338,74 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
             r, p, _ = mantel_mod._mantel_stats_pearson_xp(
                 const, self.x[:5, :5], 0, get_rng(0), "two-sided")
         self.assertTrue(np.isnan(r))
+
+
+class MantelGpuHostTests(TestCase):
+    """Host-side logic of the GPU Mantel path, exercised without a GPU.
+
+    The GPU kernel is validated on hardware separately; these cover the pieces
+    that are the same regardless of where the matrix lives: the permutation order
+    follows the CPU/array-API RNG order, and the fused per-permutation Pearson
+    formulation reproduces the cython engine's statistic and p-value.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(11)
+        a = rng.random((25, 25))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        b = rng.random((25, 25))
+        b = (b + b.T) / 2.0
+        np.fill_diagonal(b, 0.0)
+        self.x = DistanceMatrix(a)
+        self.y = DistanceMatrix(b)
+
+    def test_perm_order_matches_rng(self):
+        # identity first, then permutations drawn with the same rng calls the
+        # cython/xp paths make, so the p-value agrees.
+        n, k = 25, 40
+        order = _perm_order(n, k, get_rng(0))
+        self.assertEqual(order.shape, (k + 1, n))
+        np.testing.assert_array_equal(order[0], np.arange(n))
+        rng = get_rng(0)
+        for r in range(1, k + 1):
+            np.testing.assert_array_equal(order[r], rng.permutation(n))
+
+    def test_kernel_math_matches_cython(self):
+        # Replicate on the host exactly what the GPU kernel computes (permuted,
+        # on-the-fly-normalized Pearson over the upper triangle) and confirm the
+        # assembled statistic and p-value match the cython engine.
+        a, b = self.x.data, self.y.data
+        n = a.shape[0]
+        perms = 99
+        iu0, iu1 = np.triu_indices(n, 1)
+        x_flat, y_flat = a[iu0, iu1], b[iu0, iu1]
+        xmean, ymean = x_flat.mean(), y_flat.mean()
+        normxm = np.linalg.norm(x_flat - xmean)
+        normym = np.linalg.norm(y_flat - ymean)
+        ym_norm = (y_flat - ymean) / normym
+        mul, add = 1.0 / normxm, -xmean / normxm
+
+        order = _perm_order(n, perms, get_rng(0))
+        stats = np.empty(perms + 1)
+        for pi, perm in enumerate(order):
+            s = 0.0
+            for row in range(n - 1):
+                vrow = perm[row]
+                row_start = row * (n - 1) - ((row - 1) * row) // 2
+                for icol in range(n - row - 1):
+                    vcol = perm[icol + row + 1]
+                    s += ym_norm[row_start + icol] * (a[vrow, vcol] * mul + add)
+            stats[pi] = max(min(s, 1.0), -1.0)
+
+        comp_stat, permuted = stats[0], stats[1:]
+        count = (np.absolute(permuted) >= np.absolute(comp_stat)).sum()
+        p_value = (count + 1) / (perms + 1)
+
+        r_ref, p_ref, _ = mantel(self.x, self.y, method="pearson",
+                                 permutations=perms, seed=0, engine="cython")
+        self.assertAlmostEqual(comp_stat, r_ref, places=10)
+        self.assertEqual(p_value, p_ref)
 
 
 if __name__ == '__main__':
