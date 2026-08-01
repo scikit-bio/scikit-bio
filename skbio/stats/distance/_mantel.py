@@ -459,9 +459,9 @@ def mantel(
             # ids exactly like the NumPy path; the reorder/filter stays on the
             # input's device (distmat_reorder is array-API aware).
             x, y = _order_dms(x, y, strict=strict, lookup=lookup)
-            # With engine="numba" and a matching CUDA backend, run the fused GPU
-            # kernel on the device-resident matrices; otherwise take the
-            # backend-agnostic array-API path (also the ROCm-PyTorch fallback).
+            # With engine="numba" and a matching Numba GPU backend, run the fused
+            # GPU kernel on the device-resident matrices; otherwise take the
+            # backend-agnostic array-API path.
             gpu = _numba_gpu_module_for(x.data) if engine == "numba" else None
             if gpu is not None:
                 try:

@@ -17,8 +17,8 @@ threads walk the columns so global reads are coalesced, group labels cached in
 shared memory, s_W reduced in shared memory.
 
 Correctness-first stays the rule: this backend runs only when the device maps to
-an available Numba GPU module (CuPy / CUDA-PyTorch -> ``numba.cuda``, ROCm-PyTorch
--> ``numba.hip``). If the fused kernel cannot build or run on the current stack,
+an available Numba GPU module (CUDA CuPy / PyTorch -> ``numba.cuda``, ROCm CuPy /
+PyTorch -> ``numba.hip``). If the fused kernel cannot build or run on the current stack,
 the caller catches it, marks the backend, and keeps the vendor-neutral xp path.
 Permutations are drawn on the host in the same RNG order as the CPU Monte-Carlo
 path, so the p-value is identical to the cython, numba and xp engines.

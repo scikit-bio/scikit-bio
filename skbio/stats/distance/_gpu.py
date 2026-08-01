@@ -11,9 +11,9 @@
 The permutation-test statistics (PERMANOVA, Mantel) each ship a fused kernel that
 compiles through ``numba.cuda`` on NVIDIA and ``numba.hip`` on AMD. This module
 holds the piece they share: choosing the Numba GPU module for a given
-device-resident array (``numba.cuda`` for CuPy / CUDA-PyTorch, ``numba.hip`` for
-ROCm-PyTorch), and a correctness-first fallback to the array-API path whenever the
-fused kernel is unavailable or fails to build on the running stack.
+device-resident array (``numba.cuda`` for CUDA CuPy / PyTorch, ``numba.hip`` for
+ROCm CuPy / PyTorch), and a correctness-first fallback to the array-API path
+whenever the fused kernel is unavailable or fails to build on the running stack.
 """
 
 from warnings import warn
@@ -35,13 +35,12 @@ _unavailable = set()
 def _numba_gpu_module_for(arr):
     """Return the Numba GPU module for ``arr``'s device, or None.
 
-    CuPy and CUDA-built PyTorch map to ``numba.cuda``; ROCm-built PyTorch maps to
-    ``numba.hip``. Returns None for any other namespace (e.g. JAX, Dask), an
-    unavailable backend, when Numba GPU support is not installed, or when this
-    backend's fused kernel has already failed once in this process (see
-    :func:`_mark_gpu_unavailable`); the caller then takes the array-API path. A
-    CuPy array is routed to ``numba.cuda``, never ``numba.hip`` (the two target
-    different GPU vendors).
+    CUDA-built CuPy and PyTorch map to ``numba.cuda``; ROCm-built CuPy and PyTorch
+    map to ``numba.hip`` (both report the same array-API namespace, so the build's
+    own flag disambiguates them). Returns None for any other namespace (e.g. JAX,
+    Dask), an unavailable backend, when Numba GPU support is not installed, or when
+    this backend's fused kernel has already failed once in this process (see
+    :func:`_mark_gpu_unavailable`); the caller then takes the array-API path.
 
     Parameters
     ----------
@@ -57,7 +56,11 @@ def _numba_gpu_module_for(arr):
     if name in _unavailable:
         return None
     if name == "cupy":
-        want = "cuda"
+        import cupy
+
+        # cuPy reports the same namespace for CUDA and ROCm builds; the build's
+        # own is_hip flag disambiguates them (ROCm -> numba.hip).
+        want = "hip" if getattr(cupy.cuda.runtime, "is_hip", False) else "cuda"
     elif name == "torch":
         import torch
 

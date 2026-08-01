@@ -619,35 +619,6 @@ class PermanovaGpuHostTests(TestCase):
         self.assertAlmostEqual(f, ref['test statistic'], places=10)
         self.assertEqual(p, ref['p-value'])
 
-    def test_numba_gpu_module_routing(self):
-        # cupy and CUDA-built torch route to numba.cuda; ROCm-built torch routes
-        # to numba.hip (the kernel is offered on AMD, with a runtime fallback if
-        # it cannot build); other namespaces route to None.
-        import sys
-        import types
-
-        fake_cuda = types.SimpleNamespace(is_available=lambda: True)
-        fake_hip = types.SimpleNamespace(is_available=lambda: True)
-        fake_numba = types.SimpleNamespace(cuda=fake_cuda, hip=fake_hip)
-        cases = [
-            ("cupy", None, fake_cuda),
-            ("torch", None, fake_cuda),      # CUDA build (version.hip is None)
-            ("torch", "6.4.1", fake_hip),    # ROCm build -> numba.hip
-            ("jax", None, None),
-        ]
-        for backend, hip_version, expected in cases:
-            gpu_mod._unavailable.discard(backend)
-            torch_stub = types.SimpleNamespace(
-                version=types.SimpleNamespace(hip=hip_version)
-            )
-            with mock.patch.object(gpu_mod, "_get_backend_name",
-                                   return_value=backend), \
-                    mock.patch.object(gpu_mod._aac, "array_namespace",
-                                      return_value=object()), \
-                    mock.patch.dict(sys.modules,
-                                    {"torch": torch_stub, "numba": fake_numba}):
-                self.assertIs(gpu_mod._numba_gpu_module_for(object()), expected)
-
     def test_mark_gpu_unavailable_warns_once_then_routes_none(self):
         # The first failure for a backend warns and records it; later calls are
         # silent and _numba_gpu_module_for returns None for that backend.

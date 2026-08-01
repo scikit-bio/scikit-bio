@@ -9,8 +9,9 @@
 """Mantel GPU backend: a fused single-source Numba CUDA/HIP kernel.
 
 Analogous to the PERMANOVA GPU backend: it is taken when both distance matrices
-are resident on a matching GPU device and ``engine="numba"`` is requested (CuPy /
-CUDA-PyTorch compile through ``numba.cuda``, ROCm-PyTorch through ``numba.hip``).
+are resident on a matching GPU device and ``engine="numba"`` is requested (CUDA
+CuPy / PyTorch compile through ``numba.cuda``, ROCm CuPy / PyTorch through
+``numba.hip``).
 One thread block per permutation walks the upper triangle and accumulates the
 permuted Pearson correlation, reducing across the block in shared memory. The
 statistic and p-value are assembled on the host in the same RNG order as the

@@ -457,10 +457,10 @@ def permanova(
         and requires Numba to be installed. If not provided, the global
         default is used (see :func:`skbio.set_config`). When ``"numba"`` is
         selected, the optional scikit-bio-binaries acceleration is not used.
-        When the distance matrix is resident on a CUDA device (e.g. a CuPy- or
-        CUDA-PyTorch-backed matrix) and ``engine="numba"``, a fused GPU kernel
-        is used. Matrices on other backends, and ROCm-PyTorch matrices (see
-        Notes), use the array-API path instead.
+        When the distance matrix is resident on a CuPy- or PyTorch-backed GPU
+        (CUDA or ROCm) and ``engine="numba"``, a fused GPU kernel is used;
+        matrices on other backends use the array-API path instead (see Notes for
+        the ROCm-PyTorch case).
 
     Returns
     -------
@@ -484,10 +484,11 @@ def permanova(
     :install:`scikit-bio-binaries <#acceleration>` for more information.
 
     On a GPU-resident distance matrix with ``engine="numba"``, a fused GPU kernel
-    is used on CUDA devices. It is not used for ROCm-PyTorch matrices: a Numba HIP
-    kernel cannot be compiled once ROCm-PyTorch has been imported in the same
-    process, so such matrices fall back to the array-API path, which runs on the
-    device regardless. The result is identical across all paths.
+    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
+    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
+    ROCm PyTorch has been imported in the same process; those matrices fall back
+    to the array-API path, which runs on the device regardless. The result is
+    identical across all paths.
 
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
