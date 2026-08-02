@@ -610,6 +610,25 @@ class PairAlignTests(unittest.TestCase):
                          gap_cost=(np.nan, np.nan))
         self.assertTrue(np.isnan(obs.score))
 
+    def test_pair_align_atol_none(self):
+        """atol=None is equivalent to atol=0 and must not raise."""
+        for mode in ("global", "local"):
+            for max_paths in (1, 5):
+                obs_none = pair_align(
+                    "ACGT", "ACGA", mode=mode, atol=None, max_paths=max_paths
+                )
+                obs_zero = pair_align(
+                    "ACGT", "ACGA", mode=mode, atol=0, max_paths=max_paths
+                )
+                self.assertEqual(obs_none.score, obs_zero.score)
+                self.assertEqual(len(obs_none.paths), len(obs_zero.paths))
+                for p_none, p_zero in zip(obs_none.paths, obs_zero.paths):
+                    self.assertEqual(p_none.to_cigar(), p_zero.to_cigar())
+
+        # local alignment with no similarity: empty path list, no crash
+        obs = pair_align("AAAA", "TTTT", mode="local", atol=None)
+        self.assertEqual(obs.paths, [])
+
     def test_pair_align_error(self):
         """Errors."""
         with self.assertRaises(ValueError) as cm:
