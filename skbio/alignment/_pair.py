@@ -395,8 +395,6 @@ def pair_align(
     # sequence alignment. While the most time-consuming step (matrix filling) is done
     # in Cython, this function retains as many steps as possible in Python, thereby
     # "outsourcing" computation and optimization to the upstream library (NumPy).
-    if atol is None:
-        atol = 0.0
 
     # Determine alignment mode (False - global, True - local)
     local = _prep_mode(mode)
@@ -421,6 +419,11 @@ def pair_align(
     # called here to be safe.
     query, target = np.ascontiguousarray(submat[seq1]), seq2
     dtype = query.dtype.type
+
+    # Cast tolerance to the same type.
+    if atol is None:
+        atol = 0.0
+    atol = dtype(atol)
 
     # Prepare affine or linear gap penalties.
     gap_open, gap_extend = prep_gapcost(gap_cost, dtype=dtype)
