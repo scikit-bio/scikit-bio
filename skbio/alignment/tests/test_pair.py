@@ -629,6 +629,19 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align("AAAA", "TTTT", mode="local", atol=None)
         self.assertEqual(obs.paths, [])
 
+    def test_pair_align_atol_zero(self):
+        """Zero tolerance uses the optimal decimal-score traceback."""
+        obs = pair_align(
+            "AB",
+            "BA",
+            sub_score=(0.1, -0.2),
+            gap_cost=0.2,
+            free_ends=False,
+            atol=0,
+        )
+        self.assertAlmostEqual(obs.score, -0.3)
+        self.assertEqual(obs.paths[0].to_cigar(), "1I1M1D")
+
     def test_pair_align_error(self):
         """Errors."""
         with self.assertRaises(ValueError) as cm:
