@@ -570,7 +570,7 @@ class PairAlignTests(unittest.TestCase):
 
         # Make sure path length is always <= sum of sequence lengths. The maximum
         # happens when all characters are misaligned. This check is to make sure
-        # the pre-allocation of path in the trackback functions does not lead to
+        # the pre-allocation of path in the traceback functions does not lead to
         # overflow.
         seq1, seq2 = "AAAAA", "TTTTT"
         obs = pair_align(seq1, seq2).paths[0]
@@ -637,7 +637,7 @@ class PairAlignTests(unittest.TestCase):
 
         # This case is tricky and it fixed a subtle issue before #2513, which made
         # the code less tolerant caused by equivalent mathematics but discrepant
-        # arithmetic paths in matrix filling vs trackback.
+        # arithmetic paths in matrix filling vs traceback.
         obs = pair_align(
             "AB", "BA", sub_score=(0.1, -0.2), gap_cost=0.2, free_ends=False, atol=0
         )

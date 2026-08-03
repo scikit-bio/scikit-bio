@@ -244,6 +244,8 @@ def _trace_one_linear(
         if local and xabs(score) <= eps:
             break
         pos -= 1
+        # Don't pre-calculate `gap_extend + score`. Otherwise it will not match the
+        # arithmetic order of matrix filling, causing greater floating-point error.
 
         # deletion (vertical; gap in seq2)
         if xabs(scomat[i - 1, j] - gap_extend - score) <= eps:
