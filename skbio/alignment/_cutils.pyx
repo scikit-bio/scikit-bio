@@ -236,22 +236,23 @@ def _trace_one_linear(
        affine gap costs. Bull Math Biol, 48, 603-616.
 
     """
-    cdef floating score, gap_score
+    cdef floating score
 
     # will stop when reaching either edge of the matrix
     while i and j:
         score = scomat[i, j]
         if local and xabs(score) <= eps:
             break
-        gap_score = gap_extend + score
         pos -= 1
+        # Don't pre-calculate `gap_extend + score`. Otherwise it will not match the
+        # arithmetic order of matrix filling, causing greater floating-point error.
 
         # deletion (vertical; gap in seq2)
-        if xabs(scomat[i - 1, j] - gap_score) <= eps:
+        if xabs(scomat[i - 1, j] - gap_extend - score) <= eps:
             path[pos] = 2
             i -= 1
         # insertion (horizontal; gap in seq1)
-        elif xabs(scomat[i, j - 1] - gap_score) <= eps:
+        elif xabs(scomat[i, j - 1] - gap_extend - score) <= eps:
             path[pos] = 1
             j -= 1
         # substitution (diagonal; no gap)
