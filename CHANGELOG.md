@@ -13,7 +13,8 @@
 
 ### Bug Fixes
 
-* Fixed `pair_align` raising `TypeError` when called with `atol=None`, a documented valid value equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
+* Fixed a subtle issue in `pair_align` floating-point arithmetic path. Previous it was less tolerant than anticipated under linear gap penalty. The effect might not be noticed unless the user explicitly sets `atol` to a number smaller than default (1e-5) and scores involve decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
+* Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 
 ## Version 0.7.3
 

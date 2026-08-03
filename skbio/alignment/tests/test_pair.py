@@ -610,34 +610,36 @@ class PairAlignTests(unittest.TestCase):
                          gap_cost=(np.nan, np.nan))
         self.assertTrue(np.isnan(obs.score))
 
-    def test_pair_align_atol_none(self):
-        """atol=None is equivalent to atol=0 and must not raise."""
-        for mode in ("global", "local"):
-            for max_paths in (1, 5):
-                obs_none = pair_align(
-                    "ACGT", "ACGA", mode=mode, atol=None, max_paths=max_paths
-                )
-                obs_zero = pair_align(
-                    "ACGT", "ACGA", mode=mode, atol=0, max_paths=max_paths
-                )
-                self.assertEqual(obs_none.score, obs_zero.score)
-                self.assertEqual(len(obs_none.paths), len(obs_zero.paths))
-                for p_none, p_zero in zip(obs_none.paths, obs_zero.paths):
-                    self.assertEqual(p_none.to_cigar(), p_zero.to_cigar())
+    def test_pair_align_atol(self):
+        """Tolerance in score comparison."""
+        # In this case, one valid path is omitted due to float32 rounding when there is
+        # no tolerance. But a reasonable tolerance recovers this path.
+        seqs = ("AA", "AAAAA")
+        kwargs = {
+            "sub_score": (0.1, -0.1),
+            "gap_cost": 0.1,
+            "free_ends": False,
+            "max_paths": None,
+        }
 
-        # local alignment with no similarity: empty path list, no crash
-        obs = pair_align("AAAA", "TTTT", mode="local", atol=None)
-        self.assertEqual(obs.paths, [])
+        def _hitall(atol):
+            res = pair_align(*seqs, atol=atol, **kwargs)
+            obs = [path.to_cigar() for path in res.paths]
+            return "3I2M" in obs
 
-    def test_pair_align_atol_zero(self):
-        """Zero tolerance uses the optimal decimal-score traceback."""
+        self.assertTrue(_hitall(atol=1e-5))
+        self.assertTrue(_hitall(atol=1e-7))
+        self.assertFalse(_hitall(atol=1e-8))
+        self.assertFalse(_hitall(atol=0))
+
+        # atol=None is equivalent to atol=0 and won't raise.
+        self.assertFalse(_hitall(atol=None))
+
+        # This case is tricky and it fixed a subtle issue before #2513, which made
+        # the code less tolerant caused by equivalent mathematics but discrepant
+        # arithmetic paths in matrix filling vs trackback.
         obs = pair_align(
-            "AB",
-            "BA",
-            sub_score=(0.1, -0.2),
-            gap_cost=0.2,
-            free_ends=False,
-            atol=0,
+            "AB", "BA", sub_score=(0.1, -0.2), gap_cost=0.2, free_ends=False, atol=0
         )
         self.assertAlmostEqual(obs.score, -0.3)
         self.assertEqual(obs.paths[0].to_cigar(), "1I1M1D")
