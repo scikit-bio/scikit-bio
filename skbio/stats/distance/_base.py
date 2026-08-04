@@ -142,7 +142,17 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
-            data = squareform(data, force="tomatrix", checks=False)
+            if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+                # A condensed vector is inherently a symmetric-matrix
+                # representation; scipy's squareform has no array-API path, so
+                # expand it via a single host round-trip and place the result
+                # back on the input's device.
+                xp = _aac.array_namespace(data)
+                dev = getattr(data, "device", None)
+                mat_np = squareform(_to_numpy(data), force="tomatrix", checks=False)
+                data = xp.asarray(mat_np, device=dev)
+            else:
+                data = squareform(data, force="tomatrix", checks=False)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -184,6 +194,18 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # PairwiseMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+            data_: NDArray = data
+            return (data_, ids, validate_shape, validate_ids)
+
         _issue_copy = True
         if isinstance(data, np.ndarray):
             if data.dtype in (np.float32, np.float64):
@@ -433,7 +455,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             Deep copy of the matrix. Will be the same type as ``self``.
 
         """
-        data = self._data.copy()
+        data = copy_array(self._data)
         if transpose:
             data = data.T
         return self.__class__(data, deepcopy(self.ids), validate=False)
@@ -1050,7 +1072,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise PairwiseMatrixError(
                 "Data must be square (i.e., have the same number of rows and columns)."
             )
-        if data.dtype not in (np.float32, np.float64):
+        # isdtype works for NumPy and non-NumPy (e.g. GPU) buffers alike, via each
+        # array's own namespace. Restrict to single/double precision (as the
+        # legacy NumPy check did) so both paths accept exactly the same dtypes.
+        xp = _aac.array_namespace(data)
+        if not xp.isdtype(data.dtype, (xp.float32, xp.float64)):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     def _index_list(self, list_: Sequence[str]) -> dict:
@@ -2574,7 +2600,28 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     np.ndarray
         Condensed matrix.
 
+    Notes
+    -----
+    A non-NumPy array-API buffer (e.g. GPU-resident) is gathered on its own
+    device: the reorder indices are cheap index arithmetic computed on the
+    host, then only the actual data gather runs on the input's device.
+
     """
+    if _aac.is_array_api_obj(in_mat) and not _aac.is_numpy_array(in_mat):
+        n_original = _vec_to_shape(in_mat)
+        reorder_np = np.asarray(reorder_vec)
+        n_filtered = len(reorder_np)
+        i_indices, j_indices = np.triu_indices(n_filtered, k=1)
+        old_indices = _condensed_index(
+            reorder_np[i_indices], reorder_np[j_indices], n_original
+        )
+        xp = _aac.array_namespace(in_mat)
+        idx = xp.asarray(
+            np.asarray(old_indices, dtype=np.int64),
+            device=getattr(in_mat, "device", None),
+        )
+        return in_mat[idx]
+
     reorder_vec = np.asarray(reorder_vec)
     in_mat = np.asarray(in_mat)
     n_original = _vec_to_shape(in_mat)
