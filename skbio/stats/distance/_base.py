@@ -149,6 +149,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
                 # round-trip. Immutable backends (JAX), which do not support
                 # item-assignment, go through scipy's squareform on the host
                 # instead, mirroring SymmetricMatrix._condensed_to_redundant.
+                # A native per-backend implementation (or a Numba/GPU kernel,
+                # if available) could replace this for JAX too; this generic
+                # array-API scatter is the simpler option for now.
                 xp = _aac.array_namespace(data)
                 dev = getattr(data, "device", None)
                 if _get_backend_name(xp) in ("torch", "cupy"):
