@@ -144,13 +144,24 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if data.ndim == 1:
             if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
                 # A condensed vector is inherently a symmetric-matrix
-                # representation; scipy's squareform has no array-API path, so
-                # expand it via a single host round-trip and place the result
-                # back on the input's device.
+                # representation. Mutable backends (PyTorch, CuPy) scatter the
+                # values into the matrix on-device via item-assignment, no host
+                # round-trip. Immutable backends (JAX), which do not support
+                # item-assignment, go through scipy's squareform on the host
+                # instead, mirroring SymmetricMatrix._condensed_to_redundant.
                 xp = _aac.array_namespace(data)
                 dev = getattr(data, "device", None)
-                mat_np = squareform(_to_numpy(data), force="tomatrix", checks=False)
-                data = xp.asarray(mat_np, device=dev)
+                if _get_backend_name(xp) in ("torch", "cupy"):
+                    k = data.shape[0]
+                    n = int((1.0 + (1.0 + 8.0 * k) ** 0.5) / 2.0)
+                    idx = xp.arange(n, device=dev)
+                    upper = idx[:, None] < idx[None, :]
+                    mat = xp.zeros((n, n), dtype=data.dtype, device=dev)
+                    mat[upper] = data
+                    data = mat + xp.matrix_transpose(mat)  # diagonal stays zero
+                else:
+                    mat_np = squareform(_to_numpy(data), force="tomatrix", checks=False)
+                    data = xp.asarray(mat_np, device=dev)
             else:
                 data = squareform(data, force="tomatrix", checks=False)
 
