@@ -390,6 +390,8 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     ValueError
         If ``method`` is not one of "GN" or "GD".
     ValueError
+        If ``max_iter`` is not a positive integer.
+    ValueError
         If input is fully unobserved.
 
     See Also
@@ -455,6 +457,9 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
     elif method not in ("GN", "GD"):
         raise ValueError("Method must be 'GN' or 'GD'")
+
+    elif max_iter < 1:
+        raise ValueError("Max_iter must be a positive integer")
 
     # Create observed mask
     observed_mask = ~np.isnan(X)

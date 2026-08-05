@@ -108,6 +108,17 @@ class TestRPCA(unittest.TestCase):
             _ = rpca(nan_table, dimensions=3)
         self.assertIn("must not contain", str(context.exception))
 
+    def test_zero_max_iter_error(self):
+        """Test error for max_iter of zero."""
+        with self.assertRaises(ValueError) as context:
+            _ = rpca(self.table, dimensions=3, max_iter=0)
+        self.assertIn("positive", str(context.exception))
+
+    def test_negative_max_iter_error(self):
+        """Test error for negative max_iter."""
+        with self.assertRaises(ValueError) as context:
+            _ = rpca(self.table, dimensions=3, max_iter=-1)
+        self.assertIn("positive", str(context.exception))
 
 
 class TestRPCAReproducibility(unittest.TestCase):

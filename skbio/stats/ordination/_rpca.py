@@ -73,6 +73,8 @@ def rpca(
         If ``dimensions`` is not a positive integer less than or equal to
         min(n_samples, n_features)
     ValueError
+        If ``max_iter`` is not a positive integer.
+    ValueError
         If any row or column is fully unobserved.
 
     See Also
