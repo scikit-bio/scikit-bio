@@ -71,6 +71,76 @@ class MissingIDError(PairwiseMatrixError):
         self.args = ("The ID '%s' is not in the matrix." % missing_id,)
 
 
+def _expand_condensed(condensed: NDArray, diagonal=None) -> NDArray:
+    """Expand a 1-D condensed vector to a redundant 2-D matrix.
+
+    Works for a NumPy array or any non-NumPy array-API buffer (e.g.
+    GPU-resident), staying on the input's device for the latter. Only one
+    (n, n) buffer is allocated on the input's device, scattered into from
+    both triangles; no boolean-mask buffer or full-matrix transpose is
+    needed. Mutable backends (PyTorch, CuPy) scatter via item-assignment;
+    JAX, which is immutable, uses its functional ``.at[].set()`` update,
+    which is device-preserving the same way. Any other array-API backend
+    (e.g. Dask) falls back to a host round-trip via scipy's squareform
+    rather than assume item-assignment works. A native per-backend
+    implementation (or a Numba/GPU kernel, if available) could replace
+    this; this generic array-API scatter is the simpler option for now.
+
+    Parameters
+    ----------
+    condensed : 1-D array_like
+        Condensed (upper-triangle) form of the matrix.
+    diagonal : float or 1-D array_like, optional
+        Diagonal value(s) to set. Defaults to zero.
+
+    Returns
+    -------
+    ndarray or array
+        The redundant 2-D matrix, of the same type and on the same device
+        as ``condensed``.
+
+    """
+    if _aac.is_numpy_array(condensed):
+        mat = squareform(condensed, force="tomatrix", checks=False)
+        np.fill_diagonal(mat, diagonal if diagonal is not None else 0.0)
+        return mat
+
+    xp = _aac.array_namespace(condensed)
+    dev = getattr(condensed, "device", None)
+    backend = _get_backend_name(xp)
+
+    if backend in ("torch", "cupy", "jax"):
+        n = _vec_to_shape(condensed)
+        i_np, j_np = np.triu_indices(n, k=1)
+        i_idx = xp.asarray(i_np, device=dev)
+        j_idx = xp.asarray(j_np, device=dev)
+        mat = xp.zeros((n, n), dtype=condensed.dtype, device=dev)
+        diag_idx = xp.arange(n, device=dev)
+        if backend == "jax":
+            mat = mat.at[i_idx, j_idx].set(condensed)
+            mat = mat.at[j_idx, i_idx].set(condensed)
+            if diagonal is not None:
+                diag_val = xp.asarray(diagonal, dtype=condensed.dtype, device=dev)
+                mat = mat.at[diag_idx, diag_idx].set(diag_val)
+        else:
+            mat[i_idx, j_idx] = condensed
+            mat[j_idx, i_idx] = condensed
+            if diagonal is not None:
+                mat[diag_idx, diag_idx] = xp.asarray(
+                    diagonal, dtype=condensed.dtype, device=dev
+                )
+        return mat
+
+    # Unrecognized array-API backend: fall back to a host round-trip rather
+    # than assume item-assignment works.
+    mat_np = squareform(_to_numpy(condensed), force="tomatrix", checks=False)
+    diag = diagonal if diagonal is not None else 0.0
+    if _aac.is_array_api_obj(diag) and not _aac.is_numpy_array(diag):
+        diag = _to_numpy(diag)
+    np.fill_diagonal(mat_np, diag)
+    return xp.asarray(mat_np, device=dev)
+
+
 class PairwiseMatrix(SkbioObject, PlottableMixin):
     r"""Store pairwise relationships between objects.
 
@@ -142,31 +212,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
-            if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
-                # A condensed vector is inherently a symmetric-matrix
-                # representation. Mutable backends (PyTorch, CuPy) scatter the
-                # values into the matrix on-device via item-assignment, no host
-                # round-trip. Immutable backends (JAX), which do not support
-                # item-assignment, go through scipy's squareform on the host
-                # instead, mirroring SymmetricMatrix._condensed_to_redundant.
-                # A native per-backend implementation (or a Numba/GPU kernel,
-                # if available) could replace this for JAX too; this generic
-                # array-API scatter is the simpler option for now.
-                xp = _aac.array_namespace(data)
-                dev = getattr(data, "device", None)
-                if _get_backend_name(xp) in ("torch", "cupy"):
-                    k = data.shape[0]
-                    n = int((1.0 + (1.0 + 8.0 * k) ** 0.5) / 2.0)
-                    idx = xp.arange(n, device=dev)
-                    upper = idx[:, None] < idx[None, :]
-                    mat = xp.zeros((n, n), dtype=data.dtype, device=dev)
-                    mat[upper] = data
-                    data = mat + xp.matrix_transpose(mat)  # diagonal stays zero
-                else:
-                    mat_np = squareform(_to_numpy(data), force="tomatrix", checks=False)
-                    data = xp.asarray(mat_np, device=dev)
-            else:
-                data = squareform(data, force="tomatrix", checks=False)
+            # A condensed vector is inherently a symmetric-matrix
+            # representation. _expand_condensed handles NumPy and array-API
+            # buffers alike, staying on the input's device for the latter.
+            data = _expand_condensed(data)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -1341,6 +1390,11 @@ class SymmetricMatrix(PairwiseMatrix):
             1-D or 2-D array containing the values of the matrix.
 
         """
+        if not condensed and data.ndim == 1:
+            # Redundant form requested from a condensed vector, on any
+            # backend; _expand_condensed handles NumPy and array-API buffers
+            # alike, staying on the input's device for the latter.
+            return _expand_condensed(data, self._diagonal)
         if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
             if condensed:
                 if data.ndim == 1:
@@ -1351,9 +1405,7 @@ class SymmetricMatrix(PairwiseMatrix):
                 # same operation condensed_form() uses.
                 n = data.shape[0]
                 return distmat_reorder_condensed(data, np.arange(n))
-            if data.ndim == 1:
-                # Redundant form requested from a condensed non-NumPy vector.
-                return self._condensed_to_redundant(data)
+            # condensed=False, ndim == 2 (ndim == 1 handled above): passthrough.
             return data
         if condensed:
             # case where input is 1d and stays 1d
@@ -1362,54 +1414,8 @@ class SymmetricMatrix(PairwiseMatrix):
             # case where input is 2d and is converted to 1d
             else:
                 return squareform(data, force="tovector", checks=False)
-        else:
-            # case where input is 1d and is converted to 2d.
-            if data.ndim == 1:
-                mat = squareform(data, force="tomatrix", checks=False)
-                if self._diagonal is not None:
-                    np.fill_diagonal(mat, self._diagonal)
-                else:
-                    np.fill_diagonal(mat, 0.0)
-                return mat
-            # case where input is 2d and stays 2d
-            else:
-                return data
-
-    def _condensed_to_redundant(self, condensed: NDArray) -> NDArray:
-        """Expand a non-NumPy condensed vector to a redundant 2-D buffer on its device.
-
-        Mutable backends (e.g. PyTorch, CuPy) scatter the values into the matrix
-        on-device via item-assignment. Immutable backends (e.g. JAX), which do not
-        support item-assignment, go through a single host round-trip instead.
-
-        """
-        xp = _aac.array_namespace(condensed)
-        dev = getattr(condensed, "device", None)
-
-        if _get_backend_name(xp) in ("torch", "cupy"):
-            # scatter on-device (no host round-trip): place the values in the
-            # row-major upper triangle (matching the condensed order), mirror to
-            # the lower triangle, then set the diagonal.
-            k = condensed.shape[0]
-            n = int((1.0 + (1.0 + 8.0 * k) ** 0.5) / 2.0)
-            idx = xp.arange(n, device=dev)
-            upper = idx[:, None] < idx[None, :]
-            mat = xp.zeros((n, n), dtype=condensed.dtype, device=dev)
-            mat[upper] = condensed
-            mat = mat + xp.matrix_transpose(mat)  # symmetric; diagonal stays zero
-            if self._diagonal is not None:
-                mat[idx, idx] = xp.asarray(
-                    self._diagonal, dtype=condensed.dtype, device=dev
-                )
-            return mat
-
-        # immutable backends (e.g. JAX): build the matrix via one host round-trip.
-        mat_np = squareform(_to_numpy(condensed), force="tomatrix", checks=False)
-        diag = self._diagonal if self._diagonal is not None else 0.0
-        if _aac.is_array_api_obj(diag) and not _aac.is_numpy_array(diag):
-            diag = _to_numpy(diag)
-        np.fill_diagonal(mat_np, diag)
-        return xp.asarray(mat_np, device=dev)
+        # case where input is 2d and stays 2d (ndim == 1 handled above)
+        return data
 
     def _validate_data(self, data: NDArray) -> None:
         """Validate the data array.
@@ -1736,13 +1742,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if self._flags["CONDENSED"]:
-            if _aac.is_array_api_obj(self._data) and not _aac.is_numpy_array(
-                self._data
-            ):
-                return self._condensed_to_redundant(self._data)
-            mat = squareform(self._data, force="tomatrix", checks=False)
-            np.fill_diagonal(mat, self._diagonal)
-            return mat
+            return _expand_condensed(self._data, self._diagonal)
         else:
             return self._data
 
