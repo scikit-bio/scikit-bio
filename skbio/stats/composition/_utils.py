@@ -305,5 +305,7 @@ def _type_cast_to_float(df):
         try:
             df[col] = df[col].astype("float64")
         except (ValueError, TypeError):
-            continue
+            # patsy's dmatrix() cannot handle pandas' StringDtype
+            if isinstance(df[col].dtype, pd.StringDtype):
+                df[col] = df[col].astype(object)
     return df

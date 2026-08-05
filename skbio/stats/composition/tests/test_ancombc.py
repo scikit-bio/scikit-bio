@@ -45,6 +45,7 @@ class AncombcTests(TestCase):
             ["treatment", "treatment", "treatment", "placebo", "placebo", "placebo"],
             index=["s1", "s2", "s3", "s4", "s5", "s6"],
             name="grouping",
+            dtype=object,
         )
 
     def test_estimate_params(self):
@@ -241,6 +242,7 @@ class AncombcTests(TestCase):
         meta_data["bmi"] = pd.Categorical(
             meta_data["bmi"], categories=["obese", "overweight", "lean"]
         )
+        meta_data["region"] = meta_data["region"].astype(object)
         feature_table = np.log1p(table.to_numpy())
         dmat = dmatrix("age + region + bmi", meta_data)
         covars = dmat.design_info.column_names
