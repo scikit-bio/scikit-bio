@@ -288,12 +288,18 @@ class TreeNode(SkbioObject):
                     if key not in exclude_attrs:
                         new_node.__dict__[key] = deepcopy(old_node.__dict__[key], memo)
         else:
-            node_map = {id(old_node): new_node for old_node, new_node in node_pairs}
+            node_map = None
             for old_node, new_node in node_pairs:
                 for key in old_node.__dict__:
                     if key not in exclude_attrs:
                         value = old_node.__dict__[key]
-                        if id(value) in node_map:
+                        if isinstance(value, TreeNode):
+                            if node_map is None:
+                                node_map = {
+                                    id(old_node): new_node
+                                    for old_node, new_node in node_pairs
+                                }
+                        if node_map is not None and id(value) in node_map:
                             new_node.__dict__[key] = node_map[id(value)]
                         else:
                             new_node.__dict__[key] = copy(value)
@@ -330,6 +336,9 @@ class TreeNode(SkbioObject):
         .. versionchanged:: 0.6.3
             Node attribute caches will not be copied.
 
+        .. versionchanged:: 0.7.4
+            Can redirect node references to the copied tree.
+
         See Also
         --------
         unrooted_copy
@@ -344,15 +353,66 @@ class TreeNode(SkbioObject):
         new objects rather than references to the original objects. The distinction
         between deep and shallow copies only applies to each node attribute.
 
+        If node attributes are references to other nodes in the tree, they will be
+        redirected to the new nodes in the copied tree, rather than the old nodes in
+        the original tree. However, node references nested inside compound attributes
+        will not be redirected in the shallow copy mode (they will when `deep=True` is
+        added to the function call).
+
         Examples
         --------
         >>> from skbio import TreeNode
-        >>> tree = TreeNode.read(["((a,b)c,(d,e)f)root;"])
-        >>> tree_copy = tree.copy()
-        >>> tree_nodes = set([id(n) for n in tree.traverse()])
-        >>> tree_copy_nodes = set([id(n) for n in tree_copy.traverse()])
-        >>> print(len(tree_nodes.intersection(tree_copy_nodes)))
-        0
+        >>> tree = TreeNode.read(["(a,b)c;"])
+        >>> a, b = tree.find("a"), tree.find("b")
+
+        The function's behavior will be demonstrated using these node attributes:
+
+        >>> a.length = 1.0       # built-in attribute
+        >>> a.label = "marker"   # custom simple attribute
+        >>> a.values = [[1, 2]]  # custom compound attribute
+        >>> a.partner = b        # direct node reference
+        >>> a.links = [b]        # nested node reference
+
+        By default, the function makes a shallow copy of the tree, in which only the
+        outer-most level of each node attribute is copied, whereas nested attributes
+        are shared as references.
+
+        >>> shallow = tree.copy()
+        >>> shallow_a = shallow.find("a")
+        >>> shallow_a is a
+        False
+        >>> shallow_a.length
+        1.0
+        >>> shallow_a.label
+        'marker'
+        >>> shallow_a.values
+        [[1, 2]]
+        >>> shallow_a.values is a.values
+        False
+        >>> shallow_a.values[0] is a.values[0]
+        True
+
+        Attributes that are references to other nodes in the tree are redirected to the
+        corresponding nodes in the copied tree. However, node references nested inside
+        compound attributes still point to the original tree.
+
+        >>> shallow_a.partner is shallow.find("b")
+        True
+        >>> shallow_a.links[0] is b
+        True
+
+        A deep copy also copies nested values and redirects nested node references:
+
+        >>> deep = tree.copy(deep=True)
+        >>> deep_a, deep_b = deep.find("a"), deep.find("b")
+        >>> deep_a.values is a.values
+        False
+        >>> deep_a.values[0] is a.values[0]
+        False
+        >>> deep_a.partner is deep_b
+        True
+        >>> deep_a.links[0] is deep_b
+        True
 
         """
         return self._copy(deep, {})
@@ -5957,8 +6017,9 @@ class TreeNode(SkbioObject):
 
     @classonlymethod
     def from_taxonomy(
-        cls, lineage_map: dict | Iterable[tuple] | pd.DataFrame,
-        extract_rank: bool = False
+        cls,
+        lineage_map: dict | Iterable[tuple] | pd.DataFrame,
+        extract_rank: bool = False,
     ) -> Self:
         r"""Construct a tree from a taxonomy.
 
