@@ -2248,6 +2248,62 @@ class DistanceMatrixTests(DistanceMatrixTestBase, TestCase):
         super(DistanceMatrixTests, self).setUp()
 
 
+class PairwiseMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
+    """A PairwiseMatrix (asymmetric) can hold a non-NumPy array-API buffer."""
+
+    def setUp(self):
+        rng = np.random.default_rng(0)
+        a = rng.random((5, 5))  # not symmetric, unlike DistanceMatrix's data
+        np.fill_diagonal(a, 0.0)
+        self.data = a
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_constructor_preserves_buffer(self, xp, device):
+        pm = PairwiseMatrix(self.make_array(xp, device, self.data))
+        self.assert_type_preserved(pm.data, xp, device)
+        self.assertEqual(tuple(pm.shape), (5, 5))
+        self.assert_close(pm.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_integer_buffer_cast_to_float(self, xp, device):
+        idata = (self.data * 10).astype(int).tolist()
+        pm = PairwiseMatrix(self.make_array(xp, device, idata, dtype=xp.int64))
+        self.assert_type_preserved(pm.data, xp, device)
+        ns = aac.array_namespace(pm.data)
+        self.assertTrue(
+            ns.isdtype(pm.data.dtype, (ns.float32, ns.float64)),
+            f"integer buffer not cast to float64, got {pm.data.dtype}",
+        )
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_copy_backend(self, xp, device):
+        pm = PairwiseMatrix(self.make_array(xp, device, self.data))
+        cp = pm.copy()
+        self.assert_type_preserved(cp.data, xp, device)
+        self.assert_close(cp.data, self.data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_transpose_backend(self, xp, device):
+        pm = PairwiseMatrix(self.make_array(xp, device, self.data))
+        t = pm.transpose()
+        self.assert_type_preserved(t.data, xp, device)
+        self.assert_close(t.data, self.data.T)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_1d_condensed_input_backend(self, xp, device):
+        # A 1-D condensed buffer is inherently symmetric; scipy's squareform
+        # has no array-API path, so this goes through a single host
+        # round-trip and the result is placed back on the input's device.
+        sym = (self.data + self.data.T) / 2.0
+        np.fill_diagonal(sym, 0.0)
+        cond = scipy.spatial.distance.squareform(sym, force="tovector", checks=False)
+        buf = self.make_array(xp, device, cond)
+        pm = PairwiseMatrix(buf)
+        self.assertEqual(pm.data.ndim, 2)
+        self.assert_type_preserved(pm.data, xp, device)
+        self.assert_close(pm.data, sym)
+
+
 class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
     """A DistanceMatrix can hold a non-NumPy (e.g. GPU-resident) array-API buffer."""
 
@@ -2402,6 +2458,32 @@ class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assert_close(df.to_numpy(), self.data)
         fig = dm.plot()
         self.assertEqual(len(fig.axes), 2)  # heatmap axis + colorbar axis
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_filter_on_condensed_storage_backend(self, xp, device):
+        # filter() on a matrix that is already stored condensed goes through
+        # distmat_reorder_condensed_py; the result must stay on-device.
+        ids = list("abcde")
+        ref_dm = DistanceMatrix(self.data, ids=ids)
+        cond = self.make_array(xp, device, ref_dm.condensed_form())
+        dm = DistanceMatrix(cond, ids=ids, condensed=True)
+        sub = dm.filter(["a", "c", "e"])
+        self.assert_type_preserved(sub.data, xp, device)
+        ref = ref_dm.filter(["a", "c", "e"])
+        self.assert_close(sub.data, ref.condensed_form())
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permute_on_condensed_storage_backend(self, xp, device):
+        # permute() on a matrix that is already stored condensed goes through
+        # distmat_reorder_condensed_py; the result must stay on-device.
+        ids = list("abcde")
+        ref_dm = DistanceMatrix(self.data, ids=ids)
+        cond = self.make_array(xp, device, ref_dm.condensed_form())
+        dm = DistanceMatrix(cond, ids=ids, condensed=True)
+        got = dm.permute(condensed=True, seed=0)
+        self.assert_type_preserved(got, xp, device)
+        ref = ref_dm.permute(condensed=True, seed=0)
+        self.assert_close(got, ref)
 
 
 class SymmetricMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
