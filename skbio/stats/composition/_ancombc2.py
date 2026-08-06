@@ -97,19 +97,11 @@ class ANCOMBCResult:
         Trend test for ordered patterns in group effects.
     sensitivity_analysis()
         Pseudo-count sensitivity analysis for robustness assessment.
+
     See Also
     --------
     ancombc : ANCOM-BC function (reestimate=False).
     ancombc2 : ANCOM-BC2 function (reestimate=True).
-
-    Examples
-    --------
-    >>> result = ancombc(table + 1, metadata, formula="group")
-    >>> result.res # primary results
-    >>> result["res"]
-    >>> result.delta_em # estimated biases
-    >>> results.global_test() # post-hoc global test
-
     """
 
     # Primary results
