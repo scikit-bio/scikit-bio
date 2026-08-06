@@ -9,6 +9,13 @@ env:
   earliest_python: "3.10"
   latest_python: "3.14"
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). No job uses the token to write to this repository:
+# documentation is deployed to the website repo via an SSH deploy key and the
+# package is published to PyPI via an API token (see wheels.yml).
+permissions:
+  contents: read
+
 jobs:
   # Trigger wheel building workflow
   build_and_publish:
@@ -25,20 +32,19 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python environment
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-        # Using 3.13 because Sphinx doesn't have a 3.14 compatible release yet.
-        # Otherwise this should be ${{ env.latest_python }}
-          python-version: "3.13"
+          python-version: ${{ env.latest_python }}
 
       - name: Install dependencies
         run: |
-          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/conda_requirements.txt
+          python -m ensurepip
+          pip install --prefer-binary -r ci/requirements.doc.txt -r ci/requirements.txt
           pip install --no-deps .
           pip list
 
@@ -52,7 +58,7 @@ jobs:
           python doc/editmap.py
 
       - name: Check out website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: scikit-bio/scikit-bio.github.io
           path: website

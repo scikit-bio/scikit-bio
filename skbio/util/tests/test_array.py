@@ -7,24 +7,280 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main, skipIf
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import numpy.testing as npt
 import array_api_compat as aac
 
-from skbio.util import get_package
-from skbio.util._array import ingest_array
-
+from skbio.util import get_package, _is_usable
+from skbio.util._array import (
+    ingest_array,
+    _get_array,
+    _to_numpy,
+    _move_to_device,
+    _get_backend_name,
+)
 
 # import optional dependencies
 cp = get_package("cupy", raise_error=False)
 jax = get_package("jax", raise_error=False)
 torch = get_package("torch", raise_error=False)
 xr = get_package("xarray", raise_error=False)
-dask = get_package("dask", raise_error=False)
-if dask is not None:
-    da = get_package("dask.array")
+da = get_package("dask.array", raise_error=False)
+
+CUPY_OK = _is_usable(cp, lambda: cp.arange(1))
+TORCH_OK = _is_usable(torch, lambda: torch.arange(1))
+JAX_OK = _is_usable(jax, lambda: jax.numpy.arange(1))
+DASK_OK = _is_usable(da, lambda: da.arange(1, chunks=1).compute())
+XARRAY_OK = _is_usable(xr, lambda: xr.DataArray([1]))
+
+# Get the numpy namespace via array_api_compat (aac has no .numpy attribute).
+np_xp = aac.array_namespace(np.empty(0))
+
+
+# =====================================================================
+# Tests for _get_array
+# =====================================================================
+
+
+class TestGetArray(TestCase):
+
+    def test_non_array_converted_to_numpy(self):
+        # A plain list is not an array API object; should become ndarray.
+        obs = _get_array([1, 2, 3])
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.array([1, 2, 3]))
+
+    def test_numpy_array_returned_as_is(self):
+        arr = np.arange(5)
+        obs = _get_array(arr)
+        self.assertIs(obs, arr)
+
+    def test_numpy_array_to_numpy_noop(self):
+        arr = np.arange(5)
+        obs = _get_array(arr, to_numpy=True)
+        self.assertIs(obs, arr)
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_kept_when_to_numpy_false(self):
+        ten = torch.arange(5)
+        obs = _get_array(ten)
+        self.assertIsInstance(obs, torch.Tensor)
+        self.assertIs(obs, ten)
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_to_numpy_via_dlpack(self):
+        ten = torch.arange(5)
+        obs = _get_array(ten, to_numpy=True)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
+    def test_cupy_to_numpy(self):
+        arr = cp.arange(5)
+        obs = _get_array(arr, to_numpy=True)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not JAX_OK, "JAX is not usable.")
+    def test_jax_to_numpy(self):
+        arr = jax.numpy.arange(5)
+        obs = _get_array(arr, to_numpy=True)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not DASK_OK, "Dask is not usable.")
+    def test_dask_to_numpy_fallback(self):
+        # Dask doesn't support __dlpack__, so _get_array should fall back
+        # to np.asarray.
+        arr = da.arange(5, chunks=5)
+        obs = _get_array(arr, to_numpy=True)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    def test_to_numpy_dlpack_fallback(self):
+        class FakeArr:
+            def __array__(self, dtype=None, copy=None):
+                return np.array([10, 20, 30])
+
+        for exc in (AttributeError, TypeError, RuntimeError):
+            with self.subTest(exception=exc.__name__):
+                with patch.object(aac, "is_array_api_obj", return_value=True), \
+                    patch.object(aac, "is_numpy_array", return_value=False), \
+                    patch("skbio.util._array.np.from_dlpack", side_effect=exc):
+                    obs = _get_array(FakeArr(), to_numpy=True)
+                self.assertIsInstance(obs, np.ndarray)
+
+
+# =====================================================================
+# Tests for _to_numpy
+# =====================================================================
+
+
+class TestToNumpy(TestCase):
+
+    def test_numpy_passthrough(self):
+        arr = np.arange(5)
+        obs = _to_numpy(arr)
+        self.assertIs(obs, arr)
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_cpu(self):
+        ten = torch.arange(5)
+        obs = _to_numpy(ten)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_requires_grad(self):
+        ten = torch.arange(5, dtype=torch.float32).requires_grad_(True)
+        obs = _to_numpy(ten)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5, dtype=np.float32))
+
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
+    def test_cupy(self):
+        arr = cp.arange(5)
+        obs = _to_numpy(arr)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not JAX_OK, "JAX is not usable.")
+    def test_jax(self):
+        arr = jax.numpy.arange(5)
+        obs = _to_numpy(arr)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    @skipIf(not DASK_OK, "Dask is not usable.")
+    def test_dask(self):
+        arr = da.arange(5, chunks=5)
+        obs = _to_numpy(arr)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_array_equal(obs, np.arange(5))
+
+    def test_generic_array_via_np_asarray(self):
+        # An object with no .detach and no .get falls through to np.asarray.
+        mock_arr = MagicMock(spec=[])
+        mock_arr.__array__ = lambda dtype=None, copy=None: np.array([7, 8, 9])
+        # Ensure it's not ndarray and has no detach/get.
+        self.assertNotIsInstance(mock_arr, np.ndarray)
+        obs = _to_numpy(mock_arr)
+        self.assertIsInstance(obs, np.ndarray)
+
+
+# =====================================================================
+# Tests for _move_to_device
+# =====================================================================
+
+
+class TestMoveToDevice(TestCase):
+
+    def test_none_device_returns_same(self):
+        arr = np.arange(5)
+        obs = _move_to_device(arr, np, None)
+        self.assertIs(obs, arr)
+
+    def test_cpu_device_returns_same(self):
+        arr = np.arange(5)
+        obs = _move_to_device(arr, np, "cpu")
+        self.assertIs(obs, arr)
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_cpu_noop(self):
+        ten = torch.arange(5)
+        obs = _move_to_device(ten, torch, "cpu")
+        self.assertIs(obs, ten)
+
+    @skipIf(not TORCH_OK or not torch.cuda.is_available(),
+            "PyTorch CUDA is not usable.")
+    def test_torch_cuda(self):
+        ten = torch.arange(5)
+        obs = _move_to_device(ten, torch, "cuda")
+        self.assertTrue(obs.is_cuda)
+        npt.assert_array_equal(obs.cpu().numpy(), np.arange(5))
+
+    def test_numpy_non_cpu_passthrough(self):
+        # NumPy arrays are always on CPU; non-cpu device returns unchanged.
+        arr = np.arange(5)
+        obs = _move_to_device(arr, np, "gpu")
+        self.assertIs(obs, arr)
+
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
+    def test_cupy_non_cpu_passthrough(self):
+        import cupy
+        arr = cupy.arange(5)
+        obs = _move_to_device(arr, cupy, "gpu")
+        self.assertIs(obs, arr)
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch_to_device(self):
+        # torch.to("cpu") should work and return a CPU tensor.
+        ten = torch.arange(5)
+        # Use a module whose __name__ starts with "torch".
+        obs = _move_to_device(ten, torch, "cpu")
+        # device=cpu means early return, so test with a mock device name
+        # that triggers the torch branch but stays on cpu.
+        self.assertIs(obs, ten)
+
+
+# =====================================================================
+# Tests for _get_backend_name
+# =====================================================================
+
+
+class TestGetBackendName(TestCase):
+
+    def test_numpy(self):
+        self.assertEqual(_get_backend_name(np_xp), "numpy")
+
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
+    def test_torch(self):
+        xp = aac.array_namespace(torch.arange(1))
+        self.assertEqual(_get_backend_name(xp), "torch")
+
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
+    def test_cupy(self):
+        xp = aac.array_namespace(cp.arange(1))
+        self.assertEqual(_get_backend_name(xp), "cupy")
+
+    @skipIf(not JAX_OK, "JAX is not usable.")
+    def test_jax(self):
+        xp = aac.array_namespace(jax.numpy.arange(1))
+        self.assertEqual(_get_backend_name(xp), "jax")
+
+    @skipIf(not DASK_OK, "Dask is not usable.")
+    def test_dask(self):
+        xp = aac.array_namespace(da.arange(1, chunks=1))
+        self.assertEqual(_get_backend_name(xp), "dask")
+
+    def test_unknown_namespace_with_name(self):
+        mock_ns = MagicMock()
+        mock_ns.__name__ = "mystery_lib"
+        with patch.dict(
+            "skbio.util._array._BACKEND_CHECKERS",
+            {k: (lambda ns: False) for k in
+             ["numpy", "cupy", "torch", "jax", "dask"]},
+        ):
+            self.assertEqual(_get_backend_name(mock_ns), "mystery_lib")
+
+    def test_unknown_namespace_without_name(self):
+        mock_ns = object()
+        with patch.dict(
+            "skbio.util._array._BACKEND_CHECKERS",
+            {k: (lambda ns: False) for k in
+             ["numpy", "cupy", "torch", "jax", "dask"]},
+        ):
+            result = _get_backend_name(mock_ns)
+            # Falls back to str(xp) since object has no __name__.
+            self.assertIsInstance(result, str)
+
+
+# =====================================================================
+# Tests for ingest_array (original tests preserved + additions)
+# =====================================================================
 
 
 class TestIngestArray(TestCase):
@@ -33,19 +289,19 @@ class TestIngestArray(TestCase):
         # NumPy arrays are kept as-is.
         arr = np.arange(5)
         xp, obs = ingest_array(arr)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         self.assertIs(obs, arr)
         npt.assert_array_equal(obs, np.arange(5))
 
         xp, obs = ingest_array(arr, to_numpy=True)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIs(obs, arr)
 
         # 2-D array
         arr = np.arange(9).reshape(3, 3)
         xp, obs = ingest_array(arr)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIs(obs, arr)
         npt.assert_array_equal(obs, np.arange(9).reshape(3, 3))
 
@@ -53,19 +309,19 @@ class TestIngestArray(TestCase):
         # Plain Python lists are converted into NumPy arrays.
         lst = list(range(5))
         xp, obs = ingest_array(lst)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.asarray(lst))
 
         tup = tuple(range(5))
         xp, obs = ingest_array(tup)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.asarray(tup))
 
         ran = range(5)
         xp, obs = ingest_array(ran)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.asarray(ran))
 
@@ -74,11 +330,11 @@ class TestIngestArray(TestCase):
         import array as pyarray
         arr = pyarray.array('i', range(5))
         xp, obs = ingest_array(arr)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.asarray(arr))
 
-    @skipIf(cp is None, "CuPy is not available for unit tests.")
+    @skipIf(not CUPY_OK, "CuPy is not usable.")
     def test_ingest_array_cupy(self):
         # CuPy arrays are kept as-is in default mode.
         arr = cp.arange(5)
@@ -90,11 +346,11 @@ class TestIngestArray(TestCase):
 
         # Convert CuPy arrays into NumPy arrays.
         xp, obs = ingest_array(arr, to_numpy=True)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(torch is None, "PyTorch is not available for unit tests.")
+    @skipIf(not TORCH_OK, "PyTorch is not usable.")
     def test_ingest_array_torch(self):
         # PyTorch tensors are kept as-is in default mode.
         ten = torch.arange(5)
@@ -106,11 +362,11 @@ class TestIngestArray(TestCase):
 
         # Convert PyTorch tensors into NumPy arrays.
         xp, obs = ingest_array(ten, to_numpy=True)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(jax is None, "JAX is not available for unit tests.")
+    @skipIf(not JAX_OK, "JAX is not usable.")
     def test_ingest_array_jax(self):
         # JAX arrays are kept as-is in default mode.
         arr = jax.numpy.arange(5)
@@ -122,11 +378,11 @@ class TestIngestArray(TestCase):
 
         # Convert JAX arrays into NumPy arrays.
         xp, obs = ingest_array(arr, to_numpy=True)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(5))
 
-    @skipIf(dask is None, "Dask is not available for unit tests.")
+    @skipIf(not DASK_OK, "Dask is not usable.")
     def test_ingest_array_dask(self):
         # Dask arrays are kept as-is in default mode.
         arr = da.arange(20, chunks=4)
@@ -138,27 +394,27 @@ class TestIngestArray(TestCase):
 
         # Convert Dask arrays into NumPy arrays.
         xp, obs = ingest_array(arr, to_numpy=True)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.arange(20))
 
     def test_ingest_array_scalar(self):
         # Scalars are converted into 0-D NumPy arrays.
         xp, obs = ingest_array(42)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.array(42))
         self.assertEqual(obs.ndim, 0)
 
         # Strings are also scalars (not treated as sequences of characters).
         xp, obs = ingest_array("hello")
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.array("hello"))
         self.assertEqual(obs.ndim, 0)
 
         xp, obs = ingest_array(None)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(obs, np.array(None))
         self.assertEqual(obs.ndim, 0)
@@ -168,26 +424,44 @@ class TestIngestArray(TestCase):
         # NumPy arrays.
         s = pd.Series(range(5), index=list("abcde"))
         xp, obs = ingest_array(s)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(s.to_numpy(), np.arange(5))
 
         # So are Pandas DataFrames.
         df = s.to_frame()
         xp, obs = ingest_array(df)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(df.to_numpy(), np.arange(5).reshape(-1, 1))
 
-    @skipIf(xr is None, "Xarray is not available for unit tests.")
+    @skipIf(not XARRAY_OK, "Xarray is not usable.")
     def test_ingest_array_xarray(self):
         # Xarray DataArrays are not API-compatible arrays, but they can be casted into
         # Numpy arrays.
         xarr = xr.DataArray(range(5))
         xp, obs = ingest_array(xarr)
-        self.assertIs(xp, aac.numpy)
+        self.assertIs(xp, np_xp)
         self.assertIsInstance(obs, np.ndarray)
         npt.assert_array_equal(xarr.to_numpy(), np.arange(5))
+
+    def test_ingest_array_multiple(self):
+        # Multiple arrays should all be returned with shared namespace.
+        a = np.arange(3)
+        b = np.ones(4)
+        xp, oa, ob = ingest_array(a, b)
+        self.assertIs(xp, np_xp)
+        self.assertIs(oa, a)
+        self.assertIs(ob, b)
+
+    def test_ingest_array_multiple_mixed(self):
+        # Mix of list and ndarray; both should come back as ndarray.
+        a = [1, 2, 3]
+        b = np.ones(3)
+        xp, oa, ob = ingest_array(a, b)
+        self.assertIs(xp, np_xp)
+        self.assertIsInstance(oa, np.ndarray)
+        self.assertIs(ob, b)
 
 
 if __name__ == "__main__":

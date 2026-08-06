@@ -33,15 +33,17 @@ The purpose of these steps is to update the version within the package. At this 
 
     grep -r 'x\.y\.y-dev' .
 
-3. Remove any deprecated functionality that was scheduled for removal on or before this release. To find all deprecated functionality, search for `@deprecated` decorators:
+3. Also make sure to update the current version displayed on website. This can be done by searching for the current version number in the code base. Affected files are typically `versions.json`, `index.rst`, and `README.rst`.
+
+4. Remove any deprecated functionality that was scheduled for removal on or before this release. To find all deprecated functionality, search for `@deprecated` decorators:
 
     grep -r '@deprecated' .
 
 .. note:: Any deprecated functionality that was removed in the ``### Miscellaneous`` section of ``CHANGELOG.md``.
 
-4. Update ``CHANGELOG.md`` to include descriptions of all **user-facing** changes that made it into this release. Be sure to update the heading to include the new version (x.y.z) and the date of the release. Use the existing structure in the file as a template/guide.
+5. Update ``CHANGELOG.md`` to include descriptions of all **user-facing** changes that made it into this release. Be sure to update the heading to include the new version (x.y.z) and the date of the release. Use the existing structure in the file as a template/guide.
 
-5. Submit a pull request and merge when CI tests are passing.
+6. Submit a pull request and merge when CI tests are passing.
 
 
 Build documentation locally

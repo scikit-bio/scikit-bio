@@ -18,8 +18,36 @@ from ._docstring import (
     _note_into_doc_param,
     _deprecation_note,
     _renaming_note,
+    _array_api_compat_section,
+    _insert_into_notes_section,
 )
 from ._warning import _warn_deprecated, _warn_renamed, _warn_param_renamed
+
+
+def array_api_doc(backends, devices=None):
+    r"""Add an array API compatibility table to a function's documentation.
+
+    An array API compatibility table is inserted into the Notes section of the
+    function's docstring. If the docstring has no Notes section, the table is
+    inserted at the end of the docstring.
+
+    Parameters
+    ----------
+    backends : list of str
+        Supported backends: `'numpy'`, `'cupy'`, `'torch'`, `'jax'`,
+        `'dask'`.
+    devices : list of str, optional
+        Supported devices: `'cpu'`, `'gpu'`. Defaults to per-backend
+        defaults.
+
+    """
+
+    def decorator(func):
+        section = _array_api_compat_section(backends, devices)
+        func.__doc__ = _insert_into_notes_section(section, func.__doc__ or "")
+        return func
+
+    return decorator
 
 
 def overrides(interface_class):
@@ -92,12 +120,18 @@ class classproperty(property):
     def __init__(self, func):
         name = func.__name__
         doc = func.__doc__
-        super(classproperty, self).__init__(classmethod(func))
+        # Keep fget as a plain function so introspection tools (e.g. Sphinx)
+        # can inspect its signature without tripping on a classmethod object.
+        super(classproperty, self).__init__(func)
         self.__name__ = name
         self.__doc__ = doc
 
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+    def __get__(self, obj, owner=None):
+        if getattr(self.fget, "__isabstractmethod__", False):
+            return self
+        if owner is None:
+            owner = type(obj)
+        return self.fget(owner)
 
     def __set__(self, obj, value):
         raise AttributeError("can't set attribute")

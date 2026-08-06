@@ -1,0 +1,88 @@
+name: Numba
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  pull_request:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+
+env:
+  latest_python: "3.14"
+
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). This workflow only checks out the repo, runs tests, and
+# uploads coverage to Codecov via CODECOV_TOKEN.
+permissions:
+  contents: read
+
+jobs:
+  conf:
+    # This job is needed to route the global environment variables into
+    # a context that's available for matrix (and name, but that's unimportant)
+    name: Prepare Numba Test Plan
+    runs-on: ubuntu-latest
+    outputs:
+      latest_python: ${{ steps.set-vars.outputs.latest_python }}
+    steps:
+      - name: Report Plan
+        id: set-vars
+        run: |
+          echo "latest_python=$latest_python" >> $GITHUB_OUTPUT
+
+  test:
+    name: Numba (${{ needs.conf.outputs.latest_python }}, ${{ matrix.os }})
+    needs: conf
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-15-intel and windows-11-arm are omitted: Numba and llvmlite
+        # do not ship wheels for those targets (macOS x86_64 or Windows ARM64),
+        # so `pip install numba` would fall back to a source build requiring an
+        # LLVM toolchain.
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ needs.conf.outputs.latest_python }}
+
+      - name: Install scikit-bio + Numba
+        run: |
+          python -m ensurepip
+          pip install --prefer-binary -r ci/requirements.txt -r ci/requirements.test.txt
+          pip install numba
+          pip install --no-deps .
+          pip list
+
+      - name: Run Numba-marked tests
+        run: cd ci && pytest -m numba --pyargs skbio
+
+      - name: Run full test suite with Numba installed
+        run: make test
+
+      # coverage.py cannot trace JIT-compiled kernels, so re-run the suite
+      # with the JIT disabled (kernels run as plain Python). Linux x86_64 only,
+      # matching ci.yml; Codecov merges this report with the main one.
+      - name: Run unit tests with coverage (Numba JIT disabled)
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        env:
+          WITH_COVERAGE: "TRUE"
+          NUMBA_DISABLE_JIT: "1"
+        run: make test
+      - name: Generate coverage reports
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        run: |
+          cd ci && coverage lcov --rcfile ../.coveragerc
+      - name: Upload coverage reports to Codecov
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio

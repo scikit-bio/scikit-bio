@@ -60,7 +60,6 @@
       ~{{ name }}.prune
       ~{{ name }}.remove
       ~{{ name }}.remove_by_func
-      ~{{ name }}.remove_deleted
       ~{{ name }}.shear
       ~{{ name }}.shuffle
       ~{{ name }}.unpack

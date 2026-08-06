@@ -236,8 +236,8 @@ def subsample_counts(counts, n, replace=False, seed=None):
     if counts.ndim != 1:
         raise ValueError("Only 1-D vectors are supported.")
 
-    # csr_matrix will report ndim of 2 if vector
-    counts = sparse.csr_matrix(counts)
+    # csr_array will report ndim of 2 if vector
+    counts = sparse.csr_array(counts)
 
     counts_sum = counts.sum()
     if n > counts_sum and not replace:

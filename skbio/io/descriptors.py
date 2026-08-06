@@ -26,6 +26,7 @@ class Read:
 
     def _make_docstring(self, cls):
         name, supported_fmts, default, see = _docstring_vars(cls, "read")
+        extra_params = _extra_kwargs_docs(cls, "_reader_kwargs")
         return f"""Create a new ``{name}`` instance from a file.
 
 This is a convenience method for :func:`skbio.io.registry.read`. For more information
@@ -42,7 +43,7 @@ file : openable (filepath, URL, filehandle, etc.)
 format : str, optional
     The format of the file. The format must be a format name with a reader for
     ``{name}``. If None, the format will be inferred.
-kwargs : dict, optional
+{extra_params}kwargs : dict, optional
     Additional arguments passed to :func:`skbio.io.registry.read()` and the reader for
     ``{name}``.
 
@@ -118,6 +119,33 @@ skbio.io.util.open
 {see}
 
 """
+
+
+def _extra_kwargs_docs(cls, attr):
+    """Build parameter documentation from a class attribute dict.
+
+    Parameters
+    ----------
+    cls : type
+        The class to inspect for the attribute.
+    attr : str
+        Name of a class attribute that maps parameter names to NumPy-style
+        description strings (``"type\\n    description"``).
+
+    Returns
+    -------
+    str
+        Formatted parameter block ready for insertion into a docstring,
+        or an empty string if the attribute is absent.
+
+    """
+    extra = getattr(cls, attr, None)
+    if not extra:
+        return ""
+    lines = []
+    for param, description in extra.items():
+        lines.append(f"{param} : {description}")
+    return "\n".join(lines) + "\n"
 
 
 def _docstring_vars(cls, func):

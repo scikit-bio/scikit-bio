@@ -5,16 +5,17 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+from __future__ import annotations
 
 import re
 import collections
 import numbers
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
-import skbio.sequence.distance
 from skbio._base import SkbioObject
 from skbio.metadata._mixin import (
     MetadataMixin,
@@ -31,6 +32,10 @@ from skbio.sequence._alphabet import (
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
 from skbio.io.descriptors import Read, Write
+
+
+if TYPE_CHECKING:
+    from typing import Self, Iterable
 
 
 class Sequence(
@@ -374,6 +379,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     _ascii_invert_case_bit_offset = 32
     _ascii_lowercase_boundary = 90
     default_write_format = "fasta"
+    """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
 
     @property
@@ -441,7 +447,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return self._bytes.tobytes()
 
     @classonlymethod
-    def concat(cls, sequences, how="strict") -> "Sequence":
+    def concat(cls, sequences: Iterable[Self], how: str = "strict") -> Self:
         r"""Concatenate an iterable of ``Sequence`` objects.
 
         Parameters
@@ -1548,7 +1554,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         # metric to apply and accept **kwargs
         other = self._munge_to_self_type(other, "distance")
         if metric is None:
-            metric = skbio.sequence.distance.hamming
+            import skbio.sequence.distance
+
+            metric = getattr(skbio.sequence.distance, "hamming", None)
         return float(metric(self, other))
 
     def matches(self, other):
@@ -1861,14 +1869,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         return chars, indices
 
     def iter_kmers(self, k, overlap=True):
-        r"""Generate kmers of length `k` from this sequence.
+        r"""Generate k-mers of length `k` from this sequence.
 
         Parameters
         ----------
         k : int
             The kmer length.
         overlap : bool, optional
-            Defines whether the kmers should be overlapping or not.
+            Defines whether the k-mers should be overlapping or not.
 
         Yields
         ------

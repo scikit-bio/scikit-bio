@@ -6,39 +6,167 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from itertools import combinations
+from __future__ import annotations
 
-from typing import Optional, Union, Tuple, Dict, Sequence, TYPE_CHECKING
+from itertools import combinations
+from warnings import warn
+from typing import TYPE_CHECKING
+
+import numpy as np
+import pandas as pd
+import scipy.special
+from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarning
+
+from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
+from skbio.stats.distance import DistanceMatrix
+from skbio.util import get_rng
+from skbio._config import _resolve_engine
+
+try:
+    from numba import njit, prange
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Sequence
     from ._base import DistanceMatrix
     from numpy.typing import ArrayLike
     from skbio.util._typing import SeedLike
 
-import warnings
-import numpy as np
-import pandas as pd
-import scipy.special
-from scipy.stats import kendalltau
-from scipy.stats import ConstantInputWarning
-from scipy.stats import NearConstantInputWarning
 
-from skbio.stats.distance import DistanceMatrix
-from skbio.util import get_rng
+if NUMBA_AVAILABLE:
 
-from ._cutils import mantel_perm_pearsonr_cy
+    @njit(parallel=True)
+    def _mantel_perm_pearsonr_nb(
+        x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+    ):
+        """Fused permute, normalize, and Pearson correlation for Mantel test.
+
+        Replaces the following Python code::
+
+            def _mantel_perm_pearsonr_one(x_flat, xmean, normxm, ym_normalized):
+                xm_normalized = (x_flat - xmean) / normxm
+                one_stat = np.dot(xm_normalized, ym_normalized)
+                one_stat = max(min(one_stat, 1.0), -1.0)
+                return one_stat
+
+            permuted_stats = np.array([
+                _mantel_perm_pearsonr_one(
+                    distmat_reorder_condensed(x._data, perm_order[p]), ...
+                ) for p in range(permutations)
+            ])
+
+        Takes a pre-computed permutation order matrix and normalizes values on
+        the fly using mul and add (derived from xmean and normxm) instead of
+        materializing the full permuted matrix. Each permutation is independent
+        and computed in parallel via prange.
+
+        Parameters
+        ----------
+        x_data : 2D array_like
+            Full distance matrix (n x n).
+        perm_order : 2D array_like
+            Permutation index array (n_perm x n). Each row is a permutation
+            of range(n) specifying the reordering of rows and columns.
+        xmean : float
+            Mean of the condensed form of x.
+        normxm : float
+            Norm of (x_flat - xmean).
+        ym_normalized : 1D array_like
+            (y_flat - ymean) / normym, pre-normalized.
+        permuted_stats : 1D array_like
+            Output array (n_perm,) to write correlation coefficients into.
+
+        """
+        n = x_data.shape[0]
+        n_perm = perm_order.shape[0]
+        mul = 1.0 / normxm
+        add = -xmean / normxm
+
+        for p in prange(n_perm):
+            my_ps = 0.0
+            for row in range(n - 1):
+                vrow = perm_order[p, row]
+                row_start = row * (n - 1) - ((row - 1) * row) // 2
+                for icol in range(n - row - 1):
+                    col = icol + row + 1
+                    yval = ym_normalized[row_start + icol]
+                    xval = x_data[vrow, perm_order[p, col]] * mul + add
+                    my_ps = yval * xval + my_ps
+
+            if my_ps > 1.0:
+                my_ps = 1.0
+            elif my_ps < -1.0:
+                my_ps = -1.0
+            permuted_stats[p] = my_ps
+
+    @njit(parallel=True)
+    def _mantel_perm_pearsonr_condensed_nb(
+        x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+    ):
+        """Fused permute, normalize, and Pearson for condensed Mantel test.
+
+        Same as _mantel_perm_pearsonr_nb but accepts x_data in condensed
+        form (1D array of length n*(n-1)/2) instead of the full 2D matrix.
+        Uses condensed_index formula to map (vrow, vcol) pairs from the
+        permuted ordering back to the 1D condensed array.
+
+        Parameters
+        ----------
+        x_data : 1D array_like
+            Condensed distance matrix (lower triangle only).
+        perm_order : 2D array_like
+            Permutation index array (n_perm x n).
+        xmean : float
+            Mean of the condensed form of x.
+        normxm : float
+            Norm of (x_flat - xmean).
+        ym_normalized : 1D array_like
+            (y_flat - ymean) / normym, pre-normalized.
+        permuted_stats : 1D array_like
+            Output array (n_perm,) to write correlation coefficients into.
+
+        """
+        n_perm = perm_order.shape[0]
+        n = perm_order.shape[1]
+        mul = 1.0 / normxm
+        add = -xmean / normxm
+
+        for p in prange(n_perm):
+            my_ps = 0.0
+            for row in range(n - 1):
+                vrow = perm_order[p, row]
+                row_start = row * (n - 1) - ((row - 1) * row) // 2
+                for icol in range(n - row - 1):
+                    col = icol + row + 1
+                    vcol = perm_order[p, col]
+                    if vrow < vcol:
+                        x_idx = vrow * n + vcol - ((vrow + 2) * (vrow + 1)) // 2
+                    else:
+                        x_idx = vcol * n + vrow - ((vcol + 2) * (vcol + 1)) // 2
+                    yval = ym_normalized[row_start + icol]
+                    xval = x_data[x_idx] * mul + add
+                    my_ps = yval * xval + my_ps
+
+            if my_ps > 1.0:
+                my_ps = 1.0
+            elif my_ps < -1.0:
+                my_ps = -1.0
+            permuted_stats[p] = my_ps
 
 
 def mantel(
-    x: Union["DistanceMatrix", "ArrayLike"],
-    y: Union["DistanceMatrix", "ArrayLike"],
+    x: DistanceMatrix | ArrayLike,
+    y: DistanceMatrix | ArrayLike,
     method: str = "pearson",
     permutations: int = 999,
     alternative: str = "two-sided",
     strict: bool = True,
-    lookup: Optional[Dict[str, str]] = None,
-    seed: Optional["SeedLike"] = None,
-) -> Tuple[float, float, int]:
+    lookup: dict[str, str] | None = None,
+    seed: SeedLike | None = None,
+    engine: str | None = None,
+) -> tuple[float, float, int]:
     r"""Compute correlation between distance matrices using the Mantel test.
 
     The Mantel test compares two distance matrices by computing the correlation
@@ -126,6 +254,12 @@ def mantel(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
+    engine : {"cython", "numba"}, optional
+        Compute engine to use. ``"cython"`` (default) uses the Cython
+        implementation. ``"numba"`` uses the optional Numba implementation
+        and requires Numba to be installed. If not provided, the global
+        default is used (see :func:`skbio.set_config`). Only applies to the
+        ``"pearson"`` and ``"spearman"`` methods.
 
     Returns
     -------
@@ -159,6 +293,10 @@ def mantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
@@ -276,12 +414,6 @@ def mantel(
     """
     rng = get_rng(seed)
 
-    # convert to redundant form for now
-    if isinstance(x, DistanceMatrix) and x._flags["CONDENSED"]:
-        x = DistanceMatrix(x)
-    if isinstance(y, DistanceMatrix) and y._flags["CONDENSED"]:
-        y = DistanceMatrix(y)
-
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -289,6 +421,8 @@ def mantel(
         special = False  # set to true, if we have a dedicated implementation
     else:
         raise ValueError("Invalid correlation method '%s'." % method)
+
+    engine = _resolve_engine(engine, ("cython", "numba"))
 
     if permutations < 0:
         raise ValueError(
@@ -309,11 +443,11 @@ def mantel(
     if special:
         if method == "pearson":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
-                x, y, permutations, rng
+                x, y, permutations, rng, engine
             )
         else:
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
-                x, y, permutations, rng
+                x, y, permutations, rng, engine
             )
 
     else:
@@ -348,7 +482,7 @@ def mantel(
     return orig_stat, p_value, n
 
 
-def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
+def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -383,7 +517,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
-        warnings.warn(ConstantInputWarning())
+        warn(ConstantInputWarning())
         return np.nan, np.nan, []
 
     # inline pearsonr, condensed from scipy.stats.pearsonr
@@ -405,7 +539,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
         # If all the values in x (likewise y) are very close to the mean,
         # the loss of precision that occurs in the subtraction xm = x - xmean
         # might result in large errors in r.
-        warnings.warn(NearConstantInputWarning())
+        warn(NearConstantInputWarning())
 
     orig_stat = np.dot(xm_normalized, ym_normalized)
 
@@ -413,7 +547,7 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
     # floating point arithmetic.
     orig_stat = max(min(orig_stat, 1.0), -1.0)
 
-    mat_n = x._data.shape[0]
+    mat_n = x.shape[0]
     # note: xmean and normxm do not change with permutations
     permuted_stats = []
     comp_stat = orig_stat
@@ -432,16 +566,31 @@ def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None):
             perm_order[row, :] = rng.permutation(mat_n)
 
         permuted_stats = np.empty(permutations + 1, dtype=x_data.dtype)
-        mantel_perm_pearsonr_cy(
-            x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
-        )
+        if x._flags["CONDENSED"]:
+            if engine == "numba":
+                _mantel_perm_pearsonr_condensed_nb(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
+            else:
+                mantel_perm_pearsonr_condensed_cy(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
+        else:
+            if engine == "numba":
+                _mantel_perm_pearsonr_nb(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
+            else:
+                mantel_perm_pearsonr_cy(
+                    x_data, perm_order, xmean, normxm, ym_normalized, permuted_stats
+                )
         comp_stat = permuted_stats[0]
         permuted_stats = permuted_stats[1:]
 
     return orig_stat, comp_stat, permuted_stats
 
 
-def _mantel_stats_pearson(x, y, permutations, seed=None):
+def _mantel_stats_pearson(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using pearsonr.
 
     Parameters
@@ -470,10 +619,10 @@ def _mantel_stats_pearson(x, y, permutations, seed=None):
 
     """
     y_flat = y.condensed_form()
-    return _mantel_stats_pearson_flat(x, y_flat, permutations, seed)
+    return _mantel_stats_pearson_flat(x, y_flat, permutations, seed, engine)
 
 
-def _mantel_stats_spearman(x, y, permutations, seed=None):
+def _mantel_stats_spearman(x, y, permutations, seed=None, engine=None):
     """Compute original and permuted stats using spearmanr.
 
     Parameters
@@ -506,7 +655,7 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
 
     # If an input is constant, the correlation coefficient is not defined.
     if (x_flat == x_flat[0]).all() or (y_flat == y_flat[0]).all():
-        warnings.warn(ConstantInputWarning())
+        warn(ConstantInputWarning())
         return np.nan, np.nan, []
 
     y_rank = scipy.stats.rankdata(y_flat)
@@ -519,18 +668,18 @@ def _mantel_stats_spearman(x, y, permutations, seed=None):
     del x_rank
 
     # for our purposes, spearman is just pearson on rankdata
-    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations, seed)
+    return _mantel_stats_pearson_flat(x_rank_matrix, y_rank, permutations, seed, engine)
 
 
 def pwmantel(
-    dms: Sequence[Union["DistanceMatrix", "ArrayLike"]],
-    labels: Optional[Sequence[Union[str, int]]] = None,
+    dms: Sequence[DistanceMatrix | ArrayLike],
+    labels: Sequence[str | int] | None = None,
     method: str = "pearson",
     permutations: int = 999,
     alternative: str = "two-sided",
     strict: bool = True,
-    lookup: Optional[Dict[str, str]] = None,
-    seed: Optional["SeedLike"] = None,
+    lookup: dict[str, str] | None = None,
+    seed: SeedLike | None = None,
 ) -> pd.DataFrame:
     """Run Mantel tests for every pair of given distance matrices.
 
@@ -585,6 +734,10 @@ def pwmantel(
 
     Notes
     -----
+    This function uses parallel computation for improved performance.
+    See the :install:`parallelization guide <#parallelization>` for information on
+    controlling the number of threads used.
+
     Passing a list of filepaths can be useful as it allows for a smaller amount
     of memory consumption as it only loads two matrices at a time as opposed to
     loading all distance matrices into memory.

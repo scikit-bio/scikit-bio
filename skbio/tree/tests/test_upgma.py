@@ -2,10 +2,8 @@ import io
 from unittest import TestCase, main
 
 from skbio import DistanceMatrix, TreeNode
-
-from skbio.tree._upgma import (
-    upgma
-)
+from skbio.util import get_data_path
+from skbio.tree._upgma import upgma
 
 
 class UpgmaTests(TestCase):
@@ -44,3 +42,15 @@ class UpgmaTests(TestCase):
         actual_TreeNode = upgma(self.dm, weighted=True)
         self.assertAlmostEqual(actual_TreeNode.compare_cophenet(
             self.expected_TreeNode_wpgma), 0.0, places=10)
+
+    def test_upgma_real(self):
+        """Test on a real dataset with 100 taxa."""
+        dm = DistanceMatrix.read(get_data_path("mp100.phy"))
+        obs = upgma(dm)
+        exp = TreeNode.read(get_data_path("mp100.upgma.nwk"))
+        self.assertEqual(obs.compare_rfd(exp), 0.0)
+        self.assertAlmostEqual(obs.compare_cophenet(exp), 0.0)
+
+
+if __name__ == "__main__":
+    main()

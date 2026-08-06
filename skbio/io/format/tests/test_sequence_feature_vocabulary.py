@@ -44,7 +44,14 @@ class Tests(TestCase):
             'join(J00194.1:1..9,3..8)',
             'join(3..8,J00194.1:1..9)',
             '1.9',
-            '1^2']
+            '1^2',
+            # single-base locations with fuzzy boundary (issue #1666):
+            # e.g. lambda virus (NCBI J02459.1) contains
+            # "mRNA complement(<23231)".
+            '<9',
+            '>9',
+            'complement(<23231)',
+            'complement(>23231)']
 
         expects = [
             ([(8, 9)], [(False, False)], {'strand': '+'}),
@@ -57,7 +64,11 @@ class Tests(TestCase):
             ([(2, 8)], [(False, False)], {'strand': '+'}),
             ([(2, 8)], [(False, False)], {'strand': '+'}),
             ([(0, 9)], [(False, False)], {'strand': '+'}),
-            ([(0, 1)], [(False, False)], {'strand': '+'})]
+            ([(0, 1)], [(False, False)], {'strand': '+'}),
+            ([(8, 9)], [(True, False)], {'strand': '+'}),
+            ([(8, 9)], [(False, True)], {'strand': '+'}),
+            ([(23230, 23231)], [(True, False)], {'strand': '-'}),
+            ([(23230, 23231)], [(False, True)], {'strand': '-'})]
 
         for example, expect in zip(examples, expects):
             parsed = _parse_loc_str(example)
@@ -77,6 +88,13 @@ class Tests(TestCase):
         imd = IntervalMetadata(9)
         i1 = imd.add([(0, 1)])
         self.assertEqual(_serialize_location(i1), '1')
+
+        # single-base with fuzzy lower/upper boundary (issue #1666)
+        i1a = imd.add([(0, 1)], [(True, False)])
+        self.assertEqual(_serialize_location(i1a), '<1')
+
+        i1b = imd.add([(0, 1)], [(False, True)])
+        self.assertEqual(_serialize_location(i1b), '>1')
 
         i2 = imd.add([(0, 2)], [(True, True)])
         self.assertEqual(_serialize_location(i2), '<1..>2')

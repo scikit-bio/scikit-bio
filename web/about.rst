@@ -23,7 +23,7 @@ scikit-bio is available under the new BSD license. See :repo:`LICENSE.txt <blob/
 Team
 ----
 
-Our core development team consists of three lead developers: **Dr. Qiyun Zhu** at Arizona State University (ASU) (@qiyunzhu), **Dr. James Morton** at Gutz Analytics (@mortonjt), and **Dr. Daniel McDonald** at the University of California San Diego (UCSD) (@wasade), one software engineer: **Matthew Aton** (@mataton) and one bioinformatician: **Dr. Lars Hunger** (@LarsHunger). **Dr. Rob Knight** at UCSD (@rob-knight) provides guidance on the development and research. **Dr. Greg Caporaso** (@gregcaporaso) at Northern Arizona University (NAU), the former leader of the scikit-bio project, serves as an advisor on the current project.
+Our core development team consists of three lead developers: **Dr. Qiyun Zhu** at Arizona State University (ASU) (@qiyunzhu), **Dr. James Morton** at Gutz Analytics (@mortonjt), and **Dr. Daniel McDonald** at the University of California San Diego (UCSD) (@wasade), and one dedicated software engineer: **Matthew Aton** at ASU (@mataton). **Dr. Rob Knight** at UCSD (@rob-knight) provides guidance on the development and research. **Dr. Greg Caporaso** (@gregcaporaso) at Northern Arizona University (NAU), the former leader of the scikit-bio project, serves as an advisor on the current project.
 
 
 Credits
@@ -54,7 +54,11 @@ The development of scikit-bio is currently supported by the U.S. Department of E
 Citation
 --------
 
-If you use scikit-bio for any published research, please see our `Zenodo page <https://zenodo.org/record/8209901>`_ for how to cite.
+If you use scikit-bio for any published research, please cite:
+
+   Aton, M., McDonald, D., Cañardo Alastuey, J. et al. Scikit-bio: a fundamental Python library for biological omic data analysis. *Nat Methods* (2025). https://doi.org/10.1038/s41592-025-02981-z
+
+The full text of this article is available at: https://rdcu.be/eUcOO.
 
 
 Collaboration

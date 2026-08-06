@@ -140,6 +140,23 @@ class TestClassProperty(unittest.TestCase):
         with self.assertRaises(AttributeError):
             f.foo = 4242
 
+    def test_no_owner(self):
+        class Foo:
+            _foo = 42
+
+            @classproperty
+            def foo(cls):
+                return cls._foo
+
+        class Bar(Foo):
+            _foo = 84
+
+        descriptor = Foo.__dict__["foo"]
+
+        # Exercise classproperty.__get__(obj, owner=None) explicitly.
+        self.assertEqual(descriptor.__get__(Foo(), None), 42)
+        self.assertEqual(descriptor.__get__(Bar(), None), 84)
+
 
 class TestDeprecated(unittest.TestCase):
     def test_deprecated(self):

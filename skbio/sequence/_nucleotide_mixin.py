@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
@@ -51,8 +51,8 @@ class NucleotideMixin(metaclass=ABCMeta):
     def _motifs(self):
         return _motifs
 
-    @abstractproperty
     @classproperty
+    @abstractmethod
     def complement_map(cls):
         """Return mapping of nucleotide characters to their complements.
 

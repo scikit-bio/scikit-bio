@@ -9,11 +9,10 @@
 import io
 import gzip
 import bz2
-import tempfile
-import itertools
 from pathlib import Path
+from itertools import chain
+from tempfile import NamedTemporaryFile
 
-import requests
 
 from skbio.io import IOSourceError
 from ._fileobject import (
@@ -27,7 +26,7 @@ from ._fileobject import (
 # returns _TemporaryFileWrapper around a normal file object. Instead of
 # relying on this implementation, we take whatever the class of the result of
 # NamedTemporaryFile is.
-with tempfile.NamedTemporaryFile() as fh:
+with NamedTemporaryFile() as fh:
     _WrappedTemporaryFile = type(fh)
 
 
@@ -98,16 +97,15 @@ class FilePathSource(IOSource):
 
 class HTTPSource(IOSource):
     def can_read(self):
+        import requests  # type: ignore[import-untyped]
         return isinstance(self.file, str) and requests.compat.urlparse(
             self.file
         ).scheme in {"http", "https"}
 
     def get_reader(self):
+        import requests  # type: ignore[import-untyped]
         req = requests.get(self.file)
-
-        # if the response is not 200, an exception will be raised
         req.raise_for_status()
-
         return io.BufferedReader(io.BytesIO(req.content))
 
 
@@ -189,7 +187,7 @@ class IterableSource(IOSource):
                 self.repaired = []
                 return True
             if isinstance(head, str):
-                self.repaired = itertools.chain([head], iterator)
+                self.repaired = chain([head], iterator)
                 return True
             else:
                 # We may have mangled a generator at this point, so just abort

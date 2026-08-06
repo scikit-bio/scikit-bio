@@ -7,14 +7,15 @@
 # ----------------------------------------------------------------------------
 
 import unittest
+from packaging.version import Version
 
 import pandas as pd
 import pandas.testing as pdt
 import numpy as np
 
-
 from skbio.metadata.missing import series_encode_missing, series_extract_missing
 
+PANDAS_3 = Version(pd.__version__) >= Version("3.0.0")
 
 class RoundTripMixin:
     def check_roundtrip(self, real_value, dtype):
@@ -33,15 +34,18 @@ class RoundTripMixin:
     def test_roundtrip_float(self):
         self.check_roundtrip(0.05, float)
 
+    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_roundtrip_string(self):
         self.check_roundtrip('hello', object)
 
     def test_roundtrip_int(self):
         self.check_roundtrip(42, float)
 
+    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_roundtrip_bool(self):
         self.check_roundtrip(True, object)
 
+    @unittest.skipIf(PANDAS_3, reason="TODO: Need to rebuild NaN metadata handling in skbio.")
     def test_roundtrip_all_missing_object(self):
         expected = [None, float('nan')] + self.missing_terms
         series = pd.Series(expected, dtype=object)

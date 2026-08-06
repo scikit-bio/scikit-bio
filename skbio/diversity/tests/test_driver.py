@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import io
+import warnings
 from unittest import TestCase, main
 
 import pandas as pd
@@ -749,6 +750,40 @@ class BetaDiversityTests(TestCase):
                              pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
+
+    def test_callable_unifrac_warns(self):
+        # Passing the unifrac callables should warn that a faster string-keyed
+        # implementation is available (see issue #1342).
+        for func in (unweighted_unifrac, weighted_unifrac):
+            with self.assertWarnsRegex(UserWarning, func.__name__):
+                beta_diversity(func, self.table1,
+                               taxa=self.oids1, tree=self.tree1)
+
+    def test_string_unifrac_does_not_warn(self):
+        # The recommended string form should not emit the slow-callable warning.
+        for name in ("unweighted_unifrac", "weighted_unifrac"):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
+                beta_diversity(name, self.table1,
+                               taxa=self.oids1, tree=self.tree1)
+
+    def test_custom_callable_does_not_warn(self):
+        # Callables whose __name__ is not in the slow-callables set should
+        # not trigger the slow-callable warning.
+        def custom_metric(u, v):
+            return 0.0
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            beta_diversity(custom_metric, self.table1, self.sids1)
+
+    def test_callable_without_taxa_param(self):
+        # Callables that do not declare a 'taxa' parameter must not have
+        # taxa injected into their kwargs, even when taxa is provided.
+        def no_taxa_metric(u, v):
+            return 0.0
+        dm = beta_diversity(no_taxa_metric, self.table1, self.sids1,
+                            taxa=self.oids1)
+        self.assertEqual(dm.shape, (3, 3))
 
 
 class MetricGetters(TestCase):

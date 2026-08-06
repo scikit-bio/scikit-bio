@@ -6,16 +6,25 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-# Custom class to patch Sphinx extension "autosummary". When applied to the
-# inherited members of a class, this patch automatically trace up to the base
-# class from which each member is inherited, and create a link to the stub
-# page of the base class' member.
-
-from sphinx.ext.autosummary import Autosummary
 from sphinx.util.inspect import safe_getattr
 
 
 def trace_inherit(name, real_name):
+    """Trace the base class from which a member is inherited.
+
+    Parameters
+    ----------
+    name : str
+        Public name of the member.
+    real_name : str
+        True import path of the member.
+
+    Returns
+    -------
+    str
+        Import path of the member from the base class.
+
+    """
     # `real_name` is the full path to the member, such as:
     #   skbio.sequence.DNA.frequencies
     # It can be split into:
@@ -73,13 +82,3 @@ def trace_inherit(name, real_name):
     # Eventually, it returns:
     #   skbio.sequence.Sequence.frequencies
     return ".".join(path + [origin.__name__, name])
-
-
-class InheritedAutosummary(Autosummary):
-    def get_items(self, names):
-        items = super().get_items(names)
-        new_items = []
-        for name, sig, summary, real_name in items:
-            origin = trace_inherit(name, real_name)
-            new_items.append((name, sig, summary, origin or real_name))
-        return new_items

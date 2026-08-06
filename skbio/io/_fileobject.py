@@ -7,10 +7,10 @@
 # ----------------------------------------------------------------------------
 
 import io
-import h5py
 
 
 def is_binary_file(file):
+    import h5py
     return isinstance(
         file, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom, h5py.Group)
     )

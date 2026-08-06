@@ -89,10 +89,11 @@ html_theme_options = {
     },
 
     # announcement banner on top of the screen
-    # 'announcement': (
-    #     f"{project} 0.7.0 has been released! <a href='"
-    #     f"{github_url}/releases/tag/0.7.0'>Check it out</a>."
-    # ),
+    'announcement': (
+        "scikit-bio is participating in Google Summer of Code 2026. <a href="
+        "'https://github.com/scikit-bio/scikit-bio/discussions/2401'>Join us"
+        "</a>!"
+    ),
 
     # social media links displayed as icons
     'github_url': github_url,

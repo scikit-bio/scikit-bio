@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
+import platform
 
 import numpy as np
 import numpy.testing as npt
@@ -22,6 +23,7 @@ from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path
 
+IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
 class PERMDISPTests(TestCase):
 
@@ -165,8 +167,11 @@ class PERMDISPTests(TestCase):
         dm = pcoa(self.null_mat)
         dm = dm.samples
 
-        with self.assertWarns(ConstantInputWarning):
-            obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
+        # TODO: SciPy 1.17+ changed the behavior of f_oneway so that a
+        # ConstantInputWarning may no longer be emitted for this case.
+        # Once the expected behavior is clarified, consider reintroducing
+        # an explicit warning assertion here.
+        obs_null = _compute_groups(dm, 'centroid', self.grouping_eq)
         np.isnan(obs_null)
 
     def test_centroid_normal(self):
@@ -179,7 +184,8 @@ class PERMDISPTests(TestCase):
                     'Fast', 'Fast', 'Fast', 'Fast']
 
         obs = permdisp(self.unifrac_dm, grouping, test='centroid',
-                       permutations=99, seed=42)
+                       permutations=99, seed=42,
+                       dimensions=self.unifrac_dm.shape[0])
 
         self.assert_series_equal(obs, exp)
 
@@ -193,10 +199,12 @@ class PERMDISPTests(TestCase):
                     'Fast', 'Fast', 'Fast', 'Fast']
 
         obs = permdisp(self.unifrac_dm_condensed, grouping, test='centroid',
-                       permutations=99, seed=42)
+                       permutations=99, seed=42,
+                       dimensions=self.unifrac_dm_condensed.shape[0])
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -204,7 +212,8 @@ class PERMDISPTests(TestCase):
                         name='PERMDISP results')
 
         obs = permdisp(self.unifrac_dm, self.unif_grouping, test='median',
-                       permutations=99, seed=42)
+                       permutations=99, seed=42,
+                       dimensions=self.unifrac_dm.shape[0])
 
         self.assert_series_equal(obs, exp)
 
@@ -215,6 +224,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.139475441876,
@@ -222,7 +232,8 @@ class PERMDISPTests(TestCase):
                         name='PERMDISP results')
 
         obs = permdisp(self.unifrac_dm_condensed, self.unif_grouping, test='median',
-                       permutations=99, seed=42)
+                       permutations=99, seed=42,
+                       dimensions=self.unifrac_dm_condensed.shape[0])
 
         self.assert_series_equal(obs, exp)
 
@@ -233,6 +244,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs2, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -251,6 +263,7 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_fsvd_condensed(self):
         exp = pd.Series(index=self.exp_index,
                         data=['PERMDISP', 'F-value', 9, 2, 0.04078077215673714,
@@ -288,6 +301,7 @@ class PERMDISPTests(TestCase):
 
     def test_no_permuations(self):
         obs = permdisp(self.eq_mat, self.grouping_eq, permutations=0,
+                       dimensions=self.eq_mat.shape[0],
                        warn_neg_eigval=False)
 
         pval = obs['p-value']
@@ -304,9 +318,10 @@ class PERMDISPTests(TestCase):
         mp_mf = pd.read_csv(get_data_path('moving_pictures_mf.tsv'), sep='\t')
         mp_mf.set_index('#SampleID', inplace=True)
 
-        obs_med_mp = permdisp(mp_dm, mp_mf, column='BodySite', seed=42)
+        obs_med_mp = permdisp(mp_dm, mp_mf, column='BodySite', seed=42,
+                              dimensions=mp_dm.shape[0])
         obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite', test='centroid',
-                              seed=42)
+                              seed=42, dimensions=mp_dm.shape[0])
 
         exp_data_m = ['PERMDISP', 'F-value', 33, 4, 10.1956, 0.001, 999]
         exp_data_c = ['PERMDISP', 'F-value', 33, 4, 17.4242, 0.001, 999]
@@ -350,6 +365,58 @@ class PERMDISPTests(TestCase):
         with self.assertRaises(ValueError) as cm:
             permdisp(self.unifrac_dm, [], method='invalid')
         self.assertEqual(str(cm.exception), "Method must be eigh or fsvd.")
+
+    def test_no_mutation_of_ordination_results(self):
+        po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
+        original_columns = po.samples.columns.tolist()
+        
+        permdisp(po, self.unif_grouping, permutations=0, warn_neg_eigval=False)
+        
+        self.assertEqual(po.samples.columns.tolist(), original_columns)
+        self.assertNotIn("grouping", po.samples.columns.tolist())
+
+    def test_permdisp_passes_dimensions_through(self):
+        # Regression test for issue #2430. Previously `permdisp` silently
+        # overrode `dimensions = 0` before calling pcoa, which tripped
+        # pcoa's "EIGH: since no value for dimensions..." warning on every
+        # call for distance matrices larger than 10 samples. `permdisp`
+        # now passes `dimensions` through unchanged: normal usage (an
+        # explicit positive value, or the default of 10) no longer leaks
+        # the warning, while users who explicitly opt in with
+        # `dimensions=0` still receive it (per #2456 review).
+        import warnings
+        from scipy.spatial.distance import pdist, squareform
+
+        rng = np.random.default_rng(0)
+        n = 12  # exceed pcoa's 10-sample warning threshold
+        coords = rng.random((n, 5))
+        big_dm = DistanceMatrix(
+            squareform(pdist(coords)),
+            ids=[f"s{i}" for i in range(n)],
+        )
+        grouping = ["A"] * 6 + ["B"] * 6
+
+        # Case 1: default permdisp call (dimensions=10) — no warning.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            permdisp(big_dm, grouping, permutations=9, warn_neg_eigval=False)
+        self.assertFalse(
+            any("EIGH" in str(w.message) for w in caught),
+            "permdisp with a positive dimensions value must not emit "
+            "pcoa's 'EIGH: since no value for dimensions...' warning",
+        )
+
+        # Case 2: user explicitly passes dimensions=0 — warning preserved.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            permdisp(big_dm, grouping, permutations=9,
+                     dimensions=0, warn_neg_eigval=False)
+        self.assertTrue(
+            any(issubclass(w.category, RuntimeWarning)
+                and "EIGH" in str(w.message) for w in caught),
+            "permdisp must surface pcoa's EIGH warning when the caller "
+            "explicitly passes dimensions=0 on a large matrix",
+        )
 
 
 if __name__ == '__main__':

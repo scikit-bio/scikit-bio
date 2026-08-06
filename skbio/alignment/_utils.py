@@ -6,7 +6,10 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from typing import Iterable, Union, Tuple, List, TYPE_CHECKING
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -21,38 +24,32 @@ from skbio.sequence._alphabet import (
 
 
 # This could be exposed as a public API.
-SequenceLike = Union[
-    "Sequence",
-    str,
-    bytes,
-    Iterable[Union[str, bytes, int, float, bool]],
-    NDArray,
-]
+SequenceLike: TypeAlias = (
+    Sequence | str | bytes | Iterable[str | bytes | int | float | bool] | NDArray
+)
 
 
 # This could be exposed as a public API.
-AlignmentLike = Union[
-    "TabularMSA",
-    Iterable["SequenceLike"],
-    Tuple["AlignPath", Iterable["SequenceLike"]],
-]
+AlignmentLike: TypeAlias = (
+    TabularMSA | Iterable[SequenceLike] | tuple[AlignPath, Iterable[SequenceLike]]
+)
 
 
 # cached identity matrices for alignment with match/mismatch scores
-_idmats: dict[Union[str, type], NDArray] = {}
+_idmats: dict[str | type, NDArray] = {}
 
 # indices of cached identity matrices
 _ididxs: dict[type, NDArray] = {}
 
 
 def encode_sequences(
-    seqs: Iterable["SequenceLike"],
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    seqs: Iterable[SequenceLike],
+    sub_score: tuple[float, float] | SubstitutionMatrix | str,
     aligned: bool = False,
     dtype: type = np.float32,
     gap_chars: str = "-",
     not_empty: bool = True,
-) -> Tuple[List[NDArray], NDArray, NDArray]:
+) -> tuple[list[NDArray], NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms sequences into indices in a substitution matrix to
@@ -106,7 +103,11 @@ def encode_sequences(
     # Determine type of sequences. They can be skbio sequences (grammared or not),
     # raw strings or any iterables of scalars. Heterogeneous sequences are not allowed.
     seqtype = _check_seqtype(seqs)
-    grammared = issubclass(seqtype, GrammaredSequence)
+    if issubclass(seqtype, GrammaredSequence):
+        is_sequence = has_grammar = True
+    else:
+        has_grammar = False
+        is_sequence = issubclass(seqtype, Sequence)
 
     # Determine substitution scoring method. It can be a specified substitution matrix
     # or match & mismatch scores. For the later scenario, an identity matrix will be
@@ -129,7 +130,7 @@ def encode_sequences(
     # If yes, convert sequences into ASCII codes. Otherwise, keep sequences as strings
     # or whatever iterables in the original form.
     if not is_submat or submat.is_ascii:
-        if issubclass(seqtype, Sequence):
+        if is_sequence:
             is_ascii = True
             seqs = [x._bytes for x in seqs]
         else:
@@ -146,7 +147,7 @@ def encode_sequences(
                 is_ascii = True
     else:
         is_ascii = False
-        if issubclass(seqtype, Sequence):
+        if is_sequence:
             seqs = [str(x) for x in seqs]
 
     # Identify gaps in aligned sequences. The output is a 2D Boolean mask representing
@@ -155,12 +156,12 @@ def encode_sequences(
     gaps = None
     if aligned:
         if is_ascii:
-            if grammared:
+            if has_grammar:
                 gap_codes = seqtype._gap_codes
             else:
                 gap_codes = [ord(x) for x in gap_chars]
         else:
-            if grammared:
+            if has_grammar:
                 gap_codes = list(seqtype.gap_chars)
             else:
                 gap_codes = list(gap_chars)
@@ -171,7 +172,7 @@ def encode_sequences(
     if is_submat:
         # Determine wildcard if available.
         wild = None
-        if grammared:
+        if has_grammar:
             wild = getattr(seqtype, "wildcard_char", None)
             if is_ascii and wild is not None:
                 wild = ord(wild)
@@ -190,7 +191,7 @@ def encode_sequences(
     # from cache.
     else:
         if is_ascii:
-            key = seqtype if grammared else "ascii"
+            key = seqtype if has_grammar else "ascii"
         else:
             seqs, uniq = _indices_in_observed(seqs)
             key = uniq.size
@@ -205,10 +206,10 @@ def encode_sequences(
 
 
 def encode_alignment(
-    aln: "AlignmentLike",
-    sub_score: Union[Tuple[float, float], "SubstitutionMatrix", str],
+    aln: AlignmentLike,
+    sub_score: tuple[float, float] | SubstitutionMatrix | str,
     gap_chars: str = "-",
-) -> Tuple[List[NDArray], NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Encode sequences for alignment operations.
 
     This function transforms an alignment into a 2D array of indices in a
@@ -227,7 +228,7 @@ def encode_alignment(
 
     Returns
     -------
-    seqs : list of ndarray of intp
+    seqs : ndarray of intp
         Indices of sequence characters in the substitution matrix.
     submat : ndarray of float of shape (n_alphabet, n_alphabet)
         Substitution matrix.
@@ -388,7 +389,7 @@ def prep_identity_matrix(seqs, key, match, mismatch):
     return seqs, submat
 
 
-def _check_seqtype(seqs):
+def _check_seqtype(seqs: Iterable[SequenceLike]) -> type[SequenceLike]:
     """Check if sequences are homogeneous, and return the common type."""
     if isinstance(seqs, TabularMSA):
         dtype = seqs.dtype

@@ -104,6 +104,7 @@ extlinks = {
     'home': (f'{html_baseurl}/%s', None),
     'repo': (f'{github_url}/%s', None),
     'wiki': (f'{wiki_url}/%s', None),
+    'install': (f'{html_baseurl}/install.html%s', None)
 }
 
 
@@ -188,7 +189,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
-    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'statsmodels': ('https://www.statsmodels.org/stable/', None),
     # 'biom-format': ('https://biom-format.org/', None),
@@ -276,9 +277,44 @@ def _closure():
 _closure()
 
 
-# Import the patched autosummary extension to support automatic inheritance.
+# Custom classes to patch Sphinx extension "autosummary".
 
-from autoinherit import InheritedAutosummary
+from sphinx.ext.autosummary import Autosummary
+
+
+# -- Hide signatures ----------------------------------------------------------
+
+class NoSignatureAutosummary(Autosummary):
+    """Hide member signatures from autosummary toctrees.
+
+    This is equivalent to adding a `:signatures: none` option to every
+    `.. autosummary::` directive.
+
+    """
+    def run(self):
+        self.options['signatures'] = 'none'
+        return super().run()
+
+
+# -- Automatic inheritance ----------------------------------------------------
+
+from autoinherit import trace_inherit
+
+
+class InheritedAutosummary(NoSignatureAutosummary):
+    """Auto-summarize inherited members of a class.
+
+    This class automatically traces up to the base class from which each member
+    is inherited, and create a link to the stub page of the base class' member.
+
+    """
+    def get_items(self, names):
+        items = super().get_items(names)
+        new_items = []
+        for name, sig, summary, real_name in items:
+            origin = trace_inherit(name, real_name)
+            new_items.append((name, sig, summary, origin or real_name))
+        return new_items
 
 
 # Let autosummary skip members that have a "skipdoc" attribute that is True.
@@ -292,5 +328,6 @@ def skip_member(app, what, name, obj, skip, options):
 
 
 def setup(app):
+    app.add_directive('autosummary', NoSignatureAutosummary, override=True)
     app.add_directive('autoinherit', InheritedAutosummary)
     app.connect("autodoc-skip-member", skip_member)

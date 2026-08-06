@@ -17,9 +17,9 @@ from unittest import TestCase, main
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-import scipy.spatial.distance
+from scipy.spatial.distance import hamming as sp_hamming
 
-import skbio.sequence.distance
+from skbio.sequence.distance import hamming as sk_hamming
 from skbio import Sequence, DNA, SubstitutionMatrix
 from skbio.util import assert_data_frame_almost_equal
 from skbio.sequence._sequence import (_single_index_to_slice, _is_single_index,
@@ -2543,13 +2543,11 @@ class TestDistance(TestSequenceBase):
 
         for seqs in seqs1, seqs2:
             for seq1, seq2 in itertools.product(seqs, repeat=2):
-                distance = seq1.distance(seq2,
-                                         metric=scipy.spatial.distance.hamming)
+                distance = seq1.distance(seq2, metric=sp_hamming)
                 self.assertEqual(distance, 0.0)
 
         for seq1, seq2 in itertools.product(seqs1, seqs2):
-            distance = seq1.distance(seq2,
-                                     metric=scipy.spatial.distance.hamming)
+            distance = seq1.distance(seq2, metric=sp_hamming)
             self.assertEqual(distance, 0.75)
 
     def test_default_metric_with_metadata(self):
@@ -2580,7 +2578,7 @@ class TestDistance(TestSequenceBase):
         seq_wrong = Sequence("abcdefghijklmnop")
 
         distance1 = seq1.distance(seq2)
-        distance2 = skbio.sequence.distance.hamming(seq1, seq2)
+        distance2 = sk_hamming(seq1, seq2)
 
         self.assertEqual(distance1, distance2)
 

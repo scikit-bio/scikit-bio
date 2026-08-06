@@ -1,11 +1,99 @@
 # scikit-bio changelog
 
-## Version 0.7.2-dev
+## Version 0.7.4-dev
+
+### Features
+
+* Add optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
+* `TreeNode.prune` and `TreeNode.bifurcate` now accept an `inplace` parameter (default `True`, preserving the previous in-place behavior) and return the resulting tree. This makes them consistent with other whole-tree methods such as `shear` and `root_at_midpoint`. Set `inplace=False` to leave the original tree unchanged and operate on a copy ([#2495](https://github.com/scikit-bio/scikit-bio/pull/2495)).
+
+### Performance enhancements
+
+* When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
+* Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
+
+
+### Bug Fixes
+
+* Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
+* Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
+
+## Version 0.7.3
+
+### Features
+
+* Implemented a global mechanism to document, dispatch and test functions supporting the Python array API standard. The documentation pages of those functions now display a support grid of five array libraries (NumPy, CuPy, PyTorch, JAX and Dask) by two devices (CPU and GPU). An example is `clr`. A new developer documentation page (https://scikit.bio/devdoc/array_api.html) was added to introduce this mechanism ([#2412](https://github.com/scikit-bio/scikit-bio/pull/2412) and [#2459](https://github.com/scikit-bio/scikit-bio/pull/2459)).
+* Added `mmvec` (Microbe-Metabolite Vectors) to `skbio.stats.ordination` for learning joint embeddings of two feature sets from co-occurrence patterns. Supports L-BFGS and Adam optimizers, cross-validation via Q-squared scores, and prediction of one modality from another ([#2360](https://github.com/scikit-bio/scikit-bio/pull/2360)). Interface modernized and computational performance significantly enhanced ([#2448](https://github.com/scikit-bio/scikit-bio/pull/2448)).
+* Added gamma correction support for modeling among-site evolutionary rate heterogeneity in the JC69, F81, K2P, and TN93 models ([#2460](https://github.com/scikit-bio/scikit-bio/pull/2460)). Thank @keder for this contribution.
+* Added robust center log ratio (`rclr`) transformation for performing CLR-like transformation on only observed (non-zero) values, making it suitable for sparse compositional data ([#2386](https://github.com/scikit-bio/scikit-bio/pull/2386)).
+* Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406)). Thank @r0hansaxena for this and other contributions to this release.
+
+### Performance enhancements
+
+* Reduced `import skbio` time by ~37% by making `requests` and `h5py` lazy imports ([#2427](https://github.com/scikit-bio/scikit-bio/pull/2427)). Thank @MAUK9086 for contributing this.
+* Significantly accelerated `gme`, `bme` and `nni` of the `skbio.tree` module. Of which, `bme` received the most rigorous optimization. Parallelization is now enabled by default for this function ([#2404](https://github.com/scikit-bio/scikit-bio/pull/2404)).
+
+### Bug Fixes
+
+* Fixed `nni`'s parsing of tree with single-child root node by explicitly raising in this situation ([#2446](https://github.com/scikit-bio/scikit-bio/pull/2446)).
+* Fixed `permdisp` mutating the input `OrdinationResults` object by adding a `"grouping"` column to its `samples` DataFrame ([#2440](https://github.com/scikit-bio/scikit-bio/pull/2440)).
+* Fixed `permdisp` emitting pcoa's `RuntimeWarning` on every call with a distance matrix larger than 10 samples ([#2456](https://github.com/scikit-bio/scikit-bio/pull/2456)). Thank @jissen706 for this fix and the one below.
+* Fixed the GenBank/EMBL/GFF3 feature-location parser to accept single-base locations with a fuzzy boundary (e.g. `complement(<23231)` as found in the NCBI lambda virus record J02459.1). Previously such locations raised `FileFormatError: Could not parse location string`. The corresponding serializer was updated symmetrically to emit `<N`/`>N` instead of dropping the fuzzy marker ([#2473](https://github.com/scikit-bio/scikit-bio/pull/2473)).
+
+### Miscellaneous
+
+* Replaced SciPy sparse matrix constructors with sparse array constructors to align with SciPy's sparse array APIs. This affects `subsample_counts` (`csr_array`) (no public-facing effect) and `tree_basis` (`coo_array`) ([#2444](https://github.com/scikit-bio/scikit-bio/pull/2444)).
+* Added a general `_reader_kwargs` mechanism for documenting class-specific parameters in auto-generated `read()` docstrings. Applied to `TabularMSA` to document the required `constructor` parameter ([#2421](https://github.com/scikit-bio/scikit-bio/pull/2421)). Thank @LiudengZhang for this addition.
+* `beta_diversity` now emits a `UserWarning` when `unweighted_unifrac` or `weighted_unifrac` are passed as a callable, advising users to pass the metric name as a string for the optimized implementation ([#2462](https://github.com/scikit-bio/scikit-bio/pull/2462)). Thank @SAY-5 for this patch.
+* Improved documentation for `pip`-based contribution instructions ([#2433](https://github.com/scikit-bio/scikit-bio/pull/2433)). Thank @AhmedKhairy22 for this and other contributions.
+
+
+## Version 0.7.2
+
+### Features
+
+* Added multiple metrics for calculating the evolutionary distances between aligned sequences: generic: `pdist`, `logdet`, `paralin`, `jc69`, `f81`, `k2p`, `f84`, `tn93`. They are hosted by the submodule `skbio.sequence.distance`. Also added `align_dists`, which consumes a multiple sequence alignment and generates a distance matrix using choice of metrics ([#2336](https://github.com/scikit-bio/scikit-bio/pull/2336)).
+* `mantel` and `permanova` can now run directly on condensed form `DistanceMatrix` objects ([#2322](https://github.com/scikit-bio/scikit-bio/pull/2322), [#2335](https://github.com/scikit-bio/scikit-bio/pull/2335)).
+* Added new `phylip_dm` format for PHYLIP formatted distance matrices ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345) and [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352)).
+* Added support for reading relaxed PHYLIP formatted multiple sequence alignments ([#2345](https://github.com/scikit-bio/scikit-bio/pull/2345), [#2352](https://github.com/scikit-bio/scikit-bio/pull/2352), and [#2361](https://github.com/scikit-bio/scikit-bio/pull/2361)).
+* Added new plotting functionality for `OrdinationResults` objects, including plotting centroids, confidence ellipses, and 2D plots ([#2362](https://github.com/scikit-bio/scikit-bio/pull/2362))
+
+### Performance enhancements
+
+* Improved `TreeNode.from_linkage_matrix`, including efficiency, compatibility (it now accepts array-like objects), and documentation ([#2356](https://github.com/scikit-bio/scikit-bio/pull/2356)).
+* Updated the documentation of `dirmult_ttest` to recommend input data supplied as raw counts rather than pre-normalized proportions, as the latter lose magnitude information and can lead to higher statistical uncertainty ([#2358](https://github.com/scikit-bio/scikit-bio/pull/2358)).
+
+### Bug Fixes
+
+* Fixed an IO issue in `skbio.Table.write` where tables containing metadata could not be written ([#2338](https://github.com/scikit-bio/scikit-bio/pull/2338)).
+* Fixed an issue in the `from_iterable` methods of the `DistanceMatrix`, `SymmetricMatrix`, and `PairwiseMatrix` classes where diagonals were being filled with garbage values ([#2347](https://github.com/scikit-bio/scikit-bio/pull/2347)).
+* Fixed a bug in `TreeNode.root_at_midpoint` which could fail on a tree with no-length branches ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Fixed an unexpected behavior in several `TreeNode` methods, where tips with `.name is None` were considered as taxa and included in the calculation. Nameless tips are unusual but not forbidden by the current data model. After fixation, those tips are excluded from the calculation. Affected methods are `subset`, `subsets`, `bipart`, `bipart` and `cophenet` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Fixed an integer overflow issue in `_nodes_by_counts` that can occur on 32-bit systems, such as WASM ([#2369]https://github.com/scikit-bio/scikit-bio/pull/2369).
+
+### Miscellaneous
+
+* scikit-bio can now be cited by its [journal publication](https://doi.org/10.1038/s41592-025-02981-z) in _Nature Methods_.
+* `TreeNode.shear` now returns the sheared tree even if `inplace=True` ([#2353](https://github.com/scikit-bio/scikit-bio/pull/2353)).
+* Added compatibility for pandas 3.0. Most functionality works, but the `INSDC:missing` scheme for encoding missing values is not yet supported with pandas 3.0. See issue [#2375](https://github.com/scikit-bio/scikit-bio/issues/2375) for tracking ([#2371](https://github.com/scikit-bio/scikit-bio/pull/2371)).
+* Documentation was improved for the `default_write_format` attributes of supported file types ([#2340](https://github.com/scikit-bio/scikit-bio/pull/2340))
+* Improved documentation for parallelization techniques across the package ([#2343](https://github.com/scikit-bio/scikit-bio/pull/2343))
+
+### Backward-incompatible changes
+
+* Removed `sokalmichener` from the list of supported beta diversity metrics (see `get_beta_diversity_metrics`), as this metric was removed in SciPy 1.17.0. SciPy's documentation recommended using `rogerstanimoto` instead ([#2367](https://github.com/scikit-bio/scikit-bio/pull/2367)).
+
 
 ## Version 0.7.1.post1
 
+### Features
+
+* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2309](https://github.com/scikit-bio/scikit-bio/pull/2309)).
+
+### Bug Fixes
+
 * Fixed source distribution packaging for Python 3.14 support.
-* Added support for building scikit-bio python wheels natively on Windows ARM64 ([#2309]https://github.com/scikit-bio/scikit-bio/pull/2309).
+
 
 ## Version 0.7.1
 
@@ -161,7 +249,7 @@
 * Added parameter `include_self` to `TreeNode.ancestors` to optionally include the initial node in the path (default: False) ([#2135](https://github.com/scikit-bio/scikit-bio/pull/2135)).
 * Added parameter `seed` to functions `pcoa`, `anosim`, `permanova`, `permdisp`, `randdm`, `lladser_pe`, `lladser_ci`, `isubsample`, `subsample_power`, `subsample_paired_power`, `paired_subsamples` and `hommola_cospeciation` to accept a random seed or random generator to ensure output reproducibility ([#2120](https://github.com/scikit-bio/scikit-bio/pull/2120) and [#2129](https://github.com/scikit-bio/scikit-bio/pull/2129)).
 * Made the `IORegistry` sniffer only attempt file formats which are logical given a specific object, thus improving reading efficiency.
-* Allowed the `number_of_dimensions` parameter in the function `pcoa` to accept float values between 0 and 1 to capture fractional cumulative variance. 
+* Allowed the `number_of_dimensions` parameter in the function `pcoa` to accept float values between 0 and 1 to capture fractional cumulative variance.
 
 ### Bug fixes
 

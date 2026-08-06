@@ -204,6 +204,24 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
             cmap='Accent')
         self.check_basic_figure_sanity(fig, 1, 'a title', True, '2', '0', '1')
 
+    def test_plot_with_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', centroids=True, cmap='Set1')
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' centroid" in labels)
+        self.assertTrue("'22' centroid" in labels)
+
+    def test_plot_without_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', centroids=False, cmap='Set1')
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' centroid" not in labels)
+            self.assertTrue("'22' centroid" not in labels)
+
     def test_plot_with_invalid_axis_labels(self):
         with self.assertRaisesRegex(ValueError, r'axis_labels.*4'):
             self.min_ord_results.plot(axes=[2, 0, 1],
@@ -217,16 +235,16 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
 
     def test_validate_plot_axes_invalid_input(self):
         # not enough dimensions
-        with self.assertRaisesRegex(ValueError, r'2 dimension\(s\)'):
+        with self.assertRaisesRegex(ValueError, r'1 dimension\(s\)'):
             self.min_ord_results._validate_plot_axes(
-                np.asarray([[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]]), (0, 1, 2))
+                np.asarray([[0.1, 0.2, 0.3]]), (0, 1, 2))
 
         coord_matrix = self.min_ord_results.samples.values.T
 
         # wrong number of axes
-        with self.assertRaisesRegex(ValueError, r'exactly three.*found 0'):
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 0'):
             self.min_ord_results._validate_plot_axes(coord_matrix, [])
-        with self.assertRaisesRegex(ValueError, r'exactly three.*found 4'):
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 4'):
             self.min_ord_results._validate_plot_axes(coord_matrix,
                                                      (0, 1, 2, 3))
 
@@ -329,6 +347,358 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
         colors = [line.get_color() for line in legend.get_lines()]
         npt.assert_equal(sorted(colors), ['green', 'red'])
 
+
+@unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
+class TestOrdinationResults2DPlotting(unittest.TestCase):
+    def setUp(self):
+        # DataFrame for testing plot method. Has a categorical column with a
+        # mix of numbers and strings. Has a numeric column with a mix of ints,
+        # floats, and strings that can be converted to floats. Has a numeric
+        # column with missing data (np.nan).
+        self.df = pd.DataFrame([['foo', '42'],
+                                [22, 0],
+                                [22, -4.2],
+                                ['foo', '42.19']],
+                               index=['A', 'B', 'C', 'D'],
+                               columns=['categorical', 'numeric'])
+
+        # Minimal ordination results for easier testing of plotting method.
+        # Paired with df above.
+        eigvals = np.array([0.50, 0.25])
+        samples = np.array([[0.1, 0.2],
+                            [0.2, 0.3],
+                            [0.3, 0.4],
+                            [0.4, 0.5]])
+        samples_df = pd.DataFrame(samples, ['A', 'B', 'C', 'D'],
+                                  ['PC1', 'PC2'])
+
+        self.min_ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', eigvals, samples_df)
+        self.min_ord_results._get_mpl_plt()
+
+    def check_basic_figure_sanity(self, fig, exp_num_subplots, exp_title,
+                                  exp_legend_exists, exp_xlabel, exp_ylabel):
+        # check type
+        self.assertIsInstance(fig, mpl.figure.Figure)
+
+        # check number of subplots
+        axes = fig.get_axes()
+        npt.assert_equal(len(axes), exp_num_subplots)
+
+        # check title
+        ax = axes[0]
+        npt.assert_equal(ax.get_title(), exp_title)
+
+        # shouldn't have tick labels
+        for tick_label in (ax.get_xticklabels() + ax.get_yticklabels()):
+            npt.assert_equal(tick_label.get_text(), '')
+
+        # check if legend is present
+        legend = ax.get_legend()
+        if exp_legend_exists:
+            self.assertTrue(legend is not None)
+        else:
+            self.assertTrue(legend is None)
+
+        # check axis labels
+        npt.assert_equal(ax.get_xlabel(), exp_xlabel)
+        npt.assert_equal(ax.get_ylabel(), exp_ylabel)
+
+    def test_plot_no_metadata(self):
+        # Test 2D plot without metadata - axes should default to [0, 1]
+        fig = self.min_ord_results.plot()
+        self.check_basic_figure_sanity(fig, 1, '', False, '0', '1')
+    
+    def test_plot_explicit_2d_axes(self):
+        # Test explicitly passing 2D axes
+        fig = self.min_ord_results.plot(axes=[0, 1])
+        self.check_basic_figure_sanity(fig, 1, '', False, '0', '1')
+
+    def test_plot_with_numeric_metadata_and_plot_options(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'numeric', axes=(1, 0),
+            axis_labels=['PC 2', 'PC 1'], title='a title', cmap='Reds')
+        self.check_basic_figure_sanity(
+            fig, 2, 'a title', False, 'PC 2', 'PC 1')
+
+    def test_plot_with_categorical_metadata_and_plot_options(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', axes=[0, 1], title='a title',
+            cmap='Accent')
+        self.check_basic_figure_sanity(fig, 1, 'a title', True, '0', '1')
+    
+    def test_plot_with_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', centroids=True, cmap='Set1', axes=[0, 1])
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' centroid" in labels)
+        self.assertTrue("'22' centroid" in labels)
+
+    def test_plot_without_centroids(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', centroids=False, cmap='Set1', axes=[0, 1])
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' centroid" not in labels)
+            self.assertTrue("'22' centroid" not in labels)
+            
+    def test_plot_centroids_without_metadata(self):
+        # Test that plotting centroids without metadata raises ValueError.
+        with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot centroids.'):
+            self.min_ord_results.plot(centroids=True)
+    
+    def test_plot_with_confidence_ellipses(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', confidence_ellipses=True, cmap='Set1', axes=[0, 1])
+        ax = fig.get_axes()[0]
+        labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        self.assertTrue("'foo' ellipse" in labels)
+        self.assertTrue("'22' ellipse" in labels)
+
+    def test_plot_without_confidence_ellipse(self):
+        fig = self.min_ord_results.plot(
+            self.df, 'categorical', confidence_ellipses=False, cmap='Set1', axes=[0, 1])
+        ax = fig.get_axes()[0]
+        legend = ax.get_legend()
+        if legend:
+            labels = [t.get_text() for t in legend.get_texts()]
+            self.assertTrue("'foo' ellipse" not in labels)
+            self.assertTrue("'22' ellipse" not in labels)
+    
+    def test_plot_confidence_ellipses_without_metadata(self):
+        # Test that plotting confidence ellipses without metadata raises ValueError.
+        with self.assertRaisesRegex(ValueError, r'Metadata must be provided to plot confidence ellipses.'):
+            self.min_ord_results.plot(confidence_ellipses=True, axes=[0, 1])
+
+    def test_plot_confidence_ellipses_in_3d(self):
+        # Test that plotting confidence ellipses in 3D raises ValueError.
+        # Need to create a 3D ordination result first
+        eigvals_3d = np.array([0.50, 0.25, 0.10])
+        samples_3d = np.array([[0.1, 0.2, 0.3],
+                               [0.2, 0.3, 0.4],
+                               [0.3, 0.4, 0.5],
+                               [0.4, 0.5, 0.6]])
+        samples_df_3d = pd.DataFrame(samples_3d, ['A', 'B', 'C', 'D'],
+                                     ['PC1', 'PC2', 'PC3'])
+        ord_results_3d = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', eigvals_3d, samples_df_3d)
+        ord_results_3d._get_mpl_plt()
+        
+        with self.assertRaisesRegex(ValueError, r'Confidence ellipses can only be plotted in 2D.'):
+            ord_results_3d.plot(
+                self.df, 'categorical', confidence_ellipses=True, axes=[0, 1, 2]
+            )
+
+    def test_plot_with_invalid_axis_labels(self):
+        with self.assertRaisesRegex(ValueError, r'axis_labels.*3'):
+            self.min_ord_results.plot(axes=[0, 1],
+                                      axis_labels=('a', 'b', 'c'))
+
+    def test_validate_plot_axes_valid_input(self):
+        # shouldn't raise an error on valid input. nothing is returned, so
+        # nothing to check here
+        samples = self.min_ord_results.samples.values.T
+        self.min_ord_results._validate_plot_axes(samples, (0, 1))
+
+    def test_validate_plot_axes_invalid_input(self):
+        # not enough dimensions
+        with self.assertRaisesRegex(ValueError, r'`axes\[2\]` must be >= 0 and < 2.'):
+            self.min_ord_results._validate_plot_axes(
+                np.asarray([[0.1, 0.2], [0.2, 0.3]]), (0, 1, 2))
+
+        coord_matrix = self.min_ord_results.samples.values.T
+
+        # wrong number of axes
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 0'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, [])
+        with self.assertRaisesRegex(ValueError, r'exactly two.*found 4'):
+            self.min_ord_results._validate_plot_axes(coord_matrix,
+                                                     (0, 1, 2, 3))
+
+        # duplicate axes
+        with self.assertRaisesRegex(ValueError, r'must be unique'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 0))
+
+        # out of range axes
+        with self.assertRaisesRegex(ValueError, r'axes\[1\].*2'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, -1))
+        with self.assertRaisesRegex(ValueError, r'axes\[1\].*2'):
+            self.min_ord_results._validate_plot_axes(coord_matrix, (0, 3))
+
+    def test_get_plot_point_colors_invalid_input(self):
+        # column provided without df
+        with npt.assert_raises(ValueError):
+            self.min_ord_results._get_plot_point_colors(None, 'numeric',
+                                                        ['B', 'C'], 'jet')
+
+        # df provided without column
+        with npt.assert_raises(ValueError):
+            self.min_ord_results._get_plot_point_colors(self.df, None,
+                                                        ['B', 'C'], 'jet')
+
+        # column not in df
+        with self.assertRaisesRegex(ValueError, r'missingcol'):
+            self.min_ord_results._get_plot_point_colors(self.df, 'missingcol',
+                                                        ['B', 'C'], 'jet')
+
+        # id not in df
+        with self.assertRaisesRegex(ValueError, r'numeric'):
+            self.min_ord_results._get_plot_point_colors(
+                self.df, 'numeric', ['B', 'missingid'], 'jet')
+
+        # missing data in df
+        with self.assertRaisesRegex(ValueError, r'nancolumn'):
+            self.min_ord_results._get_plot_point_colors(self.df, 'nancolumn',
+                                                        ['B', 'C'], 'jet')
+
+    def test_get_plot_point_colors_no_df_or_column(self):
+        obs = self.min_ord_results._get_plot_point_colors(None, None,
+                                                          ['B', 'C'], 'jet')
+        npt.assert_equal(obs, (None, None))
+
+    def test_get_plot_point_colors_numeric_column(self):
+        # subset of the ids in df
+        exp = [0.0, -4.2]
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'numeric', ['B', 'C'], 'jet')
+        npt.assert_almost_equal(obs[0], exp)
+        self.assertTrue(obs[1] is None)
+
+        # all ids in df
+        exp = [0.0, 42.0]
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'numeric', ['B', 'A'], 'jet')
+        npt.assert_almost_equal(obs[0], exp)
+        self.assertTrue(obs[1] is None)
+
+    def test_get_plot_point_colors_categorical_column(self):
+        # subset of the ids in df
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.]]
+        exp_color_dict = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'categorical', ['B', 'A'], 'jet')
+        npt.assert_almost_equal(obs[0], exp_colors)
+        npt.assert_equal(obs[1], exp_color_dict)
+
+        # all ids in df
+        exp_colors = [[0., 0., 0.5, 1.], [0.5, 0., 0., 1.], 
+                      [0.5, 0., 0., 1.], [0., 0., 0.5, 1.]]
+        obs = self.min_ord_results._get_plot_point_colors(
+            self.df, 'categorical', ['B', 'A', 'D', 'C'], 'jet')
+        npt.assert_almost_equal(obs[0], exp_colors)
+        # should get same color dict as before
+        npt.assert_equal(obs[1], exp_color_dict)
+
+    def test_plot_categorical_legend(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        # we shouldn't have a legend yet
+        self.assertTrue(ax.get_legend() is None)
+
+        self.min_ord_results._plot_categorical_legend(
+            ax, {'foo': 'red', 'bar': 'green'})
+
+        # make sure we have a legend now
+        legend = ax.get_legend()
+        self.assertTrue(legend is not None)
+
+        # do some light sanity checking to make sure our input labels and
+        # colors are present
+        labels = [t.get_text() for t in legend.get_texts()]
+        npt.assert_equal(sorted(labels), ['bar', 'foo'])
+
+        colors = [line.get_color() for line in legend.get_lines()]
+        npt.assert_equal(sorted(colors), ['green', 'red'])
+
+    def test_plot_confidence_ellipses_helper(self):
+        # Test the _plot_confidence_ellipses helper function directly
+        # Create a simple dataframe with enough points per category
+        df_sufficient = pd.DataFrame([['foo', '42'],
+                                      ['foo', '43'],
+                                      ['foo', '44'],
+                                      [22, 0],
+                                      [22, -4.2],
+                                      [22, 5.1]],
+                                     index=['A', 'B', 'C', 'D', 'E', 'F'],
+                                     columns=['categorical', 'numeric'])
+        
+        # Create samples with good spread
+        samples_sufficient = np.array([[0.1, 0.3],
+                                       [0.3, 0.15],
+                                       [0.2, 0.4],
+                                       [0.5, 0.6],
+                                       [0.4, 0.45],
+                                       [0.6, 0.7]])
+        samples_df_sufficient = pd.DataFrame(samples_sufficient, 
+                                             ['A', 'B', 'C', 'D', 'E', 'F'],
+                                             ['PC1', 'PC2'])
+        
+        ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', 
+            np.array([0.50, 0.25]), samples_df_sufficient)
+        ord_results._get_mpl_plt()
+        
+        fig, ax = plt.subplots()
+        
+        category_to_color = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        
+        # Call the helper function
+        ord_results._plot_confidence_ellipses(
+            ax, df_sufficient, 'categorical', category_to_color, [0, 1])
+        
+        # Check that ellipses were added as patches
+        patches = ax.patches
+        self.assertEqual(len(patches), 2)
+        
+        # Check that all patches are Ellipse objects
+        for patch in patches:
+            self.assertIsInstance(patch, mpl.patches.Ellipse)
+        
+        plt.close(fig)
+    
+    def test_plot_confidence_ellipses_insufficient_points(self):
+        # Test that ellipses are not plotted for categories with < 3 points
+        df_sparse = pd.DataFrame([['foo', '42'],
+                                  [22, 0]],
+                                 index=['A', 'B'],
+                                 columns=['categorical', 'numeric'])
+        
+        samples_sparse = np.array([[0.1, 0.2],
+                                   [0.2, 0.3]])
+        samples_df_sparse = pd.DataFrame(samples_sparse, ['A', 'B'],
+                                         ['PC1', 'PC2'])
+        
+        ord_results = OrdinationResults(
+            'PCoA', 'Principal Coordinate Analysis', 
+            np.array([0.50, 0.25]), samples_df_sparse)
+        ord_results._get_mpl_plt()
+        
+        fig, ax = plt.subplots()
+        
+        category_to_color = {
+            'foo': [0.5, 0., 0., 1.],
+            22: [0., 0., 0.5, 1.]
+        }
+        
+        ord_results._plot_confidence_ellipses(
+            ax, df_sparse, 'categorical', category_to_color, [0, 1])
+        
+        # Should have 0 ellipses since no category has 3+ points
+        patches = ax.patches
+        self.assertEqual(len(patches), 0)
+        
+        plt.close(fig)
+        
 
 if __name__ == '__main__':
     unittest.main()
