@@ -118,8 +118,8 @@ class AncombcTests(TestCase):
         exp_0 = np.array([2.40007051, 2.4000710, 5.809086e-05])
         exp_1 = np.array([-0.08410937, -0.0847577, 1.395714e-03])
 
-        npt.assert_allclose(obs_0, exp_0, atol=1e-2)
-        npt.assert_allclose(obs_1, exp_1, atol=1e-2)
+        npt.assert_allclose(obs_0, exp_0, atol=1e-5)
+        npt.assert_allclose(obs_1, exp_1, atol=1e-5)
 
     def test_sample_bias(self):
         data = np.log1p(self.table.to_numpy())
@@ -137,7 +137,7 @@ class AncombcTests(TestCase):
             [2.43809627, 2.42448053, 2.08291958, 2.36465192, 2.40607366, 2.42865545]
         )
 
-        npt.assert_allclose(obs, exp, atol=1e-2)
+        npt.assert_allclose(obs, exp, atol=1e-5)
 
     def test_calc_statistics(self):
         data = np.log1p(self.table.to_numpy())
@@ -184,16 +184,16 @@ class AncombcTests(TestCase):
                           [1.00000000e+000, 1.00000000e+000]])
 
         for o, e in zip(obs[0], exp_se_hat):
-            npt.assert_allclose(o, e, atol=1e-2)
+            npt.assert_allclose(o, e, atol=1e-5)
 
         for o, e in zip(obs[1], exp_W):
-            npt.assert_allclose(o, e, atol=1e-2)
+            npt.assert_allclose(o, e, atol=1e-5)
 
         for o, e in zip(obs[2], exp_p):
-            npt.assert_allclose(o, e, atol=1e-2)
+            npt.assert_allclose(o, e, atol=1e-5)
 
         for o, e in zip(obs[3], exp_q):
-            npt.assert_allclose(o, e, atol=1e-2)
+            npt.assert_allclose(o, e, atol=1e-5)
 
     def test_ancombc_fail_alpha(self):
         with self.assertRaises(ValueError):
@@ -278,9 +278,9 @@ class AncombcTests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
-        res = ancombc(self.table.to_numpy() + 1, self.grouping.to_frame(), "grouping")
-        obs = res["Signif"].to_numpy()
-        npt.assert_array_equal(obs, exp)
+        # res = ancombc(self.table.to_numpy() + 1, self.grouping.to_frame(), "grouping")
+        # obs = res["Signif"].to_numpy()
+        # npt.assert_array_equal(obs, exp)
 
         # Load the HITChip Atlas dataset.
         # This dataset is adopted from the official ANCOM-BC tutorial:

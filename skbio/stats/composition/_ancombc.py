@@ -27,6 +27,11 @@ from skbio.table._tabular import _ingest_table
 from ._base import _check_composition
 from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
 
+# Convergence tolerance for Nelder-Mead optimization in _estimate_bias_em selected
+# according to the benchmark. SciPy's default is 1e-4, which would cause different
+# results to R version.
+NM_TOL = 1e-8
+
 
 def ancombc(
     table,
@@ -297,35 +302,35 @@ def ancombc(
     F1        Intercept             -0.006  0.346 -0.016   0.987   1.000   False
               status[T.moderate]    -0.337  0.245 -1.376   0.169   1.000   False
               status[T.severe]       0.278  0.350  0.792   0.428   1.000   False
-              age                    0.002  0.011  0.141   0.888   1.000   False
+              age                    0.001  0.011  0.117   0.907   1.000   False
     F2        Intercept              0.072  0.446  0.160   0.873   1.000   False
               status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
               status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
-              age                   -0.022  0.013 -1.676   0.094   0.562   False
+              age                   -0.022  0.013 -1.697   0.090   0.538   False
     F3        Intercept             -1.690  0.570 -2.967   0.003   0.021    True
               status[T.moderate]     1.010  0.578  1.747   0.081   0.565   False
               status[T.severe]       0.717  0.517  1.388   0.165   1.000   False
-              age                    0.063  0.022  2.883   0.004   0.031    True
+              age                    0.063  0.022  2.871   0.004   0.033    True
     F4        Intercept              0.439  0.483  0.910   0.363   1.000   False
               status[T.moderate]    -0.046  0.405 -0.113   0.910   1.000   False
               status[T.severe]      -0.244  0.536 -0.455   0.649   1.000   False
-              age                   -0.003  0.019 -0.185   0.854   1.000   False
+              age                   -0.004  0.019 -0.199   0.842   1.000   False
     F5        Intercept             -1.227  0.393 -3.125   0.002   0.014    True
               status[T.moderate]     0.274  0.293  0.934   0.350   1.000   False
               status[T.severe]      -0.323  0.320 -1.011   0.312   1.000   False
-              age                    0.027  0.014  2.021   0.043   0.303   False
+              age                    0.027  0.014  2.001   0.045   0.318   False
     F6        Intercept             -0.439  0.440 -0.999   0.318   1.000   False
               status[T.moderate]     0.114  0.432  0.264   0.792   1.000   False
               status[T.severe]       0.375  0.544  0.691   0.490   1.000   False
-              age                    0.008  0.016  0.480   0.631   1.000   False
+              age                    0.008  0.016  0.464   0.643   1.000   False
     F7        Intercept              0.201  0.472  0.426   0.670   1.000   False
               status[T.moderate]     0.082  0.302  0.270   0.787   1.000   False
               status[T.severe]      -0.264  0.401 -0.658   0.510   1.000   False
-              age                    0.004  0.016  0.272   0.785   1.000   False
+              age                    0.004  0.016  0.256   0.798   1.000   False
     F8        Intercept             -0.168  0.526 -0.319   0.750   1.000   False
               status[T.moderate]    -0.402  0.584 -0.688   0.491   1.000   False
               status[T.severe]      -0.299  0.728 -0.411   0.681   1.000   False
-              age                    0.022  0.018  1.237   0.216   1.000   False
+              age                    0.022  0.018  1.222   0.222   1.000   False
 
     We found that feature "F2" is significantly differentially (more) abundant in
     "moderate" and "severe" groups compared with "mild", which serves as the reference
@@ -336,7 +341,7 @@ def ancombc(
     FeatureID Covariate
     F2        status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
               status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
-    F3        age                    0.063  0.022  2.883   0.004   0.031    True
+    F3        age                    0.063  0.022  2.871   0.004   0.033    True
 
     The global test result suggests that "F2" and "F4" are differentially abundant
     between two of the three groups (though it doesn't tell which groups).
@@ -561,7 +566,7 @@ def _estimate_params(data, dmat):
     # Note: The original R code patches NaN with 0.1 when calculating covariances. This
     # is not needed in the current implementation, as the input data are guaranteed to
     # contain only finite real numbers.
-    intm_mat = np.einsum("ji,jp,jq->ipq", eps**2, dmat, dmat)
+    intm_mat = np.einsum("ji,jp,jq->ipq", eps**2, dmat, dmat, optimize=True)
     beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
     var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
 
@@ -668,7 +673,13 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     # consistent with the original R code.
     # Note: The Nelder–Mead method doesn't actually enforce bounds during optimization.
     # It merely clips at the bounds. For further consideration.
-    args = dict(method="Nelder-Mead", bounds=[(0, None)])
+    # Tight convergence criteria (xatol=1e-12, fatol=1e-12) produce more precise kappa
+    # estimates every EM step, leading to smaller accumulated errors.
+    args = dict(
+        method="Nelder-Mead",
+        bounds=[(0, None)],
+        options={"xatol": NM_TOL, "fatol": NM_TOL},
+    )
 
     # Expectation-maximization (E-M) iterations
     loss, epoch = np.inf, 0
