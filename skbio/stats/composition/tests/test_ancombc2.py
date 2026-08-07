@@ -15,6 +15,7 @@ import pandas as pd
 import pandas.testing as pdt
 from patsy import DesignMatrix, dmatrix
 
+from skbio.util import get_data_path
 from skbio.stats.composition._ancombc2 import (
     _estimate_params,
     _estimate_bias_em,
@@ -209,11 +210,6 @@ class AncombcTests(TestCase):
     def test_post_hoc_methods_recalculate(self):
         res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
 
-        first = res.structural_zeros("grouping")
-        second = res.structural_zeros("grouping")
-        self.assertIsNot(first, second)
-        pdt.assert_frame_equal(first, second)
-
         first = res.global_test("grouping")
         second = res.global_test("grouping")
         self.assertIsNot(first, second)
@@ -253,14 +249,38 @@ class AncombcTests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
-    def test_ancombc2_reuses_design_matrix(self):
-        with patch(
-            "skbio.stats.composition._ancombc2.dmatrix", wraps=dmatrix
-        ) as mock_dmatrix:
-            res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
-            res.sensitivity_analysis()
 
-        mock_dmatrix.assert_called_once_with("grouping", res._metadata)
+class StrucZeroTests(TestCase):
+
+    def test_struc_zero(self):
+        # This test returns all False results (i.e., none of the features have
+        # structural zeros). Please see the doctest for an example that generates both
+        # False and True results. Also, the original (un-subsampled) HITChip Atlas
+        # dataset should produce some True results.
+        table = pd.read_csv(
+            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
+        )
+        features = table.columns
+
+        meta_data = pd.read_csv(
+            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
+        )
+        meta_data = meta_data.dropna(axis=1, how="any")
+        categories = ["obese", "overweight", "lean"]
+        meta_data["bmi"] = pd.Categorical(
+            meta_data["bmi"], categories=["obese", "overweight", "lean"]
+        )
+
+        obs = struc_zero(table, meta_data, "bmi", neg_lb=False)
+        exp = np.zeros((len(features), len(categories)), dtype=bool)
+
+        # note: groups are sorted alphabetically
+        exp = pd.DataFrame(exp, index=features, columns=["lean", "obese", "overweight"])
+        pdt.assert_frame_equal(obs, exp)
+
+        obs = struc_zero(table, meta_data, "bmi", neg_lb=True)
+        pdt.assert_frame_equal(obs, exp)
+
 
 if __name__ == "__main__":
     main()

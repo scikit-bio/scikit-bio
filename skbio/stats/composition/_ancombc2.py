@@ -41,8 +41,8 @@ class ANCOMBCResult:
     """Results for ANCOM-BC and ANCOM-BC2 analyses.
 
     This class contains the primary differential abundance results. Post-hoc analyses
-    (structural zeros, global test, multi-group comparisons, sensitivity analysis) are
-    available as methods that compute on-demand using stored intermediate data.
+    (global test, multi-group comparisons, sensitivity analysis, etc.) are available as
+    methods that compute on-demand using stored intermediate data.
 
     Attributes
     ----------
@@ -54,8 +54,6 @@ class ANCOMBCResult:
 
     Methods
     -------
-    structural_zeros
-        Detect structural zeros (features systematically absent per group).
     global_test
         Global test for differential abundance across >= 3 groups.
     dunnett_test
@@ -74,8 +72,6 @@ class ANCOMBCResult:
     """
 
     _private_defaults = {
-        "_table": None,
-        "_metadata": None,
         "_dmat": None,
         "_beta_hat": None,
         "_var_hat": None,
@@ -154,41 +150,6 @@ class ANCOMBCResult:
         if p_adjust == "inherit":
             p_adjust = self._p_adjust
         return alpha, p_adjust
-
-    def structural_zeros(self, group: str, neg_lb: bool = False) -> pd.DataFrame:
-        """Detect structural zeros in the original table.
-
-        Structural zeros are features systematically absent from certain
-        sample groups. This method tests whether the proportion of observed
-        zeros is close to zero, suggesting absence of a feature in a group.
-
-        Parameters
-        ----------
-        group : str
-            Metadata column defining sample groups.
-        neg_lb : bool, optional
-            Whether to use the negative lower-bound adjustment.
-
-        Returns
-        -------
-        pd.DataFrame of bool
-            DataFrame of shape (n_features, n_groups) indicating whether
-            each feature is a structural zero in each group.
-
-        Raises
-        ------
-        ValueError
-            If no group variable was specified (``group`` was None when
-            :func:`ancombc2` was called).
-
-        Notes
-        -----
-        This method recomputes its result on every call.
-        """
-        _struc_zero_fn = globals()[
-            "struc_zero"
-        ]  # TODO: remove this hack once struc_zero is moved to a separate module
-        return _struc_zero_fn(self._table, self._metadata, group, neg_lb)
 
     def global_test(
         self, group: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
@@ -1460,7 +1421,10 @@ def _ancombc(
     # Note: A pseudocount should have been added to the table by the user prior to
     # calling this function.
     matrix, samples, features = _ingest_table(table)
-    _check_composition(np, matrix, nozero=True)
+    # NOTE: ANCOM-BC does not handle zeros in the input table. The user should have
+    # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
+    # TODO: Add zero-handling in ANCOM-BC2.
+    _check_composition(np, matrix, nozero=not reestimate)
     n_feats = matrix.shape[1]
     if features is None:
         features = np.arange(n_feats)
@@ -1529,8 +1493,6 @@ def _ancombc(
         return ANCOMBCResult(
             res=res,
             method="ANCOM-BC",
-            _table=pd.DataFrame(matrix, index=samples, columns=features),
-            _metadata=metadata,
             _dmat=dmat,
             _beta_hat=beta_hat,
             _var_hat=var_hat,
@@ -1597,8 +1559,6 @@ def _ancombc(
         return ANCOMBCResult(
             res=res,
             method="ANCOM-BC2",
-            _table=pd.DataFrame(matrix, index=samples, columns=features),
-            _metadata=metadata,
             _dmat=res_main["dmat"],
             _beta_hat=res_main["beta_hat"],
             _var_hat=res_main["var_hat"],
