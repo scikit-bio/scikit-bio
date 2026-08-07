@@ -249,6 +249,54 @@ class AncombcTests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
+    def test_ancombc2_aggregator(self):
+        mapping = {
+            "b1": "first",
+            "b2": "first",
+            "b3": "second",
+            "b4": "second",
+            "b5": "second",
+            "b6": "second",
+            "b7": "second",
+        }
+        expected_features = ["first", "second"]
+
+        for aggregator in (
+            mapping,
+            pd.Series(mapping),
+            lambda feature: mapping[feature],
+            [mapping[feature] for feature in self.table.columns],
+        ):
+            res = ancombc2(
+                self.table,
+                self.grouping.to_frame(),
+                "grouping",
+                aggregator=aggregator,
+            )
+            self.assertEqual(
+                res.res.index.get_level_values("FeatureID").unique().tolist(),
+                expected_features,
+            )
+
+        with self.assertRaisesRegex(ValueError, "callable aggregator requires named"):
+            ancombc2(
+                self.table.to_numpy(),
+                self.grouping.to_frame(),
+                "grouping",
+                aggregator=lambda feature: feature,
+            )
+
+        res = ancombc2(
+            self.table.to_numpy(),
+            self.grouping.to_frame(),
+            "grouping",
+            aggregator=["first", "first"] + ["second"] * 5,
+        )
+        self.assertEqual(
+            res.res.index.get_level_values("FeatureID").unique().tolist(),
+            expected_features,
+        )
+
 
 class StrucZeroTests(TestCase):
 

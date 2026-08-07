@@ -18,6 +18,7 @@
 # ----------------------------------------------------------------------------
 
 from typing import Optional
+from collections.abc import Mapping
 from itertools import combinations
 
 import numpy as np
@@ -490,7 +491,7 @@ class ANCOMBCResult:
         for pseudo_count in pseudo_list:
             res_pseudo = _ancombc2_estimate(
                 data=self._O1,
-                aggregate_data=self._O2,
+                aggregated_data=self._O2,
                 dmat=self._dmat,
                 p_adj_method=p_adjust,
                 pseudo=pseudo_count,
@@ -1257,7 +1258,7 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
 
 def _ancombc2_estimate(
     data,
-    aggregate_data,
+    aggregated_data,
     dmat,
     p_adj_method="holm",
     pseudo=0,
@@ -1269,7 +1270,7 @@ def _ancombc2_estimate(
     """ANCOM-BC2 core estimation"""
     # data preprocessing
     O1 = data + pseudo
-    O2 = aggregate_data + pseudo
+    O2 = aggregated_data + pseudo
 
     n_tax = O2.shape[1]
     tax_name = O2.columns.tolist()
@@ -1404,12 +1405,46 @@ def _ancombc2_estimate(
     }
 
 
+def _aggregate_features(table, aggregator, has_feature_ids):
+    """Aggregate feature columns according to user-supplied aggregate IDs."""
+    if aggregator is None:
+        return table
+
+    features = table.columns
+    if callable(aggregator):
+        if not has_feature_ids:
+            raise ValueError("A callable aggregator requires named features.")
+        aggregate_ids = [aggregator(feature) for feature in features]
+    elif isinstance(aggregator, Mapping) or isinstance(aggregator, pd.Series):
+        if not has_feature_ids:
+            raise ValueError("A mapping aggregator requires named features.")
+        try:
+            aggregate_ids = [aggregator[feature] for feature in features]
+        except KeyError as error:
+            raise ValueError(
+                f"Aggregator does not define feature {error.args[0]!r}."
+            ) from error
+    else:
+        aggregate_ids = np.asarray(aggregator, dtype=object)
+        if aggregate_ids.ndim != 1 or len(aggregate_ids) != len(features):
+            raise ValueError(
+                "A sequence aggregator must be one-dimensional and have one entry "
+                "per feature."
+            )
+
+    aggregate_ids = np.asarray(aggregate_ids, dtype=object)
+    if pd.isna(aggregate_ids).any():
+        raise ValueError("Aggregator must assign every feature an aggregate ID.")
+
+    return table.T.groupby(aggregate_ids, sort=False).sum().T
+
+
 def _ancombc(
     table,
     metadata,
     reestimate=False,
     formula=None,
-    aggregate_data=None,
+    aggregator=None,
     p_adjust="holm",
     pseudo=0,
     s0_perc=0.05,
@@ -1426,6 +1461,7 @@ def _ancombc(
     # TODO: Add zero-handling in ANCOM-BC2.
     _check_composition(np, matrix, nozero=not reestimate)
     n_feats = matrix.shape[1]
+    has_feature_ids = features is not None
     if features is None:
         features = np.arange(n_feats)
 
@@ -1505,22 +1541,12 @@ def _ancombc(
     else:
         # Data preprocessing (no filtering. user pre-filters)
         O1 = pd.DataFrame(matrix, index=samples, columns=features)
-        if aggregate_data is not None:
-            agg_matrix, agg_samples, agg_features = _ingest_table(aggregate_data)
-            _check_composition(np, agg_matrix, nozero=True)
-            n_agg_feats = agg_matrix.shape[1]
-            if agg_features is None:
-                agg_features = np.arange(n_agg_feats)
-
-        if aggregate_data is not None:
-            O2 = pd.DataFrame(agg_matrix, index=agg_samples, columns=agg_features)
-        else:
-            O2 = O1
+        O2 = _aggregate_features(O1, aggregator, has_feature_ids)
 
         # Step 3: Run ANCOMBC2 core estimation
         res_main = _ancombc2_estimate(
             data=O1,
-            aggregate_data=O2,
+            aggregated_data=O2,
             dmat=dmat,
             p_adj_method=p_adjust,
             pseudo=pseudo,
@@ -1656,7 +1682,7 @@ def ancombc2(
     table,
     metadata,
     formula,
-    aggregate_data=None,
+    aggregator=None,
     p_adjust="holm",
     pseudo=0,
     s0_perc=0.05,
@@ -1689,9 +1715,13 @@ def ancombc2(
         Sample metadata.
     formula : str
         Formula defining the model using factors in metadata columns.
-    aggregate_data : table_like, optional
-        Pre-aggregated data for regression. When provided, ``table`` is used
-        for EM bias estimation and ``aggregate_data`` for final regression.
+    aggregator : callable, mapping, or 1-D array_like, optional
+        Rule for aggregating features before final regression. A callable maps
+        each feature ID to an aggregate ID. A mapping, including a
+        :class:`pandas.Series`, maps feature IDs to aggregate IDs. These forms
+        require named features. A one-dimensional sequence provides one
+        aggregate ID per feature in table order. Features assigned the same
+        aggregate ID are summed. By default, no aggregation is performed.
     p_adjust : str, optional
         Multiple testing correction method. Default is "holm".
     pseudo : float, optional
@@ -1727,7 +1757,7 @@ def ancombc2(
         metadata=metadata,
         reestimate=True,
         formula=formula,
-        aggregate_data=aggregate_data,
+        aggregator=aggregator,
         p_adjust=p_adjust,
         pseudo=pseudo,
         s0_perc=s0_perc,
