@@ -23,6 +23,7 @@ from ._mantel_gpu import _run_mantel_gpu
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
 from skbio.util._array import ingest_array, _get_array
+from skbio.util._decorator import array_api_doc
 from skbio._config import _resolve_engine
 
 import array_api_compat as _aac
@@ -161,6 +162,7 @@ if NUMBA_AVAILABLE:
             permuted_stats[p] = my_ps
 
 
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def mantel(
     x: DistanceMatrix | ArrayLike,
     y: DistanceMatrix | ArrayLike,
@@ -264,7 +266,13 @@ def mantel(
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
         default is used (see :func:`skbio.set_config`). Only applies to the
-        ``"pearson"`` and ``"spearman"`` methods.
+        ``"pearson"`` and ``"spearman"`` methods. When both distance matrices
+        are resident on a CuPy- or PyTorch-backed GPU (CUDA or ROCm) and
+        ``engine="numba"``, a fused GPU kernel is used; matrices on other
+        backends use the array-API path instead (see Notes for the
+        ROCm-PyTorch case).
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -305,6 +313,13 @@ def mantel(
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
+
+    On GPU-resident distance matrices with ``engine="numba"``, a fused GPU kernel
+    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
+    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
+    ROCm PyTorch has been imported in the same process; those matrices fall back
+    to the array-API path, which runs on the device regardless. The result is
+    identical across all paths.
 
     ``np.nan`` will be returned for the p-value if `permutations` is zero or if
     the correlation coefficient is ``np.nan``. The correlation coefficient will

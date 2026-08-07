@@ -23,7 +23,7 @@ from skbio.binaries import (
     pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
     pcoa_fsvd as _skbb_pcoa_fsvd,
 )
-from skbio.util._decorator import params_aliased
+from skbio.util._decorator import params_aliased, array_api_doc
 from skbio.util._array import ingest_array, _to_numpy
 
 
@@ -45,12 +45,40 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     """Center a distance matrix.
 
-    Note: For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
+    inplace : bool, optional
+        Whether to center the given distance matrix in-place, which is more
+        efficient in terms of memory and computation. Ignored for JAX and
+        CuPy arrays (see Notes); the centered array is always returned.
+    engine : {"cython", "numba"}, optional
+        Compute engine to use for a NumPy-backed distance matrix. ``"cython"``
+        (default) uses the Cython implementation. ``"numba"`` uses the
+        optional Numba implementation and requires Numba to be installed. If
+        not provided, the global default is used (see
+        :func:`skbio.set_config`). Ignored for non-NumPy array-API buffers,
+        which always take the backend-agnostic double-centering path.
+
+        .. versionadded:: 0.7.4
+
+    Returns
+    -------
+    ndarray or array
+        The centered distance matrix, of the same type and on the same device
+        as the input.
+
+    Notes
+    -----
+    For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
     argument is accepted for API compatibility but ignored. The function
     always returns a centered array.
+
     """
     # For true NumPy arrays, use the Cython- or Numba-accelerated
     # implementation, which also supports in-place modification.
@@ -93,6 +121,7 @@ def _host_partial_eigh(matrix_any, subidx):
         ("distmat", "distance_matrix", "0.7.0", False),
     ]
 )
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def pcoa(
     distmat,
     method="eigh",
@@ -151,6 +180,8 @@ def pcoa(
         installed. If not provided, the global default is used (see
         :func:`skbio.set_config`). When ``"numba"`` is selected, the optional
         scikit-bio-binaries acceleration is not used.
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -355,12 +386,12 @@ def pcoa(
     # by L&L to deal with negative eigenvalues. We raise a warning
     # in that case. First, we make values close to 0 equal to 0.
     xp, eigvals = ingest_array(eigvals)
-    negative_close_to_zero = xp.isclose(eigvals, 0)
+    negative_close_to_zero = xp.isclose(eigvals, xp.zeros_like(eigvals))
     eigvals = xp.where(negative_close_to_zero, 0, eigvals)
 
     # eigvals might not be ordered, so we first sort them, then analogously
     # sort the eigenvectors by the ordering of the eigenvalues too
-    idxs_descending = eigvals.argsort()[::-1]
+    idxs_descending = xp.flip(eigvals.argsort(), axis=0)
     eigvals = eigvals[idxs_descending]
     eigvecs = eigvecs[:, idxs_descending]
 

@@ -174,7 +174,11 @@ References
 from ._redundancy_analysis import rda
 from ._correspondence_analysis import ca
 from ._canonical_correspondence_analysis import cca
-from ._principal_coordinate_analysis import pcoa, pcoa_biplot
+from ._principal_coordinate_analysis import (
+    pcoa,
+    pcoa_biplot,
+    center_distance_matrix,
+)
 from ._principal_component_analysis import pca
 from ._ordination_results import OrdinationResults
 from ._mmvec import mmvec, MMvec, MMvecResult
@@ -185,7 +189,6 @@ from ._utils import (
     corr,
     e_matrix,
     f_matrix,
-    center_distance_matrix,
 )
 
 __all__ = [
