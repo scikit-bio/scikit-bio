@@ -24,8 +24,7 @@ from skbio.io.format.fasta import (
     _tabular_msa_to_fasta, _parse_sequence_data)
 from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 
 
 class CustomSequence(GrammaredSequence):
