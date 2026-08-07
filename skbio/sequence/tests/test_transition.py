@@ -487,3 +487,7 @@ class TestTN93(TestCase):
 
         with self.assertRaises(ValueError):
             tn93(1, kappa_r=0.5, kappa_y=0.5, freqs=(0.0, 0.2, 0.3, -0.5))
+
+
+if __name__ == "__main__":
+    main()
