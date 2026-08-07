@@ -7,12 +7,13 @@
 # ----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
-from patsy import dmatrix
+from patsy import DesignMatrix, dmatrix
 
 from skbio.stats.composition._ancombc2 import (
     _estimate_params,
@@ -218,10 +219,26 @@ class AncombcTests(TestCase):
         self.assertIsNot(first, second)
         pdt.assert_frame_equal(first, second)
 
+    def test_post_hoc_methods_inherit_fit_settings(self):
+        res = ancombc(
+            self.table + 1,
+            self.grouping.to_frame(),
+            "grouping",
+            alpha=0.1,
+            p_adjust="bh",
+        )
+
+        inherited = res.global_test("grouping")
+        explicit = res.global_test("grouping", alpha=0.1, p_adjust="bh")
+        pdt.assert_frame_equal(inherited, explicit)
+
     def test_ancombc(self):
         # ancom-bc2 results of test dataset
         res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
         self.assertEqual(res.method, "ANCOM-BC2")
+        self.assertIsInstance(res._dmat, DesignMatrix)
+        self.assertEqual(res._dmat.design_info.column_names, ["Intercept", "grouping[T.treatment]"])
+        self.assertEqual(res.global_test("grouping").shape[0], self.table.shape[1])
         obs = res.res["Signif"].to_numpy()
 
         # expected differential abundance of intercept and grouping
@@ -235,6 +252,15 @@ class AncombcTests(TestCase):
             [0.0, 0.0],
         ]).flatten()
         npt.assert_array_equal(obs, exp)
+
+    def test_ancombc2_reuses_design_matrix(self):
+        with patch(
+            "skbio.stats.composition._ancombc2.dmatrix", wraps=dmatrix
+        ) as mock_dmatrix:
+            res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
+            res.sensitivity_analysis()
+
+        mock_dmatrix.assert_called_once_with("grouping", res._metadata)
 
 if __name__ == "__main__":
     main()
