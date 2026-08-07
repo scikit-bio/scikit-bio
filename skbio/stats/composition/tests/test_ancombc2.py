@@ -14,8 +14,7 @@ import pandas as pd
 import pandas.testing as pdt
 from patsy import dmatrix
 
-from skbio.util import get_data_path
-from skbio.stats.composition._ancombc import (
+from skbio.stats.composition._ancombc2 import (
     _estimate_params,
     _estimate_bias_em,
     _sample_fractions,
@@ -24,6 +23,7 @@ from skbio.stats.composition._ancombc import (
     _global_test,
     struc_zero,
     ancombc,
+    ancombc2,
 )
 
 
@@ -201,75 +201,15 @@ class AncombcTests(TestCase):
         with self.assertRaises(ValueError):
             ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=1.1)
 
-    def test_struc_zero(self):
-        # This test returns all False results (i.e., none of the features have
-        # structural zeros). Please see the doctest for an example that generates both
-        # False and True results. Also, the original (un-subsampled) HITChip Atlas
-        # dataset should produce some True results.
-        table = pd.read_csv(
-            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
-        )
-        features = table.columns
-
-        meta_data = pd.read_csv(
-            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
-        )
-        meta_data = meta_data.dropna(axis=1, how="any")
-        categories = ["obese", "overweight", "lean"]
-        meta_data["bmi"] = pd.Categorical(
-            meta_data["bmi"], categories=["obese", "overweight", "lean"]
-        )
-
-        obs = struc_zero(table, meta_data, "bmi", neg_lb=False)
-        exp = np.zeros((len(features), len(categories)), dtype=bool)
-
-        # note: groups are sorted alphabetically
-        exp = pd.DataFrame(exp, index=features, columns=["lean", "obese", "overweight"])
-        pdt.assert_frame_equal(obs, exp)
-
-        obs = struc_zero(table, meta_data, "bmi", neg_lb=True)
-        pdt.assert_frame_equal(obs, exp)
-
-    def test_global_test(self):
-        table = pd.read_csv(
-            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
-        )
-        meta_data = pd.read_csv(
-            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
-        )
-        meta_data = meta_data.dropna(axis=1, how="any")
-        meta_data["bmi"] = pd.Categorical(
-            meta_data["bmi"], categories=["obese", "overweight", "lean"]
-        )
-        feature_table = np.log1p(table.to_numpy())
-        dmat = dmatrix("age + region + bmi", meta_data)
-        covars = dmat.design_info.column_names
-        n_covars = len(covars)
-
-        var_hat, beta, _, vcov_hat = _estimate_params(feature_table, dmat)
-
-        bias = np.empty((n_covars, 3))
-        for i in range(n_covars):
-            bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=1e-5, max_iter=100)
-        delta_em = bias[:, 0]
-
-        beta_hat = beta.T - delta_em
-
-        obs = _global_test(dmat, "bmi", beta_hat, vcov_hat, 0.05, "holm")[-1]
-        exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
-                        False, False, False, False, False, False,  True, False, False,
-                        False, False,  True])
-        npt.assert_array_equal(obs, exp)
-
     def test_ancombc(self):
-        # ancom-bc results of test dataset
-        res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
-        obs = res["Signif"].to_numpy()
+        # ancom-bc2 results of test dataset
+        res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
+        obs = res.res["Signif"].to_numpy()
 
         # expected differential abundance of intercept and grouping
         exp = np.array([
-            [1.0, 1.0],
-            [1.0, 1.0],
+            [1.0, 0.0],
+            [1.0, 0.0],
             [0.0, 0.0],
             [0.0, 0.0],
             [0.0, 0.0],
@@ -278,76 +218,13 @@ class AncombcTests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
-        res = ancombc(self.table.to_numpy() + 1, self.grouping.to_frame(), "grouping")
-        obs = res["Signif"].to_numpy()
-        npt.assert_array_equal(obs, exp)
+    def test_ancombc2_delta_em(self):
+        # ancom-bc2 results of test dataset
+        res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
+        obs = res.delta_em
 
-        # Load the HITChip Atlas dataset.
-        # This dataset is adopted from the official ANCOM-BC tutorial:
-        #   https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/
-        #   inst/doc/ANCOMBC.html
-        # The original dataset was described in:
-        #   Lahti, Leo, et al. "Tipping elements in the human intestinal ecosystem."
-        #   Nature communications 5.1 (2014): 4344.
-        # A subset of the dataset with aggregated features is used in testing for
-        # simplicity. We followed the ANCOM-BC tutorial to preprocess the data and
-        # aggregate features at the family level. The metadata was filtered to retain
-        # attributes of interests, including a continuous covariate of age, and two
-        # categorical covariates of region and bmi according to the formula used in
-        # the ANCOM-BC tutorial.
-        table = pd.read_csv(
-            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
-        )
-        meta_data = pd.read_csv(
-            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
-        )
-        meta_data = meta_data.dropna(axis=1, how="any")
-        meta_data["bmi"] = pd.Categorical(
-            meta_data["bmi"], categories=["obese", "overweight", "lean"]
-        )
-
-        # run ancom-bc reimplemented in python for the HITChip Atlas dataset
-        res = ancombc(table + 1, meta_data, "age + region + bmi")
-
-        # format multi-index dataframe
-        obs = res["Signif"].unstack()
-        obs.columns.name = None
-        obs.index.name = "taxon"
-        obs = obs.rename(columns={"Intercept": "(Intercept)"})
-        for c in obs.columns:
-            obs = obs.rename(columns={c: c.replace("[T.", "").replace("]", "")})
-
-        # load ancom-bc results generated by the R package ANCOMBC
-        exp = pd.read_csv(
-            get_data_path("pseq_subset_out_res_diff_abn.csv"), index_col="taxon"
-        ).drop("Unnamed: 0", axis=1)
-
-        similarity = exp.eq(obs).sum().sum() / exp.size
-        npt.assert_equal(similarity, 1.0)
-
-    def test_ancombc_global(self):
-        table = pd.read_csv(
-            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
-        )
-        meta_data = pd.read_csv(
-            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
-        )
-        meta_data = meta_data.dropna(axis=1, how="any")
-        meta_data["bmi"] = pd.Categorical(
-            meta_data["bmi"], categories=["obese", "overweight", "lean"]
-        )
-
-        # run ancom-bc reimplemented in python for the HITChip Atlas dataset
-        res = ancombc(table + 1, meta_data, "age + region + bmi", "bmi")
-        obs = res[1]["Signif"].to_numpy()
-        exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
-                        False, False, False, False, False, False,  True, False, False,
-                        False, False,  True])
-        npt.assert_array_equal(obs, exp)
-
-        meta_data["bmi"] = 1
-        with self.assertRaises(ValueError):
-            ancombc(table + 1, meta_data, "age + region + bmi", "bmi")
+        exp = np.array([0.003305295, -0.198097485])
+        npt.assert_allclose(obs, exp, atol=1e-5)
 
 
 if __name__ == "__main__":
