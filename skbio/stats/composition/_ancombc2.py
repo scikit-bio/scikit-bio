@@ -147,7 +147,7 @@ class ANCOMBCResult:
     _O2: object = field(default=None, repr=False)
     _formula: Optional[str] = field(default=None, repr=False)
 
-    # --- Private caches for lazy-computed results ---
+    # private caches
     _structural_zeros: object = field(default=None, repr=False)
     _global_test: object = field(default=None, repr=False)
     _dunnett_test: object = field(default=None, repr=False)
@@ -1290,6 +1290,7 @@ def _ancombc2_estimate(
     tax_name = O2.columns.tolist()
 
     # Build design matrix using patsy (consistent with existing ancombc)
+    # TODO: use ancombc dmat
     x_df = dmatrix(f"~{fix_formula}", data=metadata, return_type="dataframe")
     fix_eff = x_df.columns.tolist()
     n_fix_eff = len(fix_eff)
@@ -1489,7 +1490,9 @@ def _ancombc(
         matrix = np.log(matrix)
 
         # Estimate initial model parameters.
-        var_hat, beta, _, vcov_hat = _estimate_params(matrix, dmat)
+        var_hat, beta, _, vcov_hat = _estimate_params(
+            matrix, dmat
+        )  # TODO: use a helper function for initial estimates
 
         # Estimate and correct for sampling bias via expectation-maximization (EM).
         # beta: (n_covariates, n_features); iterate over covariates (rows).
@@ -1595,7 +1598,7 @@ def _ancombc(
         res_dict = {
             "FeatureID": [x for x in tax_name for _ in range(n_cov)],
             "Covariate": list(fix_eff) * n_tax,
-            "lfc": lfc.ravel(),
+            "lfc": lfc.ravel(),  # TODO: should have the same results as ancombc
             "SE": se_hat.ravel(),
             "W": W.ravel(),
             "pvalue": p_hat.ravel(),
@@ -1746,7 +1749,7 @@ def ancombc2(
     global_test=False,
     pairwise=False,
     dunnett=False,
-    trend=False,
+    trend=False,  # TODO: remove parameters, only use for post hoc anlaysis
 ):
     r"""Perform differential abundance test using ANCOM-BC2.
 
