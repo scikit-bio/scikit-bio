@@ -201,9 +201,14 @@ class AncombcTests(TestCase):
         with self.assertRaises(ValueError):
             ancombc(self.table + 1, self.grouping.to_frame(), "grouping", alpha=1.1)
 
+    def test_ancombc_method(self):
+        res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
+        self.assertEqual(res.method, "ANCOM-BC")
+
     def test_ancombc(self):
         # ancom-bc2 results of test dataset
         res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
+        self.assertEqual(res.method, "ANCOM-BC2")
         obs = res.res["Signif"].to_numpy()
 
         # expected differential abundance of intercept and grouping
@@ -217,15 +222,6 @@ class AncombcTests(TestCase):
             [0.0, 0.0],
         ]).flatten()
         npt.assert_array_equal(obs, exp)
-
-    def test_ancombc2_delta_em(self):
-        # ancom-bc2 results of test dataset
-        res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
-        obs = res.delta_em
-
-        exp = np.array([0.003305295, -0.198097485])
-        npt.assert_allclose(obs, exp, atol=1e-5)
-
 
 if __name__ == "__main__":
     main()

@@ -51,16 +51,8 @@ class ANCOMBCResult:
     res : pd.DataFrame
         Primary results with (FeatureID, Covariate) multi-index. Columns are: Log2(FC),
         SE, W, pvalue, qvalue, Signif.
-    delta_em : ndarray
-        EM-estimated biases per covariate.
-    delta_wls : ndarray
-        WLS-estimated biases per covariate.
-    samp_frac : ndarray
-        Estimated sampling fractions per sample.
-    feature_table : pd.DataFrame or None
-        Preprocessed feature table. None for ANCOM-BC.
-    reestimate : bool
-        Whether ANCOM-BC2 (True) or ANCOM-BC (False) was used.
+    method : {"ANCOM-BC", "ANCOM-BC2"}
+        Differential abundance method used for the analysis.
 
     Methods
     -------
@@ -122,24 +114,18 @@ class ANCOMBCResult:
     def __init__(
         self,
         res: pd.DataFrame,
-        delta_em: Optional[np.ndarray] = None,
-        delta_wls: Optional[np.ndarray] = None,
-        samp_frac: Optional[np.ndarray] = None,
-        feature_table: Optional[pd.DataFrame] = None,
-        reestimate: bool = False,
+        method: str,
         **kwargs,
     ):
         unexpected = set(kwargs).difference(self._private_defaults)
         if unexpected:
             names = ", ".join(sorted(unexpected))
             raise TypeError(f"Unexpected ANCOMBCResult argument(s): {names}")
+        if method not in {"ANCOM-BC", "ANCOM-BC2"}:
+            raise ValueError("`method` must be either 'ANCOM-BC' or 'ANCOM-BC2'.")
 
         self.res = res
-        self.delta_em = delta_em
-        self.delta_wls = delta_wls
-        self.samp_frac = samp_frac
-        self.feature_table = feature_table
-        self.reestimate = reestimate
+        self._method = method
         for name, default in self._private_defaults.items():
             setattr(self, name, kwargs.get(name, default))
 
@@ -152,44 +138,8 @@ class ANCOMBCResult:
         self._res = value
 
     @property
-    def delta_em(self) -> Optional[np.ndarray]:
-        return self._delta_em
-
-    @delta_em.setter
-    def delta_em(self, value: Optional[np.ndarray]):
-        self._delta_em = value
-
-    @property
-    def delta_wls(self) -> Optional[np.ndarray]:
-        return self._delta_wls
-
-    @delta_wls.setter
-    def delta_wls(self, value: Optional[np.ndarray]):
-        self._delta_wls = value
-
-    @property
-    def samp_frac(self) -> Optional[np.ndarray]:
-        return self._samp_frac
-
-    @samp_frac.setter
-    def samp_frac(self, value: Optional[np.ndarray]):
-        self._samp_frac = value
-
-    @property
-    def feature_table(self) -> Optional[pd.DataFrame]:
-        return self._feature_table
-
-    @feature_table.setter
-    def feature_table(self, value: Optional[pd.DataFrame]):
-        self._feature_table = value
-
-    @property
-    def reestimate(self) -> bool:
-        return self._reestimate
-
-    @reestimate.setter
-    def reestimate(self, value: bool):
-        self._reestimate = value
+    def method(self) -> str:
+        return self._method
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -200,11 +150,7 @@ class ANCOMBCResult:
             name
             for name in (
                 "res",
-                "delta_em",
-                "delta_wls",
-                "samp_frac",
-                "feature_table",
-                "reestimate",
+                "method",
             )
             if getattr(self, name) is not None
         ]
@@ -214,9 +160,8 @@ class ANCOMBCResult:
         n_taxa = len(self.res.index.get_level_values("FeatureID").unique())
         n_cov = len(self.res.index.get_level_values("Covariate").unique())
         n_signif = int(self.res["Signif"].sum())
-        label = "ANCOM-BC2" if self.reestimate else "ANCOM-BC"
         return (
-            f"ANCOMBCResult(method={label!r}, "
+            f"ANCOMBCResult(method={self.method!r}, "
             f"n_taxa={n_taxa}, n_covariates={n_cov}, "
             f"n_signif={n_signif})"
         )
@@ -282,7 +227,7 @@ class ANCOMBCResult:
         if self._global_test is not None:
             return self._global_test
 
-        if not self.reestimate:
+        if self.method == "ANCOM-BC":
             if self._grouping is None:
                 raise ValueError(
                     "global_test requires a grouping variable; "
@@ -352,7 +297,7 @@ class ANCOMBCResult:
         """
         if self._dunnett_test is not None:
             return self._dunnett_test
-        if not self.reestimate:
+        if self.method == "ANCOM-BC":
             raise ValueError("dunnett_test() is only available for ANCOM-BC2 results.")
         if self._group is None:
             raise ValueError(
@@ -407,7 +352,7 @@ class ANCOMBCResult:
         """
         if self._pairwise_test is not None:
             return self._pairwise_test
-        if not self.reestimate:
+        if self.method == "ANCOM-BC":
             raise ValueError("pairwise_test() is only available for ANCOM-BC2 results.")
         if self._group is None:
             raise ValueError(
@@ -463,7 +408,7 @@ class ANCOMBCResult:
         """
         if self._trend_test is not None:
             return self._trend_test
-        if not self.reestimate:
+        if self.method == "ANCOM-BC":
             raise ValueError("trend_test() is only available for ANCOM-BC2 results.")
         if self._group is None:
             raise ValueError(
@@ -526,7 +471,7 @@ class ANCOMBCResult:
         """
         if self._sensitivity is not None:
             return self._sensitivity
-        if not self.reestimate:
+        if self.method == "ANCOM-BC":
             raise ValueError(
                 "sensitivity_analysis() is only available for ANCOM-BC2 results."
             )
@@ -1446,11 +1391,7 @@ def _ancombc2_estimate(
     )
 
     return {
-        "feature_table": O2,
         "bias_correct_log_table": y_bias_crt,
-        "samp_frac": theta_hat_arr,
-        "delta_em": delta_em,
-        "delta_wls": delta_wls,
         "beta_hat": beta_hat,
         "se_hat": se_hat,
         "W": W,
@@ -1552,9 +1493,6 @@ def _ancombc(
         # Identify significantly differentially abundance feature-covariate pairs.
         reject = qval <= alpha
 
-        # Estimate sampling fractions.
-        samp_frac = _sample_fractions(matrix, dmat, beta_hat)
-
         # Output the primary results.
         res = pd.DataFrame.from_dict(
             {
@@ -1573,10 +1511,7 @@ def _ancombc(
 
         return ANCOMBCResult(
             res=res,
-            delta_em=delta_em,
-            delta_wls=delta_wls,
-            samp_frac=samp_frac,
-            reestimate=False,
+            method="ANCOM-BC",
             _table=pd.DataFrame(matrix, index=samples, columns=features),
             _metadata=metadata,
             _grouping=grouping,
@@ -1645,11 +1580,7 @@ def _ancombc(
 
         return ANCOMBCResult(
             res=res,
-            delta_em=res_main["delta_em"],
-            delta_wls=res_main["delta_wls"],
-            samp_frac=res_main["samp_frac"],
-            feature_table=res_main["feature_table"],
-            reestimate=True,
+            method="ANCOM-BC2",
             _table=pd.DataFrame(matrix, index=samples, columns=features),
             _metadata=metadata,
             _group=group,
