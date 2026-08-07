@@ -78,8 +78,6 @@ class ANCOMBCResult:
     _private_defaults = {
         "_table": None,
         "_metadata": None,
-        "_group": None,
-        "_grouping": None,
         "_dmat": None,
         "_x_df": None,
         "_beta_hat": None,
@@ -90,12 +88,6 @@ class ANCOMBCResult:
         "_fix_eff": None,
         "_alpha": 0.05,
         "_p_adjust": "holm",
-        "_neg_lb": False,
-        "_mdfdr_fwer_ctrl_method": "holm",
-        "_mdfdr_B": 100,
-        "_trend_contrast": None,
-        "_trend_node": None,
-        "_trend_B": 100,
         "_s0_perc": 0.05,
         "_max_iter": 100,
         "_tol": 1e-5,
@@ -103,12 +95,6 @@ class ANCOMBCResult:
         "_O1": None,
         "_O2": None,
         "_formula": None,
-        "_structural_zeros": None,
-        "_global_test": None,
-        "_dunnett_test": None,
-        "_pairwise_test": None,
-        "_trend_test": None,
-        "_sensitivity": None,
     }
 
     def __init__(
@@ -166,12 +152,19 @@ class ANCOMBCResult:
             f"n_signif={n_signif})"
         )
 
-    def structural_zeros(self) -> pd.DataFrame:
+    def structural_zeros(self, group: str, neg_lb: bool = False) -> pd.DataFrame:
         """Detect structural zeros in the original table.
 
         Structural zeros are features systematically absent from certain
         sample groups. This method tests whether the proportion of observed
         zeros is close to zero, suggesting absence of a feature in a group.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        neg_lb : bool, optional
+            Whether to use the negative lower-bound adjustment.
 
         Returns
         -------
@@ -187,26 +180,27 @@ class ANCOMBCResult:
 
         Notes
         -----
-        Results are cached: repeated calls return the same object without
-        recomputation.
+        This method recomputes its result on every call.
         """
-        if self._structural_zeros is not None:
-            return self._structural_zeros
-        if self._group is None:
-            raise ValueError(
-                "structural_zeros requires a group variable; "
-                "pass group=... to ancombc2()."
-            )
         _struc_zero_fn = globals()["struc_zero"]
-        result = _struc_zero_fn(self._table, self._metadata, self._group, self._neg_lb)
-        self._structural_zeros = result
-        return result
+        return _struc_zero_fn(self._table, self._metadata, group, neg_lb)
 
-    def global_test(self) -> pd.DataFrame:
+    def global_test(
+        self, group: str, alpha: float = 0.05, p_adjust: str = "holm"
+    ) -> pd.DataFrame:
         """Perform global test for differential abundance across groups.
 
         The global test identifies features that are differentially abundant
         between at least two groups across three or more groups.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float, optional
+            Significance level. Default is 0.05.
+        p_adjust : str, optional
+            Multiple-testing correction method. Default is "holm".
 
         Returns
         -------
@@ -221,25 +215,15 @@ class ANCOMBCResult:
 
         Notes
         -----
-        Results are cached: repeated calls return the same object without
-        recomputation.
         """
-        if self._global_test is not None:
-            return self._global_test
-
         if self.method == "ANCOM-BC":
-            if self._grouping is None:
-                raise ValueError(
-                    "global_test requires a grouping variable; "
-                    "pass grouping=... to ancombc()."
-                )
             W_g, pval, qval, reject = _global_test(
                 self._dmat,
-                self._grouping,
+                group,
                 self._beta_hat,
                 self._vcov_hat,
-                self._alpha,
-                self._p_adjust,
+                alpha,
+                p_adjust,
             )
             result = pd.DataFrame(
                 {
@@ -252,19 +236,14 @@ class ANCOMBCResult:
             )
             result.index.name = "FeatureID"
         else:
-            if self._group is None:
-                raise ValueError(
-                    "global_test requires a group variable; "
-                    "pass group=... to ancombc2()."
-                )
             raw = _ancombc_global_F(
                 x=self._x_df,
-                group=self._group,
+                group=group,
                 beta_hat=self._beta_hat,
                 vcov_hat=self._vcov_hat,
                 dof=self._dof,
-                p_adj_method=self._p_adjust,
-                alpha=self._alpha,
+                p_adj_method=p_adjust,
+                alpha=alpha,
             )
             result = raw.copy()
             result.index = self._tax_name
@@ -277,11 +256,27 @@ class ANCOMBCResult:
             )
             result["Signif"] = result["Signif"].astype(bool)
 
-        self._global_test = result
         return result
 
-    def dunnett_test(self) -> pd.DataFrame:
+    def dunnett_test(
+        self,
+        group: str,
+        alpha: float = 0.05,
+        fwer_ctrl_method: str = "holm",
+        B: int = 100,
+    ) -> pd.DataFrame:
         """Perform Dunnett's test (each group vs. reference) with mdFDR.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float, optional
+            Significance level. Default is 0.05.
+        fwer_ctrl_method : str, optional
+            Family-wise error-rate correction method. Default is "holm".
+        B : int, optional
+            Number of bootstrap iterations. Default is 100.
 
         Returns
         -------
@@ -295,24 +290,18 @@ class ANCOMBCResult:
             If this is an ANCOM-BC result (reestimate=False), or if no
             group variable was specified.
         """
-        if self._dunnett_test is not None:
-            return self._dunnett_test
         if self.method == "ANCOM-BC":
             raise ValueError("dunnett_test() is only available for ANCOM-BC2 results.")
-        if self._group is None:
-            raise ValueError(
-                "dunnett_test requires a group variable; pass group=... to ancombc2()."
-            )
 
         raw = _ancombc_dunn(
             x=self._x_df,
-            group=self._group,
+            group=group,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             dof=self._dof,
-            B=self._mdfdr_B,
-            fwer_ctrl_method=self._mdfdr_fwer_ctrl_method,
-            alpha=self._alpha,
+            B=B,
+            fwer_ctrl_method=fwer_ctrl_method,
+            alpha=alpha,
         )
         comp_names = raw["comp_names"]
         n_comp = len(comp_names)
@@ -330,14 +319,24 @@ class ANCOMBCResult:
             }
         )
         result.set_index(["FeatureID", "Comparison"], inplace=True)
-        self._dunnett_test = result
         return result
 
-    def pairwise_test(self) -> pd.DataFrame:
+    def pairwise_test(
+        self, group: str, alpha: float = 0.05, fwer_ctrl_method: str = "holm"
+    ) -> pd.DataFrame:
         """Perform pairwise directional test between all group pairs.
 
         Uses mixed directional FDR (mdFDR) correction via bootstrap.
 
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float, optional
+            Significance level. Default is 0.05.
+        fwer_ctrl_method : str, optional
+            Family-wise error-rate correction method. Default is "holm".
+
         Returns
         -------
         pd.DataFrame
@@ -350,24 +349,18 @@ class ANCOMBCResult:
             If this is an ANCOM-BC result (reestimate=False), or if no
             group variable was specified.
         """
-        if self._pairwise_test is not None:
-            return self._pairwise_test
         if self.method == "ANCOM-BC":
             raise ValueError("pairwise_test() is only available for ANCOM-BC2 results.")
-        if self._group is None:
-            raise ValueError(
-                "pairwise_test requires a group variable; pass group=... to ancombc2()."
-            )
 
         raw = _ancombc_pair(
             x=self._x_df,
-            group=self._group,
+            group=group,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
             dof=self._dof,
-            fwer_ctrl_method=self._mdfdr_fwer_ctrl_method,
-            alpha=self._alpha,
+            fwer_ctrl_method=fwer_ctrl_method,
+            alpha=alpha,
         )
         comp_names = raw["comp_names"]
         n_comp = len(comp_names)
@@ -385,14 +378,34 @@ class ANCOMBCResult:
             }
         )
         result.set_index(["FeatureID", "Comparison"], inplace=True)
-        self._pairwise_test = result
         return result
 
-    def trend_test(self) -> pd.DataFrame:
+    def trend_test(
+        self,
+        group: str,
+        alpha: float = 0.05,
+        p_adjust: str = "holm",
+        trend_contrast=None,
+        trend_node=None,
+        trend_B: int = 100,
+    ) -> pd.DataFrame:
         """Perform trend test for ordered patterns in group effects.
 
         Uses constrained optimization to test monotone increasing/decreasing
         patterns in group-level effects.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float, optional
+            Significance level. Default is 0.05.
+        p_adjust : str, optional
+            Multiple-testing correction method. Default is "holm".
+        trend_contrast, trend_node : dict, optional
+            Trend-test contrast matrices and their node indices.
+        trend_B : int, optional
+            Number of bootstrap iterations. Default is 100.
 
         Returns
         -------
@@ -406,26 +419,20 @@ class ANCOMBCResult:
             If this is an ANCOM-BC result (reestimate=False), or if no
             group variable was specified.
         """
-        if self._trend_test is not None:
-            return self._trend_test
         if self.method == "ANCOM-BC":
             raise ValueError("trend_test() is only available for ANCOM-BC2 results.")
-        if self._group is None:
-            raise ValueError(
-                "trend_test requires a group variable; pass group=... to ancombc2()."
-            )
 
         raw = _ancombc_trend(
             x=self._x_df,
-            group=self._group,
+            group=group,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
-            p_adj_method=self._p_adjust,
-            alpha=self._alpha,
-            trend_contrast=self._trend_contrast,
-            trend_node=self._trend_node,
-            trend_B=self._trend_B,
+            p_adj_method=p_adjust,
+            alpha=alpha,
+            trend_contrast=trend_contrast,
+            trend_node=trend_node,
+            trend_B=trend_B,
         )
         result = pd.DataFrame(
             {
@@ -437,19 +444,43 @@ class ANCOMBCResult:
             index=self._tax_name,
         )
         result.index.name = "FeatureID"
-        self._trend_test = result
         return result
 
-    def sensitivity_analysis(self) -> dict:
+    def sensitivity_analysis(
+        self,
+        group: Optional[str] = None,
+        global_test: bool = False,
+        pairwise: bool = False,
+        dunnett: bool = False,
+        trend: bool = False,
+        fwer_ctrl_method: str = "holm",
+        mdfdr_B: int = 100,
+        trend_contrast=None,
+        trend_node=None,
+        trend_B: int = 100,
+    ) -> dict:
         """Perform pseudo-count sensitivity analysis.
 
         Re-runs the core estimation with pseudo-count values [0.1, 0.5, 1]
         and compares q-values to assess robustness of significance calls to
         the choice of pseudo-count.
 
-        If multi-group tests (global, pairwise, Dunnett, trend) have already
-        been computed via their respective methods, sensitivity is also
-        assessed for those tests by re-running them with each pseudo-count.
+        Set a multi-group test option to True to assess its sensitivity.
+
+        Parameters
+        ----------
+        group : str, optional
+            Metadata column defining sample groups. Required for multi-group
+            sensitivity analysis.
+        global_test, pairwise, dunnett, trend : bool, optional
+            Whether to assess sensitivity for the corresponding multi-group
+            test. Defaults are False.
+        fwer_ctrl_method : str, optional
+            Family-wise error-rate correction method. Default is "holm".
+        mdfdr_B, trend_B : int, optional
+            Bootstrap iterations for the Dunnett and trend tests. Defaults are 100.
+        trend_contrast, trend_node : dict, optional
+            Trend-test contrast matrices and their node indices.
 
         Returns
         -------
@@ -468,9 +499,11 @@ class ANCOMBCResult:
         ------
         ValueError
             If this is an ANCOM-BC result (reestimate=False).
+
+        Notes
+        -----
+        This method recomputes its result on every call.
         """
-        if self._sensitivity is not None:
-            return self._sensitivity
         if self.method == "ANCOM-BC":
             raise ValueError(
                 "sensitivity_analysis() is only available for ANCOM-BC2 results."
@@ -480,13 +513,8 @@ class ANCOMBCResult:
         n_cov = len(self._fix_eff)
         alpha = self._alpha
 
-        # Determine which multi-group tests to include
-        has_global = self._global_test is not None
-        has_pair = self._pairwise_test is not None
-        has_dunn = self._dunnett_test is not None
-        has_trend = self._trend_test is not None
-        if has_trend:
-            has_global = True  # Trend requires global test
+        if (global_test or pairwise or dunnett or trend) and group is None:
+            raise ValueError("Multi-group sensitivity analysis requires `group`.")
 
         # Original q_hat (n_tax, n_cov)
         q_hat_orig = self.res["qvalue"].values.reshape(n_tax, n_cov)
@@ -503,57 +531,55 @@ class ANCOMBCResult:
                 p_adj_method=self._p_adjust,
                 pseudo=pseudo_count,
                 s0_perc=self._s0_perc,
-                group=self._group,
                 alpha=alpha,
-                verbose=False,
                 max_iter=self._max_iter,
                 tol=self._tol,
             )
             # If multi-group tests are requested, run them for this pseudo
-            if has_global and self._group is not None:
+            if global_test:
                 res_pseudo["res_global"] = _ancombc_global_F(
                     x=res_pseudo["x_df"],
-                    group=self._group,
+                    group=group,
                     beta_hat=res_pseudo["beta_hat"],
                     vcov_hat=res_pseudo["vcov_hat"],
                     dof=res_pseudo["dof"],
                     p_adj_method=self._p_adjust,
                     alpha=alpha,
                 )
-            if has_pair and self._group is not None:
+            if pairwise:
                 res_pseudo["res_pair"] = _ancombc_pair(
                     x=res_pseudo["x_df"],
-                    group=self._group,
+                    group=group,
                     beta_hat=res_pseudo["beta_hat"],
                     var_hat=res_pseudo["var_hat"],
                     vcov_hat=res_pseudo["vcov_hat"],
                     dof=res_pseudo["dof"],
-                    fwer_ctrl_method=self._mdfdr_fwer_ctrl_method,
+                    fwer_ctrl_method=fwer_ctrl_method,
                     alpha=alpha,
                 )
-            if has_dunn and self._group is not None:
+            if dunnett:
                 res_pseudo["res_dunn"] = _ancombc_dunn(
                     x=res_pseudo["x_df"],
-                    group=self._group,
+                    group=group,
                     beta_hat=res_pseudo["beta_hat"],
                     var_hat=res_pseudo["var_hat"],
                     dof=res_pseudo["dof"],
-                    B=self._mdfdr_B,
-                    fwer_ctrl_method=self._mdfdr_fwer_ctrl_method,
+                    B=mdfdr_B,
+                    fwer_ctrl_method=fwer_ctrl_method,
                     alpha=alpha,
                 )
-            if has_trend and self._group is not None:
+            if trend:
                 res_pseudo["res_trend"] = _ancombc_trend(
                     x=res_pseudo["x_df"],
-                    group=self._group,
+                    group=group,
                     beta_hat=res_pseudo["beta_hat"],
                     var_hat=res_pseudo["var_hat"],
                     vcov_hat=res_pseudo["vcov_hat"],
                     p_adj_method=self._p_adjust,
                     alpha=alpha,
-                    trend_contrast=self._trend_contrast,
-                    trend_node=self._trend_node,
-                    trend_B=self._trend_B,
+                    trend_contrast=trend_contrast,
+                    trend_node=trend_node,
+                    trend_B=trend_B,
                 )
             ss_list.append(res_pseudo)
 
@@ -565,8 +591,10 @@ class ANCOMBCResult:
 
         # Global test sensitivity
         passed_ss_global = None
-        if has_global and self._global_test is not None:
-            q_globals = [self._global_test["qvalue"].values]
+        if global_test:
+            q_globals = [
+                self.global_test(group, alpha, self._p_adjust)["qvalue"].values
+            ]
             for r in ss_list:
                 if r.get("res_global") is not None:
                     q_globals.append(r["res_global"]["q_val"])
@@ -578,8 +606,10 @@ class ANCOMBCResult:
 
         # Pairwise sensitivity
         passed_ss_pair = None
-        if has_pair and self._pairwise_test is not None:
-            q_pair_orig = self._pairwise_test["qvalue"].values.reshape(n_tax, -1)
+        if pairwise:
+            q_pair_orig = self.pairwise_test(group, alpha, fwer_ctrl_method)[
+                "qvalue"
+            ].values.reshape(n_tax, -1)
             q_pairs = [q_pair_orig]
             for r in ss_list:
                 if r.get("res_pair") is not None:
@@ -592,8 +622,10 @@ class ANCOMBCResult:
 
         # Dunnett sensitivity
         passed_ss_dunn = None
-        if has_dunn and self._dunnett_test is not None:
-            q_dunn_orig = self._dunnett_test["qvalue"].values.reshape(n_tax, -1)
+        if dunnett:
+            q_dunn_orig = self.dunnett_test(group, alpha, fwer_ctrl_method, mdfdr_B)[
+                "qvalue"
+            ].values.reshape(n_tax, -1)
             q_dunns = [q_dunn_orig]
             for r in ss_list:
                 if r.get("res_dunn") is not None:
@@ -604,11 +636,16 @@ class ANCOMBCResult:
             ss_dunn = np.mean(q_dunn_3d > alpha, axis=-1)
             passed_ss_dunn = (ss_dunn == 0) | (ss_dunn == 1)
 
-        # Trend sensitivity (uses global sensitivity)
+        # Trend sensitivity uses global sensitivity.
         passed_ss_trend = None
-        if has_trend and self._trend_test is not None:
-            if passed_ss_global is not None:
-                passed_ss_trend = passed_ss_global
+        if trend:
+            q_trend_orig = self.trend_test(
+                group, alpha, self._p_adjust, trend_contrast, trend_node, trend_B
+            )["qvalue"].values
+            q_trends = [q_trend_orig] + [r["res_trend"]["q_val"] for r in ss_list]
+            q_trend_3d = np.stack(q_trends, axis=-1)
+            ss_trend = np.mean(q_trend_3d > alpha, axis=-1)
+            passed_ss_trend = (ss_trend == 0) | (ss_trend == 1)
 
         result = {
             "passed_ss_prim": passed_ss_prim,
@@ -618,7 +655,6 @@ class ANCOMBCResult:
             "passed_ss_trend": passed_ss_trend,
             "ss_tab_prim": ss_tab_prim,
         }
-        self._sensitivity = result
         return result
 
 
@@ -1265,7 +1301,6 @@ def _ancombc2_estimate(
     p_adj_method="holm",
     pseudo=0,
     s0_perc=0.05,
-    group=None,
     alpha=0.05,
     max_iter=100,
     tol=1e-5,
@@ -1417,27 +1452,13 @@ def _ancombc(
     metadata,
     reestimate=False,
     formula=None,
-    grouping=None,
     aggregate_data=None,
     p_adjust="holm",
     pseudo=0,
-    pseudo_sens=True,
     s0_perc=0.05,
-    group=None,
-    struc_zero=False,
-    neg_lb=False,
     alpha=0.05,
     max_iter=100,
     tol=1e-5,
-    mdfdr_fwer_ctrl_method="holm",
-    mdfdr_B=100,
-    trend_contrast=None,
-    trend_node=None,
-    trend_B=100,
-    global_test=False,
-    pairwise=False,
-    dunnett=False,
-    trend=False,
 ):
     """Private ANCOM-BC/BC2 core function."""
     # Note: A pseudocount should have been added to the table by the user prior to
@@ -1514,7 +1535,6 @@ def _ancombc(
             method="ANCOM-BC",
             _table=pd.DataFrame(matrix, index=samples, columns=features),
             _metadata=metadata,
-            _grouping=grouping,
             _dmat=dmat,
             _beta_hat=beta_hat,
             _vcov_hat=vcov_hat,
@@ -1546,7 +1566,6 @@ def _ancombc(
             p_adj_method=p_adjust,
             pseudo=pseudo,
             s0_perc=s0_perc,
-            group=group,
             alpha=alpha,
             max_iter=max_iter,
             tol=tol,
@@ -1583,7 +1602,6 @@ def _ancombc(
             method="ANCOM-BC2",
             _table=pd.DataFrame(matrix, index=samples, columns=features),
             _metadata=metadata,
-            _group=group,
             _x_df=res_main["x_df"],
             _beta_hat=res_main["beta_hat"],
             _var_hat=res_main["var_hat"],
@@ -1593,12 +1611,6 @@ def _ancombc(
             _fix_eff=fix_eff,
             _alpha=alpha,
             _p_adjust=p_adjust,
-            _neg_lb=neg_lb,
-            _mdfdr_fwer_ctrl_method=mdfdr_fwer_ctrl_method,
-            _mdfdr_B=mdfdr_B,
-            _trend_contrast=trend_contrast,
-            _trend_node=trend_node,
-            _trend_B=trend_B,
             _s0_perc=s0_perc,
             _max_iter=max_iter,
             _tol=tol,
@@ -1613,7 +1625,6 @@ def ancombc(
     table,
     metadata,
     formula,
-    grouping=None,
     max_iter=100,
     tol=1e-5,
     alpha=0.05,
@@ -1642,11 +1653,6 @@ def ancombc(
         Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    grouping : str, optional
-        A metadata column name of interest for *global test*, which identifies features
-        that are differentially abundant between at least two groups across three or
-        more groups in that column. Must be one of the factors in ``formula``. Default
-        is None, which skips global test.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -1665,8 +1671,7 @@ def ancombc(
     Returns
     -------
     :class:`ANCOMBCResult`
-        Result object with primary results, global test (if grouping specified),
-        and diagnostic values.
+        Result object with primary results and post-hoc analysis methods.
 
     See Also
     --------
@@ -1684,7 +1689,6 @@ def ancombc(
         metadata=metadata,
         reestimate=False,
         formula=formula,
-        grouping=grouping,
         max_iter=max_iter,
         tol=tol,
         alpha=alpha,
@@ -1699,23 +1703,10 @@ def ancombc2(
     aggregate_data=None,
     p_adjust="holm",
     pseudo=0,
-    pseudo_sens=True,
     s0_perc=0.05,
-    group=None,
-    struc_zero=False,
-    neg_lb=False,
     alpha=0.05,
     max_iter=100,
     tol=1e-5,
-    mdfdr_fwer_ctrl_method="holm",
-    mdfdr_B=100,
-    trend_contrast=None,
-    trend_node=None,
-    trend_B=100,
-    global_test=False,
-    pairwise=False,
-    dunnett=False,
-    trend=False,  # TODO: remove parameters, only use for post hoc anlaysis
 ):
     r"""Perform differential abundance test using ANCOM-BC2.
 
@@ -1749,48 +1740,19 @@ def ancombc2(
         Multiple testing correction method. Default is "holm".
     pseudo : float, optional
         Pseudo-count to add to zeros. Default is 0.
-    pseudo_sens : bool, optional
-        Whether to perform sensitivity analysis. Default is True.
     s0_perc : float, optional
         SAM-like fudge factor percentile. Default is 0.05.
-    group : str, optional
-        Group variable for multi-group tests. Default is None.
-    struc_zero : bool, optional
-        Whether to detect structural zeros. Default is False.
-    neg_lb : bool, optional
-        Whether to use negative lower bound for structural zeros. Default
-        is False.
     alpha : float, optional
         Significance level. Default is 0.05.
     max_iter : int, optional
         Maximum EM iterations. Default is 100.
     tol : float, optional
         EM convergence tolerance. Default is 1e-5.
-    mdfdr_fwer_ctrl_method : str, optional
-        FWER control method for mdFDR. Default is "holm".
-    mdfdr_B : int, optional
-        Number of bootstrap iterations for mdFDR. Default is 100.
-    trend_contrast : dict, optional
-        Contrast matrix for trend test. Default is None.
-    trend_node : list, optional
-        Node list for trend test. Default is None.
-    trend_B : int, optional
-        Number of bootstrap iterations for trend test. Default is 100.
-    global_test : bool, optional
-        Whether to perform global test. Default is False.
-    pairwise : bool, optional
-        Whether to perform pairwise directional test. Default is False.
-    dunnett : bool, optional
-        Whether to perform Dunnett's test. Default is False.
-    trend : bool, optional
-        Whether to perform trend test. Default is False.
 
     Returns
     -------
     :class:`ANCOMBCResult`
-        Result object with primary results, post-hoc analyses (global,
-        pairwise, Dunnett, trend, structural zeros), sensitivity analysis,
-        and diagnostic values.
+        Result object with primary results and post-hoc analysis methods.
 
     See Also
     --------
@@ -1812,23 +1774,10 @@ def ancombc2(
         aggregate_data=aggregate_data,
         p_adjust=p_adjust,
         pseudo=pseudo,
-        pseudo_sens=pseudo_sens,
         s0_perc=s0_perc,
-        group=group,
-        struc_zero=struc_zero,
-        neg_lb=neg_lb,
         alpha=alpha,
         max_iter=max_iter,
         tol=tol,
-        mdfdr_fwer_ctrl_method=mdfdr_fwer_ctrl_method,
-        mdfdr_B=mdfdr_B,
-        trend_contrast=trend_contrast,
-        trend_node=trend_node,
-        trend_B=trend_B,
-        global_test=global_test,
-        pairwise=pairwise,
-        dunnett=dunnett,
-        trend=trend,
     )
 
 

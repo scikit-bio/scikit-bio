@@ -205,6 +205,19 @@ class AncombcTests(TestCase):
         res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
         self.assertEqual(res.method, "ANCOM-BC")
 
+    def test_post_hoc_methods_recalculate(self):
+        res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
+
+        first = res.structural_zeros("grouping")
+        second = res.structural_zeros("grouping")
+        self.assertIsNot(first, second)
+        pdt.assert_frame_equal(first, second)
+
+        first = res.global_test("grouping")
+        second = res.global_test("grouping")
+        self.assertIsNot(first, second)
+        pdt.assert_frame_equal(first, second)
+
     def test_ancombc(self):
         # ancom-bc2 results of test dataset
         res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
