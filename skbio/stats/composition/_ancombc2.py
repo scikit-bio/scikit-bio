@@ -19,7 +19,6 @@
 
 from typing import Optional
 from itertools import combinations
-from dataclasses import dataclass, field, fields
 
 import numpy as np
 import pandas as pd
@@ -38,7 +37,6 @@ from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
 NM_TOL = 1e-8
 
 
-@dataclass
 class ANCOMBCResult:
     """Results for ANCOM-BC and ANCOM-BC2 analyses.
 
@@ -85,56 +83,113 @@ class ANCOMBCResult:
     ancombc2 : ANCOM-BC2 function (reestimate=True).
     """
 
-    # Primary results
-    res: pd.DataFrame
+    _private_defaults = {
+        "_table": None,
+        "_metadata": None,
+        "_group": None,
+        "_grouping": None,
+        "_dmat": None,
+        "_x_df": None,
+        "_beta_hat": None,
+        "_var_hat": None,
+        "_vcov_hat": None,
+        "_dof": None,
+        "_tax_name": None,
+        "_fix_eff": None,
+        "_alpha": 0.05,
+        "_p_adjust": "holm",
+        "_neg_lb": False,
+        "_mdfdr_fwer_ctrl_method": "holm",
+        "_mdfdr_B": 100,
+        "_trend_contrast": None,
+        "_trend_node": None,
+        "_trend_B": 100,
+        "_s0_perc": 0.05,
+        "_max_iter": 100,
+        "_tol": 1e-5,
+        "_pseudo": 0,
+        "_O1": None,
+        "_O2": None,
+        "_formula": None,
+        "_structural_zeros": None,
+        "_global_test": None,
+        "_dunnett_test": None,
+        "_pairwise_test": None,
+        "_trend_test": None,
+        "_sensitivity": None,
+    }
 
-    # Diagnostic values
-    delta_em: np.ndarray = field(default=None, repr=False)
-    delta_wls: np.ndarray = field(default=None, repr=False)
-    samp_frac: np.ndarray = field(default=None, repr=False)
+    def __init__(
+        self,
+        res: pd.DataFrame,
+        delta_em: Optional[np.ndarray] = None,
+        delta_wls: Optional[np.ndarray] = None,
+        samp_frac: Optional[np.ndarray] = None,
+        feature_table: Optional[pd.DataFrame] = None,
+        reestimate: bool = False,
+        **kwargs,
+    ):
+        unexpected = set(kwargs).difference(self._private_defaults)
+        if unexpected:
+            names = ", ".join(sorted(unexpected))
+            raise TypeError(f"Unexpected ANCOMBCResult argument(s): {names}")
 
-    # Preprocessing outputs
-    feature_table: Optional[pd.DataFrame] = field(default=None, repr=False)
+        self.res = res
+        self.delta_em = delta_em
+        self.delta_wls = delta_wls
+        self.samp_frac = samp_frac
+        self.feature_table = feature_table
+        self.reestimate = reestimate
+        for name, default in self._private_defaults.items():
+            setattr(self, name, kwargs.get(name, default))
 
-    # Determine whether ANCOM-BC2 (True) or ANCOM-BC (False) is used
-    reestimate: bool = field(default=False, repr=False)
+    @property
+    def res(self) -> pd.DataFrame:
+        return self._res
 
-    # Private intermediate data
-    _table: object = field(default=None, repr=False)
-    _metadata: object = field(default=None, repr=False)
-    _group: Optional[str] = field(default=None, repr=False)
-    _grouping: Optional[str] = field(default=None, repr=False)
-    _dmat: object = field(default=None, repr=False)
-    _x_df: object = field(default=None, repr=False)
-    _beta_hat: object = field(default=None, repr=False)
-    _var_hat: object = field(default=None, repr=False)
-    _vcov_hat: object = field(default=None, repr=False)
-    _dof: object = field(default=None, repr=False)
-    _tax_name: object = field(default=None, repr=False)
-    _fix_eff: object = field(default=None, repr=False)
-    _alpha: float = field(default=0.05, repr=False)
-    _p_adjust: str = field(default="holm", repr=False)
-    _neg_lb: bool = field(default=False, repr=False)
-    _mdfdr_fwer_ctrl_method: str = field(default="holm", repr=False)
-    _mdfdr_B: int = field(default=100, repr=False)
-    _trend_contrast: object = field(default=None, repr=False)
-    _trend_node: object = field(default=None, repr=False)
-    _trend_B: int = field(default=100, repr=False)
-    _s0_perc: float = field(default=0.05, repr=False)
-    _max_iter: int = field(default=100, repr=False)
-    _tol: float = field(default=1e-5, repr=False)
-    _pseudo: float = field(default=0, repr=False)
-    _O1: object = field(default=None, repr=False)
-    _O2: object = field(default=None, repr=False)
-    _formula: Optional[str] = field(default=None, repr=False)
+    @res.setter
+    def res(self, value: pd.DataFrame):
+        self._res = value
 
-    # private caches
-    _structural_zeros: object = field(default=None, repr=False)
-    _global_test: object = field(default=None, repr=False)
-    _dunnett_test: object = field(default=None, repr=False)
-    _pairwise_test: object = field(default=None, repr=False)
-    _trend_test: object = field(default=None, repr=False)
-    _sensitivity: object = field(default=None, repr=False)
+    @property
+    def delta_em(self) -> Optional[np.ndarray]:
+        return self._delta_em
+
+    @delta_em.setter
+    def delta_em(self, value: Optional[np.ndarray]):
+        self._delta_em = value
+
+    @property
+    def delta_wls(self) -> Optional[np.ndarray]:
+        return self._delta_wls
+
+    @delta_wls.setter
+    def delta_wls(self, value: Optional[np.ndarray]):
+        self._delta_wls = value
+
+    @property
+    def samp_frac(self) -> Optional[np.ndarray]:
+        return self._samp_frac
+
+    @samp_frac.setter
+    def samp_frac(self, value: Optional[np.ndarray]):
+        self._samp_frac = value
+
+    @property
+    def feature_table(self) -> Optional[pd.DataFrame]:
+        return self._feature_table
+
+    @feature_table.setter
+    def feature_table(self, value: Optional[pd.DataFrame]):
+        self._feature_table = value
+
+    @property
+    def reestimate(self) -> bool:
+        return self._reestimate
+
+    @reestimate.setter
+    def reestimate(self, value: bool):
+        self._reestimate = value
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -142,9 +197,16 @@ class ANCOMBCResult:
     def keys(self):
         """Return a list of attribute names that are not private and are not None."""
         return [
-            f.name
-            for f in fields(self)
-            if not f.name.startswith("_") and getattr(self, f.name) is not None
+            name
+            for name in (
+                "res",
+                "delta_em",
+                "delta_wls",
+                "samp_frac",
+                "feature_table",
+                "reestimate",
+            )
+            if getattr(self, name) is not None
         ]
 
     # formated output
@@ -448,13 +510,14 @@ class ANCOMBCResult:
         -------
         dict
             Dictionary with keys:
+
             - ``passed_ss_prim``: bool ndarray, primary results robustness
             - ``passed_ss_global``: bool ndarray or None
             - ``passed_ss_pair``: bool ndarray or None
             - ``passed_ss_dunn``: bool ndarray or None
             - ``passed_ss_trend``: bool ndarray or None
-            - ``ss_tab_prim``: float ndarray, proportion of pseudo-counts
-              where q > alpha
+            - ``ss_tab_prim``: float ndarray, proportion of pseudo-counts where
+              q > alpha.
 
         Raises
         ------
@@ -1670,7 +1733,7 @@ def ancombc(
 
     Returns
     -------
-    ANCOMBCResult
+    :class:`ANCOMBCResult`
         Result object with primary results, global test (if grouping specified),
         and diagnostic values.
 
@@ -1793,7 +1856,7 @@ def ancombc2(
 
     Returns
     -------
-    ANCOMBCResult
+    :class:`ANCOMBCResult`
         Result object with primary results, post-hoc analyses (global,
         pairwise, Dunnett, trend, structural zeros), sensitivity analysis,
         and diagnostic values.

@@ -45,6 +45,7 @@ compositions.
    ancom
    ancombc
    ancombc2
+   ANCOMBCResult
    dirmult_ttest
    dirmult_lme
    struc_zero
@@ -176,7 +177,7 @@ from ._base import (
 from ._ancom import ancom
 
 # from ._ancombc import ancombc, struc_zero
-from ._ancombc2 import ancombc, ancombc2, struc_zero
+from ._ancombc2 import ancombc, ancombc2, struc_zero, ANCOMBCResult
 from ._dirmult import dirmult_ttest, dirmult_lme
 
 __all__ = [
