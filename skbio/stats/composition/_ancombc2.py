@@ -67,11 +67,8 @@ class ANCOMBCResult:
     Attributes
     ----------
     res : pd.DataFrame
-        Primary results with (FeatureID, Covariate) multi-index.
-        For ANCOM-BC (reestimate=False): columns Log2(FC), SE, W, pvalue,
-        qvalue, Signif.
-        For ANCOM-BC2 (reestimate=True): columns lfc, SE, W, pvalue, qvalue,
-        Signif.
+        Primary results with (FeatureID, Covariate) multi-index. Columns are: Log2(FC),
+        SE, W, pvalue, qvalue, Signif.
     delta_em : ndarray
         EM-estimated biases per covariate.
     delta_wls : ndarray
@@ -299,7 +296,7 @@ class ANCOMBCResult:
         -------
         pd.DataFrame
             DataFrame with (FeatureID, Comparison) multi-index and columns:
-            lfc, SE, W, pvalue, qvalue, Signif.
+            Log2(FC), SE, W, pvalue, qvalue, Signif.
 
         Raises
         ------
@@ -333,7 +330,7 @@ class ANCOMBCResult:
             {
                 "FeatureID": [x for x in self._tax_name for _ in range(n_comp)],
                 "Comparison": comp_names * n_tax,
-                "lfc": raw["beta"].ravel(),
+                "Log2(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
                 "pvalue": raw["p_val"].ravel(),
@@ -354,7 +351,7 @@ class ANCOMBCResult:
         -------
         pd.DataFrame
             DataFrame with (FeatureID, Comparison) multi-index and columns:
-            lfc, SE, W, pvalue, qvalue, Signif.
+            Log2(FC), SE, W, pvalue, qvalue, Signif.
 
         Raises
         ------
@@ -388,7 +385,7 @@ class ANCOMBCResult:
             {
                 "FeatureID": [x for x in self._tax_name for _ in range(n_comp)],
                 "Comparison": comp_names * n_tax,
-                "lfc": raw["beta"].ravel(),
+                "Log2(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
                 "pvalue": raw["p_val"].ravel(),
@@ -1454,14 +1451,7 @@ def _ancombc(
     dunnett=False,
     trend=False,
 ):
-    """Private ANCOM-BC/BC2 core function.
-
-    Dispatches on ``reestimate``:
-    - ``reestimate=False``: ANCOM-BC path (log(matrix+1), no filtering,
-      no sensitivity, Log2(FC) columns).
-    - ``reestimate=True``: ANCOM-BC2 path (CLR centering, sensitivity,
-      multi-group tests, lfc columns).
-    """
+    """Private ANCOM-BC/BC2 core function."""
     # Note: A pseudocount should have been added to the table by the user prior to
     # calling this function.
     matrix, samples, features = _ingest_table(table)
@@ -1593,12 +1583,10 @@ def _ancombc(
         q_hat = res_main["q_hat"]
         diff_abn = res_main["diff_abn"]
 
-        lfc = beta_hat
-
         res_dict = {
             "FeatureID": [x for x in tax_name for _ in range(n_cov)],
             "Covariate": list(fix_eff) * n_tax,
-            "lfc": lfc.ravel(),  # TODO: should have the same results as ancombc
+            "Log2(FC)": beta_hat.ravel(),
             "SE": se_hat.ravel(),
             "W": W.ravel(),
             "pvalue": p_hat.ravel(),
