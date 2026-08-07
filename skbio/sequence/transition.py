@@ -52,6 +52,18 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
     from numpy.typing import ArrayLike, NDArray
 
+# ----------------------------------------------------------------------------
+# Each evolutionary model implemented in this submodule has:
+#
+# - A public-facing function that consumes a single (scalar) evolutionary
+#   distance and returns a transition probability matrix in the format of
+#   `SubstitutionMatrix`. It is a wrapper of:
+#
+# - A private function that consumes a vector of evolutionary distances and
+#   returns a 3D array of transition probability matrices. The private function
+#   is used for vectorized operations in distance calculations.
+# ----------------------------------------------------------------------------
+
 
 def _tpm_wrapper(
     func: Callable,
@@ -78,9 +90,11 @@ def _tpm_wrapper(
     allowed_seqtypes : string or tuple of strings, optional
         Valid sequence types for the model. Can be a single type (such as `"Protein"`)
         or a tuple of multiple types (such as `("DNA", "RNA")`).
+    args : list, optional
+        Model-specific parameters. Refer to the documentation of the chosen model.
     kwargs : dict, optional
-        Transition model-specific keyword parameters. Refer to the documentation of
-        the chosen model.
+        Model-specific keyword parameters. Refer to the documentation of the chosen
+        model.
 
     Returns
     -------
@@ -97,10 +111,10 @@ def _tpm_wrapper(
         types = ", ".join(allowed_seqtypes)
         raise TypeError(f"Sequence should be: {types}. Got {seqtype} instead.")
 
-    seqtype_cls = getattr(sk_seqtype, seqtype)
+    cls = getattr(sk_seqtype, seqtype)
 
-    # Get the states for the substitution matrix
-    states = sorted(seqtype_cls.definite_chars)
+    # Get the character states for the substitution matrix
+    states = sorted(cls.definite_chars - cls.noncanonical_chars)
 
     # Vectorize the distance (input: scalar, output: 1D array)
     d = np.atleast_1d(_check_d(d))
@@ -122,7 +136,7 @@ def _check_kappa(kappa: float):
     """Validate that the ts/tv ratio `kappa` is between 0 and 1."""
     if kappa <= 0.0 or kappa > 1.0:
         raise ValueError(
-            "Parameter 'kappa' must be greater than 0 and less or equal to 1."
+            "Parameter 'kappa' must be greater than 0 and less than or equal to 1."
         )
     return kappa
 
@@ -132,12 +146,11 @@ def jc69(d: float, seqtype: str = "DNA") -> SubstitutionMatrix:
 
     .. versionadded:: 0.7.4
 
-    The Jukes-Cantor 1969 (JC69) model assumes equal nucleotide frequencies
-    and equal substitution rates between all nucleotides.
+    The Jukes-Cantor 1969 (JC69) model assumes equal nucleotide frequencies and equal
+    substitution rates between all nucleotides.
 
-    The transition probability between nucleotide states for sequences
-    separated by evolutionary distance :math:`d` (expected substitutions
-    per site) is given by:
+    The transition probability between nucleotide states for sequences separated by
+    evolutionary distance :math:`d` (expected substitutions per site) is given by:
 
     .. math::
 
@@ -146,8 +159,8 @@ def jc69(d: float, seqtype: str = "DNA") -> SubstitutionMatrix:
             \frac{1}{4} - \frac{1}{4} e^{-\frac{4d}{3}} & i \neq j
         \end{cases}
 
-    where :math:`i, j \in \{A, C, G, T/U\}`, and :math:`i` and :math:`j`
-    denote ancestral and descendant states, respectively.
+    where :math:`i, j \in \{A, C, G, T/U\}`, and :math:`i` and :math:`j` denote
+    ancestral and descendant states, respectively.
 
     Parameters
     ----------
@@ -202,7 +215,7 @@ def _jc69(d: NDArray) -> NDArray:
     same = 0.25 * (1.0 + 3.0 * e)
     diff = 0.25 * (1.0 - e)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=np.float32)
     P[:] = diff[:, None, None]
 
     idx = np.arange(4)
@@ -304,7 +317,7 @@ def _k2p(d: NDArray, kappa: float) -> NDArray:
     transition = 0.25 + 0.25 * e1 - 0.5 * e2
     transversion = 0.25 - 0.25 * e1
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=np.float32)
 
     P[:] = transversion[:, None, None]
 
@@ -312,6 +325,8 @@ def _k2p(d: NDArray, kappa: float) -> NDArray:
     P[:, idx, idx] = same[:, None]
 
     # transitions: A<->G and C<->T/U
+    # NOTE: The following code and other functions in this module assume the order of
+    # nucleotides is A, C, G, T/U.
     P[:, 0, 2] = transition
     P[:, 2, 0] = transition
     P[:, 1, 3] = transition
@@ -321,16 +336,15 @@ def _k2p(d: NDArray, kappa: float) -> NDArray:
 
 
 def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
-    r"""
-    Calculate the F81 transition probability matrix for a given distance.
+    r"""Calculate the F81 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
-    The Felsenstein 1981 (F81) model assumes equal substitution rates among
-    nucleotide pairs but allows unequal equilibrium base frequencies :math:`\pi`.
+    The Felsenstein 1981 (F81) model assumes equal substitution rates among nucleotide
+    pairs but allows unequal equilibrium base frequencies :math:`\pi`.
 
-    The transition probability between nucleotide states for sequences
-    separated by evolutionary distance :math:`d` is given by:
+    The transition probability between nucleotide states for sequences separated by
+    evolutionary distance :math:`d` is given by:
 
     .. math::
         P_{ij} = \begin{cases}
@@ -350,8 +364,8 @@ def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
     d : float
         Evolutionary distance between sequences.
     freqs : array_like of float of shape (4,)
-        Relative frequencies of nucleobases A, C, G, and T/U, respectively.
-        Should sum to 1.
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1.
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
@@ -371,12 +385,10 @@ def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
     -----
     The Felsenstein 1981 (F81) model was originally introduced in [1]_.
 
-    It extends JC69 by allowing unequal equilibrium base frequencies while
-    retaining equal substitution rates between all nucleotide pairs.
+    It extends JC69 by allowing unequal equilibrium base frequencies while retaining
+    equal substitution rates between all nucleotide pairs.
 
-    F81 reduces to JC69 when all base frequencies are equal
-    (:math:`\pi_i = 0.25`).
-
+    F81 reduces to JC69 when all base frequencies are equal (:math:`\pi_i = 0.25`).
 
     References
     ----------
@@ -410,14 +422,14 @@ def _f81(d: NDArray, freqs: NDArray) -> NDArray:
         Transition probability matrices.
 
     """
-    freqs = np.asarray(freqs, dtype=np.float64)
+    freqs = np.asarray(freqs, dtype=np.float32)
 
     scale_factor = 1.0 / (1.0 - np.sum(freqs**2))
 
     e = np.exp(-scale_factor * d)
 
     n = len(d)
-    P = np.empty((n, 4, 4), dtype=np.float64)
+    P = np.empty((n, 4, 4), dtype=np.float32)
 
     P[:] = freqs[None, None, :] * (1.0 - e)[:, None, None]
 
@@ -637,7 +649,7 @@ def _tn93(d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float) -> NDArray
     """
     pi_R = freqs[0] + freqs[2]
     pi_Y = freqs[1] + freqs[3]
-    adjusted_freqs = np.array(
+    adj_freqs = np.array(
         [freqs[0] / pi_R, freqs[1] / pi_Y, freqs[2] / pi_R, freqs[3] / pi_Y]
     )[None, None, :]
     freqs = freqs[None, None, :]
@@ -657,12 +669,10 @@ def _tn93(d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float) -> NDArray
     e2 = np.exp(-scale_factor * d)[:, None, None]
     e3 = np.exp(-scale_factor * (kappa - 1.0) * d / 2.0)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=np.float32)
 
-    P = (
-        e1 * identity
-        + e2 * (1.0 - e3) * adjusted_freqs * same_class
-        + (1.0 - e2) * freqs
+    P[...] = (
+        e1 * identity + e2 * (1.0 - e3) * adj_freqs * same_class + (1.0 - e2) * freqs
     )
 
     return P
