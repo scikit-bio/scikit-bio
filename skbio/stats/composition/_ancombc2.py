@@ -1665,6 +1665,233 @@ def ancombc(
     .. [1] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
        with bias correction. Nature Communications, 11(1), p.3514.
 
+    Examples
+    --------
+    >>> from skbio.stats.composition import ancombc
+    >>> import pandas as pd
+
+    **A basic example**
+
+    Let's create a data table with six samples and seven features (e.g., these may be
+    microbial taxa):
+
+    >>> samples = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    >>> features = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']
+    >>> table = pd.DataFrame(
+    ...     [[ 2,  0,  4,  7,  0,  0,  1],
+    ...      [ 1,  1,  0,  6,  5,  1, 10],
+    ...      [ 3,  0,  2,  9,  6,  0,  1],
+    ...      [ 0, 12,  1,  2,  0,  3,  2],
+    ...      [ 2,  2, 37,  0,  0,  7,  3],
+    ...      [10,  1,  0,  0,  4,  4,  3]],
+    ...     index=samples, columns=features)
+
+    Then create a sampling grouping vector. In this example, there is a "healthy" group
+    and a "sick" group.
+
+    >>> grouping = ['healthy', 'healthy', 'healthy', 'sick', 'sick', 'sick']
+    >>> metadata = pd.Series(grouping, index=samples, name='status').to_frame()
+
+    Now run ``ancombc`` to determine if there are any features that are significantly
+    different in abundance between the healthy and the sick groups. Note that a
+    pseudocount of 1 is manually added to the table to remove zero values.
+
+    >>> result = ancombc(table + 1, metadata, formula='status').res
+    >>> result.round(3)
+                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F1        Intercept         -0.045  0.218 -0.207   0.836   1.000   False
+              status[T.sick]     0.126  0.589  0.214   0.831   1.000   False
+    F2        Intercept         -0.873  0.137 -6.381   0.000   0.000    True
+              status[T.sick]     1.241  0.538  2.307   0.021   0.105   False
+    F3        Intercept         -0.202  0.475 -0.425   0.671   1.000   False
+              status[T.sick]     0.561  0.964  0.582   0.561   1.000   False
+    F4        Intercept          1.005  0.136  7.399   0.000   0.000    True
+              status[T.sick]    -1.723  0.392 -4.399   0.000   0.000    True
+    F5        Intercept          0.141  0.422  0.335   0.738   1.000   False
+              status[T.sick]    -0.690  0.625 -1.104   0.270   1.000   False
+    F6        Intercept         -0.873  0.137 -6.381   0.000   0.000    True
+              status[T.sick]     1.480  0.160  9.255   0.000   0.000    True
+    F7        Intercept          0.157  0.401  0.391   0.695   1.000   False
+              status[T.sick]     0.049  0.405  0.121   0.904   1.000   False
+
+    The covariate "status[T.sick]" stands for the effect of the "sick" group relative
+    to the reference group, "healthy" (the first group in alphabetical order is
+    automatically selected as the reference group). "Log2(FC)" represents the
+    :func:`clr`-transformed fold change of abundance (positive/negative: more/less
+    abundant in "sick" than in "healthy", respectively). A "True" in the "Signif"
+    column indicates a significantly differentially abundant feature-covariate pair.
+    This example shows that two features differ by healthy/sick status.
+
+    >>> result.query('Covariate != "Intercept" & Signif == True').round(3)
+                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F4        status[T.sick]    -1.723  0.392 -4.399     0.0     0.0    True
+    F6        status[T.sick]     1.480  0.160  9.255     0.0     0.0    True
+
+    **An advanced example**
+
+    Now we will create a complex dataset with 15 samples grouped into three disease
+    status: "mild", "moderate" and "severe", plus age as a confounder. Our goal is
+    to identify features that are differentially abundant between disease status.
+
+    >>> samples = [f'S{i}' for i in range(1, 16)]
+    >>> features = [f'F{i}' for i in range(1, 9)]
+    >>> data = [[ 2,  0,  7,  0,  0,  2,  3,  2],
+    ...         [ 0,  2,  0,  1,  1,  2,  0,  0],
+    ...         [ 3,  1,  0,  9,  0,  1,  1,  0],
+    ...         [ 2,  0,  1,  8,  1,  0, 11, 46],
+    ...         [ 1,  0,  1,  1,  0,  0,  2,  2],
+    ...         [ 0,  3, 22,  1,  1,  1,  3,  0],
+    ...         [ 1,  7, 16,  1,  0,  0,  2,  2],
+    ...         [ 0,  5,  6,  1,  2,  1,  0,  1],
+    ...         [ 1,  7,  0,  2,  1,  0,  3,  2],
+    ...         [ 0,  6,  4,  2,  0,  2,  2,  1],
+    ...         [ 3, 13,  7,  0,  0,  0,  3,  9],
+    ...         [ 1,  8,  5,  1,  0,  0,  0,  0],
+    ...         [ 0,  5, 14,  1,  0,  1,  0,  1],
+    ...         [ 5, 26,  3,  2,  0,  3,  1,  3],
+    ...         [ 0, 18,  7,  0,  0,  3,  1,  0]]
+    >>> table = pd.DataFrame(data, index=samples, columns=features)
+    >>> status = ['mild'] * 5 + ['moderate'] * 5 + ['severe'] * 5
+    >>> age = [39, 19, 20, 31, 15, 37, 27, 47, 26, 23, 39, 48, 46, 33, 36]
+    >>> metadata = pd.DataFrame({'status': status, 'age': age}, index=samples)
+
+    Run ``ancombc``. This time, we specify two factors: "status" and "age" in the
+    formula, such that the function will test the individual effects of each factor
+    while controlling for the other. Additionally, we instruct the function to perform
+    a *global test* on "status", which identifies features that are differentially
+    abundant between at least two status.
+
+    >>> res = ancombc(table + 1, metadata, formula='status + age')
+    >>> res_main = res.res
+    >>> res_main.round(3)
+                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F1        Intercept             -0.006  0.346 -0.016   0.987   1.000   False
+              status[T.moderate]    -0.337  0.245 -1.376   0.169   1.000   False
+              status[T.severe]       0.278  0.350  0.792   0.428   1.000   False
+              age                    0.001  0.011  0.117   0.907   1.000   False
+    F2        Intercept              0.072  0.446  0.160   0.873   1.000   False
+              status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
+              status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
+              age                   -0.022  0.013 -1.697   0.090   0.538   False
+    F3        Intercept             -1.690  0.570 -2.967   0.003   0.021    True
+              status[T.moderate]     1.010  0.578  1.747   0.081   0.565   False
+              status[T.severe]       0.717  0.517  1.388   0.165   1.000   False
+              age                    0.063  0.022  2.871   0.004   0.033    True
+    F4        Intercept              0.439  0.483  0.910   0.363   1.000   False
+              status[T.moderate]    -0.046  0.405 -0.113   0.910   1.000   False
+              status[T.severe]      -0.244  0.536 -0.455   0.649   1.000   False
+              age                   -0.004  0.019 -0.199   0.842   1.000   False
+    F5        Intercept             -1.227  0.393 -3.125   0.002   0.014    True
+              status[T.moderate]     0.274  0.293  0.934   0.350   1.000   False
+              status[T.severe]      -0.323  0.320 -1.011   0.312   1.000   False
+              age                    0.027  0.014  2.001   0.045   0.318   False
+    F6        Intercept             -0.439  0.440 -0.999   0.318   1.000   False
+              status[T.moderate]     0.114  0.432  0.264   0.792   1.000   False
+              status[T.severe]       0.375  0.544  0.691   0.490   1.000   False
+              age                    0.008  0.016  0.464   0.643   1.000   False
+    F7        Intercept              0.201  0.472  0.426   0.670   1.000   False
+              status[T.moderate]     0.082  0.302  0.270   0.787   1.000   False
+              status[T.severe]      -0.264  0.401 -0.658   0.510   1.000   False
+              age                    0.004  0.016  0.256   0.798   1.000   False
+    F8        Intercept             -0.168  0.526 -0.319   0.750   1.000   False
+              status[T.moderate]    -0.402  0.584 -0.688   0.491   1.000   False
+              status[T.severe]      -0.299  0.728 -0.411   0.681   1.000   False
+              age                    0.022  0.018  1.222   0.222   1.000   False
+
+    We found that feature "F2" is significantly differentially (more) abundant in
+    "moderate" and "severe" groups compared with "mild", which serves as the reference
+    group. Additionally, feature "F3" is separately correlated with age.
+
+    >>> res_main.query('Covariate != "Intercept" & Signif == True').round(3)
+                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F2        status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
+              status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
+    F3        age                    0.063  0.022  2.871   0.004   0.033    True
+
+    The global test result suggests that "F2" and "F4" are differentially abundant
+    between two of the three groups (though it doesn't tell which groups).
+
+    >>> res_global = res.global_test(group='status')
+    >>> res_global.round(3)
+                    W  pvalue  qvalue  Signif
+    FeatureID
+    F1          1.855   0.791   1.000   False
+    F2         80.771   0.000   0.000    True
+    F3          2.925   0.463   1.000   False
+    F4         -0.093   0.000   0.000    True
+    F5          1.068   0.827   1.000   False
+    F6          0.121   0.117   0.704   False
+    F7          0.220   0.208   1.000   False
+    F8          0.485   0.430   1.000   False
+
+    **Structural zero test**
+
+    The structural zero test identifies features that are systematically absent from
+    certain sample groups. This test is an option of the R command ``ancombc``. In
+    scikit-bio, :func:`struc_zero` is a standalone function, as it is generally useful
+    with or without ANCOM-BC.
+
+    >>> from skbio.stats.composition import struc_zero
+    >>> res_zero = struc_zero(table, metadata, 'status')
+    >>> res_zero
+         mild  moderate  severe
+    F1  False     False   False
+    F2  False     False   False
+    F3  False     False   False
+    F4  False     False   False
+    F5  False     False    True
+    F6  False     False   False
+    F7  False     False   False
+    F8  False     False   False
+
+    The result reveals that feature "F5" is a structural zero in the "severe" groups,
+    as all or most of its values are zero. Although the ANCOM-BC test itself didn't
+    identify "F5", we should consider it as differentially (less) abundant than in the
+    other two groups.
+
+    We can use this additional information to update the global test result. The rule
+    is that a feature should be considered as globally differentially abundant if it is
+    a structural zero in at least one but not all groups.
+
+    >>> signif_global = res_global['Signif'] | (
+    ...     ~res_zero.all(axis=1) & res_zero.any(axis=1))
+    >>> signif_global
+    FeatureID
+    F1    False
+    F2     True
+    F3    False
+    F4     True
+    F5     True
+    F6    False
+    F7    False
+    F8    False
+    dtype: bool
+
+    The main ANCOM-BC result can also be updated with structural zeros.
+
+    >>> signif_main = res_main.query(
+    ...     'Covariate.str.startswith("status[T.")')['Signif'].unstack()
+    >>> signif_main.columns = signif_main.columns.str.removeprefix(
+    ...     'status[T.').str.removesuffix(']')
+    >>> signif_zero = res_zero.loc[signif_main.index, signif_main.columns]
+    >>> signif_main |= signif_zero
+    >>> signif_main.columns.name = None
+    >>> signif_main
+               moderate  severe
+    FeatureID
+    F1            False   False
+    F2             True    True
+    F3            False   False
+    F4            False   False
+    F5            False    True
+    F6            False   False
+    F7            False   False
+    F8            False   False
+
     """
     return _ancombc(
         table=table,
