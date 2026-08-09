@@ -231,8 +231,8 @@ def _aggregate_features(data, aggregator, features=None):
     aggregator : callable, mapping, or 1-D array_like
         Rule for aggregating features. Two options:
 
-        1. A callable or mapping that maps each feature ID to an aggregate ID.
-           Requires `features` supplied.
+        1. A callable or mapping (including pandas Series) that maps each feature ID to
+           an aggregate ID. Requires `features` supplied.
         2. A 1D array-like that provides one aggregate ID per feature in data order.
            Does not require `features`.
 
@@ -254,6 +254,12 @@ def _aggregate_features(data, aggregator, features=None):
         If `aggregator` is in an invalid format.
 
     """
+    if features is not None and len(features) != data.shape[1]:
+        raise ValueError(
+            f"Input table has {data.shape[1]} columns whereas {len(features)} "
+            "features were provided."
+        )
+
     # Callable (a function that converts the original ID into an aggregated ID)
     if callable(aggregator):
         if features is None:

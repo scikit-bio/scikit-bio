@@ -227,6 +227,11 @@ class TestAggregate(TestCase):
             _aggregate_features(self.data, 123)
         self.assertEqual(str(cm.exception), msg)
 
+        msg = "Input table has 4 columns whereas 3 features were provided."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, {"f1": "A"}, ["f1", "f2", "f3"])
+        self.assertEqual(str(cm.exception), msg)
+
         msg = "A callable aggregator requires named features."
         with self.assertRaises(ValueError) as cm:
             _aggregate_features(self.data, lambda feature: feature)
