@@ -153,7 +153,8 @@ class CoreTests(TestCase):
         delta_em = bias[:, 0]
         beta_hat = beta.T - delta_em
 
-        obs = _calc_statistics(beta_hat, var_hat)
+        obs = _calc_statistics(beta_hat, var_hat, 0.05, "holm")
+
         exp_se_hat = np.array([[0.03349832, 0.38489241],
                                [0.01784618, 0.09653226],
                                [0.086538  , 0.12040718],
@@ -161,7 +162,6 @@ class CoreTests(TestCase):
                                [0.06485124, 0.11491594],
                                [0.01530208, 0.07187641],
                                [0.01530208, 0.07062619]])
-
         exp_W = np.array([[ 2.14805775e+01, -3.06882664e+00],
                           [ 3.95639779e+01, -5.55591315e+00],
                           [ 8.05617300e-01,  5.70547350e-01],
@@ -169,34 +169,33 @@ class CoreTests(TestCase):
                           [ 1.21029210e+00,  3.69040700e-02],
                           [-1.24061800e-01, -1.63359659e+00],
                           [-1.24061800e-01,  7.48421510e-01]])
+        exp_pval = np.array([[2.36547636e-102, 2.14901260e-003],
+                             [0.00000000e+000, 2.76164163e-008],
+                             [4.20463527e-001, 5.68306514e-001],
+                             [9.01266346e-001, 3.41748381e-001],
+                             [2.26166816e-001, 9.70561497e-001],
+                             [9.01266346e-001, 1.02343585e-001],
+                             [9.01266346e-001, 4.54205953e-001]])
+        exp_qval = np.array([[1.41928582e-101, 1.28940756e-002],
+                             [0.00000000e+000, 1.93314914e-007],
+                             [1.00000000e+000, 1.00000000e+000],
+                             [1.00000000e+000, 1.00000000e+000],
+                             [1.00000000e+000, 1.00000000e+000],
+                             [1.00000000e+000, 5.11717926e-001],
+                             [1.00000000e+000, 1.00000000e+000]])
+        exp_reject = np.array([[ True,  True],
+                               [ True,  True],
+                               [False, False],
+                               [False, False],
+                               [False, False],
+                               [False, False],
+                               [False, False]])
 
-        exp_p = np.array([[2.36547636e-102, 2.14901260e-003],
-                          [0.00000000e+000, 2.76164163e-008],
-                          [4.20463527e-001, 5.68306514e-001],
-                          [9.01266346e-001, 3.41748381e-001],
-                          [2.26166816e-001, 9.70561497e-001],
-                          [9.01266346e-001, 1.02343585e-001],
-                          [9.01266346e-001, 4.54205953e-001]])
-
-        exp_q = np.array([[1.41928582e-101, 1.28940756e-002],
-                          [0.00000000e+000, 1.93314914e-007],
-                          [1.00000000e+000, 1.00000000e+000],
-                          [1.00000000e+000, 1.00000000e+000],
-                          [1.00000000e+000, 1.00000000e+000],
-                          [1.00000000e+000, 5.11717926e-001],
-                          [1.00000000e+000, 1.00000000e+000]])
-
-        for o, e in zip(obs[0], exp_se_hat):
-            npt.assert_allclose(o, e, atol=1e-5)
-
-        for o, e in zip(obs[1], exp_W):
-            npt.assert_allclose(o, e, atol=1e-3)
-
-        for o, e in zip(obs[2], exp_p):
-            npt.assert_allclose(o, e, atol=1e-5)
-
-        for o, e in zip(obs[3], exp_q):
-            npt.assert_allclose(o, e, atol=1e-5)
+        npt.assert_allclose(obs[0], exp_se_hat, atol=1e-5)
+        npt.assert_allclose(obs[1], exp_W, atol=1e-3)
+        npt.assert_allclose(obs[2], exp_pval, atol=1e-5)
+        npt.assert_allclose(obs[3], exp_qval, atol=1e-5)
+        npt.assert_array_equal(obs[4], exp_reject)
 
     def test_post_hoc_methods_recalculate(self):
         res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
@@ -361,6 +360,57 @@ class Ancombc2Tests(TestCase):
             [0.0, 0.0],
         ]).flatten()
         npt.assert_array_equal(obs, exp)
+
+    def test_ancombc2_pseq(self):
+        """Test ANCOM-BC on the HITChip Atlas dataset.
+
+        See `AncombcTests.test_ancombc_pseq`.
+
+        """
+        table = pd.read_csv(
+            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
+        )
+        meta_data = pd.read_csv(
+            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
+        )
+        meta_data = meta_data.dropna(axis=1, how="any")
+        meta_data["bmi"] = pd.Categorical(
+            meta_data["bmi"], categories=["obese", "overweight", "lean"]
+        )
+
+        # run ancom-bc for the HITChip Atlas dataset
+        res = ancombc2(table + 1, meta_data, "age + region + bmi")
+
+        ### Temporary test to confirm numerical identity ###
+        outdir = '/home/drz/Desktop'
+
+        # res.res.to_csv(f'{outdir}/ancombc2_pseq_1.tsv', sep='\t')
+        # for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
+        #     np.save(f'{outdir}/{attr}.npy', getattr(res, f'_{attr}'))
+
+        obs = res.res.reset_index()
+        exp = pd.read_table(f'{outdir}/ancombc2_pseq_1.tsv')
+        pd.testing.assert_frame_equal(obs, exp)
+        for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
+            obs = getattr(res, f'_{attr}')
+            exp = np.load(f'{outdir}/{attr}.npy')
+            npt.assert_array_equal(obs, exp)
+
+        # # format multi-index dataframe
+        # obs = res["Signif"].unstack()
+        # obs.columns.name = None
+        # obs.index.name = "taxon"
+        # obs = obs.rename(columns={"Intercept": "(Intercept)"})
+        # for c in obs.columns:
+        #     obs = obs.rename(columns={c: c.replace("[T.", "").replace("]", "")})
+
+        # # load ancom-bc results generated by the R package ANCOMBC
+        # exp = pd.read_csv(
+        #     get_data_path("pseq_subset_out_res_diff_abn.csv"), index_col="taxon"
+        # ).drop("Unnamed: 0", axis=1)
+
+        # similarity = exp.eq(obs).sum().sum() / exp.size
+        # npt.assert_equal(similarity, 1.0)
 
     def test_ancombc2_aggregator(self):
         mapping = {
