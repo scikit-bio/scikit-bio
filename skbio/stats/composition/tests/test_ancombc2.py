@@ -390,11 +390,13 @@ class Ancombc2Tests(TestCase):
 
         obs = res.res.reset_index()
         exp = pd.read_table(f'{outdir}/ancombc2_pseq_1.tsv')
+        exp["Signif"] = exp["Signif"].astype("boolean")
         pd.testing.assert_frame_equal(obs, exp)
         for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
             obs = getattr(res, f'_{attr}')
             exp = np.load(f'{outdir}/{attr}.npy')
-            npt.assert_array_equal(obs, exp)
+            npt.assert_allclose(obs, exp)
+            # npt.assert_array_equal(obs, exp)
 
         # # format multi-index dataframe
         # obs = res["Signif"].unstack()

@@ -326,7 +326,7 @@ def ancombc(
     return _ancombc_core(
         table=table,
         metadata=metadata,
-        reestimate=False,
+        version2=False,
         formula=formula,
         max_iter=max_iter,
         tol=tol,
@@ -474,19 +474,33 @@ def ancombc2(
               age                    0.022  0.029  0.763   0.462   1.000   False
 
     """
-    return _ancombc(
+    return _ancombc_core(
         table=table,
         metadata=metadata,
-        reestimate=True,
+        version2=True,
         formula=formula,
-        aggregator=aggregator,
+        max_iter=max_iter,
+        tol=tol,
+        alpha=alpha,
         p_adjust=p_adjust,
         pseudo=pseudo,
         s0_perc=s0_perc,
-        alpha=alpha,
-        max_iter=max_iter,
-        tol=tol,
+        aggregator=aggregator,
     )
+
+    # return _ancombc(
+    #     table=table,
+    #     metadata=metadata,
+    #     reestimate=True,
+    #     formula=formula,
+    #     aggregator=aggregator,
+    #     p_adjust=p_adjust,
+    #     pseudo=pseudo,
+    #     s0_perc=s0_perc,
+    #     alpha=alpha,
+    #     max_iter=max_iter,
+    #     tol=tol,
+    # )
 
 
 class ANCOMBCResult:
@@ -1232,6 +1246,7 @@ def _estimate_params(data, dmat):
     beta : ndarray of shape (n_features, n_covariates)
         Estimated coefficients (log-fold changes before correction).
         Transposed from SVD output to match downstream convention.
+        # TODO: Is there a transposition? Can it be skipped?
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
     beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
@@ -1593,25 +1608,45 @@ def _estimate_bias_var(beta, var_hat, params):
     return delta_em, delta_wls, var_delta
 
 
-def _sample_fractions(data, dmat, beta_hat):
-    """Estimate sampling fractions.
+def _sample_fractions(data, dmat, beta, delta_em):
+    """Estimate and correct for sampling fractions.
 
     Parameters
     ----------
     data : ndarray of shape (n_samples, n_features)
-        Data table. Zero-handled. Log-transformed.
+        Data table. Zero-handled. Transformed.
     dmat : ndarray of shape (n_samples, n_covariates)
         Design matrix.
-    beta_hat : ndarray of shape (n_features, n_covariates)
-        Corrected coefficients.
+    beta : ndarray of shape (n_covariates, n_features)
+        Estimated coefficients.
+    delta_em : ndarray of shape (n_covariates,)
+        Estimated biases.
 
-    Returns
-    -------
-    theta_hat : ndarray of shape (n_samples,)
-        Sampling fractions.
+    Notes
+    -----
+    `data` will be updated in place
 
     """
-    return np.mean(data - dmat @ beta_hat.T, axis=1)
+    # Compute sampling fractions
+    # beta_hat = beta.T - delta_em
+    # theta_hat = np.mean(data - dmat @ beta_hat.T, axis=1)
+    # NOTE: The following code is faster, but numerically slightly different.
+    intm = dmat @ beta
+    intm -= (dmat @ delta_em)[:, None]
+    # TODO: Is dmat @ beta already computed somewhere before?
+    intm -= data
+    intm *= -1.0
+    theta_hat = np.mean(intm, axis=1)
+    # NaN handling would be:
+    # theta_hat = np.nanmean(intm, axis=1)
+
+    # Handle NaN in theta (samples with all-NaN residuals)
+    # nan_theta = np.isnan(theta_hat_arr)
+    # if np.any(nan_theta):
+    #     theta_hat_arr[nan_theta] = 0.0
+
+    # Subtract sampling fractions from data.
+    data -= theta_hat[:, None]
 
 
 def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
@@ -1875,18 +1910,6 @@ def _ancombc2_estimate(
     # NOTE: I got rid of it. But let's revisit.
     # vcov_hat = [vcov_hat[i] for i in range(n_feats)]
 
-    # Estimate standard error
-    se_hat = np.sqrt(var_hat)
-    # NOTE: Code was below. But I think this is unnecessary: First, var_hat cannot
-    # contain negative values. Second, np.sqrt on NaN values will return NaN without
-    # warning.
-    # se_hat = np.sqrt(np.maximum(var_hat, 0))
-    # se_hat[np.isnan(var_hat)] = np.nan
-
-    W = beta_hat / se_hat
-    # NOTE: Code was below. But I think there is no need to handle NaN here.
-    # W = np.where(np.isnan(se_hat), np.nan, beta_hat / se_hat)
-
     # Compute degrees of freedom (per-taxon, based on valid samples)
     # dof = np.full((n_feats, n_covars), np.nan)
     # for i in range(n_feats):
@@ -1965,7 +1988,7 @@ def _aggregate_features(table, aggregator, has_feature_ids):
 def _ancombc_core(
     table,
     metadata,
-    reestimate=False,
+    version2=False,  # Mark ANCOM-BC2
     formula=None,
     aggregator=None,
     p_adjust="holm",
@@ -1975,7 +1998,7 @@ def _ancombc_core(
     max_iter=100,
     tol=1e-5,
 ):
-    """Private ANCOM-BC/BC2 core function."""
+    """ANCOM-BC/BC2 core function."""
 
     # NOTE: A pseudocount should have been added to the table by the user prior to
     # calling this function.
@@ -1984,9 +2007,9 @@ def _ancombc_core(
     # NOTE: ANCOM-BC does not handle zeros in the input table. The user should have
     # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
     # TODO: Add zero-handling in ANCOM-BC2.
-    _check_composition(np, matrix, nozero=not reestimate)
+    _check_composition(np, matrix, nozero=not version2)
 
-    n_feats = matrix.shape[1]
+    n_samps, n_feats = matrix.shape
     has_feature_ids = features is not None
     if features is None:
         features = np.arange(n_feats)
@@ -2006,15 +2029,22 @@ def _ancombc_core(
     if not 0 < alpha < 1:
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
 
-    # check zero values
-    zero_mask = matrix == 0
-    has_zero = np.any(zero_mask)
+    # Add pseudocount
+    if pseudo:
+        matrix += pseudo
+        zero_mask = None
+        has_zero = False
+
+    # Otherwise, check zero values
+    else:
+        zero_mask = matrix == 0
+        has_zero = np.any(zero_mask)
 
     # Transform count matrix
     # NOTE: See `_check_composition`
     # TODO: Handle zeros
     # ANCOM-BC: Log-transformation
-    if not reestimate:
+    if not version2:
         matrix_tr = np.log(matrix)
 
     # ANCOM-BC2: CLR transformation
@@ -2030,56 +2060,51 @@ def _ancombc_core(
     for i in range(n_covars):
         bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
         # TODO: handle NaN
+
     delta_em = bias[:, 0]
     delta_wls = bias[:, 1]
     var_delta = bias[:, 2]  # only for ANCOM-BC2
 
-    # Correct coefficients (logFC) according to estimated bias.
-    # beta: (n_covariates, n_features); transpose to (n_features, n_covariates)
-    # then subtract delta_em broadcast over columns.
-    beta_hat = beta.T - delta_em
+    # beta_hat = beta.T - delta_em
 
-    if reestimate:
+    # ANCOM-BC (original)
+    if not version2:
+        # Correct coefficients (logFC) according to estimated bias.
+        beta_hat = beta.T - delta_em
+
+        # Skip degree of freedom calculation. # TODO: Revisit
+        dof = None
+
+    # ANCOM-BC2
+    else:
         # TODO: aggregate data
         # matrix = agg(matrix)
         # matrix_tr = xxx(matrix)
 
-        # Compute sampling fractions
-        theta_hat = np.mean(data - dmat @ beta_hat.T, axis=1)
-
-        # Subtract sampling fractions from data before estimation.
-        matrix_crt = matrix_tr - theta_hat[:, None]  # TODO
+        # Estimate and correct for sampling fractions
+        _sample_fractions(matrix_tr, dmat, beta, delta_em)
 
         # Re-estimate parameters
-        var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_crt, dmat)
+        var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+        beta_hat = beta_hat.T
 
-        # Compute degrees of freedom
-        dof = np.full((n_feats, n_covars), np.nan)
-        for i in range(n_feats):
-            n_valid = np.sum(~np.isnan(y2_crt[:, i]))
-            if n_valid > n_covars:
-                dof[i, :] = n_valid - n_covars
+        # Adjust variances
+        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
 
-        # Adjust variance according to delta
-        var_hat = (
-            var_hat
-            + var_delta[None, :]
-            + 2 * np.sqrt(np.abs(var_hat * var_delta[None, :]))
-        )
-
-        # SAM-like fudge factor
-        if s0_perc is None:
-            s02 = np.zeros(n_covars)
+        # Compute per-feature degree of freedom (valid samples - covariates)
+        if has_zero:
+            n_valid = np.sum(~zero_mask, axis=0)
+            dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
-            s02 = np.nanquantile(var_hat, s0_perc, axis=0)
+            val = n_samps - n_covars if n_samps > n_covars else np.nan
+            dof = np.full((n_feats,), val)
 
     # Calculate statistics
-    se_hat, W, pval, qval, reject = _calc_statistics(beta_hat, var_hat, alpha, p_adjust)
+    se_hat, W, pval, qval, reject = _calc_statistics(
+        beta_hat, var_hat, alpha, p_adjust, dof
+    )
 
-    # Identify significantly differentially abundance feature-covariate pairs.
-    # reject = qval <= alpha
-
-    # Output the primary results.
+    # Output primary results.
     res = pd.DataFrame.from_dict(
         {
             "FeatureID": [x for x in features for _ in range(n_covars)],
@@ -2091,13 +2116,18 @@ def _ancombc_core(
             "qvalue": qval.ravel(),
         }
     )
+
     # Pandas' nullable boolean type
     res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
     res.set_index(["FeatureID", "Covariate"], inplace=True)
 
+    method = "ANCOM-BC"
+    if version2:
+        method += "2"
+
     return ANCOMBCResult(
         res=res,
-        method="ANCOM-BC" if not reestimate else "ANCOM-BC2",
+        method=method,
         _dmat=dmat,
         _beta_hat=beta_hat,
         _var_hat=var_hat,
@@ -2246,7 +2276,9 @@ def _ancombc(
             "pvalue": p_hat.ravel(),
             "qvalue": q_hat.ravel(),
         }
-        res_dict["Signif"] = reject.ravel()
+        # res_dict["Signif"] = reject.ravel()
+        res_dict["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+
         res = pd.DataFrame(res_dict)
         res.set_index(["FeatureID", "Covariate"], inplace=True)
 
