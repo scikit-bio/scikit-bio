@@ -1978,6 +1978,71 @@ def ancombc2(
        compositions of microbiomes with covariate adjustments and repeated
        measures. Nature Methods, 21(1), 83–91.
 
+    Examples
+    --------
+    >>> from skbio.stats.composition import ancombc2
+    >>> import pandas as pd
+
+    >>> samples = [f'S{i}' for i in range(1, 16)]
+    >>> features = [f'F{i}' for i in range(1, 9)]
+    >>> data = [[ 2,  0,  7,  0,  0,  2,  3,  2],
+    ...         [ 0,  2,  0,  1,  1,  2,  0,  0],
+    ...         [ 3,  1,  0,  9,  0,  1,  1,  0],
+    ...         [ 2,  0,  1,  8,  1,  0, 11, 46],
+    ...         [ 1,  0,  1,  1,  0,  0,  2,  2],
+    ...         [ 0,  3, 22,  1,  1,  1,  3,  0],
+    ...         [ 1,  7, 16,  1,  0,  0,  2,  2],
+    ...         [ 0,  5,  6,  1,  2,  1,  0,  1],
+    ...         [ 1,  7,  0,  2,  1,  0,  3,  2],
+    ...         [ 0,  6,  4,  2,  0,  2,  2,  1],
+    ...         [ 3, 13,  7,  0,  0,  0,  3,  9],
+    ...         [ 1,  8,  5,  1,  0,  0,  0,  0],
+    ...         [ 0,  5, 14,  1,  0,  1,  0,  1],
+    ...         [ 5, 26,  3,  2,  0,  3,  1,  3],
+    ...         [ 0, 18,  7,  0,  0,  3,  1,  0]]
+    >>> table = pd.DataFrame(data, index=samples, columns=features)
+    >>> status = ['mild'] * 5 + ['moderate'] * 5 + ['severe'] * 5
+    >>> age = [39, 19, 20, 31, 15, 37, 27, 47, 26, 23, 39, 48, 46, 33, 36]
+    >>> metadata = pd.DataFrame({'status': status, 'age': age}, index=samples)
+
+    >>> res = ancombc2(table + 1, metadata, formula='status + age')
+    >>> res_main = res.res
+    >>> res_main.round(3)
+                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Covariate
+    F1        Intercept              0.342  0.723  0.473   0.645   1.000   False
+              status[T.moderate]    -0.337  0.517 -0.652   0.528   1.000   False
+              status[T.severe]       0.278  0.673  0.413   0.688   1.000   False
+              age                    0.001  0.024  0.054   0.958   1.000   False
+    F2        Intercept             -0.541  0.796 -0.680   0.511   1.000   False
+              status[T.moderate]     1.906  0.527  3.618   0.004   0.032    True
+              status[T.severe]       2.935  0.639  4.590   0.001   0.006    True
+              age                   -0.022  0.025 -0.877   0.399   1.000   False
+    F3        Intercept             -2.242  0.893 -2.509   0.029   0.232   False
+              status[T.moderate]     1.010  0.788  1.282   0.226   1.000   False
+              status[T.severe]       0.717  0.803  0.893   0.391   1.000   False
+              age                    0.063  0.032  1.955   0.077   0.612   False
+    F4        Intercept              0.580  0.824  0.703   0.497   1.000   False
+              status[T.moderate]    -0.046  0.639 -0.071   0.945   1.000   False
+              status[T.severe]      -0.244  0.819 -0.298   0.771   1.000   False
+              age                   -0.004  0.029 -0.126   0.902   1.000   False
+    F5        Intercept             -0.502  0.757 -0.663   0.521   1.000   False
+              status[T.moderate]     0.274  0.552  0.496   0.630   1.000   False
+              status[T.severe]      -0.323  0.651 -0.497   0.629   1.000   False
+              age                    0.027  0.025  1.069   0.308   1.000   False
+    F6        Intercept             -0.045  0.791 -0.057   0.956   1.000   False
+              status[T.moderate]     0.114  0.662  0.172   0.866   1.000   False
+              status[T.severe]       0.375  0.825  0.455   0.658   1.000   False
+              age                    0.008  0.028  0.275   0.788   1.000   False
+    F7        Intercept              0.291  0.816  0.357   0.728   1.000   False
+              status[T.moderate]     0.082  0.559  0.146   0.887   1.000   False
+              status[T.severe]      -0.264  0.711 -0.371   0.718   1.000   False
+              age                    0.004  0.027  0.150   0.883   1.000   False
+    F8        Intercept             -0.118  0.858 -0.138   0.893   1.000   False
+              status[T.moderate]    -0.402  0.793 -0.507   0.622   1.000   False
+              status[T.severe]      -0.299  0.984 -0.304   0.767   1.000   False
+              age                    0.022  0.029  0.763   0.462   1.000   False
+
     """
     return _ancombc(
         table=table,
