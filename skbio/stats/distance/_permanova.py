@@ -29,7 +29,7 @@ from skbio.binaries import (
     permanova as _skbb_permanova,
 )
 from skbio.util import get_rng
-from skbio.util._decorator import params_aliased
+from skbio.util._decorator import params_aliased, array_api_doc
 from skbio.util._array import ingest_array
 from skbio._config import _resolve_engine
 
@@ -376,6 +376,7 @@ if NUMBA_AVAILABLE:
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def permanova(
     distmat: DistanceMatrix,
     grouping: pd.DataFrame | ArrayLike,
@@ -461,6 +462,8 @@ def permanova(
         (CUDA or ROCm) and ``engine="numba"``, a fused GPU kernel is used;
         matrices on other backends use the array-API path instead (see Notes for
         the ROCm-PyTorch case).
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
