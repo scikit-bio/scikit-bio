@@ -46,7 +46,7 @@ def _check_composition(
     axis : int, optional
         Axis that represents each composition. Default is the last axis (-1).
     nozero : bool, optional
-        If True, matrix cannot have zero values.
+        If True, matrix must contain only positive values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
     allnum : bool, optional
@@ -57,35 +57,39 @@ def _check_composition(
     TypeError
         If the matrix is not numeric.
     ValueError
-        If the matrix contains nan or infinite values.
+        If the matrix contains NaN (allnum=True) or infinite values.
     ValueError
-        If any values in the matrix are negative.
+        If any values in the matrix are zero (nozero=True) or negative.
     ValueError
-        If there are compositions that have all zeros.
+        If there are compositions full of zeros or NaNs (no observation).
     ValueError
         If the matrix has more than maximum number of dimensions.
 
     """
     if not xp.isdtype(mat.dtype, "numeric"):
         raise TypeError("Input matrix must have a numeric data type.")
+    if maxdim is not None and mat.ndim > maxdim:
+        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
     if allnum:
-        # Don't allow infinite or NaN values.
         if not xp.all(xp.isfinite(mat)):
             raise ValueError("Input matrix cannot have infinite or NaN values.")
     else:
-        # Allow NaN, but not infinite.
         if xp.any(xp.isinf(mat)):
             raise ValueError("Input matrix cannot have infinite values.")
     if nozero:
         if xp.any(mat <= 0):
-            raise ValueError("Input matrix cannot have negative or zero components.")
+            raise ValueError("Input matrix must have strictly positive components.")
     else:
         if xp.any(mat < 0):
             raise ValueError("Input matrix cannot have negative components.")
-        if xp.any(~xp.any(mat, axis=axis)):
-            raise ValueError("Input matrix cannot have compositions with all zeros.")
-    if maxdim is not None and mat.ndim > maxdim:
-        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
+        if allnum:
+            observed = xp.any(mat, axis=axis)
+        else:
+            observed = xp.any(mat > 0, axis=axis)
+        if xp.any(~observed):
+            raise ValueError(
+                "Input matrix cannot have compositions without observed components."
+            )
 
 
 @array_api_doc(
@@ -661,7 +665,7 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     """
     xp, mat = ingest_array(mat)
     if validate:
-        _check_composition(xp, mat, allnum=False)
+        _check_composition(xp, mat, axis=axis, allnum=False)
     return _rclr(xp, mat, axis)
 
 

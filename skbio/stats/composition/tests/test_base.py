@@ -120,7 +120,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             _check_composition(np, self.bad1)
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Input matrix cannot have compositions with all zeros."
+        msg = "Input matrix cannot have compositions without observed components."
         with self.assertRaises(ValueError) as cm:
             _check_composition(np, self.bad3)
         self.assertEqual(str(cm.exception), msg)
@@ -146,7 +146,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             _check_composition(np, np.array(0))
         self.assertEqual(str(cm.exception), msg)
 
-        msg = "Input matrix cannot have negative or zero components."
+        msg = "Input matrix must have strictly positive components."
         self.assertIsNone(_check_composition(np, self.cdata3))
         with self.assertRaises(ValueError) as cm:
             _check_composition(np, self.cdata3, nozero=True)
@@ -157,6 +157,27 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         self.assertIsNone(_check_composition(np, self.cdata9, maxdim=3))
         with self.assertRaises(ValueError) as cm:
             _check_composition(np, self.cdata9, maxdim=2)
+        self.assertEqual(str(cm.exception), msg)
+
+        # NaN values
+        mat = np.array([[3.0, 2.5], [np.nan, 1.0]])
+        msg = "Input matrix cannot have infinite or NaN values."
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, mat)
+        self.assertEqual(str(cm.exception), msg)
+        self.assertIsNone(_check_composition(np, mat, allnum=False))
+
+        # all-NaN composition
+        msg = "Input matrix cannot have compositions without observed components."
+        mat = np.array([[np.nan, 1.0], [np.nan, 2.0]])
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, mat, axis=0, allnum=False)
+        self.assertEqual(str(cm.exception), msg)
+
+        # mixture of zero and NaN
+        mat = np.array([[1.2, 2.6, np.nan], [0.0, np.nan, 0.0]])
+        with self.assertRaises(ValueError) as cm:
+            _check_composition(np, mat, allnum=False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_check_basis(self):
@@ -271,7 +292,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         npt.assert_array_equal(obs.round(3), exp)
 
         # all-zero composition
-        msg = "Input matrix cannot have compositions with all zeros."
+        msg = "Input matrix cannot have compositions without observed components."
         with self.assertRaises(ValueError) as cm:
             closure(self.bad3)
         self.assertEqual(str(cm.exception), msg)
@@ -502,7 +523,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         npt.assert_allclose(cmat, exp)
 
         # invalid input matrix
-        msg = "Input matrix cannot have negative or zero components."
+        msg = "Input matrix must have strictly positive components."
 
         # negative value
         with self.assertRaises(ValueError) as cm:
@@ -668,7 +689,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         npt.assert_allclose(obs, exp)
 
     def test_ilr_errors(self):
-        msg = "Input matrix cannot have negative or zero components."
+        msg = "Input matrix must have strictly positive components."
         with self.assertRaises(ValueError) as cm:
             ilr(self.bad1)
         self.assertEqual(str(cm.exception), msg)
@@ -1173,6 +1194,20 @@ class TestRclr(TestCase, ArrayAPITestMixin):
             rclr(mat)
 
         self.assertIn("negative", str(context.exception))
+
+    def test_rclr_empty_composition(self):
+        mat = np.array([[0, 0, 0], [1, 2, 3]])
+        with self.assertRaises(ValueError):
+            rclr(mat)
+
+        _ = rclr(mat, axis=0)
+
+        with self.assertRaises(ValueError):
+            rclr(mat.T, axis=0)
+
+        mat = np.array([[0., np.nan, 0.]])
+        with self.assertRaises(ValueError):
+            rclr(mat)
 
     def test_rclr_inf_error(self):
         """Test that infinite values raise an error."""
