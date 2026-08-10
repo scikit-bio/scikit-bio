@@ -245,55 +245,63 @@ cdef class BPTree:
             _e_index[i] = self._excess(i)
         self._e_index = _e_index
 
-    def write(self, object fname):
-        """Save the tree to a compressed NumPy ``.npz`` archive.
+    default_write_format = "newick"
 
-        The parentheses bit array, node names, and branch lengths are stored.
+    def write(self, object file, format=None, **kwargs):
+        """Write the tree to a file via the ``skbio.io`` registry.
 
         Parameters
         ----------
-        fname : str or file-like object
+        file : str or file-like object
             Path or open file handle to write to.
+        format : str, optional
+            The file format to write. Defaults to ``"newick"``.
+        kwargs : dict, optional
+            Format-specific parameters passed to the writer.
 
         See Also
         --------
         read
+        skbio.io.registry.write
+        skbio.io.format.newick
 
         """
-        np.savez_compressed(fname, names=self._names, lengths=self._lengths,
-                            B=self.data)
+        # imported lazily to avoid an import cycle at module load time
+        import skbio.io
+
+        return skbio.io.write(
+            self, into=file, format=format or "newick", **kwargs
+        )
 
     @staticmethod
-    def read(object fname):
-        """Load a tree from a NumPy ``.npz`` archive written by ``write``.
+    def read(object file, format=None, **kwargs):
+        """Read a tree from a file via the ``skbio.io`` registry.
 
         Parameters
         ----------
-        fname : str or file-like object
+        file : str or file-like object
             Path or open file handle to read from.
+        format : str, optional
+            The file format to read. If omitted, the format is inferred.
+        kwargs : dict, optional
+            Format-specific parameters passed to the reader.
 
         Returns
         -------
         BPTree
-            The reconstructed tree, with node names and branch lengths.
+            The parsed tree.
 
         See Also
         --------
         write
-
-        Warnings
-        --------
-        This method calls :func:`numpy.load` with ``allow_pickle=True`` in
-        order to restore the object-dtype ``names`` array. Loading a pickled
-        array can execute arbitrary code, so only read ``.npz`` archives from
-        trusted sources.
+        skbio.io.registry.read
+        skbio.io.format.newick
 
         """
-        # names is an object array pickled by ``write``, so unpickling must be
-        # allowed to restore it
-        data = np.load(fname, allow_pickle=True)
-        bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
-        return bp
+        # imported lazily to avoid an import cycle at module load time
+        import skbio.io
+
+        return skbio.io.read(file, into=BPTree, format=format, **kwargs)
 
     @classmethod
     def from_treenode(cls, tree):
