@@ -455,10 +455,38 @@ class Ancombc2Tests(TestCase):
         )
 
 
-class ANCOMBCResultTests(TestCase):
+class PostHocTests(TestCase):
 
-    def test_nothing(self):
-        pass
+    def test_global_test(self):
+        table = pd.read_csv(
+            get_data_path("pseq_feature_table_subset.csv.gz"), index_col=0
+        )
+        meta_data = pd.read_csv(
+            get_data_path("pseq_meta_data_subset.csv.gz"), index_col=0
+        )
+        meta_data = meta_data.dropna(axis=1, how="any")
+        meta_data["bmi"] = pd.Categorical(
+            meta_data["bmi"], categories=["obese", "overweight", "lean"]
+        )
+        feature_table = np.log1p(table.to_numpy())
+        dmat = dmatrix("age + region + bmi", meta_data)
+        covars = dmat.design_info.column_names
+        n_covars = len(covars)
+
+        var_hat, beta, _, vcov_hat = _estimate_params(feature_table, dmat)
+
+        bias = np.empty((n_covars, 3))
+        for i in range(n_covars):
+            bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=1e-5, max_iter=100)
+        delta_em = bias[:, 0]
+
+        beta_hat = beta.T - delta_em
+
+        obs = _global_test(dmat, "bmi", beta_hat, vcov_hat, 0.05, "holm")[-1]
+        exp = np.array([False,  True, False, False,  True, False, False,  True,  True,
+                        False, False, False, False, False, False,  True, False, False,
+                        False, False,  True])
+        npt.assert_array_equal(obs, exp)
 
 
 class StrucZeroTests(TestCase):

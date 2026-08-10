@@ -50,6 +50,10 @@ def ancombc(
 
     .. versionadded:: 0.7.1
 
+    .. versionchanged:: 0.7.4
+        Fixed a bug in the global test, which would produce inaccurate results. Please
+        update the program. The main results are not impacted.
+
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
@@ -240,6 +244,8 @@ def ancombc(
               status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
     F3        age                    0.063  0.022  2.871   0.004   0.033    True
 
+    **Global test**
+
     Next, we will perform a *global test* to identify features that are differentially
     abundant between at least two status.
 
@@ -247,17 +253,17 @@ def ancombc(
     >>> res_global.round(3)
                     W  pvalue  qvalue  Signif
     FeatureID
-    F1          1.855   0.791   1.000   False
-    F2         80.771   0.000   0.000    True
-    F3          2.925   0.463   1.000   False
-    F4         -0.093   0.000   0.000    True
-    F5          1.068   0.827   1.000   False
-    F6          0.121   0.117   0.704   False
-    F7          0.220   0.208   1.000   False
-    F8          0.485   0.430   1.000   False
+    F1          5.934   0.103   0.617   False
+    F2         95.473   0.000   0.000    True
+    F3          3.210   0.402   1.000   False
+    F4          0.503   0.445   1.000   False
+    F5          6.839   0.065   0.458   False
+    F6          0.631   0.541   1.000   False
+    F7          1.044   0.813   1.000   False
+    F8          0.548   0.479   1.000   False
 
-    The global test result suggests that "F2" and "F4" are differentially abundant
-    between two of the three groups (though it doesn't tell which groups).
+    The global test result suggests that "F2" is differentially abundant between two of
+    the three groups (though it doesn't tell you which groups).
 
     **Structural zero test**
 
@@ -295,7 +301,7 @@ def ancombc(
     F1    False
     F2     True
     F3    False
-    F4     True
+    F4    False
     F5     True
     F6    False
     F7    False
@@ -1869,7 +1875,13 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     # for each feature, calculate test statistics W by the following formula:
     # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
     term = np.einsum("ik,jk->ji", A, beta_hat_sub)
-    W_global = np.einsum("ni,nij,ni->n", term, vcov_hat_sub_inv, term)
+    W_global = np.einsum("ni,nij,nj->n", term, vcov_hat_sub_inv, term)
+
+    # TODO: The following math is more performant given A is an identity matrix and
+    # does not change anything in multiplication. Consider using this version but
+    # do more research to make sure this is correct.
+    # intm = np.linalg.solve(vcov_hat_sub, beta_hat_sub[..., None])[..., 0]
+    # W_global = np.einsum("ni,ni->n", beta_hat_sub, intm)
 
     # Derive p-values from W statistics
     p_lower = chi2.cdf(W_global, dof)
