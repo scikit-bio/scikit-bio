@@ -31,6 +31,7 @@ from skbio.table._tabular import _ingest_table
 from skbio.stats.composition import clr, rclr
 from ._base import _check_composition
 from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
+from skbio.table._tabular import _aggregate_features
 
 
 def ancombc(
@@ -381,8 +382,8 @@ def ancombc2(
         aggregate ID are summed. By default, no aggregation is performed.
     p_adjust : str, optional
         Multiple testing correction method. Default is "holm".
-    pseudo : float, optional
-        Pseudo-count to add to zeros. Default is 0.
+    pseudo : int or float, optional
+        Pseudocount to add to all abundance data. Default is 0.
     s0_perc : float, optional
         SAM-like fudge factor percentile. Default is 0.05.
     alpha : float, optional
@@ -1226,6 +1227,42 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     return pd.DataFrame(zero_idx.T, index=features, columns=unique_groups)
 
 
+def _handle_zeros(data, pseudo=None):
+    """Handle zero values in the count matrix.
+
+    Parameters
+    ----------
+    data : ndarray of shape (n_samples, n_features)
+        Data table.
+    pseudo : float or int, optional
+        Pseudocount.
+
+    Returns
+    -------
+    zero_mask : ndarray of shape (n_samples, n_features)
+        Boolean mask of zero values in the table.
+    has_zero : bool
+        Whether table contain zero values.
+
+    Notes
+    -----
+    Pseudocount will be added to the table in place.
+
+    """
+    # Add pseudocount
+    if pseudo:
+        data += pseudo
+        zero_mask = None
+        has_zero = False
+
+    # Otherwise, check zero values
+    else:
+        zero_mask = data == 0
+        has_zero = np.any(zero_mask)
+
+    return zero_mask, has_zero
+
+
 def _estimate_params(data, dmat):
     """Estimate initial model parameters.
 
@@ -1622,9 +1659,10 @@ def _sample_fractions(data, dmat, beta, delta_em):
     delta_em : ndarray of shape (n_covariates,)
         Estimated biases.
 
-    Notes
-    -----
-    `data` will be updated in place
+    Returns
+    -------
+    theta_hat : ndarray of shape (n_covariates,)
+        Estimated sampling fractions.
 
     """
     # Compute sampling fractions
@@ -1645,8 +1683,10 @@ def _sample_fractions(data, dmat, beta, delta_em):
     # if np.any(nan_theta):
     #     theta_hat_arr[nan_theta] = 0.0
 
+    return theta_hat
+
     # Subtract sampling fractions from data.
-    data -= theta_hat[:, None]
+    # data -= theta_hat[:, None]
 
 
 def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
@@ -1951,40 +1991,6 @@ def _ancombc2_estimate(
     }
 
 
-def _aggregate_features(table, aggregator, has_feature_ids):
-    """Aggregate feature columns according to user-supplied aggregate IDs."""
-    if aggregator is None:
-        return table
-
-    features = table.columns
-    if callable(aggregator):
-        if not has_feature_ids:
-            raise ValueError("A callable aggregator requires named features.")
-        aggregate_ids = [aggregator(feature) for feature in features]
-    elif isinstance(aggregator, Mapping) or isinstance(aggregator, pd.Series):
-        if not has_feature_ids:
-            raise ValueError("A mapping aggregator requires named features.")
-        try:
-            aggregate_ids = [aggregator[feature] for feature in features]
-        except KeyError as error:
-            raise ValueError(
-                f"Aggregator does not define feature {error.args[0]!r}."
-            ) from error
-    else:
-        aggregate_ids = np.asarray(aggregator, dtype=object)
-        if aggregate_ids.ndim != 1 or len(aggregate_ids) != len(features):
-            raise ValueError(
-                "A sequence aggregator must be one-dimensional and have one entry "
-                "per feature."
-            )
-
-    aggregate_ids = np.asarray(aggregate_ids, dtype=object)
-    if pd.isna(aggregate_ids).any():
-        raise ValueError("Aggregator must assign every feature an aggregate ID.")
-
-    return table.T.groupby(aggregate_ids, sort=False).sum().T
-
-
 def _ancombc_core(
     table,
     metadata,
@@ -2008,11 +2014,7 @@ def _ancombc_core(
     # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
     # TODO: Add zero-handling in ANCOM-BC2.
     _check_composition(np, matrix, nozero=not version2)
-
     n_samps, n_feats = matrix.shape
-    has_feature_ids = features is not None
-    if features is None:
-        features = np.arange(n_feats)
 
     # Validate metadata and cast to numbers where applicable.
     metadata = _check_metadata(metadata, matrix, samples)
@@ -2029,16 +2031,8 @@ def _ancombc_core(
     if not 0 < alpha < 1:
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
 
-    # Add pseudocount
-    if pseudo:
-        matrix += pseudo
-        zero_mask = None
-        has_zero = False
-
-    # Otherwise, check zero values
-    else:
-        zero_mask = matrix == 0
-        has_zero = np.any(zero_mask)
+    # Handle zero values
+    zero_mask, has_zero = _handle_zeros(matrix, pseudo)
 
     # Transform count matrix
     # NOTE: See `_check_composition`
@@ -2077,12 +2071,18 @@ def _ancombc_core(
 
     # ANCOM-BC2
     else:
-        # TODO: aggregate data
-        # matrix = agg(matrix)
-        # matrix_tr = xxx(matrix)
+        # Estimate sampling fractions
+        theta_hat = _sample_fractions(matrix_tr, dmat, beta, delta_em)
 
-        # Estimate and correct for sampling fractions
-        _sample_fractions(matrix_tr, dmat, beta, delta_em)
+        # Aggregate data
+        if aggregator is not None:
+            matrix, features = _aggregate_features(matrix, aggregator, features)
+            n_feats = matrix.shape[1]
+            zero_mask, has_zero = _handle_zeros(matrix, pseudo)
+            matrix_tr = rclr(matrix, axis=0)
+
+        # Correct data for sampling fractions
+        matrix_tr -= theta_hat[:, None]
 
         # Re-estimate parameters
         var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
@@ -2105,6 +2105,8 @@ def _ancombc_core(
     )
 
     # Output primary results.
+    if features is None:
+        features = np.arange(n_feats)
     res = pd.DataFrame.from_dict(
         {
             "FeatureID": [x for x in features for _ in range(n_covars)],
@@ -2121,9 +2123,7 @@ def _ancombc_core(
     res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
     res.set_index(["FeatureID", "Covariate"], inplace=True)
 
-    method = "ANCOM-BC"
-    if version2:
-        method += "2"
+    method = "ANCOM-BC" if not version2 else "ANCOM-BC2"
 
     return ANCOMBCResult(
         res=res,
@@ -2239,7 +2239,9 @@ def _ancombc(
     else:
         # Data preprocessing (no filtering. user pre-filters)
         O1 = pd.DataFrame(matrix, index=samples, columns=features)
-        O2 = _aggregate_features(O1, aggregator, has_feature_ids)
+        if aggregator is not None:
+            matrix, features = _aggregate_features(matrix, aggregator, features)
+        O2 = pd.DataFrame(matrix, index=samples, columns=features)
 
         # Step 3: Run ANCOMBC2 core estimation
         res_main = _ancombc2_estimate(

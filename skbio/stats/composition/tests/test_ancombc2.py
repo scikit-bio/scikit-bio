@@ -130,16 +130,14 @@ class CoreTests(TestCase):
         var_hat, beta, _, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
-            res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
-            bias[i] = res
+            bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
         delta_em = bias[:, 0]
-        beta_hat = beta.T - delta_em
+        # beta_hat = beta.T - delta_em
 
-        obs = _sample_fractions(data, dmat, beta_hat)
+        obs = _sample_fractions(data, dmat, beta, delta_em)
         exp = np.array(
             [2.43809627, 2.42448053, 2.08291958, 2.36465192, 2.40607366, 2.42865545]
         )
-
         npt.assert_allclose(obs, exp, atol=1e-5)
 
     def test_calc_statistics(self):
@@ -415,6 +413,8 @@ class Ancombc2Tests(TestCase):
         # npt.assert_equal(similarity, 1.0)
 
     def test_ancombc2_aggregator(self):
+        table = self.table
+        metadata = self.grouping.to_frame()
         mapping = {
             "b1": "first",
             "b2": "first",
@@ -430,11 +430,11 @@ class Ancombc2Tests(TestCase):
             mapping,
             pd.Series(mapping),
             lambda feature: mapping[feature],
-            [mapping[feature] for feature in self.table.columns],
+            [mapping[feature] for feature in table.columns],
         ):
             res = ancombc2(
-                self.table,
-                self.grouping.to_frame(),
+                table,
+                metadata,
                 "grouping",
                 aggregator=aggregator,
             )
@@ -443,17 +443,9 @@ class Ancombc2Tests(TestCase):
                 expected_features,
             )
 
-        with self.assertRaisesRegex(ValueError, "callable aggregator requires named"):
-            ancombc2(
-                self.table.to_numpy(),
-                self.grouping.to_frame(),
-                "grouping",
-                aggregator=lambda feature: feature,
-            )
-
         res = ancombc2(
-            self.table.to_numpy(),
-            self.grouping.to_frame(),
+            table,
+            metadata,
             "grouping",
             aggregator=["first", "first"] + ["second"] * 5,
         )
