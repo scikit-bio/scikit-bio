@@ -27,11 +27,10 @@ from scipy.stats import norm, chi2, t
 from scipy.optimize import minimize
 from patsy import dmatrix
 
-from skbio.table._tabular import _ingest_table
+from skbio.table._tabular import _ingest_table, _aggregate_features
 from skbio.stats.composition import clr, rclr
 from ._base import _check_composition
 from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
-from skbio.table._tabular import _aggregate_features
 
 
 def ancombc(
@@ -190,9 +189,7 @@ def ancombc(
 
     Run ``ancombc``. This time, we specify two factors: "status" and "age" in the
     formula, such that the function will test the individual effects of each factor
-    while controlling for the other. Additionally, we instruct the function to perform
-    a *global test* on "status", which identifies features that are differentially
-    abundant between at least two status.
+    while controlling for the other.
 
     >>> res = ancombc(table + 1, metadata, formula='status + age')
     >>> res_main = res.res
@@ -243,8 +240,8 @@ def ancombc(
               status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
     F3        age                    0.063  0.022  2.871   0.004   0.033    True
 
-    The global test result suggests that "F2" and "F4" are differentially abundant
-    between two of the three groups (though it doesn't tell which groups).
+    Next, we will perform a *global test* to identify features that are differentially
+    abundant between at least two status.
 
     >>> res_global = res.global_test(group='status')
     >>> res_global.round(3)
@@ -258,6 +255,9 @@ def ancombc(
     F6          0.121   0.117   0.704   False
     F7          0.220   0.208   1.000   False
     F8          0.485   0.430   1.000   False
+
+    The global test result suggests that "F2" and "F4" are differentially abundant
+    between two of the three groups (though it doesn't tell which groups).
 
     **Structural zero test**
 
@@ -327,7 +327,7 @@ def ancombc(
     return _ancombc_core(
         table=table,
         metadata=metadata,
-        version2=False,
+        v2=False,
         formula=formula,
         max_iter=max_iter,
         tol=tol,
@@ -340,13 +340,13 @@ def ancombc2(
     table,
     metadata,
     formula,
+    pseudocount=0,
     aggregator=None,
-    p_adjust="holm",
-    pseudo=0,
     s0_perc=0.05,
-    alpha=0.05,
     max_iter=100,
     tol=1e-5,
+    p_adjust="holm",
+    alpha=0.05,
 ):
     r"""Perform differential abundance test using ANCOM-BC2.
 
@@ -373,25 +373,29 @@ def ancombc2(
         Sample metadata.
     formula : str
         Formula defining the model using factors in metadata columns.
-    aggregator : callable, mapping, or 1-D array_like, optional
-        Rule for aggregating features before final regression. A callable maps
-        each feature ID to an aggregate ID. A mapping, including a
-        :class:`pandas.Series`, maps feature IDs to aggregate IDs. These forms
-        require named features. A one-dimensional sequence provides one
-        aggregate ID per feature in table order. Features assigned the same
-        aggregate ID are summed. By default, no aggregation is performed.
-    p_adjust : str, optional
-        Multiple testing correction method. Default is "holm".
     pseudo : int or float, optional
-        Pseudocount to add to all abundance data. Default is 0.
+        Pseudocount to add to all data points. Default is 0.
+    aggregator : callable, mapping, or 1-D array_like, optional
+        Rule for aggregating features before final regression. Can be a function or a
+        dictionary that maps each feature ID to an aggregate ID, or a plain list or
+        array of aggregate ID per feature in table order. By default, no aggregation
+        is performed.
     s0_perc : float, optional
         SAM-like fudge factor percentile. Default is 0.05.
-    alpha : float, optional
-        Significance level. Default is 0.05.
     max_iter : int, optional
-        Maximum EM iterations. Default is 100.
+        Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
-        EM convergence tolerance. Default is 1e-5.
+        Absolute convergence tolerance for the bias estimation process. Default is
+        1e-5.
+    alpha : float, optional
+        Significance level for the statistical tests. Must be in the range of (0, 1).
+        Default is 0.05.
+    p_adjust : str, optional
+        Method to correct *p*-values for multiple comparisons. Options are
+        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
+        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
+        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
+        Case-insensitive. If None, no correction will be performed.
 
     Returns
     -------
@@ -400,14 +404,14 @@ def ancombc2(
 
     See Also
     --------
-    ancombc : ANCOM-BC without multi-group tests or sensitivity analysis.
+    ancombc : ANCOM-BC without sampling fraction correction and multi-group testing.
     struc_zero : Standalone structural zero detection.
 
     References
     ----------
-    .. [1] Lin, H. and Peddada, S.D., 2024. Multigroup analysis of
-       compositions of microbiomes with covariate adjustments and repeated
-       measures. Nature Methods, 21(1), 83–91.
+    .. [1] Lin, H., & Peddada, S. D. (2024). Multigroup analysis of compositions of
+       microbiomes with covariate adjustments and repeated measures. Nature Methods,
+       21(1), 83-91.
 
     Examples
     --------
@@ -478,17 +482,18 @@ def ancombc2(
     return _ancombc_core(
         table=table,
         metadata=metadata,
-        version2=True,
+        v2=True,
         formula=formula,
         max_iter=max_iter,
         tol=tol,
         alpha=alpha,
         p_adjust=p_adjust,
-        pseudo=pseudo,
+        pseudo=pseudocount,
         s0_perc=s0_perc,
         aggregator=aggregator,
     )
 
+    # Obsolete route; kept for reference
     # return _ancombc(
     #     table=table,
     #     metadata=metadata,
@@ -504,727 +509,162 @@ def ancombc2(
     # )
 
 
-class ANCOMBCResult:
-    """Results for ANCOM-BC and ANCOM-BC2 analyses.
-
-    This class contains the primary differential abundance results. Post-hoc analyses
-    (global test, multi-group comparisons, sensitivity analysis, etc.) are available as
-    methods that compute on-demand using stored intermediate data.
-
-    Attributes
-    ----------
-    res : pd.DataFrame
-        Primary results with (FeatureID, Covariate) multi-index. Columns are: Log2(FC),
-        SE, W, pvalue, qvalue, Signif.
-    method : {"ANCOM-BC", "ANCOM-BC2"}
-        Differential abundance method used for the analysis.
-
-    Methods
-    -------
-    global_test
-        Global test for differential abundance across >= 3 groups.
-    dunnett_test
-        Dunnett's test: each group vs. reference, with mdFDR correction.
-    pairwise_test
-        Pairwise directional test between all group pairs, with mdFDR.
-    trend_test
-        Trend test for ordered patterns in group effects.
-    sensitivity_analysis
-        Pseudo-count sensitivity analysis for robustness assessment.
-
-    See Also
-    --------
-    ancombc : ANCOM-BC function.
-    ancombc2 : ANCOM-BC2 function.
-    """
-
-    _private_defaults = {
-        "_dmat": None,
-        "_beta_hat": None,
-        "_var_hat": None,
-        "_vcov_hat": None,
-        "_dof": None,
-        "_features": None,
-        "_covariates": None,
-        "_alpha": 0.05,
-        "_p_adjust": "holm",
-        "_s0_perc": 0.05,
-        "_max_iter": 100,
-        "_tol": 1e-5,
-        "_pseudo": 0,
-        "_O1": None,
-        "_O2": None,
-    }
-
-    def __init__(
-        self,
-        res: pd.DataFrame,
-        method: str,
-        **kwargs,
-    ):
-        unexpected = set(kwargs).difference(self._private_defaults)
-        if unexpected:
-            names = ", ".join(sorted(unexpected))
-            raise TypeError(f"Unexpected ANCOMBCResult argument(s): {names}")
-        if method not in {"ANCOM-BC", "ANCOM-BC2"}:
-            raise ValueError("`method` must be either 'ANCOM-BC' or 'ANCOM-BC2'.")
-
-        self.res = res
-        self._method = method
-        for name, default in self._private_defaults.items():
-            setattr(self, name, kwargs.get(name, default))
-
-    @property
-    def res(self) -> pd.DataFrame:
-        return self._res
-
-    @res.setter
-    def res(self, value: pd.DataFrame):
-        self._res = value
-
-    @property
-    def method(self) -> str:
-        return self._method
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def keys(self):
-        """Return a list of attribute names that are not private and are not None."""
-        return [
-            name
-            for name in (
-                "res",
-                "method",
-            )
-            if getattr(self, name) is not None
-        ]
-
-    # formated output
-    def __repr__(self):
-        n_feats = len(self.res.index.get_level_values("FeatureID").unique())
-        n_covars = len(self.res.index.get_level_values("Covariate").unique())
-        n_signif = int(self.res["Signif"].sum())
-        return (
-            f"ANCOMBCResult(method={self.method!r}, "
-            f"n_taxa={n_feats}, n_covariates={n_covars}, "
-            f"n_signif={n_signif})"
-        )
-
-    def _resolve_post_hoc_params(self, alpha, p_adjust):
-        if alpha == "inherit":
-            alpha = self._alpha
-        if p_adjust == "inherit":
-            p_adjust = self._p_adjust
-        return alpha, p_adjust
-
-    def global_test(
-        self, group: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
-    ) -> pd.DataFrame:
-        """Perform global test for differential abundance across groups.
-
-        The global test identifies features that are differentially abundant
-        between at least two groups across three or more groups.
-
-        Parameters
-        ----------
-        group : str
-            Metadata column defining sample groups.
-        alpha : float or "inherit", optional
-            Significance level, or the value used by :func:`ancombc` or
-            :func:`ancombc2`. Default is "inherit".
-        p_adjust : str, optional
-            Multiple-testing correction method, or "inherit" to use the value
-            supplied upstream. Default is "inherit".
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue,
-            Signif.
-
-        Raises
-        ------
-        ValueError
-            If no group variable was specified.
-
-        Notes
-        -----
-        """
-        alpha, p_adjust = self._resolve_post_hoc_params(alpha, p_adjust)
-        if self.method == "ANCOM-BC":
-            W_g, pval, qval, reject = _global_test(
-                self._dmat,
-                group,
-                self._beta_hat,
-                self._vcov_hat,
-                alpha,
-                p_adjust,
-            )
-            result = pd.DataFrame(
-                {
-                    "W": W_g,
-                    "pvalue": pval,
-                    "qvalue": qval,
-                    "Signif": reject,
-                },
-                index=self.res.index.get_level_values("FeatureID").unique(),
-            )
-            result.index.name = "FeatureID"
-        else:
-            raw = _ancombc_global_F(
-                dmat=self._dmat,
-                group=group,
-                beta_hat=self._beta_hat,
-                vcov_hat=self._vcov_hat,
-                dof=self._dof,
-                p_adj_method=p_adjust,
-                alpha=alpha,
-            )
-            result = raw.copy()
-            result.index = self._features
-            result = result.rename(
-                columns={
-                    "p_val": "pvalue",
-                    "q_val": "qvalue",
-                    "reject": "Signif",
-                }
-            )
-            result["Signif"] = result["Signif"].astype(bool)
-
-        return result
-
-    def dunnett_test(
-        self,
-        group: str,
-        alpha: float | str = "inherit",
-        p_adjust: str = "inherit",
-        B: int = 100,
-    ) -> pd.DataFrame:
-        """Perform Dunnett's test (each group vs. reference) with mdFDR.
-
-        Parameters
-        ----------
-        group : str
-            Metadata column defining sample groups.
-        alpha : float or "inherit", optional
-            Significance level, or the value supplied upstream. Default is
-            "inherit".
-        p_adjust : str, optional
-            P-value adjustment method, or "inherit" to use the value supplied
-            upstream. Default is "inherit".
-        B : int, optional
-            Number of bootstrap iterations. Default is 100.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with (FeatureID, Comparison) multi-index and columns:
-            Log2(FC), SE, W, pvalue, qvalue, Signif.
-
-        """
-        alpha, p_adjust = self._resolve_post_hoc_params(alpha, p_adjust)
-
-        raw = _ancombc_dunn(
-            dmat=self._dmat,
-            group=group,
-            beta_hat=self._beta_hat,
-            var_hat=self._var_hat,
-            dof=self._dof,
-            B=B,
-            fwer_ctrl_method=p_adjust,
-            alpha=alpha,
-        )
-        comp_names = raw["comp_names"]
-        n_comp = len(comp_names)
-        n_tax = len(self._features)
-        result = pd.DataFrame(
-            {
-                "FeatureID": [x for x in self._features for _ in range(n_comp)],
-                "Comparison": comp_names * n_tax,
-                "Log2(FC)": raw["beta"].ravel(),
-                "SE": raw["se"].ravel(),
-                "W": raw["W"].ravel(),
-                "pvalue": raw["p_val"].ravel(),
-                "qvalue": raw["q_val"].ravel(),
-                "Signif": raw["reject"].ravel(),
-            }
-        )
-        result.set_index(["FeatureID", "Comparison"], inplace=True)
-        return result
-
-    def pairwise_test(
-        self,
-        group: str,
-        alpha: float | str = "inherit",
-        p_adjust: str = "inherit",
-    ) -> pd.DataFrame:
-        """Perform pairwise directional test between all group pairs.
-
-        Uses mixed directional FDR (mdFDR) correction via bootstrap.
-
-        Parameters
-        ----------
-        group : str
-            Metadata column defining sample groups.
-        alpha : float or "inherit", optional
-            Significance level, or the value supplied upstream. Default is
-            "inherit".
-        p_adjust : str, optional
-            P-value adjustment method, or "inherit" to use the value supplied
-            upstream. Default is "inherit".
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with (FeatureID, Comparison) multi-index and columns:
-            Log2(FC), SE, W, pvalue, qvalue, Signif.
-
-        """
-        alpha, p_adjust = self._resolve_post_hoc_params(alpha, p_adjust)
-
-        raw = _ancombc_pair(
-            dmat=self._dmat,
-            group=group,
-            beta_hat=self._beta_hat,
-            var_hat=self._var_hat,
-            vcov_hat=self._vcov_hat,
-            dof=self._dof,
-            fwer_ctrl_method=p_adjust,
-            alpha=alpha,
-        )
-        comp_names = raw["comp_names"]
-        n_comp = len(comp_names)
-        n_tax = len(self._features)
-        result = pd.DataFrame(
-            {
-                "FeatureID": [x for x in self._features for _ in range(n_comp)],
-                "Comparison": comp_names * n_tax,
-                "Log2(FC)": raw["beta"].ravel(),
-                "SE": raw["se"].ravel(),
-                "W": raw["W"].ravel(),
-                "pvalue": raw["p_val"].ravel(),
-                "qvalue": raw["q_val"].ravel(),
-                "Signif": raw["reject"].ravel(),
-            }
-        )
-        result.set_index(["FeatureID", "Comparison"], inplace=True)
-        return result
-
-    def trend_test(
-        self,
-        group: str,
-        alpha: float | str = "inherit",
-        p_adjust: str = "inherit",
-        trend_contrast=None,
-        trend_node=None,
-        trend_B: int = 100,
-    ) -> pd.DataFrame:
-        """Perform trend test for ordered patterns in group effects.
-
-        Uses constrained optimization to test monotone increasing/decreasing
-        patterns in group-level effects.
-
-        Parameters
-        ----------
-        group : str
-            Metadata column defining sample groups.
-        alpha : float or "inherit", optional
-            Significance level, or the value supplied upstream. Default is
-            "inherit".
-        p_adjust : str, optional
-            Multiple-testing correction method, or "inherit" to use the value
-            supplied upstream. Default is "inherit".
-        trend_contrast, trend_node : dict, optional
-            Trend-test contrast matrices and their node indices.
-        trend_B : int, optional
-            Number of bootstrap iterations. Default is 100.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue,
-            Signif.
-
-        """
-        alpha, p_adjust = self._resolve_post_hoc_params(alpha, p_adjust)
-
-        raw = _ancombc_trend(
-            dmat=self._dmat,
-            group=group,
-            beta_hat=self._beta_hat,
-            var_hat=self._var_hat,
-            vcov_hat=self._vcov_hat,
-            p_adj_method=p_adjust,
-            alpha=alpha,
-            trend_contrast=trend_contrast,
-            trend_node=trend_node,
-            trend_B=trend_B,
-        )
-        result = pd.DataFrame(
-            {
-                "W": raw["W"],
-                "pvalue": raw["p_val"],
-                "qvalue": raw["q_val"],
-                "Signif": raw["reject"],
-            },
-            index=self._features,
-        )
-        result.index.name = "FeatureID"
-        return result
-
-    def sensitivity_analysis(
-        self,
-        group: Optional[str] = None,
-        global_test: bool = False,
-        pairwise: bool = False,
-        dunnett: bool = False,
-        trend: bool = False,
-        alpha: float | str = "inherit",
-        p_adjust: str = "inherit",
-        mdfdr_B: int = 100,
-        trend_contrast=None,
-        trend_node=None,
-        trend_B: int = 100,
-    ) -> dict:
-        """Perform pseudo-count sensitivity analysis.
-
-        Re-runs the core estimation with pseudo-count values [0.1, 0.5, 1]
-        and compares q-values to assess robustness of significance calls to
-        the choice of pseudo-count.
-
-        Set a multi-group test option to True to assess its sensitivity.
-
-        Parameters
-        ----------
-        group : str, optional
-            Metadata column defining sample groups. Required for multi-group
-            sensitivity analysis.
-        global_test, pairwise, dunnett, trend : bool, optional
-            Whether to assess sensitivity for the corresponding multi-group
-            test. Defaults are False.
-        alpha : float or "inherit", optional
-            Significance level, or the value supplied upstream. Default is
-            "inherit".
-        p_adjust : str, optional
-            P-value adjustment method, or "inherit" to use the value supplied
-            upstream. Default is "inherit".
-        mdfdr_B, trend_B : int, optional
-            Bootstrap iterations for the Dunnett and trend tests. Defaults are 100.
-        trend_contrast, trend_node : dict, optional
-            Trend-test contrast matrices and their node indices.
-
-        Returns
-        -------
-        dict
-            Dictionary with keys:
-
-            - ``passed_ss_prim``: bool ndarray, primary results robustness
-            - ``passed_ss_global``: bool ndarray or None
-            - ``passed_ss_pair``: bool ndarray or None
-            - ``passed_ss_dunn``: bool ndarray or None
-            - ``passed_ss_trend``: bool ndarray or None
-            - ``ss_tab_prim``: float ndarray, proportion of pseudo-counts where
-              q > alpha.
-
-        Raises
-        ------
-        ValueError
-            If this is an ANCOM-BC result (reestimate=False).
-
-        Notes
-        -----
-        This method recomputes its result on every call.
-        """
-        if self.method == "ANCOM-BC":
-            raise ValueError(
-                "sensitivity_analysis() is only available for ANCOM-BC2 results."
-            )
-
-        n_tax = len(self._features)
-        n_cov = len(self._covariates)
-        alpha, p_adjust = self._resolve_post_hoc_params(alpha, p_adjust)
-
-        if (global_test or pairwise or dunnett or trend) and group is None:
-            raise ValueError("Multi-group sensitivity analysis requires `group`.")
-
-        # Original q_hat (n_tax, n_cov)
-        q_hat_orig = self.res["qvalue"].values.reshape(n_tax, n_cov)
-
-        # Re-run core estimation with each pseudo-count
-        pseudo_list = [0.1, 0.5, 1]
-        ss_list = []
-        for pseudo_count in pseudo_list:
-            res_pseudo = _ancombc2_estimate(
-                data=self._O1,
-                agg_data=self._O2,
-                dmat=self._dmat,
-                p_adjust=p_adjust,
-                pseudo=pseudo_count,
-                s0_perc=self._s0_perc,
-                alpha=alpha,
-                max_iter=self._max_iter,
-                tol=self._tol,
-            )
-            # If multi-group tests are requested, run them for this pseudo
-            if global_test:
-                res_pseudo["res_global"] = _ancombc_global_F(
-                    dmat=res_pseudo["dmat"],
-                    group=group,
-                    beta_hat=res_pseudo["beta_hat"],
-                    vcov_hat=res_pseudo["vcov_hat"],
-                    dof=res_pseudo["dof"],
-                    p_adj_method=p_adjust,
-                    alpha=alpha,
-                )
-            if pairwise:
-                res_pseudo["res_pair"] = _ancombc_pair(
-                    dmat=res_pseudo["dmat"],
-                    group=group,
-                    beta_hat=res_pseudo["beta_hat"],
-                    var_hat=res_pseudo["var_hat"],
-                    vcov_hat=res_pseudo["vcov_hat"],
-                    dof=res_pseudo["dof"],
-                    fwer_ctrl_method=p_adjust,
-                    alpha=alpha,
-                )
-            if dunnett:
-                res_pseudo["res_dunn"] = _ancombc_dunn(
-                    dmat=res_pseudo["dmat"],
-                    group=group,
-                    beta_hat=res_pseudo["beta_hat"],
-                    var_hat=res_pseudo["var_hat"],
-                    dof=res_pseudo["dof"],
-                    B=mdfdr_B,
-                    fwer_ctrl_method=p_adjust,
-                    alpha=alpha,
-                )
-            if trend:
-                res_pseudo["res_trend"] = _ancombc_trend(
-                    dmat=res_pseudo["dmat"],
-                    group=group,
-                    beta_hat=res_pseudo["beta_hat"],
-                    var_hat=res_pseudo["var_hat"],
-                    vcov_hat=res_pseudo["vcov_hat"],
-                    p_adj_method=p_adjust,
-                    alpha=alpha,
-                    trend_contrast=trend_contrast,
-                    trend_node=trend_node,
-                    trend_B=trend_B,
-                )
-            ss_list.append(res_pseudo)
-
-        # Combine original and pseudo-count results
-        all_q = [q_hat_orig] + [r["q_hat"] for r in ss_list]
-        q_3d = np.stack(all_q, axis=-1)  # (n_tax, n_cov, n_pseudo)
-        ss_tab_prim = np.mean(q_3d > alpha, axis=-1)
-        passed_ss_prim = (ss_tab_prim == 0) | (ss_tab_prim == 1)
-
-        # Global test sensitivity
-        passed_ss_global = None
-        if global_test:
-            q_globals = [self.global_test(group, alpha, p_adjust)["qvalue"].values]
-            for r in ss_list:
-                if r.get("res_global") is not None:
-                    q_globals.append(r["res_global"]["q_val"])
-                else:
-                    q_globals.append(np.ones(n_tax))
-            q_global_3d = np.stack(q_globals, axis=-1)
-            ss_global = np.mean(q_global_3d > alpha, axis=-1)
-            passed_ss_global = (ss_global == 0) | (ss_global == 1)
-
-        # Pairwise sensitivity
-        passed_ss_pair = None
-        if pairwise:
-            q_pair_orig = self.pairwise_test(group, alpha, p_adjust)[
-                "qvalue"
-            ].values.reshape(n_tax, -1)
-            q_pairs = [q_pair_orig]
-            for r in ss_list:
-                if r.get("res_pair") is not None:
-                    q_pairs.append(r["res_pair"]["q_val"])
-                else:
-                    q_pairs.append(np.ones_like(q_pair_orig))
-            q_pair_3d = np.stack(q_pairs, axis=-1)
-            ss_pair = np.mean(q_pair_3d > alpha, axis=-1)
-            passed_ss_pair = (ss_pair == 0) | (ss_pair == 1)
-
-        # Dunnett sensitivity
-        passed_ss_dunn = None
-        if dunnett:
-            q_dunn_orig = self.dunnett_test(group, alpha, p_adjust, mdfdr_B)[
-                "qvalue"
-            ].values.reshape(n_tax, -1)
-            q_dunns = [q_dunn_orig]
-            for r in ss_list:
-                if r.get("res_dunn") is not None:
-                    q_dunns.append(r["res_dunn"]["q_val"])
-                else:
-                    q_dunns.append(np.ones_like(q_dunn_orig))
-            q_dunn_3d = np.stack(q_dunns, axis=-1)
-            ss_dunn = np.mean(q_dunn_3d > alpha, axis=-1)
-            passed_ss_dunn = (ss_dunn == 0) | (ss_dunn == 1)
-
-        # Trend sensitivity uses global sensitivity.
-        passed_ss_trend = None
-        if trend:
-            q_trend_orig = self.trend_test(
-                group, alpha, p_adjust, trend_contrast, trend_node, trend_B
-            )["qvalue"].values
-            q_trends = [q_trend_orig] + [r["res_trend"]["q_val"] for r in ss_list]
-            q_trend_3d = np.stack(q_trends, axis=-1)
-            ss_trend = np.mean(q_trend_3d > alpha, axis=-1)
-            passed_ss_trend = (ss_trend == 0) | (ss_trend == 1)
-
-        result = {
-            "passed_ss_prim": passed_ss_prim,
-            "passed_ss_global": passed_ss_global,
-            "passed_ss_pair": passed_ss_pair,
-            "passed_ss_dunn": passed_ss_dunn,
-            "passed_ss_trend": passed_ss_trend,
-            "ss_tab_prim": ss_tab_prim,
-        }
-        return result
-
-
-def struc_zero(table, metadata, grouping, neg_lb=False):
-    r"""Identify features with structural zeros.
-
-    .. versionadded:: 0.7.1
-
-    Structural zeros refer to features that are systematically absent from certain
-    sample groups. Consequently, the observed feature frequencies are all zeros, or
-    mostly zeros, due to variability in technical factors. This function tests
-    whether the proportion of observed zeros is close to zero, which suggests the
-    absence of a feature in a given sample group.
-
-    Parameters
-    ----------
-    table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
-    metadata : pd.DataFrame or 2-D array_like
-        Metadata of the samples. Rows correspond to samples and columns correspond
-        to covariates (attributes). Must be a pandas DataFrame or convertible to a
-        pandas DataFrame.
-    grouping : str
-        A metadata column name indicating the assignment of samples to groups.
-    neg_lb : bool, optional
-        Determine whether to use negative lower bound when calculating sample
-        proportions. Default is False. Generally, it is recommended to set it as True
-        when the sample size per group is relatively large.
-
-    Returns
-    -------
-    pd.DataFrame of bool of shape (n_features, n_groups)
-        A table indicating whether each feature (row) is a structural zero in each
-        group (column) (True: structural zero, False: not structural zero).
-
-    Notes
-    -----
-    The structural zero test was initially proposed and implemented in the ANCOM-II
-    method [1]_. It was adopted to the ANCOM-BC method [2]_ as a recommended method to
-    complement test results. See :func:`ancombc` for how to use this function along
-    with the ANCOM-BC test. Nevertheless, this function is generally useful with or
-    without explicit statistical tests of feature abundances.
-
-    A feature found to be a structural zero in a group should be automatically
-    considered as differentially (less) abundant compared with other groups in which
-    this feature is not a structural zero. Meanwhile, this feature should be excluded
-    from subsequent analyses that involves this group. If a feature is identified as a
-    structural zero in all groups, this feature should be removed entirely from
-    downstream analyses.
-
-    Note that the structural zero test should be applied to the original table before
-    adding a pseudocount, which will otherwise mask all zeros and invalidate this test.
-
-    References
-    ----------
-    .. [1] Kaul, A., Mandal, S., Davidov, O., & Peddada, S. D. (2017). Analysis of
-       microbiome data in the presence of excess zeros. Frontiers in Microbiology, 8,
-       2114.
-
-    .. [2] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
-       with bias correction. Nature Communications, 11(1), p.3514.
-
-    Examples
-    --------
-    >>> from skbio.stats.composition import struc_zero
-    >>> import pandas as pd
-
-    Generate a DataFrame with 10 samples and 6 features with 0's in specific groups:
-
-    >>> table = pd.DataFrame([[ 7,  1,  0, 11,  3,  1],
-    ...                       [ 1,  1,  0, 13, 13,  0],
-    ...                       [11,  5,  0,  1,  4,  1],
-    ...                       [ 2,  2,  0, 16,  4,  0],
-    ...                       [ 0,  1,  0,  0,  6,  0],
-    ...                       [14,  8,  7,  9,  0,  5],
-    ...                       [ 0,  7,  4,  1,  0, 26],
-    ...                       [ 8,  1,  4, 28,  0, 10],
-    ...                       [ 2,  2,  2,  4,  0,  5],
-    ...                       [ 6,  4, 10,  1,  0,  9]],
-    ...                      index=[f's{i}' for i in range(10)],
-    ...                      columns=[f'f{i}' for i in range(6)])
-
-    Then create a grouping vector. In this example, there is a treatment group
-    and a placebo group.
-
-    >>> metadata = pd.DataFrame(
-    ...     {'grouping': ['treatment'] * 5 + ['placebo'] * 5},
-    ...     index=[f's{i}' for i in range(10)])
-
-    The ``struc_zero`` function will identify features with structural zeros. Features
-    that are identified as structural zeros in given groups should not be used in
-    further analyses such as ``ancombc`` and  ``dirmult_ttest``.
-
-    Setting ``neg_lb=True`` declares that the true prevalence of a feature in a group
-    is not significantly different from zero.
-
-    >>> result = struc_zero(table, metadata, grouping='grouping', neg_lb=True)
-    >>> result
-        placebo  treatment
-    f0    False      False
-    f1    False      False
-    f2    False       True
-    f3    False      False
-    f4     True      False
-    f5    False       True
-
-    """
-    # Validate feature table and metadata
+def _ancombc_core(
+    table,
+    metadata,
+    v2=False,  # ANCOM-BC (True) or ANCOM-BC2 (False)
+    formula=None,
+    aggregator=None,
+    p_adjust="holm",
+    pseudo=0,
+    s0_perc=0.05,
+    alpha=0.05,
+    max_iter=100,
+    tol=1e-5,
+):
+    """ANCOM-BC/BC2 core function."""
+
+    # NOTE: A pseudocount should have been added to the table by the user prior to
+    # calling this function.
     matrix, samples, features = _ingest_table(table)
+
+    # NOTE: ANCOM-BC does not handle zeros in the input table. The user should have
+    # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
+    # TODO: Add zero-handling in ANCOM-BC2.
+    _check_composition(np, matrix, nozero=not v2)
+    n_samps, n_feats = matrix.shape
+
+    # Validate metadata and cast to numbers where applicable.
     metadata = _check_metadata(metadata, matrix, samples)
     metadata = _type_cast_to_float(metadata)
 
-    unique_groups, group_indices, group_counts = np.unique(
-        metadata[grouping], return_inverse=True, return_counts=True
+    # Create a design matrix based on metadata and formula.
+    dmat = dmatrix(formula, metadata)
+
+    # Obtain a list of covariates by selecting the relevant columns.
+    covars = dmat.design_info.column_names
+    n_covars = len(covars)
+
+    # validate parameters
+    if not 0 < alpha < 1:
+        raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
+
+    # Handle zero values
+    matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
+
+    # Transform count matrix
+    # NOTE: See `_check_composition`
+    # TODO: Handle zeros
+    # ANCOM-BC: Log-transformation
+    if not v2:
+        matrix_tr = np.log(matrix)
+
+    # ANCOM-BC2: CLR transformation on non-zero values
+    elif has_zero:
+        matrix_tr = rclr(matrix, axis=0)
+    else:
+        matrix_tr = clr(matrix, axis=0)
+
+    # Estimate initial model parameters.
+    var_hat, beta, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+
+    # Estimate and correct for sampling bias via expectation-maximization (EM).
+    # beta: (n_covariates, n_features); iterate over covariates (rows).
+    bias = np.empty((n_covars, 3))
+    for i in range(n_covars):
+        bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
+        # TODO: handle NaN
+
+    delta_em = bias[:, 0]
+    delta_wls = bias[:, 1]
+    var_delta = bias[:, 2]  # only for ANCOM-BC2
+
+    # beta_hat = beta.T - delta_em
+
+    # ANCOM-BC (original)
+    if not v2:
+        # Correct coefficients (logFC) according to estimated bias.
+        beta_hat = beta.T - delta_em
+
+        # Skip degree of freedom calculation. # TODO: Do we need dof for ANCOM-BC too?
+        dof = None
+
+    # ANCOM-BC2
+    else:
+        # Estimate sampling fractions
+        theta_hat = _sample_fractions(matrix_tr, dmat, beta, delta_em)
+
+        # Aggregate data
+        if aggregator is not None:
+            matrix, features = _aggregate_features(matrix, aggregator, features)
+            n_feats = matrix.shape[1]
+            matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
+            if has_zero:
+                matrix_tr = rclr(matrix, axis=0)
+            else:
+                matrix_tr = clr(matrix, axis=0)
+
+        # Correct data for sampling fractions
+        matrix_tr -= theta_hat[:, None]
+
+        # Re-estimate parameters
+        var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+        beta_hat = beta_hat.T
+
+        # Adjust variances
+        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
+
+        # Compute per-feature degree of freedom (valid samples - covariates)
+        if has_zero:
+            n_valid = np.sum(~zero_mask, axis=0)
+            dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
+        else:
+            val = n_samps - n_covars if n_samps > n_covars else np.nan
+            dof = np.full((n_feats,), val)
+
+    # Calculate statistics
+    se_hat, W, pval, qval, reject = _calc_statistics(
+        beta_hat, var_hat, alpha, p_adjust, dof
     )
 
-    # Create a boolean matrix to indicate whether the value in table is 0 or not
-    tmp = np.nan_to_num(matrix) != 0
+    # Output primary results
+    if features is None:
+        features = np.arange(n_feats)
+    res = pd.DataFrame.from_dict(
+        {
+            "FeatureID": [x for x in features for _ in range(n_covars)],
+            "Covariate": list(covars) * n_feats,
+            "Log2(FC)": beta_hat.ravel(),
+            "SE": se_hat.ravel(),
+            "W": W.ravel(),
+            "pvalue": pval.ravel(),
+            "qvalue": qval.ravel(),
+        }
+    )
 
-    n_groups = len(unique_groups)
-    n_features = tmp.shape[1]
+    # Pandas' nullable boolean type
+    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
+    res.set_index(["FeatureID", "Covariate"], inplace=True)
 
-    # Initialize group sum matrix
-    group_sums = np.zeros((n_groups, n_features))
-    np.add.at(group_sums, group_indices, tmp.astype(int))
+    method = "ANCOM-BC" if not v2 else "ANCOM-BC2"
 
-    # Calculate sample sizes of the groups for each feature
-    sample_size = group_counts[:, np.newaxis]
+    # TODO: deal with dof more elegantly
+    if v2:
+        dof = np.broadcast_to(dof[:, None], (n_feats, n_covars))
 
-    # Calculate sample proportions of the groups for each feature
-    p_hat = group_sums / sample_size
-
-    # Calculate the lower bound of a 95% confidence interval for sample proportion
-    if neg_lb:
-        p_hat = p_hat - 1.96 * (p_hat * (1 - p_hat) / sample_size) ** 0.5
-
-    zero_idx = p_hat <= 0
-
-    # Output structural zero as a DataFrame
-    return pd.DataFrame(zero_idx.T, index=features, columns=unique_groups)
+    return ANCOMBCResult(
+        res=res,
+        method=method,
+        _dmat=dmat,
+        _beta_hat=beta_hat,
+        _var_hat=var_hat,
+        _vcov_hat=vcov_hat,
+        _dof=dof,
+        _features=features,
+        _covariates=covars,
+        _p_adjust=p_adjust,
+        _alpha=alpha,
+    )
 
 
 def _handle_zeros(data, pseudo=None):
@@ -1239,19 +679,17 @@ def _handle_zeros(data, pseudo=None):
 
     Returns
     -------
+    data : ndarray of shape (n_samples, n_features)
+        Data table with pseudocount added.
     zero_mask : ndarray of shape (n_samples, n_features)
         Boolean mask of zero values in the table.
     has_zero : bool
         Whether table contain zero values.
 
-    Notes
-    -----
-    Pseudocount will be added to the table in place.
-
     """
     # Add pseudocount
     if pseudo:
-        data += pseudo
+        data = data + pseudo
         zero_mask = None
         has_zero = False
 
@@ -1260,7 +698,7 @@ def _handle_zeros(data, pseudo=None):
         zero_mask = data == 0
         has_zero = np.any(zero_mask)
 
-    return zero_mask, has_zero
+    return data, zero_mask, has_zero
 
 
 def _estimate_params(data, dmat):
@@ -1640,8 +1078,6 @@ def _estimate_bias_var(beta, var_hat, params):
     delta_wls = wls_numer * wls_denom_inv
     var_delta = np.nan_to_num(wls_denom_inv)
 
-    # TODO: var_delta will be used if conserve=True to account for the variance of
-    # delta_hat
     return delta_em, delta_wls, var_delta
 
 
@@ -1794,6 +1230,588 @@ def _calc_statistics(beta_hat, var_hat, alpha, p_adjust, dof=None):
     return se_hat, W, pval, qval, reject
 
 
+class ANCOMBCResult:
+    """Results for ANCOM-BC and ANCOM-BC2 analyses.
+
+    This class contains the primary differential abundance results. Post-hoc analyses
+    (global test, multi-group comparisons, sensitivity analysis, etc.) are available as
+    methods that compute on-demand using stored intermediate data.
+
+    Attributes
+    ----------
+    res : pd.DataFrame
+        Primary results with (FeatureID, Covariate) multi-index. Columns are: Log2(FC),
+        SE, W, pvalue, qvalue, Signif.
+    method : {"ANCOM-BC", "ANCOM-BC2"}
+        Differential abundance method used for the analysis.
+
+    Methods
+    -------
+    global_test
+        Global test for differential abundance across >= 3 groups.
+    dunnett_test
+        Dunnett's test: each group vs. reference, with mdFDR correction.
+    pairwise_test
+        Pairwise directional test between all group pairs, with mdFDR.
+    trend_test
+        Trend test for ordered patterns in group effects.
+    sensitivity_analysis
+        Pseudo-count sensitivity analysis for robustness assessment.
+
+    See Also
+    --------
+    ancombc : ANCOM-BC function.
+    ancombc2 : ANCOM-BC2 function.
+    """
+
+    _private_defaults = {
+        "_dmat": None,
+        "_beta_hat": None,
+        "_var_hat": None,
+        "_vcov_hat": None,
+        "_dof": None,
+        "_features": None,
+        "_covariates": None,
+        "_alpha": 0.05,
+        "_p_adjust": "holm",
+        "_s0_perc": 0.05,
+        "_max_iter": 100,
+        "_tol": 1e-5,
+        "_pseudo": 0,
+        "_O1": None,
+        "_O2": None,
+    }
+
+    def __init__(
+        self,
+        res: pd.DataFrame,
+        method: str,
+        **kwargs,
+    ):
+        unexpected = set(kwargs).difference(self._private_defaults)
+        if unexpected:
+            names = ", ".join(sorted(unexpected))
+            raise TypeError(f"Unexpected ANCOMBCResult argument(s): {names}")
+        if method not in {"ANCOM-BC", "ANCOM-BC2"}:
+            raise ValueError("`method` must be either 'ANCOM-BC' or 'ANCOM-BC2'.")
+
+        self.res = res
+        self._method = method
+        for name, default in self._private_defaults.items():
+            setattr(self, name, kwargs.get(name, default))
+
+    @property
+    def res(self) -> pd.DataFrame:
+        return self._res
+
+    @res.setter
+    def res(self, value: pd.DataFrame):
+        self._res = value
+
+    @property
+    def method(self) -> str:
+        return self._method
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def keys(self):
+        """Return a list of attribute names that are not private and are not None."""
+        return [
+            name
+            for name in (
+                "res",
+                "method",
+            )
+            if getattr(self, name) is not None
+        ]
+
+    # formated output
+    def __repr__(self):
+        n_feats = len(self.res.index.get_level_values("FeatureID").unique())
+        n_covars = len(self.res.index.get_level_values("Covariate").unique())
+        n_signif = int(self.res["Signif"].sum())
+        return (
+            f"ANCOMBCResult(method={self.method!r}, "
+            f"n_taxa={n_feats}, n_covariates={n_covars}, "
+            f"n_signif={n_signif})"
+        )
+
+    def _stat_params(self, alpha, p_adjust):
+        if alpha == "inherit":
+            alpha = self._alpha
+        if p_adjust == "inherit":
+            p_adjust = self._p_adjust
+        return alpha, p_adjust
+
+    def global_test(
+        self, group: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
+    ) -> pd.DataFrame:
+        """Perform global test for differential abundance across groups.
+
+        The global test identifies features that are differentially abundant
+        between at least two groups across three or more groups.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float or "inherit", optional
+            Significance level, or the value used by :func:`ancombc` or
+            :func:`ancombc2`. Default is "inherit".
+        p_adjust : str, optional
+            Multiple-testing correction method, or "inherit" to use the value
+            supplied upstream. Default is "inherit".
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue,
+            Signif.
+
+        Raises
+        ------
+        ValueError
+            If no group variable was specified.
+
+        Notes
+        -----
+        """
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+        if self.method == "ANCOM-BC":
+            W_g, pval, qval, reject = _global_test(
+                self._dmat,
+                group,
+                self._beta_hat,
+                self._vcov_hat,
+                alpha,
+                p_adjust,
+            )
+            result = pd.DataFrame(
+                {
+                    "W": W_g,
+                    "pvalue": pval,
+                    "qvalue": qval,
+                    "Signif": reject,
+                },
+                index=self.res.index.get_level_values("FeatureID").unique(),
+            )
+            result.index.name = "FeatureID"
+        else:
+            raw = _global_test_2(
+                dmat=self._dmat,
+                group=group,
+                beta_hat=self._beta_hat,
+                vcov_hat=self._vcov_hat,
+                dof=self._dof,
+                p_adjust=p_adjust,
+                alpha=alpha,
+            )
+            result = raw.copy()
+            result.index = self._features
+            result = result.rename(
+                columns={
+                    "p_val": "pvalue",
+                    "q_val": "qvalue",
+                    "reject": "Signif",
+                }
+            )
+            result["Signif"] = result["Signif"].astype(bool)
+
+        return result
+
+    def pairwise_test(
+        self,
+        group: str,
+        alpha: float | str = "inherit",
+        p_adjust: str = "inherit",
+    ) -> pd.DataFrame:
+        """Perform pairwise directional test between all group pairs.
+
+        Uses mixed directional FDR (mdFDR) correction via bootstrap.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float or "inherit", optional
+            Significance level, or the value supplied upstream. Default is
+            "inherit".
+        p_adjust : str, optional
+            Family wise error (FWER) controlling method. Default in "inhert", which
+            will use the *p*-value correction method supplied upstream.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with (FeatureID, Comparison) multi-index and columns:
+            Log2(FC), SE, W, pvalue, qvalue, Signif.
+
+        """
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+
+        raw = _pairwise_test(
+            dmat=self._dmat,
+            group=group,
+            beta_hat=self._beta_hat,
+            var_hat=self._var_hat,
+            vcov_hat=self._vcov_hat,
+            dof=self._dof,
+            p_adjust=p_adjust,
+            alpha=alpha,
+        )
+        comp_names = raw["comp_names"]
+        n_comp = len(comp_names)
+        n_tax = len(self._features)
+        result = pd.DataFrame(
+            {
+                "FeatureID": [x for x in self._features for _ in range(n_comp)],
+                "Comparison": comp_names * n_tax,
+                "Log2(FC)": raw["beta"].ravel(),
+                "SE": raw["se"].ravel(),
+                "W": raw["W"].ravel(),
+                "pvalue": raw["p_val"].ravel(),
+                "qvalue": raw["q_val"].ravel(),
+                "Signif": raw["reject"].ravel(),
+            }
+        )
+        result.set_index(["FeatureID", "Comparison"], inplace=True)
+        return result
+
+    def dunnett_test(
+        self,
+        group: str,
+        alpha: float | str = "inherit",
+        p_adjust: str = "inherit",
+        bootstraps: int = 100,
+    ) -> pd.DataFrame:
+        """Perform Dunnett's test (each group vs. reference) with mdFDR.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float or "inherit", optional
+            Significance level, or the value supplied upstream. Default is
+            "inherit".
+        p_adjust : str, optional
+            Family wise error (FWER) controlling method. Default in "inhert", which
+            will use the *p*-value correction method supplied upstream.
+        bootstraps : int, optional
+            Number of bootstrap iterations. Default is 100.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with (FeatureID, Comparison) multi-index and columns:
+            Log2(FC), SE, W, pvalue, qvalue, Signif.
+
+        """
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+
+        raw = _dunnett_test(
+            dmat=self._dmat,
+            group=group,
+            beta_hat=self._beta_hat,
+            var_hat=self._var_hat,
+            dof=self._dof,
+            bootstraps=bootstraps,
+            p_adjust=p_adjust,
+            alpha=alpha,
+        )
+        comp_names = raw["comp_names"]
+        n_comp = len(comp_names)
+        n_tax = len(self._features)
+        result = pd.DataFrame(
+            {
+                "FeatureID": [x for x in self._features for _ in range(n_comp)],
+                "Comparison": comp_names * n_tax,
+                "Log2(FC)": raw["beta"].ravel(),
+                "SE": raw["se"].ravel(),
+                "W": raw["W"].ravel(),
+                "pvalue": raw["p_val"].ravel(),
+                "qvalue": raw["q_val"].ravel(),
+                "Signif": raw["reject"].ravel(),
+            }
+        )
+        result.set_index(["FeatureID", "Comparison"], inplace=True)
+        return result
+
+    def trend_test(
+        self,
+        group: str,
+        alpha: float | str = "inherit",
+        p_adjust: str = "inherit",
+        trend_contrast: dict | None = None,
+        trend_node: dict | None = None,
+        bootstraps: int = 100,
+    ) -> pd.DataFrame:
+        """Perform trend test for ordered patterns in group effects.
+
+        Uses constrained optimization to test monotone increasing/decreasing
+        patterns in group-level effects.
+
+        Parameters
+        ----------
+        group : str
+            Metadata column defining sample groups.
+        alpha : float or "inherit", optional
+            Significance level, or the value supplied upstream. Default is
+            "inherit".
+        p_adjust : str, optional
+            Multiple-testing correction method, or "inherit" to use the value
+            supplied upstream. Default is "inherit".
+        trend_contrast, trend_node : dict, optional
+            Trend-test contrast matrices and their node indices.
+        bootstraps : int, optional
+            Number of bootstrap iterations. Default is 100.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue, Signif.
+
+        """
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+
+        raw = _trend_test(
+            dmat=self._dmat,
+            group=group,
+            beta_hat=self._beta_hat,
+            var_hat=self._var_hat,
+            vcov_hat=self._vcov_hat,
+            p_adjust=p_adjust,
+            alpha=alpha,
+            trend_contrast=trend_contrast,
+            trend_node=trend_node,
+            bootstraps=bootstraps,
+        )
+        result = pd.DataFrame(
+            {
+                "W": raw["W"],
+                "pvalue": raw["p_val"],
+                "qvalue": raw["q_val"],
+                "Signif": raw["reject"],
+            },
+            index=self._features,
+        )
+        result.index.name = "FeatureID"
+        return result
+
+    def sensitivity_analysis(
+        self,
+        group: Optional[str] = None,
+        global_test: bool = False,
+        pairwise: bool = False,
+        dunnett: bool = False,
+        trend: bool = False,
+        alpha: float | str = "inherit",
+        p_adjust: str = "inherit",
+        mdfdr_B: int = 100,
+        trend_contrast=None,
+        trend_node=None,
+        trend_B: int = 100,
+    ) -> dict:
+        """Perform pseudo-count sensitivity analysis.
+
+        Re-runs the core estimation with pseudo-count values [0.1, 0.5, 1]
+        and compares q-values to assess robustness of significance calls to
+        the choice of pseudo-count.
+
+        Set a multi-group test option to True to assess its sensitivity.
+
+        Parameters
+        ----------
+        group : str, optional
+            Metadata column defining sample groups. Required for multi-group
+            sensitivity analysis.
+        global_test, pairwise, dunnett, trend : bool, optional
+            Whether to assess sensitivity for the corresponding multi-group
+            test. Defaults are False.
+        alpha : float or "inherit", optional
+            Significance level, or the value supplied upstream. Default is
+            "inherit".
+        p_adjust : str, optional
+            P-value adjustment method, or "inherit" to use the value supplied
+            upstream. Default is "inherit".
+        mdfdr_B, trend_B : int, optional
+            Bootstrap iterations for the Dunnett and trend tests. Defaults are 100.
+        trend_contrast, trend_node : dict, optional
+            Trend-test contrast matrices and their node indices.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys:
+
+            - ``passed_ss_prim``: bool ndarray, primary results robustness
+            - ``passed_ss_global``: bool ndarray or None
+            - ``passed_ss_pair``: bool ndarray or None
+            - ``passed_ss_dunn``: bool ndarray or None
+            - ``passed_ss_trend``: bool ndarray or None
+            - ``ss_tab_prim``: float ndarray, proportion of pseudo-counts where
+              q > alpha.
+
+        Raises
+        ------
+        ValueError
+            If this is an ANCOM-BC result (reestimate=False).
+
+        Notes
+        -----
+        This method recomputes its result on every call.
+        """
+        if self.method == "ANCOM-BC":
+            raise ValueError(
+                "sensitivity_analysis() is only available for ANCOM-BC2 results."
+            )
+
+        n_tax = len(self._features)
+        n_cov = len(self._covariates)
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+
+        if (global_test or pairwise or dunnett or trend) and group is None:
+            raise ValueError("Multi-group sensitivity analysis requires `group`.")
+
+        # Original q_hat (n_tax, n_cov)
+        q_hat_orig = self.res["qvalue"].values.reshape(n_tax, n_cov)
+
+        # Re-run core estimation with each pseudo-count
+        pseudo_list = [0.1, 0.5, 1]
+        ss_list = []
+        for pseudo_count in pseudo_list:
+            res_pseudo = _ancombc2_estimate(
+                data=self._O1,
+                agg_data=self._O2,
+                dmat=self._dmat,
+                p_adjust=p_adjust,
+                pseudo=pseudo_count,
+                s0_perc=self._s0_perc,
+                alpha=alpha,
+                max_iter=self._max_iter,
+                tol=self._tol,
+            )
+            # If multi-group tests are requested, run them for this pseudo
+            if global_test:
+                res_pseudo["res_global"] = _global_test_2(
+                    dmat=res_pseudo["dmat"],
+                    group=group,
+                    beta_hat=res_pseudo["beta_hat"],
+                    vcov_hat=res_pseudo["vcov_hat"],
+                    dof=res_pseudo["dof"],
+                    p_adjust=p_adjust,
+                    alpha=alpha,
+                )
+            if pairwise:
+                res_pseudo["res_pair"] = _pairwise_test(
+                    dmat=res_pseudo["dmat"],
+                    group=group,
+                    beta_hat=res_pseudo["beta_hat"],
+                    var_hat=res_pseudo["var_hat"],
+                    vcov_hat=res_pseudo["vcov_hat"],
+                    dof=res_pseudo["dof"],
+                    p_adjust=p_adjust,
+                    alpha=alpha,
+                )
+            if dunnett:
+                res_pseudo["res_dunn"] = _dunnett_test(
+                    dmat=res_pseudo["dmat"],
+                    group=group,
+                    beta_hat=res_pseudo["beta_hat"],
+                    var_hat=res_pseudo["var_hat"],
+                    dof=res_pseudo["dof"],
+                    bootstraps=mdfdr_B,
+                    p_adjust=p_adjust,
+                    alpha=alpha,
+                )
+            if trend:
+                res_pseudo["res_trend"] = _trend_test(
+                    dmat=res_pseudo["dmat"],
+                    group=group,
+                    beta_hat=res_pseudo["beta_hat"],
+                    var_hat=res_pseudo["var_hat"],
+                    vcov_hat=res_pseudo["vcov_hat"],
+                    p_adjust=p_adjust,
+                    alpha=alpha,
+                    trend_contrast=trend_contrast,
+                    trend_node=trend_node,
+                    bootstraps=trend_B,
+                )
+            ss_list.append(res_pseudo)
+
+        # Combine original and pseudo-count results
+        all_q = [q_hat_orig] + [r["q_hat"] for r in ss_list]
+        q_3d = np.stack(all_q, axis=-1)  # (n_tax, n_cov, n_pseudo)
+        ss_tab_prim = np.mean(q_3d > alpha, axis=-1)
+        passed_ss_prim = (ss_tab_prim == 0) | (ss_tab_prim == 1)
+
+        # Global test sensitivity
+        passed_ss_global = None
+        if global_test:
+            q_globals = [self.global_test(group, alpha, p_adjust)["qvalue"].values]
+            for r in ss_list:
+                if r.get("res_global") is not None:
+                    q_globals.append(r["res_global"]["q_val"])
+                else:
+                    q_globals.append(np.ones(n_tax))
+            q_global_3d = np.stack(q_globals, axis=-1)
+            ss_global = np.mean(q_global_3d > alpha, axis=-1)
+            passed_ss_global = (ss_global == 0) | (ss_global == 1)
+
+        # Pairwise sensitivity
+        passed_ss_pair = None
+        if pairwise:
+            q_pair_orig = self.pairwise_test(group, alpha, p_adjust)[
+                "qvalue"
+            ].values.reshape(n_tax, -1)
+            q_pairs = [q_pair_orig]
+            for r in ss_list:
+                if r.get("res_pair") is not None:
+                    q_pairs.append(r["res_pair"]["q_val"])
+                else:
+                    q_pairs.append(np.ones_like(q_pair_orig))
+            q_pair_3d = np.stack(q_pairs, axis=-1)
+            ss_pair = np.mean(q_pair_3d > alpha, axis=-1)
+            passed_ss_pair = (ss_pair == 0) | (ss_pair == 1)
+
+        # Dunnett sensitivity
+        passed_ss_dunn = None
+        if dunnett:
+            q_dunn_orig = self.dunnett_test(group, alpha, p_adjust, mdfdr_B)[
+                "qvalue"
+            ].values.reshape(n_tax, -1)
+            q_dunns = [q_dunn_orig]
+            for r in ss_list:
+                if r.get("res_dunn") is not None:
+                    q_dunns.append(r["res_dunn"]["q_val"])
+                else:
+                    q_dunns.append(np.ones_like(q_dunn_orig))
+            q_dunn_3d = np.stack(q_dunns, axis=-1)
+            ss_dunn = np.mean(q_dunn_3d > alpha, axis=-1)
+            passed_ss_dunn = (ss_dunn == 0) | (ss_dunn == 1)
+
+        # Trend sensitivity uses global sensitivity.
+        passed_ss_trend = None
+        if trend:
+            q_trend_orig = self.trend_test(
+                group, alpha, p_adjust, trend_contrast, trend_node, trend_B
+            )["qvalue"].values
+            q_trends = [q_trend_orig] + [r["res_trend"]["q_val"] for r in ss_list]
+            q_trend_3d = np.stack(q_trends, axis=-1)
+            ss_trend = np.mean(q_trend_3d > alpha, axis=-1)
+            passed_ss_trend = (ss_trend == 0) | (ss_trend == 1)
+
+        result = {
+            "passed_ss_prim": passed_ss_prim,
+            "passed_ss_global": passed_ss_global,
+            "passed_ss_pair": passed_ss_pair,
+            "passed_ss_dunn": passed_ss_dunn,
+            "passed_ss_trend": passed_ss_trend,
+            "ss_tab_prim": ss_tab_prim,
+        }
+        return result
+
+
 def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
     """Perform ANCOM-BC global test.
 
@@ -1866,276 +1884,706 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     return W_global, pval, qval, reject
 
 
-def _ancombc2_estimate(
-    data,
-    agg_data,
-    dmat,
-    p_adjust="holm",
-    pseudo=0,
-    s0_perc=0.05,
-    alpha=0.05,
-    max_iter=100,
-    tol=1e-5,
+def _global_test_2(
+    dmat, group, beta_hat, vcov_hat, dof=None, p_adjust="holm", alpha=0.05
 ):
-    """ANCOM-BC2 core estimation"""
-    # data preprocessing
-    O1 = data + pseudo
-    O2 = agg_data + pseudo
+    """ANCOM-BC2 global test using F-test or chi-square test.
 
-    features = O2.columns.tolist()
-    n_feats = O2.shape[1]
+    Parameters
+    ----------
+    dmat : patsy.DesignMatrix
+        Design matrix generated from the fitted formula.
+    group : str
+        Group variable name.
+    beta_hat : ndarray of shape (n_taxa, n_covariates)
+        Bias-corrected coefficients.
+    vcov_hat : list of ndarray of shape (n_covariates, n_covariates)
+        Per-taxon covariance matrices.
+    dof : ndarray of shape (n_taxa, n_covariates) or None
+        Degrees of freedom. If None, use chi-square test.
+    p_adj_method : str
+        P-value adjustment method.
+    alpha : float
+        Significance level.
 
-    covars = dmat.design_info.column_names
-    n_covars = len(covars)
+    Returns
+    -------
+    pd.DataFrame with columns: W, p_val, q_val, reject
 
-    # (Robust) CLR transformation
-    # Per-taxon centering: y = log(x) - mean(log(x)) per taxon (row).
-    O1_vals = O1.values.astype(float)
-    y1 = rclr(O1_vals, axis=0)
+    """
+    n_tax = beta_hat.shape[0]
+    covariates = dmat.design_info.column_names
 
-    # Initial estimates via SVD-based OLS (_estimate_params)
-    var_hat1, beta1, _, _ = _estimate_params(data=y1, dmat=dmat)
+    # Identify group-related covariates (excluding interactions)
+    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    beta_hat_sub = beta_hat[:, group_ind]
 
-    # EM bias correction
-    bias1 = np.empty((n_covars, 3))
-    for i in range(n_covars):
-        beta_col = beta1[i]
-        var_col = var_hat1[:, i]
+    W_global = np.full(n_tax, np.nan)
+    p_global = np.ones(n_tax)
 
-        # Remove NaN pairs
-        mask = ~(np.isnan(beta_col) | np.isnan(var_col))
-        if mask.sum() > 0:
-            bias1[i] = _estimate_bias_em(
-                beta_col[mask], var_col[mask], tol=tol, max_iter=max_iter
-            )
-        else:
-            bias1[i] = [0.0, 0.0, 0.0]
+    for i in range(n_tax):
+        beta_i = beta_hat_sub[i]
+        vcov_i = vcov_hat[i][np.ix_(group_ind, group_ind)]
+        k = int(np.sum(group_ind))
 
-    delta_em = bias1[:, 0]
-    delta_wls = bias1[:, 1]
-    var_delta = bias1[:, 2]
+        try:
+            A = np.eye(k)
+            # W = beta' (A vcov A')^{-1} beta
+            AvA = A @ vcov_i @ A.T
+            W = float(beta_i @ np.linalg.pinv(AvA) @ beta_i)
 
-    # Correct coefficients and compute sampling fractions
-    beta1_corrected = beta1.T - delta_em
+            if dof is not None:
+                # F-test
+                dof_i = np.unique(dof[i, group_ind])
+                if len(dof_i) == 1:
+                    dof_i = dof_i[0]
+                else:
+                    dof_i = np.min(dof_i)
+                from scipy.stats import f as f_dist
 
-    # Compute theta_hat (sampling fractions)
-    # TODO: use `_sample_fractions` or remove it
-    resid_all = y1 - (dmat @ beta1_corrected.T)  # (n_samp, n_feats)
-    theta_hat_arr = np.nanmean(resid_all, axis=1)  # mean over features/taxa (columns)
+                p = 2 * min(
+                    f_dist.cdf(W, dfn=k, dfd=dof_i), f_dist.sf(W, dfn=k, dfd=dof_i)
+                )
+            else:
+                # Chi-square test
+                p = 2 * min(chi2.cdf(W, df=k), chi2.sf(W, df=k))
 
-    # Handle NaN in theta (samples with all-NaN residuals)
-    nan_theta = np.isnan(theta_hat_arr)
-    if np.any(nan_theta):
-        theta_hat_arr[nan_theta] = 0.0
+            W_global[i] = W
+            p_global[i] = p
+        except Exception:
+            pass  # Keep NaN/1.0 defaults
 
-    ###################################
-    ### Re-estimation of parameters ###
-    ###################################
+    # Multiple testing correction
+    func = _check_p_adjust(p_adjust)
+    q_global = func(p_global)
+    q_global = np.where(np.isnan(q_global), 1.0, q_global)
+    reject = q_global <= alpha
 
-    # Final estimates with bias-corrected theta
-    O2_vals = O2.values.astype(float)
-    y2 = rclr(O2_vals, axis=0)
+    result = pd.DataFrame(
+        {
+            "W": W_global,
+            "p_val": p_global,
+            "q_val": q_global,
+            "reject": reject,
+        }
+    )
+    return result
 
-    # Subtract theta (sampling fractions) from data (y) before estimation.
-    # _estimate_params returns beta as (n_covariates, n_features),
-    # transpose to (n_features, n_covariates) for downstream consistency.
-    y2_crt = y2 - theta_hat_arr[:, np.newaxis]  # (n_samples, n_feats)
-    var_hat, beta_hat, _, vcov_hat = _estimate_params(data=y2_crt, dmat=dmat)
-    beta_hat = beta_hat.T  # (n_feats, n_covariates)
 
-    # Adjust variances
-    _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
+def _pairwise_test(
+    dmat, group, beta_hat, var_hat, vcov_hat, dof, p_adjust="holm", alpha=0.05
+):
+    """ANCOM-BC2 pairwise directional test.
 
-    # Convert beta_covmat to list format for compatibility
-    # NOTE: I got rid of it. But let's revisit.
-    # vcov_hat = [vcov_hat[i] for i in range(n_feats)]
+    For each pair of group levels, compute the difference in coefficients
+    and its variance, then apply mdFDR correction.
+    """
+    covariates = dmat.design_info.column_names
 
-    # Compute degrees of freedom (per-taxon, based on valid samples)
-    # dof = np.full((n_feats, n_covars), np.nan)
-    # for i in range(n_feats):
-    #     n_valid = np.sum(~np.isnan(y2_crt[:, i]))
-    #     if n_valid > n_covars:
-    #         dof[i, :] = n_valid - n_covars
-    n_valid = np.sum(~np.isnan(y2_crt), axis=0)
-    dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
+    # Subset group-related covariates
+    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    beta_hat_sub = beta_hat[:, group_ind]
+    group_covars = [c for c, g in zip(covariates, group_ind) if g]
 
-    # Calculate statistics
-    se_hat, W, pval, qval, reject = _calc_statistics(
-        beta_hat, var_hat, alpha, p_adjust, dof
+    # Compute pairwise differences and their variances
+    n_tax = beta_hat.shape[0]
+    n_group = int(np.sum(group_ind))
+
+    # Generate all pairwise comparisons
+    pair_names = []
+    pair_indices = []
+    for i, j in combinations(range(n_group), 2):
+        pair_names.append(f"{group_covars[j]}_{group_covars[i]}")
+        pair_indices.append((j, i))
+
+    # Also include individual group effects
+    all_names = list(group_covars) + pair_names
+    n_comp = len(all_names)
+
+    beta_pair = np.zeros((n_tax, n_comp))
+    var_pair = np.zeros((n_tax, n_comp))
+
+    # Individual effects
+    for k in range(n_group):
+        beta_pair[:, k] = beta_hat_sub[:, k]
+        var_pair[:, k] = var_hat[:, np.where(group_ind)[0][k]]
+
+    # Pairwise differences
+    for k, (j, i) in enumerate(pair_indices):
+        beta_pair[:, n_group + k] = beta_hat_sub[:, j] - beta_hat_sub[:, i]
+        for tax in range(n_tax):
+            vcov_sub = vcov_hat[tax][
+                np.ix_(np.where(group_ind)[0][[j, i]], np.where(group_ind)[0][[j, i]])
+            ]
+            var_pair[tax, n_group + k] = _var_diff(vcov_sub)
+
+    se_pair = np.sqrt(np.maximum(var_pair, 0))
+    W_pair = beta_pair / se_pair
+
+    # Get dof for group covariates
+    if dof is not None:
+        dof_group = dof[:, group_ind]
+    else:
+        dof_group = None
+
+    # Apply mdFDR correction
+    p_q = _mdfdr_pairwise(
+        W=W_pair,
+        dof=dof_group,
+        fwer_ctrl=p_adjust,
+        dmat=dmat,
+        group=group,
+        beta_hat=beta_hat,
+        vcov_hat=vcov_hat,
+        alpha=alpha,
+        dof_global=dof,
     )
 
-    # Reconstruct bias-corrected table
-    table_bc = pd.DataFrame(
-        y2 - theta_hat_arr[:, None], index=O2.index, columns=O2.columns
-    )
+    p_hat = p_q["p_val"]
+    q_hat = p_q["q_val"]
+    diff_pair = q_hat <= alpha
 
     return {
-        "table_bc": table_bc,
-        "beta_hat": beta_hat,
-        "se_hat": se_hat,
-        "W": W,
-        "p_hat": pval,
-        "q_hat": qval,
-        "reject": reject,
-        "vcov_hat": vcov_hat,
-        "var_hat": var_hat,
-        "dof": dof,
-        "covariates": covars,
-        "features": features,
-        "dmat": dmat,
-        "y2": y2,
-        "res_global": None,
-        "res_pair": None,
-        "res_dunn": None,
-        "res_trend": None,
+        "beta": beta_pair,
+        "se": se_pair,
+        "W": W_pair,
+        "p_val": p_hat,
+        "q_val": q_hat,
+        "reject": diff_pair,
+        "comp_names": all_names,
     }
 
 
-def _ancombc_core(
-    table,
-    metadata,
-    version2=False,  # Mark ANCOM-BC2
-    formula=None,
-    aggregator=None,
-    p_adjust="holm",
-    pseudo=0,
-    s0_perc=0.05,
-    alpha=0.05,
-    max_iter=100,
-    tol=1e-5,
+def _mdfdr_pairwise(
+    W, dof, fwer_ctrl, dmat, group, beta_hat, vcov_hat, alpha, dof_global=None
 ):
-    """ANCOM-BC/BC2 core function."""
+    """Mixed directional FDR correction for pairwise tests.
 
-    # NOTE: A pseudocount should have been added to the table by the user prior to
-    # calling this function.
-    matrix, samples, features = _ingest_table(table)
+    1. Run global test to screen significant taxa (count R).
+    2. Only consider R significant taxa for pairwise p-values.
+    3. Adjust at level R * alpha / d.
 
-    # NOTE: ANCOM-BC does not handle zeros in the input table. The user should have
-    # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
-    # TODO: Add zero-handling in ANCOM-BC2.
-    _check_composition(np, matrix, nozero=not version2)
-    n_samps, n_feats = matrix.shape
+    """
+    n_tax, n_comp = W.shape
 
-    # Validate metadata and cast to numbers where applicable.
-    metadata = _check_metadata(metadata, matrix, samples)
-    metadata = _type_cast_to_float(metadata)
-
-    # Create a design matrix based on metadata and formula.
-    dmat = dmatrix(formula, metadata)
-
-    # Obtain a list of covariates by selecting the relevant columns.
-    covars = dmat.design_info.column_names
-    n_covars = len(covars)
-
-    # validate parameters
-    if not 0 < alpha < 1:
-        raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
-
-    # Handle zero values
-    zero_mask, has_zero = _handle_zeros(matrix, pseudo)
-
-    # Transform count matrix
-    # NOTE: See `_check_composition`
-    # TODO: Handle zeros
-    # ANCOM-BC: Log-transformation
-    if not version2:
-        matrix_tr = np.log(matrix)
-
-    # ANCOM-BC2: CLR transformation
-    else:
-        matrix_tr = rclr(matrix, axis=0)
-
-    # Estimate initial model parameters.
-    var_hat, beta, _, vcov_hat = _estimate_params(matrix_tr, dmat)
-
-    # Estimate and correct for sampling bias via expectation-maximization (EM).
-    # beta: (n_covariates, n_features); iterate over covariates (rows).
-    bias = np.empty((n_covars, 3))
-    for i in range(n_covars):
-        bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
-        # TODO: handle NaN
-
-    delta_em = bias[:, 0]
-    delta_wls = bias[:, 1]
-    var_delta = bias[:, 2]  # only for ANCOM-BC2
-
-    # beta_hat = beta.T - delta_em
-
-    # ANCOM-BC (original)
-    if not version2:
-        # Correct coefficients (logFC) according to estimated bias.
-        beta_hat = beta.T - delta_em
-
-        # Skip degree of freedom calculation. # TODO: Revisit
-        dof = None
-
-    # ANCOM-BC2
-    else:
-        # Estimate sampling fractions
-        theta_hat = _sample_fractions(matrix_tr, dmat, beta, delta_em)
-
-        # Aggregate data
-        if aggregator is not None:
-            matrix, features = _aggregate_features(matrix, aggregator, features)
-            n_feats = matrix.shape[1]
-            zero_mask, has_zero = _handle_zeros(matrix, pseudo)
-            matrix_tr = rclr(matrix, axis=0)
-
-        # Correct data for sampling fractions
-        matrix_tr -= theta_hat[:, None]
-
-        # Re-estimate parameters
-        var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
-        beta_hat = beta_hat.T
-
-        # Adjust variances
-        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
-
-        # Compute per-feature degree of freedom (valid samples - covariates)
-        if has_zero:
-            n_valid = np.sum(~zero_mask, axis=0)
-            dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
-        else:
-            val = n_samps - n_covars if n_samps > n_covars else np.nan
-            dof = np.full((n_feats,), val)
-
-    # Calculate statistics
-    se_hat, W, pval, qval, reject = _calc_statistics(
-        beta_hat, var_hat, alpha, p_adjust, dof
+    # Step 1: Global test screening
+    res_screen = _global_test_2(
+        dmat=dmat,
+        group=group,
+        beta_hat=beta_hat,
+        vcov_hat=vcov_hat,
+        dof=dof_global,
+        p_adjust="BH",  # TODO: Question: Is "BH" hard-coded? Not inherit?
+        alpha=alpha,
     )
 
-    # Output primary results.
-    if features is None:
-        features = np.arange(n_feats)
-    res = pd.DataFrame.from_dict(
+    R = max(int(res_screen["reject"].sum()), 1)
+    screen_ind = res_screen["reject"].values
+
+    # Step 2: Compute p-values from t-distribution
+    if dof is not None:
+        # Per-taxon, per-comparison dof
+        # For pairwise comparisons, approximate dof
+        dof_pair = np.full_like(W, 999.0)
+        if dof.ndim == 2:
+            # Use minimum dof across group covariates as approximation
+            for i in range(n_tax):
+                dof_pair[i, :] = np.nanmin(dof[i, :])
+        p_val = 2.0 * t.sf(np.abs(W), df=dof_pair)
+    else:
+        p_val = 2.0 * norm.sf(np.abs(W))
+
+    # Zero out p-values for taxa not significant in global test
+    p_val = p_val * screen_ind[:, np.newaxis]
+    p_val[p_val == 0] = 1.0
+    p_val = np.where(np.isnan(p_val), 1.0, p_val)
+
+    # Step 3: Adjust p-values
+
+    # TODO: The results are inconsistent with the R code. Found that the correction
+    # should include all p-values across comparisons, not per-comparison p-values.
+    # Needs confirmation.
+    func = _check_p_adjust(fwer_ctrl)
+    q_val = np.zeros_like(p_val)
+    for j in range(n_comp):
+        q_val[:, j] = func(p_val[:, j])
+
+    return {"p_val": p_val, "q_val": q_val}
+
+
+def _var_diff(vcov_sub):
+    """Compute variance of difference for a pair from a covariance sub-matrix.
+
+    For a 2x2 covariance matrix [[var_a, cov_ab], [cov_ab, var_b]],
+    var(a - b) = var_a + var_b - 2*cov_ab = trace - 2*off_diag_sum.
+
+    For a general kxk matrix, var(sum of signed differences) =
+    sum of all elements with appropriate signs. For the simple pairwise
+    case with contrast [1, -1], this is trace - 2*sum(off-diagonal).
+    """
+    vcov_sub = np.asarray(vcov_sub)
+    # For the pairwise case: var(a-b) = var(a) + var(b) - 2*cov(a,b)
+    # = sum(diag) - 2*sum(off-diagonal upper/lower)
+    # = sum(all elements) - 2*sum(off-diagonal)
+    # More precisely: c' V c where c = [1, -1] for 2x2
+    if vcov_sub.shape == (2, 2):
+        return vcov_sub[0, 0] + vcov_sub[1, 1] - 2 * vcov_sub[0, 1]
+    else:
+        # General case: for contrast vector c, var = c' V c
+        # Default contrast is [1, -1, 0, ...] etc.
+        off_diag = vcov_sub.sum() - np.trace(vcov_sub)
+        return np.trace(vcov_sub) - off_diag
+
+
+def _dunnett_test(
+    dmat, group, beta_hat, var_hat, dof, bootstraps=100, p_adjust="holm", alpha=0.05
+):
+    """ANCOM-BC2 Dunnett's type of test.
+
+    Compare each group to the reference group with mdFDR correction.
+    """
+    covariates = dmat.design_info.column_names
+    group_ind = np.array([group in c and ":" not in c for c in covariates])
+
+    beta_hat_dunn = beta_hat[:, group_ind]
+    var_hat_dunn = var_hat[:, group_ind]
+    se_hat_dunn = np.sqrt(np.maximum(var_hat_dunn, 0))
+    W_dunn = beta_hat_dunn / se_hat_dunn
+
+    if dof is not None:
+        dof_dunn = dof[:, group_ind]
+    else:
+        dof_dunn = None
+
+    # mdFDR correction
+    p_q = _mdfdr_dunnett(
+        W=W_dunn,
+        dof=dof_dunn,
+        fwer_ctrl=p_adjust,
+        dmat=dmat,
+        group=group,
+        B=bootstraps,
+        alpha=alpha,
+    )
+
+    return {
+        "beta": beta_hat_dunn,
+        "se": se_hat_dunn,
+        "W": W_dunn,
+        "p_val": p_q["p_val"],
+        "q_val": p_q["q_val"],
+        "reject": p_q["q_val"] <= alpha,
+        "comp_names": [c for c, g in zip(covariates, group_ind) if g],
+    }
+
+
+def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, B, alpha):
+    """mdFDR correction for Dunnett's test."""
+    n_tax = W.shape[0]
+
+    # Step 1: Global test screening via bootstrap
+    res_screen = _dunn_global(
+        dmat=dmat, group=group, W=W, B=B, dof=dof, p_adjust="BH", alpha=alpha
+    )
+    # TODO: Likewise, should p_adjust be hard-coded as "BH"?
+    R = max(int(res_screen["reject"].sum()), 1)
+    screen_ind = res_screen["reject"].values
+
+    # Step 2: Compute p-values
+    if dof is not None:
+        p_val = 2 * t.sf(np.abs(W), df=dof)
+    else:
+        p_val = 2 * norm.sf(np.abs(W))
+
+    # Zero out for non-significant taxa
+    p_val = p_val * screen_ind[:, np.newaxis]
+    p_val[p_val == 0] = 1.0
+    p_val = np.where(np.isnan(p_val), 1.0, p_val)
+
+    # Step 3: Adjust
+    func = _check_p_adjust(fwer_ctrl)
+    q_val = np.zeros_like(p_val)
+    for j in range(p_val.shape[1]):
+        q_val[:, j] = func(p_val[:, j])
+
+    return {"p_val": p_val, "q_val": q_val}
+
+
+def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
+    """Dunnett's global test for mdFDR.
+
+    Bootstrap-based: generate null W from t-distribution, take max |W|.
+    """
+    n_tax = W.shape[0]
+    covariates = dmat.design_info.column_names
+    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    n_group = int(np.sum(group_ind))
+
+    # Observed global statistic: max |W| per taxon
+    W_global = np.max(np.abs(W), axis=1)
+
+    # Bootstrap null distribution
+    W_global_null = np.zeros((n_tax, B))
+    rng = np.random.default_rng(42)
+
+    for b in range(B):
+        # Generate null W from t-distribution
+        if dof is not None:
+            # Use per-taxon, per-group dof
+            W_null = np.zeros_like(W)
+            for i in range(n_tax):
+                for j in range(W.shape[1]):
+                    df_val = dof[i, j] if not np.isnan(dof[i, j]) else 999
+                    W_null[i, j] = rng.standard_t(df_val)
+        else:
+            W_null = rng.standard_normal(size=W.shape)
+
+        W_global_null[:, b] = np.max(np.abs(W_null), axis=1)
+
+    # P-values from bootstrap
+    p_global = np.mean(W_global_null > W_global[:, np.newaxis], axis=1)
+
+    # Multiple testing correction
+    func = _check_p_adjust(p_adjust)
+    q_global = func(p_global)
+    q_global = np.where(np.isnan(q_global), 1.0, q_global)
+    reject = q_global <= alpha
+
+    return pd.DataFrame(
         {
-            "FeatureID": [x for x in features for _ in range(n_covars)],
-            "Covariate": list(covars) * n_feats,
-            "Log2(FC)": beta_hat.ravel(),
-            "SE": se_hat.ravel(),
-            "W": W.ravel(),
-            "pvalue": pval.ravel(),
-            "qvalue": qval.ravel(),
+            "W": W_global,
+            "p_val": p_global,
+            "q_val": q_global,
+            "reject": reject,
         }
     )
 
-    # Pandas' nullable boolean type
-    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
-    res.set_index(["FeatureID", "Covariate"], inplace=True)
 
-    method = "ANCOM-BC" if not version2 else "ANCOM-BC2"
+def _trend_test(
+    dmat,
+    group,
+    beta_hat,
+    var_hat,
+    vcov_hat,
+    p_adjust="holm",
+    alpha=0.05,
+    trend_contrast=None,
+    trend_node=None,
+    bootstraps=100,
+):
+    """ANCOM-BC2 trend test (pattern analysis).
 
-    return ANCOMBCResult(
-        res=res,
-        method=method,
-        _dmat=dmat,
-        _beta_hat=beta_hat,
-        _var_hat=var_hat,
-        _vcov_hat=vcov_hat,
-        _features=features,
-        _alpha=alpha,
-        _p_adjust=p_adjust,
+    Uses constrained optimization to test ordered patterns in group effects.
+    """
+    n_tax = beta_hat.shape[0]
+    covariates = dmat.design_info.column_names
+    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    n_group = int(np.sum(group_ind))
+
+    beta_hat_sub = beta_hat[:, group_ind]
+    var_hat_sub = var_hat[:, group_ind]
+    vcov_hat_sub = [v[np.ix_(group_ind, group_ind)] for v in vcov_hat]
+
+    # Default contrast: all increasing pattern
+    if trend_contrast is None:
+        # Create default contrast matrix for monotone increasing trend
+        C = np.zeros((n_group - 1, n_group))
+        for i in range(n_group - 1):
+            C[i, i] = -1
+            C[i, i + 1] = 1
+        trend_contrast = {"increasing": C}
+        trend_node = {"increasing": n_group - 1}
+
+    n_trend = len(trend_contrast)
+    trend_names = list(trend_contrast.keys())
+
+    # Constrained estimation for each taxon and each trend pattern
+    beta_hat_opt_all = np.zeros((n_tax, n_group * n_trend))
+    l_vals = np.zeros((n_tax, n_trend))
+
+    for i in range(n_tax):
+        for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
+            C = np.asarray(contrast)
+            beta_opt = _constrain_est(beta_hat_sub[i], vcov_hat_sub[i], C)
+            start_col = t_idx * n_group
+            beta_hat_opt_all[i, start_col : start_col + n_group] = beta_opt
+
+            # Compute l_infinity norm
+            node = trend_node[tname]
+            l_vals[i, t_idx] = _l_infty(beta_opt, node)
+
+    # W_trend = max l_infinity across patterns
+    W_trend = np.max(l_vals, axis=1)
+    opt_trend_idx = np.argmax(l_vals, axis=1)
+
+    # Select the optimal trend's beta for each taxon
+    beta_hat_trend = np.zeros((n_tax, n_group))
+    for i in range(n_tax):
+        t_idx = opt_trend_idx[i]
+        start_col = t_idx * n_group
+        beta_hat_trend[i] = beta_hat_opt_all[i, start_col : start_col + n_group]
+
+    # Bootstrap null distribution
+    rng = np.random.default_rng(42)
+    W_trend_null = np.zeros((n_tax, bootstraps))
+
+    ident_mat = np.eye(n_group)
+    var_hat_sub_dup = var_hat_sub  # (n_tax, n_group)
+
+    for b in range(bootstraps):
+        # Generate null beta from N(0, I)
+        beta_null = rng.standard_normal(size=(n_tax, n_group))
+
+        # Constrained estimation under null
+        l_null = np.zeros((n_tax, n_trend))
+        for i in range(n_tax):
+            for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
+                C = np.asarray(contrast)
+                beta_null_opt = _constrain_est(beta_null[i], ident_mat, C)
+                # Scale by sqrt of variance
+                beta_null_opt *= np.sqrt(np.maximum(var_hat_sub_dup[i], 0))
+                node = trend_node[tname]
+                l_null[i, t_idx] = _l_infty(beta_null_opt, node)
+
+        W_trend_null[:, b] = np.max(l_null, axis=1)
+
+    # P-values from bootstrap
+    p_trend = np.mean(W_trend_null > W_trend[:, np.newaxis], axis=1)
+
+    # Multiple testing correction
+    func = _check_p_adjust(p_adjust)
+    q_trend = func(p_trend)
+    q_trend = np.where(np.isnan(q_trend), 1.0, q_trend)
+    diff_trend = q_trend <= alpha
+
+    return {
+        "beta": beta_hat_trend,
+        "se": np.sqrt(np.maximum(var_hat_sub, 0)),
+        "W": W_trend,
+        "p_val": p_trend,
+        "q_val": q_trend,
+        "reject": diff_trend,
+    }
+
+
+def _constrain_est(beta_hat, vcov_hat, contrast):
+    """Constrained estimation via quadratic programming.
+
+    Minimize (beta - beta_opt)' P (beta - beta_opt) subject to
+    contrast @ beta_opt >= 0 (each row of contrast defines one inequality).
+
+    Uses scipy.optimize.minimize with SLSQP method, replacing R's quadprog::solve.QP.
+
+    """
+    P = _safe_inverse_spd(vcov_hat)
+    n = len(beta_hat)
+    contrast = np.asarray(contrast)
+
+    # Objective: 0.5 * x' D x - d' x  (quadratic form)
+    Dmat = 2 * P
+    Dmat = (Dmat + Dmat.T) / 2
+    # Add small ridge for numerical stability (matches R code: diag(Dmat) += 1e-10)
+    Dmat += 1e-10 * np.eye(n)
+    dvec = 2 * P @ beta_hat
+
+    def objective(x):
+        return 0.5 * x @ Dmat @ x - dvec @ x
+
+    def grad(x):
+        return Dmat @ x - dvec
+
+    # Each row of contrast defines one inequality: contrast[i] @ x >= 0
+    # SLSQP expects a single constraint function returning a vector
+    n_constraints = contrast.shape[0]
+    constraints = {
+        "type": "ineq",
+        "fun": lambda x: contrast @ x,  # Returns vector; each element must be >= 0
+        "jac": lambda x: contrast,
+    }
+
+    try:
+        result = minimize(
+            objective,
+            x0=beta_hat,
+            jac=grad,
+            method="SLSQP",
+            constraints=constraints,
+            options={"ftol": 1e-12, "maxiter": 1000},
+        )
+        return result.x
+    except Exception:
+        return np.zeros(n)
+
+
+def _safe_inverse_spd(A, ridge=1e-8):
+    """Safe inverse of a symmetric positive-definite matrix."""
+    A = (A + A.T) / 2
+    try:
+        L = np.linalg.cholesky(A)
+        return np.linalg.solve(A, np.eye(A.shape[0]))
+    except np.linalg.LinAlgError:
+        return np.linalg.inv(A + ridge * np.eye(A.shape[0]))
+
+
+def _l_infty(beta_opt, node):
+    """Compute l_infinity norm for a pattern at specified node.
+
+    Matches R's .l_infty function:
+    l = max(abs(beta_opt[node]), abs(beta_opt[node] - beta_opt[length(beta_opt)]))
+
+    Note: node is 0-based in Python (1-based in R). The last element
+    beta_opt[-1] corresponds to beta_opt[length(beta_opt)] in R.
+    """
+    beta_opt = np.asarray(beta_opt)
+    return max(
+        abs(beta_opt[node]),
+        abs(beta_opt[node] - beta_opt[-1]),
     )
+
+
+def struc_zero(table, metadata, grouping, neg_lb=False):
+    r"""Identify features with structural zeros.
+
+    .. versionadded:: 0.7.1
+
+    Structural zeros refer to features that are systematically absent from certain
+    sample groups. Consequently, the observed feature frequencies are all zeros, or
+    mostly zeros, due to variability in technical factors. This function tests
+    whether the proportion of observed zeros is close to zero, which suggests the
+    absence of a feature in a given sample group.
+
+    Parameters
+    ----------
+    table : table_like of shape (n_samples, n_features)
+        A matrix containing count or proportional abundance data of the samples. See
+        :ref:`supported formats <table_like>`.
+    metadata : pd.DataFrame or 2-D array_like
+        Metadata of the samples. Rows correspond to samples and columns correspond
+        to covariates (attributes). Must be a pandas DataFrame or convertible to a
+        pandas DataFrame.
+    grouping : str
+        A metadata column name indicating the assignment of samples to groups.
+    neg_lb : bool, optional
+        Determine whether to use negative lower bound when calculating sample
+        proportions. Default is False. Generally, it is recommended to set it as True
+        when the sample size per group is relatively large.
+
+    Returns
+    -------
+    pd.DataFrame of bool of shape (n_features, n_groups)
+        A table indicating whether each feature (row) is a structural zero in each
+        group (column) (True: structural zero, False: not structural zero).
+
+    Notes
+    -----
+    The structural zero test was initially proposed and implemented in the ANCOM-II
+    method [1]_. It was adopted to the ANCOM-BC method [2]_ as a recommended method to
+    complement test results. See :func:`ancombc` for how to use this function along
+    with the ANCOM-BC test. Nevertheless, this function is generally useful with or
+    without explicit statistical tests of feature abundances.
+
+    A feature found to be a structural zero in a group should be automatically
+    considered as differentially (less) abundant compared with other groups in which
+    this feature is not a structural zero. Meanwhile, this feature should be excluded
+    from subsequent analyses that involves this group. If a feature is identified as a
+    structural zero in all groups, this feature should be removed entirely from
+    downstream analyses.
+
+    Note that the structural zero test should be applied to the original table before
+    adding a pseudocount, which will otherwise mask all zeros and invalidate this test.
+
+    References
+    ----------
+    .. [1] Kaul, A., Mandal, S., Davidov, O., & Peddada, S. D. (2017). Analysis of
+       microbiome data in the presence of excess zeros. Frontiers in Microbiology, 8,
+       2114.
+
+    .. [2] Lin, H. and Peddada, S.D., 2020. Analysis of compositions of microbiomes
+       with bias correction. Nature Communications, 11(1), p.3514.
+
+    Examples
+    --------
+    >>> from skbio.stats.composition import struc_zero
+    >>> import pandas as pd
+
+    Generate a DataFrame with 10 samples and 6 features with 0's in specific groups:
+
+    >>> table = pd.DataFrame([[ 7,  1,  0, 11,  3,  1],
+    ...                       [ 1,  1,  0, 13, 13,  0],
+    ...                       [11,  5,  0,  1,  4,  1],
+    ...                       [ 2,  2,  0, 16,  4,  0],
+    ...                       [ 0,  1,  0,  0,  6,  0],
+    ...                       [14,  8,  7,  9,  0,  5],
+    ...                       [ 0,  7,  4,  1,  0, 26],
+    ...                       [ 8,  1,  4, 28,  0, 10],
+    ...                       [ 2,  2,  2,  4,  0,  5],
+    ...                       [ 6,  4, 10,  1,  0,  9]],
+    ...                      index=[f's{i}' for i in range(10)],
+    ...                      columns=[f'f{i}' for i in range(6)])
+
+    Then create a grouping vector. In this example, there is a treatment group
+    and a placebo group.
+
+    >>> metadata = pd.DataFrame(
+    ...     {'grouping': ['treatment'] * 5 + ['placebo'] * 5},
+    ...     index=[f's{i}' for i in range(10)])
+
+    The ``struc_zero`` function will identify features with structural zeros. Features
+    that are identified as structural zeros in given groups should not be used in
+    further analyses such as ``ancombc`` and  ``dirmult_ttest``.
+
+    Setting ``neg_lb=True`` declares that the true prevalence of a feature in a group
+    is not significantly different from zero.
+
+    >>> result = struc_zero(table, metadata, grouping='grouping', neg_lb=True)
+    >>> result
+        placebo  treatment
+    f0    False      False
+    f1    False      False
+    f2    False       True
+    f3    False      False
+    f4     True      False
+    f5    False       True
+
+    """
+    # Validate feature table and metadata
+    matrix, samples, features = _ingest_table(table)
+    metadata = _check_metadata(metadata, matrix, samples)
+    metadata = _type_cast_to_float(metadata)
+
+    unique_groups, group_indices, group_counts = np.unique(
+        metadata[grouping], return_inverse=True, return_counts=True
+    )
+
+    # Create a boolean matrix to indicate whether the value in table is 0 or not
+    tmp = np.nan_to_num(matrix) != 0
+
+    n_groups = len(unique_groups)
+    n_features = tmp.shape[1]
+
+    # Initialize group sum matrix
+    group_sums = np.zeros((n_groups, n_features))
+    np.add.at(group_sums, group_indices, tmp.astype(int))
+
+    # Calculate sample sizes of the groups for each feature
+    sample_size = group_counts[:, np.newaxis]
+
+    # Calculate sample proportions of the groups for each feature
+    p_hat = group_sums / sample_size
+
+    # Calculate the lower bound of a 95% confidence interval for sample proportion
+    if neg_lb:
+        p_hat = p_hat - 1.96 * (p_hat * (1 - p_hat) / sample_size) ** 0.5
+
+    zero_idx = p_hat <= 0
+
+    # Output structural zero as a DataFrame
+    return pd.DataFrame(zero_idx.T, index=features, columns=unique_groups)
+
+
+#####################################################
+# NOTE: The functions below are obsolete or unused. #
+#####################################################
 
 
 def _ancombc(
@@ -2151,7 +2599,11 @@ def _ancombc(
     max_iter=100,
     tol=1e-5,
 ):
-    """Private ANCOM-BC/BC2 core function."""
+    """Private ANCOM-BC/BC2 core function.
+
+    NOTE: This function is obsolete.
+
+    """
     # Note: A pseudocount should have been added to the table by the user prior to
     # calling this function.
     matrix, samples, features = _ingest_table(table)
@@ -2305,28 +2757,132 @@ def _ancombc(
         )
 
 
-def _var_diff(vcov_sub):
-    """Compute variance of difference for a pair from a covariance sub-matrix.
+def _ancombc2_estimate(
+    data,
+    agg_data,
+    dmat,
+    p_adjust="holm",
+    pseudo=0,
+    s0_perc=0.05,
+    alpha=0.05,
+    max_iter=100,
+    tol=1e-5,
+):
+    """ANCOM-BC2 core estimation
 
-    For a 2x2 covariance matrix [[var_a, cov_ab], [cov_ab, var_b]],
-    var(a - b) = var_a + var_b - 2*cov_ab = trace - 2*off_diag_sum.
+    NOTE: This function is obsolete.
 
-    For a general kxk matrix, var(sum of signed differences) =
-    sum of all elements with appropriate signs. For the simple pairwise
-    case with contrast [1, -1], this is trace - 2*sum(off-diagonal).
     """
-    vcov_sub = np.asarray(vcov_sub)
-    # For the pairwise case: var(a-b) = var(a) + var(b) - 2*cov(a,b)
-    # = sum(diag) - 2*sum(off-diagonal upper/lower)
-    # = sum(all elements) - 2*sum(off-diagonal)
-    # More precisely: c' V c where c = [1, -1] for 2x2
-    if vcov_sub.shape == (2, 2):
-        return vcov_sub[0, 0] + vcov_sub[1, 1] - 2 * vcov_sub[0, 1]
-    else:
-        # General case: for contrast vector c, var = c' V c
-        # Default contrast is [1, -1, 0, ...] etc.
-        off_diag = vcov_sub.sum() - np.trace(vcov_sub)
-        return np.trace(vcov_sub) - off_diag
+    # data preprocessing
+    O1 = data + pseudo
+    O2 = agg_data + pseudo
+
+    features = O2.columns.tolist()
+    n_feats = O2.shape[1]
+
+    covars = dmat.design_info.column_names
+    n_covars = len(covars)
+
+    # (Robust) CLR transformation
+    # Per-taxon centering: y = log(x) - mean(log(x)) per taxon (row).
+    O1_vals = O1.values.astype(float)
+    y1 = rclr(O1_vals, axis=0)
+
+    # Initial estimates via SVD-based OLS (_estimate_params)
+    var_hat1, beta1, _, _ = _estimate_params(data=y1, dmat=dmat)
+
+    # EM bias correction
+    bias1 = np.empty((n_covars, 3))
+    for i in range(n_covars):
+        beta_col = beta1[i]
+        var_col = var_hat1[:, i]
+
+        # Remove NaN pairs
+        mask = ~(np.isnan(beta_col) | np.isnan(var_col))
+        if mask.sum() > 0:
+            bias1[i] = _estimate_bias_em(
+                beta_col[mask], var_col[mask], tol=tol, max_iter=max_iter
+            )
+        else:
+            bias1[i] = [0.0, 0.0, 0.0]
+
+    delta_em = bias1[:, 0]
+    delta_wls = bias1[:, 1]
+    var_delta = bias1[:, 2]
+
+    # Correct coefficients and compute sampling fractions
+    beta1_corrected = beta1.T - delta_em
+
+    # Compute theta_hat (sampling fractions)
+    # TODO: use `_sample_fractions` or remove it
+    resid_all = y1 - (dmat @ beta1_corrected.T)  # (n_samp, n_feats)
+    theta_hat_arr = np.nanmean(resid_all, axis=1)  # mean over features/taxa (columns)
+
+    # Handle NaN in theta (samples with all-NaN residuals)
+    nan_theta = np.isnan(theta_hat_arr)
+    if np.any(nan_theta):
+        theta_hat_arr[nan_theta] = 0.0
+
+    # Final estimates with bias-corrected theta
+    O2_vals = O2.values.astype(float)
+    y2 = rclr(O2_vals, axis=0)
+
+    # Subtract theta (sampling fractions) from data (y) before estimation.
+    # _estimate_params returns beta as (n_covariates, n_features),
+    # transpose to (n_features, n_covariates) for downstream consistency.
+    y2_crt = y2 - theta_hat_arr[:, np.newaxis]  # (n_samples, n_feats)
+    var_hat, beta_hat, _, vcov_hat = _estimate_params(data=y2_crt, dmat=dmat)
+    beta_hat = beta_hat.T  # (n_feats, n_covariates)
+
+    # Adjust variances
+    _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
+
+    # Convert beta_covmat to list format for compatibility
+    # NOTE: I got rid of it. But let's revisit.
+    # vcov_hat = [vcov_hat[i] for i in range(n_feats)]
+
+    # Compute degrees of freedom (per-taxon, based on valid samples)
+    # dof = np.full((n_feats, n_covars), np.nan)
+    # for i in range(n_feats):
+    #     n_valid = np.sum(~np.isnan(y2_crt[:, i]))
+    #     if n_valid > n_covars:
+    #         dof[i, :] = n_valid - n_covars
+    n_valid = np.sum(~np.isnan(y2_crt), axis=0)
+    dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
+
+    # Calculate statistics
+    se_hat, W, pval, qval, reject = _calc_statistics(
+        beta_hat, var_hat, alpha, p_adjust, dof
+    )
+
+    # Reconstruct bias-corrected table
+    table_bc = pd.DataFrame(
+        y2 - theta_hat_arr[:, None], index=O2.index, columns=O2.columns
+    )
+
+    # Make dof 2D (TODO: won't need this after fixing downstream)
+    dof = np.broadcast_to(dof[:, None], (len(dof), n_covars))
+
+    return {
+        "table_bc": table_bc,
+        "beta_hat": beta_hat,
+        "se_hat": se_hat,
+        "W": W,
+        "p_hat": pval,
+        "q_hat": qval,
+        "reject": reject,
+        "vcov_hat": vcov_hat,
+        "var_hat": var_hat,
+        "dof": dof,
+        "covariates": covars,
+        "features": features,
+        "dmat": dmat,
+        "y2": y2,
+        "res_global": None,
+        "res_pair": None,
+        "res_dunn": None,
+        "res_trend": None,
+    }
 
 
 def _combn_fun(vec, func, sep="_"):
@@ -2369,529 +2925,3 @@ def _combn_fun2(mat, sep="_"):
         result[pair_name] = _var_diff(sub)
 
     return result
-
-
-def _ancombc_global_F(
-    dmat, group, beta_hat, vcov_hat, dof=None, p_adj_method="holm", alpha=0.05
-):
-    """ANCOM-BC2 global test using F-test or chi-square test.
-
-    Parameters
-    ----------
-    dmat : patsy.DesignMatrix
-        Design matrix generated from the fitted formula.
-    group : str
-        Group variable name.
-    beta_hat : ndarray of shape (n_taxa, n_covariates)
-        Bias-corrected coefficients.
-    vcov_hat : list of ndarray of shape (n_covariates, n_covariates)
-        Per-taxon covariance matrices.
-    dof : ndarray of shape (n_taxa, n_covariates) or None
-        Degrees of freedom. If None, use chi-square test.
-    p_adj_method : str
-        P-value adjustment method.
-    alpha : float
-        Significance level.
-
-    Returns
-    -------
-    pd.DataFrame with columns: W, p_val, q_val, reject
-    """
-    n_tax = beta_hat.shape[0]
-    covariates = dmat.design_info.column_names
-
-    # Identify group-related covariates (excluding interactions)
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-    beta_hat_sub = beta_hat[:, group_ind]
-
-    W_global = np.full(n_tax, np.nan)
-    p_global = np.ones(n_tax)
-
-    for i in range(n_tax):
-        beta_i = beta_hat_sub[i]
-        vcov_i = vcov_hat[i][np.ix_(group_ind, group_ind)]
-        k = int(np.sum(group_ind))
-
-        try:
-            A = np.eye(k)
-            # W = beta' (A vcov A')^{-1} beta
-            AvA = A @ vcov_i @ A.T
-            W = float(beta_i @ np.linalg.pinv(AvA) @ beta_i)
-
-            if dof is not None:
-                # F-test
-                dof_i = np.unique(dof[i, group_ind])
-                if len(dof_i) == 1:
-                    dof_i = dof_i[0]
-                else:
-                    dof_i = np.min(dof_i)
-                from scipy.stats import f as f_dist
-
-                p = 2 * min(
-                    f_dist.cdf(W, dfn=k, dfd=dof_i), f_dist.sf(W, dfn=k, dfd=dof_i)
-                )
-            else:
-                # Chi-square test
-                p = 2 * min(chi2.cdf(W, df=k), chi2.sf(W, df=k))
-
-            W_global[i] = W
-            p_global[i] = p
-        except Exception:
-            pass  # Keep NaN/1.0 defaults
-
-    # Multiple testing correction
-    func = _check_p_adjust(p_adj_method)
-    q_global = func(p_global)
-    q_global = np.where(np.isnan(q_global), 1.0, q_global)
-    reject = q_global <= alpha
-
-    result = pd.DataFrame(
-        {
-            "W": W_global,
-            "p_val": p_global,
-            "q_val": q_global,
-            "reject": reject,
-        }
-    )
-    return result
-
-
-def _ancombc_pair(
-    dmat, group, beta_hat, var_hat, vcov_hat, dof, fwer_ctrl_method="holm", alpha=0.05
-):
-    """ANCOM-BC2 pairwise directional test.
-
-    For each pair of group levels, compute the difference in coefficients
-    and its variance, then apply mdFDR correction.
-    """
-    covariates = dmat.design_info.column_names
-
-    # Subset group-related covariates
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-    beta_hat_sub = beta_hat[:, group_ind]
-    group_covars = [c for c, g in zip(covariates, group_ind) if g]
-
-    # Compute pairwise differences and their variances
-    n_tax = beta_hat.shape[0]
-    n_group = int(np.sum(group_ind))
-
-    # Generate all pairwise comparisons
-    pair_names = []
-    pair_indices = []
-    for i, j in combinations(range(n_group), 2):
-        pair_names.append(f"{group_covars[j]}_{group_covars[i]}")
-        pair_indices.append((j, i))
-
-    # Also include individual group effects
-    all_names = list(group_covars) + pair_names
-    n_comp = len(all_names)
-
-    beta_pair = np.zeros((n_tax, n_comp))
-    var_pair = np.zeros((n_tax, n_comp))
-
-    # Individual effects
-    for k in range(n_group):
-        beta_pair[:, k] = beta_hat_sub[:, k]
-        var_pair[:, k] = var_hat[:, np.where(group_ind)[0][k]]
-
-    # Pairwise differences
-    for k, (j, i) in enumerate(pair_indices):
-        beta_pair[:, n_group + k] = beta_hat_sub[:, j] - beta_hat_sub[:, i]
-        for tax in range(n_tax):
-            vcov_sub = vcov_hat[tax][
-                np.ix_(np.where(group_ind)[0][[j, i]], np.where(group_ind)[0][[j, i]])
-            ]
-            var_pair[tax, n_group + k] = _var_diff(vcov_sub)
-
-    se_pair = np.sqrt(np.maximum(var_pair, 0))
-    W_pair = beta_pair / se_pair
-
-    # Get dof for group covariates
-    if dof is not None:
-        dof_group = dof[:, group_ind]
-    else:
-        dof_group = None
-
-    # Apply mdFDR correction
-    p_q = _mdfdr_pairwise(
-        W=W_pair,
-        dof=dof_group,
-        fwer_ctrl_method=fwer_ctrl_method,
-        dmat=dmat,
-        group=group,
-        beta_hat=beta_hat,
-        vcov_hat=vcov_hat,
-        alpha=alpha,
-        dof_global=dof,
-    )
-
-    p_hat = p_q["p_val"]
-    q_hat = p_q["q_val"]
-    diff_pair = q_hat <= alpha
-
-    return {
-        "beta": beta_pair,
-        "se": se_pair,
-        "W": W_pair,
-        "p_val": p_hat,
-        "q_val": q_hat,
-        "reject": diff_pair,
-        "comp_names": all_names,
-    }
-
-
-def _mdfdr_pairwise(
-    W, dof, fwer_ctrl_method, dmat, group, beta_hat, vcov_hat, alpha, dof_global=None
-):
-    """Mixed directional FDR correction for pairwise tests.
-
-    1. Run global test to screen significant taxa (count R).
-    2. Only consider R significant taxa for pairwise p-values.
-    3. Adjust at level R * alpha / d.
-    """
-    n_tax, n_comp = W.shape
-
-    # Step 1: Global test screening
-    res_screen = _ancombc_global_F(
-        dmat=dmat,
-        group=group,
-        beta_hat=beta_hat,
-        vcov_hat=vcov_hat,
-        dof=dof_global,
-        p_adj_method="BH",
-        alpha=alpha,
-    )
-
-    R = max(int(res_screen["reject"].sum()), 1)
-    screen_ind = res_screen["reject"].values
-
-    # Step 2: Compute p-values from t-distribution
-    if dof is not None:
-        # Per-taxon, per-comparison dof
-        # For pairwise comparisons, approximate dof
-        dof_pair = np.full_like(W, 999.0)
-        if dof.ndim == 2:
-            # Use minimum dof across group covariates as approximation
-            for i in range(n_tax):
-                dof_pair[i, :] = np.nanmin(dof[i, :])
-        p_val = 2.0 * t.sf(np.abs(W), df=dof_pair)
-    else:
-        p_val = 2.0 * norm.sf(np.abs(W))
-
-    # Zero out p-values for taxa not significant in global test
-    p_val = p_val * screen_ind[:, np.newaxis]
-    p_val[p_val == 0] = 1.0
-    p_val = np.where(np.isnan(p_val), 1.0, p_val)
-
-    # Step 3: Adjust p-values
-    func = _check_p_adjust(fwer_ctrl_method)
-    q_val = np.zeros_like(p_val)
-    for j in range(n_comp):
-        q_val[:, j] = func(p_val[:, j])
-
-    return {"p_val": p_val, "q_val": q_val}
-
-
-def _dunn_global(dmat, group, W, B, dof, p_adj_method="holm", alpha=0.05):
-    """Dunnett's global test for mdFDR.
-
-    Bootstrap-based: generate null W from t-distribution, take max |W|.
-    """
-    n_tax = W.shape[0]
-    covariates = dmat.design_info.column_names
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-    n_group = int(np.sum(group_ind))
-
-    # Observed global statistic: max |W| per taxon
-    W_global = np.max(np.abs(W), axis=1)
-
-    # Bootstrap null distribution
-    W_global_null = np.zeros((n_tax, B))
-    rng = np.random.default_rng(42)
-
-    for b in range(B):
-        # Generate null W from t-distribution
-        if dof is not None:
-            # Use per-taxon, per-group dof
-            W_null = np.zeros_like(W)
-            for i in range(n_tax):
-                for j in range(W.shape[1]):
-                    df_val = dof[i, j] if not np.isnan(dof[i, j]) else 999
-                    W_null[i, j] = rng.standard_t(df_val)
-        else:
-            W_null = rng.standard_normal(size=W.shape)
-
-        W_global_null[:, b] = np.max(np.abs(W_null), axis=1)
-
-    # P-values from bootstrap
-    p_global = np.mean(W_global_null > W_global[:, np.newaxis], axis=1)
-
-    # Multiple testing correction
-    func = _check_p_adjust(p_adj_method)
-    q_global = func(p_global)
-    q_global = np.where(np.isnan(q_global), 1.0, q_global)
-    reject = q_global <= alpha
-
-    return pd.DataFrame(
-        {
-            "W": W_global,
-            "p_val": p_global,
-            "q_val": q_global,
-            "reject": reject,
-        }
-    )
-
-
-def _ancombc_dunn(
-    dmat, group, beta_hat, var_hat, dof, B=100, fwer_ctrl_method="holm", alpha=0.05
-):
-    """ANCOM-BC2 Dunnett's type of test.
-
-    Compare each group to the reference group with mdFDR correction.
-    """
-    covariates = dmat.design_info.column_names
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-
-    beta_hat_dunn = beta_hat[:, group_ind]
-    var_hat_dunn = var_hat[:, group_ind]
-    se_hat_dunn = np.sqrt(np.maximum(var_hat_dunn, 0))
-    W_dunn = beta_hat_dunn / se_hat_dunn
-
-    if dof is not None:
-        dof_dunn = dof[:, group_ind]
-    else:
-        dof_dunn = None
-
-    # mdFDR correction
-    p_q = _mdfdr_dunnett(
-        W=W_dunn,
-        dof=dof_dunn,
-        fwer_ctrl_method=fwer_ctrl_method,
-        dmat=dmat,
-        group=group,
-        B=B,
-        alpha=alpha,
-    )
-
-    return {
-        "beta": beta_hat_dunn,
-        "se": se_hat_dunn,
-        "W": W_dunn,
-        "p_val": p_q["p_val"],
-        "q_val": p_q["q_val"],
-        "reject": p_q["q_val"] <= alpha,
-        "comp_names": [c for c, g in zip(covariates, group_ind) if g],
-    }
-
-
-def _mdfdr_dunnett(W, dof, fwer_ctrl_method, dmat, group, B, alpha):
-    """mdFDR correction for Dunnett's test."""
-    n_tax = W.shape[0]
-
-    # Step 1: Global test screening via bootstrap
-    res_screen = _dunn_global(
-        dmat=dmat, group=group, W=W, B=B, dof=dof, p_adj_method="BH", alpha=alpha
-    )
-    R = max(int(res_screen["reject"].sum()), 1)
-    screen_ind = res_screen["reject"].values
-
-    # Step 2: Compute p-values
-    if dof is not None:
-        p_val = 2 * t.sf(np.abs(W), df=dof)
-    else:
-        p_val = 2 * norm.sf(np.abs(W))
-
-    # Zero out for non-significant taxa
-    p_val = p_val * screen_ind[:, np.newaxis]
-    p_val[p_val == 0] = 1.0
-    p_val = np.where(np.isnan(p_val), 1.0, p_val)
-
-    # Step 3: Adjust
-    func = _check_p_adjust(fwer_ctrl_method)
-    q_val = np.zeros_like(p_val)
-    for j in range(p_val.shape[1]):
-        q_val[:, j] = func(p_val[:, j])
-
-    return {"p_val": p_val, "q_val": q_val}
-
-
-def _safe_inverse_spd(A, ridge=1e-8):
-    """Safe inverse of a symmetric positive-definite matrix."""
-    A = (A + A.T) / 2
-    try:
-        L = np.linalg.cholesky(A)
-        return np.linalg.solve(A, np.eye(A.shape[0]))
-    except np.linalg.LinAlgError:
-        return np.linalg.inv(A + ridge * np.eye(A.shape[0]))
-
-
-def _constrain_est(beta_hat, vcov_hat, contrast):
-    """Constrained estimation via quadratic programming.
-
-    Minimize (beta - beta_opt)' P (beta - beta_opt) subject to
-    contrast @ beta_opt >= 0 (each row of contrast defines one inequality).
-
-    Uses scipy.optimize.minimize with SLSQP method, replacing R's
-    quadprog::solve.QP.
-    """
-    P = _safe_inverse_spd(vcov_hat)
-    n = len(beta_hat)
-    contrast = np.asarray(contrast)
-
-    # Objective: 0.5 * x' D x - d' x  (quadratic form)
-    Dmat = 2 * P
-    Dmat = (Dmat + Dmat.T) / 2
-    # Add small ridge for numerical stability (matches R code: diag(Dmat) += 1e-10)
-    Dmat += 1e-10 * np.eye(n)
-    dvec = 2 * P @ beta_hat
-
-    def objective(x):
-        return 0.5 * x @ Dmat @ x - dvec @ x
-
-    def grad(x):
-        return Dmat @ x - dvec
-
-    # Each row of contrast defines one inequality: contrast[i] @ x >= 0
-    # SLSQP expects a single constraint function returning a vector
-    n_constraints = contrast.shape[0]
-    constraints = {
-        "type": "ineq",
-        "fun": lambda x: contrast @ x,  # Returns vector; each element must be >= 0
-        "jac": lambda x: contrast,
-    }
-
-    try:
-        result = minimize(
-            objective,
-            x0=beta_hat,
-            jac=grad,
-            method="SLSQP",
-            constraints=constraints,
-            options={"ftol": 1e-12, "maxiter": 1000},
-        )
-        return result.x
-    except Exception:
-        return np.zeros(n)
-
-
-def _l_infty(beta_opt, node):
-    """Compute l_infinity norm for a pattern at specified node.
-
-    Matches R's .l_infty function:
-    l = max(abs(beta_opt[node]), abs(beta_opt[node] - beta_opt[length(beta_opt)]))
-
-    Note: node is 0-based in Python (1-based in R). The last element
-    beta_opt[-1] corresponds to beta_opt[length(beta_opt)] in R.
-    """
-    beta_opt = np.asarray(beta_opt)
-    return max(
-        abs(beta_opt[node]),
-        abs(beta_opt[node] - beta_opt[-1]),
-    )
-
-
-def _ancombc_trend(
-    dmat,
-    group,
-    beta_hat,
-    var_hat,
-    vcov_hat,
-    p_adj_method="holm",
-    alpha=0.05,
-    trend_contrast=None,
-    trend_node=None,
-    trend_B=100,
-):
-    """ANCOM-BC2 trend test (pattern analysis).
-
-    Uses constrained optimization to test ordered patterns in group effects.
-    """
-    n_tax = beta_hat.shape[0]
-    covariates = dmat.design_info.column_names
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-    n_group = int(np.sum(group_ind))
-
-    beta_hat_sub = beta_hat[:, group_ind]
-    var_hat_sub = var_hat[:, group_ind]
-    vcov_hat_sub = [v[np.ix_(group_ind, group_ind)] for v in vcov_hat]
-
-    # Default contrast: all increasing pattern
-    if trend_contrast is None:
-        # Create default contrast matrix for monotone increasing trend
-        C = np.zeros((n_group - 1, n_group))
-        for i in range(n_group - 1):
-            C[i, i] = -1
-            C[i, i + 1] = 1
-        trend_contrast = {"increasing": C}
-        trend_node = {"increasing": n_group - 1}
-
-    n_trend = len(trend_contrast)
-    trend_names = list(trend_contrast.keys())
-
-    # Constrained estimation for each taxon and each trend pattern
-    beta_hat_opt_all = np.zeros((n_tax, n_group * n_trend))
-    l_vals = np.zeros((n_tax, n_trend))
-
-    for i in range(n_tax):
-        for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
-            C = np.asarray(contrast)
-            beta_opt = _constrain_est(beta_hat_sub[i], vcov_hat_sub[i], C)
-            start_col = t_idx * n_group
-            beta_hat_opt_all[i, start_col : start_col + n_group] = beta_opt
-
-            # Compute l_infinity norm
-            node = trend_node[tname]
-            l_vals[i, t_idx] = _l_infty(beta_opt, node)
-
-    # W_trend = max l_infinity across patterns
-    W_trend = np.max(l_vals, axis=1)
-    opt_trend_idx = np.argmax(l_vals, axis=1)
-
-    # Select the optimal trend's beta for each taxon
-    beta_hat_trend = np.zeros((n_tax, n_group))
-    for i in range(n_tax):
-        t_idx = opt_trend_idx[i]
-        start_col = t_idx * n_group
-        beta_hat_trend[i] = beta_hat_opt_all[i, start_col : start_col + n_group]
-
-    # Bootstrap null distribution
-    rng = np.random.default_rng(42)
-    W_trend_null = np.zeros((n_tax, trend_B))
-
-    ident_mat = np.eye(n_group)
-    var_hat_sub_dup = var_hat_sub  # (n_tax, n_group)
-
-    for b in range(trend_B):
-        # Generate null beta from N(0, I)
-        beta_null = rng.standard_normal(size=(n_tax, n_group))
-
-        # Constrained estimation under null
-        l_null = np.zeros((n_tax, n_trend))
-        for i in range(n_tax):
-            for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
-                C = np.asarray(contrast)
-                beta_null_opt = _constrain_est(beta_null[i], ident_mat, C)
-                # Scale by sqrt of variance
-                beta_null_opt *= np.sqrt(np.maximum(var_hat_sub_dup[i], 0))
-                node = trend_node[tname]
-                l_null[i, t_idx] = _l_infty(beta_null_opt, node)
-
-        W_trend_null[:, b] = np.max(l_null, axis=1)
-
-    # P-values from bootstrap
-    p_trend = np.mean(W_trend_null > W_trend[:, np.newaxis], axis=1)
-
-    # Multiple testing correction
-    func = _check_p_adjust(p_adj_method)
-    q_trend = func(p_trend)
-    q_trend = np.where(np.isnan(q_trend), 1.0, q_trend)
-    diff_trend = q_trend <= alpha
-
-    return {
-        "beta": beta_hat_trend,
-        "se": np.sqrt(np.maximum(var_hat_sub, 0)),
-        "W": W_trend,
-        "p_val": p_trend,
-        "q_val": q_trend,
-        "reject": diff_trend,
-    }
