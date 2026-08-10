@@ -380,20 +380,20 @@ class Ancombc2Tests(TestCase):
         res = ancombc2(table + 1, meta_data, "age + region + bmi")
 
         ### Temporary test to confirm numerical identity ###
-        outdir = '/home/drz/Desktop'
+        # outdir = '/home/drz/Desktop'
 
         # res.res.to_csv(f'{outdir}/ancombc2_pseq_1.tsv', sep='\t')
         # for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
         #     np.save(f'{outdir}/{attr}.npy', getattr(res, f'_{attr}'))
 
-        obs = res.res.reset_index()
-        exp = pd.read_table(f'{outdir}/ancombc2_pseq_1.tsv')
-        exp["Signif"] = exp["Signif"].astype("boolean")
-        pd.testing.assert_frame_equal(obs, exp)
-        for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
-            obs = getattr(res, f'_{attr}')
-            exp = np.load(f'{outdir}/{attr}.npy')
-            npt.assert_allclose(obs, exp)
+        # obs = res.res.reset_index()
+        # exp = pd.read_table(f'{outdir}/ancombc2_pseq_1.tsv')
+        # exp["Signif"] = exp["Signif"].astype("boolean")
+        # pd.testing.assert_frame_equal(obs, exp)
+        # for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
+        #     obs = getattr(res, f'_{attr}')
+        #     exp = np.load(f'{outdir}/{attr}.npy')
+        #     npt.assert_allclose(obs, exp)
             # npt.assert_array_equal(obs, exp)
 
         # # format multi-index dataframe
