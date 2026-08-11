@@ -679,7 +679,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     safe_mat = xp.where(obs_mask, mat, 1)
     log_safe = xp.log(safe_mat)
 
-    # Alternatively, one can do the following, wwhich however will raise a warning.
+    # Alternatively, one can do the following, which however will raise a warning.
     # log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
 
     # Count observed values from mask
@@ -698,7 +698,7 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     # Center by geometric mean
     centered = log_safe - geo_mean_log
 
-    # Replace unobserved calues with NaN
+    # Replace unobserved values with NaN
     result = xp.where(obs_mask, centered, xp.nan)
 
     return result
