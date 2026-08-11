@@ -19,9 +19,10 @@ from skbio import TreeNode
 from skbio.stats.distance import DistanceMatrixError
 from skbio.stats.composition import (
     closure, multi_replace, perturb, perturb_inv, power, inner, clr, clr_inv, rclr,
-    ilr, ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr, tree_basis)
+    rclr_inv, ilr, ilr_inv, alr, alr_inv, sbp_basis, centralize, vlr, pairwise_vlr,
+    tree_basis)
 from skbio.stats.composition._base import (
-    _check_composition, _check_basis, _gram_schmidt_basis)
+    _check_composition, _check_basis, _gram_schmidt_basis, _rclr_inv)
 from skbio.util._testing import ArrayAPITestMixin, array_backends, xp_assert_close
 from skbio.util._array import _to_numpy
 
@@ -910,7 +911,6 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             alr_inv(arr, axis=1)
         self.assertEqual(str(cm.exception), msg)
 
-
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_alr_backends(self, xp, device):
         ref_idx = 2
@@ -1061,12 +1061,13 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.0655828061998637)
 
         # With zeros
-        output = vlr(
-            x=self.mat_with_zero[0],
-            y=self.mat_with_zero[1],
-            ddof=1,
-            robust=False,
-        )
+        with self.assertWarns(RuntimeWarning):
+            output = vlr(
+                x=self.mat_with_zero[0],
+                y=self.mat_with_zero[1],
+                ddof=1,
+                robust=False,
+            )
         assert np.isnan(output)
 
         # assert raises error
@@ -1106,7 +1107,8 @@ class VLRTests(TestCase):
 
         # With zeros
         with self.assertRaises(DistanceMatrixError):
-            pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False)
+            with self.assertWarns(RuntimeWarning):
+                pairwise_vlr(self.mat_with_zero, ids=None, ddof=1, robust=False)
 
         # no validation
         dism = pairwise_vlr(self.mat, ids=None, ddof=1, robust=False, validate=False)
@@ -1114,7 +1116,7 @@ class VLRTests(TestCase):
         self.assertAlmostEqual(output, 0.2857382286903922)
 
 
-class TestRclr(TestCase, ArrayAPITestMixin):
+class RCLRTests(TestCase, ArrayAPITestMixin):
     """Tests for the robust centered log-ratio transformation."""
 
     def test_basic_rclr(self):
@@ -1131,7 +1133,7 @@ class TestRclr(TestCase, ArrayAPITestMixin):
 
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_rclr_backends(self, xp, device):
-        # Dense data (no zeros) — should match clr
+        # Dense data (no zeros): should match clr
         data = rand(4, 6, 3) + 1e-4
         lmat = np.log(data)
         expected = lmat - np.mean(lmat, axis=-1, keepdims=True)
@@ -1143,7 +1145,7 @@ class TestRclr(TestCase, ArrayAPITestMixin):
         self.assertEqual(result.shape, arr.shape)
         self.assert_close(result, expected, rtol=_RELAXED_RTOL)
 
-        # Sparse data (with zeros) — zeros become NaN, observed values centered
+        # Sparse data (with zeros): zeros become NaN, observed values centered
         data_sparse = np.array([[3.0, 3.0, 0.0],
                                 [0.0, 4.0, 2.0]])
         expected_sparse = np.array([[0.0, 0.0, np.nan],
@@ -1383,6 +1385,97 @@ class TestRclr(TestCase, ArrayAPITestMixin):
         mat = np.array([[1, 2, 3], [4, 5, 6]])
         result = rclr(mat, validate=False)
         self.assertEqual(result.shape, mat.shape)
+
+    def test_rclr_inv(self):
+        mat = np.array([
+            [-0.69314718, 0.0, np.nan, 0.69314718],
+            [np.nan, 0.0, 0.0, np.nan],
+            [0.0, 0.0, 0.0, 0.0],
+        ])
+        exp = np.array([
+            [1 / 7, 2 / 7, 0, 4 / 7],
+            [0, 0.5, 0.5, 0],
+            [0.25, 0.25, 0.25, 0.25],
+        ])
+        npt.assert_allclose(rclr_inv(mat), exp)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_rclr_inv_backends(self, xp, device):
+        axis = 1
+
+        # Dense data: should behave like clr_inv.
+        data = rand(4, 6, 3) + 1e-4
+        log_data = np.log(data)
+        transformed = log_data - np.mean(log_data, axis=axis, keepdims=True)
+        expected = data / np.sum(data, axis=axis, keepdims=True)
+
+        arr = self.make_array(xp, device, transformed)
+        result = rclr_inv(arr, axis)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assertEqual(result.shape, arr.shape)
+        self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+        # Sparse data: NaNs represent unobserved components and become zeros.
+        transformed = np.array([
+            [-0.54930614, np.nan, 0.54930614],
+            [np.nan, 0.34657359, -0.34657359],
+        ])
+        expected = np.array([
+            [0.25, 0.0, 0.75],
+            [0.0, 2 / 3, 1 / 3],
+        ])
+
+        arr = self.make_array(xp, device, transformed)
+        result = rclr_inv(arr)
+
+        self.assert_type_preserved(result, xp, device)
+        self.assertEqual(result.shape, arr.shape)
+        self.assert_close(result, expected, rtol=_RELAXED_RTOL)
+
+    def test_rclr_inv_kernel(self):
+        mat = np.array([
+            [-0.69314718, 0.0, np.nan, 0.69314718],
+            [np.nan, 0.0, 0.0, np.nan],
+            [0.0, 0.0, 0.0, 0.0],
+        ])
+        exp = np.array([
+            [1 / 7, 2 / 7, 0, 4 / 7],
+            [0, 0.5, 0.5, 0],
+            [0.25, 0.25, 0.25, 0.25],
+        ])
+        npt.assert_allclose(_rclr_inv(np, mat, 1), exp)
+
+    def test_rclr_inv_roundtrip(self):
+        mat = np.array([
+            [1.0, 2.0, 0.0, 4.0],
+            [0.0, 3.0, 3.0, 0.0],
+            [2.0, 2.0, 2.0, 2.0],
+        ])
+        npt.assert_allclose(rclr_inv(rclr(mat)), closure(mat))
+
+    def test_rclr_inv_axis(self):
+        mat = np.array([
+            [1.0, 0.0],
+            [2.0, 3.0],
+            [4.0, 3.0],
+        ])
+        npt.assert_allclose(
+            rclr_inv(rclr(mat, axis=0), axis=0),
+            closure(mat, axis=0),
+        )
+
+    def test_rclr_inv_not_centered(self):
+        mat = np.array([1.0, np.nan, 2.0])
+        msg = "not in the RCLR range"
+        with self.assertWarnsRegex(UserWarning, msg):
+            rclr_inv(mat)
+
+    def test_rclr_inv_all_nan(self):
+        mat = np.array([np.nan, np.nan])
+        msg = "without observed components"
+        with self.assertRaisesRegex(ValueError, msg):
+            rclr_inv(mat)
 
 
 if __name__ == "__main__":
