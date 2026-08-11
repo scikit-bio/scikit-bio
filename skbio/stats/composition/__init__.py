@@ -85,6 +85,7 @@ and statistical analysis.
    clr
    clr_inv
    rclr
+   rclr_inv
    ilr
    ilr_inv
 
@@ -166,6 +167,7 @@ from ._base import (
     clr,
     clr_inv,
     rclr,
+    rclr_inv,
     ilr,
     ilr_inv,
     vlr,
@@ -192,6 +194,7 @@ __all__ = [
     "clr",
     "clr_inv",
     "rclr",
+    "rclr_inv",
     "ilr",
     "ilr_inv",
     "vlr",
