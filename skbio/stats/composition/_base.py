@@ -140,19 +140,7 @@ def closure(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
 def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
     """Perform closure."""
-    row_sums = _nansum(xp, mat, axis=axis, keepdims=True)
-    return mat / row_sums
-
-
-def _nansum(
-    xp: ModuleType, arr: StdArray, axis: int, keepdims: bool = False
-) -> StdArray:
-    """Sum array elements along axis, ignoring NaN values."""
-    # Create mask of non-NaN values
-    nan_mask = xp.isnan(arr)
-    # Replace NaN with 0 for summation
-    arr_no_nan = xp.where(nan_mask, xp.asarray(0.0, dtype=arr.dtype), arr)
-    return xp.sum(arr_no_nan, axis=axis, keepdims=keepdims)
+    return mat / xp.sum(mat, axis=axis, keepdims=True)
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
@@ -562,16 +550,14 @@ def clr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     --------
     >>> import numpy as np
     >>> from skbio.stats.composition import clr_inv
-    >>> x = np.array([.1, .3, .4, .2])
+    >>> x = np.array([-0.4,  0.3,  0.2, -0.1])
     >>> clr_inv(x)
-    array([ 0.21383822,  0.26118259,  0.28865141,  0.23632778])
+    array([ 0.1616624 ,  0.32554809,  0.2945681 ,  0.21822141])
 
     """
     xp, mat = ingest_array(mat)
 
-    # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
-    # therefore it is manually written here.
-    if validate and xp.any(xp.abs(xp.sum(mat, axis=axis)) > 1e-08):
+    if validate and _not_centered(xp, mat, axis):
         warn(
             "The input matrix is not in the CLR range, which requires the sum of "
             "values per composition equals to 0.",
@@ -579,6 +565,13 @@ def clr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
         )
 
     return _clr_inv(xp, mat, axis)
+
+
+def _not_centered(xp: ModuleType, mat: StdArray, axis: int):
+    """Check if any composition is not centered to 0."""
+    # `1e-8` is taken from `np.allclose`. It's not guaranteed that `xp` has `allclose`,
+    # therefore it is manually written here.
+    return xp.any(xp.abs(xp.sum(mat, axis=axis)) > 1e-08)
 
 
 def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
@@ -593,7 +586,9 @@ def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     devices=["cpu", "gpu"],
 )
 def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
-    r"""Perform robust centre log ratio (rclr) transformation.
+    r"""Perform robust centre log ratio (RCLR) transformation.
+
+    .. versionadded:: 0.7.3
 
     The robust CLR transformation is similar to the standard CLR transformation, but it
     only operates on observed (non-zero) values [1]_. This makes it suitable for sparse
@@ -628,6 +623,7 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     See Also
     --------
     clr
+    rclr_inv
 
     Notes
     -----
@@ -653,8 +649,7 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     >>> x = np.array([[1, 2, 0, 4],
     ...               [0, 3, 3, 0],
     ...               [2, 2, 2, 2]])
-    >>> result = rclr(x)
-    >>> np.round(result, 3)
+    >>> rclr(x).round(3)
     array([[-0.693,  0.   ,    nan,  0.693],
            [   nan,  0.   ,  0.   ,    nan],
            [ 0.   ,  0.   ,  0.   ,  0.   ]])
@@ -702,6 +697,112 @@ def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     result = xp.where(obs_mask, centered, xp.nan)
 
     return result
+
+
+@array_api_doc(
+    backends=["numpy", "cupy", "torch", "jax", "dask"],
+    devices=["cpu", "gpu"],
+)
+def rclr_inv(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
+    r"""Perform inverse robust centre log ratio (RCLR) transformation.
+
+    .. versionadded:: 0.7.4
+
+    This function transforms RCLR-transformed data back to compositional
+    space. Non-NaN values are exponentiated and closed to sum to 1, while
+    NaN values are interpreted as unobserved components and become zeros
+    in the output.
+
+    For a transformed composition :math:`x`, let :math:`S` be the set of
+    observed (non-NaN) components. The inverse transformation is
+
+    .. math::
+
+        rclr^{-1}(x)_i =
+        \begin{cases}
+            \displaystyle
+            \frac{\exp(x_i)}{\sum_{j \in S} \exp(x_j)}, & i \in S, \\
+            0, & i \notin S.
+        \end{cases}
+
+    Parameters
+    ----------
+    mat : array_like of shape (..., n_components, ...)
+        A matrix of RCLR-transformed data. NaN values represent unobserved components.
+    axis : int, optional
+        Axis along which inverse RCLR transformation will be performed. Each vector on
+        this axis is considered as an RCLR-transformed composition. Default is the last
+        axis (-1).
+    validate : bool, optional
+        Check that each composition contains at least one observed value
+        and that its observed values are centered at zero. Violation of
+        the centering condition results in a warning. Default is True.
+
+    Returns
+    -------
+    ndarray of shape (..., n_components, ...)
+        Inverse RCLR-transformed compositions. NaN values in the input become zeros,
+        and each composition sums to 1.
+
+    See Also
+    --------
+    rclr
+    clr_inv
+
+    Notes
+    -----
+    RCLR converts both zeros and missing (NaN) values to NaN. Therefore, the original
+    distinction between zeros and missing values cannot be recovered from inverse RCLR
+    transformation. This function considers all NaNs as unobserved zero components.
+
+    As with CLR, RCLR is scale invariant. Therefore ``rclr_inv(rclr(mat))`` recovers
+    ``closure(mat)``, rather than the original scale of ``mat``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skbio.stats.composition import rclr_inv
+    >>> x = np.array([-0.3, np.nan, 0.2, 0.1])
+    >>> rclr_inv(x)
+    array([ 0.24151404,  0.        ,  0.39818934,  0.36029662])
+
+    """
+    xp, mat = ingest_array(mat)
+
+    # Calculate these anyway because they are needed by `_rclr_inv`.
+    observed = ~xp.isnan(mat)
+    safe_mat = xp.where(observed, mat, 0)
+
+    if validate:
+        if xp.any(~xp.any(observed, axis=axis)):
+            raise ValueError(
+                "Input matrix cannot have compositions without observed components."
+            )
+        if _not_centered(xp, safe_mat, axis):
+            warn(
+                "The input matrix is not in the RCLR range, which requires the sum of "
+                "observed values per composition to equal 0.",
+                UserWarning,
+            )
+
+    return _rclr_inv(xp, mat, axis, observed, safe_mat)
+
+
+def _rclr_inv(
+    xp: ModuleType,
+    mat: StdArray,
+    axis: int,
+    observed: StdArray | None = None,
+    safe_mat: StdArray | None = None,
+) -> StdArray:
+    """Perform inverse RCLR transform."""
+    if observed is None:
+        observed = ~xp.isnan(mat)
+    if safe_mat is None:
+        safe_mat = xp.where(observed, mat, 0)  # replace NaNs with zeros
+    shift = xp.max(safe_mat, axis=axis, keepdims=True)
+    diff = xp.where(observed, xp.exp(safe_mat - shift), 0)
+    return _closure(xp, diff, axis)
 
 
 @params_aliased([("validate", "check", "0.7.0", True)])
