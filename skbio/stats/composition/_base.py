@@ -46,7 +46,7 @@ def _check_composition(
     axis : int, optional
         Axis that represents each composition. Default is the last axis (-1).
     nozero : bool, optional
-        If True, matrix cannot have zero values.
+        If True, matrix must contain only positive values.
     maxdim : int, optional
         Maximum number of dimensions allowed. Default is None.
     allnum : bool, optional
@@ -57,35 +57,39 @@ def _check_composition(
     TypeError
         If the matrix is not numeric.
     ValueError
-        If the matrix contains nan or infinite values.
+        If the matrix contains NaN (allnum=True) or infinite values.
     ValueError
-        If any values in the matrix are negative.
+        If any values in the matrix are zero (nozero=True) or negative.
     ValueError
-        If there are compositions that have all zeros.
+        If there are compositions full of zeros or NaNs (no observation).
     ValueError
         If the matrix has more than maximum number of dimensions.
 
     """
     if not xp.isdtype(mat.dtype, "numeric"):
         raise TypeError("Input matrix must have a numeric data type.")
+    if maxdim is not None and mat.ndim > maxdim:
+        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
     if allnum:
-        # Don't allow infinite or NaN values.
         if not xp.all(xp.isfinite(mat)):
             raise ValueError("Input matrix cannot have infinite or NaN values.")
     else:
-        # Allow NaN, but not infinite.
         if xp.any(xp.isinf(mat)):
             raise ValueError("Input matrix cannot have infinite values.")
     if nozero:
         if xp.any(mat <= 0):
-            raise ValueError("Input matrix cannot have negative or zero components.")
+            raise ValueError("Input matrix must have strictly positive components.")
     else:
         if xp.any(mat < 0):
             raise ValueError("Input matrix cannot have negative components.")
-        if xp.any(~xp.any(mat, axis=axis)):
-            raise ValueError("Input matrix cannot have compositions with all zeros.")
-    if maxdim is not None and mat.ndim > maxdim:
-        raise ValueError(f"Input matrix can only have {maxdim} dimensions or less.")
+        if allnum:
+            observed = xp.any(mat, axis=axis)
+        else:
+            observed = xp.any(mat > 0, axis=axis)
+        if xp.any(~observed):
+            raise ValueError(
+                "Input matrix cannot have compositions without observed components."
+            )
 
 
 @array_api_doc(
@@ -591,9 +595,9 @@ def _clr_inv(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
 def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     r"""Perform robust centre log ratio (rclr) transformation.
 
-    The robust CLR transformation is similar to the standard CLR transformation,
-    but it only operates on observed (non-zero) values [1]_. This makes it suitable
-    for sparse compositional data.
+    The robust CLR transformation is similar to the standard CLR transformation, but it
+    only operates on observed (non-zero) values [1]_. This makes it suitable for sparse
+    compositional data.
 
     For each composition, the transformation computes:
 
@@ -601,22 +605,20 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
         rclr(x_i) = \ln(x_i) - \frac{1}{|S|} \sum_{j \in S} \ln(x_j)
 
-    where :math:`S` is the set of indices with non-zero values, and :math:`|S|`
-    is the number of non-zero values.
+    where :math:`S` is the set of indices with non-zero values, and :math:`|S|` is the
+    number of non-zero values.
 
     Parameters
     ----------
     mat : array_like of shape (..., n_components, ...)
-        A matrix of non-negative values. Zeros are allowed and will become
-        NaN in the output. NaN values in the input are preserved (representing
-        missing entries).
+        A matrix of non-negative values. Zeros are allowed and will become NaN in the
+        output. NaN values in the input are preserved (representing missing entries).
     axis : int, optional
-        Axis along which rclr transformation will be performed. Each vector
-        on this axis is considered as a composition. Default is the last
-        axis (-1).
+        Axis along which rclr transformation will be performed. Each vector on this
+        axis is considered as a composition. Default is the last axis (-1).
     validate : bool, default True
-        Check if the matrix consists of non-negative, finite values.
-        NaN values are allowed as missing entries.
+        Check if the matrix consists of non-negative, finite values. NaN values are
+        allowed as missing entries.
 
     Returns
     -------
@@ -629,15 +631,14 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
 
     Notes
     -----
-    The rclr transformation has several advantages for sparse compositional
-    data:
+    The rclr transformation has several advantages for sparse compositional data:
 
-    1. It does not require pseudocount addition, which can bias results
-    2. It preserves the zero/non-zero structure of the data
-    3. It allows for matrix completion methods to be applied
+    1. It does not require pseudocount addition, which can bias results.
+    2. It preserves the zero/non-zero structure of the data.
+    3. It allows for matrix completion methods to be applied.
 
-    The geometric mean is computed only over non-zero values in each
-    composition, making it "robust" to the presence of zeros.
+    The geometric mean is computed only over non-zero values in each composition,
+    making it "robust" to the presence of zeros.
 
     References
     ----------
@@ -661,33 +662,44 @@ def rclr(mat: ArrayLike, axis: int = -1, validate: bool = True) -> StdArray:
     """
     xp, mat = ingest_array(mat)
     if validate:
-        _check_composition(xp, mat, allnum=False)
+        _check_composition(xp, mat, axis=axis, allnum=False)
     return _rclr(xp, mat, axis)
 
 
 def _rclr(xp: ModuleType, mat: StdArray, axis: int) -> StdArray:
     """Perform rclr transform."""
 
-    # Track which values were observed in the original input
-    observed_mask = (mat != 0) & ~xp.isnan(mat)
+    # Mask observed values (excluding zero and NaN) in the input matrix.
+    # observed_mask = (mat != 0) & ~xp.isnan(mat)
+    obs_mask = mat > 0
 
-    # Take log (will give -inf for zeros, NaN for NaN)
-    log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
+    # Safe logarithm on observed values, while unobserved values (zero and NaN) become
+    # zeros. The use of Python scalar 1 ensures that the output of `where` matches the
+    # data type of `mat`. This behavior is compliant with array API.
+    safe_mat = xp.where(obs_mask, mat, 1)
+    log_safe = xp.log(safe_mat)
+
+    # Alternatively, one can do the following, which however will raise a warning.
+    # log_safe = xp.where(observed_mask, xp.log(mat), 0.0)
 
     # Count observed values from mask
-    n_observed = xp.sum(observed_mask, axis=axis, keepdims=True)
+    n_obs = xp.sum(obs_mask, axis=axis, keepdims=True)
+
+    # Replace 0 (all-missing compositions) with 1 for safe division.
+    # This shouldn't happen if input has been validated.
+    # n_obs = xp.where(n_obs > 0, n_obs, 1)
 
     # Sum logs for observed values only
     log_sum = xp.sum(log_safe, axis=axis, keepdims=True)
 
-    # Geometric mean
-    geo_mean_log = log_sum / n_observed
+    # Calculate geometric mean
+    geo_mean_log = log_sum / n_obs
 
     # Center by geometric mean
-    result = log_safe - geo_mean_log
+    centered = log_safe - geo_mean_log
 
-    # Replace non-observed with NaN
-    result = xp.where(observed_mask, result, xp.nan)
+    # Replace unobserved values with NaN
+    result = xp.where(obs_mask, centered, xp.nan)
 
     return result
 
