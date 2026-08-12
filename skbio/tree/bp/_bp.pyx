@@ -262,6 +262,7 @@ cdef class BPTree:
         See Also
         --------
         read
+        to_npz
         skbio.io.registry.write
         skbio.io.format.newick
 
@@ -294,6 +295,7 @@ cdef class BPTree:
         See Also
         --------
         write
+        from_npz
         skbio.io.registry.read
         skbio.io.format.newick
 
@@ -302,6 +304,61 @@ cdef class BPTree:
         import skbio.io
 
         return skbio.io.read(file, into=BPTree, format=format, **kwargs)
+
+    def to_npz(self, object file):
+        """Save the tree to a compressed NumPy ``.npz`` archive.
+
+        The parentheses bit array, node names, and branch lengths are stored;
+        edge numbers are not. This is a lightweight binary dump, distinct from
+        the registry-based :meth:`write` (which defaults to newick and does
+        preserve edge numbers).
+
+        Parameters
+        ----------
+        file : str or file-like object
+            Path or open file handle to write to.
+
+        See Also
+        --------
+        from_npz
+        write
+
+        """
+        np.savez_compressed(
+            file, names=self._names, lengths=self._lengths, B=self.data
+        )
+
+    @classmethod
+    def from_npz(cls, object file):
+        """Load a tree from a NumPy ``.npz`` archive written by ``to_npz``.
+
+        Parameters
+        ----------
+        file : str or file-like object
+            Path or open file handle to read from.
+
+        Returns
+        -------
+        BPTree
+            The reconstructed tree, with node names and branch lengths.
+
+        Warnings
+        --------
+        This method calls :func:`numpy.load` with ``allow_pickle=True`` in
+        order to restore the object-dtype ``names`` array. Loading a pickled
+        array can execute arbitrary code, so only read ``.npz`` archives from
+        trusted sources.
+
+        See Also
+        --------
+        to_npz
+        read
+
+        """
+        # names is an object array pickled by ``to_npz``, so unpickling must be
+        # allowed to restore it
+        data = np.load(file, allow_pickle=True)
+        return cls(data["B"], names=data["names"], lengths=data["lengths"])
 
     @classmethod
     def from_treenode(cls, tree):

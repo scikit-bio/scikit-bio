@@ -395,6 +395,29 @@ class BPTests(TestCase):
             self.assertEqual(obs.name(i), self.bptree.name(i))
             self.assertEqual(obs.length(i), self.bptree.length(i))
 
+    def test_to_from_npz_roundtrip(self):
+        # to_npz/from_npz are the binary serialization path, separate from the
+        # registry-backed read/write. They preserve topology, names, and
+        # lengths (edge numbers are not stored).
+        names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None,
+                          None, '7', None, '8', '9', '10', None, '11', None,
+                          None, None, None])
+        lengths = np.array([0, 1, 2, 0, 3, 0, 4, 5, 0, 0, 0, 6, 0, 7, 8, 9, 0,
+                            10, 0, 0, 0, 0], dtype=np.double)
+        self.bptree.set_names(names)
+        self.bptree.set_lengths(lengths)
+
+        buf = io.BytesIO()
+        self.bptree.to_npz(buf)
+        buf.seek(0)
+        obs = BPTree.from_npz(buf)
+
+        npt.assert_equal(obs.data, self.bptree.data)
+        for i in range(obs.data.size):
+            self.assertEqual(obs.name(i), self.bptree.name(i))
+            self.assertEqual(obs.length(i), self.bptree.length(i))
+        self.assertEqual(obs.count(tips=True), self.bptree.count(tips=True))
+
 
 if __name__ == '__main__':
     main()
