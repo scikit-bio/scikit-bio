@@ -5,6 +5,7 @@
 ### Features
 
 * Added `BPTree`, a succinct balanced-parentheses representation of trees for memory-efficient storage and fast topological queries on very large trees. Ported from [improved-octo-waddle](https://github.com/biocore/improved-octo-waddle) ([#2498](https://github.com/scikit-bio/scikit-bio/pull/2498)).
+* `BPTree` reads and writes the `newick` format through the `skbio.io` registry, mirroring `TreeNode`: `BPTree.read` and `BPTree.write` delegate to the registry with `newick` as the default format. The reader and writer translate directly to and from `BPTree`'s parenthesis/name/length/edge arrays without constructing any intermediate per-node objects, and are backed by a compiled (Cython) implementation so that reading and writing stay fast on trees with millions to billions of nodes. ([#2528](https://github.com/scikit-bio/scikit-bio/pull/2528)).
 
 ## Version 0.7.3
 
