@@ -131,10 +131,12 @@ def _lsmat_to_symmetric_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
 
 
 @lsmat.reader(DistanceMatrix)
-def _lsmat_to_distance_matrix(fh, cls=None, delimiter="\t", dtype="float64"):
+def _lsmat_to_distance_matrix(
+    fh, cls=None, delimiter="\t", dtype="float64", sparse=False
+):
     if cls is None:
         cls = DistanceMatrix
-    return _lsmat_to_matrix(cls, fh, delimiter, dtype)
+    return _lsmat_to_matrix(cls, fh, delimiter, dtype, sparse)
 
 
 @lsmat.writer(PairwiseMatrix)
@@ -152,7 +154,7 @@ def _distance_matrix_to_lsmat(obj, fh, delimiter="\t"):
     _matrix_to_lsmat(obj, fh, delimiter)
 
 
-def _lsmat_to_matrix(cls, fh, delimiter, dtype):
+def _lsmat_to_matrix(cls, fh, delimiter, dtype, sparse=False):
     # We aren't using np.loadtxt because it uses *way* too much memory
     # (e.g, a 2GB matrix eats up 10GB, which then isn't freed after parsing
     # has finished). See:
@@ -225,7 +227,12 @@ def _lsmat_to_matrix(cls, fh, delimiter, dtype):
             "Expected %d row(s) of data, but found %d." % (num_ids, row_idx + 1)
         )
 
-    return cls(data, ids)
+    # Pass sparse parameter if the class supports it (DistanceMatrix does)
+    try:
+        return cls(data, ids, sparse=sparse)
+    except TypeError:
+        # For classes that don't support sparse parameter (like PairwiseMatrix)
+        return cls(data, ids)
 
 
 def _find_header(fh):
@@ -269,7 +276,12 @@ def _matrix_to_lsmat(obj, fh, delimiter):
     fh.write(_format_ids(ids, delimiter))
     fh.write("\n")
 
-    for id_, vals in zip(ids, obj.data):
+    # Get data, densifying if sparse
+    data = obj.data
+    if hasattr(obj, "_flags") and obj._flags.get("SPARSE", False):
+        data = obj.redundant_form()
+
+    for id_, vals in zip(ids, data):
         fh.write("%s" % id_)
         fh.write(delimiter)
         fh.write(delimiter.join(np.asarray(vals, dtype=str)))
