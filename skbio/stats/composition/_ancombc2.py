@@ -23,7 +23,7 @@ from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm, chi2, t
+from scipy.stats import norm, chi2, f, t
 from scipy.optimize import minimize
 from patsy import dmatrix
 
@@ -590,7 +590,7 @@ def _ancombc_core(
         # Correct coefficients (logFC) according to estimated bias.
         beta_hat = beta.T - delta_em
 
-        # Skip degree of freedom calculation. # TODO: Do we need dof for ANCOM-BC too?
+        # Skip degree of freedom calculation.
         dof = None
 
     # ANCOM-BC2
@@ -624,8 +624,8 @@ def _ancombc_core(
             n_valid = np.sum(~zero_mask, axis=0)
             dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
-            val = n_samps - n_covars if n_samps > n_covars else np.nan
-            dof = np.full((n_feats,), val)
+            dof = n_samps - n_covars if n_samps > n_covars else np.nan
+            dof = np.full((n_feats,), val)  # TODO: Make it scalar-compatible
 
     # Calculate statistics
     se_hat, W, pval, qval, reject = _calc_statistics(
@@ -652,10 +652,6 @@ def _ancombc_core(
     res.set_index(["FeatureID", "Covariate"], inplace=True)
 
     method = "ANCOM-BC" if not v2 else "ANCOM-BC2"
-
-    # TODO: deal with dof more elegantly
-    if v2:
-        dof = np.broadcast_to(dof[:, None], (n_feats, n_covars))
 
     return ANCOMBCResult(
         res=res,
@@ -1511,25 +1507,24 @@ class ANCOMBCResult:
             )
             result.index.name = "FeatureID"
         else:
-            raw = _global_test_2(
+            W_g, pval, qval, reject = _global_test(
                 dmat=self._dmat,
-                group=group,
+                grouping=group,
                 beta_hat=self._beta_hat,
                 vcov_hat=self._vcov_hat,
-                dof=self._dof,
                 p_adjust=p_adjust,
                 alpha=alpha,
+                dof=self._dof,
             )
-            result = raw.copy()
-            result.index = self._features
-            result = result.rename(
-                columns={
-                    "p_val": "pvalue",
-                    "q_val": "qvalue",
-                    "reject": "Signif",
-                }
+            result = pd.DataFrame(
+                {
+                    "W": W_g,
+                    "pvalue": pval,
+                    "qvalue": qval,
+                    "Signif": reject,
+                },
+                index=self._features,
             )
-            result["Signif"] = result["Signif"].astype(bool)
             result.index.name = "FeatureID"
 
         return result
@@ -1807,15 +1802,16 @@ class ANCOMBCResult:
             )
             # If multi-group tests are requested, run them for this pseudo
             if global_test:
-                res_pseudo["res_global"] = _global_test_2(
+                W_g, pval, qval, reject = _global_test(
                     dmat=res_pseudo["dmat"],
-                    group=group,
+                    grouping=group,
                     beta_hat=res_pseudo["beta_hat"],
                     vcov_hat=res_pseudo["vcov_hat"],
-                    dof=res_pseudo["dof"],
                     p_adjust=p_adjust,
                     alpha=alpha,
+                    dof=res_pseudo["dof"],
                 )
+                res_pseudo["res_global"] = {"q_val": qval}
             if pairwise:
                 res_pseudo["res_pair"] = _pairwise_test(
                     dmat=res_pseudo["dmat"],
@@ -1926,7 +1922,9 @@ class ANCOMBCResult:
         return result
 
 
-def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"):
+def _global_test(
+    dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm", dof=None
+):
     """Perform ANCOM-BC global test.
 
     The global test is to determine features that are differentially abundant between
@@ -1951,6 +1949,10 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
         by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
+    dof : ndarray of shape (n_features,), optional
+        Residual degrees of freedom. When provided, calculate *p*-values from
+        the F distribution as in ANCOM-BC2; otherwise use the chi-square
+        distribution as in ANCOM-BC.
 
     Returns
     -------
@@ -1969,6 +1971,7 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
 
     # Get the index of the terms in the grouping
     group_ind = np.array(range(*s.indices(s.stop)))
+    n_groups = group_ind.size
 
     # Subset beta_hat and vcov_hat by grouping indices
     beta_hat_sub = beta_hat[:, group_ind]
@@ -1977,23 +1980,27 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     # Inverse the subset of vcov_hat
     vcov_hat_sub_inv = np.linalg.pinv(vcov_hat_sub)
 
-    dof = group_ind.size
-    A = np.identity(dof)
-
-    # for each feature, calculate test statistics W by the following formula:
-    # W = (A @ beta_hat_sub).T @ inv(A @ vcov_hat_sub @ A.T) @ (A @ beta_hat_sub)
-    term = np.einsum("ik,jk->ji", A, beta_hat_sub)
-    W_global = np.einsum("ni,nij,nj->n", term, vcov_hat_sub_inv, term)
-
-    # TODO: The following math is more performant given A is an identity matrix and
-    # does not change anything in multiplication. Consider using this version but
-    # do more research to make sure this is correct.
+    # NOTE: The R code uses an identity matrix A, which is omitted here since it does
+    # not change anything in multiplication. The following math is more efficient.
+    W_global = np.einsum(
+        "ni,nij,nj->n", beta_hat_sub, vcov_hat_sub_inv, beta_hat_sub, optimize=True
+    )
+    # NOTE: A more performant math is as follows. But it may be unsafe because `solve`
+    # requires a non-singular square matrix.
     # intm = np.linalg.solve(vcov_hat_sub, beta_hat_sub[..., None])[..., 0]
     # W_global = np.einsum("ni,ni->n", beta_hat_sub, intm)
 
-    # Derive p-values from W statistics
-    p_lower = chi2.cdf(W_global, dof)
-    p_upper = chi2.sf(W_global, dof)
+    # Calculate p-values. ANCOM-BC uses chi-square; ANCOM-BC2 uses F with per-feature
+    # residual degrees of freedom.
+    if dof is None:
+        p_lower = chi2.cdf(W_global, n_groups)
+        p_upper = chi2.sf(W_global, n_groups)
+    else:
+        dof = np.asarray(dof)
+        if dof.ndim != 1 or dof.shape[0] != beta_hat.shape[0]:
+            raise ValueError("`dof` must contain one value per feature.")
+        p_lower = f.cdf(W_global, n_groups, dof)
+        p_upper = f.sf(W_global, n_groups, dof)
     pval = 2 * np.minimum(p_lower, p_upper)
 
     # Correct p-values
@@ -2002,92 +2009,6 @@ def _global_test(dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm"
     reject = qval <= alpha
 
     return W_global, pval, qval, reject
-
-
-def _global_test_2(
-    dmat, group, beta_hat, vcov_hat, dof=None, p_adjust="holm", alpha=0.05
-):
-    """ANCOM-BC2 global test using F-test or chi-square test.
-
-    Parameters
-    ----------
-    dmat : patsy.DesignMatrix
-        Design matrix generated from the fitted formula.
-    group : str
-        Group variable name.
-    beta_hat : ndarray of shape (n_taxa, n_covariates)
-        Bias-corrected coefficients.
-    vcov_hat : list of ndarray of shape (n_covariates, n_covariates)
-        Per-taxon covariance matrices.
-    dof : ndarray of shape (n_taxa, n_covariates) or None
-        Degrees of freedom. If None, use chi-square test.
-    p_adj_method : str
-        P-value adjustment method.
-    alpha : float
-        Significance level.
-
-    Returns
-    -------
-    pd.DataFrame with columns: W, p_val, q_val, reject
-
-    """
-    n_tax = beta_hat.shape[0]
-    covariates = dmat.design_info.column_names
-
-    # Identify group-related covariates (excluding interactions)
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
-    beta_hat_sub = beta_hat[:, group_ind]
-
-    W_global = np.full(n_tax, np.nan)
-    p_global = np.ones(n_tax)
-
-    for i in range(n_tax):
-        beta_i = beta_hat_sub[i]
-        vcov_i = vcov_hat[i][np.ix_(group_ind, group_ind)]
-        k = int(np.sum(group_ind))
-
-        try:
-            A = np.eye(k)
-            # W = beta' (A vcov A')^{-1} beta
-            AvA = A @ vcov_i @ A.T
-            W = float(beta_i @ np.linalg.pinv(AvA) @ beta_i)
-
-            if dof is not None:
-                # F-test
-                dof_i = np.unique(dof[i, group_ind])
-                if len(dof_i) == 1:
-                    dof_i = dof_i[0]
-                else:
-                    dof_i = np.min(dof_i)
-                from scipy.stats import f as f_dist
-
-                p = 2 * min(
-                    f_dist.cdf(W, dfn=k, dfd=dof_i), f_dist.sf(W, dfn=k, dfd=dof_i)
-                )
-            else:
-                # Chi-square test
-                p = 2 * min(chi2.cdf(W, df=k), chi2.sf(W, df=k))
-
-            W_global[i] = W
-            p_global[i] = p
-        except Exception:
-            pass  # Keep NaN/1.0 defaults
-
-    # Multiple testing correction
-    func = _check_p_adjust(p_adjust)
-    q_global = func(p_global)
-    q_global = np.where(np.isnan(q_global), 1.0, q_global)
-    reject = q_global <= alpha
-
-    result = pd.DataFrame(
-        {
-            "W": W_global,
-            "p_val": p_global,
-            "q_val": q_global,
-            "reject": reject,
-        }
-    )
-    return result
 
 
 def _pairwise_test(
@@ -2140,16 +2061,10 @@ def _pairwise_test(
     se_pair = np.sqrt(np.maximum(var_pair, 0))
     W_pair = beta_pair / se_pair
 
-    # Get dof for group covariates
-    if dof is not None:
-        dof_group = dof[:, group_ind]
-    else:
-        dof_group = None
-
     # Apply mdFDR correction
     p_q = _mdfdr_pairwise(
         W=W_pair,
-        dof=dof_group,
+        dof=dof,
         fwer_ctrl=p_adjust,
         dmat=dmat,
         group=group,
@@ -2187,29 +2102,21 @@ def _mdfdr_pairwise(
     n_tax, n_comp = W.shape
 
     # Step 1: Global test screening
-    res_screen = _global_test_2(
+    _, _, _, screen_ind = _global_test(
         dmat=dmat,
-        group=group,
+        grouping=group,
         beta_hat=beta_hat,
         vcov_hat=vcov_hat,
-        dof=dof_global,
         p_adjust="BH",  # TODO: Question: Is "BH" hard-coded? Not inherit?
         alpha=alpha,
+        dof=dof_global,
     )
 
-    R = max(int(res_screen["reject"].sum()), 1)
-    screen_ind = res_screen["reject"].values
+    R = max(int(screen_ind.sum()), 1)
 
     # Step 2: Compute p-values from t-distribution
     if dof is not None:
-        # Per-taxon, per-comparison dof
-        # For pairwise comparisons, approximate dof
-        dof_pair = np.full_like(W, 999.0)
-        if dof.ndim == 2:
-            # Use minimum dof across group covariates as approximation
-            for i in range(n_tax):
-                dof_pair[i, :] = np.nanmin(dof[i, :])
-        p_val = 2.0 * t.sf(np.abs(W), df=dof_pair)
+        p_val = 2.0 * t.sf(np.abs(W), df=dof[:, None])
     else:
         p_val = 2.0 * norm.sf(np.abs(W))
 
@@ -2270,15 +2177,10 @@ def _dunnett_test(
     se_hat_dunn = np.sqrt(np.maximum(var_hat_dunn, 0))
     W_dunn = beta_hat_dunn / se_hat_dunn
 
-    if dof is not None:
-        dof_dunn = dof[:, group_ind]
-    else:
-        dof_dunn = None
-
     # mdFDR correction
     p_q = _mdfdr_dunnett(
         W=W_dunn,
-        dof=dof_dunn,
+        dof=dof,
         fwer_ctrl=p_adjust,
         dmat=dmat,
         group=group,
@@ -2311,7 +2213,7 @@ def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, B, alpha):
 
     # Step 2: Compute p-values
     if dof is not None:
-        p_val = 2 * t.sf(np.abs(W), df=dof)
+        p_val = 2 * t.sf(np.abs(W), df=dof[:, None])
     else:
         p_val = 2 * norm.sf(np.abs(W))
 
@@ -2347,14 +2249,10 @@ def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
     rng = np.random.default_rng(42)
 
     for b in range(B):
-        # Generate null W from t-distribution
+        # Generate null W from the per-feature t-distribution.
         if dof is not None:
-            # Use per-taxon, per-group dof
-            W_null = np.zeros_like(W)
-            for i in range(n_tax):
-                for j in range(W.shape[1]):
-                    df_val = dof[i, j] if not np.isnan(dof[i, j]) else 999
-                    W_null[i, j] = rng.standard_t(df_val)
+            dof_null = np.nan_to_num(dof, nan=999.0)
+            W_null = rng.standard_t(dof_null[:, None], size=W.shape)
         else:
             W_null = rng.standard_normal(size=W.shape)
 
@@ -2979,9 +2877,6 @@ def _ancombc2_estimate(
     table_bc = pd.DataFrame(
         y2 - theta_hat_arr[:, None], index=O2.index, columns=O2.columns
     )
-
-    # Make dof 2D (TODO: won't need this after fixing downstream)
-    dof = np.broadcast_to(dof[:, None], (len(dof), n_covars))
 
     return {
         "table_bc": table_bc,
