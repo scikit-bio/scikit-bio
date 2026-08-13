@@ -17,7 +17,10 @@
 # We thank Dr. Huang Lin (@FrederickHuangLin) for his helpful advice.
 # ----------------------------------------------------------------------------
 
+from __future__ import annotations
+
 from typing import Optional
+from typing import TYPE_CHECKING
 from collections.abc import Mapping
 from itertools import combinations
 
@@ -27,10 +30,14 @@ from scipy.stats import norm, chi2, f, t
 from scipy.optimize import minimize
 from patsy import dmatrix
 
+from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _aggregate_features
 from skbio.stats.composition import clr, rclr
 from ._base import _check_composition
 from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
+
+if TYPE_CHECKING:  # pragma: no cover
+    from skbio.util._typing import SeedLike
 
 
 def ancombc(
@@ -1627,6 +1634,7 @@ class ANCOMBCResult:
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
         bootstraps: int = 100,
+        seed: SeedLike | None = None,
     ) -> pd.DataFrame:
         """Perform Dunnett's test (each group vs. reference) with mdFDR.
 
@@ -1642,6 +1650,9 @@ class ANCOMBCResult:
             will use the *p*-value correction method supplied upstream.
         bootstraps : int, optional
             Number of bootstrap iterations. Default is 100.
+        seed : int, Generator, or RandomState, optional
+            A user-provided random seed or generator for bootstrap samples. See
+            :func:`details <skbio.util.get_rng>`.
 
         Returns
         -------
@@ -1650,6 +1661,7 @@ class ANCOMBCResult:
             Log2(FC), SE, W, pvalue, qvalue, Signif.
 
         """
+        rng = get_rng(seed)
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
 
         raw = _dunnett_test(
@@ -1659,16 +1671,17 @@ class ANCOMBCResult:
             var_hat=self._var_hat,
             dof=self._dof,
             bootstraps=bootstraps,
+            rng=rng,
             p_adjust=p_adjust,
             alpha=alpha,
         )
         comp_names = raw["comp_names"]
         n_comp = len(comp_names)
-        n_tax = len(self._features)
+        n_feats = len(self._features)
         result = pd.DataFrame(
             {
                 "FeatureID": [x for x in self._features for _ in range(n_comp)],
-                "Comparison": comp_names * n_tax,
+                "Comparison": comp_names * n_feats,
                 "Log2(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
@@ -1688,6 +1701,7 @@ class ANCOMBCResult:
         trend_contrast: dict | None = None,
         trend_node: dict | None = None,
         bootstraps: int = 100,
+        seed: SeedLike | None = None,
     ) -> pd.DataFrame:
         """Perform trend test for ordered patterns in group effects.
 
@@ -1708,6 +1722,9 @@ class ANCOMBCResult:
             Trend-test contrast matrices and their node indices.
         bootstraps : int, optional
             Number of bootstrap iterations. Default is 100.
+        seed : int, Generator, or RandomState, optional
+            A user-provided random seed or generator for bootstrap samples. See
+            :func:`details <skbio.util.get_rng>`.
 
         Returns
         -------
@@ -1715,6 +1732,7 @@ class ANCOMBCResult:
             DataFrame indexed by FeatureID with columns: W, pvalue, qvalue, Signif.
 
         """
+        rng = get_rng(seed)
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
 
         raw = _trend_test(
@@ -1728,6 +1746,7 @@ class ANCOMBCResult:
             trend_contrast=trend_contrast,
             trend_node=trend_node,
             bootstraps=bootstraps,
+            rng=rng,
         )
         result = pd.DataFrame(
             {
@@ -2196,7 +2215,15 @@ def _var_diff(vcov_sub):
 
 
 def _dunnett_test(
-    dmat, group, beta_hat, var_hat, dof, bootstraps=100, p_adjust="holm", alpha=0.05
+    dmat,
+    group,
+    beta_hat,
+    var_hat,
+    dof,
+    bootstraps,
+    rng,
+    p_adjust,
+    alpha,
 ):
     """ANCOM-BC2 Dunnett's type of test.
 
@@ -2211,13 +2238,14 @@ def _dunnett_test(
     W_dunn = beta_hat_dunn / se_hat_dunn
 
     # mdFDR correction
-    p_q = _mdfdr_dunnett(
+    p_val, q_val = _mdfdr_dunnett(
         W=W_dunn,
         dof=dof,
         fwer_ctrl=p_adjust,
         dmat=dmat,
         group=group,
-        B=bootstraps,
+        bootstraps=bootstraps,
+        rng=rng,
         alpha=alpha,
     )
 
@@ -2225,23 +2253,30 @@ def _dunnett_test(
         "beta": beta_hat_dunn,
         "se": se_hat_dunn,
         "W": W_dunn,
-        "p_val": p_q["p_val"],
-        "q_val": p_q["q_val"],
-        "reject": p_q["q_val"] <= alpha,
+        "p_val": p_val,
+        "q_val": q_val,
+        "reject": q_val <= alpha,
         "comp_names": [c for c, g in zip(covariates, group_ind) if g],
     }
 
 
-def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, B, alpha):
+def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, bootstraps, alpha, rng):
     """mdFDR correction for Dunnett's test."""
-    n_tax = W.shape[0]
+    n_feats, n_comps = W.shape
 
     # Step 1: Global test screening via bootstrap
     res_screen = _dunn_global(
-        dmat=dmat, group=group, W=W, B=B, dof=dof, p_adjust="BH", alpha=alpha
+        dmat=dmat,
+        group=group,
+        W=W,
+        bootstraps=bootstraps,
+        dof=dof,
+        p_adjust="BH",
+        alpha=alpha,
+        rng=rng,
     )
     # TODO: Likewise, should p_adjust be hard-coded as "BH"?
-    R = max(int(res_screen["reject"].sum()), 1)
+    n_signs = int(res_screen["reject"].sum())
     screen_ind = res_screen["reject"].values
 
     # Step 2: Compute p-values
@@ -2256,16 +2291,26 @@ def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, B, alpha):
     p_val[p_val == 0] = 1.0
     p_val = np.where(np.isnan(p_val), 1.0, p_val)
 
-    # Step 3: Adjust
+    # Step 3: Adjust each feature's comparisons. R's p.adjust ``n`` parameter
+    # is equivalent to padding each family with unit p-values.
     func = _check_p_adjust(fwer_ctrl)
-    q_val = np.zeros_like(p_val)
-    for j in range(p_val.shape[1]):
-        q_val[:, j] = func(p_val[:, j])
+    if n_signs:
+        n_tests = n_comps * n_feats // n_signs
+        n_padding = n_tests - n_comps
 
-    return {"p_val": p_val, "q_val": q_val}
+        def adjust(pvals):
+            if n_padding:
+                pvals = np.pad(pvals, (0, n_padding), constant_values=1.0)
+            return func(pvals)[:n_comps]
+
+        q_val = np.apply_along_axis(adjust, 1, p_val)
+    else:
+        q_val = np.ones_like(p_val)
+
+    return p_val, q_val
 
 
-def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
+def _dunn_global(dmat, group, W, bootstraps, dof, p_adjust, alpha, rng):
     """Dunnett's global test for mdFDR.
 
     Bootstrap-based: generate null W from t-distribution, take max |W|.
@@ -2279,10 +2324,9 @@ def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
     W_global = np.max(np.abs(W), axis=1)
 
     # Bootstrap null distribution
-    W_global_null = np.zeros((n_tax, B))
-    rng = np.random.default_rng(42)
+    W_global_null = np.zeros((n_tax, bootstraps))
 
-    for b in range(B):
+    for b in range(bootstraps):
         # Generate null W from the per-feature t-distribution.
         if dof is not None:
             dof_null = np.nan_to_num(dof, nan=999.0)
@@ -2325,12 +2369,13 @@ def _trend_test(
     trend_contrast=None,
     trend_node=None,
     bootstraps=100,
+    rng=None,
 ):
     """ANCOM-BC2 trend test (pattern analysis).
 
     Uses constrained optimization to test ordered patterns in group effects.
     """
-    n_tax = beta_hat.shape[0]
+    n_feats = beta_hat.shape[0]
     covariates = dmat.design_info.column_names
     group_ind = np.array([group in c and ":" not in c for c in covariates])
     n_group = int(np.sum(group_ind))
@@ -2339,24 +2384,25 @@ def _trend_test(
     var_hat_sub = var_hat[:, group_ind]
     vcov_hat_sub = [v[np.ix_(group_ind, group_ind)] for v in vcov_hat]
 
-    # Default contrast: all increasing pattern
+    # Test both monotone directions. Each contrast operates on the non-reference
+    # group coefficients, with the final coefficient as the trend node.
     if trend_contrast is None:
-        # Create default contrast matrix for monotone increasing trend
-        C = np.zeros((n_group - 1, n_group))
-        for i in range(n_group - 1):
-            C[i, i] = -1
-            C[i, i + 1] = 1
-        trend_contrast = {"increasing": C}
-        trend_node = {"increasing": n_group - 1}
+        increasing = np.eye(n_group)
+        increasing[1:, :-1] -= np.eye(n_group - 1)
+        trend_contrast = {
+            "increasing": increasing,
+            "decreasing": -increasing,
+        }
+        trend_node = {name: n_group - 1 for name in trend_contrast}
 
     n_trend = len(trend_contrast)
     trend_names = list(trend_contrast.keys())
 
     # Constrained estimation for each taxon and each trend pattern
-    beta_hat_opt_all = np.zeros((n_tax, n_group * n_trend))
-    l_vals = np.zeros((n_tax, n_trend))
+    beta_hat_opt_all = np.zeros((n_feats, n_group * n_trend))
+    l_vals = np.zeros((n_feats, n_trend))
 
-    for i in range(n_tax):
+    for i in range(n_feats):
         for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
             C = np.asarray(contrast)
             beta_opt = _constrain_est(beta_hat_sub[i], vcov_hat_sub[i], C)
@@ -2372,33 +2418,33 @@ def _trend_test(
     opt_trend_idx = np.argmax(l_vals, axis=1)
 
     # Select the optimal trend's beta for each taxon
-    beta_hat_trend = np.zeros((n_tax, n_group))
-    for i in range(n_tax):
+    beta_hat_trend = np.zeros((n_feats, n_group))
+    for i in range(n_feats):
         t_idx = opt_trend_idx[i]
         start_col = t_idx * n_group
         beta_hat_trend[i] = beta_hat_opt_all[i, start_col : start_col + n_group]
 
     # Bootstrap null distribution
-    rng = np.random.default_rng(42)
-    W_trend_null = np.zeros((n_tax, bootstraps))
+    if rng is None:
+        rng = np.random.default_rng()
+    W_trend_null = np.zeros((n_feats, bootstraps))
 
-    ident_mat = np.eye(n_group)
-    var_hat_sub_dup = var_hat_sub  # (n_tax, n_group)
+    var_hat_sub_dup = np.nan_to_num(var_hat_sub, nan=1.0)
 
     for b in range(bootstraps):
         # Generate null beta from N(0, I)
-        beta_null = rng.standard_normal(size=(n_tax, n_group))
+        beta_null = rng.standard_normal(size=(n_feats, n_group))
 
         # Constrained estimation under null
-        l_null = np.zeros((n_tax, n_trend))
-        for i in range(n_tax):
-            for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
-                C = np.asarray(contrast)
-                beta_null_opt = _constrain_est(beta_null[i], ident_mat, C)
-                # Scale by sqrt of variance
-                beta_null_opt *= np.sqrt(np.maximum(var_hat_sub_dup[i], 0))
-                node = trend_node[tname]
-                l_null[i, t_idx] = _l_infty(beta_null_opt, node)
+        l_null = np.zeros((n_feats, n_trend))
+        for t_idx, (tname, contrast) in enumerate(trend_contrast.items()):
+            beta_null_opt = _constrain_est_identity(beta_null, contrast)
+            beta_null_opt *= np.sqrt(np.maximum(var_hat_sub_dup, 0))
+            node = trend_node[tname]
+            l_null[:, t_idx] = np.maximum(
+                np.abs(beta_null_opt[:, node]),
+                np.abs(beta_null_opt[:, node] - beta_null_opt[:, -1]),
+            )
 
         W_trend_null[:, b] = np.max(l_null, axis=1)
 
@@ -2468,6 +2514,52 @@ def _constrain_est(beta_hat, vcov_hat, contrast):
         return result.x
     except Exception:
         return np.zeros(n)
+
+
+def _constrain_est_identity(beta_hat, contrast):
+    """Project coefficient vectors onto linear inequalities under identity covariance.
+
+    This is the identity-covariance specialization of :func:`_constrain_est` used by
+    the trend bootstrap. It enumerates active constraint sets and evaluates all
+    feature vectors simultaneously, avoiding repeated SLSQP calls.
+    """
+    beta_hat = np.asarray(beta_hat)
+    contrast = np.asarray(contrast)
+    n_features, n_coefficients = beta_hat.shape
+    n_constraints = contrast.shape[0]
+
+    # Active-set enumeration is efficient for the small ordinal contrasts used
+    # by trend tests, but grows exponentially for larger custom systems.
+    if n_constraints > 10:
+        identity = np.eye(n_coefficients)
+        return np.array([_constrain_est(beta, identity, contrast) for beta in beta_hat])
+
+    candidates = []
+    valid = []
+
+    for size in range(n_constraints + 1):
+        for active in combinations(range(n_constraints), size):
+            if active:
+                active_contrast = contrast[list(active)]
+                gram = active_contrast @ active_contrast.T
+                multipliers = -(beta_hat @ active_contrast.T @ np.linalg.pinv(gram))
+                candidate = beta_hat + multipliers @ active_contrast
+                active_valid = np.all(multipliers >= -1e-10, axis=1)
+            else:
+                candidate = beta_hat
+                active_valid = np.ones(n_features, dtype=bool)
+
+            candidates.append(candidate)
+            valid.append(
+                active_valid & np.all(contrast @ candidate.T >= -1e-10, axis=0)
+            )
+
+    candidates = np.asarray(candidates)
+    valid = np.asarray(valid)
+    distances = np.sum((candidates - beta_hat) ** 2, axis=2)
+    distances[~valid] = np.inf
+    selected = np.argmin(distances, axis=0)
+    return candidates[selected, np.arange(n_features)]
 
 
 def _safe_inverse_spd(A, ridge=1e-8):

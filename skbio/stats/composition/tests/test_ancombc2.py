@@ -14,6 +14,7 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 from patsy import DesignMatrix, dmatrix
+from scipy.stats import t
 
 from skbio.util import get_data_path
 from skbio.stats.composition._ancombc2 import (
@@ -25,6 +26,9 @@ from skbio.stats.composition._ancombc2 import (
     _adjust_pvalues,
     _init_bias_params,
     _global_test,
+    _constrain_est,
+    _constrain_est_identity,
+    _mdfdr_dunnett,
     struc_zero,
     ancombc,
     ancombc2,
@@ -475,6 +479,17 @@ class Ancombc2Tests(TestCase):
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
+        # dunnett test
+        obs = res.dunnett_test("bmi", seed=123)
+        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
+        pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
+
+        # trend test
+        obs = res.trend_test("bmi", seed=123)
+        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0)
+        pdt.assert_frame_equal(obs[["W", "Signif"]], exp[["W", "Signif"]], atol=1e-3)
+        pdt.assert_frame_equal(obs, res.trend_test("bmi", seed=123))
+
     def test_ancombc2_aggregator(self):
         table = self.table
         metadata = self.grouping.to_frame()
@@ -519,6 +534,46 @@ class Ancombc2Tests(TestCase):
 
 
 class PostHocTests(TestCase):
+
+    def test_constrain_est_identity(self):
+        beta_hat = np.array(
+            [[-1.0, 2.0, -3.0], [2.0, 1.0, 3.0], [1.0, 3.0, 2.0]]
+        )
+        contrast = np.array(
+            [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]]
+        )
+        expected = np.array(
+            [_constrain_est(beta, np.eye(3), contrast) for beta in beta_hat]
+        )
+
+        observed = _constrain_est_identity(beta_hat, contrast)
+
+        npt.assert_allclose(observed, expected, atol=1e-8)
+
+    @patch("skbio.stats.composition._ancombc2._dunn_global")
+    def test_mdfdr_dunnett(self, mock_dunn_global):
+        mock_dunn_global.return_value = pd.DataFrame(
+            {"reject": [True, False, False]}
+        )
+        W = np.array([[4.0, 0.0], [3.0, 2.0], [1.0, 2.0]])
+
+        obs_pval, obs_qval = _mdfdr_dunnett(
+            W=W,
+            dof=10.0,
+            fwer_ctrl="holm",
+            dmat=None,
+            group="group",
+            bootstraps=100,
+            rng=np.random.default_rng(123),
+            alpha=0.05,
+        )
+
+        exp_pval = 2 * t.sf(np.abs(W[0]), 10.0)
+        exp_qval = np.ones_like(W)
+        exp_qval[0] = [exp_pval[0] * 6, 1.0]
+        npt.assert_allclose(obs_pval[0], exp_pval)
+        npt.assert_array_equal(obs_pval[1:], 1.0)
+        npt.assert_allclose(obs_qval, exp_qval)
 
     def test_global_test(self):
         table = pd.read_csv(
