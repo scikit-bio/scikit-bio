@@ -1,0 +1,64 @@
+FeatureID	Comparison	Log2(FC)	SE	W	pvalue	qvalue	Signif	Pass	Robust
+Actinobacteria	bmi[T.overweight]	0.04318688	0.1743564	0.2476931	1	1	False	True	False
+Actinobacteria	bmi[T.obese]	-0.0328714	0.1812871	-0.1813223	1	1	False	True	False
+Actinobacteria	bmi[T.obese]_bmi[T.overweight]	-0.07605828	0.2226949	-0.3415358	1	1	False	True	False
+Bacteroidetes	bmi[T.overweight]	-0.1455009	0.2241097	-0.6492398	1	1	False	True	False
+Bacteroidetes	bmi[T.obese]	0.1454152	0.2154839	0.6748311	1	1	False	True	False
+Bacteroidetes	bmi[T.obese]_bmi[T.overweight]	0.2909162	0.2732542	1.064636	1	1	False	True	False
+Cyanobacteria	bmi[T.overweight]	0.9457995	0.1848298	5.117137	3.969096e-05	0.0007938192	True	False	False
+Cyanobacteria	bmi[T.obese]	-0.2109334	0.2484133	-0.849123	0.4049582	1	False	True	False
+Cyanobacteria	bmi[T.obese]_bmi[T.overweight]	-1.156733	0.1764228	-6.556595	1.355514e-06	2.846579e-05	True	False	False
+Bacilli	bmi[T.overweight]	0.05217771	0.1638065	0.3185326	1	1	False	True	False
+Bacilli	bmi[T.obese]	-0.1367732	0.1631987	-0.8380777	1	1	False	True	False
+Bacilli	bmi[T.obese]_bmi[T.overweight]	-0.1889509	0.2083552	-0.9068691	1	1	False	True	False
+Clostridium cluster I	bmi[T.overweight]	-0.02926812	0.116753	-0.2506841	1	1	False	True	False
+Clostridium cluster I	bmi[T.obese]	-0.09061806	0.1038685	-0.8724302	1	1	False	True	False
+Clostridium cluster I	bmi[T.obese]_bmi[T.overweight]	-0.06134994	0.1465915	-0.4185095	1	1	False	True	False
+Clostridium cluster III	bmi[T.overweight]	-0.05670365	0.1566724	-0.361925	1	1	False	True	False
+Clostridium cluster III	bmi[T.obese]	0.2683946	0.1503227	1.785456	1	1	False	True	False
+Clostridium cluster III	bmi[T.obese]_bmi[T.overweight]	0.3250982	0.1958575	1.659872	1	1	False	True	False
+Clostridium cluster IV	bmi[T.overweight]	-0.1240039	0.1199833	-1.03351	1	1	False	True	False
+Clostridium cluster IV	bmi[T.obese]	-0.07700391	0.1156804	-0.6656608	1	1	False	True	False
+Clostridium cluster IV	bmi[T.obese]_bmi[T.overweight]	0.04700001	0.1551616	0.30291	1	1	False	True	False
+Clostridium cluster IX	bmi[T.overweight]	0.1485852	0.1906891	0.7792013	1	1	False	True	False
+Clostridium cluster IX	bmi[T.obese]	0.2234966	0.1815915	1.230766	1	1	False	True	False
+Clostridium cluster IX	bmi[T.obese]_bmi[T.overweight]	0.07491136	0.2360279	0.3173835	1	1	False	True	False
+Clostridium cluster XI	bmi[T.overweight]	-0.1152767	0.1429068	-0.8066565	1	1	False	True	False
+Clostridium cluster XI	bmi[T.obese]	-0.1568528	0.1481289	-1.058894	1	1	False	True	False
+Clostridium cluster XI	bmi[T.obese]_bmi[T.overweight]	-0.04157609	0.1821528	-0.2282484	1	1	False	True	False
+Clostridium cluster XIII	bmi[T.overweight]	-0.0007875164	0.09909363	-0.007947195	1	1	False	True	False
+Clostridium cluster XIII	bmi[T.obese]	0.01208409	0.09446378	0.1279231	1	1	False	True	False
+Clostridium cluster XIII	bmi[T.obese]_bmi[T.overweight]	0.01287161	0.1303398	0.09875426	1	1	False	True	False
+Clostridium cluster XIVa	bmi[T.overweight]	0.0256193	0.1352957	0.1893578	1	1	False	True	False
+Clostridium cluster XIVa	bmi[T.obese]	0.03782228	0.1232779	0.306805	1	1	False	True	False
+Clostridium cluster XIVa	bmi[T.obese]_bmi[T.overweight]	0.01220298	0.1675581	0.07282838	1	1	False	True	False
+Clostridium cluster XV	bmi[T.overweight]	-0.03529089	0.1202011	-0.2935988	1	1	False	True	False
+Clostridium cluster XV	bmi[T.obese]	-0.06371183	0.1134295	-0.5616868	1	1	False	True	False
+Clostridium cluster XV	bmi[T.obese]_bmi[T.overweight]	-0.02842093	0.1524064	-0.1864812	1	1	False	True	False
+Clostridium cluster XVI	bmi[T.overweight]	-0.01946783	0.1365849	-0.1425329	1	1	False	True	False
+Clostridium cluster XVI	bmi[T.obese]	-0.005141185	0.1294928	-0.03970248	1	1	False	True	False
+Clostridium cluster XVI	bmi[T.obese]_bmi[T.overweight]	0.01432665	0.1741718	0.08225583	1	1	False	True	False
+Clostridium cluster XVII	bmi[T.overweight]	0.243315	0.1953995	1.245218	0.2146701	1	False	True	False
+Clostridium cluster XVII	bmi[T.obese]	-0.2980746	0.2055736	-1.449965	0.1488084	1	False	True	False
+Clostridium cluster XVII	bmi[T.obese]_bmi[T.overweight]	-0.5413896	0.2082626	-2.599552	0.01010914	0.2122919	False	True	False
+Clostridium cluster XVIII	bmi[T.overweight]	0.08975539	0.1355334	0.6622383	1	1	False	True	False
+Clostridium cluster XVIII	bmi[T.obese]	0.002950779	0.1195288	0.02468675	1	1	False	True	False
+Clostridium cluster XVIII	bmi[T.obese]_bmi[T.overweight]	-0.08680461	0.1664652	-0.5214579	1	1	False	True	False
+Uncultured Clostridiales	bmi[T.overweight]	-0.471682	0.1788753	-2.636932	0.008812239	0.185057	False	True	False
+Uncultured Clostridiales	bmi[T.obese]	-0.3562619	0.1940907	-1.835543	0.06743863	1	False	True	False
+Uncultured Clostridiales	bmi[T.obese]_bmi[T.overweight]	0.1154201	0.2331637	0.4950175	0.6209588	1	False	True	False
+Uncultured Mollicutes	bmi[T.overweight]	-0.08542875	0.1778945	-0.4802214	1	1	False	True	False
+Uncultured Mollicutes	bmi[T.obese]	-0.1793384	0.1569095	-1.142942	1	1	False	True	False
+Uncultured Mollicutes	bmi[T.obese]_bmi[T.overweight]	-0.09390967	0.1952597	-0.4809476	1	1	False	True	False
+Fusobacteria	bmi[T.overweight]	0.01023416	0.09809224	0.104332	1	1	False	True	False
+Fusobacteria	bmi[T.obese]	0.05363419	0.09691392	0.5534209	1	1	False	True	False
+Fusobacteria	bmi[T.obese]_bmi[T.overweight]	0.04340003	0.132238	0.3281963	1	1	False	True	False
+Proteobacteria	bmi[T.overweight]	0.2277345	0.1540237	1.478568	1	1	False	True	False
+Proteobacteria	bmi[T.obese]	0.01163539	0.1196462	0.0972483	1	1	False	True	False
+Proteobacteria	bmi[T.obese]_bmi[T.overweight]	-0.2160991	0.1950663	-1.107824	1	1	False	True	False
+Spirochaetes	bmi[T.overweight]	0.1573286	0.1794868	0.8765469	1	1	False	True	False
+Spirochaetes	bmi[T.obese]	0.3979882	0.2416155	1.647196	1	1	False	True	False
+Spirochaetes	bmi[T.obese]_bmi[T.overweight]	0.2406595	0.1729379	1.391595	1	1	False	True	False
+Verrucomicrobia	bmi[T.overweight]	-0.052593	0.1764495	-0.2980627	1	1	False	True	False
+Verrucomicrobia	bmi[T.obese]	-0.2317347	0.149243	-1.552735	1	1	False	True	False
+Verrucomicrobia	bmi[T.obese]_bmi[T.overweight]	-0.1791417	0.2075532	-0.8631122	1	1	False	True	False

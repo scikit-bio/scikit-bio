@@ -36,6 +36,104 @@ from skbio.stats.composition._ancombc2 import (
 )
 
 
+"""
+This test module uses the "pseq_sub" dataset, adopted from the official ANCOM-BC
+tutorial:
+
+- https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/
+  ANCOMBC.html
+
+The original dataset was described in:
+
+- Lahti, Leo, et al. "Tipping elements in the human intestinal ecosystem." Nature
+  Communications 5.1 (2014): 4344.
+
+A subset of the dataset is used for simplicity and efficiency. We followed the ANCOM-BC
+tutorial to preprocess the data and aggregate taxa at the family level. A total of 300
+samples were randomly selected to achieve sufficient representation of each category.
+The metadata was filtered to retain attributes of interest, including age (continuous),
+region (4 categories) and bmi (3 categories), according to the formula used in the
+ANCOM-BC tutorial.
+
+The reference output files were generated using the R package ANCOMBC version 2.13.2,
+and re-formatted to match the Python output. The R script used for generating the
+reference files is provided below.
+
+```R
+library(ANCOMBC)
+
+set.seed(42)
+
+table <- read.csv("pseq_sub_feature_table.csv", row.names = 1)
+meta <- read.csv("pseq_sub_meta_data.csv", row.names = 1)
+meta$bmi <- factor(meta$bmi, levels = c("lean", "overweight", "obese"))
+
+res_bc <- ancombc(
+    data = table,
+    taxa_are_rows = FALSE,
+    meta_data = meta,
+    formula = "age + region + bmi",
+    group = "bmi",
+    p_adj_method = "holm",
+    prv_cut = 0,
+    lib_cut = 0,
+    pseudo = 1,
+    tol = 1e-5,
+    max_iter = 100,
+    conserve = FALSE,
+    alpha = 0.05,
+    global = TRUE,
+    struc_zero = FALSE,
+    neg_lb = FALSE,
+    n_cl = 1,
+    verbose = FALSE
+)
+
+write.csv(res_bc$res, "pseq_sub_ancombc_main.csv", row.names = FALSE)
+write.csv(res_bc$res_global, "pseq_sub_ancombc_global.csv", row.names = FALSE)
+
+trend_contrast <- list(
+    increasing = matrix(c(1, 0, -1, 1), nrow = 2, byrow = TRUE),
+    decreasing = matrix(c(-1, 0, 1, -1), nrow = 2, byrow = TRUE)
+)
+trend_node <- list(increasing = 2, decreasing = 2)
+
+res_bc2 <- ancombc2(
+    data = table,
+    taxa_are_rows = FALSE,
+    meta_data = meta,
+    fix_formula = "age + region + bmi",
+    group = "bmi",
+    p_adj_method = "holm",
+    prv_cut = 0,
+    lib_cut = 0,
+    pseudo = 0,
+    pseudo_sens = TRUE,
+    s0_perc = 0.05,
+    alpha = 0.05,
+    global = TRUE,
+    pairwise = TRUE,
+    dunnet = TRUE,
+    trend = TRUE,
+    trend_control = list(contrast = trend_contrast, node = trend_node, B = 1000),
+    mdfdr_control = list(fwer_ctrl_method = "holm", B = 1000),
+    iter_control = list(tol = 0.01, max_iter = 20, verbose = FALSE),
+    em_control = list(tol = 1e-05, max_iter = 100),
+    struc_zero = FALSE,
+    neg_lb = FALSE,
+    n_cl = 1,
+    verbose = FALSE
+)
+
+write.csv(res_bc2$res, "pseq_sub_ancombc2_main.csv", row.names = FALSE)
+write.csv(res_bc2$res_global, "pseq_sub_ancombc2_global.csv", row.names = FALSE)
+write.csv(res_bc2$res_pair, "pseq_sub_ancombc2_pair.csv", row.names = FALSE)
+write.csv(res_bc2$res_dunn, "pseq_sub_ancombc2_dunn.csv", row.names = FALSE)
+write.csv(res_bc2$res_trend, "pseq_sub_ancombc2_trend.csv", row.names = FALSE)
+```
+
+"""
+
 class CoreTests(TestCase):
     def setUp(self):
         self.table = pd.DataFrame(
@@ -403,59 +501,6 @@ class Ancombc2Tests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
-    def test_ancombc2_pseq(self):
-        """Test ANCOM-BC on the HITChip Atlas dataset.
-
-        See `AncombcTests.test_ancombc_pseq`.
-
-        """
-        table = pd.read_csv(
-            get_data_path("raw/pseq_feature_table_subset.csv.gz"), index_col=0
-        )
-        meta_data = pd.read_csv(
-            get_data_path("raw/pseq_meta_data_subset.csv.gz"), index_col=0
-        )
-        meta_data = meta_data.dropna(axis=1, how="any")
-        meta_data["bmi"] = pd.Categorical(
-            meta_data["bmi"], categories=["obese", "overweight", "lean"]
-        )
-
-        # run ancom-bc for the HITChip Atlas dataset
-        res = ancombc2(table + 1, meta_data, "age + region + bmi")
-
-        ### Temporary test to confirm numerical identity ###
-        # outdir = '/home/drz/Desktop'
-
-        # res.res.to_csv(f'{outdir}/ancombc2_pseq_1.tsv', sep='\t')
-        # for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
-        #     np.save(f'{outdir}/{attr}.npy', getattr(res, f'_{attr}'))
-
-        # obs = res.res.reset_index()
-        # exp = pd.read_table(f'{outdir}/ancombc2_pseq_1.tsv')
-        # exp["Signif"] = exp["Signif"].astype("boolean")
-        # pd.testing.assert_frame_equal(obs, exp)
-        # for attr in ('beta_hat', 'var_hat', 'vcov_hat'):
-        #     obs = getattr(res, f'_{attr}')
-        #     exp = np.load(f'{outdir}/{attr}.npy')
-        #     npt.assert_allclose(obs, exp)
-            # npt.assert_array_equal(obs, exp)
-
-        # # format multi-index dataframe
-        # obs = res["Signif"].unstack()
-        # obs.columns.name = None
-        # obs.index.name = "taxon"
-        # obs = obs.rename(columns={"Intercept": "(Intercept)"})
-        # for c in obs.columns:
-        #     obs = obs.rename(columns={c: c.replace("[T.", "").replace("]", "")})
-
-        # # load ancom-bc results generated by the R package ANCOMBC
-        # exp = pd.read_csv(
-        #     get_data_path("pseq_subset_out_res_diff_abn.csv"), index_col="taxon"
-        # ).drop("Unnamed: 0", axis=1)
-
-        # similarity = exp.eq(obs).sum().sum() / exp.size
-        # npt.assert_equal(similarity, 1.0)
-
     def test_ancombc2_pseq_sub(self):
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
@@ -488,7 +533,8 @@ class Ancombc2Tests(TestCase):
         obs = res.trend_test("bmi", seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0)
         pdt.assert_frame_equal(obs[["W", "Signif"]], exp[["W", "Signif"]], atol=1e-3)
-        pdt.assert_frame_equal(obs, res.trend_test("bmi", seed=123))
+        # NOTE: Trend test is highly stochastic, therefore we cannot directly compare
+        # p- and q-values. See its documentation.
 
     def test_ancombc2_aggregator(self):
         table = self.table

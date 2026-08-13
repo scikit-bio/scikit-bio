@@ -1703,7 +1703,7 @@ class ANCOMBCResult:
         bootstraps: int = 100,
         seed: SeedLike | None = None,
     ) -> pd.DataFrame:
-        """Perform trend test for ordered patterns in group effects.
+        r"""Perform trend test for ordered patterns in group effects.
 
         Uses constrained optimization to test monotone increasing/decreasing
         patterns in group-level effects.
@@ -1730,6 +1730,13 @@ class ANCOMBCResult:
         -------
         pd.DataFrame
             DataFrame indexed by FeatureID with columns: W, pvalue, qvalue, Signif.
+
+        Notes
+        -----
+        The trend test is highly stochastic and requires a large number of bootstraps
+        (e.g., 10,000) to stabilize the estimated *p*- and *q*-values. This is because
+        every *p*-value is estimated through independent bootstrapping. In comparsion,
+        the Dunnett's test (:meth:`dunnett_test`) is more stable.
 
         """
         rng = get_rng(seed)
