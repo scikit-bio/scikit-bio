@@ -559,12 +559,9 @@ def _ancombc_core(
     matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
 
     # Transform count matrix
-    # NOTE: See `_check_composition`
-    # TODO: Handle zeros
-    # ANCOM-BC: Log-transformation
+    # ANCOM-BC: Log-transformation (zeros are not allowed)
     if not v2:
         matrix_tr = np.log(matrix)
-
     # ANCOM-BC2: CLR transformation on non-zero values
     elif has_zero:
         matrix_tr = rclr(matrix, axis=0)
@@ -572,7 +569,8 @@ def _ancombc_core(
         matrix_tr = clr(matrix, axis=0)
 
     # Estimate initial model parameters.
-    var_hat, beta, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+    func = _estimate_params_0 if has_zero else _estimate_params
+    var_hat, beta, _, vcov_hat = func(matrix_tr, dmat)
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     # beta: (n_covariates, n_features); iterate over covariates (rows).
@@ -614,7 +612,8 @@ def _ancombc_core(
         matrix_tr -= theta_hat[:, None]
 
         # Re-estimate parameters
-        var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+        func = _estimate_params_0 if has_zero else _estimate_params
+        var_hat, beta_hat, _, vcov_hat = func(matrix_tr, dmat)
         beta_hat = beta_hat.T
 
         # Adjust variances
@@ -784,6 +783,116 @@ def _estimate_params(data, dmat):
 
     # Note: Residuals are needed for ANCOM-BC2.
     return var_hat, beta, theta.reshape(-1), beta_covmat
+
+
+def _estimate_params_0(data, dmat, tol=1e-2, max_iter=20):
+    """Estimate initial model parameters when the response contains zeros/NaNs.
+
+    This mirrors the fixed-effects ``.iter_mle`` path used by ANCOM-BC2 when
+    ``theta`` is initially ``NULL``. The input ``data`` is expected to already
+    be log-transformed and centered, with zeros represented by ``NaN`` (for
+    example, the output of ``rclr(..., axis=0)`` in this notebook).
+
+    The expensive per-feature least-squares operators are computed once by
+    batched SVD. The R iteration is then reproduced by repeatedly updating
+    ``beta`` from ``data - theta`` and updating the per-sample ``theta`` from
+    residual means over the observed features.
+
+    Parameters
+    ----------
+    data : ndarray of shape (n_samples, n_features)
+        Zero-handled, log-transformed and centered data. Missing/zero entries
+        must be represented by NaN.
+    dmat : ndarray of shape (n_samples, n_covariates)
+        Design matrix. ANCOM-BC2 requires the fixed-effect design to be fully
+        observed for this path.
+    tol : float, default=1e-2
+        Iteration tolerance. The ANCOM-BC2 default is 1e-2.
+    max_iter : int, default=20
+        Maximum number of iterations. The ANCOM-BC2 default is 20.
+
+    Returns
+    -------
+    var_hat : ndarray of shape (n_features, n_covariates)
+        Estimated variances of regression coefficients.
+    beta : ndarray of shape (n_features, n_covariates)
+        Estimated regression coefficients.
+    theta : ndarray of shape (n_samples,)
+        Per-sample mean residuals / initial sampling-fraction estimates.
+    beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
+        Estimated covariance matrices.
+
+    """
+    data = np.asarray(data, dtype=float)
+    dmat = np.asarray(dmat, dtype=float)
+
+    n_samples, n_features = data.shape
+
+    # R's lm() omits NaN responses independently for each taxon.  Build one
+    # masked design matrix per feature and compute all pseudoinverses once.
+    W = np.isfinite(data).astype(float)
+    X_w = dmat[None, :, :] * W.T[:, :, None]
+
+    U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+    cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+    S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+    V = np.swapaxes(Vh, -1, -2)
+    dmat_inv = np.einsum("fpk,fk,fsk->fps", V, S_inv, U, optimize=True)
+
+    # Initial beta from theta = 0, matching the initial lm() fits in .iter_mle.
+    y_filled = np.nan_to_num(data, nan=0.0)
+    theta = np.zeros(n_samples, dtype=float)
+    beta = np.einsum("fps,sf->fp", dmat_inv, y_filled, optimize=True)
+
+    # Reproduce ANCOM-BC2's alternating beta/theta updates.  With missing
+    # responses, this iteration cannot be collapsed to a single OLS solve.
+    epsilon = 100.0
+    iter_num = 0
+    fitted = np.zeros_like(data, dtype=float)
+
+    while epsilon > tol and iter_num < max_iter:
+        y_adj = np.where(np.isfinite(data), data - theta[:, None], 0.0)
+        beta_new = np.einsum("fps,sf->fp", dmat_inv, y_adj, optimize=True)
+
+        # R initializes each fitted vector with zero and writes fitted values
+        # only at response rows used by lm().
+        fitted = np.where(np.isfinite(data), dmat @ beta_new.T, 0.0)
+        theta_new = np.nanmean(data - fitted, axis=1)
+
+        epsilon = np.sqrt(
+            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
+        )
+        beta = beta_new
+        theta = theta_new
+        iter_num += 1
+
+    # Residuals used by the sandwich covariance estimator.
+    eps = data - fitted - theta[:, None]
+
+    # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
+    # feature-specific inverse based on each feature's observed rows.
+    Ux, Sx, Vhx = np.linalg.svd(dmat, full_matrices=False)
+    Sx_inv = np.divide(
+        1.0,
+        Sx,
+        out=np.zeros_like(Sx),
+        where=Sx > 1e-15 * np.max(Sx),
+    )
+    Vx = Vhx.T
+    gmat_inv = (Vx * Sx_inv**2) @ Vhx
+
+    # R replaces every NaN element of eps^2 * x x^T with 0.1.  Since dmat is
+    # finite, each missing residual contributes a matrix filled with 0.1.
+    eps2 = eps**2
+    n_missing = np.isnan(eps2).sum(axis=0)
+    eps2_filled = np.nan_to_num(eps2, nan=0.0)
+    intm_mat = np.einsum("sf,sp,sq->fpq", eps2_filled, dmat, dmat, optimize=True)
+    intm_mat += 0.1 * n_missing[:, None, None]
+
+    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
+    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+
+    return var_hat.copy(), beta.T, theta, beta_covmat
 
 
 # Numerical optimization setting for sampling bias estimation through an Expectation-
@@ -1088,7 +1197,7 @@ def _estimate_bias_var(beta, var_hat, params):
 
 
 def _sample_fractions(data, dmat, beta, delta_em):
-    """Estimate and correct for sampling fractions.
+    """Estimate sampling fractions.
 
     Parameters
     ----------
@@ -1116,19 +1225,17 @@ def _sample_fractions(data, dmat, beta, delta_em):
     # TODO: Is dmat @ beta already computed somewhere before?
     intm -= data
     intm *= -1.0
-    theta_hat = np.mean(intm, axis=1)
+    # theta_hat = np.mean(intm, axis=1)
     # NaN handling would be:
-    # theta_hat = np.nanmean(intm, axis=1)
+    theta_hat = np.nanmean(intm, axis=1)
 
     # Handle NaN in theta (samples with all-NaN residuals)
-    # nan_theta = np.isnan(theta_hat_arr)
-    # if np.any(nan_theta):
-    #     theta_hat_arr[nan_theta] = 0.0
+    # TODO: This may not be necessary if empty samples are not allowed.
+    nan_theta = np.isnan(theta_hat)
+    if np.any(nan_theta):
+        theta_hat[nan_theta] = 0.0
 
     return theta_hat
-
-    # Subtract sampling fractions from data.
-    # data -= theta_hat[:, None]
 
 
 def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
@@ -1423,6 +1530,7 @@ class ANCOMBCResult:
                 }
             )
             result["Signif"] = result["Signif"].astype(bool)
+            result.index.name = "FeatureID"
 
         return result
 
