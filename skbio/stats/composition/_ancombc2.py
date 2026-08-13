@@ -619,13 +619,12 @@ def _ancombc_core(
         # Adjust variances
         _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
 
-        # Compute per-feature degree of freedom (valid samples - covariates)
+        # Compute per-feature degree of freedom (observed samples - covariates)
         if has_zero:
             n_valid = np.sum(~zero_mask, axis=0)
             dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
             dof = n_samps - n_covars if n_samps > n_covars else np.nan
-            dof = np.full((n_feats,), val)  # TODO: Make it scalar-compatible
 
     # Calculate statistics
     se_hat, W, pval, qval, reject = _calc_statistics(
@@ -1287,7 +1286,7 @@ def _calc_statistics(beta_hat, var_hat, alpha, p_adjust, dof=None):
         Significance level.
     p_adjust : str
         FDR correction method.
-    dof : ndarray of shape (n_features,), optional
+    dof : float or ndarray of shape (n_features,), optional
         Degrees of freedom.
 
     Returns
@@ -1314,29 +1313,86 @@ def _calc_statistics(beta_hat, var_hat, alpha, p_adjust, dof=None):
 
     # Calculate test statistic (W)
     W = beta_hat / se_hat
-    # NOTE: Code was below. But I think there is no need to handle NaN here.
+    # NOTE: Original code is below. But I think there is no need to handle NaN here.
     # W = np.where(np.isnan(se_hat), np.nan, beta_hat / se_hat)
-    W_abs = np.abs(W)
 
-    # Calculate p-values using t-test (with degrees of freedom) or Z-test
-    if dof is not None:  # t-test
-        pval = t.sf(W_abs, dof[:, None])
-    else:  # Z-test
-        pval = norm.sf(W_abs)
-    pval *= 2.0
+    # Calculate p-values
+    pval = _calc_pvalues(W, dof)
 
-    # Set NaN values to 1 (TODO: Revisit.)
-    pval[np.isnan(pval)] = 1.0
-    # pval = np.where(np.isnan(pval), 1.0, pval)
-
-    # Perform FDR correction
-    func = _check_p_adjust(p_adjust)
-    qval = np.apply_along_axis(func, 0, pval)
+    # FDR correction of p-values
+    qval = _adjust_pvalues(pval, p_adjust)
 
     # Reject null hypothesis
     reject = qval <= alpha
 
     return se_hat, W, pval, qval, reject
+
+
+def _calc_pvalues(W, dof=None):
+    """Calculate p-values from test statistics (W).
+
+    p-values are calculated using t-test (with degrees of freedom (dof) provided, as in
+    ANCOM-BC2) or Z-test (without dof, as in ANCOM-BC).
+
+    Parameters
+    ----------
+    W : ndarray of shape (n_features, n_covariates)
+        Test statistics.
+    dof : float or ndarray of shape (n_features,), optional
+        Degrees of freedom.
+
+    Returns
+    -------
+    pval : ndarray of shape (n_features, n_covariates)
+        p-values.
+
+    """
+    W_abs = np.abs(W)
+    if dof is not None:  # t-test with dof
+        if not np.isscalar(dof):
+            dof = dof[:, None]  # broadcast to 2D
+        pval = t.sf(W_abs, dof)
+    else:  # Z-test
+        pval = norm.sf(W_abs)
+    pval *= 2.0  # two-sided test
+    return pval
+
+
+def _adjust_pvalues(pval, method):
+    """Adjust p-values for multiple-testing correction.
+
+    This function applies FDR correction to non-NaN entries. This behavior matches R's
+    `p.adjust`, whereas statsmodels' `multipletests` has inconsistent behavior in some
+    methods.
+
+    NaN p-values could emerge when there are NaN in dof, which in turn could happen if
+    there are less observed samples than covariates in some features. This issue is
+    independent from the zero values in the input data.
+
+    Parameters
+    ----------
+    pval : ndarray of shape (n_features, n_covariates)
+        p-values.
+
+    Returns
+    -------
+    qval : ndarray of shape (n_features, n_covariates)
+        q-values.
+
+    """
+    pval = np.asarray(pval)
+    valid = ~np.isnan(pval)
+    qval = np.full_like(pval, np.nan)
+    func = _check_p_adjust(method)
+
+    if pval.ndim == 1:
+        qval[valid] = func(pval[valid])
+    else:
+        for col in range(pval.shape[1]):
+            valid_col = valid[:, col]
+            qval[valid_col, col] = func(pval[valid_col, col])
+
+    return qval
 
 
 class ANCOMBCResult:
@@ -1447,6 +1503,7 @@ class ANCOMBCResult:
         )
 
     def _stat_params(self, alpha, p_adjust):
+        """Get FDR-correction method and significance level from upstream."""
         if alpha == "inherit":
             alpha = self._alpha
         if p_adjust == "inherit":
@@ -1454,16 +1511,16 @@ class ANCOMBCResult:
         return alpha, p_adjust
 
     def global_test(
-        self, group: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
+        self, grouping: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
     ) -> pd.DataFrame:
         """Perform global test for differential abundance across groups.
 
-        The global test identifies features that are differentially abundant
-        between at least two groups across three or more groups.
+        The global test identifies features that are differentially abundant between at
+        least two groups across three or more groups.
 
         Parameters
         ----------
-        group : str
+        grouping : str
             Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value used by :func:`ancombc` or
@@ -1474,59 +1531,36 @@ class ANCOMBCResult:
 
         Returns
         -------
-        pd.DataFrame
-            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue,
-            Signif.
+        res_global : pd.DataFrame
+            Global test result. Columns are:
 
-        Raises
-        ------
-        ValueError
-            If no group variable was specified.
+            - ``FeatureID``: Feature identifier, i.e., dependent variable.
 
-        Notes
-        -----
+            - ``W``: *W*-statistic quantifying the overall evidence against null
+              hypothesis (mean abundance of the feature is the same across all groups).
+
+            - ``pvalue``: *p*-value of the *W*-statistic.
+
+            - ``qvalue``: Corrected *p*-value.
+
+            - ``Signif``: Whether at least one group mean is different from others.
+
         """
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
-        if self.method == "ANCOM-BC":
-            W_g, pval, qval, reject = _global_test(
-                self._dmat,
-                group,
-                self._beta_hat,
-                self._vcov_hat,
-                alpha,
-                p_adjust,
-            )
-            result = pd.DataFrame(
-                {
-                    "W": W_g,
-                    "pvalue": pval,
-                    "qvalue": qval,
-                    "Signif": reject,
-                },
-                index=self.res.index.get_level_values("FeatureID").unique(),
-            )
-            result.index.name = "FeatureID"
-        else:
-            W_g, pval, qval, reject = _global_test(
-                dmat=self._dmat,
-                grouping=group,
-                beta_hat=self._beta_hat,
-                vcov_hat=self._vcov_hat,
-                p_adjust=p_adjust,
-                alpha=alpha,
-                dof=self._dof,
-            )
-            result = pd.DataFrame(
-                {
-                    "W": W_g,
-                    "pvalue": pval,
-                    "qvalue": qval,
-                    "Signif": reject,
-                },
-                index=self._features,
-            )
-            result.index.name = "FeatureID"
-
+        W, pval, qval, reject = _global_test(
+            dmat=self._dmat,
+            grouping=grouping,
+            beta_hat=self._beta_hat,
+            vcov_hat=self._vcov_hat,
+            p_adjust=p_adjust,
+            alpha=alpha,
+            dof=self._dof,
+        )
+        result = pd.DataFrame(
+            {"W": W, "pvalue": pval, "qvalue": qval, "Signif": reject},
+            index=self._features,
+        )
+        result.index.name = "FeatureID"
         return result
 
     def pairwise_test(
@@ -1547,7 +1581,7 @@ class ANCOMBCResult:
             Significance level, or the value supplied upstream. Default is
             "inherit".
         p_adjust : str, optional
-            Family wise error (FWER) controlling method. Default in "inhert", which
+            Family wise error (FWER) controlling method. Default is "inhert", which
             will use the *p*-value correction method supplied upstream.
 
         Returns
@@ -1571,11 +1605,11 @@ class ANCOMBCResult:
         )
         comp_names = raw["comp_names"]
         n_comp = len(comp_names)
-        n_tax = len(self._features)
+        n_feats = len(self._features)
         result = pd.DataFrame(
             {
                 "FeatureID": [x for x in self._features for _ in range(n_comp)],
-                "Comparison": comp_names * n_tax,
+                "Comparison": comp_names * n_feats,
                 "Log2(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
@@ -1949,20 +1983,19 @@ def _global_test(
         Hochberg ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported
         by statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
         Case-insensitive. If None, no correction will be performed.
-    dof : ndarray of shape (n_features,), optional
-        Residual degrees of freedom. When provided, calculate *p*-values from
-        the F distribution as in ANCOM-BC2; otherwise use the chi-square
-        distribution as in ANCOM-BC.
+    dof : float or ndarray of shape (n_features,), optional
+        Degrees of freedom. When provided, calculate p-values using F distribution (as
+        in ANCOM-BC2), otherwise use chi-square distribution (as in ANCOM-BC).
 
     Returns
     -------
-    W_global : ndarray of float of shape (n_features,)
+    W_global : ndarray of shape (n_features,)
         W-statistics of global test.
-    pval : ndarray of float of shape (n_features,)
+    pval : ndarray of shape (n_features,)
         p-values of global test.
-    qval : ndarray of float of shape (n_features,)
+    qval : ndarray of shape (n_features,)
         Adjusted p-values of global test.
-    reject : ndarray of bool of shape (n_features,)
+    reject : ndarray of shape (n_features,)
         If the variable is differentially abundant.
 
     """
@@ -1996,16 +2029,14 @@ def _global_test(
         p_lower = chi2.cdf(W_global, n_groups)
         p_upper = chi2.sf(W_global, n_groups)
     else:
-        dof = np.asarray(dof)
-        if dof.ndim != 1 or dof.shape[0] != beta_hat.shape[0]:
-            raise ValueError("`dof` must contain one value per feature.")
         p_lower = f.cdf(W_global, n_groups, dof)
         p_upper = f.sf(W_global, n_groups, dof)
     pval = 2 * np.minimum(p_lower, p_upper)
 
-    # Correct p-values
-    func = _check_p_adjust(p_adjust)
-    qval = np.apply_along_axis(func, 0, pval)
+    # R's p.adjust excludes NA values; ANCOM-BC2 then treats invalid global
+    # tests as nonsignificant.
+    qval = _adjust_pvalues(pval, p_adjust)
+    qval = np.where(np.isnan(qval), 1.0, qval)
     reject = qval <= alpha
 
     return W_global, pval, qval, reject
@@ -2062,7 +2093,7 @@ def _pairwise_test(
     W_pair = beta_pair / se_pair
 
     # Apply mdFDR correction
-    p_q = _mdfdr_pairwise(
+    pval, qval = _mdfdr_pairwise(
         W=W_pair,
         dof=dof,
         fwer_ctrl=p_adjust,
@@ -2073,18 +2104,15 @@ def _pairwise_test(
         alpha=alpha,
         dof_global=dof,
     )
-
-    p_hat = p_q["p_val"]
-    q_hat = p_q["q_val"]
-    diff_pair = q_hat <= alpha
+    reject = qval <= alpha
 
     return {
         "beta": beta_pair,
         "se": se_pair,
         "W": W_pair,
-        "p_val": p_hat,
-        "q_val": q_hat,
-        "reject": diff_pair,
+        "p_val": pval,
+        "q_val": qval,
+        "reject": reject,
         "comp_names": all_names,
     }
 
@@ -2092,17 +2120,20 @@ def _pairwise_test(
 def _mdfdr_pairwise(
     W, dof, fwer_ctrl, dmat, group, beta_hat, vcov_hat, alpha, dof_global=None
 ):
-    """Mixed directional FDR correction for pairwise tests.
+    """Perform mixed directional FDR (mdFDR) correction for pairwise tests.
 
-    1. Run global test to screen significant taxa (count R).
-    2. Only consider R significant taxa for pairwise p-values.
+    1. Run global test to screen significant features (count R).
+    2. Only consider R significant features for pairwise p-values.
     3. Adjust at level R * alpha / d.
 
     """
-    n_tax, n_comp = W.shape
+    n_feats, n_comps = W.shape
 
-    # Step 1: Global test screening
-    _, _, _, screen_ind = _global_test(
+    # Calculate p-values
+    p_val = _calc_pvalues(W, dof)
+
+    # Screen for significant comparisons using global test
+    _, _, _, signif = _global_test(
         dmat=dmat,
         grouping=group,
         beta_hat=beta_hat,
@@ -2111,31 +2142,33 @@ def _mdfdr_pairwise(
         alpha=alpha,
         dof=dof_global,
     )
+    n_signs = signif.sum().item()  # R
 
-    R = max(int(screen_ind.sum()), 1)
-
-    # Step 2: Compute p-values from t-distribution
-    if dof is not None:
-        p_val = 2.0 * t.sf(np.abs(W), df=dof[:, None])
-    else:
-        p_val = 2.0 * norm.sf(np.abs(W))
-
-    # Zero out p-values for taxa not significant in global test
-    p_val = p_val * screen_ind[:, np.newaxis]
+    # Zero out p-values for features not significant in global test
+    p_val = p_val * signif[:, None]
     p_val[p_val == 0] = 1.0
     p_val = np.where(np.isnan(p_val), 1.0, p_val)
 
-    # Step 3: Adjust p-values
-
-    # TODO: The results are inconsistent with the R code. Found that the correction
-    # should include all p-values across comparisons, not per-comparison p-values.
-    # Needs confirmation.
+    # Apply mdFDR correction. `n_rejs` adjusts each feature's comparisons as one
+    # family, with its size inflated by the global-screening factor
+    # n_feats / n_rejs.
     func = _check_p_adjust(fwer_ctrl)
-    q_val = np.zeros_like(p_val)
-    for j in range(n_comp):
-        q_val[:, j] = func(p_val[:, j])
+    if n_signs:
+        n_tests = n_comps * n_feats // n_signs
+        n_padding = n_tests - n_comps
 
-    return {"p_val": p_val, "q_val": q_val}
+        def adjust(pvals):
+            # R's p.adjust(..., n=n_tests) is equivalent to adding n_tests -
+            # len(pvals) unit p-values before correction.
+            if n_padding:
+                pvals = np.pad(pvals, (0, n_padding), constant_values=1.0)
+            return func(pvals)[:n_comps]
+
+        q_val = np.apply_along_axis(adjust, 1, p_val)
+    else:
+        q_val = np.ones_like(p_val)
+
+    return p_val, q_val
 
 
 def _var_diff(vcov_sub):
@@ -2213,7 +2246,8 @@ def _mdfdr_dunnett(W, dof, fwer_ctrl, dmat, group, B, alpha):
 
     # Step 2: Compute p-values
     if dof is not None:
-        p_val = 2 * t.sf(np.abs(W), df=dof[:, None])
+        dof = np.asarray(dof)
+        p_val = 2 * t.sf(np.abs(W), df=dof if dof.ndim == 0 else dof[:, None])
     else:
         p_val = 2 * norm.sf(np.abs(W))
 
@@ -2252,7 +2286,10 @@ def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
         # Generate null W from the per-feature t-distribution.
         if dof is not None:
             dof_null = np.nan_to_num(dof, nan=999.0)
-            W_null = rng.standard_t(dof_null[:, None], size=W.shape)
+            W_null = rng.standard_t(
+                dof_null if np.ndim(dof_null) == 0 else dof_null[:, None],
+                size=W.shape,
+            )
         else:
             W_null = rng.standard_normal(size=W.shape)
 
@@ -2261,9 +2298,9 @@ def _dunn_global(dmat, group, W, B, dof, p_adjust="holm", alpha=0.05):
     # P-values from bootstrap
     p_global = np.mean(W_global_null > W_global[:, np.newaxis], axis=1)
 
-    # Multiple testing correction
-    func = _check_p_adjust(p_adjust)
-    q_global = func(p_global)
+    # R's p.adjust excludes NA values; ANCOM-BC2 then treats invalid global
+    # tests as nonsignificant.
+    q_global = _adjust_pvalues(p_global, p_adjust)
     q_global = np.where(np.isnan(q_global), 1.0, q_global)
     reject = q_global <= alpha
 
@@ -2368,9 +2405,9 @@ def _trend_test(
     # P-values from bootstrap
     p_trend = np.mean(W_trend_null > W_trend[:, np.newaxis], axis=1)
 
-    # Multiple testing correction
-    func = _check_p_adjust(p_adjust)
-    q_trend = func(p_trend)
+    # R's p.adjust excludes NA values; ANCOM-BC2 then treats invalid trend
+    # tests as nonsignificant.
+    q_trend = _adjust_pvalues(p_trend, p_adjust)
     q_trend = np.where(np.isnan(q_trend), 1.0, q_trend)
     diff_trend = q_trend <= alpha
 

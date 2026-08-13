@@ -21,6 +21,8 @@ from skbio.stats.composition._ancombc2 import (
     _estimate_bias_em,
     _sample_fractions,
     _calc_statistics,
+    _calc_pvalues,
+    _adjust_pvalues,
     _init_bias_params,
     _global_test,
     struc_zero,
@@ -194,6 +196,27 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs[2], exp_pval, atol=1e-5)
         npt.assert_allclose(obs[3], exp_qval, atol=1e-5)
         npt.assert_array_equal(obs[4], exp_reject)
+
+    def test_calc_statistics_nan_dof(self):
+        beta_hat = np.array([[1.0, -1.0], [2.0, -2.0]])
+        var_hat = np.ones_like(beta_hat)
+        dof = np.array([10.0, np.nan])
+
+        pval = _calc_pvalues(beta_hat, dof)
+        npt.assert_array_equal(np.isnan(pval), [[False, False], [True, True]])
+
+        _, _, obs_pval, qval, reject = _calc_statistics(
+            beta_hat, var_hat, 0.05, "holm", dof
+        )
+        npt.assert_array_equal(obs_pval, pval)
+        npt.assert_array_equal(np.isnan(qval), [[False, False], [True, True]])
+        npt.assert_array_equal(reject, [[False, False], [False, False]])
+
+    def test_adjust_pvalues_nan(self):
+        pval = np.array([[0.01, 0.4], [np.nan, 0.2], [0.2, np.nan]])
+        obs = _adjust_pvalues(pval, "holm")
+        exp = np.array([[0.02, 0.4], [np.nan, 0.4], [0.2, np.nan]])
+        npt.assert_allclose(obs, exp, equal_nan=True)
 
     def test_post_hoc_methods_recalculate(self):
         res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
@@ -445,6 +468,11 @@ class Ancombc2Tests(TestCase):
         # global test
         obs = res.global_test("bmi")
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0)
+        pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
+
+        # pairwise test
+        obs = res.pairwise_test("bmi")
+        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
     def test_ancombc2_aggregator(self):
