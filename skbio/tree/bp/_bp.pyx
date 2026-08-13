@@ -550,35 +550,139 @@ cdef class BPTree:
             return self.bwdsearch(i - 1, -2) + 1
 
     cpdef SIZE_t rmq(self, SIZE_t i, SIZE_t j) nogil:
-        """The leftmost minimum excess in i -> j"""
-        cdef:
-            SIZE_t k, min_k
-            SIZE_t min_v, obs_v
+        """The leftmost minimum excess in i -> j.
 
-        min_k = i
-        min_v = self.excess(i)  # a value larger than what will be tested
-        for k in range(i, j + 1):
-            obs_v = self.excess(k)
-            if obs_v < min_v:
-                min_k = k
-                min_v = obs_v
-        return min_k
+        The minimum excess over [i, j] is found in O(log n): the two partial
+        end-blocks are scanned directly and the full interior blocks are
+        covered by a range query over the rmM tree. The leftmost position that
+        attains it is then recovered with a single ``fwdsearch``.
+        """
+        cdef:
+            SIZE_t d_star, p, blk_end, tree_v
+            SIZE_t bi, bj
+            int b
+
+        if i >= j:
+            return i
+
+        b = self._rmm.b
+        bi = i // b
+        bj = j // b
+
+        # smallest absolute excess over [i, j]
+        d_star = self._e_index[i]
+        if bi == bj:
+            for p in range(i + 1, j + 1):
+                if self._e_index[p] < d_star:
+                    d_star = self._e_index[p]
+        else:
+            # remainder of the block containing i (inclusive of i)
+            blk_end = min((bi + 1) * b, self.size)
+            for p in range(i + 1, blk_end):
+                if self._e_index[p] < d_star:
+                    d_star = self._e_index[p]
+            # full interior blocks (bi, bj) via the rmM tree
+            if bi + 1 <= bj - 1:
+                tree_v = self._rmq_tree_min(0, 0, self._rmm.n_internal,
+                                            <int>(bi + 1), <int>(bj - 1))
+                if tree_v < d_star:
+                    d_star = tree_v
+            # leading part of the block containing j (inclusive of j)
+            for p in range(bj * b, j + 1):
+                if self._e_index[p] < d_star:
+                    d_star = self._e_index[p]
+
+        # leftmost position in [i, j] whose excess equals the minimum
+        if self._e_index[i] == d_star:
+            return i
+        return self.fwdsearch(i, <int>(d_star - self._e_index[i]))
 
     cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil:
-        """The leftmost maximmum excess in i -> j."""
+        """The leftmost maximmum excess in i -> j.
+
+        Symmetric to :meth:`rmq`: an O(log n) range-maximum over the rmM tree
+        followed by a single ``fwdsearch`` for the leftmost attaining position.
+        """
         cdef:
-            SIZE_t k, max_k
-            SIZE_t max_v, obs_v
+            SIZE_t m_star, p, blk_end, tree_v
+            SIZE_t bi, bj
+            int b
 
-        max_k = i
-        max_v = self.excess(i)  # a value larger than what will be tested
-        for k in range(i, j + 1):
-            obs_v = self.excess(k)
-            if obs_v > max_v:
-                max_k = k
-                max_v = obs_v
+        if i >= j:
+            return i
 
-        return max_k
+        b = self._rmm.b
+        bi = i // b
+        bj = j // b
+
+        # largest absolute excess over [i, j]
+        m_star = self._e_index[i]
+        if bi == bj:
+            for p in range(i + 1, j + 1):
+                if self._e_index[p] > m_star:
+                    m_star = self._e_index[p]
+        else:
+            blk_end = min((bi + 1) * b, self.size)
+            for p in range(i + 1, blk_end):
+                if self._e_index[p] > m_star:
+                    m_star = self._e_index[p]
+            if bi + 1 <= bj - 1:
+                tree_v = self._rmq_tree_max(0, 0, self._rmm.n_internal,
+                                            <int>(bi + 1), <int>(bj - 1))
+                if tree_v > m_star:
+                    m_star = tree_v
+            for p in range(bj * b, j + 1):
+                if self._e_index[p] > m_star:
+                    m_star = self._e_index[p]
+
+        # leftmost position in [i, j] whose excess equals the maximum
+        if self._e_index[i] == m_star:
+            return i
+        return self.fwdsearch(i, <int>(m_star - self._e_index[i]))
+
+    cdef SIZE_t _rmq_tree_min(self, int node, int node_lo, int node_hi,
+                              int lo, int hi) nogil:
+        """Minimum excess over leaf-blocks [lo, hi].
+
+        Segment-tree range query over the rmM binary tree; ``node`` spans the
+        contiguous block range [node_lo, node_hi]. Only fully-covered nodes are
+        read, and a covered node satisfies ``node_hi <= hi < n_tip``, so it
+        (and its subtree) is always a real, populated block -- the partially
+        filled last level is only ever touched through the partial end-blocks,
+        which the callers scan directly.
+        """
+        cdef int mid
+        cdef SIZE_t left_v, right_v
+
+        if hi < node_lo or node_hi < lo:  # no overlap
+            return INT_MAX
+        if lo <= node_lo and node_hi <= hi:  # fully covered
+            return self._rmm.mM[node, self._rmm.m_idx]
+        mid = (node_lo + node_hi) / 2
+        left_v = self._rmq_tree_min(bt_left_child(node), node_lo, mid, lo, hi)
+        right_v = self._rmq_tree_min(bt_right_child(node), mid + 1, node_hi,
+                                     lo, hi)
+        return left_v if left_v < right_v else right_v
+
+    cdef SIZE_t _rmq_tree_max(self, int node, int node_lo, int node_hi,
+                              int lo, int hi) nogil:
+        """Maximum excess over leaf-blocks [lo, hi].
+
+        The range-maximum counterpart of :meth:`_rmq_tree_min`; see its note on
+        why every fully-covered node is a real block.
+        """
+        cdef int mid
+        cdef SIZE_t left_v, right_v
+
+        if hi < node_lo or node_hi < lo:  # no overlap
+            return -INT_MAX
+        if lo <= node_lo and node_hi <= hi:  # fully covered
+            return self._rmm.mM[node, self._rmm.M_idx]
+        mid = (node_lo + node_hi) / 2
+        left_v = self._rmq_tree_max(bt_left_child(node), node_lo, mid, lo, hi)
+        right_v = self._rmq_tree_max(bt_right_child(node), mid + 1, node_hi,
+                                     lo, hi)
+        return left_v if left_v > right_v else right_v
 
     def __len__(self):
         """The number of nodes in the tree."""

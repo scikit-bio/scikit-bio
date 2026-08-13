@@ -79,6 +79,8 @@ cdef class BPTree:
     cpdef SIZE_t edge_from_number(self, INT32_t n)
     cpdef SIZE_t rmq(self, SIZE_t i, SIZE_t j) nogil
     cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil
+    cdef SIZE_t _rmq_tree_min(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
+    cdef SIZE_t _rmq_tree_max(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
     cpdef SIZE_t postorder_select(self, SIZE_t k) nogil
     cpdef SIZE_t postorder_rank(self, SIZE_t i) nogil
     cpdef SIZE_t preorder_select(self, SIZE_t k) nogil
