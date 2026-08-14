@@ -321,6 +321,15 @@ def mantel(
     to the array-API path, which runs on the device regardless. The result is
     identical across all paths.
 
+    With ``engine="numba"``, GPU buffers must belong to the default device. On a
+    system with several devices, the default must be changed to match the buffer
+    ownership before this function is invoked, through
+    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    A mismatch is not reported when the kernel is launched, and on ROCm it has
+    been observed to leave the GPU context unusable for the rest of the process.
+    The array-API path, taken when ``engine="numba"`` is not requested, honors
+    whichever device the input is on.
+
     ``np.nan`` will be returned for the p-value if `permutations` is zero or if
     the correlation coefficient is ``np.nan``. The correlation coefficient will
     be ``np.nan`` if one or both of the inputs does not have any variation
