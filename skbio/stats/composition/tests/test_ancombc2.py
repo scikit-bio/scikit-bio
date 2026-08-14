@@ -145,7 +145,7 @@ class CoreTests(TestCase):
              [ 0, 12,  1,  2,  0,  3,  2],
              [ 2,  8, 27,  0,  0,  7,  3],
              [10,  9,  0,  0,  4,  4,  3]])
-        self.table1 = pd.DataFrame(data, index=samples, columns=features)
+        self.table1 = pd.DataFrame(self.data1, index=samples, columns=features)
         grouping = ["well"] * 3 + ["sick"] * 3
         self.meta1 = pd.Series(grouping, index=samples, name="status").to_frame()
 
