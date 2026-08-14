@@ -159,7 +159,7 @@ class CoreTests(TestCase):
              [1, 0],
              [1, 0]], dtype=float)
 
-        # Example 2 (old, dense)
+        # Example 2 (dense, old)
         self.data2 = np.array(
             [[12, 11, 10, 10, 10, 10, 10],
              [ 9, 11, 12, 10, 10, 10, 10],
@@ -168,26 +168,26 @@ class CoreTests(TestCase):
              [20, 22, 10, 10, 13, 10, 10],
              [23, 21, 14, 10, 10, 10, 10]])
 
-
-        self.table = pd.DataFrame(
-            [
-                [12, 11, 10, 10, 10, 10, 10],
-                [9, 11, 12, 10, 10, 10, 10],
-                [1, 11, 10, 11, 10, 5, 9],
-                [22, 21, 9, 10, 10, 10, 10],
-                [20, 22, 10, 10, 13, 10, 10],
-                [23, 21, 14, 10, 10, 10, 10],
-            ],
-            index=["s1", "s2", "s3", "s4", "s5", "s6"],
-            columns=["b1", "b2", "b3", "b4", "b5", "b6", "b7"],
-        )
-        self.grouping = pd.Series(
-            ["treatment", "treatment", "treatment", "placebo", "placebo", "placebo"],
-            index=["s1", "s2", "s3", "s4", "s5", "s6"],
-            name="grouping",
-        )
+        samples = ["s1", "s2", "s3", "s4", "s5", "s6"]
+        features = ["b1", "b2", "b3", "b4", "b5", "b6", "b7"]
+        self.table2 = pd.DataFrame(self.data2, index=samples, columns=features)
+        grouping = ["treatment"] * 3 + ["placebo"] * 3
+        self.meta2 = pd.Series(grouping, index=samples, name="group").to_frame()
+        self.dmat2 = np.array(
+            [[1, 1],
+             [1, 1],
+             [1, 1],
+             [1, 0],
+             [1, 0],
+             [1, 0]], dtype=float)
 
     def test_estimate_params(self):
+        # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
+        # occassionally slightly different results will be generated during the CI
+        # workflow. Although SciPy optimizers should be deterministic, this happens in
+        # some cases. The initial estimation of parameters is usually precise, but the
+        # subsequent iterative optimization is prone to this problem.
+
         # Example 1 (sparse, +1 before log)
         data_tr = np.log1p(self.data1)
         obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
@@ -223,40 +223,128 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
         npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
 
-        # Example 2
-        data = np.log1p(self.table.to_numpy())
-        dmat = dmatrix("grouping", self.grouping.to_frame())
-        obs = _estimate_params(data, dmat)
+        # Example 2 (dense, just log)
+        data_tr = np.log(self.data2)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
+            data_tr, self.dmat2)
+        exp_var_hat = np.array(
+            [[0.00126, 0.27087],
+             [0.00036, 0.01524],
+             [0.00889, 0.02048],
+             [0.00028, 0.02215],
+             [0.00495, 0.01983],
+             [0.00028, 0.00474],
+             [0.00028, 0.00898]])
+        exp_beta = np.array(
+            [[ 3.07409, -1.51338],
+             [ 3.06003, -0.66213],
+             [ 2.37962, -0.01626],
+             [ 2.30259,  0.03177],
+             [ 2.39004, -0.08745],
+             [ 2.30259, -0.23105],
+             [ 2.30259, -0.03512]]).T
+        exp_theta = np.array(
+            [ 0.15683,  0.14178, -0.29861, -0.03834,  0.00722,  0.03113])
+        exp_beta_covmat = np.array(
+            [[[ 0.00126, -0.00126], [-0.00126,  0.27087]],
+             [[ 0.00036, -0.00036], [-0.00036,  0.01524]],
+             [[ 0.00889, -0.00889], [-0.00889,  0.02048]],
+             [[ 0.00028, -0.00028], [-0.00028,  0.02215]],
+             [[ 0.00495, -0.00495], [-0.00495,  0.01983]],
+             [[ 0.00028, -0.00028], [-0.00028,  0.00474]],
+             [[ 0.00028, -0.00028], [-0.00028,  0.00898]]])
 
-        exp_var_hat = [[0.00112214, 0.14814216],
-                       [0.00031849, 0.00931848],
-                       [0.00748883, 0.01449789],
-                       [0.00023415, 0.01428563],
-                       [0.00420568, 0.01320567],
-                       [0.00023415, 0.00516622],
-                       [0.00023415, 0.00498806]]
+        npt.assert_array_equal(obs_var_hat.round(5), exp_var_hat)
+        npt.assert_array_equal(obs_beta.round(5), exp_beta)
+        npt.assert_array_equal(obs_theta.round(5), exp_theta)
+        npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
 
-        exp_beta = [[ 3.11935683,  3.10585971,  2.46951019, 2.39789527,  2.47828263,
-                      2.39789527,  2.39789527],
-                    [-1.26579628, -0.62095306, -0.01593022, 0.02900379, -0.08038735,
-                     -0.20204527, -0.03177006]]
+    def test_estimate_params_unbalanced(self):
+        """Unbalanced model and fallback compute test."""
+        # An unbalanced, three-covariate model
+        data = np.log(np.array(
+            [[ 2,  3,  5],
+             [ 7, 11, 13],
+             [17, 19, 23],
+             [29, 31, 37],
+             [41, 43, 47]], dtype=float))
+        dmat = np.array(
+            [[1, 0, 2],
+             [1, 1, 1],
+             [1, 2, 0],
+             [1, 3, 1],
+             [1, 5, 4]], dtype=float)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
+            data, dmat)
 
-        exp_theta = [0.12293081, 0.10931507, -0.23224588, -0.03514176, 0.00627999,
-                     0.02886177]
+        # Directly compute per-feature parameters using independent least-squares
+        # (slow and fallback) and compare with the optimized code's output.
+        exp_beta = np.linalg.pinv(dmat) @ data
+        diff = data - dmat @ exp_beta
+        exp_theta = np.mean(diff, axis=1)
+        gmat_inv = np.linalg.pinv(dmat.T @ dmat)
+        exp_beta_covmat = np.empty((data.shape[1], dmat.shape[1], dmat.shape[1]))
+        for i in range(data.shape[1]):
+            exp_beta_covmat[i] = (
+                gmat_inv @ (dmat.T * (diff[:, i] - exp_theta) ** 2) @ dmat @ gmat_inv
+            )
+        exp_var_hat = np.diagonal(exp_beta_covmat, axis1=1, axis2=2)
 
-        # NOTE: atol is set because occassionally slightly different results will be
-        # generated during the CI workflow. Although SciPy optimizers should be
-        # deterministic, this happens in some cases. The initial estimation of
-        # parameters is usually precise, but the subsequent iterative optimization is
-        # prone to this problem.
-        for o, e in zip(obs[0], exp_var_hat):
-            npt.assert_allclose(o, e, atol=1e-5)
+        npt.assert_allclose(obs_var_hat, exp_var_hat)
+        npt.assert_allclose(obs_beta, exp_beta)
+        npt.assert_allclose(obs_theta, exp_theta)
+        npt.assert_allclose(obs_beta_covmat, exp_beta_covmat)
 
-        for o, e in zip(obs[1], exp_beta):
-            npt.assert_allclose(o, e, atol=1e-5)
+    def test_estimate_params_singular(self):
+        """Rank-deficient and underdetermined design tests."""
+        # Both cases require a pseudoinverse instead of a regular matrix inverse.
+        data = np.log(np.array(
+            [[ 2,  3,  5],
+             [ 7, 11, 13],
+             [17, 19, 23]], dtype=float))
 
-        for o, e in zip(obs[2], exp_theta):
-            npt.assert_allclose(o, e, atol=1e-5)
+        # Covariates 0 and 2 are identical and constant
+        dmat1 = np.array(
+            [[1, 0, 1],
+             [1, 1, 1],
+             [1, 2, 1]], dtype=float),
+
+        # More covariates than samples; covariate 3 is linearly dependent on 0 and 1
+        dmat2 = np.array(
+            [[1, 0, 1, 2, 0],
+             [1, 1, 1, 3, 1],
+             [1, 2, 1, 4, 4]], dtype=float)
+
+        for dmat in (dmat1, dmat2):
+            obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
+                data, dmat)
+            exp_beta = np.linalg.pinv(dmat) @ data
+            diff = data - dmat @ exp_beta
+            exp_theta = np.mean(diff, axis=1)
+
+            npt.assert_allclose(obs_beta, exp_beta)
+            npt.assert_allclose(obs_theta, exp_theta, atol=1e-14)
+            self.assertTrue(np.isfinite(obs_var_hat).all())
+            self.assertTrue(np.isfinite(obs_beta_covmat).all())
+
+    def test_estimate_params_constant(self):
+        """Constant feature abundance test."""
+        # A feature with no variation has no estimated residual variance
+        data = np.full((4, 1), np.log(5.0))
+        dmat = np.array([[1, 0], [1, 1], [1, 3], [1, 4]], dtype=float)
+        var_hat, beta, theta, beta_covmat = _estimate_params(data, dmat)
+
+        # Check array shapes and confirm no NaN when there is only one feature.
+        self.assertEqual(var_hat.shape, (1, 2))
+        self.assertEqual(beta.shape, (2, 1))
+        self.assertEqual(theta.shape, (4,))
+        self.assertEqual(beta_covmat.shape, (1, 2, 2))
+        self.assertTrue(np.isfinite(var_hat).all())
+        self.assertTrue(np.isfinite(beta).all())
+        self.assertTrue(np.isfinite(theta).all())
+        self.assertTrue(np.isfinite(beta_covmat).all())
+        npt.assert_allclose(var_hat, 0.0, atol=1e-14)
+        npt.assert_allclose(beta_covmat, 0.0, atol=1e-14)
 
     def test_estimate_params_nan(self):
         # Example 1 (RCLR transform)

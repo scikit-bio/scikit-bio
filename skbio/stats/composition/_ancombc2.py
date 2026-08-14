@@ -731,7 +731,7 @@ def _estimate_params(data, dmat):
     data = np.asarray(data)
     dmat = np.asarray(dmat)
     U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
-    S_inv = np.where(S > 1e-15 * np.max(S), 1.0 / S, 0.0)
+    S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > 1e-15 * np.max(S))
 
     # Regression coefficients
     V = Vh.T
