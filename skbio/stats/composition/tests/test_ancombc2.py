@@ -17,8 +17,10 @@ from patsy import DesignMatrix, dmatrix
 from scipy.stats import t
 
 from skbio.util import get_data_path
+from skbio.stats.composition import rclr
 from skbio.stats.composition._ancombc2 import (
     _estimate_params,
+    _estimate_params_nan,
     _estimate_bias_em,
     _sample_fractions,
     _calc_statistics,
@@ -136,6 +138,7 @@ write.csv(res_bc2$res_trend, "pseq_sub_ancombc2_trend.csv", row.names = FALSE)
 
 class CoreTests(TestCase):
     def setUp(self):
+        # Example 1 (sparse)
         samples = [f'S{i}' for i in range(1, 7)]
         features = [f'F{i}' for i in range(1, 8)]
         self.data1 = np.array(
@@ -148,6 +151,23 @@ class CoreTests(TestCase):
         self.table1 = pd.DataFrame(self.data1, index=samples, columns=features)
         grouping = ["well"] * 3 + ["sick"] * 3
         self.meta1 = pd.Series(grouping, index=samples, name="status").to_frame()
+        self.dmat1 = np.array(
+            [[1, 1],
+             [1, 1],
+             [1, 1],
+             [1, 0],
+             [1, 0],
+             [1, 0]], dtype=float)
+
+        # Example 2 (old, dense)
+        self.data2 = np.array(
+            [[12, 11, 10, 10, 10, 10, 10],
+             [ 9, 11, 12, 10, 10, 10, 10],
+             [ 1, 11, 10, 11, 10,  5,  9],
+             [22, 21,  9, 10, 10, 10, 10],
+             [20, 22, 10, 10, 13, 10, 10],
+             [23, 21, 14, 10, 10, 10, 10]])
+
 
         self.table = pd.DataFrame(
             [
@@ -168,6 +188,42 @@ class CoreTests(TestCase):
         )
 
     def test_estimate_params(self):
+        # Example 1 (sparse, +1 before log)
+        data_tr = np.log1p(self.data1)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
+            data_tr, self.dmat1)
+        exp_var_hat = np.array(
+            [[0.24374, 0.26827],
+             [0.0414 , 0.10443],
+             [0.5995 , 0.78012],
+             [0.16891, 0.17501],
+             [0.17638, 0.36711],
+             [0.00728, 0.04665],
+             [0.00178, 0.21715]])
+        exp_beta = np.array(
+            [[ 1.1655 , -0.10615],
+             [ 2.35492, -1.75767],
+             [ 1.34178, -0.4391 ],
+             [ 0.3662 ,  1.74311],
+             [ 0.53648,  0.70941],
+             [ 1.69172, -1.46068],
+             [ 1.2904 , -0.029  ]]).T
+        exp_theta = np.array(
+            [-0.17616,  0.01642,  0.15975, -0.2722 ,  0.19239,  0.07981])
+        exp_beta_covmat = np.array(
+            [[[ 0.24374, -0.24374], [-0.24374,  0.26827]],
+             [[ 0.0414 , -0.0414 ], [-0.0414 ,  0.10443]],
+             [[ 0.5995 , -0.5995 ], [-0.5995 ,  0.78012]],
+             [[ 0.16891, -0.16891], [-0.16891,  0.17501]],
+             [[ 0.17638, -0.17638], [-0.17638,  0.36711]],
+             [[ 0.00728, -0.00728], [-0.00728,  0.04665]],
+             [[ 0.00178, -0.00178], [-0.00178,  0.21715]]])
+        npt.assert_array_equal(obs_var_hat.round(5), exp_var_hat)
+        npt.assert_array_equal(obs_beta.round(5), exp_beta)
+        npt.assert_array_equal(obs_theta.round(5), exp_theta)
+        npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
+
+        # Example 2
         data = np.log1p(self.table.to_numpy())
         dmat = dmatrix("grouping", self.grouping.to_frame())
         obs = _estimate_params(data, dmat)
@@ -201,6 +257,53 @@ class CoreTests(TestCase):
 
         for o, e in zip(obs[2], exp_theta):
             npt.assert_allclose(o, e, atol=1e-5)
+
+    def test_estimate_params_nan(self):
+        # Example 1 (RCLR transform)
+        data_tr = rclr(self.data1, axis=0, validate=False)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_nan(
+            data_tr, self.dmat1)
+        exp_var_hat = np.array(
+            [[0.14683, 0.26361],
+             [0.10253, 0.12889],
+             [0.33717, 0.4007 ],
+             [0.     , 0.04588],
+             [0.     , 0.04129],
+             [0.02128, 0.0435 ],
+             [0.013  , 0.31737]])
+        exp_beta = np.array(
+            [[ 0.266  , -0.6268 ],
+             [ 0.76291, -1.81436],
+             [ 0.43704, -0.64821],
+             [-0.41512,  0.73585],
+             [-0.47541,  0.4906 ],
+             [ 0.36923, -1.66446],
+             [ 0.09796, -0.19649]]).T
+        exp_theta = np.array(
+            [-0.17764,  0.18778, -0.00845, -0.54944,  0.28287,  0.26657])
+        exp_beta_covmat = np.array(
+            [[[ 0.14683, -0.14683], [-0.14683,  0.26361]],
+             [[ 0.10253, -0.10253], [-0.10253,  0.12889]],
+             [[ 0.33717, -0.33717], [-0.33717,  0.4007 ]],
+             [[ 0.     , -0.     ], [-0.     ,  0.04588]],
+             [[ 0.     , -0.     ], [-0.     ,  0.04129]],
+             [[ 0.02128, -0.02128], [-0.02128,  0.0435 ]],
+             [[ 0.013  , -0.013  ], [-0.013  ,  0.31737]]])
+        npt.assert_array_equal(obs_var_hat.round(5), exp_var_hat)
+        npt.assert_array_equal(obs_beta.round(5), exp_beta)
+        npt.assert_array_equal(obs_theta.round(5), exp_theta)
+        npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
+
+        # Should match `_estimate_params` on non-zero data
+        data_tr = np.log1p(self.data1)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_nan(
+            data_tr, self.dmat1)
+        exp_var_hat, exp_beta, exp_theta, exp_beta_covmat = _estimate_params(
+            data_tr, self.dmat1)
+        npt.assert_allclose(obs_var_hat, exp_var_hat, atol=1e-5)
+        npt.assert_allclose(obs_beta, exp_beta, atol=1e-5)
+        npt.assert_allclose(obs_theta, exp_theta, atol=1e-5)
+        npt.assert_allclose(obs_beta_covmat, exp_beta_covmat, atol=1e-5)
 
     def test_init_bias_params(self):
         # regular case

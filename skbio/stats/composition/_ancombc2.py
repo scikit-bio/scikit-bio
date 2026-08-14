@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from typing import Optional
 from typing import TYPE_CHECKING
-from collections.abc import Mapping
 from itertools import combinations
 
 import numpy as np
@@ -506,21 +505,6 @@ def ancombc2(
         aggregator=aggregator,
     )
 
-    # Obsolete route; kept for reference
-    # return _ancombc(
-    #     table=table,
-    #     metadata=metadata,
-    #     reestimate=True,
-    #     formula=formula,
-    #     aggregator=aggregator,
-    #     p_adjust=p_adjust,
-    #     pseudo=pseudo,
-    #     s0_perc=s0_perc,
-    #     alpha=alpha,
-    #     max_iter=max_iter,
-    #     tol=tol,
-    # )
-
 
 def _ancombc_core(
     table,
@@ -536,9 +520,6 @@ def _ancombc_core(
     tol=1e-5,
 ):
     """ANCOM-BC/BC2 core function."""
-
-    # NOTE: A pseudocount should have been added to the table by the user prior to
-    # calling this function.
     matrix, samples, features = _ingest_table(table)
 
     # ANCOM-BC does not handle zeros in the input table. The user should have added a
@@ -570,12 +551,12 @@ def _ancombc_core(
         matrix_tr = np.log(matrix)
     # ANCOM-BC2: CLR transformation on non-zero values
     elif has_zero:
-        matrix_tr = rclr(matrix, axis=0)
+        matrix_tr = rclr(matrix, axis=0, validate=False)
     else:
-        matrix_tr = clr(matrix, axis=0)
+        matrix_tr = clr(matrix, axis=0, validate=False)
 
     # Estimate initial model parameters.
-    func = _estimate_params_0 if has_zero else _estimate_params
+    func = _estimate_params_nan if has_zero else _estimate_params
     var_hat, beta, _, vcov_hat = func(matrix_tr, dmat)
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
@@ -610,15 +591,15 @@ def _ancombc_core(
             n_feats = matrix.shape[1]
             matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
             if has_zero:
-                matrix_tr = rclr(matrix, axis=0)
+                matrix_tr = rclr(matrix, axis=0, validate=False)
             else:
-                matrix_tr = clr(matrix, axis=0)
+                matrix_tr = clr(matrix, axis=0, validate=False)
 
         # Correct data for sampling fractions
         matrix_tr -= theta_hat[:, None]
 
         # Re-estimate parameters
-        func = _estimate_params_0 if has_zero else _estimate_params
+        func = _estimate_params_nan if has_zero else _estimate_params
         var_hat, beta_hat, _, vcov_hat = func(matrix_tr, dmat)
         beta_hat = beta_hat.T
 
@@ -786,7 +767,7 @@ def _estimate_params(data, dmat):
     return var_hat, beta, theta.reshape(-1), beta_covmat
 
 
-def _estimate_params_0(data, dmat, tol=1e-2, max_iter=20):
+def _estimate_params_nan(data, dmat, tol=1e-2, max_iter=20):
     """Estimate initial model parameters when the response contains zeros/NaNs.
 
     This mirrors the fixed-effects ``.iter_mle`` path used by ANCOM-BC2 when
@@ -1571,7 +1552,7 @@ class ANCOMBCResult:
 
     def pairwise_test(
         self,
-        group: str,
+        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
     ) -> pd.DataFrame:
@@ -1581,7 +1562,7 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        group : str
+        grouping : str
             Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
@@ -1601,7 +1582,7 @@ class ANCOMBCResult:
 
         raw = _pairwise_test(
             dmat=self._dmat,
-            group=group,
+            grouping=grouping,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
@@ -1629,7 +1610,7 @@ class ANCOMBCResult:
 
     def dunnett_test(
         self,
-        group: str,
+        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
         bootstraps: int = 100,
@@ -1639,7 +1620,7 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        group : str
+        grouping : str
             Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
@@ -1665,7 +1646,7 @@ class ANCOMBCResult:
 
         raw = _dunnett_test(
             dmat=self._dmat,
-            group=group,
+            grouping=grouping,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             dof=self._dof,
@@ -1694,7 +1675,7 @@ class ANCOMBCResult:
 
     def trend_test(
         self,
-        group: str,
+        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
         trend_contrast: dict | None = None,
@@ -1709,7 +1690,7 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        group : str
+        grouping : str
             Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
@@ -1743,7 +1724,7 @@ class ANCOMBCResult:
 
         raw = _trend_test(
             dmat=self._dmat,
-            group=group,
+            grouping=grouping,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
@@ -1854,7 +1835,7 @@ def _global_test(
 
 
 def _pairwise_test(
-    dmat, group, beta_hat, var_hat, vcov_hat, dof, p_adjust="holm", alpha=0.05
+    dmat, grouping, beta_hat, var_hat, vcov_hat, dof, p_adjust="holm", alpha=0.05
 ):
     """ANCOM-BC2 pairwise directional test.
 
@@ -1864,7 +1845,7 @@ def _pairwise_test(
     covariates = dmat.design_info.column_names
 
     # Subset group-related covariates
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
     beta_hat_sub = beta_hat[:, group_ind]
     group_covars = [c for c, g in zip(covariates, group_ind) if g]
 
@@ -1909,7 +1890,7 @@ def _pairwise_test(
         dof=dof,
         fwer_ctrl=p_adjust,
         dmat=dmat,
-        group=group,
+        group=grouping,
         beta_hat=beta_hat,
         vcov_hat=vcov_hat,
         alpha=alpha,
@@ -2008,7 +1989,7 @@ def _var_diff(vcov_sub):
 
 def _dunnett_test(
     dmat,
-    group,
+    grouping,
     beta_hat,
     var_hat,
     dof,
@@ -2022,7 +2003,7 @@ def _dunnett_test(
     Compare each group to the reference group with mdFDR correction.
     """
     covariates = dmat.design_info.column_names
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
 
     beta_hat_dunn = beta_hat[:, group_ind]
     var_hat_dunn = var_hat[:, group_ind]
@@ -2035,7 +2016,7 @@ def _dunnett_test(
         dof=dof,
         fwer_ctrl=p_adjust,
         dmat=dmat,
-        group=group,
+        group=grouping,
         bootstraps=bootstraps,
         rng=rng,
         alpha=alpha,
@@ -2152,7 +2133,7 @@ def _dunn_global(dmat, group, W, bootstraps, dof, p_adjust, alpha, rng):
 
 def _trend_test(
     dmat,
-    group,
+    grouping,
     beta_hat,
     var_hat,
     vcov_hat,
@@ -2169,7 +2150,7 @@ def _trend_test(
     """
     n_feats = beta_hat.shape[0]
     covariates = dmat.design_info.column_names
-    group_ind = np.array([group in c and ":" not in c for c in covariates])
+    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
     n_group = int(np.sum(group_ind))
 
     beta_hat_sub = beta_hat[:, group_ind]
