@@ -136,6 +136,19 @@ write.csv(res_bc2$res_trend, "pseq_sub_ancombc2_trend.csv", row.names = FALSE)
 
 class CoreTests(TestCase):
     def setUp(self):
+        samples = [f'S{i}' for i in range(1, 7)]
+        features = [f'F{i}' for i in range(1, 8)]
+        self.data1 = np.array(
+            [[ 2,  1,  4,  7,  0,  0,  1],
+             [ 1,  0,  0,  6,  5,  1, 10],
+             [ 3,  2,  2,  9,  6,  0,  1],
+             [ 0, 12,  1,  2,  0,  3,  2],
+             [ 2,  8, 27,  0,  0,  7,  3],
+             [10,  9,  0,  0,  4,  4,  3]])
+        self.table1 = pd.DataFrame(data, index=samples, columns=features)
+        grouping = ["well"] * 3 + ["sick"] * 3
+        self.meta1 = pd.Series(grouping, index=samples, name="status").to_frame()
+
         self.table = pd.DataFrame(
             [
                 [12, 11, 10, 10, 10, 10, 10],

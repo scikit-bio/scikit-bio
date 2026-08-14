@@ -541,9 +541,8 @@ def _ancombc_core(
     # calling this function.
     matrix, samples, features = _ingest_table(table)
 
-    # NOTE: ANCOM-BC does not handle zeros in the input table. The user should have
-    # added a pseudocount. ANCOM-BC2 should be able to handle zeros.
-    # TODO: Add zero-handling in ANCOM-BC2.
+    # ANCOM-BC does not handle zeros in the input table. The user should have added a
+    # pseudocount. ANCOM-BC2 can handle zeros.
     _check_composition(np, matrix, nozero=not v2)
     n_samps, n_feats = matrix.shape
 
