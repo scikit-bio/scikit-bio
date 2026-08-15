@@ -419,7 +419,9 @@ def pcoa(
     num_positive = (eigvals >= 0).sum()
     # Create a mask to set negative eigenvalues to 0 and their corresponding
     # eigenvectors to 0 because JAX does not have in-place operations.
-    idx = xp.arange(eigvals.shape[0])
+    # `num_positive` lives on the eigenvalues' device, so `idx` has to be created
+    # there as well; otherwise the comparison mixes a host and a device array.
+    idx = xp.arange(eigvals.shape[0], device=eigvals.device)
     mask = idx < num_positive
 
     eigvals = xp.where(mask, eigvals, 0)

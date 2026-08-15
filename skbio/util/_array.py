@@ -78,8 +78,10 @@ def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
         # For array objects that doesn't have the `__dlpack__` protocol (e.g., Dask,
         # at the time of coding), or array objects that are not on the same device
         # (e.g., cuda), `np.asarray` is called as a fallback, which should work for
-        # objects that have an `__array__` protocol.
-        except (AttributeError, TypeError, RuntimeError):
+        # objects that have an `__array__` protocol. NumPy raises `BufferError`
+        # ("Unsupported device in DLTensor") for a GPU-resident buffer, so that
+        # must be caught here too, otherwise the device fallback never runs.
+        except (AttributeError, TypeError, RuntimeError, BufferError):
             arr = _to_numpy(arr)
 
     return arr
