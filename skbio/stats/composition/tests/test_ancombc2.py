@@ -21,8 +21,10 @@ from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
     _estimate_params,
     _estimate_params_nan,
+    _transform_ancombc2,
     _estimate_bias_em,
     _sample_fractions,
+    _format_results,
     _calc_statistics,
     _calc_pvalues,
     _adjust_pvalues,
@@ -181,6 +183,33 @@ class CoreTests(TestCase):
              [1, 0],
              [1, 0]], dtype=float)
 
+    def test_transform_ancombc2(self):
+        # Dense NumPy-specialized CLR must match the public Array API implementation.
+        dense = self.data2.astype(float)
+        observed = _transform_ancombc2(dense)
+        expected = clr(dense, axis=0, validate=False)
+        npt.assert_allclose(observed, expected)
+
+        # Sparse NumPy-specialized RCLR reuses the precomputed zero mask and must match
+        # the public implementation, including NaN placement.
+        sparse = self.data1.astype(float)
+        zero_mask = sparse == 0
+        observed = _transform_ancombc2(sparse, zero_mask)
+        expected = rclr(sparse, axis=0, validate=False)
+        npt.assert_allclose(observed, expected, equal_nan=True)
+
+        # Preserve NumPy's dtype/promotion behavior too (RCLR promotes float32 here).
+        sparse32 = sparse.astype(np.float32)
+        observed32 = _transform_ancombc2(sparse32, zero_mask)
+        expected32 = rclr(sparse32, axis=0, validate=False)
+        self.assertEqual(observed32.dtype, expected32.dtype)
+        npt.assert_allclose(observed32, expected32, equal_nan=True)
+
+        # The transformation must not mutate the raw input table.
+        copy = sparse.copy()
+        _transform_ancombc2(copy, zero_mask)
+        npt.assert_array_equal(copy, sparse)
+
     def test_estimate_params(self):
         # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
         # occassionally slightly different results will be generated during the CI
@@ -259,6 +288,58 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
         npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
 
+        # Diagonal-only path must produce identical primary variances without retaining
+        # the full covariance tensor.
+        diag_var, diag_beta, diag_theta, diag_cov = _estimate_params(
+            data_tr, self.dmat2, full_covariance=False
+        )
+        npt.assert_allclose(diag_var, obs_var_hat)
+        npt.assert_allclose(diag_beta, obs_beta)
+        npt.assert_allclose(diag_theta, obs_theta)
+        self.assertIsNone(diag_cov)
+        self.assertTrue(diag_var.flags.f_contiguous)
+
+    def test_estimate_params_overwrite(self):
+        data = np.log(self.data2.astype(float))
+        expected = _estimate_params(data.copy(), self.dmat2, full_covariance=False)
+
+        work = data.copy()
+        observed = _estimate_params(
+            work, self.dmat2, full_covariance=False, overwrite_data=True
+        )
+        for obs, exp in zip(observed[:3], expected[:3]):
+            npt.assert_allclose(obs, exp)
+        self.assertIsNone(observed[3])
+
+        # Destructive mode intentionally turns the transformed table into squared,
+        # centered residuals; it should no longer contain the original transformed data.
+        self.assertFalse(np.array_equal(work, data))
+        self.assertTrue(np.all(work >= 0))
+
+    def test_estimate_params_covariance_subset(self):
+        rng = np.random.default_rng(42)
+        data = rng.normal(size=(20, 30))
+        dmat = np.column_stack(
+            [np.ones(20), rng.normal(size=(20, 5))]
+        )
+        group_ind = np.array([1, 3, 4])
+
+        full = _estimate_params(data.copy(), dmat, full_covariance=True)
+        subset = _estimate_params(
+            data.copy(),
+            dmat,
+            full_covariance=False,
+            covariance_indices=group_ind,
+        )
+
+        npt.assert_allclose(subset[0], full[0])
+        npt.assert_allclose(subset[1], full[1])
+        npt.assert_allclose(subset[2], full[2])
+        npt.assert_allclose(
+            subset[3], full[3][:, group_ind][:, :, group_ind]
+        )
+        self.assertEqual(subset[3].shape, (data.shape[1], 3, 3))
+
     def test_estimate_params_unbalanced(self):
         """Unbalanced model and fallback compute test."""
         # An unbalanced, three-covariate model
@@ -307,7 +388,7 @@ class CoreTests(TestCase):
         dmat1 = np.array(
             [[1, 0, 1],
              [1, 1, 1],
-             [1, 2, 1]], dtype=float),
+             [1, 2, 1]], dtype=float)
 
         # More covariates than samples; covariate 3 is linearly dependent on 0 and 1
         dmat2 = np.array(
@@ -400,6 +481,133 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs_theta, exp_theta, atol=1e-5)
         npt.assert_allclose(obs_beta_covmat, exp_beta_covmat, atol=1e-5)
 
+        # Full and diagonal-only covariance paths agree for missing-value data too.
+        data_tr = rclr(self.data1, axis=0, validate=False)
+        full = _estimate_params_nan(data_tr, self.dmat1, self.data1 == 0)
+        diag = _estimate_params_nan(
+            data_tr, self.dmat1, self.data1 == 0, full_covariance=False
+        )
+        npt.assert_allclose(diag[0], full[0])
+        npt.assert_allclose(diag[1], full[1])
+        npt.assert_allclose(diag[2], full[2])
+        self.assertIsNone(diag[3])
+        self.assertTrue(diag[0].flags.f_contiguous)
+
+    def test_estimate_params_nan_covariance_subset(self):
+        rng = np.random.default_rng(43)
+        n_samples, n_features, n_covariates = 20, 25, 6
+        data = rng.normal(size=(n_samples, n_features))
+        dmat = np.column_stack(
+            [np.ones(n_samples), rng.normal(size=(n_samples, n_covariates - 1))]
+        )
+        zero_mask = rng.random(data.shape) < 0.2
+        for j in range(n_features):
+            if (~zero_mask[:, j]).sum() < n_covariates + 2:
+                zero_mask[: n_covariates + 2, j] = False
+        data[zero_mask] = np.nan
+        group_ind = np.array([1, 2, 4])
+
+        for solver in ("legacy", "batched"):
+            full = _estimate_params_nan(
+                data.copy(),
+                dmat,
+                zero_mask,
+                max_iter=10,
+                full_covariance=True,
+                solver=solver,
+            )
+            subset = _estimate_params_nan(
+                data.copy(),
+                dmat,
+                zero_mask,
+                max_iter=10,
+                full_covariance=False,
+                covariance_indices=group_ind,
+                solver=solver,
+            )
+            npt.assert_allclose(subset[0], full[0])
+            npt.assert_allclose(subset[1], full[1])
+            npt.assert_allclose(subset[2], full[2])
+            npt.assert_allclose(
+                subset[3], full[3][:, group_ind][:, :, group_ind]
+            )
+
+    def test_estimate_params_nan_solvers(self):
+        """Chunked compact solver agrees with the retained legacy SVD route."""
+        zero_mask = self.data1 == 0
+        data_tr = _transform_ancombc2(self.data1.astype(float), zero_mask)
+
+        legacy = _estimate_params_nan(
+            data_tr, self.dmat1, zero_mask, solver="legacy"
+        )
+        # Exercise several block boundaries, including one feature per SVD.
+        for batch_size in (1, 3, None):
+            batched = _estimate_params_nan(
+                data_tr,
+                self.dmat1,
+                zero_mask,
+                solver="batched",
+                svd_batch_size=batch_size,
+            )
+            for observed, expected in zip(batched, legacy):
+                npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-12)
+
+        # The diagonal-only covariance route must remain solver-independent too.
+        legacy_diag = _estimate_params_nan(
+            data_tr,
+            self.dmat1,
+            zero_mask,
+            solver="legacy",
+            full_covariance=False,
+        )
+        batched_diag = _estimate_params_nan(
+            data_tr,
+            self.dmat1,
+            zero_mask,
+            solver="batched",
+            svd_batch_size=2,
+            full_covariance=False,
+        )
+        for observed, expected in zip(batched_diag[:3], legacy_diag[:3]):
+            npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-12)
+        self.assertIsNone(legacy_diag[3])
+        self.assertIsNone(batched_diag[3])
+
+        # Deliberately near-collinear designs are where a compact X.T X-like
+        # application can lose precision. The batched solver detects these features
+        # from the masked-design SVD and retains their stable SVD pseudoinverses.
+        rng = np.random.default_rng(42)
+        n_samples, n_features = 30, 12
+        x = rng.normal(size=n_samples)
+        dmat = np.column_stack(
+            [np.ones(n_samples), x, x + 1e-6 * rng.normal(size=n_samples)]
+        )
+        data = rng.normal(size=(n_samples, n_features))
+        zero_mask = rng.random(data.shape) < 0.2
+        data[zero_mask] = np.nan
+
+        legacy = _estimate_params_nan(
+            data,
+            dmat,
+            zero_mask,
+            solver="legacy",
+            tol=0.0,
+            max_iter=10,
+            full_covariance=False,
+        )
+        batched = _estimate_params_nan(
+            data,
+            dmat,
+            zero_mask,
+            solver="batched",
+            svd_batch_size=4,
+            tol=0.0,
+            max_iter=10,
+            full_covariance=False,
+        )
+        for observed, expected in zip(batched[:3], legacy[:3]):
+            npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-10)
+
     def test_estimate_params_nan_direct(self):
         # The direct solve reaches the same fixed point as a tightly converged
         # version of the alternating ANCOM-BC2 update.
@@ -409,9 +617,14 @@ class CoreTests(TestCase):
             data_tr, self.dmat1, zero_mask, tol=1e-12, max_iter=1000
         )
         direct = _estimate_params_nan(data_tr, self.dmat1, zero_mask, direct=True)
+        direct_legacy = _estimate_params_nan(
+            data_tr, self.dmat1, zero_mask, direct=True, solver="legacy"
+        )
 
         for observed_array, direct_array in zip(observed, direct):
             npt.assert_allclose(direct_array, observed_array, atol=1e-10)
+        for batched_array, legacy_array in zip(direct, direct_legacy):
+            npt.assert_allclose(batched_array, legacy_array, rtol=1e-12, atol=1e-12)
 
     def test_init_bias_params(self):
         # regular case
@@ -473,8 +686,8 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs.round(5), exp)
 
     def test_sample_bias(self):
-        data = np.log1p(self.table.to_numpy())
-        dmat = dmatrix("grouping", self.grouping.to_frame())
+        data = np.log1p(self.table2.to_numpy())
+        dmat = dmatrix("group", self.meta2)
         var_hat, beta, _, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
@@ -489,8 +702,8 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs, exp, atol=1e-5)
 
     def test_calc_statistics(self):
-        data = np.log1p(self.table.to_numpy())
-        dmat = dmatrix("grouping", self.grouping.to_frame())
+        data = np.log1p(self.table2.to_numpy())
+        dmat = dmatrix("group", self.meta2)
         var_hat, beta, _, _ = _estimate_params(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
@@ -543,6 +756,43 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs[3], exp_qval, atol=1e-5)
         npt.assert_array_equal(obs[4], exp_reject)
 
+        # The memory-efficient DataFrame path should contain the same statistics in the
+        # same feature-major / covariate-minor order.
+        observed = _format_results(
+            beta_hat,
+            var_hat,
+            self.table2.columns,
+            ["Intercept", "group[T.treatment]"],
+            0.05,
+            "holm",
+        )
+        self.assertListEqual(
+            list(observed.columns),
+            ["Log2(FC)", "SE", "W", "pvalue", "qvalue", "Signif"],
+        )
+        self.assertListEqual(
+            observed.index.names, ["FeatureID", "Covariate"]
+        )
+        npt.assert_allclose(
+            observed["Log2(FC)"].to_numpy().reshape(beta_hat.shape), beta_hat
+        )
+        npt.assert_allclose(
+            observed["SE"].to_numpy().reshape(beta_hat.shape), exp_se_hat, atol=1e-5
+        )
+        npt.assert_allclose(
+            observed["W"].to_numpy().reshape(beta_hat.shape), exp_W, atol=1e-3
+        )
+        npt.assert_allclose(
+            observed["pvalue"].to_numpy().reshape(beta_hat.shape), exp_pval, atol=1e-5
+        )
+        npt.assert_allclose(
+            observed["qvalue"].to_numpy().reshape(beta_hat.shape), exp_qval, atol=1e-5
+        )
+        npt.assert_array_equal(
+            observed["Signif"].to_numpy().reshape(beta_hat.shape), exp_reject
+        )
+        self.assertEqual(str(observed["Signif"].dtype), "boolean")
+
     def test_calc_statistics_nan_dof(self):
         beta_hat = np.array([[1.0, -1.0], [2.0, -2.0]])
         var_hat = np.ones_like(beta_hat)
@@ -564,25 +814,78 @@ class CoreTests(TestCase):
         exp = np.array([[0.02, 0.4], [np.nan, 0.4], [0.2, np.nan]])
         npt.assert_allclose(obs, exp, equal_nan=True)
 
-    def test_post_hoc_methods_recalculate(self):
-        res = ancombc(self.table + 1, self.grouping.to_frame(), "grouping")
+        # The result-construction path reuses the p-value array for q-values. Verify
+        # that aliasing ``out`` with the input preserves NaNs and gives the same result.
+        work = pval.copy()
+        returned = _adjust_pvalues(work, "holm", out=work)
+        self.assertIs(returned, work)
+        npt.assert_allclose(work, exp, equal_nan=True)
 
-        first = res.global_test("grouping")
-        second = res.global_test("grouping")
+        # A distinct output array should be supported too.
+        work = np.empty_like(pval)
+        returned = _adjust_pvalues(pval, "holm", out=work)
+        self.assertIs(returned, work)
+        npt.assert_allclose(work, exp, equal_nan=True)
+
+        # Common aliases use the optimized Benjamini-Hochberg implementation, while
+        # other methods continue to fall back to the generic adjustment function.
+        pval = np.array([0.01, 0.04, 0.03, 0.2])
+        exp = np.array([0.04, 0.05333333, 0.05333333, 0.2])
+        for method in ("bh", "fdr_bh", "benjamini-hochberg"):
+            obs = _adjust_pvalues(pval, method)
+            npt.assert_allclose(obs, exp)
+
+        obs = _adjust_pvalues(pval, "bonferroni")
+        npt.assert_allclose(obs, [0.04, 0.16, 0.12, 0.8])
+
+        obs = _adjust_pvalues(pval, None)
+        npt.assert_array_equal(obs, pval)
+
+    def test_post_hoc_methods_recalculate(self):
+        table = pd.DataFrame(
+            np.arange(1, 73, dtype=float).reshape(9, 8),
+            index=[f"S{i}" for i in range(9)],
+        )
+        metadata = pd.DataFrame(
+            {
+                "grouping": pd.Categorical(["a"] * 3 + ["b"] * 3 + ["c"] * 3),
+                "age": np.arange(9, dtype=float),
+            },
+            index=table.index,
+        )
+        res = ancombc(
+            table, metadata, "grouping + age", grouping="grouping", max_iter=2
+        )
+
+        first = res.global_test()
+        second = res.global_test()
         self.assertIsNot(first, second)
         pdt.assert_frame_equal(first, second)
 
     def test_post_hoc_methods_inherit_fit_settings(self):
+        table = pd.DataFrame(
+            np.arange(1, 73, dtype=float).reshape(9, 8),
+            index=[f"S{i}" for i in range(9)],
+        )
+        metadata = pd.DataFrame(
+            {
+                "grouping": pd.Categorical(["a"] * 3 + ["b"] * 3 + ["c"] * 3),
+                "age": np.arange(9, dtype=float),
+            },
+            index=table.index,
+        )
         res = ancombc(
-            self.table + 1,
-            self.grouping.to_frame(),
-            "grouping",
+            table,
+            metadata,
+            "grouping + age",
+            grouping="grouping",
             alpha=0.1,
             p_adjust="bh",
+            max_iter=2,
         )
 
-        inherited = res.global_test("grouping")
-        explicit = res.global_test("grouping", alpha=0.1, p_adjust="bh")
+        inherited = res.global_test()
+        explicit = res.global_test(alpha=0.1, p_adjust="bh")
         pdt.assert_frame_equal(inherited, explicit)
 
 
@@ -636,6 +939,27 @@ class AncombcTests(TestCase):
             with self.assertRaises(ValueError):
                 ancombc(table + 1, metadata, "grouping", alpha=alpha)
 
+    def test_grouping_validation(self):
+        table = pd.DataFrame(
+            np.arange(1, 73, dtype=float).reshape(9, 8),
+            index=[f"S{i}" for i in range(9)],
+        )
+        metadata = pd.DataFrame(
+            {
+                "grouping": pd.Categorical(["a"] * 3 + ["b"] * 3 + ["c"] * 3),
+                "age": np.arange(9, dtype=float),
+                "binary": pd.Categorical(["a"] * 5 + ["b"] * 4),
+            },
+            index=table.index,
+        )
+
+        with self.assertRaisesRegex(ValueError, "not a metadata column"):
+            ancombc(table, metadata, "grouping + age", grouping="missing")
+        with self.assertRaisesRegex(ValueError, "must be a term in `formula`"):
+            ancombc(table, metadata, "age", grouping="grouping")
+        with self.assertRaisesRegex(ValueError, "at least three observed groups"):
+            ancombc(table, metadata, "binary + age", grouping="binary")
+
     # def test_ancombc_pseq(self):
     #     """Test ANCOM-BC on the HITChip Atlas dataset."""
     #     table = pd.read_csv(
@@ -675,14 +999,16 @@ class AncombcTests(TestCase):
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
         # core test
-        res = ancombc(table + 1, meta, formula="age + region + bmi")
+        res = ancombc(
+            table + 1, meta, formula="age + region + bmi", grouping="bmi"
+        )
         obs = res.res
         exp = pd.read_table(get_data_path("pseq_sub_ancombc_main.tsv"), index_col=(0, 1))
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
         # global test
-        obs = res.global_test("bmi")
+        obs = res.global_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
@@ -713,7 +1039,21 @@ class Ancombc2Tests(TestCase):
         self.assertEqual(res.method, "ANCOM-BC2")
         self.assertIsInstance(res._dmat, DesignMatrix)
         self.assertEqual(res._dmat.design_info.column_names, ["Intercept", "grouping[T.treatment]"])
-        self.assertEqual(res.global_test("grouping").shape[0], self.table.shape[1])
+        self.assertFalse(res.has_covariance)
+        self.assertIsNone(res._vcov_hat)
+        self.assertIsNone(res.grouping)
+        with self.assertRaisesRegex(ValueError, "grouping=<metadata column>"):
+            res.global_test()
+
+        # A two-level factor is valid in the primary model but cannot be selected as
+        # the post-hoc grouping, which requires at least three observed groups.
+        with self.assertRaisesRegex(ValueError, "at least three observed groups"):
+            ancombc2(
+                self.table,
+                self.grouping.to_frame(),
+                "grouping",
+                grouping="grouping",
+            )
         obs = res.res["Signif"].to_numpy()
 
         # expected differential abundance of intercept and grouping
@@ -728,6 +1068,40 @@ class Ancombc2Tests(TestCase):
         ]).flatten()
         npt.assert_array_equal(obs, exp)
 
+    def test_grouping_controls_posthoc_availability(self):
+        res = ancombc2(self.table, self.grouping.to_frame(), "grouping")
+        self.assertFalse(res.has_covariance)
+        for method in (
+            res.global_test, res.pairwise_test, res.dunnett_test, res.trend_test
+        ):
+            with self.assertRaisesRegex(ValueError, "grouping=<metadata column>"):
+                method()
+
+        # Three groups retain only the grouping covariance submatrix.
+        table = pd.concat([self.table, self.table.iloc[:3]], ignore_index=True)
+        table.index = [f"s{i}" for i in range(len(table))]
+        metadata = pd.DataFrame(
+            {
+                "grouping": pd.Categorical(["a"] * 3 + ["b"] * 3 + ["c"] * 3),
+                "age": np.arange(9, dtype=float),
+            },
+            index=table.index,
+        )
+        res = ancombc2(
+            table, metadata, "grouping + age", grouping="grouping", max_iter=2
+        )
+        self.assertEqual(res.grouping, "grouping")
+        self.assertTrue(res.has_covariance)
+        self.assertEqual(res._vcov_hat.shape, (table.shape[1], 2, 2))
+        self.assertEqual(res.global_test().shape[0], table.shape[1])
+        self.assertEqual(
+            res.dunnett_test(bootstraps=5, seed=123)
+            .index.get_level_values("FeatureID")
+            .nunique(),
+            table.shape[1],
+        )
+
+
     def test_ancombc2_pseq_sub(self):
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
@@ -735,29 +1109,31 @@ class Ancombc2Tests(TestCase):
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
         # core test
-        res = ancombc2(table, meta, formula="age + region + bmi")
+        res = ancombc2(
+            table, meta, formula="age + region + bmi", grouping="bmi"
+        )
         obs = res.res
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1))
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # global test
-        obs = res.global_test("bmi")
+        obs = res.global_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # pairwise test
-        obs = res.pairwise_test("bmi")
+        obs = res.pairwise_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # dunnett test
-        obs = res.dunnett_test("bmi", seed=123)
+        obs = res.dunnett_test(seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # trend test
-        obs = res.trend_test("bmi", seed=123)
+        obs = res.trend_test(seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0)
         pdt.assert_frame_equal(obs[["W", "Signif"]], exp[["W", "Signif"]], atol=1e-3)
         # NOTE: Trend test is highly stochastic, therefore we cannot directly compare

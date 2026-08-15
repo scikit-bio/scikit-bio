@@ -31,7 +31,6 @@ from patsy import dmatrix
 
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _aggregate_features
-from skbio.stats.composition import clr, rclr
 from ._base import _check_composition
 from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
 
@@ -47,6 +46,7 @@ def ancombc(
     tol=1e-5,
     alpha=0.05,
     p_adjust="holm",
+    grouping=None,
 ):
     r"""Perform differential abundance test using ANCOM-BC.
 
@@ -75,6 +75,14 @@ def ancombc(
         Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
+    grouping : str, optional
+        Metadata column defining the sample groups for post-hoc analysis. It must be a
+        term in ``formula`` and contain at least three observed groups. Other model
+        terms are treated as adjustment covariates. ``grouping`` has no impact on the
+        primary result. If provided, only the coefficient covariance submatrices
+        required for this grouping are calculated and retained, enabling post-hoc
+        methods on the returned :class:`ANCOMBCResult`. If None (default), only
+        coefficient variances are calculated and post-hoc methods are unavailable.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -201,7 +209,8 @@ def ancombc(
     formula, such that the function will test the individual effects of each factor
     while controlling for the other.
 
-    >>> res = ancombc(table + 1, metadata, formula='status + age')
+    >>> res = ancombc(
+    ...     table + 1, metadata, formula='status + age', grouping='status')
     >>> res_main = res.res
     >>> res_main.round(3)
                                   Log2(FC)     SE      W  pvalue  qvalue  Signif
@@ -255,7 +264,7 @@ def ancombc(
     Next, we will perform a *global test* to identify features that are differentially
     abundant between at least two status.
 
-    >>> res_global = res.global_test(group='status')
+    >>> res_global = res.global_test()
     >>> res_global.round(3)
                     W  pvalue  qvalue  Signif
     FeatureID
@@ -341,6 +350,7 @@ def ancombc(
         metadata=metadata,
         v2=False,
         formula=formula,
+        grouping=grouping,
         max_iter=max_iter,
         tol=tol,
         alpha=alpha,
@@ -359,6 +369,7 @@ def ancombc2(
     tol=1e-5,
     p_adjust="holm",
     alpha=0.05,
+    grouping=None,
 ):
     r"""Perform differential abundance test using ANCOM-BC2.
 
@@ -385,6 +396,14 @@ def ancombc2(
         Sample metadata.
     formula : str
         Formula defining the model using factors in metadata columns.
+    grouping : str, optional
+        Metadata column defining the sample groups for post-hoc analysis. It must be a
+        term in ``formula`` and contain at least three observed groups. Other model
+        terms are treated as adjustment covariates. ``grouping`` has no impact on the
+        primary result. If provided, only the coefficient covariance submatrices
+        required for this grouping are calculated and retained, enabling post-hoc
+        methods on the returned :class:`ANCOMBCResult`. If None (default), only
+        coefficient variances are calculated and post-hoc methods are unavailable.
     pseudo : int or float, optional
         Pseudocount to add to all data points. Default is 0.
     aggregator : callable, mapping, or 1-D array_like, optional
@@ -496,6 +515,7 @@ def ancombc2(
         metadata=metadata,
         v2=True,
         formula=formula,
+        grouping=grouping,
         max_iter=max_iter,
         tol=tol,
         alpha=alpha,
@@ -511,6 +531,7 @@ def _ancombc_core(
     metadata,
     v2=False,  # ANCOM-BC (True) or ANCOM-BC2 (False)
     formula=None,
+    grouping=None,
     aggregator=None,
     p_adjust="holm",
     pseudo=0,
@@ -538,6 +559,10 @@ def _ancombc_core(
     covars = dmat.design_info.column_names
     n_covars = len(covars)
 
+    # Validate the optional post-hoc grouping and identify its design-matrix columns.
+    # When provided, only this coefficient covariance submatrix is retained.
+    group_ind = _validate_grouping(metadata, dmat, grouping)
+
     # validate parameters
     if not 0 < alpha < 1:
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
@@ -545,21 +570,38 @@ def _ancombc_core(
     # Handle zero values
     matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
 
-    # Transform count matrix
-    # ANCOM-BC: Log-transformation (zeros are not allowed)
+    # Transform count matrix. ANCOM-BC uses a plain logarithm. ANCOM-BC2 uses
+    # a NumPy-specialized CLR/RCLR implementation that keeps only one full-size
+    # floating-point transform buffer.
     if not v2:
         matrix_tr = np.log(matrix)
-    # ANCOM-BC2: CLR transformation on non-zero values
-    elif has_zero:
-        matrix_tr = rclr(matrix, axis=0, validate=False)
     else:
-        matrix_tr = clr(matrix, axis=0, validate=False)
+        matrix_tr = _transform_ancombc2(matrix, zero_mask)
 
-    # Estimate initial model parameters.
+    # Estimate initial model parameters. ANCOM-BC2 always re-estimates parameters after
+    # sampling-fraction correction, so its initial EM fit needs variances only. For
+    # ANCOM-BC this is the final fit, so retain the grouping covariance submatrix when
+    # post-hoc analysis was requested.
+    initial_covariance_indices = None if v2 else group_ind
     if has_zero:
-        var_hat, beta, _, vcov_hat = _estimate_params_nan(matrix_tr, dmat, zero_mask)
+        var_hat, beta, _, vcov_hat = _estimate_params_nan(
+            matrix_tr,
+            dmat,
+            zero_mask,
+            full_covariance=False,
+            covariance_indices=initial_covariance_indices,
+        )
     else:
-        var_hat, beta, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+        var_hat, beta, _, vcov_hat = _estimate_params(
+            matrix_tr,
+            dmat,
+            full_covariance=False,
+            covariance_indices=initial_covariance_indices,
+            # ANCOM-BC never consumes the transformed table after this fit, so its
+            # storage can become the residual workspace. ANCOM-BC2 still needs the
+            # transformed table for `_sample_fractions` below.
+            overwrite_data=not v2,
+        )
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     # beta: (n_covariates, n_features); iterate over covariates (rows).
@@ -584,17 +626,16 @@ def _ancombc_core(
     # ANCOM-BC2
     else:
         # Estimate sampling fractions
-        theta_hat = _sample_fractions(matrix_tr, dmat, beta, delta_em)
+        theta_hat = _sample_fractions(
+            matrix_tr, dmat, beta, delta_em, zero_mask=zero_mask
+        )
 
         # Aggregate data
         if aggregator is not None:
             matrix, features = _aggregate_features(matrix, aggregator, features)
             n_feats = matrix.shape[1]
             matrix, zero_mask, has_zero = _handle_zeros(matrix, pseudo)
-            if has_zero:
-                matrix_tr = rclr(matrix, axis=0, validate=False)
-            else:
-                matrix_tr = clr(matrix, axis=0, validate=False)
+            matrix_tr = _transform_ancombc2(matrix, zero_mask)
 
         # Correct data for sampling fractions
         matrix_tr -= theta_hat[:, None]
@@ -602,14 +643,28 @@ def _ancombc_core(
         # Re-estimate parameters
         if has_zero:
             var_hat, beta_hat, _, vcov_hat = _estimate_params_nan(
-                matrix_tr, dmat, zero_mask
+                matrix_tr,
+                dmat,
+                zero_mask,
+                full_covariance=False,
+                covariance_indices=group_ind,
             )
         else:
-            var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
+            # After sampling-fraction correction this is the final fit, so the
+            # transformed table can itself serve as the residual workspace.
+            var_hat, beta_hat, _, vcov_hat = _estimate_params(
+                matrix_tr,
+                dmat,
+                full_covariance=False,
+                covariance_indices=group_ind,
+                overwrite_data=True,
+            )
         beta_hat = beta_hat.T
 
         # Adjust variances
-        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc)
+        _adjust_variances(
+            var_hat, vcov_hat, var_delta, s0_perc, covariance_indices=group_ind
+        )
 
         # Compute per-feature degree of freedom (observed samples - covariates)
         if has_zero:
@@ -618,29 +673,13 @@ def _ancombc_core(
         else:
             dof = n_samps - n_covars if n_samps > n_covars else np.nan
 
-    # Calculate statistics
-    se_hat, W, pval, qval, reject = _calc_statistics(
-        beta_hat, var_hat, alpha, p_adjust, dof
-    )
-
-    # Output primary results
+    # Output primary results. Compute statistics and populate the DataFrame
+    # incrementally to minimize the number of feature-by-covariate arrays alive at
+    # once. This is more memory-efficient than calculating all statistics first and
+    # constructing the DataFrame from repeated Python label lists.
     if features is None:
         features = np.arange(n_feats)
-    res = pd.DataFrame.from_dict(
-        {
-            "FeatureID": [x for x in features for _ in range(n_covars)],
-            "Covariate": list(covars) * n_feats,
-            "Log2(FC)": beta_hat.ravel(),
-            "SE": se_hat.ravel(),
-            "W": W.ravel(),
-            "pvalue": pval.ravel(),
-            "qvalue": qval.ravel(),
-        }
-    )
-
-    # Pandas' nullable boolean type
-    res["Signif"] = pd.Series(reject.ravel(), dtype="boolean")
-    res.set_index(["FeatureID", "Covariate"], inplace=True)
+    res = _format_results(beta_hat, var_hat, features, covars, alpha, p_adjust, dof)
 
     method = "ANCOM-BC" if not v2 else "ANCOM-BC2"
 
@@ -651,12 +690,49 @@ def _ancombc_core(
         _beta_hat=beta_hat,
         _var_hat=var_hat,
         _vcov_hat=vcov_hat,
+        _grouping=grouping,
+        _group_indices=group_ind,
         _dof=dof,
         _features=features,
         _covariates=covars,
         _p_adjust=p_adjust,
         _alpha=alpha,
     )
+
+
+def _validate_grouping(metadata, dmat, grouping):
+    """Validate a post-hoc grouping and return its design-matrix column indices."""
+    if grouping is None:
+        return None
+    if not isinstance(grouping, str):
+        raise TypeError("`grouping` must be a metadata column name or None.")
+    if grouping not in metadata.columns:
+        raise ValueError(f"`grouping`={grouping!r} is not a metadata column.")
+
+    term_slices = dmat.design_info.term_name_slices
+    if grouping not in term_slices:
+        terms = [name for name in term_slices if name != "Intercept"]
+        raise ValueError(
+            f"`grouping`={grouping!r} must be a term in `formula`. "
+            f"Available terms are: {terms}."
+        )
+
+    n_groups = metadata[grouping].nunique(dropna=True)
+    if n_groups < 3:
+        raise ValueError(
+            f"`grouping`={grouping!r} must contain at least three observed groups "
+            f"for post-hoc analysis; found {n_groups}."
+        )
+
+    s = term_slices[grouping]
+    indices = np.arange(s.start, s.stop, dtype=int)
+    if indices.size < 2:
+        raise ValueError(
+            f"`grouping`={grouping!r} does not produce at least two group "
+            "coefficients in the design matrix. Ensure it is modeled as a "
+            "categorical factor."
+        )
+    return indices
 
 
 def _handle_zeros(data, pseudo=None):
@@ -673,8 +749,9 @@ def _handle_zeros(data, pseudo=None):
     -------
     data : ndarray of shape (n_samples, n_features)
         Data table with pseudocount added.
-    zero_mask : ndarray of shape (n_samples, n_features)
-        Boolean mask of zero values in the table.
+    zero_mask : ndarray of shape (n_samples, n_features) or None
+        Boolean mask of zero values in the table, or None when the table is zero-free
+        (or a pseudocount was applied).
     has_zero : bool
         Whether table contain zero values.
 
@@ -689,11 +766,64 @@ def _handle_zeros(data, pseudo=None):
     else:
         zero_mask = data == 0
         has_zero = np.any(zero_mask)
+        # The mask is only needed by the RCLR/missing-value path. Releasing it for a
+        # zero-free table avoids retaining an n_samples x n_features boolean array.
+        if not has_zero:
+            zero_mask = None
 
     return data, zero_mask, has_zero
 
 
-def _estimate_params(data, dmat):
+def _transform_ancombc2(data, zero_mask=None):
+    """Perform the NumPy-specialized CLR/RCLR transform used by ANCOM-BC2.
+
+    The public CLR/RCLR helpers are written for multiple Array API namespaces. This
+    private path receives a validated NumPy array, so it can use in-place ufuncs and
+    boolean assignment to avoid multiple full-size floating-point temporaries.
+
+    Transformation is along axis 0, matching the existing ANCOM-BC2 implementation.
+    ``zero_mask=None`` selects CLR; otherwise zeros are excluded from the log mean and
+    restored as NaN, matching RCLR.
+    """
+    data = np.asarray(data)
+
+    # Match NumPy's dtype behavior. `log` preserves inexact precision and promotes
+    # integer input to float64. RCLR then divides by an integer observation count, which
+    # promotes (for example) float32 logs to float64.
+    log_dtype = data.dtype if np.issubdtype(data.dtype, np.inexact) else np.dtype(float)
+    if zero_mask is None:
+        result_dtype = log_dtype
+    else:
+        result_dtype = np.result_type(log_dtype, np.dtype(np.intp))
+    result = np.array(data, dtype=result_dtype, copy=True, order="K")
+
+    if zero_mask is None:
+        np.log(result, out=result, dtype=log_dtype)
+        result -= np.mean(result, axis=0, keepdims=True)
+        return result
+
+    # Set zeros to one before log so that they contribute zero to the log sum. This
+    # avoids the `safe_mat`, `log_safe`, `centered`, and final `where` arrays required
+    # by a functional RCLR implementation.
+    result[zero_mask] = 1.0
+    np.log(result, out=result, dtype=log_dtype)
+    n_obs = result.shape[0] - np.sum(zero_mask, axis=0, keepdims=True)
+    # Match RCLR's accumulation precision: its log array has `log_dtype`, then division
+    # by the integer observation count applies NumPy's normal promotion rules.
+    log_sum = np.sum(result, axis=0, keepdims=True, dtype=log_dtype)
+    log_mean = log_sum / n_obs
+    result -= log_mean
+    result[zero_mask] = np.nan
+    return result
+
+
+def _estimate_params(
+    data,
+    dmat,
+    full_covariance=True,
+    covariance_indices=None,
+    overwrite_data=False,
+):
     """Estimate initial model parameters.
 
     Perform initial estimation of model parameters (coefficients, variances and
@@ -705,6 +835,19 @@ def _estimate_params(data, dmat):
         Data table. Must be zero-handled and log-transformed.
     dmat : ndarray of shape (n_samples, n_covariates)
         Design matrix.
+    full_covariance : bool, optional
+        Whether to calculate the full covariance matrix for every feature. Default is
+        True. Retained for low-level regression tests; the public ANCOM-BC APIs use
+        ``covariance_indices`` instead.
+    covariance_indices : 1-D array_like of int, optional
+        Coefficient indices whose covariance submatrix should be calculated when
+        ``full_covariance=False``. All coefficient variances are always calculated.
+        If None, no covariance matrix is returned.
+    overwrite_data : bool, optional
+        Reuse ``data`` as the centered, squared-residual workspace when its dtype
+        already matches the regression result dtype. This destroys the input array and
+        is intended for internal call sites that no longer need the transformed table.
+        Default is False.
 
     Returns
     -------
@@ -714,8 +857,9 @@ def _estimate_params(data, dmat):
         Estimated coefficients (log-fold changes before correction).
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
-    beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
-        Estimated covariance matrices.
+    beta_covmat : ndarray or None
+        Full covariance matrices when ``full_covariance=True``; otherwise covariance
+        submatrices for ``covariance_indices`` or None when no submatrix was requested.
 
     """
     # The original R code performs iterative maximum likelihood estimation to calculate
@@ -730,48 +874,85 @@ def _estimate_params(data, dmat):
     # Moore-Penrose pseudoinverse is robust in those cases.
     data = np.asarray(data)
     dmat = np.asarray(dmat)
-    dmat_inv, gmat_inv = _invert_gram(dmat)
+    dmat_inv, _ = _invert_gram(dmat)
     beta = dmat_inv @ data
 
-    # Per-sample mean residuals (theta)
-    diff = data - dmat @ beta
-    theta = np.mean(diff, axis=1, keepdims=True)
+    # Residual workspace. Preserving `data` requires one n_samples x n_features
+    # array. When destruction is allowed, reuse `data` and subtract fitted values in
+    # feature blocks so that no complete fitted matrix is materialized.
+    resid_dtype = np.result_type(data.dtype, dmat.dtype, beta.dtype)
+    can_overwrite = overwrite_data and data.dtype == resid_dtype
+    if can_overwrite:
+        if not data.flags.writeable:
+            raise ValueError("`data` must be writable when `overwrite_data=True`.")
+        resid = data
+        _subtract_fitted_inplace(resid, dmat, beta)
+    else:
+        # Match the dtype produced by the original expression `data - dmat @ beta`.
+        # In particular, a float32 response with a float64 design promotes residuals to
+        # float64; using `empty_like(data)` would silently lose that precision.
+        resid = np.empty_like(data, dtype=resid_dtype)
+        np.matmul(dmat, beta, out=resid)
+        np.subtract(data, resid, out=resid)
 
-    # Centered residuals
-    eps = diff - theta
+    # Per-sample mean residuals (theta), then center and square the same workspace.
+    theta = np.mean(resid, axis=1, keepdims=True)
+    resid -= theta
 
-    # Calculate the covariance matrix of the coefficients. The estimated variances are
-    # the diagonal of the covariance matrix.
-    # NOTE: The original R code uses nested `for` loops over samples and features. The
-    # current implementation is fully vectorized.
+    # Calculate the covariance matrix of the coefficients. For feature i, the
+    # sandwich estimator can be written as
+    #
+    #   Cov(beta_i) = sum_j eps_ji**2 * h_j h_j.T,
+    #
+    # where H = X @ (X.T @ X)^+ is the influence matrix. `dmat_inv.T` is exactly H,
+    # and has already been calculated by `_invert_gram`. Flattening h_j h_j.T turns
+    # the contraction over samples into one matrix multiplication (GEMM) across all
+    # features, which is substantially faster than the three-way einsum followed by
+    # two sandwich matrix multiplications.
     # NOTE: The original R code patches NaN with 0.1 when calculating covariances. This
     # is not needed in the current implementation, as the input data are guaranteed to
     # contain only finite real numbers.
-    intm_mat = np.einsum("ji,jp,jq->ipq", eps**2, dmat, dmat, optimize=True)
-    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
-    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
-
-    # Make a writable F-contiguous copy of the read-only diagonal view.
-    # NOTE: F-contiguity benefits downstream calculations, though only a little.
-    var_hat = np.asfortranarray(var_hat)
+    np.square(resid, out=resid)
+    if full_covariance:
+        if covariance_indices is not None:
+            raise ValueError(
+                "`covariance_indices` cannot be used with `full_covariance=True`."
+            )
+        beta_covmat = _covariance_gemm(resid, dmat_inv.T)
+        var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+        # Make a writable F-contiguous copy of the read-only diagonal view.
+        var_hat = np.asfortranarray(var_hat)
+    elif covariance_indices is not None:
+        var_hat, beta_covmat = _variance_covariance_gemm(
+            resid, dmat_inv.T, covariance_indices
+        )
+    else:
+        # Main inference needs only diag(Cov(beta_i)). Since
+        # diag(h_j h_j.T) = h_j**2, all feature/covariate variances are one
+        # much smaller GEMM: (n_features x n_samples) @ (n_samples x n_covariates).
+        var_hat = _variance_gemm(resid, dmat_inv.T)
+        beta_covmat = None
 
     return var_hat, beta, theta.reshape(-1), beta_covmat
 
 
 def _estimate_params_nan(
-    data, dmat, zero_mask=None, tol=1e-2, max_iter=20, direct=False
+    data,
+    dmat,
+    zero_mask=None,
+    tol=1e-2,
+    max_iter=20,
+    direct=False,
+    full_covariance=True,
+    covariance_indices=None,
+    solver="batched",
+    svd_batch_size=None,
 ):
     """Estimate initial model parameters when the response contains zeros/NaNs.
 
     This mirrors the fixed-effects ``.iter_mle`` path used by ANCOM-BC2 when
     ``theta`` is initially ``NULL``. The input ``data`` is expected to already
-    be log-transformed and centered, with zeros represented by ``NaN`` (for
-    example, the output of ``rclr(..., axis=0)`` in this notebook).
-
-    The expensive per-feature least-squares operators are computed once by
-    batched SVD. The R iteration is then reproduced by repeatedly updating
-    ``beta`` from ``data - theta`` and updating the per-sample ``theta`` from
-    residual means over the observed features.
+    be log-transformed and centered, with zeros represented by ``NaN``.
 
     Parameters
     ----------
@@ -783,15 +964,28 @@ def _estimate_params_nan(
         observed for this path.
     zero_mask : ndarray of shape (n_samples, n_features), optional
         Boolean mask of zero/missing values in ``data`` before transformation.
-        Providing this avoids recomputing the mask from the transformed data.
     tol : float, default=1e-2
         Iteration tolerance. The ANCOM-BC2 default is 1e-2.
     max_iter : int, default=20
         Maximum number of iterations. The ANCOM-BC2 default is 20.
     direct : bool, default=False
         Solve the coupled sample effects directly instead of reproducing the
-        ANCOM-BC2 iteration. This converges fully and does not match R's
-        tolerance-limited results exactly.
+        ANCOM-BC2 iteration.
+    full_covariance : bool, optional
+        Whether to calculate the full covariance matrix for every feature. Default is
+        True. Retained for low-level regression tests.
+    covariance_indices : 1-D array_like of int, optional
+        Coefficient indices whose covariance submatrix should be calculated when
+        ``full_covariance=False``. All coefficient variances are always calculated.
+        If None, no covariance matrix is returned.
+    solver : {"batched", "legacy"}, optional
+        Missing-response least-squares implementation. ``"legacy"`` materializes the
+        complete feature-by-sample pseudoinverse tensor and is retained for numerical
+        comparison. ``"batched"`` performs the masked SVD in feature blocks and stores
+        only compact per-feature spectral operators. Default is ``"batched"``.
+    svd_batch_size : int, optional
+        Number of features per masked-SVD block for ``solver="batched"``. By default a
+        size is selected to keep the principal SVD input/output workspaces near 32 MiB.
 
     Returns
     -------
@@ -801,28 +995,118 @@ def _estimate_params_nan(
         Estimated regression coefficients.
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals / initial sampling-fraction estimates.
-    beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
-        Estimated covariance matrices.
+    beta_covmat : ndarray or None
+        Full covariance matrices when ``full_covariance=True``; otherwise covariance
+        submatrices for ``covariance_indices`` or None when no submatrix was requested.
 
     """
     data = np.asarray(data)
     dmat = np.asarray(dmat)
-
-    n_samples, _ = data.shape
-
-    # R's lm() omits NaN responses independently for each taxon.  Build one
-    # masked design matrix per feature and compute all pseudoinverses once.
     if zero_mask is None:
         zero_mask = np.isnan(data)
+    else:
+        zero_mask = np.asarray(zero_mask, dtype=bool)
+
+    if solver == "legacy":
+        theta, beta = _estimate_params_nan_legacy(
+            data, dmat, zero_mask, tol, max_iter, direct
+        )
+    elif solver == "batched":
+        theta, beta = _estimate_params_nan_batched(
+            data,
+            dmat,
+            zero_mask,
+            tol,
+            max_iter,
+            direct,
+            svd_batch_size=svd_batch_size,
+        )
+    else:
+        raise ValueError("`solver` must be either 'batched' or 'legacy'.")
+
+    # Residuals used by the sandwich covariance estimator. Missing residuals are set to
+    # zero here and handled separately below to preserve ANCOM-BC2/R's 0.1 correction.
+    intm = np.empty_like(data)
+    np.matmul(dmat, beta.T, out=intm)
+    np.copyto(intm, 0.0, where=zero_mask)
+    intm *= -1.0
+    intm += data
+    intm -= theta[:, None]
+    np.square(intm, out=intm)
+    np.nan_to_num(intm, copy=False, nan=0.0)
+
+    # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
+    # feature-specific inverse based on each feature's observed rows. Its transpose is
+    # the influence matrix H used by the GEMM covariance calculation below.
+    dmat_inv_global, gmat_inv = _invert_gram(dmat)
+    n_missing = zero_mask.sum(axis=0)
+
+    if full_covariance:
+        if covariance_indices is not None:
+            raise ValueError(
+                "`covariance_indices` cannot be used with `full_covariance=True`."
+            )
+        beta_covmat = _covariance_gemm(intm, dmat_inv_global.T)
+        var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+        var_hat = np.asfortranarray(var_hat)
+    elif covariance_indices is not None:
+        var_hat, beta_covmat = _variance_covariance_gemm(
+            intm, dmat_inv_global.T, covariance_indices
+        )
+    else:
+        var_hat = _variance_gemm(intm, dmat_inv_global.T)
+        beta_covmat = None
+
+    # R replaces every NaN element of eps^2 * x x^T with 0.1. Since dmat is finite,
+    # each missing residual contributes a matrix filled with 0.1 before the sandwich
+    # transformation. Add the correction to the full diagonal and, when retained, the
+    # requested covariance submatrix.
+    if np.any(n_missing):
+        gsum_left = np.sum(gmat_inv, axis=1)
+        gsum_right = np.sum(gmat_inv, axis=0)
+        var_hat += (0.1 * n_missing)[:, None] * (gsum_left * gsum_right)[None, :]
+
+        if beta_covmat is not None:
+            if full_covariance:
+                missing_cov = np.outer(gsum_left, gsum_right)
+            else:
+                cov_idx = _normalize_covariance_indices(
+                    covariance_indices, var_hat.shape[1]
+                )
+                missing_cov = np.outer(gsum_left[cov_idx], gsum_right[cov_idx])
+            beta_covmat += (0.1 * n_missing)[:, None, None] * missing_cov
+
+    # Ensure the retained covariance diagonal is exactly the same array of variances
+    # used by the primary analysis, including the R missing-value correction.
+    if beta_covmat is not None:
+        if full_covariance:
+            cov_idx = np.arange(var_hat.shape[1])
+        else:
+            cov_idx = _normalize_covariance_indices(
+                covariance_indices, var_hat.shape[1]
+            )
+        diag_idx = np.arange(cov_idx.size)
+        beta_covmat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
+
+    return var_hat, beta.T.copy(), theta, beta_covmat
+
+
+def _estimate_params_nan_legacy(data, dmat, zero_mask, tol, max_iter, direct):
+    """Fit missing-response models using the original full batched pseudoinverse.
+
+    This helper intentionally preserves the pre-optimization route so the compact
+    implementation can be regression-tested against it. Its dominant arrays have shape
+    ``(n_features, n_samples, n_covariates)``.
+    """
+    n_samples = data.shape[0]
+
     W = 1.0 - zero_mask.T
     X_w = dmat[None, :, :] * W[:, :, None]
-
     U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
     S_inv = _invert_singular(S)
     V = np.swapaxes(Vh, -1, -2)
     dmat_inv = np.einsum("fpk,fk,fsk->fps", V, S_inv, U, optimize=True)
 
-    # Initial beta from theta = 0, matching the initial lm() fits in .iter_mle.
     intm = np.zeros_like(data)
     np.copyto(intm, data, where=~zero_mask)
     theta = np.zeros(n_samples, dtype=data.dtype)
@@ -836,32 +1120,288 @@ def _estimate_params_nan(
         theta, beta = _estimate_params_nan_iter(
             data, dmat, zero_mask, dmat_inv, intm, theta, beta, tol, max_iter
         )
+    return theta, beta
 
-    # Residuals used by the sandwich covariance estimator.
+
+def _estimate_params_nan_batched(
+    data,
+    dmat,
+    zero_mask,
+    tol,
+    max_iter,
+    direct,
+    svd_batch_size=None,
+    compact_cond_max=1e4,
+):
+    """Fit missing-response models with chunked SVD and compact spectral operators.
+
+    Each feature still receives an SVD of its masked design matrix, using the exact same
+    singular-value cutoff as the legacy route. Only ``Vh`` and inverse singular values
+    are retained. The large ``U`` and masked-design tensors exist for one feature block
+    at a time, reducing persistent storage from O(F*N*P) to O(F*P^2).
+    """
+    n_samples, n_features = data.shape
+    n_covariates = dmat.shape[1]
+    n_components = min(n_samples, n_covariates)
+
+    # The legacy route's `1.0 - zero_mask` promotes masked designs to float64. Preserve
+    # that behavior even when `dmat` itself is float32.
+    operator_dtype = np.result_type(dmat.dtype, np.dtype(float))
+    Vh_all = np.empty((n_features, n_components, n_covariates), dtype=operator_dtype)
+    S_inv_all = np.empty((n_features, n_components), dtype=operator_dtype)
+
+    if svd_batch_size is None:
+        # X_w and U are both approximately batch*N*P floats, while W contributes another
+        # batch*N floats. Keep these principal workspaces near 32 MiB; LAPACK may use
+        # additional internal workspace, so this is intentionally conservative.
+        bytes_per_feature = (
+            operator_dtype.itemsize * n_samples * (n_covariates + n_components + 1)
+        )
+        svd_batch_size = max(1, (32 << 20) // max(bytes_per_feature, 1))
+        svd_batch_size = min(svd_batch_size, n_features)
+    elif svd_batch_size < 1:
+        raise ValueError("`svd_batch_size` must be a positive integer.")
+
+    dmat_work = np.asarray(dmat, dtype=operator_dtype)
+    fallback_blocks = {}
+    for start in range(0, n_features, svd_batch_size):
+        stop = min(start + svd_batch_size, n_features)
+        # Preserve legacy dtype and SVD input exactly, but only for this feature block.
+        W_block = 1.0 - zero_mask[:, start:stop].T
+        X_w = dmat_work[None, :, :] * W_block[:, :, None]
+        U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+        S_inv = _invert_singular(S)
+        Vh_all[start:stop] = Vh
+        S_inv_all[start:stop] = S_inv
+
+        # Applying a compact operator through X.T @ y is algebraically equivalent to
+        # X^+ @ y, but it behaves like a normal-equation calculation numerically and
+        # can lose accuracy for severely ill-conditioned masked designs. Retain the
+        # full, stable SVD pseudoinverse only for those exceptional features. This keeps
+        # the common case O(F*P^2) while preserving legacy behavior where it matters.
+        cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+        retained = S > cutoff
+        min_retained = np.min(np.where(retained, S, np.inf), axis=1)
+        max_s = np.max(S, axis=1)
+        cond = np.divide(
+            max_s,
+            min_retained,
+            out=np.ones_like(max_s),
+            where=np.isfinite(min_retained) & (min_retained > 0),
+        )
+        unstable = cond > compact_cond_max
+        if np.any(unstable):
+            local = np.flatnonzero(unstable)
+            V = np.swapaxes(Vh[local], -1, -2)
+            pinv = np.einsum(
+                "fpk,fk,fsk->fps", V, S_inv[local], U[local], optimize=True
+            )
+            fallback_blocks[start] = (local, pinv)
+
+        # U and the masked design are the large block-local arrays.
+        del U, X_w, W_block
+
+    # Preserve the legacy route's response-workspace precision. In particular, a
+    # float32 transformed response keeps float32 residual/theta updates even though the
+    # masked design SVD itself is float64. The compact RHS/beta calculations still use
+    # the promoted operator dtype, matching dmat_inv @ intm in the legacy route.
+    intm = np.zeros_like(data)
+    np.copyto(intm, data, where=~zero_mask)
+    theta = np.zeros(n_samples, dtype=data.dtype)
+
+    solve_dtype = np.result_type(data.dtype, operator_dtype)
+    rhs = np.empty((n_covariates, n_features), dtype=solve_dtype)
+    beta = np.empty((n_features, n_covariates), dtype=solve_dtype)
+    _apply_masked_spectral_operator(
+        dmat_work,
+        intm,
+        Vh_all,
+        S_inv_all,
+        rhs=rhs,
+        out=beta,
+        fallback_blocks=fallback_blocks,
+    )
+
+    if direct:
+        theta, beta = _estimate_params_nan_direct_batched(
+            data,
+            dmat_work,
+            zero_mask,
+            Vh_all,
+            S_inv_all,
+            intm,
+            beta,
+            rhs,
+            svd_batch_size,
+            fallback_blocks,
+        )
+    else:
+        theta, beta = _estimate_params_nan_iter_batched(
+            data,
+            dmat_work,
+            zero_mask,
+            Vh_all,
+            S_inv_all,
+            intm,
+            theta,
+            beta,
+            rhs,
+            tol,
+            max_iter,
+            fallback_blocks,
+        )
+    return theta, beta
+
+
+def _apply_masked_spectral_operator(
+    dmat,
+    adjusted,
+    Vh,
+    S_inv,
+    rhs=None,
+    out=None,
+    fallback_blocks=None,
+):
+    """Apply compact operators, with stable SVD fallbacks when needed."""
+    n_features = S_inv.shape[0]
+    n_covariates = Vh.shape[2]
+    dtype = np.result_type(dmat.dtype, adjusted.dtype, Vh.dtype, S_inv.dtype)
+    if rhs is None:
+        rhs = np.empty((n_covariates, n_features), dtype=dtype)
+    if out is None:
+        out = np.empty((n_features, n_covariates), dtype=dtype)
+
+    # Missing adjusted responses are already zero, so X.T @ adjusted is simultaneously
+    # the RHS for every feature-specific masked regression.
+    np.matmul(dmat.T, adjusted, out=rhs)
+
+    # X_f = U S V.T and rhs = X_f.T y = V S U.T y. Therefore
+    # X_f^+ y = V S^-2 V.T rhs. Retaining V and S instead of pinv(X.T X) preserves the
+    # legacy SVD's rank decision and avoids forming normal equations.
+    tmp = np.einsum("fkp,pf->fk", Vh, rhs, optimize=True)
+    tmp *= S_inv * S_inv
+    np.einsum("fpk,fk->fp", np.swapaxes(Vh, -1, -2), tmp, out=out, optimize=True)
+
+    if fallback_blocks:
+        for start, (local, pinv) in fallback_blocks.items():
+            indices = start + local
+            out[indices] = np.einsum(
+                "kps,sk->kp", pinv, adjusted[:, indices], optimize=True
+            )
+    return out
+
+
+def _estimate_params_nan_iter_batched(
+    data,
+    dmat,
+    zero_mask,
+    Vh,
+    S_inv,
+    intm,
+    theta,
+    beta,
+    rhs,
+    tol,
+    max_iter,
+    fallback_blocks,
+):
+    """Reproduce ANCOM-BC2 iterations using compact feature operators."""
+    epsilon = 100.0
+    it = 0
+    beta_new = np.empty_like(beta)
+    while epsilon > tol and it < max_iter:
+        np.subtract(data, theta[:, None], out=intm)
+        np.copyto(intm, 0.0, where=zero_mask)
+        _apply_masked_spectral_operator(
+            dmat,
+            intm,
+            Vh,
+            S_inv,
+            rhs=rhs,
+            out=beta_new,
+            fallback_blocks=fallback_blocks,
+        )
+
+        np.matmul(dmat, beta_new.T, out=intm)
+        np.copyto(intm, 0.0, where=zero_mask)
+        np.subtract(data, intm, out=intm)
+        theta_new = np.nanmean(intm, axis=1)
+
+        epsilon = np.sqrt(
+            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
+        )
+        beta, beta_new = beta_new, beta
+        theta = theta_new
+        it += 1
+    return theta, beta
+
+
+def _estimate_params_nan_direct_batched(
+    data,
+    dmat,
+    zero_mask,
+    Vh,
+    S_inv,
+    intm,
+    beta,
+    rhs,
+    svd_batch_size,
+    fallback_blocks,
+):
+    """Direct fixed-point solve using compact operators and bounded reconstruction."""
+    n_samples, n_features = data.shape
+    n_covariates = dmat.shape[1]
+
     np.matmul(dmat, beta.T, out=intm)
     np.copyto(intm, 0.0, where=zero_mask)
-
-    intm *= -1.0
-    intm += data
-    intm -= theta[:, None]  # eps = data - intm - theta[:, None]
-    np.square(intm, out=intm)
+    np.subtract(data, intm, out=intm)
     np.nan_to_num(intm, copy=False, nan=0.0)
+    residual_sum = intm.sum(axis=1)
+    observed_counts = (~zero_mask).sum(axis=1)
 
-    # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
-    # feature-specific inverse based on each feature's observed rows.
-    _, gmat_inv = _invert_gram(dmat)
+    system = np.diag(observed_counts.astype(np.result_type(dmat, float), copy=False))
+    V = np.swapaxes(Vh, -1, -2)
+    for start in range(0, n_features, svd_batch_size):
+        stop = min(start + svd_batch_size, n_features)
+        W_block = 1.0 - zero_mask[:, start:stop].T
 
-    # R replaces every NaN element of eps^2 * x x^T with 0.1.  Since dmat is
-    # finite, each missing residual contributes a matrix filled with 0.1.
-    n_missing = zero_mask.sum(axis=0)
-    intm_mat = np.einsum("sf,sp,sq->fpq", intm, dmat, dmat, optimize=True)
-    intm_mat += 0.1 * n_missing[:, None, None]
+        # Reconstruct only this block of X_f^+ = V S^-2 V.T X_f.T. This is needed by
+        # the direct sample-effect system but is discarded immediately afterwards.
+        Vh_block = Vh[start:stop]
+        V_block = V[start:stop]
+        scaled = V_block * (S_inv[start:stop] ** 2)[:, None, :]
+        gram_inv = np.matmul(scaled, Vh_block)
+        xtw = dmat.T[None, :, :] * W_block[:, None, :]
+        dmat_inv_block = np.matmul(gram_inv, xtw)
+        if start in fallback_blocks:
+            local, pinv = fallback_blocks[start]
+            dmat_inv_block[local] = pinv
+        system -= np.einsum(
+            "bs,sp,bpt->st", W_block, dmat, dmat_inv_block, optimize=True
+        )
 
-    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
-    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
-    var_hat = np.asfortranarray(var_hat)
+    constraint = dmat.T * observed_counts
+    augmented = np.block(
+        [[system, constraint.T], [constraint, np.zeros((n_covariates,) * 2)]]
+    )
+    theta = np.linalg.lstsq(
+        augmented,
+        np.concatenate((residual_sum, np.zeros(n_covariates))),
+        rcond=None,
+    )[0][:n_samples]
 
-    return var_hat, beta.T.copy(), theta, beta_covmat
+    np.subtract(data, theta[:, None], out=intm)
+    np.copyto(intm, 0.0, where=zero_mask)
+    _apply_masked_spectral_operator(
+        dmat,
+        intm,
+        Vh,
+        S_inv,
+        rhs=rhs,
+        out=beta,
+        fallback_blocks=fallback_blocks,
+    )
+    return theta, beta
 
 
 def _estimate_params_nan_iter(
@@ -925,6 +1465,144 @@ def _estimate_params_nan_direct(data, dmat, zero_mask, W, dmat_inv, intm, beta):
     np.copyto(intm, 0.0, where=zero_mask)
     beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
     return theta, beta
+
+
+def _subtract_fitted_inplace(data, dmat, beta, target_bytes=8 << 20):
+    """Replace ``data`` with regression residuals using a bounded workspace.
+
+    ``data -= dmat @ beta`` would allocate a complete fitted matrix. Multiplying
+    feature blocks into an approximately 8 MiB temporary bounds that extra memory while
+    retaining efficient BLAS matrix multiplication.
+    """
+    n_samples, n_features = data.shape
+    if n_features == 0:
+        return
+
+    cols = max(1, target_bytes // max(data.itemsize * n_samples, 1))
+    cols = min(cols, n_features)
+    fitted = np.empty((n_samples, cols), dtype=data.dtype)
+
+    for start in range(0, n_features, cols):
+        stop = min(start + cols, n_features)
+        block = fitted[:, : stop - start]
+        np.matmul(dmat, beta[:, start:stop], out=block)
+        data[:, start:stop] -= block
+
+
+def _normalize_covariance_indices(indices, n_covariates):
+    """Normalize and validate coefficient indices for a covariance submatrix."""
+    indices = np.asarray(indices, dtype=int)
+    if indices.ndim != 1 or indices.size == 0:
+        raise ValueError("`covariance_indices` must be a non-empty 1-D array.")
+    if np.any(indices < 0) or np.any(indices >= n_covariates):
+        raise ValueError("`covariance_indices` contains an out-of-bounds index.")
+    if np.unique(indices).size != indices.size:
+        raise ValueError("`covariance_indices` must not contain duplicate indices.")
+    return indices
+
+
+def _variance_covariance_gemm(resid_sq, influence, covariance_indices):
+    """Calculate all variances and one symmetric covariance submatrix.
+
+    All coefficient variances are calculated through :func:`_variance_gemm`, exactly
+    the same path used when no grouping is requested. This guarantees that enabling
+    post-hoc analysis does not perturb the primary result. A second, smaller GEMM
+    calculates only the ``k * (k - 1) / 2`` unique off-diagonal covariances needed by
+    the selected grouping, avoiding the ``P**2`` work of a full covariance matrix.
+    """
+    n_samples, n_covariates = influence.shape
+    n_features = resid_sq.shape[1]
+    cov_idx = _normalize_covariance_indices(covariance_indices, n_covariates)
+    k = cov_idx.size
+
+    # Keep the primary variances bit-for-bit on the same calculation path regardless
+    # of whether a grouping was requested.
+    var_hat = _variance_gemm(resid_sq, influence)
+    beta_covmat = np.empty((n_features, k, k), dtype=var_hat.dtype)
+    diag_idx = np.arange(k)
+    beta_covmat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
+
+    tri_i, tri_j = np.triu_indices(k, 1)
+    n_offdiag = tri_i.size
+    if n_offdiag:
+        dtype = np.result_type(resid_sq, influence)
+        pair_products = np.empty((n_samples, n_offdiag), dtype=dtype)
+        np.multiply(
+            influence[:, cov_idx[tri_i]],
+            influence[:, cov_idx[tri_j]],
+            out=pair_products,
+        )
+        offdiag = np.empty((n_features, n_offdiag), dtype=dtype)
+        np.matmul(resid_sq.T, pair_products, out=offdiag)
+        beta_covmat[:, tri_i, tri_j] = offdiag
+        beta_covmat[:, tri_j, tri_i] = offdiag
+
+    return var_hat, beta_covmat
+
+
+def _variance_gemm(resid_sq, influence):
+    """Calculate coefficient variances without forming full covariance matrices.
+
+    For feature i, ``diag(Cov(beta_i)) = sum_j resid_sq[j, i] * influence[j]**2``.
+    This is a single GEMM with an ``(n_features, n_covariates)`` output instead of
+    ``(n_features, n_covariates, n_covariates)``.
+    """
+    influence_sq = np.square(influence)
+    var_hat = np.empty(
+        (resid_sq.shape[1], influence.shape[1]),
+        dtype=np.result_type(resid_sq, influence),
+        order="F",
+    )
+    np.matmul(resid_sq.T, influence_sq, out=var_hat)
+    return var_hat
+
+
+def _covariance_gemm(resid_sq, influence):
+    """Calculate full sandwich covariance matrices using one GEMM.
+
+    Parameters
+    ----------
+    resid_sq : ndarray of shape (n_samples, n_features)
+        Squared, centered residuals. Missing residuals must already be replaced with
+        zero if they require separate handling.
+    influence : ndarray of shape (n_samples, n_covariates)
+        Influence matrix ``X @ (X.T @ X)^+``.
+
+    Returns
+    -------
+    ndarray of shape (n_features, n_covariates, n_covariates)
+        Full covariance matrix of the coefficients for each feature.
+
+    Notes
+    -----
+    For feature i, the sandwich covariance is
+
+        sum_j resid_sq[j, i] * influence[j].T * influence[j].
+
+    The per-sample outer products are independent of features. Flattening them into
+    rows converts the contraction over samples into a single level-3 BLAS matrix
+    multiplication across all features.
+
+    """
+    n_samples, n_covars = influence.shape
+    n_feats = resid_sq.shape[1]
+
+    # Pairwise products h_jp * h_jq for every sample j. The last two axes are
+    # flattened so the feature/sample contraction below is a conventional GEMM.
+    pair_products = np.empty(
+        (n_samples, n_covars, n_covars),
+        dtype=np.result_type(resid_sq, influence),
+    )
+    np.multiply(influence[:, :, None], influence[:, None, :], out=pair_products)
+    pair_products.shape = (n_samples, n_covars * n_covars)
+
+    beta_covmat = np.empty((n_feats, n_covars, n_covars), dtype=pair_products.dtype)
+    np.matmul(
+        resid_sq.T,
+        pair_products,
+        out=beta_covmat.reshape(n_feats, n_covars * n_covars),
+    )
+    return beta_covmat
 
 
 def _invert_gram(dmat):
@@ -1039,7 +1717,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     n_feats = beta.shape[0]
     shape = (3, n_feats)
     nu_inv = np.empty(shape)  # inverse of variances
-    stdevs = np.empty(shape)  # standard deviations
+    inv_stdevs = np.empty(shape)  # inverse standard deviations
     ratios = np.empty(shape)  # coefficients / variances
 
     # Mean coefficients
@@ -1057,28 +1735,28 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     # NOTE: Making `var_hat` C-contiguous can further improve performance, but this is
     # marginal compared with the EM process.
     np.reciprocal(var_hat, out=nu_inv[0])
-    np.sqrt(var_hat, out=stdevs[0])
+    np.sqrt(nu_inv[0], out=inv_stdevs[0])
     np.divide(beta, var_hat, out=ratios[0])
 
-    log2pi = 0.5 * np.log(2.0 * np.pi)
-
-    # Objective function for optimization of variance estimation. Equivalent to:
-    # def func(x, loc, resp):
-    #     log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
-    #     return -np.dot(resp, log_pdf)
-    # However, `norm.logpdf` doesn't have an `out` parameter. Therefore, the process is
-    # implemented from scratch below to utilize the pre-allocated workspace.
-    # logpdf = -0.5 * ((beta - loc)**2 / var + log(var) + log(2 * pi))
-    def func(x, loc, resp):
-        np.add(var_hat, x, out=intm0)
-        np.subtract(beta, loc, out=intm1)
-        np.square(intm1, out=intm1)
-        np.divide(intm1, intm0, out=intm1)
-        np.log(intm0, out=intm0)
-        np.add(intm1, intm0, out=intm1)
-        np.multiply(intm1, -0.5, out=intm1)
-        np.subtract(intm1, log2pi, out=intm1)
-        return -np.dot(resp, intm1)
+    # Objective function for optimization of variance estimation. For fixed `loc` and
+    # responsibilities, the negative weighted Gaussian log-likelihood is, up to an
+    # additive constant:
+    #
+    #   0.5 * sum(resp * ((beta - loc)**2 / (var_hat + x)
+    #                     + log(var_hat + x)))
+    #
+    # The omitted 0.5 * log(2 * pi) * sum(resp) term is independent of `x` and
+    # therefore cannot affect the minimizer. The squared residual `(beta - loc)**2`
+    # is also independent of `x`; it is computed once per component below and passed
+    # into this callback, instead of being recomputed at every Nelder-Mead evaluation.
+    # The factor 0.5 is retained because `OPTARG` uses an absolute function tolerance
+    # (`fatol`); dropping the factor would rescale the stopping criterion.
+    def func(x, sq_diff, resp):
+        np.add(var_hat, x[0], out=intm0)
+        np.log(intm0, out=intm1)
+        np.divide(sq_diff, intm0, out=intm0)
+        np.add(intm0, intm1, out=intm0)
+        return 0.5 * np.dot(resp, intm0)
 
     # Expectation-maximization (E-M) iterations
     loss, epoch = np.inf, 0
@@ -1086,7 +1764,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         # Update intermediates (2nd and 3rd rows only)
         np.add(var_hat, params[6:8, None], out=intm)  # kappa1, kappa2
         np.reciprocal(intm, out=nu_inv[1:])
-        np.sqrt(intm, out=stdevs[1:])
+        np.sqrt(nu_inv[1:], out=inv_stdevs[1:])
         np.subtract(beta, params[4:6, None], out=ratios[1:])  # means (l)
         ratios[1:] *= nu_inv[1:]
 
@@ -1095,14 +1773,20 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         delta = means[0] = params[3]  # global bias (delta)
         np.add(params[4:6], delta, means[1:])
 
-        # Posterior probabilities = mean probability density functions weighted by
-        # component fractions
-        # Note: `norm.pdf` doesn't have an `out` parameter. To further optimize this,
-        # one needs to manually implement the under-the-hood algorithm.
-        # p_r,i = (pi_r * phi(delta_i - (delta + l_r) / nu_ir)) /
-        #         sum_r(pi_r * phi((delta_i - (dleta + l_r)) / nu_ir)),
-        # where r = 0, 1, 2; i = 1, ..., n_features
-        resp[:] = norm.pdf(beta, means[:, None], stdevs)
+        # Posterior probabilities = Gaussian densities weighted by component fractions.
+        # The normalizing constant 1 / sqrt(2 * pi) is shared by all components and
+        # cancels when responsibilities are normalized, so it is omitted. Compute the
+        # remaining density directly in pre-allocated memory:
+        #
+        #   exp(-0.5 * (beta - mean_r)**2 / nu_r) / sqrt(nu_r)
+        #
+        # where `nu_inv` is 1 / nu_r and `inv_stdevs` is 1 / sqrt(nu_r).
+        np.subtract(beta, means[:, None], out=resp)
+        np.square(resp, out=resp)
+        resp *= nu_inv
+        resp *= -0.5
+        np.exp(resp, out=resp)
+        resp *= inv_stdevs
         resp *= params[:3, None]  # weights (pi)
         resp /= np.sum(resp, axis=0, keepdims=True)
 
@@ -1141,10 +1825,16 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         updated[5] = np.maximum(l2, 0)
 
         # Perform numeric optimization to minimize variances of negative and positive
-        # components (kappa).
+        # components (kappa). The component means and responsibilities stay fixed
+        # throughout each M-step optimization, so precompute squared residuals once.
+        # `ratios[1:]` is no longer needed after the delta update above and is reused
+        # here as workspace.
+        np.subtract(beta, means[1:, None], out=ratios[1:])
+        np.square(ratios[1:], out=ratios[1:])
+
         # TODO: Consider scenarios where optimization doesn't converge.
-        updated[6] = minimize(func, params[6], args=(means[1], resp[1]), **OPTARG).x[0]
-        updated[7] = minimize(func, params[7], args=(means[2], resp[2]), **OPTARG).x[0]
+        updated[6] = minimize(func, params[6], args=(ratios[1], resp[1]), **OPTARG).x[0]
+        updated[7] = minimize(func, params[7], args=(ratios[2], resp[2]), **OPTARG).x[0]
 
         # Avoid zero variances.
         # updated[6] = max(updated[6], eps)
@@ -1269,7 +1959,7 @@ def _estimate_bias_var(beta, var_hat, params):
     return delta_em, delta_wls, var_delta
 
 
-def _sample_fractions(data, dmat, beta, delta_em):
+def _sample_fractions(data, dmat, beta, delta_em, zero_mask=None):
     """Estimate sampling fractions.
 
     Parameters
@@ -1282,6 +1972,9 @@ def _sample_fractions(data, dmat, beta, delta_em):
         Estimated coefficients.
     delta_em : ndarray of shape (n_covariates,)
         Estimated biases.
+    zero_mask : ndarray of shape (n_samples, n_features), optional
+        Boolean mask of unobserved entries. When absent, use an algebraically equivalent
+        dense calculation that avoids an n_samples x n_features residual array.
 
     Returns
     -------
@@ -1289,18 +1982,24 @@ def _sample_fractions(data, dmat, beta, delta_em):
         Estimated sampling fractions.
 
     """
-    # Compute sampling fractions
-    # beta_hat = beta.T - delta_em
-    # theta_hat = np.mean(data - dmat @ beta_hat.T, axis=1)
-    # NOTE: The following code is faster, but numerically slightly different.
-    intm = dmat @ beta
-    intm -= (dmat @ delta_em)[:, None]
-    # TODO: Is dmat @ beta already computed somewhere before?
-    intm -= data
-    intm *= -1.0
-    # theta_hat = np.mean(intm, axis=1)
-    # NaN handling would be:
-    theta_hat = np.nanmean(intm, axis=1)
+    # Compute sampling fractions. For dense data, linearity of the mean gives
+    #
+    # mean(data - X @ beta + X @ delta, axis=features)
+    #   = mean(data) - X @ mean(beta) + X @ delta,
+    #
+    # avoiding another n_samples x n_features matrix while `data` must remain intact.
+    if zero_mask is None:
+        theta_hat = np.mean(data, axis=1)
+        theta_hat -= dmat @ np.mean(beta, axis=1)
+        theta_hat += dmat @ delta_em
+    else:
+        # With feature-specific missingness the mean cannot be pulled through X @ beta,
+        # so retain the existing NaN-aware calculation.
+        intm = dmat @ beta
+        intm -= (dmat @ delta_em)[:, None]
+        intm -= data
+        intm *= -1.0
+        theta_hat = np.nanmean(intm, axis=1)
 
     # Handle NaN in theta (samples with all-NaN residuals)
     # TODO: This may not be necessary if empty samples are not allowed.
@@ -1311,23 +2010,28 @@ def _sample_fractions(data, dmat, beta, delta_em):
     return theta_hat
 
 
-def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
+def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, covariance_indices=None):
     """Adjust variances.
 
     Parameters
     ----------
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances.
-    vcov_hat : ndarray of shape (n_features, n_covariates, n_covariates)
-        Estimated covariance matrices.
+    vcov_hat : ndarray or None
+        Full coefficient covariance matrices or a retained covariance submatrix. May be
+        None when only coefficient variances were requested.
     var_delta : ndarray of shape (n_covariates,)
         Estimated variances of biases.
     s0_perc : float
-        SAM-like fudge factor
+        SAM-like fudge factor.
+    covariance_indices : 1-D array_like of int, optional
+        Full-model coefficient indices represented by ``vcov_hat`` when it is a
+        covariance submatrix.
 
     Notes
     -----
-    This function will update `var_hat` and `vcov_hat` in place.
+    This function updates ``var_hat`` in place and, when provided, updates the diagonal
+    of ``vcov_hat`` to remain consistent.
 
     """
     # vars += delta + 2 * |vars * delta|^0.5
@@ -1346,9 +2050,97 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
         var_hat += s02[None, :]
         # var_hat[np.isnan(beta_hat)] = np.nan
 
-    # Update vcov_hat with adjusted variances
-    diag_idx = np.arange(var_hat.shape[1])
-    vcov_hat[:, diag_idx, diag_idx] = var_hat
+    # Keep a retained covariance tensor consistent with the adjusted variances.
+    if vcov_hat is not None:
+        if covariance_indices is None:
+            if vcov_hat.shape[1] != var_hat.shape[1]:
+                raise ValueError(
+                    "`covariance_indices` is required for a covariance submatrix."
+                )
+            cov_idx = np.arange(var_hat.shape[1])
+        else:
+            cov_idx = _normalize_covariance_indices(
+                covariance_indices, var_hat.shape[1]
+            )
+            if vcov_hat.shape[1:] != (cov_idx.size, cov_idx.size):
+                raise ValueError(
+                    "`vcov_hat` shape does not match `covariance_indices`."
+                )
+        diag_idx = np.arange(cov_idx.size)
+        vcov_hat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
+
+
+def _format_results(beta_hat, var_hat, features, covariates, alpha, p_adjust, dof=None):
+    """Format primary ANCOM-BC/BC2 statistics as a DataFrame.
+
+    This function is specialized for the public result-construction path. Unlike
+    :func:`_calc_statistics`, which returns every intermediate statistic as a NumPy
+    array, this routine inserts each statistic into the DataFrame as soon as it is
+    calculated and then reuses its temporary workspace. This reduces peak memory for
+    large feature-by-covariate result tables.
+
+    Parameters
+    ----------
+    beta_hat : ndarray of shape (n_features, n_covariates)
+        Estimated coefficients post correction.
+    var_hat : ndarray of shape (n_features, n_covariates)
+        Estimated variances.
+    features : 1-D array_like of length n_features
+        Feature identifiers.
+    covariates : 1-D array_like of length n_covariates
+        Covariate identifiers.
+    alpha : float
+        Significance level.
+    p_adjust : str
+        FDR correction method.
+    dof : float or ndarray of shape (n_features,), optional
+        Degrees of freedom.
+
+    Returns
+    -------
+    pd.DataFrame
+        Primary results with a (FeatureID, Covariate) MultiIndex and columns
+        Log2(FC), SE, W, pvalue, qvalue and Signif.
+
+    """
+    beta_hat = np.asarray(beta_hat)
+    var_hat = np.asarray(var_hat)
+    if beta_hat.shape != var_hat.shape:
+        raise ValueError("`beta_hat` and `var_hat` must have matching shapes.")
+
+    n_feats, n_covars = beta_hat.shape
+    if len(features) != n_feats or len(covariates) != n_covars:
+        raise ValueError(
+            "Feature and covariate identifiers must match the result dimensions."
+        )
+
+    # Construct the MultiIndex directly. This avoids materializing two Python lists
+    # of length n_features * n_covariates before converting them into an index.
+    index = pd.MultiIndex.from_product(
+        (features, covariates), names=("FeatureID", "Covariate")
+    )
+    res = pd.DataFrame(index=index)
+    res["Log2(FC)"] = beta_hat.ravel()
+
+    # A single feature-by-covariate workspace is enough for SE and W because pandas
+    # copies each column on assignment.
+    work = np.sqrt(var_hat)
+    res["SE"] = work.ravel()
+    np.divide(beta_hat, work, out=work)
+    res["W"] = work.ravel()
+
+    # scipy.stats allocates the p-value array. Once p-values have been copied into
+    # the DataFrame, reuse that same array for adjusted p-values.
+    np.abs(work, out=work)
+    pval = _calc_pvalues_abs(work, dof)
+    res["pvalue"] = pval.ravel()
+    del work
+
+    _adjust_pvalues(pval, p_adjust, out=pval)
+    res["qvalue"] = pval.ravel()
+    res["Signif"] = pd.array(pval.ravel() <= alpha, dtype="boolean")
+
+    return res
 
 
 def _calc_statistics(beta_hat, var_hat, alpha, p_adjust, dof=None):
@@ -1425,10 +2217,14 @@ def _calc_pvalues(W, dof=None):
         p-values.
 
     """
-    W_abs = np.abs(W)
+    return _calc_pvalues_abs(np.abs(W), dof)
+
+
+def _calc_pvalues_abs(W_abs, dof=None):
+    """Calculate two-sided p-values from absolute test statistics."""
     if dof is not None:  # t-test with dof
         if not np.isscalar(dof):
-            dof = dof[:, None]  # broadcast to 2D
+            dof = np.asarray(dof)[:, None]  # broadcast to 2D
         pval = t.sf(W_abs, dof)
     else:  # Z-test
         pval = norm.sf(W_abs)
@@ -1436,7 +2232,7 @@ def _calc_pvalues(W, dof=None):
     return pval
 
 
-def _adjust_pvalues(pval, method):
+def _adjust_pvalues(pval, method, out=None):
     """Adjust p-values for multiple-testing correction.
 
     This function applies FDR correction to non-NaN entries. This behavior matches R's
@@ -1451,6 +2247,9 @@ def _adjust_pvalues(pval, method):
     ----------
     pval : ndarray of shape (n_features, n_covariates)
         p-values.
+    out : ndarray, optional
+        Array in which to store adjusted p-values. May be the same array as ``pval``.
+        By default, allocate a new array.
 
     Returns
     -------
@@ -1460,9 +2259,57 @@ def _adjust_pvalues(pval, method):
     """
     pval = np.asarray(pval)
     valid = ~np.isnan(pval)
-    qval = np.full_like(pval, np.nan)
-    func = _check_p_adjust(method)
+    if out is None:
+        qval = np.full_like(pval, np.nan)
+    else:
+        qval = np.asarray(out)
+        if qval.shape != pval.shape:
+            raise ValueError("`out` must have the same shape as `pval`.")
+        if not np.can_cast(pval.dtype, qval.dtype, casting="same_kind"):
+            raise TypeError("`out` has an incompatible dtype.")
+        # If output doesn't alias the input, initialize invalid entries to NaN. When
+        # it does alias, those entries are already NaN and clearing the array first
+        # would destroy the p-values before adjustment.
+        if not np.shares_memory(qval, pval):
+            qval.fill(np.nan)
+    # Holm and Benjamini-Hochberg are the documented/common choices. Their formulas
+    # are simple enough to apply directly, avoiding repeated statsmodels dispatch and
+    # validation overhead for every covariate. Processing one column at a time keeps
+    # scratch space O(n_features), rather than allocating another full result matrix.
+    key = None if method is None else str(method).lower()
+    holm = key in {"holm", "holm-bonferroni"}
+    bh = key in {"bh", "fdr_bh", "benjamini-hochberg"}
 
+    if key is None:
+        if not np.shares_memory(qval, pval):
+            np.copyto(qval, pval)
+        return qval
+
+    if holm or bh:
+        cols = (None,) if pval.ndim == 1 else range(pval.shape[1])
+        for col in cols:
+            pcol = pval if col is None else pval[:, col]
+            qcol = qval if col is None else qval[:, col]
+            valid_idx = np.flatnonzero(~np.isnan(pcol))
+            n = valid_idx.size
+            if not n:
+                continue
+
+            values = pcol[valid_idx]
+            order = np.argsort(values)
+            adjusted = values[order].copy()
+            if holm:
+                adjusted *= n - np.arange(n)
+                np.maximum.accumulate(adjusted, out=adjusted)
+            else:
+                adjusted /= np.arange(1, n + 1) / float(n)
+                adjusted[:] = np.minimum.accumulate(adjusted[::-1])[::-1]
+            np.minimum(adjusted, 1.0, out=adjusted)
+            qcol[valid_idx[order]] = adjusted
+        return qval
+
+    # Preserve support for every other method accepted by `_check_p_adjust`.
+    func = _check_p_adjust(method)
     if pval.ndim == 1:
         qval[valid] = func(pval[valid])
     else:
@@ -1477,8 +2324,9 @@ class ANCOMBCResult:
     """Results for ANCOM-BC and ANCOM-BC2 analyses.
 
     This class contains the primary differential abundance results. Post-hoc analyses
-    (global test, multi-group comparisons, sensitivity analysis, etc.) are available as
-    methods that compute on-demand using stored intermediate data.
+    are available as methods that compute on-demand when a ``grouping`` was specified
+    in the upstream :func:`ancombc` or :func:`ancombc2` call. Only the covariance
+    submatrices required for that grouping are retained.
 
     Attributes
     ----------
@@ -1487,6 +2335,11 @@ class ANCOMBCResult:
         SE, W, pvalue, qvalue, Signif.
     method : {"ANCOM-BC", "ANCOM-BC2"}
         Differential abundance method used for the analysis.
+    grouping : str or None
+        Grouping term selected for post-hoc analysis, or None when post-hoc analyses
+        were not enabled.
+    has_covariance : bool
+        Whether a grouping covariance submatrix was retained.
 
     Methods
     -------
@@ -1512,6 +2365,8 @@ class ANCOMBCResult:
         "_beta_hat": None,
         "_var_hat": None,
         "_vcov_hat": None,
+        "_grouping": None,
+        "_group_indices": None,
         "_dof": None,
         "_features": None,
         "_covariates": None,
@@ -1555,6 +2410,26 @@ class ANCOMBCResult:
     def method(self) -> str:
         return self._method
 
+    @property
+    def grouping(self) -> str | None:
+        """Grouping term selected for post-hoc analysis, if any."""
+        return self._grouping
+
+    @property
+    def has_covariance(self) -> bool:
+        """Whether a grouping covariance submatrix was retained."""
+        return self._vcov_hat is not None
+
+    def _require_grouping(self, method):
+        """Require an upstream grouping for post-hoc analyses."""
+        if self._grouping is None:
+            func = "ancombc2" if self.method == "ANCOM-BC2" else "ancombc"
+            raise ValueError(
+                f"`{method}` requires a post-hoc grouping. Rerun "
+                f"`{func}(..., grouping=<metadata column>)` to enable post-hoc "
+                "analysis."
+            )
+
     def __getitem__(self, key):
         return getattr(self, key)
 
@@ -1589,7 +2464,7 @@ class ANCOMBCResult:
         return alpha, p_adjust
 
     def global_test(
-        self, grouping: str, alpha: float | str = "inherit", p_adjust: str = "inherit"
+        self, alpha: float | str = "inherit", p_adjust: str = "inherit"
     ) -> pd.DataFrame:
         """Perform global test for differential abundance across groups.
 
@@ -1598,8 +2473,6 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        grouping : str
-            Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value used by :func:`ancombc` or
             :func:`ancombc2`. Default is "inherit".
@@ -1624,12 +2497,14 @@ class ANCOMBCResult:
             - ``Signif``: Whether at least one group mean is different from others.
 
         """
+        self._require_grouping("global_test")
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
         W, pval, qval, reject = _global_test(
             dmat=self._dmat,
-            grouping=grouping,
+            grouping=self._grouping,
             beta_hat=self._beta_hat,
             vcov_hat=self._vcov_hat,
+            group_indices=self._group_indices,
             p_adjust=p_adjust,
             alpha=alpha,
             dof=self._dof,
@@ -1643,7 +2518,6 @@ class ANCOMBCResult:
 
     def pairwise_test(
         self,
-        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
     ) -> pd.DataFrame:
@@ -1653,8 +2527,6 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        grouping : str
-            Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
             "inherit".
@@ -1669,14 +2541,16 @@ class ANCOMBCResult:
             Log2(FC), SE, W, pvalue, qvalue, Signif.
 
         """
+        self._require_grouping("pairwise_test")
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
 
         raw = _pairwise_test(
             dmat=self._dmat,
-            grouping=grouping,
+            grouping=self._grouping,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
+            group_indices=self._group_indices,
             dof=self._dof,
             p_adjust=p_adjust,
             alpha=alpha,
@@ -1701,7 +2575,6 @@ class ANCOMBCResult:
 
     def dunnett_test(
         self,
-        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
         bootstraps: int = 100,
@@ -1711,8 +2584,6 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        grouping : str
-            Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
             "inherit".
@@ -1732,13 +2603,15 @@ class ANCOMBCResult:
             Log2(FC), SE, W, pvalue, qvalue, Signif.
 
         """
+        self._require_grouping("dunnett_test")
         rng = get_rng(seed)
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
 
         raw = _dunnett_test(
             dmat=self._dmat,
-            grouping=grouping,
+            grouping=self._grouping,
             beta_hat=self._beta_hat,
+            group_indices=self._group_indices,
             var_hat=self._var_hat,
             dof=self._dof,
             bootstraps=bootstraps,
@@ -1766,7 +2639,6 @@ class ANCOMBCResult:
 
     def trend_test(
         self,
-        grouping: str,
         alpha: float | str = "inherit",
         p_adjust: str = "inherit",
         trend_contrast: dict | None = None,
@@ -1781,8 +2653,6 @@ class ANCOMBCResult:
 
         Parameters
         ----------
-        grouping : str
-            Metadata column defining sample groups.
         alpha : float or "inherit", optional
             Significance level, or the value supplied upstream. Default is
             "inherit".
@@ -1810,15 +2680,17 @@ class ANCOMBCResult:
         the Dunnett's test (:meth:`dunnett_test`) is more stable.
 
         """
+        self._require_grouping("trend_test")
         rng = get_rng(seed)
         alpha, p_adjust = self._stat_params(alpha, p_adjust)
 
         raw = _trend_test(
             dmat=self._dmat,
-            grouping=grouping,
+            grouping=self._grouping,
             beta_hat=self._beta_hat,
             var_hat=self._var_hat,
             vcov_hat=self._vcov_hat,
+            group_indices=self._group_indices,
             p_adjust=p_adjust,
             alpha=alpha,
             trend_contrast=trend_contrast,
@@ -1839,8 +2711,30 @@ class ANCOMBCResult:
         return result
 
 
+def _group_indices_from_design(dmat, grouping):
+    """Return the design-matrix column indices for a named model term."""
+    s = dmat.design_info.term_name_slices[grouping]
+    return np.arange(s.start, s.stop, dtype=int)
+
+
+def _select_group_covariance(vcov_hat, group_indices):
+    """Return a grouping covariance submatrix from full or already-subset storage."""
+    group_indices = np.asarray(group_indices, dtype=int)
+    k = group_indices.size
+    if vcov_hat.shape[1:] == (k, k):
+        return vcov_hat
+    return vcov_hat[:, group_indices][:, :, group_indices]
+
+
 def _global_test(
-    dmat, grouping, beta_hat, vcov_hat, alpha=0.05, p_adjust="holm", dof=None
+    dmat,
+    grouping,
+    beta_hat,
+    vcov_hat,
+    alpha=0.05,
+    p_adjust="holm",
+    dof=None,
+    group_indices=None,
 ):
     """Perform ANCOM-BC global test.
 
@@ -1855,8 +2749,9 @@ def _global_test(
         The group variable of interests in metadata.
     beta_hat : ndarray of shape (n_features, n_covariates)
         Corrected coefficients.
-    vcov_hat : ndarray of shape (n_features, n_covariates, n_covariates)
-        Estimated covariance matrices.
+    vcov_hat : ndarray
+        Full coefficient covariance matrices or the covariance submatrices for the
+        grouping term.
     alpha : float, optional
         Significance level for the statistical tests. Must be in the range of (0, 1).
         Default is 0.05.
@@ -1882,16 +2777,16 @@ def _global_test(
         If the variable is differentially abundant.
 
     """
-    # Slices of columns in the dmat that the terms in the grouping is mapped to
-    s = dmat.design_info.term_name_slices[grouping]
-
-    # Get the index of the terms in the grouping
-    group_ind = np.array(range(*s.indices(s.stop)))
+    if group_indices is None:
+        group_ind = _group_indices_from_design(dmat, grouping)
+    else:
+        group_ind = np.asarray(group_indices, dtype=int)
     n_groups = group_ind.size
 
-    # Subset beta_hat and vcov_hat by grouping indices
+    # `vcov_hat` may be the full model covariance (legacy/internal calls) or the
+    # grouping-only covariance retained by the public API.
     beta_hat_sub = beta_hat[:, group_ind]
-    vcov_hat_sub = vcov_hat[:, group_ind][:, :, group_ind]
+    vcov_hat_sub = _select_group_covariance(vcov_hat, group_ind)
 
     # Inverse the subset of vcov_hat
     vcov_hat_sub_inv = np.linalg.pinv(vcov_hat_sub)
@@ -1926,7 +2821,15 @@ def _global_test(
 
 
 def _pairwise_test(
-    dmat, grouping, beta_hat, var_hat, vcov_hat, dof, p_adjust="holm", alpha=0.05
+    dmat,
+    grouping,
+    beta_hat,
+    var_hat,
+    vcov_hat,
+    dof,
+    p_adjust="holm",
+    alpha=0.05,
+    group_indices=None,
 ):
     """ANCOM-BC2 pairwise directional test.
 
@@ -1934,15 +2837,18 @@ def _pairwise_test(
     and its variance, then apply mdFDR correction.
     """
     covariates = dmat.design_info.column_names
+    if group_indices is None:
+        group_ind = _group_indices_from_design(dmat, grouping)
+    else:
+        group_ind = np.asarray(group_indices, dtype=int)
 
-    # Subset group-related covariates
-    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
     beta_hat_sub = beta_hat[:, group_ind]
-    group_covars = [c for c, g in zip(covariates, group_ind) if g]
+    group_covars = [covariates[i] for i in group_ind]
+    vcov_group = _select_group_covariance(vcov_hat, group_ind)
 
     # Compute pairwise differences and their variances
     n_tax = beta_hat.shape[0]
-    n_group = int(np.sum(group_ind))
+    n_group = group_ind.size
 
     # Generate all pairwise comparisons
     pair_names = []
@@ -1961,16 +2867,14 @@ def _pairwise_test(
     # Individual effects
     for k in range(n_group):
         beta_pair[:, k] = beta_hat_sub[:, k]
-        var_pair[:, k] = var_hat[:, np.where(group_ind)[0][k]]
+        var_pair[:, k] = var_hat[:, group_ind[k]]
 
     # Pairwise differences
     for k, (j, i) in enumerate(pair_indices):
         beta_pair[:, n_group + k] = beta_hat_sub[:, j] - beta_hat_sub[:, i]
-        for tax in range(n_tax):
-            vcov_sub = vcov_hat[tax][
-                np.ix_(np.where(group_ind)[0][[j, i]], np.where(group_ind)[0][[j, i]])
-            ]
-            var_pair[tax, n_group + k] = _var_diff(vcov_sub)
+        var_pair[:, n_group + k] = (
+            vcov_group[:, j, j] + vcov_group[:, i, i] - 2.0 * vcov_group[:, j, i]
+        )
 
     se_pair = np.sqrt(np.maximum(var_pair, 0))
     W_pair = beta_pair / se_pair
@@ -1983,9 +2887,10 @@ def _pairwise_test(
         dmat=dmat,
         group=grouping,
         beta_hat=beta_hat,
-        vcov_hat=vcov_hat,
+        vcov_hat=vcov_group,
         alpha=alpha,
         dof_global=dof,
+        group_indices=group_ind,
     )
     reject = qval <= alpha
 
@@ -2001,7 +2906,16 @@ def _pairwise_test(
 
 
 def _mdfdr_pairwise(
-    W, dof, fwer_ctrl, dmat, group, beta_hat, vcov_hat, alpha, dof_global=None
+    W,
+    dof,
+    fwer_ctrl,
+    dmat,
+    group,
+    beta_hat,
+    vcov_hat,
+    alpha,
+    dof_global=None,
+    group_indices=None,
 ):
     """Perform mixed directional FDR (mdFDR) correction for pairwise tests.
 
@@ -2024,6 +2938,7 @@ def _mdfdr_pairwise(
         p_adjust="BH",  # TODO: Question: Is "BH" hard-coded? Not inherit?
         alpha=alpha,
         dof=dof_global,
+        group_indices=group_indices,
     )
     n_signs = signif.sum().item()  # R
 
@@ -2088,13 +3003,17 @@ def _dunnett_test(
     rng,
     p_adjust,
     alpha,
+    group_indices=None,
 ):
     """ANCOM-BC2 Dunnett's type of test.
 
     Compare each group to the reference group with mdFDR correction.
     """
     covariates = dmat.design_info.column_names
-    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
+    if group_indices is None:
+        group_ind = _group_indices_from_design(dmat, grouping)
+    else:
+        group_ind = np.asarray(group_indices, dtype=int)
 
     beta_hat_dunn = beta_hat[:, group_ind]
     var_hat_dunn = var_hat[:, group_ind]
@@ -2120,7 +3039,7 @@ def _dunnett_test(
         "p_val": p_val,
         "q_val": q_val,
         "reject": q_val <= alpha,
-        "comp_names": [c for c, g in zip(covariates, group_ind) if g],
+        "comp_names": [covariates[i] for i in group_ind],
     }
 
 
@@ -2234,19 +3153,22 @@ def _trend_test(
     trend_node=None,
     bootstraps=100,
     rng=None,
+    group_indices=None,
 ):
     """ANCOM-BC2 trend test (pattern analysis).
 
     Uses constrained optimization to test ordered patterns in group effects.
     """
     n_feats = beta_hat.shape[0]
-    covariates = dmat.design_info.column_names
-    group_ind = np.array([grouping in c and ":" not in c for c in covariates])
-    n_group = int(np.sum(group_ind))
+    if group_indices is None:
+        group_ind = _group_indices_from_design(dmat, grouping)
+    else:
+        group_ind = np.asarray(group_indices, dtype=int)
+    n_group = group_ind.size
 
     beta_hat_sub = beta_hat[:, group_ind]
     var_hat_sub = var_hat[:, group_ind]
-    vcov_hat_sub = [v[np.ix_(group_ind, group_ind)] for v in vcov_hat]
+    vcov_hat_sub = _select_group_covariance(vcov_hat, group_ind)
 
     # Test both monotone directions. Each contrast operates on the non-reference
     # group coefficients, with the final coefficient as the trend node.
