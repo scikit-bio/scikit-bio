@@ -19,8 +19,8 @@ from scipy.stats import t
 from skbio.util import get_data_path
 from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
-    _estimate_params,
-    _estimate_params_nan,
+    _estimate_params_dense,
+    _estimate_params_sparse,
     _transform_ancombc2,
     _estimate_bias_em,
     _sample_fractions,
@@ -210,7 +210,7 @@ class CoreTests(TestCase):
         _transform_ancombc2(copy, zero_mask)
         npt.assert_array_equal(copy, sparse)
 
-    def test_estimate_params(self):
+    def test_estimate_params_dense(self):
         # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
         # occassionally slightly different results will be generated during the CI
         # workflow. Although SciPy optimizers should be deterministic, this happens in
@@ -218,10 +218,11 @@ class CoreTests(TestCase):
         # subsequent iterative optimization is prone to this problem.
 
         # Example 1 (sparse, +1 before log)
+        # By default (groups is True), the full covariance matrix is calculated.
         data_tr = np.log1p(self.data1)
-        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
+        obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
             data_tr, self.dmat1)
-        exp_var_hat = np.array(
+        exp_var = np.array(
             [[0.24374, 0.26827],
              [0.0414 , 0.10443],
              [0.5995 , 0.78012],
@@ -239,7 +240,7 @@ class CoreTests(TestCase):
              [ 1.2904 , -0.029  ]]).T
         exp_theta = np.array(
             [-0.17616,  0.01642,  0.15975, -0.2722 ,  0.19239,  0.07981])
-        exp_beta_covmat = np.array(
+        exp_cov = np.array(
             [[[ 0.24374, -0.24374], [-0.24374,  0.26827]],
              [[ 0.0414 , -0.0414 ], [-0.0414 ,  0.10443]],
              [[ 0.5995 , -0.5995 ], [-0.5995 ,  0.78012]],
@@ -247,16 +248,17 @@ class CoreTests(TestCase):
              [[ 0.17638, -0.17638], [-0.17638,  0.36711]],
              [[ 0.00728, -0.00728], [-0.00728,  0.04665]],
              [[ 0.00178, -0.00178], [-0.00178,  0.21715]]])
-        npt.assert_array_equal(obs_var_hat.round(5), exp_var_hat)
+        npt.assert_array_equal(obs_var.round(5), exp_var)
         npt.assert_array_equal(obs_beta.round(5), exp_beta)
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
-        npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
+        npt.assert_array_equal(obs_cov.round(5), exp_cov)
+        self.assertTrue(obs_var.flags.f_contiguous)
 
         # Example 2 (dense, just log)
         data_tr = np.log(self.data2)
-        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
-            data_tr, self.dmat2)
-        exp_var_hat = np.array(
+        obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
+            data_tr.copy(), self.dmat2, groups=True)
+        exp_var = np.array(
             [[0.00126, 0.27087],
              [0.00036, 0.01524],
              [0.00889, 0.02048],
@@ -274,7 +276,7 @@ class CoreTests(TestCase):
              [ 2.30259, -0.03512]]).T
         exp_theta = np.array(
             [ 0.15683,  0.14178, -0.29861, -0.03834,  0.00722,  0.03113])
-        exp_beta_covmat = np.array(
+        exp_cov = np.array(
             [[[ 0.00126, -0.00126], [-0.00126,  0.27087]],
              [[ 0.00036, -0.00036], [-0.00036,  0.01524]],
              [[ 0.00889, -0.00889], [-0.00889,  0.02048]],
@@ -283,40 +285,39 @@ class CoreTests(TestCase):
              [[ 0.00028, -0.00028], [-0.00028,  0.00474]],
              [[ 0.00028, -0.00028], [-0.00028,  0.00898]]])
 
-        npt.assert_array_equal(obs_var_hat.round(5), exp_var_hat)
+        npt.assert_array_equal(obs_var.round(5), exp_var)
         npt.assert_array_equal(obs_beta.round(5), exp_beta)
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
-        npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
+        npt.assert_array_equal(obs_cov.round(5), exp_cov)
 
-        # Diagonal-only path must produce identical primary variances without retaining
-        # the full covariance tensor.
-        diag_var, diag_beta, diag_theta, diag_cov = _estimate_params(
-            data_tr, self.dmat2, full_covariance=False
-        )
-        npt.assert_allclose(diag_var, obs_var_hat)
-        npt.assert_allclose(diag_beta, obs_beta)
-        npt.assert_allclose(diag_theta, obs_theta)
-        self.assertIsNone(diag_cov)
-        self.assertTrue(diag_var.flags.f_contiguous)
+        exp_var, exp_beta, exp_theta, exp_cov = (
+            obs_var, obs_beta, obs_theta, obs_cov)
 
-    def test_estimate_params_overwrite(self):
-        data = np.log(self.data2.astype(float))
-        expected = _estimate_params(data.copy(), self.dmat2, full_covariance=False)
+        # Grouping is None. Only the diagonal of the covariance matrix is calculated,
+        # which is sufficient for estimating the same parameters. No covariance is
+        # returned.
+        obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
+            data_tr.copy(), self.dmat2, groups=None)
+        self.assertIsNone(obs_cov)
+        npt.assert_allclose(obs_var, exp_var)
+        npt.assert_allclose(obs_beta, exp_beta)
+        npt.assert_allclose(obs_theta, exp_theta)
+        self.assertTrue(obs_var.flags.f_contiguous)
 
-        work = data.copy()
-        observed = _estimate_params(
-            work, self.dmat2, full_covariance=False, overwrite_data=True
-        )
-        for obs, exp in zip(observed[:3], expected[:3]):
-            npt.assert_allclose(obs, exp)
-        self.assertIsNone(observed[3])
-
-        # Destructive mode intentionally turns the transformed table into squared,
-        # centered residuals; it should no longer contain the original transformed data.
-        self.assertFalse(np.array_equal(work, data))
-        self.assertTrue(np.all(work >= 0))
+        # Grouping specified. Only covariance submatrices of the relevant coefficients
+        # will be calculated and returned.
+        groups=np.array([1])
+        obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
+            data_tr.copy(), self.dmat2, groups=groups)
+        npt.assert_allclose(obs_var, exp_var)
+        npt.assert_allclose(obs_beta, exp_beta)
+        npt.assert_allclose(obs_theta, exp_theta)
+        self.assertTupleEqual(obs_cov.shape, (
+            data_tr.shape[1], len(groups), len(groups)))
+        npt.assert_allclose(obs_cov, exp_cov[:, groups][:, :, groups])
 
     def test_estimate_params_covariance_subset(self):
+        # TODO: revisit
         rng = np.random.default_rng(42)
         data = rng.normal(size=(20, 30))
         dmat = np.column_stack(
@@ -324,12 +325,11 @@ class CoreTests(TestCase):
         )
         group_ind = np.array([1, 3, 4])
 
-        full = _estimate_params(data.copy(), dmat, full_covariance=True)
-        subset = _estimate_params(
+        full = _estimate_params_dense(data.copy(), dmat, groups=True)
+        subset = _estimate_params_dense(
             data.copy(),
             dmat,
-            full_covariance=False,
-            covariance_indices=group_ind,
+            groups=group_ind,
         )
 
         npt.assert_allclose(subset[0], full[0])
@@ -355,8 +355,8 @@ class CoreTests(TestCase):
              [1, 2, 0],
              [1, 3, 1],
              [1, 5, 4]], dtype=float)
-        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
-            data, dmat)
+        obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
+            data.copy(), dmat)
 
         # Directly compute per-feature parameters using independent least-squares
         # (slow and fallback) and compare with the optimized code's output.
@@ -364,17 +364,17 @@ class CoreTests(TestCase):
         diff = data - dmat @ exp_beta
         exp_theta = np.mean(diff, axis=1)
         gmat_inv = np.linalg.pinv(dmat.T @ dmat)
-        exp_beta_covmat = np.empty((data.shape[1], dmat.shape[1], dmat.shape[1]))
+        exp_cov = np.empty((data.shape[1], dmat.shape[1], dmat.shape[1]))
         for i in range(data.shape[1]):
-            exp_beta_covmat[i] = (
+            exp_cov[i] = (
                 gmat_inv @ (dmat.T * (diff[:, i] - exp_theta) ** 2) @ dmat @ gmat_inv
             )
-        exp_var_hat = np.diagonal(exp_beta_covmat, axis1=1, axis2=2)
+        exp_var = np.diagonal(exp_cov, axis1=1, axis2=2)
 
-        npt.assert_allclose(obs_var_hat, exp_var_hat)
+        npt.assert_allclose(obs_var, exp_var)
         npt.assert_allclose(obs_beta, exp_beta)
         npt.assert_allclose(obs_theta, exp_theta)
-        npt.assert_allclose(obs_beta_covmat, exp_beta_covmat)
+        npt.assert_allclose(obs_cov, exp_cov)
 
     def test_estimate_params_singular(self):
         """Rank-deficient and underdetermined design tests."""
@@ -397,23 +397,23 @@ class CoreTests(TestCase):
              [1, 2, 1, 4, 4]], dtype=float)
 
         for dmat in (dmat1, dmat2):
-            obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params(
-                data, dmat)
+            obs_var, obs_beta, obs_theta, obs_cov = _estimate_params_dense(
+                data.copy(), dmat)
             exp_beta = np.linalg.pinv(dmat) @ data
             diff = data - dmat @ exp_beta
             exp_theta = np.mean(diff, axis=1)
 
             npt.assert_allclose(obs_beta, exp_beta)
             npt.assert_allclose(obs_theta, exp_theta, atol=1e-14)
-            self.assertTrue(np.isfinite(obs_var_hat).all())
-            self.assertTrue(np.isfinite(obs_beta_covmat).all())
+            self.assertTrue(np.isfinite(obs_var).all())
+            self.assertTrue(np.isfinite(obs_cov).all())
 
     def test_estimate_params_constant(self):
         """Constant feature abundance test."""
         # A feature with no variation has no estimated residual variance
         data = np.full((4, 1), np.log(5.0))
         dmat = np.array([[1, 0], [1, 1], [1, 3], [1, 4]], dtype=float)
-        var_hat, beta, theta, beta_covmat = _estimate_params(data, dmat)
+        var_hat, beta, theta, beta_covmat = _estimate_params_dense(data, dmat)
 
         # Check array shapes and confirm no NaN when there is only one feature.
         self.assertEqual(var_hat.shape, (1, 2))
@@ -427,11 +427,12 @@ class CoreTests(TestCase):
         npt.assert_allclose(var_hat, 0.0, atol=1e-14)
         npt.assert_allclose(beta_covmat, 0.0, atol=1e-14)
 
-    def test_estimate_params_nan(self):
+    def test_estimate_params_sparse(self):
         # Example 1 (RCLR transform)
+        missing = self.data1 == 0
         data_tr = rclr(self.data1, axis=0, validate=False)
-        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_nan(
-            data_tr, self.dmat1)
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_sparse(
+            data_tr, self.dmat1, missing)
         exp_var_hat = np.array(
             [[0.14683, 0.26361],
              [0.10253, 0.12889],
@@ -463,18 +464,11 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
         npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
 
-        # Reuse the input-table zero mask instead of scanning transformed data.
-        masked = _estimate_params_nan(data_tr, self.dmat1, self.data1 == 0)
-        for observed, expected in zip(masked, (
-            obs_var_hat, obs_beta, obs_theta, obs_beta_covmat
-        )):
-            npt.assert_allclose(observed, expected)
-
         # Should match `_estimate_params` on non-zero data
         data_tr = np.log1p(self.data1)
-        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_nan(
-            data_tr, self.dmat1)
-        exp_var_hat, exp_beta, exp_theta, exp_beta_covmat = _estimate_params(
+        obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_sparse(
+            data_tr, self.dmat1, np.full(self.data1.shape, False))
+        exp_var_hat, exp_beta, exp_theta, exp_beta_covmat = _estimate_params_dense(
             data_tr, self.dmat1)
         npt.assert_allclose(obs_var_hat, exp_var_hat, atol=1e-5)
         npt.assert_allclose(obs_beta, exp_beta, atol=1e-5)
@@ -483,9 +477,9 @@ class CoreTests(TestCase):
 
         # Full and diagonal-only covariance paths agree for missing-value data too.
         data_tr = rclr(self.data1, axis=0, validate=False)
-        full = _estimate_params_nan(data_tr, self.dmat1, self.data1 == 0)
-        diag = _estimate_params_nan(
-            data_tr, self.dmat1, self.data1 == 0, full_covariance=False
+        full = _estimate_params_sparse(data_tr, self.dmat1, self.data1 == 0)
+        diag = _estimate_params_sparse(
+            data_tr, self.dmat1, self.data1 == 0, groups=None
         )
         npt.assert_allclose(diag[0], full[0])
         npt.assert_allclose(diag[1], full[1])
@@ -493,7 +487,7 @@ class CoreTests(TestCase):
         self.assertIsNone(diag[3])
         self.assertTrue(diag[0].flags.f_contiguous)
 
-    def test_estimate_params_nan_covariance_subset(self):
+    def test_estimate_params_sparse_covariance_subset(self):
         rng = np.random.default_rng(43)
         n_samples, n_features, n_covariates = 20, 25, 6
         data = rng.normal(size=(n_samples, n_features))
@@ -508,21 +502,20 @@ class CoreTests(TestCase):
         group_ind = np.array([1, 2, 4])
 
         for solver in ("legacy", "batched"):
-            full = _estimate_params_nan(
+            full = _estimate_params_sparse(
                 data.copy(),
                 dmat,
                 zero_mask,
                 max_iter=10,
-                full_covariance=True,
+                groups=True,
                 solver=solver,
             )
-            subset = _estimate_params_nan(
+            subset = _estimate_params_sparse(
                 data.copy(),
                 dmat,
                 zero_mask,
                 max_iter=10,
-                full_covariance=False,
-                covariance_indices=group_ind,
+                groups=group_ind,
                 solver=solver,
             )
             npt.assert_allclose(subset[0], full[0])
@@ -532,17 +525,17 @@ class CoreTests(TestCase):
                 subset[3], full[3][:, group_ind][:, :, group_ind]
             )
 
-    def test_estimate_params_nan_solvers(self):
+    def test_estimate_params_sparse_solvers(self):
         """Chunked compact solver agrees with the retained legacy SVD route."""
         zero_mask = self.data1 == 0
         data_tr = _transform_ancombc2(self.data1.astype(float), zero_mask)
 
-        legacy = _estimate_params_nan(
+        legacy = _estimate_params_sparse(
             data_tr, self.dmat1, zero_mask, solver="legacy"
         )
         # Exercise several block boundaries, including one feature per SVD.
         for batch_size in (1, 3, None):
-            batched = _estimate_params_nan(
+            batched = _estimate_params_sparse(
                 data_tr,
                 self.dmat1,
                 zero_mask,
@@ -553,20 +546,20 @@ class CoreTests(TestCase):
                 npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-12)
 
         # The diagonal-only covariance route must remain solver-independent too.
-        legacy_diag = _estimate_params_nan(
+        legacy_diag = _estimate_params_sparse(
             data_tr,
             self.dmat1,
             zero_mask,
             solver="legacy",
-            full_covariance=False,
+            groups=None,
         )
-        batched_diag = _estimate_params_nan(
+        batched_diag = _estimate_params_sparse(
             data_tr,
             self.dmat1,
             zero_mask,
             solver="batched",
             svd_batch_size=2,
-            full_covariance=False,
+            groups=None,
         )
         for observed, expected in zip(batched_diag[:3], legacy_diag[:3]):
             npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-12)
@@ -586,16 +579,16 @@ class CoreTests(TestCase):
         zero_mask = rng.random(data.shape) < 0.2
         data[zero_mask] = np.nan
 
-        legacy = _estimate_params_nan(
+        legacy = _estimate_params_sparse(
             data,
             dmat,
             zero_mask,
             solver="legacy",
             tol=0.0,
             max_iter=10,
-            full_covariance=False,
+            groups=None,
         )
-        batched = _estimate_params_nan(
+        batched = _estimate_params_sparse(
             data,
             dmat,
             zero_mask,
@@ -603,21 +596,21 @@ class CoreTests(TestCase):
             svd_batch_size=4,
             tol=0.0,
             max_iter=10,
-            full_covariance=False,
+            groups=None,
         )
         for observed, expected in zip(batched[:3], legacy[:3]):
             npt.assert_allclose(observed, expected)
 
-    def test_estimate_params_nan_direct(self):
+    def test_estimate_params_sparse_direct(self):
         # The direct solve reaches the same fixed point as a tightly converged
         # version of the alternating ANCOM-BC2 update.
         data_tr = rclr(self.data1, axis=0, validate=False)
         zero_mask = self.data1 == 0
-        observed = _estimate_params_nan(
+        observed = _estimate_params_sparse(
             data_tr, self.dmat1, zero_mask, tol=1e-12, max_iter=1000
         )
-        direct = _estimate_params_nan(data_tr, self.dmat1, zero_mask, direct=True)
-        direct_legacy = _estimate_params_nan(
+        direct = _estimate_params_sparse(data_tr, self.dmat1, zero_mask, direct=True)
+        direct_legacy = _estimate_params_sparse(
             data_tr, self.dmat1, zero_mask, direct=True, solver="legacy"
         )
 
@@ -655,7 +648,7 @@ class CoreTests(TestCase):
     def test_estimate_bias_em(self):
         # Example 1 (sparse): log1p, no NaN
         data = np.log1p(self.data1)
-        var_hat, beta, *_ = _estimate_params(data, self.dmat1)
+        var_hat, beta, *_ = _estimate_params_dense(data, self.dmat1)
         obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
         exp = np.array([[1.28803, 1.28828, 0.00168],
                         [0.06374, 0.06394, 0.02038]])
@@ -663,7 +656,7 @@ class CoreTests(TestCase):
 
         # RCLR transform, has NaN
         data = rclr(self.data1, axis=0)
-        var_hat, beta, *_ = _estimate_params_nan(data, self.dmat1)
+        var_hat, beta, *_ = _estimate_params_sparse(data, self.dmat1, self.data1 == 0)
         obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
         exp = np.array([[ 0.19357,  0.19545,  0.00043],
                         [-0.50523, -0.50468,  0.0116 ]])
@@ -671,7 +664,7 @@ class CoreTests(TestCase):
 
         # Example 2 (dense, log)
         data = np.log(self.data2)
-        var_hat, beta, *_ = _estimate_params(data, self.dmat2)
+        var_hat, beta, *_ = _estimate_params_dense(data, self.dmat2)
         obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
         exp = np.array([[ 2.30495,  2.30494,  0.00007],
                         [-0.1981 , -0.19314,  0.00187]])
@@ -679,7 +672,7 @@ class CoreTests(TestCase):
 
         # CLR transform
         data = clr(self.data2, axis=0)
-        var_hat, beta, *_ = _estimate_params(data, self.dmat2)
+        var_hat, beta, *_ = _estimate_params_dense(data, self.dmat2)
         obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
         exp = np.array([[ 0.00331,  0.01708,  0.00024],
                         [-0.1981 , -0.19314,  0.00187]])
@@ -688,7 +681,7 @@ class CoreTests(TestCase):
     def test_sample_bias(self):
         data = np.log1p(self.table2.to_numpy())
         dmat = dmatrix("group", self.meta2)
-        var_hat, beta, _, _ = _estimate_params(data, dmat)
+        var_hat, beta, _, _ = _estimate_params_dense(data.copy(), dmat)
         bias = np.empty((2, 3))
         for i in range(2):
             bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
@@ -704,7 +697,7 @@ class CoreTests(TestCase):
     def test_calc_statistics(self):
         data = np.log1p(self.table2.to_numpy())
         dmat = dmatrix("group", self.meta2)
-        var_hat, beta, _, _ = _estimate_params(data, dmat)
+        var_hat, beta, _, _ = _estimate_params_dense(data, dmat)
         bias = np.empty((2, 3))
         for i in range(2):
             res = _estimate_bias_em(beta[i], var_hat[:, i], max_iter=1)
@@ -993,6 +986,8 @@ class AncombcTests(TestCase):
     #     npt.assert_equal(similarity, 1.0)
 
     def test_ancombc_pseq_sub(self):
+        wkdir = '/home/drz/Desktop'
+
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
         meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
@@ -1007,10 +1002,19 @@ class AncombcTests(TestCase):
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc_main.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc_main.csv", index_col=(0, 1))
+        exp["Signif"] = exp["Signif"].astype("boolean")
+        pdt.assert_frame_equal(obs, exp)
+
         # global test
         obs = res.global_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
+
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc_global.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc_global.csv", index_col=0)
+        pdt.assert_frame_equal(obs, exp)
 
 class Ancombc2Tests(TestCase):
     def setUp(self):
@@ -1103,6 +1107,8 @@ class Ancombc2Tests(TestCase):
 
 
     def test_ancombc2_pseq_sub(self):
+        wkdir = '/home/drz/Desktop'
+
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
         meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
@@ -1117,20 +1123,37 @@ class Ancombc2Tests(TestCase):
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv", index_col=(0, 1))
+        exp["Signif"] = exp["Signif"].astype("boolean")
+        pdt.assert_frame_equal(obs, exp)
+
         # global test
         obs = res.global_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
+
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_global.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_global.csv", index_col=0)
+        pdt.assert_frame_equal(obs, exp)
 
         # pairwise test
         obs = res.pairwise_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv", index_col=(0, 1))
+        pdt.assert_frame_equal(obs, exp)
+
         # dunnett test
         obs = res.dunnett_test(seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
+
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv", index_col=(0, 1))
+        pdt.assert_frame_equal(obs, exp)
 
         # trend test
         obs = res.trend_test(seed=123)
@@ -1138,6 +1161,10 @@ class Ancombc2Tests(TestCase):
         pdt.assert_frame_equal(obs[["W", "Signif"]], exp[["W", "Signif"]], atol=1e-3)
         # NOTE: Trend test is highly stochastic, therefore we cannot directly compare
         # p- and q-values. See its documentation.
+
+        # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_trend.csv")
+        exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_trend.csv", index_col=0)
+        pdt.assert_frame_equal(obs, exp)
 
     def test_ancombc2_aggregator(self):
         table = self.table
@@ -1240,7 +1267,7 @@ class PostHocTests(TestCase):
     #     covars = dmat.design_info.column_names
     #     n_covars = len(covars)
 
-    #     var_hat, beta, _, vcov_hat = _estimate_params(feature_table, dmat)
+    #     var_hat, beta, _, vcov_hat = _estimate_params_dense(feature_table, dmat)
 
     #     bias = np.empty((n_covars, 3))
     #     for i in range(n_covars):
