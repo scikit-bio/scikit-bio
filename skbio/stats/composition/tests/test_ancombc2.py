@@ -17,7 +17,7 @@ from patsy import DesignMatrix, dmatrix
 from scipy.stats import t
 
 from skbio.util import get_data_path
-from skbio.stats.composition import rclr
+from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
     _estimate_params,
     _estimate_params_nan,
@@ -382,6 +382,13 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs_theta.round(5), exp_theta)
         npt.assert_array_equal(obs_beta_covmat.round(5), exp_beta_covmat)
 
+        # Reuse the input-table zero mask instead of scanning transformed data.
+        masked = _estimate_params_nan(data_tr, self.dmat1, self.data1 == 0)
+        for observed, expected in zip(masked, (
+            obs_var_hat, obs_beta, obs_theta, obs_beta_covmat
+        )):
+            npt.assert_allclose(observed, expected)
+
         # Should match `_estimate_params` on non-zero data
         data_tr = np.log1p(self.data1)
         obs_var_hat, obs_beta, obs_theta, obs_beta_covmat = _estimate_params_nan(
@@ -392,6 +399,19 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs_beta, exp_beta, atol=1e-5)
         npt.assert_allclose(obs_theta, exp_theta, atol=1e-5)
         npt.assert_allclose(obs_beta_covmat, exp_beta_covmat, atol=1e-5)
+
+    def test_estimate_params_nan_direct(self):
+        # The direct solve reaches the same fixed point as a tightly converged
+        # version of the alternating ANCOM-BC2 update.
+        data_tr = rclr(self.data1, axis=0, validate=False)
+        zero_mask = self.data1 == 0
+        observed = _estimate_params_nan(
+            data_tr, self.dmat1, zero_mask, tol=1e-12, max_iter=1000
+        )
+        direct = _estimate_params_nan(data_tr, self.dmat1, zero_mask, direct=True)
+
+        for observed_array, direct_array in zip(observed, direct):
+            npt.assert_allclose(direct_array, observed_array, atol=1e-10)
 
     def test_init_bias_params(self):
         # regular case
@@ -420,17 +440,37 @@ class CoreTests(TestCase):
         self.assertTupleEqual(obs, (0, 0, 10, 1, 1))
 
     def test_estimate_bias_em(self):
-        data = np.log1p(self.table.to_numpy())
-        dmat = dmatrix("grouping", self.grouping.to_frame())
-        var_hat, beta, _, _ = _estimate_params(data, dmat)
+        # Example 1 (sparse): log1p, no NaN
+        data = np.log1p(self.data1)
+        var_hat, beta, *_ = _estimate_params(data, self.dmat1)
+        obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
+        exp = np.array([[1.28803, 1.28828, 0.00168],
+                        [0.06374, 0.06394, 0.02038]])
+        npt.assert_array_equal(obs.round(5), exp)
 
-        obs_0 = _estimate_bias_em(beta[0], var_hat[:, 0], max_iter=100)
-        obs_1 = _estimate_bias_em(beta[1], var_hat[:, 1], max_iter=100)
-        exp_0 = np.array([2.40007051, 2.4000710, 5.809086e-05])
-        exp_1 = np.array([-0.08410937, -0.0847577, 1.395714e-03])
+        # RCLR transform, has NaN
+        data = rclr(self.data1, axis=0)
+        var_hat, beta, *_ = _estimate_params_nan(data, self.dmat1)
+        obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
+        exp = np.array([[ 0.19357,  0.19545,  0.00043],
+                        [-0.50523, -0.50468,  0.0116 ]])
+        npt.assert_array_equal(obs.round(5), exp)
 
-        npt.assert_allclose(obs_0, exp_0, atol=1e-5)
-        npt.assert_allclose(obs_1, exp_1, atol=1e-5)
+        # Example 2 (dense, log)
+        data = np.log(self.data2)
+        var_hat, beta, *_ = _estimate_params(data, self.dmat2)
+        obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
+        exp = np.array([[ 2.30495,  2.30494,  0.00007],
+                        [-0.1981 , -0.19314,  0.00187]])
+        npt.assert_array_equal(obs.round(5), exp)
+
+        # CLR transform
+        data = clr(self.data2, axis=0)
+        var_hat, beta, *_ = _estimate_params(data, self.dmat2)
+        obs = np.vstack(list(map(_estimate_bias_em, beta, var_hat.T)))
+        exp = np.array([[ 0.00331,  0.01708,  0.00024],
+                        [-0.1981 , -0.19314,  0.00187]])
+        npt.assert_array_equal(obs.round(5), exp)
 
     def test_sample_bias(self):
         data = np.log1p(self.table.to_numpy())

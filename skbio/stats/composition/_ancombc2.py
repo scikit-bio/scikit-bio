@@ -556,15 +556,16 @@ def _ancombc_core(
         matrix_tr = clr(matrix, axis=0, validate=False)
 
     # Estimate initial model parameters.
-    func = _estimate_params_nan if has_zero else _estimate_params
-    var_hat, beta, _, vcov_hat = func(matrix_tr, dmat)
+    if has_zero:
+        var_hat, beta, _, vcov_hat = _estimate_params_nan(matrix_tr, dmat, zero_mask)
+    else:
+        var_hat, beta, _, vcov_hat = _estimate_params(matrix_tr, dmat)
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
     # beta: (n_covariates, n_features); iterate over covariates (rows).
     bias = np.empty((n_covars, 3))
     for i in range(n_covars):
         bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
-        # TODO: handle NaN
 
     delta_em = bias[:, 0]
     delta_wls = bias[:, 1]
@@ -599,8 +600,12 @@ def _ancombc_core(
         matrix_tr -= theta_hat[:, None]
 
         # Re-estimate parameters
-        func = _estimate_params_nan if has_zero else _estimate_params
-        var_hat, beta_hat, _, vcov_hat = func(matrix_tr, dmat)
+        if has_zero:
+            var_hat, beta_hat, _, vcov_hat = _estimate_params_nan(
+                matrix_tr, dmat, zero_mask
+            )
+        else:
+            var_hat, beta_hat, _, vcov_hat = _estimate_params(matrix_tr, dmat)
         beta_hat = beta_hat.T
 
         # Adjust variances
@@ -705,10 +710,8 @@ def _estimate_params(data, dmat):
     -------
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances of regression coefficients.
-    beta : ndarray of shape (n_features, n_covariates)
+    beta : ndarray of shape (n_covariates, n_features)
         Estimated coefficients (log-fold changes before correction).
-        Transposed from SVD output to match downstream convention.
-        # TODO: Is there a transposition? Can it be skipped?
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
     beta_covmat : ndarray of shape (n_features, n_covariates, n_covariates)
@@ -723,23 +726,12 @@ def _estimate_params(data, dmat):
     # decomposition (SVD). Therefore, the following code only performs SVD once, and
     # uses the intermediates to calculate coefficients and inverse Gram matrix.
 
-    # Perform thin SVD and set small singular values to zero. The process and threshold
-    # (1e-15) are consistent with the underlying algorithm of `pinv`.
-    # Note: the Gram matrix may be singular, if there are colinear covariates in the
-    # design matrix. In such cases, a direct `inv` will raise an error, and `pinv` is
-    # the robust choice.
+    # The Gram matrix may be singular if covariates are collinear. The
+    # Moore-Penrose pseudoinverse is robust in those cases.
     data = np.asarray(data)
     dmat = np.asarray(dmat)
-    U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
-    S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > 1e-15 * np.max(S))
-
-    # Regression coefficients
-    V = Vh.T
-    dmat_inv = (V * S_inv) @ U.T
+    dmat_inv, gmat_inv = _invert_gram(dmat)
     beta = dmat_inv @ data
-
-    # Inverse Gram matrix
-    gmat_inv = (V * S_inv**2) @ Vh
 
     # Per-sample mean residuals (theta)
     diff = data - dmat @ beta
@@ -750,24 +742,25 @@ def _estimate_params(data, dmat):
 
     # Calculate the covariance matrix of the coefficients. The estimated variances are
     # the diagonal of the covariance matrix.
-    # Note: The original R code uses nested `for` loops over samples and features. The
+    # NOTE: The original R code uses nested `for` loops over samples and features. The
     # current implementation is fully vectorized.
-    # Note: The original R code patches NaN with 0.1 when calculating covariances. This
+    # NOTE: The original R code patches NaN with 0.1 when calculating covariances. This
     # is not needed in the current implementation, as the input data are guaranteed to
     # contain only finite real numbers.
     intm_mat = np.einsum("ji,jp,jq->ipq", eps**2, dmat, dmat, optimize=True)
     beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
     var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
 
-    # Make a C-contiguous, writtable copy of var_hat
-    var_hat = var_hat.copy()
-    assert var_hat.flags["C_CONTIGUOUS"]
+    # Make a writable F-contiguous copy of the read-only diagonal view.
+    # NOTE: F-contiguity benefits downstream calculations, though only a little.
+    var_hat = np.asfortranarray(var_hat)
 
-    # Note: Residuals are needed for ANCOM-BC2.
     return var_hat, beta, theta.reshape(-1), beta_covmat
 
 
-def _estimate_params_nan(data, dmat, tol=1e-2, max_iter=20):
+def _estimate_params_nan(
+    data, dmat, zero_mask=None, tol=1e-2, max_iter=20, direct=False
+):
     """Estimate initial model parameters when the response contains zeros/NaNs.
 
     This mirrors the fixed-effects ``.iter_mle`` path used by ANCOM-BC2 when
@@ -788,16 +781,23 @@ def _estimate_params_nan(data, dmat, tol=1e-2, max_iter=20):
     dmat : ndarray of shape (n_samples, n_covariates)
         Design matrix. ANCOM-BC2 requires the fixed-effect design to be fully
         observed for this path.
+    zero_mask : ndarray of shape (n_samples, n_features), optional
+        Boolean mask of zero/missing values in ``data`` before transformation.
+        Providing this avoids recomputing the mask from the transformed data.
     tol : float, default=1e-2
         Iteration tolerance. The ANCOM-BC2 default is 1e-2.
     max_iter : int, default=20
         Maximum number of iterations. The ANCOM-BC2 default is 20.
+    direct : bool, default=False
+        Solve the coupled sample effects directly instead of reproducing the
+        ANCOM-BC2 iteration. This converges fully and does not match R's
+        tolerance-limited results exactly.
 
     Returns
     -------
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances of regression coefficients.
-    beta : ndarray of shape (n_features, n_covariates)
+    beta : ndarray of shape (n_covariates, n_features)
         Estimated regression coefficients.
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals / initial sampling-fraction estimates.
@@ -805,76 +805,151 @@ def _estimate_params_nan(data, dmat, tol=1e-2, max_iter=20):
         Estimated covariance matrices.
 
     """
-    data = np.asarray(data, dtype=float)
-    dmat = np.asarray(dmat, dtype=float)
+    data = np.asarray(data)
+    dmat = np.asarray(dmat)
 
-    n_samples, n_features = data.shape
+    n_samples, _ = data.shape
 
     # R's lm() omits NaN responses independently for each taxon.  Build one
     # masked design matrix per feature and compute all pseudoinverses once.
-    W = np.isfinite(data).astype(float)
-    X_w = dmat[None, :, :] * W.T[:, :, None]
+    if zero_mask is None:
+        zero_mask = np.isnan(data)
+    W = 1.0 - zero_mask.T
+    X_w = dmat[None, :, :] * W[:, :, None]
 
     U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
-    cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
-    S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+    S_inv = _invert_singular(S)
     V = np.swapaxes(Vh, -1, -2)
     dmat_inv = np.einsum("fpk,fk,fsk->fps", V, S_inv, U, optimize=True)
 
     # Initial beta from theta = 0, matching the initial lm() fits in .iter_mle.
-    y_filled = np.nan_to_num(data, nan=0.0)
-    theta = np.zeros(n_samples, dtype=float)
-    beta = np.einsum("fps,sf->fp", dmat_inv, y_filled, optimize=True)
+    intm = np.zeros_like(data)
+    np.copyto(intm, data, where=~zero_mask)
+    theta = np.zeros(n_samples, dtype=data.dtype)
+    beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
 
-    # Reproduce ANCOM-BC2's alternating beta/theta updates.  With missing
-    # responses, this iteration cannot be collapsed to a single OLS solve.
+    if direct:
+        theta, beta = _estimate_params_nan_direct(
+            data, dmat, zero_mask, W, dmat_inv, intm, beta
+        )
+    else:
+        theta, beta = _estimate_params_nan_iter(
+            data, dmat, zero_mask, dmat_inv, intm, theta, beta, tol, max_iter
+        )
+
+    # Residuals used by the sandwich covariance estimator.
+    np.matmul(dmat, beta.T, out=intm)
+    np.copyto(intm, 0.0, where=zero_mask)
+
+    intm *= -1.0
+    intm += data
+    intm -= theta[:, None]  # eps = data - intm - theta[:, None]
+    np.square(intm, out=intm)
+    np.nan_to_num(intm, copy=False, nan=0.0)
+
+    # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
+    # feature-specific inverse based on each feature's observed rows.
+    _, gmat_inv = _invert_gram(dmat)
+
+    # R replaces every NaN element of eps^2 * x x^T with 0.1.  Since dmat is
+    # finite, each missing residual contributes a matrix filled with 0.1.
+    n_missing = zero_mask.sum(axis=0)
+    intm_mat = np.einsum("sf,sp,sq->fpq", intm, dmat, dmat, optimize=True)
+    intm_mat += 0.1 * n_missing[:, None, None]
+
+    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
+    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+    var_hat = np.asfortranarray(var_hat)
+
+    return var_hat, beta.T.copy(), theta, beta_covmat
+
+
+def _estimate_params_nan_iter(
+    data, dmat, zero_mask, dmat_inv, intm, theta, beta, tol, max_iter
+):
+    """Reproduce ANCOM-BC2's alternating beta/theta updates."""
+    # Missing responses couple features through theta, so these are not
+    # independent OLS fits.
     epsilon = 100.0
-    iter_num = 0
-    fitted = np.zeros_like(data, dtype=float)
-
-    while epsilon > tol and iter_num < max_iter:
-        y_adj = np.where(np.isfinite(data), data - theta[:, None], 0.0)
-        beta_new = np.einsum("fps,sf->fp", dmat_inv, y_adj, optimize=True)
+    it = 0
+    while epsilon > tol and it < max_iter:
+        np.subtract(data, theta[:, None], out=intm)
+        np.copyto(intm, 0.0, where=zero_mask)  # adjusted
+        beta_new = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
 
         # R initializes each fitted vector with zero and writes fitted values
         # only at response rows used by lm().
-        fitted = np.where(np.isfinite(data), dmat @ beta_new.T, 0.0)
-        theta_new = np.nanmean(data - fitted, axis=1)
+        np.matmul(dmat, beta_new.T, out=intm)
+        np.copyto(intm, 0.0, where=zero_mask)
+        np.subtract(data, intm, out=intm)  # fitted
+        theta_new = np.nanmean(intm, axis=1)
 
         epsilon = np.sqrt(
             np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
         )
         beta = beta_new
         theta = theta_new
-        iter_num += 1
+        it += 1
+    return theta, beta
 
-    # Residuals used by the sandwich covariance estimator.
-    eps = data - fitted - theta[:, None]
 
-    # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
-    # feature-specific inverse based on each feature's observed rows.
-    Ux, Sx, Vhx = np.linalg.svd(dmat, full_matrices=False)
-    Sx_inv = np.divide(
-        1.0,
-        Sx,
-        out=np.zeros_like(Sx),
-        where=Sx > 1e-15 * np.max(Sx),
+def _estimate_params_nan_direct(data, dmat, zero_mask, W, dmat_inv, intm, beta):
+    """Solve the fully converged fixed point for zero-containing data.
+
+    This exact method should produce numerically better result than the iterative
+    optimization method. But it costs more compute due to solving a cubic system.
+
+    """
+    # The theta update is affine: theta_new = D^-1 (r + S @ theta).
+    # Solve its fixed point while imposing the constraint selected by the
+    # zero-initialized iteration, X.T @ D @ theta = 0.
+    fitted = np.matmul(dmat, beta.T)
+    np.copyto(fitted, 0.0, where=zero_mask)
+    np.subtract(data, fitted, out=intm)
+    np.nan_to_num(intm, copy=False, nan=0.0)
+    residual_sum = intm.sum(axis=1)
+    observed_counts = (~zero_mask).sum(axis=1)
+    system = np.diag(observed_counts) - np.einsum(
+        "fs,sp,fpt->st", W, dmat, dmat_inv, optimize=True
     )
-    Vx = Vhx.T
-    gmat_inv = (Vx * Sx_inv**2) @ Vhx
+    constraint = dmat.T * observed_counts
+    augmented = np.block(
+        [[system, constraint.T], [constraint, np.zeros((dmat.shape[1],) * 2)]]
+    )
+    theta = np.linalg.lstsq(
+        augmented,
+        np.concatenate((residual_sum, np.zeros(dmat.shape[1]))),
+        rcond=None,
+    )[0][: data.shape[0]]
+    np.subtract(data, theta[:, None], out=intm)
+    np.copyto(intm, 0.0, where=zero_mask)
+    beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
+    return theta, beta
 
-    # R replaces every NaN element of eps^2 * x x^T with 0.1.  Since dmat is
-    # finite, each missing residual contributes a matrix filled with 0.1.
-    eps2 = eps**2
-    n_missing = np.isnan(eps2).sum(axis=0)
-    eps2_filled = np.nan_to_num(eps2, nan=0.0)
-    intm_mat = np.einsum("sf,sp,sq->fpq", eps2_filled, dmat, dmat, optimize=True)
-    intm_mat += 0.1 * n_missing[:, None, None]
 
-    beta_covmat = (gmat_inv @ intm_mat) @ gmat_inv
-    var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+def _invert_gram(dmat):
+    """Calculate least-squares and inverse-Gram operators from a design matrix."""
+    U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
+    S_inv = _invert_singular(S)
+    V = Vh.T
+    dmat_inv = (V * S_inv) @ U.T
+    gmat_inv = (V * S_inv**2) @ Vh
+    return dmat_inv, gmat_inv
 
-    return var_hat.copy(), beta.T, theta, beta_covmat
+
+def _invert_singular(S):
+    """Invert significant singular values.
+
+    Small singular values are set to zero prior to inversion. The process and threshold
+    (1e-15) are consistent with the underlying algorithm of `pinv`.
+
+    The Gram matrix may be singular, if there are colinear covariates in the design
+    matrix. In such cases, a direct `inv` will raise an error, and `pinv` is the robust
+    choice.
+
+    """
+    cutoff = 1e-15 * np.max(S, axis=-1, keepdims=True)
+    return np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
 
 
 # Numerical optimization setting for sampling bias estimation through an Expectation-
@@ -925,7 +1000,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
     """
     # This function involves careful memory optimization to avoid creating temporary
     # arrays during iteration. Technically, the arrays could have been pre-allocated
-    # in the outer function `ancombc` and re-used across covariates, which could
+    # in the outer function `_ancombc_core` and re-used across covariates, which could
     # further enhance memory efficiency. It is left as-is for modularity.
 
     # The original R code has `na.rm = TRUE` in many commands. This is not necessary
@@ -975,19 +1050,35 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
 
     # Just a 2-row array to store random data
     intm = np.empty((2, n_feats))
+    intm0, intm1 = intm
 
     # Initialize intermediates. The 1st row is constant, representing pre-correction
     # estimates, whereas the 2nd and 3rd rows are to be modified during iteration.
+    # NOTE: Making `var_hat` C-contiguous can further improve performance, but this is
+    # marginal compared with the EM process.
     np.reciprocal(var_hat, out=nu_inv[0])
     np.sqrt(var_hat, out=stdevs[0])
     np.divide(beta, var_hat, out=ratios[0])
 
-    # Objective function for numeric optimization of variance estimation
-    # Note: `norm.logpdf` doesn't have an `out` parameter. To further optimize this,
-    # one needs to manually implement the under-the-hood algorithm.
+    log2pi = 0.5 * np.log(2.0 * np.pi)
+
+    # Objective function for optimization of variance estimation. Equivalent to:
+    # def func(x, loc, resp):
+    #     log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
+    #     return -np.dot(resp, log_pdf)
+    # However, `norm.logpdf` doesn't have an `out` parameter. Therefore, the process is
+    # implemented from scratch below to utilize the pre-allocated workspace.
+    # logpdf = -0.5 * ((beta - loc)**2 / var + log(var) + log(2 * pi))
     def func(x, loc, resp):
-        log_pdf = norm.logpdf(beta, loc=loc, scale=(var_hat + x) ** 0.5)
-        return -np.dot(resp, log_pdf)
+        np.add(var_hat, x, out=intm0)
+        np.subtract(beta, loc, out=intm1)
+        np.square(intm1, out=intm1)
+        np.divide(intm1, intm0, out=intm1)
+        np.log(intm0, out=intm0)
+        np.add(intm1, intm0, out=intm1)
+        np.multiply(intm1, -0.5, out=intm1)
+        np.subtract(intm1, log2pi, out=intm1)
+        return -np.dot(resp, intm1)
 
     # Expectation-maximization (E-M) iterations
     loss, epoch = np.inf, 0
@@ -1240,7 +1331,7 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
 
     """
     # vars += delta + 2 * |vars * delta|^0.5
-    var_delta_t = var_delta[np.newaxis, :]
+    var_delta_t = var_delta[None, :]
     var_prod = var_hat * var_delta_t
     np.abs(var_prod, out=var_prod)
     np.sqrt(var_prod, out=var_prod)
@@ -1252,7 +1343,7 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc):
     # TODO: Handle NaN values
     if s0_perc:
         s02 = np.nanquantile(var_hat, s0_perc, axis=0)
-        var_hat += s02[np.newaxis, :]
+        var_hat += s02[None, :]
         # var_hat[np.isnan(beta_hat)] = np.nan
 
     # Update vcov_hat with adjusted variances
