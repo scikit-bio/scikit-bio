@@ -1594,7 +1594,7 @@ def _covariance_gemm(resid_sq, influence):
         dtype=np.result_type(resid_sq, influence),
     )
     np.multiply(influence[:, :, None], influence[:, None, :], out=pair_products)
-    pair_products.shape = (n_samples, n_covars * n_covars)
+    pair_products = pair_products.reshape(n_samples, n_covars * n_covars, copy=False)
 
     beta_covmat = np.empty((n_feats, n_covars, n_covars), dtype=pair_products.dtype)
     np.matmul(
@@ -2376,8 +2376,6 @@ class ANCOMBCResult:
         "_max_iter": 100,
         "_tol": 1e-5,
         "_pseudo": 0,
-        "_O1": None,
-        "_O2": None,
     }
 
     def __init__(

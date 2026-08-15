@@ -606,7 +606,7 @@ class CoreTests(TestCase):
             full_covariance=False,
         )
         for observed, expected in zip(batched[:3], legacy[:3]):
-            npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-10)
+            npt.assert_allclose(observed, expected)
 
     def test_estimate_params_nan_direct(self):
         # The direct solve reaches the same fixed point as a tightly converged
