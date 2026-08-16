@@ -138,7 +138,7 @@ jobs:
       - name: Generate coverage reports
         if: runner.os == 'Linux' && runner.arch == 'X64'
         run: |
-          cd ci && coverage lcov --rcfile ../.coveragerc
+          cd ci && coverage lcov --rcfile ../pyproject.toml
       - name: Upload coverage reports to Codecov
         if: runner.os == 'Linux' && runner.arch == 'X64'
         uses: codecov/codecov-action@v5
