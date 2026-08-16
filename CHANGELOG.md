@@ -10,6 +10,7 @@
 ### Performance enhancements
 
 * Reduced `BPTree.rmq`, `rMq`, `lca`, `height`, and `deepest_node` from O(span) to O(log n) by answering range-minimum/maximum excess queries with the rmM (min-max) tree instead of linearly scanning the queried range. For distant node pairs and deep subtrees this scales with tree size: on large trees, `lca`, `rmq`, and `rMq` on far-apart nodes drop from milliseconds to a flat sub-microsecond — hundreds- to thousands-fold, across balanced, caterpillar, and random topologies alike — with no change to construction time or memory footprint ([#2541](https://github.com/scikit-bio/scikit-bio/pull/2541)).
+* Sped up `BPTree` construction by building the `select` index in a single linear pass (`numpy.flatnonzero` over each parenthesis type) instead of an O(n log n) `numpy.unique` over cumulative ranks. The index build drops roughly tenfold — about a 7% reduction in total tree construction time on large trees, inherited by `parse_newick` and `from_treenode` — while producing bit-for-bit identical arrays and an unchanged memory footprint ([#XXXX](https://github.com/scikit-bio/scikit-bio/pull/XXXX)).
 
 ### Bug Fixes
 
