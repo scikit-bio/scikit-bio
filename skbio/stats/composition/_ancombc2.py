@@ -566,7 +566,7 @@ def _ancombc_core(
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
 
     # Handle zero values
-    matrix, missing, has_zero = _handle_zeros(matrix, pseudo)
+    matrix, missing = _handle_zeros(matrix, pseudo)
 
     # Transform count matrix. ANCOM-BC uses a plain logarithm. ANCOM-BC2 uses
     # a NumPy-specialized CLR/RCLR implementation that keeps only one full-size
@@ -617,7 +617,7 @@ def _ancombc_core(
         if aggregator is not None:
             matrix, features = _aggregate_features(matrix, aggregator, features)
             n_feats = matrix.shape[1]
-            matrix, missing, has_zero = _handle_zeros(matrix, pseudo)
+            matrix, missing = _handle_zeros(matrix, pseudo)
             matrix_tr = _transform_ancombc2(matrix, missing)
 
         # Correct data for sampling fractions
@@ -637,7 +637,7 @@ def _ancombc_core(
         )
 
         # Compute per-feature degree of freedom (observed samples - covariates)
-        if has_zero:
+        if missing is not None:
             n_valid = np.sum(~missing, axis=0)
             dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
@@ -722,26 +722,20 @@ def _handle_zeros(data, pseudo=None):
     missing : ndarray of shape (n_samples, n_features) or None
         Boolean mask of zero values in the table, or None when the table is zero-free
         (or a pseudocount was applied).
-    has_zero : bool
-        Whether table contain zero values.
 
     """
     # Add pseudocount
     if pseudo:
         data = data + pseudo
         missing = None
-        has_zero = False
 
     # Otherwise, check zero values
     else:
         missing = data == 0
-        has_zero = np.any(missing)
-        # The mask is only needed by the RCLR/missing-value path. Releasing it for a
-        # zero-free table avoids retaining an n_samples x n_features boolean array.
-        if not has_zero:
+        if not np.any(missing):
             missing = None
 
-    return data, missing, has_zero
+    return data, missing
 
 
 def _transform_ancombc2(data, missing=None):
@@ -788,10 +782,7 @@ def _transform_ancombc2(data, missing=None):
 
 
 def _estimate_params(data, dmat, groups, missing, keep_data=True):
-    """Estimate initial model parameters.
-
-    Perform initial estimation of model parameters (coefficients, variances and
-    mean residuals) based on the observed data prior to bias correction.
+    """Estimate model parameters.
 
     Parameters
     ----------
@@ -821,6 +812,14 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
     beta_covmat : ndarray or None
         Full covariance matrices when ``full_covariance=True``; otherwise covariance
         submatrices for ``covariance_indices`` or None when no submatrix was requested.
+
+    Notes
+    -----
+    In ANCOM-BC, this function performs initial estimation of the model parameters
+    (coefficients, variances and mean residuals) based on the observed data.
+
+    In ANCOM-BC2, this function additionally performs final parameter estimation on
+    data corrected for sampling fractions.
 
     """
     if missing is not None:
