@@ -21,6 +21,7 @@ from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
     _estimate_params_dense,
     _estimate_params_sparse,
+    _lstsq_fit,
     _transform_data,
     _estimate_bias_em,
     _sample_fractions,
@@ -345,29 +346,47 @@ class CoreTests(TestCase):
             data_tr.shape[1], len(groups), len(groups)))
         npt.assert_allclose(obs_cov, exp_cov[:, groups][:, :, groups])
 
-    def test_estimate_params_covariance_subset(self):
-        # TODO: revisit
+    def test_estimate_params_grouped(self):
+        # Covariance submatrices from grouped calculation should match the full matrix.
         rng = np.random.default_rng(42)
         data = rng.normal(size=(20, 30))
-        dmat = np.column_stack(
-            [np.ones(20), rng.normal(size=(20, 5))]
-        )
-        group_ind = np.array([1, 3, 4])
+        dmat = np.column_stack([np.ones(20), rng.normal(size=(20, 5))])
+        groups = np.array([1, 3, 4])
 
-        full = _estimate_params_dense(data.copy(), dmat, groups=True)
-        subset = _estimate_params_dense(
-            data.copy(),
-            dmat,
-            groups=group_ind,
-        )
+        obs = _estimate_params_dense(data.copy(), dmat, groups=groups)
+        exp = _estimate_params_dense(data.copy(), dmat, groups=True)
 
-        npt.assert_allclose(subset[0], full[0])
-        npt.assert_allclose(subset[1], full[1])
-        npt.assert_allclose(subset[2], full[2])
-        npt.assert_allclose(
-            subset[3], full[3][:, group_ind][:, :, group_ind]
-        )
-        self.assertEqual(subset[3].shape, (data.shape[1], 3, 3))
+        npt.assert_allclose(obs[0], exp[0])
+        npt.assert_allclose(obs[1], exp[1])
+        npt.assert_allclose(obs[2], exp[2])
+        npt.assert_allclose(obs[3], exp[3][:, groups][:, :, groups])
+        self.assertEqual(obs[3].shape, (data.shape[1], 3, 3))
+
+    def test_lstsq_fit(self):
+        dmat = np.array(
+            [[1, 0, 1],
+             [1, 1, 1],
+             [1, 2, 1],
+             [1, 3, 1]], dtype=float)
+        obs_dmat_inv, obs_gram_sum = _lstsq_fit(dmat, gram=True)
+        exp_dmat_inv = np.array(
+            [[ 0.35,  0.2 ,  0.05, -0.1 ],
+             [-0.3 , -0.1 ,  0.1 ,  0.3 ],
+             [ 0.35,  0.2 ,  0.05, -0.1 ]])
+        exp_gram_sum = np.array([ 0.2, -0.1,  0.2])
+        npt.assert_allclose(obs_dmat_inv, exp_dmat_inv)
+        npt.assert_allclose(obs_gram_sum, exp_gram_sum)
+
+        # Compare with direct math
+        exp_dmat_inv = np.linalg.pinv(dmat)
+        exp_gram_sum = np.linalg.pinv(dmat.T @ dmat).sum(axis=0)
+        npt.assert_allclose(obs_dmat_inv, exp_dmat_inv)
+        npt.assert_allclose(obs_gram_sum, exp_gram_sum)
+
+        # Omit inverse Gram matrix sum
+        obs_dmat_inv, obs_gram_sum = _lstsq_fit(dmat, gram=False)
+        npt.assert_allclose(obs_dmat_inv, exp_dmat_inv)
+        self.assertIsNone(obs_gram_sum)
 
     def test_estimate_params_unbalanced(self):
         """Unbalanced model and fallback compute test."""
@@ -516,7 +535,7 @@ class CoreTests(TestCase):
         self.assertIsNone(diag[3])
         self.assertTrue(diag[0].flags.f_contiguous)
 
-    def test_estimate_params_sparse_covariance_subset(self):
+    def test_estimate_params_sparse_grouped(self):
         rng = np.random.default_rng(43)
         n_samples, n_features, n_covariates = 20, 25, 6
         data = rng.normal(size=(n_samples, n_features))
@@ -528,38 +547,36 @@ class CoreTests(TestCase):
             if (~zero_mask[:, j]).sum() < n_covariates + 2:
                 zero_mask[: n_covariates + 2, j] = False
         data[zero_mask] = np.nan
-        group_ind = np.array([1, 2, 4])
+        groups = np.array([1, 2, 4])
 
-        for solver in ("legacy", "batched"):
+        for solver in (False, True):
             full = _estimate_params_sparse(
                 data.copy(),
                 dmat,
                 zero_mask,
                 max_iter=10,
                 groups=True,
-                solver=solver,
+                batched=solver,
             )
             subset = _estimate_params_sparse(
                 data.copy(),
                 dmat,
                 zero_mask,
                 max_iter=10,
-                groups=group_ind,
-                solver=solver,
+                groups=groups,
+                batched=solver,
             )
             npt.assert_allclose(subset[0], full[0])
             npt.assert_allclose(subset[1], full[1])
             npt.assert_allclose(subset[2], full[2])
-            npt.assert_allclose(
-                subset[3], full[3][:, group_ind][:, :, group_ind]
-            )
+            npt.assert_allclose(subset[3], full[3][:, groups][:, :, groups])
 
     def test_estimate_params_sparse_solvers(self):
         """Chunked compact solver agrees with the retained legacy SVD route."""
         data_tr, zero_mask = _transform_data(self.data1.astype(float), 0, True)
 
         legacy = _estimate_params_sparse(
-            data_tr, self.dmat1, zero_mask, solver="legacy"
+            data_tr, self.dmat1, zero_mask, batched="legacy"
         )
         # Exercise several block boundaries, including one feature per SVD.
         for batch_size in (1, 3, None):
@@ -567,8 +584,8 @@ class CoreTests(TestCase):
                 data_tr,
                 self.dmat1,
                 zero_mask,
-                solver="batched",
-                svd_batch_size=batch_size,
+                batched="batched",
+                batch=batch_size,
             )
             for observed, expected in zip(batched, legacy):
                 npt.assert_allclose(observed, expected, rtol=1e-12, atol=1e-12)
@@ -578,15 +595,15 @@ class CoreTests(TestCase):
             data_tr,
             self.dmat1,
             zero_mask,
-            solver="legacy",
+            batched="legacy",
             groups=None,
         )
         batched_diag = _estimate_params_sparse(
             data_tr,
             self.dmat1,
             zero_mask,
-            solver="batched",
-            svd_batch_size=2,
+            batched="batched",
+            batch=2,
             groups=None,
         )
         for observed, expected in zip(batched_diag[:3], legacy_diag[:3]):
@@ -611,7 +628,7 @@ class CoreTests(TestCase):
             data,
             dmat,
             zero_mask,
-            solver="legacy",
+            batched="legacy",
             tol=0.0,
             max_iter=10,
             groups=None,
@@ -620,8 +637,8 @@ class CoreTests(TestCase):
             data,
             dmat,
             zero_mask,
-            solver="batched",
-            svd_batch_size=4,
+            batched="batched",
+            batch=4,
             tol=0.0,
             max_iter=10,
             groups=None,
@@ -639,7 +656,7 @@ class CoreTests(TestCase):
         )
         direct = _estimate_params_sparse(data_tr, self.dmat1, zero_mask, direct=True)
         direct_legacy = _estimate_params_sparse(
-            data_tr, self.dmat1, zero_mask, direct=True, solver="legacy"
+            data_tr, self.dmat1, zero_mask, direct=True, batched="legacy"
         )
 
         for observed_array, direct_array in zip(observed, direct):

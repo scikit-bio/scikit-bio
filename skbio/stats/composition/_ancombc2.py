@@ -800,13 +800,17 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
     covmat : ndarray or None
-        Covariance matrices of coefficients.
-        - When `groups=None`: Return None.
-        - When `groups=True`: Return full covariance matrices. Shape: (n_features,
-          n_covariates, n_covariates)
-        - When `groups` is ndarray of indices: Return covariance submatrices of these
-          indices. Shape: (n_features, n_groups - 1, n_groups - 1)
+        Estimated covariance matrices of coefficients.
+        - When `groups=None`: None.
+        - When `groups=True`: Full covariance matrices.
+          Shape: (n_features, n_covariates, n_covariates)
+        - When `groups` is ndarray of indices: Covariance submatrices of the indices.
+          Shape: (n_features, n_groups - 1, n_groups - 1)
 
+    Notes
+    -----
+    Returned `var_hat` is F-contiguous, which should (presumably) benefit the
+    downstream EM optimization process.
     """
     dmat = np.asarray(dmat, dtype=data.dtype)
     if missing is not None:
@@ -838,7 +842,7 @@ def _estimate_params_dense(data, dmat, groups=True):
     # data -= dmat @ beta
     # The process below is equivalent but saves memory by avoiding materializing the
     # entire fitted matrix. TODO: Revisit.
-    _subtract_fitted_inplace(data, dmat, beta)
+    _calc_residual(data, dmat, beta)
 
     # Calculate per-sample mean residuals (theta)
     theta = np.mean(data, axis=1, keepdims=True)
@@ -847,17 +851,8 @@ def _estimate_params_dense(data, dmat, groups=True):
     data -= theta  # eps
     np.square(data, out=data)  # eps2
 
-    # Calculate covariance matrix of the coefficients
-    if groups is True:
-        covmat = _calc_covariance(data, dmat_inv.T)
-        var_hat = np.diagonal(covmat, axis1=1, axis2=2)
-        # Make a writable F-contiguous copy of the read-only diagonal view.
-        var_hat = np.asfortranarray(var_hat)
-    elif groups is not None:
-        var_hat, covmat = _calc_var_covar(data, dmat_inv.T, groups)
-    else:
-        var_hat = _calc_variance(data, dmat_inv.T)
-        covmat = None
+    # Calculate variances and covariance matrix of coefficients
+    var_hat, covmat = _calc_grouped_var_cov(data, dmat_inv.T, groups)
 
     return var_hat, beta, theta.reshape(-1), covmat
 
@@ -870,8 +865,8 @@ def _estimate_params_sparse(
     tol=1e-2,
     max_iter=20,
     direct=False,
-    solver="batched",
-    svd_batch_size=None,
+    batched=True,
+    batch=None,
 ):
     """Estimate model parameters from a sparse matrix (with missing values).
 
@@ -900,12 +895,12 @@ def _estimate_params_sparse(
         Coefficient indices whose covariance submatrix should be calculated when
         ``full_covariance=False``. All coefficient variances are always calculated.
         If None, no covariance matrix is returned.
-    solver : {"batched", "legacy"}, optional
-        Missing-response least-squares implementation. ``"legacy"`` materializes the
+    batched : bool, optional
+        Missing-response least-squares implementation. False materializes the
         complete feature-by-sample pseudoinverse tensor and is retained for numerical
-        comparison. ``"batched"`` performs the masked SVD in feature blocks and stores
-        only compact per-feature spectral operators. Default is ``"batched"``.
-    svd_batch_size : int, optional
+        comparison. True (default) performs the masked SVD in feature blocks and stores
+        only compact per-feature spectral operators.
+    batch : int, optional
         Number of features per masked-SVD block for ``solver="batched"``. By default a
         size is selected to keep the principal SVD input/output workspaces near 32 MiB.
 
@@ -918,90 +913,61 @@ def _estimate_params_sparse(
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals / initial sampling-fraction estimates.
     covmat : ndarray or None
-        Full covariance matrices when ``full_covariance=True``; otherwise covariance
-        submatrices for ``covariance_indices`` or None when no submatrix was requested.
+        Estimated covariance matrices of coefficients.
 
     """
-    if solver == "legacy":
-        theta, beta = _estimate_params_nan_legacy(
-            data, dmat, missing, tol, max_iter, direct
-        )
-    elif solver == "batched":
-        theta, beta = _estimate_params_nan_batched(
-            data,
-            dmat,
-            missing,
-            tol,
-            max_iter,
-            direct,
-            svd_batch_size=svd_batch_size,
-        )
-    else:
-        raise ValueError("`solver` must be either 'batched' or 'legacy'.")
+    func = _lstsq_nan_batch if batched else _lstsq_nan_full
+    theta, beta = func(data, dmat, missing, tol, max_iter, direct, batch)
 
     # Residuals used by the sandwich covariance estimator. Missing residuals are set to
     # zero here and handled separately below to preserve ANCOM-BC2/R's 0.1 correction.
     intm = np.empty_like(data)
     np.matmul(dmat, beta.T, out=intm)
-    np.copyto(intm, 0.0, where=missing)
     intm *= -1.0
     intm += data
     intm -= theta[:, None]
     np.square(intm, out=intm)
-    np.nan_to_num(intm, copy=False, nan=0.0)
+    intm[missing] = 0.0
 
     # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
     # feature-specific inverse based on each feature's observed rows. Its transpose is
     # the influence matrix H used by the GEMM covariance calculation below.
-    dmat_inv, gmat_inv = _lstsq_fit(dmat, gram=True)
+    dmat_inv, gram_sum = _lstsq_fit(dmat, gram=True)
     n_missing = missing.sum(axis=0)
 
-    if groups is True:
-        covmat = _calc_covariance(intm, dmat_inv.T)
-        var_hat = np.diagonal(covmat, axis1=1, axis2=2)
-        var_hat = np.asfortranarray(var_hat)
-    elif groups is not None:
-        var_hat, covmat = _calc_var_covar(intm, dmat_inv.T, groups)
-    else:
-        var_hat = _calc_variance(intm, dmat_inv.T)
-        covmat = None
+    # Calculate variances and covariance matrix of coefficients
+    var_hat, covmat = _calc_grouped_var_cov(intm, dmat_inv.T, groups)
 
-    # R replaces every NaN element of eps^2 * x x^T with 0.1. Since dmat is finite,
-    # each missing residual contributes a matrix filled with 0.1 before the sandwich
-    # transformation. Add the correction to the full diagonal and, when retained, the
-    # requested covariance submatrix.
+    # This code matches R, which replaces every NaN element of resid^2 * x x^T with
+    # 0.1. Since dmat is finite, each missing residual contributes a matrix filled with
+    # 0.1 before transformation.
     if np.any(n_missing):
-        gsum_left = np.sum(gmat_inv, axis=1)
-        gsum_right = np.sum(gmat_inv, axis=0)
-        var_hat += (0.1 * n_missing)[:, None] * (gsum_left * gsum_right)[None, :]
-
+        var_hat += (0.1 * n_missing)[:, None] * (gram_sum * gram_sum)[None, :]
         if covmat is not None:
-            if groups is True:
-                missing_cov = np.outer(gsum_left, gsum_right)
-            else:
-                missing_cov = np.outer(gsum_left[groups], gsum_right[groups])
+            if groups is not True:
+                gram_sum = gram_sum[groups]
+            missing_cov = np.outer(gram_sum, gram_sum)
             covmat += (0.1 * n_missing)[:, None, None] * missing_cov
 
     # Ensure the retained covariance diagonal is exactly the same array of variances
     # used by the primary analysis, including the R missing-value correction.
-    # TODO: no need to slice when groups is True?
     if covmat is not None:
         if groups is True:
             groups = np.arange(var_hat.shape[1])
-        diag_idx = np.arange(groups.size)
-        covmat[:, diag_idx, diag_idx] = var_hat[:, groups]
+        diag = np.arange(groups.size)
+        covmat[:, diag, diag] = var_hat[:, groups]
 
     return var_hat, beta.T.copy(), theta, covmat
 
 
-def _estimate_params_nan_legacy(data, dmat, missing, tol, max_iter, direct):
+def _lstsq_nan_full(data, dmat, missing, tol, max_iter, direct, batch=None):
     """Fit missing-response models using the original full batched pseudoinverse.
 
     This helper intentionally preserves the pre-optimization route so the compact
     implementation can be regression-tested against it. Its dominant arrays have shape
     `(n_features, n_samples, n_covariates)`.
     """
-    n_samples = data.shape[0]
+    n_samps = data.shape[0]
 
     W = 1.0 - missing.T
     X_w = dmat[None, :, :] * W[:, :, None]
@@ -1012,7 +978,7 @@ def _estimate_params_nan_legacy(data, dmat, missing, tol, max_iter, direct):
 
     intm = np.zeros_like(data)
     np.copyto(intm, data, where=~missing)
-    theta = np.zeros(n_samples, dtype=data.dtype)
+    theta = np.zeros(n_samps, dtype=data.dtype)
     beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
 
     if direct:
@@ -1026,14 +992,14 @@ def _estimate_params_nan_legacy(data, dmat, missing, tol, max_iter, direct):
     return theta, beta
 
 
-def _estimate_params_nan_batched(
+def _lstsq_nan_batch(
     data,
     dmat,
     missing,
     tol,
     max_iter,
     direct,
-    svd_batch_size=None,
+    batch=None,
     compact_cond_max=1e4,
 ):
     """Fit missing-response models with chunked SVD and compact spectral operators.
@@ -1053,22 +1019,22 @@ def _estimate_params_nan_batched(
     Vh_all = np.empty((n_features, n_components, n_covariates), dtype=operator_dtype)
     S_inv_all = np.empty((n_features, n_components), dtype=operator_dtype)
 
-    if svd_batch_size is None:
+    if batch is None:
         # X_w and U are both approximately batch*N*P floats, while W contributes another
         # batch*N floats. Keep these principal workspaces near 32 MiB; LAPACK may use
         # additional internal workspace, so this is intentionally conservative.
         bytes_per_feature = (
             operator_dtype.itemsize * n_samples * (n_covariates + n_components + 1)
         )
-        svd_batch_size = max(1, (32 << 20) // max(bytes_per_feature, 1))
-        svd_batch_size = min(svd_batch_size, n_features)
-    elif svd_batch_size < 1:
+        batch = max(1, (32 << 20) // max(bytes_per_feature, 1))
+        batch = min(batch, n_features)
+    elif batch < 1:
         raise ValueError("`svd_batch_size` must be a positive integer.")
 
     dmat_work = np.asarray(dmat, dtype=operator_dtype)
     fallback_blocks = {}
-    for start in range(0, n_features, svd_batch_size):
-        stop = min(start + svd_batch_size, n_features)
+    for start in range(0, n_features, batch):
+        stop = min(start + batch, n_features)
         # Preserve legacy dtype and SVD input exactly, but only for this feature block.
         W_block = 1.0 - missing[:, start:stop].T
         X_w = dmat_work[None, :, :] * W_block[:, :, None]
@@ -1135,7 +1101,7 @@ def _estimate_params_nan_batched(
             intm,
             beta,
             rhs,
-            svd_batch_size,
+            batch,
             fallback_blocks,
         )
     else:
@@ -1370,30 +1336,30 @@ def _estimate_params_nan_direct(data, dmat, missing, W, dmat_inv, intm, beta):
     return theta, beta
 
 
-def _subtract_fitted_inplace(data, dmat, beta, target_bytes=8 << 20):
-    """Replace ``data`` with regression residuals using a bounded workspace.
+def _calc_residual(data, dmat, beta, target_bytes=8 << 20):
+    """Calculate regression residuals in-place.
 
     ``data -= dmat @ beta`` would allocate a complete fitted matrix. Multiplying
     feature blocks into an approximately 8 MiB temporary bounds that extra memory while
     retaining efficient BLAS matrix multiplication.
     """
-    n_samples, n_features = data.shape
-    if n_features == 0:
+    n_samps, n_feats = data.shape
+    if n_feats == 0:
         return
 
-    cols = max(1, target_bytes // max(data.itemsize * n_samples, 1))
-    cols = min(cols, n_features)
-    fitted = np.empty((n_samples, cols), dtype=data.dtype)
+    cols = max(1, target_bytes // max(data.itemsize * n_samps, 1))
+    cols = min(cols, n_feats)
+    fitted = np.empty((n_samps, cols), dtype=data.dtype)
 
-    for start in range(0, n_features, cols):
-        stop = min(start + cols, n_features)
+    for start in range(0, n_feats, cols):
+        stop = min(start + cols, n_feats)
         block = fitted[:, : stop - start]
         np.matmul(dmat, beta[:, start:stop], out=block)
         data[:, start:stop] -= block
 
 
 def _lstsq_fit(dmat, gram=False):
-    """Calculate a least-squares operator, and optionally inverse Gram matrix.
+    """Calculate a least-squares operator and optional inverse-Gram sum vector.
 
     Both operators are derived from one singular value decomposition.
     """
@@ -1401,8 +1367,14 @@ def _lstsq_fit(dmat, gram=False):
     S_inv = _invert_singular(S)
     V = Vh.T
     dmat_inv = (V * S_inv) @ U.T
-    gmat_inv = (V * S_inv**2) @ Vh if gram else None
-    return dmat_inv, gmat_inv
+    if gram:
+        # Calculate a sum vector of inverse Gram matrix
+        gram_sum = V @ ((S_inv**2) * np.sum(Vh, axis=1))
+        # If one needs the full inverse Gram matrix, it is:
+        # gmat_inv = (V * S_inv**2) @ Vh
+    else:
+        gram_sum = None
+    return dmat_inv, gram_sum
 
 
 def _invert_singular(S):
@@ -1419,7 +1391,41 @@ def _invert_singular(S):
     return np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
 
 
-def _calc_variance(resid2, hmat):
+def _calc_grouped_var_cov(res2, hmat, groups):
+    """Calculate variances and covariance matrix of coefficients.
+
+    Parameters
+    ----------
+    res2 : ndarray of shape (n_samples, n_features)
+        Squared, centered residuals. Any float type. Missing values must already be
+        replaced with zero.
+    hmat : ndarray of shape (n_samples, n_covariates)
+        Influence matrix H. The same float type as `res2`.
+    groups : ndarray of shape (n_groups - 1,), bool, or None
+        Indices of coefficients representing groups.
+
+    Returns
+    -------
+    var_hat : ndarray of shape (n_features, n_covariates)
+        Estimated variances of regression coefficients.
+    covmat : ndarray or None
+        Estimated covariance matrices of coefficients.
+
+    """
+    if groups is True:
+        covmat = _calc_covariance(res2, hmat)
+        var_hat = np.diagonal(covmat, axis1=1, axis2=2)
+        # Make a writable F-contiguous copy of the read-only diagonal view.
+        var_hat = np.asfortranarray(var_hat)
+    elif groups is not None:
+        var_hat, covmat = _calc_var_cov(res2, hmat, groups)
+    else:
+        var_hat = _calc_variance(res2, hmat)
+        covmat = None
+    return var_hat, covmat
+
+
+def _calc_variance(res2, hmat):
     """Calculate coefficient variances without forming full covariance matrices.
 
     For feature i, there is:
@@ -1428,34 +1434,18 @@ def _calc_variance(resid2, hmat):
 
     This is a single matrix multiplication with an (n_features, n_covariates) output.
 
-    This function outputs an F-contiguous array, which should (presumably) benefit the
-    EM optimization process. Otherwise, this function can be replaced with:
+    This function outputs an F-contiguous array. Otherwise, it can be replaced with:
 
         `return resid_sq.T @ influence**2`
     """
-    var_hat = np.empty((resid2.shape[1], hmat.shape[1]), dtype=resid2.dtype, order="F")
-    np.matmul(resid2.T, np.square(hmat), out=var_hat)
+    var_hat = np.empty((res2.shape[1], hmat.shape[1]), dtype=res2.dtype, order="F")
+    np.matmul(res2.T, np.square(hmat), out=var_hat)
     return var_hat
 
 
-def _calc_covariance(resid2, hmat):
+def _calc_covariance(res2, hmat):
     """Calculate full covariance matrices.
 
-    Parameters
-    ----------
-    resid2 : ndarray of shape (n_samples, n_features)
-        Squared, centered residuals. Missing residuals must already be replaced with
-        zero if they require separate handling.
-    hmat : ndarray of shape (n_samples, n_covariates)
-        Influence matrix H.
-
-    Returns
-    -------
-    ndarray of shape (n_features, n_covariates, n_covariates)
-        Full covariance matrix of the coefficients for each feature.
-
-    Notes
-    -----
     For feature i, the covariance is:
 
         Cov(beta_i) = sum_j resid2_ji * h_j h_j.T
@@ -1468,10 +1458,10 @@ def _calc_covariance(resid2, hmat):
     """
     n_samps, n_covars = hmat.shape
     prods = (hmat[:, :, None] * hmat[:, None, :]).reshape(n_samps, n_covars * n_covars)
-    return (resid2.T @ prods).reshape(resid2.shape[1], n_covars, n_covars)
+    return (res2.T @ prods).reshape(res2.shape[1], n_covars, n_covars)
 
 
-def _calc_var_covar(resid2, hmat, groups):
+def _calc_var_cov(res2, hmat, groups):
     """Calculate all variances and one symmetric covariance submatrix.
 
     All coefficient variances are calculated through `_calc_variance`, exactly the same
@@ -1483,12 +1473,12 @@ def _calc_var_covar(resid2, hmat, groups):
     full covariance matrix.
     """
     n_samps, n_covars = hmat.shape
-    n_feats = resid2.shape[1]
+    n_feats = res2.shape[1]
     k = groups.size
 
     # Keep the primary variances bit-for-bit on the same calculation path regardless
     # of whether a grouping was requested.
-    var_hat = _calc_variance(resid2, hmat)
+    var_hat = _calc_variance(res2, hmat)
     covmat = np.empty((n_feats, k, k), dtype=var_hat.dtype)
     diag_idx = np.arange(k)
     covmat[:, diag_idx, diag_idx] = var_hat[:, groups]
@@ -1496,7 +1486,7 @@ def _calc_var_covar(resid2, hmat, groups):
     tri_i, tri_j = np.triu_indices(k, 1)
     n_offdiag = tri_i.size
     if n_offdiag:
-        dtype = np.result_type(resid2, hmat)
+        dtype = np.result_type(res2, hmat)
         pair_products = np.empty((n_samps, n_offdiag), dtype=dtype)
         np.multiply(
             hmat[:, groups[tri_i]],
@@ -1504,7 +1494,7 @@ def _calc_var_covar(resid2, hmat, groups):
             out=pair_products,
         )
         offdiag = np.empty((n_feats, n_offdiag), dtype=dtype)
-        np.matmul(resid2.T, pair_products, out=offdiag)
+        np.matmul(res2.T, pair_products, out=offdiag)
         covmat[:, tri_i, tri_j] = offdiag
         covmat[:, tri_j, tri_i] = offdiag
 
