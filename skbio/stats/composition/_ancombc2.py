@@ -544,7 +544,6 @@ def _ancombc_core(
     # ANCOM-BC does not handle zeros in the input table. The user should have added a
     # pseudocount. ANCOM-BC2 can handle zeros.
     _check_composition(np, matrix, nozero=not v2)
-    n_samps, n_feats = matrix.shape
 
     # Validate metadata and cast to numbers where applicable.
     metadata = _check_metadata(metadata, matrix, samples)
@@ -557,35 +556,28 @@ def _ancombc_core(
     covars = dmat.design_info.column_names
     n_covars = len(covars)
 
-    # Validate the optional post-hoc grouping and identify its design-matrix columns.
+    # Validate sample grouping for post-hoc analysis
     # When provided, only this coefficient covariance submatrix is retained.
     groups = _validate_grouping(metadata, dmat, grouping)
 
-    # validate parameters
+    # Validate parameters
     if not 0 < alpha < 1:
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
+    if not pseudo >= 0:
+        raise ValueError(f"Pseudocount must be a non-negative number.")
 
-    # Handle zero values
-    matrix, missing = _handle_zeros(matrix, pseudo)
-
-    # Transform count matrix. ANCOM-BC uses a plain logarithm. ANCOM-BC2 uses
-    # a NumPy-specialized CLR/RCLR implementation that keeps only one full-size
-    # floating-point transform buffer.
-    if not v2:
-        matrix_tr = np.log(matrix)
-    else:
-        matrix_tr = _transform_ancombc2(matrix, missing)
+    # Transform data
+    data, missing = _transform_data(matrix, pseudo, center=v2)
 
     # Estimate initial model parameters.
-    # ANCOM-BC2 always re-estimates parameters after
-    # sampling-fraction correction, so its initial EM fit needs variances only. For
-    # ANCOM-BC this is the final fit, so retain the grouping covariance submatrix when
-    # post-hoc analysis was requested.
+    # ANCOM-BC2 always re-estimates parameters after sampling-fraction correction, so
+    # its initial EM fit needs variances only. For ANCOM-BC this is the final fit, so
+    # retain the grouping covariance submatrix when post-hoc analysis was requested.
     # Data matrix will be overwritten during dense parameter estimation. However it is
     # needed for sampling fraction estimation in the ANCOM-BC2 route. Therefore `v2`
     # instructs the function to make a copy.
     var_hat, beta, _, vcov_hat = _estimate_params(
-        matrix_tr, dmat, None if v2 else groups, missing, v2
+        data, dmat, None if v2 else groups, missing, v2
     )
 
     # Estimate and correct for sampling bias via expectation-maximization (EM).
@@ -594,11 +586,7 @@ def _ancombc_core(
     for i in range(n_covars):
         bias[i] = _estimate_bias_em(beta[i], var_hat[:, i], tol=tol, max_iter=max_iter)
 
-    delta_em = bias[:, 0]
-    delta_wls = bias[:, 1]
-    var_delta = bias[:, 2]  # only for ANCOM-BC2
-
-    # beta_hat = beta.T - delta_em
+    delta_em, delta_wls, var_delta = bias[:, 0], bias[:, 1], bias[:, 2]
 
     # ANCOM-BC (original)
     if not v2:
@@ -611,23 +599,21 @@ def _ancombc_core(
     # ANCOM-BC2
     else:
         # Estimate sampling fractions
-        theta_hat = _sample_fractions(matrix_tr, dmat, beta, delta_em, missing=missing)
+        theta_hat = _sample_fractions(data, dmat, beta, delta_em, missing=missing)
 
         # Aggregate data
         if aggregator is not None:
             matrix, features = _aggregate_features(matrix, aggregator, features)
-            n_feats = matrix.shape[1]
-            matrix, missing = _handle_zeros(matrix, pseudo)
-            matrix_tr = _transform_ancombc2(matrix, missing)
+            data, missing = _transform_data(matrix, pseudo, center=v2)
 
         # Correct data for sampling fractions
-        matrix_tr -= theta_hat[:, None]
+        data -= theta_hat[:, None]
 
         # Re-estimate parameters.
         # Since this is the final fit, retain the grouping covariance submatrix if
         # requested.
         var_hat, beta_hat, _, vcov_hat = _estimate_params(
-            matrix_tr, dmat, groups, missing, False
+            data, dmat, groups, missing, False
         )
         beta_hat = beta_hat.T
 
@@ -641,6 +627,7 @@ def _ancombc_core(
             n_valid = np.sum(~missing, axis=0)
             dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
+            n_samps = matrix.shape[0]
             dof = n_samps - n_covars if n_samps > n_covars else np.nan
 
     # Output primary results. Compute statistics and populate the DataFrame
@@ -648,7 +635,7 @@ def _ancombc_core(
     # once. This is more memory-efficient than calculating all statistics first and
     # constructing the DataFrame from repeated Python label lists.
     if features is None:
-        features = np.arange(n_feats)
+        features = np.arange(matrix.shape[1])
     res = _format_results(beta_hat, var_hat, features, covars, alpha, p_adjust, dof)
 
     method = "ANCOM-BC" if not v2 else "ANCOM-BC2"
@@ -705,8 +692,8 @@ def _validate_grouping(metadata, dmat, grouping):
     return indices
 
 
-def _handle_zeros(data, pseudo=None):
-    """Handle zero values in the count matrix.
+def _transform_data(data, pseudo=None, center=False):
+    """Transform abundance data table.
 
     Parameters
     ----------
@@ -714,71 +701,70 @@ def _handle_zeros(data, pseudo=None):
         Data table.
     pseudo : float or int, optional
         Pseudocount.
+    center : bool, optional
+        If True, center data at 0 for each feature.
 
     Returns
     -------
     data : ndarray of shape (n_samples, n_features)
-        Data table with pseudocount added.
+        Transformed data table.
     missing : ndarray of shape (n_samples, n_features) or None
-        Boolean mask of zero values in the table, or None when the table is zero-free
-        (or a pseudocount was applied).
+        Boolean mask of zero values in the table, or None if the table is zero-free or
+        a pseudocount is added.
+
+    Notes
+    -----
+    For ANCOM-BC, a simple log-transform is applied. For ANCOM-BC2, the log-transformed
+    data is centered at 0 per feature. This is equivalent to `rclr(data, axis=0)`, but
+    more efficient.
+
+    The returned `data` is a new data table in any float type. The original data table
+    is kept intact.
 
     """
-    # Add pseudocount
+    ### Step 1: Identify zeros values and/or add pseudocount. ###
+
+    # Add pseudocount if provided. Output must be in float type.
     if pseudo:
-        data = data + pseudo
+        data = data + float(pseudo)
         missing = None
 
-    # Otherwise, check zero values
+    # Otherwise, identify zero values and make a float copy of data.
     else:
         missing = data == 0
         if not np.any(missing):
             missing = None
+        if np.issubdtype(data.dtype, np.floating):
+            data = data.copy()
+        else:
+            data = data.astype(float)
+
+    ### Step 2: Log-transform observed data and optionally center ###
+
+    # Fill missing values with 1 for safe log (they become 0)
+    if missing is not None:
+        data[missing] = 1.0
+
+    # Log-transform in place
+    np.log(data, out=data)
+
+    # Center at 0 (subtract by feature mean) in place
+    if center:
+        if missing is None:
+            mean_ = np.mean(data, axis=0, keepdims=True)
+        else:
+            n_obs = data.shape[0] - np.sum(missing, axis=0, keepdims=True)
+            # n_obs = np.where(n_obs > 0, n_obs, 1)
+            mean_ = np.sum(data, axis=0, keepdims=True)
+            mean_ /= n_obs
+        data -= mean_
+
+    # Fill missing values with NaN
+    # NOTE: This is not needed except for `_sample_fractions`
+    if missing is not None:
+        data[missing] = np.nan
 
     return data, missing
-
-
-def _transform_ancombc2(data, missing=None):
-    """Perform the NumPy-specialized CLR/RCLR transform used by ANCOM-BC2.
-
-    The public CLR/RCLR helpers are written for multiple Array API namespaces. This
-    private path receives a validated NumPy array, so it can use in-place ufuncs and
-    boolean assignment to avoid multiple full-size floating-point temporaries.
-
-    Transformation is along axis 0, matching the existing ANCOM-BC2 implementation.
-    ``missing=None`` selects CLR; otherwise zeros are excluded from the log mean and
-    restored as NaN, matching RCLR.
-    """
-    data = np.asarray(data)
-
-    # Match NumPy's dtype behavior. `log` preserves inexact precision and promotes
-    # integer input to float64. RCLR then divides by an integer observation count, which
-    # promotes (for example) float32 logs to float64.
-    log_dtype = data.dtype if np.issubdtype(data.dtype, np.inexact) else np.dtype(float)
-    if missing is None:
-        result_dtype = log_dtype
-    else:
-        result_dtype = np.result_type(log_dtype, np.dtype(np.intp))
-    result = np.array(data, dtype=result_dtype, copy=True, order="K")
-
-    if missing is None:
-        np.log(result, out=result, dtype=log_dtype)
-        result -= np.mean(result, axis=0, keepdims=True)
-        return result
-
-    # Set zeros to one before log so that they contribute zero to the log sum. This
-    # avoids the `safe_mat`, `log_safe`, `centered`, and final `where` arrays required
-    # by a functional RCLR implementation.
-    result[missing] = 1.0
-    np.log(result, out=result, dtype=log_dtype)
-    n_obs = result.shape[0] - np.sum(missing, axis=0, keepdims=True)
-    # Match RCLR's accumulation precision: its log array has `log_dtype`, then division
-    # by the integer observation count applies NumPy's normal promotion rules.
-    log_sum = np.sum(result, axis=0, keepdims=True, dtype=log_dtype)
-    log_mean = log_sum / n_obs
-    result -= log_mean
-    result[missing] = np.nan
-    return result
 
 
 def _estimate_params(data, dmat, groups, missing, keep_data=True):

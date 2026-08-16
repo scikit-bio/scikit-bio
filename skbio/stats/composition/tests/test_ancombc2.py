@@ -21,7 +21,7 @@ from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
     _estimate_params_dense,
     _estimate_params_sparse,
-    _transform_ancombc2,
+    _transform_data,
     _estimate_bias_em,
     _sample_fractions,
     _format_results,
@@ -183,32 +183,61 @@ class CoreTests(TestCase):
              [1, 0],
              [1, 0]], dtype=float)
 
-    def test_transform_ancombc2(self):
-        # Dense NumPy-specialized CLR must match the public Array API implementation.
-        dense = self.data2.astype(float)
-        observed = _transform_ancombc2(dense)
-        expected = clr(dense, axis=0, validate=False)
-        npt.assert_allclose(observed, expected)
+    def test_transform_data(self):
+        # dense matrix, log transform
+        matrix = self.data2.copy()
+        obs_data, obs_mask = _transform_data(matrix)
+        self.assertIsNone(obs_mask)
+        exp_data = np.log(matrix)
+        npt.assert_allclose(obs_data, exp_data)
 
-        # Sparse NumPy-specialized RCLR reuses the precomputed zero mask and must match
-        # the public implementation, including NaN placement.
-        sparse = self.data1.astype(float)
-        zero_mask = sparse == 0
-        observed = _transform_ancombc2(sparse, zero_mask)
-        expected = rclr(sparse, axis=0, validate=False)
-        npt.assert_allclose(observed, expected, equal_nan=True)
+        # output is a new copy
+        self.assertIsNot(obs_data.base, matrix)
 
-        # Preserve NumPy's dtype/promotion behavior too (RCLR promotes float32 here).
-        sparse32 = sparse.astype(np.float32)
-        observed32 = _transform_ancombc2(sparse32, zero_mask)
-        expected32 = rclr(sparse32, axis=0, validate=False)
-        self.assertEqual(observed32.dtype, expected32.dtype)
-        npt.assert_allclose(observed32, expected32, equal_nan=True)
+        # output is float type
+        self.assertTrue(np.issubdtype(obs_data.dtype, np.floating))
 
-        # The transformation must not mutate the raw input table.
-        copy = sparse.copy()
-        _transform_ancombc2(copy, zero_mask)
-        npt.assert_array_equal(copy, sparse)
+        # original data is untouched
+        npt.assert_array_equal(matrix, self.data2)
+
+        # input is already float
+        obs_data, obs_mask = _transform_data(matrix.astype(np.float64))
+        npt.assert_allclose(obs_data, exp_data)
+        self.assertTrue(obs_data.dtype == np.float64)
+
+        # input is float but not float64; will be kept
+        obs_data, obs_mask = _transform_data(matrix.astype(np.float32))
+        npt.assert_allclose(obs_data, exp_data)
+        self.assertTrue(obs_data.dtype == np.float32)
+
+        # dense matrix, CLR
+        obs_data, obs_mask = _transform_data(matrix, center=True)
+        exp_data = clr(matrix, axis=0, validate=False)
+        npt.assert_allclose(obs_data, exp_data)
+
+        # sparse matrix, with pseudocount
+        matrix = self.data1
+        exp_mask = matrix == 0
+        obs_data, obs_mask = _transform_data(matrix, pseudo=1)
+        self.assertIsNone(obs_mask)
+        exp_data = np.log(matrix + 1.0)
+        npt.assert_allclose(obs_data, exp_data)
+        self.assertIsNot(obs_data.base, matrix)
+        self.assertTrue(np.issubdtype(obs_data.dtype, np.floating))
+
+        # sparse matrix, log on observed data
+        obs_data, obs_mask = _transform_data(matrix)
+        npt.assert_array_equal(obs_mask, exp_mask)
+        exp_data = np.ones_like(matrix, dtype=float)
+        exp_data[~obs_mask] = np.log(matrix[~obs_mask])
+        exp_data[obs_mask] = np.nan
+        npt.assert_allclose(obs_data, exp_data)
+
+        # sparse matrix, RCLR
+        obs_data, obs_mask = _transform_data(matrix, center=True)
+        npt.assert_array_equal(obs_mask, exp_mask)
+        exp_data = rclr(matrix, axis=0, validate=False)
+        npt.assert_allclose(obs_data, exp_data)
 
     def test_estimate_params_dense(self):
         # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
@@ -527,8 +556,7 @@ class CoreTests(TestCase):
 
     def test_estimate_params_sparse_solvers(self):
         """Chunked compact solver agrees with the retained legacy SVD route."""
-        zero_mask = self.data1 == 0
-        data_tr = _transform_ancombc2(self.data1.astype(float), zero_mask)
+        data_tr, zero_mask = _transform_data(self.data1.astype(float), 0, True)
 
         legacy = _estimate_params_sparse(
             data_tr, self.dmat1, zero_mask, solver="legacy"
