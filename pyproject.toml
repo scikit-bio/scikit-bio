@@ -155,8 +155,6 @@ markers = [
 
 [tool.check-manifest]
 ignore = [
-    ".coveragerc",
-    ".dockerignore",
     ".editorconfig",
     "checklist.py",
     # created by conda-incubator/setup-miniconda@v4 action
@@ -180,4 +178,28 @@ ignore = [
     "D213",  # puts summary on second line
     "D400",  # redundant with D415 in place
     "D301",  # forces raw string literals
+]
+
+[tool.coverage.run]
+source = ["skbio"]
+branch = true
+relative_files = true
+omit = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/__init__.py",
+]
+
+[tool.coverage.report]
+omit = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/__init__.py",
+    "util/_typing.py",
+    "util/_testing.py",
+]
+exclude_also = [
+    "pass",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
 ]
