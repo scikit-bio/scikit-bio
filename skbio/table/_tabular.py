@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from warnings import warn
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -218,3 +218,84 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
         raise ValueError(lenerr.format(data.shape[1], "feature", len(feature_ids)))
 
     return data, sample_ids, feature_ids
+
+
+def _aggregate_features(data, aggregator, features=None):
+    """Aggregate features in a data table.
+
+    Features assigned the same aggregate ID are summed.
+
+    Parameters
+    ----------
+    data : ndarray of shape (n_samples, n_features)
+        The raw numeric values from the input data.
+    aggregator : callable, mapping, or 1-D array_like
+        Rule for aggregating features. Two options:
+
+        1. A callable or mapping (including pandas Series) that maps each feature ID to
+           an aggregate ID. Requires `features` supplied.
+        2. A 1D array-like that provides one aggregate ID per feature in data order.
+           Does not require `features`.
+
+    features : sequence of shape (n_features,), optional
+        Feature IDs. If None, no feature IDs are available.
+
+    Returns
+    -------
+    agg_data : ndarray of shape (n_samples, n_agg_features)
+        Aggregated data table.
+    agg_features : sequence of shape (n_agg_features,)
+        Aggregated feature IDs, in order of first appearance.
+
+    Raises
+    ------
+    ValueError
+        If `aggregator` cannot assign an aggregate ID to every feature.
+    TypeError
+        If `aggregator` is in an invalid format.
+
+    """
+    if features is not None and len(features) != data.shape[1]:
+        raise ValueError(
+            f"Input table has {data.shape[1]} columns whereas {len(features)} "
+            "features were provided."
+        )
+
+    # Callable (a function that converts the original ID into an aggregated ID)
+    if callable(aggregator):
+        if features is None:
+            raise ValueError("A callable aggregator requires named features.")
+        agg_ids = [aggregator(feature) for feature in features]
+        agg_ids = np.asarray(agg_ids, dtype=object)
+
+    # Mapping (e.g., a dictionary of original ID -> aggregated ID)
+    elif isinstance(aggregator, (Mapping, pd.Series)):
+        if features is None:
+            raise ValueError("A mapping aggregator requires named features.")
+        try:
+            agg_ids = [aggregator[feature] for feature in features]
+        except KeyError as e:
+            raise ValueError(
+                f"Aggregator does not define feature {e.args[0]!r}."
+            ) from e
+        else:
+            agg_ids = np.asarray(agg_ids, dtype=object)
+
+    # One-dimensional array-like (does not require feature IDs)
+    else:
+        agg_ids = np.asarray(aggregator, dtype=object)
+        if agg_ids.ndim == 0:
+            raise TypeError("Invalid aggregator format.")
+        if agg_ids.ndim != 1 or len(agg_ids) != data.shape[1]:
+            raise ValueError(
+                "An array-like aggregator must be 1D and have one entry per feature."
+            )
+
+    if pd.isna(agg_ids).any():
+        raise ValueError("Aggregator must assign every feature an aggregate ID.")
+
+    agg_codes, agg_features = pd.factorize(agg_ids, sort=False)
+    agg_data = np.zeros((data.shape[0], len(agg_features)), dtype=data.dtype)
+    np.add.at(agg_data, (slice(None), agg_codes), data)
+
+    return agg_data, agg_features

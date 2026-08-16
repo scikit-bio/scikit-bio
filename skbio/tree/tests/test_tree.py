@@ -156,6 +156,58 @@ class TreeTests(TestCase):
         cp.dummy[1].append(0)
         self.assertListEqual(t.dummy[1], [2, 3])
 
+    def test_copy_remaps_node_reference_attribute(self):
+        """Deep copy redirects a node-referencing attribute to the new tree."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        # the attribute points to the corresponding node in the copy, not to
+        # a detached duplicate or the original node
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIsNot(cp_a.partner, b)
+
+    def test_copy_remaps_node_reference_attribute_shallow(self):
+        """Shallow copy redirects a node-referencing attribute to the new tree."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+
+        cp = t.copy(deep=False)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIsNot(cp_a.partner, b)
+
+    def test_copy_handles_cyclic_node_references(self):
+        """Copying a tree with cyclic node references does not infinitely recurse."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+        b.partner = a
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIs(cp_b.partner, cp_a)
+
+    def test_copy_remaps_nested_node_references(self):
+        """Deep copy redirects node references nested inside containers."""
+        t = self.simple_t
+        a, b, c = t.find("a"), t.find("b"), t.find("c")
+        a.links = [b, c]
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b, cp_c = cp.find("a"), cp.find("b"), cp.find("c")
+
+        self.assertIs(cp_a.links[0], cp_b)
+        self.assertIs(cp_a.links[1], cp_c)
+        self.assertIsNot(cp_a.links[0], b)
+
     # ------------------------------------------------
     # Tree navigation
     # ------------------------------------------------

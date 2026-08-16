@@ -420,6 +420,11 @@ def pair_align(
     query, target = np.ascontiguousarray(submat[seq1]), seq2
     dtype = query.dtype.type
 
+    # Cast tolerance to the same type.
+    if atol is None:
+        atol = 0.0
+    atol = dtype(atol)
+
     # Prepare affine or linear gap penalties.
     gap_open, gap_extend = prep_gapcost(gap_cost, dtype=dtype)
     affine = gap_open != 0

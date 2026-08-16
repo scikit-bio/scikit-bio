@@ -18,7 +18,12 @@ from skbio.table import Table
 from skbio.util import get_package
 from skbio.util._testing import assert_data_frame_almost_equal
 
-from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
+from skbio.table._tabular import (
+    _aggregate_features,
+    _create_table,
+    _create_table_1d,
+    _ingest_table,
+)
 
 
 # import optional dependencies
@@ -200,6 +205,88 @@ class TestIngest(TestCase):
         msg = "Input table has 3 features whereas 2 feature IDs were provided."
         with self.assertRaises(ValueError) as cm:
             _ingest_table(self.data, feature_ids=["f2", "f3"])
+        self.assertEqual(str(cm.exception), msg)
+
+
+class TestAggregate(TestCase):
+    def setUp(self):
+        self.data = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
+        self.features = ["f1", "f2", "f3", "f4"]
+        self.agg_list = ["B", "A", "B", "C"]
+        self.exp_data = np.array([[4, 2, 4], [12, 6, 8]])
+        self.exp_features = np.array(["B", "A", "C"])
+
+    def assert_aggregated(self, data, features):
+        npt.assert_array_equal(data, self.exp_data)
+        npt.assert_array_equal(features, self.exp_features)
+
+    def test_list(self):
+        data, ids = _aggregate_features(self.data, self.agg_list)
+        self.assert_aggregated(data, ids)
+
+    def test_array(self):
+        data, ids = _aggregate_features(self.data, np.array(self.agg_list))
+        self.assert_aggregated(data, ids)
+
+    def test_func(self):
+        def aggregator(feature):
+            return self.agg_list[int(feature[1:]) - 1]
+
+        data, ids = _aggregate_features(self.data, aggregator, self.features)
+        self.assert_aggregated(data, ids)
+
+    def test_dict(self):
+        agg_dict = dict(zip(self.features, self.agg_list))
+        data, ids = _aggregate_features(self.data, agg_dict, self.features)
+        self.assert_aggregated(data, ids)
+
+    def test_series(self):
+        agg_series = pd.Series(self.agg_list, index=self.features)
+        data, ids = _aggregate_features(self.data, agg_series, self.features)
+        self.assert_aggregated(data, ids)
+
+    def test_errors(self):
+        msg = "Invalid aggregator format."
+        with self.assertRaises(TypeError) as cm:
+            _aggregate_features(self.data, None)
+        self.assertEqual(str(cm.exception), msg)
+
+        with self.assertRaises(TypeError) as cm:
+            _aggregate_features(self.data, 123)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Input table has 4 columns whereas 3 features were provided."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, {"f1": "A"}, ["f1", "f2", "f3"])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "A callable aggregator requires named features."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, lambda feature: feature)
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "A mapping aggregator requires named features."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, {"f1": "A"})
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Aggregator does not define feature 'f4'."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(
+                self.data,
+                {"f1": "A", "f2": "B", "f3": "C"},
+                self.features,
+            )
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "An array-like aggregator must be 1D and have one entry per feature."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, ["A", "B"])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Aggregator must assign every feature an aggregate ID."
+        with self.assertRaises(ValueError) as cm:
+            _aggregate_features(self.data, ["A", "B", None, "C"])
         self.assertEqual(str(cm.exception), msg)
 
 
