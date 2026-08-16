@@ -618,9 +618,7 @@ def _ancombc_core(
         beta_hat = beta_hat.T
 
         # Adjust variances
-        _adjust_variances(
-            var_hat, vcov_hat, var_delta, s0_perc, covariance_indices=groups
-        )
+        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups)
 
         # Compute per-feature degree of freedom (observed samples - covariates)
         if missing is not None:
@@ -770,6 +768,12 @@ def _transform_data(data, pseudo=None, center=False):
 def _estimate_params(data, dmat, groups, missing, keep_data=True):
     """Estimate model parameters.
 
+    In ANCOM-BC, this function is used for initial estimation of model parameters
+    (coefficients, variances and mean residuals) based on the observed data.
+
+    In ANCOM-BC2, this function is additionally used for final parameter estimation on
+    data corrected for sampling fractions.
+
     Parameters
     ----------
     data : ndarray of shape (n_samples, n_features)
@@ -779,7 +783,7 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
     groups : ndarray of shape (n_groups - 1,), bool, or None
         Indices of coefficients in the design matrix whose covariance submatrix will
         be calculated. If True, the entire covariance matrix will be calculated. If
-        False or None, no covariance will be returned.
+        None, no covariance will be returned.
     missing : ndarray of shape (n_samples, n_features), or None
         Boolean mask of zero values in the pre-transformation data table, or None if
         the table is zero-free or a pseudocount was applied.
@@ -792,22 +796,19 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
     var_hat : ndarray of shape (n_features, n_covariates)
         Estimated variances of regression coefficients.
     beta : ndarray of shape (n_covariates, n_features)
-        Estimated coefficients (log-fold changes before correction).
+        Estimated coefficients (log-fold changes).
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals of estimated data.
-    beta_covmat : ndarray or None
-        Full covariance matrices when ``full_covariance=True``; otherwise covariance
-        submatrices for ``covariance_indices`` or None when no submatrix was requested.
-
-    Notes
-    -----
-    In ANCOM-BC, this function performs initial estimation of the model parameters
-    (coefficients, variances and mean residuals) based on the observed data.
-
-    In ANCOM-BC2, this function additionally performs final parameter estimation on
-    data corrected for sampling fractions.
+    covmat : ndarray or None
+        Covariance matrices of coefficients.
+        - When `groups=None`: Return None.
+        - When `groups=True`: Return full covariance matrices. Shape: (n_features,
+          n_covariates, n_covariates)
+        - When `groups` is ndarray of indices: Return covariance submatrices of these
+          indices. Shape: (n_features, n_groups - 1, n_groups - 1)
 
     """
+    dmat = np.asarray(dmat, dtype=data.dtype)
     if missing is not None:
         return _estimate_params_sparse(data, dmat, missing, groups)
     elif keep_data:
@@ -817,7 +818,7 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
 
 
 def _estimate_params_dense(data, dmat, groups=True):
-    """Estimate initial model parameters from a dense matrix (no missing values).
+    """Estimate model parameters from a dense matrix (no missing values).
 
     The original R code performs iterative maximum likelihood estimation to calculate
     the coefficients, and calls MASS:ginv to calculate the pseudo inverse Gram matrix
@@ -827,55 +828,38 @@ def _estimate_params_dense(data, dmat, groups=True):
     decomposition (SVD). Therefore, the following code only performs SVD once, and
     uses the intermediates to calculate coefficients and inverse Gram matrix.
 
-    NOTE: This function will overwrite the data table.
-
+    NOTE: This function overwrites the data table.
     """
-    # The Gram matrix may be singular if covariates are collinear. The
-    # Moore-Penrose pseudoinverse is robust in those cases.
-    dmat = np.asarray(dmat)
-    dmat_inv, _ = _invert_gram(dmat)
+    # Calculate coefficients using least-squares fitting
+    dmat_inv, _ = _lstsq_fit(dmat)
     beta = dmat_inv @ data
 
-    # Residual workspace. Preserving `data` requires one n_samples x n_features
-    # array. When destruction is allowed, reuse `data` and subtract fitted values in
-    # feature blocks so that no complete fitted matrix is materialized.
-    # TODO
-    resid = data
-    _subtract_fitted_inplace(resid, dmat, beta)
+    # Calculate residuals = data - fitted data
+    # data -= dmat @ beta
+    # The process below is equivalent but saves memory by avoiding materializing the
+    # entire fitted matrix. TODO: Revisit.
+    _subtract_fitted_inplace(data, dmat, beta)
 
-    # Per-sample mean residuals (theta), then center and square the same workspace.
-    theta = np.mean(resid, axis=1, keepdims=True)
-    resid -= theta
+    # Calculate per-sample mean residuals (theta)
+    theta = np.mean(data, axis=1, keepdims=True)
 
-    # Calculate the covariance matrix of the coefficients. For feature i, the
-    # sandwich estimator can be written as
-    #
-    #   Cov(beta_i) = sum_j eps_ji**2 * h_j h_j.T,
-    #
-    # where H = X @ (X.T @ X)^+ is the influence matrix. `dmat_inv.T` is exactly H,
-    # and has already been calculated by `_invert_gram`. Flattening h_j h_j.T turns
-    # the contraction over samples into one matrix multiplication (GEMM) across all
-    # features, which is substantially faster than the three-way einsum followed by
-    # two sandwich matrix multiplications.
-    # NOTE: The original R code patches NaN with 0.1 when calculating covariances. This
-    # is not needed in the current implementation, as the input data are guaranteed to
-    # contain only finite real numbers.
-    np.square(resid, out=resid)
+    # Center and square residuals
+    data -= theta  # eps
+    np.square(data, out=data)  # eps2
+
+    # Calculate covariance matrix of the coefficients
     if groups is True:
-        beta_covmat = _covariance_gemm(resid, dmat_inv.T)
-        var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+        covmat = _calc_covariance(data, dmat_inv.T)
+        var_hat = np.diagonal(covmat, axis1=1, axis2=2)
         # Make a writable F-contiguous copy of the read-only diagonal view.
         var_hat = np.asfortranarray(var_hat)
     elif groups is not None:
-        var_hat, beta_covmat = _variance_covariance_gemm(resid, dmat_inv.T, groups)
+        var_hat, covmat = _calc_var_covar(data, dmat_inv.T, groups)
     else:
-        # Main inference needs only diag(Cov(beta_i)). Since
-        # diag(h_j h_j.T) = h_j**2, all feature/covariate variances are one
-        # much smaller GEMM: (n_features x n_samples) @ (n_samples x n_covariates).
-        var_hat = _variance_gemm(resid, dmat_inv.T)
-        beta_covmat = None
+        var_hat = _calc_variance(data, dmat_inv.T)
+        covmat = None
 
-    return var_hat, beta, theta.reshape(-1), beta_covmat
+    return var_hat, beta, theta.reshape(-1), covmat
 
 
 def _estimate_params_sparse(
@@ -889,7 +873,7 @@ def _estimate_params_sparse(
     solver="batched",
     svd_batch_size=None,
 ):
-    """Estimate initial model parameters from a sparse matrix (with missing values).
+    """Estimate model parameters from a sparse matrix (with missing values).
 
     This mirrors the fixed-effects ``.iter_mle`` path used by ANCOM-BC2 when
     ``theta`` is initially ``NULL``. The input ``data`` is expected to already
@@ -933,13 +917,11 @@ def _estimate_params_sparse(
         Estimated regression coefficients.
     theta : ndarray of shape (n_samples,)
         Per-sample mean residuals / initial sampling-fraction estimates.
-    beta_covmat : ndarray or None
+    covmat : ndarray or None
         Full covariance matrices when ``full_covariance=True``; otherwise covariance
         submatrices for ``covariance_indices`` or None when no submatrix was requested.
 
     """
-    dmat = np.asarray(dmat)
-
     if solver == "legacy":
         theta, beta = _estimate_params_nan_legacy(
             data, dmat, missing, tol, max_iter, direct
@@ -971,20 +953,18 @@ def _estimate_params_sparse(
     # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
     # feature-specific inverse based on each feature's observed rows. Its transpose is
     # the influence matrix H used by the GEMM covariance calculation below.
-    dmat_inv_global, gmat_inv = _invert_gram(dmat)
+    dmat_inv, gmat_inv = _lstsq_fit(dmat, gram=True)
     n_missing = missing.sum(axis=0)
 
     if groups is True:
-        beta_covmat = _covariance_gemm(intm, dmat_inv_global.T)
-        var_hat = np.diagonal(beta_covmat, axis1=1, axis2=2)
+        covmat = _calc_covariance(intm, dmat_inv.T)
+        var_hat = np.diagonal(covmat, axis1=1, axis2=2)
         var_hat = np.asfortranarray(var_hat)
     elif groups is not None:
-        var_hat, beta_covmat = _variance_covariance_gemm(
-            intm, dmat_inv_global.T, groups
-        )
+        var_hat, covmat = _calc_var_covar(intm, dmat_inv.T, groups)
     else:
-        var_hat = _variance_gemm(intm, dmat_inv_global.T)
-        beta_covmat = None
+        var_hat = _calc_variance(intm, dmat_inv.T)
+        covmat = None
 
     # R replaces every NaN element of eps^2 * x x^T with 0.1. Since dmat is finite,
     # each missing residual contributes a matrix filled with 0.1 before the sandwich
@@ -995,25 +975,23 @@ def _estimate_params_sparse(
         gsum_right = np.sum(gmat_inv, axis=0)
         var_hat += (0.1 * n_missing)[:, None] * (gsum_left * gsum_right)[None, :]
 
-        if beta_covmat is not None:
+        if covmat is not None:
             if groups is True:
                 missing_cov = np.outer(gsum_left, gsum_right)
             else:
-                cov_idx = _normalize_covariance_indices(groups, var_hat.shape[1])
-                missing_cov = np.outer(gsum_left[cov_idx], gsum_right[cov_idx])
-            beta_covmat += (0.1 * n_missing)[:, None, None] * missing_cov
+                missing_cov = np.outer(gsum_left[groups], gsum_right[groups])
+            covmat += (0.1 * n_missing)[:, None, None] * missing_cov
 
     # Ensure the retained covariance diagonal is exactly the same array of variances
     # used by the primary analysis, including the R missing-value correction.
-    if beta_covmat is not None:
+    # TODO: no need to slice when groups is True?
+    if covmat is not None:
         if groups is True:
-            cov_idx = np.arange(var_hat.shape[1])
-        else:
-            cov_idx = _normalize_covariance_indices(groups, var_hat.shape[1])
-        diag_idx = np.arange(cov_idx.size)
-        beta_covmat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
+            groups = np.arange(var_hat.shape[1])
+        diag_idx = np.arange(groups.size)
+        covmat[:, diag_idx, diag_idx] = var_hat[:, groups]
 
-    return var_hat, beta.T.copy(), theta, beta_covmat
+    return var_hat, beta.T.copy(), theta, covmat
 
 
 def _estimate_params_nan_legacy(data, dmat, missing, tol, max_iter, direct):
@@ -1021,7 +999,7 @@ def _estimate_params_nan_legacy(data, dmat, missing, tol, max_iter, direct):
 
     This helper intentionally preserves the pre-optimization route so the compact
     implementation can be regression-tested against it. Its dominant arrays have shape
-    ``(n_features, n_samples, n_covariates)``.
+    `(n_features, n_samples, n_covariates)`.
     """
     n_samples = data.shape[0]
 
@@ -1414,84 +1392,62 @@ def _subtract_fitted_inplace(data, dmat, beta, target_bytes=8 << 20):
         data[:, start:stop] -= block
 
 
-def _normalize_covariance_indices(indices, n_covariates):
-    """Normalize and validate coefficient indices for a covariance submatrix."""
-    indices = np.asarray(indices, dtype=int)
-    if indices.ndim != 1 or indices.size == 0:
-        raise ValueError("`covariance_indices` must be a non-empty 1-D array.")
-    if np.any(indices < 0) or np.any(indices >= n_covariates):
-        raise ValueError("`covariance_indices` contains an out-of-bounds index.")
-    if np.unique(indices).size != indices.size:
-        raise ValueError("`covariance_indices` must not contain duplicate indices.")
-    return indices
+def _lstsq_fit(dmat, gram=False):
+    """Calculate a least-squares operator, and optionally inverse Gram matrix.
 
-
-def _variance_covariance_gemm(resid_sq, influence, covariance_indices):
-    """Calculate all variances and one symmetric covariance submatrix.
-
-    All coefficient variances are calculated through :func:`_variance_gemm`, exactly
-    the same path used when no grouping is requested. This guarantees that enabling
-    post-hoc analysis does not perturb the primary result. A second, smaller GEMM
-    calculates only the ``k * (k - 1) / 2`` unique off-diagonal covariances needed by
-    the selected grouping, avoiding the ``P**2`` work of a full covariance matrix.
+    Both operators are derived from one singular value decomposition.
     """
-    n_samples, n_covariates = influence.shape
-    n_features = resid_sq.shape[1]
-    cov_idx = _normalize_covariance_indices(covariance_indices, n_covariates)
-    k = cov_idx.size
-
-    # Keep the primary variances bit-for-bit on the same calculation path regardless
-    # of whether a grouping was requested.
-    var_hat = _variance_gemm(resid_sq, influence)
-    beta_covmat = np.empty((n_features, k, k), dtype=var_hat.dtype)
-    diag_idx = np.arange(k)
-    beta_covmat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
-
-    tri_i, tri_j = np.triu_indices(k, 1)
-    n_offdiag = tri_i.size
-    if n_offdiag:
-        dtype = np.result_type(resid_sq, influence)
-        pair_products = np.empty((n_samples, n_offdiag), dtype=dtype)
-        np.multiply(
-            influence[:, cov_idx[tri_i]],
-            influence[:, cov_idx[tri_j]],
-            out=pair_products,
-        )
-        offdiag = np.empty((n_features, n_offdiag), dtype=dtype)
-        np.matmul(resid_sq.T, pair_products, out=offdiag)
-        beta_covmat[:, tri_i, tri_j] = offdiag
-        beta_covmat[:, tri_j, tri_i] = offdiag
-
-    return var_hat, beta_covmat
+    U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
+    S_inv = _invert_singular(S)
+    V = Vh.T
+    dmat_inv = (V * S_inv) @ U.T
+    gmat_inv = (V * S_inv**2) @ Vh if gram else None
+    return dmat_inv, gmat_inv
 
 
-def _variance_gemm(resid_sq, influence):
+def _invert_singular(S):
+    """Invert significant singular values.
+
+    The Gram matrix may be singular, if there are colinear covariates in the design
+    matrix. In such cases, a direct `inv` will raise an error, and `pinv` (Moore-Penrose
+    pseudoinverse)is the robust choice.
+
+    Small singular values are set to zero prior to inversion. The process and threshold
+    (1e-15) are consistent with the underlying algorithm of `pinv`.
+    """
+    cutoff = 1e-15 * np.max(S, axis=-1, keepdims=True)
+    return np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+
+
+def _calc_variance(resid2, hmat):
     """Calculate coefficient variances without forming full covariance matrices.
 
-    For feature i, ``diag(Cov(beta_i)) = sum_j resid_sq[j, i] * influence[j]**2``.
-    This is a single GEMM with an ``(n_features, n_covariates)`` output instead of
-    ``(n_features, n_covariates, n_covariates)``.
+    For feature i, there is:
+
+        diag(Cov(beta_i)) = sum_j resid_sq[j, i] * influence[j]**2
+
+    This is a single matrix multiplication with an (n_features, n_covariates) output.
+
+    This function outputs an F-contiguous array, which should (presumably) benefit the
+    EM optimization process. Otherwise, this function can be replaced with:
+
+        `return resid_sq.T @ influence**2`
     """
-    influence_sq = np.square(influence)
-    var_hat = np.empty(
-        (resid_sq.shape[1], influence.shape[1]),
-        dtype=np.result_type(resid_sq, influence),
-        order="F",
-    )
-    np.matmul(resid_sq.T, influence_sq, out=var_hat)
+    var_hat = np.empty((resid2.shape[1], hmat.shape[1]), dtype=resid2.dtype, order="F")
+    np.matmul(resid2.T, np.square(hmat), out=var_hat)
     return var_hat
 
 
-def _covariance_gemm(resid_sq, influence):
-    """Calculate full sandwich covariance matrices using one GEMM.
+def _calc_covariance(resid2, hmat):
+    """Calculate full covariance matrices.
 
     Parameters
     ----------
-    resid_sq : ndarray of shape (n_samples, n_features)
+    resid2 : ndarray of shape (n_samples, n_features)
         Squared, centered residuals. Missing residuals must already be replaced with
         zero if they require separate handling.
-    influence : ndarray of shape (n_samples, n_covariates)
-        Influence matrix ``X @ (X.T @ X)^+``.
+    hmat : ndarray of shape (n_samples, n_covariates)
+        Influence matrix H.
 
     Returns
     -------
@@ -1500,59 +1456,59 @@ def _covariance_gemm(resid_sq, influence):
 
     Notes
     -----
-    For feature i, the sandwich covariance is
+    For feature i, the covariance is:
 
-        sum_j resid_sq[j, i] * influence[j].T * influence[j].
+        Cov(beta_i) = sum_j resid2_ji * h_j h_j.T
 
-    The per-sample outer products are independent of features. Flattening them into
-    rows converts the contraction over samples into a single level-3 BLAS matrix
+    where H = X @ (X.T @ X)^+ is the influence matrix (^+ means Moore-Penrose
+    pseudoinverse). This H is given by `dmat_inv.T` calculated upstream.
+
+    Flattening h_j h_j.T turns the contraction over samples into one matrix
     multiplication across all features.
-
     """
-    n_samples, n_covars = influence.shape
-    n_feats = resid_sq.shape[1]
-
-    # Pairwise products h_jp * h_jq for every sample j. The last two axes are
-    # flattened so the feature/sample contraction below is a conventional GEMM.
-    pair_products = np.empty(
-        (n_samples, n_covars, n_covars),
-        dtype=np.result_type(resid_sq, influence),
-    )
-    np.multiply(influence[:, :, None], influence[:, None, :], out=pair_products)
-    pair_products = pair_products.reshape(n_samples, n_covars * n_covars, copy=False)
-
-    beta_covmat = np.empty((n_feats, n_covars, n_covars), dtype=pair_products.dtype)
-    np.matmul(
-        resid_sq.T,
-        pair_products,
-        out=beta_covmat.reshape(n_feats, n_covars * n_covars),
-    )
-    return beta_covmat
+    n_samps, n_covars = hmat.shape
+    prods = (hmat[:, :, None] * hmat[:, None, :]).reshape(n_samps, n_covars * n_covars)
+    return (resid2.T @ prods).reshape(resid2.shape[1], n_covars, n_covars)
 
 
-def _invert_gram(dmat):
-    """Calculate least-squares and inverse-Gram operators from a design matrix."""
-    U, S, Vh = np.linalg.svd(dmat, full_matrices=False)
-    S_inv = _invert_singular(S)
-    V = Vh.T
-    dmat_inv = (V * S_inv) @ U.T
-    gmat_inv = (V * S_inv**2) @ Vh
-    return dmat_inv, gmat_inv
+def _calc_var_covar(resid2, hmat, groups):
+    """Calculate all variances and one symmetric covariance submatrix.
 
+    All coefficient variances are calculated through `_calc_variance`, exactly the same
+    path used when no grouping is requested. This guarantees that enabling post-hoc
+    analysis does not perturb the primary result.
 
-def _invert_singular(S):
-    """Invert significant singular values.
-
-    Small singular values are set to zero prior to inversion. The process and threshold
-    (1e-15) are consistent with the underlying algorithm of `pinv`.
-
-    The Gram matrix may be singular, if there are colinear covariates in the design
-    matrix. In such cases, a direct `inv` will raise an error, and `pinv` is the robust
-    choice.
-
+    A second, smaller matrix multiplication calculates only the k * (k - 1) / 2 unique
+    off-diagonal covariances needed by the selected grouping, avoiding calculating the
+    full covariance matrix.
     """
-    cutoff = 1e-15 * np.max(S, axis=-1, keepdims=True)
-    return np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+    n_samps, n_covars = hmat.shape
+    n_feats = resid2.shape[1]
+    k = groups.size
+
+    # Keep the primary variances bit-for-bit on the same calculation path regardless
+    # of whether a grouping was requested.
+    var_hat = _calc_variance(resid2, hmat)
+    covmat = np.empty((n_feats, k, k), dtype=var_hat.dtype)
+    diag_idx = np.arange(k)
+    covmat[:, diag_idx, diag_idx] = var_hat[:, groups]
+
+    tri_i, tri_j = np.triu_indices(k, 1)
+    n_offdiag = tri_i.size
+    if n_offdiag:
+        dtype = np.result_type(resid2, hmat)
+        pair_products = np.empty((n_samps, n_offdiag), dtype=dtype)
+        np.multiply(
+            hmat[:, groups[tri_i]],
+            hmat[:, groups[tri_j]],
+            out=pair_products,
+        )
+        offdiag = np.empty((n_feats, n_offdiag), dtype=dtype)
+        np.matmul(resid2.T, pair_products, out=offdiag)
+        covmat[:, tri_i, tri_j] = offdiag
+        covmat[:, tri_j, tri_i] = offdiag
+
+    return var_hat, covmat
 
 
 # Numerical optimization setting for sampling bias estimation through an Expectation-
@@ -1935,7 +1891,7 @@ def _sample_fractions(data, dmat, beta, delta_em, missing=None):
     return theta_hat
 
 
-def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, covariance_indices=None):
+def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups=None):
     """Adjust variances.
 
     Parameters
@@ -1977,22 +1933,10 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, covariance_indices=
 
     # Keep a retained covariance tensor consistent with the adjusted variances.
     if vcov_hat is not None:
-        if covariance_indices is None:
-            if vcov_hat.shape[1] != var_hat.shape[1]:
-                raise ValueError(
-                    "`covariance_indices` is required for a covariance submatrix."
-                )
-            cov_idx = np.arange(var_hat.shape[1])
-        else:
-            cov_idx = _normalize_covariance_indices(
-                covariance_indices, var_hat.shape[1]
-            )
-            if vcov_hat.shape[1:] != (cov_idx.size, cov_idx.size):
-                raise ValueError(
-                    "`vcov_hat` shape does not match `covariance_indices`."
-                )
-        diag_idx = np.arange(cov_idx.size)
-        vcov_hat[:, diag_idx, diag_idx] = var_hat[:, cov_idx]
+        if groups is None:
+            groups = np.arange(var_hat.shape[1])
+        diag_idx = np.arange(groups.size)
+        vcov_hat[:, diag_idx, diag_idx] = var_hat[:, groups]
 
 
 def _format_results(beta_hat, var_hat, features, covariates, alpha, p_adjust, dof=None):
