@@ -192,8 +192,7 @@ cdef class BPTree:
         cdef Py_ssize_t[:] _e_index
         cdef Py_ssize_t[:] _k_index_0
         cdef Py_ssize_t[:] _k_index_1
-        cdef Py_ssize_t[:] _r_index_0
-        cdef Py_ssize_t[:] _r_index_1
+        cdef cnp.ndarray _step
         cdef cnp.ndarray[object, ndim=1] _names
         cdef cnp.ndarray[DOUBLE_t, ndim=1] _lengths
         cdef cnp.ndarray[INT32_t, ndim=1] _edges
@@ -227,19 +226,23 @@ cdef class BPTree:
             self._edges = np.full(self.data.size, 0, dtype=INT32)
             self._edge_lookup = None
 
-        # precursor for select index cache
-        _r_index_0 = np.cumsum((1 - B), dtype=SIZE)
-        _r_index_1 = np.cumsum(B, dtype=SIZE)
-
-        # construct a select index. These operations are performed frequently,
-        # and easy to cache at a relatively minor memory expense. It cannot be
-        # assumed that open and close will be same length so can't stack
-        _k_index_0 = np.unique(_r_index_0,
-                               return_index=True)[1].astype(SIZE)
-        self._k_index_0 = _k_index_0
-        _k_index_1 = np.unique(_r_index_1,
-                               return_index=True)[1].astype(SIZE)
+        # Construct a select index: _k_index_t[k] is the position of the k-th
+        # occurrence of bit t (select), cached because select is used often.
+        # These are the first indices of each distinct value of the running rank
+        # (cumsum) of bit t; for a 0/1 array that is exactly the positions where
+        # that bit's running count increments, i.e. every position holding the
+        # bit, with position 0 always included. Computing those increment
+        # positions directly is a single O(n) pass and is bit-for-bit identical
+        # to np.unique(cumsum(...), return_index=True) while avoiding its
+        # O(n log n) sort. Opens and closes differ in count, so they can't stack.
+        _step = B.astype(bool)
+        _step[0] = True
+        _k_index_1 = np.flatnonzero(_step).astype(SIZE)
         self._k_index_1 = _k_index_1
+        _step = (B == 0)
+        _step[0] = True
+        _k_index_0 = np.flatnonzero(_step).astype(SIZE)
+        self._k_index_0 = _k_index_0
 
         # construct an excess index. These operations are performed a lot, and
         # similarly can to rank and select, can be cached at a minimal expense.
