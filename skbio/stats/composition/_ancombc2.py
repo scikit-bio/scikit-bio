@@ -8,7 +8,7 @@
 
 # ----------------------------------------------------------------------------
 # This implementation of ANCOM-BC is based on an analysis of the source code
-# from the R package ANCOMBC:
+# of the R package ANCOMBC:
 # - https://github.com/FrederickHuangLin/ANCOMBC
 #
 # Which is licensed under Artistic-2.0:
@@ -57,8 +57,7 @@ def ancombc(
     .. versionadded:: 0.7.1
 
     .. versionchanged:: 0.7.4
-        Fixed a bug in the global test, which would produce inaccurate results. Please
-        update the program. The main results are not impacted.
+        Improved computational efficiency.
 
     Parameters
     ----------
@@ -99,10 +98,15 @@ def ancombc(
     :class:`ANCOMBCResult`
         Result object with primary results and post-hoc analysis methods.
 
+    .. versionchanged:: 0.7.4
+        Global test is now deferred as a post-hoc analysis. See
+        :meth:`~ANCOMBCResult.global_test`. "Log2(FC)" has been renamed as "Log(FC)"
+        for accuracy.
+
     See Also
     --------
-    ancombc2 : ANCOM-BC2 with multi-group tests.
-    struc_zero : Standalone structural zero detection.
+    ancombc2
+    struc_zero
 
     References
     ----------
@@ -1016,15 +1020,7 @@ def _estimate_params_sparse(
     func = _lstsq_sparse_batch if batch else _lstsq_sparse
     theta, beta = func(data, dmat, missing, direct, batch, tol, max_iter)
 
-    # Residuals used by the sandwich covariance estimator. Missing residuals are set to
-    # zero here and handled separately below to preserve ANCOM-BC2/R's 0.1 correction.
-    # intm = np.empty_like(data)
-    # np.matmul(dmat, beta.T, out=intm)
-    # intm *= -1.0
-    # intm += data
-    # intm -= theta[:, None]
-    # np.square(intm, out=intm)
-    # intm[missing] = 0.0
+    # Calculate residuals
     intm = _calc_residual_sparse(data, dmat, beta, theta, missing)
 
     # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
@@ -1104,18 +1100,19 @@ def _lstsq_sparse(data, dmat, missing, direct, batch=None, tol=1e-2, max_iter=20
     # sample effects `theta`.
     if direct:
         return _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta)
-    return _solve_sparse_iter_unified(
-        data,
-        dmat,
-        missing,
-        intm,
-        theta,
-        beta,
-        tol,
-        max_iter,
-        batch=False,
-        dmat_inv=dmat_inv,
-    )
+    else:
+        return _solve_sparse_iter(
+            data,
+            dmat,
+            missing,
+            intm,
+            theta,
+            beta,
+            tol,
+            max_iter,
+            batch=False,
+            dmat_inv=dmat_inv,
+        )
 
 
 def _lstsq_sparse_batch(
@@ -1146,8 +1143,7 @@ def _lstsq_sparse_batch(
 
     # Determine batch size
     # X_w and U are both approximately batch*N*P floats, while W contributes another
-    # batch*N floats. Keep these principal workspaces near 32 MiB; LAPACK may use
-    # additional internal workspace, so this is intentionally conservative.
+    # batch*N floats. Keep these principal workspaces near 32 MiB.
     if batch is True:
         bytes_per_feature = dtype.itemsize * n_samps * (n_covars + n_comps + 1)
         batch = max(1, (32 << 20) // max(bytes_per_feature, 1))
@@ -1216,7 +1212,7 @@ def _lstsq_sparse_batch(
             batch,
             illed,
         )
-    return _solve_sparse_iter_unified(
+    return _solve_sparse_iter(
         data,
         dmat,
         missing,
@@ -1235,21 +1231,21 @@ def _lstsq_sparse_batch(
 
 
 def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None, tmp=None):
-    r"""Apply feature-specific masked pseudoinverses using compact SVD operators.
+    """Apply feature-specific masked pseudoinverses using compact SVD operators.
 
     This computes coefficients for all features without materializing each complete
-    pseudoinverse ``X_f^+``. For feature ``f``, let the masked design matrix have SVD
+    pseudoinverse `X_f^+`. For feature `f`, let the masked design matrix have SVD
 
-    ``X_f = U_f S_f V_f.T``.
+        X_f = U_f S_f V_f.T
 
-    Since ``X_f.T y_f = V_f S_f U_f.T y_f``, the coefficient estimate can be written
+    Since X_f.T y_f = V_f S_f U_f.T y_f, the coefficient estimate can be written
 
-    ``beta_f = V_f S_f^-2 V_f.T (X_f.T y_f)``.
+        beta_f = V_f S_f^-2 V_f.T (X_f.T y_f)
 
-    The batched sparse solver therefore retains only ``Vh`` (``V_f.T``) and inverse
+    The batched sparse solver therefore retains only `Vh` (`V_f.T`) and inverse
     singular values for well-conditioned features. Missing values in ``adjusted`` must
     already be replaced by zero. Ill-conditioned features may optionally be overwritten
-    by stable full-SVD pseudoinverse results supplied through ``illed``.
+    by stable full-SVD pseudoinverse results supplied through `illed`.
 
     Parameters
     ----------
@@ -1260,12 +1256,12 @@ def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None, tmp=N
         be zero.
     Vh : ndarray of shape (n_features, n_components, n_covariates)
         Right singular vectors for each feature-specific masked design matrix, where
-        ``n_components = min(n_samples, n_covariates)``.
+        `n_components = min(n_samples, n_covariates)`.
     S_inv : ndarray of shape (n_features, n_components)
         Inverse retained singular values. Singular values below the rank threshold are
         represented by zero.
     rhs : ndarray of shape (n_covariates, n_features), optional
-        Reusable workspace for the common right-hand side ``dmat.T @ adjusted``. If
+        Reusable workspace for the common right-hand side `dmat.T @ adjusted`. If
         omitted, a new array is allocated. Supplying this workspace is worthwhile in
         the iterative solver because this matrix multiplication is performed every
         iteration.
@@ -1273,27 +1269,17 @@ def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None, tmp=N
         Output buffer for fitted coefficients. If omitted, a new array is allocated.
     illed : dict, optional
         Stable full-SVD fallbacks for ill-conditioned features. Keys are feature-block
-        starts and values are ``(local_indices, pseudoinverses)``. The corresponding
-        rows of ``out`` are overwritten after the compact calculation.
+        starts and values are `(local_indices, pseudoinverses)`. The corresponding
+        rows of `out` are overwritten after the compact calculation.
     tmp : ndarray of shape (n_features, n_components), optional
-        Reusable workspace for ``V_f.T (X_f.T y_f)``. If omitted, a new array is
+        Reusable workspace for `V_f.T (X_f.T y_f)`. If omitted, a new array is
         allocated.
 
     Returns
     -------
     ndarray of shape (n_features, n_covariates)
-        The fitted coefficients. This is the same object as ``out`` when ``out`` is
+        The fitted coefficients. This is the same object as `out` when `out` is
         provided.
-
-    Notes
-    -----
-    The three reusable arrays have distinct roles and lifetimes: ``rhs`` stores the
-    BLAS-friendly matrix product ``dmat.T @ adjusted``; ``tmp`` stores the projection
-    into each feature's singular-vector basis; and ``out`` receives the final
-    coefficients. ``rhs`` can be eliminated algebraically by reusing transposed output
-    storage, but that makes the hot matrix multiplication slower in benchmarks. Keeping
-    all three workspaces avoids per-iteration allocations while preserving the faster
-    memory layout.
     """
     n_feats = S_inv.shape[0]
     n_covars = Vh.shape[2]
@@ -1332,7 +1318,6 @@ def _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta):
 
     This exact method should produce numerically better result than the iterative
     optimization method. But it costs more compute due to solving a cubic system.
-
     """
     # The theta update is affine: theta_new = D^-1 (r + S @ theta).
     # Solve its fixed point while imposing the constraint selected by the
@@ -1361,23 +1346,7 @@ def _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta):
     return theta, beta
 
 
-def _solve_sparse_iter(data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter):
-    """Reproduce ANCOM-BC2's alternating beta/theta updates."""
-    return _solve_sparse_iter_unified(
-        data,
-        dmat,
-        missing,
-        intm,
-        theta,
-        beta,
-        tol,
-        max_iter,
-        batch=False,
-        dmat_inv=dmat_inv,
-    )
-
-
-def _solve_sparse_iter_unified(
+def _solve_sparse_iter(
     data,
     dmat,
     missing,
@@ -1394,7 +1363,7 @@ def _solve_sparse_iter_unified(
     illed=None,
     tmp=None,
 ):
-    """Unified iterative solver for full-pseudoinverse and compact-operator routes."""
+    """Iterative solver for full-pseudoinverse and compact-operator routes."""
     n_obs = missing.shape[1] - np.sum(missing, axis=1)
     epsilon = 100.0
     it = 0
@@ -1410,8 +1379,10 @@ def _solve_sparse_iter_unified(
         np.copyto(intm, 0.0, where=missing)
 
         if batch:
+            # Full-pseudoinverse; production code
             _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta_new, illed, tmp)
         else:
+            # Compact feature operators (mimicks R code)
             np.einsum("fps,sf->fp", dmat_inv, intm, out=beta_new, optimize=True)
 
         # Residuals. There is no need to clear fitted values at missing positions before
@@ -1434,6 +1405,7 @@ def _solve_sparse_iter_unified(
         beta, beta_new = beta_new, beta
         theta, theta_new = theta_new, theta
         it += 1
+
     return theta, beta
 
 
@@ -1496,38 +1468,6 @@ def _solve_sparse_batch(
     _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta, illed)
 
     return theta, beta
-
-
-def _solve_sparse_batch_iter(
-    data,
-    dmat,
-    missing,
-    Vh,
-    S_inv,
-    intm,
-    theta,
-    beta,
-    rhs,
-    tol,
-    max_iter,
-    illed,
-):
-    """Reproduce ANCOM-BC2 iterations using compact feature operators."""
-    return _solve_sparse_iter_unified(
-        data,
-        dmat,
-        missing,
-        intm,
-        theta,
-        beta,
-        tol,
-        max_iter,
-        batch=True,
-        Vh=Vh,
-        S_inv=S_inv,
-        rhs=rhs,
-        illed=illed,
-    )
 
 
 def _calc_residual(data, dmat, beta, target_bytes=8 << 20):
@@ -1605,7 +1545,6 @@ def _calc_grouped_var_cov(res2, hmat, groups):
         Estimated variances of regression coefficients.
     covmat : ndarray or None
         Estimated covariance matrices of coefficients.
-
     """
     if groups is True:
         covmat = _calc_covariance(res2, hmat)
@@ -2535,6 +2474,10 @@ class ANCOMBCResult:
         The global test identifies features that are differentially abundant between at
         least two groups across three or more groups.
 
+        .. versionchanged:: 0.7.4
+            Fixed a bug in the global test, which would produce inaccurate results.
+            Please update the program. The main results are not impacted.
+
         Parameters
         ----------
         alpha : float or "inherit", optional
@@ -2546,7 +2489,7 @@ class ANCOMBCResult:
 
         Returns
         -------
-        res_global : pd.DataFrame
+        pd.DataFrame
             Global test result. Columns are:
 
             - ``FeatureID``: Feature identifier, i.e., dependent variable.
