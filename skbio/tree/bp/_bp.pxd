@@ -22,7 +22,7 @@ ctypedef cnp.uint8_t BOOL_t
 
 
 cdef class mM:
-    cdef int b  # block size
+    cdef SIZE_t b  # block size (SIZE_t so block-index * block-size products stay 64-bit)
     cdef int n_tip  # number of tips in the binary tree
     cdef int n_internal  # number of internal nodes in the binary tree
     cdef int n_total  # total number of nodes in the binary tree
@@ -33,7 +33,7 @@ cdef class mM:
     cdef SIZE_t[:, ::1] mM
     cdef SIZE_t[:] r
 
-    cdef void rmm(self, BOOL_t[:] B, int B_size) nogil
+    cdef void rmm(self, BOOL_t[:] B, SIZE_t B_size) nogil
 
 
 @cython.final
@@ -55,8 +55,8 @@ cdef class BPTree:
     cdef inline SIZE_t select(self, SIZE_t t, SIZE_t k) nogil
     cdef SIZE_t _excess(self, SIZE_t i) nogil
     cdef SIZE_t excess(self, SIZE_t i) nogil
-    cdef SIZE_t fwdsearch(self, SIZE_t i, int d) nogil
-    cdef SIZE_t bwdsearch(self, SIZE_t i, int d) nogil
+    cdef SIZE_t fwdsearch(self, SIZE_t i, SIZE_t d) nogil
+    cdef SIZE_t bwdsearch(self, SIZE_t i, SIZE_t d) nogil
     cpdef inline SIZE_t close(self, SIZE_t i) nogil
     cdef inline SIZE_t open(self, SIZE_t i) nogil
     cpdef inline BOOL_t is_tip(self, SIZE_t i) nogil
@@ -69,8 +69,8 @@ cdef class BPTree:
     cpdef SIZE_t parent(self, SIZE_t i) nogil
     cpdef SIZE_t depth(self, SIZE_t i) nogil
     cpdef SIZE_t root(self) nogil
-    cdef int scan_block_forward(self, int i, int k, int b, int d) nogil
-    cdef int scan_block_backward(self, int i, int k, int b, int d) nogil
+    cdef SIZE_t scan_block_forward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil
+    cdef SIZE_t scan_block_backward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil
     cdef void _set_edges(self, cnp.ndarray[INT32_t, ndim=1] edges)
 
     cpdef inline unicode name(self, SIZE_t i)

@@ -33,14 +33,14 @@ BOOL = np.uint8
 INT32 = np.int32
 
 
-cdef inline int min(int a, int b) nogil:
+cdef inline SIZE_t min(SIZE_t a, SIZE_t b) nogil:
     if a > b:
         return b
     else:
         return a
 
 
-cdef inline int max(int a, int b) nogil:
+cdef inline SIZE_t max(SIZE_t a, SIZE_t b) nogil:
     if a > b:
         return a
     else:
@@ -48,29 +48,32 @@ cdef inline int max(int a, int b) nogil:
 
 
 cdef class mM:
-    def __cinit__(self, BOOL_t[:] B, int B_size):
+    def __cinit__(self, BOOL_t[:] B, SIZE_t B_size):
         self.m_idx = 0
         self.M_idx = 1
 
         self.rmm(B, B_size)
 
-    cdef void rmm(self, BOOL_t[:] B, int B_size) nogil:
+    cdef void rmm(self, BOOL_t[:] B, SIZE_t B_size) nogil:
         """Construct the rmM tree based off of Navarro and Sadakane
 
         http://www.dcc.uchile.cl/~gnavarro/ps/talg12.pdf
         """
-        cdef int i, j, lvl, pos  # for loop support
-        cdef int offset  # tip offset in binary tree for a given parenthesis
-        cdef int lower_limit  # the lower limit of the bucket a parenthesis is in
-        cdef int upper_limit  # the upper limit of the bucket a parenthesis is in
-        cdef int min_ = 0 # m, absolute minimum for a blokc
-        cdef int max_ = 0 # M, absolute maximum for a block
-        cdef int excess = 0 # e, absolute excess
+        # i/j and the block bounds index into B[0, 2n), so they are SIZE_t
+        # (64-bit); lvl/pos iterate the small rmM binary tree and stay int.
+        cdef SIZE_t i, j  # parenthesis positions
+        cdef int lvl, pos  # rmM-tree level / node within a level
+        cdef SIZE_t offset  # tip offset in binary tree for a given parenthesis
+        cdef SIZE_t lower_limit  # the lower limit of the bucket a parenthesis is in
+        cdef SIZE_t upper_limit  # the upper limit of the bucket a parenthesis is in
+        cdef SIZE_t min_ = 0 # m, absolute minimum for a blokc
+        cdef SIZE_t max_ = 0 # M, absolute maximum for a block
+        cdef SIZE_t excess = 0 # e, absolute excess
         cdef int vbar
-        cdef int r = 0
+        cdef SIZE_t r = 0
 
         # build tip info
-        self.b = <int>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
+        self.b = <SIZE_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
 
         # determine the number of nodes and height of the binary tree
         self.n_tip = <int>ceil(B_size / <double> self.b)
@@ -480,10 +483,10 @@ cdef class BPTree:
             The rank order of the position.
         """
         cdef int k
-        cdef int r = 0
-        cdef int lower_bound
-        cdef int upper_bound
-        cdef int j
+        cdef SIZE_t r = 0
+        cdef SIZE_t lower_bound
+        cdef SIZE_t upper_bound
+        cdef SIZE_t j
         cdef int node
 
         k = i // self._rmm.b
@@ -595,7 +598,7 @@ cdef class BPTree:
         # leftmost position in [i, j] whose excess equals the minimum
         if self._e_index[i] == d_star:
             return i
-        return self.fwdsearch(i, <int>(d_star - self._e_index[i]))
+        return self.fwdsearch(i, d_star - self._e_index[i])
 
     cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil:
         """The leftmost maximmum excess in i -> j.
@@ -638,7 +641,7 @@ cdef class BPTree:
         # leftmost position in [i, j] whose excess equals the maximum
         if self._e_index[i] == m_star:
             return i
-        return self.fwdsearch(i, <int>(m_star - self._e_index[i]))
+        return self.fwdsearch(i, m_star - self._e_index[i])
 
     cdef SIZE_t _rmq_tree_min(self, int node, int node_lo, int node_hi,
                               int lo, int hi) nogil:
@@ -1384,7 +1387,7 @@ cdef class BPTree:
         bit_array_free(mask)
         return new_bp
 
-    cdef int scan_block_forward(self, int i, int k, int b, int d) nogil:
+    cdef SIZE_t scan_block_forward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil:
         """Scan a block forward from i.
 
         Parameters
@@ -1404,9 +1407,9 @@ cdef class BPTree:
             The index position of the result. -1 is returned if a result is not
             found.
         """
-        cdef int lower_bound
-        cdef int upper_bound
-        cdef int j
+        cdef SIZE_t lower_bound
+        cdef SIZE_t upper_bound
+        cdef SIZE_t j
 
         # lower_bound is block boundary or right of i
         lower_bound = max(k, 0) * b
@@ -1421,7 +1424,7 @@ cdef class BPTree:
 
         return -1
 
-    cdef int scan_block_backward(self, int i, int k, int b, int d) nogil:
+    cdef SIZE_t scan_block_backward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil:
         """Scan a block backward from i.
 
         Parameters
@@ -1441,9 +1444,9 @@ cdef class BPTree:
             The index position of the result. -1 is returned if a result is not
             found.
         """
-        cdef int lower_bound
-        cdef int upper_bound
-        cdef int j
+        cdef SIZE_t lower_bound
+        cdef SIZE_t upper_bound
+        cdef SIZE_t j
 
         # range stop is exclusive, so need to set "stop" at -1 of boundary
         lower_bound = max(k, 0) * b - 1
@@ -1467,7 +1470,7 @@ cdef class BPTree:
 
         return -1
 
-    cdef SIZE_t fwdsearch(self, SIZE_t i, int d) nogil:
+    cdef SIZE_t fwdsearch(self, SIZE_t i, SIZE_t d) nogil:
         """Search forward from i for desired excess.
 
         Parameters
@@ -1483,7 +1486,7 @@ cdef class BPTree:
             The index of the result, or -1 if no result was found
         """
         cdef int k  # the block being interrogated
-        cdef int result = -1 # the result of a scan within a block
+        cdef SIZE_t result = -1 # the result of a scan within a block
         cdef int node  # the node within the binary tree being examined
 
         # get the block of parentheses to check
@@ -1529,7 +1532,7 @@ cdef class BPTree:
 
         return result
 
-    cdef SIZE_t bwdsearch(self, SIZE_t i, int d) nogil:
+    cdef SIZE_t bwdsearch(self, SIZE_t i, SIZE_t d) nogil:
         """Search backward from i for desired excess
 
         Parameters
@@ -1545,7 +1548,7 @@ cdef class BPTree:
             The index of the result, or -1 if no result was found
         """
         cdef int k  # the block being interrogated
-        cdef int result = -1 # the result of a scan within a block
+        cdef SIZE_t result = -1 # the result of a scan within a block
         cdef int node  # the node within the binary tree being examined
 
         # get the block of parentheses to check
