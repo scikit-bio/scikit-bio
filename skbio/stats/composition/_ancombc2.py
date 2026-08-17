@@ -77,7 +77,7 @@ def ancombc(
     grouping : str, optional
         Metadata column defining sample groups for post-hoc analyses. Must be a term
         in ``formula`` and contain at least three groups. Other terms are treated as
-        adjustment covariates. It has no impact on the main esult. If None (default),
+        adjustment covariates. It has no impact on the main result. If None (default),
         post-hoc analyses will be unavailable.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
@@ -101,7 +101,7 @@ def ancombc(
 
     See Also
     --------
-    ancombc2 : ANCOM-BC2 with multi-group tests and sensitivity analysis.
+    ancombc2 : ANCOM-BC2 with multi-group tests.
     struc_zero : Standalone structural zero detection.
 
     References
@@ -140,9 +140,9 @@ def ancombc(
     different in abundance between the healthy and the sick groups. Note that a
     pseudocount of 1 is manually added to the table to remove zero values.
 
-    >>> result = ancombc(table + 1, metadata, formula='status').res
+    >>> result = ancombc(table + 1, metadata, formula='status').result
     >>> result.round(3)
-                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+                              Log(FC)     SE      W  pvalue  qvalue  Signif
     FeatureID Covariate
     F1        Intercept         -0.045  0.218 -0.207   0.836   1.000   False
               status[T.sick]     0.126  0.589  0.214   0.831   1.000   False
@@ -161,14 +161,14 @@ def ancombc(
 
     The covariate "status[T.sick]" stands for the effect of the "sick" group relative
     to the reference group, "healthy" (the first group in alphabetical order is
-    automatically selected as the reference group). "Log2(FC)" represents the
-    :func:`clr`-transformed fold change of abundance (positive/negative: more/less
+    automatically selected as the reference group). "Log(FC)" represents the
+    bias-corrected fold change on the natural-log scale (positive/negative: more/less
     abundant in "sick" than in "healthy", respectively). A "True" in the "Signif"
     column indicates a significantly differentially abundant feature-covariate pair.
     This example shows that two features differ by healthy/sick status.
 
     >>> result.query('Covariate != "Intercept" & Signif == True').round(3)
-                              Log2(FC)     SE      W  pvalue  qvalue  Signif
+                              Log(FC)     SE      W  pvalue  qvalue  Signif
     FeatureID Covariate
     F4        status[T.sick]    -1.723  0.392 -4.399     0.0     0.0    True
     F6        status[T.sick]     1.480  0.160  9.255     0.0     0.0    True
@@ -207,9 +207,9 @@ def ancombc(
 
     >>> res = ancombc(
     ...     table + 1, metadata, formula='status + age', grouping='status')
-    >>> res_main = res.res
+    >>> res_main = res.result
     >>> res_main.round(3)
-                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+                                  Log(FC)     SE      W  pvalue  qvalue  Signif
     FeatureID Covariate
     F1        Intercept             -0.006  0.346 -0.016   0.987   1.000   False
               status[T.moderate]    -0.337  0.245 -1.376   0.169   1.000   False
@@ -249,7 +249,7 @@ def ancombc(
     group. Additionally, feature "F3" is separately correlated with age.
 
     >>> res_main.query('Covariate != "Intercept" & Signif == True').round(3)
-                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+                                  Log(FC)     SE      W  pvalue  qvalue  Signif
     FeatureID Covariate
     F2        status[T.moderate]     1.906  0.259  7.371   0.000   0.000    True
               status[T.severe]       2.935  0.304  9.649   0.000   0.000    True
@@ -361,7 +361,7 @@ def ancombc2(
     grouping=None,
     pseudocount=0,
     aggregator=None,
-    s0_perc=0.05,
+    var_quantile=0.05,
     max_iter=100,
     tol=1e-5,
     p_adjust="holm",
@@ -370,18 +370,9 @@ def ancombc2(
     r"""Perform differential abundance test using ANCOM-BC2.
 
     Analysis of Compositions of Microbiomes with Bias Correction 2
-    (ANCOM-BC2) [1]_ is a differential abundance testing method that extends
-    ANCOM-BC with several improvements:
-
-    - **SAM-like fudge factor** (``s0_perc``): Adds a small constant to
-      the denominator of the test statistic to stabilize inference for
-      rare taxa with extremely small standard errors.
-    - **Pseudo-count sensitivity analysis**: Assesses robustness of results
-      to the choice of pseudo-count added to zero counts.
-    - **Multi-group comparisons**: Supports global test, pairwise
-      directional test, Dunnett's type of test, and trend test.
-    - **Mixed directional FDR** (mdFDR): Controls false discovery rate
-      in multi-group settings using a bootstrap-based approach.
+    (ANCOM-BC2) [1]_ extends ANCOM-BC by explicitly estimating sample-specific
+    sampling fractions, correcting the transformed abundance data by these estimates,
+    and refitting the model before inference.
 
     Parameters
     ----------
@@ -400,7 +391,7 @@ def ancombc2(
     grouping : str, optional
         Metadata column defining sample groups for post-hoc analyses. Must be a term
         in ``formula`` and contain at least three groups. Other terms are treated as
-        adjustment covariates. It has no impact on the main esult. If None (default),
+        adjustment covariates. It has no impact on the main result. If None (default),
         post-hoc analyses will be unavailable.
     pseudocount : int or float, optional
         Pseudocount to add to all abundance data. Default is 0.
@@ -409,8 +400,9 @@ def ancombc2(
         dictionary that maps each feature ID to an aggregate ID, or a plain list or
         array of aggregate ID per feature in table order. By default, no aggregation
         is performed.
-    s0_perc : float, optional
-        SAM-like fudge factor percentile. Default is 0.05.
+    var_quantile : float, optional
+        Quantile of coefficient variances used to calculate a variance-stabilizing
+        offset. Must be between 0 and 1. Set to 0 to disable. Default is 0.05.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -433,7 +425,7 @@ def ancombc2(
 
     See Also
     --------
-    ancombc : ANCOM-BC without sampling fraction correction and multi-group testing.
+    ancombc : ANCOM-BC without explicit sampling-fraction correction.
     struc_zero : Standalone structural zero detection.
 
     References
@@ -447,65 +439,169 @@ def ancombc2(
     >>> from skbio.stats.composition import ancombc2
     >>> import pandas as pd
 
-    >>> samples = [f'S{i}' for i in range(1, 16)]
-    >>> features = [f'F{i}' for i in range(1, 9)]
-    >>> data = [[ 2,  0,  7,  0,  0,  2,  3,  2],
-    ...         [ 0,  2,  0,  1,  1,  2,  0,  0],
-    ...         [ 3,  1,  0,  9,  0,  1,  1,  0],
-    ...         [ 2,  0,  1,  8,  1,  0, 11, 46],
-    ...         [ 1,  0,  1,  1,  0,  0,  2,  2],
-    ...         [ 0,  3, 22,  1,  1,  1,  3,  0],
-    ...         [ 1,  7, 16,  1,  0,  0,  2,  2],
-    ...         [ 0,  5,  6,  1,  2,  1,  0,  1],
-    ...         [ 1,  7,  0,  2,  1,  0,  3,  2],
-    ...         [ 0,  6,  4,  2,  0,  2,  2,  1],
-    ...         [ 3, 13,  7,  0,  0,  0,  3,  9],
-    ...         [ 1,  8,  5,  1,  0,  0,  0,  0],
-    ...         [ 0,  5, 14,  1,  0,  1,  0,  1],
-    ...         [ 5, 26,  3,  2,  0,  3,  1,  3],
-    ...         [ 0, 18,  7,  0,  0,  3,  1,  0]]
-    >>> table = pd.DataFrame(data, index=samples, columns=features)
-    >>> status = ['mild'] * 5 + ['moderate'] * 5 + ['severe'] * 5
-    >>> age = [39, 19, 20, 31, 15, 37, 27, 47, 26, 23, 39, 48, 46, 33, 36]
-    >>> metadata = pd.DataFrame({'status': status, 'age': age}, index=samples)
+    Consider a microbiome-like dataset with 15 samples and eight features. The counts
+    are sparse and right-skewed. Samples belong to three disease-status groups, while
+    age is included as a potential confounder.
 
-    >>> res = ancombc2(table + 1, metadata, formula='status + age')
-    >>> res_main = res.res
-    >>> res_main.round(3)
-                                  Log2(FC)     SE      W  pvalue  qvalue  Signif
+    >>> samples = [f"S{i}" for i in range(1, 16)]
+    >>> features = [f"F{i}" for i in range(1, 9)]
+    >>> data = [
+    ...     [1, 10, 16, 0, 0, 12, 0, 7],
+    ...     [0, 10, 45, 2, 1, 25, 1, 9],
+    ...     [4,  8, 22, 1, 5, 14, 1, 5],
+    ...     [1, 11, 22, 1, 4, 14, 1, 3],
+    ...     [4,  7, 36, 0, 0, 19, 0, 9],
+    ...     [2, 30, 26, 0, 0, 12, 1, 0],
+    ...     [1, 36, 10, 1, 5, 15, 2, 9],
+    ...     [1, 25, 11, 2, 2,  8, 0, 5],
+    ...     [1, 36, 23, 0, 2, 11, 1, 2],
+    ...     [3, 60, 33, 3, 4, 14, 1, 6],
+    ...     [3, 57, 30, 3, 1,  3, 0, 4],
+    ...     [0, 65, 23, 0, 2,  2, 0, 8],
+    ...     [2, 46, 19, 0, 1,  2, 0, 1],
+    ...     [0, 41, 26, 0, 2,  0, 0, 3],
+    ...     [3, 46, 20, 0, 0,  3, 0, 0],
+    ... ]
+    >>> table = pd.DataFrame(data, index=samples, columns=features)
+    >>> status = ["mild"] * 5 + ["moderate"] * 5 + ["severe"] * 5
+    >>> age = [25, 48, 23, 35, 52, 51, 18, 29, 40, 29, 44, 39, 26, 37, 46]
+    >>> metadata = pd.DataFrame({"status": status, "age": age}, index=samples)
+
+    **Primary analysis**
+
+    Fit disease status while adjusting for age. Specifying ``grouping="status"`` also
+    enables post-hoc analyses for this factor. The alphabetically first level, ``mild``,
+    serves as the reference group.
+
+    >>> res = ancombc2(
+    ...     table, metadata, formula="status + age", grouping="status"
+    ... )
+
+    ``ANCOMBCResult`` behaves like its primary result table for display and column
+    selection. Here we display only significant feature-covariate pairs:
+
+    >>> res[res["Signif"]].round(3)
+                                  Log(FC)     SE      W  pvalue  qvalue  Signif
     FeatureID Covariate
-    F1        Intercept              0.342  0.723  0.473   0.645   1.000   False
-              status[T.moderate]    -0.337  0.517 -0.652   0.528   1.000   False
-              status[T.severe]       0.278  0.673  0.413   0.688   1.000   False
-              age                    0.001  0.024  0.054   0.958   1.000   False
-    F2        Intercept             -0.541  0.796 -0.680   0.511   1.000   False
-              status[T.moderate]     1.906  0.527  3.618   0.004   0.032    True
-              status[T.severe]       2.935  0.639  4.590   0.001   0.006    True
-              age                   -0.022  0.025 -0.877   0.399   1.000   False
-    F3        Intercept             -2.242  0.893 -2.509   0.029   0.232   False
-              status[T.moderate]     1.010  0.788  1.282   0.226   1.000   False
-              status[T.severe]       0.717  0.803  0.893   0.391   1.000   False
-              age                    0.063  0.032  1.955   0.077   0.612   False
-    F4        Intercept              0.580  0.824  0.703   0.497   1.000   False
-              status[T.moderate]    -0.046  0.639 -0.071   0.945   1.000   False
-              status[T.severe]      -0.244  0.819 -0.298   0.771   1.000   False
-              age                   -0.004  0.029 -0.126   0.902   1.000   False
-    F5        Intercept             -0.502  0.757 -0.663   0.521   1.000   False
-              status[T.moderate]     0.274  0.552  0.496   0.630   1.000   False
-              status[T.severe]      -0.323  0.651 -0.497   0.629   1.000   False
-              age                    0.027  0.025  1.069   0.308   1.000   False
-    F6        Intercept             -0.045  0.791 -0.057   0.956   1.000   False
-              status[T.moderate]     0.114  0.662  0.172   0.866   1.000   False
-              status[T.severe]       0.375  0.825  0.455   0.658   1.000   False
-              age                    0.008  0.028  0.275   0.788   1.000   False
-    F7        Intercept              0.291  0.816  0.357   0.728   1.000   False
-              status[T.moderate]     0.082  0.559  0.146   0.887   1.000   False
-              status[T.severe]      -0.264  0.711 -0.371   0.718   1.000   False
-              age                    0.004  0.027  0.150   0.883   1.000   False
-    F8        Intercept             -0.118  0.858 -0.138   0.893   1.000   False
-              status[T.moderate]    -0.402  0.793 -0.507   0.622   1.000   False
-              status[T.severe]      -0.299  0.984 -0.304   0.767   1.000   False
-              age                    0.022  0.029  0.763   0.462   1.000   False
+    F2        status[T.moderate]    1.578  0.287  5.503   0.000   0.001    True
+              status[T.severe]      1.880  0.300  6.272   0.000   0.000    True
+    F6        status[T.severe]     -1.729  0.343 -5.042   0.001   0.004    True
+
+    ``Log(FC)`` is the estimated coefficient on the natural-log scale. Therefore, F2 is
+    more abundant in both moderate and severe samples than in mild samples after
+    adjusting for age, while F6 is less abundant in severe samples. The full pandas
+    DataFrame is available as ``res.result``.
+
+    **Global test**
+
+    The global test asks whether a feature differs between at least two of the three
+    status groups, without identifying which groups differ.
+
+    >>> res_global = res.global_test()
+    >>> res_global.round(3)
+                    W  pvalue  qvalue  Signif
+    FeatureID
+    F1          1.786   0.457   1.000   False
+    F2         60.287   0.000   0.000    True
+    F3          0.040   0.078   0.469   False
+    F4          4.780   0.233   1.000   False
+    F5          1.385   0.623   1.000   False
+    F6         25.905   0.000   0.002    True
+    F7          0.865   0.990   1.000   False
+    F8          1.589   0.513   1.000   False
+
+    This identifies F2 and F6 as globally differentially abundant.
+
+    **Pairwise test**
+
+    The pairwise test compares every pair of status groups. In addition to the two
+    comparisons against the reference group, it can directly compare severe with
+    moderate samples.
+
+    >>> res_pair = res.pairwise_test()
+    >>> cols = ["Log(FC)", "qvalue", "Signif"]
+    >>> res_pair.loc[res_pair["Signif"], cols].round(3)
+                                                   Log(FC)  qvalue  Signif
+    FeatureID Comparison
+    F2        status[T.moderate]                     1.578   0.002    True
+              status[T.severe]                       1.880   0.001    True
+    F6        status[T.severe]                      -1.729   0.006    True
+              status[T.severe]_status[T.moderate]   -1.654   0.023    True
+
+    Thus, F6 is not only depleted in severe samples relative to mild samples, but also
+    relative to moderate samples.
+
+    **Dunnett's test**
+
+    Dunnett's test is useful when the scientific question specifically concerns each
+    group versus a reference group. It therefore omits the severe-versus-moderate
+    comparison. A seed is supplied because the procedure uses bootstrapping.
+
+    >>> res_dunn = res.dunnett_test(seed=42)
+    >>> res_dunn[res_dunn["Signif"]].round(3)
+                                  Log(FC)     SE      W  pvalue  qvalue  Signif
+    FeatureID Comparison
+    F2        status[T.moderate]    1.578  0.287  5.503   0.000   0.001    True
+              status[T.severe]      1.880  0.300  6.272   0.000   0.000    True
+    F6        status[T.severe]     -1.729  0.343 -5.042   0.001   0.004    True
+
+    **Trend test**
+
+    Finally, the status labels have a natural mild-to-moderate-to-severe ordering. The
+    trend test evaluates ordered patterns in group effects. Here this ordering also
+    matches the factor level order used by the fitted model.
+
+    >>> res_trend = res.trend_test(seed=42)
+    >>> res_trend.round(3)
+                   W  pvalue  qvalue  Signif
+    FeatureID
+    F1         0.513    0.28    1.00   False
+    F2         1.880    0.00    0.00    True
+    F3         0.031    1.00    1.00   False
+    F4         0.833    0.13    0.78   False
+    F5         0.485    0.32    1.00   False
+    F6         1.729    0.00    0.00    True
+    F7         0.232    0.79    1.00   False
+    F8         0.539    0.23    1.00   False
+
+    The trend test again identifies F2 and F6, consistent with their increasing and
+    decreasing abundance patterns across disease severity, respectively.
+
+    **Pseudo-count sensitivity analysis**
+
+    The choice of pseudo-count can affect differential abundance results. A simple
+    sensitivity analysis is to repeat the complete analysis using pseudo-counts 0, 0.1,
+    0.5, and 1. A result passes when its significance decision is unchanged across all
+    four analyses, and is robust when the baseline result is significant and passes the
+    sensitivity analysis. This corresponds to the procedure used by ANCOMBC 2.10.1 and
+    later. Earlier versions added alternative pseudo-counts after bias correction; since
+    2.10.1, each pseudo-count is added before bias correction and the full analysis is
+    rerun.
+
+    The analysis can be composed directly from repeated calls:
+
+    >>> fits = [
+    ...     ancombc2(
+    ...         table, metadata, formula='status + age', grouping='status',
+    ...         pseudocount=p)
+    ...     for p in (0, 0.1, 0.5, 1)
+    ... ]
+    >>> def sensitivity(results):
+    ...     result = results[0].copy()
+    ...     signif = pd.concat([x['Signif'] for x in results], axis=1)
+    ...     result['Pass'] = signif.eq(signif.iloc[:, 0], axis=0).all(axis=1)
+    ...     result['Robust'] = result['Signif'] & result['Pass']
+    ...     return result
+    >>> res_sens = sensitivity([fit.result for fit in fits])
+
+    The same helper can be applied to :meth:`ANCOMBCResult.global_test`,
+    :meth:`ANCOMBCResult.pairwise_test`, or :meth:`ANCOMBCResult.dunnett_test`. For
+    :meth:`ANCOMBCResult.trend_test`, the R implementation uses the global-test
+    sensitivity decision rather than repeating the stochastic trend test at each
+    pseudo-count. The same general approach can also be used with :func:`ancombc` and
+    other analyses involving pseudo-counts. Because :func:`ancombc` requires strictly
+    positive input and has no ``pseudocount`` parameter, add the desired positive
+    pseudo-count to the input table before each fit.
 
     """
     return _ancombc_core(
@@ -519,7 +615,7 @@ def ancombc2(
         alpha=alpha,
         p_adjust=p_adjust,
         pseudo=pseudocount,
-        s0_perc=s0_perc,
+        var_quantile=var_quantile,
         aggregator=aggregator,
     )
 
@@ -533,7 +629,7 @@ def _ancombc_core(
     aggregator=None,
     p_adjust="holm",
     pseudo=0,
-    s0_perc=0.05,
+    var_quantile=0.05,
     alpha=0.05,
     max_iter=100,
     tol=1e-5,
@@ -563,6 +659,8 @@ def _ancombc_core(
     # Validate parameters
     if not 0 < alpha < 1:
         raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
+    if not 0 <= var_quantile <= 1:
+        raise ValueError("`var_quantile` must be between 0 and 1.")
     if not pseudo >= 0:
         raise ValueError(f"Pseudocount must be a non-negative number.")
 
@@ -618,11 +716,11 @@ def _ancombc_core(
         beta_hat = beta_hat.T
 
         # Adjust variances
-        _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups)
+        _adjust_variances(var_hat, vcov_hat, var_delta, var_quantile, groups)
 
         # Compute per-feature degree of freedom (observed samples - covariates)
         if missing is not None:
-            n_valid = np.sum(~missing, axis=0)
+            n_valid = missing.shape[0] - np.sum(missing, axis=0)
             dof = np.where(n_valid > n_covars, n_valid - n_covars, np.nan)
         else:
             n_samps = matrix.shape[0]
@@ -716,26 +814,39 @@ def _transform_data(data, pseudo=None, center=False):
     data is centered at 0 per feature. This is equivalent to `rclr(data, axis=0)`, but
     more efficient.
 
-    The returned `data` is a new data table in any float type. The original data table
-    is kept intact.
+    The returned `data` is a new float32 or float64 table. Floating inputs no wider
+    than float32 use float32; wider floating inputs and integer inputs use float64. The
+    original data table is kept intact.
 
     """
-    ### Step 1: Identify zeros values and/or add pseudocount. ###
+    ### Step 1: Identify zero values and/or add pseudocount. ###
 
-    # Add pseudocount if provided. Output must be in float type.
+    # NumPy linear algebra does not support float16, while keeping float32 input can
+    # materially reduce memory consumption. Use float32 for floating inputs no wider
+    # than float32, and float64 otherwise. Integer input is promoted to float64 to
+    # preserve the historical precision of count-data analysis.
+    dtype = data.dtype
+    if (
+        np.issubdtype(dtype, np.floating)
+        and dtype.itemsize <= np.dtype(np.float32).itemsize
+    ):
+        dtype = np.dtype(np.float32)
+    else:
+        dtype = np.dtype(np.float64)
+
+    # Add pseudocount if provided. Always make a new floating-point array so the input
+    # table remains untouched.
     if pseudo:
-        data = data + float(pseudo)
+        data = data.astype(dtype, copy=True)
+        data += pseudo
         missing = None
 
-    # Otherwise, identify zero values and make a float copy of data.
+    # Otherwise, identify zero values and make a floating-point copy of data.
     else:
         missing = data == 0
         if not np.any(missing):
             missing = None
-        if np.issubdtype(data.dtype, np.floating):
-            data = data.copy()
-        else:
-            data = data.astype(float)
+        data = data.astype(dtype, copy=True)
 
     ### Step 2: Log-transform observed data and optionally center ###
 
@@ -979,8 +1090,8 @@ def _lstsq_sparse(data, dmat, missing, direct, batch=None, tol=1e-2, max_iter=20
     V = np.swapaxes(Vh, -1, -2)
     dmat_inv = np.einsum("fpk,fk,fsk->fps", V, S_inv, U, optimize=True)
 
-    intm = np.zeros_like(data)
-    np.copyto(intm, data, where=~missing)
+    intm = data.copy()
+    np.copyto(intm, 0.0, where=missing)
     theta = np.zeros(n_samps, dtype=data.dtype)
     beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
 
@@ -993,8 +1104,17 @@ def _lstsq_sparse(data, dmat, missing, direct, batch=None, tol=1e-2, max_iter=20
     # sample effects `theta`.
     if direct:
         return _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta)
-    return _solve_sparse_iter(
-        data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter
+    return _solve_sparse_iter_unified(
+        data,
+        dmat,
+        missing,
+        intm,
+        theta,
+        beta,
+        tol,
+        max_iter,
+        batch=False,
+        dmat_inv=dmat_inv,
     )
 
 
@@ -1074,13 +1194,14 @@ def _lstsq_sparse_batch(
         del U, X_w, W_block
 
     # Preserve the input precision for the response and compact-operator workspaces.
-    intm = np.zeros_like(data)
-    np.copyto(intm, data, where=~missing)
+    intm = data.copy()
+    np.copyto(intm, 0.0, where=missing)
     theta = np.zeros(n_samps, dtype=dtype)
 
     rhs = np.empty((n_covars, n_feats), dtype=dtype)
+    tmp = np.empty((n_feats, n_comps), dtype=dtype)
     beta = np.empty((n_feats, n_covars), dtype=dtype)
-    _apply_pinv(dmat, intm, Vh_all, S_inv_all, rhs, beta, illed)
+    _apply_pinv(dmat, intm, Vh_all, S_inv_all, rhs, beta, illed, tmp)
 
     if direct:
         return _solve_sparse_batch(
@@ -1095,26 +1216,84 @@ def _lstsq_sparse_batch(
             batch,
             illed,
         )
-    return _solve_sparse_batch_iter(
+    return _solve_sparse_iter_unified(
         data,
         dmat,
         missing,
-        Vh_all,
-        S_inv_all,
         intm,
         theta,
         beta,
-        rhs,
         tol,
         max_iter,
-        illed,
+        batch=True,
+        Vh=Vh_all,
+        S_inv=S_inv_all,
+        rhs=rhs,
+        illed=illed,
+        tmp=tmp,
     )
 
 
-def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None):
-    """Apply each feature's masked design pseudoinverse to the adjusted response.
+def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None, tmp=None):
+    r"""Apply feature-specific masked pseudoinverses using compact SVD operators.
 
-    For ill-conditioned features, apply stable SVD fallback.
+    This computes coefficients for all features without materializing each complete
+    pseudoinverse ``X_f^+``. For feature ``f``, let the masked design matrix have SVD
+
+    ``X_f = U_f S_f V_f.T``.
+
+    Since ``X_f.T y_f = V_f S_f U_f.T y_f``, the coefficient estimate can be written
+
+    ``beta_f = V_f S_f^-2 V_f.T (X_f.T y_f)``.
+
+    The batched sparse solver therefore retains only ``Vh`` (``V_f.T``) and inverse
+    singular values for well-conditioned features. Missing values in ``adjusted`` must
+    already be replaced by zero. Ill-conditioned features may optionally be overwritten
+    by stable full-SVD pseudoinverse results supplied through ``illed``.
+
+    Parameters
+    ----------
+    dmat : ndarray of shape (n_samples, n_covariates)
+        Complete design matrix shared by all features.
+    adjusted : ndarray of shape (n_samples, n_features)
+        Responses after subtracting the current sample effects. Missing responses must
+        be zero.
+    Vh : ndarray of shape (n_features, n_components, n_covariates)
+        Right singular vectors for each feature-specific masked design matrix, where
+        ``n_components = min(n_samples, n_covariates)``.
+    S_inv : ndarray of shape (n_features, n_components)
+        Inverse retained singular values. Singular values below the rank threshold are
+        represented by zero.
+    rhs : ndarray of shape (n_covariates, n_features), optional
+        Reusable workspace for the common right-hand side ``dmat.T @ adjusted``. If
+        omitted, a new array is allocated. Supplying this workspace is worthwhile in
+        the iterative solver because this matrix multiplication is performed every
+        iteration.
+    out : ndarray of shape (n_features, n_covariates), optional
+        Output buffer for fitted coefficients. If omitted, a new array is allocated.
+    illed : dict, optional
+        Stable full-SVD fallbacks for ill-conditioned features. Keys are feature-block
+        starts and values are ``(local_indices, pseudoinverses)``. The corresponding
+        rows of ``out`` are overwritten after the compact calculation.
+    tmp : ndarray of shape (n_features, n_components), optional
+        Reusable workspace for ``V_f.T (X_f.T y_f)``. If omitted, a new array is
+        allocated.
+
+    Returns
+    -------
+    ndarray of shape (n_features, n_covariates)
+        The fitted coefficients. This is the same object as ``out`` when ``out`` is
+        provided.
+
+    Notes
+    -----
+    The three reusable arrays have distinct roles and lifetimes: ``rhs`` stores the
+    BLAS-friendly matrix product ``dmat.T @ adjusted``; ``tmp`` stores the projection
+    into each feature's singular-vector basis; and ``out`` receives the final
+    coefficients. ``rhs`` can be eliminated algebraically by reusing transposed output
+    storage, but that makes the hot matrix multiplication slower in benchmarks. Keeping
+    all three workspaces avoids per-iteration allocations while preserving the faster
+    memory layout.
     """
     n_feats = S_inv.shape[0]
     n_covars = Vh.shape[2]
@@ -1123,6 +1302,8 @@ def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None):
         rhs = np.empty((n_covars, n_feats), dtype=dtype)
     if out is None:
         out = np.empty((n_feats, n_covars), dtype=dtype)
+    if tmp is None:
+        tmp = np.empty_like(S_inv)
 
     # Missing adjusted responses are already zero, so X.T @ adjusted is simultaneously
     # the RHS for every feature-specific masked regression.
@@ -1130,9 +1311,11 @@ def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None):
 
     # X_f = U S V.T and rhs = X_f.T y = V S U.T y. Therefore
     # X_f^+ y = V S^-2 V.T rhs. Retaining V and S instead of pinv(X.T X) preserves the
-    # legacy SVD's rank decision and avoids forming normal equations.
-    tmp = np.einsum("fkp,pf->fk", Vh, rhs, optimize=True)
-    tmp *= S_inv * S_inv
+    # legacy SVD's rank decision and avoids forming normal equations. Reuse ``tmp`` and
+    # multiply by S^-1 twice to avoid materializing ``S_inv * S_inv`` each iteration.
+    np.einsum("fkp,pf->fk", Vh, rhs, out=tmp, optimize=True)
+    tmp *= S_inv
+    tmp *= S_inv
     np.einsum("fpk,fk->fp", np.swapaxes(Vh, -1, -2), tmp, out=out, optimize=True)
 
     # Stable SVD fallback
@@ -1159,7 +1342,7 @@ def _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta):
     np.subtract(data, fitted, out=intm)
     np.nan_to_num(intm, copy=False, nan=0.0)
     residual_sum = intm.sum(axis=1)
-    observed_counts = (~missing).sum(axis=1)
+    observed_counts = missing.shape[1] - missing.sum(axis=1)
     system = np.diag(observed_counts) - np.einsum(
         "fs,sp,fpt->st", W, dmat, dmat_inv, optimize=True
     )
@@ -1180,27 +1363,76 @@ def _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta):
 
 def _solve_sparse_iter(data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter):
     """Reproduce ANCOM-BC2's alternating beta/theta updates."""
-    # Missing responses couple features through theta, so these are not
-    # independent OLS fits.
+    return _solve_sparse_iter_unified(
+        data,
+        dmat,
+        missing,
+        intm,
+        theta,
+        beta,
+        tol,
+        max_iter,
+        batch=False,
+        dmat_inv=dmat_inv,
+    )
+
+
+def _solve_sparse_iter_unified(
+    data,
+    dmat,
+    missing,
+    intm,
+    theta,
+    beta,
+    tol,
+    max_iter,
+    batch,
+    dmat_inv=None,
+    Vh=None,
+    S_inv=None,
+    rhs=None,
+    illed=None,
+    tmp=None,
+):
+    """Unified iterative solver for full-pseudoinverse and compact-operator routes."""
+    n_obs = missing.shape[1] - np.sum(missing, axis=1)
     epsilon = 100.0
     it = 0
+    beta_new = np.empty_like(beta)
+    theta_new = np.empty_like(theta)
+    if batch and tmp is None:
+        tmp = np.empty_like(S_inv)
+
     while epsilon > tol and it < max_iter:
+        # Adjust observed responses by the current sample effects. Missing responses
+        # must be zero for both pseudoinverse routes.
         np.subtract(data, theta[:, None], out=intm)
-        np.copyto(intm, 0.0, where=missing)  # adjusted
-        beta_new = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
-
-        # R initializes each fitted vector with zero and writes fitted values
-        # only at response rows used by lm().
-        np.matmul(dmat, beta_new.T, out=intm)
         np.copyto(intm, 0.0, where=missing)
-        np.subtract(data, intm, out=intm)  # fitted
-        theta_new = np.nanmean(intm, axis=1)
 
-        epsilon = np.sqrt(
-            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
-        )
-        beta = beta_new
-        theta = theta_new
+        if batch:
+            _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta_new, illed, tmp)
+        else:
+            np.einsum("fps,sf->fp", dmat_inv, intm, out=beta_new, optimize=True)
+
+        # Residuals. There is no need to clear fitted values at missing positions before
+        # subtracting: ``data`` is NaN there, so the subtraction overwrites them with
+        # NaN. Reduce directly into the pre-allocated theta workspace.
+        np.matmul(dmat, beta_new.T, out=intm)
+        np.subtract(data, intm, out=intm)
+        np.nansum(intm, axis=1, out=theta_new)
+        theta_new /= n_obs
+
+        # The previous beta/theta buffers are dead once the new estimates are available.
+        # Reuse them for squared convergence deltas instead of allocating F-by-P and
+        # sample-length temporaries from ``(new - old) ** 2``.
+        np.subtract(beta_new, beta, out=beta)
+        np.square(beta, out=beta)
+        np.subtract(theta_new, theta, out=theta)
+        np.square(theta, out=theta)
+        epsilon = np.sqrt(np.nansum(beta) + np.nansum(theta))
+
+        beta, beta_new = beta_new, beta
+        theta, theta_new = theta_new, theta
         it += 1
     return theta, beta
 
@@ -1226,7 +1458,7 @@ def _solve_sparse_batch(
     np.subtract(data, intm, out=intm)
     np.nan_to_num(intm, copy=False, nan=0.0)
     residual_sum = intm.sum(axis=1)
-    observed_counts = (~missing).sum(axis=1)
+    observed_counts = missing.shape[1] - missing.sum(axis=1)
 
     system = np.diag(observed_counts.astype(np.result_type(dmat, float), copy=False))
     V = np.swapaxes(Vh, -1, -2)
@@ -1281,26 +1513,21 @@ def _solve_sparse_batch_iter(
     illed,
 ):
     """Reproduce ANCOM-BC2 iterations using compact feature operators."""
-    epsilon = 100.0
-    it = 0
-    beta_new = np.empty_like(beta)
-    while epsilon > tol and it < max_iter:
-        np.subtract(data, theta[:, None], out=intm)
-        np.copyto(intm, 0.0, where=missing)
-        _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta_new, illed)
-
-        np.matmul(dmat, beta_new.T, out=intm)
-        np.copyto(intm, 0.0, where=missing)
-        np.subtract(data, intm, out=intm)
-        theta_new = np.nanmean(intm, axis=1)
-
-        epsilon = np.sqrt(
-            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
-        )
-        beta, beta_new = beta_new, beta
-        theta = theta_new
-        it += 1
-    return theta, beta
+    return _solve_sparse_iter_unified(
+        data,
+        dmat,
+        missing,
+        intm,
+        theta,
+        beta,
+        tol,
+        max_iter,
+        batch=True,
+        Vh=Vh,
+        S_inv=S_inv,
+        rhs=rhs,
+        illed=illed,
+    )
 
 
 def _calc_residual(data, dmat, beta, target_bytes=8 << 20):
@@ -1451,20 +1678,12 @@ def _calc_var_cov(res2, hmat, groups):
     diag_idx = np.arange(k)
     covmat[:, diag_idx, diag_idx] = var_hat[:, groups]
 
-    tri_i, tri_j = np.triu_indices(k, 1)
-    n_offdiag = tri_i.size
-    if n_offdiag:
-        dtype = np.result_type(res2, hmat)
-        pair_products = np.empty((n_samps, n_offdiag), dtype=dtype)
-        np.multiply(
-            hmat[:, groups[tri_i]],
-            hmat[:, groups[tri_j]],
-            out=pair_products,
+    # Calculate off-diagonal covariances if needed
+    i, j = np.triu_indices(k, 1)
+    if i.size > 0:
+        covmat[:, i, j] = covmat[:, j, i] = np.einsum(
+            "sf,si,si->fi", res2, hmat[:, groups[i]], hmat[:, groups[j]], optimize=True
         )
-        offdiag = np.empty((n_feats, n_offdiag), dtype=dtype)
-        np.matmul(res2.T, pair_products, out=offdiag)
-        covmat[:, tri_i, tri_j] = offdiag
-        covmat[:, tri_j, tri_i] = offdiag
 
     return var_hat, covmat
 
@@ -1849,7 +2068,7 @@ def _sample_fractions(data, dmat, beta, delta_em, missing=None):
     return theta_hat
 
 
-def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups=None):
+def _adjust_variances(var_hat, vcov_hat, var_delta, var_quantile, groups=None):
     """Adjust variances.
 
     Parameters
@@ -1861,9 +2080,10 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups=None):
         None when only coefficient variances were requested.
     var_delta : ndarray of shape (n_covariates,)
         Estimated variances of biases.
-    s0_perc : float
-        SAM-like fudge factor.
-    covariance_indices : 1-D array_like of int, optional
+    var_quantile : float
+        Quantile of coefficient variances used to calculate a variance-stabilizing
+        offset. Set to 0 to disable.
+    groups : 1-D array_like of int, optional
         Full-model coefficient indices represented by ``vcov_hat`` when it is a
         covariance submatrix.
 
@@ -1882,11 +2102,10 @@ def _adjust_variances(var_hat, vcov_hat, var_delta, s0_perc, groups=None):
     var_hat += var_delta_t
     var_hat += var_prod
 
-    # SAM-like fudge factor
-    # TODO: Handle NaN values
-    if s0_perc:
-        s02 = np.nanquantile(var_hat, s0_perc, axis=0)
-        var_hat += s02[None, :]
+    # Add a variance-stabilizing offset based on the requested quantile.
+    if var_quantile:
+        var_offset = np.nanquantile(var_hat, var_quantile, axis=0)
+        var_hat += var_offset[None, :]
         # var_hat[np.isnan(beta_hat)] = np.nan
 
     # Keep a retained covariance tensor consistent with the adjusted variances.
@@ -1927,7 +2146,7 @@ def _format_results(beta_hat, var_hat, features, covariates, alpha, p_adjust, do
     -------
     pd.DataFrame
         Primary results with a (FeatureID, Covariate) MultiIndex and columns
-        Log2(FC), SE, W, pvalue, qvalue and Signif.
+        Log(FC), SE, W, pvalue, qvalue and Signif.
 
     """
     beta_hat = np.asarray(beta_hat)
@@ -1947,7 +2166,7 @@ def _format_results(beta_hat, var_hat, features, covariates, alpha, p_adjust, do
         (features, covariates), names=("FeatureID", "Covariate")
     )
     res = pd.DataFrame(index=index)
-    res["Log2(FC)"] = beta_hat.ravel()
+    res["Log(FC)"] = beta_hat.ravel()
 
     # A single feature-by-covariate workspace is enough for SE and W because pandas
     # copies each column on assignment.
@@ -2124,7 +2343,7 @@ def _adjust_pvalues(pval, method, out=None):
 
             values = pcol[valid_idx]
             order = np.argsort(values)
-            adjusted = values[order].copy()
+            adjusted = values[order]
             if holm:
                 adjusted *= n - np.arange(n)
                 np.maximum.accumulate(adjusted, out=adjusted)
@@ -2150,16 +2369,37 @@ def _adjust_pvalues(pval, method, out=None):
 class ANCOMBCResult:
     """Results for ANCOM-BC and ANCOM-BC2 analyses.
 
-    This class contains the primary differential abundance results. Post-hoc analyses
+    This class contains the primary differential abundance results. The object displays
+    as the primary result table and supports ``[]`` selection like a pandas DataFrame;
+    the underlying DataFrame is available through :attr:`result`. Post-hoc analyses
     are available as methods that compute on-demand when a ``grouping`` was specified
     in the upstream :func:`ancombc` or :func:`ancombc2` call. Only the covariance
     submatrices required for that grouping are retained.
 
     Attributes
     ----------
-    res : pd.DataFrame
-        Primary results with (FeatureID, Covariate) multi-index. Columns are: Log2(FC),
-        SE, W, pvalue, qvalue, Signif.
+    result : pd.DataFrame
+        Primary differential abundance results with a (FeatureID, Covariate)
+        multi-index. The index levels and columns are:
+
+        - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+        - ``Covariate``: Model coefficient associated with a metadata covariate or
+          factor level.
+
+        - ``Log(FC)``: Bias-corrected estimated model coefficient on the natural-log
+          abundance scale.
+
+        - ``SE``: Standard error of the estimated coefficient.
+
+        - ``W``: *W*-statistic, calculated as the estimated coefficient divided by its
+          standard error.
+
+        - ``pvalue``: Uncorrected *p*-value of the *W*-statistic.
+
+        - ``qvalue``: *p*-value corrected for multiple testing.
+
+        - ``Signif``: Whether the coefficient is significantly different from zero.
     method : {"ANCOM-BC", "ANCOM-BC2"}
         Differential abundance method used for the analysis.
     grouping : str or None
@@ -2178,8 +2418,6 @@ class ANCOMBCResult:
         Pairwise directional test between all group pairs, with mdFDR.
     trend_test
         Trend test for ordered patterns in group effects.
-    sensitivity_analysis
-        Pseudo-count sensitivity analysis for robustness assessment.
 
     See Also
     --------
@@ -2199,7 +2437,7 @@ class ANCOMBCResult:
         "_covariates": None,
         "_alpha": 0.05,
         "_p_adjust": "holm",
-        "_s0_perc": 0.05,
+        "_var_quantile": 0.05,
         "_max_iter": 100,
         "_tol": 1e-5,
         "_pseudo": 0,
@@ -2218,18 +2456,28 @@ class ANCOMBCResult:
         if method not in {"ANCOM-BC", "ANCOM-BC2"}:
             raise ValueError("`method` must be either 'ANCOM-BC' or 'ANCOM-BC2'.")
 
-        self.res = res
+        self.result = res
         self._method = method
         for name, default in self._private_defaults.items():
             setattr(self, name, kwargs.get(name, default))
 
     @property
+    def result(self) -> pd.DataFrame:
+        """Primary differential abundance result table."""
+        return self._result
+
+    @result.setter
+    def result(self, value: pd.DataFrame):
+        self._result = value
+
+    @property
     def res(self) -> pd.DataFrame:
-        return self._res
+        """Alias of :attr:`result` for backward compatibility."""
+        return self._result
 
     @res.setter
     def res(self, value: pd.DataFrame):
-        self._res = value
+        self._result = value
 
     @property
     def method(self) -> str:
@@ -2256,29 +2504,20 @@ class ANCOMBCResult:
             )
 
     def __getitem__(self, key):
-        return getattr(self, key)
+        """Select columns or rows from the primary result table."""
+        return self.result[key]
 
     def keys(self):
-        """Return a list of attribute names that are not private and are not None."""
-        return [
-            name
-            for name in (
-                "res",
-                "method",
-            )
-            if getattr(self, name) is not None
-        ]
+        """Return column labels of the primary result table."""
+        return self.result.keys()
 
-    # formated output
     def __repr__(self):
-        n_feats = len(self.res.index.get_level_values("FeatureID").unique())
-        n_covars = len(self.res.index.get_level_values("Covariate").unique())
-        n_signif = int(self.res["Signif"].sum())
-        return (
-            f"ANCOMBCResult(method={self.method!r}, "
-            f"n_taxa={n_feats}, n_covariates={n_covars}, "
-            f"n_signif={n_signif})"
-        )
+        """Display the primary result table."""
+        return repr(self.result)
+
+    def _repr_html_(self):
+        """Display the primary result table in rich notebook frontends."""
+        return self.result._repr_html_()
 
     def _stat_params(self, alpha, p_adjust):
         """Get FDR-correction method and significance level from upstream."""
@@ -2356,14 +2595,33 @@ class ANCOMBCResult:
             Significance level, or the value supplied upstream. Default is
             "inherit".
         p_adjust : str, optional
-            Family wise error (FWER) controlling method. Default is "inhert", which
+            Family wise error (FWER) controlling method. Default is "inherit", which
             will use the *p*-value correction method supplied upstream.
 
         Returns
         -------
         pd.DataFrame
-            DataFrame with (FeatureID, Comparison) multi-index and columns:
-            Log2(FC), SE, W, pvalue, qvalue, Signif.
+            Pairwise test result with a (FeatureID, Comparison) multi-index. The index
+            levels and columns are:
+
+            - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+            - ``Comparison``: Group contrast being tested.
+
+            - ``Log(FC)``: Estimated difference in group effects on the natural-log
+              abundance scale.
+
+            - ``SE``: Standard error of the estimated contrast.
+
+            - ``W``: *W*-statistic, calculated as the estimated contrast divided by its
+              standard error.
+
+            - ``pvalue``: Uncorrected *p*-value of the *W*-statistic.
+
+            - ``qvalue``: *p*-value after mixed directional false discovery rate
+              correction.
+
+            - ``Signif``: Whether the contrast is significantly different from zero.
 
         """
         self._require_grouping("pairwise_test")
@@ -2387,7 +2645,7 @@ class ANCOMBCResult:
             {
                 "FeatureID": [x for x in self._features for _ in range(n_comp)],
                 "Comparison": comp_names * n_feats,
-                "Log2(FC)": raw["beta"].ravel(),
+                "Log(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
                 "pvalue": raw["p_val"].ravel(),
@@ -2413,7 +2671,7 @@ class ANCOMBCResult:
             Significance level, or the value supplied upstream. Default is
             "inherit".
         p_adjust : str, optional
-            Family wise error (FWER) controlling method. Default in "inhert", which
+            Family wise error (FWER) controlling method. Default is "inherit", which
             will use the *p*-value correction method supplied upstream.
         bootstraps : int, optional
             Number of bootstrap iterations. Default is 100.
@@ -2424,8 +2682,27 @@ class ANCOMBCResult:
         Returns
         -------
         pd.DataFrame
-            DataFrame with (FeatureID, Comparison) multi-index and columns:
-            Log2(FC), SE, W, pvalue, qvalue, Signif.
+            Dunnett test result with a (FeatureID, Comparison) multi-index. The index
+            levels and columns are:
+
+            - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+            - ``Comparison``: Group-versus-reference contrast being tested.
+
+            - ``Log(FC)``: Estimated group effect relative to the reference group on
+              the natural-log abundance scale.
+
+            - ``SE``: Standard error of the estimated contrast.
+
+            - ``W``: *W*-statistic, calculated as the estimated contrast divided by its
+              standard error.
+
+            - ``pvalue``: Uncorrected *p*-value of the *W*-statistic.
+
+            - ``qvalue``: *p*-value after mixed directional false discovery rate
+              correction.
+
+            - ``Signif``: Whether the group differs significantly from the reference.
 
         """
         self._require_grouping("dunnett_test")
@@ -2451,7 +2728,7 @@ class ANCOMBCResult:
             {
                 "FeatureID": [x for x in self._features for _ in range(n_comp)],
                 "Comparison": comp_names * n_feats,
-                "Log2(FC)": raw["beta"].ravel(),
+                "Log(FC)": raw["beta"].ravel(),
                 "SE": raw["se"].ravel(),
                 "W": raw["W"].ravel(),
                 "pvalue": raw["p_val"].ravel(),
@@ -2495,7 +2772,17 @@ class ANCOMBCResult:
         Returns
         -------
         pd.DataFrame
-            DataFrame indexed by FeatureID with columns: W, pvalue, qvalue, Signif.
+            Trend test result indexed by FeatureID. The index and columns are:
+
+            - ``FeatureID``: Feature identifier, i.e., dependent variable.
+
+            - ``W``: Test statistic for the strongest tested trend pattern.
+
+            - ``pvalue``: Bootstrap-estimated *p*-value of the trend statistic.
+
+            - ``qvalue``: *p*-value corrected for multiple testing.
+
+            - ``Signif``: Whether the feature exhibits a significant tested trend.
 
         Notes
         -----

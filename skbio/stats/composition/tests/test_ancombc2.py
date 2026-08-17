@@ -26,6 +26,13 @@ from skbio.stats.composition._ancombc2 import (
     _lstsq_dense,
     _lstsq_sparse,
     _lstsq_sparse_batch,
+    _apply_pinv,
+    _solve_sparse_iter,
+    _solve_sparse_batch_iter,
+    _solve_sparse_iter_unified,
+    _calc_variance,
+    _calc_covariance,
+    _calc_var_cov,
     _transform_data,
     _estimate_bias_em,
     _sample_fractions,
@@ -210,9 +217,20 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs_data, exp_data)
         self.assertTrue(obs_data.dtype == np.float64)
 
-        # input is float but not float64; will be kept
-        obs_data, obs_mask = _transform_data(matrix.astype(np.float32))
-        npt.assert_allclose(obs_data, exp_data)
+        # input is float32; will be kept. Build the expected result from the float32
+        # input because the log is intentionally evaluated at float32 precision.
+        matrix32 = matrix.astype(np.float32)
+        obs_data, obs_mask = _transform_data(matrix32)
+        exp_data32 = np.log(matrix32)
+        npt.assert_array_equal(obs_data, exp_data32)
+        self.assertTrue(obs_data.dtype == np.float32)
+
+        # float16 is promoted to float32 because NumPy linear algebra does not support
+        # float16. The transform is then evaluated at float32 precision.
+        matrix16 = matrix.astype(np.float16)
+        obs_data, obs_mask = _transform_data(matrix16)
+        exp_data32 = np.log(matrix16.astype(np.float32))
+        npt.assert_array_equal(obs_data, exp_data32)
         self.assertTrue(obs_data.dtype == np.float32)
 
         # dense matrix, CLR
@@ -243,6 +261,15 @@ class CoreTests(TestCase):
         npt.assert_array_equal(obs_mask, exp_mask)
         exp_data = rclr(matrix, axis=0, validate=False)
         npt.assert_allclose(obs_data, exp_data)
+
+        # Sparse float16 data are likewise promoted to float32. Compare with RCLR on
+        # the promoted input so the reference uses the same intended precision.
+        matrix16 = matrix.astype(np.float16)
+        obs_data, obs_mask = _transform_data(matrix16, center=True)
+        npt.assert_array_equal(obs_mask, exp_mask)
+        exp_data32 = rclr(matrix16.astype(np.float32), axis=0, validate=False)
+        npt.assert_allclose(obs_data, exp_data32, rtol=1e-6, atol=1e-7)
+        self.assertTrue(obs_data.dtype == np.float32)
 
     def test_estimate_params_dense(self):
         # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
@@ -419,6 +446,253 @@ class CoreTests(TestCase):
             npt.assert_allclose(obs_theta, exp_theta)
             npt.assert_allclose(obs_beta, exp_beta)
 
+    def test_apply_pinv(self):
+        data, missing = _transform_data(self.data1.astype(float), 0, True)
+        dmat = self.dmat1
+        n_feats = data.shape[1]
+
+        # Build compact operators in the same way as the batched sparse route.
+        W = 1.0 - missing.T
+        X_w = dmat[None, :, :] * W[:, :, None]
+        U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+        cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+        S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+
+        adjusted = np.zeros_like(data)
+        np.copyto(adjusted, data, where=~missing)
+
+        obs = _apply_pinv(dmat, adjusted, Vh, S_inv)
+
+        # Reusable workspaces should produce the same result without allocating the
+        # intermediate projection on each call.
+        rhs = np.empty((dmat.shape[1], n_feats), dtype=data.dtype)
+        tmp = np.empty_like(S_inv)
+        out = np.empty_like(obs)
+        returned = _apply_pinv(
+            dmat, adjusted, Vh, S_inv, rhs=rhs, out=out, illed={}, tmp=tmp
+        )
+        self.assertIs(returned, out)
+        npt.assert_allclose(out, obs)
+
+        exp = np.empty_like(obs)
+        for i in range(n_feats):
+            x_i = dmat * (~missing[:, i])[:, None]
+            exp[i] = np.linalg.pinv(x_i) @ adjusted[:, i]
+        npt.assert_allclose(obs, exp)
+
+        # Stable fallback should override selected rows exactly.
+        illed = {0: (np.array([0]), np.zeros((1, dmat.shape[1], dmat.shape[0])))}
+        obs_fallback = _apply_pinv(dmat, adjusted, Vh, S_inv, illed=illed)
+        npt.assert_allclose(obs_fallback[0], 0.0)
+        npt.assert_allclose(obs_fallback[1:], obs[1:])
+
+    def test_solve_sparse_iter(self):
+        data, missing = _transform_data(self.data1.astype(float), 0, True)
+        dmat = self.dmat1
+
+        W = 1.0 - missing.T
+        X_w = dmat[None, :, :] * W[:, :, None]
+        U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+        cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+        S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+        dmat_inv = np.einsum(
+            "fpk,fk,fsk->fps", np.swapaxes(Vh, -1, -2), S_inv, U, optimize=True
+        )
+
+        intm = np.zeros_like(data)
+        np.copyto(intm, data, where=~missing)
+        theta = np.zeros(data.shape[0], dtype=data.dtype)
+        beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
+
+        exp = _lstsq_sparse(data, dmat, missing, False)
+        obs = _solve_sparse_iter(
+            data.copy(),
+            dmat,
+            missing,
+            dmat_inv,
+            intm.copy(),
+            theta.copy(),
+            beta.copy(),
+            1e-2,
+            20,
+        )
+        npt.assert_allclose(obs[0], exp[0])
+        npt.assert_allclose(obs[1], exp[1])
+
+    def test_solve_sparse_batch_iter(self):
+        data, missing = _transform_data(self.data1.astype(float), 0, True)
+        dmat = self.dmat1
+        n_samps, n_feats = data.shape
+        n_covars = dmat.shape[1]
+        n_comps = min(n_samps, n_covars)
+
+        Vh_all = np.empty((n_feats, n_comps, n_covars), dtype=data.dtype)
+        S_inv_all = np.empty((n_feats, n_comps), dtype=data.dtype)
+        for start in range(0, n_feats, 1):
+            stop = start + 1
+            W_block = 1.0 - missing[:, start:stop].T
+            X_w = dmat[None, :, :] * W_block[:, :, None]
+            _, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+            cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+            Vh_all[start:stop] = Vh
+            S_inv_all[start:stop] = np.divide(
+                1.0, S, out=np.zeros_like(S), where=S > cutoff
+            )
+
+        intm = np.zeros_like(data)
+        np.copyto(intm, data, where=~missing)
+        theta = np.zeros(n_samps, dtype=data.dtype)
+        rhs = np.empty((n_covars, n_feats), dtype=data.dtype)
+        beta = np.empty((n_feats, n_covars), dtype=data.dtype)
+        _apply_pinv(dmat, intm, Vh_all, S_inv_all, rhs, beta, {})
+
+        exp = _lstsq_sparse_batch(data, dmat, missing, False, batch=1)
+        obs = _solve_sparse_batch_iter(
+            data.copy(),
+            dmat,
+            missing,
+            Vh_all,
+            S_inv_all,
+            intm.copy(),
+            theta.copy(),
+            beta.copy(),
+            rhs.copy(),
+            1e-2,
+            20,
+            {},
+        )
+        npt.assert_allclose(obs[0], exp[0])
+        npt.assert_allclose(obs[1], exp[1])
+
+    def test_solve_sparse_iter_unified(self):
+        data, missing = _transform_data(self.data1.astype(float), 0, True)
+        dmat = self.dmat1
+
+        W = 1.0 - missing.T
+        X_w = dmat[None, :, :] * W[:, :, None]
+        U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
+        cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+        S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
+        dmat_inv = np.einsum(
+            "fpk,fk,fsk->fps", np.swapaxes(Vh, -1, -2), S_inv, U, optimize=True
+        )
+
+        intm = np.zeros_like(data)
+        np.copyto(intm, data, where=~missing)
+        theta = np.zeros(data.shape[0], dtype=data.dtype)
+        beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
+
+        obs_dense = _solve_sparse_iter_unified(
+            data.copy(),
+            dmat,
+            missing,
+            intm.copy(),
+            theta.copy(),
+            beta.copy(),
+            1e-2,
+            20,
+            batch=False,
+            dmat_inv=dmat_inv,
+        )
+        exp_dense = _solve_sparse_iter(
+            data.copy(),
+            dmat,
+            missing,
+            dmat_inv,
+            intm.copy(),
+            theta.copy(),
+            beta.copy(),
+            1e-2,
+            20,
+        )
+        npt.assert_allclose(obs_dense[0], exp_dense[0])
+        npt.assert_allclose(obs_dense[1], exp_dense[1])
+
+        n_samps, n_feats = data.shape
+        n_covars = dmat.shape[1]
+        n_comps = min(n_samps, n_covars)
+        Vh_all = np.empty((n_feats, n_comps, n_covars), dtype=data.dtype)
+        S_inv_all = np.empty((n_feats, n_comps), dtype=data.dtype)
+        for start in range(0, n_feats, 1):
+            stop = start + 1
+            W_block = 1.0 - missing[:, start:stop].T
+            X_w = dmat[None, :, :] * W_block[:, :, None]
+            _, S, Vh_block = np.linalg.svd(X_w, full_matrices=False)
+            cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
+            Vh_all[start:stop] = Vh_block
+            S_inv_all[start:stop] = np.divide(
+                1.0, S, out=np.zeros_like(S), where=S > cutoff
+            )
+        rhs = np.empty((n_covars, n_feats), dtype=data.dtype)
+        beta_batch = np.empty((n_feats, n_covars), dtype=data.dtype)
+        _apply_pinv(dmat, intm, Vh_all, S_inv_all, rhs, beta_batch, {})
+
+        obs_batch = _solve_sparse_iter_unified(
+            data.copy(),
+            dmat,
+            missing,
+            intm.copy(),
+            theta.copy(),
+            beta_batch.copy(),
+            1e-2,
+            20,
+            batch=True,
+            Vh=Vh_all,
+            S_inv=S_inv_all,
+            rhs=rhs.copy(),
+            illed={},
+        )
+        exp_batch = _solve_sparse_batch_iter(
+            data.copy(),
+            dmat,
+            missing,
+            Vh_all,
+            S_inv_all,
+            intm.copy(),
+            theta.copy(),
+            beta_batch.copy(),
+            rhs.copy(),
+            1e-2,
+            20,
+            {},
+        )
+        npt.assert_allclose(obs_batch[0], exp_batch[0])
+        npt.assert_allclose(obs_batch[1], exp_batch[1])
+
+        # Fixed-iteration reference using the original convergence arithmetic. This
+        # checks that in-place reuse of the old beta/theta buffers does not change the
+        # numerical iteration.
+        beta_ref = beta.copy()
+        theta_ref = theta.copy()
+        intm_ref = intm.copy()
+        beta_new_ref = np.empty_like(beta_ref)
+        for _ in range(5):
+            np.subtract(data, theta_ref[:, None], out=intm_ref)
+            np.copyto(intm_ref, 0.0, where=missing)
+            np.einsum(
+                "fps,sf->fp", dmat_inv, intm_ref, out=beta_new_ref, optimize=True
+            )
+            np.matmul(dmat, beta_new_ref.T, out=intm_ref)
+            np.subtract(data, intm_ref, out=intm_ref)
+            theta_new_ref = np.nanmean(intm_ref, axis=1)
+            beta_ref, beta_new_ref = beta_new_ref, beta_ref
+            theta_ref = theta_new_ref
+
+        obs_ref = _solve_sparse_iter_unified(
+            data.copy(),
+            dmat,
+            missing,
+            intm.copy(),
+            theta.copy(),
+            beta.copy(),
+            0.0,
+            5,
+            batch=False,
+            dmat_inv=dmat_inv,
+        )
+        npt.assert_allclose(obs_ref[0], theta_ref)
+        npt.assert_allclose(obs_ref[1], beta_ref)
+
         data, missing = _transform_data(self.data1.astype(float), 0, True)
         for direct in (False, True):
             exp_theta, exp_beta = _lstsq_sparse(
@@ -429,6 +703,68 @@ class CoreTests(TestCase):
             )
             npt.assert_allclose(obs_theta, exp_theta)
             npt.assert_allclose(obs_beta, exp_beta)
+
+    def test_calc_variance(self):
+        res2 = np.array(
+            [[ 1,  2,  3],
+             [ 4,  5,  6],
+             [ 7,  8,  9],
+             [10, 11, 12]], dtype=float)
+        hmat = np.array(
+            [[1, 2],
+             [3, 4],
+             [5, 6],
+             [7, 8]], dtype=float)
+        obs = _calc_variance(res2, hmat)
+        exp = np.sum(res2[:, :, None] * hmat[:, None, :] ** 2, axis=0)
+        npt.assert_allclose(obs, exp)
+        self.assertTrue(obs.flags.f_contiguous)
+
+    def test_calc_covariance(self):
+        res2 = np.array(
+            [[ 1,  2,  3],
+             [ 4,  5,  6],
+             [ 7,  8,  9],
+             [10, 11, 12]], dtype=float)
+        hmat = np.array(
+            [[1, 2],
+             [3, 4],
+             [5, 6],
+             [7, 8]], dtype=float)
+
+        obs = _calc_covariance(res2, hmat)
+        exp = np.sum(
+            res2[:, :, None, None]
+            * hmat[:, None, :, None]
+            * hmat[:, None, None, :],
+            axis=0,
+        )
+        npt.assert_allclose(obs, exp)
+
+    def test_calc_var_cov(self):
+        res2 = np.array(
+            [[ 1,  2,  3],
+             [ 4,  5,  6],
+             [ 7,  8,  9],
+             [10, 11, 12]], dtype=float)
+        hmat = np.array(
+            [[ 1,  2,  3],
+             [ 4,  5,  6],
+             [ 7,  8,  9],
+             [10, 11, 12]], dtype=float)
+        groups = np.array([0, 2])
+
+        obs_var, obs_cov = _calc_var_cov(res2, hmat, groups)
+        exp_var = np.sum(res2[:, :, None] * hmat[:, None, :] ** 2, axis=0)
+        exp_cov = np.sum(
+            res2[:, :, None, None]
+            * hmat[:, None, groups, None]
+            * hmat[:, None, None, groups],
+            axis=0,
+        )
+        npt.assert_allclose(obs_var, exp_var)
+        npt.assert_allclose(obs_cov, exp_cov)
+        self.assertTrue(obs_var.flags.f_contiguous)
 
     def test_calc_residual(self):
         data = np.arange(20, dtype=float).reshape(4, 5)
@@ -898,13 +1234,13 @@ class CoreTests(TestCase):
         )
         self.assertListEqual(
             list(observed.columns),
-            ["Log2(FC)", "SE", "W", "pvalue", "qvalue", "Signif"],
+            ["Log(FC)", "SE", "W", "pvalue", "qvalue", "Signif"],
         )
         self.assertListEqual(
             observed.index.names, ["FeatureID", "Covariate"]
         )
         npt.assert_allclose(
-            observed["Log2(FC)"].to_numpy().reshape(beta_hat.shape), beta_hat
+            observed["Log(FC)"].to_numpy().reshape(beta_hat.shape), beta_hat
         )
         npt.assert_allclose(
             observed["SE"].to_numpy().reshape(beta_hat.shape), exp_se_hat, atol=1e-5
@@ -1046,8 +1382,19 @@ class AncombcTests(TestCase):
         # check "method" attribute in result
         self.assertEqual(res.method, "ANCOM-BC")
 
+        # The result object presents itself as the primary DataFrame while retaining an
+        # explicit ``result`` attribute. ``res`` remains a compatibility alias.
+        self.assertIs(res.res, res.result)
+        pdt.assert_series_equal(res["qvalue"], res.result["qvalue"])
+        selected = res[res["qvalue"] <= 0.05]
+        expected = res.result[res.result["qvalue"] <= 0.05]
+        pdt.assert_frame_equal(selected, expected)
+        self.assertTrue(res.keys().equals(res.result.columns))
+        self.assertEqual(repr(res), repr(res.result))
+        self.assertEqual(res._repr_html_(), res.result._repr_html_())
+
         # check differential abundance of intercept and grouping
-        obs = res.res["Signif"].to_numpy()
+        obs = res.result["Signif"].to_numpy()
         exp = np.array([
             [1.0, 1.0],
             [1.0, 1.0],
@@ -1061,7 +1408,7 @@ class AncombcTests(TestCase):
 
         # input as numpy array
         res = ancombc(table.to_numpy() + 1, metadata, "grouping")
-        obs = res.res["Signif"].to_numpy()
+        obs = res.result["Signif"].to_numpy()
         npt.assert_array_equal(obs, exp)
 
         # invalid alpha parameter
@@ -1104,7 +1451,7 @@ class AncombcTests(TestCase):
     #     )
 
     #     # run ancom-bc for the HITChip Atlas dataset
-    #     res = ancombc(table + 1, meta_data, "age + region + bmi").res
+    #     res = ancombc(table + 1, meta_data, "age + region + bmi").result
 
     #     # format multi-index dataframe
     #     obs = res["Signif"].unstack()
@@ -1134,13 +1481,15 @@ class AncombcTests(TestCase):
         res = ancombc(
             table + 1, meta, formula="age + region + bmi", grouping="bmi"
         )
-        obs = res.res
+        obs = res.result
         exp = pd.read_table(get_data_path("pseq_sub_ancombc_main.tsv"), index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc_main.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc_main.csv", index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp)
 
@@ -1195,7 +1544,17 @@ class Ancombc2Tests(TestCase):
                 "grouping",
                 grouping="grouping",
             )
-        obs = res.res["Signif"].to_numpy()
+
+        for var_quantile in (-0.1, 1.1):
+            with self.assertRaisesRegex(ValueError, "`var_quantile`"):
+                ancombc2(
+                    self.table,
+                    self.grouping.to_frame(),
+                    "grouping",
+                    var_quantile=var_quantile,
+                )
+
+        obs = res.result["Signif"].to_numpy()
 
         # expected differential abundance of intercept and grouping
         exp = np.array([
@@ -1255,13 +1614,15 @@ class Ancombc2Tests(TestCase):
         res = ancombc2(
             table, meta, formula="age + region + bmi", grouping="bmi"
         )
-        obs = res.res
+        obs = res.result
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv", index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp)
 
@@ -1277,19 +1638,23 @@ class Ancombc2Tests(TestCase):
         # pairwise test
         obs = res.pairwise_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv", index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp)
 
         # dunnett test
         obs = res.dunnett_test(seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv", index_col=(0, 1))
+        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp)
 
         # trend test
@@ -1302,6 +1667,83 @@ class Ancombc2Tests(TestCase):
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_trend.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_trend.csv", index_col=0)
         pdt.assert_frame_equal(obs, exp)
+
+    def test_ancombc2_sensitivity(self):
+        cats = ["lean", "overweight", "obese"]
+        table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
+        meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
+        meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
+
+        fits = [
+            ancombc2(
+                table,
+                meta,
+                formula="age + region + bmi",
+                grouping="bmi",
+                pseudocount=pseudo,
+            )
+            for pseudo in (0, 0.1, 0.5, 1)
+        ]
+
+        def sensitivity(results):
+            result = results[0].copy()
+            signif = pd.concat([x["Signif"] for x in results], axis=1)
+            result["Pass"] = signif.eq(signif.iloc[:, 0], axis=0).all(axis=1)
+            result["Robust"] = result["Signif"] & result["Pass"]
+            return result
+
+        # Primary result
+        obs = sensitivity([fit.result for fit in fits])
+        exp = pd.read_table(
+            get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1)
+        )
+        pdt.assert_frame_equal(
+            obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
+        )
+
+        # Global test
+        global_results = [fit.global_test() for fit in fits]
+        obs_global = sensitivity(global_results)
+        exp = pd.read_table(
+            get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0
+        )
+        pdt.assert_frame_equal(
+            obs_global[["Pass", "Robust"]],
+            exp[["Pass", "Robust"]],
+            check_dtype=False,
+        )
+
+        # Pairwise directional test
+        obs = sensitivity([fit.pairwise_test() for fit in fits])
+        exp = pd.read_table(
+            get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1)
+        )
+        pdt.assert_frame_equal(
+            obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
+        )
+
+        # Dunnett's test. Reuse the same seed so pseudo-count sensitivity is not
+        # confounded with Monte Carlo variation.
+        obs = sensitivity([fit.dunnett_test(seed=123) for fit in fits])
+        exp = pd.read_table(
+            get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1)
+        )
+        pdt.assert_frame_equal(
+            obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
+        )
+
+        # The R implementation assigns the global sensitivity decision to the trend
+        # test rather than rerunning the stochastic trend test at each pseudo-count.
+        obs = fits[0].trend_test(seed=123)
+        obs["Pass"] = obs_global["Pass"]
+        obs["Robust"] = obs["Signif"] & obs["Pass"]
+        exp = pd.read_table(
+            get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0
+        )
+        pdt.assert_frame_equal(
+            obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
+        )
+
 
     def test_ancombc2_aggregator(self):
         table = self.table
@@ -1330,7 +1772,7 @@ class Ancombc2Tests(TestCase):
                 aggregator=aggregator,
             )
             self.assertEqual(
-                res.res.index.get_level_values("FeatureID").unique().tolist(),
+                res.result.index.get_level_values("FeatureID").unique().tolist(),
                 expected_features,
             )
 
@@ -1341,7 +1783,7 @@ class Ancombc2Tests(TestCase):
             aggregator=["first", "first"] + ["second"] * 5,
         )
         self.assertEqual(
-            res.res.index.get_level_values("FeatureID").unique().tolist(),
+            res.result.index.get_level_values("FeatureID").unique().tolist(),
             expected_features,
         )
 
