@@ -19,9 +19,13 @@ from scipy.stats import t
 from skbio.util import get_data_path
 from skbio.stats.composition import clr, rclr
 from skbio.stats.composition._ancombc2 import (
+    _calc_residual,
+    _calc_residual_sparse,
     _estimate_params_dense,
     _estimate_params_sparse,
-    _lstsq_fit,
+    _lstsq_dense,
+    _lstsq_sparse,
+    _lstsq_sparse_batch,
     _transform_data,
     _estimate_bias_em,
     _sample_fractions,
@@ -362,13 +366,13 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs[3], exp[3][:, groups][:, :, groups])
         self.assertEqual(obs[3].shape, (data.shape[1], 3, 3))
 
-    def test_lstsq_fit(self):
+    def test_lstsq_dense(self):
         dmat = np.array(
             [[1, 0, 1],
              [1, 1, 1],
              [1, 2, 1],
              [1, 3, 1]], dtype=float)
-        obs_dmat_inv, obs_gram_sum = _lstsq_fit(dmat, gram=True)
+        obs_dmat_inv, obs_gram_sum = _lstsq_dense(dmat, gram=True)
         exp_dmat_inv = np.array(
             [[ 0.35,  0.2 ,  0.05, -0.1 ],
              [-0.3 , -0.1 ,  0.1 ,  0.3 ],
@@ -384,9 +388,100 @@ class CoreTests(TestCase):
         npt.assert_allclose(obs_gram_sum, exp_gram_sum)
 
         # Omit inverse Gram matrix sum
-        obs_dmat_inv, obs_gram_sum = _lstsq_fit(dmat, gram=False)
+        obs_dmat_inv, obs_gram_sum = _lstsq_dense(dmat, gram=False)
         npt.assert_allclose(obs_dmat_inv, exp_dmat_inv)
         self.assertIsNone(obs_gram_sum)
+
+    def test_lstsq_sparse(self):
+        data = np.log1p(self.data1)
+        missing = np.zeros_like(data, dtype=bool)
+        dmat_inv, _ = _lstsq_dense(self.dmat1)
+        exp_beta = (dmat_inv @ data).T
+        exp_theta = np.mean(data - self.dmat1 @ exp_beta.T, axis=1)
+
+        for direct in (False, True):
+            obs_theta, obs_beta = _lstsq_sparse(
+                data, self.dmat1, missing, direct)
+            npt.assert_allclose(obs_theta, exp_theta)
+            npt.assert_allclose(obs_beta, exp_beta)
+
+    def test_lstsq_sparse_batch(self):
+        data = np.log1p(self.data1)
+        missing = np.zeros_like(data, dtype=bool)
+        dmat_inv, _ = _lstsq_dense(self.dmat1)
+        exp_beta = (dmat_inv @ data).T
+        exp_theta = np.mean(data - self.dmat1 @ exp_beta.T, axis=1)
+
+        for direct in (False, True):
+            obs_theta, obs_beta = _lstsq_sparse_batch(
+                data, self.dmat1, missing, direct, batch=1
+            )
+            npt.assert_allclose(obs_theta, exp_theta)
+            npt.assert_allclose(obs_beta, exp_beta)
+
+        data, missing = _transform_data(self.data1.astype(float), 0, True)
+        for direct in (False, True):
+            exp_theta, exp_beta = _lstsq_sparse(
+                data, self.dmat1, missing, direct
+            )
+            obs_theta, obs_beta = _lstsq_sparse_batch(
+                data, self.dmat1, missing, direct, batch=1
+            )
+            npt.assert_allclose(obs_theta, exp_theta)
+            npt.assert_allclose(obs_beta, exp_beta)
+
+    def test_calc_residual(self):
+        data = np.arange(20, dtype=float).reshape(4, 5)
+        dmat = np.array(
+            [[1, 0],
+             [1, 1],
+             [1, 2],
+             [1, 3]], dtype=float)
+        beta = np.array(
+            [[1, 2, 3, 4, 5],
+             [2, 3, 4, 5, 6]], dtype=float)
+
+        # Compare result with full-matrix math
+        _calc_residual(obs := data.copy(), dmat, beta)
+        exp = data - dmat @ beta
+        npt.assert_allclose(obs, exp)
+
+        # Change memory size
+        exp = obs
+        _calc_residual(obs := data.copy(), dmat, beta, target_bytes=32)
+        npt.assert_allclose(obs, exp)
+
+    def test_calc_residual_sparse(self):
+        data = np.arange(20, dtype=float).reshape(4, 5)
+        dmat = np.array(
+            [[1, 0],
+             [1, 1],
+             [1, 2],
+             [1, 3]], dtype=float)
+        beta = np.array(
+            [[1, 2, 3, 4, 5],
+             [2, 3, 4, 5, 6]], dtype=float)
+        theta = np.array([0.5, -0.5, 1.0, -1.0])
+
+        # Dense matrix: compare result with the dense function
+        _calc_residual(exp := data.copy(), dmat, beta)
+        exp -= theta[:, None]
+        np.square(exp, out=exp)
+        obs = _calc_residual_sparse(
+            data, dmat, beta.T, theta, np.zeros(data.shape, dtype=bool)
+        )
+        npt.assert_allclose(obs, exp)
+
+        # Sparse matrix: missing residuals are zeroed after squaring.
+        missing = np.zeros(data.shape, dtype=bool)
+        missing[[0, 2, 3], [1, 3, 4]] = True
+        data[missing] = np.nan
+        _calc_residual(exp := data.copy(), dmat, beta)
+        exp -= theta[:, None]
+        np.square(exp, out=exp)
+        exp[missing] = 0.0
+        obs = _calc_residual_sparse(data, dmat, beta.T, theta, missing)
+        npt.assert_allclose(obs, exp)
 
     def test_estimate_params_unbalanced(self):
         """Unbalanced model and fallback compute test."""
@@ -556,7 +651,7 @@ class CoreTests(TestCase):
                 zero_mask,
                 max_iter=10,
                 groups=True,
-                batched=solver,
+                batch=solver,
             )
             subset = _estimate_params_sparse(
                 data.copy(),
@@ -564,7 +659,7 @@ class CoreTests(TestCase):
                 zero_mask,
                 max_iter=10,
                 groups=groups,
-                batched=solver,
+                batch=solver,
             )
             npt.assert_allclose(subset[0], full[0])
             npt.assert_allclose(subset[1], full[1])
@@ -576,7 +671,7 @@ class CoreTests(TestCase):
         data_tr, zero_mask = _transform_data(self.data1.astype(float), 0, True)
 
         legacy = _estimate_params_sparse(
-            data_tr, self.dmat1, zero_mask, batched="legacy"
+            data_tr, self.dmat1, zero_mask, batch=None
         )
         # Exercise several block boundaries, including one feature per SVD.
         for batch_size in (1, 3, None):
@@ -584,7 +679,6 @@ class CoreTests(TestCase):
                 data_tr,
                 self.dmat1,
                 zero_mask,
-                batched="batched",
                 batch=batch_size,
             )
             for observed, expected in zip(batched, legacy):
@@ -595,14 +689,13 @@ class CoreTests(TestCase):
             data_tr,
             self.dmat1,
             zero_mask,
-            batched="legacy",
+            batch=None,
             groups=None,
         )
         batched_diag = _estimate_params_sparse(
             data_tr,
             self.dmat1,
             zero_mask,
-            batched="batched",
             batch=2,
             groups=None,
         )
@@ -628,7 +721,7 @@ class CoreTests(TestCase):
             data,
             dmat,
             zero_mask,
-            batched="legacy",
+            batch=None,
             tol=0.0,
             max_iter=10,
             groups=None,
@@ -637,7 +730,6 @@ class CoreTests(TestCase):
             data,
             dmat,
             zero_mask,
-            batched="batched",
             batch=4,
             tol=0.0,
             max_iter=10,
@@ -656,7 +748,7 @@ class CoreTests(TestCase):
         )
         direct = _estimate_params_sparse(data_tr, self.dmat1, zero_mask, direct=True)
         direct_legacy = _estimate_params_sparse(
-            data_tr, self.dmat1, zero_mask, direct=True, batched="legacy"
+            data_tr, self.dmat1, zero_mask, direct=True, batch=None
         )
 
         for observed_array, direct_array in zip(observed, direct):

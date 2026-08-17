@@ -752,13 +752,13 @@ def _transform_data(data, pseudo=None, center=False):
             mean_ = np.mean(data, axis=0, keepdims=True)
         else:
             n_obs = data.shape[0] - np.sum(missing, axis=0, keepdims=True)
-            # n_obs = np.where(n_obs > 0, n_obs, 1)
+            # n_obs = np.where(n_obs > 0, n_obs, 1)  # TODO: deal with empty features
             mean_ = np.sum(data, axis=0, keepdims=True)
             mean_ /= n_obs
         data -= mean_
 
     # Fill missing values with NaN
-    # NOTE: This is not needed except for `_sample_fractions`
+    # TODO: This is not needed except for `_sample_fractions`
     if missing is not None:
         data[missing] = np.nan
 
@@ -835,7 +835,7 @@ def _estimate_params_dense(data, dmat, groups=True):
     NOTE: This function overwrites the data table.
     """
     # Calculate coefficients using least-squares fitting
-    dmat_inv, _ = _lstsq_fit(dmat)
+    dmat_inv, _ = _lstsq_dense(dmat)
     beta = dmat_inv @ data
 
     # Calculate residuals = data - fitted data
@@ -865,8 +865,7 @@ def _estimate_params_sparse(
     tol=1e-2,
     max_iter=20,
     direct=False,
-    batched=True,
-    batch=None,
+    batch=True,
 ):
     """Estimate model parameters from a sparse matrix (with missing values).
 
@@ -876,33 +875,19 @@ def _estimate_params_sparse(
 
     Parameters
     ----------
-    data : ndarray of shape (n_samples, n_features)
-        Zero-handled, log-transformed and centered data. Missing/zero entries
-        must be represented by NaN.
-    dmat : ndarray of shape (n_samples, n_covariates)
-        Design matrix. ANCOM-BC2 requires the fixed-effect design to be fully
-        observed for this path.
-    missing : ndarray of shape (n_samples, n_features), optional
-        Boolean mask of zero/missing values in ``data`` before transformation.
-    tol : float, default=1e-2
-        Iteration tolerance. The ANCOM-BC2 default is 1e-2.
-    max_iter : int, default=20
-        Maximum number of iterations. The ANCOM-BC2 default is 20.
-    direct : bool, default=False
-        Solve the coupled sample effects directly instead of reproducing the
-        ANCOM-BC2 iteration.
-    groups : 1-D array_like of int, optional
-        Coefficient indices whose covariance submatrix should be calculated when
-        ``full_covariance=False``. All coefficient variances are always calculated.
-        If None, no covariance matrix is returned.
-    batched : bool, optional
-        Missing-response least-squares implementation. False materializes the
-        complete feature-by-sample pseudoinverse tensor and is retained for numerical
-        comparison. True (default) performs the masked SVD in feature blocks and stores
-        only compact per-feature spectral operators.
-    batch : int, optional
-        Number of features per masked-SVD block for ``solver="batched"``. By default a
-        size is selected to keep the principal SVD input/output workspaces near 32 MiB.
+    direct : bool, optional
+        If True, directly solve the coupled sample effects with exact linear algebra.
+        If False (default), using an iterative approach to approximate the solution,
+        (matching ANCOM-BC2).
+    batch : int or bool, optional
+        Number of features per batch for masked SVD. If True (default), batch size will
+        be automatically determined such that the memory consumption is about 32 MiB.
+        If compares False, batched SVD will be disabled and a full feature-by-sample
+        array will be computed.
+    tol : float, optional
+        Iteration tolerance. Default is 1e-2 (matching ANCOM-BC2).
+    max_iter : int, optional
+        Maximum number of iterations. Default is 20 (matching ANCOM-BC2).
 
     Returns
     -------
@@ -916,23 +901,25 @@ def _estimate_params_sparse(
         Estimated covariance matrices of coefficients.
 
     """
-    func = _lstsq_nan_batch if batched else _lstsq_nan_full
-    theta, beta = func(data, dmat, missing, tol, max_iter, direct, batch)
+    # Fit missing-response model
+    func = _lstsq_sparse_batch if batch else _lstsq_sparse
+    theta, beta = func(data, dmat, missing, direct, batch, tol, max_iter)
 
     # Residuals used by the sandwich covariance estimator. Missing residuals are set to
     # zero here and handled separately below to preserve ANCOM-BC2/R's 0.1 correction.
-    intm = np.empty_like(data)
-    np.matmul(dmat, beta.T, out=intm)
-    intm *= -1.0
-    intm += data
-    intm -= theta[:, None]
-    np.square(intm, out=intm)
-    intm[missing] = 0.0
+    # intm = np.empty_like(data)
+    # np.matmul(dmat, beta.T, out=intm)
+    # intm *= -1.0
+    # intm += data
+    # intm -= theta[:, None]
+    # np.square(intm, out=intm)
+    # intm[missing] = 0.0
+    intm = _calc_residual_sparse(data, dmat, beta, theta, missing)
 
     # Important R detail: .iter_mle uses ONE global ginv(X.T @ X), not a
     # feature-specific inverse based on each feature's observed rows. Its transpose is
     # the influence matrix H used by the GEMM covariance calculation below.
-    dmat_inv, gram_sum = _lstsq_fit(dmat, gram=True)
+    dmat_inv, gram_sum = _lstsq_dense(dmat, gram=True)
     n_missing = missing.sum(axis=0)
 
     # Calculate variances and covariance matrix of coefficients
@@ -960,16 +947,32 @@ def _estimate_params_sparse(
     return var_hat, beta.T.copy(), theta, covmat
 
 
-def _lstsq_nan_full(data, dmat, missing, tol, max_iter, direct, batch=None):
-    """Fit missing-response models using the original full batched pseudoinverse.
+def _calc_residual_sparse(data, dmat, beta, theta, missing):
+    """Calculate regression residuals for sparse data.
 
-    This helper intentionally preserves the pre-optimization route so the compact
-    implementation can be regression-tested against it. Its dominant arrays have shape
-    `(n_features, n_samples, n_covariates)`.
+    Missing residuals are set to zero here and handled separately below to preserve
+    the R code's 0.1 correction.
+    """
+    resids = np.empty_like(data)
+    np.matmul(dmat, beta.T, out=resids)
+    resids *= -1.0
+    resids += data
+    resids -= theta[:, None]
+    np.square(resids, out=resids)
+    resids[missing] = 0.0
+    return resids
+
+
+def _lstsq_sparse(data, dmat, missing, direct, batch=None, tol=1e-2, max_iter=20):
+    """Fit missing-response models using full pseudoinverse.
+
+    This function preserves the pre-optimization path which is exact and compact but
+    is less efficient due to the materialization of 3-D arrays of shape (n_features,
+    n_samples, n_covariates).
     """
     n_samps = data.shape[0]
 
-    W = 1.0 - missing.T
+    W = data.dtype.type(1.0) - missing.T
     X_w = dmat[None, :, :] * W[:, :, None]
     U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
     S_inv = _invert_singular(S)
@@ -981,63 +984,63 @@ def _lstsq_nan_full(data, dmat, missing, tol, max_iter, direct, batch=None):
     theta = np.zeros(n_samps, dtype=data.dtype)
     beta = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
 
+    # Solve the missing-response model:
+    #   data[s, f] = dmat[s] @ beta[f] + theta[s]
+    # for observed entries.
+    # The direct route solves the coupled fixed-point system for `theta` before
+    # estimating `beta`.
+    # The iterative route alternates updates of feature coefficients `beta` and shared
+    # sample effects `theta`.
     if direct:
-        theta, beta = _estimate_params_nan_direct(
-            data, dmat, missing, W, dmat_inv, intm, beta
-        )
-    else:
-        theta, beta = _estimate_params_nan_iter(
-            data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter
-        )
-    return theta, beta
+        return _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta)
+    return _solve_sparse_iter(
+        data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter
+    )
 
 
-def _lstsq_nan_batch(
-    data,
-    dmat,
-    missing,
-    tol,
-    max_iter,
-    direct,
-    batch=None,
-    compact_cond_max=1e4,
+def _lstsq_sparse_batch(
+    data, dmat, missing, direct, batch=True, tol=1e-2, max_iter=20, max_cond=1e4
 ):
     """Fit missing-response models with chunked SVD and compact spectral operators.
 
     Each feature still receives an SVD of its masked design matrix, using the exact same
-    singular-value cutoff as the legacy route. Only ``Vh`` and inverse singular values
-    are retained. The large ``U`` and masked-design tensors exist for one feature block
+    singular-value cutoff as the legacy route. Only `Vh` and inverse singular values
+    are retained. The large `U` and masked-design tensors exist for one feature block
     at a time, reducing persistent storage from O(F*N*P) to O(F*P^2).
+
+    Parameters
+    ----------
+    max_cond : int or float, optional
+        Maximum condition number for the compact pseudoinverse calculation. Features
+        with a masked design matrix exceeding this value use a full SVD pseudoinverse
+        to preserve numerical accuracy. Default is 1e4.
+
     """
-    n_samples, n_features = data.shape
-    n_covariates = dmat.shape[1]
-    n_components = min(n_samples, n_covariates)
+    n_samps, n_feats = data.shape
+    n_covars = dmat.shape[1]
+    n_comps = min(n_samps, n_covars)
+    dtype = data.dtype
 
-    # The legacy route's `1.0 - missing` promotes masked designs to float64. Preserve
-    # that behavior even when `dmat` itself is float32.
-    operator_dtype = np.result_type(dmat.dtype, np.dtype(float))
-    Vh_all = np.empty((n_features, n_components, n_covariates), dtype=operator_dtype)
-    S_inv_all = np.empty((n_features, n_components), dtype=operator_dtype)
+    Vh_all = np.empty((n_feats, n_comps, n_covars), dtype=dtype)
+    S_inv_all = np.empty((n_feats, n_comps), dtype=dtype)
 
-    if batch is None:
-        # X_w and U are both approximately batch*N*P floats, while W contributes another
-        # batch*N floats. Keep these principal workspaces near 32 MiB; LAPACK may use
-        # additional internal workspace, so this is intentionally conservative.
-        bytes_per_feature = (
-            operator_dtype.itemsize * n_samples * (n_covariates + n_components + 1)
-        )
+    # Determine batch size
+    # X_w and U are both approximately batch*N*P floats, while W contributes another
+    # batch*N floats. Keep these principal workspaces near 32 MiB; LAPACK may use
+    # additional internal workspace, so this is intentionally conservative.
+    if batch is True:
+        bytes_per_feature = dtype.itemsize * n_samps * (n_covars + n_comps + 1)
         batch = max(1, (32 << 20) // max(bytes_per_feature, 1))
-        batch = min(batch, n_features)
-    elif batch < 1:
-        raise ValueError("`svd_batch_size` must be a positive integer.")
+        batch = min(batch, n_feats)
 
-    dmat_work = np.asarray(dmat, dtype=operator_dtype)
-    fallback_blocks = {}
-    for start in range(0, n_features, batch):
-        stop = min(start + batch, n_features)
-        # Preserve legacy dtype and SVD input exactly, but only for this feature block.
-        W_block = 1.0 - missing[:, start:stop].T
-        X_w = dmat_work[None, :, :] * W_block[:, :, None]
+    # Mark features whose masked design is ill-conditioned, such that a batched
+    # solution is unstable, and a full SVD solution will be needed.
+    illed = {}
+
+    for start in range(0, n_feats, batch):
+        stop = min(start + batch, n_feats)
+        W_block = dtype.type(1.0) - missing[:, start:stop].T
+        X_w = dmat[None, :, :] * W_block[:, :, None]
         U, S, Vh = np.linalg.svd(X_w, full_matrices=False)
         S_inv = _invert_singular(S)
         Vh_all[start:stop] = Vh
@@ -1058,43 +1061,31 @@ def _lstsq_nan_batch(
             out=np.ones_like(max_s),
             where=np.isfinite(min_retained) & (min_retained > 0),
         )
-        unstable = cond > compact_cond_max
+        unstable = cond > max_cond
         if np.any(unstable):
             local = np.flatnonzero(unstable)
             V = np.swapaxes(Vh[local], -1, -2)
             pinv = np.einsum(
                 "fpk,fk,fsk->fps", V, S_inv[local], U[local], optimize=True
             )
-            fallback_blocks[start] = (local, pinv)
+            illed[start] = (local, pinv)
 
         # U and the masked design are the large block-local arrays.
         del U, X_w, W_block
 
-    # Preserve the legacy route's response-workspace precision. In particular, a
-    # float32 transformed response keeps float32 residual/theta updates even though the
-    # masked design SVD itself is float64. The compact RHS/beta calculations still use
-    # the promoted operator dtype, matching dmat_inv @ intm in the legacy route.
+    # Preserve the input precision for the response and compact-operator workspaces.
     intm = np.zeros_like(data)
     np.copyto(intm, data, where=~missing)
-    theta = np.zeros(n_samples, dtype=data.dtype)
+    theta = np.zeros(n_samps, dtype=dtype)
 
-    solve_dtype = np.result_type(data.dtype, operator_dtype)
-    rhs = np.empty((n_covariates, n_features), dtype=solve_dtype)
-    beta = np.empty((n_features, n_covariates), dtype=solve_dtype)
-    _apply_masked_spectral_operator(
-        dmat_work,
-        intm,
-        Vh_all,
-        S_inv_all,
-        rhs=rhs,
-        out=beta,
-        fallback_blocks=fallback_blocks,
-    )
+    rhs = np.empty((n_covars, n_feats), dtype=dtype)
+    beta = np.empty((n_feats, n_covars), dtype=dtype)
+    _apply_pinv(dmat, intm, Vh_all, S_inv_all, rhs, beta, illed)
 
     if direct:
-        theta, beta = _estimate_params_nan_direct_batched(
+        return _solve_sparse_batch(
             data,
-            dmat_work,
+            dmat,
             missing,
             Vh_all,
             S_inv_all,
@@ -1102,43 +1093,36 @@ def _lstsq_nan_batch(
             beta,
             rhs,
             batch,
-            fallback_blocks,
+            illed,
         )
-    else:
-        theta, beta = _estimate_params_nan_iter_batched(
-            data,
-            dmat_work,
-            missing,
-            Vh_all,
-            S_inv_all,
-            intm,
-            theta,
-            beta,
-            rhs,
-            tol,
-            max_iter,
-            fallback_blocks,
-        )
-    return theta, beta
+    return _solve_sparse_batch_iter(
+        data,
+        dmat,
+        missing,
+        Vh_all,
+        S_inv_all,
+        intm,
+        theta,
+        beta,
+        rhs,
+        tol,
+        max_iter,
+        illed,
+    )
 
 
-def _apply_masked_spectral_operator(
-    dmat,
-    adjusted,
-    Vh,
-    S_inv,
-    rhs=None,
-    out=None,
-    fallback_blocks=None,
-):
-    """Apply compact operators, with stable SVD fallbacks when needed."""
-    n_features = S_inv.shape[0]
-    n_covariates = Vh.shape[2]
-    dtype = np.result_type(dmat.dtype, adjusted.dtype, Vh.dtype, S_inv.dtype)
+def _apply_pinv(dmat, adjusted, Vh, S_inv, rhs=None, out=None, illed=None):
+    """Apply each feature's masked design pseudoinverse to the adjusted response.
+
+    For ill-conditioned features, apply stable SVD fallback.
+    """
+    n_feats = S_inv.shape[0]
+    n_covars = Vh.shape[2]
+    dtype = dmat.dtype
     if rhs is None:
-        rhs = np.empty((n_covariates, n_features), dtype=dtype)
+        rhs = np.empty((n_covars, n_feats), dtype=dtype)
     if out is None:
-        out = np.empty((n_features, n_covariates), dtype=dtype)
+        out = np.empty((n_feats, n_covars), dtype=dtype)
 
     # Missing adjusted responses are already zero, so X.T @ adjusted is simultaneously
     # the RHS for every feature-specific masked regression.
@@ -1151,158 +1135,16 @@ def _apply_masked_spectral_operator(
     tmp *= S_inv * S_inv
     np.einsum("fpk,fk->fp", np.swapaxes(Vh, -1, -2), tmp, out=out, optimize=True)
 
-    if fallback_blocks:
-        for start, (local, pinv) in fallback_blocks.items():
-            indices = start + local
-            out[indices] = np.einsum(
-                "kps,sk->kp", pinv, adjusted[:, indices], optimize=True
-            )
+    # Stable SVD fallback
+    if illed:
+        for start, (local, pinv) in illed.items():
+            idx = start + local
+            out[idx] = np.einsum("kps,sk->kp", pinv, adjusted[:, idx], optimize=True)
+
     return out
 
 
-def _estimate_params_nan_iter_batched(
-    data,
-    dmat,
-    missing,
-    Vh,
-    S_inv,
-    intm,
-    theta,
-    beta,
-    rhs,
-    tol,
-    max_iter,
-    fallback_blocks,
-):
-    """Reproduce ANCOM-BC2 iterations using compact feature operators."""
-    epsilon = 100.0
-    it = 0
-    beta_new = np.empty_like(beta)
-    while epsilon > tol and it < max_iter:
-        np.subtract(data, theta[:, None], out=intm)
-        np.copyto(intm, 0.0, where=missing)
-        _apply_masked_spectral_operator(
-            dmat,
-            intm,
-            Vh,
-            S_inv,
-            rhs=rhs,
-            out=beta_new,
-            fallback_blocks=fallback_blocks,
-        )
-
-        np.matmul(dmat, beta_new.T, out=intm)
-        np.copyto(intm, 0.0, where=missing)
-        np.subtract(data, intm, out=intm)
-        theta_new = np.nanmean(intm, axis=1)
-
-        epsilon = np.sqrt(
-            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
-        )
-        beta, beta_new = beta_new, beta
-        theta = theta_new
-        it += 1
-    return theta, beta
-
-
-def _estimate_params_nan_direct_batched(
-    data,
-    dmat,
-    missing,
-    Vh,
-    S_inv,
-    intm,
-    beta,
-    rhs,
-    svd_batch_size,
-    fallback_blocks,
-):
-    """Direct fixed-point solve using compact operators and bounded reconstruction."""
-    n_samples, n_features = data.shape
-    n_covariates = dmat.shape[1]
-
-    np.matmul(dmat, beta.T, out=intm)
-    np.copyto(intm, 0.0, where=missing)
-    np.subtract(data, intm, out=intm)
-    np.nan_to_num(intm, copy=False, nan=0.0)
-    residual_sum = intm.sum(axis=1)
-    observed_counts = (~missing).sum(axis=1)
-
-    system = np.diag(observed_counts.astype(np.result_type(dmat, float), copy=False))
-    V = np.swapaxes(Vh, -1, -2)
-    for start in range(0, n_features, svd_batch_size):
-        stop = min(start + svd_batch_size, n_features)
-        W_block = 1.0 - missing[:, start:stop].T
-
-        # Reconstruct only this block of X_f^+ = V S^-2 V.T X_f.T. This is needed by
-        # the direct sample-effect system but is discarded immediately afterwards.
-        Vh_block = Vh[start:stop]
-        V_block = V[start:stop]
-        scaled = V_block * (S_inv[start:stop] ** 2)[:, None, :]
-        gram_inv = np.matmul(scaled, Vh_block)
-        xtw = dmat.T[None, :, :] * W_block[:, None, :]
-        dmat_inv_block = np.matmul(gram_inv, xtw)
-        if start in fallback_blocks:
-            local, pinv = fallback_blocks[start]
-            dmat_inv_block[local] = pinv
-        system -= np.einsum(
-            "bs,sp,bpt->st", W_block, dmat, dmat_inv_block, optimize=True
-        )
-
-    constraint = dmat.T * observed_counts
-    augmented = np.block(
-        [[system, constraint.T], [constraint, np.zeros((n_covariates,) * 2)]]
-    )
-    theta = np.linalg.lstsq(
-        augmented,
-        np.concatenate((residual_sum, np.zeros(n_covariates))),
-        rcond=None,
-    )[0][:n_samples]
-
-    np.subtract(data, theta[:, None], out=intm)
-    np.copyto(intm, 0.0, where=missing)
-    _apply_masked_spectral_operator(
-        dmat,
-        intm,
-        Vh,
-        S_inv,
-        rhs=rhs,
-        out=beta,
-        fallback_blocks=fallback_blocks,
-    )
-    return theta, beta
-
-
-def _estimate_params_nan_iter(
-    data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter
-):
-    """Reproduce ANCOM-BC2's alternating beta/theta updates."""
-    # Missing responses couple features through theta, so these are not
-    # independent OLS fits.
-    epsilon = 100.0
-    it = 0
-    while epsilon > tol and it < max_iter:
-        np.subtract(data, theta[:, None], out=intm)
-        np.copyto(intm, 0.0, where=missing)  # adjusted
-        beta_new = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
-
-        # R initializes each fitted vector with zero and writes fitted values
-        # only at response rows used by lm().
-        np.matmul(dmat, beta_new.T, out=intm)
-        np.copyto(intm, 0.0, where=missing)
-        np.subtract(data, intm, out=intm)  # fitted
-        theta_new = np.nanmean(intm, axis=1)
-
-        epsilon = np.sqrt(
-            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
-        )
-        beta = beta_new
-        theta = theta_new
-        it += 1
-    return theta, beta
-
-
-def _estimate_params_nan_direct(data, dmat, missing, W, dmat_inv, intm, beta):
+def _solve_sparse(data, dmat, missing, W, dmat_inv, intm, beta):
     """Solve the fully converged fixed point for zero-containing data.
 
     This exact method should produce numerically better result than the iterative
@@ -1336,12 +1178,138 @@ def _estimate_params_nan_direct(data, dmat, missing, W, dmat_inv, intm, beta):
     return theta, beta
 
 
+def _solve_sparse_iter(data, dmat, missing, dmat_inv, intm, theta, beta, tol, max_iter):
+    """Reproduce ANCOM-BC2's alternating beta/theta updates."""
+    # Missing responses couple features through theta, so these are not
+    # independent OLS fits.
+    epsilon = 100.0
+    it = 0
+    while epsilon > tol and it < max_iter:
+        np.subtract(data, theta[:, None], out=intm)
+        np.copyto(intm, 0.0, where=missing)  # adjusted
+        beta_new = np.einsum("fps,sf->fp", dmat_inv, intm, optimize=True)
+
+        # R initializes each fitted vector with zero and writes fitted values
+        # only at response rows used by lm().
+        np.matmul(dmat, beta_new.T, out=intm)
+        np.copyto(intm, 0.0, where=missing)
+        np.subtract(data, intm, out=intm)  # fitted
+        theta_new = np.nanmean(intm, axis=1)
+
+        epsilon = np.sqrt(
+            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
+        )
+        beta = beta_new
+        theta = theta_new
+        it += 1
+    return theta, beta
+
+
+def _solve_sparse_batch(
+    data,
+    dmat,
+    missing,
+    Vh,
+    S_inv,
+    intm,
+    beta,
+    rhs,
+    batch,
+    illed,
+):
+    """Direct fixed-point solve using compact operators and bounded reconstruction."""
+    n_samples, n_features = data.shape
+    n_covariates = dmat.shape[1]
+
+    np.matmul(dmat, beta.T, out=intm)
+    np.copyto(intm, 0.0, where=missing)
+    np.subtract(data, intm, out=intm)
+    np.nan_to_num(intm, copy=False, nan=0.0)
+    residual_sum = intm.sum(axis=1)
+    observed_counts = (~missing).sum(axis=1)
+
+    system = np.diag(observed_counts.astype(np.result_type(dmat, float), copy=False))
+    V = np.swapaxes(Vh, -1, -2)
+    for start in range(0, n_features, batch):
+        stop = min(start + batch, n_features)
+        W_block = 1.0 - missing[:, start:stop].T
+
+        # Reconstruct only this block of X_f^+ = V S^-2 V.T X_f.T. This is needed by
+        # the direct sample-effect system but is discarded immediately afterwards.
+        Vh_block = Vh[start:stop]
+        V_block = V[start:stop]
+        scaled = V_block * (S_inv[start:stop] ** 2)[:, None, :]
+        gram_inv = np.matmul(scaled, Vh_block)
+        xtw = dmat.T[None, :, :] * W_block[:, None, :]
+        dmat_inv_block = np.matmul(gram_inv, xtw)
+        if start in illed:
+            local, pinv = illed[start]
+            dmat_inv_block[local] = pinv
+        system -= np.einsum(
+            "bs,sp,bpt->st", W_block, dmat, dmat_inv_block, optimize=True
+        )
+
+    constraint = dmat.T * observed_counts
+    augmented = np.block(
+        [[system, constraint.T], [constraint, np.zeros((n_covariates,) * 2)]]
+    )
+    theta = np.linalg.lstsq(
+        augmented,
+        np.concatenate((residual_sum, np.zeros(n_covariates))),
+        rcond=None,
+    )[0][:n_samples]
+
+    np.subtract(data, theta[:, None], out=intm)
+    np.copyto(intm, 0.0, where=missing)
+    _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta, illed)
+
+    return theta, beta
+
+
+def _solve_sparse_batch_iter(
+    data,
+    dmat,
+    missing,
+    Vh,
+    S_inv,
+    intm,
+    theta,
+    beta,
+    rhs,
+    tol,
+    max_iter,
+    illed,
+):
+    """Reproduce ANCOM-BC2 iterations using compact feature operators."""
+    epsilon = 100.0
+    it = 0
+    beta_new = np.empty_like(beta)
+    while epsilon > tol and it < max_iter:
+        np.subtract(data, theta[:, None], out=intm)
+        np.copyto(intm, 0.0, where=missing)
+        _apply_pinv(dmat, intm, Vh, S_inv, rhs, beta_new, illed)
+
+        np.matmul(dmat, beta_new.T, out=intm)
+        np.copyto(intm, 0.0, where=missing)
+        np.subtract(data, intm, out=intm)
+        theta_new = np.nanmean(intm, axis=1)
+
+        epsilon = np.sqrt(
+            np.nansum((beta_new - beta) ** 2) + np.nansum((theta_new - theta) ** 2)
+        )
+        beta, beta_new = beta_new, beta
+        theta = theta_new
+        it += 1
+    return theta, beta
+
+
 def _calc_residual(data, dmat, beta, target_bytes=8 << 20):
     """Calculate regression residuals in-place.
 
-    ``data -= dmat @ beta`` would allocate a complete fitted matrix. Multiplying
-    feature blocks into an approximately 8 MiB temporary bounds that extra memory while
-    retaining efficient BLAS matrix multiplication.
+    This is equivalent to `data -= dmat @ beta`, which however would materialize a
+    full fitted matrix. Instead, this function multiplies feature blocks into a
+    workspace of about 8 MiB to reduce memory cost while retaining efficient matrix
+    multiplication.
     """
     n_samps, n_feats = data.shape
     if n_feats == 0:
@@ -1358,7 +1326,7 @@ def _calc_residual(data, dmat, beta, target_bytes=8 << 20):
         data[:, start:stop] -= block
 
 
-def _lstsq_fit(dmat, gram=False):
+def _lstsq_dense(dmat, gram=False):
     """Calculate a least-squares operator and optional inverse-Gram sum vector.
 
     Both operators are derived from one singular value decomposition.
