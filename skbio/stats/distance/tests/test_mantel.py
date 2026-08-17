@@ -1228,6 +1228,28 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
             self.assertAlmostEqual(r, r_ref, places=10)
             self.assertAlmostEqual(p, p_ref, places=10)
 
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_numba_engine_backends(self, xp, device):
+        # `engine="numba"` on device-resident matrices is what routes to the
+        # fused GPU kernel; on NumPy it exercises the CPU numba engine. Skipped
+        # automatically where Numba or the device is unavailable.
+        for method in ("pearson", "spearman"):
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                method=method, permutations=99, seed=0,
+            )
+            mx = DistanceMatrix(self.make_array(xp, device, self.x))
+            my = DistanceMatrix(self.make_array(xp, device, self.y))
+            r, p, _ = mantel(
+                mx, my, method=method, permutations=99, seed=0, engine="numba"
+            )
+            # Default tolerance, as in the other engine="numba" tests: the fused
+            # kernel sums in a different order than Cython, so r is not expected
+            # to agree bit for bit.
+            self.assertAlmostEqual(r, r_ref)
+            self.assertAlmostEqual(p, p_ref)
+
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_spearman_ties_backends(self, xp, device):
         # integer distances with repeats -> tied ranks, exercising the
