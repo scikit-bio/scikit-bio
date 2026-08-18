@@ -19,6 +19,7 @@
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
+* Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
 
 
 ## Version 0.7.3

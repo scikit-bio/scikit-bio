@@ -471,6 +471,28 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             new_ids = tuple(mapper(x) for x in self.ids)
         self.ids = new_ids
 
+    def _diagonal_kwargs(self, idxs=None):
+        """Return constructor keyword arguments that preserve the diagonal.
+
+        Reconstructing a matrix from its condensed form loses the diagonal,
+        because the condensed representation only stores off-diagonal values.
+        Subclasses that carry a meaningful diagonal override this to thread it
+        through. The base matrix has no explicit diagonal, so nothing is added.
+
+        Parameters
+        ----------
+        idxs : sequence of int, optional
+            Row/column indices selecting and ordering the retained entries. If
+            ``None``, the full diagonal is used.
+
+        Returns
+        -------
+        dict
+            Keyword arguments to pass to ``self.__class__``.
+
+        """
+        return {}
+
     def filter(
         self,
         ids: Sequence[str],
@@ -508,7 +530,12 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         """
         if tuple(self._ids) == tuple(ids):
             if self._flags["CONDENSED"]:
-                return self.__class__(self._data, self._ids, condensed=True)
+                return self.__class__(
+                    self._data,
+                    self._ids,
+                    condensed=True,
+                    **self._diagonal_kwargs(),
+                )
             else:
                 return self.__class__(self._data, self._ids)
 
@@ -532,7 +559,13 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         if self._flags["CONDENSED"]:
             filtered_data = distmat_reorder_condensed_py(self.condensed_form(), idxs)
             self._validate_ids(filtered_data, ids)
-            return self.__class__(filtered_data, ids, validate=False, condensed=True)
+            return self.__class__(
+                filtered_data,
+                ids,
+                validate=False,
+                condensed=True,
+                **self._diagonal_kwargs(idxs),
+            )
         else:
             filtered_data = distmat_reorder(self.redundant_form(), idxs)
             self._validate_ids(filtered_data, ids)
@@ -1427,6 +1460,34 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         return self._diagonal
 
+    def _diagonal_kwargs(self, idxs=None):
+        """Return ``diagonal=`` keyword arguments to preserve the diagonal.
+
+        A condensed symmetric matrix stores only its off-diagonal values, so
+        the diagonal must be threaded through explicitly when reconstructing
+        via ``self.__class__(..., condensed=True)``. A scalar (uniform)
+        diagonal applies to every position and is passed through unchanged; an
+        array diagonal is subset and reordered by ``idxs`` so it follows the new
+        row/column order (or kept whole when ``idxs`` is ``None``).
+
+        Parameters
+        ----------
+        idxs : sequence of int, optional
+            Row/column indices selecting and ordering the retained entries.
+
+        Returns
+        -------
+        dict
+            ``{"diagonal": ...}``, or an empty dict when no diagonal is set.
+
+        """
+        diag = self._diagonal
+        if diag is None:
+            return {}
+        if idxs is not None and not np.isscalar(diag):
+            diag = np.asarray(diag)[idxs]
+        return {"diagonal": diag}
+
     @classonlymethod
     def from_iterable(
         cls,
@@ -1764,7 +1825,11 @@ class SymmetricMatrix(PairwiseMatrix):
             if self._flags["CONDENSED"]:
                 permuted = distmat_reorder_condensed_py(self._data, order)
                 return self.__class__(
-                    permuted, self.ids, validate=False, condensed=True
+                    permuted,
+                    self.ids,
+                    validate=False,
+                    condensed=True,
+                    **self._diagonal_kwargs(order),
                 )
             else:
                 permuted = distmat_reorder(self._data, order)
@@ -1987,6 +2052,15 @@ class DistanceMatrix(SymmetricMatrix):
         self._diagonal = 0.0
         self._data = self._init_data(data, condensed)
         self._flags = self._init_flags(condensed)
+
+    def _diagonal_kwargs(self, idxs=None):
+        """Distance matrices are always hollow, so no diagonal is threaded.
+
+        Overrides :meth:`SymmetricMatrix._diagonal_kwargs` because
+        ``DistanceMatrix.__init__`` does not accept a ``diagonal`` argument.
+
+        """
+        return {}
 
     def _normalize_input(self, data, ids):
         """Get input into standard numpy array format."""
