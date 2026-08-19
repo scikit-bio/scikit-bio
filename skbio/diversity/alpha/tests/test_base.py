@@ -41,6 +41,7 @@ class BaseTests(TestCase):
         self.assertEqual(berger_parker_d(self.counts), 5 / 22)
         self.assertEqual(berger_parker_d(np.array([5])), 1)
         self.assertTrue(np.isnan(berger_parker_d([0, 0])))
+        self.assertEqual(berger_parker_d(np.array([5, 5]), xp=np), 0.5)
 
     def test_brillouin_d(self):
         self.assertAlmostEqual(brillouin_d(np.array([1, 2, 0, 0, 3, 1])),
