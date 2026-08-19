@@ -8,11 +8,12 @@
 
 import numpy as np
 import pandas as pd
-from scipy.linalg import svd, lstsq
+
 
 from ._ordination_results import OrdinationResults
 from ._utils import corr, svd_rank, scale
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
+from skbio.util._array import ingest_array
 
 
 def rda(
@@ -113,6 +114,8 @@ def rda(
     Y, y_rows, y_cols = _ingest_table(y)
     X, x_rows, x_cols = _ingest_table(x)
 
+    xp, Y, X = ingest_array(Y, X)
+
     n, p = Y.shape
     n_, m = X.shape
     if n != n_:
@@ -156,11 +159,11 @@ def rda(
     # reproduce an example in L&L where X was rank-deficient, we'll
     # just use `np.linalg.lstsq`, which uses the SVD decomposition
     # under the hood and so it's also more expensive.
-    B, _, rank_X, _ = lstsq(X, Y)
-    Y_hat = X.dot(B)
+    B, _, rank_X, _ = xp.linalg.lstsq(X, Y)
+    Y_hat = xp.matmul(X, B)
     # Now let's perform PCA on the fitted values from the multiple
     # regression
-    u, s, vt = svd(Y_hat, full_matrices=False)
+    u, s, vt = xp.linalg.svd(Y_hat, full_matrices=False)
     # vt are the right eigenvectors, which is what we need to
     # perform PCA. That is, we're changing points in Y_hat from the
     # canonical basis to the orthonormal basis given by the right
@@ -174,25 +177,29 @@ def rda(
 
     # Ordination in the space of response variables. Its columns are
     # sample scores. (Eq. 11.12)
-    F = Y.dot(U)
+    F = xp.matmul(Y, U)
     # Ordination in the space of explanatory variables. Its columns
     # are fitted sample scores. (Eq. 11.13)
-    Z = Y_hat.dot(U)
+    Z = xp.matmul(Y_hat, U)
 
     # Canonical coefficients (formula 11.14)
     # C = B.dot(U)  # Not used
 
     Y_res = Y - Y_hat
     # PCA on the residuals
-    u_res, s_res, vt_res = svd(Y_res, full_matrices=False)
+    u_res, s_res, vt_res = xp.linalg.svd(Y_res, full_matrices=False)
     # See 9) in p. 587 in L&L 1998
     rank_res = svd_rank(Y_res.shape, s_res)
     # Theoretically, there're at most min(p, n - 1) non-zero eigenvalues as
+    if rank_res > 0:
+        U_res = xp.swapaxes(vt_res[:rank_res], -2, -1)
+        F_res = xp.matmul(Y_res, U_res)
+    else:
+        U_res = xp.zeros((Y.shape[1], 0), dtype=Y.dtype)
+        F_res = xp.zeros((Y.shape[0], 0), dtype=Y.dtype)
+  # Ordination in the space of residuals
 
-    U_res = vt_res[:rank_res].T
-    F_res = Y_res.dot(U_res)  # Ordination in the space of residuals
-
-    eigenvalues = np.r_[s[:rank], s_res[:rank_res]]
+    eigenvalues = xp.concatenate((s[:rank], s_res[:rank_res]),axis=0)
 
     # Compute scores
     if scaling not in {1, 2}:
@@ -205,13 +212,13 @@ def rda(
         index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
         backend=output_format,
     )
-    const = np.sum(eigenvalues**2) ** 0.25
+    const = xp.sum(eigenvalues**2) ** 0.25
     if scaling == 1:
         scaling_factor = const
     elif scaling == 2:
         scaling_factor = eigenvalues / const
-    feature_scores = np.hstack((U, U_res)) * scaling_factor
-    sample_scores = np.hstack((F, F_res)) / scaling_factor
+    feature_scores = xp.concatenate((U, U_res), axis = 1) * scaling_factor
+    sample_scores = xp.concatenate((F, F_res), axis = 1) / scaling_factor
 
     feature_scores = _create_table(
         feature_scores,
@@ -226,7 +233,7 @@ def rda(
         backend=output_format,
     )
     # TODO not yet used/displayed
-    sample_constraints = np.hstack((Z, F_res)) / scaling_factor
+    sample_constraints = xp.concatenate((Z, F_res), axis = 1) / scaling_factor
     sample_constraints = _create_table(
         sample_constraints,
         index=sample_ids,
@@ -251,7 +258,7 @@ def rda(
     # scores, but they're computed like this:
     # corr(X, F))
     p_explained = _create_table_1d(
-        eigenvalues / eigenvalues.sum(),
+        eigenvalues / xp.sum(eigenvalues),
         index=["RDA%d" % (i + 1) for i in range(len(eigenvalues))],
         backend=output_format,
     )
