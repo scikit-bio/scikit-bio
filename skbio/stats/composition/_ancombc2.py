@@ -19,7 +19,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
 from typing import TYPE_CHECKING
 from itertools import combinations
 
@@ -1756,8 +1755,8 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         return 0.5 * np.dot(resp, intm0)
 
     # Expectation-maximization (E-M) iterations
-    loss, epoch = np.inf, 0
-    while loss > tol and epoch < max_iter:
+    loss, it = np.inf, 0
+    while loss > tol and it < max_iter:
         # Update intermediates (2nd and 3rd rows only)
         np.add(var_hat, params[6:8, None], out=intm)  # kappa1, kappa2
         np.reciprocal(intm, out=nu_inv[1:])
@@ -1844,7 +1843,7 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         loss = np.linalg.norm(updated - params)
 
         params[:] = updated
-        epoch += 1
+        it += 1
 
     return _estimate_bias_var(beta, var_hat, params)
 

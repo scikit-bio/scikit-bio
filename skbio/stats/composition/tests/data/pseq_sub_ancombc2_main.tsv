@@ -1,4 +1,4 @@
-FeatureID	Covariate	Log2(FC)	SE	W	pvalue	qvalue	Signif	Pass	Robust
+FeatureID	Covariate	Log(FC)	SE	W	pvalue	qvalue	Signif	Pass	Robust
 Actinobacteria	Intercept	0.3924157	0.2498952	1.570321	0.1174196	1	False	True	False
 Actinobacteria	region[T.NE]	0.7321285	0.164793	4.442715	1.260802e-05	0.0002521605	True	True	True
 Actinobacteria	region[T.SE]	0.6112894	0.2131407	2.868009	0.0044306	0.0930426	False	True	False

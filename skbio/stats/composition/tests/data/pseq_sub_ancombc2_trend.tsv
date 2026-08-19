@@ -1,4 +1,4 @@
-FeatureID	Log2(FC):bmi[T.overweight]	Log2(FC):bmi[T.obese]	SE:bmi[T.overweight]	SE:bmi[T.obese]	W	pvalue	qvalue	Signif	Pass	Robust
+FeatureID	Log(FC):bmi[T.overweight]	Log(FC):bmi[T.obese]	SE:bmi[T.overweight]	SE:bmi[T.obese]	W	pvalue	qvalue	Signif	Pass	Robust
 Actinobacteria	0	-0.0425828	0.1743564	0.1812871	0.0425828	0.933	1	False	True	False
 Bacteroidetes	0	0.1772684	0.2241097	0.2154839	0.1772684	0.499	1	False	True	False
 Cyanobacteria	1.110223e-16	-1.107204	0.1848298	0.2484133	1.107204	0	0	True	False	False

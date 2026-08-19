@@ -1,4 +1,4 @@
-FeatureID	Comparison	Log2(FC)	SE	W	pvalue	qvalue	Signif	Pass	Robust
+FeatureID	Comparison	Log(FC)	SE	W	pvalue	qvalue	Signif	Pass	Robust
 Actinobacteria	bmi[T.overweight]	0.04318688	0.1743564	0.2476931	1	1	False	True	False
 Actinobacteria	bmi[T.obese]	-0.0328714	0.1812871	-0.1813223	1	1	False	True	False
 Bacteroidetes	bmi[T.overweight]	-0.1455009	0.2241097	-0.6492398	1	1	False	True	False

@@ -1,4 +1,4 @@
-FeatureID	Covariate	Log2(FC)	SE	W	pvalue	qvalue	Signif
+FeatureID	Covariate	Log(FC)	SE	W	pvalue	qvalue	Signif
 Actinobacteria	Intercept	2.483948	0.2046037	12.14029	6.459902e-34	6.459902e-33	True
 Actinobacteria	region[T.NE]	0.7315903	0.129976	5.628656	1.816197e-08	3.814014e-07	True
 Actinobacteria	region[T.SE]	0.5597108	0.1682988	3.325697	0.0008819779	0.01675758	True

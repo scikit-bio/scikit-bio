@@ -1249,7 +1249,7 @@ class AncombcTests(TestCase):
     #     npt.assert_equal(similarity, 1.0)
 
     def test_ancombc_pseq_sub(self):
-        wkdir = '/home/drz/Desktop'
+        wkdir = '/home/drz/Dropbox/scikit-bio/ancombc/pseq_sub/py_out'
 
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
@@ -1262,13 +1262,11 @@ class AncombcTests(TestCase):
         )
         obs = res.result
         exp = pd.read_table(get_data_path("pseq_sub_ancombc_main.tsv"), index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc_main.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc_main.csv", index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp)
 
@@ -1382,7 +1380,7 @@ class Ancombc2Tests(TestCase):
 
 
     def test_ancombc2_pseq_sub(self):
-        wkdir = '/home/drz/Desktop'
+        wkdir = '/home/drz/Dropbox/scikit-bio/ancombc/pseq_sub/py_out'
 
         cats = ["lean", "overweight", "obese"]
         table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
@@ -1395,13 +1393,11 @@ class Ancombc2Tests(TestCase):
         )
         obs = res.result
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_main.csv", index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp["Signif"] = exp["Signif"].astype("boolean")
         pdt.assert_frame_equal(obs, exp)
 
@@ -1417,23 +1413,19 @@ class Ancombc2Tests(TestCase):
         # pairwise test
         obs = res.pairwise_test()
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_pair.csv", index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp)
 
         # dunnett test
         obs = res.dunnett_test(seed=123)
         exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # obs.to_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv")
         exp = pd.read_csv(f"{wkdir}/pseq_sub_ancombc2_dunn.csv", index_col=(0, 1))
-        exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp)
 
         # trend test
