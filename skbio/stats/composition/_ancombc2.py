@@ -31,7 +31,7 @@ from patsy import dmatrix
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _aggregate_features
 from ._base import _check_composition
-from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
+from ._utils import _check_metadata, _check_p_adjust, _build_dmatrix
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike
@@ -646,18 +646,6 @@ def _ancombc_core(
 
     # Validate metadata and cast to numbers where applicable.
     metadata = _check_metadata(metadata, matrix, samples)
-    metadata = _type_cast_to_float(metadata)
-
-    # Create a design matrix based on metadata and formula.
-    dmat = dmatrix(formula, metadata)
-
-    # Obtain a list of covariates by selecting the relevant columns.
-    covars = dmat.design_info.column_names
-    n_covars = len(covars)
-
-    # Validate sample grouping for post-hoc analysis
-    # When provided, only this coefficient covariance submatrix is retained.
-    groups = _validate_grouping(metadata, dmat, grouping)
 
     # Validate parameters
     if not 0 < alpha < 1:
@@ -669,6 +657,17 @@ def _ancombc_core(
 
     # Transform data
     data, missing = _transform_data(matrix, pseudo, center=v2)
+
+    # Create a design matrix based on metadata and formula.
+    dmat = _build_dmatrix(formula, metadata, dtype=data.dtype)
+
+    # Obtain a list of covariates by selecting the relevant columns.
+    covars = dmat.design_info.column_names
+    n_covars = len(covars)
+
+    # Validate sample grouping for post-hoc analysis
+    # When provided, only this coefficient covariance submatrix is retained.
+    groups = _validate_grouping(metadata, dmat, grouping)
 
     # Estimate initial model parameters.
     # ANCOM-BC2 always re-estimates parameters after sampling-fraction correction, so
@@ -926,7 +925,6 @@ def _estimate_params(data, dmat, groups, missing, keep_data=True):
     Returned `var_hat` is F-contiguous, which should (presumably) benefit the
     downstream EM optimization process.
     """
-    dmat = np.asarray(dmat, dtype=data.dtype)
     if missing is not None:
         return _estimate_params_sparse(data, dmat, missing, groups)
     elif keep_data:
