@@ -455,10 +455,10 @@ class CoreTests(TestCase):
         cutoff = 1e-15 * np.max(S, axis=1, keepdims=True)
         S_inv = np.divide(1.0, S, out=np.zeros_like(S), where=S > cutoff)
 
-        adjusted = np.zeros_like(data)
-        np.copyto(adjusted, data, where=~missing)
+        resp = np.zeros_like(data)
+        np.copyto(resp, data, where=~missing)
 
-        obs = _apply_pinv(dmat, adjusted, Vh, S_inv)
+        obs = _apply_pinv(dmat, resp, Vh, S_inv)
 
         # Reusable workspaces should produce the same result without allocating the
         # intermediate projection on each call.
@@ -466,7 +466,7 @@ class CoreTests(TestCase):
         tmp = np.empty_like(S_inv)
         out = np.empty_like(obs)
         returned = _apply_pinv(
-            dmat, adjusted, Vh, S_inv, rhs=rhs, out=out, illed={}, tmp=tmp
+            dmat, resp, Vh, S_inv, out=out, rhs=rhs, illed={}, tmp=tmp
         )
         self.assertIs(returned, out)
         npt.assert_allclose(out, obs)
@@ -474,12 +474,12 @@ class CoreTests(TestCase):
         exp = np.empty_like(obs)
         for i in range(n_feats):
             x_i = dmat * (~missing[:, i])[:, None]
-            exp[i] = np.linalg.pinv(x_i) @ adjusted[:, i]
+            exp[i] = np.linalg.pinv(x_i) @ resp[:, i]
         npt.assert_allclose(obs, exp)
 
         # Stable fallback should override selected rows exactly.
         illed = {0: (np.array([0]), np.zeros((1, dmat.shape[1], dmat.shape[0])))}
-        obs_fallback = _apply_pinv(dmat, adjusted, Vh, S_inv, illed=illed)
+        obs_fallback = _apply_pinv(dmat, resp, Vh, S_inv, illed=illed)
         npt.assert_allclose(obs_fallback[0], 0.0)
         npt.assert_allclose(obs_fallback[1:], obs[1:])
 
