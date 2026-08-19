@@ -16,6 +16,7 @@
 
 ### Bug Fixes
 
+* Fixed an unexpected behavior in differential abundance tests (`ancombc` and `dirmult_lme`) that string columns in the metadata that can be casted into numbers (e.g., `["1", "2", "3"]`) are treated as numerical. Now they are treated are categories ([#2539](https://github.com/scikit-bio/scikit-bio/pull/2539)).
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
