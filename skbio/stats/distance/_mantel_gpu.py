@@ -40,7 +40,8 @@ def _build_kernel(gpu):
     from numba import float64 as nb_f64
 
     @gpu.jit
-    def _mantel_r(n_dims, mat, perm_order, ym_norm, mul, add, out):
+    def _mantel_r(n_dims, mat, perm_order, ym_norm, mul, add, out):  # pragma: no cover
+        # runs on the device; coverage.py cannot instrument compiled PTX
         p = gpu.blockIdx.x              # one block per permutation
         t = gpu.threadIdx.x
         tile = gpu.blockDim.x           # == _TPB

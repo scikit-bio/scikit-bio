@@ -43,7 +43,8 @@ def _build_kernel(gpu):
     from numba import float64 as nb_f64, int64 as nb_i64
 
     @gpu.jit
-    def _pmn_sW(n_dims, mat, groupings, inv_gs, out_sW):
+    def _pmn_sW(n_dims, mat, groupings, inv_gs, out_sW):  # pragma: no cover
+        # runs on the device; coverage.py cannot instrument compiled PTX
         gel = gpu.blockIdx.x            # one block per permutation
         icol = gpu.threadIdx.x
         tile = gpu.blockDim.x           # == _TPB

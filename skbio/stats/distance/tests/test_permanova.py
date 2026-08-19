@@ -555,6 +555,40 @@ class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
         )
         self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
 
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_numba_engine_backends(self, xp, device):
+        # `engine="numba"` on a device-resident matrix is what routes to the
+        # fused GPU kernel; on NumPy it exercises the CPU numba engine. Skipped
+        # automatically where Numba or the device is unavailable.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        res = permanova(
+            dm, self.grouping, permutations=99, seed=0, engine="numba"
+        )
+        # Default tolerance, as in the other engine="numba" tests above: the
+        # fused kernel sums in a different order than Cython, so the statistic
+        # is not expected to agree bit for bit.
+        self.assertAlmostEqual(res['test statistic'], self.ref['test statistic'])
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_numba_engine_float32_backends(self, xp, device):
+        # the kernel's per-element math stays in the matrix dtype; float32 is
+        # the common case on consumer GPUs and untested on this path otherwise.
+        dm = DistanceMatrix(
+            self.make_array(xp, device, self.data, dtype=xp.float32)
+        )
+        res = permanova(
+            dm, self.grouping, permutations=99, seed=0, engine="numba"
+        )
+        # float32 input -> agreement at float32 precision, as in the CPU numba
+        # float32 test: the kernel accumulates in float64 but reads float32.
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=5
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
     def test_permanova_array_api_numpy_backend(self):
         # NumPy is array-API compatible, so the array-API compute path runs on a
         # NumPy array. The dispatch routes a NumPy DistanceMatrix to the
@@ -635,6 +669,15 @@ class PermanovaGpuHostTests(TestCase):
                 gpu_mod._mark_gpu_unavailable(arr)  # must not warn again
         finally:
             gpu_mod._unavailable.discard("numpy")
+
+    def test_assemble_fp_no_permutations(self):
+        # permutations=0 -> NaN p-value rather than a count over an empty slice.
+        # pseudo-F for s_T=10, s_W=2, n=8, k=2 is (8/1) / (2/6) = 24.
+        f, p = _assemble_fp(
+            np.array([2.0]), s_T=10.0, sample_size=8, num_groups=2, permutations=0
+        )
+        self.assertAlmostEqual(f, 24.0)
+        self.assertTrue(np.isnan(p))
 
 
 if __name__ == '__main__':
