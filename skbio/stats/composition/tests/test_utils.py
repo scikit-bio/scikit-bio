@@ -17,7 +17,7 @@ from skbio.stats.composition._utils import (
     _check_grouping,
     _check_trt_ref_groups,
     _check_metadata,
-    _type_cast_to_float,
+    _build_dmatrix,
     _check_sig_test,
     _check_p_adjust,
 )
@@ -252,17 +252,36 @@ class UtilsTests(TestCase):
             _check_metadata(df, mat)
         self.assertEqual(str(cm.exception), msg)
 
-    def test_type_cast_to_float(self):
-        df = pd.DataFrame([("Alice", 20, 28.0),
-                           ("Bob",   32, 33.0),
-                           ("Carol", 25, 26.5)],
-                          columns=["name", "age", "bmi"])
-        obs = _type_cast_to_float(df)
-        self.assertIsInstance(obs, pd.DataFrame)
-        self.assertIsNot(obs, df)
-        self.assertTrue(pd.api.types.is_string_dtype(obs["name"]))
-        self.assertEqual(obs["age"].dtype, np.float64)
-        self.assertEqual(obs["bmi"].dtype, np.float64)
+    def test_build_dmatrix(self):
+        meta = pd.DataFrame({
+            "num": [1, 2, 3],  # as continuous
+            "str": ["orange", "apple", "pear"],  # sorted alphabetically
+            "num_str": ["1", "2", "3"],  # categorical
+            "bool": [True, False, True],  # categorical
+            "cat": pd.Categorical(["red", "blue", "blue"], categories=[
+                "red", "blue"], ordered=True)})  # no sorting
+        obs = _build_dmatrix(
+            "num + str + num_str + bool + cat", meta)
+        exp_covars = [
+            "Intercept",
+            "str[T.orange]",
+            "str[T.pear]",
+            "num_str[T.2]",
+            "num_str[T.3]",
+            "bool[T.True]",
+            "cat[T.blue]",
+            "num"]  # continuous variable moves after categorical
+        exp_mat = np.array([
+            [1, 1, 0, 0, 0, 1, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 2],
+            [1, 0, 1, 0, 1, 1, 1, 3]], dtype=float)
+        self.assertListEqual(obs.design_info.column_names, exp_covars)
+        npt.assert_array_equal(obs, exp_mat)
+
+        # specify data type
+        obs = _build_dmatrix("num", meta, dtype=np.float32)
+        self.assertEqual(obs.dtype, np.float32)
+        npt.assert_array_equal(obs, [[1, 1], [1, 2], [1, 3]])
 
     def test_check_sig_test(self):
         from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal

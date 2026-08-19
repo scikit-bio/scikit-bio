@@ -44,6 +44,8 @@ compositions.
 
    ancom
    ancombc
+   ancombc2
+   ANCOMBCResult
    dirmult_ttest
    dirmult_lme
    struc_zero
@@ -83,6 +85,7 @@ and statistical analysis.
    clr
    clr_inv
    rclr
+   rclr_inv
    ilr
    ilr_inv
 
@@ -164,6 +167,7 @@ from ._base import (
     clr,
     clr_inv,
     rclr,
+    rclr_inv,
     ilr,
     ilr_inv,
     vlr,
@@ -173,7 +177,9 @@ from ._base import (
     tree_basis,
 )
 from ._ancom import ancom
-from ._ancombc import ancombc, struc_zero
+
+# from ._ancombc import ancombc, struc_zero
+from ._ancombc2 import ancombc, ancombc2, struc_zero, ANCOMBCResult
 from ._dirmult import dirmult_ttest, dirmult_lme
 
 __all__ = [
@@ -188,6 +194,7 @@ __all__ = [
     "clr",
     "clr_inv",
     "rclr",
+    "rclr_inv",
     "ilr",
     "ilr_inv",
     "vlr",
