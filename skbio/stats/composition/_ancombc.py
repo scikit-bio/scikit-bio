@@ -21,11 +21,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm, chi2
 from scipy.optimize import minimize
-from patsy import dmatrix
 
 from skbio.table._tabular import _ingest_table
 from ._base import _check_composition
-from ._utils import _check_metadata, _check_p_adjust, _type_cast_to_float
+from ._utils import _check_metadata, _check_p_adjust, _build_dmatrix
 
 
 def ancombc(
@@ -429,15 +428,14 @@ def ancombc(
     # Log-transform count matrix.
     matrix = np.log(matrix)
 
-    # Validate metadata and cast to numbers where applicable.
+    # Validate metadata.
     metadata = _check_metadata(metadata, matrix, samples)
-    metadata = _type_cast_to_float(metadata)
 
     if grouping is not None and len(metadata[grouping].unique()) < 3:
         raise ValueError("Global test cannot be performed on less than three groups.")
 
     # Create a design matrix based on metadata and formula.
-    dmat = dmatrix(formula, metadata)
+    dmat = _build_dmatrix(formula, metadata)
 
     # Obtain a list of covariates by selecting the relevant columns.
     covars = dmat.design_info.column_names
@@ -1021,7 +1019,6 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     # Validate feature table and metadata
     matrix, samples, features = _ingest_table(table)
     metadata = _check_metadata(metadata, matrix, samples)
-    metadata = _type_cast_to_float(metadata)
 
     unique_groups, group_indices, group_counts = np.unique(
         metadata[grouping], return_inverse=True, return_counts=True
