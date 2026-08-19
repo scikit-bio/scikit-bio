@@ -155,6 +155,7 @@ markers = [
 
 [tool.check-manifest]
 ignore = [
+    ".dockerignore",
     ".editorconfig",
     "checklist.py",
     # created by conda-incubator/setup-miniconda@v4 action
