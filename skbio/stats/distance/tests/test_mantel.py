@@ -23,7 +23,7 @@ from skbio.stats.distance import _mantel as mantel_mod
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
 from skbio.stats.distance._mantel import _mantel_stats_spearman
-from skbio.stats.distance._mantel_gpu import _perm_order
+from skbio.stats.distance._mantel_gpu import _perm_order, _run_mantel_gpu
 from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
                                           mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
@@ -1250,6 +1250,42 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
             self.assertAlmostEqual(r, r_ref)
             self.assertAlmostEqual(p, p_ref)
 
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_numba_engine_alternative_backends(self, xp, device):
+        # the fused kernel's stats feed a p-value formula with three branches
+        # on `alternative`; only "two-sided" is exercised above.
+        mx = DistanceMatrix(self.make_array(xp, device, self.x))
+        my = DistanceMatrix(self.make_array(xp, device, self.y))
+        for alternative in ("greater", "less"):
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                permutations=99, seed=0, alternative=alternative,
+            )
+            r, p, _ = mantel(
+                mx, my, permutations=99, seed=0, alternative=alternative,
+                engine="numba",
+            )
+            self.assertAlmostEqual(r, r_ref)
+            self.assertAlmostEqual(p, p_ref)
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_numba_engine_float32_backends(self, xp, device):
+        # the kernel's per-element math stays in the matrix dtype; float32 is
+        # the common case on consumer GPUs and untested on this path otherwise.
+        r_ref, p_ref, _ = mantel(
+            DistanceMatrix(self.x), DistanceMatrix(self.y),
+            permutations=99, seed=0,
+        )
+        mx = DistanceMatrix(self.make_array(xp, device, self.x, dtype=xp.float32))
+        my = DistanceMatrix(self.make_array(xp, device, self.y, dtype=xp.float32))
+        r, p, _ = mantel(mx, my, permutations=99, seed=0, engine="numba")
+        # float32 input -> agreement at float32 precision, as in the CPU numba
+        # float32 test: the kernel accumulates in float64 but reads float32.
+        self.assertAlmostEqual(r, r_ref, places=5)
+        self.assertAlmostEqual(p, p_ref)
+
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_spearman_ties_backends(self, xp, device):
         # integer distances with repeats -> tied ranks, exercising the
@@ -1428,6 +1464,45 @@ class MantelGpuHostTests(TestCase):
                                  permutations=perms, seed=0, engine="cython")
         self.assertAlmostEqual(comp_stat, r_ref, places=10)
         self.assertEqual(p_value, p_ref)
+
+    def test_run_mantel_gpu_validation(self):
+        # same validation as _mantel_stats_pearson_xp; a NumPy array reaches
+        # these checks before ``gpu`` is touched, so ``None`` stands in for it.
+        with self.assertRaises(ValueError):  # shape mismatch
+            _run_mantel_gpu(None, self.x.data, self.y.data[:9, :9], 0,
+                            get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # not square
+            _run_mantel_gpu(None, np.zeros((3, 4)), np.zeros((3, 4)), 0,
+                            get_rng(0), "two-sided")
+        with self.assertRaises(ValueError):  # fewer than 3 objects
+            _run_mantel_gpu(None, np.zeros((2, 2)), np.zeros((2, 2)), 0,
+                            get_rng(0), "two-sided")
+        const = np.ones((5, 5))
+        np.fill_diagonal(const, 0.0)
+        with self.assertWarns(ConstantInputWarning):
+            r, p, _ = _run_mantel_gpu(None, const, self.x.data[:5, :5], 0,
+                                      get_rng(0), "two-sided")
+        self.assertTrue(np.isnan(r))
+        self.assertTrue(np.isnan(p))
+
+    def test_run_mantel_gpu_near_constant_and_no_permutations(self):
+        # near-constant input warns but still returns a statistic; permutations=0
+        # returns a NaN p-value. Both branches return before the kernel launch,
+        # so ``gpu=None`` is never touched.
+        rng = np.random.default_rng(0)
+        near_const = np.full((5, 5), 1.0) + rng.random((5, 5)) * 1e-14
+        near_const = (near_const + near_const.T) / 2.0
+        np.fill_diagonal(near_const, 0.0)
+        with self.assertWarns(NearConstantInputWarning):
+            r, p, _ = _run_mantel_gpu(None, near_const, self.y.data[:5, :5], 0,
+                                      get_rng(0), "two-sided")
+        self.assertFalse(np.isnan(r))
+        self.assertTrue(np.isnan(p))
+
+        r, p, _ = _run_mantel_gpu(None, self.x.data, self.y.data, 0,
+                                  get_rng(0), "two-sided")
+        self.assertFalse(np.isnan(r))
+        self.assertTrue(np.isnan(p))
 
 
 if __name__ == '__main__':
