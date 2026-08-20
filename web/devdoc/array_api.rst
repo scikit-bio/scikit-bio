@@ -209,3 +209,32 @@ A few cross-backend differences come up often enough to call out:
 - Some array API standard functions are unimplemented in certain
   backends. Check the library's documentation if you hit
   ``AttributeError`` on ``xp``.
+
+Multi-GPU systems
+-----------------
+
+The array-API paths honor whichever device the input array is on, because
+every intermediate is allocated with ``device=`` taken from the input.
+
+The fused Numba GPU kernels (currently ``permanova`` and ``mantel`` with
+``engine="numba"``) do not. They allocate and launch on Numba's *current*
+device. GPU buffers must therefore belong to the default device. If you use
+multiple devices, change the default to match the buffer ownership before
+invoking these functions::
+
+    from numba import cuda        # use hip instead of cuda on ROCm
+
+    cuda.select_device(buffer_device_ordinal)
+    result = permanova(dm, grouping, engine="numba")
+
+The failure mode is worth knowing, because it is not a clean error. The
+``__cuda_array_interface__`` protocol carries no device field, so nothing in
+the handoff identifies which device the buffer belongs to. Launching against a
+buffer from another device reports nothing at launch time; on ROCm the illegal
+access has been observed to surface only at the next synchronizing call, and
+to leave the GPU context unusable for the remainder of the process, so a later
+and entirely valid operation fails instead.
+
+The array-API path has no such constraint and is device-correct on any GPU.
+Contributors adding new Numba GPU kernels should be aware of the same
+limitation.

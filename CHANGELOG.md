@@ -8,11 +8,15 @@
 * Introduced transition probability matrix computation ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
 * Added inverse robust center log ratio (`rclr_inv`) transformation ([#2527](https://github.com/scikit-bio/scikit-bio/pull/2527)).
 * `TreeNode.prune` and `TreeNode.bifurcate` now accept an `inplace` parameter (default `True`, preserving the previous in-place behavior) and return the resulting tree. This makes them consistent with other whole-tree methods such as `shear` and `root_at_midpoint`. Set `inplace=False` to leave the original tree unchanged and operate on a copy ([#2495](https://github.com/scikit-bio/scikit-bio/pull/2495)).
+* Transition probability matrix computation has been introduced ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
+* `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
+* Added a Numba GPU backend for `permanova` and `mantel`. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused single-source kernel runs on the device (`numba.cuda` on NVIDIA, `numba.hip` on AMD), falling back to the array-API path when the kernel is unavailable [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Performance enhancements
 
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
+* On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Bug Fixes
 
@@ -20,7 +24,8 @@
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
-
+* Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
+* `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
 
 ## Version 0.7.3
 

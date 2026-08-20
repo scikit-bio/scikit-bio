@@ -78,8 +78,10 @@ def _get_array(arr: ArrayLike, /, *, to_numpy: bool = False) -> StdArray:
         # For array objects that doesn't have the `__dlpack__` protocol (e.g., Dask,
         # at the time of coding), or array objects that are not on the same device
         # (e.g., cuda), `np.asarray` is called as a fallback, which should work for
-        # objects that have an `__array__` protocol.
-        except (AttributeError, TypeError, RuntimeError):
+        # objects that have an `__array__` protocol. NumPy raises `BufferError`
+        # ("Unsupported device in DLTensor") for a GPU-resident buffer, so that
+        # must be caught here too, otherwise the device fallback never runs.
+        except (AttributeError, TypeError, RuntimeError, BufferError):
             arr = _to_numpy(arr)
 
     return arr
@@ -268,3 +270,33 @@ def ingest_array(
     """
     arrays = tuple(_get_array(x, to_numpy=to_numpy) for x in arrays)
     return aac.array_namespace(*arrays), *arrays
+
+
+def copy_array(arr: StdArray) -> StdArray:
+    r"""Return an independent copy of an array on its original device.
+
+    Parameters
+    ----------
+    arr : array
+        A NumPy array or an array object compliant with the Python array API
+        standard.
+
+    Returns
+    -------
+    array
+        A copy of `arr`, of the same type and on the same device.
+
+    See Also
+    --------
+    ingest_array
+
+    Notes
+    -----
+    For a NumPy array this is equivalent to ``arr.copy()``. For a non-NumPy
+    (e.g. GPU-resident) array it copies via the array's own namespace, keeping
+    the data on its original device rather than forcing a host copy.
+
+    """
+    if aac.is_numpy_array(arr):
+        return arr.copy()
+    return aac.array_namespace(arr).asarray(arr, copy=True)

@@ -44,7 +44,15 @@ jobs:
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
           SKBIO_DEVICE: cpu
-        run: cd ci && pytest -m array_api --pyargs skbio
+        run: cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio
+
+      - name: Generate coverage reports
+        run: cd ci && coverage lcov --rcfile ../pyproject.toml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
 
   test-gpu:
     if: |
@@ -83,6 +91,10 @@ jobs:
             cupy)  pip install cupy-cuda12x[ctk] ;;
           esac
           pip install -r ci/requirements.txt -r ci/requirements.test.txt
+          # numba-cuda is what lets the fused GPU kernels actually run here.
+          # Without it `engine="numba"` cannot resolve and the kernel modules
+          # are never executed, so they show up as uncovered.
+          pip install "numba-cuda[cu12]"
 
       - name: Verify GPU is visible to backend
         env:
@@ -108,8 +120,28 @@ jobs:
               print("cupy:", cupy.__version__, "devices:", n)
           PY
 
+      - name: Verify Numba can target the GPU
+        # Without this the job still passes when numba-cuda is missing or cannot
+        # find NVVM: the fused kernel is simply skipped and every test takes the
+        # array-API fallback, so the GPU kernels would look tested when they were
+        # never run.
+        run: |
+          python - <<'PY'
+          from numba import cuda
+          assert cuda.is_available(), "numba.cuda cannot target this GPU"
+          print("numba.cuda devices:", cuda.gpus)
+          PY
+
       - name: Run tests
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
           SKBIO_DEVICE: ${{ matrix.device }}
-        run: cd ci && pytest -m array_api --pyargs skbio
+        run: cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio
+
+      - name: Generate coverage reports
+        run: cd ci && coverage lcov --rcfile ../pyproject.toml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
