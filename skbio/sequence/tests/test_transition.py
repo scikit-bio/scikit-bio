@@ -13,6 +13,33 @@ import numpy.testing as npt
 from skbio.sequence.transition import jc69, k2p, f81, hky85, tn93
 
 
+class TestDtype(TestCase):
+    def test_dtype(self):
+        models = (
+            lambda **kwargs: jc69(0.5, **kwargs),
+            lambda **kwargs: k2p(0.5, kappa=0.5, **kwargs),
+            lambda **kwargs: f81(0.5, freqs=(0.1, 0.2, 0.3, 0.4), **kwargs),
+            lambda **kwargs: hky85(
+                0.5, freqs=(0.1, 0.2, 0.3, 0.4), kappa=0.5, **kwargs
+            ),
+            lambda **kwargs: tn93(
+                0.5,
+                freqs=(0.1, 0.2, 0.3, 0.4),
+                kappa_r=0.4,
+                kappa_y=0.6,
+                **kwargs,
+            ),
+        )
+
+        for model in models:
+            self.assertEqual(model().dtype, np.float32)
+            self.assertEqual(model(dtype="float64").dtype, np.float64)
+            self.assertEqual(model(dtype=np.float64).dtype, np.float64)
+            for dtype in (None, "float16", np.float16, int):
+                with self.assertRaises(TypeError):
+                    model(dtype=dtype)
+
+
 class TestJC69(TestCase):
     def test_instance(self):
         obs = jc69(0).data
@@ -375,9 +402,9 @@ class TestTN93(TestCase):
             tn93(0, kappa_r=0.4, kappa_y=0.6, freqs=(0.1, 0.4, 0.4, 0.1)).data,
         )
 
-        obs = tn93(0.5, kappa_r=0.4, kappa_y=0.6, freqs=(0.0, 0.2, 0.3, 0.5)).data.round(
-                5
-            )
+        obs = tn93(
+            0.5, kappa_r=0.4, kappa_y=0.6, freqs=(0.0, 0.2, 0.3, 0.5)
+        ).data.round(5)
         exp = np.array(
             [
                 [0.56864, 0.11071, 0.04387, 0.27678],
@@ -388,9 +415,9 @@ class TestTN93(TestCase):
         )
         npt.assert_array_equal(obs, exp)
 
-        obs = tn93(0.5, kappa_r=0.6, kappa_y=0.4, freqs=(0.0, 0.2, 0.3, 0.5)).data.round(
-                5
-            )
+        obs = tn93(
+            0.5, kappa_r=0.6, kappa_y=0.4, freqs=(0.0, 0.2, 0.3, 0.5)
+        ).data.round(5)
         exp = np.array(
             [
                 [0.52458, 0.11071, 0.08793, 0.27678],
@@ -401,9 +428,9 @@ class TestTN93(TestCase):
         )
         npt.assert_array_equal(obs, exp)
 
-        obs = tn93(0.5, kappa_r=0.4, kappa_y=0.6, freqs=(0.1, 0.4, 0.4, 0.1)).data.round(
-                5
-            )
+        obs = tn93(
+            0.5, kappa_r=0.4, kappa_y=0.6, freqs=(0.1, 0.4, 0.4, 0.1)
+        ).data.round(5)
         exp = np.array(
             [
                 [0.61762, 0.21248, 0.11678, 0.05312],
@@ -433,7 +460,9 @@ class TestTN93(TestCase):
             jc69(0.5).data,
         )
 
-        obs = tn93(1, kappa_r=0.4, kappa_y=0.6, freqs=(0.0, 0.2, 0.3, 0.5)).data.round(5)
+        obs = tn93(
+            1, kappa_r=0.4, kappa_y=0.6, freqs=(0.0, 0.2, 0.3, 0.5)
+        ).data.round(5)
         exp = np.array(
             [
                 [0.32335, 0.16014, 0.11617, 0.40035],

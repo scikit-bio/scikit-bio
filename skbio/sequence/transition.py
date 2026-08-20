@@ -70,6 +70,7 @@ def _tpm_wrapper(
     d: float,
     seqtype: str,
     allowed_seqtypes: str | tuple,
+    dtype: str | type,
     *args: tuple,
     **kwargs: dict,
 ):
@@ -90,6 +91,8 @@ def _tpm_wrapper(
     allowed_seqtypes : string or tuple of strings, optional
         Valid sequence types for the model. Can be a single type (such as `"Protein"`)
         or a tuple of multiple types (such as `("DNA", "RNA")`).
+    dtype : str or dtype
+        Floating-point data type of the transition probability matrix.
     args : list, optional
         Model-specific parameters. Refer to the documentation of the chosen model.
     kwargs : dict, optional
@@ -117,10 +120,11 @@ def _tpm_wrapper(
     states = sorted(cls.definite_chars - cls.noncanonical_chars)
 
     # Vectorize the distance (input: scalar, output: 1D array)
-    d = np.atleast_1d(_check_d(d))
+    dtype = _check_dtype(dtype)
+    d = np.atleast_1d(_check_d(d)).astype(dtype)
 
     # Call the transition probability model function to get the probabilities
-    probs = func(d, *args, **kwargs)
+    probs = func(d, *args, dtype=dtype, **kwargs)
 
     return SubstitutionMatrix(states, probs[0])
 
@@ -141,7 +145,16 @@ def _check_kappa(kappa: float):
     return kappa
 
 
-def jc69(d: float, seqtype: str = "DNA") -> SubstitutionMatrix:
+def _check_dtype(dtype: str | type):
+    """Validate the floating-point data type of a transition probability matrix."""
+    if dtype is None or (dtype := np.dtype(dtype)) not in (np.float32, np.float64):
+        raise TypeError(f"{dtype} is not a supported data type.")
+    return dtype
+
+
+def jc69(
+    d: float, seqtype: str = "DNA", dtype: str | type = "float32"
+) -> SubstitutionMatrix:
     r"""Calculate the JC69 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
@@ -169,6 +182,9 @@ def jc69(d: float, seqtype: str = "DNA") -> SubstitutionMatrix:
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
@@ -193,10 +209,12 @@ def jc69(d: float, seqtype: str = "DNA") -> SubstitutionMatrix:
        Mammalian Protein Metabolism, 3(21), 132.
 
     """
-    return _tpm_wrapper(_jc69, d, seqtype=seqtype, allowed_seqtypes=("DNA", "RNA"))
+    return _tpm_wrapper(
+        _jc69, d, seqtype=seqtype, allowed_seqtypes=("DNA", "RNA"), dtype=dtype
+    )
 
 
-def _jc69(d: NDArray) -> NDArray:
+def _jc69(d: NDArray, dtype: np.dtype) -> NDArray:
     """Calculate the JC69 transition probability matrices for given distances.
 
     Parameters
@@ -215,7 +233,7 @@ def _jc69(d: NDArray) -> NDArray:
     same = 0.25 * (1.0 + 3.0 * e)
     diff = 0.25 * (1.0 - e)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float32)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
     P[:] = diff[:, None, None]
 
     idx = np.arange(4)
@@ -224,7 +242,9 @@ def _jc69(d: NDArray) -> NDArray:
     return P
 
 
-def k2p(d: float, kappa: float, seqtype: str = "DNA") -> SubstitutionMatrix:
+def k2p(
+    d: float, kappa: float, seqtype: str = "DNA", dtype: str | type = "float32"
+) -> SubstitutionMatrix:
     r"""Calculate the K2P transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
@@ -257,6 +277,9 @@ def k2p(d: float, kappa: float, seqtype: str = "DNA") -> SubstitutionMatrix:
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
@@ -290,11 +313,12 @@ def k2p(d: float, kappa: float, seqtype: str = "DNA") -> SubstitutionMatrix:
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         kappa=_check_kappa(kappa),
     )
 
 
-def _k2p(d: NDArray, kappa: float) -> NDArray:
+def _k2p(d: NDArray, kappa: float, dtype: np.dtype) -> NDArray:
     """Calculate the K2P transition probability matrices for given distances.
 
     Parameters
@@ -317,7 +341,7 @@ def _k2p(d: NDArray, kappa: float) -> NDArray:
     transition = 0.25 + 0.25 * e1 - 0.5 * e2
     transversion = 0.25 - 0.25 * e1
 
-    P = np.empty((len(d), 4, 4), dtype=np.float32)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
 
     P[:] = transversion[:, None, None]
 
@@ -335,7 +359,12 @@ def _k2p(d: NDArray, kappa: float) -> NDArray:
     return P
 
 
-def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
+def f81(
+    d: float,
+    freqs: ArrayLike,
+    seqtype: str = "DNA",
+    dtype: str | type = "float32",
+) -> SubstitutionMatrix:
     r"""Calculate the F81 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
@@ -369,6 +398,9 @@ def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
@@ -402,11 +434,12 @@ def f81(d: float, freqs: ArrayLike, seqtype: str = "DNA") -> SubstitutionMatrix:
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
     )
 
 
-def _f81(d: NDArray, freqs: NDArray) -> NDArray:
+def _f81(d: NDArray, freqs: NDArray, dtype: np.dtype) -> NDArray:
     """Calculate the F81 transition probability matrices for given distances.
 
     Parameters
@@ -422,14 +455,14 @@ def _f81(d: NDArray, freqs: NDArray) -> NDArray:
         Transition probability matrices.
 
     """
-    freqs = np.asarray(freqs, dtype=np.float32)
+    freqs = np.asarray(freqs, dtype=dtype)
 
     scale_factor = 1.0 / (1.0 - np.sum(freqs**2))
 
     e = np.exp(-scale_factor * d)
 
     n = len(d)
-    P = np.empty((n, 4, 4), dtype=np.float32)
+    P = np.empty((n, 4, 4), dtype=dtype)
 
     P[:] = freqs[None, None, :] * (1.0 - e)[:, None, None]
 
@@ -440,7 +473,11 @@ def _f81(d: NDArray, freqs: NDArray) -> NDArray:
 
 
 def hky85(
-    d: float, freqs: ArrayLike, kappa: float, seqtype: str = "DNA"
+    d: float,
+    freqs: ArrayLike,
+    kappa: float,
+    seqtype: str = "DNA",
+    dtype: str | type = "float32",
 ) -> SubstitutionMatrix:
     r"""Calculate the HKY85 transition probability matrix for a given distance.
 
@@ -481,6 +518,9 @@ def hky85(
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
@@ -519,12 +559,13 @@ def hky85(
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
         kappa=_check_kappa(kappa),
     )
 
 
-def _hky85(d: NDArray, freqs: NDArray, kappa: float) -> NDArray:
+def _hky85(d: NDArray, freqs: NDArray, kappa: float, dtype: np.dtype) -> NDArray:
     r"""Calculate theHKY85 transition probability matrix for given distances.
 
     Parameters
@@ -542,11 +583,16 @@ def _hky85(d: NDArray, freqs: NDArray, kappa: float) -> NDArray:
         Transition probability matrices.
 
     """
-    return _tn93(d, freqs=freqs, kappa_r=kappa, kappa_y=kappa)
+    return _tn93(d, freqs=freqs, kappa_r=kappa, kappa_y=kappa, dtype=dtype)
 
 
 def tn93(
-    d: float, freqs: ArrayLike, kappa_r: float, kappa_y: float, seqtype: str = "DNA"
+    d: float,
+    freqs: ArrayLike,
+    kappa_r: float,
+    kappa_y: float,
+    seqtype: str = "DNA",
+    dtype: str | type = "float32",
 ) -> SubstitutionMatrix:
     r"""Calculate the TN93 transition probability matrix for a given distance.
 
@@ -590,6 +636,9 @@ def tn93(
     seqtype : {'DNA', 'RNA'}, optional
         Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
         Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
@@ -626,13 +675,16 @@ def tn93(
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
         kappa_r=_check_kappa(kappa_r),
         kappa_y=_check_kappa(kappa_y),
     )
 
 
-def _tn93(d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float) -> NDArray:
+def _tn93(
+    d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float, dtype: np.dtype
+) -> NDArray:
     r"""Tamura-Nei 1993 (TN93) transition probability matrix for branch length d.
 
     Parameters
@@ -647,6 +699,8 @@ def _tn93(d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float) -> NDArray
         Transition/transversion rate ratio of pyrimidines.
 
     """
+    freqs = np.asarray(freqs, dtype=dtype)
+
     pi_R = freqs[0] + freqs[2]
     pi_Y = freqs[1] + freqs[3]
     adj_freqs = np.array(
@@ -669,7 +723,7 @@ def _tn93(d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float) -> NDArray
     e2 = np.exp(-scale_factor * d)[:, None, None]
     e3 = np.exp(-scale_factor * (kappa - 1.0) * d / 2.0)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float32)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
 
     P[...] = (
         e1 * identity + e2 * (1.0 - e3) * adj_freqs * same_class + (1.0 - e2) * freqs
