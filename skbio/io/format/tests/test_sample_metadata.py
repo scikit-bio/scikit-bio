@@ -12,8 +12,7 @@ import tempfile
 import os
 
 
-from skbio.util import get_data_path
-from skbio.util._decorator import overrides
+from skbio.util import get_data_path, overrides
 
 from skbio.metadata._metadata import SampleMetadata
 from skbio.io.format.sample_metadata import (
