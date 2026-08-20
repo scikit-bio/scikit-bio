@@ -1372,7 +1372,7 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
                 method=method, permutations=99, seed=0,
             )
             r, p, n = mantel_mod._mantel_stats_pearson_xp(
-                self.x, self.y, 99, get_rng(0), "two-sided", spearman=spearman,
+                self.x, self.y, 99, 0, "two-sided", spearman=spearman,
             )
             self.assertEqual(n, self.x.shape[0])
             self.assertAlmostEqual(r, r_ref, places=10)

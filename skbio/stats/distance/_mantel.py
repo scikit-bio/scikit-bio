@@ -441,8 +441,6 @@ def mantel(
     ``array_like`` because there is no notion of IDs.
 
     """
-    rng = get_rng(seed)
-
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -490,7 +488,7 @@ def mantel(
             if gpu is not None:
                 try:
                     return _run_mantel_gpu(
-                        gpu, x.data, y.data, permutations, rng, alternative,
+                        gpu, x.data, y.data, permutations, seed, alternative,
                         spearman=(method == "spearman"),
                     )
                 except Exception:
@@ -498,7 +496,7 @@ def mantel(
                     # it and fall back to the array-API path (correct anywhere).
                     _mark_gpu_unavailable(x.data)
             return _mantel_stats_pearson_xp(
-                x.data, y.data, permutations, rng, alternative,
+                x.data, y.data, permutations, seed, alternative,
                 spearman=(method == "spearman"),
             )
 
@@ -523,11 +521,11 @@ def mantel(
     if special:
         if method == "pearson":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
-                x, y, permutations, rng, engine
+                x, y, permutations, seed, engine
             )
         else:
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
-                x, y, permutations, rng, engine
+                x, y, permutations, seed, engine
             )
 
     else:
@@ -539,6 +537,9 @@ def mantel(
 
         permuted_stats = []
         if not (permutations == 0 or np.isnan(orig_stat)):
+            # This path permutes inside the loop, so it needs one generator that
+            # advances across iterations; a seed would repeat the same draw.
+            rng = get_rng(seed)
             perm_gen = (
                 corr_func(x.permute(condensed=True, seed=rng), y_flat)[0]
                 for _ in range(permutations)
@@ -590,7 +591,7 @@ def _xp_rank_average(xp, a):
     )
 
 
-def _mantel_stats_pearson_xp(x, y, permutations, rng, alternative, spearman=False):
+def _mantel_stats_pearson_xp(x, y, permutations, seed, alternative, spearman=False):
     """Mantel pearson/spearman result in the ``xp`` namespace.
 
     Backend-agnostic equivalent of ``_mantel_stats_pearson``/``_spearman`` for
@@ -600,6 +601,7 @@ def _mantel_stats_pearson_xp(x, y, permutations, rng, alternative, spearman=Fals
 
     Returns ``(orig_stat, p_value, n)``, matching ``mantel``'s return.
     """
+    rng = get_rng(seed)
     xp, X, Y = ingest_array(x, y)
     if X.shape != Y.shape:
         raise ValueError("Distance matrices must have the same shape.")

@@ -29,6 +29,7 @@ from warnings import warn
 
 from scipy.stats import ConstantInputWarning, NearConstantInputWarning
 
+from skbio.util import get_rng
 from skbio.util._array import _get_backend_name
 from ._gpu import _TPB, _get_kernel
 
@@ -114,7 +115,7 @@ def _perm_order(n, permutations, rng):
     return out
 
 
-def _run_mantel_gpu(gpu, x, y, permutations, rng, alternative, spearman=False):
+def _run_mantel_gpu(gpu, x, y, permutations, seed, alternative, spearman=False):
     """Run the Mantel pearson/spearman test with the fused GPU kernel.
 
     Mirrors :func:`._mantel._mantel_stats_pearson_xp`'s preprocessing (upper
@@ -122,6 +123,12 @@ def _run_mantel_gpu(gpu, x, y, permutations, rng, alternative, spearman=False):
     per-permutation array-API loop with the fused kernel on the device-resident
     matrices. ``gpu`` is the Numba module from :func:`._gpu._numba_gpu_module_for`.
     Returns ``(orig_stat, p_value, n)`` to match :func:`._mantel.mantel`.
+
+    Takes ``seed`` rather than a live generator, as
+    :func:`._permanova_gpu._run_permanova_gpu` does. The permutations are drawn
+    before the launch that may fail, so a generator passed in from the caller
+    would come back partly consumed and the array-API fallback would then draw a
+    different set and report a different p-value than an unaccelerated run.
     """
     # Lazy import avoids a circular import (``_mantel`` imports this module).
     from ._mantel import _upper_tri_xp, _xp_rank_average, _device
@@ -186,7 +193,7 @@ def _run_mantel_gpu(gpu, x, y, permutations, rng, alternative, spearman=False):
     if Xsrc.dtype == xp.float32:
         mul, add = np.float32(mul), np.float32(add)
         ym_norm = xp.astype(ym_norm, xp.float32)
-    perm_order = _perm_order(n, permutations, rng)
+    perm_order = _perm_order(n, permutations, get_rng(seed))
 
     kernel = _get_kernel(_kernels, _build_kernel, gpu, _get_backend_name(xp))
     d_perm = gpu.to_device(perm_order)
