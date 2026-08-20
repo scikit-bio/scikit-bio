@@ -76,7 +76,7 @@ def _tpm_wrapper(
 ):
     """Wrapper for transition probability model functions.
 
-    This helper function transforms distance `d` so it is always is a vector for the
+    This helper function transforms distance `d` so it is always a vector for the
     internal interface and transition probability matrix output so it is always a valid
     `SubstitutionMatrix` instance.
 
