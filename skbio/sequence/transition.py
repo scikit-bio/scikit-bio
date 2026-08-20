@@ -1,25 +1,23 @@
-r"""Transition probability models (:mod:`skbio.sequence.tpm`)
-==========================================================
+"""Transition probability models (:mod:`skbio.sequence.transition`)
+================================================================
 
 .. currentmodule:: skbio.sequence.transition
 
-This module provides functions for calculating transition probability
-matrices (TPMs) under several substitution models for a specified
-evolutionary distance (branch length).
+This module provides functions for calculating transition probability matrices (TPMs,
+a.k.a. substitution probability matrices) under different substitution models for a
+specified evolutionary distance (expected number of substitutions per site, which is
+often represented as branch length in a phylogenetic tree).
 
-A TPM gives the probability that each ancestral
-state (rows) is observed as each descendant state (columns)
-after the specified evolutionary distance. For continuous-time Markov
-models, the TPM is obtained from the instantaneous rate matrix, :math:`Q`, as
-:math:`P(t) = e^{Qt}`. Each row of the matrix sums to one.
+A TPM gives the probability that each ancestral state (rows) is observed as each
+descendant state (columns) after the specified evolutionary distance. For
+continuous-time Markov models, the TPM is obtained from the instantaneous rate matrix,
+:math:`Q`, as :math:`P(t) = e^{Qt}`. Each row of the matrix sums to one.
 
-Different models differ in the assumptions they make about instantaneous
-substitution rates and equilibrium state frequencies, resulting in
-different sets of model parameters. TPMs are
-also known as substitution probability matrices.
+Models differ in the assumptions they make about instantaneous substitution rates and
+equilibrium state frequencies, resulting in different sets of model parameters.
 
 Transition probability matrices
-----------------------------------------
+-------------------------------
 
 .. autosummary::
    :toctree:
@@ -30,7 +28,7 @@ Transition probability matrices
    hky85
    tn93
 
-"""
+"""  # noqa: D205, D415
 
 # ----------------------------------------------------------------------------
 # Copyright (c) 2013--, scikit-bio development team.
@@ -43,111 +41,129 @@ Transition probability matrices
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from inspect import signature
-import functools
 
 import numpy as np
 
-from skbio.sequence.distance import _char_hash, _check_freqs
-from collections.abc import Callable
-from skbio.sequence import (
-    Sequence,
-    GrammaredSequence,
-    DNA,
-    RNA,
-    Protein,
-    SubstitutionMatrix,
-)
+from skbio.sequence.distance import _check_freqs
+from skbio.sequence import SubstitutionMatrix
 import skbio.sequence as sk_seqtype
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
     from numpy.typing import ArrayLike, NDArray
 
+# ----------------------------------------------------------------------------
+# Each evolutionary model implemented in this submodule has:
+#
+# - A public-facing function that consumes a single (scalar) evolutionary
+#   distance and returns a transition probability matrix in the format of
+#   `SubstitutionMatrix`. It is a wrapper of:
+#
+# - A private function that consumes a vector of evolutionary distances and
+#   returns a 3D array of transition probability matrices. The private function
+#   is used for vectorized operations in distance calculations.
+# ----------------------------------------------------------------------------
 
-def _wrap_vector_tpm_function(
-    function: Callable,
+
+def _tpm_wrapper(
+    func: Callable,
     d: float,
     seqtype: str,
     allowed_seqtypes: str | tuple,
+    dtype: str | type,
     *args: tuple,
     **kwargs: dict,
 ):
-    r"""
-    Transforms distance d so it is always is a vector for the internal
-    interface and transition probability matrix output so it is always a
-    valid SubstitutionMatrix.
+    """Wrapper for transition probability model functions.
+
+    This helper function transforms distance `d` so it is always a vector for the
+    internal interface and transition probability matrix output so it is always a valid
+    `SubstitutionMatrix` instance.
+
     Parameters
     ----------
-    function : function
+    func : callable
         Transition probability model function.
     d : float
-        distance between sequences.
-    kwargs : tuple, optional
-        Transition model-specific positional parameters. Refer to
-        the documentation of the chosen model.
+        Evolutionary distance between sequences.
     seqtype : type or tuple of types, optional
-        Name of the sequence type. Should be one of values in allowed_seqtypes.
+        Name of the sequence type. Should be one of values in `allowed_seqtypes`.
     allowed_seqtypes : string or tuple of strings, optional
-        Valid sequence types for the model. Can be a single type (such as
-        ``"Protein"``) or a tuple of multiple types (such as
-        ``("DNA", "RNA")``).
+        Valid sequence types for the model. Can be a single type (such as `"Protein"`)
+        or a tuple of multiple types (such as `("DNA", "RNA")`).
+    dtype : str or dtype
+        Floating-point data type of the transition probability matrix.
+    args : list, optional
+        Model-specific parameters. Refer to the documentation of the chosen model.
     kwargs : dict, optional
-        Transition model-specific keyword parameters. Refer to
-        the documentation of the chosen model.
+        Model-specific keyword parameters. Refer to the documentation of the chosen
+        model.
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows are ancestral nucleotides,
-        columns are descendant nucleotides.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
+
     """
-
-    d = np.atleast_1d(_check_d(d))
-
-    probabilities = function(d, *args, **kwargs)
-
+    # Validate sequence type
     if not isinstance(allowed_seqtypes, tuple):
         allowed_seqtypes = (allowed_seqtypes,)
 
     if seqtype not in allowed_seqtypes:
         types = ", ".join(allowed_seqtypes)
-        raise TypeError(f"Sequence should be: {types}. Got {seqtype} instead")
+        raise TypeError(f"Sequence should be: {types}. Got {seqtype} instead.")
 
-    seqtype_cls = getattr(sk_seqtype, seqtype)
-    states = sorted(seqtype_cls.definite_chars)
+    cls = getattr(sk_seqtype, seqtype)
 
-    return SubstitutionMatrix(states, probabilities[0])
+    # Get the character states for the substitution matrix
+    states = sorted(cls.definite_chars - cls.noncanonical_chars)
 
+    # Vectorize the distance (input: scalar, output: 1D array)
+    dtype = _check_dtype(dtype)
+    d = np.atleast_1d(_check_d(d)).astype(dtype)
 
-def _check_kappa(kappa: float):
-    if kappa <= 0.0 or kappa > 1.0:
-        raise ValueError(
-            "Parameter 'kappa' must be greater than 0 and less or equal to 1."
-        )
-    return kappa
+    # Call the transition probability model function to get the probabilities
+    probs = func(d, *args, dtype=dtype, **kwargs)
+
+    return SubstitutionMatrix(states, probs[0])
 
 
 def _check_d(d: float):
+    """Validate that the evolutionary distance `d` is non-negative."""
     if d < 0:
         raise ValueError("Distance must be non-negative.")
     return d
 
 
+def _check_kappa(kappa: float):
+    """Validate that the ts/tv ratio `kappa` is between 0 and 1."""
+    if kappa <= 0.0 or kappa > 1.0:
+        raise ValueError(
+            "Parameter 'kappa' must be greater than 0 and less than or equal to 1."
+        )
+    return kappa
+
+
+def _check_dtype(dtype: str | type):
+    """Validate the floating-point data type of a transition probability matrix."""
+    if dtype is None or (dtype := np.dtype(dtype)) not in (np.float32, np.float64):
+        raise TypeError(f"{dtype} is not a supported data type.")
+    return dtype
+
+
 def jc69(
-    d: float,
-    seqtype: str = "DNA",
+    d: float, seqtype: str = "DNA", dtype: str | type = "float32"
 ) -> SubstitutionMatrix:
-    r"""
-    Calculate the JC69 transition probability matrix for a given distance.
+    r"""Calculate the JC69 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
-    The Jukes-Cantor 1969 (JC69) model assumes equal nucleotide frequencies
-    and equal substitution rates between all nucleotides.
+    The Jukes-Cantor 1969 (JC69) model assumes equal nucleotide frequencies and equal
+    substitution rates between all nucleotides.
 
-    The transition probability between nucleotide states for sequences
-    separated by evolutionary distance :math:`d` (expected substitutions
-    per site) is given by:
+    The transition probability between nucleotide states for sequences separated by
+    evolutionary distance :math:`d` (expected substitutions per site) is given by:
 
     .. math::
 
@@ -156,65 +172,68 @@ def jc69(
             \frac{1}{4} - \frac{1}{4} e^{-\frac{4d}{3}} & i \neq j
         \end{cases}
 
-    where :math:`i, j \in \{A, C, G, T/U\}`, and :math:`i` and :math:`j`
-    denote ancestral and descendant states, respectively.
+    where :math:`i, j \in \{A, C, G, T/U\}`, and :math:`i` and :math:`j` denote
+    ancestral and descendant states, respectively.
 
     Parameters
     ----------
     d : float
-        Evolutionary distance (expected substitutions per site) between
-        sequences.
-    seqtype : str
-        Sequence type: "DNA" (default) or "RNA". Used to label matrix states
-        as nucleotides (A, C, G, T/U).
+        Evolutionary distance between sequences.
+    seqtype : {'DNA', 'RNA'}, optional
+        Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
+        Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows correspond to ancestral states,
-        columns correspond to descendant states.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
+
+    See Also
+    --------
+    skbio.sequence.distance.jc69
 
     Notes
     -----
     The Jukes-Cantor 1969 (JC69) model was originally described in [1]_.
 
-    It is a continuous-time Markov chain model that assumes equal base
-    frequencies and equal substitution rates between all nucleotides.
+    It is a continuous-time Markov chain model that assumes equal base frequencies and
+    equal substitution rates between all nucleotides.
 
     References
     ----------
-    .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein
-        molecules. Mammalian Protein Metabolism, 3(21), 132.
-    """
+    .. [1] Jukes, T. H., & Cantor, C. R. (1969). Evolution of protein molecules.
+       Mammalian Protein Metabolism, 3(21), 132.
 
-    return _wrap_vector_tpm_function(
-        _jc69, d, seqtype=seqtype, allowed_seqtypes=("DNA", "RNA")
+    """
+    return _tpm_wrapper(
+        _jc69, d, seqtype=seqtype, allowed_seqtypes=("DNA", "RNA"), dtype=dtype
     )
 
 
-def _jc69(
-    d: NDArray,
-) -> NDArray:
-    r"""
-    Computes series of matrices for vector of distances d.
+def _jc69(d: NDArray, dtype: np.dtype) -> NDArray:
+    """Calculate the JC69 transition probability matrices for given distances.
 
     Parameters
     ----------
-    d : 1D np.ndarray
-        Vector of distances between sequences.
+    d : ndarray of shape (n,)
+        Evolutionary distances between sequences.
 
     Returns
     -------
-    3D np.ndarray
-        Transition probability matrix. It has shape (n, m, m), where n is
-        length of vector d and m is size of the sequence alphabet.
+    ndarray of shape (n, 4, 4)
+        Transition probability matrices.
+
     """
     e = np.exp(-4.0 * d / 3.0)
 
     same = 0.25 * (1.0 + 3.0 * e)
     diff = 0.25 * (1.0 - e)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
     P[:] = diff[:, None, None]
 
     idx = np.arange(4)
@@ -224,12 +243,9 @@ def _jc69(
 
 
 def k2p(
-    d: float,
-    kappa: float,
-    seqtype: str = "DNA",
+    d: float, kappa: float, seqtype: str = "DNA", dtype: str | type = "float32"
 ) -> SubstitutionMatrix:
-    r"""
-    Calculate the K2P transition probability matrix for a given distance.
+    r"""Calculate the K2P transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
@@ -255,19 +271,26 @@ def k2p(
     Parameters
     ----------
     d : float
-        distance or distances between sequences.
+        Evolutionary distance between sequences.
     kappa : float
-        ratio between transition and transversion rates
-    seqtype : str
-        String that holds type of the sequence. "DNA" (default) and "RNA"
-        are valid options. Needed to assign proper nucleotide letters to
-        SubstitutionMatrix dimensions.
+        Ratio between transition and transversion rates. Should be between 0 and 1.
+    seqtype : {'DNA', 'RNA'}, optional
+        Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
+        Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows are ancestral nucleotides,
-        columns are descendant nucleotides.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
+
+    See Also
+    --------
+    skbio.sequence.distance.k2p
+    jc69
 
     Notes
     -----
@@ -285,19 +308,32 @@ def k2p(
 
     """
 
-    return _wrap_vector_tpm_function(
+    return _tpm_wrapper(
         _k2p,
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         kappa=_check_kappa(kappa),
     )
 
 
-def _k2p(
-    d: NDArray,
-    kappa: float,
-) -> NDArray:
+def _k2p(d: NDArray, kappa: float, dtype: np.dtype) -> NDArray:
+    """Calculate the K2P transition probability matrices for given distances.
+
+    Parameters
+    ----------
+    d : ndarray of shape (n,)
+        Evolutionary distances between sequences.
+    kappa : float
+        Ratio between transition and transversion rates.
+
+    Returns
+    -------
+    ndarray of shape (n, 4, 4)
+        Transition probability matrices.
+
+    """
     e1 = np.exp(-4.0 * d / 3.0)
     e2 = np.exp(-2.0 * (kappa + 1) * d / 3.0)
 
@@ -305,14 +341,16 @@ def _k2p(
     transition = 0.25 + 0.25 * e1 - 0.5 * e2
     transversion = 0.25 - 0.25 * e1
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
 
     P[:] = transversion[:, None, None]
 
     idx = np.arange(4)
     P[:, idx, idx] = same[:, None]
 
-    # transitions: A<->G and C<->T
+    # transitions: A<->G and C<->T/U
+    # NOTE: The following code and other functions in this module assume the order of
+    # nucleotides is A, C, G, T/U.
     P[:, 0, 2] = transition
     P[:, 2, 0] = transition
     P[:, 1, 3] = transition
@@ -325,17 +363,17 @@ def f81(
     d: float,
     freqs: ArrayLike,
     seqtype: str = "DNA",
+    dtype: str | type = "float32",
 ) -> SubstitutionMatrix:
-    r"""
-    Calculate the F81 transition probability matrix for a given distance.
+    r"""Calculate the F81 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
-    The Felsenstein 1981 (F81) model assumes equal substitution rates among
-    nucleotide pairs but allows unequal equilibrium base frequencies :math:`\pi`.
+    The Felsenstein 1981 (F81) model assumes equal substitution rates among nucleotide
+    pairs but allows unequal equilibrium base frequencies :math:`\pi`.
 
-    The transition probability between nucleotide states for sequences
-    separated by evolutionary distance :math:`d` is given by:
+    The transition probability between nucleotide states for sequences separated by
+    evolutionary distance :math:`d` is given by:
 
     .. math::
         P_{ij} = \begin{cases}
@@ -353,35 +391,36 @@ def f81(
     Parameters
     ----------
     d : float
-        distance or distances between sequences.
+        Evolutionary distance between sequences.
     freqs : array_like of float of shape (4,)
-        Relative frequencies of nucleobases A, C, G, and T/U, respectively.
-        Should sum to 1.
-    seqtype : str
-        String that holds type of the sequence. "DNA" (default) and "RNA"
-        are valid options. Needed to assign proper nucleotide letters to
-        SubstitutionMatrix dimensions.
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1.
+    seqtype : {'DNA', 'RNA'}, optional
+        Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
+        Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows are ancestral nucleotides,
-        columns are descendant nucleotides.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
 
     See Also
     --------
+    skbio.sequence.distance.f81
     jc69
 
     Notes
     -----
     The Felsenstein 1981 (F81) model was originally introduced in [1]_.
 
-    It extends JC69 by allowing unequal equilibrium base frequencies while
-    retaining equal substitution rates between all nucleotide pairs.
+    It extends JC69 by allowing unequal equilibrium base frequencies while retaining
+    equal substitution rates between all nucleotide pairs.
 
-    F81 reduces to JC69 when all base frequencies are equal
-    (:math:`\pi_i = 0.25`).
-
+    F81 reduces to JC69 when all base frequencies are equal (:math:`\pi_i = 0.25`).
 
     References
     ----------
@@ -390,39 +429,40 @@ def f81(
 
     """
 
-    return _wrap_vector_tpm_function(
+    return _tpm_wrapper(
         _f81,
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
     )
 
 
-def _f81(
-    d: NDArray,
-    freqs: NDArray,
-) -> NDArray:
-    r"""
-    F81 transition probability matrix for branch length d.
+def _f81(d: NDArray, freqs: NDArray, dtype: np.dtype) -> NDArray:
+    """Calculate the F81 transition probability matrices for given distances.
 
     Parameters
     ----------
-    d
-        Branch length(s).
-    freqs
-        Stationary frequencies of states.
-        Shape: (4,)
-    """
+    d : ndarray of shape (n,)
+        Evolutionary distances between sequences.
+    freqs : ndarray of shape (4,)
+        Stationary frequencies of the four nucleotides.
 
-    freqs = np.asarray(freqs, dtype=np.float64)
+    Returns
+    -------
+    ndarray of shape (n, 4, 4)
+        Transition probability matrices.
+
+    """
+    freqs = np.asarray(freqs, dtype=dtype)
 
     scale_factor = 1.0 / (1.0 - np.sum(freqs**2))
 
     e = np.exp(-scale_factor * d)
 
     n = len(d)
-    P = np.empty((n, 4, 4), dtype=np.float64)
+    P = np.empty((n, 4, 4), dtype=dtype)
 
     P[:] = freqs[None, None, :] * (1.0 - e)[:, None, None]
 
@@ -437,9 +477,9 @@ def hky85(
     freqs: ArrayLike,
     kappa: float,
     seqtype: str = "DNA",
+    dtype: str | type = "float32",
 ) -> SubstitutionMatrix:
-    r"""
-    Calculate the HKY85 transition probability matrix for a given distance.
+    r"""Calculate the HKY85 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
@@ -469,27 +509,30 @@ def hky85(
     Parameters
     ----------
     d : float
-        distance or distances between sequences.
+        Evolutionary distance between sequences.
     freqs : array_like of float of shape (4,)
-        Relative frequencies of nucleobases A, C, G, and T/U, respectively.
-        Should sum to 1.
-    kappa
-        Transition/transversion rate ratio. Should be
-        :math:`0 < \kappa \leq 1`.
-    seqtype : str
-        String that holds type of the sequence. "DNA" (default) and "RNA"
-        are valid options. Needed to assign proper nucleotide letters to
-        SubstitutionMatrix dimensions.
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1.
+    kappa : float
+        Ratio between transition and transversion rates. Should be between 0 and 1.
+    seqtype : {'DNA', 'RNA'}, optional
+        Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
+        Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows are ancestral nucleotides,
-        columns are descendant nucleotides.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
 
     See Also
     --------
+    skbio.sequence.distance.f84
     f81
+    tn93
 
     Notes
     -----
@@ -504,40 +547,43 @@ def hky85(
     References
     ----------
     .. [1] Hasegawa, M., Kishino, H., & Yano, T. A. (1985). Dating of the human-ape
-        splitting by a molecular clock of mitochondrial DNA. Journal of molecular
-        evolution, 22(2), 160-174.
+       splitting by a molecular clock of mitochondrial DNA. Journal of Molecular
+       Evolution, 22(2), 160-174.
     .. [2] Felsenstein, J. (2004). Inferring Phylogenies. 2003. Sinauer Associates,
-        Sunderland, Massachusetts.
+       Sunderland, Massachusetts.
 
     """
 
-    return _wrap_vector_tpm_function(
+    return _tpm_wrapper(
         _hky85,
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
         kappa=_check_kappa(kappa),
     )
 
 
-def _hky85(d: NDArray, freqs: NDArray, kappa: float) -> NDArray:
-    r"""
-    HKY85 transition probability matrix for branch length d.
+def _hky85(d: NDArray, freqs: NDArray, kappa: float, dtype: np.dtype) -> NDArray:
+    r"""Calculate theHKY85 transition probability matrix for given distances.
 
     Parameters
     ----------
-    d
-        Branch length(s).
-    freqs
-        Stationary frequencies of states.
-        Shape: (4,)
-    kappa
-        Transition/transversion rate ratio. Should be
-        :math:`0 < \kappa \leq 1`.
-    """
+    d : ndarray of shape (n,)
+        Evolutionary distances between sequences.
+    freqs : ndarray of shape (4,)
+        Stationary frequencies of the four nucleotides.
+    kappa : float
+        Ratio between transition and transversion rates.
 
-    return _tn93(d, freqs=freqs, kappa_r=kappa, kappa_y=kappa)
+    Returns
+    -------
+    ndarray of shape (n, 4, 4)
+        Transition probability matrices.
+
+    """
+    return _tn93(d, freqs=freqs, kappa_r=kappa, kappa_y=kappa, dtype=dtype)
 
 
 def tn93(
@@ -546,19 +592,18 @@ def tn93(
     kappa_r: float,
     kappa_y: float,
     seqtype: str = "DNA",
+    dtype: str | type = "float32",
 ) -> SubstitutionMatrix:
-    r"""
-    Calculate the TN93 transition probability matrix for a given distance.
+    r"""Calculate the TN93 transition probability matrix for a given distance.
 
     .. versionadded:: 0.7.4
 
-    The Tamura-Nei 1993 (TN93) allows differential base
-    frequencies (:math:`\pi`) and assumes different ratios :math:`\kappa` between
-    rates of transitions (substitutions between two purines or between two
-    pyrimidines) and transversions (substitutions between a purine and a
-    pyrimidine) for each class of nucleotides. Transition probability for a
-    nucleotide for sequences with a distance :math:`d` between them can be
-    calculated like:
+    The Tamura-Nei 1993 (TN93) allows differential base frequencies (:math:`\pi`) and
+    assumes different ratios :math:`\kappa` between rates of transitions (substitutions
+    between two purines or between two pyrimidines) and transversions (substitutions
+    between a purine and a pyrimidine) for each class of nucleotides. Transition
+    probability for a nucleotide for sequences with a distance :math:`d` between them
+    can be calculated as:
 
     .. math::
         P_{ij} = e^{-\frac{\kappa_i d}{2b}}\delta_{ij} +
@@ -567,12 +612,12 @@ def tn93(
             \left (1 - e^{\frac{-d}{b}}\right )\pi_j
 
     Where :math:`i,j \in \{A, C, G, T/U\}`, :math:`i` is ancestral nucleotide,
-    :math:`j` is descendant nucleotide, :math:`\delta_{ij}` is Kronecker delta
-    function and is 1 if :math:`i=j` and 0 otherwise, \epsilon_{ij} is
-    purine/pyrimidine indicator function which is 1 if :math:`i` and :math:`j`
-    in the same nucloetide class and is 0 otherwise, :math:`\kappa_i` is a
-    transition/transversion rate ratio for purines or pyrimidines, depending
-    on a substitution type. The normalization constant :math:`b` is defined as:
+    :math:`j` is descendant nucleotide, :math:`\delta_{ij}` is Kronecker delta function
+    and is 1 if :math:`i=j` and 0 otherwise, \epsilon_{ij} is purine/pyrimidine
+    indicator function which is 1 if :math:`i` and :math:`j` are in the same nucloetide
+    class and is 0 otherwise, :math:`\kappa_i` is a transition/transversion rate ratio
+    for purines or pyrimidines, depending on a substitution type. The normalization
+    constant :math:`b` is defined as:
 
     .. math::
         b = 1 - \pi_A^2 - \pi_C^2 - \pi_G^2 - \pi_T^2
@@ -580,39 +625,40 @@ def tn93(
     Parameters
     ----------
     d : float
-        distance or distances between sequences.
+        Evolutionary distance between sequences.
     freqs : array_like of float of shape (4,)
-        Relative frequencies of nucleobases A, C, G, and T/U, respectively.
-        Should sum to 1.
-    kappa_r
-        Transition/transversion rate ratio of purines. Should be
-        :math:`0 < \kappa \leq 1`.
-    kappa_y
-        Transition/transversion rate ratio of pyrimidines. Should be
-        :math:`0 < \kappa \leq 1`.
-    seqtype : str
-        String that holds type of the sequence. "DNA" (default) and "RNA"
-        are valid options. Needed to assign proper nucleotide letters to
-        SubstitutionMatrix dimensions.
+        Relative frequencies of nucleobases A, C, G, and T/U, respectively. Should sum
+        to 1.
+    kappa_r : float
+        Transition/transversion rate ratio of purines. Should be between 0 and 1.
+    kappa_y : float
+        Transition/transversion rate ratio of pyrimidines. Should be between 0 and 1.
+    seqtype : {'DNA', 'RNA'}, optional
+        Sequence type. Used to label matrix states as nucleotides (A, C, G, T/U).
+        Default is "DNA".
+    dtype : str or dtype, optional
+        Floating-point data type of the transition probability matrix. Options are
+        "float32" (default) and "float64".
 
     Returns
     -------
     SubstitutionMatrix
-        Transition probability matrix. Rows are ancestral nucleotides,
-        columns are descendant nucleotides.
+        Transition probability matrix. Rows are ancestral nucleotides, columns are
+        descendant nucleotides.
 
     See Also
     --------
+    skbio.sequence.distance.tn93
     hky85
 
     Notes
     -----
-    The Tamura-Nei 1993 (TN93) model was described in [1]_. The transition
-    probability formulas were taken from [2]_.
+    The Tamura-Nei 1993 (TN93) model was described in [1]_. The transition probability
+    formulas were taken from [2]_.
 
-    It generalizes HKY85 by allowing different transition rates for purine
-    and pyrimidine substitutions while maintaining a single transversion rate
-    class. HKY85 is recovered when :math:`\kappa_R = \kappa_Y`.
+    It generalizes HKY85 by allowing different transition rates for purine and
+    pyrimidine substitutions while maintaining a single transversion rate class. HKY85
+    is recovered when :math:`\kappa_R = \kappa_Y`.
 
     References
     ----------
@@ -620,15 +666,16 @@ def tn93(
        substitutions in the control region of mitochondrial DNA in humans and
        chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.
     .. [2] Felsenstein, J. (2004). Inferring Phylogenies. 2003. Sinauer
-        Associates, Sunderland, Massachusetts.
+       Associates, Sunderland, Massachusetts.
 
     """
 
-    return _wrap_vector_tpm_function(
+    return _tpm_wrapper(
         _tn93,
         d,
         seqtype=seqtype,
         allowed_seqtypes=("DNA", "RNA"),
+        dtype=dtype,
         freqs=_check_freqs(freqs),
         kappa_r=_check_kappa(kappa_r),
         kappa_y=_check_kappa(kappa_y),
@@ -636,32 +683,27 @@ def tn93(
 
 
 def _tn93(
-    d: NDArray,
-    freqs: NDArray,
-    kappa_r: float,
-    kappa_y: float,
+    d: NDArray, freqs: NDArray, kappa_r: float, kappa_y: float, dtype: np.dtype
 ) -> NDArray:
-    r"""
-    F81 transition probability matrix for branch length d.
+    r"""Tamura-Nei 1993 (TN93) transition probability matrix for branch length d.
 
     Parameters
     ----------
-    d
-        Branch length(s).
-    freqs
-        Stationary frequencies of states.
-        Shape: (4,)
-    kappa_r
-        Transition/transversion rate ratio of purines. Should be
-        :math:`0 < \kappa \leq 1`.
-    kappa_y
-        Transition/transversion rate ratio of pyrimidines. Should be
-        :math:`0 < \kappa \leq 1`.
+    d : ndarray of shape (n,)
+        Evolutionary distances between sequences..
+    freqs : ndarray of shape (4,)
+        Stationary frequencies of the four nucleotides.
+    kappa_r : float
+        Transition/transversion rate ratio of purines.
+    kappa_y : float
+        Transition/transversion rate ratio of pyrimidines.
+
     """
+    freqs = np.asarray(freqs, dtype=dtype)
 
     pi_R = freqs[0] + freqs[2]
     pi_Y = freqs[1] + freqs[3]
-    adjusted_freqs = np.array(
+    adj_freqs = np.array(
         [freqs[0] / pi_R, freqs[1] / pi_Y, freqs[2] / pi_R, freqs[3] / pi_Y]
     )[None, None, :]
     freqs = freqs[None, None, :]
@@ -681,12 +723,10 @@ def _tn93(
     e2 = np.exp(-scale_factor * d)[:, None, None]
     e3 = np.exp(-scale_factor * (kappa - 1.0) * d / 2.0)
 
-    P = np.empty((len(d), 4, 4), dtype=np.float64)
+    P = np.empty((len(d), 4, 4), dtype=dtype)
 
-    P = (
-        e1 * identity
-        + e2 * (1.0 - e3) * adjusted_freqs * same_class
-        + (1.0 - e2) * freqs
+    P[...] = (
+        e1 * identity + e2 * (1.0 - e3) * adj_freqs * same_class + (1.0 - e2) * freqs
     )
 
     return P
