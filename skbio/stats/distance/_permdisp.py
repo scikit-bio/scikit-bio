@@ -171,12 +171,17 @@ def permdisp(
     ...                       ['s1', 's2', 's3', 's4', 's5', 's6'])
     >>> grouping = ['G1', 'G1', 'G1', 'G2', 'G2', 'G2']
 
+    This illustrative distance matrix is non-Euclidean. The examples below disable
+    PCoA's negative-eigenvalue warning to keep the focus on PERMDISP usage. This does
+    not alter the results.
+
     Run PERMDISP using 99 permutations to calculate the p-value. The seed is to make
     the output deterministic. You may skip it if that's not necessary.
 
     >>> from skbio.stats.distance import permdisp
     >>> permdisp(dm, grouping, permutations=99, seed=42,
-    ...          dimensions=dm.shape[0]) # doctest: +ELLIPSIS
+    ...          dimensions=dm.shape[0],
+    ...          warn_neg_eigval=False)  # doctest: +ELLIPSIS
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -192,7 +197,8 @@ def permdisp(
     To suppress calculation of the p-value and only obtain the F statistic, specify
     zero permutations:
 
-    >>> permdisp(dm, grouping, permutations=0, dimensions=dm.shape[0])
+    >>> permdisp(dm, grouping, permutations=0, dimensions=dm.shape[0],
+    ...          warn_neg_eigval=False)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -212,7 +218,7 @@ def permdisp(
     statistics.
 
     >>> permdisp(dm, grouping, test='centroid', permutations=6, seed=42,
-    ...          dimensions=dm.shape[0])
+    ...          dimensions=dm.shape[0], warn_neg_eigval=False)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -232,7 +238,7 @@ def permdisp(
     ...      {'Grouping': {'s1': 'G1', 's2': 'G1', 's3': 'G1', 's4': 'G2',
     ...                    's5': 'G2', 's6': 'G2'}})
     >>> permdisp(dm, df, 'Grouping', permutations=6, test='centroid', seed=42,
-    ...          dimensions=dm.shape[0])
+    ...          dimensions=dm.shape[0], warn_neg_eigval=False)
     method name               PERMDISP
     test statistic name        F-value
     sample size                      6
@@ -326,4 +332,3 @@ def _compute_groups(samples, test_type, grouping):
 
     stat, _ = f_oneway(*groups)
     return float(np.ravel(stat)[0])
-
