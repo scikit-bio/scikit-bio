@@ -624,7 +624,7 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
             tmp = np.exp(data - np.max(data, axis=axis, keepdims=True))
             expected = tmp / np.sum(tmp, axis=axis, keepdims=True)
             arr = self.make_array(xp, device, data)
-            result = clr_inv(arr, axis)
+            result = clr_inv(arr, axis=axis, validate=False)
 
             self.assert_type_preserved(result, xp, device)
             self.assertEqual(result.shape, arr.shape)

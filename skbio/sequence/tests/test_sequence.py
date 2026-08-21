@@ -1432,16 +1432,16 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         seq = Sequence('')
 
         self.assertEqual(seq.frequencies(), {})
-        self.assertEqual(seq.frequencies(relative=True), {})
-
         self.assertEqual(seq.frequencies(chars=set()), {})
-        self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
-
         self.assertEqual(seq.frequencies(chars={'a', 'b'}), {'a': 0, 'b': 0})
 
-        # use npt.assert_equal to explicitly handle nan comparisons
-        npt.assert_equal(seq.frequencies(chars={'a', 'b'}, relative=True),
-                         {'a': np.nan, 'b': np.nan})
+        with np.errstate(divide='raise', invalid='raise'):
+            self.assertEqual(seq.frequencies(relative=True), {})
+            self.assertEqual(seq.frequencies(chars=set(), relative=True), {})
+
+            # use npt.assert_equal to explicitly handle nan comparisons
+            npt.assert_equal(seq.frequencies(chars={'a', 'b'}, relative=True),
+                             {'a': np.nan, 'b': np.nan})
 
     def test_frequencies_observed_chars(self):
         seq = Sequence('x')

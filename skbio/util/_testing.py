@@ -404,7 +404,6 @@ def assert_series_almost_equal(left, right):
         check_series_type=True,
         check_names=True,
         check_exact=False,
-        check_datetimelike_compat=False,
         obj="Series",
     )
     # this check ensures that empty Series with different indices do not

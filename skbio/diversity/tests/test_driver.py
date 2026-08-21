@@ -422,10 +422,14 @@ class BetaDiversityTests(TestCase):
             beta_diversity('weighted_unifrac', [[0, 1, 3], [0, 3, 12]],
                            not_a_real_kwarg=42.0, tree=self.tree1,
                            taxa=['O1', 'O2', 'O3'])
-        with self.assertRaisesRegex(TypeError, error_msg):
-            beta_diversity(weighted_unifrac, [[0, 1, 3], [0, 3, 12]],
-                           not_a_real_kwarg=42.0, tree=self.tree1,
-                           taxa=['O1', 'O2', 'O3'])
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Passing `weighted_unifrac` as a callable"
+            )
+            with self.assertRaisesRegex(TypeError, error_msg):
+                beta_diversity(weighted_unifrac, [[0, 1, 3], [0, 3, 12]],
+                               not_a_real_kwarg=42.0, tree=self.tree1,
+                               taxa=['O1', 'O2', 'O3'])
 
         # non-matching id or taxon counts
         msg = "Input table has 3 samples whereas 2 sample IDs were provided."
@@ -434,16 +438,24 @@ class BetaDiversityTests(TestCase):
         self.assertEqual(str(cm.exception), msg)
 
         msg = "Input table has 2 features whereas 3 feature IDs were provided."
-        with self.assertRaises(ValueError) as cm:
-            beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar', 'qux'],
-                           tree=self.tree1)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Passing `weighted_unifrac` as a callable"
+            )
+            with self.assertRaises(ValueError) as cm:
+                beta_diversity(weighted_unifrac, example_table,
+                               taxa=['foo', 'bar', 'qux'], tree=self.tree1)
         self.assertEqual(str(cm.exception), msg)
 
         # non-matching taxa and tree
         msg = "2 taxa are not present as tip names in the tree."
-        with self.assertRaises(MissingNodeError) as cm:
-            beta_diversity(weighted_unifrac, example_table, taxa=['foo', 'bar'],
-                           tree=self.tree1)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Passing `weighted_unifrac` as a callable"
+            )
+            with self.assertRaises(MissingNodeError) as cm:
+                beta_diversity(weighted_unifrac, example_table,
+                               taxa=['foo', 'bar'], tree=self.tree1)
         self.assertEqual(str(cm.exception), msg)
 
     def test_invalid_input_mahalanobis(self):
@@ -657,8 +669,9 @@ class BetaDiversityTests(TestCase):
         # expected values calculated by hand
         dm1 = beta_diversity('unweighted_unifrac', self.table1, self.sids1,
                              taxa=self.oids1, tree=self.tree1)
-        dm2 = beta_diversity(unweighted_unifrac, self.table1, self.sids1,
-                             taxa=self.oids1, tree=self.tree1)
+        with self.assertWarnsRegex(UserWarning, "unweighted_unifrac"):
+            dm2 = beta_diversity(unweighted_unifrac, self.table1, self.sids1,
+                                 taxa=self.oids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [[0.0, 0.0, 0.25],
@@ -676,8 +689,9 @@ class BetaDiversityTests(TestCase):
         # expected values calculated by hand
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
                              taxa=self.oids1, tree=self.tree1)
-        dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
-                             taxa=self.oids1, tree=self.tree1)
+        with self.assertWarnsRegex(UserWarning, "weighted_unifrac"):
+            dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
+                                 taxa=self.oids1, tree=self.tree1)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -697,9 +711,10 @@ class BetaDiversityTests(TestCase):
         dm1 = beta_diversity('weighted_unifrac', self.table1, self.sids1,
                              taxa=self.oids1, tree=self.tree1,
                              normalized=True)
-        dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
-                             taxa=self.oids1, tree=self.tree1,
-                             normalized=True)
+        with self.assertWarnsRegex(UserWarning, "weighted_unifrac"):
+            dm2 = beta_diversity(weighted_unifrac, self.table1, self.sids1,
+                                 taxa=self.oids1, tree=self.tree1,
+                                 normalized=True)
         self.assertEqual(dm1.shape, (3, 3))
         self.assertEqual(dm1, dm2)
         expected_data = [
@@ -740,9 +755,10 @@ class BetaDiversityTests(TestCase):
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
-        dm1 = beta_diversity(unweighted_unifrac, self.table1,
-                             taxa=self.oids1, tree=self.tree1,
-                             pairwise_func=not_a_real_pdist)
+        with self.assertWarnsRegex(UserWarning, "unweighted_unifrac"):
+            dm1 = beta_diversity(unweighted_unifrac, self.table1,
+                                 taxa=self.oids1, tree=self.tree1,
+                                 pairwise_func=not_a_real_pdist)
         expected = DistanceMatrix([[0.0, 42.0], [42.0, 0.0]])
         self.assertEqual(dm1, expected)
 
