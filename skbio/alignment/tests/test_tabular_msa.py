@@ -3455,8 +3455,9 @@ class TestGapFrequencies(unittest.TestCase):
     def test_no_positions_relative(self):
         msa = TabularMSA([DNA('')])
 
-        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
-        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+        with np.errstate(divide='raise', invalid='raise'):
+            seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+            pos_freqs = msa.gap_frequencies(axis='position', relative=True)
 
         npt.assert_array_equal(np.array([]), seq_freqs)
         npt.assert_array_equal(np.array([np.nan]), pos_freqs)

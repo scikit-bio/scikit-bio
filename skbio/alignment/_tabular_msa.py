@@ -1666,8 +1666,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         gap_freqs = np.asarray(gap_freqs, dtype=float if relative else int)
 
-        if relative:
+        if relative and length:
             gap_freqs /= length
+        elif relative:
+            gap_freqs.fill(np.nan)
 
         return gap_freqs
 

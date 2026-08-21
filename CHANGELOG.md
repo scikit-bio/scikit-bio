@@ -23,6 +23,7 @@
 * Fixed an unexpected behavior in differential abundance tests (`ancombc` and `dirmult_lme`) where string columns in the metadata that can be cast into numbers (e.g., `["1", "2", "3"]`) were treated as numerical. Now they are treated as categories ([#2539](https://github.com/scikit-bio/scikit-bio/pull/2539)).
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
+* Fixed `TabularMSA.gap_frequencies(relative=True)` emitting a zero-division warning for alignments with no positions. Return values are unchanged.
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
 * Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
 * `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
