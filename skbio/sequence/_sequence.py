@@ -1829,7 +1829,10 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         obs_counts = freqs[indices]
         if relative:
-            obs_counts = obs_counts / len(self)
+            if len(self):
+                obs_counts = obs_counts / len(self)
+            else:
+                obs_counts = np.full_like(obs_counts, np.nan, dtype=float)
 
         # Use tolist() for minor performance gain.
         return dict(zip(chars, obs_counts.tolist()))
