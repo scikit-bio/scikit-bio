@@ -53,7 +53,7 @@ import functools
 
 import numpy as np
 
-from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
+from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA
 from skbio.sequence._alphabet import _encode_alphabet
 
 if TYPE_CHECKING:  # pragma: no cover

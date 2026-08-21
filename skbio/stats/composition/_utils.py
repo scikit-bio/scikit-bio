@@ -285,25 +285,44 @@ def _check_trt_ref_groups(treatment, reference, groups, labels):
     return trt_idx, ref_idx
 
 
-def _type_cast_to_float(df):
-    """Attempt to cast all of the values in dataframe to float.
+def _build_dmatrix(formula, metadata, dtype=None):
+    """Build a design matrix from sample metadata using Patsy.
 
-    This will try to type cast all of the series within the dataframe into floats. If a
-    column cannot be type casted, it will be kept as is.
+    Metadata values are passed to Patsy unchanged. Therefore, Patsy infers whether
+    factors are numerical or categorical from their existing data types and the
+    formula specification.
 
     Parameters
     ----------
-    df : pd.DataFrame
+    formula : str or generic Formula object
+        Formula defining the model.
+    metadata : pd.DataFrame
+        Sample metadata containing factors referenced in `formula`.
+    dtype : dtype_like, optional
+        Data type of the resulting design matrix. If omitted, use Patsy's
+        default output data type.
 
     Returns
     -------
-    pd.DataFrame
+    patsy.DesignMatrix
+        Design matrix generated from the formula and metadata.
+
+    Notes
+    -----
+    TODO: patsy has been superseded by formulaic. Consider a replacement.
 
     """
-    df = df.copy()
-    for col in df.select_dtypes(exclude=["float64"]).columns:
-        try:
-            df[col] = df[col].astype("float64")
-        except (ValueError, TypeError):
-            continue
-    return df
+    if dtype is None:
+        from patsy import dmatrix
+
+        return dmatrix(formula, metadata, eval_env=1, return_type="matrix")
+
+    from patsy import build_design_matrices, incr_dbuilder
+
+    def data_iter_maker():
+        return iter([metadata])
+
+    design_info = incr_dbuilder(formula, data_iter_maker, eval_env=1)
+    return build_design_matrices(
+        [design_info], metadata, return_type="matrix", dtype=dtype
+    )[0]

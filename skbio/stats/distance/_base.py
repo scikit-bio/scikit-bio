@@ -26,6 +26,9 @@ from skbio.io.descriptors import Read, Write
 
 from ._utils import is_symmetric_and_hollow, is_symmetric
 from ._utils import distmat_reorder, distmat_reorder_condensed
+from skbio.util._array import ingest_array, copy_array, _to_numpy, _get_backend_name
+
+import array_api_compat as _aac
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence, Iterable, Callable, Collection
@@ -66,6 +69,76 @@ class MissingIDError(PairwiseMatrixError):
     def __init__(self, missing_id):
         super(MissingIDError, self).__init__()
         self.args = ("The ID '%s' is not in the matrix." % missing_id,)
+
+
+def _expand_condensed(condensed: NDArray, diagonal=None) -> NDArray:
+    """Expand a 1-D condensed vector to a redundant 2-D matrix.
+
+    Works for a NumPy array or any non-NumPy array-API buffer (e.g.
+    GPU-resident), staying on the input's device for the latter. Only one
+    (n, n) buffer is allocated on the input's device, scattered into from
+    both triangles; no boolean-mask buffer or full-matrix transpose is
+    needed. Mutable backends (PyTorch, CuPy) scatter via item-assignment;
+    JAX, which is immutable, uses its functional ``.at[].set()`` update,
+    which is device-preserving the same way. Any other array-API backend
+    (e.g. Dask) falls back to a host round-trip via scipy's squareform
+    rather than assume item-assignment works. A native per-backend
+    implementation (or a Numba/GPU kernel, if available) could replace
+    this; this generic array-API scatter is the simpler option for now.
+
+    Parameters
+    ----------
+    condensed : 1-D array_like
+        Condensed (upper-triangle) form of the matrix.
+    diagonal : float or 1-D array_like, optional
+        Diagonal value(s) to set. Defaults to zero.
+
+    Returns
+    -------
+    ndarray or array
+        The redundant 2-D matrix, of the same type and on the same device
+        as ``condensed``.
+
+    """
+    if _aac.is_numpy_array(condensed):
+        mat = squareform(condensed, force="tomatrix", checks=False)
+        np.fill_diagonal(mat, diagonal if diagonal is not None else 0.0)
+        return mat
+
+    xp = _aac.array_namespace(condensed)
+    dev = getattr(condensed, "device", None)
+    backend = _get_backend_name(xp)
+
+    if backend in ("torch", "cupy", "jax"):
+        n = _vec_to_shape(condensed)
+        i_np, j_np = np.triu_indices(n, k=1)
+        i_idx = xp.asarray(i_np, device=dev)
+        j_idx = xp.asarray(j_np, device=dev)
+        mat = xp.zeros((n, n), dtype=condensed.dtype, device=dev)
+        diag_idx = xp.arange(n, device=dev)
+        if backend == "jax":
+            mat = mat.at[i_idx, j_idx].set(condensed)
+            mat = mat.at[j_idx, i_idx].set(condensed)
+            if diagonal is not None:
+                diag_val = xp.asarray(diagonal, dtype=condensed.dtype, device=dev)
+                mat = mat.at[diag_idx, diag_idx].set(diag_val)
+        else:
+            mat[i_idx, j_idx] = condensed
+            mat[j_idx, i_idx] = condensed
+            if diagonal is not None:
+                mat[diag_idx, diag_idx] = xp.asarray(
+                    diagonal, dtype=condensed.dtype, device=dev
+                )
+        return mat
+
+    # Unrecognized array-API backend: fall back to a host round-trip rather
+    # than assume item-assignment works.
+    mat_np = squareform(_to_numpy(condensed), force="tomatrix", checks=False)
+    diag = diagonal if diagonal is not None else 0.0
+    if _aac.is_array_api_obj(diag) and not _aac.is_numpy_array(diag):
+        diag = _to_numpy(diag)
+    np.fill_diagonal(mat_np, diag)
+    return xp.asarray(mat_np, device=dev)
 
 
 class PairwiseMatrix(SkbioObject, PlottableMixin):
@@ -139,7 +212,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # convert data to redundant if 1D input.
         # should do this for PairwiseMatrix only.
         if data.ndim == 1:
-            data = squareform(data, force="tomatrix", checks=False)
+            # A condensed vector is inherently a symmetric-matrix
+            # representation. _expand_condensed handles NumPy and array-API
+            # buffers alike, staying on the input's device for the latter.
+            data = _expand_condensed(data)
 
         if ids is None:
             ids = self._generate_ids(data)
@@ -181,6 +257,18 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # PairwiseMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+            data_: NDArray = data
+            return (data_, ids, validate_shape, validate_ids)
+
         _issue_copy = True
         if isinstance(data, np.ndarray):
             if data.dtype in (np.float32, np.float64):
@@ -430,7 +518,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             Deep copy of the matrix. Will be the same type as ``self``.
 
         """
-        data = self._data.copy()
+        data = copy_array(self._data)
         if transpose:
             data = data.T
         return self.__class__(data, deepcopy(self.ids), validate=False)
@@ -806,7 +894,9 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         fig, ax = self.plt.subplots()
 
         # use pcolormesh instead of pcolor for performance
-        heatmap = ax.pcolormesh(self.redundant_form(), cmap=cmap)
+        # matplotlib needs a host array; a non-NumPy (e.g. GPU-resident)
+        # buffer is materialized here since a heatmap is inherently host-side.
+        heatmap = ax.pcolormesh(_to_numpy(self.redundant_form()), cmap=cmap)
         fig.colorbar(heatmap)
 
         # center labels within each cell
@@ -852,8 +942,10 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         c  2.0  3.0  0.0
 
         """
+        # pandas needs a host array; a non-NumPy (e.g. GPU-resident) buffer is
+        # materialized here since a DataFrame is inherently host-side.
         return pd.DataFrame(
-            data=self.redundant_form(), index=self.ids, columns=self.ids
+            data=_to_numpy(self.redundant_form()), index=self.ids, columns=self.ids
         )
 
     def __str__(self) -> str:
@@ -1076,7 +1168,11 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             raise PairwiseMatrixError(
                 "Data must be square (i.e., have the same number of rows and columns)."
             )
-        if data.dtype not in (np.float32, np.float64):
+        # isdtype works for NumPy and non-NumPy (e.g. GPU) buffers alike, via each
+        # array's own namespace. Restrict to single/double precision (as the
+        # legacy NumPy check did) so both paths accept exactly the same dtypes.
+        xp = _aac.array_namespace(data)
+        if not xp.isdtype(data.dtype, (xp.float32, xp.float64)):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     def _index_list(self, list_: Sequence[str]) -> dict:
@@ -1221,18 +1317,28 @@ class SymmetricMatrix(PairwiseMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # DistanceMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return (
             data_,
@@ -1276,6 +1382,9 @@ class SymmetricMatrix(PairwiseMatrix):
             if data.ndim == 1:
                 return 0.0
             elif data.ndim == 2:
+                if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+                    xp = _aac.array_namespace(data)
+                    return xp.linalg.diagonal(data)
                 return np.diagonal(data)
         return None
 
@@ -1314,6 +1423,23 @@ class SymmetricMatrix(PairwiseMatrix):
             1-D or 2-D array containing the values of the matrix.
 
         """
+        if not condensed and data.ndim == 1:
+            # Redundant form requested from a condensed vector, on any
+            # backend; _expand_condensed handles NumPy and array-API buffers
+            # alike, staying on the input's device for the latter.
+            return _expand_condensed(data, self._diagonal)
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            if condensed:
+                if data.ndim == 1:
+                    # Already condensed; store as-is, no conversion needed.
+                    return data
+                # 2-D non-NumPy input requested in condensed form: extract the
+                # row-major upper triangle on-device (identity-reordered), the
+                # same operation condensed_form() uses.
+                n = data.shape[0]
+                return distmat_reorder_condensed(data, np.arange(n))
+            # condensed=False, ndim == 2 (ndim == 1 handled above): passthrough.
+            return data
         if condensed:
             # case where input is 1d and stays 1d
             if data.ndim == 1:
@@ -1321,18 +1447,8 @@ class SymmetricMatrix(PairwiseMatrix):
             # case where input is 2d and is converted to 1d
             else:
                 return squareform(data, force="tovector", checks=False)
-        else:
-            # case where input is 1d and is converted to 2d.
-            if data.ndim == 1:
-                mat = squareform(data, force="tomatrix", checks=False)
-                if self._diagonal is not None:
-                    np.fill_diagonal(mat, self._diagonal)
-                else:
-                    np.fill_diagonal(mat, 0.0)
-                return mat
-            # case where input is 2d and stays 2d
-            else:
-                return data
+        # case where input is 2d and stays 2d (ndim == 1 handled above)
+        return data
 
     def _validate_data(self, data: NDArray) -> None:
         """Validate the data array.
@@ -1415,7 +1531,11 @@ class SymmetricMatrix(PairwiseMatrix):
                 f"Found {data.ndim} dimensions."
             )
 
-        if data.dtype not in (np.float32, np.float64):
+        # isdtype works for NumPy and non-NumPy (e.g. GPU) buffers alike, via each
+        # array's own namespace. Restrict to single/double precision (as the legacy
+        # NumPy check did) so both paths accept exactly the same dtypes.
+        xp = _aac.array_namespace(data)
+        if not xp.isdtype(data.dtype, (xp.float32, xp.float64)):
             raise PairwiseMatrixError("Data must contain only floating point values.")
 
     @property
@@ -1683,9 +1803,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         if self._flags["CONDENSED"]:
-            mat = squareform(self._data, force="tomatrix", checks=False)
-            np.fill_diagonal(mat, self._diagonal)
-            return mat
+            return _expand_condensed(self._data, self._diagonal)
         else:
             return self._data
 
@@ -1760,6 +1878,9 @@ class SymmetricMatrix(PairwiseMatrix):
         """
         if self._flags["CONDENSED"]:
             return self._data
+        elif _aac.is_array_api_obj(self._data) and not _aac.is_numpy_array(self._data):
+            n = self._data.shape[0]
+            return distmat_reorder_condensed(self._data, np.arange(n))
         else:
             return squareform(self._data, force="tovector", checks=False)
 
@@ -1867,7 +1988,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        data = copy_array(self._data)
         # We deepcopy IDs in case the tuple contains mutable objects at some
         # point in the future.
         # Note: Skip validation, since we assume self was already validated
@@ -2034,6 +2155,16 @@ class DistanceMatrix(SymmetricMatrix):
             data, ids
         )
 
+        # The Cython kernels (validation, permutation, reordering) read through a
+        # C-contiguous, writable typed memoryview. A read-only buffer (e.g. one
+        # materialized from an immutable JAX array via __dlpack__) or a
+        # non-contiguous one gets a single writable copy here; non-NumPy
+        # (array-API) buffers stay on their own device untouched.
+        if _aac.is_numpy_array(data) and not (
+            data.flags.c_contiguous and data.flags.writeable
+        ):
+            data = np.array(data, order="C")
+
         if ids is None:
             ids = self._generate_ids(data)
         else:
@@ -2100,18 +2231,28 @@ class DistanceMatrix(SymmetricMatrix):
         # np.asarray to situations where the data are (a) not already a numpy
         # array or (b) the data are not a single or double precision numpy
         # data type.
-        _issue_copy = True
-        if isinstance(data, np.ndarray):
-            if data.dtype in (np.float32, np.float64):
-                _issue_copy = False
+        if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+            # Preserve a non-NumPy (e.g. GPU-resident) array-API buffer so the
+            # DistanceMatrix can hold GPU data. NumPy / list / tuple inputs are
+            # still normalized to a NumPy array below. A non-floating buffer is
+            # cast to float64, mirroring the NumPy path (which keeps float32/64
+            # and casts everything else to float).
+            _xp, data = ingest_array(data)
+            if not _xp.isdtype(data.dtype, (_xp.float32, _xp.float64)):
+                data = _xp.astype(data, _xp.float64)
+        else:
+            _issue_copy = True
+            if isinstance(data, np.ndarray):
+                if data.dtype in (np.float32, np.float64):
+                    _issue_copy = False
 
-        if _issue_copy:
-            data = np.asarray(data, dtype="float")
+            if _issue_copy:
+                data = np.asarray(data, dtype="float")
 
-        # Make data_ explicitly an ndarray to help with type checking.
-        # At this point in the code we can be certain that data is an
-        # ndarray.
-        assert isinstance(data, np.ndarray)
+            # Make data_ explicitly an ndarray to help with type checking.
+            # At this point in the code we can be certain that data is an
+            # ndarray.
+            assert isinstance(data, np.ndarray)
         data_: NDArray = data
         return data_, ids, validate_data, validate_ids, validate_shape
 
@@ -2149,7 +2290,7 @@ class DistanceMatrix(SymmetricMatrix):
 
         """
         # adding for backward compatibility
-        data = self._data.copy()
+        data = copy_array(self._data)
         if transpose:
             data = data.T
         # We deepcopy IDs in case the tuple contains mutable objects at some
@@ -2547,7 +2688,28 @@ def distmat_reorder_condensed_py(in_mat, reorder_vec):
     np.ndarray
         Condensed matrix.
 
+    Notes
+    -----
+    A non-NumPy array-API buffer (e.g. GPU-resident) is gathered on its own
+    device: the reorder indices are cheap index arithmetic computed on the
+    host, then only the actual data gather runs on the input's device.
+
     """
+    if _aac.is_array_api_obj(in_mat) and not _aac.is_numpy_array(in_mat):
+        n_original = _vec_to_shape(in_mat)
+        reorder_np = np.asarray(reorder_vec)
+        n_filtered = len(reorder_np)
+        i_indices, j_indices = np.triu_indices(n_filtered, k=1)
+        old_indices = _condensed_index(
+            reorder_np[i_indices], reorder_np[j_indices], n_original
+        )
+        xp = _aac.array_namespace(in_mat)
+        idx = xp.asarray(
+            np.asarray(old_indices, dtype=np.int64),
+            device=getattr(in_mat, "device", None),
+        )
+        return in_mat[idx]
+
     reorder_vec = np.asarray(reorder_vec)
     in_mat = np.asarray(in_mat)
     n_original = _vec_to_shape(in_mat)

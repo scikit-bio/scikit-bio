@@ -19,8 +19,7 @@ from skbio.io.format.fastq import (
     _generator_to_fastq, _tabular_msa_to_fastq)
 from skbio.sequence import GrammaredSequence
 from skbio.util import get_data_path
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 
 import numpy as np
 

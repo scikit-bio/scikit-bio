@@ -19,7 +19,7 @@ from ._utils import (
     _check_grouping,
     _check_trt_ref_groups,
     _check_p_adjust,
-    _type_cast_to_float,
+    _build_dmatrix,
 )
 
 
@@ -512,7 +512,6 @@ def dirmult_lme(
     3  0.440581   False
 
     """
-    from patsy import dmatrix
     from scipy.optimize import OptimizeWarning
     from statsmodels.regression.mixed_linear_model import MixedLM, VCSpec
     from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -532,9 +531,6 @@ def dirmult_lme(
     # validate metadata
     metadata = _check_metadata(metadata, matrix, samples)
 
-    # cast metadata to numbers where applicable
-    metadata = _type_cast_to_float(metadata)
-
     # Instead of directly calling `MixedLM.from_formula` on merged table + metadata,
     # the following code converts metadata into a design matrix based on the formula
     # (as well as re_formula and vc_formula, if applicable), and calls `MixedLM`.
@@ -543,7 +539,7 @@ def dirmult_lme(
     # the design matrix can save conversion overheads.
 
     # Create a design matrix based on metadata and formula.
-    dmat = dmatrix(formula, metadata, return_type="matrix")
+    dmat = _build_dmatrix(formula, metadata)
 
     # Obtain the list of covariates by selecting the relevant columns
     covars = dmat.design_info.column_names
@@ -574,7 +570,7 @@ def dirmult_lme(
 
     # random effects matrix
     if re_formula is not None:
-        exog_re = np.asarray(dmatrix(re_formula, metadata, return_type="matrix"))
+        exog_re = np.asarray(_build_dmatrix(re_formula, metadata))
     else:
         exog_re = None
 
@@ -586,7 +582,7 @@ def dirmult_lme(
         names, cols, mats = [], [], []
         for name, formula in vc_formula.items():
             names.append(name)
-            dmats = [dmatrix(formula, x, return_type="matrix") for x in metas]
+            dmats = [_build_dmatrix(formula, x) for x in metas]
             cols.append([x.design_info.column_names for x in dmats])
             mats.append([np.asarray(x) for x in dmats])
         exog_vc = VCSpec(names, cols, mats)

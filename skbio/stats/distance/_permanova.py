@@ -22,13 +22,18 @@ from ._base import (
     DistanceMatrix,
 )
 from ._cutils import permanova_f_stat_sW_cy, permanova_f_stat_sW_condensed_cy
+from ._gpu import _mark_gpu_unavailable
+from ._permanova_gpu import _numba_gpu_module_for, _run_permanova_gpu
 from skbio.binaries import (
     permanova_available as _skbb_permanova_available,
     permanova as _skbb_permanova,
 )
 from skbio.util import get_rng
-from skbio.util._decorator import params_aliased
+from skbio.util._decorator import params_aliased, array_api_doc
+from skbio.util._array import ingest_array
 from skbio._config import _resolve_engine
+
+import array_api_compat as _aac
 
 try:
     from numba import njit, prange
@@ -371,6 +376,7 @@ if NUMBA_AVAILABLE:
 
 
 @params_aliased([("distmat", "distance_matrix", "0.7.0", False)])
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def permanova(
     distmat: DistanceMatrix,
     grouping: pd.DataFrame | ArrayLike,
@@ -450,7 +456,14 @@ def permanova(
         Compute engine to use. ``"cython"`` (default) uses the Cython
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`).
+        default is used (see :func:`skbio.set_config`). When ``"numba"`` is
+        selected, the optional scikit-bio-binaries acceleration is not used.
+        When the distance matrix is resident on a CuPy- or PyTorch-backed GPU
+        (CUDA or ROCm) and ``engine="numba"``, a fused GPU kernel is used;
+        matrices on other backends use the array-API path instead (see Notes for
+        the ROCm-PyTorch case).
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -472,6 +485,22 @@ def permanova(
 
     Low-level acceleration is available for this function. See
     :install:`scikit-bio-binaries <#acceleration>` for more information.
+
+    On a GPU-resident distance matrix with ``engine="numba"``, a fused GPU kernel
+    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
+    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
+    ROCm PyTorch has been imported in the same process; those matrices fall back
+    to the array-API path, which runs on the device regardless. The result is
+    identical across all paths.
+
+    With ``engine="numba"``, GPU buffers must belong to the default device. On a
+    system with several devices, the default must be changed to match the buffer
+    ownership before this function is invoked, through
+    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    A mismatch is not reported when the kernel is launched, and on ROCm it has
+    been observed to leave the GPU context unusable for the rest of the process.
+    The array-API path, taken when ``engine="numba"`` is not requested, honors
+    whichever device the input is on.
 
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
@@ -518,15 +547,38 @@ def permanova(
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
+    # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer: with
+    # engine="numba" and a matching Numba GPU backend it runs the fused GPU
+    # kernel on the device-resident matrix; otherwise it takes the backend-
+    # agnostic xp path. A NumPy-backed DM keeps the Cython/Numba engine path.
+    if not _aac.is_numpy_array(distmat.data):
+        gpu = _numba_gpu_module_for(distmat.data) if engine == "numba" else None
+        if gpu is not None:
+            try:
+                return _run_permanova_gpu(
+                    gpu, distmat.data, grouping, column, permutations, seed,
+                    ids=distmat.ids,
+                )
+            except Exception:
+                # The fused kernel could not build/run on this stack (e.g. a
+                # numba-hip build that fails to compile); record it and fall
+                # back to the array-API path, which is correct on any backend.
+                _mark_gpu_unavailable(distmat.data)
+        return _permanova_array_api(
+            distmat.data, grouping, column, permutations, seed, ids=distmat.ids
+        )
+
     sample_size = distmat.shape[0]
 
     num_groups, grouping = _preprocess_input_sng(
         distmat.ids, sample_size, grouping, column
     )
 
-    engine = _resolve_engine(engine, ("cython", "numba"))
-
-    if _skbb_permanova_available(
+    # When "numba" is requested, skip the scikit-bio-binaries path (the
+    # Cython-equivalent), matching the engine selection for the compute below.
+    if engine != "numba" and _skbb_permanova_available(
         distmat, grouping, permutations, seed
     ):  # pragma: no cover
         # unlikely to throw here, but just in case
@@ -550,7 +602,9 @@ def permanova(
     # if we got here, we could not use skbb
     # Calculate number of objects in each group.
     group_sizes = np.bincount(grouping)
-    s_T = (distmat.data**2).sum() / sample_size
+    # accumulate in float64: for a float32 matrix s_T and s_W nearly cancel in
+    # the pseudo-F, so a float32 sum here loses accuracy in the s_A = s_T - s_W step
+    s_T = (distmat.data**2).sum(dtype=np.float64) / sample_size
     if not distmat._flags["CONDENSED"]:
         # we are going over the whole matrix, instead of just upper triangle
         # so cut in half
@@ -600,3 +654,52 @@ def _compute_f_stat(
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
+
+
+def _permanova_sW_xp(xp, dm, grouping, inv_group_sizes):
+    """Within-group sum of squares s_W for a full distance matrix, in ``xp``.
+
+    Backend-agnostic equivalent of ``permanova_f_stat_sW_cy`` for the
+    non-condensed (full 2-D) case: sum over upper-triangle pairs ``i < j`` in
+    the same group of ``d[i, j] ** 2`` divided by the group size of row ``i``.
+    """
+    n = dm.shape[0]
+    idx = xp.arange(n, device=dm.device)
+    upper = idx[:, None] < idx[None, :]
+    same = grouping[:, None] == grouping[None, :]
+    mask = xp.astype(upper & same, dm.dtype)
+    row_w = xp.take(inv_group_sizes, grouping)
+    return xp.sum(dm * dm * mask * row_w[:, None])
+
+
+def _permanova_array_api(distmat, grouping, column, permutations, seed, ids=None):
+    """PERMANOVA on an array-API (e.g. GPU-resident) full distance matrix.
+
+    Mirrors the DistanceMatrix path but computes the pseudo-F statistic with
+    the ``xp`` namespace so the distance matrix stays on its device. ``ids``
+    align a DataFrame/Series grouping to the matrix rows. Permutations reuse the
+    shared Monte-Carlo driver so the p-value matches the NumPy path exactly.
+    """
+    xp, dm = ingest_array(distmat)
+    sample_size = dm.shape[0]
+
+    num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
+
+    group_sizes = np.bincount(grouping)
+    inv_group_sizes = xp.asarray(
+        1.0 / group_sizes, dtype=dm.dtype, device=dm.device
+    )
+    # full 2-D matrix (array-API input is never condensed); halve to count each
+    # unordered pair once, matching the DistanceMatrix full-matrix path.
+    s_T = xp.sum(dm * dm, dtype=xp.float64) / sample_size / 2.0
+
+    def _test_stat(grp):
+        grp = xp.asarray(grp, device=dm.device)
+        s_W = _permanova_sW_xp(xp, dm, grp, inv_group_sizes)
+        s_A = s_T - s_W
+        return float((s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups)))
+
+    stat, p_value = _run_monte_carlo_stats(_test_stat, grouping, permutations, seed)
+    return _build_results(
+        "PERMANOVA", "pseudo-F", sample_size, num_groups, stat, p_value, permutations
+    )

@@ -15,6 +15,23 @@ import pandas as pd
 from ._base import _table_to_numpy
 from skbio._config import get_config
 from skbio.util import get_package
+from skbio.util._array import _to_numpy
+
+import array_api_compat as _aac
+
+
+def _to_host(data):
+    """Bring a non-NumPy array-API buffer back to the host.
+
+    The table backends (pandas, NumPy, polars) are all host-side, so a
+    GPU-resident result has to be transferred before a table can be built from
+    it: CuPy refuses the implicit conversion outright and PyTorch refuses it for
+    a CUDA tensor. Anything that is not a non-NumPy array-API object (NumPy
+    arrays, DataFrames, lists, dicts) is passed through untouched.
+    """
+    if _aac.is_array_api_obj(data) and not _aac.is_numpy_array(data):
+        return _to_numpy(data)
+    return data
 
 
 def _create_table(data, columns=None, index=None, backend=None):
@@ -40,6 +57,8 @@ def _create_table(data, columns=None, index=None, backend=None):
     """
     if backend is None:
         backend = get_config("table_output")
+
+    data = _to_host(data)
 
     if backend == "pandas":
         return pd.DataFrame(data, index=index, columns=columns)
@@ -78,6 +97,8 @@ def _create_table_1d(data, index=None, backend=None):
     """
     if backend is None:
         backend = get_config("table_output")
+
+    data = _to_host(data)
 
     if backend in ("pandas"):  # , "biom"):
         return pd.Series(data, index=index)
