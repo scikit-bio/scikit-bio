@@ -131,6 +131,8 @@ class TestOrdinationResults(unittest.TestCase):
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestOrdinationResultsPlotting(unittest.TestCase):
     def setUp(self):
+        self.addCleanup(plt.close, "all")
+
         # DataFrame for testing plot method. Has a categorical column with a
         # mix of numbers and strings. Has a numeric column with a mix of ints,
         # floats, and strings that can be converted to floats. Has a numeric
@@ -351,6 +353,8 @@ class TestOrdinationResultsPlotting(unittest.TestCase):
 @unittest.skipUnless(has_matplotlib, "Matplotlib not available.")
 class TestOrdinationResults2DPlotting(unittest.TestCase):
     def setUp(self):
+        self.addCleanup(plt.close, "all")
+
         # DataFrame for testing plot method. Has a categorical column with a
         # mix of numbers and strings. Has a numeric column with a mix of ints,
         # floats, and strings that can be converted to floats. Has a numeric
