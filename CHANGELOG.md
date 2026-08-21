@@ -1,5 +1,11 @@
 # scikit-bio changelog
 
+## Version 0.8.0-dev
+
+### Backward-incompatible changes
+
+* Removed the deprecated `skbio.sequence.GrammaredSequence.nondegenerate_chars`, `skbio.sequence.GrammaredSequence.nondegenerates`, and `skbio.sequence.GrammaredSequence.has_nondegenerates` aliases. Use `definite_chars`, `definites`, and `has_definites`, respectively. These aliases had been deprecated since version 0.5.0.
+
 ## Version 0.7.4-dev
 
 ### Features
