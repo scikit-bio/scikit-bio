@@ -28,6 +28,7 @@
 * Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
 * Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
 * `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
+* Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
 
 ## Version 0.7.3
 

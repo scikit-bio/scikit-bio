@@ -1221,6 +1221,48 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             self.dm_3x3_cond.filter([])
         self.assertEqual(str(e.exception), "IDs must be at least 1 in size.")
 
+    # Regression tests for #2516: filter()/permute() must not silently reset a
+    # non-zero diagonal to 0 when the matrix is stored condensed. Note that
+    # __eq__ ignores the diagonal (it only compares the off-diagonal data), so
+    # these assertions read the diagonal explicitly.
+    def test_filter_subset_preserves_diagonal(self):
+        obs = self.dm_5x5_cond_diag.filter(["a", "c", "e"])
+        npt.assert_array_equal(obs.diagonal, [90, 70, 50])
+
+        # subset combined with reordering
+        obs = self.dm_5x5_cond_diag.filter(["c", "a"])
+        npt.assert_array_equal(obs.diagonal, [70, 90])
+
+    def test_filter_reorder_preserves_diagonal(self):
+        obs = self.dm_5x5_cond_diag.filter(["e", "d", "c", "b", "a"])
+        npt.assert_array_equal(obs.diagonal, [50, 60, 70, 80, 90])
+
+    def test_filter_same_ids_preserves_diagonal(self):
+        # exercises the same-ids fast path
+        obs = self.dm_5x5_cond_diag.filter(list("abcde"))
+        npt.assert_array_equal(obs.diagonal, [90, 80, 70, 60, 50])
+
+    def test_filter_scalar_uniform_diagonal_preserved(self):
+        sm = self.matobj([1, 2, 3], ["a", "b", "c"], diagonal=8, condensed=True)
+        obs = sm.filter(["a", "c"])
+        self.assertEqual(obs.diagonal, 8.0)
+
+    def test_permute_preserves_diagonal(self):
+        # seed=2 yields the permutation order [2, 0, 1] for a 3x3 matrix, so the
+        # diagonal and off-diagonal values follow that same reordering.
+        sm = self.matobj(
+            [0.01, 4.2, 12], ["a", "b", "c"], diagonal=[10, 20, 30], condensed=True
+        )
+        obs = sm.permute(seed=2)
+        npt.assert_array_equal(obs.diagonal, [30, 10, 20])
+        npt.assert_array_equal(obs.condensed_form(), [4.2, 12, 0.01])
+
+        # the diagonal of a larger permuted matrix is a permutation of the
+        # original diagonal, never all zeros
+        obs = self.dm_5x5_cond_diag.permute(seed=7)
+        self.assertCountEqual(np.asarray(obs.diagonal).tolist(), [90, 80, 70, 60, 50])
+        self.assertFalse(np.allclose(np.asarray(obs.diagonal), 0.0))
+
     def test_getslice(self):
         # Slice of first dimension only. Test that __getslice__ defers to
         # __getitem__.
@@ -1868,6 +1910,19 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
         )
         obs = self.dm_3x3_cond.permute(seed=2)
         self.assertEqual(obs, exp)
+
+    # Regression tests for #2516: DistanceMatrix is always hollow, so filter()
+    # and permute() must keep the diagonal at 0 (and must not raise while the
+    # SymmetricMatrix diagonal fix threads a diagonal through its subclass).
+    def test_filter_preserves_hollow_diagonal(self):
+        obs = self.dm_3x3_cond.filter(["c", "a"])
+        self.assertEqual(obs.diagonal, 0.0)
+        npt.assert_array_equal(np.diag(obs.redundant_form()), [0.0, 0.0])
+
+    def test_permute_preserves_hollow_diagonal(self):
+        obs = self.dm_3x3_cond.permute(seed=2)
+        self.assertEqual(obs.diagonal, 0.0)
+        npt.assert_array_equal(np.diag(obs.redundant_form()), [0.0, 0.0, 0.0])
 
     # TODO: need to test this with SymmetricMatrix vs DistanceMatrix for condensed form
     def test_eq(self):
