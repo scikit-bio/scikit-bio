@@ -60,7 +60,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'gpu-ci')
     name: Array API (${{ matrix.backend }}, cuda)
     # runs-on: gpu-t4-4-core
-    runs-on: [self-hosted, linux, x64, azure-gpu-a10]
+    runs-on: [self-hosted, linux, x64, azure-gpu-t4]
     strategy:
       fail-fast: false
       matrix:
