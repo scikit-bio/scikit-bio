@@ -196,7 +196,7 @@ class TestPCA(TestCase):
         assert_ordination_results_equal(results, self.reduced_dim_expected_results,
                                         ignore_directionality=True)
         
-    def test_eigh_full_dim(self):
+    def test_eigh_full_dim_iterative(self):
         results = pca(self.X, 
                       method="eigh",
                       iterative=True,
@@ -206,7 +206,7 @@ class TestPCA(TestCase):
         assert_ordination_results_equal(results, self.full_dim_expected_results,
                                         ignore_directionality=True)
         
-    def test_eigh_reduced_dim(self):
+    def test_eigh_reduced_dim_iterative(self):
         results = pca(self.X, 
                       method="eigh",
                       dimensions=2,
