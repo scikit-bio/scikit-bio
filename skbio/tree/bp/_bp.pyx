@@ -271,7 +271,7 @@ cdef class BPTree:
         import skbio.io
 
         return skbio.io.write(
-            self, into=file, format=format or "newick", **kwargs
+            self, into=file, format=format or self.default_write_format, **kwargs
         )
 
     @staticmethod
@@ -310,8 +310,8 @@ cdef class BPTree:
 
         The parentheses bit array, node names, and branch lengths are stored;
         edge numbers are not. This is a lightweight binary dump, distinct from
-        the registry-based :meth:`write` (which defaults to newick and does
-        preserve edge numbers).
+        the registry-based :meth:`write` (which defaults to the ``newick``
+        format).
 
         Parameters
         ----------
