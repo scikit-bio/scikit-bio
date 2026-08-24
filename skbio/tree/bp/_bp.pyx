@@ -562,7 +562,7 @@ cdef class BPTree:
         """
         cdef:
             Py_ssize_t d_star, p, blk_end, tree_v
-            Py_ssize_t bi, bj
+            Py_ssize_t bi, bj, e_i
             Py_ssize_t b
 
         if i >= j:
@@ -573,7 +573,8 @@ cdef class BPTree:
         bj = j // b
 
         # smallest absolute excess over [i, j]
-        d_star = self._e_index[i]
+        e_i = self._e_index[i]
+        d_star = e_i
         if bi == bj:
             for p in range(i + 1, j + 1):
                 if self._e_index[p] < d_star:
@@ -596,9 +597,9 @@ cdef class BPTree:
                     d_star = self._e_index[p]
 
         # leftmost position in [i, j] whose excess equals the minimum
-        if self._e_index[i] == d_star:
+        if e_i == d_star:
             return i
-        return self.fwdsearch(i, d_star - self._e_index[i])
+        return self.fwdsearch(i, d_star - e_i)
 
     cpdef Py_ssize_t rMq(self, Py_ssize_t i, Py_ssize_t j) nogil:
         """The leftmost maximmum excess in i -> j.
@@ -608,7 +609,7 @@ cdef class BPTree:
         """
         cdef:
             Py_ssize_t m_star, p, blk_end, tree_v
-            Py_ssize_t bi, bj
+            Py_ssize_t bi, bj, e_i
             Py_ssize_t b
 
         if i >= j:
@@ -619,7 +620,8 @@ cdef class BPTree:
         bj = j // b
 
         # largest absolute excess over [i, j]
-        m_star = self._e_index[i]
+        e_i = self._e_index[i]
+        m_star = e_i
         if bi == bj:
             for p in range(i + 1, j + 1):
                 if self._e_index[p] > m_star:
@@ -639,9 +641,9 @@ cdef class BPTree:
                     m_star = self._e_index[p]
 
         # leftmost position in [i, j] whose excess equals the maximum
-        if self._e_index[i] == m_star:
+        if e_i == m_star:
             return i
-        return self.fwdsearch(i, m_star - self._e_index[i])
+        return self.fwdsearch(i, m_star - e_i)
 
     cdef Py_ssize_t _rmq_tree_min(self, Py_ssize_t node, Py_ssize_t node_lo, Py_ssize_t node_hi,
                               Py_ssize_t lo, Py_ssize_t hi) nogil:
