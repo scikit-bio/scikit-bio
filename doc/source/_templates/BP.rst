@@ -11,6 +11,8 @@
 
       ~{{ name }}.read
       ~{{ name }}.write
+      ~{{ name }}.to_npz
+      ~{{ name }}.from_npz
 
    .. rubric:: Tree navigation
 
