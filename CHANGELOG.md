@@ -6,6 +6,14 @@
 
 * Added `BPTree`, a succinct balanced-parentheses representation of trees for memory-efficient storage and fast topological queries on very large trees. Ported from [improved-octo-waddle](https://github.com/biocore/improved-octo-waddle) ([#2498](https://github.com/scikit-bio/scikit-bio/pull/2498)).
 
+### Performance enhancements
+
+* Reduced `BPTree.rmq`, `rMq`, `lca`, `height`, and `deepest_node` from O(span) to O(log n) by answering range-minimum/maximum excess queries with the rmM (min-max) tree instead of linearly scanning the queried range. For distant node pairs and deep subtrees this scales with tree size: on large trees, `lca`, `rmq`, and `rMq` on far-apart nodes drop from milliseconds to a flat sub-microsecond — hundreds- to thousands-fold, across balanced, caterpillar, and random topologies alike — with no change to construction time or memory footprint ([#2541](https://github.com/scikit-bio/scikit-bio/pull/2541)).
+
+### Bug Fixes
+
+* Widened the `BPTree` rmM (min-max) tree construction and the `fwdsearch`/`bwdsearch` search kernel from 32-bit to 64-bit indices. The parenthesis positions, block sizes, and excess deltas were C `int`s (inherited from the original improved-octo-waddle port), which silently overflowed for trees larger than 2³¹ parentheses (~537 million tips) — corrupting navigation rather than raising an error. Because the stored index arrays were already 64-bit, memory footprint and per-operation runtime are unchanged; only the loop counters and scan positions were widened ([#2541](https://github.com/scikit-bio/scikit-bio/pull/2541)).
+
 ## Version 0.7.3
 
 ### Features
