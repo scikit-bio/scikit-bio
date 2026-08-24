@@ -176,17 +176,10 @@ In addition to :class:`~skbio.tree.TreeNode`, this format reads and writes
 :class:`~skbio.tree.BPTree`, the succinct balanced-parentheses representation
 intended for very large trees. Reading and writing a ``BPTree`` never
 materializes a ``TreeNode`` (or any other per-node object): the parenthesis,
-name, length, and edge-number arrays are built directly, preserving
-``BPTree``'s memory scalability. For throughput on trees with millions to
-billions of nodes, the ``BPTree`` reader and writer are backed by a compiled
-(Cython) implementation in :mod:`skbio.tree.bp`.
-
-Edge numbers -- integer identifiers assigned to edges (as used by phylogenetic
-placement) -- are written in the canonical ``{N}`` form immediately after a
-branch length (e.g. ``A:0.01{4}``). On read they are parsed into the tree's
-edge array when present (both ``{N}`` and ``[N]`` are accepted). The ``BPTree``
-writer accepts an `include_edge_nums` parameter (``False`` by default); when
-``True`` it emits the ``{N}`` suffix for every node.
+name, and length arrays are built directly, preserving ``BPTree``'s memory
+scalability. For throughput on trees with millions to billions of nodes, the
+``BPTree`` reader and writer are backed by a compiled (Cython) implementation
+in :mod:`skbio.tree.bp`.
 
 .. note:: Because the ``BPTree`` reader uses its own compiled newick scanner
    rather than the tokenizer described above, the ``convert_underscores``
@@ -544,7 +537,9 @@ def _newick_to_bp(fh, cls=None):
 
 
 @newick.writer(BPTree)
-def _bp_to_newick(obj, fh, include_edge_nums=False):
+def _bp_to_newick(obj, fh):
     from skbio.tree.bp._bp_io import write_newick
 
-    write_newick(obj, fh, include_edge_nums)
+    # Edge numbers are not part of the newick spec; they are handled by the
+    # jplace format. The compiled writer still takes the flag, so pass False.
+    write_newick(obj, fh, False)

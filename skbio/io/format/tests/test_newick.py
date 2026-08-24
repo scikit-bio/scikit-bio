@@ -373,7 +373,7 @@ class TestNewick(unittest.TestCase):
 class TestNewickBPTree(unittest.TestCase):
     # A diverse battery of valid newick strings covering multifurcation,
     # single-descendant chains, unnamed/unlengthed nodes, quoted labels
-    # containing structural characters, exponent lengths, and edge numbers.
+    # containing structural characters, and exponent lengths.
     battery = [
         "((a:2,b):1,(c:4,d)y:20,e)r;",
         "(((a:1,b:2.5)c:6,d:8,(e),(f,g,(h:1,i:2)j:1)k:1.2)l,m:2)r;",
@@ -384,7 +384,7 @@ class TestNewickBPTree(unittest.TestCase):
         "(('foo(b)ar':1,baz:2)x:3)r;",
         '((foo"bar":1,baz:2)x:3)r;',
         "((b:3)a:2)root:1;",
-        "((A:.01{0}, B:.01{1})D:.01{3}, C:.01{4}) {5};",
+        "((A:.01, B:.01)D:.01, C:.01)r;",
         "(a:1e-3,b:2.5E2)r;",
         "((:0.25,:0.5):0.0,x)r;",
     ]
@@ -417,17 +417,6 @@ class TestNewickBPTree(unittest.TestCase):
         for i, e_n in enumerate(exp_n):
             self.assertEqual(obs.name(i), e_n)
 
-    def test_edge_numbers(self):
-        in_ = "((A:.01{0}, B:.01{1})D:.01{3}, C:.01{4}) {5};"
-        obs = self._read_bp(in_)
-        self.assertEqual(obs.edge(2), 0)
-        self.assertEqual(obs.edge(4), 1)
-        self.assertEqual(obs.edge(1), 3)
-        self.assertEqual(obs.edge(7), 4)
-        self.assertEqual(obs.edge(0), 5)
-        self.assertEqual(obs.edge_from_number(0), 2)
-        self.assertEqual(obs.edge_from_number(5), 0)
-
     def test_write_roundtrip(self):
         for s in self.battery:
             bp = self._read_bp(s)
@@ -439,16 +428,6 @@ class TestNewickBPTree(unittest.TestCase):
             for i in range(bp.data.size):
                 self.assertEqual(obs.name(i), bp.name(i))
                 self.assertAlmostEqual(obs.length(i), bp.length(i))
-
-    def test_write_edge_numbers_roundtrip(self):
-        in_ = "((A:.01{0}, B:.01{1})D:.01{3}, C:.01{4}) {5};"
-        bp = self._read_bp(in_)
-        buf = io.StringIO()
-        _bp_to_newick(bp, buf, include_edge_nums=True)
-        buf.seek(0)
-        obs = self._read_bp(buf.getvalue())
-        for i in range(bp.data.size):
-            self.assertEqual(obs.edge(i), bp.edge(i))
 
     def test_read_via_registry_and_sniff(self):
         s = "((a:2,b):1,(c:4,d)y:20,e)r;"
