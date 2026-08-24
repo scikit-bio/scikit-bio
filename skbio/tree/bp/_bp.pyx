@@ -33,14 +33,14 @@ BOOL = np.uint8
 INT32 = np.int32
 
 
-cdef inline SIZE_t min(SIZE_t a, SIZE_t b) nogil:
+cdef inline Py_ssize_t min(Py_ssize_t a, Py_ssize_t b) nogil:
     if a > b:
         return b
     else:
         return a
 
 
-cdef inline SIZE_t max(SIZE_t a, SIZE_t b) nogil:
+cdef inline Py_ssize_t max(Py_ssize_t a, Py_ssize_t b) nogil:
     if a > b:
         return a
     else:
@@ -48,32 +48,32 @@ cdef inline SIZE_t max(SIZE_t a, SIZE_t b) nogil:
 
 
 cdef class mM:
-    def __cinit__(self, BOOL_t[:] B, SIZE_t B_size):
+    def __cinit__(self, BOOL_t[:] B, Py_ssize_t B_size):
         self.m_idx = 0
         self.M_idx = 1
 
         self.rmm(B, B_size)
 
-    cdef void rmm(self, BOOL_t[:] B, SIZE_t B_size) nogil:
+    cdef void rmm(self, BOOL_t[:] B, Py_ssize_t B_size) nogil:
         """Construct the rmM tree based off of Navarro and Sadakane
 
         http://www.dcc.uchile.cl/~gnavarro/ps/talg12.pdf
         """
-        # i/j and the block bounds index into B[0, 2n), so they are SIZE_t
+        # i/j and the block bounds index into B[0, 2n), so they are Py_ssize_t
         # (64-bit); lvl/pos iterate the small rmM binary tree and stay int.
-        cdef SIZE_t i, j  # parenthesis positions
+        cdef Py_ssize_t i, j  # parenthesis positions
         cdef int lvl, pos  # rmM-tree level / node within a level
-        cdef SIZE_t offset  # tip offset in binary tree for a given parenthesis
-        cdef SIZE_t lower_limit  # the lower limit of the bucket a parenthesis is in
-        cdef SIZE_t upper_limit  # the upper limit of the bucket a parenthesis is in
-        cdef SIZE_t min_ = 0 # m, absolute minimum for a blokc
-        cdef SIZE_t max_ = 0 # M, absolute maximum for a block
-        cdef SIZE_t excess = 0 # e, absolute excess
+        cdef Py_ssize_t offset  # tip offset in binary tree for a given parenthesis
+        cdef Py_ssize_t lower_limit  # the lower limit of the bucket a parenthesis is in
+        cdef Py_ssize_t upper_limit  # the upper limit of the bucket a parenthesis is in
+        cdef Py_ssize_t min_ = 0 # m, absolute minimum for a blokc
+        cdef Py_ssize_t max_ = 0 # M, absolute maximum for a block
+        cdef Py_ssize_t excess = 0 # e, absolute excess
         cdef int vbar
-        cdef SIZE_t r = 0
+        cdef Py_ssize_t r = 0
 
         # build tip info
-        self.b = <SIZE_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
+        self.b = <Py_ssize_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
 
         # determine the number of nodes and height of the binary tree
         self.n_tip = <int>ceil(B_size / <double> self.b)
@@ -187,17 +187,17 @@ cdef class BPTree:
                   cnp.ndarray[DOUBLE_t, ndim=1] lengths=None,
                   cnp.ndarray[object, ndim=1] names=None,
                   cnp.ndarray[INT32_t, ndim=1] edges=None):
-        cdef SIZE_t i
-        cdef SIZE_t size
-        cdef SIZE_t[:] _e_index
-        cdef SIZE_t[:] _k_index_0
-        cdef SIZE_t[:] _k_index_1
-        cdef SIZE_t[:] _r_index_0
-        cdef SIZE_t[:] _r_index_1
+        cdef Py_ssize_t i
+        cdef Py_ssize_t size
+        cdef Py_ssize_t[:] _e_index
+        cdef Py_ssize_t[:] _k_index_0
+        cdef Py_ssize_t[:] _k_index_1
+        cdef Py_ssize_t[:] _r_index_0
+        cdef Py_ssize_t[:] _r_index_1
         cdef cnp.ndarray[object, ndim=1] _names
         cdef cnp.ndarray[DOUBLE_t, ndim=1] _lengths
         cdef cnp.ndarray[INT32_t, ndim=1] _edges
-        cdef cnp.ndarray[SIZE_t, ndim=1] _edge_lookup
+        cdef cnp.ndarray[Py_ssize_t, ndim=1] _edge_lookup
 
         # the tree is only valid if it is balanced (equal opens and closes)
         if B.sum() * 2 != B.size:
@@ -368,7 +368,7 @@ cdef class BPTree:
         cdef:
             Py_ssize_t i, n
             Py_ssize_t chi_ptr, cur_index
-            SIZE_t node_idx, first_child, last_child, sib_idx
+            Py_ssize_t node_idx, first_child, last_child, sib_idx
             cnp.ndarray[DOUBLE_t, ndim=1] length
             cnp.ndarray[UINT32_t, ndim=1] node_ids
             cnp.ndarray[object, ndim=1] name
@@ -433,7 +433,7 @@ cdef class BPTree:
         cdef:
             int i, n
             INT32_t edge
-            cnp.ndarray[SIZE_t, ndim=1] _edge_lookup
+            cnp.ndarray[Py_ssize_t, ndim=1] _edge_lookup
             cnp.ndarray[BOOL_t, ndim=1] b
 
         b = self.data
@@ -451,19 +451,19 @@ cdef class BPTree:
     def set_edges(self, cnp.ndarray[INT32_t, ndim=1] edges):
         self._set_edges(edges)
 
-    cpdef inline unicode name(self, SIZE_t i):
+    cpdef inline unicode name(self, Py_ssize_t i):
         return self._names[i]
 
-    cpdef inline DOUBLE_t length(self, SIZE_t i):
+    cpdef inline DOUBLE_t length(self, Py_ssize_t i):
         return self._lengths[i]
 
-    cpdef inline INT32_t edge(self, SIZE_t i):
+    cpdef inline INT32_t edge(self, Py_ssize_t i):
         return self._edges[i]
 
-    cpdef SIZE_t edge_from_number(self, INT32_t n):
+    cpdef Py_ssize_t edge_from_number(self, INT32_t n):
         return self._edge_lookup[n]
 
-    cdef inline SIZE_t rank(self, SIZE_t t, SIZE_t i) nogil:
+    cdef inline Py_ssize_t rank(self, Py_ssize_t t, Py_ssize_t i) nogil:
         """Determine the rank order of the ith bit t
 
         Rank is the order of the ith bit observed, from left to right. For
@@ -471,22 +471,22 @@ cdef class BPTree:
 
         Parameters
         ----------
-        t : SIZE_t
+        t : Py_ssize_t
             The bit value, either 0 or 1 where 0 is a closing parenthesis and
             1 is an opening.
-        i : SIZE_T
+        i : Py_ssize_t
             The position to evaluate
 
         Returns
         -------
-        SIZE_t
+        Py_ssize_t
             The rank order of the position.
         """
         cdef int k
-        cdef SIZE_t r = 0
-        cdef SIZE_t lower_bound
-        cdef SIZE_t upper_bound
-        cdef SIZE_t j
+        cdef Py_ssize_t r = 0
+        cdef Py_ssize_t lower_bound
+        cdef Py_ssize_t upper_bound
+        cdef Py_ssize_t j
         cdef int node
 
         k = i // self._rmm.b
@@ -510,25 +510,25 @@ cdef class BPTree:
         else:
             return (i - r) + 1
 
-    cdef inline SIZE_t select(self, SIZE_t t, SIZE_t k) nogil:
+    cdef inline Py_ssize_t select(self, Py_ssize_t t, Py_ssize_t k) nogil:
         """The position in B of the kth occurrence of the bit t."""
         if t:
             return self._k_index_1[k]
         else:
             return self._k_index_0[k]
 
-    cdef SIZE_t _excess(self, SIZE_t i) nogil:
+    cdef Py_ssize_t _excess(self, Py_ssize_t i) nogil:
         """Actually compute excess"""
         if i < 0:
             return 0  # wasn't stated as needed but appears so given testing
         return (2 * self.rank(1, i) - i) - 1
 
-    cdef SIZE_t excess(self, SIZE_t i) nogil:
+    cdef Py_ssize_t excess(self, Py_ssize_t i) nogil:
         """the number of opening minus closing parentheses in B[1, i]"""
         # same as: self.rank(1, i) - self.rank(0, i)
         return self._e_index[i]
 
-    cpdef inline SIZE_t close(self, SIZE_t i) nogil:
+    cpdef inline Py_ssize_t close(self, Py_ssize_t i) nogil:
         """The position of the closing parenthesis that matches B[i]"""
         if not self._b_ptr[i]:
             # identity: the close of a closed parenthesis is itself
@@ -536,7 +536,7 @@ cdef class BPTree:
 
         return self.fwdsearch(i, -1)
 
-    cdef inline SIZE_t open(self, SIZE_t i) nogil:
+    cdef inline Py_ssize_t open(self, Py_ssize_t i) nogil:
         """The position of the opening parenthesis that matches B[i]"""
         if self._b_ptr[i] or i <= 0:
             # identity: the open of an open parenthesis is itself
@@ -545,14 +545,14 @@ cdef class BPTree:
 
         return self.bwdsearch(i, 0) + 1
 
-    cdef inline SIZE_t enclose(self, SIZE_t i) nogil:
+    cdef inline Py_ssize_t enclose(self, Py_ssize_t i) nogil:
         """The opening parenthesis of the smallest matching pair that contains position i"""
         if self._b_ptr[i]:
             return self.bwdsearch(i, -2) + 1
         else:
             return self.bwdsearch(i - 1, -2) + 1
 
-    cpdef SIZE_t rmq(self, SIZE_t i, SIZE_t j) nogil:
+    cpdef Py_ssize_t rmq(self, Py_ssize_t i, Py_ssize_t j) nogil:
         """The leftmost minimum excess in i -> j.
 
         The minimum excess over [i, j] is found in O(log n): the two partial
@@ -561,8 +561,8 @@ cdef class BPTree:
         attains it is then recovered with a single ``fwdsearch``.
         """
         cdef:
-            SIZE_t d_star, p, blk_end, tree_v
-            SIZE_t bi, bj
+            Py_ssize_t d_star, p, blk_end, tree_v
+            Py_ssize_t bi, bj
             int b
 
         if i >= j:
@@ -600,15 +600,15 @@ cdef class BPTree:
             return i
         return self.fwdsearch(i, d_star - self._e_index[i])
 
-    cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil:
+    cpdef Py_ssize_t rMq(self, Py_ssize_t i, Py_ssize_t j) nogil:
         """The leftmost maximmum excess in i -> j.
 
         Symmetric to :meth:`rmq`: an O(log n) range-maximum over the rmM tree
         followed by a single ``fwdsearch`` for the leftmost attaining position.
         """
         cdef:
-            SIZE_t m_star, p, blk_end, tree_v
-            SIZE_t bi, bj
+            Py_ssize_t m_star, p, blk_end, tree_v
+            Py_ssize_t bi, bj
             int b
 
         if i >= j:
@@ -643,7 +643,7 @@ cdef class BPTree:
             return i
         return self.fwdsearch(i, m_star - self._e_index[i])
 
-    cdef SIZE_t _rmq_tree_min(self, int node, int node_lo, int node_hi,
+    cdef Py_ssize_t _rmq_tree_min(self, int node, int node_lo, int node_hi,
                               int lo, int hi) nogil:
         """Minimum excess over leaf-blocks [lo, hi].
 
@@ -655,7 +655,7 @@ cdef class BPTree:
         which the callers scan directly.
         """
         cdef int mid
-        cdef SIZE_t left_v, right_v
+        cdef Py_ssize_t left_v, right_v
 
         if hi < node_lo or node_hi < lo:  # no overlap
             return INT_MAX
@@ -667,7 +667,7 @@ cdef class BPTree:
                                      lo, hi)
         return left_v if left_v < right_v else right_v
 
-    cdef SIZE_t _rmq_tree_max(self, int node, int node_lo, int node_hi,
+    cdef Py_ssize_t _rmq_tree_max(self, int node, int node_lo, int node_hi,
                               int lo, int hi) nogil:
         """Maximum excess over leaf-blocks [lo, hi].
 
@@ -675,7 +675,7 @@ cdef class BPTree:
         why every fully-covered node is a real block.
         """
         cdef int mid
-        cdef SIZE_t left_v, right_v
+        cdef Py_ssize_t left_v, right_v
 
         if hi < node_lo or node_hi < lo:  # no overlap
             return -INT_MAX
@@ -713,7 +713,7 @@ cdef class BPTree:
     def __reduce__(self):
         return (BPTree, (self.data, self._lengths, self._names))
 
-    cpdef SIZE_t depth(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t depth(self, Py_ssize_t i) nogil:
         """The depth of given node.
         
         Parameters
@@ -728,11 +728,11 @@ cdef class BPTree:
         """
         return self._e_index[i]
 
-    cpdef SIZE_t root(self) nogil:
+    cpdef Py_ssize_t root(self) nogil:
         """The index of the root node of the tree."""
         return 0
 
-    cpdef SIZE_t parent(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t parent(self, Py_ssize_t i) nogil:
         """The parent of node.
 
         Parameters
@@ -750,7 +750,7 @@ cdef class BPTree:
         else:
             return self.enclose(i)
 
-    cpdef BOOL_t is_tip(self, SIZE_t i) nogil:
+    cpdef BOOL_t is_tip(self, Py_ssize_t i) nogil:
         """Whether the node is a tip of a tree.
         
         Parameters
@@ -765,7 +765,7 @@ cdef class BPTree:
         """
         return self._b_ptr[i] and (not self._b_ptr[i + 1])
 
-    cpdef SIZE_t first_child(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t first_child(self, Py_ssize_t i) nogil:
         """Index of the first (leftmost) child of a node.
 
         Parameters
@@ -798,7 +798,7 @@ cdef class BPTree:
         else:
             return self.first_child(self.open(i))
 
-    cpdef SIZE_t last_child(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t last_child(self, Py_ssize_t i) nogil:
         """Index of the last (rightmost) child of a node.
 
         Parameters
@@ -831,12 +831,12 @@ cdef class BPTree:
         else:
             return self.last_child(self.open(i))
 
-    def mincount(self, SIZE_t i, SIZE_t j):
+    def mincount(self, Py_ssize_t i, Py_ssize_t j):
         """number of occurrences of the minimum in excess(i), excess(i + 1), . . . , excess(j)."""
         excess, counts = np.unique([self.excess(k) for k in range(i, j + 1)], return_counts=True)
         return counts[excess.argmin()]
 
-    def minselect(self, SIZE_t i, SIZE_t j, SIZE_t q):
+    def minselect(self, Py_ssize_t i, Py_ssize_t j, Py_ssize_t q):
         """position of the qth minimum in excess(i), excess(i + 1), . . . , excess(j)."""
         counts = np.array([self.excess(k) for k in range(i, j + 1)])
         index = counts == counts.min()
@@ -846,7 +846,7 @@ cdef class BPTree:
         else:
             return i + index.nonzero()[0][q - 1]
 
-    cpdef SIZE_t next_sibling(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t next_sibling(self, Py_ssize_t i) nogil:
         """Index of the next (right) sibling of a node.
 
         Parameters
@@ -871,7 +871,7 @@ cdef class BPTree:
         :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
         sibling nodes.
         """
-        cdef SIZE_t pos
+        cdef Py_ssize_t pos
 
         if self._b_ptr[i]:
             pos = self.close(i) + 1
@@ -885,7 +885,7 @@ cdef class BPTree:
         else:
             return 0
 
-    cpdef SIZE_t previous_sibling(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t previous_sibling(self, Py_ssize_t i) nogil:
         """Index of the previous (left) sibling of a node.
 
         Parameters
@@ -910,7 +910,7 @@ cdef class BPTree:
         :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
         sibling nodes.
         """
-        cdef SIZE_t pos
+        cdef Py_ssize_t pos
 
         if self._b_ptr[i]:
             if self._b_ptr[max(0, i - 1)]:
@@ -927,7 +927,7 @@ cdef class BPTree:
         else:
             return 0
 
-    cpdef SIZE_t preorder_rank(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t preorder_rank(self, Py_ssize_t i) nogil:
         """Preorder rank of a node.
 
         Parameters
@@ -957,7 +957,7 @@ cdef class BPTree:
         else:
             return self.preorder_rank(self.open(i))
 
-    cpdef SIZE_t preorder_select(self, SIZE_t k) nogil:
+    cpdef Py_ssize_t preorder_select(self, Py_ssize_t k) nogil:
         """Index of the node with a given preorder rank.
 
         Parameters
@@ -983,7 +983,7 @@ cdef class BPTree:
         """
         return self.select(1, k)
 
-    cpdef SIZE_t postorder_rank(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t postorder_rank(self, Py_ssize_t i) nogil:
         """Postorder rank of a node.
 
         Parameters
@@ -1013,7 +1013,7 @@ cdef class BPTree:
         else:
             return self.rank(0, i)
 
-    cpdef SIZE_t postorder_select(self, SIZE_t k) nogil:
+    cpdef Py_ssize_t postorder_select(self, Py_ssize_t k) nogil:
         """Index of the node with a given postorder rank.
 
         Parameters
@@ -1039,7 +1039,7 @@ cdef class BPTree:
         """
         return self.open(self.select(0, k))
 
-    cpdef BOOL_t is_ancestor(self, SIZE_t i, SIZE_t j) nogil:
+    cpdef BOOL_t is_ancestor(self, Py_ssize_t i, Py_ssize_t j) nogil:
         """Whether a node is an ancestor of another node.
 
         Parameters
@@ -1066,7 +1066,7 @@ cdef class BPTree:
 
         return i <= j < self.close(i)
 
-    cpdef SIZE_t count(self, SIZE_t i=0, bint tips=False) nogil:
+    cpdef Py_ssize_t count(self, Py_ssize_t i=0, bint tips=False) nogil:
         """Get the count of nodes in the subtree rooted at a node.
 
         Parameters
@@ -1094,7 +1094,7 @@ cdef class BPTree:
 
         """
         cdef:
-            SIZE_t last, j, c
+            Py_ssize_t last, j, c
 
         if not self._b_ptr[i]:
             i = self.open(i)
@@ -1115,7 +1115,7 @@ cdef class BPTree:
 
         return c
 
-    cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil:
+    cpdef Py_ssize_t level_ancestor(self, Py_ssize_t i, Py_ssize_t d) nogil:
         """Index of the ancestor a given number of levels above a node.
 
         Parameters
@@ -1150,7 +1150,7 @@ cdef class BPTree:
 
         return self.bwdsearch(i, -d - 1) + 1
 
-    cpdef SIZE_t level_next(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t level_next(self, Py_ssize_t i) nogil:
         """Index of the next node at the same depth.
 
         Parameters
@@ -1177,7 +1177,7 @@ cdef class BPTree:
         """
         return self.fwdsearch(self.close(i), 1)
 
-    cpdef SIZE_t lca(self, SIZE_t i, SIZE_t j) nogil:
+    cpdef Py_ssize_t lca(self, Py_ssize_t i, Py_ssize_t j) nogil:
         """The lowest common ancestor of two nodes.
 
         Parameters
@@ -1199,7 +1199,7 @@ cdef class BPTree:
         else:
             return self.parent(self.rmq(i, j) + 1)
 
-    cpdef SIZE_t deepest_node(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t deepest_node(self, Py_ssize_t i) nogil:
         """Index of the deepest node descending from a node.
 
         Parameters
@@ -1225,7 +1225,7 @@ cdef class BPTree:
         """
         return self.rMq(self.open(i), self.close(i))
 
-    cpdef SIZE_t height(self, SIZE_t i) nogil:
+    cpdef Py_ssize_t height(self, Py_ssize_t i) nogil:
         """The height of node i with respect to its deepest descendent
 
         Parameters
@@ -1259,8 +1259,8 @@ cdef class BPTree:
             ancestors.
         """
         cdef:
-            SIZE_t i, n = len(tips)
-            SIZE_t p, t, count = 0
+            Py_ssize_t i, n = len(tips)
+            Py_ssize_t p, t, count = 0
             BIT_ARRAY* mask
             BPTree new_bp
 
@@ -1295,7 +1295,7 @@ cdef class BPTree:
     cdef BPTree _mask_from_self(self, BIT_ARRAY* mask,
                             cnp.ndarray[DOUBLE_t, ndim=1] lengths):
         cdef:
-            SIZE_t i, k, n, mask_sum
+            Py_ssize_t i, k, n, mask_sum
             cnp.ndarray[BOOL_t, ndim=1] new_b
             cnp.ndarray[object, ndim=1] new_names
             cnp.ndarray[object, ndim=1] names = self._names
@@ -1351,8 +1351,8 @@ cdef class BPTree:
 
         """
         cdef:
-            SIZE_t i, n = self.data.sum()
-            SIZE_t current, first, last
+            Py_ssize_t i, n = self.data.sum()
+            Py_ssize_t current, first, last
             cnp.ndarray[DOUBLE_t, ndim=1] new_lengths
             BIT_ARRAY* mask
             DOUBLE_t* new_lengths_ptr
@@ -1387,7 +1387,7 @@ cdef class BPTree:
         bit_array_free(mask)
         return new_bp
 
-    cdef SIZE_t scan_block_forward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil:
+    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil:
         """Scan a block forward from i.
 
         Parameters
@@ -1407,9 +1407,9 @@ cdef class BPTree:
             The index position of the result. -1 is returned if a result is not
             found.
         """
-        cdef SIZE_t lower_bound
-        cdef SIZE_t upper_bound
-        cdef SIZE_t j
+        cdef Py_ssize_t lower_bound
+        cdef Py_ssize_t upper_bound
+        cdef Py_ssize_t j
 
         # lower_bound is block boundary or right of i
         lower_bound = max(k, 0) * b
@@ -1424,7 +1424,7 @@ cdef class BPTree:
 
         return -1
 
-    cdef SIZE_t scan_block_backward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil:
+    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil:
         """Scan a block backward from i.
 
         Parameters
@@ -1444,9 +1444,9 @@ cdef class BPTree:
             The index position of the result. -1 is returned if a result is not
             found.
         """
-        cdef SIZE_t lower_bound
-        cdef SIZE_t upper_bound
-        cdef SIZE_t j
+        cdef Py_ssize_t lower_bound
+        cdef Py_ssize_t upper_bound
+        cdef Py_ssize_t j
 
         # range stop is exclusive, so need to set "stop" at -1 of boundary
         lower_bound = max(k, 0) * b - 1
@@ -1470,7 +1470,7 @@ cdef class BPTree:
 
         return -1
 
-    cdef SIZE_t fwdsearch(self, SIZE_t i, SIZE_t d) nogil:
+    cdef Py_ssize_t fwdsearch(self, Py_ssize_t i, Py_ssize_t d) nogil:
         """Search forward from i for desired excess.
 
         Parameters
@@ -1486,7 +1486,7 @@ cdef class BPTree:
             The index of the result, or -1 if no result was found
         """
         cdef int k  # the block being interrogated
-        cdef SIZE_t result = -1 # the result of a scan within a block
+        cdef Py_ssize_t result = -1 # the result of a scan within a block
         cdef int node  # the node within the binary tree being examined
 
         # get the block of parentheses to check
@@ -1532,7 +1532,7 @@ cdef class BPTree:
 
         return result
 
-    cdef SIZE_t bwdsearch(self, SIZE_t i, SIZE_t d) nogil:
+    cdef Py_ssize_t bwdsearch(self, Py_ssize_t i, Py_ssize_t d) nogil:
         """Search backward from i for desired excess
 
         Parameters
@@ -1548,7 +1548,7 @@ cdef class BPTree:
             The index of the result, or -1 if no result was found
         """
         cdef int k  # the block being interrogated
-        cdef SIZE_t result = -1 # the result of a scan within a block
+        cdef Py_ssize_t result = -1 # the result of a scan within a block
         cdef int node  # the node within the binary tree being examined
 
         # get the block of parentheses to check

@@ -14,7 +14,6 @@ cimport cython
 
 from ._ba cimport BIT_ARRAY
 
-ctypedef cnp.npy_intp SIZE_t
 ctypedef cnp.uint32_t UINT32_t
 ctypedef cnp.int32_t INT32_t
 ctypedef cnp.float64_t DOUBLE_t
@@ -22,7 +21,7 @@ ctypedef cnp.uint8_t BOOL_t
 
 
 cdef class mM:
-    cdef SIZE_t b  # block size (SIZE_t so block-index * block-size products stay 64-bit)
+    cdef Py_ssize_t b  # block size (Py_ssize_t so block-index * block-size products stay 64-bit)
     cdef int n_tip  # number of tips in the binary tree
     cdef int n_internal  # number of internal nodes in the binary tree
     cdef int n_total  # total number of nodes in the binary tree
@@ -30,10 +29,10 @@ cdef class mM:
     cdef int m_idx  # m is minimum excess
     cdef int M_idx  # M is maximum excess
     cdef int r_idx  # rank
-    cdef SIZE_t[:, ::1] mM
-    cdef SIZE_t[:] r
+    cdef Py_ssize_t[:, ::1] mM
+    cdef Py_ssize_t[:] r
 
-    cdef void rmm(self, BOOL_t[:] B, SIZE_t B_size) nogil
+    cdef void rmm(self, BOOL_t[:] B, Py_ssize_t B_size) nogil
 
 
 @cython.final
@@ -41,56 +40,56 @@ cdef class BPTree:
     cdef:
         public cnp.ndarray data
         BOOL_t* _b_ptr
-        SIZE_t[:] _e_index
-        SIZE_t[:] _k_index_0
-        SIZE_t[:] _k_index_1
+        Py_ssize_t[:] _e_index
+        Py_ssize_t[:] _k_index_0
+        Py_ssize_t[:] _k_index_1
         cnp.ndarray _names
         cnp.ndarray _lengths
         cnp.ndarray _edges
         cnp.ndarray _edge_lookup
         mM _rmm
-        SIZE_t size
+        Py_ssize_t size
 
-    cdef inline SIZE_t rank(self, SIZE_t t, SIZE_t i) nogil
-    cdef inline SIZE_t select(self, SIZE_t t, SIZE_t k) nogil
-    cdef SIZE_t _excess(self, SIZE_t i) nogil
-    cdef SIZE_t excess(self, SIZE_t i) nogil
-    cdef SIZE_t fwdsearch(self, SIZE_t i, SIZE_t d) nogil
-    cdef SIZE_t bwdsearch(self, SIZE_t i, SIZE_t d) nogil
-    cpdef inline SIZE_t close(self, SIZE_t i) nogil
-    cdef inline SIZE_t open(self, SIZE_t i) nogil
-    cpdef inline BOOL_t is_tip(self, SIZE_t i) nogil
-    cdef inline SIZE_t enclose(self, SIZE_t i) nogil
+    cdef inline Py_ssize_t rank(self, Py_ssize_t t, Py_ssize_t i) nogil
+    cdef inline Py_ssize_t select(self, Py_ssize_t t, Py_ssize_t k) nogil
+    cdef Py_ssize_t _excess(self, Py_ssize_t i) nogil
+    cdef Py_ssize_t excess(self, Py_ssize_t i) nogil
+    cdef Py_ssize_t fwdsearch(self, Py_ssize_t i, Py_ssize_t d) nogil
+    cdef Py_ssize_t bwdsearch(self, Py_ssize_t i, Py_ssize_t d) nogil
+    cpdef inline Py_ssize_t close(self, Py_ssize_t i) nogil
+    cdef inline Py_ssize_t open(self, Py_ssize_t i) nogil
+    cpdef inline BOOL_t is_tip(self, Py_ssize_t i) nogil
+    cdef inline Py_ssize_t enclose(self, Py_ssize_t i) nogil
     cdef BPTree _mask_from_self(self, BIT_ARRAY* mask, cnp.ndarray[DOUBLE_t, ndim=1] lengths)
-    cpdef SIZE_t next_sibling(self, SIZE_t i) nogil
-    cpdef SIZE_t previous_sibling(self, SIZE_t i) nogil
-    cpdef SIZE_t last_child(self, SIZE_t i) nogil
-    cpdef SIZE_t first_child(self, SIZE_t i) nogil
-    cpdef SIZE_t parent(self, SIZE_t i) nogil
-    cpdef SIZE_t depth(self, SIZE_t i) nogil
-    cpdef SIZE_t root(self) nogil
-    cdef SIZE_t scan_block_forward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil
-    cdef SIZE_t scan_block_backward(self, SIZE_t i, int k, SIZE_t b, SIZE_t d) nogil
+    cpdef Py_ssize_t next_sibling(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t previous_sibling(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t last_child(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t first_child(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t parent(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t depth(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t root(self) nogil
+    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil
+    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil
     cdef void _set_edges(self, cnp.ndarray[INT32_t, ndim=1] edges)
 
-    cpdef inline unicode name(self, SIZE_t i)
-    cpdef inline DOUBLE_t length(self, SIZE_t i)
-    cpdef inline INT32_t edge(self, SIZE_t i)
-    cpdef SIZE_t edge_from_number(self, INT32_t n)
-    cpdef SIZE_t rmq(self, SIZE_t i, SIZE_t j) nogil
-    cpdef SIZE_t rMq(self, SIZE_t i, SIZE_t j) nogil
-    cdef SIZE_t _rmq_tree_min(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
-    cdef SIZE_t _rmq_tree_max(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
-    cpdef SIZE_t postorder_select(self, SIZE_t k) nogil
-    cpdef SIZE_t postorder_rank(self, SIZE_t i) nogil
-    cpdef SIZE_t preorder_select(self, SIZE_t k) nogil
-    cpdef SIZE_t preorder_rank(self, SIZE_t i) nogil
-    cpdef BOOL_t is_ancestor(self, SIZE_t i, SIZE_t j) nogil
-    cpdef SIZE_t level_ancestor(self, SIZE_t i, SIZE_t d) nogil
-    cpdef SIZE_t count(self, SIZE_t i=*, bint tips=*) nogil
+    cpdef inline unicode name(self, Py_ssize_t i)
+    cpdef inline DOUBLE_t length(self, Py_ssize_t i)
+    cpdef inline INT32_t edge(self, Py_ssize_t i)
+    cpdef Py_ssize_t edge_from_number(self, INT32_t n)
+    cpdef Py_ssize_t rmq(self, Py_ssize_t i, Py_ssize_t j) nogil
+    cpdef Py_ssize_t rMq(self, Py_ssize_t i, Py_ssize_t j) nogil
+    cdef Py_ssize_t _rmq_tree_min(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
+    cdef Py_ssize_t _rmq_tree_max(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
+    cpdef Py_ssize_t postorder_select(self, Py_ssize_t k) nogil
+    cpdef Py_ssize_t postorder_rank(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t preorder_select(self, Py_ssize_t k) nogil
+    cpdef Py_ssize_t preorder_rank(self, Py_ssize_t i) nogil
+    cpdef BOOL_t is_ancestor(self, Py_ssize_t i, Py_ssize_t j) nogil
+    cpdef Py_ssize_t level_ancestor(self, Py_ssize_t i, Py_ssize_t d) nogil
+    cpdef Py_ssize_t count(self, Py_ssize_t i=*, bint tips=*) nogil
     cpdef BPTree shear(self, set tips)
     cpdef BPTree collapse(self)
-    cpdef SIZE_t level_next(self, SIZE_t i) nogil
-    cpdef SIZE_t height(self, SIZE_t i) nogil
-    cpdef SIZE_t deepest_node(self, SIZE_t i) nogil
-    cpdef SIZE_t lca(self, SIZE_t i, SIZE_t j) nogil
+    cpdef Py_ssize_t level_next(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t height(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t deepest_node(self, Py_ssize_t i) nogil
+    cpdef Py_ssize_t lca(self, Py_ssize_t i, Py_ssize_t j) nogil
