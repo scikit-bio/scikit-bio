@@ -23,8 +23,9 @@ from ._ba cimport *
 
 cnp.import_array()
 
-cdef extern from "limits.h":
-    int INT_MAX
+cdef extern from "Python.h":
+    # largest value a Py_ssize_t can hold; used as a nogil "+infinity" sentinel
+    cdef Py_ssize_t PY_SSIZE_T_MAX
 
 
 DOUBLE = np.float64
@@ -59,26 +60,25 @@ cdef class mM:
 
         http://www.dcc.uchile.cl/~gnavarro/ps/talg12.pdf
         """
-        # i/j and the block bounds index into B[0, 2n), so they are Py_ssize_t
-        # (64-bit); lvl/pos iterate the small rmM binary tree and stay int.
+        # i/j index into B[0, 2n) and lvl/pos iterate the small rmM binary
+        # tree; all are non-negative indices, so they are Py_ssize_t.
         cdef Py_ssize_t i, j  # parenthesis positions
-        cdef int lvl, pos  # rmM-tree level / node within a level
+        cdef Py_ssize_t lvl, pos  # rmM-tree level / node within a level
         cdef Py_ssize_t offset  # tip offset in binary tree for a given parenthesis
         cdef Py_ssize_t lower_limit  # the lower limit of the bucket a parenthesis is in
         cdef Py_ssize_t upper_limit  # the upper limit of the bucket a parenthesis is in
         cdef Py_ssize_t min_ = 0 # m, absolute minimum for a blokc
         cdef Py_ssize_t max_ = 0 # M, absolute maximum for a block
         cdef Py_ssize_t excess = 0 # e, absolute excess
-        cdef int vbar
         cdef Py_ssize_t r = 0
 
         # build tip info
         self.b = <Py_ssize_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
 
         # determine the number of nodes and height of the binary tree
-        self.n_tip = <int>ceil(B_size / <double> self.b)
-        self.height = <int>ceil(log2(self.n_tip))
-        self.n_internal = <int>(pow(2, self.height)) - 1
+        self.n_tip = <Py_ssize_t>ceil(B_size / <double> self.b)
+        self.height = <Py_ssize_t>ceil(log2(self.n_tip))
+        self.n_internal = <Py_ssize_t>(pow(2, self.height)) - 1
         self.n_total = self.n_tip + self.n_internal
 
         with gil:
@@ -97,7 +97,7 @@ cdef class mM:
             offset = i // self.b
             lower_limit = i
             upper_limit = min(i + self.b, B_size)
-            min_ = INT_MAX
+            min_ = PY_SSIZE_T_MAX
             max_ = 0
 
             self.r[offset + self.n_internal] = r
@@ -123,7 +123,7 @@ cdef class mM:
         # compute for internal nodes of rmM tree in reverse level order starting
         # at the level above the tips
         for lvl in range(self.height - 1, -1, -1):
-            num_curr_nodes = <int>pow(2, lvl)
+            num_curr_nodes = <Py_ssize_t>pow(2, lvl)
 
             # for each node in the level
             for pos in range(num_curr_nodes):
@@ -431,7 +431,7 @@ cdef class BPTree:
 
     cdef void _set_edges(self, cnp.ndarray[INT32_t, ndim=1] edges):
         cdef:
-            int i, n
+            Py_ssize_t i, n
             INT32_t edge
             cnp.ndarray[Py_ssize_t, ndim=1] _edge_lookup
             cnp.ndarray[BOOL_t, ndim=1] b
@@ -482,12 +482,12 @@ cdef class BPTree:
         Py_ssize_t
             The rank order of the position.
         """
-        cdef int k
+        cdef Py_ssize_t k
         cdef Py_ssize_t r = 0
         cdef Py_ssize_t lower_bound
         cdef Py_ssize_t upper_bound
         cdef Py_ssize_t j
-        cdef int node
+        cdef Py_ssize_t node
 
         k = i // self._rmm.b
 
@@ -563,7 +563,7 @@ cdef class BPTree:
         cdef:
             Py_ssize_t d_star, p, blk_end, tree_v
             Py_ssize_t bi, bj
-            int b
+            Py_ssize_t b
 
         if i >= j:
             return i
@@ -587,7 +587,7 @@ cdef class BPTree:
             # full interior blocks (bi, bj) via the rmM tree
             if bi + 1 <= bj - 1:
                 tree_v = self._rmq_tree_min(0, 0, self._rmm.n_internal,
-                                            <int>(bi + 1), <int>(bj - 1))
+                                            bi + 1, bj - 1)
                 if tree_v < d_star:
                     d_star = tree_v
             # leading part of the block containing j (inclusive of j)
@@ -609,7 +609,7 @@ cdef class BPTree:
         cdef:
             Py_ssize_t m_star, p, blk_end, tree_v
             Py_ssize_t bi, bj
-            int b
+            Py_ssize_t b
 
         if i >= j:
             return i
@@ -631,7 +631,7 @@ cdef class BPTree:
                     m_star = self._e_index[p]
             if bi + 1 <= bj - 1:
                 tree_v = self._rmq_tree_max(0, 0, self._rmm.n_internal,
-                                            <int>(bi + 1), <int>(bj - 1))
+                                            bi + 1, bj - 1)
                 if tree_v > m_star:
                     m_star = tree_v
             for p in range(bj * b, j + 1):
@@ -643,8 +643,8 @@ cdef class BPTree:
             return i
         return self.fwdsearch(i, m_star - self._e_index[i])
 
-    cdef Py_ssize_t _rmq_tree_min(self, int node, int node_lo, int node_hi,
-                              int lo, int hi) nogil:
+    cdef Py_ssize_t _rmq_tree_min(self, Py_ssize_t node, Py_ssize_t node_lo, Py_ssize_t node_hi,
+                              Py_ssize_t lo, Py_ssize_t hi) nogil:
         """Minimum excess over leaf-blocks [lo, hi].
 
         Segment-tree range query over the rmM binary tree; ``node`` spans the
@@ -654,11 +654,11 @@ cdef class BPTree:
         filled last level is only ever touched through the partial end-blocks,
         which the callers scan directly.
         """
-        cdef int mid
+        cdef Py_ssize_t mid
         cdef Py_ssize_t left_v, right_v
 
         if hi < node_lo or node_hi < lo:  # no overlap
-            return INT_MAX
+            return PY_SSIZE_T_MAX
         if lo <= node_lo and node_hi <= hi:  # fully covered
             return self._rmm.mM[node, self._rmm.m_idx]
         mid = (node_lo + node_hi) / 2
@@ -667,18 +667,18 @@ cdef class BPTree:
                                      lo, hi)
         return left_v if left_v < right_v else right_v
 
-    cdef Py_ssize_t _rmq_tree_max(self, int node, int node_lo, int node_hi,
-                              int lo, int hi) nogil:
+    cdef Py_ssize_t _rmq_tree_max(self, Py_ssize_t node, Py_ssize_t node_lo, Py_ssize_t node_hi,
+                              Py_ssize_t lo, Py_ssize_t hi) nogil:
         """Maximum excess over leaf-blocks [lo, hi].
 
         The range-maximum counterpart of :meth:`_rmq_tree_min`; see its note on
         why every fully-covered node is a real block.
         """
-        cdef int mid
+        cdef Py_ssize_t mid
         cdef Py_ssize_t left_v, right_v
 
         if hi < node_lo or node_hi < lo:  # no overlap
-            return -INT_MAX
+            return -PY_SSIZE_T_MAX
         if lo <= node_lo and node_hi <= hi:  # fully covered
             return self._rmm.mM[node, self._rmm.M_idx]
         mid = (node_lo + node_hi) / 2
@@ -1387,7 +1387,7 @@ cdef class BPTree:
         bit_array_free(mask)
         return new_bp
 
-    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil:
+    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, Py_ssize_t k, Py_ssize_t b, Py_ssize_t d) nogil:
         """Scan a block forward from i.
 
         Parameters
@@ -1424,7 +1424,7 @@ cdef class BPTree:
 
         return -1
 
-    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil:
+    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, Py_ssize_t k, Py_ssize_t b, Py_ssize_t d) nogil:
         """Scan a block backward from i.
 
         Parameters
@@ -1485,9 +1485,9 @@ cdef class BPTree:
         int
             The index of the result, or -1 if no result was found
         """
-        cdef int k  # the block being interrogated
+        cdef Py_ssize_t k  # the block being interrogated
         cdef Py_ssize_t result = -1 # the result of a scan within a block
-        cdef int node  # the node within the binary tree being examined
+        cdef Py_ssize_t node  # the node within the binary tree being examined
 
         # get the block of parentheses to check
         k = i // self._rmm.b
@@ -1525,7 +1525,7 @@ cdef class BPTree:
 
             # we have found a block with contains our solution. convert from the
             # node index back into the block index
-            k = node - <int>(pow(2, self._rmm.height) - 1)
+            k = node - <Py_ssize_t>(pow(2, self._rmm.height) - 1)
 
             # scan for a result using the original d
             result = self.scan_block_forward(i, k, self._rmm.b, d)
@@ -1547,9 +1547,9 @@ cdef class BPTree:
         int
             The index of the result, or -1 if no result was found
         """
-        cdef int k  # the block being interrogated
+        cdef Py_ssize_t k  # the block being interrogated
         cdef Py_ssize_t result = -1 # the result of a scan within a block
-        cdef int node  # the node within the binary tree being examined
+        cdef Py_ssize_t node  # the node within the binary tree being examined
 
         # get the block of parentheses to check
         k = i // self._rmm.b
@@ -1566,7 +1566,7 @@ cdef class BPTree:
         # special case: check sibling
         if result == -1 and bt_is_right_child(node):
             node = bt_left_sibling(node)
-            k = node - <int>(pow(2, self._rmm.height) - 1)
+            k = node - <Py_ssize_t>(pow(2, self._rmm.height) - 1)
             result = self.scan_block_backward(i, k, self._rmm.b, d)
 
            # reset node and k in the event that result == -1
@@ -1600,7 +1600,7 @@ cdef class BPTree:
 
             # we have found a block with contains our solution. convert from the
             # node index back into the block index
-            k = node - <int>(pow(2, self._rmm.height) - 1)
+            k = node - <Py_ssize_t>(pow(2, self._rmm.height) - 1)
 
             # scan for a result
             result = self.scan_block_backward(i, k, self._rmm.b, d)

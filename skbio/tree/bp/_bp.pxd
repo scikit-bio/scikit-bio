@@ -22,13 +22,13 @@ ctypedef cnp.uint8_t BOOL_t
 
 cdef class mM:
     cdef Py_ssize_t b  # block size (Py_ssize_t so block-index * block-size products stay 64-bit)
-    cdef int n_tip  # number of tips in the binary tree
-    cdef int n_internal  # number of internal nodes in the binary tree
-    cdef int n_total  # total number of nodes in the binary tree
-    cdef int height  # the height of the binary tree
-    cdef int m_idx  # m is minimum excess
-    cdef int M_idx  # M is maximum excess
-    cdef int r_idx  # rank
+    cdef Py_ssize_t n_tip  # number of tips in the binary tree
+    cdef Py_ssize_t n_internal  # number of internal nodes in the binary tree
+    cdef Py_ssize_t n_total  # total number of nodes in the binary tree
+    cdef Py_ssize_t height  # the height of the binary tree
+    cdef Py_ssize_t m_idx  # m is minimum excess
+    cdef Py_ssize_t M_idx  # M is maximum excess
+    cdef Py_ssize_t r_idx  # rank
     cdef Py_ssize_t[:, ::1] mM
     cdef Py_ssize_t[:] r
 
@@ -68,8 +68,8 @@ cdef class BPTree:
     cpdef Py_ssize_t parent(self, Py_ssize_t i) nogil
     cpdef Py_ssize_t depth(self, Py_ssize_t i) nogil
     cpdef Py_ssize_t root(self) nogil
-    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil
-    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, int k, Py_ssize_t b, Py_ssize_t d) nogil
+    cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, Py_ssize_t k, Py_ssize_t b, Py_ssize_t d) nogil
+    cdef Py_ssize_t scan_block_backward(self, Py_ssize_t i, Py_ssize_t k, Py_ssize_t b, Py_ssize_t d) nogil
     cdef void _set_edges(self, cnp.ndarray[INT32_t, ndim=1] edges)
 
     cpdef inline unicode name(self, Py_ssize_t i)
@@ -78,8 +78,8 @@ cdef class BPTree:
     cpdef Py_ssize_t edge_from_number(self, INT32_t n)
     cpdef Py_ssize_t rmq(self, Py_ssize_t i, Py_ssize_t j) nogil
     cpdef Py_ssize_t rMq(self, Py_ssize_t i, Py_ssize_t j) nogil
-    cdef Py_ssize_t _rmq_tree_min(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
-    cdef Py_ssize_t _rmq_tree_max(self, int node, int node_lo, int node_hi, int lo, int hi) nogil
+    cdef Py_ssize_t _rmq_tree_min(self, Py_ssize_t node, Py_ssize_t node_lo, Py_ssize_t node_hi, Py_ssize_t lo, Py_ssize_t hi) nogil
+    cdef Py_ssize_t _rmq_tree_max(self, Py_ssize_t node, Py_ssize_t node_lo, Py_ssize_t node_hi, Py_ssize_t lo, Py_ssize_t hi) nogil
     cpdef Py_ssize_t postorder_select(self, Py_ssize_t k) nogil
     cpdef Py_ssize_t postorder_rank(self, Py_ssize_t i) nogil
     cpdef Py_ssize_t preorder_select(self, Py_ssize_t k) nogil
