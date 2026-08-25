@@ -152,9 +152,9 @@ def write_newick(BPTree tree, object output, bint include_edge):
                     output.write(name)
 
             if include_edge:
-                output.write(':%f{%d}' % (length, edge))
+                output.write(':%s{%d}' % (length, edge))
             else:
-                output.write(':%f' % length)
+                output.write(':%s' % length)
 
             if tree.next_sibling(open_paren_stack.pop()) == 0:
                 if idx != root_close:
@@ -162,7 +162,7 @@ def write_newick(BPTree tree, object output, bint include_edge):
             else:
                 output.write(',')
 
-    output.write(';')
+    output.write(';\n')
 
 
 cpdef parse_newick(unicode data):

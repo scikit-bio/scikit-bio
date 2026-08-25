@@ -248,41 +248,102 @@ cdef class BPTree:
             _e_index[i] = self._excess(i)
         self._e_index = _e_index
 
-    def write(self, object fname):
-        """Save the tree to a compressed NumPy ``.npz`` archive.
+    default_write_format = "newick"
 
-        The parentheses bit array, node names, and branch lengths are stored.
+    def write(self, object file, format=None, **kwargs):
+        """Write the tree to a file via the ``skbio.io`` registry.
 
         Parameters
         ----------
-        fname : str or file-like object
+        file : str or file-like object
             Path or open file handle to write to.
+        format : str, optional
+            The file format to write. Defaults to ``"newick"``.
+        kwargs : dict, optional
+            Format-specific parameters passed to the writer.
 
         See Also
         --------
         read
+        to_npz
+        skbio.io.registry.write
+        skbio.io.format.newick
 
         """
-        np.savez_compressed(fname, names=self._names, lengths=self._lengths,
-                            B=self.data)
+        # imported lazily to avoid an import cycle at module load time
+        import skbio.io
+
+        return skbio.io.write(
+            self, into=file, format=format or self.default_write_format, **kwargs
+        )
 
     @staticmethod
-    def read(object fname):
-        """Load a tree from a NumPy ``.npz`` archive written by ``write``.
+    def read(object file, format=None, **kwargs):
+        """Read a tree from a file via the ``skbio.io`` registry.
 
         Parameters
         ----------
-        fname : str or file-like object
+        file : str or file-like object
+            Path or open file handle to read from.
+        format : str, optional
+            The file format to read. If omitted, the format is inferred.
+        kwargs : dict, optional
+            Format-specific parameters passed to the reader.
+
+        Returns
+        -------
+        BPTree
+            The parsed tree.
+
+        See Also
+        --------
+        write
+        from_npz
+        skbio.io.registry.read
+        skbio.io.format.newick
+
+        """
+        # imported lazily to avoid an import cycle at module load time
+        import skbio.io
+
+        return skbio.io.read(file, into=BPTree, format=format, **kwargs)
+
+    def to_npz(self, object file):
+        """Save the tree to a compressed NumPy ``.npz`` archive.
+
+        The parentheses bit array, node names, and branch lengths are stored;
+        edge numbers are not. This is a lightweight binary dump, distinct from
+        the registry-based :meth:`write` (which defaults to the ``newick``
+        format).
+
+        Parameters
+        ----------
+        file : str or file-like object
+            Path or open file handle to write to.
+
+        See Also
+        --------
+        from_npz
+        write
+
+        """
+        np.savez_compressed(
+            file, names=self._names, lengths=self._lengths, B=self.data
+        )
+
+    @classmethod
+    def from_npz(cls, object file):
+        """Load a tree from a NumPy ``.npz`` archive written by ``to_npz``.
+
+        Parameters
+        ----------
+        file : str or file-like object
             Path or open file handle to read from.
 
         Returns
         -------
         BPTree
             The reconstructed tree, with node names and branch lengths.
-
-        See Also
-        --------
-        write
 
         Warnings
         --------
@@ -291,12 +352,16 @@ cdef class BPTree:
         array can execute arbitrary code, so only read ``.npz`` archives from
         trusted sources.
 
+        See Also
+        --------
+        to_npz
+        read
+
         """
-        # names is an object array pickled by ``write``, so unpickling must be
+        # names is an object array pickled by ``to_npz``, so unpickling must be
         # allowed to restore it
-        data = np.load(fname, allow_pickle=True)
-        bp = BPTree(data['B'], names=data['names'], lengths=data['lengths'])
-        return bp
+        data = np.load(file, allow_pickle=True)
+        return cls(data["B"], names=data["names"], lengths=data["lengths"])
 
     @classmethod
     def from_treenode(cls, tree):
