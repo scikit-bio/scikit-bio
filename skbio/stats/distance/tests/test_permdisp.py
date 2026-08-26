@@ -282,6 +282,28 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    def test_fsvd_seed_is_reproducible(self):
+        # fsvd draws a random projection, so permdisp has to pass its seed down
+        # to pcoa for the result to be reproducible. The matrix has to be large
+        # enough that different projections actually disagree; on a handful of
+        # samples they all converge and the difference is invisible. No
+        # permutations are needed, since the statistic alone depends on the
+        # ordination.
+        rng = np.random.default_rng(0)
+        mat = rng.random((60, 60))
+        mat = (mat + mat.T) / 2
+        np.fill_diagonal(mat, 0.0)
+        dm = DistanceMatrix(mat)
+        grouping = ['a'] * 30 + ['b'] * 30
+
+        for test in ('centroid', 'median'):
+            first = permdisp(dm, grouping, test=test, permutations=0,
+                             method='fsvd', seed=42)
+            repeat = permdisp(dm, grouping, test=test, permutations=0,
+                              method='fsvd', seed=42)
+            npt.assert_allclose(repeat['test statistic'],
+                                first['test statistic'])
+
     def test_not_distance_matrix(self):
         dm = []
         grouping = ['Control', 'Control', 'Control', 'Control', 'Control',

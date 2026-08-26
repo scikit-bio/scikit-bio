@@ -294,6 +294,7 @@ def permdisp(
             distmat,
             method=method,
             dimensions=dimensions,
+            seed=seed,
             warn_neg_eigval=warn_neg_eigval,
         )
     else:
