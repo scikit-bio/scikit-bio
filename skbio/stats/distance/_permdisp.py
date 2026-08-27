@@ -22,12 +22,264 @@ from ._base import (
     DistanceMatrix,
 )
 from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
+from skbio._config import _resolve_engine
+
+try:
+    from numba import njit, prange, get_num_threads
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import ArrayLike
     import pandas as pd
     from skbio.util._typing import SeedLike
+
+
+if NUMBA_AVAILABLE:
+
+    @njit
+    def _anova_f_nb(dists, codes, counts, group_sums, num_groups):
+        """One-way ANOVA F over per-sample distances to their group center.
+
+        Shared by both center definitions: only the distances differ, the test
+        around them does not. ``counts`` and ``group_sums`` are the per-group
+        sample count and distance total, already accumulated by the caller
+        while it walked the samples.
+        """
+        n = dists.shape[0]
+
+        total = 0
+        grand = 0.0
+        for g in range(num_groups):
+            total += counts[g]
+            grand += group_sums[g]
+        grand /= total
+
+        ss_between = 0.0
+        for g in range(num_groups):
+            diff = group_sums[g] / counts[g] - grand
+            ss_between += counts[g] * diff * diff
+
+        ss_within = 0.0
+        for i in range(n):
+            g = codes[i]
+            resid = dists[i] - group_sums[g] / counts[g]
+            ss_within += resid * resid
+
+        ms_between = ss_between / (num_groups - 1)
+        ms_within = ss_within / (total - num_groups)
+        if ms_within == 0.0:
+            if ms_between == 0.0:
+                return np.nan
+            return np.inf
+        return ms_between / ms_within
+
+    @njit
+    def _permdisp_f_stat_centroid_nb(samples, codes, num_groups):
+        """Levene-style F statistic on distances to each group's centroid.
+
+        Reproduces one call of ``_compute_groups(samples, "centroid", codes)``:
+        the group centroids, the Euclidean distance of every sample to its own
+        centroid, and the one-way ANOVA F over those distances. ``codes`` holds
+        the group index of each sample (0 to ``num_groups`` - 1).
+        """
+        n, d = samples.shape
+
+        counts = np.zeros(num_groups, np.int64)
+        centroids = np.zeros((num_groups, d), np.float64)
+        for i in range(n):
+            g = codes[i]
+            counts[g] += 1
+            for j in range(d):
+                centroids[g, j] += samples[i, j]
+        for g in range(num_groups):
+            for j in range(d):
+                centroids[g, j] /= counts[g]
+
+        # distance of each sample to its own centroid, plus the per-group sum
+        # needed for the group means below
+        dists = np.empty(n, np.float64)
+        group_sums = np.zeros(num_groups, np.float64)
+        for i in range(n):
+            g = codes[i]
+            acc = 0.0
+            for j in range(d):
+                diff = samples[i, j] - centroids[g, j]
+                acc += diff * diff
+            val = np.sqrt(acc)
+            dists[i] = val
+            group_sums[g] += val
+
+        # one-way ANOVA on the distances
+        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
+
+    @njit(parallel=True)
+    def _permdisp_perm_stats_centroid_nb(samples, perm_codes, num_groups):
+        """F statistic for a batch of groupings, one per row of ``perm_codes``.
+
+        The whole permutation loop is batched into a single call because the
+        per-permutation work is O(n * d) with ``d`` the retained dimensions
+        (10 by default), small enough that Python-level call overhead would
+        otherwise dominate. Permutations are independent, so the parallel axis
+        is the permutation rather than anything inside a single statistic.
+        """
+        n_perm = perm_codes.shape[0]
+        out = np.empty(n_perm, np.float64)
+        for p in prange(n_perm):
+            out[p] = _permdisp_f_stat_centroid_nb(samples, perm_codes[p], num_groups)
+        return out
+
+    @njit
+    def _geomedian_nb(X, eps=1e-7, maxiters=500):
+        """Geometric median of the columns of ``X``, shaped (dims, samples).
+
+        Numba port of ``._cutils.geomedian_axis_one``, which is itself a port of
+        hdmedians v0.14.2. Same modified Weiszfeld iteration, same convergence
+        test and the same handling of samples that coincide with the current
+        estimate, so both engines return the same center.
+        """
+        p, n = X.shape
+
+        y = np.zeros(p, np.float64)
+        for j in range(p):
+            acc = 0.0
+            for i in range(n):
+                acc += X[j, i]
+            y[j] = acc / n
+
+        if n == 1:
+            return y
+
+        D = np.empty(n, np.float64)
+        Dinv = np.empty(n, np.float64)
+        W = np.empty(n, np.float64)
+        T = np.empty(p, np.float64)
+        y1 = np.empty(p, np.float64)
+        R = np.empty(p, np.float64)
+
+        for _ in range(maxiters):
+            for i in range(n):
+                acc = 0.0
+                for j in range(p):
+                    diff = X[j, i] - y[j]
+                    acc += diff * diff
+                Di = np.sqrt(acc)
+                D[i] = Di
+                # A sample sitting on the current estimate contributes no
+                # direction, so it is dropped from the weights and added back
+                # through the nzeros correction below.
+                Dinv[i] = 1.0 / Di if abs(Di) > eps else 0.0
+
+            nzeros = n
+            for i in range(n):
+                if abs(D[i]) > eps:
+                    nzeros -= 1
+
+            # Every sample sits on the estimate, so there is no direction left
+            # to move in and the estimate is the median. Checked before the
+            # weights because the inverse distances are then all zero and their
+            # total would divide by zero just below; the Cython original tests
+            # this after dividing and raises instead.
+            if nzeros == n:
+                break
+
+            Dinvs = 0.0
+            for i in range(n):
+                Dinvs += Dinv[i]
+            for i in range(n):
+                W[i] = Dinv[i] / Dinvs
+
+            for j in range(p):
+                total = 0.0
+                for i in range(n):
+                    if abs(D[i]) > eps:
+                        total += W[i] * X[j, i]
+                T[j] = total
+
+            if nzeros == 0:
+                for j in range(p):
+                    y1[j] = T[j]
+            else:
+                for j in range(p):
+                    R[j] = (T[j] - y[j]) * Dinvs
+                r = 0.0
+                for j in range(p):
+                    r += R[j] * R[j]
+                r = np.sqrt(r)
+                rinv = nzeros / r if r > eps else 0.0
+                for j in range(p):
+                    y1[j] = max(0.0, 1 - rinv) * T[j] + min(1.0, rinv) * y[j]
+
+            dist = 0.0
+            for j in range(p):
+                diff = y[j] - y1[j]
+                dist += diff * diff
+            if np.sqrt(dist) < eps:
+                break
+
+            for j in range(p):
+                y[j] = y1[j]
+
+        return y
+
+    @njit
+    def _permdisp_f_stat_median_nb(samples, codes, num_groups):
+        """As :func:`_permdisp_f_stat_centroid_nb`, but around group medians.
+
+        The center of each group is its geometric median rather than its mean,
+        which is what ``test="median"`` selects.
+        """
+        n, d = samples.shape
+
+        counts = np.zeros(num_groups, np.int64)
+        for i in range(n):
+            counts[codes[i]] += 1
+
+        dists = np.empty(n, np.float64)
+        group_sums = np.zeros(num_groups, np.float64)
+        for g in range(num_groups):
+            size = counts[g]
+            # geomedian_axis_one takes (dims, samples), so the group is gathered
+            # transposed.
+            grp = np.empty((d, size), np.float64)
+            idx = np.empty(size, np.int64)
+            k = 0
+            for i in range(n):
+                if codes[i] == g:
+                    idx[k] = i
+                    for j in range(d):
+                        grp[j, k] = samples[i, j]
+                    k += 1
+            center = _geomedian_nb(grp)
+            for m in range(size):
+                acc = 0.0
+                for j in range(d):
+                    diff = samples[idx[m], j] - center[j]
+                    acc += diff * diff
+                val = np.sqrt(acc)
+                dists[idx[m]] = val
+                group_sums[g] += val
+
+        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
+
+    @njit(parallel=True)
+    def _permdisp_perm_stats_median_nb(samples, perm_codes, num_groups):
+        """F statistic for a batch of groupings, around group medians."""
+        n_perm = perm_codes.shape[0]
+        out = np.empty(n_perm, np.float64)
+        for p in prange(n_perm):
+            out[p] = _permdisp_f_stat_median_nb(samples, perm_codes[p], num_groups)
+        return out
+
+
+# Permutations processed per batched kernel call, per thread. The permutation is
+# the parallel axis here, so this is what keeps every worker supplied; it is
+# deliberately a few dozen per thread rather than one so the kernel launch is
+# amortised, and it bounds the grouping buffer to (CHUNK x n).
+_PERM_CHUNK_PER_THREAD = 32
 
 
 @params_aliased(
@@ -46,6 +298,7 @@ def permdisp(
     dimensions: int = 10,
     seed: SeedLike | None = None,
     warn_neg_eigval: bool | float = 0.01,
+    engine: str | None = None,
 ) -> pd.Series:
     r"""Test for Homogeneity of Multivariate Groups Disperisons.
 
@@ -102,6 +355,14 @@ def permdisp(
         during PCoA. See :func:`skbio.stats.ordination.pcoa <pcoa>` for details.
 
         .. versionadded:: 0.6.3
+
+    engine : {"cython", "numba"}, optional
+        Compute engine to use for the permutation test. ``"cython"`` (default)
+        uses the existing implementation. ``"numba"`` uses the optional Numba
+        implementation and requires Numba to be installed. If not provided, the
+        global default is used (see :func:`skbio.set_config`).
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -304,15 +565,78 @@ def permdisp(
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    test_stat_function = partial(_compute_groups, sample_data, test)
+    engine = _resolve_engine(engine, ("cython", "numba"))
 
-    stat, p_value = _run_monte_carlo_stats(
-        test_stat_function, grouping, permutations, seed
-    )
+    # The Numba engine batches the permutation loop, for both center
+    # definitions.
+    if engine == "numba":
+        stat, p_value = _run_permdisp_numba(
+            sample_data, grouping, num_groups, permutations, seed, test
+        )
+    else:
+        test_stat_function = partial(_compute_groups, sample_data, test)
+
+        stat, p_value = _run_monte_carlo_stats(
+            test_stat_function, grouping, permutations, seed
+        )
 
     return _build_results(
         "PERMDISP", "F-value", sample_size, num_groups, stat, p_value, permutations
     )
+
+
+def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, test):
+    """Observed statistic and p-value via the Numba engine.
+
+    Draws the permutations on the host in the same order as
+    :func:`._base._run_monte_carlo_stats` (observed grouping first, then one
+    ``rng.permutation`` per replicate) so the p-value matches the Cython engine
+    exactly, then evaluates them in a single batched kernel call per chunk.
+    """
+    if permutations < 0:
+        raise ValueError(
+            "Number of permutations must be greater than or equal to zero."
+        )
+
+    samples = np.ascontiguousarray(sample_data, dtype=np.float64)
+    codes = np.ascontiguousarray(grouping, dtype=np.int32)
+    sample_size = codes.shape[0]
+
+    if test == "centroid":
+        batch = _permdisp_perm_stats_centroid_nb
+    else:
+        batch = _permdisp_perm_stats_median_nb
+
+    rng = get_rng(seed)
+    n_total = permutations + 1
+    stats = np.empty(n_total, np.float64)
+
+    # Each permutation is only O(n * d) work with d the retained dimensions (10
+    # by default), so the parallel axis is the permutation itself rather than
+    # anything inside a single statistic. Groupings are generated in fixed-size
+    # chunks so peak memory stays at (CHUNK x n) instead of growing with the
+    # permutation count; unlike the permanova row-tile kernel, here the chunk is
+    # the amount of parallel work per kernel call, so it scales with the thread
+    # count to keep every worker busy.
+    CHUNK = _PERM_CHUNK_PER_THREAD * get_num_threads()
+    width = min(CHUNK, n_total)
+    # Permutation-major buffer, allocated once and reused across chunks;
+    # rng.permutation fills a row, so the writes are sequential.
+    buf = np.empty((width, sample_size), dtype=np.int32)
+    for start in range(0, n_total, CHUNK):
+        end = min(start + CHUNK, n_total)
+        for i in range(start, end):
+            if i == 0:
+                buf[0] = codes
+            else:
+                buf[i - start] = rng.permutation(codes)
+        stats[start:end] = batch(samples, buf[: end - start], num_groups)
+
+    stat = float(stats[0])
+    if permutations == 0:
+        return stat, np.nan
+    p_value = (1.0 + np.sum(stats[1:] >= stats[0])) / (1.0 + permutations)
+    return stat, float(p_value)
 
 
 def _compute_groups(samples, test_type, grouping):

@@ -21,7 +21,7 @@ from skbio.stats.ordination import pcoa
 from skbio.stats.distance import permdisp
 from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
-from skbio.util import get_data_path
+from skbio.util import get_data_path, numba_code
 
 IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
@@ -439,6 +439,189 @@ class PERMDISPTests(TestCase):
             "permdisp must surface pcoa's EIGH warning when the caller "
             "explicitly passes dimensions=0 on a large matrix",
         )
+
+
+class PERMDISPEngineTests(TestCase):
+    """The numba engine must agree with cython, statistic and p-value alike."""
+
+    def setUp(self):
+        # A few well separated groups over a random matrix, large enough that
+        # the pcoa retains the default ten dimensions.
+        rng = np.random.default_rng(0)
+        mat = rng.random((30, 30))
+        mat = (mat + mat.T) / 2
+        np.fill_diagonal(mat, 0.0)
+        self.dm = DistanceMatrix(mat)
+        self.grouping = ['a'] * 10 + ['b'] * 10 + ['c'] * 10
+
+    def _assert_engines_agree(self, test, **kwargs):
+        obs = permdisp(self.dm, self.grouping, test=test, seed=42,
+                       engine="numba", **kwargs)
+        exp = permdisp(self.dm, self.grouping, test=test, seed=42,
+                       engine="cython", **kwargs)
+        npt.assert_allclose(obs['test statistic'], exp['test statistic'])
+        # The p-value is the real check: it only matches if the numba driver
+        # draws permutations in the same order as the cython path.
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_centroid_matches_cython(self):
+        self._assert_engines_agree("centroid", permutations=99)
+
+    @numba_code
+    def test_median_matches_cython(self):
+        self._assert_engines_agree("median", permutations=99)
+
+    @numba_code
+    def test_p_value_matches_cython_across_seeds(self):
+        # The p-value only matches if the numba driver consumes the random
+        # stream exactly as the cython path does. A desynchronized stream
+        # still agrees on most seeds, so one seed is not enough to catch it.
+        for seed in range(10):
+            obs = permdisp(self.dm, self.grouping, test="median",
+                           permutations=99, seed=seed, engine="numba")
+            exp = permdisp(self.dm, self.grouping, test="median",
+                           permutations=99, seed=seed, engine="cython")
+            self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_uneven_groups_match_cython(self):
+        self.grouping = ['a'] * 4 + ['b'] * 6 + ['c'] * 20
+        self._assert_engines_agree("median", permutations=99)
+
+    @numba_code
+    def test_dimensions_passed_through(self):
+        self._assert_engines_agree("median", permutations=99, dimensions=3)
+
+    @numba_code
+    def test_ordination_input_matches_cython(self):
+        # permdisp also accepts an OrdinationResults directly, which skips the
+        # internal pcoa call. The engine dispatch happens after that branch, so
+        # both input forms have to agree.
+        ordination = pcoa(self.dm, method="eigh", dimensions=10)
+        for test in ("centroid", "median"):
+            obs = permdisp(ordination, self.grouping, test=test,
+                           permutations=99, seed=42, engine="numba")
+            exp = permdisp(ordination, self.grouping, test=test,
+                           permutations=99, seed=42, engine="cython")
+            npt.assert_allclose(obs['test statistic'], exp['test statistic'])
+            self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_no_permutations(self):
+        # permutations=0 skips the batch entirely and returns a NaN p-value.
+        obs = permdisp(self.dm, self.grouping, permutations=0, engine="numba")
+        exp = permdisp(self.dm, self.grouping, permutations=0, engine="cython")
+        npt.assert_allclose(obs['test statistic'], exp['test statistic'])
+        self.assertTrue(np.isnan(obs['p-value']))
+
+    @numba_code
+    def test_geomedian_matches_cython_kernel(self):
+        # The numba geomedian is a port of geomedian_axis_one and has to
+        # return the same center, including for the degenerate single-column
+        # case that returns the mean without iterating.
+        from skbio.stats.distance._permdisp import _geomedian_nb
+
+        rng = np.random.default_rng(1)
+        for shape in [(10, 30), (3, 50), (10, 1), (10, 2)]:
+            X = np.ascontiguousarray(rng.random(shape))
+            npt.assert_allclose(_geomedian_nb(X.copy()),
+                                np.asarray(geomedian_axis_one(X.copy())))
+
+        # Layouts where the iteration lands exactly on one of the samples.
+        # That is the one path needing the zero-distance correction, and these
+        # particular ones move to a different center without it, so they pin
+        # the correction down rather than merely reaching it.
+        degenerate = [np.array([[2.0, 1.0, -2.0, 2.0, -3.0, 0.0]]),
+                      np.array([[0.0, 3.0, -2.0, -1.0, 2.0, -2.0]]),
+                      np.array([[-2.0, -1.0, -1.0, 0.0, -1.0, 1.0]]),
+                      np.array([[-1.0, 1.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, -1.0, 1.0, 0.0]])]
+        for X in degenerate:
+            X = np.ascontiguousarray(X)
+            npt.assert_allclose(_geomedian_nb(X.copy()),
+                                np.asarray(geomedian_axis_one(X.copy())))
+
+    @numba_code
+    def test_geomedian_all_points_coincide(self):
+        # Every sample sitting on the same spot leaves the iteration with no
+        # direction to move in, and the median is that spot. Not compared
+        # against geomedian_axis_one here because the Cython kernel divides by
+        # a zero weight total before reaching that test and raises instead.
+        from skbio.stats.distance._permdisp import _geomedian_nb
+
+        X = np.ascontiguousarray(np.tile(np.array([[1.5], [-2.0]]), (1, 6)))
+        npt.assert_allclose(_geomedian_nb(X), np.array([1.5, -2.0]))
+
+    @numba_code
+    def test_degenerate_anova_matches_f_oneway(self):
+        # The numba kernels inline the one-way ANOVA instead of calling
+        # scipy.stats.f_oneway, so the two have to agree where the ratio stops
+        # being finite. Putting each group on a shell of constant radius about
+        # its own center makes every within-group distance identical, which
+        # zeroes the within-group term: differing radii then leave the groups
+        # apart and give inf, equal radii give nan.
+        from skbio.stats.distance._permdisp import _permdisp_f_stat_centroid_nb
+
+        def shell(cx, cy, r, k):
+            th = np.linspace(0, 2 * np.pi, k, endpoint=False)
+            return np.stack([cx + r * np.cos(th), cy + r * np.sin(th)], axis=1)
+
+        codes = np.array([0] * 4 + [1] * 4)
+        for radius in (2.0, 1.0):
+            samples = np.vstack([shell(0.0, 0.0, 1.0, 4),
+                                 shell(10.0, 10.0, radius, 4)])
+            exp = _compute_groups(samples, "centroid", codes)
+            obs = _permdisp_f_stat_centroid_nb(
+                np.ascontiguousarray(samples),
+                np.ascontiguousarray(codes, dtype=np.int32), 2)
+            npt.assert_array_equal(obs, exp)
+
+    @numba_code
+    def test_tied_statistics_match_cython(self):
+        # With few samples per group many permutations reproduce the observed
+        # partition under a different labelling, which gives a statistic that
+        # is exactly equal to the observed one rather than merely close. Those
+        # ties count towards the p-value, so this pins the comparison down to
+        # the same ">=" the cython path uses.
+        rng = np.random.default_rng(0)
+        mat = rng.random((6, 6))
+        mat = (mat + mat.T) / 2
+        np.fill_diagonal(mat, 0.0)
+        dm = DistanceMatrix(mat)
+        grouping = ['a'] * 3 + ['b'] * 3
+        for test in ("centroid", "median"):
+            obs = permdisp(dm, grouping, test=test, permutations=999, seed=42,
+                           engine="numba", dimensions=5, warn_neg_eigval=False)
+            exp = permdisp(dm, grouping, test=test, permutations=999, seed=42,
+                           engine="cython", dimensions=5, warn_neg_eigval=False)
+            npt.assert_allclose(obs['test statistic'], exp['test statistic'])
+            self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_negative_permutations_raises(self):
+        with self.assertRaisesRegex(ValueError, "greater than or equal to zero"):
+            permdisp(self.dm, self.grouping, permutations=-1, engine="numba")
+
+    @numba_code
+    def test_crosses_chunk_boundary(self):
+        # The driver batches the permutations, so more than one chunk's worth
+        # exercises the multi-batch path. The RNG has to stay in step across
+        # chunks for the p-value to still match the cython engine.
+        from numba import get_num_threads
+        from skbio.stats.distance._permdisp import _PERM_CHUNK_PER_THREAD
+
+        permutations = _PERM_CHUNK_PER_THREAD * get_num_threads() + 5
+        obs = permdisp(self.dm, self.grouping, permutations=permutations,
+                       seed=42, engine="numba")
+        exp = permdisp(self.dm, self.grouping, permutations=permutations,
+                       seed=42, engine="cython")
+        npt.assert_allclose(obs['test statistic'], exp['test statistic'])
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    def test_bad_engine_raises(self):
+        with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+            permdisp(self.dm, self.grouping, permutations=0, engine="julia")
 
 
 if __name__ == '__main__':
