@@ -1,0 +1,118 @@
+name: GPU CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [labeled]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+
+concurrency:
+  group: azure-gpu
+  queue: max
+
+env:
+  latest_python: "3.13"  # torch has no 3.14 wheels yet
+
+permissions:
+  contents: read
+
+jobs:
+  test-gpu:
+    name: Array API (${{ matrix.backend }}, cuda)
+    if: |
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'gpu-ci') ||
+      (github.event_name != 'pull_request' &&
+       github.ref == 'refs/heads/main')
+    # runs-on: gpu-t4-4-core
+    runs-on: [self-hosted, linux, x64, azure-gpu-t4]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - backend: torch
+            device: cuda
+          - backend: jax
+            device: cuda
+          - backend: cupy
+            device: cuda
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.latest_python }}
+
+      - name: Check CUDA driver
+        run: nvidia-smi
+
+      - name: Install scikit-bio + backend
+        # CUDA 12 is pinned for the libraries. To update CUDA versions check the
+        # installation guides for each package.
+        run: |
+          python -m ensurepip
+          pip install -v .
+          case "${{ matrix.backend }}" in
+            torch) pip install torch --index-url https://download.pytorch.org/whl/cu128 ;;
+            jax)   pip install -U "jax[cuda12]" ;;
+            cupy)  pip install cupy-cuda12x[ctk] ;;
+          esac
+          pip install -r ci/requirements.txt -r ci/requirements.test.txt
+          # numba-cuda is what lets the fused GPU kernels actually run here.
+          # Without it `engine="numba"` cannot resolve and the kernel modules
+          # are never executed, so they show up as uncovered.
+          pip install "numba-cuda[cu12]"
+
+      - name: Verify GPU is visible to backend
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          python - <<'PY'
+          import os
+          backend = os.environ["BACKEND"]
+          if backend == "torch":
+              import torch
+              assert torch.cuda.is_available(), "torch installed without CUDA"
+              print("torch:", torch.__version__, "CUDA:", torch.version.cuda,
+                    "device:", torch.cuda.get_device_name(0))
+          elif backend == "jax":
+              import jax
+              gpus = jax.devices("gpu")
+              assert gpus, "jax sees no GPU"
+              print("jax:", jax.__version__, "devices:", gpus)
+          elif backend == "cupy":
+              import cupy
+              n = cupy.cuda.runtime.getDeviceCount()
+              assert n > 0, "cupy sees no GPU"
+              print("cupy:", cupy.__version__, "devices:", n)
+          PY
+
+      - name: Verify Numba can target the GPU
+        # Without this the job still passes when numba-cuda is missing or cannot
+        # find NVVM: the fused kernel is simply skipped and every test takes the
+        # array-API fallback, so the GPU kernels would look tested when they were
+        # never run.
+        run: |
+          python - <<'PY'
+          from numba import cuda
+          assert cuda.is_available(), "numba.cuda cannot target this GPU"
+          print("numba.cuda devices:", cuda.gpus)
+          PY
+
+      - name: Run tests
+        env:
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
+          SKBIO_DEVICE: ${{ matrix.device }}
+        run: cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio
+
+      - name: Generate coverage reports
+        run: cd ci && coverage lcov --rcfile ../pyproject.toml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
