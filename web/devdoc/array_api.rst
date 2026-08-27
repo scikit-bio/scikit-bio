@@ -142,22 +142,16 @@ The ``-m array_api`` marker filters to tests decorated with
 Continuous integration
 ----------------------
 
-GPU testing happens in the ``Array API Compatibility`` workflow
-(``.github/workflows/array-api.yml``), which runs on a T4 GPU runner
+GPU testing happens in the ``GPU CI`` workflow (``.github/workflows/gpu.yml``), which runs on a T4 GPU runner
 against the ``torch``, ``jax``, and ``cupy`` backends with CUDA.
 
 **Triggers:**
 
-- **Weekly cron**: every Monday at 06:00 UTC, catching regressions
-  from upstream changes in array libraries
+- **`gpu-ci` label on a PR**: Apply the label to a PR to trigger the workflow. Pushes to the labeled PR will NOT re-trigger it. Instead, remove and re-add the label after reviewing updated commits.
+- **Weekly cron**: every Monday at 06:00 UTC, catching regressions from upstream changes in array libraries.
 - **Manual dispatch**: via the Actions tab on GitHub
-- **`gpu-ci` label on a PR**: applies the label to a PR to trigger
-  the workflow; pushes to the labeled PR will re-trigger it
 
-Reviewers should apply the ``gpu-ci`` label to any PR that modifies
-array-API code paths. Most PRs do not need GPU validation and the
-workflow has a non-trivial cost, so it is not run on every PR
-automatically.
+Reviewers should apply the ``gpu-ci`` label to any PR that modifies GPU code paths. Most PRs do not need GPU validation and the workflow has a non-trivial cost, so it is not run on every PR automatically.
 
 **What the workflow verifies:**
 

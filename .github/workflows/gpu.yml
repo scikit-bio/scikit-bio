@@ -1,5 +1,10 @@
 name: GPU CI
 
+# This workflow runs the GPU tests on the Azure GPU VM. A separate workflow, "Azure VM
+# Start", launches the VM at the same time, while the current workflow is queued and
+# will run when the VM is launched. Upon completion, another workflow, "Azure VM Stop"
+# will be triggered to shut down the VM.
+
 on:
   pull_request:
     branches: [main]
@@ -9,12 +14,13 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
+# Ensure that only one GPU workflow runs at a time, because we have only one GPU VM.
 concurrency:
   group: azure-gpu
   queue: max
 
 env:
-  latest_python: "3.13"  # torch has no 3.14 wheels yet
+  latest_python: "3.14"
 
 permissions:
   contents: read
@@ -28,11 +34,19 @@ jobs:
        github.event.label.name == 'gpu-ci') ||
       (github.event_name != 'pull_request' &&
        github.ref == 'refs/heads/main')
+
+    # GitHub's own GPU runner:
     # runs-on: gpu-t4-4-core
+
+    # Azure's GPU runner (NC4as T4 v3)
     runs-on: [self-hosted, linux, x64, azure-gpu-t4]
     strategy:
       fail-fast: false
+
+      # Our GPU VM has just one GPU, and 16 GB VRAM, so let's not run multiple jobs
+      # with different backends at the same time.
       max-parallel: 1
+
       matrix:
         include:
           - backend: torch
