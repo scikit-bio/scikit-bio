@@ -14,7 +14,7 @@ concurrency:
   queue: max
 
 env:
-  latest_python: "3.13"  # torch has no 3.14 wheels yet
+  latest_python: "3.14"
 
 permissions:
   contents: read
