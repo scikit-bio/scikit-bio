@@ -1,13 +1,6 @@
-name: Azure control
+name: Azure VM Stop
 
 on:
-  pull_request_target:
-    branches: [main]
-    types: [labeled]
-    paths-ignore: ["web/**", "**.md", "README.rst"]
-  workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
   workflow_run:
     workflows: ["GPU CI"]
     types: [completed]
@@ -20,47 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  start-gpu-vm:
-    name: Start Azure GPU VM
-
-    # A maintainer must add this exact label. New commits do not satisfy this
-    # condition; remove and re-add the label after reviewing updated commits.
-    if: |
-      (github.event_name == 'schedule') ||
-      (github.event_name == 'workflow_dispatch' &&
-       github.ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request_target' &&
-       github.event.action == 'labeled' &&
-       github.event.label.name == 'gpu-ci')
-
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      # This workflow must never check out or execute pull-request code.
-
-      - name: Log in to Azure using OIDC
-        uses: azure/login@v3
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Start VM
-        env:
-          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-          VM_NAME: ${{ vars.AZURE_VM_NAME }}
-        run: |
-          az vm start \
-            --resource-group "$RESOURCE_GROUP" \
-            --name "$VM_NAME"
-
   stop-gpu-vm:
-    name: Deallocate Azure GPU VM
+    name: Stop Azure GPU VM
 
     if: |
       github.event_name == 'workflow_run'
@@ -79,14 +33,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+
+        # This step checks for any other queued or running GPU workflows. If there are
+        # any, we will not stop the VM yet, because the next workflow will use it.
         run: |
-          jq_filter="[
-            .workflow_runs[]
-            | select(
-                .id != ${SOURCE_RUN_ID}
-                and .status != \"completed\"
-              )
-          ] | length"
+          jq_filter="[.workflow_runs[] | select(.id != ${SOURCE_RUN_ID}
+            and .status != \"completed\")] | length"
 
           active="$(
             gh api \
