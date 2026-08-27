@@ -1,5 +1,9 @@
 name: Azure VM Stop
 
+# This workflow is triggered by the completion of the "GPU CI" workflow. It shuts down
+# the Azure VM to avoid charges when it is not needed. If there are other workflows
+# queued or running, the current workflow will abort in order not to break them.
+
 on:
   workflow_run:
     workflows: ["GPU CI"]

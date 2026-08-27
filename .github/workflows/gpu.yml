@@ -1,5 +1,10 @@
 name: GPU CI
 
+# This workflow runs the GPU tests on the Azure GPU VM. A separate workflow, "Azure VM
+# Start", launches the VM at the same time, while the current workflow is queued and
+# will run when the VM is launched. Upon completion, another workflow, "Azure VM Stop"
+# will be triggered to shut down the VM.
+
 on:
   pull_request:
     branches: [main]

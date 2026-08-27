@@ -1,5 +1,10 @@
 name: Azure VM Start
 
+# This workflow starts the Azure GPU VM used for GPU testing. It is typically triggered
+# by a "gpu-ci" label added to a pull request. It listens to the `pull_request_target`
+# event instead of `pull_request`, because it needs to access the Azure credentials
+# stored in the repo.
+
 on:
   pull_request_target:
     branches: [main]
