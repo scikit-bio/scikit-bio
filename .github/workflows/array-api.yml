@@ -1,5 +1,9 @@
 name: Array API Compatibility
 
+concurrency:
+  group: array-api-azure-gpu
+  cancel-in-progress: false
+
 on:
   pull_request:
     branches: [main]
@@ -54,15 +58,48 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
 
-  test-gpu:
+  start-gpu-vm:
+    name: Start Azure GPU VM
     if: |
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'gpu-ci')
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'gpu-ci') ||
+      (github.event_name != 'pull_request' &&
+       github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Log in to Azure using OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Start VM
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          VM_NAME: ${{ vars.AZURE_VM_NAME }}
+        run: |
+          az vm start \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME"
+
+  test-gpu:
     name: Array API (${{ matrix.backend }}, cuda)
     # runs-on: gpu-t4-4-core
+    needs: start-gpu-vm
     runs-on: [self-hosted, linux, x64, azure-gpu-t4]
+    timeout-minutes: 60
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - backend: torch
@@ -146,3 +183,30 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: scikit-bio/scikit-bio
+
+  stop-gpu-vm:
+    name: Deallocate Azure GPU VM
+    needs: [start-gpu-vm, test-gpu]
+    if: always() && needs.start-gpu-vm.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Log in to Azure using OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deallocate VM
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          VM_NAME: ${{ vars.AZURE_VM_NAME }}
+        run: |
+          az vm deallocate \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME"
