@@ -274,7 +274,17 @@ if NUMBA_AVAILABLE:
                         rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
                     )
 
-    @njit(parallel=True, cache=True)
+    @njit(inline="always")
+    def _condensed_row_base(row, n):
+        """Flat offset such that condensed_matrix[base + col] is (row, col).
+
+        Only valid for col > row. Numba inlines this at both call sites in
+        ``_permanova_f_stat_sW_rowtile_condensed_nb`` below, so factoring it
+        out costs nothing at runtime.
+        """
+        return row * n - ((row + 2) * (row + 1)) // 2
+
+    @njit(parallel=True)
     def _permanova_f_stat_sW_rowtile_condensed_nb(
         condensed_matrix, groupings_T, inv_group_sizes, partials
     ):
@@ -299,8 +309,9 @@ if NUMBA_AVAILABLE:
         inv_group_sizes : np.ndarray, shape (num_groups,)
             Reciprocal group sizes (``1.0 / group_sizes``).
         partials : np.ndarray, shape (n // 2, C) with C >= n_perm
-            Reused scratch; each iteration zeros and fills the first
-            ``n_perm`` entries of its own row.
+            Reused scratch; each iteration fills the first ``n_perm`` entries
+            of its own row (no separate zero pass needed -- the first write
+            per row is an assignment, not an accumulate).
 
         """
         k = condensed_matrix.shape[0]
@@ -310,13 +321,11 @@ if NUMBA_AVAILABLE:
 
         for row_idx in prange(n_half):
             local_sW = partials[row_idx]
-            for p in range(n_perm):
-                local_sW[p] = 0.0
             rsum = np.empty(n_perm, np.float64)
 
             for p in range(n_perm):
                 rsum[p] = 0.0
-            base = row_idx * n - ((row_idx + 2) * (row_idx + 1)) // 2
+            base = _condensed_row_base(row_idx, n)
             for col in range(row_idx + 1, n):
                 val = np.float64(condensed_matrix[base + col])
                 val2 = val * val
@@ -325,13 +334,13 @@ if NUMBA_AVAILABLE:
                         groupings_T[col, p] == groupings_T[row_idx, p]
                     )
             for p in range(n_perm):
-                local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[row_idx, p]]
+                local_sW[p] = rsum[p] * inv_group_sizes[groupings_T[row_idx, p]]
 
             mirror_row = n - row_idx - 2
             if mirror_row != row_idx:
                 for p in range(n_perm):
                     rsum[p] = 0.0
-                mbase = mirror_row * n - ((mirror_row + 2) * (mirror_row + 1)) // 2
+                mbase = _condensed_row_base(mirror_row, n)
                 for col in range(mirror_row + 1, n):
                     val = np.float64(condensed_matrix[mbase + col])
                     val2 = val * val
@@ -366,7 +375,8 @@ if NUMBA_AVAILABLE:
         Parameters
         ----------
         distmat : DistanceMatrix
-            Full (non-condensed) distance matrix.
+            Full or condensed distance matrix; dispatches to the matching
+            row-tile kernel based on ``distmat._flags["CONDENSED"]``.
         grouping : np.ndarray, shape (n,)
             Integer group labels (0-indexed).
         group_sizes : np.ndarray, shape (num_groups,)
@@ -704,10 +714,21 @@ def permanova(
 def _compute_f_stat(
     sample_size, num_groups, distance_matrix, group_sizes, s_T, engine, grouping
 ):
-    """Compute PERMANOVA pseudo-F statistic."""
+    """Compute PERMANOVA pseudo-F statistic.
+
+    Only reachable with ``engine == "cython"``: ``permanova()`` routes every
+    ``engine == "numba"`` call through the row-tile path
+    (``_run_permanova_rowtile_nb``) instead, for both full and condensed
+    matrices, so the ``engine == "numba"`` branches below can never execute
+    through the public API. They're kept, along with
+    ``_permanova_f_stat_sW_nb``/``_permanova_f_stat_sW_condensed_nb``, only as
+    directly unit-tested reference kernels (see ``test_sW_full_nb``/
+    ``test_sW_condensed_nb`` in test_permanova.py) -- not because anything
+    still calls them this way.
+    """
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        if engine == "numba":
+        if engine == "numba":  # pragma: no cover -- see docstring
             s_W = _permanova_f_stat_sW_condensed_nb(
                 distance_matrix.data, group_sizes, grouping
             )
@@ -716,7 +737,7 @@ def _compute_f_stat(
                 distance_matrix.data, group_sizes, grouping
             )
     else:
-        if engine == "numba":
+        if engine == "numba":  # pragma: no cover -- see docstring
             s_W = _permanova_f_stat_sW_nb(
                 distance_matrix.data, group_sizes, grouping
             )
