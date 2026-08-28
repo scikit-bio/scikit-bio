@@ -527,6 +527,11 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
 
 if NUMBA_AVAILABLE:
 
+    @njit(inline="always")
+    def _condensed_row_base(i, n_samples):
+        """Flat offset such that out[base + j] is pair (i, j), for j > i."""
+        return i * n_samples - (i * (i + 1)) // 2 - i - 1
+
     @njit(parallel=True, cache=True)
     def _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths):
         """Full unweighted UniFrac distance matrix (condensed) via Numba.
@@ -541,6 +546,12 @@ if NUMBA_AVAILABLE:
         for each pair, sum branch lengths of nodes present in exactly one sample
         (``unique``) and of nodes present in either sample (``observed``); the
         distance is ``unique / observed``, or ``0.0`` when ``observed == 0``.
+
+        Sample ``i``'s node-presence row is computed once per ``i`` (outside the
+        ``j`` loop) rather than recomputed for every ``j``, since it doesn't
+        depend on ``j``; ``counts_by_node`` is expected to already be
+        C-contiguous (the caller arranges this), so both that row and the inner
+        per-``k`` reads stay cache-friendly.
 
         Parameters
         ----------
@@ -563,13 +574,15 @@ if NUMBA_AVAILABLE:
         out = np.empty(n_pairs, np.float64)
 
         for i in prange(n_samples - 1):
-            # base condensed offset for row i so that idx = base_i + j
-            base_i = i * n_samples - (i * (i + 1)) // 2 - i - 1
+            base_i = _condensed_row_base(i, n_samples)
+            u_present_row = np.empty(n_nodes, np.bool_)
+            for k in range(n_nodes):
+                u_present_row[k] = counts_by_node[i, k] > 0
             for j in range(i + 1, n_samples):
                 unique = 0.0
                 observed = 0.0
                 for k in range(n_nodes):
-                    u_present = counts_by_node[i, k] > 0
+                    u_present = u_present_row[k]
                     v_present = counts_by_node[j, k] > 0
                     if u_present or v_present:
                         bl = branch_lengths[k]
@@ -596,6 +609,11 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
     counts_by_node, _, branch_lengths = _setup_multiple_unifrac(
         counts, taxa, tree, validate
     )
+    # counts_by_node is a transposed view (see _setup_multiple_unifrac) and so
+    # not C-contiguous along the node axis the kernel's inner loop walks;
+    # ascontiguousarray pays that cost once here instead of on every strided
+    # read inside the O(n_samples^2 * n_nodes) kernel.
+    counts_by_node = np.ascontiguousarray(counts_by_node)
     return _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths)
 
 
@@ -626,6 +644,11 @@ if NUMBA_AVAILABLE:
         correction ``sum(node_to_root_distances * (up + vp))``, except when both
         samples are entirely empty, in which case the distance is ``0.0``.
 
+        Sample ``i``'s node proportions depend only on ``i`` (not ``j``), so
+        they're computed once per ``i`` outside the ``j`` loop rather than
+        recomputed (and re-divided) for every ``j``; ``counts_by_node`` is
+        expected to already be C-contiguous (the caller arranges this).
+
         Parameters
         ----------
         counts_by_node : np.ndarray of shape (n_samples, n_nodes)
@@ -653,18 +676,21 @@ if NUMBA_AVAILABLE:
         out = np.empty(n_pairs, np.float64)
 
         for i in prange(n_samples - 1):
-            # base condensed offset for row i so that idx = base_i + j
-            base_i = i * n_samples - (i * (i + 1)) // 2 - i - 1
+            base_i = _condensed_row_base(i, n_samples)
             u_total = sample_totals[i]
+            u_proportions = np.empty(n_nodes, np.float64)
+            if u_total > 0.0:
+                for k in range(n_nodes):
+                    u_proportions[k] = counts_by_node[i, k] / u_total
+            else:
+                for k in range(n_nodes):
+                    u_proportions[k] = 0.0
             for j in range(i + 1, n_samples):
                 v_total = sample_totals[j]
                 wu = 0.0
                 c = 0.0
                 for k in range(n_nodes):
-                    if u_total > 0.0:
-                        up = counts_by_node[i, k] / u_total
-                    else:
-                        up = 0.0
+                    up = u_proportions[k]
                     if v_total > 0.0:
                         vp = counts_by_node[j, k] / v_total
                     else:
@@ -697,8 +723,13 @@ def _weighted_unifrac_pdist_numba(counts, taxa, tree, normalized, validate):
     counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(
         counts, taxa, tree, validate
     )
+    # counts_by_node is a transposed view (see _setup_multiple_unifrac) and so
+    # not C-contiguous along the node axis the kernel's inner loop walks;
+    # ascontiguousarray pays that cost once here instead of on every strided
+    # read inside the O(n_samples^2 * n_nodes) kernel.
+    counts_by_node = np.ascontiguousarray(counts_by_node)
     tip_indices = _get_tip_indices(tree_index)
-    sample_totals = counts_by_node[:, tip_indices].sum(axis=1).astype(np.float64)
+    sample_totals = counts_by_node[:, tip_indices].sum(axis=1, dtype=np.float64)
     if normalized:
         node_to_root_distances = _tip_distances(
             branch_lengths, tree, tip_indices
