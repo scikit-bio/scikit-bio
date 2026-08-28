@@ -33,7 +33,7 @@ from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
 try:
-    from numba import njit, prange
+    from numba import njit
 
     NUMBA_AVAILABLE = True
 except ImportError:  # pragma: no cover
@@ -915,44 +915,17 @@ class MMvec(SkbioObject):
 
 if NUMBA_AVAILABLE:
 
-    @njit(parallel=True, cache=True)
+    @njit(cache=True)
     def _scatter_add_grad_nb(out, ids, contrib, scale):
-        """Fused scatter-accumulation of ``scale * contrib`` rows into ``out``.
-
-        Numba replacement for ``np.add.at(out, ids, scale * contrib)`` that
-        preserves ``np.add.at`` semantics exactly, including repeated indices
-        (every contribution for a given row is accumulated, not overwritten).
-
-        Parallelism is over the *output rows* (the "row-owner" pattern): each
-        ``prange`` iteration owns one output row and is the only writer to it,
-        so there are no data races and no atomics. Within a row, contributions
-        are summed in increasing batch order (the same order ``np.add.at``
-        uses), which makes the result bit-for-bit identical to ``np.add.at``
-        under IEEE-754 (float addition is not associative, so the order is
-        load-bearing). ``fastmath`` is deliberately NOT enabled so the compiler
-        cannot reassociate or contract the multiply-add.
-
-        Parameters
-        ----------
-        out : ndarray of shape (n_rows, n_cols), float64
-            Pre-zeroed accumulator, modified in place.
-        ids : ndarray of shape (n_batch,), integer
-            Target row index for each batch contribution. Values must lie in
-            ``[0, n_rows)``; out-of-range ids are silently skipped.
-        contrib : ndarray of shape (n_batch, n_cols), float64
-            Per-batch contributions before scaling.
-        scale : float
-            Scalar multiplier applied to every contribution.
-
-        """
-        n_rows = out.shape[0]
-        n_cols = out.shape[1]
+        # Plain sequential scan over the batch (see _scatter_add_grad's
+        # docstring for the semantics and why this is sequential rather than
+        # prange-parallelized).
         n_batch = ids.shape[0]
-        for r in prange(n_rows):
-            for b in range(n_batch):
-                if ids[b] == r:
-                    for j in range(n_cols):
-                        out[r, j] += scale * contrib[b, j]
+        n_cols = out.shape[1]
+        for b in range(n_batch):
+            row = ids[b]
+            for j in range(n_cols):
+                out[row, j] += scale * contrib[b, j]
 
 else:  # pragma: no cover
     _scatter_add_grad_nb = None
@@ -963,14 +936,37 @@ def _scatter_add_grad(out, ids, contrib, scale):
 
     Both branches implement ``out += scale * contrib`` scattered by ``ids`` with
     ``np.add.at`` accumulation semantics and produce numerically identical
-    (bit-for-bit) results.
+    (bit-for-bit) results: contributions are summed in increasing batch order
+    (the same order ``np.add.at`` uses), which matters because float addition
+    is not associative.
+
+    The Numba kernel is a single sequential scan over the batch, not a
+    prange-parallelized one: a row-owner ``prange`` scheme was tried first
+    (each output row scanned by its own thread, avoiding write races) but
+    benchmarked 6-6.5x *slower* than the plain sequential version at
+    representative shapes (500-5000 rows, 32-128 cols, 64-1024 batch size) --
+    the row-owner scan does O(n_rows * n_batch) work to avoid atomics, while
+    the batch (not the row count) is what's actually small here, so a single
+    O(n_batch) pass over it is both simpler and substantially faster.
+    ``fastmath`` is deliberately not enabled, so the compiler cannot
+    reassociate or contract the multiply-add.
+
+    Dispatch here is purely automatic (Numba if installed, ``np.add.at``
+    otherwise), unlike the ``engine=`` parameter on ``permanova``/``mantel``/
+    ``permdisp``/``pcoa``. Those default to Cython and require an explicit
+    opt-in to Numba; this kernel is internal (no public parameter) and wants
+    the opposite default, so it does not route through
+    :func:`skbio._config.get_config`'s ``"engine"`` setting -- doing so would
+    make ``get_config("engine")``'s default value of ``"cython"`` silently
+    disable Numba here even when it's installed and no one asked for that.
 
     Parameters
     ----------
     out : ndarray of shape (n_rows, n_cols), float64
         Pre-zeroed accumulator, modified in place.
     ids : ndarray of shape (n_batch,), integer
-        Target row index for each batch contribution.
+        Target row index for each batch contribution. Values must lie in
+        ``[0, n_rows)``.
     contrib : ndarray of shape (n_batch, n_cols), float64
         Per-batch contributions before scaling.
     scale : float
@@ -1075,7 +1071,11 @@ class _MMvecModel:
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
         sample_ids = X_coo.row[batch_idx]
-        X_ids = X_coo.col[batch_idx]
+        # Cast once here rather than in _scatter_add_grad: X_ids is reused for
+        # both the dx_main and dx_bias scatter-adds below, and X_coo.col is
+        # int32 by default, so casting it up front makes the second call's
+        # cast a no-op instead of repeating the same int32->intp copy twice.
+        X_ids = np.ascontiguousarray(X_coo.col[batch_idx], dtype=np.intp)
 
         # Build the non-reference logits directly for the sampled X features.
         Y_batch = Y[sample_ids, :]  # (B, d2)

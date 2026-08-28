@@ -17,7 +17,7 @@
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
 * On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
-* Accelerated `mmvec`'s Adam optimizer by replacing the per-minibatch `np.add.at` scatter-accumulation in the gradient computation with a fused Numba kernel (used automatically when Numba is installed; falls back to `np.add.at` otherwise). Results are numerically identical.
+* Accelerated `mmvec`'s Adam optimizer by replacing the per-minibatch `np.add.at` scatter-accumulation in the gradient computation with a fused, sequential Numba kernel (used automatically when Numba is installed; falls back to `np.add.at` otherwise), 5.7-8.2x faster at representative batch sizes. Results are numerically identical.
 
 ### Bug Fixes
 
