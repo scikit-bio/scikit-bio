@@ -598,6 +598,14 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
             "Number of permutations must be greater than or equal to zero."
         )
 
+    # The Cython path reaches geomedian_axis_one, a fused-type function that
+    # accepts only single or double precision, so anything else raises there.
+    # Match that rather than silently widening whatever comes in.
+    if np.asarray(sample_data).dtype not in (np.float32, np.float64):
+        raise TypeError(
+            "Ordination coordinates must be of type np.float32 or np.float64."
+        )
+
     samples = np.ascontiguousarray(sample_data, dtype=np.float64)
     codes = np.ascontiguousarray(grouping, dtype=np.int32)
     sample_size = codes.shape[0]
@@ -636,7 +644,7 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
     if permutations == 0:
         return stat, np.nan
     p_value = (1.0 + np.sum(stats[1:] >= stats[0])) / (1.0 + permutations)
-    return stat, float(p_value)
+    return stat, p_value
 
 
 def _compute_groups(samples, test_type, grouping):

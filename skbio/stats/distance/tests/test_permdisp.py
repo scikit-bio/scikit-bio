@@ -17,7 +17,7 @@ from pandas.testing import assert_series_equal
 from scipy.stats import f_oneway, ConstantInputWarning
 
 from skbio import DistanceMatrix
-from skbio.stats.ordination import pcoa
+from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.stats.distance import permdisp
 from skbio.stats.distance._permdisp import _compute_groups
 from skbio.stats.distance._cutils import geomedian_axis_one
@@ -622,6 +622,45 @@ class PERMDISPEngineTests(TestCase):
                        seed=42, engine="cython")
         npt.assert_allclose(obs['test statistic'], exp['test statistic'])
         self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_non_float_ordination_raises_like_cython(self):
+        # geomedian_axis_one only has single and double precision signatures,
+        # so the cython path raises on anything else. The numba kernels would
+        # happily widen an integer array and return a number instead, which is
+        # worse than the error, so the engine refuses the same inputs.
+        ordination = pcoa(self.dm, method="eigh", dimensions=10)
+
+        def recast(dtype):
+            return OrdinationResults(
+                short_method_name=ordination.short_method_name,
+                long_method_name=ordination.long_method_name,
+                eigvals=ordination.eigvals,
+                samples=ordination.samples.astype(dtype),
+                proportion_explained=ordination.proportion_explained)
+
+        for dtype in ("float16", "int64"):
+            for engine in ("cython", "numba"):
+                with self.assertRaises(TypeError):
+                    permdisp(recast(dtype), self.grouping, test="median",
+                             permutations=0, engine=engine)
+        # single and double precision stay accepted by both
+        for dtype in ("float32", "float64"):
+            for engine in ("cython", "numba"):
+                permdisp(recast(dtype), self.grouping, test="median",
+                         permutations=0, engine=engine)
+
+    @numba_code
+    def test_result_types_match_cython(self):
+        # permdisp returns an object-dtype Series, so the type of each entry is
+        # visible to the caller and must not depend on the engine.
+        for permutations in (0, 99):
+            obs = permdisp(self.dm, self.grouping, permutations=permutations,
+                           seed=42, engine="numba")
+            exp = permdisp(self.dm, self.grouping, permutations=permutations,
+                           seed=42, engine="cython")
+            for key in ("test statistic", "p-value"):
+                self.assertIs(type(obs[key]), type(exp[key]))
 
     def test_bad_engine_raises(self):
         with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
