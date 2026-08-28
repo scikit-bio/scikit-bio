@@ -37,6 +37,11 @@ if TYPE_CHECKING:  # pragma: no cover
     import pandas as pd
     from skbio.util._typing import SeedLike
 
+# Must match the defaults of geomedian_axis_one's eps/maxiters in _cutils.pyx, so
+# the two engines resolve to the same behavior when the caller doesn't override them.
+_GEOMEDIAN_EPS = 1e-7
+_GEOMEDIAN_MAXITERS = 500
+
 
 if NUMBA_AVAILABLE:
 
@@ -87,7 +92,7 @@ if NUMBA_AVAILABLE:
                 else:
                     Dinv[i] = 0.0
 
-            # sequential reduction, same order as Cython's _sum
+            # accumulate in the same order as Cython's _sum, for bit-identical results
             Dinvs = 0.0
             for i in range(n):
                 Dinvs += Dinv[i]
@@ -157,8 +162,14 @@ def _geomedian_axis_one(X, engine):
         The length-``p`` geometric median.
     """
     if engine == "numba":
-        Xc = np.ascontiguousarray(X, dtype=np.float64)
-        return np.asarray(_geomedian_axis_one_nb(Xc, 1e-7, 500))
+        # X is typically a transposed view (group_data.T); asarray (unlike
+        # ascontiguousarray) only casts dtype and leaves an already-float64 array
+        # as-is, so this avoids forcing a full transpose-copy on every call. Numba
+        # handles the resulting non-contiguous 2-D array directly.
+        Xc = np.asarray(X, dtype=np.float64)
+        return np.asarray(
+            _geomedian_axis_one_nb(Xc, _GEOMEDIAN_EPS, _GEOMEDIAN_MAXITERS)
+        )
     return np.asarray(geomedian_axis_one(X))
 
 
