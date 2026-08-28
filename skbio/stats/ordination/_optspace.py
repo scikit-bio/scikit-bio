@@ -458,7 +458,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     elif method not in ("GN", "GD"):
         raise ValueError("Method must be 'GN' or 'GD'")
 
-    elif max_iter < 1:
+    elif type(max_iter) is not int or max_iter < 1:
         raise ValueError("Max_iter must be a positive integer")
 
     # Create observed mask

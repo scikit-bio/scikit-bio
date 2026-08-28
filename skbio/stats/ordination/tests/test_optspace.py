@@ -128,6 +128,12 @@ class TestOptSpace(unittest.TestCase):
             _ = optspace(self.M_obs, self.r, max_iter=-1)
         self.assertIn("positive", str(context.exception))
 
+    def test_non_integer_max_iter_error(self):
+        """Test error for non-integer max_iter."""
+        with self.assertRaises(ValueError) as context:
+            _ = optspace(self.M_obs, self.r, max_iter=2.5)
+        self.assertIn("integer", str(context.exception))
+
     def test_max_ls_exception(self):
         """Test line search warning when convergence is not achieved."""
         with patch(
