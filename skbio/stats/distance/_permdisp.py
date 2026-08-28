@@ -120,7 +120,7 @@ if NUMBA_AVAILABLE:
     def _permdisp_perm_stats_centroid_nb(samples, perm_codes, num_groups):
         """F statistic for a batch of groupings, one per row of ``perm_codes``.
 
-        The whole permutation loop is batched into a single call because the
+        The permutation loop is batched, one call per chunk, because the
         per-permutation work is O(n * d) with ``d`` the retained dimensions
         (10 by default), small enough that Python-level call overhead would
         otherwise dominate. Permutations are independent, so the parallel axis
@@ -137,9 +137,10 @@ if NUMBA_AVAILABLE:
         """Geometric median of the columns of ``X``, shaped (dims, samples).
 
         Numba port of ``._cutils.geomedian_axis_one``, which is itself a port of
-        hdmedians v0.14.2. Same modified Weiszfeld iteration, same convergence
-        test and the same handling of samples that coincide with the current
-        estimate, so both engines return the same center.
+        hdmedians v0.14.2. Same modified Weiszfeld iteration and same convergence
+        test, and it agrees with the Cython kernel to 1e-12 or better. The one
+        deliberate difference is the placement of the test for every sample
+        coinciding with the estimate, described where it is applied below.
         """
         p, n = X.shape
 
@@ -278,7 +279,7 @@ if NUMBA_AVAILABLE:
 # Permutations processed per batched kernel call, per thread. The permutation is
 # the parallel axis here, so this is what keeps every worker supplied; it is
 # deliberately a few dozen per thread rather than one so the kernel launch is
-# amortised, and it bounds the grouping buffer to (CHUNK x n).
+# amortized, and it bounds the grouping buffer to (CHUNK x n).
 _PERM_CHUNK_PER_THREAD = 32
 
 
@@ -590,8 +591,8 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
 
     Draws the permutations on the host in the same order as
     :func:`._base._run_monte_carlo_stats` (observed grouping first, then one
-    ``rng.permutation`` per replicate) so the p-value matches the Cython engine
-    exactly, then evaluates them in a single batched kernel call per chunk.
+    ``rng.permutation`` per replicate) so the two engines see the same groupings
+    in the same order, then evaluates them in one batched kernel call per chunk.
     """
     if permutations < 0:
         raise ValueError(
