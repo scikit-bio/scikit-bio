@@ -254,6 +254,8 @@ def permdisp(
         installed. If not provided, the global default is used (see
         :func:`skbio.set_config`). Ignored when ``test="centroid"``.
 
+        .. versionadded:: 0.7.4
+
     Returns
     -------
     pandas.Series
