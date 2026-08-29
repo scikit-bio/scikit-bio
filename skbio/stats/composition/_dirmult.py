@@ -166,7 +166,6 @@ def dirmult_ttest(
     --------
     dirmult_ttest
     scipy.stats.ttest_ind
-    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
@@ -228,6 +227,9 @@ def dirmult_ttest(
     """
     from scipy.stats import t as t_dist
 
+    if draws < 1:
+        raise ValueError("draws must be a positive integer.")
+
     rng = get_rng(seed)
 
     matrix, samples, features = _ingest_table(table)
@@ -270,10 +272,12 @@ def dirmult_ttest(
         # overhead), which would undercut the point of this PR.
         vn1 = trt_mat.var(axis=0, ddof=1) / n1
         vn2 = ref_mat.var(axis=0, ddof=1) / n2
-        pooled = vn1 + vn2
+        # Not a "pooled variance" in the equal-variance sense; this is the
+        # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
+        var_sum = vn1 + vn2
         diff[i] = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
-        se[i] = np.sqrt(pooled)
-        dof[i] = pooled**2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
+        se[i] = np.sqrt(var_sum)
+        dof[i] = var_sum**2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
 
     # Vectorized two-sided Welch's t-test across all draws at once.
     tstat_ = diff / se
