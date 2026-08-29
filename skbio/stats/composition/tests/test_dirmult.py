@@ -14,7 +14,7 @@ import pandas as pd
 import pandas.testing as pdt
 
 from skbio.stats.composition._dirmult import (
-    dirmult_ttest, dirmult_lme,
+    dirmult_ttest, dirmult_lme, _welch_draw_stats,
 )
 
 
@@ -126,8 +126,11 @@ class DirMultTTestTests(TestCase):
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
     def test_dirmult_ttest_welch_closed_form_parity(self):
-        # The vectorized closed-form Welch's t-test must reproduce statsmodels'
-        # CompareMeans (usevar="unequal", two-sided, alpha=0.05) exactly.
+        # The production closed-form Welch's t-test statistics must reproduce
+        # statsmodels' CompareMeans (usevar="unequal", two-sided, alpha=0.05)
+        # exactly. Calls _welch_draw_stats directly (the actual per-draw
+        # helper dirmult_ttest uses), rather than re-deriving the formula, so
+        # this test exercises the shipped code path.
         try:
             from statsmodels.stats.weightstats import CompareMeans
         except ImportError:
@@ -139,12 +142,7 @@ class DirMultTTestTests(TestCase):
         trt = rng.normal(size=(n1, m))
         ref = rng.normal(size=(n2, m))
 
-        # closed form (mirrors the implementation)
-        vn1 = trt.var(axis=0, ddof=1) / n1
-        vn2 = ref.var(axis=0, ddof=1) / n2
-        diff = trt.mean(axis=0) - ref.mean(axis=0)
-        se = np.sqrt(vn1 + vn2)
-        dof = (vn1 + vn2) ** 2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
+        diff, se, dof = _welch_draw_stats(trt, ref, n1, n2)
         tstat = diff / se
         pval = 2.0 * t_dist.sf(np.abs(tstat), dof)
         tcrit = t_dist.ppf(0.975, dof)

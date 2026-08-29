@@ -49,6 +49,36 @@ def _dirmult_draw(matrix, rng):
     return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
 
 
+def _welch_draw_stats(trt_mat, ref_mat, n1, n2):
+    """Per-draw Welch's (unequal-variance) t-test sufficient statistics.
+
+    This is the closed form of statsmodels' CompareMeans.ttest_ind /
+    tconfint_diff with usevar="unequal" (and, checked separately, of
+    scipy.stats.ttest_ind with equal_var=False); sample variances use
+    ddof=1. Kept as this closed form rather than delegating to either
+    library call: both were benchmarked and are markedly slower per draw
+    than this vectorized arithmetic (scipy.stats.ttest_ind in particular
+    measured 2.4-4x slower here, presumably from its more general-purpose
+    per-call overhead), which would undercut the point of this function.
+
+    Returns
+    -------
+    diff : mean(treatment) - mean(reference)
+    se : Welch standard error
+    dof : Welch-Satterthwaite degrees of freedom
+
+    """
+    vn1 = trt_mat.var(axis=0, ddof=1) / n1
+    vn2 = ref_mat.var(axis=0, ddof=1) / n2
+    # Not a "pooled variance" in the equal-variance sense; this is the
+    # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
+    var_sum = vn1 + vn2
+    diff = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
+    se = np.sqrt(var_sum)
+    dof = var_sum**2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
+    return diff, se, dof
+
+
 def dirmult_ttest(
     table,
     grouping,
@@ -261,23 +291,7 @@ def dirmult_ttest(
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        # Welch's (unequal-variance) t-test sufficient statistics. This is the
-        # closed form of statsmodels' CompareMeans.ttest_ind / tconfint_diff with
-        # usevar="unequal" (and, checked separately, of scipy.stats.ttest_ind
-        # with equal_var=False); sample variances use ddof=1. Kept as this
-        # closed form rather than delegating to either library call: both were
-        # benchmarked and are markedly slower per draw than this vectorized
-        # arithmetic (scipy.stats.ttest_ind in particular measured 2.4-4x
-        # slower here, presumably from its more general-purpose per-call
-        # overhead), which would undercut the point of this PR.
-        vn1 = trt_mat.var(axis=0, ddof=1) / n1
-        vn2 = ref_mat.var(axis=0, ddof=1) / n2
-        # Not a "pooled variance" in the equal-variance sense; this is the
-        # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
-        var_sum = vn1 + vn2
-        diff[i] = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
-        se[i] = np.sqrt(var_sum)
-        dof[i] = var_sum**2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
+        diff[i], se[i], dof[i] = _welch_draw_stats(trt_mat, ref_mat, n1, n2)
 
     # Vectorized two-sided Welch's t-test across all draws at once.
     tstat_ = diff / se
