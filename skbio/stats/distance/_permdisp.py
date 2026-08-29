@@ -45,7 +45,7 @@ _GEOMEDIAN_MAXITERS = 500
 
 if NUMBA_AVAILABLE:
 
-    @njit(cache=True)
+    @njit
     def _geomedian_axis_one_nb(X, eps, maxiters):
         """Compute geometric median along axis 1 using Numba.
 
