@@ -244,7 +244,8 @@ def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
         return True
     if engine == "numba":
         reason = (
-            "a pairwise_func was provided" if pairwise_func is not None
+            "a pairwise_func was provided"
+            if pairwise_func is not None
             else f"unrecognized keyword argument(s) {sorted(kwargs)} were provided"
         )
         warnings.warn(

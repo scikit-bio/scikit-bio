@@ -533,8 +533,9 @@ if NUMBA_AVAILABLE:
         return i * n_samples - (i * (i + 1)) // 2 - i - 1
 
     @njit(inline="always")
-    def _unweighted_unifrac_row_nb(row, n_samples, n_nodes, counts_by_node,
-                                    branch_lengths, out):
+    def _unweighted_unifrac_row_nb(
+        row, n_samples, n_nodes, counts_by_node, branch_lengths, out
+    ):
         """Fill out[] with row's distance to every sample j > row.
 
         Factored out of _unweighted_unifrac_pdist_nb so its prange loop can
@@ -621,8 +622,7 @@ if NUMBA_AVAILABLE:
             mirror_i = n_samples - i - 2
             if mirror_i != i:
                 _unweighted_unifrac_row_nb(
-                    mirror_i, n_samples, n_nodes, counts_by_node,
-                    branch_lengths, out
+                    mirror_i, n_samples, n_nodes, counts_by_node, branch_lengths, out
                 )
 
         return out
@@ -650,9 +650,17 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
 if NUMBA_AVAILABLE:
 
     @njit(inline="always")
-    def _weighted_unifrac_row_nb(row, n_samples, n_nodes, counts_by_node,
-                                  branch_lengths, sample_totals,
-                                  node_to_root_distances, normalized, out):
+    def _weighted_unifrac_row_nb(
+        row,
+        n_samples,
+        n_nodes,
+        counts_by_node,
+        branch_lengths,
+        sample_totals,
+        node_to_root_distances,
+        normalized,
+        out,
+    ):
         """Fill out[] with row's distance to every sample j > row.
 
         Factored out of _weighted_unifrac_pdist_nb so its prange loop can
@@ -754,15 +762,28 @@ if NUMBA_AVAILABLE:
         # the cost of capping usable parallelism at n_half threads).
         for i in prange(n_half):
             _weighted_unifrac_row_nb(
-                i, n_samples, n_nodes, counts_by_node, branch_lengths,
-                sample_totals, node_to_root_distances, normalized, out
+                i,
+                n_samples,
+                n_nodes,
+                counts_by_node,
+                branch_lengths,
+                sample_totals,
+                node_to_root_distances,
+                normalized,
+                out,
             )
             mirror_i = n_samples - i - 2
             if mirror_i != i:
                 _weighted_unifrac_row_nb(
-                    mirror_i, n_samples, n_nodes, counts_by_node,
-                    branch_lengths, sample_totals, node_to_root_distances,
-                    normalized, out
+                    mirror_i,
+                    n_samples,
+                    n_nodes,
+                    counts_by_node,
+                    branch_lengths,
+                    sample_totals,
+                    node_to_root_distances,
+                    normalized,
+                    out,
                 )
 
         return out
