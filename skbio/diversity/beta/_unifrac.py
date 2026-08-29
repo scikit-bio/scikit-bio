@@ -532,7 +532,7 @@ if NUMBA_AVAILABLE:
         """Flat offset such that out[base + j] is pair (i, j), for j > i."""
         return i * n_samples - (i * (i + 1)) // 2 - i - 1
 
-    @njit(parallel=True, cache=True)
+    @njit(parallel=True)
     def _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths):
         """Full unweighted UniFrac distance matrix (condensed) via Numba.
 
@@ -619,7 +619,7 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
 
 if NUMBA_AVAILABLE:
 
-    @njit(parallel=True, cache=True)
+    @njit(parallel=True)
     def _weighted_unifrac_pdist_nb(
         counts_by_node,
         branch_lengths,
