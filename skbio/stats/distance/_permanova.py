@@ -428,8 +428,10 @@ if NUMBA_AVAILABLE:
         # Permutation-major int32 buffer; rng.permutation fills a row, so the
         # writes are sequential. Allocated once and reused across chunks.
         buf = np.empty((width, sample_size), dtype=np.int32)
-        # Kernel scratch, allocated once and reused (the kernel zeros its own
-        # rows); max width is CHUNK.
+        # Kernel scratch, allocated once and reused; max width is CHUNK. The
+        # full-matrix kernel zeros each row before accumulating into it, while
+        # the condensed kernel's first write per row is a plain assignment, so
+        # neither kernel depends on stale contents left over from a prior chunk.
         partials = np.empty((n_half, width), np.float64)
         for start in range(0, n_total, CHUNK):
             end = min(start + CHUNK, n_total)

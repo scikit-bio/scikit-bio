@@ -564,6 +564,33 @@ class InternalPERMANOVATests(PERMANOVATestData):
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
 
     @numba_code
+    def test_permanova_rowtile_condensed_nb_odd_n(self):
+        # All fixtures above use even n (4, 6, 12); an odd sample count
+        # changes how n // 2 rows get paired against their mirror row, so
+        # exercise it directly against the reference sW kernel.
+        rng = get_rng(0)
+        n = 51
+        condensed = rng.random(n * (n - 1) // 2)
+        grouping = rng.integers(0, 3, size=n).astype(np.intp)
+        group_sizes = np.bincount(grouping).astype(np.intp)
+
+        exp = permanova_mod._permanova_f_stat_sW_condensed_nb(
+            condensed, group_sizes, grouping
+        )
+
+        inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
+        groupings_T = np.ascontiguousarray(
+            grouping.reshape(n, 1).astype(np.int32)
+        )
+        partials = np.empty((n // 2, 1), np.float64)
+        permanova_mod._permanova_f_stat_sW_rowtile_condensed_nb(
+            condensed, groupings_T, inv_group_sizes, partials
+        )
+        obs = partials[:, 0].sum()
+
+        self.assertAlmostEqual(obs, exp, places=10)
+
+    @numba_code
     def test_permanova_rowtile_nb_crosses_chunk_boundary(self):
         # permutations exceeding the driver's internal chunk size exercises
         # multiple batches; the RNG must stay in sync across chunks so the
