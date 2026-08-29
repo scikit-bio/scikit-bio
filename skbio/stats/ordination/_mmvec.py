@@ -920,10 +920,15 @@ if NUMBA_AVAILABLE:
         # Plain sequential scan over the batch (see _scatter_add_grad's
         # docstring for the semantics and why this is sequential rather than
         # prange-parallelized).
+        n_rows = out.shape[0]
         n_batch = ids.shape[0]
         n_cols = out.shape[1]
         for b in range(n_batch):
             row = ids[b]
+            # Match the row-owner kernel this replaced: out-of-range ids are
+            # silently skipped rather than indexing out of bounds.
+            if row < 0 or row >= n_rows:
+                continue
             for j in range(n_cols):
                 out[row, j] += scale * contrib[b, j]
 
@@ -931,7 +936,9 @@ else:  # pragma: no cover
     _scatter_add_grad_nb = None
 
 
-def _scatter_add_grad(out, ids, contrib, scale):
+def _scatter_add_grad(
+    out: np.ndarray, ids: np.ndarray, contrib: np.ndarray, scale: float
+) -> None:
     """Dispatch scatter-add to the Numba kernel if available, else ``np.add.at``.
 
     Both branches implement ``out += scale * contrib`` scattered by ``ids`` with
@@ -965,8 +972,13 @@ def _scatter_add_grad(out, ids, contrib, scale):
     out : ndarray of shape (n_rows, n_cols), float64
         Pre-zeroed accumulator, modified in place.
     ids : ndarray of shape (n_batch,), integer
-        Target row index for each batch contribution. Values must lie in
-        ``[0, n_rows)``.
+        Target row index for each batch contribution. Values should lie in
+        ``[0, n_rows)``; the Numba kernel silently skips a contribution whose
+        id is negative or ``>= n_rows``, matching the row-owner kernel this
+        one replaced. This differs from the ``np.add.at`` fallback, which
+        wraps a negative id via ordinary fancy indexing and raises
+        ``IndexError`` for an id ``>= n_rows``; callers must not rely on
+        either engine for out-of-range ids.
     contrib : ndarray of shape (n_batch, n_cols), float64
         Per-batch contributions before scaling.
     scale : float
@@ -1073,8 +1085,9 @@ class _MMvecModel:
         sample_ids = X_coo.row[batch_idx]
         # Cast once here rather than in _scatter_add_grad: X_ids is reused for
         # both the dx_main and dx_bias scatter-adds below, and X_coo.col is
-        # int32 by default, so casting it up front makes the second call's
-        # cast a no-op instead of repeating the same int32->intp copy twice.
+        # int32 by default, so casting it up front means the second call's
+        # ascontiguousarray only re-checks dtype/contiguity instead of
+        # repeating the actual int32->intp copy.
         X_ids = np.ascontiguousarray(X_coo.col[batch_idx], dtype=np.intp)
 
         # Build the non-reference logits directly for the sampled X features.

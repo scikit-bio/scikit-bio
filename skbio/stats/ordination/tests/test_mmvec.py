@@ -1026,6 +1026,25 @@ class TestScatterAddGrad(unittest.TestCase):
 
         npt.assert_array_equal(out_nb, np.zeros((d1, p)))
 
+    @numba_code
+    def test_scatter_add_grad_out_of_range_ids_skipped(self):
+        """An id outside [0, n_rows) is silently skipped, not out-of-bounds."""
+        d1, p = 12, 3
+        ids = np.array([-1, 0, d1, 5], dtype=np.intp)
+        contrib = np.array(
+            [[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0], [4.0, 4.0, 4.0]]
+        )
+        scale = -1.7
+
+        out_nb = np.zeros((d1, p))
+        _scatter_add_grad_nb(out_nb, ids, contrib, scale)
+
+        out_ref = np.zeros((d1, p))
+        out_ref[0] = scale * contrib[1]
+        out_ref[5] = scale * contrib[3]
+
+        npt.assert_array_equal(out_nb, out_ref)
+
     def test_dispatch_fallback_matches_numpy(self):
         """The np.add.at fallback path is exact when Numba is unavailable."""
         rng = np.random.default_rng(0)
