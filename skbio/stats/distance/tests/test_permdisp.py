@@ -373,6 +373,13 @@ class PERMDISPTests(TestCase):
                     dimensions=self.eq_mat.shape[0], warn_neg_eigval=False,
                     engine='bogus')
 
+    def test_permdisp_engine_ignored_for_centroid(self):
+        # engine is documented as ignored when test="centroid", so an
+        # invalid engine value must not raise in that case.
+        permdisp(self.eq_mat, self.grouping_eq, test='centroid',
+                 dimensions=self.eq_mat.shape[0], warn_neg_eigval=False,
+                 engine='bogus')
+
     def test_confirm_betadispr_results(self):
         mp_dm = DistanceMatrix.read(get_data_path('moving_pictures_dm.tsv'))
         mp_mf = pd.read_csv(get_data_path('moving_pictures_mf.tsv'), sep='\t')

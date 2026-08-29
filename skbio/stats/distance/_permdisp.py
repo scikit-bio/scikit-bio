@@ -461,7 +461,13 @@ def permdisp(
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    engine = _resolve_engine(engine, ("cython", "numba"))
+    # Only resolve engine for test="median": it's the only test type that
+    # reads it (see _compute_groups below), and the docstring documents
+    # engine as ignored for test="centroid". Resolving unconditionally would
+    # raise ImportError/ValueError for an unavailable/invalid engine even
+    # when test="centroid" never uses it.
+    if test == "median":
+        engine = _resolve_engine(engine, ("cython", "numba"))
 
     test_stat_function = partial(_compute_groups, sample_data, test, engine)
 
