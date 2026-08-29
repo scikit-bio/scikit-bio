@@ -1039,9 +1039,9 @@ class TestScatterAddGrad(unittest.TestCase):
         out_nb = np.zeros((d1, p))
         _scatter_add_grad_nb(out_nb, ids, contrib, scale)
 
+        in_range = (ids >= 0) & (ids < d1)
         out_ref = np.zeros((d1, p))
-        out_ref[0] = scale * contrib[1]
-        out_ref[5] = scale * contrib[3]
+        np.add.at(out_ref, ids[in_range], scale * contrib[in_range])
 
         npt.assert_array_equal(out_nb, out_ref)
 
