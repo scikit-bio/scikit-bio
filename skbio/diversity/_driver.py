@@ -273,6 +273,8 @@ def beta_diversity(
         the full distance matrix in one parallel pass. If not provided, the
         global default is used (see :func:`~skbio.set_config`). Ignored by
         metrics without a Numba implementation.
+
+        .. versionadded:: 0.7.4
     kwargs : dict, optional
         Metric-specific parameters. Refer to the documentation of the chosen metric.
         A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
