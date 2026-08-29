@@ -804,6 +804,30 @@ class UnifracTests(TestCase):
                 "unweighted_unifrac", self.b1, ids=self.sids1,
                 taxa=self.oids1, tree=self.t1, engine="julia")
 
+    @numba_code
+    def test_beta_diversity_engine_numba_with_pairwise_func_is_used(self):
+        calls = []
+
+        def recording_pdist(counts, metric, **kwargs):
+            calls.append(metric)
+            from scipy.spatial.distance import pdist
+            return pdist(counts, metric=metric, **kwargs)
+
+        beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba", pairwise_func=recording_pdist)
+
+        self.assertEqual(len(calls), 1)
+
+    @numba_code
+    def test_beta_diversity_engine_numba_bogus_kwarg_raises(self):
+        for engine in ("cython", "numba"):
+            with self.assertRaises(TypeError):
+                beta_diversity(
+                    "unweighted_unifrac", self.b1, ids=self.sids1,
+                    taxa=self.oids1, tree=self.t1, engine=engine,
+                    bogus_kwarg=True)
+
 
 if __name__ == '__main__':
     main()

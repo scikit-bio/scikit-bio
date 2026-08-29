@@ -320,7 +320,12 @@ def beta_diversity(
 
     if metric == "unweighted_unifrac":
         resolved_engine = _resolve_engine(engine, ("cython", "numba"))
-        if resolved_engine == "numba":
+        # The numba path computes the whole distance matrix directly, so it
+        # can only be taken when nothing else needs to see `counts`/`kwargs`:
+        # a caller-supplied pairwise_func would never be invoked, and any
+        # leftover kwargs (typo'd or meant for pairwise_func) would be
+        # silently dropped instead of raised or applied.
+        if resolved_engine == "numba" and pairwise_func is None and not kwargs:
             distances = _unweighted_unifrac_pdist_numba(
                 counts, taxa=taxa, tree=tree, validate=validate
             )
@@ -333,7 +338,9 @@ def beta_diversity(
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
         resolved_engine = _resolve_engine(engine, ("cython", "numba"))
-        if resolved_engine == "numba":
+        # See the unweighted_unifrac branch above for why pairwise_func and
+        # leftover kwargs disqualify the numba fast path.
+        if resolved_engine == "numba" and pairwise_func is None and not kwargs:
             distances = _weighted_unifrac_pdist_numba(
                 counts,
                 taxa=taxa,
