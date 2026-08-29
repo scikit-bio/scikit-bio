@@ -532,6 +532,37 @@ if NUMBA_AVAILABLE:
         """Flat offset such that out[base + j] is pair (i, j), for j > i."""
         return i * n_samples - (i * (i + 1)) // 2 - i - 1
 
+    @njit(inline="always")
+    def _unweighted_unifrac_row_nb(row, n_samples, n_nodes, counts_by_node,
+                                    branch_lengths, out):
+        """Fill out[] with row's distance to every sample j > row.
+
+        Factored out of _unweighted_unifrac_pdist_nb so its prange loop can
+        call it once for a row and once for that row's mirror without
+        duplicating the body; inline="always" makes this compile to the same
+        code as writing it out twice.
+        """
+        base = _condensed_row_base(row, n_samples)
+        present_row = np.empty(n_nodes, np.bool_)
+        for k in range(n_nodes):
+            present_row[k] = counts_by_node[row, k] > 0
+        for j in range(row + 1, n_samples):
+            unique = 0.0
+            observed = 0.0
+            for k in range(n_nodes):
+                u_present = present_row[k]
+                v_present = counts_by_node[j, k] > 0
+                if u_present or v_present:
+                    bl = branch_lengths[k]
+                    observed += bl
+                    if u_present != v_present:
+                        unique += bl
+            idx = base + j
+            if observed == 0.0:
+                out[idx] = 0.0
+            else:
+                out[idx] = unique / observed
+
     @njit(parallel=True)
     def _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths):
         """Full unweighted UniFrac distance matrix (condensed) via Numba.
@@ -578,51 +609,21 @@ if NUMBA_AVAILABLE:
         # prange(n_samples - 1) gives thread 0 far more work than the last
         # thread. Pairing row i with mirror_i = n_samples - i - 2 (as
         # _permanova_f_stat_sW_condensed_nb does) keeps the work per prange
-        # iteration roughly constant (~n_samples) regardless of i.
+        # iteration roughly constant (~n_samples) regardless of i. This also
+        # halves the number of schedulable prange tasks (from n_samples - 1
+        # to n_half), which caps usable parallelism at n_half threads on
+        # machines with more cores than that -- the same tradeoff
+        # _permanova_f_stat_sW_condensed_nb already makes.
         for i in prange(n_half):
-            base_i = _condensed_row_base(i, n_samples)
-            u_present_row = np.empty(n_nodes, np.bool_)
-            for k in range(n_nodes):
-                u_present_row[k] = counts_by_node[i, k] > 0
-            for j in range(i + 1, n_samples):
-                unique = 0.0
-                observed = 0.0
-                for k in range(n_nodes):
-                    u_present = u_present_row[k]
-                    v_present = counts_by_node[j, k] > 0
-                    if u_present or v_present:
-                        bl = branch_lengths[k]
-                        observed += bl
-                        if u_present != v_present:
-                            unique += bl
-                idx = base_i + j
-                if observed == 0.0:
-                    out[idx] = 0.0
-                else:
-                    out[idx] = unique / observed
-
+            _unweighted_unifrac_row_nb(
+                i, n_samples, n_nodes, counts_by_node, branch_lengths, out
+            )
             mirror_i = n_samples - i - 2
             if mirror_i != i:
-                base_m = _condensed_row_base(mirror_i, n_samples)
-                m_present_row = np.empty(n_nodes, np.bool_)
-                for k in range(n_nodes):
-                    m_present_row[k] = counts_by_node[mirror_i, k] > 0
-                for j in range(mirror_i + 1, n_samples):
-                    unique = 0.0
-                    observed = 0.0
-                    for k in range(n_nodes):
-                        u_present = m_present_row[k]
-                        v_present = counts_by_node[j, k] > 0
-                        if u_present or v_present:
-                            bl = branch_lengths[k]
-                            observed += bl
-                            if u_present != v_present:
-                                unique += bl
-                    idx = base_m + j
-                    if observed == 0.0:
-                        out[idx] = 0.0
-                    else:
-                        out[idx] = unique / observed
+                _unweighted_unifrac_row_nb(
+                    mirror_i, n_samples, n_nodes, counts_by_node,
+                    branch_lengths, out
+                )
 
         return out
 
@@ -647,6 +648,48 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, validate):
 
 
 if NUMBA_AVAILABLE:
+
+    @njit(inline="always")
+    def _weighted_unifrac_row_nb(row, n_samples, n_nodes, counts_by_node,
+                                  branch_lengths, sample_totals,
+                                  node_to_root_distances, normalized, out):
+        """Fill out[] with row's distance to every sample j > row.
+
+        Factored out of _weighted_unifrac_pdist_nb so its prange loop can
+        call it once for a row and once for that row's mirror without
+        duplicating the body; inline="always" makes this compile to the same
+        code as writing it out twice.
+        """
+        base = _condensed_row_base(row, n_samples)
+        row_total = sample_totals[row]
+        row_proportions = np.empty(n_nodes, np.float64)
+        if row_total > 0.0:
+            for k in range(n_nodes):
+                row_proportions[k] = counts_by_node[row, k] / row_total
+        else:
+            for k in range(n_nodes):
+                row_proportions[k] = 0.0
+        for j in range(row + 1, n_samples):
+            v_total = sample_totals[j]
+            wu = 0.0
+            c = 0.0
+            for k in range(n_nodes):
+                up = row_proportions[k]
+                if v_total > 0.0:
+                    vp = counts_by_node[j, k] / v_total
+                else:
+                    vp = 0.0
+                wu += branch_lengths[k] * abs(up - vp)
+                if normalized:
+                    c += node_to_root_distances[k] * (up + vp)
+            idx = base + j
+            if normalized:
+                if row_total == 0.0 and v_total == 0.0:
+                    out[idx] = 0.0
+                else:
+                    out[idx] = wu / c
+            else:
+                out[idx] = wu
 
     @njit(parallel=True)
     def _weighted_unifrac_pdist_nb(
@@ -707,71 +750,20 @@ if NUMBA_AVAILABLE:
 
         # See the matching comment in _unweighted_unifrac_pdist_nb: pairing
         # row i with mirror_i = n_samples - i - 2 keeps the work per prange
-        # iteration roughly constant instead of triangularly imbalanced.
+        # iteration roughly constant instead of triangularly imbalanced (at
+        # the cost of capping usable parallelism at n_half threads).
         for i in prange(n_half):
-            base_i = _condensed_row_base(i, n_samples)
-            u_total = sample_totals[i]
-            u_proportions = np.empty(n_nodes, np.float64)
-            if u_total > 0.0:
-                for k in range(n_nodes):
-                    u_proportions[k] = counts_by_node[i, k] / u_total
-            else:
-                for k in range(n_nodes):
-                    u_proportions[k] = 0.0
-            for j in range(i + 1, n_samples):
-                v_total = sample_totals[j]
-                wu = 0.0
-                c = 0.0
-                for k in range(n_nodes):
-                    up = u_proportions[k]
-                    if v_total > 0.0:
-                        vp = counts_by_node[j, k] / v_total
-                    else:
-                        vp = 0.0
-                    wu += branch_lengths[k] * abs(up - vp)
-                    if normalized:
-                        c += node_to_root_distances[k] * (up + vp)
-                idx = base_i + j
-                if normalized:
-                    if u_total == 0.0 and v_total == 0.0:
-                        out[idx] = 0.0
-                    else:
-                        out[idx] = wu / c
-                else:
-                    out[idx] = wu
-
+            _weighted_unifrac_row_nb(
+                i, n_samples, n_nodes, counts_by_node, branch_lengths,
+                sample_totals, node_to_root_distances, normalized, out
+            )
             mirror_i = n_samples - i - 2
             if mirror_i != i:
-                base_m = _condensed_row_base(mirror_i, n_samples)
-                m_total = sample_totals[mirror_i]
-                m_proportions = np.empty(n_nodes, np.float64)
-                if m_total > 0.0:
-                    for k in range(n_nodes):
-                        m_proportions[k] = counts_by_node[mirror_i, k] / m_total
-                else:
-                    for k in range(n_nodes):
-                        m_proportions[k] = 0.0
-                for j in range(mirror_i + 1, n_samples):
-                    v_total = sample_totals[j]
-                    wu = 0.0
-                    c = 0.0
-                    for k in range(n_nodes):
-                        up = m_proportions[k]
-                        if v_total > 0.0:
-                            vp = counts_by_node[j, k] / v_total
-                        else:
-                            vp = 0.0
-                        wu += branch_lengths[k] * abs(up - vp)
-                        if normalized:
-                            c += node_to_root_distances[k] * (up + vp)
-                    idx = base_m + j
-                    if normalized:
-                        if m_total == 0.0 and v_total == 0.0:
-                            out[idx] = 0.0
-                        else:
-                            out[idx] = wu / c
-                    else:
-                        out[idx] = wu
+                _weighted_unifrac_row_nb(
+                    mirror_i, n_samples, n_nodes, counts_by_node,
+                    branch_lengths, sample_totals, node_to_root_distances,
+                    normalized, out
+                )
 
         return out
 
