@@ -565,9 +565,10 @@ class InternalPERMANOVATests(PERMANOVATestData):
 
     @numba_code
     def test_permanova_rowtile_condensed_nb_odd_n(self):
-        # All fixtures above use even n (4, 6, 12); an odd sample count
-        # changes how n // 2 rows get paired against their mirror row, so
-        # exercise it directly against the reference sW kernel.
+        # The condensed row-tile kernel is only exercised above at n=6 (via
+        # dm_unequal); an odd sample count changes how n // 2 rows get
+        # paired against their mirror row, so exercise it directly against
+        # the reference sW kernel.
         rng = get_rng(0)
         n = 51
         condensed = rng.random(n * (n - 1) // 2)
