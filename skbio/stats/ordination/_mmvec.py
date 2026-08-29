@@ -915,7 +915,7 @@ class MMvec(SkbioObject):
 
 if NUMBA_AVAILABLE:
 
-    @njit(cache=True)
+    @njit
     def _scatter_add_grad_nb(out, ids, contrib, scale):
         # Plain sequential scan over the batch (see _scatter_add_grad's
         # docstring for the semantics and why this is sequential rather than
