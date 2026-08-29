@@ -572,8 +572,14 @@ if NUMBA_AVAILABLE:
         n_nodes = counts_by_node.shape[1]
         n_pairs = n_samples * (n_samples - 1) // 2
         out = np.empty(n_pairs, np.float64)
+        n_half = n_samples // 2
 
-        for i in prange(n_samples - 1):
+        # Row i has n_samples - 1 - i pairs to compute, so a plain
+        # prange(n_samples - 1) gives thread 0 far more work than the last
+        # thread. Pairing row i with mirror_i = n_samples - i - 2 (as
+        # _permanova_f_stat_sW_condensed_nb does) keeps the work per prange
+        # iteration roughly constant (~n_samples) regardless of i.
+        for i in prange(n_half):
             base_i = _condensed_row_base(i, n_samples)
             u_present_row = np.empty(n_nodes, np.bool_)
             for k in range(n_nodes):
@@ -594,6 +600,29 @@ if NUMBA_AVAILABLE:
                     out[idx] = 0.0
                 else:
                     out[idx] = unique / observed
+
+            mirror_i = n_samples - i - 2
+            if mirror_i != i:
+                base_m = _condensed_row_base(mirror_i, n_samples)
+                m_present_row = np.empty(n_nodes, np.bool_)
+                for k in range(n_nodes):
+                    m_present_row[k] = counts_by_node[mirror_i, k] > 0
+                for j in range(mirror_i + 1, n_samples):
+                    unique = 0.0
+                    observed = 0.0
+                    for k in range(n_nodes):
+                        u_present = m_present_row[k]
+                        v_present = counts_by_node[j, k] > 0
+                        if u_present or v_present:
+                            bl = branch_lengths[k]
+                            observed += bl
+                            if u_present != v_present:
+                                unique += bl
+                    idx = base_m + j
+                    if observed == 0.0:
+                        out[idx] = 0.0
+                    else:
+                        out[idx] = unique / observed
 
         return out
 
@@ -674,8 +703,12 @@ if NUMBA_AVAILABLE:
         n_nodes = counts_by_node.shape[1]
         n_pairs = n_samples * (n_samples - 1) // 2
         out = np.empty(n_pairs, np.float64)
+        n_half = n_samples // 2
 
-        for i in prange(n_samples - 1):
+        # See the matching comment in _unweighted_unifrac_pdist_nb: pairing
+        # row i with mirror_i = n_samples - i - 2 keeps the work per prange
+        # iteration roughly constant instead of triangularly imbalanced.
+        for i in prange(n_half):
             base_i = _condensed_row_base(i, n_samples)
             u_total = sample_totals[i]
             u_proportions = np.empty(n_nodes, np.float64)
@@ -706,6 +739,39 @@ if NUMBA_AVAILABLE:
                         out[idx] = wu / c
                 else:
                     out[idx] = wu
+
+            mirror_i = n_samples - i - 2
+            if mirror_i != i:
+                base_m = _condensed_row_base(mirror_i, n_samples)
+                m_total = sample_totals[mirror_i]
+                m_proportions = np.empty(n_nodes, np.float64)
+                if m_total > 0.0:
+                    for k in range(n_nodes):
+                        m_proportions[k] = counts_by_node[mirror_i, k] / m_total
+                else:
+                    for k in range(n_nodes):
+                        m_proportions[k] = 0.0
+                for j in range(mirror_i + 1, n_samples):
+                    v_total = sample_totals[j]
+                    wu = 0.0
+                    c = 0.0
+                    for k in range(n_nodes):
+                        up = m_proportions[k]
+                        if v_total > 0.0:
+                            vp = counts_by_node[j, k] / v_total
+                        else:
+                            vp = 0.0
+                        wu += branch_lengths[k] * abs(up - vp)
+                        if normalized:
+                            c += node_to_root_distances[k] * (up + vp)
+                    idx = base_m + j
+                    if normalized:
+                        if m_total == 0.0 and v_total == 0.0:
+                            out[idx] = 0.0
+                        else:
+                            out[idx] = wu / c
+                    else:
+                        out[idx] = wu
 
         return out
 
