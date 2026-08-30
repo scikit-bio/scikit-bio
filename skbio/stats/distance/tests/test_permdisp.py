@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from functools import partial
-from unittest import TestCase, main, skipIf
+from unittest import TestCase, main, mock, skipIf
 import platform
 
 import numpy as np
@@ -356,6 +356,11 @@ class PERMDISPTests(TestCase):
         cy = np.asarray(geomedian_axis_one(self.eq_mat.data))
         nb = _geomedian_axis_one(self.eq_mat.data, "numba")
         npt.assert_allclose(nb, cy, rtol=0, atol=1e-10)
+
+    def test_geomedian_numba_unavailable(self):
+        with mock.patch("skbio.stats.distance._permdisp.NUMBA_AVAILABLE", False):
+            with self.assertRaisesRegex(ImportError, "requires the optional numba"):
+                _geomedian_axis_one(self.eq_mat.data, "numba")
 
     @numba_code
     def test_permdisp_engine_equivalence(self):
