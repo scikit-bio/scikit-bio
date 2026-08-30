@@ -947,15 +947,10 @@ def _scatter_add_grad(
     (the same order ``np.add.at`` uses), which matters because float addition
     is not associative.
 
-    The Numba kernel is a single sequential scan over the batch, not a
-    prange-parallelized one: a row-owner ``prange`` scheme was tried first
-    (each output row scanned by its own thread, avoiding write races) but
-    benchmarked 6-6.5x *slower* than the plain sequential version at
-    representative shapes (500-5000 rows, 32-128 cols, 64-1024 batch size) --
-    the row-owner scan does O(n_rows * n_batch) work to avoid atomics, while
-    the batch (not the row count) is what's actually small here, so a single
-    O(n_batch) pass over it is both simpler and substantially faster.
-    ``fastmath`` is deliberately not enabled, so the compiler cannot
+    The Numba kernel is a single sequential scan over the batch, not
+    prange-parallelized: the batch size, not the row count, is what's small
+    here, so an O(n_batch) pass beats parallelizing over O(n_rows) output
+    rows. ``fastmath`` is deliberately not enabled, so the compiler cannot
     reassociate or contract the multiply-add.
 
     Dispatch here is purely automatic (Numba if installed, ``np.add.at``
