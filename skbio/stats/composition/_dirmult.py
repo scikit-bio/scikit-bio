@@ -257,7 +257,7 @@ def dirmult_ttest(
     """
     from scipy.stats import t as t_dist
 
-    if draws < 1:
+    if not isinstance(draws, (int, np.integer)) or draws < 1:
         raise ValueError("draws must be a positive integer.")
 
     rng = get_rng(seed)

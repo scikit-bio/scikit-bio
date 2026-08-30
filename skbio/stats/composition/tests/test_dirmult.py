@@ -225,9 +225,10 @@ class DirMultTTestTests(TestCase):
             dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
 
     def test_dirmult_ttest_invalid_draws(self):
-        with self.assertRaises(ValueError):
-            dirmult_ttest(self.table, self.grouping, self.treatment,
-                          self.reference, draws=0)
+        for draws in (0, -1, 2.5, float("nan")):
+            with self.assertRaises(ValueError):
+                dirmult_ttest(self.table, self.grouping, self.treatment,
+                              self.reference, draws=draws)
 
     def test_dirmult_ttest_missing_values_in_grouping(self):
         self.grouping[1] = np.nan  # Introduce a missing value in grouping
