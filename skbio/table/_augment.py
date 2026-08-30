@@ -15,6 +15,7 @@ import numpy as np
 from skbio.util import get_rng
 from skbio.stats.composition import closure
 from skbio.table._tabular import _ingest_table
+from skbio.util._array import ingest_array
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Sequence
@@ -59,7 +60,7 @@ def _validate_labels(labels: NDArray, n: int) -> tuple[NDArray, NDArray]:
         If one-hot encoded labels are not valid.
 
     """
-    labels = np.asarray(labels)
+    xp, labels = ingest_array(labels)
 
     if labels.ndim not in (1, 2):
         raise ValueError(
@@ -76,33 +77,39 @@ def _validate_labels(labels: NDArray, n: int) -> tuple[NDArray, NDArray]:
     if labels.ndim == 1:
         # if labels is not integer-type, make sure it contains only whole numbers,
         # then convert to int
-        if not np.issubdtype(labels.dtype, np.integer):
-            if not (np.mod(labels, 1) == 0).all():
-                raise ValueError(f"Labels must only contain integer values.")
-            labels = labels.astype(int)
+        if not xp.isdtype(labels.dtype, "integral"):
+            labels_float = xp.astype(labels, xp.float64)
+            labels_int = xp.astype(labels, xp.int64)
+            if not xp.all(labels_float == xp.astype(labels_int, xp.float64)):
+                raise ValueError("Labels must only contain integer values.")
+            labels = labels_int
 
         # check that labels are 0-indexed
-        unique_labels = np.unique(labels)
-        if unique_labels.min() != 0:
+        unique_labels = xp.unique_values(labels)
+        unique_labels = xp.sort(unique_labels)
+        min_label = unique_labels[0]
+        if int(min_label) != 0:
             raise ValueError("Labels must be zero-indexed. Minimum value must be 0.")
-        n_classes = len(unique_labels)
-        exp_labels = np.arange(n_classes)
-        # check that label is consecutive integers starting at 0
-        if not np.array_equal(unique_labels, exp_labels):
+        n_classes = unique_labels.shape[0]
+        exp_labels = xp.arange(n_classes, dtype=labels.dtype)
+        # check that labels are consecutive integers starting at 0
+        if not bool(xp.all(unique_labels == exp_labels)):
             raise ValueError(
                 "Labels must be consecutive integers from 0 to n_classes - 1."
             )
-        # perform one-hot encoding
-        labels_one_hot = np.eye(n_classes, dtype=int)[labels]
+
+        labels_one_hot = xp.eye(n_classes, dtype=labels.dtype)[labels]
         return labels, labels_one_hot
 
     # input as one-hot encoded labels
     else:
-        # all rows should sum to 1
-        if not np.allclose(labels.sum(axis=1), 1):
+        row_sums = xp.sum(labels, axis=1)
+        ones = xp.ones(labels.shape[0], dtype=labels.dtype)
+        tol = xp.asarray(1e-8, dtype=xp.float64)
+        diff = xp.abs(xp.astype(row_sums, xp.float64) - xp.astype(ones, xp.float64))
+        if not bool(xp.all(diff < tol)):
             raise ValueError("Labels are not properly one-hot encoded.")
-        # generated label indices
-        labels_index = labels.argmax(axis=1)
+        labels_index = xp.argmax(labels, axis=1)
         return labels_index, labels
 
 
@@ -120,9 +127,15 @@ def _normalize_matrix(matrix: NDArray) -> NDArray:
         Normalized matrix.
 
     """
-    if np.allclose(matrix.sum(axis=1), 1):
+    xp, matrix = ingest_array(matrix)
+    row_sums = xp.sum(matrix, axis=1)
+    ones = xp.ones(matrix.shape[0], dtype=matrix.dtype)
+    tol = xp.asarray(1e-8, dtype=xp.float64)
+    diff = xp.abs(xp.astype(row_sums, xp.float64) - xp.astype(ones, xp.float64))
+
+    if bool(xp.all(diff < tol)):
         return matrix
-    return closure(matrix)
+    return closure(matrix, axis=1)
 
 
 def _all_pairs(n: int) -> NDArray:
@@ -156,16 +169,18 @@ def _intra_class_pairs(labels: ArrayLike) -> NDArray:
         Pairs of sample indices.
 
     """
+    xp, labels = ingest_array(labels)
     pairs = []
-    for label in np.unique(labels):
-        idx = np.where(labels == label)[0]
-        if idx.size > 1:
-            i, j = np.triu_indices(idx.size, k=1)
-            pairs.append(np.column_stack((idx[i], idx[j])))
+    for label in xp.unique_values(labels):
+        idx = xp.where(labels == label)[0]
+        m = idx.shape[0]
+        if m > 1:
+            i, j = xp.triu_indices(idx.size, k=1)
+            pairs.append(xp.stack((idx[i], idx[j]), axis= 1))
     if pairs:
-        return np.vstack(pairs)
+        return xp.concatenate(pairs)
     else:
-        return np.empty((0, 2), dtype=np.intp)
+        return xp.empty((0, 2), dtype=xp.int64)
 
 
 def _format_input(
