@@ -12,7 +12,6 @@ import os
 import io
 import sys
 import unittest
-from unittest import mock
 
 import numpy as np
 import numpy.testing as npt
@@ -812,6 +811,21 @@ class TestMMvecLBFGS(unittest.TestCase):
 
         self.assertIn("Optimizer must be", str(ctx.exception))
 
+    def test_invalid_engine_raises(self):
+        """Invalid engine should raise ValueError."""
+        with self.assertRaises(ValueError):
+            mmvec(
+                self.X,
+                self.Y,
+                optimizer="adam",
+                max_iter=1,
+                engine="invalid",
+            )
+
+    def test_default_engine_is_numpy(self):
+        """MMvec must default to engine="numpy", not implicit Numba."""
+        self.assertEqual(MMvec().engine, "numpy")
+
 
 class TestMMvecCaseStudies(unittest.TestCase):
     """Test MMvec on real-world case study datasets.
@@ -1046,21 +1060,37 @@ class TestScatterAddGrad(unittest.TestCase):
         npt.assert_array_equal(out_nb, out_ref)
 
     def test_dispatch_fallback_matches_numpy(self):
-        """The np.add.at fallback path is exact when Numba is unavailable."""
+        """engine="numpy" takes the np.add.at path and matches it exactly."""
         rng = np.random.default_rng(0)
         d1, p, B = 12, 3, 40
         ids = rng.integers(0, d1, size=B)
         contrib = rng.standard_normal((B, p))
         scale = -1.7
 
-        with mock.patch("skbio.stats.ordination._mmvec.NUMBA_AVAILABLE", False):
-            out = np.zeros((d1, p))
-            _scatter_add_grad(out, ids, contrib, scale)
+        out = np.zeros((d1, p))
+        _scatter_add_grad(out, ids, contrib, scale, "numpy")
 
         ref = np.zeros((d1, p))
         np.add.at(ref, ids, scale * contrib)
 
         npt.assert_array_equal(out, ref)
+
+    @numba_code
+    def test_dispatch_numba_matches_numpy(self):
+        """engine="numba" matches the engine="numpy" path exactly."""
+        rng = np.random.default_rng(0)
+        d1, p, B = 12, 3, 40
+        ids = rng.integers(0, d1, size=B)
+        contrib = rng.standard_normal((B, p))
+        scale = -1.7
+
+        out_nb = np.zeros((d1, p))
+        _scatter_add_grad(out_nb, ids, contrib, scale, "numba")
+
+        out_np = np.zeros((d1, p))
+        _scatter_add_grad(out_np, ids, contrib, scale, "numpy")
+
+        npt.assert_array_equal(out_nb, out_np)
 
     @numba_code
     def test_loss_and_grad_numba_matches_fallback(self):
@@ -1090,14 +1120,15 @@ class TestScatterAddGrad(unittest.TestCase):
         size = 10
         norm = 5 / size
 
+        model.engine = "numba"
         _, g_nb = model.loss_and_grad(
             X_coo, Y, size, norm, weights, np.random.default_rng(123)
         )
 
-        with mock.patch("skbio.stats.ordination._mmvec.NUMBA_AVAILABLE", False):
-            _, g_ref = model.loss_and_grad(
-                X_coo, Y, size, norm, weights, np.random.default_rng(123)
-            )
+        model.engine = "numpy"
+        _, g_ref = model.loss_and_grad(
+            X_coo, Y, size, norm, weights, np.random.default_rng(123)
+        )
 
         for a, b in zip(g_nb, g_ref):
             npt.assert_array_equal(a, b)

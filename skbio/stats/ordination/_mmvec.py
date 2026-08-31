@@ -31,6 +31,7 @@ from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
+from skbio._config import _resolve_engine
 
 try:
     from numba import njit
@@ -69,6 +70,7 @@ def mmvec(
     seed: SeedLike | None = None,
     verbose: bool = False,
     output_format: str | None = None,
+    engine: str = "numpy",
 ) -> MMvecResult:
     r"""Perform multiomics Microbe-Metabolite Vectors (MMvec) analysis.
 
@@ -153,6 +155,14 @@ def mmvec(
         Print training progress. Default is False.
     output_format : str, optional
         Output table format. See :ref:`table_params` for details.
+    engine : {"numpy", "numba"}, optional
+        Compute engine for the Adam optimizer's gradient scatter-add step.
+        Ignored for ``optimizer="lbfgs"``. ``"numpy"`` (default) uses
+        :func:`numpy.add.at`. ``"numba"`` uses the optional Numba
+        implementation and requires Numba to be installed; it is not used
+        unless explicitly requested here.
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -320,6 +330,7 @@ def mmvec(
         seed=seed,
         verbose=verbose,
         output_format=output_format,
+        engine=engine,
     )
     fitted = estimator.fit(X, Y)
     return MMvecResult(fitted)
@@ -575,6 +586,7 @@ class MMvec(SkbioObject):
         seed: SeedLike | None = None,
         verbose: bool = False,
         output_format: str | None = None,
+        engine: str = "numpy",
     ) -> None:
         self.n_components = n_components
         self.optimizer = optimizer
@@ -592,6 +604,7 @@ class MMvec(SkbioObject):
         self.seed = seed
         self.verbose = verbose
         self.output_format = output_format
+        self.engine = engine
 
     def fit(self, X: TableLike, y: TableLike) -> MMvec:
         """Fit MMvec model.
@@ -642,6 +655,14 @@ class MMvec(SkbioObject):
         # Create RNG
         rng = get_rng(self.seed)
 
+        # Resolve the scatter-add engine. Unlike permanova/mantel/permdisp/pcoa,
+        # this does not fall back to the global skbio.set_config("engine")
+        # default: that default is "cython", and mmvec has no cython
+        # implementation, so treating None as "look up the global config" would
+        # raise instead of doing something sensible. "numpy" is the explicit,
+        # always-safe default; engine="numba" must be requested directly.
+        engine = _resolve_engine(self.engine, ("numpy", "numba"))
+
         n_features_x = X_arr.shape[1]
         n_features_y = y_arr.shape[1]
 
@@ -655,6 +676,7 @@ class MMvec(SkbioObject):
             y_prior_mean=self.y_prior_mean,
             y_prior_scale=self.y_prior_scale,
             rng=rng,
+            engine=engine,
         )
 
         # Convert X to sparse COO format
@@ -937,11 +959,11 @@ else:  # pragma: no cover
 
 
 def _scatter_add_grad(
-    out: np.ndarray, ids: np.ndarray, contrib: np.ndarray, scale: float
+    out: np.ndarray, ids: np.ndarray, contrib: np.ndarray, scale: float, engine: str
 ) -> None:
-    """Dispatch scatter-add to the Numba kernel if available, else ``np.add.at``.
+    """Dispatch scatter-add to the requested engine.
 
-    Both branches implement ``out += scale * contrib`` scattered by ``ids`` with
+    Both engines implement ``out += scale * contrib`` scattered by ``ids`` with
     ``np.add.at`` accumulation semantics and produce numerically identical
     (bit-for-bit) results: contributions are summed in increasing batch order
     (the same order ``np.add.at`` uses), which matters because float addition
@@ -952,15 +974,6 @@ def _scatter_add_grad(
     here, so an O(n_batch) pass beats parallelizing over O(n_rows) output
     rows. ``fastmath`` is deliberately not enabled, so the compiler cannot
     reassociate or contract the multiply-add.
-
-    Dispatch here is purely automatic (Numba if installed, ``np.add.at``
-    otherwise), unlike the ``engine=`` parameter on ``permanova``/``mantel``/
-    ``permdisp``/``pcoa``. Those default to Cython and require an explicit
-    opt-in to Numba; this kernel is internal (no public parameter) and wants
-    the opposite default, so it does not route through
-    :func:`skbio._config.get_config`'s ``"engine"`` setting -- doing so would
-    make ``get_config("engine")``'s default value of ``"cython"`` silently
-    disable Numba here even when it's installed and no one asked for that.
 
     Parameters
     ----------
@@ -978,9 +991,11 @@ def _scatter_add_grad(
         Per-batch contributions before scaling.
     scale : float
         Scalar multiplier applied to every contribution.
+    engine : {"numpy", "numba"}
+        Already-resolved compute engine.
 
     """
-    if NUMBA_AVAILABLE:
+    if engine == "numba":
         ids = np.ascontiguousarray(ids, dtype=np.intp)
         contrib = np.ascontiguousarray(contrib)
         _scatter_add_grad_nb(out, ids, contrib, scale)
@@ -1001,6 +1016,7 @@ class _MMvecModel:
         y_prior_mean: float,
         y_prior_scale: float,
         rng: np.random.Generator,
+        engine: str = "numpy",
     ) -> None:
         """Initialize MMvec model parameters.
 
@@ -1022,11 +1038,15 @@ class _MMvecModel:
             Scale of Gaussian prior on Y-side embeddings and biases.
         rng : numpy.random.Generator
             Random number generator.
+        engine : {"numpy", "numba"}, optional
+            Compute engine for the Adam optimizer's scatter-add gradient
+            step. Already resolved by the caller (:meth:`MMvec.fit`).
 
         """
         self.n_features_x = n_features_x
         self.n_features_y = n_features_y
         self.n_components = n_components
+        self.engine = engine
         self.x_prior_mean = x_prior_mean
         self.x_prior_scale = x_prior_scale
         self.y_prior_mean = y_prior_mean
@@ -1129,8 +1149,8 @@ class _MMvecModel:
         # Scatter-add the sampled X-side contributions back to full parameter
         # arrays. Fused numba kernel (falls back to np.add.at if numba is absent);
         # both paths are bit-for-bit identical, including repeated X_ids.
-        _scatter_add_grad(dx_main, X_ids, dx_main_batch, -norm)
-        _scatter_add_grad(dx_bias, X_ids, dx_bias_batch[:, None], -norm)
+        _scatter_add_grad(dx_main, X_ids, dx_main_batch, -norm, self.engine)
+        _scatter_add_grad(dx_bias, X_ids, dx_bias_batch[:, None], -norm, self.engine)
 
         # Add prior gradients
         dx_main += (self.x_main - self.x_prior_mean) / (self.x_prior_scale**2)
