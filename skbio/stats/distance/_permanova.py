@@ -37,6 +37,7 @@ import array_api_compat as _aac
 
 try:
     from numba import njit, prange
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -163,8 +164,7 @@ if NUMBA_AVAILABLE:
             for col_idx in range(row_idx + 1, n):
                 if grouping[col_idx] == group_idx:
                     condensed_idx = (
-                        row_idx * n + col_idx
-                        - ((row_idx + 2) * (row_idx + 1)) // 2
+                        row_idx * n + col_idx - ((row_idx + 2) * (row_idx + 1)) // 2
                     )
                     val = np.float64(condensed_matrix[condensed_idx])
                     local_sum += val * val
@@ -178,7 +178,8 @@ if NUMBA_AVAILABLE:
                 for col_idx in range(mirror_row + 1, n):
                     if grouping[col_idx] == group_idx:
                         condensed_idx = (
-                            mirror_row * n + col_idx
+                            mirror_row * n
+                            + col_idx
                             - ((mirror_row + 2) * (mirror_row + 1)) // 2
                         )
                         val = condensed_matrix[condensed_idx]
@@ -270,9 +271,7 @@ if NUMBA_AVAILABLE:
                             groupings_T[col, p] == groupings_T[mirror_row, p]
                         )
                 for p in range(n_perm):
-                    local_sW[p] += (
-                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
-                    )
+                    local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
 
     @njit(inline="always")
     def _condensed_row_base(row, n):
@@ -349,13 +348,10 @@ if NUMBA_AVAILABLE:
                             groupings_T[col, p] == groupings_T[mirror_row, p]
                         )
                 for p in range(n_perm):
-                    local_sW[p] += (
-                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
-                    )
+                    local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
 
     def _run_permanova_rowtile_nb(
-        distmat, grouping, group_sizes, s_T, num_groups, sample_size,
-        permutations, seed
+        distmat, grouping, group_sizes, s_T, num_groups, sample_size, permutations, seed
     ):
         """Run PERMANOVA with the row-tile (single matrix pass) strategy.
 
@@ -643,7 +639,12 @@ def permanova(
         if gpu is not None:
             try:
                 return _run_permanova_gpu(
-                    gpu, distmat.data, grouping, column, permutations, seed,
+                    gpu,
+                    distmat.data,
+                    grouping,
+                    column,
+                    permutations,
+                    seed,
                     ids=distmat.ids,
                 )
             except Exception:
@@ -697,12 +698,18 @@ def permanova(
 
     if engine == "numba":
         stat, p_value = _run_permanova_rowtile_nb(
-            distmat, grouping, group_sizes, s_T,
-            num_groups, sample_size, permutations, seed
+            distmat,
+            grouping,
+            group_sizes,
+            s_T,
+            num_groups,
+            sample_size,
+            permutations,
+            seed,
         )
     else:
         test_stat_function = partial(
-            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
+            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
         )
         stat, p_value = _run_monte_carlo_stats(
             test_stat_function, grouping, permutations, seed
@@ -714,39 +721,22 @@ def permanova(
 
 
 def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, engine, grouping
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
 ):
     """Compute PERMANOVA pseudo-F statistic.
 
-    Only reachable with ``engine == "cython"``: ``permanova()`` routes every
+    Only used for ``engine == "cython"``: ``permanova()`` routes every
     ``engine == "numba"`` call through the row-tile path
     (``_run_permanova_rowtile_nb``) instead, for both full and condensed
-    matrices, so the ``engine == "numba"`` branches below can never execute
-    through the public API. They're kept, along with
-    ``_permanova_f_stat_sW_nb``/``_permanova_f_stat_sW_condensed_nb``, only as
-    directly unit-tested reference kernels (see ``test_sW_full_nb``/
-    ``test_sW_condensed_nb`` in test_permanova.py) -- not because anything
-    still calls them this way.
+    matrices.
     """
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        if engine == "numba":  # pragma: no cover -- see docstring
-            s_W = _permanova_f_stat_sW_condensed_nb(
-                distance_matrix.data, group_sizes, grouping
-            )
-        else:
-            s_W = permanova_f_stat_sW_condensed_cy(
-                distance_matrix.data, group_sizes, grouping
-            )
+        s_W = permanova_f_stat_sW_condensed_cy(
+            distance_matrix.data, group_sizes, grouping
+        )
     else:
-        if engine == "numba":  # pragma: no cover -- see docstring
-            s_W = _permanova_f_stat_sW_nb(
-                distance_matrix.data, group_sizes, grouping
-            )
-        else:
-            s_W = permanova_f_stat_sW_cy(
-                distance_matrix.data, group_sizes, grouping
-            )
+        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
@@ -782,9 +772,7 @@ def _permanova_array_api(distmat, grouping, column, permutations, seed, ids=None
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
     group_sizes = np.bincount(grouping)
-    inv_group_sizes = xp.asarray(
-        1.0 / group_sizes, dtype=dm.dtype, device=dm.device
-    )
+    inv_group_sizes = xp.asarray(1.0 / group_sizes, dtype=dm.dtype, device=dm.device)
     # full 2-D matrix (array-API input is never condensed); halve to count each
     # unordered pair once, matching the DistanceMatrix full-matrix path.
     s_T = xp.sum(dm * dm, dtype=xp.float64) / sample_size / 2.0
