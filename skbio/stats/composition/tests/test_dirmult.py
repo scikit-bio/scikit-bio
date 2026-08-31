@@ -142,7 +142,11 @@ class DirMultTTestTests(TestCase):
         trt = rng.normal(size=(n1, m))
         ref = rng.normal(size=(n2, m))
 
-        diff, se, dof = _welch_draw_stats(trt, ref, n1, n2)
+        diff = np.empty(m)
+        se = np.empty(m)
+        dof = np.empty(m)
+        scratch = (np.empty(m), np.empty(m), np.empty(m), np.empty(m))
+        _welch_draw_stats(trt, ref, n1, n2, diff, se, dof, *scratch)
         tstat = diff / se
         pval = 2.0 * t_dist.sf(np.abs(tstat), dof)
         tcrit = t_dist.ppf(0.975, dof)

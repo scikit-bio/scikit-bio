@@ -49,7 +49,9 @@ def _dirmult_draw(matrix, rng):
     return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
 
 
-def _welch_draw_stats(trt_mat, ref_mat, n1, n2):
+def _welch_draw_stats(
+    trt_mat, ref_mat, n1, n2, diff_out, se_out, dof_out, vn1, vn2, var_sum, mean_ref
+):
     """Per-draw Welch's (unequal-variance) t-test sufficient statistics.
 
     This is the closed form of statsmodels' CompareMeans.ttest_ind /
@@ -61,22 +63,36 @@ def _welch_draw_stats(trt_mat, ref_mat, n1, n2):
     measured 2.4-4x slower here, presumably from its more general-purpose
     per-call overhead), which would undercut the point of this function.
 
-    Returns
-    -------
-    diff : mean(treatment) - mean(reference)
-    se : Welch standard error
-    dof : Welch-Satterthwaite degrees of freedom
+    Writes into ``diff_out``/``se_out``/``dof_out`` (typically a row of the
+    caller's ``(draws, m)`` buffers) rather than returning new arrays.
+    ``vn1``/``vn2``/``var_sum``/``mean_ref`` are reusable length-m scratch
+    buffers with no meaning after the call returns. All seven buffers must be
+    pre-allocated once outside the per-draw loop, so a call here allocates no
+    new (m,)-length arrays.
 
     """
-    vn1 = trt_mat.var(axis=0, ddof=1) / n1
-    vn2 = ref_mat.var(axis=0, ddof=1) / n2
+    trt_mat.mean(axis=0, out=diff_out)
+    ref_mat.mean(axis=0, out=mean_ref)
+    diff_out -= mean_ref
+
+    np.var(trt_mat, axis=0, ddof=1, out=vn1)
+    vn1 /= n1
+    np.var(ref_mat, axis=0, ddof=1, out=vn2)
+    vn2 /= n2
+
     # Not a "pooled variance" in the equal-variance sense; this is the
     # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
-    var_sum = vn1 + vn2
-    diff = trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
-    se = np.sqrt(var_sum)
-    dof = var_sum**2 / (vn1**2 / (n1 - 1) + vn2**2 / (n2 - 1))
-    return diff, se, dof
+    np.add(vn1, vn2, out=var_sum)
+    np.sqrt(var_sum, out=se_out)
+
+    np.square(vn1, out=vn1)
+    vn1 /= n1 - 1
+    np.square(vn2, out=vn2)
+    vn2 /= n2 - 1
+    vn1 += vn2  # Welch-Satterthwaite denominator
+
+    np.square(var_sum, out=dof_out)
+    dof_out /= vn1
 
 
 def dirmult_ttest(
@@ -283,6 +299,13 @@ def dirmult_ttest(
     se = np.empty((draws, m))  # Welch standard error
     dof = np.empty((draws, m))  # Welch-Satterthwaite degrees of freedom
 
+    # Scratch buffers reused across draws by _welch_draw_stats, so it doesn't
+    # allocate new (m,)-length arrays on every iteration.
+    vn1 = np.empty(m)
+    vn2 = np.empty(m)
+    var_sum = np.empty(m)
+    mean_ref = np.empty(m)
+
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
         dir_mat = _dirmult_draw(matrix, rng)
@@ -291,7 +314,19 @@ def dirmult_ttest(
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        diff[i], se[i], dof[i] = _welch_draw_stats(trt_mat, ref_mat, n1, n2)
+        _welch_draw_stats(
+            trt_mat,
+            ref_mat,
+            n1,
+            n2,
+            diff[i],
+            se[i],
+            dof[i],
+            vn1,
+            vn2,
+            var_sum,
+            mean_ref,
+        )
 
     # Vectorized two-sided Welch's t-test across all draws at once.
     tstat_ = diff / se
