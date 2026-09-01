@@ -261,7 +261,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
                 cls.__degen_nonca_hash = cls._degenerate_hash.copy()
                 cls.__degen_nonca_hash[cls._noncanonical_codes] = True
             else:
-                cls.__canonical_hash = cls._degenerate_hash
+                cls.__degen_nonca_hash = cls._degenerate_hash
         return cls.__degen_nonca_hash
 
     @classproperty
