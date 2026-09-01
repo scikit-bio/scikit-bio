@@ -706,8 +706,10 @@ class UnifracTests(TestCase):
     def test_unweighted_unifrac_engine_numba_larger_random(self):
         rng = np.random.default_rng(0)
         counts = rng.integers(0, 10, size=(12, 5))
-        # cover the "both samples empty" (observed == 0) branch
+        # cover the "both samples empty" (observed == 0) branch: rows 0 and 1
+        # are both all-zero, guaranteed rather than left to chance
         counts[0] = 0
+        counts[1] = 0
         ids = [f"S{i}" for i in range(counts.shape[0])]
 
         dm_cy = beta_diversity(
@@ -719,8 +721,8 @@ class UnifracTests(TestCase):
 
         np.testing.assert_allclose(
             dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
-        # row 0 is all-zero, so every distance from it must be 0
-        np.testing.assert_allclose(dm_nb.data[0], dm_cy.data[0])
+        # rows 0 and 1 are both all-zero, so their pairwise distance must be 0
+        self.assertEqual(dm_nb.data[0, 1], 0.0)
 
     @numba_code
     def test_unweighted_unifrac_engine_numba_single_sample(self):
