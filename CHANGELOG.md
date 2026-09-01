@@ -14,6 +14,8 @@
 
 ### Performance enhancements
 
+* `beta_diversity` gained an optional Numba engine (`engine="numba"`) for the `unweighted_unifrac` metric, computing the full distance matrix in a single parallel pass and avoiding the per-pair Python-callable overhead of the SciPy `pdist` path.
+* `beta_diversity` now also supports the Numba engine (`engine="numba"`) for the `weighted_unifrac` metric, covering both the normalized and unnormalized variants, computing the full distance matrix in a single parallel pass instead of per-pair SciPy `pdist` dispatch.
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
 * The Numba backend for `permanova` now also accelerates condensed-form distance matrices, which previously fell back to the slower per-permutation kernel instead of the single-pass row-tile kernel.
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
