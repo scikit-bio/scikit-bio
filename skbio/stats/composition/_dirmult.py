@@ -312,14 +312,28 @@ def dirmult_ttest(
     n1 = len(trt_idx)
     n2 = len(ref_idx)
 
-    # Per-draw sufficient statistics for Welch's t-test.
-    diff = np.empty((draws, m))  # mean(treatment) - mean(reference)
-    se = np.empty((draws, m))  # Welch standard error
-    dof = np.empty((draws, m))  # Welch-Satterthwaite degrees of freedom
+    # Streamed across draws in O(features) rather than storing (draws,
+    # features) arrays: running sums for the point estimates (divided by
+    # draws below) and running min/max for the confidence bounds. Summing
+    # sequentially here instead of via a single (draws, features) .mean(axis=0)
+    # can differ from the prior behavior at floating-point noise level.
+    delta_sum = np.zeros(m)
+    tstat_sum = np.zeros(m)
+    pval_sum = np.zeros(m)
+    lower = np.full(m, np.inf)
+    upper = np.full(m, -np.inf)
 
-    # Scratch buffer reused across draws by _welch_draw_stats, so it doesn't
-    # allocate new (m,)-length arrays on every iteration.
-    work = np.empty(m)
+    # Per-draw scratch, reused across draws so the loop allocates no new
+    # (m,)-length arrays.
+    diff_i = np.empty(m)  # mean(treatment) - mean(reference)
+    se_i = np.empty(m)  # Welch standard error
+    dof_i = np.empty(m)  # Welch-Satterthwaite degrees of freedom
+    work = np.empty(m)  # _welch_draw_stats' own scratch
+    tstat_i = np.empty(m)
+    pval_i = np.empty(m)
+    tcrit_i = np.empty(m)
+    margin_i = np.empty(m)
+    bound_i = np.empty(m)
 
     # Scratch buffer reused across draws by _dirmult_draw's Gamma sampling step,
     # which is otherwise the largest per-draw allocation (matrix.shape).
@@ -333,30 +347,39 @@ def dirmult_ttest(
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff[i], se[i], dof[i], work)
+        _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff_i, se_i, dof_i, work)
 
-    # Vectorized two-sided Welch's t-test across all draws at once. Uses the
-    # scipy.special ufuncs directly rather than scipy.stats.t.sf/ppf: same
-    # result (stdtr(dof, -x) is the upper-tail probability of the symmetric
-    # t distribution, i.e. sf(x)), scipy's own docs note the ufuncs are
-    # faster than the corresponding scipy.stats.t methods.
-    tstat_ = diff / se
-    pval_ = stdtr(dof, -np.abs(tstat_))
-    pval_ *= 2.0
+        np.divide(diff_i, se_i, out=tstat_i)
 
-    # 95% confidence intervals of the difference (alpha=0.05, two-sided).
-    tcrit = stdtrit(dof, 0.975)
-    margin = tcrit * se
-    lower_ = diff - margin
-    upper_ = diff + margin
+        # Two-sided Welch's t-test p-value for this draw. Uses the
+        # scipy.special ufuncs directly rather than scipy.stats.t.sf/ppf: same
+        # result (stdtr(dof, -x) is the upper-tail probability of the
+        # symmetric t distribution, i.e. sf(x)), and scipy's own docs note
+        # the ufuncs are faster than the corresponding scipy.stats.t methods.
+        np.abs(tstat_i, out=pval_i)
+        pval_i *= -1
+        stdtr(dof_i, pval_i, out=pval_i)
+        pval_i *= 2.0
 
-    # Aggregate across draws: averages for point estimates, and the widest
-    # interval (min lower / max upper) across draws, matching prior behavior.
-    delta = diff.mean(axis=0)
-    tstat = tstat_.mean(axis=0)
-    pval = pval_.mean(axis=0)
-    lower = lower_.min(axis=0)
-    upper = upper_.max(axis=0)
+        # 95% confidence interval of the difference for this draw
+        # (alpha=0.05, two-sided).
+        stdtrit(dof_i, 0.975, out=tcrit_i)
+        np.multiply(tcrit_i, se_i, out=margin_i)
+        np.subtract(diff_i, margin_i, out=bound_i)
+        np.minimum(lower, bound_i, out=lower)
+        np.add(diff_i, margin_i, out=bound_i)
+        np.maximum(upper, bound_i, out=upper)
+
+        delta_sum += diff_i
+        tstat_sum += tstat_i
+        pval_sum += pval_i
+
+    # Aggregate across draws: averages for point estimates (widest interval
+    # for the confidence bounds was already tracked above), matching prior
+    # behavior.
+    delta = delta_sum / draws
+    tstat = tstat_sum / draws
+    pval = pval_sum / draws
 
     # Correct p-values for multiple comparison.
     if p_adjust is not None:
