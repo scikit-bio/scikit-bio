@@ -20,6 +20,8 @@
 
 ### Bug Fixes
 
+* Fixed `GrammaredSequence.to_definites` raising `TypeError: 'NoneType' object is not subscriptable` on any sequence type that defines no non-canonical characters, which includes `DNA` and `RNA`. The cached mask builder `_degen_nonca_hash` assigned to `_canonical_hash` instead of itself in that branch, so it always returned `None` and additionally overwrote the canonical-character mask with the degenerate-character mask ([#2562](https://github.com/scikit-bio/scikit-bio/pull/2562)).
+
 * Fixed `permdisp` not passing its `seed` down to `pcoa`, which left `method="fsvd"` unseeded. Because the FSVD solver draws a random projection, results were not reproducible even when a seed was given; on larger matrices repeated calls with the same seed could return materially different p-values. `method="eigh"` was unaffected, being deterministic ([#2546](https://github.com/scikit-bio/scikit-bio/pull/2546)).
 * Fixed an unexpected behavior in differential abundance tests (`ancombc` and `dirmult_lme`) where string columns in the metadata that can be cast into numbers (e.g., `["1", "2", "3"]`) were treated as numerical. Now they are treated as categories ([#2539](https://github.com/scikit-bio/scikit-bio/pull/2539)).
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
