@@ -505,8 +505,9 @@ class InternalPERMANOVATests(PERMANOVATestData):
                       engine="numba")
 
     @numba_code
-    def test_permanova_rowtile_nb_condensed_falls_back(self):
-        # condensed matrix must use the single-perm path, not the row-tile path
+    def test_permanova_condensed_nb_matches_cython(self):
+        # condensed matrices now take the row-tile fast path under numba;
+        # the result must still match the cython monte-carlo engine.
         dm_condensed = DistanceMatrix(
             squareform(self.dm_full), self.ids, condensed=True
         )
@@ -516,6 +517,79 @@ class InternalPERMANOVATests(PERMANOVATestData):
                         seed=42, engine="cython")
         self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
         self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_stat_matches_cython(self):
+        # observed F-stat is deterministic at permutations=0 (no RNG); the
+        # condensed row-tile numba kernel must agree with condensed cython to
+        # near machine precision.
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=0,
+                        engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=0,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'],
+                               places=12)
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_matches_full_nb(self):
+        # condensed and full inputs both use the row-tile numba path; with the
+        # same seed the permutations are identical, so results must match.
+        dm_full = DistanceMatrix(self.dm_full, self.ids)
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs_full = permanova(dm_full, self.grouping_labels, permutations=99,
+                             seed=42, engine="numba")
+        obs_cond = permanova(dm_condensed, self.grouping_labels,
+                             permutations=99, seed=42, engine="numba")
+        self.assertAlmostEqual(obs_full['test statistic'],
+                               obs_cond['test statistic'], places=12)
+        self.assertEqual(obs_full['p-value'], obs_cond['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_crosses_chunk_boundary(self):
+        # >256 permutations spans multiple driver chunks; RNG must stay in
+        # sync so the condensed numba result still matches cython.
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=600,
+                        seed=42, engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=600,
+                        seed=42, engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_odd_n(self):
+        # The condensed row-tile kernel is only exercised above at n=6 (via
+        # dm_unequal); an odd sample count changes how n // 2 rows get
+        # paired against their mirror row, so exercise it directly against
+        # the reference sW kernel.
+        rng = get_rng(0)
+        n = 51
+        condensed = rng.random(n * (n - 1) // 2)
+        grouping = rng.integers(0, 3, size=n).astype(np.intp)
+        group_sizes = np.bincount(grouping).astype(np.intp)
+
+        exp = permanova_mod._permanova_f_stat_sW_condensed_nb(
+            condensed, group_sizes, grouping
+        )
+
+        inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
+        groupings_T = np.ascontiguousarray(
+            grouping.reshape(n, 1).astype(np.int32)
+        )
+        partials = np.empty((n // 2, 1), np.float64)
+        permanova_mod._permanova_f_stat_sW_rowtile_condensed_nb(
+            condensed, groupings_T, inv_group_sizes, partials
+        )
+        obs = partials[:, 0].sum()
+
+        self.assertAlmostEqual(obs, exp, places=10)
 
     @numba_code
     def test_permanova_rowtile_nb_crosses_chunk_boundary(self):

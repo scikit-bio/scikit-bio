@@ -274,6 +274,85 @@ if NUMBA_AVAILABLE:
                         rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
                     )
 
+    @njit(inline="always")
+    def _condensed_row_base(row, n):
+        """Flat offset such that condensed_matrix[base + col] is (row, col).
+
+        Only valid for col > row. Numba inlines this at both call sites in
+        ``_permanova_f_stat_sW_rowtile_condensed_nb`` below, so factoring it
+        out costs nothing at runtime.
+        """
+        return row * n - ((row + 2) * (row + 1)) // 2
+
+    @njit(parallel=True)
+    def _permanova_f_stat_sW_rowtile_condensed_nb(
+        condensed_matrix, groupings_T, inv_group_sizes, partials
+    ):
+        """Compute partial s_W for a chunk of permutations from condensed data.
+
+        Same single-pass, row-parallel strategy as
+        ``_permanova_f_stat_sW_rowtile_nb`` but reads the distance matrix in
+        condensed (upper-triangle, 1-D) form. Each ``(row, col)`` pair with
+        ``col > row`` maps to the condensed index
+        ``row * n + col - ((row + 2) * (row + 1)) // 2`` (the same mapping
+        used by ``_permanova_f_stat_sW_condensed_nb``). Because the inner
+        loop only visits ``col > row`` the ``vrow < vcol`` branch used by the
+        condensed Mantel kernel is unnecessary here.
+
+        Parameters
+        ----------
+        condensed_matrix : np.ndarray, shape (k,)
+            Condensed (upper triangle) distance matrix,
+            k = n * (n - 1) // 2.
+        groupings_T : np.ndarray, shape (n, n_perm), int32
+            Permuted groupings, sample-major (transposed) and C-contiguous.
+        inv_group_sizes : np.ndarray, shape (num_groups,)
+            Reciprocal group sizes (``1.0 / group_sizes``).
+        partials : np.ndarray, shape (n // 2, C) with C >= n_perm
+            Reused scratch; each iteration fills the first ``n_perm`` entries
+            of its own row (no separate zero pass needed -- the first write
+            per row is an assignment, not an accumulate).
+
+        """
+        k = condensed_matrix.shape[0]
+        n = int((1.0 + math.sqrt(1.0 + 8.0 * k)) / 2.0)
+        n_perm = groupings_T.shape[1]
+        n_half = n // 2
+
+        for row_idx in prange(n_half):
+            local_sW = partials[row_idx]
+            rsum = np.empty(n_perm, np.float64)
+
+            for p in range(n_perm):
+                rsum[p] = 0.0
+            base = _condensed_row_base(row_idx, n)
+            for col in range(row_idx + 1, n):
+                val = np.float64(condensed_matrix[base + col])
+                val2 = val * val
+                for p in range(n_perm):
+                    rsum[p] += val2 * np.float64(
+                        groupings_T[col, p] == groupings_T[row_idx, p]
+                    )
+            for p in range(n_perm):
+                local_sW[p] = rsum[p] * inv_group_sizes[groupings_T[row_idx, p]]
+
+            mirror_row = n - row_idx - 2
+            if mirror_row != row_idx:
+                for p in range(n_perm):
+                    rsum[p] = 0.0
+                mbase = _condensed_row_base(mirror_row, n)
+                for col in range(mirror_row + 1, n):
+                    val = np.float64(condensed_matrix[mbase + col])
+                    val2 = val * val
+                    for p in range(n_perm):
+                        rsum[p] += val2 * np.float64(
+                            groupings_T[col, p] == groupings_T[mirror_row, p]
+                        )
+                for p in range(n_perm):
+                    local_sW[p] += (
+                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
+                    )
+
     def _run_permanova_rowtile_nb(
         distmat, grouping, group_sizes, s_T, num_groups, sample_size,
         permutations, seed
@@ -296,7 +375,8 @@ if NUMBA_AVAILABLE:
         Parameters
         ----------
         distmat : DistanceMatrix
-            Full (non-condensed) distance matrix.
+            Full or condensed distance matrix; dispatches to the matching
+            row-tile kernel based on ``distmat._flags["CONDENSED"]``.
         grouping : np.ndarray, shape (n,)
             Integer group labels (0-indexed).
         group_sizes : np.ndarray, shape (num_groups,)
@@ -330,6 +410,11 @@ if NUMBA_AVAILABLE:
         out_sW = np.empty(n_total, np.float64)
         inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
         n_half = sample_size // 2
+        rowtile_kernel = (
+            _permanova_f_stat_sW_rowtile_condensed_nb
+            if distmat._flags["CONDENSED"]
+            else _permanova_f_stat_sW_rowtile_nb
+        )
 
         # CHUNK is the number of permutations processed per pass over the
         # matrix. It is not a parallelism knob (the kernel parallelises over
@@ -343,8 +428,10 @@ if NUMBA_AVAILABLE:
         # Permutation-major int32 buffer; rng.permutation fills a row, so the
         # writes are sequential. Allocated once and reused across chunks.
         buf = np.empty((width, sample_size), dtype=np.int32)
-        # Kernel scratch, allocated once and reused (the kernel zeros its own
-        # rows); max width is CHUNK.
+        # Kernel scratch, allocated once and reused; max width is CHUNK. The
+        # full-matrix kernel zeros each row before accumulating into it, while
+        # the condensed kernel's first write per row is a plain assignment, so
+        # neither kernel depends on stale contents left over from a prior chunk.
         partials = np.empty((n_half, width), np.float64)
         for start in range(0, n_total, CHUNK):
             end = min(start + CHUNK, n_total)
@@ -360,9 +447,7 @@ if NUMBA_AVAILABLE:
             # is a non-contiguous view, so this materialises the C-contiguous
             # copy the kernel needs.
             groupings_T = np.ascontiguousarray(buf[:chunk_size].T)
-            _permanova_f_stat_sW_rowtile_nb(
-                distmat.data, groupings_T, inv_group_sizes, partials
-            )
+            rowtile_kernel(distmat.data, groupings_T, inv_group_sizes, partials)
             # sum each row-pair's partial contribution into s_W per permutation
             out_sW[start:end] = partials[:, :chunk_size].sum(axis=0)
 
@@ -610,14 +695,14 @@ def permanova(
         # so cut in half
         s_T /= 2.0
 
-    if engine == "numba" and not distmat._flags["CONDENSED"]:
+    if engine == "numba":
         stat, p_value = _run_permanova_rowtile_nb(
             distmat, grouping, group_sizes, s_T,
             num_groups, sample_size, permutations, seed
         )
     else:
         test_stat_function = partial(
-            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T, engine
+            _compute_f_stat, sample_size, num_groups, distmat, group_sizes, s_T
         )
         stat, p_value = _run_monte_carlo_stats(
             test_stat_function, grouping, permutations, seed
@@ -629,28 +714,22 @@ def permanova(
 
 
 def _compute_f_stat(
-    sample_size, num_groups, distance_matrix, group_sizes, s_T, engine, grouping
+    sample_size, num_groups, distance_matrix, group_sizes, s_T, grouping
 ):
-    """Compute PERMANOVA pseudo-F statistic."""
+    """Compute PERMANOVA pseudo-F statistic.
+
+    Only used for ``engine == "cython"``: ``permanova()`` routes every
+    ``engine == "numba"`` call through the row-tile path
+    (``_run_permanova_rowtile_nb``) instead, for both full and condensed
+    matrices.
+    """
     # Calculate s_W for each group, accounting for different group sizes.
     if distance_matrix._flags["CONDENSED"]:
-        if engine == "numba":
-            s_W = _permanova_f_stat_sW_condensed_nb(
-                distance_matrix.data, group_sizes, grouping
-            )
-        else:
-            s_W = permanova_f_stat_sW_condensed_cy(
-                distance_matrix.data, group_sizes, grouping
-            )
+        s_W = permanova_f_stat_sW_condensed_cy(
+            distance_matrix.data, group_sizes, grouping
+        )
     else:
-        if engine == "numba":
-            s_W = _permanova_f_stat_sW_nb(
-                distance_matrix.data, group_sizes, grouping
-            )
-        else:
-            s_W = permanova_f_stat_sW_cy(
-                distance_matrix.data, group_sizes, grouping
-            )
+        s_W = permanova_f_stat_sW_cy(distance_matrix.data, group_sizes, grouping)
 
     s_A = s_T - s_W
     return (s_A / (num_groups - 1)) / (s_W / (sample_size - num_groups))
