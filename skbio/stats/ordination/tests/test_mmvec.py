@@ -822,9 +822,9 @@ class TestMMvecLBFGS(unittest.TestCase):
                 engine="invalid",
             )
 
-    def test_default_engine_is_numpy(self):
-        """MMvec must default to engine="numpy", not implicit Numba."""
-        self.assertEqual(MMvec().engine, "numpy")
+    def test_default_engine_is_cython(self):
+        """MMvec must default to engine="cython", not implicit Numba."""
+        self.assertEqual(MMvec().engine, "cython")
 
 
 class TestMMvecCaseStudies(unittest.TestCase):
@@ -1059,8 +1059,8 @@ class TestScatterAddGrad(unittest.TestCase):
 
         npt.assert_array_equal(out_nb, out_ref)
 
-    def test_dispatch_fallback_matches_numpy(self):
-        """engine="numpy" takes the np.add.at path and matches it exactly."""
+    def test_dispatch_fallback_matches_cython(self):
+        """engine="cython" takes the np.add.at path and matches it exactly."""
         rng = np.random.default_rng(0)
         d1, p, B = 12, 3, 40
         ids = rng.integers(0, d1, size=B)
@@ -1068,7 +1068,7 @@ class TestScatterAddGrad(unittest.TestCase):
         scale = -1.7
 
         out = np.zeros((d1, p))
-        _scatter_add_grad(out, ids, contrib, scale, "numpy")
+        _scatter_add_grad(out, ids, contrib, scale, "cython")
 
         ref = np.zeros((d1, p))
         np.add.at(ref, ids, scale * contrib)
@@ -1076,8 +1076,8 @@ class TestScatterAddGrad(unittest.TestCase):
         npt.assert_array_equal(out, ref)
 
     @numba_code
-    def test_dispatch_numba_matches_numpy(self):
-        """engine="numba" matches the engine="numpy" path exactly."""
+    def test_dispatch_numba_matches_cython(self):
+        """engine="numba" matches the engine="cython" path exactly."""
         rng = np.random.default_rng(0)
         d1, p, B = 12, 3, 40
         ids = rng.integers(0, d1, size=B)
@@ -1088,7 +1088,7 @@ class TestScatterAddGrad(unittest.TestCase):
         _scatter_add_grad(out_nb, ids, contrib, scale, "numba")
 
         out_np = np.zeros((d1, p))
-        _scatter_add_grad(out_np, ids, contrib, scale, "numpy")
+        _scatter_add_grad(out_np, ids, contrib, scale, "cython")
 
         npt.assert_array_equal(out_nb, out_np)
 
@@ -1125,7 +1125,7 @@ class TestScatterAddGrad(unittest.TestCase):
             X_coo, Y, size, norm, weights, np.random.default_rng(123)
         )
 
-        model.engine = "numpy"
+        model.engine = "cython"
         _, g_ref = model.loss_and_grad(
             X_coo, Y, size, norm, weights, np.random.default_rng(123)
         )

@@ -70,7 +70,7 @@ def mmvec(
     seed: SeedLike | None = None,
     verbose: bool = False,
     output_format: str | None = None,
-    engine: str = "numpy",
+    engine: str = "cython",
 ) -> MMvecResult:
     r"""Perform multiomics Microbe-Metabolite Vectors (MMvec) analysis.
 
@@ -155,12 +155,14 @@ def mmvec(
         Print training progress. Default is False.
     output_format : str, optional
         Output table format. See :ref:`table_params` for details.
-    engine : {"numpy", "numba"}, optional
+    engine : {"cython", "numba"}, optional
         Compute engine for the Adam optimizer's gradient scatter-add step.
-        Ignored for ``optimizer="lbfgs"``. ``"numpy"`` (default) uses
-        :func:`numpy.add.at`. ``"numba"`` uses the optional Numba
-        implementation and requires Numba to be installed; it is not used
-        unless explicitly requested here.
+        Ignored for ``optimizer="lbfgs"``. ``"cython"`` (default) uses
+        :func:`numpy.add.at` (mmvec has no compiled Cython implementation;
+        the name follows the library-wide convention where ``"cython"``
+        labels the non-JIT default engine). ``"numba"`` uses the optional
+        Numba implementation and requires Numba to be installed; it is not
+        used unless explicitly requested here.
 
         .. versionadded:: 0.7.4
 
@@ -586,7 +588,7 @@ class MMvec(SkbioObject):
         seed: SeedLike | None = None,
         verbose: bool = False,
         output_format: str | None = None,
-        engine: str = "numpy",
+        engine: str = "cython",
     ) -> None:
         self.n_components = n_components
         self.optimizer = optimizer
@@ -657,11 +659,13 @@ class MMvec(SkbioObject):
 
         # Resolve the scatter-add engine. Unlike permanova/mantel/permdisp/pcoa,
         # this does not fall back to the global skbio.set_config("engine")
-        # default: that default is "cython", and mmvec has no cython
-        # implementation, so treating None as "look up the global config" would
-        # raise instead of doing something sensible. "numpy" is the explicit,
-        # always-safe default; engine="numba" must be requested directly.
-        engine = _resolve_engine(self.engine, ("numpy", "numba"))
+        # value: that lookup only makes sense for functions with an actual
+        # Cython implementation to fall back to, and treating None as "look
+        # up the global config" here would raise instead of doing something
+        # sensible. "cython" is the explicit, always-safe default (dispatching
+        # to np.add.at, per library convention for labeling the non-JIT
+        # default engine); engine="numba" must be requested directly.
+        engine = _resolve_engine(self.engine, ("cython", "numba"))
 
         n_features_x = X_arr.shape[1]
         n_features_y = y_arr.shape[1]
@@ -991,8 +995,10 @@ def _scatter_add_grad(
         Per-batch contributions before scaling.
     scale : float
         Scalar multiplier applied to every contribution.
-    engine : {"numpy", "numba"}
-        Already-resolved compute engine.
+    engine : {"cython", "numba"}
+        Already-resolved compute engine. ``"cython"`` dispatches to
+        :func:`numpy.add.at` (see ``MMvec``'s ``engine`` docstring for why
+        this non-Numba path is still labeled ``"cython"``).
 
     """
     if engine == "numba":
@@ -1016,7 +1022,7 @@ class _MMvecModel:
         y_prior_mean: float,
         y_prior_scale: float,
         rng: np.random.Generator,
-        engine: str = "numpy",
+        engine: str = "cython",
     ) -> None:
         """Initialize MMvec model parameters.
 
@@ -1038,7 +1044,7 @@ class _MMvecModel:
             Scale of Gaussian prior on Y-side embeddings and biases.
         rng : numpy.random.Generator
             Random number generator.
-        engine : {"numpy", "numba"}, optional
+        engine : {"cython", "numba"}, optional
             Compute engine for the Adam optimizer's scatter-add gradient
             step. Already resolved by the caller (:meth:`MMvec.fit`).
 
