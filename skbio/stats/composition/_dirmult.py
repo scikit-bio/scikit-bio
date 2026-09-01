@@ -13,7 +13,7 @@ import pandas as pd
 
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table
-from ._base import _check_composition, clr
+from ._base import _check_composition
 from ._utils import (
     _check_metadata,
     _check_grouping,
@@ -23,12 +23,19 @@ from ._utils import (
 )
 
 
-def _dirmult_draw(matrix, rng):
+def _dirmult_draw(matrix, rng, out=None):
     """Resample data from a Dirichlet-multinomial posterior distribution.
+
+    ``out``, if given, is a reusable ``matrix.shape`` scratch buffer that
+    receives the Gamma draw (``rng.standard_gamma`` writes into it directly)
+    and is then transformed into the returned array in place. It has no
+    meaning after the call returns; the return value aliases it. When ``out``
+    is None, a fresh array is drawn and transformed in place instead, so the
+    result is always a new array independent of ``matrix``.
 
     See Also
     --------
-    numpy.random.Generator.gamma
+    numpy.random.Generator.standard_gamma
     numpy.random.Generator.dirichlet
 
     Notes
@@ -43,15 +50,23 @@ def _dirmult_draw(matrix, rng):
     by row sums. Meanwhile, CLR is independent of scale, therefore the normalization
     step can be omitted.
 
-    `gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
+    ``standard_gamma`` is ``gamma`` with ``scale=1.0`` fixed; the two are bit-identical
+    for the same seed, and only the former accepts an ``out`` buffer. `gamma`/
+    `standard_gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
+
+    The Gamma draw is disposable (nothing else reads it), so the CLR transform
+    is applied in place rather than via :func:`clr`, which is a shared,
+    array-API-general function that cannot assume it owns its input. This is
+    bit-identical to ``clr(draw, validate=False)``.
 
     """
-    return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
+    draw = rng.standard_gamma(matrix, size=matrix.shape, out=out)
+    np.log(draw, out=draw)
+    draw -= draw.mean(axis=-1, keepdims=True)
+    return draw
 
 
-def _welch_draw_stats(
-    trt_mat, ref_mat, n1, n2, diff_out, se_out, dof_out, vn1, vn2, var_sum, mean_ref
-):
+def _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff_out, se_out, dof_out, work):
     """Per-draw Welch's (unequal-variance) t-test sufficient statistics.
 
     This is the closed form of statsmodels' CompareMeans.ttest_ind /
@@ -64,35 +79,38 @@ def _welch_draw_stats(
     per-call overhead), which would undercut the point of this function.
 
     Writes into ``diff_out``/``se_out``/``dof_out`` (typically a row of the
-    caller's ``(draws, m)`` buffers) rather than returning new arrays.
-    ``vn1``/``vn2``/``var_sum``/``mean_ref`` are reusable length-m scratch
-    buffers with no meaning after the call returns. All seven buffers must be
-    pre-allocated once outside the per-draw loop, so a call here allocates no
-    new (m,)-length arrays.
+    caller's ``(draws, m)`` buffers) rather than returning new arrays;
+    ``se_out``/``dof_out`` also double as scratch for intermediate values
+    (their final values are only written on the last two lines). ``work`` is
+    a reusable length-m scratch buffer with no meaning after the call
+    returns. All four buffers must be pre-allocated once outside the
+    per-draw loop, so a call here allocates no new (m,)-length arrays.
+
+    The variance calls pass the already-computed means via ``mean=``
+    (NumPy >= 2.0) instead of letting ``np.var`` recompute them internally.
 
     """
-    trt_mat.mean(axis=0, out=diff_out)
-    ref_mat.mean(axis=0, out=mean_ref)
-    diff_out -= mean_ref
-
-    np.var(trt_mat, axis=0, ddof=1, out=vn1)
-    vn1 /= n1
-    np.var(ref_mat, axis=0, ddof=1, out=vn2)
-    vn2 /= n2
+    np.mean(trt_mat, axis=0, out=diff_out)
+    np.mean(ref_mat, axis=0, out=work)
+    np.var(trt_mat, axis=0, ddof=1, mean=diff_out, out=se_out)
+    np.var(ref_mat, axis=0, ddof=1, mean=work, out=dof_out)
+    diff_out -= work
+    se_out /= n1  # vn1
+    dof_out /= n2  # vn2
 
     # Not a "pooled variance" in the equal-variance sense; this is the
     # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
-    np.add(vn1, vn2, out=var_sum)
-    np.sqrt(var_sum, out=se_out)
+    np.add(se_out, dof_out, out=work)  # var_sum
 
-    np.square(vn1, out=vn1)
-    vn1 /= n1 - 1
-    np.square(vn2, out=vn2)
-    vn2 /= n2 - 1
-    vn1 += vn2  # Welch-Satterthwaite denominator
+    np.square(se_out, out=se_out)
+    se_out /= n1 - 1
+    np.square(dof_out, out=dof_out)
+    dof_out /= n2 - 1
+    se_out += dof_out  # Welch-Satterthwaite denominator
 
-    np.square(var_sum, out=dof_out)
-    dof_out /= vn1
+    np.square(work, out=dof_out)
+    dof_out /= se_out  # degrees of freedom
+    np.sqrt(work, out=se_out)  # standard error
 
 
 def dirmult_ttest(
@@ -271,7 +289,7 @@ def dirmult_ttest(
     b7     7.600734  1.480232 -0.601277  4.043888  0.017077  0.068310   False
 
     """
-    from scipy.stats import t as t_dist
+    from scipy.special import stdtr, stdtrit
 
     if not isinstance(draws, (int, np.integer)) or draws < 1:
         raise ValueError("draws must be a positive integer.")
@@ -299,42 +317,35 @@ def dirmult_ttest(
     se = np.empty((draws, m))  # Welch standard error
     dof = np.empty((draws, m))  # Welch-Satterthwaite degrees of freedom
 
-    # Scratch buffers reused across draws by _welch_draw_stats, so it doesn't
+    # Scratch buffer reused across draws by _welch_draw_stats, so it doesn't
     # allocate new (m,)-length arrays on every iteration.
-    vn1 = np.empty(m)
-    vn2 = np.empty(m)
-    var_sum = np.empty(m)
-    mean_ref = np.empty(m)
+    work = np.empty(m)
+
+    # Scratch buffer reused across draws by _dirmult_draw's Gamma sampling step,
+    # which is otherwise the largest per-draw allocation (matrix.shape).
+    gamma_buf = np.empty(matrix.shape)
 
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
-        dir_mat = _dirmult_draw(matrix, rng)
+        dir_mat = _dirmult_draw(matrix, rng, out=gamma_buf)
 
         # Stratify data by group (treatment vs. reference).
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        _welch_draw_stats(
-            trt_mat,
-            ref_mat,
-            n1,
-            n2,
-            diff[i],
-            se[i],
-            dof[i],
-            vn1,
-            vn2,
-            var_sum,
-            mean_ref,
-        )
+        _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff[i], se[i], dof[i], work)
 
-    # Vectorized two-sided Welch's t-test across all draws at once.
+    # Vectorized two-sided Welch's t-test across all draws at once. Uses the
+    # scipy.special ufuncs directly rather than scipy.stats.t.sf/ppf: same
+    # result (stdtr(dof, -x) is the upper-tail probability of the symmetric
+    # t distribution, i.e. sf(x)), scipy's own docs note the ufuncs are
+    # faster than the corresponding scipy.stats.t methods.
     tstat_ = diff / se
-    pval_ = t_dist.sf(np.abs(tstat_), dof)
+    pval_ = stdtr(dof, -np.abs(tstat_))
     pval_ *= 2.0
 
     # 95% confidence intervals of the difference (alpha=0.05, two-sided).
-    tcrit = t_dist.ppf(0.975, dof)
+    tcrit = stdtrit(dof, 0.975)
     margin = tcrit * se
     lower_ = diff - margin
     upper_ = diff + margin
