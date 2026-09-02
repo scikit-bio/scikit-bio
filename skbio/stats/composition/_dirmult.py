@@ -23,7 +23,7 @@ from ._utils import (
 )
 
 
-def _dirmult_draw(matrix, rng, out=None):
+def _dirmult_draw(matrix, rng, out=None, row_mean_out=None):
     """Resample data from a Dirichlet-multinomial posterior distribution.
 
     ``out``, if given, is a reusable ``matrix.shape`` scratch buffer that
@@ -32,6 +32,10 @@ def _dirmult_draw(matrix, rng, out=None):
     meaning after the call returns; the return value aliases it. When ``out``
     is None, a fresh array is drawn and transformed in place instead, so the
     result is always a new array independent of ``matrix``.
+
+    ``row_mean_out``, if given, is a reusable ``(matrix.shape[0],)`` scratch
+    buffer for the per-row mean computed during the CLR transform. It has no
+    meaning after the call returns.
 
     See Also
     --------
@@ -62,7 +66,8 @@ def _dirmult_draw(matrix, rng, out=None):
     """
     draw = rng.standard_gamma(matrix, size=matrix.shape, out=out)
     np.log(draw, out=draw)
-    draw -= draw.mean(axis=-1, keepdims=True)
+    row_mean = np.mean(draw, axis=-1, out=row_mean_out)
+    draw -= row_mean[:, None]
     return draw
 
 
@@ -319,29 +324,28 @@ def dirmult_ttest(
     # can differ from the prior behavior at floating-point noise level.
     delta_sum = np.zeros(m)
     tstat_sum = np.zeros(m)
-    pval_sum = np.zeros(m)
+    pval_sum = np.zeros(m)  # un-doubled tail probability; the *2 happens once, below
     lower = np.full(m, np.inf)
     upper = np.full(m, -np.inf)
 
     # Per-draw scratch, reused across draws so the loop allocates no new
-    # (m,)-length arrays.
+    # (m,)-length arrays. `work` holds a different quantity at each step
+    # (t-statistic, then p-value, then t-critical/margin), since each is only
+    # needed until it has been folded into a running sum or bound.
     diff_i = np.empty(m)  # mean(treatment) - mean(reference)
     se_i = np.empty(m)  # Welch standard error
     dof_i = np.empty(m)  # Welch-Satterthwaite degrees of freedom
-    work = np.empty(m)  # _welch_draw_stats' own scratch
-    tstat_i = np.empty(m)
-    pval_i = np.empty(m)
-    tcrit_i = np.empty(m)
-    margin_i = np.empty(m)
-    bound_i = np.empty(m)
+    work = np.empty(m)
+    bound_i = np.empty(m)  # lower bound, then upper bound
 
-    # Scratch buffer reused across draws by _dirmult_draw's Gamma sampling step,
-    # which is otherwise the largest per-draw allocation (matrix.shape).
+    # Scratch buffers reused across draws by _dirmult_draw's Gamma sampling
+    # step (the largest per-draw allocation) and its CLR row-mean.
     gamma_buf = np.empty(matrix.shape)
+    row_mean_buf = np.empty(matrix.shape[0])
 
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
-        dir_mat = _dirmult_draw(matrix, rng, out=gamma_buf)
+        dir_mat = _dirmult_draw(matrix, rng, out=gamma_buf, row_mean_out=row_mean_buf)
 
         # Stratify data by group (treatment vs. reference).
         trt_mat = dir_mat[trt_idx]
@@ -349,37 +353,40 @@ def dirmult_ttest(
 
         _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff_i, se_i, dof_i, work)
 
-        np.divide(diff_i, se_i, out=tstat_i)
+        # t = diff / se.
+        np.divide(diff_i, se_i, out=work)
+        tstat_sum += work
 
-        # Two-sided Welch's t-test p-value for this draw. Uses the
+        # Two-sided p-value = 2 * P(T > |t|) = 2 * stdtr(dof, -|t|). Uses the
         # scipy.special ufuncs directly rather than scipy.stats.t.sf/ppf: same
-        # result (stdtr(dof, -x) is the upper-tail probability of the
-        # symmetric t distribution, i.e. sf(x)), and scipy's own docs note
-        # the ufuncs are faster than the corresponding scipy.stats.t methods.
-        np.abs(tstat_i, out=pval_i)
-        pval_i *= -1
-        stdtr(dof_i, pval_i, out=pval_i)
-        pval_i *= 2.0
+        # result, and scipy's own docs note the ufuncs are faster than the
+        # corresponding scipy.stats.t methods. `work` still holds t from
+        # above; overwritten here since it has already been summed.
+        np.abs(work, out=work)
+        work *= -1
+        stdtr(dof_i, work, out=work)
+        pval_sum += work
 
-        # 95% confidence interval of the difference for this draw
-        # (alpha=0.05, two-sided).
-        stdtrit(dof_i, 0.975, out=tcrit_i)
-        np.multiply(tcrit_i, se_i, out=margin_i)
-        np.subtract(diff_i, margin_i, out=bound_i)
+        # 95% CI margin = t_crit(dof, 0.975) * se. `work` reused again now
+        # that this draw's t-statistic and p-value are both already summed.
+        stdtrit(dof_i, 0.975, out=work)
+        work *= se_i
+        np.subtract(diff_i, work, out=bound_i)
         np.minimum(lower, bound_i, out=lower)
-        np.add(diff_i, margin_i, out=bound_i)
+        np.add(diff_i, work, out=bound_i)
         np.maximum(upper, bound_i, out=upper)
 
         delta_sum += diff_i
-        tstat_sum += tstat_i
-        pval_sum += pval_i
 
     # Aggregate across draws: averages for point estimates (widest interval
     # for the confidence bounds was already tracked above), matching prior
-    # behavior.
-    delta = delta_sum / draws
-    tstat = tstat_sum / draws
-    pval = pval_sum / draws
+    # behavior. In place, since the sums have no further use.
+    delta_sum /= draws
+    tstat_sum /= draws
+    pval_sum *= 2.0 / draws
+    delta = delta_sum
+    tstat = tstat_sum
+    pval = pval_sum
 
     # Correct p-values for multiple comparison.
     if p_adjust is not None:
