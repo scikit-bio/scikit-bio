@@ -13,6 +13,7 @@ The full license is in the file LICENSE.txt, distributed with this software.
 
 import os
 import platform
+import re
 import sys
 import sysconfig
 import subprocess
@@ -29,6 +30,26 @@ if sys.version_info.major != 3:
         "scikit-bio can only be used with Python 3. You are currently "
         "running Python %d." % sys.version_info.major
     )
+
+
+def _sanitize_config_vars():
+    """Work around malformed compiler flags baked into some Python builds.
+
+    Some Python builds (e.g. conda-forge's aarch64 Python 3.14) ship a
+    malformed standalone "-partition=none" flag (rather than the valid
+    "-flto-partition=none") in their CFLAGS/LDFLAGS. gcc does not recognize
+    "-partition=none" on its own, which makes every extension build fail.
+    Strip such broken tokens (without touching a valid, already-prefixed
+    "-flto-partition=none") before the compiler is configured.
+    """
+    broken_flag = re.compile(r"(?<!\S)-partition=\S*")
+    config_vars = sysconfig.get_config_vars()
+    for key, value in config_vars.items():
+        if isinstance(value, str) and broken_flag.search(value):
+            config_vars[key] = broken_flag.sub("", value).strip()
+
+
+_sanitize_config_vars()
 
 
 def check_bin(ccbin, source, allow_dash):
