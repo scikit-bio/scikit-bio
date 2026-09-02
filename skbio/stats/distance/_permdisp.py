@@ -599,14 +599,19 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
             "Number of permutations must be greater than or equal to zero."
         )
 
-    # The Cython path reaches geomedian_axis_one, a fused-type function that
-    # accepts only single or double precision, so anything else raises there.
-    # Match that rather than silently widening whatever comes in.
+    # geomedian_axis_one is fused over float32 and float64, so Cython's median
+    # path raises on any other dtype, and this rejects the same set so the two
+    # engines agree there. The check is not conditioned on the test, so it also
+    # covers test="centroid", which never reaches that kernel and which Cython
+    # computes for any numeric dtype; the Numba path is stricter in that case.
     if np.asarray(sample_data).dtype not in (np.float32, np.float64):
         raise TypeError(
             "Ordination coordinates must be of type np.float32 or np.float64."
         )
 
+    # An accepted float32 ordination is accumulated in float64, for the same
+    # reason as #2509. Cython computes in the input dtype instead, so the two
+    # engines differ by float32 precision on such an input.
     samples = np.ascontiguousarray(sample_data, dtype=np.float64)
     codes = np.ascontiguousarray(grouping, dtype=np.int32)
     sample_size = codes.shape[0]
