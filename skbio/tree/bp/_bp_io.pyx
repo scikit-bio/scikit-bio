@@ -379,7 +379,16 @@ def parse_jplace(object data):
         are ``fragment`` followed by the ``fields`` declared in the jplace
         document. Rows are restricted to edges present in the tree.
     BPTree
-        The reference tree parsed from the jplace ``tree`` entry.
+        The reference tree parsed from the jplace ``tree`` entry, carrying its
+        ``{}`` edge numbers.
+
+    Raises
+    ------
+    ValueError
+        If a required member (``tree``, ``placements``, ``fields``) is missing,
+        or if ``fields`` does not include ``edge_num``.
+    KeyError
+        If a placement record lacks the required ``n`` member.
 
     Notes
     -----
@@ -399,7 +408,7 @@ def parse_jplace(object data):
     """
     cdef:
         dict as_json
-        list fields, placements, fragments, p, placement_data
+        list fields, columns, placements, fragments, placement_data
         list placement_inner_data, pquery, entry
         unicode frag, newick
         Py_ssize_t placement_idx, placement_inner_idx, fragment_idx
@@ -409,21 +418,33 @@ def parse_jplace(object data):
         set edges
 
     as_json = json.loads(data)
+
+    for key in ('tree', 'placements', 'fields'):
+        if key not in as_json:
+            raise ValueError(
+                "jplace document is missing the required '%s' member" % key
+            )
+
     newick = as_json['tree']
     placement_data = as_json['placements']
+    fields = list(as_json['fields'])
 
-    fields = as_json['fields']
-    fields = ['fragment', ] + fields
+    if 'edge_num' not in fields:
+        raise ValueError(
+            "jplace 'fields' must include 'edge_num' to map placements onto "
+            "the reference tree"
+        )
+
+    columns = ['fragment', ] + fields
 
     placements = []
     for placement_idx in range(len(placement_data)):
         placement = placement_data[placement_idx]
 
-        placement_inner_data = placement['p']
-
         if 'n' not in placement:
             raise KeyError("jplace parsing limited to entries with 'n' keys")
 
+        placement_inner_data = placement['p']
         fragments = placement['n']
         n_fragments = len(fragments)
 
@@ -437,7 +458,62 @@ def parse_jplace(object data):
 
     tree = parse_newick(newick)
     edges = {tree.edge(i) for i, v in enumerate(tree.data) if v}
-    df = pd.DataFrame(placements, columns=fields)
+    df = pd.DataFrame(placements, columns=columns)
     df = df[df['edge_num'].isin(edges)]
 
     return df, tree
+
+
+def _json_default(object obj):
+    """Fallback JSON encoder that unwraps NumPy scalars to Python types."""
+    if isinstance(obj, np.generic):
+        return obj.item()
+    raise TypeError(
+        "Object of type %s is not JSON serializable" % type(obj).__name__
+    )
+
+
+def write_jplace(BPTree tree, object output, object fields=None,
+                 object version=None, object metadata=None):
+    """Write a reference tree as a jplace document.
+
+    A ``BPTree`` holds a reference tree but no placements, so the document is
+    written with an empty ``placements`` list; ``fields``, ``version``, and
+    ``metadata`` fill the remaining required jplace members. This mirrors the
+    ``jplace`` read path, which returns only the reference tree.
+
+    Parameters
+    ----------
+    tree : BPTree
+        The reference tree, serialized as Newick with ``{}`` edge numbers via
+        :func:`write_newick`. Existing edge numbers are written as-is; a tree
+        without edge numbers emits ``{0}`` on every edge.
+    output : file-like object
+        An open, writable handle that the JSON document is written to.
+    fields : list of str, optional
+        The placement field names to record. Defaults to ``["edge_num"]``.
+    version : int, optional
+        The jplace format version to record. Defaults to ``3``.
+    metadata : dict, optional
+        Free-form metadata to record. Defaults to ``{}``.
+
+    """
+    cdef:
+        unicode tree_str
+        object buf, document
+
+    from io import StringIO
+
+    buf = StringIO()
+    write_newick(tree, buf, True)
+    tree_str = buf.getvalue().strip()
+
+    document = {
+        "tree": tree_str,
+        "placements": [],
+        "fields": list(fields) if fields is not None else ["edge_num"],
+        "version": version if version is not None else 3,
+        "metadata": metadata if metadata is not None else {},
+    }
+
+    json.dump(document, output, default=_json_default)
