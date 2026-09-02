@@ -193,6 +193,23 @@ class TestStockholmReader(unittest.TestCase):
                          index=['RTC2231', 'RTF2124', 'RTH3322', 'RTB1512'])
         self.assertEqual(msa, exp)
 
+    def test_stockholm_lowercase(self):
+        # lowercase characters that aren't in the sequence's alphabet raise
+        # by default...
+        fp = get_data_path('stockholm_lowercase')
+        with self.assertRaisesRegex(ValueError, 'Invalid character'):
+            _stockholm_to_tabular_msa(fp, constructor=Protein)
+
+        # ...unless `lowercase` is passed, in which case it is forwarded to
+        # `constructor` just like other keyword arguments accepted by
+        # sequence constructors
+        msa = _stockholm_to_tabular_msa(fp, constructor=Protein,
+                                        lowercase=True)
+        exp = TabularMSA([Protein('ACDEFGHIKLMN', metadata={'id': 'seq1'}),
+                          Protein('ACDEFGHIKLMN', metadata={'id': 'seq2'})],
+                         index=['seq1', 'seq2'])
+        self.assertEqual(msa, exp)
+
     def test_stockholm_runon_gf(self):
         fp = get_data_path('stockholm_runon_gf_no_whitespace')
         msa = _stockholm_to_tabular_msa(fp, constructor=DNA)

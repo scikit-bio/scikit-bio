@@ -33,6 +33,7 @@
 * Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
 * `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
 * Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
+* Fixed the Stockholm `TabularMSA` reader rejecting all extra keyword arguments (e.g., `lowercase`), even though such arguments are accepted by sequence constructors and forwarded by other multi-sequence format readers. Keyword arguments other than `constructor` are now forwarded to `constructor` when building each aligned sequence ([#1543](https://github.com/scikit-bio/scikit-bio/issues/1543)).
 
 ## Version 0.7.3
 

@@ -258,12 +258,17 @@ The final line of a Stockholm file must be the following footer::
 
 Format Parameters
 -----------------
-The only supported format parameter is ``constructor``, which specifies the
-type of in-memory sequence object to read each aligned sequence into. This must
-be a subclass of ``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``)
-and is a required format parameter. For example, if you know that the Stockholm
-file you're reading contains DNA sequences, you would pass ``constructor=DNA``
-to the reader call.
+The ``constructor`` format parameter specifies the type of in-memory sequence
+object to read each aligned sequence into. This must be a subclass of
+``GrammaredSequence`` (e.g., ``DNA``, ``RNA``, ``Protein``) and is a required
+format parameter. For example, if you know that the Stockholm file you're
+reading contains DNA sequences, you would pass ``constructor=DNA`` to the
+reader call.
+
+Any other keyword arguments are forwarded to ``constructor`` when building each
+aligned sequence. For example, ``lowercase`` can be passed to accept lowercase
+characters that aren't in the sequence's alphabet, as with other sequence
+constructors.
 
 Examples
 --------
@@ -427,7 +432,7 @@ def _stockholm_sniffer(fh):
 
 
 @stockholm.reader(TabularMSA)
-def _stockholm_to_tabular_msa(fh, cls=None, constructor=None):
+def _stockholm_to_tabular_msa(fh, cls=None, constructor=None, **kwargs):
     # Checks that user has passed required constructor parameter
     if constructor is None:
         raise ValueError(
@@ -480,7 +485,7 @@ def _stockholm_to_tabular_msa(fh, cls=None, constructor=None):
             'Final line does not conform to Stockholm format. Must contain only "//".'
         )
 
-    return msa_data.build_tabular_msa(constructor)
+    return msa_data.build_tabular_msa(constructor, **kwargs)
 
 
 # For storing intermediate data used to construct a Sequence object.
@@ -558,7 +563,7 @@ class _MSAData:
             self._seqs[seq_name] = _SeqData(seq_name)
         self._seqs[seq_name].add_positional_metadata_feature(feature_name, feature_data)
 
-    def build_tabular_msa(self, constructor):
+    def build_tabular_msa(self, constructor, **kwargs):
         if len(self._seqs) != len(self._seq_order):
             invalid_seq_names = set(self._seqs) - set(self._seq_order)
             raise StockholmFormatError(
@@ -568,7 +573,7 @@ class _MSAData:
 
         seqs = []
         for seq_name in self._seq_order:
-            seqs.append(self._seqs[seq_name].build_sequence(constructor))
+            seqs.append(self._seqs[seq_name].build_sequence(constructor, **kwargs))
 
         positional_metadata = self._positional_metadata
         if not positional_metadata:
@@ -625,11 +630,12 @@ class _SeqData:
         else:
             self.positional_metadata[feature_name] = feature_data
 
-    def build_sequence(self, constructor):
+    def build_sequence(self, constructor, **kwargs):
         return constructor(
             self.seq,
             metadata=self.metadata,
             positional_metadata=(self.positional_metadata),
+            **kwargs,
         )
 
 
