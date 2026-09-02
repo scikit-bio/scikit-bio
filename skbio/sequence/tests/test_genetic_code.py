@@ -30,12 +30,50 @@ class TestGeneticCode(unittest.TestCase):
                          'Alternative Yeast Nuclear')
         self.assertEqual(GeneticCode.from_ncbi(25).name,
                          'Candidate Division SR1 and Gracilibacteria')
+        self.assertEqual(GeneticCode.from_ncbi(27).name,
+                         'Karyorelict Nuclear')
+        self.assertEqual(GeneticCode.from_ncbi(33).name,
+                         'Cephalodiscidae Mitochondrial')
 
     def test_from_ncbi_invalid_input(self):
         with self.assertRaisesRegex(ValueError, r'table_id.*7'):
             GeneticCode.from_ncbi(7)
         with self.assertRaisesRegex(ValueError, r'table_id.*42'):
             GeneticCode.from_ncbi(42)
+
+    def test_from_ncbi_table_26_to_33(self):
+        # tables 26-33 were added to NCBI's genetic code page after
+        # scikit-bio's table was last synced; spot check that they are
+        # available and correctly defined
+        exp_names = {
+            26: 'Pachysolen tannophilus Nuclear',
+            27: 'Karyorelict Nuclear',
+            28: 'Condylostoma Nuclear',
+            29: 'Mesodinium Nuclear',
+            30: 'Peritrich Nuclear',
+            31: 'Blastocrithidia Nuclear',
+            32: 'Balanophoraceae Plastid',
+            33: 'Cephalodiscidae Mitochondrial',
+        }
+        for table_id, name in exp_names.items():
+            self.assertEqual(GeneticCode.from_ncbi(table_id).name, name)
+
+        # table 26 reassigns CUG from Leu to Ala (unlike the standard code)
+        seq = RNA('CUG')
+        self.assertEqual(GeneticCode.from_ncbi(26).translate(seq),
+                          Protein('A'))
+        self.assertEqual(GeneticCode.from_ncbi(1).translate(seq),
+                          Protein('L'))
+
+    def test_from_ncbi_table_3_gtg_start(self):
+        # table 3 (Yeast Mitochondrial) gained GTG as an alternative start
+        # codon in a later revision of NCBI's genetic code table; make sure
+        # it is recognized as such (in addition to the pre-existing ATA and
+        # ATG starts)
+        seq = RNA('GUGAAA')
+        exp = Protein('MK')
+        obs = GeneticCode.from_ncbi(3).translate(seq, start='require')
+        self.assertEqual(obs, exp)
 
     def test_reading_frames(self):
         exp = [1, 2, 3, -1, -2, -3]
@@ -182,8 +220,18 @@ class TestGeneticCode(unittest.TestCase):
             # completely different type
             'foo'
         ]
-        # none of the NCBI genetic codes should be equal to each other
-        unequal_gcs.extend(_ncbi_genetic_codes.values())
+        # None of the NCBI genetic codes should be equal to each other, with
+        # one known exception: tables 27 (Karyorelict Nuclear) and 28
+        # (Condylostoma Nuclear) share identical `amino_acids` and `starts`
+        # strings. NCBI distinguishes them only by a context-dependent
+        # stop/sense ambiguity that isn't captured by scikit-bio's model, so
+        # they compare equal here. Deduplicate before asserting pairwise
+        # inequality so this known collision doesn't fail the test below.
+        distinct_ncbi_gcs = []
+        for gc in _ncbi_genetic_codes.values():
+            if gc not in distinct_ncbi_gcs:
+                distinct_ncbi_gcs.append(gc)
+        unequal_gcs.extend(distinct_ncbi_gcs)
 
         for gc in unequal_gcs:
             self.assertTrue(gc == gc)

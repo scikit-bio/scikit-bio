@@ -781,7 +781,7 @@ _ncbi_genetic_codes = {
     ),
     3: GeneticCode(
         "FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
-        "----------------------------------MM----------------------------",
+        "----------------------------------MM---------------M------------",
         "Yeast Mitochondrial",
     ),
     4: GeneticCode(
@@ -858,5 +858,45 @@ _ncbi_genetic_codes = {
         "FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "---M-------------------------------M---------------M------------",
         "Candidate Division SR1 and Gracilibacteria",
+    ),
+    26: GeneticCode(
+        "FFLLSSSSYY**CC*WLLLAPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-------------------M---------------M----------------------------",
+        "Pachysolen tannophilus Nuclear",
+    ),
+    27: GeneticCode(
+        "FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Karyorelict Nuclear",
+    ),
+    28: GeneticCode(
+        "FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Condylostoma Nuclear",
+    ),
+    29: GeneticCode(
+        "FFLLSSSSYYYYCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Mesodinium Nuclear",
+    ),
+    30: GeneticCode(
+        "FFLLSSSSYYEECC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Peritrich Nuclear",
+    ),
+    31: GeneticCode(
+        "FFLLSSSSYYEECCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Blastocrithidia Nuclear",
+    ),
+    32: GeneticCode(
+        "FFLLSSSSYY*WCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "---M---------------M------------MMMM---------------M------------",
+        "Balanophoraceae Plastid",
+    ),
+    33: GeneticCode(
+        "FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG",
+        "---M---------------M---------------M---------------M------------",
+        "Cephalodiscidae Mitochondrial",
     ),
 }
