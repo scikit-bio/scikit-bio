@@ -15,6 +15,7 @@
 ### Bug Fixes
 
 * Widened the `BPTree` rmM (min-max) tree construction and the `fwdsearch`/`bwdsearch` search kernel from 32-bit to 64-bit indices. The parenthesis positions, block sizes, and excess deltas were C `int`s (inherited from the original improved-octo-waddle port), which silently overflowed for trees larger than 2³¹ parentheses (~537 million tips) — corrupting navigation rather than raising an error. Because the stored index arrays were already 64-bit, memory footprint and per-operation runtime are unchanged; only the loop counters and scan positions were widened ([#2541](https://github.com/scikit-bio/scikit-bio/pull/2541)).
+* Fixed the compiled `newick` reader/writer that backs `BPTree` to correctly handle Newick comments, quoted labels, and whitespace (addressing [#2349](https://github.com/scikit-bio/scikit-bio/issues/2349)). `[...]` comments, including nested ones, are now skipped rather than corrupting the parsed topology or being misread as edge numbers; single-quoted labels preserve embedded apostrophes (`''` reads as a single `'` and is written doubled); and labels containing whitespace or any of the structural characters `` ' _ ; , : ( ) [ ] `` are quoted on write so the output re-parses losslessly. The `BPTree` `newick` reader also gained an optional `convert_underscores` parameter (default `True`, matching `TreeNode`) ([#2568](https://github.com/scikit-bio/scikit-bio/pull/2568)).
 
 ## Version 0.7.3
 
