@@ -51,6 +51,21 @@ def _edges(bp):
     return [bp.edge(i) for i in range(bp.data.size)]
 
 
+def _synthetic_jplace(tree):
+    # A minimal, valid jplace document with a single placement on edge 0, used
+    # to exercise reference-tree Newick grammar (comments, quoting, underscores).
+    return json.dumps(
+        {
+            "tree": tree,
+            "placements": [{"p": [[0, -1.0, 1.0, 0.0, 0.0]], "n": ["frag"]}],
+            "fields": ["edge_num", "likelihood", "like_weight_ratio",
+                       "distal_length", "pendant_length"],
+            "version": 3,
+            "metadata": {},
+        }
+    )
+
+
 class TestJplaceReader(unittest.TestCase):
     """The jplace registry reader returns the reference tree as a BPTree and
     drops the placement records."""
@@ -90,13 +105,15 @@ class TestJplaceReader(unittest.TestCase):
         self.assertIsInstance(bp, BPTree)
         self.assertEqual(TreeNode.from_bptree(bp).compare_rfd(self.tree), 0)
 
-    def test_square_braces_parse_as_edges(self):
-        # On this branch [] is still an edge-number delimiter (the dedicated
-        # grammar PR changes [] to a Newick comment).
+    def test_square_braces_treated_as_comment(self):
+        # On the grammar branch [] is a Newick comment: converting the canonical
+        # {N} to [N] drops the edge numbers (edges become 0) while leaving the
+        # topology intact.
         data = json.loads(self.jplacedata)
         data["tree"] = re.sub(r"{(\d+)}", r"[\1]", data["tree"])
         bp = self._read_bp(json.dumps(data))
         self.assertEqual(TreeNode.from_bptree(bp).compare_rfd(self.tree), 0)
+        self.assertTrue(all(e == 0 for e in _edges(bp)))
 
     def test_missing_required_key_raises(self):
         data = json.loads(self.jplacedata)
@@ -175,6 +192,42 @@ class TestJplaceWriter(unittest.TestCase):
             TreeNode.from_bptree(bp).compare_rfd(TreeNode.from_bptree(back)),
             0,
         )
+
+
+class TestJplaceReferenceTreeGrammar(unittest.TestCase):
+    """Reference-tree Newick grammar seen through the jplace BPTree path."""
+
+    def _read(self, tree):
+        return skbio.io.read([_synthetic_jplace(tree)], into=BPTree,
+                             format="jplace")
+
+    def _names(self, bp):
+        return {bp.name(i) for i in range(bp.data.size)}
+
+    def test_underscores_preserved(self):
+        # jplace taxa are accessions; '_' is significant and must not become a
+        # space (the jplace path reads with convert_underscores=False).
+        bp = self._read("((A_1:.1{0}, B_2:.1{1})C:.1{2}, D:.1{3}){4};")
+        names = self._names(bp)
+        self.assertIn("A_1", names)
+        self.assertIn("B_2", names)
+        self.assertNotIn("A 1", names)
+
+    def test_comment_in_reference_tree_ignored(self):
+        # A [comment] on an edge is stripped; the {} edge numbers still resolve.
+        bp = self._read("((A:.1{0}[note], B:.1{1})C:.1{2}, D:.1{3}){4};")
+        self.assertIn(0, {bp.edge(i) for i in range(bp.data.size)})
+        self.assertIn("A", self._names(bp))
+
+    def test_special_char_label_round_trip(self):
+        # A whitespace label is quoted in the written tree and re-reads intact.
+        bp = self._read("(('a b':.1{0}, B:.1{1})C:.1{2}, D:.1{3}){4};")
+        self.assertIn("a b", self._names(bp))
+        buf = io.StringIO()
+        bp.write(buf, format="jplace")
+        self.assertIn("'a b'", json.loads(buf.getvalue())["tree"])
+        back = skbio.io.read([buf.getvalue()], into=BPTree, format="jplace")
+        self.assertIn("a b", self._names(back))
 
 
 class TestJplaceSniffer(unittest.TestCase):
