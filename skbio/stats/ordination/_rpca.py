@@ -58,6 +58,10 @@ def rpca(
         than or equal to min(n, p). Default is 3.
     max_iter : int, optional
         Maximum iterations for OptSpace algorithm. Default is 10000.
+
+        .. versionchanged:: 0.7.4
+            A non-positive or non-integer value now raises ``ValueError``
+            instead of failing with an unrelated error partway through.
     sample_ids, feature_ids, output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
 
