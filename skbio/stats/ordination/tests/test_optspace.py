@@ -116,6 +116,29 @@ class TestOptSpace(unittest.TestCase):
 
         self.assertIn("did not converge", str(context.warning))
 
+    def test_zero_max_iter_error(self):
+        """Test error for max_iter of zero."""
+        with self.assertRaises(ValueError) as context:
+            _ = optspace(self.M_obs, self.r, max_iter=0)
+        self.assertIn("positive", str(context.exception))
+
+    def test_negative_max_iter_error(self):
+        """Test error for negative max_iter."""
+        with self.assertRaises(ValueError) as context:
+            _ = optspace(self.M_obs, self.r, max_iter=-1)
+        self.assertIn("positive", str(context.exception))
+
+    def test_numpy_integer_max_iter_accepted(self):
+        """Test that a NumPy integer type is accepted for max_iter."""
+        with self.assertWarns(RuntimeWarning):
+            _ = optspace(self.M_obs, self.r, max_iter=np.int64(1))
+
+    def test_non_integer_max_iter_error(self):
+        """Test error for non-integer max_iter."""
+        with self.assertRaises(ValueError) as context:
+            _ = optspace(self.M_obs, self.r, max_iter=2.5)
+        self.assertIn("integer", str(context.exception))
+
     def test_max_ls_exception(self):
         """Test line search warning when convergence is not achieved."""
         with patch(

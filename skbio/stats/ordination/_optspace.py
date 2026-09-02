@@ -369,6 +369,10 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         The rank of the matrix to recover. Default is 3.
     max_iter : int, optional
         Maximum number of iterations. Default is 10000.
+
+        .. versionchanged:: 0.7.4
+            A non-positive or non-integer value now raises ``ValueError``
+            instead of failing with an unrelated error partway through.
     tol : float, optional
         Convergence tolerance. Default is 1e-5.
     method : {'GD', 'GN'}, optional
@@ -389,6 +393,8 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         ``min(n_samples, n_features)``.
     ValueError
         If ``method`` is not one of "GN" or "GD".
+    ValueError
+        If ``max_iter`` is not a positive integer.
     ValueError
         If input is fully unobserved.
 
@@ -455,6 +461,9 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
     elif method not in ("GN", "GD"):
         raise ValueError("Method must be 'GN' or 'GD'")
+
+    elif not np.issubdtype(type(max_iter), np.integer) or max_iter < 1:
+        raise ValueError("Max_iter must be a positive integer")
 
     # Create observed mask
     observed_mask = ~np.isnan(X)
