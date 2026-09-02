@@ -23,7 +23,8 @@ Format Specification
 A jplace file is a JSON object with the following top-level members [1]_:
 
 - ``tree``: a Newick string in which each edge is annotated with an integer
-  edge number, delimited by ``{}`` (canonical) or ``[]``.
+  edge number, delimited by ``{}``. (``[]`` is treated as a standard Newick
+  comment and ignored.)
 - ``placements``: a list of placement records. Each record has a ``p`` member
   (a list of placement rows, each row a list matching ``fields``) and an ``n``
   member (a list of query/fragment names).
@@ -48,7 +49,7 @@ Caveats
 ~~~~~~~
 - Multiplicities are not supported by :func:`skbio.tree.bp.parse_jplace`; any
   ``"nm"`` entry is ignored.
-- A single edge may carry ``[]`` *or* ``{}`` edge numbers, but not both.
+- Edge numbers use ``{}`` only. ``[]`` is treated as a standard Newick comment.
 - A jplace document written from an edge-number-less ``BPTree`` repeats ``{0}``
   on every edge; the round trip is only meaningful when the tree carries edge
   numbers (as a tree read from jplace does).
