@@ -34,6 +34,10 @@
 * `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
 * Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
 
+### Miscellaneous
+
+* `beta_diversity` now emits a `UserWarning` when the returned distance matrix contains `nan` values, which can happen, for example, when two or more samples all have an all-zero count vector and the chosen metric (e.g., `'braycurtis'`) divides by the total count. Previously this passed silently ([#1702](https://github.com/scikit-bio/scikit-bio/issues/1702)).
+
 ## Version 0.7.3
 
 ### Features
