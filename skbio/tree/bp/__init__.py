@@ -18,11 +18,12 @@ public objects are re-exported from :mod:`skbio.tree`.
 # ----------------------------------------------------------------------------
 
 from ._bp import BPTree
-from ._bp_io import parse_newick, write_newick, parse_jplace
+from ._bp_io import parse_newick, write_newick, parse_jplace, write_jplace
 
 __all__ = [
     "BPTree",
     "parse_newick",
     "write_newick",
     "parse_jplace",
+    "write_jplace",
 ]

@@ -6,6 +6,7 @@
 
 * Added `BPTree`, a succinct balanced-parentheses representation of trees for memory-efficient storage and fast topological queries on very large trees. Ported from [improved-octo-waddle](https://github.com/biocore/improved-octo-waddle) ([#2498](https://github.com/scikit-bio/scikit-bio/pull/2498)).
 * `BPTree` reads and writes the `newick` format through the `skbio.io` registry, mirroring `TreeNode`: `BPTree.read` and `BPTree.write` delegate to the registry with `newick` as the default format. The reader and writer translate directly to and from `BPTree`'s parenthesis/name/length/edge arrays without constructing any intermediate per-node objects, and are backed by a compiled (Cython) implementation so that reading and writing stay fast on trees with millions to billions of nodes. ([#2528](https://github.com/scikit-bio/scikit-bio/pull/2528)).
+* Added the `jplace` format ([Matsen et al. 2012](https://doi.org/10.1371/journal.pone.0031009)) to the `skbio.io` registry, reading and writing the reference tree of a phylogenetic placement as a `BPTree`. Reading a `jplace` file returns the reference tree (preserving its `{}` edge numbers) and drops the placement records; `skbio.tree.bp.parse_jplace` remains available to obtain the placements table alongside the tree. Writing a `BPTree` emits a `jplace` document containing the tree with an empty `placements` list. Both directions are backed by the compiled (Cython) implementation, so throughput is preserved on large trees ([#2568](https://github.com/scikit-bio/scikit-bio/pull/2568)).
 
 ### Performance enhancements
 
@@ -14,6 +15,7 @@
 ### Bug Fixes
 
 * Widened the `BPTree` rmM (min-max) tree construction and the `fwdsearch`/`bwdsearch` search kernel from 32-bit to 64-bit indices. The parenthesis positions, block sizes, and excess deltas were C `int`s (inherited from the original improved-octo-waddle port), which silently overflowed for trees larger than 2³¹ parentheses (~537 million tips) — corrupting navigation rather than raising an error. Because the stored index arrays were already 64-bit, memory footprint and per-operation runtime are unchanged; only the loop counters and scan positions were widened ([#2541](https://github.com/scikit-bio/scikit-bio/pull/2541)).
+* Fixed the compiled `newick` reader/writer that backs `BPTree` to correctly handle Newick comments, quoted labels, and whitespace (addressing [#2349](https://github.com/scikit-bio/scikit-bio/issues/2349)). `[...]` comments, including nested ones, are now skipped rather than corrupting the parsed topology or being misread as edge numbers; single-quoted labels preserve embedded apostrophes (`''` reads as a single `'` and is written doubled); and labels containing whitespace or any of the structural characters `` ' _ ; , : ( ) [ ] `` are quoted on write so the output re-parses losslessly. The `BPTree` `newick` reader also gained an optional `convert_underscores` parameter (default `True`, matching `TreeNode`) ([#2568](https://github.com/scikit-bio/scikit-bio/pull/2568)).
 
 ## Version 0.7.3
 

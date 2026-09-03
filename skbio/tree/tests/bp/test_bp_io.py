@@ -18,7 +18,8 @@ import pandas as pd
 import pandas.testing as pdt
 import skbio
 
-from skbio.tree.bp import parse_newick, write_newick, parse_jplace
+from skbio.tree.bp import (
+    parse_newick, write_newick, parse_jplace, write_jplace)
 
 
 def get_data_path(filename):
@@ -296,6 +297,67 @@ class JPlaceParseTests(TestCase):
         self.assertEqual([n.name for n in skbio_tree.children], ["a"])
         self.assertEqual([n.name for n in skbio_tree.non_tips()], ["a"])
         self.assertEqual([n.name for n in skbio_tree.tips()], ["b"])
+
+
+class JPlaceWriteTests(TestCase):
+    def setUp(self):
+        # A reference BPTree carrying edge numbers, obtained from the fixture.
+        jplacedata = open(get_data_path('200/placement.jplace')).read()
+        _, self.bp = parse_jplace(jplacedata)
+
+    def _edges(self, bp):
+        return [bp.edge(i) for i in range(bp.data.size)]
+
+    def test_write_jplace_defaults(self):
+        # A BPTree holds a reference tree but no placements, so the document is
+        # written with an empty ``placements`` list and default members.
+        buf = io.StringIO()
+        write_jplace(self.bp, buf)
+        doc = json.loads(buf.getvalue())
+        self.assertEqual(
+            sorted(doc.keys()),
+            ['fields', 'metadata', 'placements', 'tree', 'version'])
+        self.assertEqual(doc['placements'], [])
+        self.assertEqual(doc['fields'], ['edge_num'])
+        self.assertEqual(doc['version'], 3)
+        self.assertEqual(doc['metadata'], {})
+        # the reference tree is serialized with {} edge numbers
+        self.assertTrue(doc['tree'].rstrip().endswith(';'))
+        self.assertRegex(doc['tree'], r"\{\d+\}")
+
+    def test_write_jplace_round_trip_tree_and_edges(self):
+        # Writing then re-reading preserves the topology and the edge numbers;
+        # the (empty) placement table round-trips empty.
+        buf = io.StringIO()
+        write_jplace(self.bp, buf)
+        obs_df, obs_bp = parse_jplace(buf.getvalue())
+        self.assertEqual(len(obs_df), 0)
+        self.assertEqual(
+            skbio.TreeNode.from_bptree(obs_bp).compare_rfd(
+                skbio.TreeNode.from_bptree(self.bp)), 0)
+        self.assertEqual(self._edges(obs_bp), self._edges(self.bp))
+
+    def test_write_jplace_fields_version_metadata_overrides(self):
+        buf = io.StringIO()
+        write_jplace(self.bp, buf, fields=['edge_num', 'likelihood'],
+                     version=2, metadata={'invocation': 'pplacer'})
+        doc = json.loads(buf.getvalue())
+        self.assertEqual(doc['fields'], ['edge_num', 'likelihood'])
+        self.assertEqual(doc['version'], 2)
+        self.assertEqual(doc['metadata'], {'invocation': 'pplacer'})
+
+    def test_write_jplace_edgeless_tree(self):
+        # A tree without edge numbers emits {0} on every edge (no unique
+        # numbers); the topology still round-trips.
+        bp = parse_newick("((a,b)c,d)r;")
+        buf = io.StringIO()
+        write_jplace(bp, buf)
+        doc = json.loads(buf.getvalue())
+        self.assertNotIn('{1}', doc['tree'])
+        _, obs_bp = parse_jplace(buf.getvalue())
+        self.assertEqual(
+            skbio.TreeNode.from_bptree(obs_bp).compare_rfd(
+                skbio.TreeNode.from_bptree(bp)), 0)
 
 
 if __name__ == '__main__':

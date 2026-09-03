@@ -522,14 +522,14 @@ def _tokenize_newick(fh, convert_underscores=True):
 
 
 @newick.reader(BPTree)
-def _newick_to_bp(fh, cls=None):
+def _newick_to_bp(fh, cls=None, convert_underscores=True):
     from skbio.tree.bp._bp_io import parse_newick
 
     # The compiled parser scans the whole string at once, so materialize the
     # handle's contents before handing it off. It raises ValueError on malformed
     # input; re-raise as the format's error type per the registry convention.
     try:
-        return parse_newick(fh.read())
+        return parse_newick(fh.read(), convert_underscores=convert_underscores)
     except ValueError as e:
         raise NewickFormatError(
             "Could not parse file as newick into a BPTree: %s" % e
