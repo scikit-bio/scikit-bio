@@ -767,7 +767,17 @@ class GeneticCode(SkbioObject):
             )
 
 
-# defined at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+# The amino_acids/starts data below are derived from NCBI's "Genetic Codes"
+# resource, compiled by NCBI's Taxonomy Group (Elzanowski & Ostell):
+#   https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+#   ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt (machine-readable source)
+# This data is produced by the U.S. government and is in the public domain
+# (see https://www.ncbi.nlm.nih.gov/home/about/policies/); no license terms
+# apply, but it is credited here as its original source per scikit-bio's
+# contribution guidelines. `Starts` positions that NCBI marks as ambiguous
+# stop/sense codons (rather than an alternative start codon) are recorded
+# here as non-start ("-"), since scikit-bio's `starts` field only models
+# start-codon status.
 _ncbi_genetic_codes = {
     1: GeneticCode(
         "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
@@ -828,6 +838,11 @@ _ncbi_genetic_codes = {
         "FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG",
         "-----------------------------------M----------------------------",
         "Alternative Flatworm Mitochondrial",
+    ),
+    15: GeneticCode(
+        "FFLLSSSSYY*QCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Blepharisma Macronuclear",
     ),
     16: GeneticCode(
         "FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",

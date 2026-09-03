@@ -28,6 +28,8 @@ class TestGeneticCode(unittest.TestCase):
                          'Vertebrate Mitochondrial')
         self.assertEqual(GeneticCode.from_ncbi(12).name,
                          'Alternative Yeast Nuclear')
+        self.assertEqual(GeneticCode.from_ncbi(15).name,
+                         'Blepharisma Macronuclear')
         self.assertEqual(GeneticCode.from_ncbi(25).name,
                          'Candidate Division SR1 and Gracilibacteria')
         self.assertEqual(GeneticCode.from_ncbi(27).name,
@@ -41,11 +43,13 @@ class TestGeneticCode(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'table_id.*42'):
             GeneticCode.from_ncbi(42)
 
-    def test_from_ncbi_table_26_to_33(self):
-        # tables 26-33 were added to NCBI's genetic code page after
-        # scikit-bio's table was last synced; spot check that they are
-        # available and correctly defined
+    def test_from_ncbi_table_15_and_26_to_33(self):
+        # table 15 was missing from scikit-bio's table entirely, and tables
+        # 26-33 were added to NCBI's genetic code page after scikit-bio's
+        # table was last synced; spot check that they are all available and
+        # correctly defined
         exp_names = {
+            15: 'Blepharisma Macronuclear',
             26: 'Pachysolen tannophilus Nuclear',
             27: 'Karyorelict Nuclear',
             28: 'Condylostoma Nuclear',
@@ -57,6 +61,14 @@ class TestGeneticCode(unittest.TestCase):
         }
         for table_id, name in exp_names.items():
             self.assertEqual(GeneticCode.from_ncbi(table_id).name, name)
+
+        # table 15 reassigns UAG from a stop codon to Gln (unlike the
+        # standard code)
+        seq = RNA('UAG')
+        self.assertEqual(GeneticCode.from_ncbi(15).translate(seq),
+                          Protein('Q'))
+        self.assertEqual(GeneticCode.from_ncbi(1).translate(seq),
+                          Protein('*'))
 
         # table 26 reassigns CUG from Leu to Ala (unlike the standard code)
         seq = RNA('CUG')
