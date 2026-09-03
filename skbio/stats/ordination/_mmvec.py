@@ -31,6 +31,14 @@ from skbio.stats.composition import clr_inv as softmax
 from skbio.stats.composition import ilr_inv
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
+from skbio._config import _resolve_engine
+
+try:
+    from numba import njit
+
+    NUMBA_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.util._typing import SeedLike, TableLike
@@ -62,6 +70,7 @@ def mmvec(
     seed: SeedLike | None = None,
     verbose: bool = False,
     output_format: str | None = None,
+    engine: str = "cython",
 ) -> MMvecResult:
     r"""Perform multiomics Microbe-Metabolite Vectors (MMvec) analysis.
 
@@ -146,6 +155,16 @@ def mmvec(
         Print training progress. Default is False.
     output_format : str, optional
         Output table format. See :ref:`table_params` for details.
+    engine : {"cython", "numba"}, optional
+        Compute engine for the Adam optimizer's gradient scatter-add step.
+        Ignored for ``optimizer="lbfgs"``. ``"cython"`` (default) uses
+        :func:`numpy.add.at` (mmvec has no compiled Cython implementation;
+        the name follows the library-wide convention where ``"cython"``
+        labels the non-JIT default engine). ``"numba"`` uses the optional
+        Numba implementation and requires Numba to be installed; it is not
+        used unless explicitly requested here.
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -313,6 +332,7 @@ def mmvec(
         seed=seed,
         verbose=verbose,
         output_format=output_format,
+        engine=engine,
     )
     fitted = estimator.fit(X, Y)
     return MMvecResult(fitted)
@@ -568,6 +588,7 @@ class MMvec(SkbioObject):
         seed: SeedLike | None = None,
         verbose: bool = False,
         output_format: str | None = None,
+        engine: str = "cython",
     ) -> None:
         self.n_components = n_components
         self.optimizer = optimizer
@@ -585,6 +606,7 @@ class MMvec(SkbioObject):
         self.seed = seed
         self.verbose = verbose
         self.output_format = output_format
+        self.engine = engine
 
     def fit(self, X: TableLike, y: TableLike) -> MMvec:
         """Fit MMvec model.
@@ -635,6 +657,16 @@ class MMvec(SkbioObject):
         # Create RNG
         rng = get_rng(self.seed)
 
+        # Resolve the scatter-add engine. Unlike permanova/mantel/permdisp/pcoa,
+        # this does not fall back to the global skbio.set_config("engine")
+        # value: that lookup only makes sense for functions with an actual
+        # Cython implementation to fall back to, and treating None as "look
+        # up the global config" here would raise instead of doing something
+        # sensible. "cython" is the explicit, always-safe default (dispatching
+        # to np.add.at, per library convention for labeling the non-JIT
+        # default engine); engine="numba" must be requested directly.
+        engine = _resolve_engine(self.engine, ("cython", "numba"))
+
         n_features_x = X_arr.shape[1]
         n_features_y = y_arr.shape[1]
 
@@ -648,6 +680,7 @@ class MMvec(SkbioObject):
             y_prior_mean=self.y_prior_mean,
             y_prior_scale=self.y_prior_scale,
             rng=rng,
+            engine=engine,
         )
 
         # Convert X to sparse COO format
@@ -906,6 +939,76 @@ class MMvec(SkbioObject):
         return 1.0 - ss_res / ss_tot
 
 
+if NUMBA_AVAILABLE:
+
+    @njit
+    def _scatter_add_grad_nb(out, ids, contrib, scale):
+        # Plain sequential scan over the batch (see _scatter_add_grad's
+        # docstring for the semantics and why this is sequential rather than
+        # prange-parallelized).
+        n_rows = out.shape[0]
+        n_batch = ids.shape[0]
+        n_cols = out.shape[1]
+        for b in range(n_batch):
+            row = ids[b]
+            # Match the row-owner kernel this replaced: out-of-range ids are
+            # silently skipped rather than indexing out of bounds.
+            if row < 0 or row >= n_rows:
+                continue
+            for j in range(n_cols):
+                out[row, j] += scale * contrib[b, j]
+
+else:  # pragma: no cover
+    _scatter_add_grad_nb = None
+
+
+def _scatter_add_grad(
+    out: np.ndarray, ids: np.ndarray, contrib: np.ndarray, scale: float, engine: str
+) -> None:
+    """Dispatch scatter-add to the requested engine.
+
+    Both engines implement ``out += scale * contrib`` scattered by ``ids`` with
+    ``np.add.at`` accumulation semantics and produce numerically identical
+    (bit-for-bit) results: contributions are summed in increasing batch order
+    (the same order ``np.add.at`` uses), which matters because float addition
+    is not associative.
+
+    The Numba kernel is a single sequential scan over the batch, not
+    prange-parallelized: the batch size, not the row count, is what's small
+    here, so an O(n_batch) pass beats parallelizing over O(n_rows) output
+    rows. ``fastmath`` is deliberately not enabled, so the compiler cannot
+    reassociate or contract the multiply-add.
+
+    Parameters
+    ----------
+    out : ndarray of shape (n_rows, n_cols), float64
+        Pre-zeroed accumulator, modified in place.
+    ids : ndarray of shape (n_batch,), integer
+        Target row index for each batch contribution. Values should lie in
+        ``[0, n_rows)``; the Numba kernel silently skips a contribution whose
+        id is negative or ``>= n_rows``, matching the row-owner kernel this
+        one replaced. This differs from the ``np.add.at`` fallback, which
+        wraps a negative id via ordinary fancy indexing and raises
+        ``IndexError`` for an id ``>= n_rows``; callers must not rely on
+        either engine for out-of-range ids.
+    contrib : ndarray of shape (n_batch, n_cols), float64
+        Per-batch contributions before scaling.
+    scale : float
+        Scalar multiplier applied to every contribution.
+    engine : {"cython", "numba"}
+        Already-resolved compute engine. ``"cython"`` dispatches to
+        :func:`numpy.add.at` (see ``MMvec``'s ``engine`` docstring for why
+        this non-Numba path is still labeled ``"cython"``).
+
+    """
+    if engine == "numba":
+        ids = np.ascontiguousarray(ids, dtype=np.intp)
+        contrib = np.ascontiguousarray(contrib)
+        _scatter_add_grad_nb(out, ids, contrib, scale)
+    else:
+        np.add.at(out, ids, scale * contrib)
+
+
 class _MMvecModel:
     """Internal model class for MMvec optimization."""
 
@@ -919,6 +1022,7 @@ class _MMvecModel:
         y_prior_mean: float,
         y_prior_scale: float,
         rng: np.random.Generator,
+        engine: str = "cython",
     ) -> None:
         """Initialize MMvec model parameters.
 
@@ -940,11 +1044,15 @@ class _MMvecModel:
             Scale of Gaussian prior on Y-side embeddings and biases.
         rng : numpy.random.Generator
             Random number generator.
+        engine : {"cython", "numba"}, optional
+            Compute engine for the Adam optimizer's scatter-add gradient
+            step. Already resolved by the caller (:meth:`MMvec.fit`).
 
         """
         self.n_features_x = n_features_x
         self.n_features_y = n_features_y
         self.n_components = n_components
+        self.engine = engine
         self.x_prior_mean = x_prior_mean
         self.x_prior_scale = x_prior_scale
         self.y_prior_mean = y_prior_mean
@@ -996,7 +1104,12 @@ class _MMvecModel:
         batch_idx = rng.choice(len(X_coo.data), size=size, replace=True, p=weights)
 
         sample_ids = X_coo.row[batch_idx]
-        X_ids = X_coo.col[batch_idx]
+        # Cast once here rather than in _scatter_add_grad: X_ids is reused for
+        # both the dx_main and dx_bias scatter-adds below, and X_coo.col is
+        # int32 by default, so casting it up front means the second call's
+        # ascontiguousarray only re-checks dtype/contiguity instead of
+        # repeating the actual int32->intp copy.
+        X_ids = np.ascontiguousarray(X_coo.col[batch_idx], dtype=np.intp)
 
         # Build the non-reference logits directly for the sampled X features.
         Y_batch = Y[sample_ids, :]  # (B, d2)
@@ -1039,9 +1152,11 @@ class _MMvecModel:
         dx_main = np.zeros_like(self.x_main)
         dx_bias = np.zeros_like(self.x_bias)
 
-        # Scatter-add the sampled X-side contributions back to full parameter arrays.
-        np.add.at(dx_main, X_ids, -norm * dx_main_batch)
-        np.add.at(dx_bias[:, 0], X_ids, -norm * dx_bias_batch)
+        # Scatter-add the sampled X-side contributions back to full parameter
+        # arrays. Fused numba kernel (falls back to np.add.at if numba is absent);
+        # both paths are bit-for-bit identical, including repeated X_ids.
+        _scatter_add_grad(dx_main, X_ids, dx_main_batch, -norm, self.engine)
+        _scatter_add_grad(dx_bias, X_ids, dx_bias_batch[:, None], -norm, self.engine)
 
         # Add prior gradients
         dx_main += (self.x_main - self.x_prior_mean) / (self.x_prior_scale**2)
