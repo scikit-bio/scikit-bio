@@ -35,7 +35,7 @@ References
 from warnings import warn
 
 import numpy as np
-from scipy.linalg import svd
+from scipy.linalg import svd, qr, solve_triangular
 from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
@@ -116,7 +116,83 @@ def _svd_init(X_trimmed, r):
     return U, V
 
 
-def jacobian_S(U, V, S, rows, cols):
+def _obs_basis(Ui, Vj, tol=1e-12):
+    """Factorize the S-Jacobian restricted to the observed entries.
+
+    ``J_S`` is the linear map ``dS -> P_\\Omega(U dS V^T)``. Written as a matrix
+    acting on ``dS.ravel()`` it has one row per observed entry ``k = (i, j)``,
+
+    A[k, a * r + b] = U[i, a] * V[j, b],
+
+    i.e. ``A[k] = kron(U[i], V[j])``, which matches the row-major
+    ``s.reshape(r, r)`` convention used throughout this module. ``A`` is
+    ``(n_observed, r ** 2)``, so it is thin (only 9 columns at the default rank
+    of 3) and can be factorized once per outer iteration and reused by every
+    matrix-vector product.
+
+    The economy QR factorization ``A[:, perm] = Q R`` yields both operations
+    needed downstream: ``Q`` is an orthonormal basis of ``range(J_S)``, and
+    ``R`` back-substitutes the least-squares solve for ``S``.
+
+    Column pivoting is used so that rank deficiency (possible when the observed
+    entries do not determine all ``r ** 2`` degrees of freedom of ``S``) is
+    detected from the magnitudes of the diagonal of ``R``, which pivoting orders
+    non-increasingly. Trailing columns whose pivot falls below ``tol`` relative
+    to the leading pivot are dropped, giving the basic (minimum-column-support)
+    least-squares solution rather than a division by a near-zero pivot.
+
+    Parameters
+    ----------
+    Ui : ndarray of shape (n_observed, r)
+        Rows of ``U`` gathered at the observed row indices.
+    Vj : ndarray of shape (n_observed, r)
+        Rows of ``V`` gathered at the observed column indices.
+    tol : float, optional
+        Relative pivot threshold for rank detection.
+
+    Returns
+    -------
+    Q : ndarray of shape (n_observed, rank)
+        Orthonormal basis of ``range(J_S)``.
+    R : ndarray of shape (rank, rank)
+        Upper triangular factor of the retained columns.
+    perm : ndarray of shape (rank,)
+        Indices of the retained columns of ``A``.
+    """
+
+    r = Ui.shape[1]
+
+    # A[k, a * r + b] = Ui[k, a] * Vj[k, b]
+    A = (Ui[:, :, None] * Vj[:, None, :]).reshape(-1, r**2)
+
+    Q, R, perm = qr(A, mode="economic", pivoting=True)
+
+    # Pivoting orders |diag(R)| non-increasingly, so the numerical rank is the
+    # length of the leading run of pivots above the relative threshold.
+    pivots = np.abs(np.diag(R))
+    if pivots.size == 0 or pivots[0] == 0.0:
+        rank = 0
+    else:
+        rank = int(np.count_nonzero(pivots > tol * pivots[0]))
+
+    return Q[:, :rank], R[:rank, :rank], perm[:rank]
+
+
+def _project_S_complement(Q, w):
+    """Project w onto the orthogonal complement of the S tangent space.
+
+    ``Q`` is an orthonormal basis of ``range(J_S)`` as returned by
+    :func:`_obs_basis`, so the projector onto the complement is
+
+    P_\\perp w = w - Q (Q^T w).
+
+    This is exact and costs ``O(n_observed * r ** 2)``.
+    """
+
+    return w - Q @ (Q.T @ w)
+
+
+def jacobian_S(Ui, Vj, S):
     """Compute J_S(dS).
 
     The Jacobian is
@@ -127,13 +203,18 @@ def jacobian_S(U, V, S, rows, cols):
     the reconstruction error over the observed entries.
 
     J_S(dS) = P_\\Omega(U dS V^T).
+
+    Evaluated only at the observed entries, this is
+
+    J_S(dS)[k] = U[i] dS V[j]^T,
+
+    which avoids forming the dense ``(m, n)`` product.
     """
 
-    W = U @ S @ V.T
-    return W[rows, cols]
+    return (Ui @ S * Vj).sum(axis=1)
 
 
-def jacobian_S_adj(U, V, w, observed_mask):
+def jacobian_S_adj(Ui, Vj, w):
     """Compute J_S*(W).
 
     The Jacobian adjoint is defined with respect to the inner product by
@@ -142,16 +223,15 @@ def jacobian_S_adj(U, V, w, observed_mask):
 
     Thus,
 
-    J_S*(W) = U^T P_\\Omega(W) V.
+    J_S*(W) = U^T P_\\Omega(W) V = sum_k w[k] outer(U[i], V[j]),
+
+    where the sum runs over the observed entries ``k = (i, j)``.
     """
 
-    W = np.zeros_like(observed_mask, dtype=U.dtype)
-    W[observed_mask] = w
-    ds = U.T @ W @ V
-    return ds.ravel()
+    return np.einsum("k,ka,kb->ab", w, Ui, Vj).ravel()
 
 
-def _solve_S(U, V, b, observed_mask, tol):
+def _solve_S(Q, R, perm, b, r):
     """Compute optimal S given U and V.
 
     Solves the least squares problem to find the optimal S that
@@ -164,32 +244,22 @@ def _solve_S(U, V, b, observed_mask, tol):
 
     J_S(dS) = -R
 
-    This is solved via lsmr.
+    Given the pivoted QR factorization ``A[:, perm] = Q R`` of the S-Jacobian
+    (see :func:`_obs_basis`), the solution follows from a single triangular
+    back-substitution, ``R s[perm] = Q^T b``, with the dropped (rank-deficient)
+    coefficients left at zero. This is exact, unlike the iterative solve it
+    replaces.
     """
 
-    r = U.shape[1]
-    n_observed = np.sum(observed_mask)
-    rows, cols = np.where(observed_mask)
+    s = np.zeros(r**2, dtype=b.dtype)
 
-    def matvec(s):
-        return jacobian_S(U, V, s.reshape(r, r), rows, cols)
-
-    def rmatvec(w):
-        return jacobian_S_adj(U, V, w, observed_mask)
-
-    J_S = LinearOperator(
-        shape=(n_observed, r**2),
-        matvec=matvec,
-        rmatvec=rmatvec,
-        dtype=U.dtype,
-    )
-
-    s = lsmr(J_S, b, atol=tol, btol=tol)[0]
+    if perm.size:
+        s[perm] = solve_triangular(R, Q.T @ b)
 
     return s.reshape(r, r)
 
 
-def jacobian_UV(U, V, S, dU, dV, observed_mask, tol):
+def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q):
     """Compute J_UV(dU, dV).
 
     The Jacobian is
@@ -202,29 +272,31 @@ def jacobian_UV(U, V, S, dU, dV, observed_mask, tol):
 
     J_UV(dU, dV) = P_\\Omega(dU S V^T + U S dV^T)
 
-    This is pre-composed with projection of the pair (dU, dV) onto the tangent
-    space of (U, V).
-    """
+    Evaluated only at the observed entries ``k = (i, j)``, this is
 
-    rows, cols = np.where(observed_mask)
+    J_UV(dU, dV)[k] = dU[i] . (V S^T)[j] + (U S)[i] . dV[j],
+
+    so ``US = U @ S`` and ``VST = V @ S.T`` are precomputed once per outer
+    iteration and no dense ``(m, n)`` array is ever formed.
+
+    This is pre-composed with projection of the pair (dU, dV) onto the tangent
+    space of (U, V), and post-composed with projection onto the orthogonal
+    complement of the S tangent space.
+    """
 
     # Project input onto (U, V) tangent space
     dU_t = dU - U @ (U.T @ dU)
     dV_t = dV - V @ (V.T @ dV)
 
-    # Compute Jacobian
-    W = dU_t @ S @ V.T
-    W += U @ S @ dV_t.T
+    # Compute Jacobian over the observed entries only
+    w = (dU_t[rows] * VST[cols]).sum(axis=1)
+    w += (US[rows] * dV_t[cols]).sum(axis=1)
 
     # Project output onto complement of S tangent space
-    w = W[rows, cols]
-    s = _solve_S(U, V, w, observed_mask, tol)
-    w -= jacobian_S(U, V, s, rows, cols)
-
-    return w
+    return _project_S_complement(Q, w)
 
 
-def jacobian_UV_adj(U, V, S, w, observed_mask, tol):
+def jacobian_UV_adj(U, V, w, rows, cols, US, VST, Q):
     """Compute J*(W).
 
     The Jacobian adjoint is defined with respect to the inner product by
@@ -235,19 +307,28 @@ def jacobian_UV_adj(U, V, S, w, observed_mask, tol):
 
     J_UV*(W) = (P_\\Omega(W) V S^T, P_\\Omega(W)^T U S)
 
-    This is projected back to the tangent space of (U, V).
+    which over the observed entries ``k = (i, j)`` is the scatter-accumulation
+
+    dU[i] += w[k] * (V S^T)[j],   dV[j] += w[k] * (U S)[i].
+
+    The input is first projected onto the orthogonal complement of the S tangent
+    space and the output is projected back to the tangent space of (U, V). Both
+    projections are self-adjoint, so this is the exact adjoint of
+    :func:`jacobian_UV`.
     """
 
-    rows, cols = np.where(observed_mask)
+    m, r = U.shape
+    n = V.shape[0]
 
     # Project input onto complement of S tangent space
-    W = np.zeros_like(observed_mask, dtype=U.dtype)
-    s = _solve_S(U, V, w, observed_mask, tol)
-    W[observed_mask] = w - jacobian_S(U, V, s, rows, cols)
+    w = _project_S_complement(Q, w)
 
-    # Compute Jacobian adjoint
-    dU = W @ V @ S.T
-    dV = W.T @ U @ S
+    # Compute Jacobian adjoint by scattering into the factor rows
+    dU = np.empty((m, r), dtype=U.dtype)
+    dV = np.empty((n, r), dtype=V.dtype)
+    for q in range(r):
+        dU[:, q] = np.bincount(rows, weights=w * VST[cols, q], minlength=m)
+        dV[:, q] = np.bincount(cols, weights=w * US[rows, q], minlength=n)
 
     # Project output onto (U, V) tangent space
     dU -= U @ (U.T @ dU)
@@ -271,33 +352,38 @@ def unpack(x, U_shape, V_shape):
     return dU, dV
 
 
-def solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp):
-    """Solve (J_UV* J_UV)dx = -J_UV* R.
+def solve_gauss_newton_step(U, V, rows, cols, US, VST, Q_S, residual, tol, damp):
+    """Solve (J_UV* J_UV)dx = -J_UV* residual.
 
     The Gauss-Newton step is the vector dx = (dU, dV), where dU and dV are
     tangent vectors in their respective Grassmann manifolds. The step is the
-    least-squares solution of the system J_UV dx = -R, and it is computed using
-    the LSMR algorithm.
+    least-squares solution of the system J_UV dx = -residual, and it is
+    computed using the LSMR algorithm.
+
+    ``US``, ``VST`` and ``Q_S`` depend only on the current ``(U, V, S)``, which
+    are fixed for the duration of this call, so they are computed once by the
+    caller and closed over by the matrix-vector products rather than being
+    rebuilt on every LSMR iteration.
     """
 
     nvars = U.size + V.size
 
     def matvec(x):
         dU, dV = unpack(x, U.shape, V.shape)
-        return jacobian_UV(U, V, S, dU, dV, observed_mask, tol)
+        return jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q_S)
 
     def rmatvec(y):
-        dU, dV = jacobian_UV_adj(U, V, S, y, observed_mask, tol)
+        dU, dV = jacobian_UV_adj(U, V, y, rows, cols, US, VST, Q_S)
         return pack(dU, dV)
 
     J_UV = LinearOperator(
-        shape=(np.sum(observed_mask), nvars),
+        shape=(rows.size, nvars),
         matvec=matvec,
         rmatvec=rmatvec,
         dtype=U.dtype,
     )
 
-    step = lsmr(J_UV, -R.ravel(), atol=tol, btol=tol, damp=damp)[0]
+    step = lsmr(J_UV, -residual.ravel(), atol=tol, btol=tol, damp=damp)[0]
 
     return unpack(step, U.shape, V.shape)
 
@@ -505,23 +591,37 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
     # Objective function
     def _compute_obj(U, V):
+        # Gather the factor rows at the observed entries and factorize J_S
+        Ui_curr, Vj_curr = U[rows], V[cols]
+        Q_curr, R_curr, perm_curr = _obs_basis(Ui_curr, Vj_curr)
+
         # Compute optimal S given current U, V
-        S_curr = _solve_S(U, V, b, observed_mask, tol)
+        S_curr = _solve_S(Q_curr, R_curr, perm_curr, b, r)
 
         # Compute current error
-        R_curr = jacobian_S(U, V, S_curr, rows, cols) - b
+        E_curr = jacobian_S(Ui_curr, Vj_curr, S_curr) - b
 
         # Current objective (Frobenius norm of error over observed entries)
-        obj_curr = np.sum(R_curr**2)
+        obj_curr = np.sum(E_curr**2)
 
         return obj_curr
 
     for _ in range(max_iter):
+        # Gather the factor rows at the observed entries. The basis Q of
+        # range(J_S) and its triangular factor depend only on (U, V), so they
+        # are built once per iteration and reused by every Jacobian product.
+        Ui, Vj = U[rows], V[cols]
+        Q_S, R_S, perm_S = _obs_basis(Ui, Vj)
+
         # Compute optimal S given current U, V
-        S = _solve_S(U, V, b, observed_mask, tol)
+        S = _solve_S(Q_S, R_S, perm_S, b, r)
+
+        # Precompute the S-scaled factors used by the Jacobian products
+        US = U @ S
+        VST = V @ S.T
 
         # Compute current error
-        R = jacobian_S(U, V, S, rows, cols) - b
+        R = jacobian_S(Ui, Vj, S) - b
 
         # Current objective (Frobenius norm of error over observed entries)
         obj = np.sum(R**2)
@@ -547,7 +647,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         # Update via gradient descent with line search
         if method == "GD":
             # Compute gradient directions
-            dU, dV = jacobian_UV_adj(U, V, S, -R, observed_mask, tol)
+            dU, dV = jacobian_UV_adj(U, V, -R, rows, cols, US, VST, Q_S)
 
             # Perform backtracking line search
             U, V, obj, alpha = line_search(
@@ -557,7 +657,9 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         # Update via Gauss-Newton
         if method == "GN":
             # Compute Gauss-Newton step
-            dU, dV = solve_gauss_newton_step(U, V, S, observed_mask, R, tol, damp)
+            dU, dV = solve_gauss_newton_step(
+                U, V, rows, cols, US, VST, Q_S, R, tol, damp
+            )
 
             # Retract updates back to Grassmann manifold
             U = retract_grassmann(U, dU)
