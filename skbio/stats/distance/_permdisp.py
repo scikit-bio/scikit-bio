@@ -376,6 +376,9 @@ def permdisp(
         If, when using the spatial median test, the pcoa ordination is not of
         type np.float32 or np.float64, the spatial median function will fail
         and the centroid test should be used instead
+    TypeError
+        If, when using the centroid test, the pcoa ordination is not of a
+        numeric type.
     ValueError
         If the test is not centroid or median, or if method is not eigh or fsvd.
     TypeError
@@ -599,19 +602,25 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
             "Number of permutations must be greater than or equal to zero."
         )
 
-    # geomedian_axis_one is fused over float32 and float64, so Cython's median
-    # path raises on any other dtype, and this rejects the same set so the two
-    # engines agree there. The check is not conditioned on the test, so it also
-    # covers test="centroid", which never reaches that kernel and which Cython
-    # computes for any numeric dtype; the Numba path is stricter in that case.
-    if np.asarray(sample_data).dtype not in (np.float32, np.float64):
-        raise TypeError(
-            "Ordination coordinates must be of type np.float32 or np.float64."
-        )
+    # Reject exactly what the Cython path rejects, so that engine= selects an
+    # implementation without changing which inputs are legal. The median test
+    # reaches geomedian_axis_one, which is fused over float32 and float64 and
+    # raises on anything else. The centroid test never reaches that kernel and
+    # is computed with numpy, which handles any numeric dtype but not object,
+    # string or datetime64 arrays.
+    dtype = np.asarray(sample_data).dtype
+    if test == "median":
+        if dtype not in (np.float32, np.float64):
+            raise TypeError(
+                "Ordination coordinates must be of type np.float32 or np.float64."
+            )
+    elif not (np.issubdtype(dtype, np.number) or dtype == np.bool_):
+        raise TypeError("Ordination coordinates must be of a numeric type.")
 
-    # An accepted float32 ordination is accumulated in float64, for the same
-    # reason as #2509. Cython computes in the input dtype instead, so the two
-    # engines differ by float32 precision on such an input.
+    # The kernels accumulate in float64 whatever comes in, for the same reason
+    # as #2509. Cython computes in the input dtype instead, so the engines
+    # differ by that dtype's precision on a float32 or float16 ordination.
+    # Integers agree, since numpy's mean promotes them to float64 anyway.
     samples = np.ascontiguousarray(sample_data, dtype=np.float64)
     codes = np.ascontiguousarray(grouping, dtype=np.int32)
     sample_size = codes.shape[0]
