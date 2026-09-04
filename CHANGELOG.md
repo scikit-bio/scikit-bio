@@ -21,6 +21,7 @@
 * The Numba backend for `permanova` now also accelerates condensed-form distance matrices, which previously fell back to the slower per-permutation kernel instead of the single-pass row-tile kernel.
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
 * On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
+* Vectorized Welch's *t*-test in `dirmult_ttest`, replacing the per-draw statsmodels `CompareMeans` object construction with a closed-form NumPy/SciPy computation across all posterior draws. Results are numerically identical to the previous implementation while avoiding hundreds of Python-level object constructions per call. `dirmult_ttest` now also raises `ValueError` for `draws < 1`, rather than the previous implementation's uncontrolled empty-array behavior.
 
 ### Bug Fixes
 

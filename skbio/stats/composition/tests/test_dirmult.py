@@ -14,7 +14,7 @@ import pandas as pd
 import pandas.testing as pdt
 
 from skbio.stats.composition._dirmult import (
-    dirmult_ttest, dirmult_lme,
+    dirmult_ttest, dirmult_lme, _welch_draw_stats,
 )
 
 
@@ -125,6 +125,46 @@ class DirMultTTestTests(TestCase):
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
+    def test_dirmult_ttest_welch_closed_form_parity(self):
+        # The production closed-form Welch's t-test statistics must reproduce
+        # statsmodels' CompareMeans (usevar="unequal", two-sided, alpha=0.05)
+        # exactly. Calls _welch_draw_stats directly (the actual per-draw
+        # helper dirmult_ttest uses), rather than re-deriving the formula, so
+        # this test exercises the shipped code path.
+        try:
+            from statsmodels.stats.weightstats import CompareMeans
+        except ImportError:
+            self.skipTest("statsmodels is not installed.")
+        from scipy.stats import t as t_dist
+
+        rng = np.random.default_rng(0)
+        n1, n2, m = 5, 4, 6
+        trt = rng.normal(size=(n1, m))
+        ref = rng.normal(size=(n2, m))
+
+        diff = np.empty(m)
+        se = np.empty(m)
+        dof = np.empty(m)
+        work = np.empty(m)
+        _welch_draw_stats(trt, ref, n1, n2, diff, se, dof, work)
+        tstat = diff / se
+        pval = 2.0 * t_dist.sf(np.abs(tstat), dof)
+        tcrit = t_dist.ppf(0.975, dof)
+        lower = diff - tcrit * se
+        upper = diff + tcrit * se
+
+        # statsmodels reference
+        cm = CompareMeans.from_data(trt, ref)
+        t_sm, p_sm, _ = cm.ttest_ind(value=0, alternative="two-sided", usevar="unequal")
+        lo_sm, hi_sm = cm.tconfint_diff(
+            alpha=0.05, alternative="two-sided", usevar="unequal"
+        )
+
+        npt.assert_allclose(tstat, t_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(pval, p_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(lower, lo_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(upper, hi_sm, rtol=1e-12, atol=1e-12)
+
     def test_dirmult_ttest_output(self):
         exp_lfc = np.log2(self.p2 / self.p1)
         exp_lfc = exp_lfc - exp_lfc.mean()
@@ -187,6 +227,12 @@ class DirMultTTestTests(TestCase):
         self.table.iloc[0, 0] = -5  # Modify a value to be negative
         with self.assertRaises(ValueError):
             dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_invalid_draws(self):
+        for draws in (0, -1, 2.5, float("nan")):
+            with self.assertRaises(ValueError):
+                dirmult_ttest(self.table, self.grouping, self.treatment,
+                              self.reference, draws=draws)
 
     def test_dirmult_ttest_missing_values_in_grouping(self):
         self.grouping[1] = np.nan  # Introduce a missing value in grouping
