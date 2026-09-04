@@ -128,6 +128,23 @@ class TestNucleotideSequence(unittest.TestCase):
             with self.assertRaises(AttributeError):
                 constructor('').complement_map = {'W': 'X'}
 
+    def test_to_definites(self):
+        # DNA and RNA define no non-canonical characters, so the default
+        # noncanonical=True must give the same result as noncanonical=False.
+        dna_exp = (DNA, 'ACGTRYN-.',
+                   'ACGTNNN-.', 'ACGT----.', 'ACGT-.', 'ACGTAAA-.')
+        rna_exp = (RNA, 'ACGURYN-.',
+                   'ACGUNNN-.', 'ACGU----.', 'ACGU-.', 'ACGUAAA-.')
+
+        for constructor, seq_str, wild, gap, dele, chara in (dna_exp, rna_exp):
+            seq = constructor(seq_str)
+            self.assertEqual(str(seq.to_definites()), wild)
+            self.assertEqual(str(seq.to_definites(noncanonical=True)), wild)
+            self.assertEqual(str(seq.to_definites(noncanonical=False)), wild)
+            self.assertEqual(str(seq.to_definites(degenerate='gap')), gap)
+            self.assertEqual(str(seq.to_definites(degenerate='del')), dele)
+            self.assertEqual(str(seq.to_definites(degenerate='A')), chara)
+
     def test_translate_ncbi_table_id(self):
         for seq in RNA('AAAUUUAUGCAU'), DNA('AAATTTATGCAT'):
             # default
