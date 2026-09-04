@@ -27,13 +27,6 @@ class TestProtein(unittest.TestCase):
         with self.assertRaises(AttributeError):
             Protein('').alphabet = set("ABCD")
 
-    # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
-    # is removed
-    def test_nondegenerate_chars(self):
-        exp = set("ACDEFGHIKLMNOPQRSTUVWY")
-        self.assertEqual(Protein("").nondegenerate_chars, exp)
-        self.assertEqual(Protein.nondegenerate_chars, exp)
-
     def test_definite_chars(self):
         exp = set("ACDEFGHIKLMNOPQRSTUVWY")
         self.assertEqual(Protein("").definite_chars, exp)
