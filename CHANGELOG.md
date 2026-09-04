@@ -37,6 +37,10 @@
 * Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
 * `GeneticCode.from_ncbi` now recognizes NCBI genetic code table 15 (Blepharisma Macronuclear) and tables 26 through 33 (Pachysolen tannophilus, Karyorelict, Condylostoma, Mesodinium, Peritrich, and Blastocrithidia Nuclear, Balanophoraceae Plastid, and Cephalodiscidae Mitochondrial), all of which were missing from scikit-bio's table. Also added `GTG` as a recognized alternative start codon for table 3 (Yeast Mitochondrial), matching a later revision of NCBI's table ([#1659](https://github.com/scikit-bio/scikit-bio/issues/1659)).
 
+### Bug Fixes
+
+* Fixed the GFF3 reader dropping or duplicating features when a sequence ID's records are not contiguous in the file. GFF3 does not require features to be grouped by sequence ID, but the reader previously only merged consecutive lines. As a result, reading a specific `seq_id` returned only its first block of features, and the generator reader yielded the same `seq_id` multiple times. All features for a sequence ID are now merged regardless of their order in the file ([#2501](https://github.com/scikit-bio/scikit-bio/pull/2501)).
+
 ## Version 0.7.3
 
 ### Features
