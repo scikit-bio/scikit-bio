@@ -21,6 +21,8 @@ cimport cython
 from ._bp_binary_tree cimport *
 from ._ba cimport *
 
+from ..._base import SkbioObject
+
 cnp.import_array()
 
 cdef extern from "Python.h":
@@ -810,6 +812,13 @@ cdef class BPTree:
     def __len__(self):
         """The number of nodes in the tree."""
         return self.size / 2
+
+    def __str__(self):
+        """Return a concise summary of the tree.
+
+        Implements the abstract ``__str__`` required of scikit-bio objects.
+        """
+        return self.__repr__()
 
     def __repr__(self):
         """Returns summary of the tree.
@@ -1726,3 +1735,13 @@ cdef class BPTree:
             result = self.scan_block_backward(i, k, self._rmm.b, d)
 
         return result
+
+
+# Register BPTree as a virtual subclass of SkbioObject so that
+# ``isinstance(bp, SkbioObject)`` is True and BPTree participates in the skbio
+# class hierarchy like TreeNode. A Cython ``cdef class`` cannot directly
+# subclass a pure-Python ABC ("first base is not an extension type"), and
+# a pure-Python facade would tax every hot-path call; virtual registration
+# gives the hierarchy membership at zero runtime/memory cost while BPTree stays
+# fully compiled.
+SkbioObject.register(BPTree)
