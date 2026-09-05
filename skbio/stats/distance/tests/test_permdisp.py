@@ -626,9 +626,11 @@ class PERMDISPEngineTests(TestCase):
     @numba_code
     def test_non_float_ordination_raises_like_cython(self):
         # geomedian_axis_one only has single and double precision signatures,
-        # so the cython path raises on anything else. The numba kernels would
-        # happily widen an integer array and return a number instead, which is
-        # worse than the error, so the engine refuses the same inputs.
+        # so the cython median path raises on anything else. The numba kernels
+        # would happily widen an integer array and return a number instead,
+        # which is worse than the error, so the engine refuses the same inputs.
+        # The centroid test never reaches that kernel and cython computes it
+        # for any numeric dtype, so both engines have to accept those.
         ordination = pcoa(self.dm, method="eigh", dimensions=10)
 
         def recast(dtype):
@@ -648,6 +650,37 @@ class PERMDISPEngineTests(TestCase):
         for dtype in ("float32", "float64"):
             for engine in ("cython", "numba"):
                 permdisp(recast(dtype), self.grouping, test="median",
+                         permutations=0, engine=engine)
+        # the centroid test does not use geomedian_axis_one, so an integer
+        # ordination is computed rather than refused, and the two engines
+        # agree because numpy's mean promotes integers to float64. The pcoa
+        # coordinates are all smaller than one, so they have to be scaled
+        # before casting or every one of them truncates to zero and the
+        # comparison below is between two NaNs.
+        scaled = ordination.samples * 1000
+        for dtype in ("int64", "int32"):
+            as_int = OrdinationResults(
+                short_method_name=ordination.short_method_name,
+                long_method_name=ordination.long_method_name,
+                eigvals=ordination.eigvals,
+                samples=scaled.astype(dtype),
+                proportion_explained=ordination.proportion_explained)
+            obs = [permdisp(as_int, self.grouping, test="centroid",
+                            permutations=99, seed=42, engine=engine)
+                   for engine in ("cython", "numba")]
+            self.assertTrue(np.isfinite(obs[0]["test statistic"]))
+            npt.assert_allclose(obs[0]["test statistic"],
+                                obs[1]["test statistic"], rtol=1e-12)
+            # no permuted statistic lands within 1e-4 of the observed one on
+            # this fixture, so the ">=" counts cannot differ over a last-bit
+            # disagreement and the p-values are exactly equal.
+            self.assertEqual(obs[0]["p-value"], obs[1]["p-value"])
+        # a dtype numpy cannot do arithmetic on is refused by both engines
+        # rather than being quietly coerced by the numba path. Strings reach
+        # this as object too, since that is how pandas stores them.
+        for engine in ("cython", "numba"):
+            with self.assertRaises(TypeError):
+                permdisp(recast("object"), self.grouping, test="centroid",
                          permutations=0, engine=engine)
 
     @numba_code
