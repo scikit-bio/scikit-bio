@@ -117,7 +117,7 @@ def _adjust_pvalues(pval, method="bh", *, axis=0, n_tests=None, out=None):
         Real p-values in [0, 1], optionally containing NaNs.
     method : str or None, optional
         Method to correct p-values. Options are: Bonferroni ("bonf" or "bonferroni"),
-        Holm-Boniferroni ("holm" or "holm-bonferroni"), Benjamini-Hochberg ("bh" or
+        Holm-Bonferroni ("holm" or "holm-bonferroni"), Benjamini-Hochberg ("bh" or
         "benjamini-hochberg") (default), and Benjamini-Yekutieli ("by" or
         "benjamini-yekutieli"), or any method supported by statsmodels' `multipletests`
         function. Case-insensitive. If None, no correction will be performed.

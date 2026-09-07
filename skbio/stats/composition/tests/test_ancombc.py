@@ -282,7 +282,7 @@ class CoreTests(TestCase):
 
     def test_estimate_params_dense(self):
         # NOTE: Numerical accuracy is evaluated up to 5 decimal places. This is because
-        # occassionally slightly different results will be generated during the CI
+        # occasionally slightly different results will be generated during the CI
         # workflow. Although SciPy optimizers should be deterministic, this happens in
         # some cases. The initial estimation of parameters is usually precise, but the
         # subsequent iterative optimization is prone to this problem.

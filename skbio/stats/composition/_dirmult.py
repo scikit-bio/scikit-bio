@@ -184,7 +184,7 @@ def dirmult_ttest(
         *p*-values. Default is 128.
     p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are: Bonferroni
-        ("bonf"/"bonferroni"), Holm-Boniferroni ("holm"/"holm-bonferroni", default),
+        ("bonf"/"bonferroni"), Holm-Bonferroni ("holm"/"holm-bonferroni", default),
         Benjamini-Hochberg ("bh"/"benjamini-hochberg"), and Benjamini-Yekutieli
         ("by"/"benjamini-yekutieli"), or any method supported by statsmodels'
         :func:`~statsmodels.stats.multitest.multipletests` function. Case-insensitive.
@@ -495,7 +495,7 @@ def dirmult_lme(
         Default is 128.
     p_adjust : str, optional
         Method to correct *p*-values for multiple comparisons. Options are: Bonferroni
-        ("bonf"/"bonferroni"), Holm-Boniferroni ("holm"/"holm-bonferroni", default),
+        ("bonf"/"bonferroni"), Holm-Bonferroni ("holm"/"holm-bonferroni", default),
         Benjamini-Hochberg ("bh"/"benjamini-hochberg"), and Benjamini-Yekutieli
         ("by"/"benjamini-yekutieli"), or any method supported by statsmodels'
         :func:`~statsmodels.stats.multitest.multipletests` function. Case-insensitive.
