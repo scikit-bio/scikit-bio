@@ -12,7 +12,7 @@ import pandas as pd
 from skbio.util._decorator import params_aliased
 from skbio.table._tabular import _ingest_table
 from ._base import _check_composition
-from ._utils import _check_grouping, _check_sig_test, _check_p_adjust
+from ._utils import _check_grouping, _check_sig_test, _adjust_pvalues
 
 
 @params_aliased(
@@ -81,11 +81,12 @@ def ancom(
         be significantly different. This can can be anywhere between 0 and 1
         exclusive.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are
-        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
-        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
-        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
-        Case-insensitive. If None, no correction will be performed.
+        Method to correct *p*-values for multiple comparisons. Options are: Bonferroni
+        ("bonf"/"bonferroni"), Holm-Boniferroni ("holm"/"holm-bonferroni", default),
+        Benjamini-Hochberg ("bh"/"benjamini-hochberg"), and Benjamini-Yekutieli
+        ("by"/"benjamini-yekutieli"), or any method supported by statsmodels'
+        :func:`~statsmodels.stats.multitest.multipletests` function. Case-insensitive.
+        If None, no correction will be performed.
     sig_test : str or callable, optional
         A function to test for significance between classes. It must be able to
         accept at least two vectors of floats and returns a test statistic and
@@ -323,10 +324,8 @@ def ancom(
     # compare log ratios
     pval_mat = _log_compare(matrix, labels, n_groups, test_f)
 
-    # correct for multiple testing problem
-    if p_adjust is not None:
-        func = _check_p_adjust(p_adjust)
-        pval_mat = np.apply_along_axis(func, 1, pval_mat)
+    # multiple testing correction
+    _adjust_pvalues(pval_mat, p_adjust, axis=1, out=pval_mat)
 
     np.fill_diagonal(pval_mat, 1)
 

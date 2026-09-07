@@ -13,8 +13,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 
 from skbio.sequence.distance import (
     _metric_specs, _char_hash, _char_freqs, _check_freqs, hamming, pdist,

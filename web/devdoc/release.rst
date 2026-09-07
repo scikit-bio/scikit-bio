@@ -69,7 +69,7 @@ This process typically takes some time, but it is well worth the time to ensure 
 Manually check that the correct wheels are built by downloading the artifacts from the workflow run or visually checking the output from ``cibuildwheel`` on the GitHub Actions workflow page.
 If downloading, inspect the zip file containing the wheels provided by workflow for each platform. The zip file should contain all the wheels you are trying to build.
 
-If you find that the desired wheels are not present in the zip files, or you are coming accross unexpected errors in the wheel building process, there are a few places to check:
+If you find that the desired wheels are not present in the zip files, or you are coming across unexpected errors in the wheel building process, there are a few places to check:
 
 1. Check that you have updated the ``cibuildwheel`` portion of the ``pyproject.toml`` configuration file to include all supported Python versions and any other information you want.
 

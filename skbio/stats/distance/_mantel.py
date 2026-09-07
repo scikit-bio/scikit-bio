@@ -18,9 +18,15 @@ import scipy.special
 from scipy.stats import kendalltau, ConstantInputWarning, NearConstantInputWarning
 
 from ._cutils import mantel_perm_pearsonr_cy, mantel_perm_pearsonr_condensed_cy
+from ._gpu import _numba_gpu_module_for, _mark_gpu_unavailable
+from ._mantel_gpu import _run_mantel_gpu
 from skbio.stats.distance import DistanceMatrix
 from skbio.util import get_rng
+from skbio.util._array import ingest_array, _get_array
+from skbio.util._decorator import array_api_doc
 from skbio._config import _resolve_engine
+
+import array_api_compat as _aac
 
 try:
     from numba import njit, prange
@@ -156,6 +162,7 @@ if NUMBA_AVAILABLE:
             permuted_stats[p] = my_ps
 
 
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def mantel(
     x: DistanceMatrix | ArrayLike,
     y: DistanceMatrix | ArrayLike,
@@ -259,7 +266,13 @@ def mantel(
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
         default is used (see :func:`skbio.set_config`). Only applies to the
-        ``"pearson"`` and ``"spearman"`` methods.
+        ``"pearson"`` and ``"spearman"`` methods. When both distance matrices
+        are resident on a CuPy- or PyTorch-backed GPU (CUDA or ROCm) and
+        ``engine="numba"``, a fused GPU kernel is used; matrices on other
+        backends use the array-API path instead (see Notes for the
+        ROCm-PyTorch case).
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -300,6 +313,22 @@ def mantel(
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
+
+    On GPU-resident distance matrices with ``engine="numba"``, a fused GPU kernel
+    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
+    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
+    ROCm PyTorch has been imported in the same process; those matrices fall back
+    to the array-API path, which runs on the device regardless. The result is
+    identical across all paths.
+
+    With ``engine="numba"``, GPU buffers must belong to the default device. On a
+    system with several devices, the default must be changed to match the buffer
+    ownership before this function is invoked, through
+    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    A mismatch is not reported when the kernel is launched, and on ROCm it has
+    been observed to leave the GPU context unusable for the rest of the process.
+    The array-API path, taken when ``engine="numba"`` is not requested, honors
+    whichever device the input is on.
 
     ``np.nan`` will be returned for the p-value if `permutations` is zero or if
     the correlation coefficient is ``np.nan``. The correlation coefficient will
@@ -412,8 +441,6 @@ def mantel(
     ``array_like`` because there is no notion of IDs.
 
     """
-    rng = get_rng(seed)
-
     if method in ("pearson", "spearman"):
         special = True
     elif method == "kendalltau":
@@ -431,6 +458,57 @@ def mantel(
     if alternative not in ("two-sided", "greater", "less"):
         raise ValueError("Invalid alternative hypothesis '%s'." % alternative)
 
+    # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer is
+    # dispatched to the backend-agnostic xp path for pearson/spearman so the
+    # matrices stay on their device. kendalltau has no xp path and falls through
+    # to the host/scipy route below, where _order_dms materializes on host.
+    x_is_xp = isinstance(x, DistanceMatrix) and not _aac.is_numpy_array(x.data)
+    y_is_xp = isinstance(y, DistanceMatrix) and not _aac.is_numpy_array(y.data)
+
+    if special and (x_is_xp or y_is_xp):
+        if not (x_is_xp and y_is_xp) or (
+            _aac.array_namespace(x.data) is not _aac.array_namespace(y.data)
+        ):
+            # mixed or mismatched backends: fall back to the NumPy path below with
+            # a warning rather than a hard failure.
+            warn(
+                "x and y are not both DistanceMatrix objects on the same array "
+                "backend; falling back to the NumPy path.",
+                UserWarning,
+            )
+        else:
+            # both are non-NumPy DistanceMatrix objects on the same backend: align
+            # ids exactly like the NumPy path; the reorder/filter stays on the
+            # input's device (distmat_reorder is array-API aware).
+            x, y = _order_dms(x, y, strict=strict, lookup=lookup)
+            # With engine="numba" and a matching Numba GPU backend, run the fused
+            # GPU kernel on the device-resident matrices; otherwise take the
+            # backend-agnostic array-API path.
+            gpu = _numba_gpu_module_for(x.data) if engine == "numba" else None
+            if gpu is not None:
+                try:
+                    return _run_mantel_gpu(
+                        gpu, x.data, y.data, permutations, seed, alternative,
+                        spearman=(method == "spearman"),
+                    )
+                except Exception:
+                    # The fused kernel could not build/run on this stack; record
+                    # it and fall back to the array-API path (correct anywhere).
+                    _mark_gpu_unavailable(x.data)
+            return _mantel_stats_pearson_xp(
+                x.data, y.data, permutations, seed, alternative,
+                spearman=(method == "spearman"),
+            )
+
+    # Default NumPy path: reached for kendalltau (no xp path), when neither input
+    # is a non-NumPy array, or when the inputs were not all on the same backend
+    # (the fallback above). A non-NumPy DistanceMatrix is materialized on the host
+    # here (SciPy's kendalltau is host-only, and _order_dms runs on host).
+    if x_is_xp:
+        x = DistanceMatrix(_get_array(x.data, to_numpy=True), x.ids)
+    if y_is_xp:
+        y = DistanceMatrix(_get_array(y.data, to_numpy=True), y.ids)
+
     x, y = _order_dms(x, y, strict=strict, lookup=lookup)
 
     n = x.shape[0]
@@ -443,11 +521,11 @@ def mantel(
     if special:
         if method == "pearson":
             orig_stat, comp_stat, permuted_stats = _mantel_stats_pearson(
-                x, y, permutations, rng, engine
+                x, y, permutations, seed, engine
             )
         else:
             orig_stat, comp_stat, permuted_stats = _mantel_stats_spearman(
-                x, y, permutations, rng, engine
+                x, y, permutations, seed, engine
             )
 
     else:
@@ -459,6 +537,9 @@ def mantel(
 
         permuted_stats = []
         if not (permutations == 0 or np.isnan(orig_stat)):
+            # This path permutes inside the loop, so it needs one generator that
+            # advances across iterations; a seed would repeat the same draw.
+            rng = get_rng(seed)
             perm_gen = (
                 corr_func(x.permute(condensed=True, seed=rng), y_flat)[0]
                 for _ in range(permutations)
@@ -480,6 +561,129 @@ def mantel(
         p_value = (count_better + 1) / (permutations + 1)
 
     return orig_stat, p_value, n
+
+
+def _upper_tri_xp(xp, n, device=None):
+    """Row-major upper-triangle (i < j) index vectors, matching condensed order."""
+    idx = xp.arange(n, device=device)
+    ones = xp.ones(n, dtype=idx.dtype, device=device)
+    ii = idx[:, None] * ones[None, :]
+    jj = ones[:, None] * idx[None, :]
+    mask = idx[:, None] < idx[None, :]
+    return xp.astype(ii[mask], idx.dtype), xp.astype(jj[mask], idx.dtype)
+
+
+def _xp_rank_average(xp, a):
+    """Average-tie ranks, matching ``scipy.stats.rankdata`` (method='average')."""
+    n = a.shape[0]
+    dev = _device(a)
+    sorter = xp.argsort(a, stable=True)
+    inv = xp.argsort(sorter)  # inverse permutation without item assignment
+    a_sorted = a[sorter]
+    obs = xp.concat([xp.asarray([True], device=dev), a_sorted[1:] != a_sorted[:-1]])
+    dense = xp.cumulative_sum(xp.astype(obs, xp.int64), axis=0)[inv]
+    count_nz = xp.nonzero(obs)[0]
+    count = xp.concat([count_nz, xp.asarray([n], dtype=count_nz.dtype, device=dev)])
+    return 0.5 * (
+        xp.astype(count[dense], xp.float64)
+        + xp.astype(count[dense - 1], xp.float64)
+        + 1.0
+    )
+
+
+def _mantel_stats_pearson_xp(x, y, permutations, seed, alternative, spearman=False):
+    """Mantel pearson/spearman result in the ``xp`` namespace.
+
+    Backend-agnostic equivalent of ``_mantel_stats_pearson``/``_spearman`` for
+    full (non-condensed) array-API matrices. Matches the RNG usage of the NumPy
+    path (identity permutation first, then ``permutations`` calls to
+    ``rng.permutation(n)``) so p-values are reproducible and identical.
+
+    Returns ``(orig_stat, p_value, n)``, matching ``mantel``'s return.
+    """
+    rng = get_rng(seed)
+    xp, X, Y = ingest_array(x, y)
+    if X.shape != Y.shape:
+        raise ValueError("Distance matrices must have the same shape.")
+    if (X.ndim != 2) or (X.shape[0] != X.shape[1]):
+        raise ValueError("Distance matrix must be a square 2-D array.")
+    n = X.shape[0]
+    if n < 3:
+        raise ValueError(
+            "Distance matrices must have at least 3 matching IDs "
+            "between them (i.e., minimum 3x3 in size)."
+        )
+
+    iu0, iu1 = _upper_tri_xp(xp, n, device=_device(X))
+    x_flat = X[iu0, iu1]
+    y_flat = Y[iu0, iu1]
+
+    if spearman:
+        x_flat = _xp_rank_average(xp, x_flat)
+        y_flat = _xp_rank_average(xp, y_flat)
+        # rebuild the ranked symmetric matrix so permuted pairs can be gathered
+        # (one-time host assembly; on-device gather is a possible follow-up).
+        xr = _get_array(x_flat, to_numpy=True)
+        i0, j0 = _get_array(iu0, to_numpy=True), _get_array(iu1, to_numpy=True)
+        full = np.zeros((n, n), dtype=np.float64)
+        full[i0, j0] = xr
+        full[j0, i0] = xr
+        Xsrc = xp.asarray(full, device=_device(X))
+    else:
+        Xsrc = X
+
+    # constant input -> correlation undefined (matches scipy/skbio behavior)
+    if bool(xp.all(x_flat == x_flat[0])) or bool(xp.all(y_flat == y_flat[0])):
+        warn(ConstantInputWarning())
+        return np.nan, np.nan, n
+
+    xmean = xp.mean(x_flat)
+    normxm = xp.sqrt(xp.sum((x_flat - xmean) ** 2))
+    ymean = xp.mean(y_flat)
+    normym = xp.sqrt(xp.sum((y_flat - ymean) ** 2))
+    ym_norm = (y_flat - ymean) / normym
+
+    # near-constant input -> loss of precision in r (matches the NumPy path)
+    threshold = 1e-13
+    if (float(normxm) < threshold * abs(float(xmean))) or (
+        float(normym) < threshold * abs(float(ymean))
+    ):
+        warn(NearConstantInputWarning())
+
+    def _corr(cond):
+        s = float(xp.sum(((cond - xmean) / normxm) * ym_norm))
+        return max(min(s, 1.0), -1.0)
+
+    orig_stat = _corr(x_flat)
+    comp_stat = orig_stat
+    permuted_stats = []
+    if not (permutations == 0 or np.isnan(orig_stat)):
+        # identity permutation gives comp_stat (matches perm_order[0] in the
+        # NumPy path); the RNG is then consumed exactly `permutations` times.
+        idx = xp.arange(n, device=_device(X))
+        comp_stat = _corr(Xsrc[idx[iu0], idx[iu1]])
+        permuted_stats = np.empty(permutations, dtype=np.float64)
+        for k in range(permutations):
+            pp = xp.asarray(rng.permutation(n), device=_device(X))
+            permuted_stats[k] = _corr(Xsrc[pp[iu0], pp[iu1]])
+
+    # p-value from the permutation distribution (matches the NumPy path exactly)
+    if permutations == 0 or np.isnan(orig_stat):
+        p_value = np.nan
+    else:
+        if alternative == "two-sided":
+            count_better = (np.absolute(permuted_stats) >= np.absolute(comp_stat)).sum()
+        elif alternative == "greater":
+            count_better = (permuted_stats >= comp_stat).sum()
+        else:
+            count_better = (permuted_stats <= comp_stat).sum()
+        p_value = (count_better + 1) / (permutations + 1)
+    return orig_stat, p_value, n
+
+
+def _device(arr):
+    """Best-effort device of an array-API array (None if not exposed)."""
+    return getattr(arr, "device", None)
 
 
 def _mantel_stats_pearson_flat(x, y_flat, permutations, seed=None, engine=None):

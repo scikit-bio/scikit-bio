@@ -12,9 +12,6 @@ on:
 env:
   latest_python: "3.14"
 
-# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
-# of least privilege). This workflow only checks out the repo, runs tests, and
-# uploads coverage to Codecov via CODECOV_TOKEN.
 permissions:
   contents: read
 
@@ -79,7 +76,7 @@ jobs:
       - name: Generate coverage reports
         if: runner.os == 'Linux' && runner.arch == 'X64'
         run: |
-          cd ci && coverage lcov --rcfile ../.coveragerc
+          cd ci && coverage lcov --rcfile ../pyproject.toml
       - name: Upload coverage reports to Codecov
         if: runner.os == 'Linux' && runner.arch == 'X64'
         uses: codecov/codecov-action@v5

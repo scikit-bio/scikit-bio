@@ -21,8 +21,7 @@ import scipy.stats
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.alignment import AlignPath
 from skbio.sequence import GrammaredSequence
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests)
@@ -3456,8 +3455,9 @@ class TestGapFrequencies(unittest.TestCase):
     def test_no_positions_relative(self):
         msa = TabularMSA([DNA('')])
 
-        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
-        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+        with np.errstate(divide='raise', invalid='raise'):
+            seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+            pos_freqs = msa.gap_frequencies(axis='position', relative=True)
 
         npt.assert_array_equal(np.array([]), seq_freqs)
         npt.assert_array_equal(np.array([np.nan]), pos_freqs)

@@ -91,22 +91,22 @@ estimate for the critical value of 0.01, and a critical value of 0.001.
 
 >>> from skbio.stats.power import subsample_power
 >>> pwr_100, counts_100 = subsample_power(
-...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     test=f, samples=samples, max_counts=10, min_counts=4, counts_interval=1,
 ...     draw_mode='matched', alpha_pwr=0.1, num_iter=25, seed=rng)
 >>> counts_100
-array([3, 4, 5, 6, 7, 8, 9])
+array([4, 5, 6, 7, 8, 9])
 >>> pwr_100.mean(0)
-array([ 0.512,  0.936,  0.984,  1.   ,  1.   ,  1.   ,  1.   ])
+array([ 0.94 ,  0.992,  1.   ,  1.   ,  1.   ,  1.   ])
 >>> pwr_010, counts_010 = subsample_power(
-...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     test=f, samples=samples, max_counts=10, min_counts=4, counts_interval=1,
 ...     draw_mode='matched', alpha_pwr=0.01, num_iter=25, seed=rng)
 >>> pwr_010.mean(0)
-array([ 0.072,  0.416,  0.888,  0.964,  1.   ,  0.996,  1.   ])
+array([ 0.4  ,  0.844,  0.956,  0.988,  1.   ,  1.   ])
 >>> pwr_001, counts_001 = subsample_power(
-...     test=f, samples=samples, max_counts=10, min_counts=3, counts_interval=1,
+...     test=f, samples=samples, max_counts=10, min_counts=4, counts_interval=1,
 ...     draw_mode='matched', alpha_pwr=0.001, num_iter=25, seed=rng)
 >>> pwr_001.mean(0)
-array([ 0.   ,  0.044,  0.204,  0.796,  0.948,  0.996,  1.   ])
+array([ 0.044,  0.244,  0.768,  0.94 ,  0.984,  1.   ])
 
 Based on this power estimate, as we increase our confidence that we have not
 committed a type I error and identified a false positive, the number of samples

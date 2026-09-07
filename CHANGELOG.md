@@ -4,19 +4,39 @@
 
 ### Features
 
-* Add optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
+* Added optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
+* Introduced transition probability matrix computation ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
+* Added inverse robust center log ratio (`rclr_inv`) transformation ([#2527](https://github.com/scikit-bio/scikit-bio/pull/2527)).
 * `TreeNode.prune` and `TreeNode.bifurcate` now accept an `inplace` parameter (default `True`, preserving the previous in-place behavior) and return the resulting tree. This makes them consistent with other whole-tree methods such as `shear` and `root_at_midpoint`. Set `inplace=False` to leave the original tree unchanged and operate on a copy ([#2495](https://github.com/scikit-bio/scikit-bio/pull/2495)).
+* Transition probability matrix computation has been introduced ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
+* `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
+* `permdisp` now accepts `engine="numba"`, which evaluates the permutation loop in batched Numba calls for both the centroid and the median test. The geometric median used by the median test was ported to Numba alongside it. Permutations are drawn in the same order as the Cython path, so p-values are unchanged ([#2547](https://github.com/scikit-bio/scikit-bio/pull/2547)).
+* Added a Numba GPU backend for `permanova` and `mantel`. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused single-source kernel runs on the device (`numba.cuda` on NVIDIA, `numba.hip` on AMD), falling back to the array-API path when the kernel is unavailable [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 
 ### Performance enhancements
 
+* `beta_diversity` gained an optional Numba engine (`engine="numba"`) for the `unweighted_unifrac` metric, computing the full distance matrix in a single parallel pass and avoiding the per-pair Python-callable overhead of the SciPy `pdist` path.
+* `beta_diversity` now also supports the Numba engine (`engine="numba"`) for the `weighted_unifrac` metric, covering both the normalized and unnormalized variants, computing the full distance matrix in a single parallel pass instead of per-pair SciPy `pdist` dispatch.
 * When using the Numba backend, Permanova is up to 8x faster [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488).
+* The Numba backend for `permanova` now also accelerates condensed-form distance matrices, which previously fell back to the slower per-permutation kernel instead of the single-pass row-tile kernel.
 * Improved `TreeNode.copy` such that it can handle node cross-references correctly: If a node attribute refers to another node in the tree, the copied node attribute will be redirected to the corresponding node in the new tree ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
-
+* On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
+* Vectorized Welch's *t*-test in `dirmult_ttest`, replacing the per-draw statsmodels `CompareMeans` object construction with a closed-form NumPy/SciPy computation across all posterior draws. Results are numerically identical to the previous implementation while avoiding hundreds of Python-level object constructions per call. `dirmult_ttest` now also raises `ValueError` for `draws < 1`, rather than the previous implementation's uncontrolled empty-array behavior.
+* Added efficient native implementations of Bonferroni, Holm-Boniferroni, Benjamini-Hochberg, and Benjamini-Yekutieli methods for multiple testing correction of *p*-values, avoiding statsmodels dispatch. This improved the efficiency of differential abundance tests (`dirmult_ttest`, `dirmult_lme`, `ancom`, `ancombc` and `ancombc2`). NaN p-values are excluded from each testing family, following the behavior of R's `p.adjust`.
 
 ### Bug Fixes
 
+* Fixed `permdisp` not passing its `seed` down to `pcoa`, which left `method="fsvd"` unseeded. Because the FSVD solver draws a random projection, results were not reproducible even when a seed was given; on larger matrices repeated calls with the same seed could return materially different p-values. `method="eigh"` was unaffected, being deterministic ([#2546](https://github.com/scikit-bio/scikit-bio/pull/2546)).
+* Fixed an unexpected behavior in differential abundance tests (`ancombc` and `dirmult_lme`) where string columns in the metadata that can be cast into numbers (e.g., `["1", "2", "3"]`) were treated as numerical. Now they are treated as categories ([#2539](https://github.com/scikit-bio/scikit-bio/pull/2539)).
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
 * Fixed a bug in `pair_align` which raised a `TypeError` when called with `atol=None`. This should be equivalent to `atol=0` ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
+* Fixed `TabularMSA.gap_frequencies(relative=True)` emitting a zero-division warning for alignments with no positions. Return values are unchanged ([#2543](https://github.com/scikit-bio/scikit-bio/pull/2543)).
+* Fixed `Sequence.frequencies(relative=True)` emitting a zero-division warning for empty sequences. Return values are unchanged ([#2543](https://github.com/scikit-bio/scikit-bio/pull/2543)).
+* Patched `rclr` such that it won't raise a zero division warning ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
+* Fixed `permanova` returning an inaccurate pseudo-F for float32 distance matrices, caused by accumulating the total sum of squares in float32 rather than float64 [#2509](https://github.com/scikit-bio/scikit-bio/pull/2509).
+* `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
+* Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
+* `GeneticCode.from_ncbi` now recognizes NCBI genetic code table 15 (Blepharisma Macronuclear) and tables 26 through 33 (Pachysolen tannophilus, Karyorelict, Condylostoma, Mesodinium, Peritrich, and Blastocrithidia Nuclear, Balanophoraceae Plastid, and Cephalodiscidae Mitochondrial), all of which were missing from scikit-bio's table. Also added `GTG` as a recognized alternative start codon for table 3 (Yeast Mitochondrial), matching a later revision of NCBI's table ([#1659](https://github.com/scikit-bio/scikit-bio/issues/1659)).
 
 ## Version 0.7.3
 

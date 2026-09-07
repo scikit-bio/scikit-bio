@@ -1,3 +1,5 @@
+comment: false
+
 coverage:
   status:
     patch:
@@ -8,7 +10,7 @@ coverage:
         target: 80%
 
 ignore:
-  - "*/tests/*"
-  - "test_*.py"
+  - "**/tests/**"
+  - "**/test_*.py"
   - "util/_typing.py"
   - "util/_testing.py"

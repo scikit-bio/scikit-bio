@@ -6,16 +6,17 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from types import SimpleNamespace
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 
-from skbio.stats.composition._dirmult import (
-    dirmult_ttest, dirmult_lme,
-)
+from skbio.stats.composition import dirmult_ttest, dirmult_lme
+from skbio.stats.composition._dirmult import _welch_draw_stats
 
 
 class DirMultTTestTests(TestCase):
@@ -125,6 +126,46 @@ class DirMultTTestTests(TestCase):
         npt.assert_array_less(res_100['CI(2.5)'], res_10000['CI(2.5)'])
         npt.assert_array_less(res_10000['CI(97.5)'], res_100['CI(97.5)'])
 
+    def test_dirmult_ttest_welch_closed_form_parity(self):
+        # The production closed-form Welch's t-test statistics must reproduce
+        # statsmodels' CompareMeans (usevar="unequal", two-sided, alpha=0.05)
+        # exactly. Calls _welch_draw_stats directly (the actual per-draw
+        # helper dirmult_ttest uses), rather than re-deriving the formula, so
+        # this test exercises the shipped code path.
+        try:
+            from statsmodels.stats.weightstats import CompareMeans
+        except ImportError:
+            self.skipTest("statsmodels is not installed.")
+        from scipy.stats import t as t_dist
+
+        rng = np.random.default_rng(0)
+        n1, n2, m = 5, 4, 6
+        trt = rng.normal(size=(n1, m))
+        ref = rng.normal(size=(n2, m))
+
+        diff = np.empty(m)
+        se = np.empty(m)
+        dof = np.empty(m)
+        work = np.empty(m)
+        _welch_draw_stats(trt, ref, n1, n2, diff, se, dof, work)
+        tstat = diff / se
+        pval = 2.0 * t_dist.sf(np.abs(tstat), dof)
+        tcrit = t_dist.ppf(0.975, dof)
+        lower = diff - tcrit * se
+        upper = diff + tcrit * se
+
+        # statsmodels reference
+        cm = CompareMeans.from_data(trt, ref)
+        t_sm, p_sm, _ = cm.ttest_ind(value=0, alternative="two-sided", usevar="unequal")
+        lo_sm, hi_sm = cm.tconfint_diff(
+            alpha=0.05, alternative="two-sided", usevar="unequal"
+        )
+
+        npt.assert_allclose(tstat, t_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(pval, p_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(lower, lo_sm, rtol=1e-12, atol=1e-12)
+        npt.assert_allclose(upper, hi_sm, rtol=1e-12, atol=1e-12)
+
     def test_dirmult_ttest_output(self):
         exp_lfc = np.log2(self.p2 / self.p1)
         exp_lfc = exp_lfc - exp_lfc.mean()
@@ -173,6 +214,39 @@ class DirMultTTestTests(TestCase):
                                self.reference, pseudocount=None)
         self.assertIsInstance(result, pd.DataFrame)
 
+    def test_dirmult_ttest_p_adjust(self):
+        from statsmodels.stats.multitest import multipletests
+
+        base = dirmult_ttest(self.table, self.grouping, self.treatment,
+                             self.reference, draws=4, seed=0, p_adjust=None)
+        for method in ("holm", "fdr_bh", "bonferroni", "fdr_by", "sidak"):
+            obs = dirmult_ttest(self.table, self.grouping, self.treatment,
+                                self.reference, draws=4, seed=0, p_adjust=method)
+            exp = base.copy()
+            exp["qvalue"] = multipletests(base["pvalue"], method=method)[1]
+            exp["Signif"] = ((exp["qvalue"] <= 0.05) &
+                             ((exp["CI(2.5)"] > 0) | (exp["CI(97.5)"] < 0)))
+            pdt.assert_frame_equal(obs, exp, rtol=1e-14, atol=0)
+
+    def test_dirmult_ttest_p_adjust_nan(self):
+        from statsmodels.stats.multitest import multipletests
+
+        def stats(trt, ref, n1, n2, diff, se, dof, work):
+            _welch_draw_stats(trt, ref, n1, n2, diff, se, dof, work)
+            dof[1] = np.nan  # One feature has an unestimable test statistic.
+
+        for method in ("holm", "fdr_bh", "bonferroni", "fdr_by", "sidak"):
+            with patch('skbio.stats.composition._dirmult._welch_draw_stats',
+                       side_effect=stats):
+                obs = dirmult_ttest(
+                    self.table, self.grouping, self.treatment, self.reference,
+                    draws=4, seed=0, p_adjust=method)
+            valid = obs["pvalue"].notna()
+            exp = multipletests(obs.loc[valid, "pvalue"], method=method)[1]
+            npt.assert_allclose(obs.loc[valid, "qvalue"], exp, rtol=1e-14)
+            self.assertTrue(np.isnan(obs["qvalue"].iloc[1]))
+            self.assertFalse(obs["Signif"].iloc[1])
+
     def test_dirmult_ttest_no_p_adjust(self):
         result = dirmult_ttest(self.table, self.grouping, self.treatment,
                                self.reference, p_adjust=None)
@@ -187,6 +261,12 @@ class DirMultTTestTests(TestCase):
         self.table.iloc[0, 0] = -5  # Modify a value to be negative
         with self.assertRaises(ValueError):
             dirmult_ttest(self.table, self.grouping, self.treatment, self.reference)
+
+    def test_dirmult_ttest_invalid_draws(self):
+        for draws in (0, -1, 2.5, float("nan")):
+            with self.assertRaises(ValueError):
+                dirmult_ttest(self.table, self.grouping, self.treatment,
+                              self.reference, draws=draws)
 
     def test_dirmult_ttest_missing_values_in_grouping(self):
         self.grouping[1] = np.nan  # Introduce a missing value in grouping
@@ -229,6 +309,50 @@ class DirMultLMETests(TestCase):
              "Covar2": [1,1,1,1,2,2],
              "Covar3": [1,2,1,2,1,2]},
             index=index)
+
+    def test_dirmult_lme_p_adjust(self):
+        from statsmodels.stats.multitest import multipletests
+
+        kwargs = dict(table=self.table, metadata=self.metadata,
+                      formula="Covar2 + Covar3", grouping="Covar1", draws=1, seed=0)
+        base = dirmult_lme(**kwargs, p_adjust=None)
+        for method in ("holm", "fdr_bh", "bonferroni", "fdr_by", "sidak"):
+            obs = dirmult_lme(**kwargs, p_adjust=method)
+            exp = base.copy()
+            for _, group in exp.groupby("FeatureID"):
+                exp.loc[group.index, "qvalue"] = multipletests(
+                    group["pvalue"], method=method)[1]
+            exp["Signif"] = pd.Series(
+                (exp["qvalue"] <= 0.05) &
+                ((exp["CI(2.5)"] > 0) | (exp["CI(97.5)"] < 0)), dtype="boolean")
+            pdt.assert_frame_equal(obs, exp, rtol=1e-14, atol=0)
+
+    def test_dirmult_lme_p_adjust_nan(self):
+        # Include an unestimable covariate and a feature whose fit fails entirely.
+        def fitted(pvalues):
+            return SimpleNamespace(
+                params=np.array([0., 1., 2.]),
+                pvalues=np.array([0.5, *pvalues]),
+                conf_int=lambda: np.array([[-1., 1.], [0.1, 0.3], [0.2, 0.4]]))
+
+        for method, qvalues in (
+                ("holm", [0.02, 0.04, np.nan, 0.02, 0.4, 0.4, np.nan, np.nan]),
+                ("bh", [0.02, 0.04, np.nan, 0.02, 0.3, 0.3, np.nan, np.nan]),
+                ("bonferroni", [0.02, 0.08, np.nan, 0.02, 0.4, 0.6,
+                                np.nan, np.nan])):
+            fits = [fitted([0.01, 0.04]), fitted([np.nan, 0.02]),
+                    fitted([0.2, 0.3]), np.linalg.LinAlgError()]
+            with patch('statsmodels.regression.mixed_linear_model.MixedLM.fit',
+                       side_effect=fits), self.assertWarnsRegex(
+                           UserWarning, "LME fit failed for 1 features"):
+                obs = dirmult_lme(
+                    self.table, self.metadata, formula="Covar2 + Covar3",
+                    grouping="Covar1", draws=1, seed=0, p_adjust=method)
+            npt.assert_allclose(obs["qvalue"], qvalues)
+            npt.assert_allclose(obs["pvalue"],
+                                [0.01, 0.04, np.nan, 0.02, 0.2, 0.3, np.nan, np.nan])
+            npt.assert_array_equal(obs["Reps"], [1, 1, 1, 1, 1, 1, 0, 0])
+            self.assertTrue(obs["Signif"].iloc[-2:].isna().all())
 
     def test_dirmult_lme_demo(self):
         # a regular analysis

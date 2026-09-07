@@ -16,8 +16,7 @@ from skbio.util import get_data_path
 from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, GrammaredSequence, DNA, Protein
 from skbio.sequence import SubstitutionMatrix
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 from skbio.alignment._utils import encode_sequences
 
 from skbio.alignment._pair import (

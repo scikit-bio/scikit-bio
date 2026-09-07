@@ -49,6 +49,15 @@ Distance calculation
    distance
 
 
+Transition probability models
+-----------------------------
+
+.. autosummary::
+   :toctree: generated/
+
+    transition
+
+
 Abstract classes
 ----------------
 

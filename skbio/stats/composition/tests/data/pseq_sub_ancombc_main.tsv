@@ -1,0 +1,148 @@
+FeatureID	Covariate	Log(FC)	SE	W	pvalue	qvalue	Signif
+Actinobacteria	Intercept	2.483948	0.2046037	12.14029	6.459902e-34	6.459902e-33	True
+Actinobacteria	region[T.NE]	0.7315903	0.129976	5.628656	1.816197e-08	3.814014e-07	True
+Actinobacteria	region[T.SE]	0.5597108	0.1682988	3.325697	0.0008819779	0.01675758	True
+Actinobacteria	region[T.US]	0.2078401	0.1575664	1.319064	0.1871478	1	False
+Actinobacteria	bmi[T.overweight]	0.04167254	0.1393933	0.2989565	0.7649732	1	False
+Actinobacteria	bmi[T.obese]	-0.03759686	0.1501582	-0.2503817	0.8022921	1	False
+Actinobacteria	age	-0.01715092	0.004233073	-4.051648	5.085824e-05	0.001068023	True
+Bacteroidetes	Intercept	4.474086	0.2531319	17.67492	6.54366e-70	9.815489e-69	True
+Bacteroidetes	region[T.NE]	-0.6148184	0.1703491	-3.609167	0.000307182	0.005529276	True
+Bacteroidetes	region[T.SE]	-0.5308901	0.2063277	-2.573044	0.01008085	0.1713744	False
+Bacteroidetes	region[T.US]	-0.06083063	0.3011669	-0.2019831	0.8399299	1	False
+Bacteroidetes	bmi[T.overweight]	-0.1457815	0.1922107	-0.7584465	0.4481838	1	False
+Bacteroidetes	bmi[T.obese]	0.1380025	0.1832456	0.7531012	0.4513891	1	False
+Bacteroidetes	age	0.004113067	0.005262948	0.7815138	0.4345004	1	False
+Cyanobacteria	Intercept	-2.659573	0.08042298	-33.06982	8.074335e-240	1.45338e-238	True
+Cyanobacteria	region[T.NE]	-0.2300828	0.06739493	-3.413948	0.0006402869	0.01088488	True
+Cyanobacteria	region[T.SE]	-0.2969727	0.08220959	-3.612385	0.0003033937	0.006371268	True
+Cyanobacteria	region[T.US]	-0.115655	0.07267483	-1.591404	0.1115188	1	False
+Cyanobacteria	bmi[T.overweight]	-0.01319862	0.07887121	-0.1673439	0.8670995	1	False
+Cyanobacteria	bmi[T.obese]	-0.02493175	0.07243916	-0.344175	0.7307146	1	False
+Cyanobacteria	age	0.002367795	0.001842946	1.284788	0.1988664	1	False
+Bacilli	Intercept	1.967704	0.1500181	13.11644	2.650836e-39	2.91592e-38	True
+Bacilli	region[T.NE]	0.312281	0.1098951	2.841628	0.004488378	0.07181405	False
+Bacilli	region[T.SE]	0.02600361	0.1356232	0.1917342	0.8479504	1	False
+Bacilli	region[T.US]	0.2879463	0.1711391	1.682528	0.09246648	1	False
+Bacilli	bmi[T.overweight]	0.05128058	0.1260106	0.4069545	0.6840414	1	False
+Bacilli	bmi[T.obese]	-0.1418396	0.129044	-1.099156	0.2716998	1	False
+Bacilli	age	-0.001673124	0.003269401	-0.5117523	0.6088244	1	False
+Clostridium cluster I	Intercept	0.3534617	0.1200206	2.945007	0.003229471	0.01291788	True
+Clostridium cluster I	region[T.NE]	0.01542609	0.0651518	0.2367715	0.8128341	1	False
+Clostridium cluster I	region[T.SE]	-0.02029069	0.07273879	-0.2789528	0.7802811	1	False
+Clostridium cluster I	region[T.US]	-0.05582293	0.09834303	-0.5676348	0.570283	1	False
+Clostridium cluster I	bmi[T.overweight]	-0.02651827	0.07049107	-0.3761934	0.7067731	1	False
+Clostridium cluster I	bmi[T.obese]	-0.09160854	0.0572588	-1.599903	0.10962	1	False
+Clostridium cluster I	age	0.0006693102	0.002107177	0.3176336	0.7507628	1	False
+Clostridium cluster III	Intercept	-0.02898678	0.1571919	-0.1844037	0.8536967	1	False
+Clostridium cluster III	region[T.NE]	0.3911374	0.09312387	4.200184	2.666984e-05	0.0005333968	True
+Clostridium cluster III	region[T.SE]	0.03899839	0.1129799	0.3451799	0.7299591	1	False
+Clostridium cluster III	region[T.US]	0.3213241	0.2038368	1.576379	0.1149384	1	False
+Clostridium cluster III	bmi[T.overweight]	-0.04688139	0.109882	-0.426652	0.6696328	1	False
+Clostridium cluster III	bmi[T.obese]	0.2542315	0.1056347	2.406704	0.01609722	0.3219445	False
+Clostridium cluster III	age	-0.007887368	0.0031719	-2.486638	0.01289564	0.1934346	False
+Clostridium cluster IV	Intercept	5.248204	0.1146117	45.79117	0	0	True
+Clostridium cluster IV	region[T.NE]	-0.0840627	0.07319049	-1.148547	0.2507429	1	False
+Clostridium cluster IV	region[T.SE]	-0.02205189	0.08402954	-0.2624302	0.7929898	1	False
+Clostridium cluster IV	region[T.US]	-0.1738206	0.09592222	-1.812099	0.06997088	0.9795924	False
+Clostridium cluster IV	bmi[T.overweight]	-0.1247109	0.07846308	-1.589422	0.1119653	1	False
+Clostridium cluster IV	bmi[T.obese]	-0.08428714	0.07487721	-1.125671	0.2603046	1	False
+Clostridium cluster IV	age	0.005678146	0.002124228	2.673039	0.007516744	0.1277846	False
+Clostridium cluster IX	Intercept	1.278198	0.1786308	7.155527	8.335193e-13	6.668154e-12	True
+Clostridium cluster IX	region[T.NE]	-0.06279041	0.1314834	-0.4775539	0.6329677	1	False
+Clostridium cluster IX	region[T.SE]	-0.07459871	0.1486501	-0.5018409	0.6157794	1	False
+Clostridium cluster IX	region[T.US]	0.3380461	0.2604465	1.297948	0.1943051	1	False
+Clostridium cluster IX	bmi[T.overweight]	0.1486725	0.1551468	0.9582694	0.3379269	1	False
+Clostridium cluster IX	bmi[T.obese]	0.2127363	0.1456559	1.46054	0.1441416	1	False
+Clostridium cluster IX	age	-0.002052775	0.00406125	-0.5054539	0.6132401	1	False
+Clostridium cluster XI	Intercept	1.452065	0.2118739	6.853437	7.209666e-12	5.046766e-11	True
+Clostridium cluster XI	region[T.NE]	0.06892339	0.1108158	0.6219637	0.5339657	1	False
+Clostridium cluster XI	region[T.SE]	0.2789962	0.1166623	2.391486	0.0167803	0.2517045	False
+Clostridium cluster XI	region[T.US]	0.1891019	0.1788396	1.057382	0.2903371	1	False
+Clostridium cluster XI	bmi[T.overweight]	-0.1123008	0.1038779	-1.081085	0.2796592	1	False
+Clostridium cluster XI	bmi[T.obese]	-0.1583867	0.112614	-1.406457	0.1595886	1	False
+Clostridium cluster XI	age	-0.008021154	0.003634182	-2.207141	0.02730418	0.3822585	False
+Clostridium cluster XIII	Intercept	-1.592527	0.05724565	-27.81918	2.542668e-170	4.322536e-169	True
+Clostridium cluster XIII	region[T.NE]	-0.01829535	0.03859032	-0.4740917	0.6354345	1	False
+Clostridium cluster XIII	region[T.SE]	-0.1413792	0.0452861	-3.121911	0.001796813	0.03234264	True
+Clostridium cluster XIII	region[T.US]	0.04263704	0.04612604	0.9243596	0.3552991	1	False
+Clostridium cluster XIII	bmi[T.overweight]	0.009490501	0.04195637	0.2261993	0.8210464	1	False
+Clostridium cluster XIII	bmi[T.obese]	0.02728919	0.03867018	0.7056908	0.4803805	1	False
+Clostridium cluster XIII	age	-0.0005132636	0.001175972	-0.4364589	0.6625038	1	False
+Clostridium cluster XIVa	Intercept	5.233726	0.1179704	44.36476	0	0	True
+Clostridium cluster XIVa	region[T.NE]	0.1896408	0.0738166	2.569081	0.01019686	0.1529529	False
+Clostridium cluster XIVa	region[T.SE]	0.2338805	0.09400319	2.488006	0.01284615	0.2055383	False
+Clostridium cluster XIVa	region[T.US]	0.2002981	0.1371135	1.460819	0.144065	1	False
+Clostridium cluster XIVa	bmi[T.overweight]	0.02486052	0.09441922	0.2632994	0.7923198	1	False
+Clostridium cluster XIVa	bmi[T.obese]	0.03051887	0.08422835	0.3623349	0.7171018	1	False
+Clostridium cluster XIVa	age	-0.007356068	0.002391615	-3.075774	0.00209957	0.03779225	True
+Clostridium cluster XV	Intercept	-1.948429	0.07973738	-24.43558	7.162515e-132	1.146002e-130	True
+Clostridium cluster XV	region[T.NE]	0.02059355	0.04168736	0.494	0.6213062	1	False
+Clostridium cluster XV	region[T.SE]	0.08676454	0.07809788	1.110972	0.2665805	1	False
+Clostridium cluster XV	region[T.US]	0.1840618	0.08634095	2.131802	0.03302315	0.5283704	False
+Clostridium cluster XV	bmi[T.overweight]	-0.01304005	0.05701981	-0.2286933	0.8191073	1	False
+Clostridium cluster XV	bmi[T.obese]	-0.009594052	0.05364261	-0.1788513	0.8580544	1	False
+Clostridium cluster XV	age	-0.0004388814	0.001796099	-0.2443526	0.8069578	1	False
+Clostridium cluster XVI	Intercept	0.04132756	0.1160541	0.356106	0.7217612	1	False
+Clostridium cluster XVI	region[T.NE]	0.2116966	0.08270027	2.559805	0.01047308	0.1529529	False
+Clostridium cluster XVI	region[T.SE]	0.1057824	0.1114673	0.9489991	0.3426211	1	False
+Clostridium cluster XVI	region[T.US]	0.283299	0.120394	2.3531	0.01861763	0.3164997	False
+Clostridium cluster XVI	bmi[T.overweight]	-0.01787025	0.09178269	-0.1947018	0.8456264	1	False
+Clostridium cluster XVI	bmi[T.obese]	-0.004664566	0.0875308	-0.05329057	0.9575004	1	False
+Clostridium cluster XVI	age	-0.0005042486	0.002489104	-0.2025824	0.8394615	1	False
+Clostridium cluster XVII	Intercept	-2.286158	0.1740612	-13.13422	2.096502e-39	2.515802e-38	True
+Clostridium cluster XVII	region[T.NE]	0.1001035	0.09458511	1.058343	0.2898992	1	False
+Clostridium cluster XVII	region[T.SE]	0.1157092	0.1789055	0.6467616	0.5177862	1	False
+Clostridium cluster XVII	region[T.US]	0.832199	0.242752	3.428186	0.0006076286	0.01154494	True
+Clostridium cluster XVII	bmi[T.overweight]	-0.02094951	0.1374938	-0.1523669	0.8788975	1	False
+Clostridium cluster XVII	bmi[T.obese]	-0.3527811	0.1152481	-3.061057	0.002205569	0.04631694	True
+Clostridium cluster XVII	age	0.00484528	0.003952192	1.225973	0.2202089	1	False
+Clostridium cluster XVIII	Intercept	-0.3451161	0.105827	-3.261133	0.001109679	0.006658071	True
+Clostridium cluster XVIII	region[T.NE]	0.2655418	0.06532843	4.06472	4.809017e-05	0.0009137133	True
+Clostridium cluster XVIII	region[T.SE]	0.1887721	0.08057782	2.34273	0.01914324	0.2680054	False
+Clostridium cluster XVIII	region[T.US]	0.3767884	0.1225557	3.074426	0.002109077	0.03796339	True
+Clostridium cluster XVIII	bmi[T.overweight]	0.09031747	0.08761322	1.030866	0.3026038	1	False
+Clostridium cluster XVIII	bmi[T.obese]	0.007511474	0.06990983	0.1074452	0.9144358	1	False
+Clostridium cluster XVIII	age	-0.007267367	0.002266914	-3.205842	0.00134668	0.02558692	True
+Uncultured Clostridiales	Intercept	2.018043	0.1887157	10.69356	1.091013e-26	9.819121e-26	True
+Uncultured Clostridiales	region[T.NE]	-0.1500451	0.1293128	-1.160326	0.245916	1	False
+Uncultured Clostridiales	region[T.SE]	-0.40564	0.1762845	-2.301054	0.0213886	0.2780518	False
+Uncultured Clostridiales	region[T.US]	-0.9157987	0.1808115	-5.064936	4.085373e-07	8.170745e-06	True
+Uncultured Clostridiales	bmi[T.overweight]	-0.4681927	0.1440786	-3.249565	0.001155816	0.02427214	True
+Uncultured Clostridiales	bmi[T.obese]	-0.3591405	0.1623457	-2.212196	0.02695312	0.5121093	False
+Uncultured Clostridiales	age	0.01616975	0.004205067	3.845302	0.0001204041	0.002408083	True
+Uncultured Mollicutes	Intercept	-0.1075562	0.1476408	-0.7284994	0.466308	1	False
+Uncultured Mollicutes	region[T.NE]	-0.0274414	0.1063983	-0.2579119	0.7964749	1	False
+Uncultured Mollicutes	region[T.SE]	-0.1484022	0.1210039	-1.226425	0.2200387	1	False
+Uncultured Mollicutes	region[T.US]	-0.2266224	0.1459855	-1.552363	0.1205754	1	False
+Uncultured Mollicutes	bmi[T.overweight]	-0.07749952	0.1388133	-0.5583002	0.5766394	1	False
+Uncultured Mollicutes	bmi[T.obese]	-0.1688814	0.1175241	-1.436993	0.1507199	1	False
+Uncultured Mollicutes	age	0.003336326	0.003751985	0.8892161	0.373887	1	False
+Fusobacteria	Intercept	-1.01557	0.05842942	-17.38114	1.146515e-67	1.60512e-66	True
+Fusobacteria	region[T.NE]	0.01701393	0.03819615	0.4454357	0.6560049	1	False
+Fusobacteria	region[T.SE]	-0.03612184	0.06754657	-0.5347693	0.5928094	1	False
+Fusobacteria	region[T.US]	0.02272907	0.042765	0.5314876	0.5950809	1	False
+Fusobacteria	bmi[T.overweight]	0.0113599	0.04253423	0.2670767	0.7894101	1	False
+Fusobacteria	bmi[T.obese]	0.05252873	0.0428421	1.226101	0.2201608	1	False
+Fusobacteria	age	-0.0005050964	0.001177149	-0.4290846	0.6678617	1	False
+Proteobacteria	Intercept	1.428434	0.1012395	14.10946	3.321296e-45	4.317685e-44	True
+Proteobacteria	region[T.NE]	-0.05180886	0.07701635	-0.6726996	0.5011384	1	False
+Proteobacteria	region[T.SE]	-0.1087496	0.08714389	-1.247931	0.2120563	1	False
+Proteobacteria	region[T.US]	0.3180663	0.169135	1.880547	0.0600336	0.900504	False
+Proteobacteria	bmi[T.overweight]	0.2266441	0.1151404	1.968415	0.04902032	0.9804064	False
+Proteobacteria	bmi[T.obese]	0.005653348	0.07638578	0.07401048	0.941002	1	False
+Proteobacteria	age	0.004422991	0.00218175	2.027268	0.04263503	0.5542554	False
+Spirochaetes	Intercept	-2.648784	0.07235316	-36.6091	2.049194e-293	3.893469e-292	True
+Spirochaetes	region[T.NE]	-0.009329289	0.04872939	-0.191451	0.8481723	1	False
+Spirochaetes	region[T.SE]	-0.1802818	0.05142047	-3.506032	0.0004548414	0.009096827	True
+Spirochaetes	region[T.US]	-0.01766242	0.05286901	-0.3340788	0.7383201	1	False
+Spirochaetes	bmi[T.overweight]	0.01852676	0.05311007	0.348837	0.7272117	1	False
+Spirochaetes	bmi[T.obese]	0.01681924	0.05404815	0.3111899	0.7556563	1	False
+Spirochaetes	age	-0.0005257948	0.001472589	-0.3570546	0.7210509	1	False
+Verrucomicrobia	Intercept	0.4562868	0.1501878	3.038109	0.002380682	0.01190341	True
+Verrucomicrobia	region[T.NE]	0.1740855	0.1040223	1.67354	0.09422106	1	False
+Verrucomicrobia	region[T.SE]	0.1779071	0.1251585	1.421455	0.1551846	1	False
+Verrucomicrobia	region[T.US]	1.081643	0.1928776	5.607924	2.047684e-08	4.300136e-07	True
+Verrucomicrobia	bmi[T.overweight]	-0.03957467	0.1397355	-0.2832113	0.7770149	1	False
+Verrucomicrobia	bmi[T.obese]	-0.229433	0.1117409	-2.053258	0.04004756	0.720856	False
+Verrucomicrobia	age	0.008649457	0.003346864	2.584347	0.009756368	0.1561019	False

@@ -16,6 +16,7 @@ from skbio.stats.ordination import corr, mean_and_std, e_matrix, f_matrix, \
     center_distance_matrix
 
 from skbio.stats.ordination._utils import _e_matrix_inplace, _f_matrix_inplace
+from skbio.util import numba_code
 
 
 class TestUtils(TestCase):
@@ -121,6 +122,34 @@ class TestUtils(TestCase):
 
         # and ensure that the result of inplace centering was correct
         npt.assert_almost_equal(dm_expected, dm_centered_inp)
+
+    @numba_code
+    def test_center_distance_matrix_numba_matches_cython(self):
+        # The numba and cython engines should produce the same centered matrix.
+        # `big` is larger than the 24-wide centering tile and not a multiple of
+        # 24, so it exercises the multi-block tiling and its partial final
+        # block; both float64 and float32, in-place or not.
+        rng = np.random.default_rng(0)
+        big = rng.random((50, 50))
+        big = (big + big.T) / 2.0
+        np.fill_diagonal(big, 0.0)
+
+        for base in (self.dist_mat, big):
+            for dtype in (np.float64, np.float32):
+                mat = base.astype(dtype)
+
+                cy = center_distance_matrix(mat.copy(), engine="cython")
+                nb = center_distance_matrix(mat.copy(), engine="numba")
+                npt.assert_allclose(nb, cy, rtol=0, atol=1e-6)
+
+                # in-place centering must match the out-of-place result
+                nb_inplace = center_distance_matrix(
+                    mat.copy(), inplace=True, engine="numba")
+                npt.assert_array_equal(nb_inplace, nb)
+
+    def test_center_distance_matrix_bad_engine(self):
+        with npt.assert_raises(ValueError):
+            center_distance_matrix(self.dist_mat.copy(), engine="nonsense")
 
 
 if __name__ == '__main__':

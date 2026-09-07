@@ -18,7 +18,7 @@ from skbio.stats.distance import PairwiseMatrixError
 from skbio.stats.ordination import pcoa, pcoa_biplot
 from skbio.util import (get_data_path, assert_ordination_results_equal,
                         assert_data_frame_almost_equal, ArrayAPITestMixin,
-                        array_backends)
+                        array_backends, numba_code)
 from skbio.stats.ordination._principal_coordinate_analysis import (
     e_matrix,
     f_matrix,
@@ -60,6 +60,15 @@ class TestPCoA(TestCase):
 
         results = pcoa(self.dm3)
 
+        assert_ordination_results_equal(results, expected_results,
+                                        ignore_directionality=True)
+
+    @numba_code
+    def test_engine_numba_matches_cython(self):
+        # Selecting the numba centering engine must give the same PCoA as the
+        # default cython engine.
+        expected_results = pcoa(self.dm3, engine="cython")
+        results = pcoa(self.dm3, engine="numba")
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
 
@@ -529,6 +538,44 @@ class TestFSVDBackends(TestCase, ArrayAPITestMixin):
         # Eigenvalues are unique; eigenvectors can flip sign per column.
         self.assert_close(res_vals, ref_vals, rtol=1e-5, atol=1e-5)
         self.assert_close(xp.abs(res_vecs), np.abs(ref_vecs), rtol=1e-5, atol=1e-5)
+
+
+class TestPCoABackends(TestCase, ArrayAPITestMixin):
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_pcoa_eigh_matches_numpy(self, xp, device):
+        dm_np = DistanceMatrix(np.asarray(_DM, dtype=np.float64))
+        expected = pcoa(dm_np, method="eigh", dimensions=3, seed=0)
+
+        dm = DistanceMatrix(self.make_array(xp, device, _DM))
+        result = pcoa(dm, method="eigh", dimensions=3, seed=0)
+
+        assert_ordination_results_equal(result, expected,
+                                        ignore_directionality=True)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_pcoa_fsvd_matches_numpy(self, xp, device):
+        dm_np = DistanceMatrix(np.asarray(_DM, dtype=np.float64))
+        expected = pcoa(dm_np, method="fsvd", dimensions=3, seed=0)
+
+        dm = DistanceMatrix(self.make_array(xp, device, _DM))
+        result = pcoa(dm, method="fsvd", dimensions=3, seed=0)
+
+        assert_ordination_results_equal(result, expected,
+                                        ignore_directionality=True)
+
+
+class TestCenterDistanceMatrixPublicWiring(TestCase):
+    def test_public_name_is_array_api_aware_implementation(self):
+        # skbio.stats.ordination.center_distance_matrix must resolve to the
+        # array-API-aware implementation in this module, not the NumPy-only
+        # one in _utils.py (which it is built on top of via the "cython"/
+        # "numba" engines). Importing it under a different local name here
+        # so this doesn't just compare the same import against itself.
+        from skbio.stats.ordination import (
+            center_distance_matrix as public_center_distance_matrix,
+        )
+
+        self.assertIs(public_center_distance_matrix, center_distance_matrix)
 
 
 if __name__ == "__main__":

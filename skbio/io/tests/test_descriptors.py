@@ -327,17 +327,17 @@ class TestInheritanceIntegration(unittest.TestCase):
     
     def test_child_inherits_read(self):
         """Test that child class inherits parent's read capability."""
-        fh = StringIO("child data")
+        fh = StringIO("TESTDATA:child data")
         obj = self.ChildClass.read(fh, format='inheritance_test_format')
         self.assertIsInstance(obj, self.ChildClass)
-        self.assertEqual(obj.data, "child data")
+        self.assertEqual(obj.data, "TESTDATA:child data")
     
     def test_grandchild_inherits_read(self):
         """Test that grandchild class inherits parent's read capability."""
-        fh = StringIO("grandchild data")
+        fh = StringIO("TESTDATA:grandchild data")
         obj = self.GrandchildClass.read(fh, format='inheritance_test_format')
         self.assertIsInstance(obj, self.GrandchildClass)
-        self.assertEqual(obj.data, "grandchild data")
+        self.assertEqual(obj.data, "TESTDATA:grandchild data")
     
     def test_child_inherits_write(self):
         """Test that child class inherits parent's write capability."""

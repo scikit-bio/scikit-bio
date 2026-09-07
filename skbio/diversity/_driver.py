@@ -23,6 +23,8 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac,
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
+    _unweighted_unifrac_pdist_numba,
+    _weighted_unifrac_pdist_numba,
 )
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
@@ -32,6 +34,7 @@ from skbio.diversity._util import (
 )
 from skbio.util._decorator import deprecated
 from skbio.table._tabular import _ingest_table
+from skbio._config import _resolve_engine
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Callable
@@ -228,12 +231,39 @@ def alpha_diversity(
     return pd.Series(results, index=ids)
 
 
+def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
+    """Whether beta_diversity's numba unifrac kernels can be used as-is.
+
+    Those kernels compute the whole distance matrix directly, bypassing
+    pairwise_func and any leftover metric kwargs entirely, so the fast path
+    only applies when neither was supplied. Warn if the caller explicitly
+    asked for engine="numba" but can't get it, so that case stays visible
+    instead of silently falling back to the cython/pairwise_func path.
+    """
+    if pairwise_func is None and not kwargs:
+        return True
+    if engine == "numba":
+        reason = (
+            "a pairwise_func was provided"
+            if pairwise_func is not None
+            else f"unrecognized keyword argument(s) {sorted(kwargs)} were provided"
+        )
+        warnings.warn(
+            f"engine='numba' was requested but {reason}, which the numba "
+            "unifrac kernels cannot use; falling back to the cython/"
+            "pairwise_func path instead.",
+            stacklevel=3,
+        )
+    return False
+
+
 def beta_diversity(
     metric: str | Callable,
     counts: TableLike,
     ids: ArrayLike | None = None,
     validate: bool = True,
     pairwise_func: Callable | None = None,
+    engine: str | None = None,
     **kwargs: Any,
 ) -> DistanceMatrix:
     r"""Compute distances between all pairs of samples.
@@ -262,6 +292,15 @@ def beta_diversity(
         Examples of functions that can be provided are SciPy's
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
+    engine : {"cython", "numba"}, optional
+        Compute engine for metrics that support it. Currently only
+        ``"unweighted_unifrac"`` and ``"weighted_unifrac"`` honor this; the
+        ``"numba"`` engine requires the optional Numba dependency and computes
+        the full distance matrix in one parallel pass. If not provided, the
+        global default is used (see :func:`~skbio.set_config`). Ignored by
+        metrics without a Numba implementation.
+
+        .. versionadded:: 0.7.4
     kwargs : dict, optional
         Metric-specific parameters. Refer to the documentation of the chosen metric.
         A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
@@ -306,6 +345,14 @@ def beta_diversity(
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
+        resolved_engine = _resolve_engine(engine, ("cython", "numba"))
+        if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
+            engine, pairwise_func, kwargs
+        ):
+            distances = _unweighted_unifrac_pdist_numba(
+                counts, taxa=taxa, tree=tree, validate=validate
+            )
+            return DistanceMatrix(distances, ids)
         metric, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
@@ -313,6 +360,18 @@ def beta_diversity(
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
+        resolved_engine = _resolve_engine(engine, ("cython", "numba"))
+        if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
+            engine, pairwise_func, kwargs
+        ):
+            distances = _weighted_unifrac_pdist_numba(
+                counts,
+                taxa=taxa,
+                tree=tree,
+                normalized=normalized,
+                validate=validate,
+            )
+            return DistanceMatrix(distances, ids)
         metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
