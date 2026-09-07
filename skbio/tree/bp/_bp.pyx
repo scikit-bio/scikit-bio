@@ -21,6 +21,8 @@ cimport cython
 from ._bp_binary_tree cimport *
 from ._ba cimport *
 
+from ..._base import SkbioObject
+
 cnp.import_array()
 
 cdef extern from "Python.h":
@@ -192,8 +194,7 @@ cdef class BPTree:
         cdef Py_ssize_t[:] _e_index
         cdef Py_ssize_t[:] _k_index_0
         cdef Py_ssize_t[:] _k_index_1
-        cdef Py_ssize_t[:] _r_index_0
-        cdef Py_ssize_t[:] _r_index_1
+        cdef cnp.ndarray _step
         cdef cnp.ndarray[object, ndim=1] _names
         cdef cnp.ndarray[DOUBLE_t, ndim=1] _lengths
         cdef cnp.ndarray[INT32_t, ndim=1] _edges
@@ -227,19 +228,23 @@ cdef class BPTree:
             self._edges = np.full(self.data.size, 0, dtype=INT32)
             self._edge_lookup = None
 
-        # precursor for select index cache
-        _r_index_0 = np.cumsum((1 - B), dtype=SIZE)
-        _r_index_1 = np.cumsum(B, dtype=SIZE)
-
-        # construct a select index. These operations are performed frequently,
-        # and easy to cache at a relatively minor memory expense. It cannot be
-        # assumed that open and close will be same length so can't stack
-        _k_index_0 = np.unique(_r_index_0,
-                               return_index=True)[1].astype(SIZE)
-        self._k_index_0 = _k_index_0
-        _k_index_1 = np.unique(_r_index_1,
-                               return_index=True)[1].astype(SIZE)
+        # Construct a select index: _k_index_t[k] is the position of the k-th
+        # occurrence of bit t (select), cached because select is used often.
+        # These are the first indices of each distinct value of the running rank
+        # (cumsum) of bit t; for a 0/1 array that is exactly the positions where
+        # that bit's running count increments, i.e. every position holding the
+        # bit, with position 0 always included. Computing those increment
+        # positions directly is a single O(n) pass and is bit-for-bit identical
+        # to np.unique(cumsum(...), return_index=True) while avoiding its
+        # O(n log n) sort. Opens and closes differ in count, so they can't stack.
+        _step = B.astype(bool)
+        _step[0] = True
+        _k_index_1 = np.flatnonzero(_step).astype(SIZE)
         self._k_index_1 = _k_index_1
+        _step = (B == 0)
+        _step[0] = True
+        _k_index_0 = np.flatnonzero(_step).astype(SIZE)
+        self._k_index_0 = _k_index_0
 
         # construct an excess index. These operations are performed a lot, and
         # similarly can to rank and select, can be cached at a minimal expense.
@@ -487,6 +492,56 @@ cdef class BPTree:
 
         return {'child_index': child_index, 'length': length, 'id_index': id_index,
                 'name': name}
+
+    def _to_node_arrays(self):
+        """Return preorder per-node arrays for :meth:`TreeNode.from_bptree`.
+
+        The balanced-parentheses traversal is performed here in a single
+        compiled pass so that :meth:`skbio.tree.TreeNode.from_bptree` pays no
+        per-node Python/C call overhead; the pure-Python side is then left with
+        only the ``TreeNode`` object assembly.
+
+        Returns
+        -------
+        tuple of numpy.ndarray
+            ``(name, length, edge, parent)``, each indexed by preorder position.
+            ``name`` is dtype ``object``, ``length`` is ``float64`` and ``edge``
+            is ``int32`` (mirroring :meth:`name`, :meth:`length`, :meth:`edge`).
+            ``parent`` (dtype ``intp``) holds the preorder index of each node's
+            parent, or ``-1`` for the root.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.from_bptree
+
+        """
+        cdef:
+            Py_ssize_t i, n
+            Py_ssize_t node_idx, root
+            cnp.ndarray[object, ndim=1] name
+            cnp.ndarray[DOUBLE_t, ndim=1] length
+            cnp.ndarray[INT32_t, ndim=1] edge
+            cnp.ndarray[Py_ssize_t, ndim=1] parent
+
+        n = <Py_ssize_t>self.data.sum()
+        name = np.empty(n, dtype=object)
+        length = np.empty(n, dtype=DOUBLE)
+        edge = np.empty(n, dtype=INT32)
+        parent = np.empty(n, dtype=SIZE)
+
+        root = self.root()
+        for i in range(n):
+            node_idx = self.preorder_select(i)
+            name[i] = self.name(node_idx)
+            length[i] = self.length(node_idx)
+            edge[i] = self.edge(node_idx)
+            if node_idx == root:
+                parent[i] = -1
+            else:
+                # preorder_rank is 1-based, so -1 converts it to a 0-based index
+                parent[i] = self.preorder_rank(self.parent(node_idx)) - 1
+
+        return name, length, edge, parent
 
     def set_names(self, cnp.ndarray[object, ndim=1] names):
         self._names = names
@@ -757,6 +812,13 @@ cdef class BPTree:
     def __len__(self):
         """The number of nodes in the tree."""
         return self.size / 2
+
+    def __str__(self):
+        """Return a concise summary of the tree.
+
+        Implements the abstract ``__str__`` required of scikit-bio objects.
+        """
+        return self.__repr__()
 
     def __repr__(self):
         """Returns summary of the tree.
@@ -1673,3 +1735,13 @@ cdef class BPTree:
             result = self.scan_block_backward(i, k, self._rmm.b, d)
 
         return result
+
+
+# Register BPTree as a virtual subclass of SkbioObject so that
+# ``isinstance(bp, SkbioObject)`` is True and BPTree participates in the skbio
+# class hierarchy like TreeNode. A Cython ``cdef class`` cannot directly
+# subclass a pure-Python ABC ("first base is not an extension type"), and
+# a pure-Python facade would tax every hot-path call; virtual registration
+# gives the hierarchy membership at zero runtime/memory cost while BPTree stays
+# fully compiled.
+SkbioObject.register(BPTree)
