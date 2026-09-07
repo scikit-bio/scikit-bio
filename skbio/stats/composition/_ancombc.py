@@ -856,7 +856,7 @@ def _ancombc_core(
     # pseudocount. ANCOM-BC2 can handle zeros.
     _check_composition(np, matrix, nozero=not v2)
 
-    # Validate metadata and cast to numbers where applicable.
+    # Validate metadata.
     metadata = _check_metadata(metadata, matrix, samples)
 
     # Transform data

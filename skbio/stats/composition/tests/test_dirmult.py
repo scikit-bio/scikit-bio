@@ -15,8 +15,9 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.testing as pdt
 
-from skbio.stats.composition import dirmult_ttest, dirmult_lme
-from skbio.stats.composition._dirmult import _welch_draw_stats
+from skbio.stats.composition._dirmult import (
+    dirmult_ttest, dirmult_lme, _welch_draw_stats,
+)
 
 
 class DirMultTTestTests(TestCase):
