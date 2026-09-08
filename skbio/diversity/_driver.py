@@ -411,6 +411,16 @@ def beta_diversity(
         pairwise_func = pdist
 
     distances = pairwise_func(counts, metric=metric, **kwargs)
+    if np.isnan(distances).any():
+        warnings.warn(
+            "The computed distance matrix contains `nan` value(s). This can "
+            "happen, for example, when two samples both have an all-zero "
+            "count vector and the chosen metric divides by the total count "
+            "(e.g., 'braycurtis'). Consider removing empty samples from "
+            "`counts` beforehand, or inspect the returned distance matrix "
+            "for `nan` values.",
+            stacklevel=2,
+        )
     return DistanceMatrix(distances, ids)
 
 
