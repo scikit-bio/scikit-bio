@@ -745,7 +745,14 @@ def _fasta_to_generator(
         for seq, id_, desc in _parse_fasta_raw(
             fh, _parse_sequence_data, FASTAFormatError, **kwarg
         ):
-            yield constructor(seq, metadata={"id": id_, "description": desc}, **kwargs)
+            try:
+                yield constructor(
+                    seq, metadata={"id": id_, "description": desc}, **kwargs
+                )
+            except ValueError as e:
+                raise ValueError(
+                    "Could not parse the FASTA record with ID %r: %s" % (id_, e)
+                ) from e
     else:
         fasta_gen = _parse_fasta_raw(
             fh, _parse_sequence_data, FASTAFormatError, **kwarg
@@ -777,12 +784,18 @@ def _fasta_to_generator(
                 )
 
             # sequence and quality scores lengths are checked in constructor
-            yield constructor(
-                fasta_seq,
-                metadata={"id": fasta_id, "description": fasta_desc},
-                positional_metadata={"quality": qual_scores},
-                **kwargs,
-            )
+            try:
+                yield constructor(
+                    fasta_seq,
+                    metadata={"id": fasta_id, "description": fasta_desc},
+                    positional_metadata={"quality": qual_scores},
+                    **kwargs,
+                )
+            except ValueError as e:
+                raise ValueError(
+                    "Could not parse the FASTA record with ID %r: %s"
+                    % (fasta_id, e)
+                ) from e
 
 
 @fasta.reader(Sequence)

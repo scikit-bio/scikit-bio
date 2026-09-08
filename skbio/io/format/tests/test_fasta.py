@@ -664,7 +664,7 @@ class ReaderTests(TestCase):
         for read_fn in read_fns:
             with self.assertRaises(ValueError) as e:
                 read_fn(fp, keep_spaces=True, lowercase=True)
-            self.assertTrue(str(e.exception).startswith("Invalid char"))
+            self.assertIn("Invalid char", str(e.exception))
 
         # test generator
         obs = str(next(_fasta_to_generator(fp, keep_spaces=True)))
@@ -673,6 +673,26 @@ class ReaderTests(TestCase):
         # test Sequence
         obs = str(_fasta_to_sequence(fp, keep_spaces=True))
         self.assertEqual(obs, "ACGT - acgt.")
+
+    def test_generator_invalid_record_error_names_record_id(self):
+        # a validation error raised while constructing a record should name
+        # that record's ID, so it's clear which record among many is at
+        # fault (see issue #1470)
+        fh = io.StringIO(">good\nACGT\n>bad\nACGU\n>also_good\nACGT\n")
+        gen = _fasta_to_generator(fh, constructor=DNA)
+        self.assertEqual(str(next(gen)), "ACGT")
+        with self.assertRaisesRegex(ValueError, r"record with ID 'bad'.*"
+                                    r"Invalid character"):
+            next(gen)
+
+    def test_generator_with_qual_invalid_record_error_names_record_id(self):
+        fh = io.StringIO(">good\nACGT\n>bad\nACGU\n")
+        qual_fh = io.StringIO(">good\n40 40 40 40\n>bad\n40 40 40 40\n")
+        gen = _fasta_to_generator(fh, qual=qual_fh, constructor=DNA)
+        self.assertEqual(str(next(gen)), "ACGT")
+        with self.assertRaisesRegex(ValueError, r"record with ID 'bad'.*"
+                                    r"Invalid character"):
+            next(gen)
 
 
 class WriterTests(TestCase):
