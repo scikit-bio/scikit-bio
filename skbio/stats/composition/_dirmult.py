@@ -429,8 +429,6 @@ def dirmult_ttest(
     return res
 
 
-
-
 def dirmult_lme(
     table,
     metadata,
