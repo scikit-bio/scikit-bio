@@ -6,10 +6,12 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import gzip
 import unittest
 from pathlib import Path
+from tempfile import TemporaryFile
 
-from skbio.io._iosources import IOSource, Compressor
+from skbio.io._iosources import IOSource, Compressor, GzipCompressor
 
 
 class TestIOSource(unittest.TestCase):
@@ -54,6 +56,16 @@ class TestCompressor(TestIOSource):
 
     def test_can_write(self):
         self.assertEqual(self.compressor.can_write(), True)
+
+
+class TestGzipCompressor(unittest.TestCase):
+    def test_get_reader_read_write_file(self):
+        data = b'>sequence\nACGT\n'
+        with TemporaryFile(mode='w+b') as file:
+            file.write(gzip.compress(data))
+            file.seek(0)
+            with GzipCompressor(file, {}).get_reader() as reader:
+                self.assertEqual(reader.read(), data)
 
 
 if __name__ == "__main__":

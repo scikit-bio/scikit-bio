@@ -26,6 +26,8 @@
 
 ### Bug Fixes
 
+* Fixed gzip readers inferring write mode from read/write file objects on Python 3.15 by explicitly opening in binary read mode ([#2576](https://github.com/scikit-bio/scikit-bio/issues/2576)). Thanks to Maximiliano Curia for the original Debian patch and Andreas Tille for reporting it upstream.
+
 * Fixed `permdisp` not passing its `seed` down to `pcoa`, which left `method="fsvd"` unseeded. Because the FSVD solver draws a random projection, results were not reproducible even when a seed was given; on larger matrices repeated calls with the same seed could return materially different p-values. `method="eigh"` was unaffected, being deterministic ([#2546](https://github.com/scikit-bio/scikit-bio/pull/2546)).
 * Fixed an unexpected behavior in differential abundance tests (`ancombc` and `dirmult_lme`) where string columns in the metadata that can be cast into numbers (e.g., `["1", "2", "3"]`) were treated as numerical. Now they are treated as categories ([#2539](https://github.com/scikit-bio/scikit-bio/pull/2539)).
 * Fixed a subtle floating-point arithmetic issue in `pair_align` under a linear gap penalty. Previously it could be less tolerant than expected when `atol` was set smaller than the default (1e-5) and scores involved decimal numbers ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
