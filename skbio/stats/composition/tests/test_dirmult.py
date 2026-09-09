@@ -20,7 +20,9 @@ from skbio.stats.composition._dirmult import (
     dirmult_ttest, dirmult_lme, _welch_draw_stats,
 )
 from skbio.stats.composition._lme import (
-    _RandIntDesign, _randint_applicable, _randint_fit,
+    _RandIntDesign,
+    _randint_applicable,
+    _randint_fit,
 )
 
 
@@ -352,7 +354,8 @@ class DirMultLMETests(TestCase):
                            UserWarning, "LME fit failed for 1 features"):
                 obs = dirmult_lme(
                     self.table, self.metadata, formula="Covar2 + Covar3",
-                    grouping="Covar1", draws=1, seed=0, p_adjust=method)
+                    grouping="Covar1", draws=1, seed=0, p_adjust=method,
+                    fit_method="bfgs")
             npt.assert_allclose(obs["qvalue"], qvalues)
             npt.assert_allclose(obs["pvalue"],
                                 [0.01, 0.04, np.nan, 0.02, 0.2, 0.3, np.nan, np.nan])
@@ -473,8 +476,7 @@ class DirMultLMETests(TestCase):
             n = len(groups)
             exog = np.column_stack([np.ones(n), rng.normal(size=(n, 2))])
             u = rng.normal(size=(len(sizes), 6))
-            resp = (exog @ rng.normal(size=(3, 6)) + u[groups]
-                    + rng.normal(size=(n, 6)))
+            resp = exog @ rng.normal(size=(3, 6)) + u[groups] + rng.normal(size=(n, 6))
             des = _RandIntDesign(exog, groups, len(sizes))
             beta, bse, ok, theta, llf = _randint_fit(des, resp)
             self.assertTrue(ok.all())
@@ -495,11 +497,22 @@ class DirMultLMETests(TestCase):
     def test_dirmult_lme_randint_fallback(self):
         # Arguments that select a different model, optimizer or convergence
         # filter must route to the per-feature MixedLM path, and still work.
-        defaults = dict(re_formula=None, vc_formula=None, model_kwargs={},
-                        fit_kwargs={}, fit_method=None, fit_converge=False)
-        common = dict(table=self.table, metadata=self.metadata,
-                      formula="Covar2 + Covar3", grouping="Covar1",
-                      draws=1, seed=0)
+        defaults = dict(
+            re_formula=None,
+            vc_formula=None,
+            model_kwargs={},
+            fit_kwargs={},
+            fit_method=None,
+            fit_converge=False,
+        )
+        common = dict(
+            table=self.table,
+            metadata=self.metadata,
+            formula="Covar2 + Covar3",
+            grouping="Covar1",
+            draws=1,
+            seed=0,
+        )
         for extra in (
             {"re_formula": "1"},
             {"vc_formula": {"Covar2": "0 + C(Covar2)"}},
