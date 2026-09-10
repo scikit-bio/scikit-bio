@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from types import SimpleNamespace
+import warnings
 from unittest import TestCase, main
 from unittest.mock import patch
 
@@ -17,6 +18,11 @@ import pandas.testing as pdt
 
 from skbio.stats.composition._dirmult import (
     dirmult_ttest, dirmult_lme, _welch_draw_stats,
+)
+from skbio.stats.composition._lme import (
+    _RandIntDesign,
+    _randint_applicable,
+    _randint_fit,
 )
 
 
@@ -348,7 +354,8 @@ class DirMultLMETests(TestCase):
                            UserWarning, "LME fit failed for 1 features"):
                 obs = dirmult_lme(
                     self.table, self.metadata, formula="Covar2 + Covar3",
-                    grouping="Covar1", draws=1, seed=0, p_adjust=method)
+                    grouping="Covar1", draws=1, seed=0, p_adjust=method,
+                    fit_method="bfgs")
             npt.assert_allclose(obs["qvalue"], qvalues)
             npt.assert_allclose(obs["pvalue"],
                                 [0.01, 0.04, np.nan, 0.02, 0.2, 0.3, np.nan, np.nan])
@@ -458,6 +465,69 @@ class DirMultLMETests(TestCase):
         # npt.assert_array_equal(res["qvalue"].round(3), np.array([
         #     0.274, 0.463, 0.645, 0.766, 0.251, 0.703, 0.400, 0.415]))
 
+    def test_dirmult_lme_randint_matches_mixedlm(self):
+        # The batched random-intercept fit must reproduce MixedLM wherever
+        # MixedLM's own optimizer actually reaches the optimum.
+        from statsmodels.regression.mixed_linear_model import MixedLM
+
+        rng = np.random.default_rng(0)
+        for sizes in ([4] * 12, [2] * 25, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
+            groups = np.repeat(np.arange(len(sizes)), sizes)
+            n = len(groups)
+            exog = np.column_stack([np.ones(n), rng.normal(size=(n, 2))])
+            u = rng.normal(size=(len(sizes), 6))
+            resp = exog @ rng.normal(size=(3, 6)) + u[groups] + rng.normal(size=(n, 6))
+            des = _RandIntDesign(exog, groups, len(sizes))
+            beta, bse, ok, theta, llf = _randint_fit(des, resp)
+            self.assertTrue(ok.all())
+            self.assertTrue(np.all(np.isfinite(theta)) and np.all(theta > 0))
+            for j in range(resp.shape[1]):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    exp = MixedLM(resp[:, j], exog, groups).fit()
+                # Only compare where MixedLM found the same likelihood; where
+                # it stopped early, the batched fit is the better optimum.
+                if llf[j] - exp.llf > 1e-6:
+                    self.assertGreater(llf[j], exp.llf)
+                    continue
+                npt.assert_allclose(beta[:, j], exp.fe_params, rtol=1e-4)
+                npt.assert_allclose(bse[:, j], exp.bse_fe, rtol=1e-3)
+                npt.assert_allclose(llf[j], exp.llf, rtol=1e-9)
+
+    def test_dirmult_lme_randint_fallback(self):
+        # Arguments that select a different model, optimizer or convergence
+        # filter must route to the per-feature MixedLM path, and still work.
+        defaults = dict(
+            re_formula=None,
+            vc_formula=None,
+            model_kwargs={},
+            fit_kwargs={},
+            fit_method=None,
+            fit_converge=False,
+        )
+        common = dict(
+            table=self.table,
+            metadata=self.metadata,
+            formula="Covar2 + Covar3",
+            grouping="Covar1",
+            draws=1,
+            seed=0,
+        )
+        for extra in (
+            {"re_formula": "1"},
+            {"vc_formula": {"Covar2": "0 + C(Covar2)"}},
+            {"model_kwargs": {"use_sqrt": False}},
+            {"fit_kwargs": {"reml": False}},
+            {"fit_method": "bfgs"},
+            {"fit_converge": True},
+        ):
+            self.assertFalse(_randint_applicable(**{**defaults, **extra}))
+            res = dirmult_lme(**common, **extra)
+            self.assertIsInstance(res, pd.DataFrame)
+
+        # The documented default is the only configuration that batches.
+        self.assertTrue(_randint_applicable(**defaults))
+
     def test_dirmult_lme_vc_formula(self):
         res = dirmult_lme(
             table=self.table, metadata=self.metadata, formula="Covar2 + Covar3",
@@ -485,13 +555,14 @@ class DirMultLMETests(TestCase):
 
     def test_dirmult_lme_fit_warnings(self):
         # Convergence warnings are frequently raised during model fitting.
+        # An explicit fit method selects the per-feature MixedLM code path.
         from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
         with self.assertWarns(ConvergenceWarning):
             dirmult_lme(table=self.table, metadata=self.metadata,
                         formula="Covar2 + Covar3", grouping="Covar1",
                         draws=1, seed=0, p_adjust="sidak",
-                        fit_warnings=True)
+                        fit_method="bfgs", fit_warnings=True)
 
     def test_dirmult_lme_fail_all(self):
         # Supply a non-existent optimization method to make it fail.
@@ -571,8 +642,8 @@ class DirMultLMETests(TestCase):
             draws=8, seed=0, p_adjust="sidak")
 
         npt.assert_array_equal(res["Log2(FC)"].round(5), [-0.28051, 0.32118, -0.04067])
-        npt.assert_array_equal(res["CI(2.5)"].round(5), [-0.41639, 0.18745, -0.16542])
-        npt.assert_array_equal(res["CI(97.5)"].round(5), [-0.14359, 0.46473, 0.07706])
+        npt.assert_array_equal(res["CI(2.5)"].round(5), [-0.41506, 0.18745, -0.16443])
+        npt.assert_array_equal(res["CI(97.5)"].round(5), [-0.14361, 0.46473, 0.07583])
 
         # confirm expected fold change is within confidence interval
         npt.assert_array_less(exp_lfc, res['CI(97.5)'])
