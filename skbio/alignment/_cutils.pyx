@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+# cython: initializedcheck=False
 
 from cython cimport floating
 from libc.math cimport INFINITY, fabs, fabsf
@@ -534,3 +535,147 @@ def _multi_align_score(
                 score -= gap_open + cumL * gap_extend
 
     return score
+
+
+def _fill_linear_rows(
+    floating[:, ::1] rows,
+    floating[::1] edge,
+    unsigned char[:, ::1] trace,
+    const floating[:, ::1] scores,
+    floating gap_extend,
+    floating eps
+):
+    """Fill rolling H rows; save pairwise traceback decisions in one byte/cell.
+
+    Python initializes the top row and `edge` with the leading-gap scores.
+    Each consumed entry of `edge` is replaced by the last-column score, so
+    Python can select a free-end stop using the same rule as pair_align.
+    """
+    cdef Py_ssize_t m = scores.shape[0], n = scores.shape[1]
+    cdef Py_ssize_t i, j, cur, prev
+    cdef floating sub_, ins_, del_, best
+    with nogil:
+        edge[0] = rows[0, n]
+        for i in range(1, m + 1):
+            cur = i % 2
+            prev = 1 - cur
+            rows[cur, 0] = edge[i]
+            for j in range(1, n + 1):
+                sub_ = rows[prev, j - 1] + scores[i - 1, j - 1]
+                ins_ = rows[cur, j - 1] - gap_extend
+                del_ = rows[prev, j] - gap_extend
+                best = rows[cur, j] = max(sub_, ins_, del_)
+                # Same arithmetic and deletion > insertion > diagonal priority
+                # as _trace_one_linear. Tolerance never changes the DP maximum.
+                if xabs(del_ - best) <= eps:
+                    trace[i, j] = 2
+                elif xabs(ins_ - best) <= eps:
+                    trace[i, j] = 1
+                else:
+                    trace[i, j] = 0
+            edge[i] = rows[cur, n]
+
+
+def _fill_affine_rows(
+    floating[:, ::1] rows,
+    floating[:, ::1] insrows,
+    floating[:, ::1] delrows,
+    floating[::1] edge,
+    unsigned char[:, ::1] trace,
+    const floating[:, ::1] scores,
+    floating gap_open,
+    floating gap_extend,
+    floating eps
+):
+    """Fill rolling H/I/D rows with the pairwise affine recurrence.
+
+    The main state H is the best of diagonal, insertion, and deletion. Opening
+    from H permits direct gap-direction switches. Each trace byte contains the
+    main-state choice (bits 0-1), insertion extension (bit 2), and deletion
+    extension (bit 3). These reproduce _trace_one_affine, including near ties.
+    All arrays, including boundary storage, are owned and initialized by Python.
+    """
+    cdef Py_ssize_t m = scores.shape[0], n = scores.shape[1]
+    cdef Py_ssize_t i, j, cur, prev
+    cdef floating oe = gap_open + gap_extend
+    cdef floating sub_, ins_, del_, best, ins_ext, del_ext
+    cdef unsigned char flags
+    with nogil:
+        edge[0] = rows[0, n]
+        for i in range(1, m + 1):
+            cur = i % 2
+            prev = 1 - cur
+            rows[cur, 0] = edge[i]
+            insrows[cur, 0] = -INFINITY
+            for j in range(1, n + 1):
+                sub_ = rows[prev, j - 1] + scores[i - 1, j - 1]
+                ins_ext = insrows[cur, j - 1] - gap_extend
+                del_ext = delrows[prev, j] - gap_extend
+                ins_ = insrows[cur, j] = max(rows[cur, j - 1] - oe, ins_ext)
+                del_ = delrows[cur, j] = max(rows[prev, j] - oe, del_ext)
+                best = rows[cur, j] = max(sub_, ins_, del_)
+                flags = 0
+                if xabs(del_ - best) <= eps:
+                    flags = 2
+                elif xabs(ins_ - best) <= eps:
+                    flags = 1
+                if xabs(ins_ext - ins_) <= eps:
+                    flags |= 4
+                if xabs(del_ext - del_) <= eps:
+                    flags |= 8
+                trace[i, j] = flags
+            edge[i] = rows[cur, n]
+
+
+def _trace_linear_rows(
+    unsigned char[::1] path,
+    Py_ssize_t pos,
+    Py_ssize_t i,
+    Py_ssize_t j,
+    const unsigned char[:, ::1] trace
+):
+    """Follow stored linear decisions; Python completes leading/trailing gaps."""
+    cdef unsigned char move
+    with nogil:
+        while i and j:
+            move = trace[i, j]
+            pos -= 1
+            path[pos] = move
+            i -= move != 1
+            j -= move != 2
+    return pos, i, j
+
+
+def _trace_affine_rows(
+    unsigned char[::1] path,
+    Py_ssize_t pos,
+    Py_ssize_t i,
+    Py_ssize_t j,
+    const unsigned char[:, ::1] trace
+):
+    """Follow H/I/D decisions without retaining the full floating-point matrices."""
+    cdef unsigned char state = 0, flags
+    with nogil:
+        while i and j:
+            flags = trace[i, j]
+            if state == 0:
+                state = flags & 3
+                if state:
+                    continue
+                i -= 1
+                j -= 1
+                pos -= 1
+                path[pos] = 0
+            elif state == 1:
+                if not (flags & 4):
+                    state = 0
+                j -= 1
+                pos -= 1
+                path[pos] = 1
+            else:
+                if not (flags & 8):
+                    state = 0
+                i -= 1
+                pos -= 1
+                path[pos] = 2
+    return pos, i, j

@@ -49,6 +49,17 @@ Convenience wrappers with preset scoring schemes.
     pair_align_prot
 
 
+Multiple alignment
+------------------
+
+Progressive alignment using averaged residue profiles.
+
+.. autosummary::
+   :toctree: generated/
+
+    multi_align
+
+
 Alignment statistics
 --------------------
 
@@ -437,6 +448,7 @@ from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
 from skbio.alignment._distance import align_dists
 from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
+from skbio.alignment._multi import multi_align
 
 __all__ = [
     "TabularMSA",
@@ -451,6 +463,7 @@ __all__ = [
     "align_score",
     "align_dists",
     "pair_align",
+    "multi_align",
     "pair_align_nucl",
     "pair_align_prot",
 ]
