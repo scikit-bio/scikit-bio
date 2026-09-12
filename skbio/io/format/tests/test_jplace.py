@@ -19,21 +19,13 @@ import skbio
 import skbio.io
 from skbio.io import JplaceFormatError
 from skbio.tree import TreeNode, BPTree
-from skbio.tree.bp import parse_jplace
+from skbio.tree.bp import parse_jplace, write_jplace
 from skbio.io.format.jplace import _jplace_sniffer
 
 
 def _fixture_path():
-    # Reuse the jplace fixture that ships with the BP tests rather than
-    # duplicating a ~10 KB file under this test directory.
     return os.path.join(
-        os.path.dirname(skbio.__file__),
-        "tree",
-        "tests",
-        "bp",
-        "data",
-        "200",
-        "placement.jplace",
+        os.path.dirname(__file__), "data", "placement.jplace"
     )
 
 
@@ -343,6 +335,47 @@ class TestParseJplace(unittest.TestCase):
             TreeNode.from_bptree(tree).compare_rfd(TreeNode.from_bptree(bp)),
             0,
         )
+
+    def test_non_object_document_raises(self):
+        # A JSON array (not an object) must raise ValueError, not a TypeError
+        # that would bypass the registry's JplaceFormatError wrapping.
+        with self.assertRaises(ValueError):
+            parse_jplace(json.dumps([1, 2, 3]))
+
+    def test_missing_version_raises(self):
+        # ``version`` is required, matching the sniffer's acceptance criteria.
+        data = json.loads(self.jplacedata)
+        del data["version"]
+        with self.assertRaises(ValueError):
+            parse_jplace(json.dumps(data))
+
+
+class TestWriteJplaceBackend(unittest.TestCase):
+    """Direct ``write_jplace`` options and validation (not exposed through the
+    registry writer, which always writes defaults)."""
+
+    def setUp(self):
+        self.path = _fixture_path()
+        self.bp = skbio.io.read(self.path, into=BPTree, format="jplace")
+
+    def test_fields_version_metadata_overrides(self):
+        buf = io.StringIO()
+        write_jplace(self.bp, buf, fields=["edge_num", "likelihood"],
+                     version=2, metadata={"invocation": "pplacer"})
+        doc = json.loads(buf.getvalue())
+        self.assertEqual(doc["fields"], ["edge_num", "likelihood"])
+        self.assertEqual(doc["version"], 2)
+        self.assertEqual(doc["metadata"], {"invocation": "pplacer"})
+
+    def test_fields_as_string_raises(self):
+        # A bare string would be split into single characters by list().
+        with self.assertRaises(TypeError):
+            write_jplace(self.bp, io.StringIO(), fields="edge_num")
+
+    def test_fields_without_edge_num_raises(self):
+        # The written document must stay readable by parse_jplace.
+        with self.assertRaises(ValueError):
+            write_jplace(self.bp, io.StringIO(), fields=["likelihood"])
 
 
 if __name__ == "__main__":
