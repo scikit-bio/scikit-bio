@@ -113,6 +113,11 @@ cdef unicode _strip_comments(unicode data):
             out.append(data[seg_start:i])
             comment_depth += 1
 
+    if comment_depth > 0:
+        # An unterminated ``[`` comment: ``seg_start`` still points at the
+        # pre-comment text (already emitted), so appending the tail here would
+        # duplicate it and reintroduce the ``[``. Treat the input as malformed.
+        raise ValueError("Unbalanced '[' comment in newick string")
     out.append(data[seg_start:n])
     return u''.join(out)
 
@@ -154,6 +159,11 @@ cdef void _set_node_metadata(cnp.uint32_t ptr, unicode token,
             edge = number_from_edge(token[curly:])
         else:
             name = _unquote_name(token, convert_underscores)
+
+    # Whitespace around a branch-length ``:`` (e.g. ") :0.1") can leave an
+    # empty name once unquoted; an unnamed node is None, not "".
+    if name is not None and len(name) == 0:
+        name = None
 
     names[ptr] = name
     lengths[ptr] = length
@@ -462,8 +472,9 @@ def parse_jplace(object data):
     Raises
     ------
     ValueError
-        If a required member (``tree``, ``placements``, ``fields``) is missing,
-        or if ``fields`` does not include ``edge_num``.
+        If the document is not a JSON object, if a required member (``tree``,
+        ``placements``, ``fields``, ``version``) is missing, or if ``fields``
+        does not include ``edge_num``.
     KeyError
         If a placement record lacks the required ``n`` member.
 
@@ -492,12 +503,18 @@ def parse_jplace(object data):
         Py_ssize_t placement_idx, placement_inner_idx, fragment_idx
         Py_ssize_t n_fragments
         BPTree tree
-        object df
+        object df, parsed
         set edges
 
-    as_json = json.loads(data)
+    # Load into an untyped object first: a non-object JSON document (e.g. a
+    # list) would raise TypeError when bound to the ``dict``-typed ``as_json``,
+    # bypassing the ValueError wrapping the caller expects.
+    parsed = json.loads(data)
+    if not isinstance(parsed, dict):
+        raise ValueError("jplace document must be a JSON object")
+    as_json = parsed
 
-    for key in ('tree', 'placements', 'fields'):
+    for key in ('tree', 'placements', 'fields', 'version'):
         if key not in as_json:
             raise ValueError(
                 "jplace document is missing the required '%s' member" % key
@@ -577,12 +594,33 @@ def write_jplace(BPTree tree, object output, object fields=None,
     metadata : dict, optional
         Free-form metadata to record. Defaults to ``{}``.
 
+    Raises
+    ------
+    TypeError
+        If ``fields`` is a string rather than a sequence of field names.
+    ValueError
+        If ``fields`` is given but does not include ``edge_num``, which the
+        reader requires to map placements onto the reference tree.
+
     """
     cdef:
         unicode tree_str
+        list field_names
         object buf, document
 
     from io import StringIO
+
+    # Normalize/validate ``fields``: a bare string would be split into single
+    # characters by ``list()``, and the document must carry ``edge_num`` to be
+    # readable by ``parse_jplace``.
+    if fields is None:
+        field_names = ["edge_num"]
+    elif isinstance(fields, str):
+        raise TypeError("fields must be a list of field names, not a string")
+    else:
+        field_names = list(fields)
+        if "edge_num" not in field_names:
+            raise ValueError("fields must include 'edge_num'")
 
     buf = StringIO()
     write_newick(tree, buf, True)
@@ -591,7 +629,7 @@ def write_jplace(BPTree tree, object output, object fields=None,
     document = {
         "tree": tree_str,
         "placements": [],
-        "fields": list(fields) if fields is not None else ["edge_num"],
+        "fields": field_names,
         "version": version if version is not None else 3,
         "metadata": metadata if metadata is not None else {},
     }
