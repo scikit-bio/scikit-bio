@@ -181,10 +181,10 @@ scalability. For throughput on trees with millions to billions of nodes, the
 ``BPTree`` reader and writer are backed by a compiled (Cython) implementation
 in :mod:`skbio.tree.bp`.
 
-.. note:: Because the ``BPTree`` reader uses its own compiled newick scanner
-   rather than the tokenizer described above, the ``convert_underscores``
-   behavior does not apply to it -- underscores in unquoted ``BPTree`` labels
-   are preserved literally.
+.. note:: The ``BPTree`` reader uses its own compiled newick scanner rather
+   than the tokenizer described above, but it honors ``convert_underscores``
+   the same way (default ``True``): underscores in unquoted labels are read as
+   spaces unless ``convert_underscores=False`` is passed.
 
 Examples
 --------

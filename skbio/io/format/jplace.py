@@ -37,8 +37,7 @@ Reading a jplace file yields the reference tree as a
 :class:`~skbio.tree.BPTree`, the succinct balanced-parentheses representation
 that carries the ``{}`` edge numbers and scales to the large reference trees
 typical of placement studies. The placement records themselves are **dropped**;
-use :func:`skbio.tree.bp.parse_jplace` to obtain the placements table alongside
-the tree.
+only the reference tree is returned.
 
 Writing a ``BPTree`` produces a jplace document containing the reference tree
 (with its ``{}`` edge numbers) and an empty ``placements`` list -- a ``BPTree``
@@ -47,8 +46,6 @@ in scikit-bio's compiled backend, so throughput is preserved for large files.
 
 Caveats
 ~~~~~~~
-- Multiplicities are not supported by :func:`skbio.tree.bp.parse_jplace`; any
-  ``"nm"`` entry is ignored.
 - Edge numbers use ``{}`` only. ``[]`` is treated as a standard Newick comment.
 - A jplace document written from an edge-number-less ``BPTree`` repeats ``{0}``
   on every edge; the round trip is only meaningful when the tree carries edge
