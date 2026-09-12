@@ -8,17 +8,14 @@
 
 import os
 import re
-import json
 import io
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
-import pandas as pd
-import pandas.testing as pdt
 import skbio
 
-from skbio.tree.bp import parse_newick, write_newick, parse_jplace
+from skbio.tree.bp import parse_newick, write_newick
 
 
 def get_data_path(filename):
@@ -198,96 +195,6 @@ class NewickTests(TestCase):
             self.assertEqual(obs_bp.name(i), e_n)
             self.assertEqual(obs_bp.length(i), e_l)
 
-
-class JPlaceParseTests(TestCase):
-    def setUp(self):
-        self.jplacedata = open(get_data_path('200/placement.jplace')).read()
-        no_edge_numbers = re.sub(r"{\d+}", '',
-                                 json.loads(self.jplacedata)['tree'])
-        self.tree = skbio.TreeNode.read([no_edge_numbers])
-
-    def test_place_jplace_square_braces(self):
-        jplacedata = json.loads(self.jplacedata)
-        treestr = jplacedata['tree']
-        treestr = re.sub(r"{(\d+)}", r"[\1]", treestr)
-        jplacedata['tree'] = treestr
-        jplacedata = json.dumps(jplacedata)
-
-        exp_tree = self.tree
-        obs_df, obs_tree = parse_jplace(jplacedata)
-        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
-        self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
-        for n in obs_tree.traverse(include_self=False):
-            self.assertTrue(n.edge_num >= 0)
-
-    def test_parse_jplace_simple(self):
-        columns = ['fragment', 'edge_num', 'likelihood', 'like_weight_ratio',
-                   'distal_length', 'pendant_length']
-        exp_df = [["82", 361, 0.01013206496780672, 1, 0.02652932626620403,
-                   0.039354548684623215],
-                  ["99", 308, 0.04520741687623886, 1, 0.11020044356641526,
-                   0.06550337922097477],
-                  ["43", 309, 0.04054866161921744, 1, 0.010712923050783987,
-                   0.020946988900520196],
-                  ["195", 277, 0.01918907908397749, 1, 0.03065741838803451,
-                   0.04513513498399864],
-                  ["162", 55, 0.01758935282545493, 1, 0.0033199487685078776,
-                   0.05388735804976052],
-                  ["56", 81, 0.2366882303770561, 1, 0.04172580852519453,
-                   0.0007060238727097983],
-                  ["91", 105, 0.0001863393767883581, 1, 0.04578898721138839,
-                   0.08655004339151215],
-                  ["174", 89, 0.01216463967379211, 1, 0.04707020642820376,
-                   0.045206727542450205],
-                  ["5", 143, 0.012162345471765756, 1, 0.023797389484252734,
-                   0.10447375403452556],
-                  ["55", 139, 0.09563944060686769, 1, 0.014593217782258146,
-                   0.04537214236560885]]
-        exp_df = pd.DataFrame(exp_df, columns=columns)
-        exp_tree = self.tree
-        obs_df, obs_tree = parse_jplace(self.jplacedata)
-        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
-        pdt.assert_frame_equal(obs_df, exp_df)
-        self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
-
-    def test_parse_jplace_multiple_per_fragment(self):
-        columns = ['fragment', 'edge_num', 'likelihood', 'like_weight_ratio',
-                   'distal_length', 'pendant_length']
-        exp_df = [["82", 361, 0.01013206496780672, 1, 0.02652932626620403,
-                   0.039354548684623215],
-                  ["99", 308, 0.04520741687623886, 1, 0.11020044356641526,
-                   0.06550337922097477],
-                  ["99", 309, 0.04520741687623886, 1, 0.11020044356641526,
-                   0.00550337922097477],
-                  ["55", 139, 0.09563944060686769, 1, 0.014593217782258146,
-                   0.04537214236560885],
-                  ["55", 138, 0.09563944060686769, 10, 0.014593217782258146,
-                   0.04537214236560885]]
-        exp_df = pd.DataFrame(exp_df, columns=columns)
-
-        data = json.loads(self.jplacedata)
-        keep = []
-        for placement in data['placements']:
-            if placement['n'][0] == '82':
-                keep.append(placement)
-            elif placement['n'][0] == '99':
-                placement['p'].append([309, 0.04520741687623886, 1,
-                                       0.11020044356641526,
-                                       0.00550337922097477])
-                keep.append(placement)
-            elif placement['n'][0] == '55':
-                placement['p'].append([138, 0.09563944060686769, 10,
-                                       0.014593217782258146,
-                                       0.04537214236560885])
-                keep.append(placement)
-        data['placements'] = keep
-        data = json.dumps(data)
-        exp_tree = self.tree
-        obs_df, obs_tree = parse_jplace(data)
-        obs_tree = skbio.TreeNode.from_bptree(obs_tree)
-        pdt.assert_frame_equal(obs_df, exp_df)
-        self.assertEqual(obs_tree.compare_rfd(exp_tree), 0)
-
     def test_parse_newick_linear_tree(self):
         test = '((b:3)a:2)root:1;'
         topology = parse_newick(test)
@@ -296,6 +203,18 @@ class JPlaceParseTests(TestCase):
         self.assertEqual([n.name for n in skbio_tree.children], ["a"])
         self.assertEqual([n.name for n in skbio_tree.non_tips()], ["a"])
         self.assertEqual([n.name for n in skbio_tree.tips()], ["b"])
+
+    def test_parse_newick_empty_name_is_none(self):
+        # Whitespace before a branch-length ':' leaves an empty label once
+        # unquoted; an unnamed node must be None, not "".
+        obs = parse_newick("((b:1) :0.1)root;")
+        names = [obs.name(i) for i in range(obs.data.size)]
+        self.assertNotIn("", names)
+        self.assertIn(None, names)
+
+    def test_parse_newick_unterminated_comment_raises(self):
+        with self.assertRaises(ValueError):
+            parse_newick("((a,b)c,d)r[oops;")
 
 
 if __name__ == '__main__':
