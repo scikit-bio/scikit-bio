@@ -25,7 +25,8 @@ from ._pair import (
     _leading_gaps,
     _encode_path,
 )
-from ._utils import encode_sequences, prep_gapcost
+from ._utils import encode_sequences, prep_gapcost, _get_seqids
+from skbio.tree._utils import _tree_to_lnkmat
 from ._cutils import (
     _fill_linear_matrix,
     _fill_affine_matrices,
@@ -89,11 +90,10 @@ def multi_align(
         Otherwise, all sequence pairs are aligned and their score-based distances
         are passed in condensed form to SciPy average linkage (UPGMA).
     ids : iterable of str, optional
-        Unique string identifiers in input order, used for guide-tree tips. Explicit
-        values override sequence metadata. Otherwise, use metadata ``'id'`` values
-        if present in every sequence and unique; use ``['0', '1', ...]`` if none
-        is present. Partial, duplicate, or non-string metadata IDs raise an error.
-
+        Unique string identifiers in input order to match tips in the provided guide
+        tree. Override sequence metadata if provided. Otherwise, use metadata ``'id'``
+        values if present in every sequence and unique, or use ``['0', '1', ...]`` if
+        none is present. Partial, duplicate, or non-string metadata IDs raise an error.
     method : {'full', 'rolling'}, optional
         Profile DP backend. 'full' (default) reuses the pairwise fill and traceback
         kernels, retaining one linear or three affine score matrices. 'rolling'
@@ -281,53 +281,33 @@ def multi_align(
             gapped = seq.has_gaps()
         elif isinstance(seq, (Sequence, str)):
             chars = str(seq)
-            gapped = "-" in chars or "." in chars
+            gapped = "-" in chars or "." in chars  # TODO: is this correct?
         else:
             gapped = False
         if gapped:
             raise ValueError("Input sequences must be ungapped.")
 
     encoded, matrix, _ = encode_sequences(sequences, sub_score)
+    # Check symmetry. It's not that MSA absolutely require it. But its behavior will be
+    # unpredictable with asymmetric substitution scores.
     if not np.isfinite(matrix).all() or not np.array_equal(matrix, matrix.T):
         raise ValueError("Substitution scores must be finite and symmetric.")
+
     atol = matrix.dtype.type(atol)
     if not np.isfinite(atol):
         raise ValueError("`atol` is too large for the scoring dtype.")
+
+    # Prepare gap penalties
     gap_open, gap_extend = prep_gapcost(gap_cost, matrix.dtype.type)
     if not np.isfinite([gap_open, gap_extend]).all() or min(gap_open, gap_extend) < 0:
         raise ValueError("Gap costs must be finite and nonnegative.")
-    if ids is None:
-        present = [
-            isinstance(seq, Sequence) and seq.has_metadata() and "id" in seq.metadata
-            for seq in sequences
-        ]
-        if any(present):
-            if not all(present):
-                raise ValueError(
-                    "Metadata 'id' must be present in every sequence or none."
-                )
-            ids = [seq.metadata["id"] for seq in sequences]
-        else:
-            ids = list(map(str, range(len(sequences))))
-    else:
-        ids = list(ids)
-    if (
-        len(ids) != len(sequences)
-        or not all(isinstance(x, str) for x in ids)
-        or len(set(ids)) != len(ids)
-    ):
-        raise ValueError("`ids` must be unique strings, one per sequence.")
-    if guide_tree is not None:
-        if not isinstance(guide_tree, TreeNode):
-            raise TypeError("`guide_tree` must be a TreeNode.")
-        tips = [tip.name for tip in guide_tree.tips()]
-        if len(tips) != len(ids) or set(tips) != set(ids):
-            raise ValueError("Guide-tree tips must match `ids` exactly.")
-        if any(
-            len(node.children) != 2 for node in guide_tree.non_tips(include_self=True)
-        ):
-            raise ValueError("The guide tree must be binary.")
 
+    # Prepare custom guide tree
+    # TODO: Skip if tree is not supplied
+    ids = _get_seqids(sequences, ids)
+
+    # Fall back to pairwise alignment
+    # TODO: Merge into main workflow.
     if len(sequences) == 2:
         path = pair_align(
             *sequences,
@@ -338,20 +318,28 @@ def multi_align(
         ).paths[0]
         return AlignPath.from_bits(path.to_bits())
 
-    # Compact the observed alphabet once; identity matrices may span all ASCII.
+    # Shrink substitution matrix to observed characters only. This accelerates the
+    # calculation without changing the result.
+    # TODO: investigate
     alphabet, inverse = np.unique(np.concatenate(encoded), return_inverse=True)
     encoded = np.split(inverse, np.cumsum([len(x) for x in encoded])[:-1])
     matrix = np.ascontiguousarray(matrix[np.ix_(alphabet, alphabet)])
+
     workspace = _ProfileWorkspace()
     n = len(sequences)
+
+    # Decide merging order. If a guide tree is provided, convert it into a linkage
+    # matrix (only first two columns are needed). Otherwise, perform pairwise
+    # alignments, calculate a distance matrix using the Feng-Doolittle metric, then
+    # calculate a guide tree using UPGMA and retain the linkage matrix.
+    # `merges` is an index array of (n_seqs - 1, 2)
     if guide_tree is None:
         distances = _multi_distances(
             encoded, matrix, gap_open, gap_extend, free_ends, ids, workspace, atol
         )
-        # UPGMA needs only cluster indices, not TreeNode objects or branch lengths.
         merges = linkage(distances, method="average")[:, :2].astype(np.intp)
     else:
-        merges = _guide_merges(guide_tree, ids)
+        merges = _tree_to_lnkmat(guide_tree, ids)
 
     profiles = {}
     eye = np.eye(len(matrix), dtype=matrix.dtype)
@@ -370,21 +358,6 @@ def multi_align(
         )
     _, bits, order = profiles[2 * n - 2]
     return AlignPath.from_bits(bits[np.argsort(order)])
-
-
-def _guide_merges(tree, ids):
-    """Convert a validated binary tree to linkage-style child indices."""
-    leaves = dict(zip(ids, range(len(ids))))
-    indices = {}
-    merges = []
-    for node in tree.postorder():
-        if node.is_tip():
-            indices[node] = leaves[node.name]
-        else:
-            # Postorder numbers children before parents and preserves child order.
-            indices[node] = len(ids) + len(merges)
-            merges.append([indices.pop(child) for child in node.children])
-    return np.array(merges, dtype=np.intp)
 
 
 def _multi_distances(
