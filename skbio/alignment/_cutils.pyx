@@ -28,12 +28,11 @@ cdef inline floating xabs(floating x) noexcept nogil:
         return fabs(x)
 
 
-cdef inline floating lbound(bint local, floating gap_extend) noexcept nogil:
+cdef inline floating lbound(bint local, floating score) noexcept nogil:
     """Get lower bound of alignment score.
 
-    `gap_extend` is supplied to let the compiler know the floating type (float or
-    double). Otherwise it will complain: "Return type is not specified as argument
-    type".
+    `score` is supplied to let the compiler know the floating type (float or double).
+    Otherwise it will complain: "Return type is not specified as argument type".
 
     Currently it is not used, because `-INFINITY` is good enough.
 
@@ -46,25 +45,25 @@ cdef inline floating lbound(bint local, floating gap_extend) noexcept nogil:
         return -DBL_MAX
 
 
-def _fill_linear_matrix(
-    floating[:, ::1] scomat,
+def _fill_matrix_linear(
+    floating[:, ::1] primat,
     const floating[:, ::1] query,
     const Py_ssize_t[::1] target,
-    floating gap_extend,
+    floating gap,
     bint local,
 ):
     """Calculate optimal scores over the alignment matrix with linear gap penalty.
 
     Parameters:
     ----------
-    scomat : memoryview of ndarray of shape (m, n)
-        Main matrix.
+    primat : memoryview of ndarray of shape (m, n)
+        Primary matrix.
     query : memoryview of ndarray of float of shape (m, n_symbols)
         Query profile.
     target : memoryview of ndarray of int of shape (n,)
         Target sequence.
-    gap_extend : floating
-        Gap extension penalty.
+    gap : floating
+        Gap penalty.
     local : bint
         Local (True) or global (False) alignment.
 
@@ -96,37 +95,37 @@ def _fill_linear_matrix(
 
     """
     cdef floating bound = 0 if local else -INFINITY
-    cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
+    cdef Py_ssize_t m1 = primat.shape[0], n1 = primat.shape[1]
     cdef Py_ssize_t i, j
     cdef floating* row
 
     for i in range(1, m1):
         row = &query[i - 1, 0]
         for j in range(1, n1):
-            scomat[i, j] = max(
-                scomat[i - 1, j - 1] + row[target[j - 1]],
-                scomat[i, j - 1] - gap_extend,
-                scomat[i - 1, j] - gap_extend,
+            primat[i, j] = max(
+                primat[i - 1, j - 1] + row[target[j - 1]],
+                primat[i, j - 1] - gap,
+                primat[i - 1, j] - gap,
                 bound,
             )
 
 
-def _fill_affine_matrices(
-    floating[:, ::1] scomat,
+def _fill_matrix_affine(
+    floating[:, ::1] primat,
     floating[:, ::1] insmat,
     floating[:, ::1] delmat,
     const floating[:, ::1] query,
     const Py_ssize_t[::1] target,
-    floating gap_open,
-    floating gap_extend,
+    floating gap_o,
+    floating gap_e,
     bint local,
 ):
     """Calculate optimal scores over the alignment matrix with affine gap penalty.
 
     Parameters:
     ----------
-    scomat : memoryview of ndarray of shape (m, n)
-        Main matrix.
+    primat : memoryview of ndarray of shape (m, n)
+        Primary matrix.
     insmat : memoryview of ndarray of shape (m, n)
         Insertion matrix.
     delmat : memoryview of ndarray of shape (m, n)
@@ -135,21 +134,21 @@ def _fill_affine_matrices(
         Query profile.
     target : memoryview of ndarray of int of shape (n,)
         Target sequence.
-    gap_open : floating
+    gap_o : floating
         Gap opening penalty.
-    gap_extend : floating
+    gap_e : floating
         Gap extension penalty.
     local : bint
         Local (True) or global (False) alignment.
 
     See Also
     --------
-    _fill_linear_matrix
+    _fill_matrix_linear
 
     """
     cdef floating bound = 0 if local else -INFINITY
-    cdef floating gap_open_extend = gap_open + gap_extend
-    cdef Py_ssize_t m1 = scomat.shape[0], n1 = scomat.shape[1]
+    cdef floating gap_oe = gap_o + gap_e
+    cdef Py_ssize_t m1 = primat.shape[0], n1 = primat.shape[1]
     cdef Py_ssize_t i, j
     cdef floating sub_, ins_, del_
     cdef floating* row
@@ -159,21 +158,97 @@ def _fill_affine_matrices(
         for j in range(1, n1):
 
             # substitution (diagonal)
-            sub_ = scomat[i - 1, j - 1] + row[target[j - 1]]
+            sub_ = primat[i - 1, j - 1] + row[target[j - 1]]
 
             # open a new insertion or extend a previous insertion (horizontal)
             ins_ = insmat[i, j] = max(
-                scomat[i, j - 1] - gap_open_extend,
-                insmat[i, j - 1] - gap_extend,
+                primat[i, j - 1] - gap_oe,
+                insmat[i, j - 1] - gap_e,
             )
 
             # open a new deletion or extend a previous deletion (vertical)
             del_ = delmat[i, j] = max(
-                scomat[i - 1, j] - gap_open_extend,
-                delmat[i - 1, j] - gap_extend,
+                primat[i - 1, j] - gap_oe,
+                delmat[i - 1, j] - gap_e,
             )
 
-            scomat[i, j] = max(sub_, ins_, del_, bound)
+            primat[i, j] = max(sub_, ins_, del_, bound)
+
+
+def _fill_matrix_linear_mn(
+    floating[:, ::1] primat,
+    const floating[:, ::1] scores,
+    floating gap,
+    bint local,
+):
+    """Calculate optimal scores over the alignment matrix with linear gap penalty.
+
+    Parameters:
+    ----------
+    scores : memoryview of ndarray of float of shape (m, n)
+        Query x target score matrix.
+
+    Notes
+    -----
+    This is a variant of `_fill_matrix_linear`. It takes a pre-calculated matrix of
+    query x target matrix as input, in which cell values represent substitution score
+    of every pair of characters. This method consumes more memory, and is slower in
+    in benchmarks, but it enables alignment-to-alignment alignment (i.e., both query
+    and target are alignments of multiple sequences).
+
+    """
+    cdef floating bound = 0 if local else -INFINITY
+    cdef Py_ssize_t m1 = primat.shape[0], n1 = primat.shape[1]
+    cdef Py_ssize_t i, j
+    cdef floating* row
+
+    for i in range(1, m1):
+        row = &scores[i - 1, 0]
+        for j in range(1, n1):
+            primat[i, j] = max(
+                primat[i - 1, j - 1] + row[j - 1],
+                primat[i, j - 1] - gap,
+                primat[i - 1, j] - gap,
+                bound,
+            )
+
+
+def _fill_matrix_affine_mn(
+    floating[:, ::1] primat,
+    floating[:, ::1] insmat,
+    floating[:, ::1] delmat,
+    const floating[:, ::1] scores,
+    floating gap_o,
+    floating gap_e,
+    bint local,
+):
+    """Calculate optimal scores over the alignment matrix with affine gap penalty.
+
+    Notes
+    -----
+    This is a variant of `_fill_matrix_affine`. See `_fill_matrix_linear_mn`.
+
+    """
+    cdef floating bound = 0 if local else -INFINITY
+    cdef floating gap_oe = gap_o + gap_e
+    cdef Py_ssize_t m1 = primat.shape[0], n1 = primat.shape[1]
+    cdef Py_ssize_t i, j
+    cdef floating sub_, ins_, del_
+    cdef floating* row
+
+    for i in range(1, m1):
+        row = &scores[i - 1, 0]
+        for j in range(1, n1):
+            sub_ = primat[i - 1, j - 1] + row[j - 1]
+            ins_ = insmat[i, j] = max(
+                primat[i, j - 1] - gap_oe,
+                insmat[i, j - 1] - gap_e,
+            )
+            del_ = delmat[i, j] = max(
+                primat[i - 1, j] - gap_oe,
+                delmat[i - 1, j] - gap_e,
+            )
+            primat[i, j] = max(sub_, ins_, del_, bound)
 
 
 def _trace_one_linear(
@@ -181,8 +256,8 @@ def _trace_one_linear(
     Py_ssize_t pos,
     Py_ssize_t i,
     Py_ssize_t j,
-    floating[:, ::1] scomat,
-    floating gap_extend,
+    floating[:, ::1] primat,
+    floating gap,
     bint local,
     floating eps,
 ):
@@ -198,10 +273,10 @@ def _trace_one_linear(
         Current row index in the matrix.
     j : int
         Current column index in the matrix.
-    scomat : memoryview of ndarray of shape (m, n)
-        Main matrix.
-    gap_extend : floating
-        Gap extension penalty.
+    primat : memoryview of ndarray of shape (m, n)
+        Primary matrix.
+    gap : floating
+        Gap penalty.
     local : bint
         Local (True) or global (False) alignment.
     eps : floating
@@ -241,19 +316,19 @@ def _trace_one_linear(
 
     # will stop when reaching either edge of the matrix
     while i and j:
-        score = scomat[i, j]
+        score = primat[i, j]
         if local and xabs(score) <= eps:
             break
         pos -= 1
-        # Don't pre-calculate `gap_extend + score`. Otherwise it will not match the
-        # arithmetic order of matrix filling, causing greater floating-point error.
+        # Don't pre-calculate `gap + score`. Otherwise it will not match the arithmetic
+        # order of matrix filling, causing greater floating-point error.
 
         # deletion (vertical; gap in seq2)
-        if xabs(scomat[i - 1, j] - gap_extend - score) <= eps:
+        if xabs(primat[i - 1, j] - gap - score) <= eps:
             path[pos] = 2
             i -= 1
         # insertion (horizontal; gap in seq1)
-        elif xabs(scomat[i, j - 1] - gap_extend - score) <= eps:
+        elif xabs(primat[i, j - 1] - gap - score) <= eps:
             path[pos] = 1
             j -= 1
         # substitution (diagonal; no gap)
@@ -270,10 +345,10 @@ def _trace_one_affine(
     Py_ssize_t pos,
     Py_ssize_t i,
     Py_ssize_t j,
-    floating[:, ::1] scomat,
+    floating[:, ::1] primat,
     floating[:, ::1] insmat,
     floating[:, ::1] delmat,
-    floating gap_extend,
+    floating gap_e,
     bint local,
     floating eps,
 ):
@@ -289,13 +364,13 @@ def _trace_one_affine(
         Current row index in the matrix.
     j : int
         Current column index in the matrix.
-    scomat : memoryview of ndarray of shape (m, n)
-        Main matrix.
+    primat : memoryview of ndarray of shape (m, n)
+        Primary matrix.
     insmat : memoryview of ndarray of shape (m, n)
         Insertion matrix.
     delmat : memoryview of ndarray of shape (m, n)
         Deletion matrix.
-    gap_extend : floating
+    gap_e : floating
         Gap extension penalty.
     local : bint
         Local (True) or global (False) alignment.
@@ -317,15 +392,15 @@ def _trace_one_affine(
     
         Main matrix: jumping to deletion matrix > jumping to insertion matrix >
           substitution.
-        Deletion matrix: staying in deletion matrix > jumping to main matrix.
-        Insertion matrix: staying in insertion matrix > jumping to main matrix.
+        Deletion matrix: staying in deletion matrix > jumping to Primary matrix.
+        Insertion matrix: staying in insertion matrix > jumping to Primary matrix.
 
     """
     cdef floating score
     cdef int mat = 0
 
     while i and j:
-        score = scomat[i, j]
+        score = primat[i, j]
         if local and xabs(score) <= eps:
             break
 
@@ -333,7 +408,7 @@ def _trace_one_affine(
         if mat == 2:
             # extend an existing gap (stay in the current matrix),
             # or open a new gap (jump back to main matrix)
-            if xabs(delmat[i - 1, j] - gap_extend - delmat[i, j]) > eps:
+            if xabs(delmat[i - 1, j] - gap_e - delmat[i, j]) > eps:
                 mat = 0
             i -= 1
             pos -= 1
@@ -342,7 +417,7 @@ def _trace_one_affine(
         # insertion matrix (horizontal; gap in seq1)
         elif mat == 1:
             # same as above
-            if xabs(insmat[i, j - 1] - gap_extend - insmat[i, j]) > eps:
+            if xabs(insmat[i, j - 1] - gap_e - insmat[i, j]) > eps:
                 mat = 0
             j -= 1
             pos -= 1
@@ -416,8 +491,8 @@ def _multi_align_score(
     const Py_ssize_t[::1] starts,
     const Py_ssize_t[::1] stops,
     const floating[:, ::1] submat,
-    floating gap_open,
-    floating gap_extend,
+    floating gap_o,
+    floating gap_e,
     bint free_ends,
 ):
     """Calculate sum-of-pairs (SP) alignment score of aligned sequences.
@@ -436,9 +511,9 @@ def _multi_align_score(
         Stop position of terminal gap-free region of each sequence.
     submat : ndarray of float of shape (n_alphabet, n_alphabet)
         Substitution matrix.
-    gap_open : float
+    gap_o : float
         Gap opening penalty.
-    gap_extend : float
+    gap_e : float
         Gap extension penalty.
     free_ends : bool
         Whether terminal gaps are free from penalization.
@@ -507,7 +582,7 @@ def _multi_align_score(
 
                 # end of previous gap
                 if prev and curr != prev:
-                    score -= gap_open + cumL * gap_extend
+                    score -= gap_o + cumL * gap_e
 
                 # non-gap in both sequences: iterate by position within segment
                 if curr == 0:
@@ -532,17 +607,17 @@ def _multi_align_score(
 
             # handle last gap
             if prev:
-                score -= gap_open + cumL * gap_extend
+                score -= gap_o + cumL * gap_e
 
     return score
 
 
-def _fill_linear_rows(
+def _fill_rows_linear(
     floating[:, ::1] rows,
     floating[::1] edge,
     unsigned char[:, ::1] trace,
     const floating[:, ::1] scores,
-    floating gap_extend,
+    floating gap,
     floating eps
 ):
     """Fill rolling H rows; save pairwise traceback decisions in one byte/cell.
@@ -562,8 +637,8 @@ def _fill_linear_rows(
             rows[cur, 0] = edge[i]
             for j in range(1, n + 1):
                 sub_ = rows[prev, j - 1] + scores[i - 1, j - 1]
-                ins_ = rows[cur, j - 1] - gap_extend
-                del_ = rows[prev, j] - gap_extend
+                ins_ = rows[cur, j - 1] - gap
+                del_ = rows[prev, j] - gap
                 best = rows[cur, j] = max(sub_, ins_, del_)
                 # Same arithmetic and deletion > insertion > diagonal priority
                 # as _trace_one_linear. Tolerance never changes the DP maximum.
@@ -576,15 +651,15 @@ def _fill_linear_rows(
             edge[i] = rows[cur, n]
 
 
-def _fill_affine_rows(
+def _fill_rows_affine(
     floating[:, ::1] rows,
     floating[:, ::1] insrows,
     floating[:, ::1] delrows,
     floating[::1] edge,
     unsigned char[:, ::1] trace,
     const floating[:, ::1] scores,
-    floating gap_open,
-    floating gap_extend,
+    floating gap_o,
+    floating gap_e,
     floating eps
 ):
     """Fill rolling H/I/D rows with the pairwise affine recurrence.
@@ -597,7 +672,7 @@ def _fill_affine_rows(
     """
     cdef Py_ssize_t m = scores.shape[0], n = scores.shape[1]
     cdef Py_ssize_t i, j, cur, prev
-    cdef floating oe = gap_open + gap_extend
+    cdef floating oe = gap_o + gap_e
     cdef floating sub_, ins_, del_, best, ins_ext, del_ext
     cdef unsigned char flags
     with nogil:
@@ -609,8 +684,8 @@ def _fill_affine_rows(
             insrows[cur, 0] = -INFINITY
             for j in range(1, n + 1):
                 sub_ = rows[prev, j - 1] + scores[i - 1, j - 1]
-                ins_ext = insrows[cur, j - 1] - gap_extend
-                del_ext = delrows[prev, j] - gap_extend
+                ins_ext = insrows[cur, j - 1] - gap_e
+                del_ext = delrows[prev, j] - gap_e
                 ins_ = insrows[cur, j] = max(rows[cur, j - 1] - oe, ins_ext)
                 del_ = delrows[cur, j] = max(rows[prev, j] - oe, del_ext)
                 best = rows[cur, j] = max(sub_, ins_, del_)
@@ -627,7 +702,7 @@ def _fill_affine_rows(
             edge[i] = rows[cur, n]
 
 
-def _trace_linear_rows(
+def _trace_rows_linear(
     unsigned char[::1] path,
     Py_ssize_t pos,
     Py_ssize_t i,
@@ -646,7 +721,7 @@ def _trace_linear_rows(
     return pos, i, j
 
 
-def _trace_affine_rows(
+def _trace_rows_affine(
     unsigned char[::1] path,
     Py_ssize_t pos,
     Py_ssize_t i,

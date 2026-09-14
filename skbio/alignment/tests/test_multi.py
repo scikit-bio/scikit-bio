@@ -8,7 +8,6 @@
 
 from functools import lru_cache
 from itertools import product
-from io import StringIO
 import unittest
 
 import numpy as np
@@ -16,12 +15,12 @@ import numpy.testing as npt
 
 from skbio import DNA, RNA, Protein, Sequence, TabularMSA, TreeNode, SubstitutionMatrix
 from skbio.io import read as sk_read
+from skbio.util._array import ArrayWorkspace
 from skbio.alignment import AlignPath, multi_align, pair_align, align_score
 from skbio.alignment._utils import encode_sequences
 from skbio.alignment._pair import _encode_path
 from skbio.alignment._multi import (
     _align_profiles,
-    _ProfileWorkspace,
     _merge_profiles,
     _multi_distances,
     _fd_dist,
@@ -551,7 +550,7 @@ class ProfileKernelTests(unittest.TestCase):
             [False, True],
             [0, 1e-5, 0.1],
         ):
-            full, rolling = _ProfileWorkspace(), _ProfileWorkspace()
+            full, rolling = ArrayWorkspace(), ArrayWorkspace()
             for m, n in [(1, 5), (7, 2), (2, 9), (3, 3), (1, 1)]:
                 scores = rng.normal(size=(m, n)).astype(dtype)
                 costs = tuple(map(dtype, gap))
@@ -561,8 +560,8 @@ class ProfileKernelTests(unittest.TestCase):
                 )
                 self.assertEqual(a[1], b[1])
                 npt.assert_array_equal(a[0], b[0])
-                self.assertFalse(np.shares_memory(a[0], full.buffers["path"]))
-            before = dict(rolling.buffers)
+                self.assertFalse(np.shares_memory(a[0], full.arrays["path"]))
+            before = dict(rolling.arrays)
             _align_profiles(
                 np.ones((1, 1), dtype=dtype),
                 *costs,
@@ -572,8 +571,8 @@ class ProfileKernelTests(unittest.TestCase):
                 dtype(atol),
             )
             for name, buffer in before.items():
-                self.assertIs(buffer, rolling.buffers[name])
-        ws = _ProfileWorkspace()
+                self.assertIs(buffer, rolling.arrays[name])
+        ws = ArrayWorkspace()
         a = ws.get("test", (3, 4), np.float32)
         b = ws.get("test", (2, 5), np.float32)
         self.assertTrue(np.shares_memory(a, b))
@@ -726,7 +725,7 @@ class PairWorkspaceTests(unittest.TestCase):
                     dtype=dtype,
                 ),
             )
-            workspace = _ProfileWorkspace()
+            workspace = ArrayWorkspace()
             costs = tuple(map(dtype, gap))
             for m, n in [(1, 5), (7, 2), (2, 9), (3, 3), (1, 1)]:
                 seqs = ["".join(rng.choice(list("ACGT"), length)) for length in (m, n)]
@@ -750,17 +749,17 @@ class PairWorkspaceTests(unittest.TestCase):
                     traceback=False,
                 )
                 self.assertEqual(score_only, score)
-                self.assertEqual(workspace.buffers["dp0"].dtype, dtype)
+                self.assertEqual(workspace.arrays["dp0"].dtype, dtype)
 
     def test_rolling_helper(self):
         for dtype, gap, free in product(
             [np.float32, np.float64], [(0, 0.3), (1.1, 0.3)], [False, True]
         ):
             scores = np.array([[2, -1, 2], [-1, 2, -1]], dtype=dtype)
-            workspace = _ProfileWorkspace()
+            workspace = ArrayWorkspace()
             args = (*map(dtype, gap), free, workspace, dtype(1e-5))
             moves, score = _align_pair_roll(scores, *args)
-            self.assertTrue(np.shares_memory(moves, workspace.buffers["path"]))
+            self.assertTrue(np.shares_memory(moves, workspace.arrays["path"]))
             saved = moves.copy()
             full, expected = _align_pair(scores, np.arange(3), *args)
             npt.assert_array_equal(saved, full)
@@ -770,7 +769,7 @@ class PairWorkspaceTests(unittest.TestCase):
         # A shifted self-alignment beats the ungapped diagonal for this matrix.
         matrix = np.array([[-1, 2], [2, -1]], dtype=np.float32)
         seq = np.array([0, 1], dtype=np.intp)
-        workspace = _ProfileWorkspace()
+        workspace = ArrayWorkspace()
         moves, score = _align_pair(
             matrix[seq],
             seq,
@@ -783,7 +782,7 @@ class PairWorkspaceTests(unittest.TestCase):
         )
         self.assertIsNone(moves)
         self.assertEqual(score, 2)
-        self.assertNotIn("path", workspace.buffers)
+        self.assertNotIn("path", workspace.arrays)
 
 
 class MultiDistanceTests(unittest.TestCase):
@@ -793,7 +792,7 @@ class MultiDistanceTests(unittest.TestCase):
         np.fill_diagonal(matrix, 1.0)
         encoded = [np.array([0, 1]), np.array([0, 2]), np.array([0, 1])]
         dm = _multi_distances(
-            encoded, matrix, 0.0, 2.0, False, list("abc"), _ProfileWorkspace(), 0.0
+            encoded, matrix, 0.0, 2.0, False, list("abc"), ArrayWorkspace(), 0.0
         )
         npt.assert_allclose(dm, [np.log(3), 0, np.log(3)])
         self.assertEqual(dm.dtype, np.float64)
@@ -806,7 +805,7 @@ class MultiDistanceTests(unittest.TestCase):
         encoded = [np.array([0, 1]), np.array([0])]
         for free, expected in [(False, np.log(3.5)), (True, np.log(1.5))]:
             dm = _multi_distances(
-                encoded, matrix, 1.0, 1.0, free, ["0", "1"], _ProfileWorkspace(), 0.0
+                encoded, matrix, 1.0, 1.0, free, ["0", "1"], ArrayWorkspace(), 0.0
             )
             self.assertAlmostEqual(dm[0], expected)
 
@@ -830,7 +829,7 @@ class MultiDistanceTests(unittest.TestCase):
             encoded, matrix, _ = encode_sequences(seqs, submat)
             costs = tuple(map(dtype, gap))
             observed = _multi_distances(
-                encoded, matrix, *costs, free, ids, _ProfileWorkspace(), dtype(1e-5)
+                encoded, matrix, *costs, free, ids, ArrayWorkspace(), dtype(1e-5)
             )
             kwargs = dict(sub_score=submat, gap_cost=gap, free_ends=free)
             selfs = [pair_align(s, s, max_paths=0, **kwargs).score for s in seqs]

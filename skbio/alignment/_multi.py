@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-from math import prod
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -16,6 +15,8 @@ import numpy as np
 from scipy.cluster.hierarchy import linkage
 from skbio.sequence import Sequence, GrammaredSequence
 from skbio.tree import TreeNode
+from skbio.tree._utils import _tree_to_lnkmat
+from skbio.util._array import ArrayWorkspace
 from ._path import AlignPath
 from ._pair import (
     pair_align,
@@ -26,16 +27,17 @@ from ._pair import (
     _encode_path,
 )
 from ._utils import encode_sequences, prep_gapcost, _get_seqids
-from skbio.tree._utils import _tree_to_lnkmat
 from ._cutils import (
-    _fill_linear_matrix,
-    _fill_affine_matrices,
+    _fill_matrix_linear,
+    _fill_matrix_affine,
     _trace_one_linear,
     _trace_one_affine,
-    _fill_linear_rows,
-    _fill_affine_rows,
-    _trace_linear_rows,
-    _trace_affine_rows,
+    _fill_rows_linear,
+    _fill_rows_affine,
+    _trace_rows_linear,
+    _trace_rows_affine,
+    _fill_matrix_linear_mn,
+    _fill_matrix_affine_mn,
 )
 
 
@@ -319,13 +321,14 @@ def multi_align(
         return AlignPath.from_bits(path.to_bits())
 
     # Shrink substitution matrix to observed characters only. This accelerates the
-    # calculation without changing the result.
+    # calculation without changing the result. For example, if DNA sequences contain
+    # only ACGT, the matrix will be (4, 4).
     # TODO: investigate
     alphabet, inverse = np.unique(np.concatenate(encoded), return_inverse=True)
     encoded = np.split(inverse, np.cumsum([len(x) for x in encoded])[:-1])
     matrix = np.ascontiguousarray(matrix[np.ix_(alphabet, alphabet)])
 
-    workspace = _ProfileWorkspace()
+    workspace = ArrayWorkspace()
     n = len(sequences)
 
     # Decide merging order. If a guide tree is provided, convert it into a linkage
@@ -451,15 +454,28 @@ def _merge_profiles(
     """Merge residue counts and gap masks; original row order travels with them."""
     counts_a, bits_a, order_a = a
     counts_b, bits_b, order_b = b
+
+    # counts : ndarray of shape (n_columns, n_alphabet)
+    #     One-hot encoding of sequence.
+    # bits : ndarray of shape (1, n_columns)
+    #     Gap positions.
+    # order: list of int
+    #     Indices of merged sequences.
+
     if workspace is None:
-        workspace = _ProfileWorkspace()
+        workspace = ArrayWorkspace()
     scores = workspace.get("scores", (len(counts_a), len(counts_b)), matrix.dtype)
+    # scores: (n_columns_a, n_columns_b)
+
     np.matmul(
         (counts_a / len(order_a)) @ matrix, (counts_b / len(order_b)).T, out=scores
     )
     indices, _ = _align_profiles(
         scores, gap_open, gap_extend, free_ends, workspace, method, atol
     )
+    # indices: Alignment path represented as incremental indices, with -1 representing
+    # a gap. Consistent with `AlignPath.to_indices`.
+
     width = indices.shape[1]
     counts = np.zeros((width, len(matrix)), dtype=matrix.dtype)
     bits = []
@@ -472,22 +488,12 @@ def _merge_profiles(
         new_bits = np.ones((len(old_bits), width), dtype=bool)
         new_bits[:, present] = old_bits[:, take[present]]
         bits.append(new_bits)
+
+    # counts: (n_columns, n_alphabet)
+    # np.concatenate(bits): (n_sequences, n_columns)
+    # bits are plain gap positions (True - gap), not run-length encoding.
+    # TODO: averaging counts here or later (only once?)
     return counts, np.concatenate(bits), order_a + order_b
-
-
-class _ProfileWorkspace:
-    """Per-call flat buffers shared by pairwise alignment and profile merging."""
-
-    def __init__(self):
-        self.buffers = {}
-
-    def get(self, name, shape, dtype):
-        size = prod(shape)
-        old = self.buffers.get(name)
-        if old is None or old.size < size or old.dtype != dtype:
-            capacity = size if old is None else max(size, 2 * old.size)
-            self.buffers[name] = np.empty(capacity, dtype=dtype)
-        return self.buffers[name][:size].reshape(shape)
 
 
 def _align_pair(
@@ -498,33 +504,44 @@ def _align_pair(
     Return dense moves borrowed from the workspace (or None) and a Python-float
     score. Consume moves before the next call; score-only calls skip traceback.
     """
-    m, n = len(query), len(target)
-    affine = gap_open != 0
+    if whole := target is None:
+        m, n = query.shape
+        scores = (query,)
+    else:
+        m, n = len(query), len(target)
+        scores = (query, target)
+
+    if affine := gap_open != 0:
+        gaps = (gap_open, gap_extend)
+        fill_f = _fill_matrix_affine_mn if whole else _fill_matrix_affine
+        trace_f = _trace_one_affine
+    else:
+        gaps = (gap_extend,)
+        fill_f = _fill_matrix_linear_mn if whole else _fill_matrix_linear
+        trace_f = _trace_one_linear
+
     matrices = tuple(
         workspace.get(f"dp{k}", (m + 1, n + 1), query.dtype)
         for k in range(3 if affine else 1)
     )
     # Reshaping changes row stride, so smaller matrices also need fresh boundaries.
     _init_matrices(matrices, gap_open, gap_extend, False, free_ends, free_ends)
-    if affine:
-        _fill_affine_matrices(*matrices, query, target, gap_open, gap_extend, False)
-    else:
-        _fill_linear_matrix(matrices[0], query, target, gap_extend, False)
+
+    fill_f(*matrices, *scores, *gaps, False)
+
     score, stops = _one_stop(matrices[0], False, free_ends, free_ends)
     if not traceback:
         return None, float(score)
     i, j = stops[0]
+
+    # Dense alignment path (without run-length encoding)
     path = workspace.get("path", (m + n,), np.uint8)
     pos, _, _ = _trailing_gaps(path, m + n, i, j, m, n, True, True)
-    if affine:
-        pos, i, j = _trace_one_affine(
-            path, pos, i, j, *matrices, gap_extend, False, atol
-        )
-    else:
-        pos, i, j = _trace_one_linear(
-            path, pos, i, j, matrices[0], gap_extend, False, atol
-        )
+
+    pos, i, j = trace_f(path, pos, i, j, *matrices, gap_extend, False, atol)
+
     pos, _, _ = _leading_gaps(path, pos, i, j, True, True)
+
     return path[pos:], float(score)
 
 
@@ -553,9 +570,9 @@ def _align_pair_roll(scores, gap_open, gap_extend, free_ends, workspace, atol):
             edge[1:] -= gap_open
     trace = workspace.get("trace", (m + 1, n + 1), np.uint8)
     if affine:
-        _fill_affine_rows(*matrices, edge, trace, scores, gap_open, gap_extend, atol)
+        _fill_rows_affine(*matrices, edge, trace, scores, gap_open, gap_extend, atol)
     else:
-        _fill_linear_rows(matrices[0], edge, trace, scores, gap_extend, atol)
+        _fill_rows_linear(matrices[0], edge, trace, scores, gap_extend, atol)
     last = matrices[0][m % 2]
     i, j = m, n
     if free_ends:
@@ -569,9 +586,9 @@ def _align_pair_roll(scores, gap_open, gap_extend, free_ends, workspace, atol):
     path = workspace.get("path", (m + n,), np.uint8)
     pos, _, _ = _trailing_gaps(path, m + n, i, j, m, n, True, True)
     if affine:
-        pos, i, j = _trace_affine_rows(path, pos, i, j, trace)
+        pos, i, j = _trace_rows_affine(path, pos, i, j, trace)
     else:
-        pos, i, j = _trace_linear_rows(path, pos, i, j, trace)
+        pos, i, j = _trace_rows_linear(path, pos, i, j, trace)
     pos, _, _ = _leading_gaps(path, pos, i, j, True, True)
     moves = path[pos:]
     return moves, float(score)
@@ -586,20 +603,23 @@ def _align_profiles(
     the traced path can score below that maximum, just as in pair_align.
     """
     if workspace is None:
-        workspace = _ProfileWorkspace()
-    n = scores.shape[1]
+        workspace = ArrayWorkspace()
     if method == "full":
-        # A column-score table is a pairwise query table with target indices 0..n-1.
-        target = workspace.get("target", (n,), np.intp)
-        target[:] = np.arange(n)
         moves, score = _align_pair(
-            scores, target, gap_open, gap_extend, free_ends, workspace, atol
+            scores, None, gap_open, gap_extend, free_ends, workspace, atol
         )
     else:
         moves, score = _align_pair_roll(
             scores, gap_open, gap_extend, free_ends, workspace, atol
         )
-    present = np.array([moves != 1, moves != 2])
+
+    # `present` is an (2, n_columns) Boolean array marking the presence of sites in
+    # either sequence.
+    # present = np.array([moves != 1, moves != 2])
+    present = moves != np.array([1, 2])[:, None]
+
+    # `indices` are indices of characters in alignment. Gaps are -1.
     indices = np.cumsum(present, axis=1) - 1
     indices[~present] = -1
-    return indices, float(score)
+
+    return indices, float(score)  # TODO: score is not necessary
