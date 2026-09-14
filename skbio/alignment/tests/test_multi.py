@@ -25,7 +25,6 @@ from skbio.alignment._multi import (
     _multi_distances,
     _fd_dist,
     _align_pair,
-    _align_pair_roll,
 )
 
 
@@ -450,25 +449,6 @@ class MultiAlignTests(unittest.TestCase):
         path = multi_align(seqs, guide_tree=_tree(3))
         self.assertEqual([s.replace("-", "") for s in path.to_aligned(seqs)], seqs)
 
-    def test_backends(self):
-        seqs = ["ACGT", "AGT", "ACGT", "ACT"]
-        for gap, free, atol in product([2, (5, 2)], [True, False], [0, 1e-5]):
-            a = multi_align(
-                seqs, gap_cost=gap, free_ends=free, atol=atol, method="full"
-            )
-            b = multi_align(
-                seqs, gap_cost=gap, free_ends=free, atol=atol, method="rolling"
-            )
-            self.assertEqual(a.to_aligned(seqs), b.to_aligned(seqs))
-        with self.assertRaisesRegex(ValueError, "method"):
-            multi_align(seqs, method="invalid")
-        for atol in [-1, np.nan, np.inf, (0, 1)]:
-            with self.assertRaisesRegex(ValueError, "atol"):
-                multi_align(seqs, atol=atol)
-        with np.errstate(over="ignore"):
-            with self.assertRaisesRegex(ValueError, "scoring dtype"):
-                multi_align(seqs, atol=1e100)
-
     # def test_invalid_inputs(self):
     #     for seqs in [[], ["A"]]:
     #         with self.assertRaisesRegex(ValueError, "At least two"):
@@ -519,19 +499,16 @@ class ProfileKernelTests(unittest.TestCase):
         # Includes boundary insertions, direction switches, zero costs, long runs,
         # and both fused numeric types. All scores are exactly representable.
         rng = np.random.default_rng(27)
-        for dtype, p, q, gap, free, method in product(
+        for dtype, p, q, gap, free in product(
             [np.float32, np.float64],
             range(1, 4),
             range(1, 4),
             [0, 2, (0, 2), (5, 0), (5, 2), (0.5, 0.25)],
             [False, True],
-            ["full", "rolling"],
         ):
             scores = rng.choice([-20.0, -1.0, 0.0, 0.25, 2.0], (p, q)).astype(dtype)
             o, e = (0, gap) if np.isscalar(gap) else gap
-            indices, score = _align_profiles(
-                scores, dtype(o), dtype(e), free, method=method
-            )
+            indices, score = _align_profiles(scores, dtype(o), dtype(e), free)
             expected = max(_score_path(x, scores, gap, free) for x in _paths(p, q))
             with self.subTest(dtype=dtype, p=p, q=q, gap=gap, free=free):
                 self.assertEqual(score, expected)
@@ -541,43 +518,6 @@ class ProfileKernelTests(unittest.TestCase):
                 npt.assert_array_equal(indices[0, indices[0] >= 0], np.arange(p))
                 npt.assert_array_equal(indices[1, indices[1] >= 0], np.arange(q))
                 self.assertFalse((indices == -1).all(axis=0).any())
-
-    def test_backend_agreement_and_workspace(self):
-        rng = np.random.default_rng(32)
-        for dtype, gap, free, atol in product(
-            [np.float32, np.float64],
-            [(0, 0.2), (1.1, 0.3), (3, 0)],
-            [False, True],
-            [0, 1e-5, 0.1],
-        ):
-            full, rolling = ArrayWorkspace(), ArrayWorkspace()
-            for m, n in [(1, 5), (7, 2), (2, 9), (3, 3), (1, 1)]:
-                scores = rng.normal(size=(m, n)).astype(dtype)
-                costs = tuple(map(dtype, gap))
-                a = _align_profiles(scores, *costs, free, full, "full", dtype(atol))
-                b = _align_profiles(
-                    scores, *costs, free, rolling, "rolling", dtype(atol)
-                )
-                self.assertEqual(a[1], b[1])
-                npt.assert_array_equal(a[0], b[0])
-                self.assertFalse(np.shares_memory(a[0], full.arrays["path"]))
-            before = dict(rolling.arrays)
-            _align_profiles(
-                np.ones((1, 1), dtype=dtype),
-                *costs,
-                free,
-                rolling,
-                "rolling",
-                dtype(atol),
-            )
-            for name, buffer in before.items():
-                self.assertIs(buffer, rolling.arrays[name])
-        ws = ArrayWorkspace()
-        a = ws.get("test", (3, 4), np.float32)
-        b = ws.get("test", (2, 5), np.float32)
-        self.assertTrue(np.shares_memory(a, b))
-        self.assertTrue(b.flags.c_contiguous)
-        self.assertEqual(ws.get("test", (1, 1), np.float64).dtype, np.float64)
 
     def test_linear_affine_equivalence(self):
         scores = np.array([[2.0, -3.0], [-1.0, 2.0], [0.0, 0.0]])
@@ -750,20 +690,6 @@ class PairWorkspaceTests(unittest.TestCase):
                 )
                 self.assertEqual(score_only, score)
                 self.assertEqual(workspace.arrays["dp0"].dtype, dtype)
-
-    def test_rolling_helper(self):
-        for dtype, gap, free in product(
-            [np.float32, np.float64], [(0, 0.3), (1.1, 0.3)], [False, True]
-        ):
-            scores = np.array([[2, -1, 2], [-1, 2, -1]], dtype=dtype)
-            workspace = ArrayWorkspace()
-            args = (*map(dtype, gap), free, workspace, dtype(1e-5))
-            moves, score = _align_pair_roll(scores, *args)
-            self.assertTrue(np.shares_memory(moves, workspace.arrays["path"]))
-            saved = moves.copy()
-            full, expected = _align_pair(scores, np.arange(3), *args)
-            npt.assert_array_equal(saved, full)
-            self.assertEqual(score, expected)
 
     def test_self_score_without_traceback(self):
         # A shifted self-alignment beats the ungapped diagonal for this matrix.

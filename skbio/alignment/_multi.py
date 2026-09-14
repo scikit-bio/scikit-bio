@@ -32,10 +32,6 @@ from ._cutils import (
     _fill_matrix_affine,
     _trace_one_linear,
     _trace_one_affine,
-    _fill_rows_linear,
-    _fill_rows_affine,
-    _trace_rows_linear,
-    _trace_rows_affine,
     _fill_matrix_linear_mn,
     _fill_matrix_affine_mn,
 )
@@ -55,7 +51,6 @@ def multi_align(
     free_ends: bool = True,
     guide_tree: TreeNode | None = None,
     ids: Iterable[str] | None = None,
-    method: str = "full",
     atol: float = 1e-5,
 ) -> AlignPath:
     r"""Align multiple sequences by progressive profile merging.
@@ -96,13 +91,6 @@ def multi_align(
         tree. Override sequence metadata if provided. Otherwise, use metadata ``'id'``
         values if present in every sequence and unique, or use ``['0', '1', ...]`` if
         none is present. Partial, duplicate, or non-string metadata IDs raise an error.
-    method : {'full', 'rolling'}, optional
-        Profile DP backend. 'full' (default) reuses the pairwise fill and traceback
-        kernels, retaining one linear or three affine score matrices. 'rolling'
-        retains two score rows per state and one byte of traceback per cell.
-        Both use the same recurrence, endpoint selection, and traceback tolerance.
-        A per-call workspace grows as needed and is reused across guide pairwise
-        alignments and profile merges. Guide alignments always use full matrices.
     atol : float, optional
         Nonnegative finite absolute tolerance for traceback score comparisons,
         following :func:`pair_align`. Default is 1e-5. Set to zero for exact
@@ -174,13 +162,6 @@ def multi_align(
     Thus a completely nonoverlapping alignment can have score zero. Stop ties
     prefer the smallest (row, column); traceback prefers deletion, insertion, then
     diagonal, and gap extension before opening, as in :func:`pair_align`.
-
-    Profile-column substitution scores require a floating-point matrix of size
-    :math:`mn` in both backends. Beyond this shared cost, 'full' retains one or
-    three floating-point matrices, whereas 'rolling' uses one byte per cell and
-    linear-sized score buffers. Flat NumPy work buffers double in capacity when
-    necessary; active prefixes are reshaped into contiguous views. Retained child
-    profiles and returned paths own their data and never alias this workspace.
 
     Each merge optimizes this objective, but the overall progressive alignment is
     heuristic. It does **not** optimize the induced-pair sum-of-pairs (SP) score:
@@ -270,8 +251,6 @@ def multi_align(
     sequences = list(sequences)
     if len(sequences) < 2:
         raise ValueError("At least two sequences are required.")
-    if method not in ("full", "rolling"):
-        raise ValueError("`method` must be 'full' or 'rolling'.")
     if not np.isscalar(atol) or not np.isfinite(atol) or atol < 0:
         raise ValueError("`atol` must be finite and nonnegative.")
     if not isinstance(free_ends, (bool, np.bool_)):
@@ -357,7 +336,7 @@ def multi_align(
                 )
         a, b = (profiles.pop(child) for child in children)
         profiles[parent] = _merge_profiles(
-            a, b, matrix, gap_open, gap_extend, free_ends, workspace, method, atol
+            a, b, matrix, gap_open, gap_extend, free_ends, workspace, atol
         )
     _, bits, order = profiles[2 * n - 2]
     return AlignPath.from_bits(bits[np.argsort(order)])
@@ -449,7 +428,7 @@ def _fd_dist(score, path, expected, s_max, gap_open, gap_extend, free_ends, allo
 
 
 def _merge_profiles(
-    a, b, matrix, gap_open, gap_extend, free_ends, workspace=None, method="full", atol=0
+    a, b, matrix, gap_open, gap_extend, free_ends, workspace=None, atol=0
 ):
     """Merge residue counts and gap masks; original row order travels with them."""
     counts_a, bits_a, order_a = a
@@ -471,7 +450,7 @@ def _merge_profiles(
         (counts_a / len(order_a)) @ matrix, (counts_b / len(order_b)).T, out=scores
     )
     indices, _ = _align_profiles(
-        scores, gap_open, gap_extend, free_ends, workspace, method, atol
+        scores, gap_open, gap_extend, free_ends, workspace, atol
     )
     # indices: Alignment path represented as incremental indices, with -1 representing
     # a gap. Consistent with `AlignPath.to_indices`.
@@ -545,58 +524,7 @@ def _align_pair(
     return path[pos:], float(score)
 
 
-def _align_pair_roll(scores, gap_open, gap_extend, free_ends, workspace, atol):
-    """Align a dense column-score table using rolling rows and stored traceback.
-
-    Like `_align_pair`, return workspace-borrowed dense moves and a Python-float
-    score. The rolling kernels consume column scores directly, without a target
-    index array. Costs and tolerance are already in the scoring dtype.
-    """
-    m, n = scores.shape
-    dtype = scores.dtype
-    affine = gap_open != 0
-    matrices = tuple(
-        workspace.get(f"dp{k}", (2, n + 1), dtype) for k in range(3 if affine else 1)
-    )
-    _init_matrices(matrices, gap_open, gap_extend, False, free_ends, free_ends)
-    edge = workspace.get("edge", (m + 1,), dtype)
-    if free_ends:
-        edge[:] = 0
-    else:
-        edge[0] = 0
-        edge[1:] = np.arange(1, m + 1, dtype=dtype)
-        edge[1:] *= -gap_extend
-        if gap_open:
-            edge[1:] -= gap_open
-    trace = workspace.get("trace", (m + 1, n + 1), np.uint8)
-    if affine:
-        _fill_rows_affine(*matrices, edge, trace, scores, gap_open, gap_extend, atol)
-    else:
-        _fill_rows_linear(matrices[0], edge, trace, scores, gap_extend, atol)
-    last = matrices[0][m % 2]
-    i, j = m, n
-    if free_ends:
-        # Same endpoint ordering as _one_stop: exclude (m,n) from column scan.
-        i, j = int(edge[:m].argmax()), int(last.argmax())
-        if edge[i] >= last[j]:
-            j = n
-        else:
-            i = m
-    score = edge[i] if j == n else last[j]
-    path = workspace.get("path", (m + n,), np.uint8)
-    pos, _, _ = _trailing_gaps(path, m + n, i, j, m, n, True, True)
-    if affine:
-        pos, i, j = _trace_rows_affine(path, pos, i, j, trace)
-    else:
-        pos, i, j = _trace_rows_linear(path, pos, i, j, trace)
-    pos, _, _ = _leading_gaps(path, pos, i, j, True, True)
-    moves = path[pos:]
-    return moves, float(score)
-
-
-def _align_profiles(
-    scores, gap_open, gap_extend, free_ends, workspace=None, method="full", atol=0
-):
+def _align_profiles(scores, gap_open, gap_extend, free_ends, workspace=None, atol=0):
     """Align profile columns with costs already prepared in the scoring dtype.
 
     Return independent column indices and the DP maximum. With positive `atol`,
@@ -604,14 +532,9 @@ def _align_profiles(
     """
     if workspace is None:
         workspace = ArrayWorkspace()
-    if method == "full":
-        moves, score = _align_pair(
-            scores, None, gap_open, gap_extend, free_ends, workspace, atol
-        )
-    else:
-        moves, score = _align_pair_roll(
-            scores, gap_open, gap_extend, free_ends, workspace, atol
-        )
+    moves, score = _align_pair(
+        scores, None, gap_open, gap_extend, free_ends, workspace, atol
+    )
 
     # `present` is an (2, n_columns) Boolean array marking the presence of sites in
     # either sequence.
