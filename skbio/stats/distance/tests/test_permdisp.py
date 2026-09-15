@@ -19,7 +19,7 @@ from scipy.stats import f_oneway, ConstantInputWarning
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups
+from skbio.stats.distance._permdisp import _compute_groups, NUMBA_AVAILABLE
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path, numba_code
 
@@ -696,6 +696,19 @@ class PERMDISPEngineTests(TestCase):
         exp = permdisp(self.dm, self.grouping, permutations=99, seed=42,
                        engine="numba")
         self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_engine_fast_is_cython_without_numba(self):
+        # The counterpart to test_engine_fast_is_accepted above. Without numba
+        # installed, "fast" resolves to "cython" and runs the exact same
+        # cython call as engine="cython", so unlike the numba comparison this
+        # one is exact.
+        obs = permdisp(self.dm, self.grouping, permutations=99, seed=42,
+                       engine="fast")
+        exp = permdisp(self.dm, self.grouping, permutations=99, seed=42,
+                       engine="cython")
+        self.assertEqual(obs['test statistic'], exp['test statistic'])
         self.assertEqual(obs['p-value'], exp['p-value'])
 
     @numba_code

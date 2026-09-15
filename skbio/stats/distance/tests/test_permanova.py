@@ -8,7 +8,7 @@
 
 import io
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,7 @@ from scipy.spatial.distance import squareform
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
 from skbio.stats.distance import _permanova as permanova_mod
+from skbio.stats.distance._permanova import NUMBA_AVAILABLE
 from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
                                           permanova_f_stat_sW_condensed_cy)
 from skbio.util import get_data_path, numba_code, get_rng
@@ -476,6 +477,20 @@ class InternalPERMANOVATests(PERMANOVATestData):
         exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
                         engine="numba")
         self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_permanova_engine_fast_is_cython_without_numba(self):
+        # The counterpart to test_permanova_engine_fast_is_accepted above.
+        # Without numba installed, "fast" resolves to "cython" and the call
+        # runs through the exact same cython code as engine="cython", so
+        # unlike the numba comparison this one is exact, not approximate.
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="fast")
+        exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="cython")
+        self.assertEqual(obs['test statistic'], exp['test statistic'])
         self.assertEqual(obs['p-value'], exp['p-value'])
 
     def test_bad_engine_raises(self):

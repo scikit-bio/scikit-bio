@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 import numpy as np
 import numpy.testing as npt
@@ -253,6 +253,20 @@ class InternalMantelTests(MantelTestData):
                      engine="fast")
         exp = mantel(self.minx_dm, self.miny_dm, permutations=99, seed=0,
                      engine="numba")
+        self.assertEqual(obs[0], exp[0])
+        self.assertEqual(obs[1], exp[1])
+
+    @skipIf(mantel_mod.NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_engine_fast_is_cython_without_numba(self):
+        # The counterpart to test_engine_fast_is_accepted above. Without numba
+        # installed, "fast" resolves to "cython" and runs the exact same
+        # cython call as engine="cython". That is why this one is exact: not
+        # because mantel's two engines happen to agree, but because only one
+        # engine is involved at all.
+        obs = mantel(self.minx_dm, self.miny_dm, permutations=99, seed=0,
+                     engine="fast")
+        exp = mantel(self.minx_dm, self.miny_dm, permutations=99, seed=0,
+                     engine="cython")
         self.assertEqual(obs[0], exp[0])
         self.assertEqual(obs[1], exp[1])
 
