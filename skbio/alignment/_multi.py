@@ -327,7 +327,6 @@ def multi_align(
         dm = _multi_distances(
             encoded, matrix, gap_open, gap_extend, free_ends, ids, workspace, atol
         )
-
         lm = linkage(dm, method="average")
         merges = lm[:, :2].astype(np.intp)
     else:
@@ -335,24 +334,33 @@ def multi_align(
 
     profiles = {}
     eye = np.eye(len(matrix), dtype=matrix.dtype)
+
     for parent, children in enumerate(merges, n):
         # Materialize leaves when first used and release children after each merge.
         for child in children:
             if child < n:
+                codes = encoded[child]
                 profiles[child] = (
-                    eye[encoded[child]],
-                    np.zeros((1, len(encoded[child])), dtype=bool),
+                    eye[codes],
+                    np.zeros((1, len(codes)), dtype=bool),
                     [child],
                 )
         a, b = (profiles.pop(child) for child in children)
-        profiles[parent] = _merge_profiles(
+        profiles[parent] = _merge_align(
             a, b, matrix, gap_open, gap_extend, free_ends, workspace, atol
         )
+
+        ### reporting ###
+        counts, bits, order = profiles[parent]
+        path = AlignPath.from_bits(bits)
+        aln = path.to_aligned([sequences[i] for i in order])
+
     _, bits, order = profiles[2 * n - 2]
 
     # Reorder sequences to match input order before outputting
     path = AlignPath.from_bits(bits[np.argsort(order)])
 
+    # Prepare extra outputs
     if not keep_tree:
         tree = None
     elif guide_tree is None:
@@ -452,58 +460,91 @@ def _fd_dist(score, path, expected, s_max, gap_open, gap_extend, free_ends, allo
     return -np.log(min(ratio, 1.0))
 
 
-def _merge_profiles(
-    a, b, matrix, gap_open, gap_extend, free_ends, workspace=None, atol=0
-):
-    """Merge residue counts and gap masks; original row order travels with them."""
-    counts_a, bits_a, order_a = a
-    counts_b, bits_b, order_b = b
+def _merge_align(aln1, aln2, submat, gap_o, gap_e, free_ends, works, atol=0):
+    """Merge two alignments.
 
-    # counts : ndarray of shape (n_columns, n_alphabet)
-    #     One-hot encoding of sequence.
-    # bits : ndarray of shape (1, n_columns)
-    #     Gap positions.
-    # order: list of int
-    #     Indices of merged sequences.
+    Parameters
+    ----------
+    aln1, aln2 : 3-tuple of (counts, bits, order)
+        The two alignments to merge. Elements are:
 
-    if workspace is None:
-        workspace = ArrayWorkspace()
-    scores = workspace.get("scores", (len(counts_a), len(counts_b)), matrix.dtype)
-    # scores: (n_columns_a, n_columns_b)
+        counts : ndarray of shape (n_columns, n_symbols)
+            Count per site per character in the alphabet. For one sequence, it is the
+            one-hot encoding by alphabet. For multiple sequences, it is the sum of
+            character frequencies in the current alignment.
+        bits : ndarray of shape (n_sequences, n_columns)
+            Gap positions in the alignment.
+        order: list of int
+            Indices of merged sequences in merging order.
 
-    np.matmul(
-        (counts_a / len(order_a)) @ matrix, (counts_b / len(order_b)).T, out=scores
-    )
-    indices, _ = _align_profiles(
-        scores, gap_open, gap_extend, free_ends, workspace, atol
-    )
-    # indices: Alignment path represented as incremental indices, with -1 representing
-    # a gap. Consistent with `AlignPath.to_indices`.
+    Returns
+    -------
+    3-tuple of (counts, bits, order)
+        Output alignment. See above.
 
-    width = indices.shape[1]
-    counts = np.zeros((width, len(matrix)), dtype=matrix.dtype)
-    bits = []
-    for old_counts, old_bits, take in (
-        (counts_a, bits_a, indices[0]),
-        (counts_b, bits_b, indices[1]),
+    Notes
+    -----
+    Output retains original row order.
+
+    """
+    counts1, bits1, order1 = aln1
+    counts2, bits2, order2 = aln2
+    dtype = submat.dtype
+
+    n1, L1 = bits1.shape
+    n2, L2 = bits2.shape
+
+    # Pre-calculate an (n_columns_1, n_columns_2) score matrix before feeding into DP.
+    # This is fully vectorized, but consumes extra memory. Workspace is pre-allocated
+    # to reduce allocation overhead.
+    # scores = (counts1 / n1) @ submat @ (counts2 / n2).T
+    scores = works.get("scores", (L1, L2), dtype)
+    weight = works.get("weight", (L1, submat.shape[0]), dtype)
+    np.matmul(counts1, submat, out=weight)
+    np.matmul(weight, counts2.T, out=scores)
+    scores /= n1 * n2
+
+    # Perform pairwise alignment using DP and return a dense path.
+    path, _ = _align_pair(scores, None, gap_o, gap_e, free_ends, works, atol)
+    L = path.size
+
+    # (2, n_columns) array of pre-merging column indices in the merged alignment. Gaps
+    # are -1. This format is consistent with `AlignPath.to_indices`.
+    # Here n_columns is the number of columns in the merged alignment.
+    mask = path != np.array([1, 2])[:, None]
+    indices = np.cumsum(mask, axis=1) - 1
+    indices[~mask] = -1
+
+    counts = np.zeros((L, submat.shape[0]), dtype=dtype)
+    bits = np.ones((n1 + n2, L), dtype=bool)
+    i = 0
+    for counts_, bits_, n_, take in (
+        (counts1, bits1, n1, indices[0]),
+        (counts2, bits2, n2, indices[1]),
     ):
-        present = take >= 0
-        counts[present] += old_counts[take[present]]
-        new_bits = np.ones((len(old_bits), width), dtype=bool)
-        new_bits[:, present] = old_bits[:, take[present]]
-        bits.append(new_bits)
+        mask = take >= 0
+        cols = take[mask]
+        j = i + n_
+        counts[mask] += counts_[cols]
+        bits[i:j, mask] = bits_[:, cols]
+        i = j
 
-    # counts: (n_columns, n_alphabet)
-    # np.concatenate(bits): (n_sequences, n_columns)
+    order = order1 + order2
+
     # bits are plain gap positions (True - gap), not run-length encoding.
     # TODO: averaging counts here or later (only once?)
-    return counts, np.concatenate(bits), order_a + order_b
+    return counts, bits, order
 
 
-def _align_pair(
-    query, target, gap_open, gap_extend, free_ends, workspace, atol, traceback=True
-):
+def _align_pair(query, target, gap_o, gap_e, free_ends, works, atol, traceback=True):
     """Align an encoded query/target with prepared costs in the query dtype.
+
+    Returns
+    -------
+    path : ndarray of uint8 of (n_sites,)
+        Dense alignment path (without run-length encoding).
+    score : float
+        Optimal alignment score.
 
     Return dense moves borrowed from the workspace (or None) and a Python-float
     score. Consume moves before the next call; score-only calls skip traceback.
@@ -515,21 +556,21 @@ def _align_pair(
         m, n = len(query), len(target)
         scores = (query, target)
 
-    if affine := gap_open != 0:
-        gaps = (gap_open, gap_extend)
+    if affine := gap_o != 0:
+        gaps = (gap_o, gap_e)
         fill_f = _fill_matrix_affine_mn if whole else _fill_matrix_affine
         trace_f = _trace_one_affine
     else:
-        gaps = (gap_extend,)
+        gaps = (gap_e,)
         fill_f = _fill_matrix_linear_mn if whole else _fill_matrix_linear
         trace_f = _trace_one_linear
 
     matrices = tuple(
-        workspace.get(f"dp{k}", (m + 1, n + 1), query.dtype)
+        works.get(f"dp{k}", (m + 1, n + 1), query.dtype)
         for k in range(3 if affine else 1)
     )
     # Reshaping changes row stride, so smaller matrices also need fresh boundaries.
-    _init_matrices(matrices, gap_open, gap_extend, False, free_ends, free_ends)
+    _init_matrices(matrices, gap_o, gap_e, False, free_ends, free_ends)
 
     fill_f(*matrices, *scores, *gaps, False)
 
@@ -538,36 +579,11 @@ def _align_pair(
         return None, float(score)
     i, j = stops[0]
 
-    # Dense alignment path (without run-length encoding)
-    path = workspace.get("path", (m + n,), np.uint8)
+    path = works.get("path", (m + n,), np.uint8)
     pos, _, _ = _trailing_gaps(path, m + n, i, j, m, n, True, True)
 
-    pos, i, j = trace_f(path, pos, i, j, *matrices, gap_extend, False, atol)
+    pos, i, j = trace_f(path, pos, i, j, *matrices, gap_e, False, atol)
 
     pos, _, _ = _leading_gaps(path, pos, i, j, True, True)
 
     return path[pos:], float(score)
-
-
-def _align_profiles(scores, gap_open, gap_extend, free_ends, workspace=None, atol=0):
-    """Align profile columns with costs already prepared in the scoring dtype.
-
-    Return independent column indices and the DP maximum. With positive `atol`,
-    the traced path can score below that maximum, just as in pair_align.
-    """
-    if workspace is None:
-        workspace = ArrayWorkspace()
-    moves, score = _align_pair(
-        scores, None, gap_open, gap_extend, free_ends, workspace, atol
-    )
-
-    # `present` is an (2, n_columns) Boolean array marking the presence of sites in
-    # either sequence.
-    # present = np.array([moves != 1, moves != 2])
-    present = moves != np.array([1, 2])[:, None]
-
-    # `indices` are indices of characters in alignment. Gaps are -1.
-    indices = np.cumsum(present, axis=1) - 1
-    indices[~present] = -1
-
-    return indices, float(score)  # TODO: score is not necessary
