@@ -8,13 +8,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING
 
 import numpy as np
 
 from scipy.cluster.hierarchy import linkage
 from skbio.sequence import Sequence, GrammaredSequence
 from skbio.tree import TreeNode
+from skbio.stats.distance import DistanceMatrix
 from skbio.tree._utils import _tree_to_lnkmat
 from skbio.util._array import ArrayWorkspace
 from ._path import AlignPath
@@ -43,6 +44,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from ._utils import SequenceLike
 
 
+class MultiAlignResult(NamedTuple):
+    path: AlignPath
+    tree: TreeNode | None = None
+    distmat: DistanceMatrix | None = None
+
+
 def multi_align(
     sequences: Iterable[SequenceLike],
     /,
@@ -52,7 +59,9 @@ def multi_align(
     guide_tree: TreeNode | None = None,
     ids: Iterable[str] | None = None,
     atol: float = 1e-5,
-) -> AlignPath:
+    keep_tree: bool = False,
+    keep_distmat: bool = False,
+) -> MultiAlignResult:
     r"""Align multiple sequences by progressive profile merging.
 
     Return a full-coverage alignment using a supplied guide tree or an automatically
@@ -96,12 +105,23 @@ def multi_align(
         following :func:`pair_align`. Default is 1e-5. Set to zero for exact
         comparisons. Positive tolerance can select a slightly lower-scoring path;
         the DP maximum itself is unaffected. Also used for guide pairwise alignments.
+    keep_tree : bool, optional
+        If True, include the guide tree in the returned object. Default is False.
+    keep_distmat : bool, optional
+        If True, and if the guide tree is not provided, include the constructed
+        distance matrix in the returned object. Default is False.
 
     Returns
     -------
-    AlignPath
+    path : AlignPath
         One alignment path in original input sequence order, starting at position
         zero and consuming every sequence in full.
+    tree : TreeNode or None
+        Constructed or provided guide tree determining the merging order of sequences
+        (if ``keep_tree`` is True).
+    distmat : DistanceMatrix or None
+        Distance matrix constructed based on pairwise alignments and used to compute
+        the guide tree (if ``keep_distmat`` is True).
 
     Raises
     ------
@@ -287,18 +307,6 @@ def multi_align(
     # TODO: Skip if tree is not supplied
     ids = _get_seqids(sequences, ids)
 
-    # Fall back to pairwise alignment
-    # TODO: Merge into main workflow.
-    if len(sequences) == 2:
-        path = pair_align(
-            *sequences,
-            sub_score=sub_score,
-            gap_cost=gap_cost,
-            free_ends=free_ends,
-            atol=atol,
-        ).paths[0]
-        return AlignPath.from_bits(path.to_bits())
-
     # Shrink substitution matrix to observed characters only. This accelerates the
     # calculation without changing the result. For example, if DNA sequences contain
     # only ACGT, the matrix will be (4, 4).
@@ -316,10 +324,12 @@ def multi_align(
     # calculate a guide tree using UPGMA and retain the linkage matrix.
     # `merges` is an index array of (n_seqs - 1, 2)
     if guide_tree is None:
-        distances = _multi_distances(
+        dm = _multi_distances(
             encoded, matrix, gap_open, gap_extend, free_ends, ids, workspace, atol
         )
-        merges = linkage(distances, method="average")[:, :2].astype(np.intp)
+
+        lm = linkage(dm, method="average")
+        merges = lm[:, :2].astype(np.intp)
     else:
         merges = _tree_to_lnkmat(guide_tree, ids)
 
@@ -339,7 +349,22 @@ def multi_align(
             a, b, matrix, gap_open, gap_extend, free_ends, workspace, atol
         )
     _, bits, order = profiles[2 * n - 2]
-    return AlignPath.from_bits(bits[np.argsort(order)])
+
+    # Reorder sequences to match input order before outputting
+    path = AlignPath.from_bits(bits[np.argsort(order)])
+
+    if not keep_tree:
+        tree = None
+    elif guide_tree is None:
+        tree = TreeNode.from_linkage_matrix(lm, ids)
+    else:
+        tree = guide_tree
+    if keep_distmat and guide_tree is None:
+        dm = DistanceMatrix(dm, ids)
+    else:
+        dm = None
+
+    return MultiAlignResult(path, tree, dm)
 
 
 def _multi_distances(

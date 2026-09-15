@@ -15,11 +15,14 @@ import numpy.testing as npt
 
 from skbio import DNA, RNA, Protein, Sequence, TabularMSA, TreeNode, SubstitutionMatrix
 from skbio.io import read as sk_read
+from skbio.tree import TreeNode
+from skbio.stats.distance import DistanceMatrix
 from skbio.util._array import ArrayWorkspace
 from skbio.alignment import AlignPath, multi_align, pair_align, align_score
 from skbio.alignment._utils import encode_sequences
 from skbio.alignment._pair import _encode_path
 from skbio.alignment._multi import (
+    MultiAlignResult,
     _align_profiles,
     _merge_profiles,
     _multi_distances,
@@ -101,8 +104,12 @@ class MultiAlignTests(unittest.TestCase):
         ]))
 
         # Default parameters (match = 1, mismatch = -1, gap = -2, free ends)
-        path = multi_align(seqs)
+        res = multi_align(seqs)
+        self.assertIs(type(res), MultiAlignResult)
+        path = res[0]
         self.assertIs(type(path), AlignPath)
+        self.assertIsNone(res[1])
+        self.assertIsNone(res[2])
         obs = path.to_aligned(seqs)
         exp = [
             "CAGCTATATATCGCTACG--",
@@ -127,11 +134,32 @@ class MultiAlignTests(unittest.TestCase):
         exp = 16.0
         self.assertEqual(obs, exp)
 
+        # Return tuple with guide tree and distance matrix
+        path, tree, dm = multi_align(seqs, keep_tree=True, keep_distmat=True)
+        self.assertIs(type(path), AlignPath)
+        self.assertIs(type(tree), TreeNode)
+        self.assertIs(type(dm), DistanceMatrix)
+
+        # Examine bits, guide tree and distance matrix
+        exp = np.array(
+            [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]],
+            dtype=np.uint8)
+        npt.assert_array_equal(path.to_bits(), exp)
+        exp = TreeNode.read(["((0,1),2);"])
+        self.assertEqual(tree.compare_rfd(exp), 0.0)
+        self.assertTupleEqual(dm.ids, tuple("012"))
+        exp = np.array([[0.,      0.36617, 0.51669],
+                        [0.36617, 0.,      1.13943],
+                        [0.51669, 1.13943, 0.     ]])
+        npt.assert_array_equal(dm.data.round(5), exp)
+
     def test_multi_align_prot(self):
         """Align protein sequences."""
         seqs = [Protein("MKT"), Protein("MT"), Protein("MKT")]
         # params = dict(sub_score="BLOSUM62", free_ends=False)
-        path = multi_align(
+        path, *_ = multi_align(
             seqs,
             sub_score="BLOSUM62",
             guide_tree=_tree(3),
@@ -175,7 +203,7 @@ class MultiAlignTests(unittest.TestCase):
         ))
         seqs = list(sk_read([p53_faa], format="fasta", constructor=Protein))
         params = dict(sub_score="BLOSUM62", gap_cost=(11, 1))  # BLASTP
-        path = multi_align(seqs, **params)
+        path = multi_align(seqs, **params).path
         obs = path.to_aligned(seqs)
         exp = [
             "SDPSVEPPLSQETFSDLWKLLPENN",
@@ -227,7 +255,7 @@ class MultiAlignTests(unittest.TestCase):
         # NOTE: tRNA sequences are too diverse and `free_ends=True` (default mode) will
         # produce a poorly overlapped alignment.
         params = dict(sub_score=(2, -3), gap_cost=(5, 2), free_ends=False)  # BLASTN
-        path = multi_align(seqs, **params)
+        path = multi_align(seqs, **params).path
         obs = path.to_aligned(seqs)
         exp = [
             "AGAAATTTAGGTTAAATACAGACCAAGA-----GCCTTCA------AAGCCC---TCAGT"
@@ -251,12 +279,12 @@ class MultiAlignTests(unittest.TestCase):
     def test_multi_align_params(self):
         """Test that common parameter settings work (don't break)."""
         seqs = ["ACGT", "AGT", "ACGT"]
-        path = multi_align(seqs, free_ends=False)
+        path = multi_align(seqs, free_ends=False).path
         self.assertIs(type(path), AlignPath)
         self.assertEqual(path.to_aligned(seqs), ["ACGT", "A-GT", "ACGT"])
         self.assertEqual(align_score((path, seqs), free_ends=False), 6)
         for free, gap in product([False, True], [2, (5, 2), (5, 0)]):
-            path = multi_align(seqs, gap_cost=gap, free_ends=free)
+            path = multi_align(seqs, gap_cost=gap, free_ends=free).path
             self.assertEqual([s.replace("-", "") for s in path.to_aligned(seqs)], seqs)
 
     def test_multi_align_input(self):
@@ -266,7 +294,7 @@ class MultiAlignTests(unittest.TestCase):
         # input sequence class
         for cls in [str, Sequence, DNA, RNA, Protein]:
             data = [cls(x.replace("T", "U") if cls is RNA else x) for x in seqs]
-            path = multi_align(data, free_ends=False)
+            path = multi_align(data, free_ends=False).path
             npt.assert_array_equal(
                 path.to_bits(), [[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]
             )
@@ -277,7 +305,7 @@ class MultiAlignTests(unittest.TestCase):
             [["cat", "dog", "bird"], ["cat", "bird"], ["cat", "dog", "bird"]],  # words
             ["αβγ", "αγ", "αβγ"],  # unicode
         ]:
-            path = multi_align(iter(data), guide_tree=_tree(3), free_ends=False)
+            path, *_ = multi_align(iter(data), guide_tree=_tree(3), free_ends=False)
             npt.assert_array_equal(path.to_bits()[1], [0, 1, 0])
 
         # custom substitution matrix
@@ -287,14 +315,14 @@ class MultiAlignTests(unittest.TestCase):
             [-1, -1, 2, -1],
             [-1, -1, -1, 2],
         ])
-        path = multi_align(seqs, sub_score=submat, free_ends=False)
+        path, *_ = multi_align(seqs, sub_score=submat, free_ends=False)
         self.assertEqual(path.to_aligned(seqs)[1], "A-GT")
 
     def test_multi_align_two(self):
         """Test only two sequences (will fallback to pairwise alignment)."""
         seq1 = DNA("GAATTC")
         seq2 = DNA("AGATCT")
-        obs = multi_align((seq1, seq2))
+        obs, *_ = multi_align((seq1, seq2))
 
         # Output type is AlignPath nor PairAlignPath
         self.assertIs(type(obs), AlignPath)
@@ -311,7 +339,7 @@ class MultiAlignTests(unittest.TestCase):
 
         # Custom parameters
         params = dict(sub_score=(5, -4), gap_cost=(5, 2))
-        obs = multi_align((seq1, seq2), **params)
+        obs, *_ = multi_align((seq1, seq2), **params)
         exp = pair_align(seq1, seq2, **params).paths[0]
         npt.assert_array_equal(obs.to_bits(), exp.to_bits())
 
@@ -322,7 +350,7 @@ class MultiAlignTests(unittest.TestCase):
                 DNA("AGTTAACGG")]
 
         # Auto-determine merge order
-        obs = multi_align(seqs).to_aligned(seqs)
+        obs = multi_align(seqs).path.to_aligned(seqs)
         exp = ["CA-TTAACGT-",
                "-CGTTA-CGGT",
                "-AGTTAACGG-"]
@@ -331,14 +359,14 @@ class MultiAlignTests(unittest.TestCase):
 
         # Merging seqs 0 and 2 first produces the same output.
         tree = TreeNode.read(["((0,2),1);"])
-        obs = multi_align(seqs, guide_tree=tree).to_aligned(seqs)
+        obs = multi_align(seqs, guide_tree=tree).path.to_aligned(seqs)
         self.assertListEqual(obs, exp)
         self.assertEqual(align_score(obs), 7.0)
 
         # Merge seqs 0 and 1 first produces a less-aligned alignment, likely because
         # they are less similar, although the alignment score is the same.
         tree = TreeNode.read(["((0,1),2);"])
-        obs = multi_align(seqs, guide_tree=tree).to_aligned(seqs)
+        obs = multi_align(seqs, guide_tree=tree).path.to_aligned(seqs)
         exp = ["CATTAACGT------",
                "------CGTTACGGT",
                "AGTTAACGG------"]
@@ -347,7 +375,7 @@ class MultiAlignTests(unittest.TestCase):
 
         # Merge seqs 1 and 2 first produces an alternative and even better alignment.
         tree = TreeNode.read(["((1,2),0);"])
-        obs = multi_align(seqs, guide_tree=tree).to_aligned(seqs)
+        obs = multi_align(seqs, guide_tree=tree).path.to_aligned(seqs)
         exp = ["CATTAACGT-",
                "CGTTA-CGGT",
                "AGTTAACGG-"]
@@ -364,7 +392,7 @@ class MultiAlignTests(unittest.TestCase):
         for id_, seq in zip("abc", seqs):
             seq.metadata["id"] = id_
         tree = TreeNode.read(["((b,c),a);"])
-        obs = multi_align(seqs, guide_tree=tree).to_aligned(seqs)
+        obs = multi_align(seqs, guide_tree=tree).path.to_aligned(seqs)
         self.assertListEqual(obs, exp)
 
     def test_multi_align_ids(self):
@@ -379,13 +407,13 @@ class MultiAlignTests(unittest.TestCase):
         self.assertListEqual(obs, exp)
 
         # Sequence IDs are not used.
-        obs = multi_align(seqs, free_ends=False).to_aligned(seqs)
+        obs = multi_align(seqs, free_ends=False).path.to_aligned(seqs)
         exp = ["ACGT", "A-GT", "ACGT"]
         self.assertListEqual(obs, exp)
 
         # Sequence IDs match guide tree.
         tree = TreeNode.read(["((c,a),b);"])
-        obs = multi_align(seqs, guide_tree=tree, free_ends=False).to_aligned(seqs)
+        obs = multi_align(seqs, guide_tree=tree, free_ends=False).path.to_aligned(seqs)
         self.assertListEqual(obs, exp)
 
         # Sequence IDs don't match guide tree
@@ -424,7 +452,7 @@ class MultiAlignTests(unittest.TestCase):
         ids = ["a", "b", "c", "d"]
         tree = TreeNode.read(["((d,b),(c,a));"])
         before = str(tree)
-        path = multi_align(seqs, ids=iter(ids), guide_tree=tree, free_ends=False)
+        path = multi_align(seqs, ids=iter(ids), guide_tree=tree, free_ends=False).path
         self.assertEqual([x.replace("-", "") for x in path.to_aligned(seqs)], seqs)
         self.assertEqual(str(tree), before)
         self.assertEqual(ids, ["a", "b", "c", "d"])
@@ -435,10 +463,10 @@ class MultiAlignTests(unittest.TestCase):
             seqs = ["AAA"] * n
             with self.assertRaisesRegex(ValueError, "normalization is not positive"):
                 multi_align(seqs)
-            path = multi_align(seqs, guide_tree=_tree(n))
+            path = multi_align(seqs, guide_tree=_tree(n)).path
             self.assertEqual(path.to_aligned(seqs), seqs)
             seqs = ["ACGT" if i % 2 else "AGT" for i in range(n)]
-            path = multi_align(seqs, guide_tree=_tree(n), free_ends=False)
+            path = multi_align(seqs, guide_tree=_tree(n), free_ends=False).path
             self.assertEqual([x.replace("-", "") for x in path.to_aligned(seqs)], seqs)
             self.assertFalse(path.to_bits().all(axis=0).any())
 
@@ -446,7 +474,7 @@ class MultiAlignTests(unittest.TestCase):
         seqs = ["AAAA", "CCCC", "GGGG"]
         with self.assertRaisesRegex(ValueError, "supply a guide tree"):
             multi_align(seqs, free_ends=False)
-        path = multi_align(seqs, guide_tree=_tree(3))
+        path = multi_align(seqs, guide_tree=_tree(3)).path
         self.assertEqual([s.replace("-", "") for s in path.to_aligned(seqs)], seqs)
 
     # def test_invalid_inputs(self):
@@ -778,8 +806,8 @@ class MultiDistanceTests(unittest.TestCase):
                     )
             npt.assert_allclose(observed, squareform(expected), rtol=1e-14, atol=1e-14)
             old_tree = upgma(DistanceMatrix(expected, ids))
-            a = multi_align(seqs, ids=ids, **kwargs)
-            b = multi_align(seqs, ids=ids, guide_tree=old_tree, **kwargs)
+            a = multi_align(seqs, ids=ids, **kwargs).path
+            b = multi_align(seqs, ids=ids, guide_tree=old_tree, **kwargs).path
             npt.assert_array_equal(a.to_bits(), b.to_bits())
 
     def test_distance_domains(self):
@@ -803,9 +831,9 @@ class MultiDistanceTests(unittest.TestCase):
                 gap_cost=gap,
                 free_ends=False,
                 guide_tree=_tree(3),
-            )
+            ).path
             self.assertEqual([x.replace("-", "") for x in path.to_aligned(seqs)], seqs)
-        path = multi_align(["AAAA", "CCCC", "GGGG"], free_ends=True)
+        path = multi_align(["AAAA", "CCCC", "GGGG"], free_ends=True).path
         self.assertEqual(path.shape[0], 3)
 
     def test_roundoff(self):

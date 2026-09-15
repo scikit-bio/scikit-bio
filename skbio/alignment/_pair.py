@@ -154,7 +154,7 @@ def pair_align(
            Relative tolerance is not involved in the calculation.
 
     keep_matrices : bool, optional
-        Whether to include the alignment matrix(ces) in the returned value. They are
+        Whether to include the alignment matrix(ces) in the returned object. They are
         typically for diagnostic or educational purposes. Default is False, which lets
         the memory space free up after the function finishes.
 
