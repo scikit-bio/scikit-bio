@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from functools import lru_cache
 
 import numpy as np
 
@@ -1357,3 +1358,58 @@ def _run_length_encode(s):
     count = np.diff(np.concatenate((idx, [len(s)])))
     unique = input_arr[idx]
     return "".join(str(c) + u for c, u in zip(count, unique))
+
+
+lru_cache()
+
+
+def all_pair_paths(m, n):
+    """Enumerate all possible pairwise alignment paths between two sequences.
+
+    This function is for testing purposes. It is useful for exhaustively computing all
+    solutions and find the optimum, which is then compared with the solution inferred
+    by an algorithm (e.g., dynamic programming).
+
+    Parameters
+    ----------
+    m, n : int
+        Lengths of two sequences, respectively.
+
+    Returns
+    -------
+    list of PairAlignPath
+        All pairwise alignment paths.
+
+    """
+    res = []
+    for path in _all_pair_paths(m, n):
+        ints = np.array(path, dtype=np.uint8)
+        idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
+        lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
+        ints = ints[idx]
+        res.append(PairAlignPath(lens, ints))
+    return res
+
+
+def _all_pair_paths(m, n):
+    """Enumerate and return all paths in dense format without packing.
+
+    Returns
+    -------
+    list of tuple of int
+        Dense alignment paths (0: substitution, 1: insertion, 2: deletion).
+
+    """
+    grid = [[[] for _ in range(n + 1)] for _ in range(m + 1)]
+    grid[0][0] = [()]
+    for i in range(m + 1):
+        row = grid[i]
+        for j in range(n + 1):
+            paths = row[j]
+            if i >= 1 and j >= 1:
+                paths.extend((0,) + path for path in grid[i - 1][j - 1])
+            if i >= 1:
+                paths.extend((2,) + path for path in grid[i - 1][j])
+            if j >= 1:
+                paths.extend((1,) + path for path in grid[i][j - 1])
+    return grid[m][n]

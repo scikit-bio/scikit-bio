@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from itertools import product
 import unittest
 
 import numpy as np
@@ -17,7 +18,9 @@ from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, GrammaredSequence, DNA, Protein
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import classproperty, overrides
+from skbio.alignment import align_score
 from skbio.alignment._utils import encode_sequences
+from skbio.alignment._path import all_pair_paths
 
 from skbio.alignment._pair import (
     pair_align,
@@ -218,6 +221,24 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align(seq1, seq2, sub_score="PAM70", gap_cost=(11, 1))
         self.assertEqual(obs.score, 86)
         self.assertEqual(obs.paths[0].to_cigar(), "1D29M")
+
+    def test_pair_align_exhaust(self):
+        """Output score matches exhaustive enumeration."""
+        rng = np.random.default_rng(42)
+        alphabet = np.array([65, 67, 71, 84], dtype=np.uint8)
+        for m, n, sub, gap, free in product(
+            range(1, 3),
+            range(2, 5),
+            [(1, -1), (2, -3), (0.5, -1.5)],
+            [2, (0, 2), (2, 0), (5, 2), (0.5, 0.25)],
+            [False, True],
+        ):
+            seqs = tuple(alphabet[rng.integers(4, size=x)].tobytes().decode(
+                "ascii") for x in (m, n))
+            obs = pair_align(*seqs, "global", sub, gap, free).score
+            paths = all_pair_paths(m, n)
+            exp = max(align_score((path, seqs), sub, gap, free) for path in paths)
+            self.assertEqual(obs, exp)
 
     def test_pair_align_custom(self):
         """Align custom sequence types."""
@@ -743,34 +764,8 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align_prot(seq1, seq2, **kwargs)
         self.assertEqual(obs.score, 13)
 
-    def test_prep_free_ends(self):
-        obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (2, 2, 2, 2))
-        obs = _prep_free_ends(local=False, free_ends=False, trim_ends=False)
-        self.assertTupleEqual(obs, (0, 0, 0, 0))
-        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (1, 1, 1, 1))
-        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=True)
-        self.assertTupleEqual(obs, (2, 2, 2, 2))
-        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=False)
-        self.assertTupleEqual(obs, (1, 1, 0, 0))
-        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=True)
-        self.assertTupleEqual(obs, (2, 2, 0, 0))
-        obs = _prep_free_ends(
-            local=False, free_ends=(True, False, False, True), trim_ends=True)
-        self.assertTupleEqual(obs, (2, 0, 0, 2))
-        obs = _prep_free_ends(
-            local=False, free_ends=(True, False, True, False), trim_ends=False)
-        self.assertTupleEqual(obs, (1, 0, 1, 0))
 
-        # non-Boolean inputs
-        obs = _prep_free_ends(local=False, free_ends=(0, 1, 2, 3), trim_ends="yes")
-        self.assertTupleEqual(obs, (0, 2, 2, 2))
-
-        msg = "`free_ends` must be one, two or four Booleans."
-        with self.assertRaises(ValueError) as cm:
-            _ = _prep_free_ends(local=False, free_ends=(1, 2, 3), trim_ends=False)
-        self.assertEqual(str(cm.exception), msg)
+class KernelTests(unittest.TestCase):
 
     def test_alloc_matrices(self):
         # linear
@@ -1482,6 +1477,38 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(len(obs), 3)
         for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
             self.assertEqual(obs[i].to_cigar(), exp)
+
+
+class HelperTests(unittest.TestCase):
+
+    def test_prep_free_ends(self):
+        obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
+        obs = _prep_free_ends(local=False, free_ends=False, trim_ends=False)
+        self.assertTupleEqual(obs, (0, 0, 0, 0))
+        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=False)
+        self.assertTupleEqual(obs, (1, 1, 1, 1))
+        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=True)
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
+        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=False)
+        self.assertTupleEqual(obs, (1, 1, 0, 0))
+        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=True)
+        self.assertTupleEqual(obs, (2, 2, 0, 0))
+        obs = _prep_free_ends(
+            local=False, free_ends=(True, False, False, True), trim_ends=True)
+        self.assertTupleEqual(obs, (2, 0, 0, 2))
+        obs = _prep_free_ends(
+            local=False, free_ends=(True, False, True, False), trim_ends=False)
+        self.assertTupleEqual(obs, (1, 0, 1, 0))
+
+        # non-Boolean inputs
+        obs = _prep_free_ends(local=False, free_ends=(0, 1, 2, 3), trim_ends="yes")
+        self.assertTupleEqual(obs, (0, 2, 2, 2))
+
+        msg = "`free_ends` must be one, two or four Booleans."
+        with self.assertRaises(ValueError) as cm:
+            _ = _prep_free_ends(local=False, free_ends=(1, 2, 3), trim_ends=False)
+        self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":
