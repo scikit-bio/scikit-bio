@@ -217,7 +217,6 @@ class GzipCompressor(Compressor):
         return self.file.peek(2)[:2] == b"\x1f\x8b"
 
     def get_reader(self):
-        # Read-mode fix by Maximiliano Curia; see licenses/debian-skbio.txt.
         return gzip.GzipFile(fileobj=self.file, mode="rb")
 
     def get_writer(self):
