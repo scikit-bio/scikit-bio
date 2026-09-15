@@ -357,11 +357,14 @@ def permdisp(
 
         .. versionadded:: 0.6.3
 
-    engine : {"cython", "numba"}, optional
+    engine : {"cython", "numba", "fast"}, optional
         Compute engine to use for the permutation test. ``"cython"`` (default)
         uses the existing implementation. ``"numba"`` uses the optional Numba
         implementation and requires Numba to be installed. If not provided, the
-        global default is used (see :func:`skbio.set_config`).
+        global default is used (see :func:`skbio.set_config`). ``"fast"`` lets
+        scikit-bio pick whichever engine it expects to be quicker here, which
+        is Numba when it is installed and Cython otherwise; results may differ
+        from the default in the last bits.
 
         .. versionadded:: 0.7.4
 
@@ -569,7 +572,11 @@ def permdisp(
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
-    engine = _resolve_engine(engine, ("cython", "numba"))
+    engine = _resolve_engine(
+        engine,
+        ("cython", "numba"),
+        fast="numba" if NUMBA_AVAILABLE else "cython",
+    )
 
     # The Numba engine batches the permutation loop, for both center
     # definitions.
