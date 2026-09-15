@@ -514,6 +514,19 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
                 else:
                     Dinv[i] = 0.
 
+            nzeros = n
+            for i in range(n):
+                if fabs(D[i]) > eps:
+                    nzeros -= 1
+
+            # Every point coincides with the current estimate, so the estimate
+            # is already the median and there is no direction left to move in.
+            # This test has to happen before the division below: when it holds,
+            # every Dinv[i] is zero, so Dinvs is zero too and the division
+            # raises instead of returning the coincident point.
+            if nzeros == n:
+                break
+
             Dinvs = _sum(Dinv)
 
             for i in range(n):
@@ -526,15 +539,8 @@ def geomedian_axis_one(floating[:, :] X, floating eps=1e-7,
                         total += W[i] * X[j, i]
                 T[j] = total
 
-            nzeros = n
-            for i in range(n):
-                if fabs(D[i]) > eps:
-                    nzeros -= 1
-
             if nzeros == 0:
                 y1 = T
-            elif nzeros == n:
-                break
             else:
                 for j in range(p):
                     R[j] = (T[j] - y[j]) * Dinvs

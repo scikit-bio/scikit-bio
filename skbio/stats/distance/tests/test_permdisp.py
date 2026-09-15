@@ -335,6 +335,44 @@ class PERMDISPTests(TestCase):
         obs = np.array(geomedian_axis_one(self.eq_mat.data))
         npt.assert_almost_equal(obs, exp, decimal=6)
 
+    def test_geomedian_all_points_coincide(self):
+        # Every point sitting on the same spot leaves the iteration with no
+        # direction to move in, and that spot is the median. The weight total
+        # is zero there, so the division that normalizes the weights has to be
+        # skipped rather than reached.
+        for p, n in ((2, 6), (3, 4), (10, 2), (1, 3)):
+            point = np.arange(1., p + 1.) * 1.5
+            X = np.ascontiguousarray(np.tile(point[:, None], (1, n)))
+            npt.assert_allclose(np.asarray(geomedian_axis_one(X)), point)
+
+    def test_geomedian_all_points_coincide_float32(self):
+        # The fused kernel has a separate single precision specialization, so
+        # the zero weight total has to be handled on that branch too.
+        point = np.array([1.5, -2.0], dtype=np.float32)
+        X = np.ascontiguousarray(np.tile(point[:, None], (1, 5)))
+        npt.assert_allclose(np.asarray(geomedian_axis_one(X)), point)
+
+    def test_median_identical_samples_within_group(self):
+        # Technical replicates put every sample of a group on one ordination
+        # point, which is what drives the group's geometric median onto that
+        # point. This used to raise from inside geomedian_axis_one.
+        dm = DistanceMatrix(
+            [[0., 0., 0., 1., 1., 1.],
+             [0., 0., 0., 1., 1., 1.],
+             [0., 0., 0., 1., 1., 1.],
+             [1., 1., 1., 0., 0., 0.],
+             [1., 1., 1., 0., 0., 0.],
+             [1., 1., 1., 0., 0., 0.]],
+            ['s1', 's2', 's3', 's4', 's5', 's6'])
+        grouping = ['a', 'a', 'a', 'b', 'b', 'b']
+
+        obs = permdisp(dm, grouping, test='median', permutations=99, seed=42,
+                       dimensions=3)
+        self.assertEqual(obs['method name'], 'PERMDISP')
+        self.assertEqual(obs['sample size'], 6)
+        self.assertEqual(obs['number of groups'], 2)
+        self.assertTrue(np.isfinite(obs['test statistic']))
+
     def test_confirm_betadispr_results(self):
         mp_dm = DistanceMatrix.read(get_data_path('moving_pictures_dm.tsv'))
         mp_mf = pd.read_csv(get_data_path('moving_pictures_mf.tsv'), sep='\t')
@@ -622,6 +660,30 @@ class PERMDISPEngineTests(TestCase):
                        seed=42, engine="cython")
         npt.assert_allclose(obs['test statistic'], exp['test statistic'])
         self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_coincident_samples_agree_across_engines(self):
+        # The numba geomedian already returned the coincident point here while
+        # the cython kernel raised, so this input is where the two engines
+        # disagreed most starkly. With the cython kernel fixed they have to
+        # agree.
+        dm = DistanceMatrix(
+            [[0., 0., 0., 1., 1., 1.],
+             [0., 0., 0., 1., 1., 1.],
+             [0., 0., 0., 1., 1., 1.],
+             [1., 1., 1., 0., 0., 0.],
+             [1., 1., 1., 0., 0., 0.],
+             [1., 1., 1., 0., 0., 0.]],
+            ['s1', 's2', 's3', 's4', 's5', 's6'])
+        grouping = ['a', 'a', 'a', 'b', 'b', 'b']
+
+        obs = [permdisp(dm, grouping, test='median', permutations=99, seed=42,
+                        dimensions=3, engine=engine)
+               for engine in ('cython', 'numba')]
+        self.assertTrue(np.isfinite(obs[0]['test statistic']))
+        npt.assert_allclose(obs[0]['test statistic'],
+                            obs[1]['test statistic'], rtol=1e-12)
+        self.assertEqual(obs[0]['p-value'], obs[1]['p-value'])
 
     @numba_code
     def test_non_float_ordination_raises_like_cython(self):
