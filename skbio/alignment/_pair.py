@@ -14,6 +14,7 @@ import numpy as np
 
 from skbio.alignment import PairAlignPath
 from ._utils import encode_sequences, prep_gapcost
+from ._path import _encode_path
 from ._cutils import (
     _fill_matrix_linear,
     _fill_matrix_affine,
@@ -876,39 +877,6 @@ def _all_stops(primat, local, trail1, trail2, eps=1e-5):
     # global alignment
     else:
         return primat[m, n], np.array([[m, n]])
-
-
-def _encode_path(path, i0, i1, j0, j1):
-    """Perform run-length encoding (RLE) on a dense alignment path.
-
-    Parameters
-    ----------
-    path : ndarray of uint8 of shape (n_positions,)
-        Dense alignment path.
-    i0, i1 : int
-        Start and stop positions in sequences 1, respectively.
-    j0, j1 : int
-        Start and stop positions in sequences 2, respectively.
-
-    Returns
-    -------
-    PairAlignPath
-        Encoded alignment path.
-
-    See Also
-    --------
-    skbio.alignment.AlignPath.from_bits
-
-    """
-    if L := path.size:
-        segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
-        lens = np.append(segs[1:] - segs[:-1], L - segs[-1])
-        ints = path[segs]
-    else:
-        lens = np.array([], dtype=np.intp)
-        ints = path
-    ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
-    return PairAlignPath(lens, ints, ranges=ranges)
 
 
 def _trailing_gaps(path, pos, i, j, m, n, fill1, fill2):

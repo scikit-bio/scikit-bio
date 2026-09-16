@@ -1345,7 +1345,7 @@ def _merge_same_2d(lens, gaps):
     return np.add.reduceat(lens, idx, dtype=lens.dtype), gaps[:, idx]
 
 
-def _run_length_encode(s):
+def _rle_string(s):
     r"""Perform run length encoding on a string.
 
     Parameters
@@ -1381,14 +1381,42 @@ def all_pair_paths(m, n):
         All pairwise alignment paths.
 
     """
-    res = []
-    for path in _all_pair_paths(m, n):
-        ints = np.array(path, dtype=np.uint8)
-        idx = np.append(0, np.where(ints[:-1] != ints[1:])[0] + 1)
-        lens = np.append(idx[1:] - idx[:-1], ints.size - idx[-1])
-        ints = ints[idx]
-        res.append(PairAlignPath(lens, ints))
-    return res
+    return [_encode_path(np.array(x, dtype=np.uint8)) for x in _all_pair_paths(m, n)]
+
+
+def _encode_path(path, i0=None, i1=None, j0=None, j1=None):
+    """Perform run-length encoding (RLE) on a dense alignment path.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    i0, i1 : int, optional
+        Start and stop positions in sequence 1, respectively.
+    j0, j1 : int, optional
+        Start and stop positions in sequence 2, respectively.
+
+    Returns
+    -------
+    PairAlignPath
+        Encoded alignment path.
+
+    See Also
+    --------
+    skbio.alignment.AlignPath.from_bits
+
+    """
+    if L := path.size:
+        segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+        lens = np.append(segs[1:] - segs[:-1], L - segs[-1])
+        ints = path[segs]
+    else:
+        lens = np.array([], dtype=np.intp)
+        ints = path
+    if i0 is None:
+        return PairAlignPath(lens, ints)
+    ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
+    return PairAlignPath(lens, ints, ranges=ranges)
 
 
 def _all_pair_paths(m, n):

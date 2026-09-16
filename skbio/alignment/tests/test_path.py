@@ -16,7 +16,7 @@ from skbio.alignment import TabularMSA
 from skbio.alignment._path import (
     AlignPath,
     PairAlignPath,
-    _run_length_encode,
+    _rle_string,
     all_pair_paths,
     _all_pair_paths,
 )
@@ -810,8 +810,8 @@ class TestPairAlignPath(unittest.TestCase):
 
 
 class TestMisc(unittest.TestCase):
-    def test_run_length_encode(self):
-        obs = _run_length_encode("ABBCCCDDDD")
+    def test_rle_string(self):
+        obs = _rle_string("ABBCCCDDDD")
         exp = "1A2B3C4D"
         self.assertEqual(obs, exp)
 

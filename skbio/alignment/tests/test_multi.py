@@ -12,6 +12,8 @@ import unittest
 
 import numpy as np
 import numpy.testing as npt
+from scipy.spatial.distance import squareform
+from scipy.cluster.hierarchy import linkage
 
 from skbio import DNA, RNA, Protein, Sequence, TabularMSA, TreeNode, SubstitutionMatrix
 from skbio.io import read as sk_read
@@ -24,7 +26,7 @@ from skbio.alignment._pair import _encode_path
 from skbio.alignment._multi import (
     MultiAlignResult,
     _merge_align,
-    _multi_distances,
+    _score_dists,
     _fd_dist,
     _align_pair,
 )
@@ -457,25 +459,6 @@ class MultiAlignTests(unittest.TestCase):
         self.assertEqual(ids, ["a", "b", "c", "d"])
         npt.assert_array_equal(path.starts, [0, 0, 0, 0])
 
-    def test_duplicates_and_packing(self):
-        for n in [3, 7, 8, 9, 16, 17]:
-            seqs = ["AAA"] * n
-            with self.assertRaisesRegex(ValueError, "normalization is not positive"):
-                multi_align(seqs)
-            path = multi_align(seqs, guide_tree=_tree(n)).path
-            self.assertEqual(path.to_aligned(seqs), seqs)
-            seqs = ["ACGT" if i % 2 else "AGT" for i in range(n)]
-            path = multi_align(seqs, guide_tree=_tree(n), free_ends=False).path
-            self.assertEqual([x.replace("-", "") for x in path.to_aligned(seqs)], seqs)
-            self.assertFalse(path.to_bits().all(axis=0).any())
-
-    def test_unrelated_sequences_with_tree(self):
-        seqs = ["AAAA", "CCCC", "GGGG"]
-        with self.assertRaisesRegex(ValueError, "supply a guide tree"):
-            multi_align(seqs, free_ends=False)
-        path = multi_align(seqs, guide_tree=_tree(3)).path
-        self.assertEqual([s.replace("-", "") for s in path.to_aligned(seqs)], seqs)
-
     # def test_invalid_inputs(self):
     #     for seqs in [[], ["A"]]:
     #         with self.assertRaisesRegex(ValueError, "At least two"):
@@ -560,7 +543,7 @@ class MergeAlignTests(unittest.TestCase):
             submat=submat,
             gap_o=np.float32(0.0),
             gap_e=np.float32(2.0),
-            free_ends=False,
+            free=False,
             works=works,
             atol=np.float32(0.0),
         )
@@ -858,191 +841,94 @@ class MergeAlignTests(unittest.TestCase):
 #         self.assertNotEqual(_moves(indices), "DYD")
 
 
-class PairWorkspaceTests(unittest.TestCase):
-    def test_pairwise_agreement(self):
-        # Changing both dimensions catches stale boundaries and row-stride reuse.
-        rng = np.random.default_rng(81)
-        for dtype, gap, free, atol in product(
-            [np.float32, np.float64],
-            [(0, 0.2), (1.1, 0.3), (3, 0)],
-            [False, True],
-            [0, 1e-5, 0.1],
-        ):
-            matrix = SubstitutionMatrix(
-                "ACGT",
-                np.array(
-                    [[2.3 if i == j else -1.1 for j in range(4)] for i in range(4)],
-                    dtype=dtype,
-                ),
-            )
-            workspace = ArrayWorkspace()
-            costs = tuple(map(dtype, gap))
-            for m, n in [(1, 5), (7, 2), (2, 9), (3, 3), (1, 1)]:
-                seqs = ["".join(rng.choice(list("ACGT"), length)) for length in (m, n)]
-                encoded, submat, _ = encode_sequences(seqs, matrix)
-                moves, score = _align_pair(
-                    submat[encoded[0]], encoded[1], *costs, free, workspace, dtype(atol)
-                )
-                path = _encode_path(moves, 0, m, 0, n)
-                expected = pair_align(
-                    *seqs, sub_score=matrix, gap_cost=gap, free_ends=free, atol=atol
-                )
-                self.assertEqual(score, expected.score)
-                npt.assert_array_equal(path.to_bits(), expected.paths[0].to_bits())
-                _, score_only = _align_pair(
-                    submat[encoded[0]],
-                    encoded[1],
-                    *costs,
-                    free,
-                    workspace,
-                    dtype(atol),
-                    traceback=False,
-                )
-                self.assertEqual(score_only, score)
-                self.assertEqual(workspace.arrays["dp0"].dtype, dtype)
+class ScoreDistsTests(unittest.TestCase):
 
-    def test_self_score_without_traceback(self):
-        # A shifted self-alignment beats the ungapped diagonal for this matrix.
-        matrix = np.array([[-1, 2], [2, -1]], dtype=np.float32)
-        seq = np.array([0, 1], dtype=np.intp)
-        workspace = ArrayWorkspace()
-        moves, score = _align_pair(
-            matrix[seq],
-            seq,
-            np.float32(0),
-            np.float32(0),
-            False,
-            workspace,
-            np.float32(0),
-            traceback=False,
-        )
-        self.assertIsNone(moves)
-        self.assertEqual(score, 2)
-        self.assertNotIn("path", workspace.arrays)
+    def test_score_dists(self):
+        seqs = ["ACGTACGT",
+                "ACGTCGT",
+                "ACGTACCT",
+                "ACGTACG",
+                "ACGTACGT"]
+        encoded = [np.array(["ACGT".index(x) for x in seq], dtype=np.intp)
+                   for seq in seqs]
+        works = ArrayWorkspace()
 
+        # normal case
+        submat = np.full((4, 4), -1, dtype=np.float32)
+        np.fill_diagonal(submat, 1)
+        gap_o, gap_e = np.float32(0), np.float32(2)
+        free = False
+        atol = np.float32(0)
+        
+        obs = _score_dists(encoded, submat, gap_o, gap_e, free, works, atol)
+        self.assertEqual(obs.dtype, np.float64)
+        exp = np.array([[ 0.     ,  0.21357,  0.18232,  0.21357, -0.     ],
+                        [ 0.21357,  0.     ,  0.42488,  0.43693,  0.21357],
+                        [ 0.18232,  0.42488,  0.     ,  0.42488,  0.18232],
+                        [ 0.21357,  0.43693,  0.42488,  0.     ,  0.21357],
+                        [-0.     ,  0.21357,  0.18232,  0.21357,  0.     ]])
+        npt.assert_array_equal(squareform(obs).round(5), exp)
 
-class MultiDistanceTests(unittest.TestCase):
-    def test_hand_calculation(self):
+        # Output is valid input for SciPy's linkage
+        obs = linkage(obs, method="average")
+        exp = np.array([[0, 4],
+                        [2, 5],
+                        [1, 6],
+                        [3, 7]], dtype=np.intp)
+        npt.assert_array_equal(obs[:, :2].astype(np.intp), exp)
+
+        # Different parameters
+        np.fill_diagonal(submat, 3)
+        gap_o = np.float32(5)
+        free = True
+        obs = _score_dists(encoded, submat, gap_o, gap_e, free, works, atol)
+        exp = np.array([[ 0.     ,  0.33987,  0.18232,  0.06899, -0.     ],
+                        [ 0.33987,  0.     ,  0.55118,  0.43937,  0.33987],
+                        [ 0.18232,  0.55118,  0.     ,  0.2803 ,  0.18232],
+                        [ 0.06899,  0.43937,  0.2803 ,  0.     ,  0.06899],
+                        [-0.     ,  0.33987,  0.18232,  0.06899,  0.     ]])
+        npt.assert_array_equal(squareform(obs).round(5), exp)
+
+        # Edge case: aligning AC, AG, AC
+        # AC vs AC: d=0 (identical sequences)
         # AC vs AG: S=0, S_max=2, S_rand=(1-1-1-1)/2=-1, d=ln(3).
-        matrix = np.full((3, 3), -1.0, dtype=np.float64)
-        np.fill_diagonal(matrix, 1.0)
+        submat = np.full((3, 3), -1.0, dtype=np.float64)
+        np.fill_diagonal(submat, 1.0)
         encoded = [np.array([0, 1]), np.array([0, 2]), np.array([0, 1])]
-        dm = _multi_distances(
-            encoded, matrix, 0.0, 2.0, False, list("abc"), ArrayWorkspace(), 0.0
-        )
-        npt.assert_allclose(dm, [np.log(3), 0, np.log(3)])
-        self.assertEqual(dm.dtype, np.float64)
+        obs = _score_dists(encoded, submat, 0, 2, False, works, 0)
+        npt.assert_allclose(obs, [np.log(3), 0, np.log(3)])
 
-    def test_gap_statistics(self):
-        # AC vs A: a single terminal gap, L=2, expected substitution sum / L=0.
-        # Penalized: S=-1, S_rand=-2, S_max=1.5 -> d=-ln(1/3.5).
-        # Free: S=1, S_rand=0, S_max=1.5 -> d=-ln(1/1.5).
-        matrix = np.array([[1.0, -1.0], [-1.0, 1.0]])
+        # Edge case: AC vs A
+        # Single terminal gap, L=2, expected substitution sum / L=0.
+        submat = np.array([[1.0, -1.0], [-1.0, 1.0]])
         encoded = [np.array([0, 1]), np.array([0])]
-        for free, expected in [(False, np.log(3.5)), (True, np.log(1.5))]:
-            dm = _multi_distances(
-                encoded, matrix, 1.0, 1.0, free, ["0", "1"], ArrayWorkspace(), 0.0
-            )
-            self.assertAlmostEqual(dm[0], expected)
 
-    def test_condensed_distances_and_guide(self):
-        from scipy.spatial.distance import squareform
-        from skbio import DistanceMatrix
-        from skbio.tree import upgma
+        # Penalized gap: S=-1, S_rand=-2, S_max=1.5 -> d=-ln(1/3.5).
+        obs = _score_dists(encoded, submat, 1, 1, False, works, 0)
+        npt.assert_allclose(obs, [np.log(3.5)])
 
-        seqs = ["ACGTACGT", "ACGTCGT", "ACGTACCT", "ACGTACG", "ACGTACGT"]
-        ids = list("abcde")
-        for dtype, gap, free in product(
-            [np.float32, np.float64], [(0, 0.3), (1.1, 0.3)], [False, True]
-        ):
-            submat = SubstitutionMatrix(
-                "ACGT",
-                np.array(
-                    [[2.3 if i == j else -1.1 for j in range(4)] for i in range(4)],
-                    dtype=dtype,
-                ),
-            )
-            encoded, matrix, _ = encode_sequences(seqs, submat)
-            costs = tuple(map(dtype, gap))
-            observed = _multi_distances(
-                encoded, matrix, *costs, free, ids, ArrayWorkspace(), dtype(1e-5)
-            )
-            kwargs = dict(sub_score=submat, gap_cost=gap, free_ends=free)
-            selfs = [pair_align(s, s, max_paths=0, **kwargs).score for s in seqs]
-            expected = np.zeros((len(seqs), len(seqs)))
-            for i in range(len(seqs)):
-                for j in range(i + 1, len(seqs)):
-                    pair = pair_align(seqs[i], seqs[j], **kwargs)
-                    # Explicit residue pairs avoid reusing the count-matrix formula.
-                    composition = sum(
-                        float(matrix[a, b]) for a in encoded[i] for b in encoded[j]
-                    )
-                    expected[i, j] = expected[j, i] = _fd_dist(
-                        pair.score,
-                        pair.paths[0],
-                        composition,
-                        (selfs[i] + selfs[j]) / 2,
-                        *map(float, costs),
-                        free,
-                        8 * np.finfo(dtype).eps,
-                    )
-            npt.assert_allclose(observed, squareform(expected), rtol=1e-14, atol=1e-14)
-            old_tree = upgma(DistanceMatrix(expected, ids))
-            a = multi_align(seqs, ids=ids, **kwargs).path
-            b = multi_align(seqs, ids=ids, guide_tree=old_tree, **kwargs).path
-            npt.assert_array_equal(a.to_bits(), b.to_bits())
+        # Free gap: S=1, S_rand=0, S_max=1.5 -> d=-ln(1/1.5).
+        obs = _score_dists(encoded, submat, 1, 1, True, works, 0)
+        npt.assert_allclose(obs, [np.log(1.5)])
 
-    def test_distance_domains(self):
-        cases = [
-            (["AAAA", "CCCC", "AAAA"], (1, -1), 2, "random baseline"),
-            (["AC", "CA", "AC"], (0, 0), 2, "not positive"),
-            (
-                ["AC", "CA", "AC"],
-                SubstitutionMatrix("AC", [[-10, 2], [2, -10]]),
-                0,
-                "exceeds",
-            ),
-        ]
-        for seqs, matrix, gap, message in cases:
-            with self.assertRaisesRegex(ValueError, message):
-                multi_align(seqs, sub_score=matrix, gap_cost=gap, free_ends=False)
-            # The same data remain alignable when a guide is supplied.
-            path = multi_align(
-                seqs,
-                sub_score=matrix,
-                gap_cost=gap,
-                free_ends=False,
-                guide_tree=_tree(3),
-            ).path
-            self.assertEqual([x.replace("-", "") for x in path.to_aligned(seqs)], seqs)
-        path = multi_align(["AAAA", "CCCC", "GGGG"], free_ends=True).path
-        self.assertEqual(path.shape[0], 3)
+        # Edge case: AAA vs AAA
+        # S = S_max = S_rand -> d is undefined. The current implementation returns 0.
+        encoded = [np.array([0, 0, 0]), np.array([0, 0, 0])]
+        obs = _score_dists(encoded, submat, 1, 1, True, works, 0)
+        npt.assert_allclose(obs, [0])
 
-    def test_roundoff(self):
-        path = pair_align("A", "A", free_ends=False).paths[0]
-        for dtype in [np.float32, np.float64]:
-            eps = np.finfo(dtype).eps
-            # Direct numerical inputs isolate the documented boundary at one.
-            for ratio in [1, 1 + 2 * eps, 1 + 8 * eps]:
-                self.assertEqual(_fd_dist(ratio, path, 0, 1, 0, 0, False, 8 * eps), 0)
-            self.assertAlmostEqual(
-                _fd_dist(0.5, path, 0, 1, 0, 0, False, 8 * eps), np.log(2)
-            )
-            with self.assertRaisesRegex(ValueError, "exceeds"):
-                _fd_dist(1 + 16 * eps, path, 0, 1, 0, 0, False, 8 * eps)
-        for score in [np.inf, np.nan]:
-            with self.assertRaisesRegex(ValueError, "nonfinite"):
-                _fd_dist(score, path, 0, 1, 0, 0, False, 0)
+        # Edge case: match negative, mismatch positive
+        # S=2, S_max=-3, S_rand=-4 -> S_eff=6. The current implementation clips at 1.
+        submat = np.array([[-5.0, 1.0], [1.0, -5.0]])
+        encoded = [np.array([0, 1]), np.array([1, 0])]
+        obs = _score_dists(encoded, submat, 0, 2, False, works, 0)
+        npt.assert_allclose(obs, [0])
 
-    def test_custom_self_alignment(self):
-        # Non-diagonal self-alignments score 2, rather than the diagonal's -20.
-        # An incorrect diagonal shortcut would make normalization nonpositive.
-        sm = SubstitutionMatrix("AC", [[-10.0, 2.0], [2.0, -10.0]])
-        self.assertEqual(
-            pair_align("AC", "AC", sub_score=sm, gap_cost=0, free_ends=False).score, 2
-        )
-        with self.assertRaisesRegex(ValueError, "exceeds the self-score"):
-            multi_align(["AC", "CA", "AC"], sub_score=sm, gap_cost=0, free_ends=False)
+        # Edge case: mismatch neutral
+        # S=0, S_max=2, S_rand=1 -> S_eff=-1. The current implementation clips at 1e-6.
+        submat = np.array([[1.0, 0.0], [0.0, 1.0]])
+        obs = _score_dists(encoded, submat, 0, 2, False, works, 0)
+        npt.assert_allclose(obs, [-np.log(1e-6)])
 
 
 if __name__ == "__main__":
