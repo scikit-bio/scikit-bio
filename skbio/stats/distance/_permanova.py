@@ -537,16 +537,19 @@ def permanova(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
-    engine : {"cython", "numba"}, optional
+    engine : {"cython", "numba", "fast"}, optional
         Compute engine to use. ``"cython"`` (default) uses the Cython
         implementation. ``"numba"`` uses the optional Numba implementation
         and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`). When ``"numba"`` is
-        selected, the optional scikit-bio-binaries acceleration is not used.
-        When the distance matrix is resident on a CuPy- or PyTorch-backed GPU
-        (CUDA or ROCm) and ``engine="numba"``, a fused GPU kernel is used;
-        matrices on other backends use the array-API path instead (see Notes for
-        the ROCm-PyTorch case).
+        default is used (see :func:`skbio.set_config`). ``"fast"`` lets
+        scikit-bio pick whichever engine it expects to be quicker here, which
+        is Numba when it is installed and Cython otherwise; results may differ
+        from the default in the last bits. When ``"numba"`` is selected, the
+        optional scikit-bio-binaries acceleration is not used. When the
+        distance matrix is resident on a CuPy- or PyTorch-backed GPU (CUDA or
+        ROCm) and ``engine="numba"``, a fused GPU kernel is used; matrices on
+        other backends use the array-API path instead (see Notes for the
+        ROCm-PyTorch case).
 
         .. versionadded:: 0.7.4
 
@@ -632,7 +635,11 @@ def permanova(
     if not isinstance(distmat, DistanceMatrix):
         raise TypeError("Input must be a DistanceMatrix.")
 
-    engine = _resolve_engine(engine, ("cython", "numba"))
+    engine = _resolve_engine(
+        engine,
+        ("cython", "numba"),
+        fast="numba" if NUMBA_AVAILABLE else "cython",
+    )
 
     # A DistanceMatrix backed by a non-NumPy (e.g. GPU-resident) buffer: with
     # engine="numba" and a matching Numba GPU backend it runs the fused GPU

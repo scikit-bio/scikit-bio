@@ -4,6 +4,7 @@
 
 ### Features
 
+* `permanova`, `mantel` and `permdisp` now accept `engine="fast"`, which lets scikit-bio choose whichever engine it expects to be quickest instead of the conservative default, resolving to the Numba engine when Numba is installed and to Cython otherwise. The default is unchanged and remains `"cython"`; results from `"fast"` may differ from the default in the last bits ([#2575](https://github.com/scikit-bio/scikit-bio/pull/2575)).
 * Added optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
 * Introduced transition probability matrix computation ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
 * Added inverse robust center log ratio (`rclr_inv`) transformation ([#2527](https://github.com/scikit-bio/scikit-bio/pull/2527)).
