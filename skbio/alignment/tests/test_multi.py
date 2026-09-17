@@ -16,7 +16,6 @@ from scipy.cluster.hierarchy import linkage
 
 from skbio import DNA, RNA, Protein, Sequence, TabularMSA, TreeNode, SubstitutionMatrix
 from skbio.io import read as sk_read
-from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._array import ArrayWorkspace
 from skbio.alignment import AlignPath, pair_align, align_score
@@ -166,10 +165,9 @@ class MultiAlignTests(unittest.TestCase):
         exp = [str(seq) for seq in seqs]
         self.assertListEqual(obs, exp)
 
-        # TODO: Let `from_path_seqs` incorporate sequence IDs.
-        # obs = [seq.metadata["id"] for seq in msa]
-        # exp = [seq.metadata["id"] for seq in seqs]
-        # self.assertListEqual(obs, exp)
+        obs = [seq.metadata["id"] for seq in msa]
+        exp = [seq.metadata["id"] for seq in seqs]
+        self.assertListEqual(obs, exp)
 
     def test_multi_align_trna(self):
         """Align human mitochondrial tRNA sequences (nucleotide)."""
@@ -372,6 +370,11 @@ class MultiAlignTests(unittest.TestCase):
         # Retain guide tree in output
         res = multi_align(seqs, guide_tree=tree, keep_tree=True)
         self.assertIs(res.tree, tree)
+
+        msg = "`guide_tree` must be a TreeNode."
+        with self.assertRaises(TypeError) as cm:
+            multi_align(seqs, guide_tree="xyz")
+        self.assertEqual(str(cm.exception), msg)
 
     def test_multi_align_ids(self):
         """Test of custom sequence IDs."""

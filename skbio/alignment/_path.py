@@ -1360,9 +1360,7 @@ def _rle_string(s):
     return "".join(str(c) + u for c, u in zip(count, unique))
 
 
-lru_cache()
-
-
+@lru_cache()
 def all_pair_paths(m, n):
     """Enumerate all possible pairwise alignment paths between two sequences.
 

@@ -465,7 +465,7 @@ def _check_indices(seqs, gaps=None):
                 raise ValueError(msg.format(i + 1))
 
 
-def _check_atol(atol, dtype=None):
+def _prep_atol(atol, dtype=None):
     """Check if absolute tolerance (atol) is valid."""
     if atol is None:
         atol = 0.0
@@ -473,6 +473,8 @@ def _check_atol(atol, dtype=None):
         raise ValueError("`atol` must be finite and non-negative.")
     if dtype is not None:
         atol = dtype(atol)
+        if not np.isfinite(atol):
+            raise ValueError("`atol` must be finite and non-negative.")
     return atol
 
 

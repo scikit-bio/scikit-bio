@@ -13,7 +13,7 @@ from typing import Any, NamedTuple, TYPE_CHECKING
 import numpy as np
 
 from skbio.alignment import PairAlignPath
-from ._utils import encode_sequences, prep_gapcost, _check_atol
+from ._utils import encode_sequences, prep_gapcost, _prep_atol
 from ._path import _encode_path
 from ._cutils import (
     _fill_matrix_linear,
@@ -423,7 +423,7 @@ def pair_align(
     # To prepare input for `_mn` version, do: `scores = submat[seq1[:, None], seq2]`.
 
     # Cast tolerance to the same type.
-    atol = _check_atol(atol, dtype=dtype)
+    atol = _prep_atol(atol, dtype=dtype)
 
     # Prepare affine or linear gap penalties.
     gap_open, gap_extend = prep_gapcost(gap_cost, dtype=dtype)

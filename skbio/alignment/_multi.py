@@ -25,7 +25,7 @@ from ._pair import (
     _leading_gaps,
     _encode_path,
 )
-from ._utils import encode_sequences, prep_gapcost, _get_seqids, _check_atol
+from ._utils import encode_sequences, prep_gapcost, _get_seqids, _prep_atol
 from ._cutils import (
     _fill_matrix_linear,
     _fill_matrix_affine,
@@ -357,7 +357,7 @@ def multi_align(
     gap_o, gap_e = prep_gapcost(gap_cost, dtype=dtype)
     if not np.isfinite([gap_o, gap_e]).all() or min(gap_o, gap_e) < 0:
         raise ValueError("Gap costs must be finite and non-negative.")
-    atol = _check_atol(atol, dtype=dtype)
+    atol = _prep_atol(atol, dtype=dtype)
 
     # Shrink substitution matrix to observed characters only. This accelerates the
     # calculation without changing the result. For example, if DNA sequences contain
@@ -381,6 +381,8 @@ def multi_align(
         lm = linkage(dm, method="average")
         merges = lm[:, :2].astype(np.intp)
     else:
+        if not isinstance(guide_tree, TreeNode):
+            raise TypeError("`guide_tree` must be a TreeNode.")
         merges = _tree_to_lnkmat(guide_tree, ids)
 
     eye = np.eye(len(submat), dtype=dtype)
