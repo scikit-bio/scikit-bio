@@ -238,32 +238,108 @@ def multi_align(
 
     Examples
     --------
-    Align three sequences and materialize their aligned strings:
-
     >>> from skbio.alignment import multi_align, align_score
-    >>> seqs = ['ACGT', 'AGT', 'ACGT']
-    >>> path = multi_align(seqs, free_ends=False).path
-    >>> path.to_aligned(seqs)
-    ['ACGT', 'A-GT', 'ACGT']
-    >>> align_score((path, seqs), free_ends=False)
-    6.0
 
-    A supplied tree controls merge order and avoids automatic distances:
+    Align three DNA sequences using default parameters.
 
-    >>> from skbio import TreeNode
-    >>> tree = TreeNode.read(['((a,b),c);'])
-    >>> res = multi_align(seqs, ids=['a', 'b', 'c'], guide_tree=tree,
-    ...                    gap_cost=(2, 1), free_ends=False)
-    >>> res.path.shape[0]
-    3
+    >>> from skbio.sequence import DNA
+    >>> seqs = [DNA('CATTAACGT'),
+    ...         DNA('CGTTACGGT'),
+    ...         DNA('AGTTAACGG')]
+    >>> path = multi_align(seqs).path
+    >>> path
+    <AlignPath, sequences: 3, positions: 11, segments: 7>
 
-    Sequence metadata IDs, including those read from FASTA headers, are inferred:
+    Print the aligned sequences.
 
-    >>> from skbio import DNA
-    >>> named = [DNA(seq, metadata={'id': name})
-    ...          for seq, name in zip(seqs, ['a', 'b', 'c'])]
-    >>> multi_align(named, guide_tree=tree, free_ends=False).path.to_aligned(named)
-    ['ACGT', 'A-GT', 'ACGT']
+    >>> for seq in path.to_aligned(seqs):
+    ...     print(seq)
+    CA-TTAACGT-
+    -CGTTA-CGGT
+    -AGTTAACGG-
+
+    The quality of the alignment can be evaluated using the `align_score` function,
+    which calculates the sum-of-pairs (SP) score. It has the same default parameter
+    settings as `multi_align` does.
+
+    >>> from skbio.alignment import align_score
+    >>> align_score((path, seqs))
+    7.0
+
+    Under the hood, the function performs pairwise alignments, calculates a distance
+    matrix, then infers a guide tree which determines the merging order. The tree and
+    distance matrix can be retained for diagnostic and educational purposes.
+
+    >>> path, tree, dm = multi_align(seqs, keep_tree=True, keep_distmat=True)
+    >>> print(tree.ascii_art())
+              /-1
+    ---------|
+             |          /-0
+              \--------|
+                        \-2
+
+    >>> print(dm)
+    3x3 distance matrix
+    IDs:
+    '0', '1', '2'
+    Data:
+    [[ 0.          0.70444674  0.40215932]
+     [ 0.70444674  0.          0.40215932]
+     [ 0.40215932  0.40215932  0.        ]]
+
+    One can supply a custom guide tree to skip the costly automatic pairwise alignment
+    and tree building process. An accurate tree may improve the alignment quality.
+
+    >>> from skbio.tree import TreeNode
+    >>> tree = TreeNode.read(['((1,2),0);'])
+    >>> path = multi_align(seqs, guide_tree=tree).path
+    >>> for seq in path.to_aligned(seqs):
+    ...     print(seq)
+    CATTAACGT-
+    CGTTA-CGGT
+    AGTTAACGG-
+
+    >>> align_score((path, seqs))
+    9.0
+
+    By default, sequences match taxa (tip names) of the tree by incremental indices
+    '0', '1', '2'... Alternatively, explicit sequence IDs can be defined using the
+    ``'id'`` key of sequence metadata or supplied by the ``ids`` parameter of this
+    function.
+
+    >>> for seq, id_ in zip(seqs, 'abc'):
+    ...     seq.metadata['id'] = id_
+    >>> tree = TreeNode.read(['((b,c),a);'])
+    >>> res = multi_align(seqs, guide_tree=tree)
+
+    One can customize the alignment parameters, including substitution scores, gap
+    penalties, and terminal gap policy. Refer to :func:`pair_align` for details of
+    the parameters.
+
+    >>> params = dict(sub_score=(2, -3), gap_cost=(2, 5), free_ends=False)
+    >>> path = multi_align(seqs, **params).path
+    >>> for seq in path.to_aligned(seqs):
+    ...     print(seq)
+    CATTAACGT
+    CGTTACGGT
+    AGTTAACGG
+
+    Supply the same parameters when calculating the alignment score.
+
+    >>> align_score((path, seqs), **params)
+    4.0
+
+    The entire process of reading a multi-FASTA file of original sequences, performing
+    multiple sequence alignment, and writing the aligned sequences into a multi-FASTA
+    file is:
+
+    >>> from skbio.io import read as sk_read  # doctest: +SKIP
+    >>> from skbio.alignment import TabularMSA  # doctest: +SKIP
+    >>> it = sk_read('input.fa', format='fasta', constructor=DNA)  # doctest: +SKIP
+    >>> seqs = list(it)  # doctest: +SKIP
+    >>> path = multi_align(seqs, **params).path  # doctest: +SKIP
+    >>> msa = TabularMSA.from_path_seqs(path, seqs)  # doctest: +SKIP
+    >>> msa.write('output.fa')  # doctest: +SKIP
 
     """
     seqs = list(sequences)

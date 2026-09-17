@@ -430,7 +430,7 @@ class MergeAlignTests(unittest.TestCase):
                            [-1,  1, -1, -1],
                            [-1, -1,  1, -1],
                            [-1, -1, -1,  1]], dtype=np.float32)
-        
+
         # Sequences encoded as indices in the substitution matrix
         encoded = [np.array([0, 2, 2, 1, 0, 3, 2]),
                    np.array([2, 1, 1, 0, 3, 2]),
