@@ -721,10 +721,10 @@ class UnifracTests(TestCase):
     def test_unifrac_engine_fast_is_accepted(self):
         # Checks that "fast" is plumbed through and gives the same answer,
         # not which engine ran. The numba and cython unifrac kernels agree to
-        # well inside this tolerance, which the engine_numba_matches_cython
-        # tests above already show, so no comparison of their results can tell
-        # the two engines apart. Which engine "fast" resolves to is covered in
-        # skbio/tests/test_config.py.
+        # well inside this tolerance, which the two
+        # engine_numba_matches_cython tests in this file already show, so no
+        # comparison of their results can tell the two engines apart. Which
+        # engine "fast" resolves to is covered in skbio/tests/test_config.py.
         for metric in ("unweighted_unifrac", "weighted_unifrac"):
             dm_fast = beta_diversity(
                 metric, self.b1, ids=self.sids1, taxa=self.oids1,
