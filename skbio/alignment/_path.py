@@ -718,7 +718,7 @@ class AlignPath(SkbioObject):
         elif not np.issubdtype(type(gap), np.integer):
             raise TypeError(errmsg)
 
-        bits = np.squeeze(self._to_bits())
+        bits = self._to_bits()
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self._lengths, axis=1)
@@ -1181,7 +1181,7 @@ class PairAlignPath(AlignPath):
         from skbio.sequence import Sequence
 
         cigar = []
-        states = np.squeeze(self._states)
+        states = self._states[0]
 
         # TODO: Make this compatible with `SequenceLike`.
         if seqs is not None:
