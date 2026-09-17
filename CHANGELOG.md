@@ -4,6 +4,7 @@
 
 ### Features
 
+* `beta_diversity` now accepts `engine="fast"` for the `unweighted_unifrac` and `weighted_unifrac` metrics, resolving to the Numba engine when Numba is installed and to Cython otherwise. Measured on an x86 node, Numba is 15x to 205x quicker than Cython on these metrics once compiled, across tables from 100 to 2,000 samples. It pays a one-off compilation cost on the first call, so a single small run can be slower. The default is unchanged ([#2581](https://github.com/scikit-bio/scikit-bio/pull/2581)).
 * `permanova`, `mantel` and `permdisp` now accept `engine="fast"`, which lets scikit-bio choose whichever engine it expects to be quickest instead of the conservative default, resolving to the Numba engine when Numba is installed and to Cython otherwise. The default is unchanged and remains `"cython"`; results from `"fast"` may differ from the default in the last bits ([#2575](https://github.com/scikit-bio/scikit-bio/pull/2575)).
 * Added optional support for the Numba backend [#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), with Permanova and Mantel currently using it [#2488](https://github.com/scikit-bio/scikit-bio/pull/2488)and [#2464](https://github.com/scikit-bio/scikit-bio/pull/2464).
 * Introduced transition probability matrix computation ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
