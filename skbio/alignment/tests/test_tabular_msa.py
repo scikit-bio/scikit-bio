@@ -905,6 +905,13 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         for o, e in zip(obs, exp):
             self.assertEqual(str(o), e)
 
+        # with metadata
+        for seq, i in zip(seqs, range(len(seqs))):
+            seq.metadata["id"] = "S" + str(i)
+        obs = TabularMSA.from_path_seqs(path, seqs)
+        for seq, i in zip(obs, range(len(seqs))):
+            self.assertEqual(seq.metadata["id"], "S" + str(i))
+
         msg = "`seqs` must be of skbio.Sequence type."
         with self.assertRaises(ValueError) as cm:
             TabularMSA.from_path_seqs(path=path, seqs=[1, 2, 3])

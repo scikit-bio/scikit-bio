@@ -23,6 +23,7 @@
 * On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 * Vectorized Welch's *t*-test in `dirmult_ttest`, replacing the per-draw statsmodels `CompareMeans` object construction with a closed-form NumPy/SciPy computation across all posterior draws. Results are numerically identical to the previous implementation while avoiding hundreds of Python-level object constructions per call. `dirmult_ttest` now also raises `ValueError` for `draws < 1`, rather than the previous implementation's uncontrolled empty-array behavior.
 * Added efficient native implementations of Bonferroni, Holm-Bonferroni, Benjamini-Hochberg, and Benjamini-Yekutieli methods for multiple testing correction of *p*-values, avoiding statsmodels dispatch. This improved the efficiency of differential abundance tests (`dirmult_ttest`, `dirmult_lme`, `ancom`, `ancombc` and `ancombc2`). NaN p-values are excluded from each testing family, following the behavior of R's `p.adjust`.
+* `TabularMSA.from_path_seqs` now copies metadata of original sequences.
 
 ### Bug Fixes
 
@@ -37,6 +38,7 @@
 * `permanova` and `pcoa` now honor `engine="numba"` by not taking the scikit-bio-binaries path (the Cython-equivalent acceleration) [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
 * Fixed `SymmetricMatrix.filter` and `SymmetricMatrix.permute` silently resetting a non-zero diagonal to `0` when the matrix was stored in condensed form. Both methods reconstructed the result from its condensed representation, which only carries off-diagonal values, without passing the diagonal through. The diagonal is now subset and reordered along with the rows and columns. `DistanceMatrix` is unaffected because it is always hollow ([#2516](https://github.com/scikit-bio/scikit-bio/issues/2516)). Thank @LarytheLord for reporting and diagnosing the root cause.
 * `GeneticCode.from_ncbi` now recognizes NCBI genetic code table 15 (Blepharisma Macronuclear) and tables 26 through 33 (Pachysolen tannophilus, Karyorelict, Condylostoma, Mesodinium, Peritrich, and Blastocrithidia Nuclear, Balanophoraceae Plastid, and Cephalodiscidae Mitochondrial), all of which were missing from scikit-bio's table. Also added `GTG` as a recognized alternative start codon for table 3 (Yeast Mitochondrial), matching a later revision of NCBI's table ([#1659](https://github.com/scikit-bio/scikit-bio/issues/1659)).
+
 
 ## Version 0.7.3
 
