@@ -11,9 +11,15 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio.alignment._path import PairAlignPath, AlignPath, _run_length_encode
-from skbio.alignment import TabularMSA
 from skbio.sequence import DNA, Protein
+from skbio.alignment import TabularMSA
+from skbio.alignment._path import (
+    AlignPath,
+    PairAlignPath,
+    _rle_string,
+    all_pair_paths,
+    _all_pair_paths,
+)
 
 
 class TestAlignPath(unittest.TestCase):
@@ -804,10 +810,64 @@ class TestPairAlignPath(unittest.TestCase):
 
 
 class TestMisc(unittest.TestCase):
-    def test_run_length_encode(self):
-        obs = _run_length_encode("ABBCCCDDDD")
+    def test_rle_string(self):
+        obs = _rle_string("ABBCCCDDDD")
         exp = "1A2B3C4D"
         self.assertEqual(obs, exp)
+
+
+class TestAllPaths(unittest.TestCase):
+
+    def test_all_pair_paths(self):
+        obs = all_pair_paths(1, 1)
+        self.assertEqual(len(obs), 3)
+        exp = ["1M", "1D1I", "1I1D"]
+        for o, e in zip(obs, exp):
+            self.assertIs(type(o), PairAlignPath)
+            self.assertEqual(o.to_cigar(), e)
+
+        obs = _all_pair_paths(0, 0)
+        exp = [()]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(0, 1)
+        exp = [(1,)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(1, 1)
+        exp = [(0,), (2, 1), (1, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(1, 2)
+        exp = [(0, 1), (2, 1, 1), (1, 0), (1, 2, 1), (1, 1, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(2, 1)
+        exp = [(0, 2), (2, 0), (2, 2, 1), (2, 1, 2), (1, 2, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(2, 3)
+        exp = [(0, 0, 1),
+               (0, 2, 1, 1),
+               (0, 1, 0),
+               (0, 1, 2, 1),
+               (0, 1, 1, 2),
+               (2, 0, 1, 1),
+               (2, 2, 1, 1, 1),
+               (2, 1, 0, 1),
+               (2, 1, 2, 1, 1),
+               (2, 1, 1, 0),
+               (2, 1, 1, 2, 1),
+               (2, 1, 1, 1, 2),
+               (1, 0, 0),
+               (1, 0, 2, 1),
+               (1, 0, 1, 2),
+               (1, 2, 0, 1),
+               (1, 2, 2, 1, 1),
+               (1, 2, 1, 0),
+               (1, 2, 1, 2, 1),
+               (1, 2, 1, 1, 2),
+               (1, 1, 0, 2),
+               (1, 1, 2, 0),
+               (1, 1, 2, 2, 1),
+               (1, 1, 2, 1, 2),
+               (1, 1, 1, 2, 2)]
+        self.assertListEqual(obs, exp)
 
 
 if __name__ == "__main__":

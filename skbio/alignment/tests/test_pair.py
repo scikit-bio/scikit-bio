@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from itertools import product
 import unittest
 
 import numpy as np
@@ -17,7 +18,9 @@ from skbio.alignment import TabularMSA
 from skbio.sequence import Sequence, GrammaredSequence, DNA, Protein
 from skbio.sequence import SubstitutionMatrix
 from skbio.util import classproperty, overrides
+from skbio.alignment import align_score
 from skbio.alignment._utils import encode_sequences
+from skbio.alignment._path import all_pair_paths
 
 from skbio.alignment._pair import (
     pair_align,
@@ -32,8 +35,10 @@ from skbio.alignment._pair import (
     _traceback_all,
 )
 from skbio.alignment._cutils import (
-    _fill_linear_matrix,
-    _fill_affine_matrices,
+    _fill_matrix_linear,
+    _fill_matrix_affine,
+    _fill_matrix_linear_mn,
+    _fill_matrix_affine_mn,
 )
 
 
@@ -216,6 +221,24 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align(seq1, seq2, sub_score="PAM70", gap_cost=(11, 1))
         self.assertEqual(obs.score, 86)
         self.assertEqual(obs.paths[0].to_cigar(), "1D29M")
+
+    def test_pair_align_exhaust(self):
+        """Output score matches exhaustive enumeration."""
+        rng = np.random.default_rng(42)
+        alphabet = np.array([65, 67, 71, 84], dtype=np.uint8)
+        for m, n, sub, gap, free in product(
+            range(1, 3),
+            range(2, 5),
+            [(1, -1), (2, -3), (0.5, -1.5)],
+            [2, (0, 2), (2, 0), (5, 2), (0.5, 0.25)],
+            [False, True],
+        ):
+            seqs = tuple(alphabet[rng.integers(4, size=x)].tobytes().decode(
+                "ascii") for x in (m, n))
+            obs = pair_align(*seqs, "global", sub, gap, free).score
+            paths = all_pair_paths(m, n)
+            exp = max(align_score((path, seqs), sub, gap, free) for path in paths)
+            self.assertEqual(obs, exp)
 
     def test_pair_align_custom(self):
         """Align custom sequence types."""
@@ -741,34 +764,8 @@ class PairAlignTests(unittest.TestCase):
         obs = pair_align_prot(seq1, seq2, **kwargs)
         self.assertEqual(obs.score, 13)
 
-    def test_prep_free_ends(self):
-        obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (2, 2, 2, 2))
-        obs = _prep_free_ends(local=False, free_ends=False, trim_ends=False)
-        self.assertTupleEqual(obs, (0, 0, 0, 0))
-        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=False)
-        self.assertTupleEqual(obs, (1, 1, 1, 1))
-        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=True)
-        self.assertTupleEqual(obs, (2, 2, 2, 2))
-        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=False)
-        self.assertTupleEqual(obs, (1, 1, 0, 0))
-        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=True)
-        self.assertTupleEqual(obs, (2, 2, 0, 0))
-        obs = _prep_free_ends(
-            local=False, free_ends=(True, False, False, True), trim_ends=True)
-        self.assertTupleEqual(obs, (2, 0, 0, 2))
-        obs = _prep_free_ends(
-            local=False, free_ends=(True, False, True, False), trim_ends=False)
-        self.assertTupleEqual(obs, (1, 0, 1, 0))
 
-        # non-Boolean inputs
-        obs = _prep_free_ends(local=False, free_ends=(0, 1, 2, 3), trim_ends="yes")
-        self.assertTupleEqual(obs, (0, 2, 2, 2))
-
-        msg = "`free_ends` must be one, two or four Booleans."
-        with self.assertRaises(ValueError) as cm:
-            _ = _prep_free_ends(local=False, free_ends=(1, 2, 3), trim_ends=False)
-        self.assertEqual(str(cm.exception), msg)
+class KernelTests(unittest.TestCase):
 
     def test_alloc_matrices(self):
         # linear
@@ -839,59 +836,59 @@ class PairAlignTests(unittest.TestCase):
         self.assertTrue(np.isneginf(obs[1][1:, 0]).all())
         self.assertTrue(np.isneginf(obs[2][0, 1:]).all())
 
-    def test_fill_linear_matrix(self):
+    def test_fill_matrix_linear(self):
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
-        dtype=query.dtype.type
+        dtype = query.dtype.type
         m, n = seq1.size, seq2.size
 
         # global
-        obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=False, lead1=False, lead2=False)
-        _fill_linear_matrix(obs[0], query, target, 2, local=False)
+        obs, *_ = _alloc_matrices(m, n, False, dtype=dtype)
+        _init_matrices((obs,), 0, 2, local=False, lead1=False, lead2=False)
+        _fill_matrix_linear(obs, query, target, 2, local=False)
         exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                         [ -2,   1,  -1,  -3,  -5,  -7],
                         [ -4,  -1,   0,   0,  -2,  -4],
                         [ -6,  -3,  -2,  -1,  -1,  -1],
                         [ -8,  -5,  -4,  -3,   0,  -2]])
-        npt.assert_array_equal(obs[0], exp)
+        npt.assert_array_equal(obs, exp)
 
         # local
-        obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=True, lead1=False, lead2=False)
-        _fill_linear_matrix(obs[0], query, target, 2, local=True)
+        obs, *_ = _alloc_matrices(m, n, False, dtype=dtype)
+        _init_matrices((obs,), 0, 2, local=True, lead1=False, lead2=False)
+        _fill_matrix_linear(obs, query, target, 2, local=True)
         exp = np.array([[0, 0, 0, 0, 0, 0],
                         [0, 1, 1, 0, 0, 0],
                         [0, 0, 0, 2, 0, 0],
                         [0, 0, 0, 0, 1, 1],
                         [0, 0, 0, 0, 1, 0]])
-        npt.assert_array_equal(obs[0], exp)
+        npt.assert_array_equal(obs, exp)
 
         # semi-global
-        obs = _alloc_matrices(m, n, False, dtype=dtype)
-        _init_matrices(obs, 0, 2, local=False, lead1=True, lead2=True)
-        _fill_linear_matrix(obs[0], query, target, 2, local=False)
+        obs, *_ = _alloc_matrices(m, n, False, dtype=dtype)
+        _init_matrices((obs,), 0, 2, local=False, lead1=True, lead2=True)
+        _fill_matrix_linear(obs, query, target, 2, local=False)
         exp = np.array([[ 0,  0,  0,  0,  0,  0],
                         [ 0,  1,  1, -1, -1, -1],
                         [ 0, -1,  0,  2,  0, -2],
                         [ 0, -1, -2,  0,  1,  1],
                         [ 0, -1, -2, -2,  1,  0]])
-        npt.assert_array_equal(obs[0], exp)
+        npt.assert_array_equal(obs, exp)
 
-    def test_fill_affine_matrices(self):
+    def test_fill_matrix_affine(self):
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
-        dtype=query.dtype.type
+        dtype = query.dtype.type
         m, n = seq1.size, seq2.size
 
         # global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
         _init_matrices(obs, 3, 1, local=False, lead1=False, lead2=False)
-        _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
+        _fill_matrix_affine(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0, -4, -5, -6, -7, -8],
                          [-4,  1, -3, -4, -5, -6],
                          [-5, -3,  0, -2, -5, -6],
@@ -912,7 +909,7 @@ class PairAlignTests(unittest.TestCase):
         # local
         obs = _alloc_matrices(m, n, True, dtype=dtype)
         _init_matrices(obs, 3, 1, local=True, lead1=False, lead2=False)
-        _fill_affine_matrices(*obs, query, target, 3, 1, local=True)
+        _fill_matrix_affine(*obs, query, target, 3, 1, local=True)
         exp0 = np.array([[0, 0, 0, 0, 0, 0],
                          [0, 1, 1, 0, 0, 0],
                          [0, 0, 0, 2, 0, 0],
@@ -933,7 +930,7 @@ class PairAlignTests(unittest.TestCase):
         # semi-global
         obs = _alloc_matrices(m, n, True, dtype=dtype)
         _init_matrices(obs, 3, 1, local=False, lead1=True, lead2=True)
-        _fill_affine_matrices(*obs, query, target, 3, 1, local=False)
+        _fill_matrix_affine(*obs, query, target, 3, 1, local=False)
         exp0 = np.array([[ 0,  0,  0,  0,  0,  0],
                          [ 0,  1,  1, -1, -1, -1],
                          [ 0, -1,  0,  2, -2, -2],
@@ -951,230 +948,296 @@ class PairAlignTests(unittest.TestCase):
                          [-5, -5, -3, -3, -5]])
         npt.assert_array_equal(obs[2][1:, 1:], exp2)
 
+    def test_fill_matrix_linear_mn(self):
+        seq1 = DNA("ACGT")
+        seq2 = DNA("AACTG")
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
+        scores = submat[seq1[:, None], seq2]
+
+        # global alignment
+        obs, *_ = _alloc_matrices(seq1.size, seq2.size, False, dtype=scores.dtype)
+        _init_matrices((obs,), 0, 2, local=False, lead1=False, lead2=False)
+        _fill_matrix_linear_mn(obs, scores, 2, local=False)
+        exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+                        [ -2,   1,  -1,  -3,  -5,  -7],
+                        [ -4,  -1,   0,   0,  -2,  -4],
+                        [ -6,  -3,  -2,  -1,  -1,  -1],
+                        [ -8,  -5,  -4,  -3,   0,  -2]])
+        npt.assert_array_equal(obs, exp)
+
+        # match `_fill_matrix_linear`
+        query, target = submat[seq1], seq2
+        exp = obs.copy()
+        exp[1:, 1:] = np.nan
+        _fill_matrix_linear(exp, query, target, 2, local=False)
+        exp = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+                        [ -2,   1,  -1,  -3,  -5,  -7],
+                        [ -4,  -1,   0,   0,  -2,  -4],
+                        [ -6,  -3,  -2,  -1,  -1,  -1],
+                        [ -8,  -5,  -4,  -3,   0,  -2]])
+        npt.assert_array_equal(obs, exp)
+
+    def test_fill_matrix_affine_mn(self):
+        seq1 = DNA("ACGT")
+        seq2 = DNA("AACTG")
+        (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
+        scores = submat[seq1[:, None], seq2]
+
+        # global alignment
+        obs = _alloc_matrices(seq1.size, seq2.size, True, dtype=scores.dtype)
+        _init_matrices(obs, 3, 1, local=False, lead1=False, lead2=False)
+        _fill_matrix_affine_mn(*obs, scores, 3, 1, local=False)
+        exp0 = np.array([[ 0, -4, -5, -6, -7, -8],
+                         [-4,  1, -3, -4, -5, -6],
+                         [-5, -3,  0, -2, -5, -6],
+                         [-6, -4, -4, -1, -3, -4],
+                         [-7, -5, -5, -5,  0, -4]])
+        npt.assert_array_equal(obs[0], exp0)
+        exp1 = np.array([[ -8,  -3,  -4,  -5,  -6],
+                         [ -9,  -7,  -4,  -5,  -6],
+                         [-10,  -8,  -8,  -5,  -6],
+                         [-11,  -9,  -9,  -9,  -4]])
+        npt.assert_array_equal(obs[1][1:, 1:], exp1)
+        exp2 = np.array([[ -8,  -9, -10, -11, -12],
+                         [ -3,  -7,  -8,  -9, -10],
+                         [ -4,  -4,  -6,  -9, -10],
+                         [ -5,  -5,  -5,  -7,  -8]])
+        npt.assert_array_equal(obs[2][1:, 1:], exp2)
+
+        # match `_fill_matrix_affine`
+        query, target = submat[seq1], seq2
+        exp = []
+        for o in obs:
+            exp.append(e := o.copy())
+            e[1:, 1:] = np.nan
+        _fill_matrix_affine(*exp, query, target, 3, 1, local=False)
+        for o, e in zip(obs, exp):
+            npt.assert_array_equal(o, e)
+
     def test_one_stop(self):
         # ACGT vs AACTG, sub=(1, -1), gap=2, same below, unless otherwise stated
         # global (bottom-right corner)
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _one_stop(scomat, local=False, trail1=False, trail2=False)
+        obs = _one_stop(primat, local=False, trail1=False, trail2=False)
         self.assertEqual(obs[0], -2)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
         # local (maximum in the matrix)
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 1, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 0],
                            [0, 0, 0, 0, 1, 1],
                            [0, 0, 0, 0, 1, 0]])
-        obs = _one_stop(scomat, local=True, trail1=False, trail2=False)
+        obs = _one_stop(primat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
         # local, tie (will pick the smaller index)
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _one_stop(scomat, local=True, trail1=False, trail2=False)
+        obs = _one_stop(primat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
         # semi-global (maximum in bottom row)
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
                            [ 0, -1,  1, -1, -1, -1, -1],
                            [ 0, -1, -2,  2, -2, -2, -2],
                            [ 0, -1, -2, -2,  3, -1, -1],
                            [ 0,  1, -2, -3, -1,  4,  0]])
-        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
+        obs = _one_stop(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
         # bottom row only
-        obs = _one_stop(scomat, local=False, trail1=True, trail2=False)
+        obs = _one_stop(primat, local=False, trail1=True, trail2=False)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
         # right-most column only
-        obs = _one_stop(scomat, local=False, trail1=False, trail2=True)
+        obs = _one_stop(primat, local=False, trail1=False, trail2=True)
         self.assertEqual(obs[0], 0)
         npt.assert_array_equal(obs[1], [[0, 6]])
 
         # transpose and maximum in right-most column
-        scomat = np.ascontiguousarray(scomat.T)
-        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
+        primat = np.ascontiguousarray(primat.T)
+        obs = _one_stop(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[5, 4]])
 
         # semi-global, tie
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0],
                            [ 0,  1,  1, -1, -1, -1],
                            [ 0, -1,  0,  2,  0, -2],
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
-        obs = _one_stop(scomat, local=False, trail1=True, trail2=True)
+        obs = _one_stop(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5]])
 
     def test_all_stops(self):
         # ACGT vs AACTG, sub=(1, -1), gap=2, same below, unless otherwise stated
         # global (always unique)
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _all_stops(scomat, local=False, trail1=False, trail2=False)
+        obs = _all_stops(primat, local=False, trail1=False, trail2=False)
         self.assertEqual(obs[0], -2)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
         # local, unique
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 1, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 0],
                            [0, 0, 0, 0, 1, 1],
                            [0, 0, 0, 0, 1, 0]])
-        obs = _all_stops(scomat, local=True, trail1=False, trail2=False)
+        obs = _all_stops(primat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3]])
 
         # local, tie (CGTC vs. TCGAG)
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _all_stops(scomat, local=True, trail1=False, trail2=False)
+        obs = _all_stops(primat, local=True, trail1=False, trail2=False)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3], [4, 2]])
 
         # exact comparison
-        obs = _all_stops(scomat, local=True, trail1=False, trail2=False, eps=None)
+        obs = _all_stops(primat, local=True, trail1=False, trail2=False, eps=None)
         self.assertEqual(obs[0], 2)
         npt.assert_array_equal(obs[1], [[2, 3], [4, 2]])
 
         # semi-global, unique (TCGA vs. ATCGAG)
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0,  0],
                            [ 0, -1,  1, -1, -1, -1, -1],
                            [ 0, -1, -2,  2, -2, -2, -2],
                            [ 0, -1, -2, -2,  3, -1, -1],
                            [ 0,  1, -2, -3, -1,  4,  0]])
-        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
+        obs = _all_stops(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 4)
         npt.assert_array_equal(obs[1], [[4, 5]])
 
         # semi-global, tie
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0],
                            [ 0,  1,  1, -1, -1, -1],
                            [ 0, -1,  0,  2,  0, -2],
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
-        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
+        obs = _all_stops(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5], [4, 4]])
 
         # bottom row only
-        obs = _all_stops(scomat, local=False, trail1=True, trail2=False)
+        obs = _all_stops(primat, local=False, trail1=True, trail2=False)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[4, 4]])
 
         # right-most column only
-        obs = _all_stops(scomat, local=False, trail1=False, trail2=True)
+        obs = _all_stops(primat, local=False, trail1=False, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5]])
 
         # exact comparison
-        obs = _all_stops(scomat, local=False, trail1=True, trail2=True, eps=None)
+        obs = _all_stops(primat, local=False, trail1=True, trail2=True, eps=None)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[3, 5], [4, 4]])
 
         # ensure ascending order
-        scomat = np.array([[0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 1],
                            [0, 0, 0, 0, 1],
                            [0, 0, 1, 1, 1]])
-        obs = _all_stops(scomat, local=False, trail1=True, trail2=True)
+        obs = _all_stops(primat, local=False, trail1=True, trail2=True)
         self.assertEqual(obs[0], 1)
         npt.assert_array_equal(obs[1], [[1, 4], [2, 4], [3, 2], [3, 3], [3, 4]])
 
     def test_traceback_one(self):
         # ACTCA vs CAGAG, sub=(1, -1), gap=2 (linear)
         # global: unique path, bottom-right corner to left-most column
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,  -1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,  -2,  -2,  -4,  -6],
                            [ -6,  -3,  -2,  -3,  -3,  -5],
                            [ -8,  -5,  -4,  -3,  -4,  -4],
                            [-10,  -7,  -4,  -5,  -2,  -4]], dtype=float)
-        obs = _traceback_one(5, 5, (scomat,), 0., 2.)
+        obs = _traceback_one(5, 5, (primat,), 0., 2.)
         self.assertEqual(obs.to_cigar(), "1D4M1I")
 
         # transpose: bottom-right corner to top row
-        scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(5, 5, (scomat,), 0., 2.)
+        primat = np.ascontiguousarray(primat.T)
+        obs = _traceback_one(5, 5, (primat,), 0., 2.)
         self.assertEqual(obs.to_cigar(), "1I4M1D")
 
         # semi-global: unique path, bottom row to left-most column
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0],
                            [ 0, -1,  1, -1,  1, -1],
                            [ 0,  1, -1,  0, -1,  0],
                            [ 0, -1,  0, -2, -1, -2],
                            [ 0,  1, -1, -1, -3, -2],
                            [ 0, -1,  2,  0,  0, -2]], dtype=float)
-        obs = _traceback_one(5, 2, (scomat,), 0., 2.)
+        obs = _traceback_one(5, 2, (primat,), 0., 2.)
         self.assertEqual(obs.to_cigar(), "3D2M3I")
 
         # transpose: right-most column to top row
-        scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(2, 5, (scomat,), 0., 2.)
+        primat = np.ascontiguousarray(primat.T)
+        obs = _traceback_one(2, 5, (primat,), 0., 2.)
         self.assertEqual(obs.to_cigar(), "3I2M3D")
 
         # local: unique path, bottom row to left-most column
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 1, 0, 1, 0],
                            [0, 1, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0],
                            [0, 1, 0, 0, 0, 0],
                            [0, 0, 2, 0, 1, 0]], dtype=float)
-        obs = _traceback_one(5, 2, (scomat,), 0., 2., True, 2, 2, 2, 2)
+        obs = _traceback_one(5, 2, (primat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [3, 0])
 
         # transpose: right-most column to top row
-        scomat = np.ascontiguousarray(scomat.T)
-        obs = _traceback_one(2, 5, (scomat,), 0., 2., True, 2, 2, 2, 2)
+        primat = np.ascontiguousarray(primat.T)
+        obs = _traceback_one(2, 5, (primat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [0, 3])
 
         # GATCA vs CTTC, sub=(1, -1), gap=2 (linear)
         # local: unique path, right-most column to middle of the matrix
-        scomat = np.array([[0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0],
                            [0, 0, 1, 1, 0],
                            [0, 1, 0, 0, 2],
                            [0, 0, 0, 0, 0]], dtype=float)
-        obs = _traceback_one(4, 4, (scomat,), 0., 2., True, 2, 2, 2, 2)
+        obs = _traceback_one(4, 4, (primat,), 0., 2., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "2M")
         npt.assert_array_equal(obs.starts, [2, 2])
 
         # ACGT vs AACTG, sub=(1, -1), gap=2, global
         # multiple paths: algorithm favors D > I > M in reverse order
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]], dtype=float)
-        obs = _traceback_one(4, 5, (scomat,), 0., 2., local=False)
+        obs = _traceback_one(4, 5, (primat,), 0., 2., local=False)
         self.assertEqual(obs.to_cigar(), "4M1I")
 
         # TAGCATC vs TCAGTC, sub=(2, -1), gap=(3, 1) (affine), global
         # involves tie, gap opening, gap extension
         NAN, INF = np.nan, -np.inf
-        scomat = np.array([[  0,  -4,  -5,  -6,  -7,  -8,  -9],
+        primat = np.array([[  0,  -4,  -5,  -6,  -7,  -8,  -9],
                            [ -4,   2,  -2,  -3,  -4,  -5,  -6],
                            [ -5,  -2,   1,   0,  -4,  -5,  -6],
                            [ -6,  -3,  -3,   0,   2,  -2,  -3],
@@ -1198,21 +1261,21 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -5,  -5,  -5,  -3,  -3,  -4],
                            [NAN,  -6,  -6,  -3,  -4,  -4,  -4],
                            [NAN,  -7,  -7,  -4,  -4,  -5,  -5]], dtype=float)
-        matrices = (scomat, insmat, delmat)
+        matrices = (primat, insmat, delmat)
         obs = _traceback_one(7, 6, matrices, 3., 1.)
         self.assertEqual(obs.to_cigar(), "1M1I2M2D2M")
 
         # transpose (needs to transpose all 3 matrices and shuffle the latter 2)
-        scomat = np.ascontiguousarray(scomat.T)
+        primat = np.ascontiguousarray(primat.T)
         insmat = np.ascontiguousarray(insmat.T)
         delmat = np.ascontiguousarray(delmat.T)
-        matrices = (scomat, delmat, insmat)
+        matrices = (primat, delmat, insmat)
         obs = _traceback_one(6, 7, matrices, 3., 1.)
         self.assertEqual(obs.to_cigar(), "1M2I2M1D2M")
 
         # GTCGG vs ATCGA, sub=(2, -1), gap=(3, 1), local
         # starts from middle, ends in middle of the matrix
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 2, 0],
                            [0, 0, 2, 0, 0, 1],
                            [0, 0, 0, 4, 0, 0],
@@ -1230,17 +1293,17 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -4,  -2,  -4,  -3,  -3],
                            [NAN,  -4,  -3,   0,  -4,  -4],
                            [NAN,  -4,  -4,  -1,   2,  -2]], dtype=float)
-        matrices = (scomat, insmat, delmat)
+        matrices = (primat, insmat, delmat)
         obs = _traceback_one(4, 4, matrices, 3., 1., True, 2, 2, 2, 2)
         self.assertEqual(obs.to_cigar(), "3M")
 
         # floating-point tolerance
-        scomat = np.array([[0, -2], [-2, -4]], dtype=float)
-        args = (1, 1, (scomat,), 0., 2.,)
+        primat = np.array([[0, -2], [-2, -4]], dtype=float)
+        args = (1, 1, (primat,), 0., 2.,)
         self.assertEqual(_traceback_one(*args).to_cigar(), "1I1D")
-        scomat[0, 1] = -2.0000000001
+        primat[0, 1] = -2.0000000001
         self.assertEqual(_traceback_one(*args).to_cigar(), "1I1D")
-        scomat[0, 1] = -2.0001
+        primat[0, 1] = -2.0001
         self.assertEqual(_traceback_one(*args).to_cigar(), "1D1I")
         self.assertEqual(_traceback_one(*args, eps=1.0e-2).to_cigar(), "1I1D")
 
@@ -1251,13 +1314,13 @@ class PairAlignTests(unittest.TestCase):
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
         query, target = np.ascontiguousarray(submat[seq1]), seq2
 
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,  -1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,  -2,  -2,  -4,  -6],
                            [ -6,  -3,  -2,  -3,  -3,  -5],
                            [ -8,  -5,  -4,  -3,  -4,  -4],
                            [-10,  -7,  -4,  -5,  -2,  -4]])
-        obs = _traceback_all([[5, 5]], None, (scomat,), query, target, 0, 2)
+        obs = _traceback_all([[5, 5]], None, (primat,), query, target, 0, 2)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "1D4M1I")
 
@@ -1265,34 +1328,34 @@ class PairAlignTests(unittest.TestCase):
         seq1 = DNA("ACGT")
         seq2 = DNA("AACTG")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
-        scomat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
+        primat = np.array([[  0,  -2,  -4,  -6,  -8, -10],
                            [ -2,   1,  -1,  -3,  -5,  -7],
                            [ -4,  -1,   0,   0,  -2,  -4],
                            [ -6,  -3,  -2,  -1,  -1,  -1],
                            [ -8,  -5,  -4,  -3,   0,  -2]])
-        obs = _traceback_all([[4, 5]], None, (scomat,), submat[seq1], seq2, 0, 2)
+        obs = _traceback_all([[4, 5]], None, (primat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 3)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
         self.assertEqual(obs[1].to_cigar(), "1M1I3M")
         self.assertEqual(obs[2].to_cigar(), "1I4M")
 
         # limit number of paths to return
-        obs = _traceback_all([[4, 5]], 2, (scomat,), submat[seq1], seq2, 0, 2)
+        obs = _traceback_all([[4, 5]], 2, (primat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
         self.assertEqual(obs[1].to_cigar(), "1M1I3M")
-        obs = _traceback_all([[4, 5]], 1, (scomat,), submat[seq1], seq2, 0, 2)
+        obs = _traceback_all([[4, 5]], 1, (primat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "4M1I")
 
         # semi-global, two stops, one path each
-        scomat = np.array([[ 0,  0,  0,  0,  0,  0],
+        primat = np.array([[ 0,  0,  0,  0,  0,  0],
                            [ 0,  1,  1, -1, -1, -1],
                            [ 0, -1,  0,  2,  0, -2],
                            [ 0, -1, -2,  0,  1,  1],
                            [ 0, -1, -2, -2,  1,  0]])
         obs = _traceback_all(
-            [[3, 5], [4, 4]], None, (scomat,), submat[seq1], seq2, 0, 2)
+            [[3, 5], [4, 4]], None, (primat,), submat[seq1], seq2, 0, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1I2M1I1M1D")
         self.assertEqual(obs[1].to_cigar(), "1I2M1D1M1I")
@@ -1301,12 +1364,12 @@ class PairAlignTests(unittest.TestCase):
         seq1 = DNA("CGTC")
         seq2 = DNA("TCGAG")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (1, -1))
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 1, 0, 0, 0],
                            [0, 0, 0, 2, 0, 1],
                            [0, 1, 0, 0, 1, 0],
                            [0, 0, 2, 0, 0, 0]])
-        obs = _traceback_all([[2, 3], [4, 2]], None, (scomat,), submat[seq1], seq2,
+        obs = _traceback_all([[2, 3], [4, 2]], None, (primat,), submat[seq1], seq2,
                              0, 2, True, 2, 2, 2, 2)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "2M")
@@ -1317,7 +1380,7 @@ class PairAlignTests(unittest.TestCase):
         seq2 = DNA("TCAGTC")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
         NAN, INF = np.nan, -np.inf
-        scomat = np.array([[  0,  -4,  -5,  -6,  -7,  -8,  -9],
+        primat = np.array([[  0,  -4,  -5,  -6,  -7,  -8,  -9],
                            [ -4,   2,  -2,  -3,  -4,  -5,  -6],
                            [ -5,  -2,   1,   0,  -4,  -5,  -6],
                            [ -6,  -3,  -3,   0,   2,  -2,  -3],
@@ -1341,7 +1404,7 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -5,  -5,  -5,  -3,  -3,  -4],
                            [NAN,  -6,  -6,  -3,  -4,  -4,  -4],
                            [NAN,  -7,  -7,  -4,  -4,  -5,  -5]])
-        matrices = [scomat, insmat, delmat]
+        matrices = [primat, insmat, delmat]
         obs = _traceback_all([[7, 6]], None, matrices, submat[seq1], seq2, 3, 1)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1M1I2M2D2M")
@@ -1349,10 +1412,10 @@ class PairAlignTests(unittest.TestCase):
 
         # transpose
         submat = np.ascontiguousarray(submat.T)
-        scomat = np.ascontiguousarray(scomat.T)
+        primat = np.ascontiguousarray(primat.T)
         insmat = np.ascontiguousarray(insmat.T)
         delmat = np.ascontiguousarray(delmat.T)
-        matrices = [scomat, delmat, insmat]
+        matrices = [primat, delmat, insmat]
         obs = _traceback_all([[6, 7]], None, matrices, submat[seq2], seq1, 3, 1)
         self.assertEqual(len(obs), 2)
         self.assertEqual(obs[0].to_cigar(), "1M2I2M1D2M")
@@ -1362,7 +1425,7 @@ class PairAlignTests(unittest.TestCase):
         seq1 = DNA("GTCGG")
         seq2 = DNA("ATCGA")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
-        scomat = np.array([[0, 0, 0, 0, 0, 0],
+        primat = np.array([[0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 2, 0],
                            [0, 0, 2, 0, 0, 1],
                            [0, 0, 0, 4, 0, 0],
@@ -1380,7 +1443,7 @@ class PairAlignTests(unittest.TestCase):
                            [NAN,  -4,  -2,  -4,  -3,  -3],
                            [NAN,  -4,  -3,   0,  -4,  -4],
                            [NAN,  -4,  -4,  -1,   2,  -2]])
-        matrices = [scomat, insmat, delmat]
+        matrices = [primat, insmat, delmat]
         obs = _traceback_all(
             [[4, 4]], None, matrices, submat[seq1], seq2, 3, 1, True, 2, 2, 2, 2)
         self.assertEqual(len(obs), 1)
@@ -1390,22 +1453,22 @@ class PairAlignTests(unittest.TestCase):
         seq1 = DNA("A")
         seq2 = DNA("A")
         (seq1, seq2), submat, _ = encode_sequences((seq1, seq2), (2, -1))
-        scomat = np.array([[1, 5], [5, 3]], dtype=float)
-        args = ([[1, 1]], None, (scomat,), submat[seq1], seq2, 0., 2.)
+        primat = np.array([[1, 5], [5, 3]], dtype=float)
+        args = ([[1, 1]], None, (primat,), submat[seq1], seq2, 0., 2.)
         obs = _traceback_all(*args)
         self.assertEqual(len(obs), 3)
         for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
             self.assertEqual(obs[i].to_cigar(), exp)
 
-        scomat[0, 1] -= 0.00000001
-        scomat[1, 0] += 0.00000001
+        primat[0, 1] -= 0.00000001
+        primat[1, 0] += 0.00000001
         obs = _traceback_all(*args)
         self.assertEqual(len(obs), 3)
         for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
             self.assertEqual(obs[i].to_cigar(), exp)
 
-        scomat[0, 1] -= 0.0001
-        scomat[1, 0] += 0.0001
+        primat[0, 1] -= 0.0001
+        primat[1, 0] += 0.0001
         obs = _traceback_all(*args)
         self.assertEqual(len(obs), 1)
         self.assertEqual(obs[0].to_cigar(), "1M")
@@ -1414,6 +1477,38 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(len(obs), 3)
         for i, exp in enumerate(["1I1D", "1D1I", "1M"]):
             self.assertEqual(obs[i].to_cigar(), exp)
+
+
+class HelperTests(unittest.TestCase):
+
+    def test_prep_free_ends(self):
+        obs = _prep_free_ends(local=True, free_ends=True, trim_ends=False)
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
+        obs = _prep_free_ends(local=False, free_ends=False, trim_ends=False)
+        self.assertTupleEqual(obs, (0, 0, 0, 0))
+        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=False)
+        self.assertTupleEqual(obs, (1, 1, 1, 1))
+        obs = _prep_free_ends(local=False, free_ends=True, trim_ends=True)
+        self.assertTupleEqual(obs, (2, 2, 2, 2))
+        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=False)
+        self.assertTupleEqual(obs, (1, 1, 0, 0))
+        obs = _prep_free_ends(local=False, free_ends=(True, False), trim_ends=True)
+        self.assertTupleEqual(obs, (2, 2, 0, 0))
+        obs = _prep_free_ends(
+            local=False, free_ends=(True, False, False, True), trim_ends=True)
+        self.assertTupleEqual(obs, (2, 0, 0, 2))
+        obs = _prep_free_ends(
+            local=False, free_ends=(True, False, True, False), trim_ends=False)
+        self.assertTupleEqual(obs, (1, 0, 1, 0))
+
+        # non-Boolean inputs
+        obs = _prep_free_ends(local=False, free_ends=(0, 1, 2, 3), trim_ends="yes")
+        self.assertTupleEqual(obs, (0, 2, 2, 2))
+
+        msg = "`free_ends` must be one, two or four Booleans."
+        with self.assertRaises(ValueError) as cm:
+            _ = _prep_free_ends(local=False, free_ends=(1, 2, 3), trim_ends=False)
+        self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":
