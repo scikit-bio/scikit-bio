@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple, TYPE_CHECKING
+from typing import Any, NamedTuple, TYPE_CHECKING
 
 import numpy as np
 
@@ -436,6 +436,94 @@ def multi_align(
         dm = None
 
     return MultiAlignResult(path, tree, dm)
+
+
+def multi_align_nucl(
+    sequences: Iterable[SequenceLike],
+    /,
+    **kwargs: Any,
+) -> MultiAlignResult:
+    r"""Align multiple nucleotide sequences.
+
+    This is a convenience wrapper of ``multi_align`` for nucleotide sequence alignment.
+    It is preloaded with a scoring scheme consistent with BLASTN's defaults [1]_: match
+    score = 2, mismatch score = -3, gap opening penalty = 5, gap extension penalty = 2.
+    All parameters remain customizable. Refer to :func:`multi_align` for full
+    documentation.
+
+    See Also
+    --------
+    multi_align
+    multi_align_prot
+
+    References
+    ----------
+    .. [1] https://www.ncbi.nlm.nih.gov/books/NBK279684/
+
+    Examples
+    --------
+    >>> from skbio.sequence import DNA
+    >>> from skbio.alignment import multi_align_nucl
+    >>> seqs = [DNA("CAGCTATATATCGCTACG"),
+    ...         DNA("CTGCTTATATCCCTAGG"),
+    ...         DNA("AAGCTATACATCCTTCACG")]
+    >>> path = multi_align_nucl(seqs).path
+    >>> for seq in path.to_aligned(seqs):
+    ...     print(seq)
+    CAGCTATATATCGCT-ACG
+    CTGCT-TATATCCCT-AGG
+    AAGCTATACATCCTTCACG
+
+    """
+    params: dict[str, Any] = dict(sub_score=(2.0, -3.0), gap_cost=(5.0, 2.0))
+    params.update(kwargs)
+    return multi_align(sequences, **params)
+
+
+def multi_align_prot(
+    sequences: Iterable[SequenceLike],
+    /,
+    **kwargs: Any,
+) -> MultiAlignResult:
+    r"""Align multiple protein sequences.
+
+    This is a convenience wrapper of ``multi_align`` for protein sequence alignment.
+    It is preloaded with a scoring scheme consistent with BLASTP's defaults [1]_:
+    substitution matrix = BLOSUM62, gap opening penalty = 11, gap extension penalty
+    = 1. All parameters remain customizable. Refer to :func:`multi_align` for full
+    documentation.
+
+    See Also
+    --------
+    multi_align
+    multi_align_nucl
+
+    References
+    ----------
+    .. [1] https://www.ncbi.nlm.nih.gov/books/NBK279684/
+
+    Examples
+    --------
+    >>> from skbio.sequence import Protein
+    >>> from skbio.alignment import multi_align_prot
+    >>> seqs = [Protein("MKTAVLGHDPQRSIF"),
+    ...         Protein("MKTSVLGHDPKRAIF"),
+    ...         Protein("MRAAAVLNYDPPQSVF"),
+    ...         Protein("MKTGAVLGHEDPQRTIF"),
+    ...         Protein("MSTGVLGYDPQRSIL")]
+    >>> path = multi_align_prot(seqs).path
+    >>> for seq in path.to_aligned(seqs):
+    ...     print(seq)
+    MKTA-VLGH-DPQRSIF
+    MKTS-VLGH-DPKRAIF
+    MRAAAVLNY-DPPQSVF
+    MKTGAVLGHEDPQRTIF
+    MSTG-VLGY-DPQRSIL
+
+    """
+    params: dict[str, Any] = dict(sub_score="BLOSUM62", gap_cost=(11.0, 1.0))
+    params.update(kwargs)
+    return multi_align(sequences, **params)
 
 
 def _score_dists(encoded, submat, gap_o, gap_e, free, works, atol):

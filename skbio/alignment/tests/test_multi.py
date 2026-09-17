@@ -19,9 +19,15 @@ from skbio.io import read as sk_read
 from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._array import ArrayWorkspace
-from skbio.alignment import AlignPath, multi_align, pair_align, align_score
-from skbio.alignment._multi import MultiAlignResult, _merge_align, _score_dists
-
+from skbio.alignment import AlignPath, pair_align, align_score
+from skbio.alignment._multi import (
+    MultiAlignResult,
+    multi_align,
+    multi_align_nucl,
+    multi_align_prot,
+    _merge_align,
+    _score_dists,
+)
 
 class MultiAlignTests(unittest.TestCase):
     def test_multi_align_nucl(self):
@@ -83,6 +89,24 @@ class MultiAlignTests(unittest.TestCase):
                         [0.36617, 0.,      1.13943],
                         [0.51669, 1.13943, 0.     ]])
         npt.assert_array_equal(dm.data.round(5), exp)
+
+    def test_multi_align_prot(self):
+        seqs = [Protein("MKTAVLGHDPQRSIF"),
+                Protein("MKTSVLGHDPKRAIF"),
+                Protein("MRAAAVLNYDPPQSVF"),
+                Protein("MKTGAVLGHEDPQRTIF"),
+                Protein("MSTGVLGYDPQRSIL")]
+        params = dict(sub_score="BLOSUM62", gap_cost=(11.0, 1.0))
+        path = multi_align(seqs, **params).path
+        obs = path.to_aligned(seqs)
+        exp = ["MKTA-VLGH-DPQRSIF",
+               "MKTS-VLGH-DPKRAIF",
+               "MRAAAVLNY-DPPQSVF",
+               "MKTGAVLGHEDPQRTIF",
+               "MSTG-VLGY-DPQRSIL"]
+        self.assertListEqual(obs, exp)
+        obs = align_score((path, seqs), **params)
+        self.assertEqual(obs, 423.0)
 
     def test_multi_align_p53(self):
         """Align P53 transactivation motif sequences (protein)."""
@@ -411,6 +435,30 @@ class MultiAlignTests(unittest.TestCase):
         self.assertEqual(str(tree), before)
         self.assertEqual(ids, ["a", "b", "c", "d"])
         npt.assert_array_equal(path.starts, [0, 0, 0, 0])
+
+    def test_pair_align_nucl_wrap(self):
+        seqs = [DNA("CAGCTATATATCGCTACG"),
+                DNA("CTGCTTATATCCCTAGG"),
+                DNA("AAGCTATACATCCTTCACG")]
+        obs = multi_align_nucl(seqs).path.to_aligned(seqs)
+        exp = ["CAGCTATATATCGCT-ACG",
+               "CTGCT-TATATCCCT-AGG",
+               "AAGCTATACATCCTTCACG"]
+        self.assertListEqual(obs, exp)
+
+    def test_pair_align_prot_wrap(self):
+        seqs = [Protein("MKTAVLGHDPQRSIF"),
+                Protein("MKTSVLGHDPKRAIF"),
+                Protein("MRAAAVLNYDPPQSVF"),
+                Protein("MKTGAVLGHEDPQRTIF"),
+                Protein("MSTGVLGYDPQRSIL")]
+        obs = multi_align_prot(seqs).path.to_aligned(seqs)
+        exp = ["MKTA-VLGH-DPQRSIF",
+               "MKTS-VLGH-DPKRAIF",
+               "MRAAAVLNY-DPPQSVF",
+               "MKTGAVLGHEDPQRTIF",
+               "MSTG-VLGY-DPQRSIL"]
+        self.assertListEqual(obs, exp)
 
 
 class MergeAlignTests(unittest.TestCase):
