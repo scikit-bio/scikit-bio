@@ -60,49 +60,38 @@ def multi_align(
     keep_tree: bool = False,
     keep_distmat: bool = False,
 ) -> MultiAlignResult:
-    r"""Align multiple sequences by progressive profile merging.
-
-    Return a full-coverage alignment using a supplied guide tree or an automatically
-    constructed UPGMA tree. Both linear and affine gap penalties are supported.
+    r"""Perform progressive alignment of multiple sequences.
 
     .. versionadded:: 0.7.4
 
     Parameters
     ----------
     sequences : iterable of sequence-like
-        Two or more nonempty, ungapped sequences of the same type. Supports the
-        sequence types accepted by :func:`pair_align`, including scikit-bio sequences,
-        strings, and sequences of tokens or numbers. Decode byte strings first.
-        Gaps in grammared
-        sequences, and '-' or '.' in other string-like inputs, are not allowed.
-        Duplicate sequences are retained as separate rows.
+        Sequences to be aligned. Supports :class:`~skbio.sequence.Sequence`, strings,
+        or sequence of strings or numbers. Sequences must be non-empty and ungapped.
+        At least two sequences must be provided.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
-        Match/mismatch scores, a substitution matrix, or its name. Scores must be
-        finite, and the matrix must be symmetric. Default is (1.0, -1.0).
+        Score of a substitution. May be two numbers (match, mismatch), a substitution
+        matrix, or its name. See :func:`pair_align` for details. Default is
+        (1.0, -1.0).
     gap_cost : float or tuple of (float, float), optional
-        Nonnegative, finite gap penalties. A scalar ``g`` gives a cost of ``g * k``
-        for a run of ``k`` newly inserted profile columns. A tuple ``(o, e)`` gives
-        ``o + e * k``: the first column costs ``o + e``. Default is 2.0.
+        Penalty of a gap. May be one (linear) or two numbers (affine). See
+        :func:`pair_align` for details. Default is 2.0.
     free_ends : bool, optional
-        If True (default), insertions before or after an entire child profile are
-        free. All residues and terminal columns remain in the output. Boundaries of
-        individual sequences within a profile do not determine this exemption.
+        If True (default), gaps at the sequence terminals are free from penalization.
     guide_tree : TreeNode, optional
-        Rooted binary guide tree. Its tip names must match ``ids`` exactly. The node
-        supplied is treated as the root; branch lengths are ignored. The tree is not
-        modified. If provided, pairwise distance calculation is skipped entirely.
-        Otherwise, all sequence pairs are aligned and their score-based distances
-        are passed in condensed form to SciPy average linkage (UPGMA).
+        A guide tree determining the merging order of sequences. Must be strictly
+        bifurcating. Tip names must match sequence IDs. If not provided, the function
+        will align all sequence pairs, calculate score-based distances, and compute a
+        guide tree using UPGMA. A provided guide tree will skip these procedures.
     ids : iterable of str, optional
-        Unique string identifiers in input order to match tips in the provided guide
-        tree. Override sequence metadata if provided. Otherwise, use metadata ``'id'``
-        values if present in every sequence and unique, or use ``['0', '1', ...]`` if
-        none is present. Partial, duplicate, or non-string metadata IDs raise an error.
+        Unique identifiers in input order to match tips in the provided guide tree.
+        tree. If not provided, the function will use sequence metadata ``'id'`` if
+        present in every sequence and unique, or use ``['0', '1', ...]`` if none is
+        present.
     atol : float, optional
-        Nonnegative finite absolute tolerance for traceback score comparisons,
-        following :func:`pair_align`. Default is 1e-5. Set to zero for exact
-        comparisons. Positive tolerance can select a slightly lower-scoring path;
-        the DP maximum itself is unaffected. Also used for guide pairwise alignments.
+        Absolute tolerance in comparing scores of alternative alignment paths. See
+        :func:`pair_align` for details. Default is 1e-5.
     keep_tree : bool, optional
         If True, include the guide tree in the returned object. Default is False.
     keep_distmat : bool, optional
@@ -118,17 +107,14 @@ def multi_align(
         Constructed or provided guide tree determining the merging order of sequences
         (if ``keep_tree`` is True).
     distmat : DistanceMatrix or None
-        Distance matrix constructed based on pairwise alignments and used to compute
-        the guide tree (if ``keep_distmat`` is True).
+        Distance matrix constructed based on pairwise alignment scores and used to
+        compute the guide tree (if ``keep_distmat`` is True).
 
     Raises
     ------
     ValueError
         If inputs are empty or gapped, scores or costs are invalid, identifiers do
         not match, or a guide tree is not binary with exactly the required tips.
-    ValueError
-        If a pairwise score cannot be converted to a finite nonnegative distance.
-        A supplied guide tree permits alignment without this distance requirement.
     TypeError
         If ``free_ends`` is not Boolean or ``guide_tree`` is not a TreeNode.
 
@@ -137,104 +123,101 @@ def multi_align(
     pair_align
     align_score
     AlignPath
-    skbio.tree.upgma
 
     Notes
     -----
-    This algorithm follows the profile-averaging modification of Feng and Doolittle
-    [1]_, [2]_, with a fixed guide tree and configurable linear/affine profile-gap
-    costs. It does not reproduce their complete sequence-order refinement procedure.
+    This function implements the classic progressive alignment method for multiple
+    sequence alignment, originally introduced in [1]_, with later improvements
+    described in [2]_ and [3]_. Compared with the historical method, this
+    implementation represents a refined form of progressive alignment commonly
+    described in educational materials. Specifically, the algorithm consists of the
+    following steps, described in reverse order:
 
-    Guide merges are stored as pairs of cluster indices. Automatic guides use
-    SciPy linkage order; supplied trees use postorder with their child order
-    preserved. Branch lengths are not needed for alignment.
-
-    At each internal tree node, two child alignments are merged without changing
-    their existing residue relationships. For profiles :math:`A` and :math:`B` with
-    :math:`r` and :math:`s` rows,
-    the score of matching columns :math:`i` and :math:`j` is
-
-    .. math::
-
-        C_{ij} = \frac{1}{rs}\sum_{a\in A}\sum_{b\in B}\widetilde M(a_i,b_j).
-
-    Here, :math:`\widetilde M` is the substitution matrix extended with a private gap
-    symbol that scores zero against every residue and itself. Equivalently, column
-    frequencies, **including gaps in their denominators**, give
-    :math:`C_{ij}=f_{A,i}^T M f_{B,j}` using only nongap entries. Frequencies are not
-    renormalized after excluding gaps. Each input row has equal weight, including
-    duplicates; merged frequencies are weighted by child row counts.
-
-    A merge path consumes both child columns (D), only an A column while inserting
-    gaps into B (X), or only a B column while inserting gaps into A (Y). Its objective
-    is the sum of D scores minus the costs of maximal consecutive X or Y runs. A
-    new run is charged **once per profile**, without multiplying by row count or
-    adjusting for residue occupancy. Existing gaps incur no additional cost in a D
-    move. A D move ends a run even if individual rows contain gaps there; switching
-    directly between X and Y is allowed and opens a new run.
-
-    Both backends use the pairwise affine states: an overall best score H and
-    insertion/deletion scores I/D. A gap opens from H at cost :math:`o+e` or extends
-    at cost :math:`e`. Leading boundary scores are initialized in Python; free
-    trailing gaps are appended after selecting the best last-row/last-column stop.
-    Thus a completely nonoverlapping alignment can have score zero. Stop ties
-    prefer the smallest (row, column); traceback prefers deletion, insertion, then
-    diagonal, and gap extension before opening, as in :func:`pair_align`.
-
-    Each merge optimizes this objective, but the overall progressive alignment is
-    heuristic. It does **not** optimize the induced-pair sum-of-pairs (SP) score:
-    :func:`align_score` penalizes resulting residue-gap runs separately for every
-    sequence pair, including gaps treated as neutral in later profile merges. Its
-    terminal boundaries also refer to individual pairs. Use it for final evaluation,
-    not as the internal merge objective. Exact affine-SP merging is a different,
-    more demanding optimization problem [3]_.
-
-    For automatic guide construction, one global pairwise alignment per pair gives
-    score :math:`S_{ab}`, aligned length :math:`L` (including terminal columns), and
-    charged gap cost :math:`K`. With original residue counts :math:`c_a,c_b`, the
-    distance is
+    An alignment of all sequences is constructed by iteratively merging sub-alignments
+    containing one or more sequences. This function adopts the *profile alignment*
+    approach [3]_, which aligns two sub-alignments ("profiles") using the same dynamic
+    programming (DP) algorithm used for pairwise sequence alignment (see
+    :func:`pair_align`). The score :math:`S` for two matching columns is calculated as
+    the average substitution score :math:`s` across all pairs of characters from the
+    two profiles:
 
     .. math::
+        S = \frac{1}{mn}\sum_{x\in A}\sum_{y\in B}s(x,y)
 
-        S_{\mathrm{rand}} = c_a^T M c_b/L - K,\quad
-        S_{\mathrm{max}} = (S_{aa}+S_{bb})/2,\quad
-        d = -\ln\left(\frac{S_{ab}-S_{\mathrm{rand}}}
-                            {S_{\mathrm{max}}-S_{\mathrm{rand}}}\right).
+    where :math:`x` and :math:`y` are characters in the two columns of profiles
+    :math:`A` and :math:`B`, which contain :math:`m` and :math:`n` rows (sequences),
+    respectively.
 
-    Self-scores are optimal pairwise self-alignment scores. :math:`K` uses the selected
-    gap and terminal settings. The self-score average is not a guaranteed upper
-    bound for arbitrary scoring schemes. This extends the constant-gap random-score
-    formula in [2]_ and is not a guaranteed mathematical metric. Every sequence
-    pair is evaluated, including duplicates. Identical sequences can also have an
-    undefined normalization (for example, identical homopolymers).
-    Nonpositive numerator/denominator or a ratio above one
-    (beyond eight machine epsilons of the scoring dtype) raises an error, rather
-    than inventing a distance for unrelated sequences. Pairwise alignments are
-    processed one at a time using shared score buffers; self-alignments omit
-    traceback. DP and profile arithmetic use the substitution-matrix dtype; FD
-    normalization uses float64 to limit additional rounding near the random baseline.
-    The eight-epsilon allowance is a small boundary-roundoff policy, not a bound on
-    accumulated alignment-score error.
-    Two inputs bypass distances and use pair_align directly, regardless of `method`.
-    Tied pairwise alignments can produce different distance statistics; tied guides
-    and different floating-point arithmetic can consequently change the final MSA.
+    Under the "once a gap, always a gap" rule [1]_, existing gaps within each profile
+    are treated as neutral characters and assigned a substitution score of 0 with any
+    character. Gap penalties are calculated only for gaps introduced during the DP
+    alignment.
 
-    All-pairs dynamic programming takes approximately :math:`O(n^2 L^2)` time for
-    :math:`n` sequences of comparable length :math:`L`. Each profile merge requires
-    quadratic time and memory in child alignment lengths, in addition to computing
-    column scores. This method
-    targets moderate research and educational use, not very large sequence sets.
+    The order of merging is determined by a *guide tree*. The program traverses the
+    tree in postorder and merges the two child sub-alignments at each internal node. If
+    the guide tree is not explicitly supplied, the program computes one using the UPGMA
+    method (see :func:`~skbio.tree.upgma`) from a distance matrix containing all
+    pairwise sequence distances. Each distance is calculated by aligning the two
+    sequences :math:`a` and :math:`b` using DP (see :func:`pair_align`) and
+    normalizing the alignment score :math:`S_{a,b}` as follows [1]_:
+
+    .. math::
+        D = -\ln S_{\mathrm{eff}} = -\ln\left(\frac{S_{a,b} - S_{\mathrm{rand}}}
+        {S_{\mathrm{iden}} - S_{\mathrm{rand}}}\right)
+
+    where :math:`S_{\mathrm{iden}} = (S_{a,a} + S_{b,b})/2` is the average score of the
+    two sequences aligned to themselves. :math:`S_{\mathrm{rand}}` is the *random
+    score*, calculated as [2]_:
+
+    .. math::
+        S_{\mathrm{rand}} = \frac{1}{L}\sum_{x\in a}\sum_{y\in b}s(x,y)N_a(x)N_b(y) - G
+
+    where :math:`L` is the length of the alignment, :math:`G` is the total gap penalty,
+    and :math:`N` is the number of occurrences of a character in the corresponding
+    source sequence.
+
+    There are two notes regarding this calculation. First, a factor of 100 is omitted
+    from the effective score :math:`S_{\mathrm{eff}}` compared with the original work.
+    Second, to guard against edge cases that would produce undefined, infinite, or
+    negative distances (e.g., when aligning two homopolymers), :math:`S_{\mathrm{eff}}`
+    is clipped to the range [1e-6, 1] in this implementation.
+
+    **Solution quality**
+
+    The *sum-of-pairs* (SP) score is the optimality criterion for multiple sequence
+    alignment. This metric can be calculated by applying the :func:`align_score`
+    function to the resulting alignment. It should be noted that progressive alignment
+    is a heuristic algorithm and the resulting alignment is not guaranteed to be
+    optimal.
+
+    **Computational efficiency**
+
+    The algorithm is dominated by the all-vs-all pairwise alignment step, which takes
+    *O*\(*n*:sup:`2` *L*:sup:`2`) time for *n* sequences of comparable length *L*. Peak
+    memory usage is *O*\(*n*:sup:`2` + *L*:sup:`2`) for storing the distance matrix and
+    each DP matrix (the algorithm reuses memory for DP matrices). When a guide tree is
+    supplied, time reduces to *O*\(*nL*:sup:`2` + *n*:sup:`2` *L*), and memory to
+    *O*\(*L*:sup:`2` + *nL*).
+
+    **Terminal gap policy**
+
+    The function defaults to ``free_ends=True`` which prevents terminal gaps from
+    being penalized. This setting is broadly applicable to homologous sequences with
+    incomplete coverage, different domain boundaries, or terminal extensions. However,
+    it can favor short overlaps between weakly related sequences. When sequences are
+    expected to span the same homologous region with defined boundaries (e.g., the
+    coding sequence of a gene), setting ``free_ends=False`` is often preferable.
 
     References
     ----------
-    .. [1] Feng, D.-F. and Doolittle, R. F. (1987). Progressive sequence alignment as
-       a prerequisite to correct phylogenetic trees. J. Mol. Evol. 25, 351-360.
-       doi:10.1007/BF02603120. See the Note Added in Proof, p. 359.
-    .. [2] Feng, D.-F. and Doolittle, R. F. (1996). Progressive alignment of amino acid
-       sequences and construction of phylogenetic trees from them. Methods Enzymol.
-       266, 368-382. doi:10.1016/S0076-6879(96)66023-6.
-    .. [3] Wheeler, T. J. and Kececioglu, J. D. (2007). Multiple alignment by aligning
-       alignments. Bioinformatics 23, i559-i568. doi:10.1093/bioinformatics/btm226.
+    .. [1] Feng, D. F., & Doolittle, R. F. (1987). Progressive sequence alignment as a
+       prerequisite to correct phylogenetic trees. Journal of Molecular Evolution,
+       25(4), 351-360.
+    .. [2] Feng, D. F., & Doolittle, R. F. (1996). [21] Progressive alignment of amino
+       acid sequences and construction of phylogenetic trees from them. In Methods in
+       enzymology (Vol. 266, pp. 368-382). Academic Press.
+    .. [3] Corpet, F. (1988). Multiple sequence alignment with hierarchical clustering.
+       Nucleic Acids Research, 16(22), 10881-10890.
 
     Examples
     --------
