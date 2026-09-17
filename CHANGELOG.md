@@ -12,6 +12,7 @@
 * `pcoa` and `center_distance_matrix` can now use the Numba backend for distance-matrix centering via `engine="numba"` [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508).
 * `permdisp` now accepts `engine="numba"`, which evaluates the permutation loop in batched Numba calls for both the centroid and the median test. The geometric median used by the median test was ported to Numba alongside it. Permutations are drawn in the same order as the Cython path, so p-values are unchanged ([#2547](https://github.com/scikit-bio/scikit-bio/pull/2547)).
 * Added a Numba GPU backend for `permanova` and `mantel`. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused single-source kernel runs on the device (`numba.cuda` on NVIDIA, `numba.hip` on AMD), falling back to the array-API path when the kernel is unavailable [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
+* Added a versatile multiple sequence alignment function `multi_align`, which implements the Feng-Doolittle progressive alignment algorithm with later improvements. Also added wrapper functions `multi_align_nucl` and `multi_align_prot` [#2582](https://github.com/scikit-bio/scikit-bio/pull/2582).
 
 ### Performance enhancements
 
@@ -23,7 +24,7 @@
 * On a GPU-resident matrix, the fused Numba kernel accelerates `permanova` and `mantel` on the device; on a datacenter GPU it is much faster than the CPU engines (for example, `permanova` at 25000 samples and 9999 permutations in about 7 s versus about 426 s for OpenMP Cython on an MI300X) [#2511](https://github.com/scikit-bio/scikit-bio/pull/2511).
 * Vectorized Welch's *t*-test in `dirmult_ttest`, replacing the per-draw statsmodels `CompareMeans` object construction with a closed-form NumPy/SciPy computation across all posterior draws. Results are numerically identical to the previous implementation while avoiding hundreds of Python-level object constructions per call. `dirmult_ttest` now also raises `ValueError` for `draws < 1`, rather than the previous implementation's uncontrolled empty-array behavior.
 * Added efficient native implementations of Bonferroni, Holm-Bonferroni, Benjamini-Hochberg, and Benjamini-Yekutieli methods for multiple testing correction of *p*-values, avoiding statsmodels dispatch. This improved the efficiency of differential abundance tests (`dirmult_ttest`, `dirmult_lme`, `ancom`, `ancombc` and `ancombc2`). NaN p-values are excluded from each testing family, following the behavior of R's `p.adjust`.
-* `TabularMSA.from_path_seqs` now copies metadata of original sequences.
+* `TabularMSA.from_path_seqs` now copies metadata of original sequences [#2582](https://github.com/scikit-bio/scikit-bio/pull/2582).
 
 ### Bug Fixes
 
