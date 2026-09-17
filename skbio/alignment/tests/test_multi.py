@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from functools import lru_cache
 from itertools import product
 import unittest
 
@@ -21,78 +20,7 @@ from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
 from skbio.util._array import ArrayWorkspace
 from skbio.alignment import AlignPath, multi_align, pair_align, align_score
-from skbio.alignment._utils import encode_sequences
-from skbio.alignment._pair import _encode_path
-from skbio.alignment._multi import (
-    MultiAlignResult,
-    _merge_align,
-    _score_dists,
-    _fd_dist,
-    _align_pair,
-)
-
-
-@lru_cache(None)
-def _paths(p, q):
-    """Enumerate complete paths without a DP recurrence or production helpers."""
-    if p == q == 0:
-        return ("",)
-    result = []
-    for move, di, dj in [("D", 1, 1), ("X", 1, 0), ("Y", 0, 1)]:
-        if p >= di and q >= dj:
-            result.extend(move + x for x in _paths(p - di, q - dj))
-    return tuple(result)
-
-
-def _score_path(path, scores, gap, free):
-    """Score columns and maximal move runs independently of affine DP states."""
-    o, e = (0, gap) if np.isscalar(gap) else gap
-    p, q = scores.shape
-    i = j = t = 0
-    score = 0.0
-    while t < len(path):
-        move = path[t]
-        if move == "D":
-            score += float(scores[i, j])
-            i += 1
-            j += 1
-            t += 1
-            continue
-        stop = t + 1
-        while stop < len(path) and path[stop] == move:
-            stop += 1
-        length = stop - t
-        terminal = j in (0, q) if move == "X" else i in (0, p)
-        if not (free and terminal):
-            score -= o + e * length
-        if move == "X":
-            i += length
-        else:
-            j += length
-        t = stop
-    assert (i, j) == (p, q)
-    return score
-
-
-def _moves(indices):
-    return "".join("Y" if a < 0 else "X" if b < 0 else "D" for a, b in indices.T)
-
-
-def _profile(rows, order, dtype=np.float64):
-    bits = np.array([[x == "-" for x in row] for row in rows])
-    counts = np.array(
-        [[sum(row[i] == x for row in rows) for x in "AC"] for i in range(len(rows[0]))],
-        dtype=dtype,
-    )
-    return counts, bits, order
-
-
-def _tree(n):
-    """Build an unbalanced guide with default row IDs."""
-    tree = TreeNode(name="0")
-    for i in range(1, n):
-        tree = TreeNode(children=[tree, TreeNode(name=str(i))])
-    return tree
+from skbio.alignment._multi import MultiAlignResult, _merge_align, _score_dists
 
 
 class MultiAlignTests(unittest.TestCase):
@@ -155,18 +83,6 @@ class MultiAlignTests(unittest.TestCase):
                         [0.36617, 0.,      1.13943],
                         [0.51669, 1.13943, 0.     ]])
         npt.assert_array_equal(dm.data.round(5), exp)
-
-    def test_multi_align_prot(self):
-        """Align protein sequences."""
-        seqs = [Protein("MKT"), Protein("MT"), Protein("MKT")]
-        # params = dict(sub_score="BLOSUM62", free_ends=False)
-        path, *_ = multi_align(
-            seqs,
-            sub_score="BLOSUM62",
-            guide_tree=_tree(3),
-            free_ends=False,
-        )
-        self.assertEqual(path.shape[0], 3)
 
     def test_multi_align_p53(self):
         """Align P53 transactivation motif sequences (protein)."""
@@ -292,7 +208,7 @@ class MultiAlignTests(unittest.TestCase):
         """Test various types of input sequences and parameters."""
         seqs = ["ACGT", "AGT", "ACGT"]
 
-        # input sequence class
+        # Alternative input sequence class; input as list; output as object
         for cls in [str, Sequence, DNA, RNA, Protein]:
             data = [cls(x.replace("T", "U") if cls is RNA else x) for x in seqs]
             path = multi_align(data, free_ends=False).path
@@ -300,16 +216,16 @@ class MultiAlignTests(unittest.TestCase):
                 path.to_bits(), [[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]]
             )
 
-        # input sequence type
+        # Alternative input sequence type; input as iterator; output as tuple
         for data in [
             [[1, 2, 3], [1, 3], [1, 2, 3]],  # integers
             [["cat", "dog", "bird"], ["cat", "bird"], ["cat", "dog", "bird"]],  # words
-            ["αβγ", "αγ", "αβγ"],  # unicode
+            ["äëï", "äï", "äëï"],  # unicode
         ]:
-            path, *_ = multi_align(iter(data), guide_tree=_tree(3), free_ends=False)
+            path, *_ = multi_align(iter(data), free_ends=False)
             npt.assert_array_equal(path.to_bits()[1], [0, 1, 0])
 
-        # custom substitution matrix
+        # Custom substitution matrix
         submat = SubstitutionMatrix("ACGT", [
             [2, -1, -1, -1],
             [-1, 2, -1, -1],
@@ -318,6 +234,39 @@ class MultiAlignTests(unittest.TestCase):
         ])
         path, *_ = multi_align(seqs, sub_score=submat, free_ends=False)
         self.assertEqual(path.to_aligned(seqs)[1], "A-GT")
+
+    def test_multi_align_error(self):
+        """Test invalid input sequences and parameters."""
+
+        for seqs in (["ACGT"], []):
+            with self.assertRaisesRegex(ValueError, "At least two"):
+                multi_align(seqs)
+
+        for seqs in [["", "A"], ["A", ""], ["", "", ""]]:
+            with self.assertRaisesRegex(ValueError, "length of zero"):
+                multi_align(seqs)
+
+        for value in ["A-", "A.", Sequence("A-"), DNA("A."), RNA("A-")]:
+            with self.assertRaisesRegex(ValueError, "ungapped"):
+                multi_align([value, value])
+
+        with self.assertRaisesRegex(TypeError, "decoded"):
+            multi_align([b"AC", b"AC"])
+
+        for free in [0, "yes", (True, False), None]:
+            with self.assertRaisesRegex(TypeError, "Boolean"):
+                multi_align(["A", "A"], free_ends=free)
+        multi_align(["A", "A"], free_ends=np.bool_(True))
+
+        for gap in [-1, np.inf, np.nan, (1, -1), (-1, 1), (np.inf, 1)]:
+            with self.assertRaisesRegex(ValueError, "finite and non-negative"):
+                multi_align(["A", "A"], gap_cost=gap)
+
+        for score in [
+            (np.inf, -1), (1, np.nan), SubstitutionMatrix("AC", [[1, 0], [-1, 1]]),
+        ]:
+            with self.assertRaisesRegex(ValueError, "finite and symmetric"):
+                multi_align(["AC", "AC"], sub_score=score)
 
     def test_multi_align_two(self):
         """Test only two sequences (will fallback to pairwise alignment)."""
@@ -396,6 +345,10 @@ class MultiAlignTests(unittest.TestCase):
         obs = multi_align(seqs, guide_tree=tree).path.to_aligned(seqs)
         self.assertListEqual(obs, exp)
 
+        # Retain guide tree in output
+        res = multi_align(seqs, guide_tree=tree, keep_tree=True)
+        self.assertIs(res.tree, tree)
+
     def test_multi_align_ids(self):
         """Test of custom sequence IDs."""
         # FASTA parsing automatically assign sequence IDs.
@@ -458,50 +411,6 @@ class MultiAlignTests(unittest.TestCase):
         self.assertEqual(str(tree), before)
         self.assertEqual(ids, ["a", "b", "c", "d"])
         npt.assert_array_equal(path.starts, [0, 0, 0, 0])
-
-    # def test_invalid_inputs(self):
-    #     for seqs in [[], ["A"]]:
-    #         with self.assertRaisesRegex(ValueError, "At least two"):
-    #             multi_align(seqs)
-    #     for seqs in [["", "A"], ["A", ""], ["", "", ""]]:
-    #         with self.assertRaisesRegex(ValueError, "length of zero"):
-    #             multi_align(seqs)
-    #     for value in ["A-", "A.", Sequence("A-"), DNA("A."), RNA("A-")]:
-    #         with self.assertRaisesRegex(ValueError, "ungapped"):
-    #             multi_align([value, value])
-    #     with self.assertRaisesRegex(TypeError, "decoded"):
-    #         multi_align([b"AC", b"AC"])
-    #     for free in [0, "yes", (True, False), None]:
-    #         with self.assertRaisesRegex(TypeError, "Boolean"):
-    #             multi_align(["A", "A"], free_ends=free)
-    #     multi_align(["A", "A"], free_ends=np.bool_(True))
-    #     for gap in [-1, np.inf, np.nan, (1, -1), (-1, 1), (np.inf, 1)]:
-    #         with self.assertRaisesRegex(ValueError, "finite and nonnegative"):
-    #             multi_align(["A", "A"], gap_cost=gap)
-    #     for score in [
-    #         (np.inf, -1),
-    #         (1, np.nan),
-    #         SubstitutionMatrix("AC", [[1, 0], [-1, 1]]),
-    #     ]:
-    #         with self.assertRaisesRegex(ValueError, "finite and symmetric"):
-    #             multi_align(["AC", "AC"], sub_score=score)
-    #     with self.assertRaises(TypeError):
-    #         multi_align(["AC", DNA("AC")])
-    #     with self.assertRaises(ValueError):
-    #         multi_align(
-    #             ["AC", "AT"], sub_score=SubstitutionMatrix("AC", [[1, -1], [-1, 1]])
-    #         )
-    #     for ids in [[], ["x"], ["x", "x"], [0, 1], ["x", []]]:
-    #         with self.assertRaisesRegex(ValueError, "unique strings"):
-    #             multi_align(["A", "A"], guide_tree=_tree(2), ids=ids)
-    #     with self.assertRaisesRegex(TypeError, "TreeNode"):
-    #         multi_align(["A", "A"], guide_tree="(0,1);")
-    #     for newick in ["(0,0);", "(0,2);", "0;", "((0,1),2);"]:
-    #         with self.assertRaisesRegex(ValueError, "tips must match"):
-    #             multi_align(["A", "A"], guide_tree=TreeNode.read([newick]))
-    #     for newick in ["(0,1,2);", "((0), (1,2));", "(((0,1),2));"]:
-    #         with self.assertRaisesRegex(ValueError, "must be binary"):
-    #             multi_align(["A"] * 3, guide_tree=TreeNode.read([newick]))
 
 
 class MergeAlignTests(unittest.TestCase):
@@ -685,160 +594,6 @@ class MergeAlignTests(unittest.TestCase):
         npt.assert_array_equal(obs_bits, exp_bits)
         self.assertListEqual(obs_odr, exp_odr)
         self.assertListEqual(obs_aln, exp_aln)
-
-
-# class ProfileKernelTests(unittest.TestCase):
-#     def test_exhaustive_paths(self):
-#         # Includes boundary insertions, direction switches, zero costs, long runs,
-#         # and both fused numeric types. All scores are exactly representable.
-#         rng = np.random.default_rng(27)
-#         for dtype, p, q, gap, free in product(
-#             [np.float32, np.float64],
-#             range(1, 4),
-#             range(1, 4),
-#             [0, 2, (0, 2), (5, 0), (5, 2), (0.5, 0.25)],
-#             [False, True],
-#         ):
-#             scores = rng.choice([-20.0, -1.0, 0.0, 0.25, 2.0], (p, q)).astype(dtype)
-#             o, e = (0, gap) if np.isscalar(gap) else gap
-#             indices, score = _align_profiles(scores, dtype(o), dtype(e), free)
-#             expected = max(_score_path(x, scores, gap, free) for x in _paths(p, q))
-#             with self.subTest(dtype=dtype, p=p, q=q, gap=gap, free=free):
-#                 self.assertEqual(score, expected)
-#                 self.assertEqual(
-#                     _score_path(_moves(indices), scores, gap, free), expected
-#                 )
-#                 npt.assert_array_equal(indices[0, indices[0] >= 0], np.arange(p))
-#                 npt.assert_array_equal(indices[1, indices[1] >= 0], np.arange(q))
-#                 self.assertFalse((indices == -1).all(axis=0).any())
-
-#     def test_linear_affine_equivalence(self):
-#         scores = np.array([[2.0, -3.0], [-1.0, 2.0], [0.0, 0.0]])
-#         for free in [False, True]:
-#             a = _align_profiles(scores, 0.0, 2.0, free)
-#             optimum = max(_score_path(x, scores, (0, 2), free) for x in _paths(3, 2))
-#             self.assertEqual(a[1], optimum)
-
-#     def test_direction_switch_and_ties(self):
-#         scores = np.array([[-20.0]])
-#         indices, score = _align_profiles(scores, 5.0, 2.0, False)
-#         self.assertEqual(score, -14.0)
-#         self.assertEqual(_moves(indices), "YX")  # terminal X wins
-#         for o in [0.0, 5.0]:
-#             indices, score = _align_profiles(scores, o, 2.0, True)
-#             self.assertEqual(score, 0.0)
-#             self.assertEqual(_moves(indices), "YX")
-#         for o in [0.0, 2.0]:
-#             indices, _ = _align_profiles(np.zeros((3, 3)), o, 0.0, True)
-#             self.assertEqual(_moves(indices), "YYYXXX")
-
-#     def test_small_difference_is_not_a_tie(self):
-#         for dtype in [np.float32, np.float64]:
-#             scores = np.array([[np.finfo(dtype).eps]], dtype=dtype)
-#             for o in [0.0, 1.0]:
-#                 indices, score = _align_profiles(scores, dtype(o), dtype(0), True)
-#                 self.assertEqual(_moves(indices), "D")
-#                 self.assertEqual(score, scores[0, 0])
-
-#     def test_hand_scoring(self):
-#         scores = np.full((3, 2), 2.0)
-#         self.assertEqual(_score_path("XDD", scores, (5, 2), False), -3)
-#         self.assertEqual(_score_path("XDD", scores, (5, 2), True), 4)
-#         self.assertEqual(_score_path("DXD", scores, (5, 2), True), -3)
-#         for gap, cost in [(2, 6), ((5, 2), 11), ((5, 0), 5)]:
-#             self.assertEqual(
-#                 _score_path("XXXDD", np.full((5, 2), 2.0), gap, False), 4 - cost
-#             )
-
-#     def test_profile_average_and_row_counts(self):
-#         matrix = np.array([[2.0, -1.0], [-1.0, 2.0]])
-#         a = _profile(["A", "A", "-", "-"], [0, 1, 2, 3])
-#         b = _profile(["A", "C"], [4, 5])
-#         # The isolated columns can contain gap-only rows here: real child profiles
-#         # have other columns with residues. Test the local averaging independently.
-#         c, bits, order = _merge_align(a, b, matrix, 10.0, 1.0, False)
-#         npt.assert_array_equal(c, [[3, 1]])
-#         npt.assert_array_equal(bits[:, 0], [0, 0, 1, 1, 0, 0])
-#         self.assertEqual(order, list(range(6)))
-#         score = (
-#             sum(
-#                 0 if x == "-" or y == "-" else matrix["AC".index(x), "AC".index(y)]
-#                 for x in "AA--"
-#                 for y in "AC"
-#             )
-#             / 8
-#         )
-#         self.assertEqual(score, 0.25)
-#         a = _profile(["A"], [0])
-#         b = _profile(["C", "C", "C"], [1, 2, 3])
-#         c, _, _ = _merge_align(a, b, matrix, 10.0, 1.0, False)
-#         npt.assert_array_equal(c / 4, [[0.25, 0.75]])
-
-#     def test_merge_against_row_pair_oracle(self):
-#         matrix = np.array([[2.0, -1.0], [-1.0, 2.0]])
-#         for rows_a, rows_b, gap, free in product(
-#             [["A-C", "ACC"], ["AC-", "-CA", "A--"]],
-#             [["CA", "-A"], ["AAC", "C--"]],
-#             [(0, 2), (5, 2), (5, 0)],
-#             [False, True],
-#         ):
-#             r, s = len(rows_a), len(rows_b)
-#             p, q = len(rows_a[0]), len(rows_b[0])
-#             scores = np.array(
-#                 [
-#                     [
-#                         sum(
-#                             0
-#                             if a[i] == "-" or b[j] == "-"
-#                             else matrix["AC".index(a[i]), "AC".index(b[j])]
-#                             for a in rows_a
-#                             for b in rows_b
-#                         )
-#                         / (r * s)
-#                         for j in range(q)
-#                     ]
-#                     for i in range(p)
-#                 ]
-#             )
-#             candidates = []
-#             for path in _paths(p, q):
-#                 i = j = 0
-#                 merged = [""] * (r + s)
-#                 for move in path:
-#                     for k, row in enumerate(rows_a):
-#                         merged[k] += "-" if move == "Y" else row[i]
-#                     for k, row in enumerate(rows_b, r):
-#                         merged[k] += "-" if move == "X" else row[j]
-#                     i += move != "Y"
-#                     j += move != "X"
-#                 candidates.append((_score_path(path, scores, gap, free), merged))
-#             best = max(x[0] for x in candidates)
-#             a = _profile(rows_a, list(range(r)))
-#             b = _profile(rows_b, list(range(r, r + s)))
-#             counts, bits, _ = _merge_align(a, b, matrix, *gap, free)
-#             ungapped = [x.replace("-", "") for x in rows_a + rows_b]
-#             merged = AlignPath.from_bits(bits).to_aligned(ungapped)
-#             self.assertTrue(
-#                 any(
-#                     abs(score - best) < 1e-12 and rows == merged
-#                     for score, rows in candidates
-#                 )
-#             )
-#             npt.assert_array_equal(counts, _profile(merged, [])[0])
-#             for old, mask in [(rows_a, bits[:r]), (rows_b, bits[r:])]:
-#                 npt.assert_array_equal(mask[:, ~mask.all(axis=0)], _profile(old, [])[1])
-
-#     def test_old_gaps_do_not_make_internal_insertions_free(self):
-#         # Profile A's second row ends at column 1, but an insertion into A after
-#         # column 1 is internal to the *profile*, even with free ends.
-#         a = _profile(["AC", "A-"], [0, 1])
-#         b = _profile(["AAC"], [2])
-#         matrix = np.array([[2.0, -20.0], [-20.0, 2.0]])
-#         scores = (a[0] / 2) @ matrix @ b[0].T
-#         self.assertEqual(_score_path("DYD", scores, (5, 2), True), -4)
-#         indices, score = _align_profiles(scores, 5.0, 2.0, True)
-#         self.assertGreater(score, -4)
-#         self.assertNotEqual(_moves(indices), "DYD")
 
 
 class ScoreDistsTests(unittest.TestCase):

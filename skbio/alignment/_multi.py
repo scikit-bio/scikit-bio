@@ -12,22 +12,20 @@ from typing import NamedTuple, TYPE_CHECKING
 
 import numpy as np
 
-from scipy.cluster.hierarchy import linkage
 from skbio.sequence import Sequence, GrammaredSequence
+from skbio.alignment import AlignPath
 from skbio.tree import TreeNode
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree._utils import _tree_to_lnkmat
 from skbio.util._array import ArrayWorkspace
-from ._path import AlignPath
 from ._pair import (
-    pair_align,
     _init_matrices,
     _one_stop,
     _trailing_gaps,
     _leading_gaps,
     _encode_path,
 )
-from ._utils import encode_sequences, prep_gapcost, _get_seqids
+from ._utils import encode_sequences, prep_gapcost, _get_seqids, _check_atol
 from ._cutils import (
     _fill_matrix_linear,
     _fill_matrix_affine,
@@ -244,7 +242,7 @@ def multi_align(
 
     >>> from skbio.alignment import multi_align, align_score
     >>> seqs = ['ACGT', 'AGT', 'ACGT']
-    >>> path = multi_align(seqs, free_ends=False)
+    >>> path = multi_align(seqs, free_ends=False).path
     >>> path.to_aligned(seqs)
     ['ACGT', 'A-GT', 'ACGT']
     >>> align_score((path, seqs), free_ends=False)
@@ -254,9 +252,9 @@ def multi_align(
 
     >>> from skbio import TreeNode
     >>> tree = TreeNode.read(['((a,b),c);'])
-    >>> path = multi_align(seqs, ids=['a', 'b', 'c'], guide_tree=tree,
+    >>> res = multi_align(seqs, ids=['a', 'b', 'c'], guide_tree=tree,
     ...                    gap_cost=(2, 1), free_ends=False)
-    >>> path.shape[0]
+    >>> res.path.shape[0]
     3
 
     Sequence metadata IDs, including those read from FASTA headers, are inferred:
@@ -264,95 +262,86 @@ def multi_align(
     >>> from skbio import DNA
     >>> named = [DNA(seq, metadata={'id': name})
     ...          for seq, name in zip(seqs, ['a', 'b', 'c'])]
-    >>> multi_align(named, guide_tree=tree, free_ends=False).to_aligned(named)
+    >>> multi_align(named, guide_tree=tree, free_ends=False).path.to_aligned(named)
     ['ACGT', 'A-GT', 'ACGT']
 
     """
-    sequences = list(sequences)
-    if len(sequences) < 2:
+    seqs = list(sequences)
+    if (n := len(seqs)) < 2:
         raise ValueError("At least two sequences are required.")
-    if not np.isscalar(atol) or not np.isfinite(atol) or atol < 0:
-        raise ValueError("`atol` must be finite and nonnegative.")
-    if not isinstance(free_ends, (bool, np.bool_)):
-        raise TypeError("`free_ends` must be Boolean.")
-    for seq in sequences:
+    for seq in seqs:
         if isinstance(seq, bytes):
             raise TypeError("Byte strings must be decoded before alignment.")
         if isinstance(seq, GrammaredSequence):
             gapped = seq.has_gaps()
         elif isinstance(seq, (Sequence, str)):
             chars = str(seq)
-            gapped = "-" in chars or "." in chars  # TODO: is this correct?
+            gapped = "-" in chars or "." in chars
         else:
             gapped = False
         if gapped:
             raise ValueError("Input sequences must be ungapped.")
+    ids = _get_seqids(seqs, ids)
 
-    encoded, matrix, _ = encode_sequences(sequences, sub_score)
+    # Multiple alignment doesn't support custom terminal penalties.
+    if not isinstance(free_ends, (bool, np.bool_)):
+        raise TypeError("`free_ends` must be Boolean.")
+
+    seqs, submat, _ = encode_sequences(seqs, sub_score)
+    dtype = submat.dtype.type
+
     # Check symmetry. It's not that MSA absolutely require it. But its behavior will be
     # unpredictable with asymmetric substitution scores.
-    if not np.isfinite(matrix).all() or not np.array_equal(matrix, matrix.T):
+    if not np.isfinite(submat).all() or not np.array_equal(submat, submat.T):
         raise ValueError("Substitution scores must be finite and symmetric.")
 
-    atol = matrix.dtype.type(atol)
-    if not np.isfinite(atol):
-        raise ValueError("`atol` is too large for the scoring dtype.")
-
-    # Prepare gap penalties
-    gap_open, gap_extend = prep_gapcost(gap_cost, matrix.dtype.type)
-    if not np.isfinite([gap_open, gap_extend]).all() or min(gap_open, gap_extend) < 0:
-        raise ValueError("Gap costs must be finite and nonnegative.")
-
-    # Prepare custom guide tree
-    # TODO: Skip if tree is not supplied
-    ids = _get_seqids(sequences, ids)
+    gap_o, gap_e = prep_gapcost(gap_cost, dtype=dtype)
+    if not np.isfinite([gap_o, gap_e]).all() or min(gap_o, gap_e) < 0:
+        raise ValueError("Gap costs must be finite and non-negative.")
+    atol = _check_atol(atol, dtype=dtype)
 
     # Shrink substitution matrix to observed characters only. This accelerates the
     # calculation without changing the result. For example, if DNA sequences contain
     # only ACGT, the matrix will be (4, 4).
-    # TODO: investigate
-    alphabet, inverse = np.unique(np.concatenate(encoded), return_inverse=True)
-    encoded = np.split(inverse, np.cumsum([len(x) for x in encoded])[:-1])
-    matrix = np.ascontiguousarray(matrix[np.ix_(alphabet, alphabet)])
+    alphabet, inv = np.unique(np.concatenate(seqs), return_inverse=True)
+    seqs = np.split(inv, np.cumsum([len(x) for x in seqs])[:-1])
+    submat = np.ascontiguousarray(submat[np.ix_(alphabet, alphabet)])
 
+    # Re-usable array buffers that are capable of auto-growth
     works = ArrayWorkspace()
-    n = len(sequences)
 
     # Decide merging order. If a guide tree is provided, convert it into a linkage
-    # matrix (only first two columns are needed). Otherwise, perform pairwise
-    # alignments, calculate a distance matrix using the Feng-Doolittle metric, then
-    # calculate a guide tree using UPGMA and retain the linkage matrix.
+    # matrix (only the first two columns are needed). Otherwise, perform pairwise
+    # alignments, compute a distance matrix using the Feng-Doolittle score distance
+    # metric, then compute a guide tree using UPGMA and retain the linkage matrix.
     # `merges` is an index array of (n_seqs - 1, 2)
     if guide_tree is None:
-        dm = _score_dists(encoded, matrix, gap_open, gap_extend, free_ends, works, atol)
+        from scipy.cluster.hierarchy import linkage
+
+        dm = _score_dists(seqs, submat, gap_o, gap_e, free_ends, works, atol)
         lm = linkage(dm, method="average")
         merges = lm[:, :2].astype(np.intp)
     else:
         merges = _tree_to_lnkmat(guide_tree, ids)
 
-    profiles = {}
-    eye = np.eye(len(matrix), dtype=matrix.dtype)
+    eye = np.eye(len(submat), dtype=dtype)
 
-    for parent, children in enumerate(merges, n):
-        # Materialize leaves when first used and release children after each merge.
+    # Perform iterative profile alignment to merge all sequences. A profile consists of
+    # a count matrix, a gap mask, and a list of member sequences.
+    profiles = {}
+    for parent, children in enumerate(merges, start=n):
         for child in children:
-            if child < n:
-                codes = encoded[child]
+            if child < n:  # is a tip in linkage matrix
+                seq = seqs[child]
                 profiles[child] = (
-                    eye[codes],
-                    np.zeros((1, len(codes)), dtype=bool),
+                    eye[seq],
+                    np.zeros((1, len(seq)), dtype=bool),
                     [child],
                 )
         a, b = (profiles.pop(child) for child in children)
         profiles[parent] = _merge_align(
-            a, b, matrix, gap_open, gap_extend, free_ends, works, atol
+            a, b, submat, gap_o, gap_e, free_ends, works, atol
         )
-
-        ### reporting ###
-        counts, bits, order = profiles[parent]
-        path = AlignPath.from_bits(bits)
-        aln = path.to_aligned([sequences[i] for i in order])
-
     _, bits, order = profiles[2 * n - 2]
 
     # Reorder sequences to match input order before outputting
@@ -422,7 +411,7 @@ def _score_dists(encoded, submat, gap_o, gap_e, free, works, atol):
             # Calculate total gap penalty
             gaps = path.states.ravel().astype(bool)
             if free:
-                gaps[0] = gaps[-1] = 0
+                gaps[0] = gaps[-1] = False
             s_gaps = gap_o64 * gaps.sum() + gap_e64 * lens[gaps].sum()
 
             # Calculate score distance
@@ -464,109 +453,26 @@ def _score_dist(score, s_subs, s_gaps, s_max):
     return -np.log(s_eff)
 
 
-def _multi_distances(encoded, submat, gap_o, gap_e, free, ids, works, atol):
-    """Stream pairwise alignments into SciPy's condensed distance ordering."""
-    n = len(encoded)
-    # DP uses the matrix dtype. FD arithmetic uses float64 to avoid additional
-    # rounding in composition sums and subtraction near the random baseline;
-    # widening cannot recover precision already lost during alignment.
-    counts = np.array(
-        [np.bincount(x, minlength=len(submat)) for x in encoded], dtype=np.float64
-    )
-    weighted = counts @ submat.astype(np.float64)
-    fd_o, fd_e = float(gap_o), float(gap_e)
-    self_scores = np.empty(n, dtype=np.float64)
-    data = np.empty(n * (n - 1) // 2, dtype=np.float64)
-
-    # Small allowance at the dimensionless boundary one, not a general DP error
-    # bound or a tolerance for declaring alignment scores tied.
-    allowance = 8 * np.finfo(submat.dtype).eps
-
-    params = (gap_o, gap_e, free, works, atol)
-
-    # Upper-triangle traversal needs future sequences' self-scores in advance.
-    # Recreate query tables in the pair loop instead of retaining all of them.
-    for i, seq in enumerate(encoded):
-        _, self_scores[i] = _align_pair(submat[seq], seq, *params, trace=False)
-
-    pos = 0
-    for i in range(n - 1):
-        seq = encoded[i]
-        query = submat[seq]
-        for j in range(i + 1, n):
-            moves, score = _align_pair(query, encoded[j], *params)
-            path = _encode_path(moves, 0, len(seq), 0, len(encoded[j]))
-            s_max = (self_scores[i] + self_scores[j]) / 2
-            try:
-                dist = _fd_dist(
-                    score,
-                    path,
-                    weighted[i] @ counts[j],
-                    s_max,
-                    fd_o,
-                    fd_e,
-                    free,
-                    allowance,
-                )
-            except ValueError as e:
-                raise ValueError(
-                    f"Cannot calculate a distance between {ids[i]!r} and {ids[j]!r}: "
-                    f"{e}; supply a guide tree instead."
-                ) from e
-            # Consecutive pairs already follow SciPy's condensed ordering.
-            data[pos] = dist
-            pos += 1
-    return data
-
-
-def _fd_dist(score, path, expected, s_max, gap_o, gap_e, free, allowance):
-    """Convert an alignment score to a Feng-Doolittle distance.
-
-    `expected` is the unnormalized composition sum c_a.T @ M @ c_b; `s_max`
-    is the average optimal self-score. The path consumes both sequences in full.
-    Existing validation guarantees finite scoring parameters and a nonempty path.
-    """
-    lengths = path.lengths
-    s_subs = expected / lengths.sum()
-    gaps = path.states.ravel().astype(bool)
-    if free:
-        gaps[0] = gaps[-1] = False
-    s_gaps = gap_o * gaps.sum() + gap_e * lengths[gaps].sum()
-    s_rand = s_subs - s_gaps
-    numer = score - s_rand
-    denom = s_max - s_rand
-    if not np.isfinite([numer, denom]).all():
-        raise ValueError("nonfinite score normalization")
-    if denom <= 0:
-        raise ValueError("self-score normalization is not positive")
-    if numer <= 0:
-        raise ValueError("alignment score does not exceed the random baseline")
-    ratio = numer / denom
-    if ratio > 1 + allowance:
-        raise ValueError("alignment score exceeds the self-score normalization")
-    return -np.log(min(ratio, 1.0))
-
-
 def _merge_align(aln1, aln2, submat, gap_o, gap_e, free, works, atol=0):
     """Merge two alignments.
 
     Parameters
     ----------
-    aln1, aln2 : 3-tuple of (counts, bits, order)
+    aln1, aln2 : 3-tuple of (counts, gaps, order)
         The two alignments to merge. Elements are:
 
         counts : ndarray of shape (n_columns, n_symbols)
             Count per site per character in the alphabet. For one sequence, it is the
             one-hot encoding by alphabet. For multiple sequences, it is the sum of
             character frequencies in the current alignment.
-        bits : ndarray of shape (n_sequences, n_columns)
+        gaps : ndarray of shape (n_sequences, n_columns)
             Gap positions in the alignment.
         order: list of int
             Indices of merged sequences in merging order.
 
     Returns
     -------
-    3-tuple of (counts, bits, order)
+    3-tuple of (counts, gaps, order)
         Output alignment. See above.
 
     Notes
@@ -574,12 +480,12 @@ def _merge_align(aln1, aln2, submat, gap_o, gap_e, free, works, atol=0):
     Output retains original row order.
 
     """
-    counts1, bits1, order1 = aln1
-    counts2, bits2, order2 = aln2
+    counts1, gaps1, order1 = aln1
+    counts2, gaps2, order2 = aln2
     dtype = submat.dtype
 
-    n1, L1 = bits1.shape
-    n2, L2 = bits2.shape
+    n1, L1 = gaps1.shape
+    n2, L2 = gaps2.shape
 
     # Pre-calculate an (n_columns_1, n_columns_2) score matrix before feeding into DP.
     # This is fully vectorized, but consumes extra memory. Workspace is pre-allocated
@@ -602,23 +508,22 @@ def _merge_align(aln1, aln2, submat, gap_o, gap_e, free, works, atol=0):
     indices = np.cumsum(mask, axis=1) - 1
     indices[~mask] = -1
 
-    # Sum counts and concatenate bits (gaps) of the two alignments.
+    # Sum counts and concatenate gaps of the two alignments.
     counts = np.zeros((L, submat.shape[0]), dtype=dtype)
-    bits = np.ones((n1 + n2, L), dtype=bool)
+    gaps = np.ones((n1 + n2, L), dtype=bool)
     i = 0
     for counts_, bits_, n_, take in (
-        (counts1, bits1, n1, indices[0]),
-        (counts2, bits2, n2, indices[1]),
+        (counts1, gaps1, n1, indices[0]),
+        (counts2, gaps2, n2, indices[1]),
     ):
         mask = take >= 0
         cols = take[mask]
         j = i + n_
         counts[mask] += counts_[cols]
-        bits[i:j, mask] = bits_[:, cols]
+        gaps[i:j, mask] = bits_[:, cols]
         i = j
 
-    # TODO: averaging counts here or later (only once?)
-    return counts, bits, order1 + order2
+    return counts, gaps, order1 + order2
 
 
 def _align_pair(query, target, gap_o, gap_e, free, works, atol, trace=True):
@@ -626,7 +531,7 @@ def _align_pair(query, target, gap_o, gap_e, free, works, atol, trace=True):
 
     Returns
     -------
-    path : ndarray of uint8 of (n_sites,)
+    path : ndarray of uint8 of (n_columns,)
         Dense alignment path (without run-length encoding).
     score : float
         Optimal alignment score.
@@ -652,21 +557,17 @@ def _align_pair(query, target, gap_o, gap_e, free, works, atol, trace=True):
         works.get(f"dp{k}", (m + 1, n + 1), query.dtype)
         for k in range(3 if affine else 1)
     )
-    # Reshaping changes row stride, so smaller matrices also need fresh boundaries.
     _init_matrices(matrices, gap_o, gap_e, False, free, free)
-
     fill_f(*matrices, *scores, *gaps, False)
 
     score, stops = _one_stop(matrices[0], False, free, free)
     if not trace:
         return None, float(score)
-    i, j = stops[0]
 
+    i, j = stops[0]
     path = works.get("path", (m + n,), np.uint8)
     pos, _, _ = _trailing_gaps(path, m + n, i, j, m, n, True, True)
-
     pos, i, j = trace_f(path, pos, i, j, *matrices, gap_e, False, atol)
-
     pos, _, _ = _leading_gaps(path, pos, i, j, True, True)
 
     return path[pos:], float(score)

@@ -20,6 +20,7 @@ from skbio.alignment._utils import (
     prep_identity_matrix,
     _check_seqtype,
     _get_seqids,
+    _check_atol,
 )
 
 
@@ -475,6 +476,22 @@ class UtilsTests(unittest.TestCase):
         # Duplicate is okay
         obs = _get_seqids(seqs, ids=ids, unique=False)
         self.assertListEqual(obs, ids)
+
+    def test_check_atol(self):
+        self.assertEqual(_check_atol(1e-5), 1e-5)
+        self.assertEqual(_check_atol(0.01), 0.01)
+        self.assertEqual(_check_atol(0), 0.0)
+        self.assertEqual(_check_atol(None), 0.0)
+        for dtype in (np.float64, np.float32, np.float16):
+            obs = _check_atol(1e-3, dtype)
+            self.assertEqual(obs, 1e-3)
+            self.assertEqual(obs.dtype, dtype)
+
+        msg = "`atol` must be finite and non-negative."
+        for atol in (-1.5, np.inf, -np.inf, np.nan):
+            with self.assertRaises(ValueError) as cm:
+                _check_atol(atol)
+            self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":

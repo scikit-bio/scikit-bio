@@ -465,6 +465,17 @@ def _check_indices(seqs, gaps=None):
                 raise ValueError(msg.format(i + 1))
 
 
+def _check_atol(atol, dtype=None):
+    """Check if absolute tolerance (atol) is valid."""
+    if atol is None:
+        atol = 0.0
+    elif not np.isscalar(atol) or not np.isfinite(atol) or atol < 0:
+        raise ValueError("`atol` must be finite and non-negative.")
+    if dtype is not None:
+        atol = dtype(atol)
+    return atol
+
+
 def _get_align_path(bits):
     """Calculate the path of an alignment.
 
