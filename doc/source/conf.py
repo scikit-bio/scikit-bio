@@ -123,6 +123,44 @@ numpydoc_class_members_toctree = False
 numpydoc_show_class_members = False
 numpydoc_show_inherited_class_members = False
 
+# Data types that should be displayed as a link. This list contains scikit-bio classes
+# that are frequently used as input/output (for less frequently used classes one can
+# manually write as :class:`~skbio.submodule.MyClass`), "-like" types linked to a list
+# of supported formats, or external links.
+MY_XREF_ALIASES = {
+    "Sequence": "skbio.sequence.Sequence",
+    "DNA": "skbio.sequence.DNA",
+    "RNA": "skbio.sequence.RNA",
+    "Protein": "skbio.sequence.Protein",
+    "GeneticCode": "skbio.sequence.GeneticCode",
+    "SubstitutionMatrix": "skbio.sequence.SubstitutionMatrix",
+    "TabularMSA": "skbio.alignment.TabularMSA",
+    "AlignPath": "skbio.alignment.AlignPath",
+    "PairAlignPath": "skbio.alignment.PairAlignPath",
+    "TreeNode": "skbio.tree.TreeNode",
+    "PairwiseMatrix": "skbio.stats.distance.PairwiseMatrix",
+    "SymmetricMatrix": "skbio.stats.distance.SymmetricMatrix",
+    "DistanceMatrix": "skbio.stats.distance.DistanceMatrix",
+    "ProteinEmbedding": "skbio.embedding.ProteinEmbedding",
+    "OrdinationResults": "skbio.stats.ordination.OrdinationResults",
+    "SampleMetadata": "skbio.metadata.SampleMetadata",
+    "Table": "skbio.table.Table",
+    "array_like": ":ref:`array_like <array_like>`",
+    "table_like": ":ref:`table_like <table_like>`",
+    "formula": "`formula <https://patsy.readthedocs.io/en/latest/formulas.html>`__",
+}
+
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = MY_XREF_ALIASES
+numpydoc_xref_ignore = "all"
+
+
+def _restrict_numpydoc_xrefs(app, config):
+    # numpydoc silently adds a list of default links like `str`, `int`,..., and it
+    # cannot be disabled by setting `numpydoc_xref_ignore = "all"`. This function
+    # overrides this behavior.
+    config.numpydoc_xref_aliases_complete = MY_XREF_ALIASES.copy()
+
 
 # -- PyData Theme configuration ----------------------------------------------
 
@@ -331,3 +369,4 @@ def setup(app):
     app.add_directive('autosummary', NoSignatureAutosummary, override=True)
     app.add_directive('autoinherit', InheritedAutosummary)
     app.connect("autodoc-skip-member", skip_member)
+    app.connect("config-inited", _restrict_numpydoc_xrefs, priority=999)

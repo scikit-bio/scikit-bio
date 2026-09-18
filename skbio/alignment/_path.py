@@ -1158,7 +1158,7 @@ class PairAlignPath(AlignPath):
 
         Parameters
         ----------
-        seqs : list of skbio.Sequence or string
+        seqs : list of Sequence or string
             A pair of sequences to generate CIGAR string. If provided, will
             distinguish match (``=``) and mismatch (``X``). Otherwise, will uniformly
             note them as (mis)match (``M``). The first sequence in the list is the

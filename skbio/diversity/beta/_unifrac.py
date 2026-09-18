@@ -45,7 +45,7 @@ def unweighted_unifrac(u_counts, v_counts, taxa, tree, validate=True):
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
     validate: bool, optional
@@ -179,7 +179,7 @@ def weighted_unifrac(
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
     normalized: boolean, optional
@@ -501,7 +501,7 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree: skbio.TreeNode
+    tree: TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset.
     validate: bool, optional
@@ -836,7 +836,7 @@ def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset.
     normalized : bool

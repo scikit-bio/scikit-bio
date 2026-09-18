@@ -1446,10 +1446,8 @@ def pairwise_vlr(mat, ids=None, ddof=1, robust=False, validate=True):
 
     Returns
     -------
-    skbio.DistanceMatrix if validate=True
+    DistanceMatrix
         Distance matrix of variance log ratio values.
-    skbio.DissimilarityMatrix if validate=False
-        Dissimilarity matrix of variance log ratio values.
 
     Notes
     -----
@@ -1514,7 +1512,7 @@ def tree_basis(tree):
 
     Parameters
     ----------
-    tree : skbio.TreeNode
+    tree : TreeNode
         Input bifurcating tree. Must be strictly bifurcating (i.e. every
         internal node needs to have exactly two children). This is used to
         specify the ilr basis.

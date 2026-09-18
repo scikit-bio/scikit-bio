@@ -820,8 +820,7 @@ def phylomix(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See
-        :ref:`supported formats <table_like>`.
+        Input data table to be augmented.
     n : int
         Number of synthetic samples to generate.
     tree : :class:`~skbio.tree.TreeNode`

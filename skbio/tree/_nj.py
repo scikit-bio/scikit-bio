@@ -27,7 +27,7 @@ def nj(
 
     Parameters
     ----------
-    dm : skbio.DistanceMatrix
+    dm : DistanceMatrix
         Input distance matrix containing pairwise distances among taxa.
     neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
