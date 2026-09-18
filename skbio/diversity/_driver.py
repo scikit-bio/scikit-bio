@@ -25,6 +25,7 @@ from skbio.diversity.beta._unifrac import (
     _normalize_weighted_unifrac_by_default,
     _unweighted_unifrac_pdist_numba,
     _weighted_unifrac_pdist_numba,
+    NUMBA_AVAILABLE,
 )
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
@@ -231,6 +232,12 @@ def alpha_diversity(
     return pd.Series(results, index=ids)
 
 
+# What engine="fast" resolves to for the unifrac metrics. Both call sites want
+# the same answer, so it is computed once here rather than repeating the
+# conditional at each one. NUMBA_AVAILABLE is fixed at import, so this is too.
+_UNIFRAC_FAST_ENGINE = "numba" if NUMBA_AVAILABLE else "cython"
+
+
 def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
     """Whether beta_diversity's numba unifrac kernels can be used as-is.
 
@@ -292,12 +299,16 @@ def beta_diversity(
         Examples of functions that can be provided are SciPy's
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
-    engine : {"cython", "numba"}, optional
+    engine : {"cython", "numba", "fast"}, optional
         Compute engine for metrics that support it. Currently only
         ``"unweighted_unifrac"`` and ``"weighted_unifrac"`` honor this; the
         ``"numba"`` engine requires the optional Numba dependency and computes
         the full distance matrix in one parallel pass. If not provided, the
-        global default is used (see :func:`~skbio.set_config`). Ignored by
+        global default is used (see :func:`~skbio.set_config`). ``"fast"`` lets
+        scikit-bio pick whichever engine it expects to be quicker here, which
+        is Numba when it is installed and Cython otherwise; results may differ
+        from the default in the last bits, and Numba pays a one-off compilation
+        cost on the first call, so a single small run can be slower. Ignored by
         metrics without a Numba implementation.
 
         .. versionadded:: 0.7.4
@@ -345,7 +356,9 @@ def beta_diversity(
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
-        resolved_engine = _resolve_engine(engine, ("cython", "numba"))
+        resolved_engine = _resolve_engine(
+            engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
+        )
         if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
             engine, pairwise_func, kwargs
         ):
@@ -360,7 +373,9 @@ def beta_diversity(
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
-        resolved_engine = _resolve_engine(engine, ("cython", "numba"))
+        resolved_engine = _resolve_engine(
+            engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
+        )
         if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
             engine, pairwise_func, kwargs
         ):
