@@ -45,6 +45,10 @@
 * Fixed `AlignPath.to_indices` raising `AxisError` and `PairAlignPath.to_cigar` (with `seqs`) raising `TypeError` when the path has only one segment, such as a gap-free alignment returned by `pair_align`. `AlignPath.to_indices` also failed on a path with only one sequence. ([#2579](https://github.com/scikit-bio/scikit-bio/issues/2579))
 
 
+### Bug Fixes
+
+* Fixed the GenBank/EMBL/GFF3 feature-location parser raising `FileFormatError` on remote entry references with fuzzy boundaries (e.g. `AB000684.1:<1..>275`). Such references are now dropped consistently with other remote entry references (whose coordinates refer to a different sequence), rather than raising ([#2502](https://github.com/scikit-bio/scikit-bio/pull/2502)).
+
 ## Version 0.7.3
 
 ### Features
