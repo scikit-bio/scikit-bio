@@ -45,6 +45,10 @@
 * Fixed `AlignPath.to_indices` raising `AxisError` and `PairAlignPath.to_cigar` (with `seqs`) raising `TypeError` when the path has only one segment, such as a gap-free alignment returned by `pair_align`. `AlignPath.to_indices` also failed on a path with only one sequence. ([#2579](https://github.com/scikit-bio/scikit-bio/issues/2579))
 
 
+### Miscellaneous
+
+* `beta_diversity` now emits a `UserWarning` when the returned distance matrix contains `nan` values, which can happen, for example, when two or more samples all have an all-zero count vector and the chosen metric (e.g., `'braycurtis'`) divides by the total count. Previously this passed silently ([#1702](https://github.com/scikit-bio/scikit-bio/issues/1702)).
+
 ## Version 0.7.3
 
 ### Features
