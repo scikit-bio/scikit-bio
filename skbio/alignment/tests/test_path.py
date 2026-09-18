@@ -11,9 +11,15 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-from skbio.alignment._path import PairAlignPath, AlignPath, _run_length_encode
-from skbio.alignment import TabularMSA
 from skbio.sequence import DNA, Protein
+from skbio.alignment import TabularMSA, pair_align
+from skbio.alignment._path import (
+    AlignPath,
+    PairAlignPath,
+    _rle_string,
+    all_pair_paths,
+    _all_pair_paths,
+)
 
 
 class TestAlignPath(unittest.TestCase):
@@ -476,6 +482,39 @@ class TestAlignPath(unittest.TestCase):
             _ = path.to_indices(gap=2.5)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_to_indices_single_segment(self):
+        # a gap-free alignment is a path with only one segment
+        path = AlignPath(lengths=[3], states=[0], starts=[0, 0])
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, np.array([[0, 1, 2], [0, 1, 2]]))
+
+        # non-zero starts
+        path = AlignPath(lengths=[3], states=[0], starts=[2, 5])
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, np.array([[2, 3, 4], [5, 6, 7]]))
+
+        # other gap modes
+        obs = path.to_indices(gap="del")
+        npt.assert_array_equal(obs, np.array([[2, 3, 4], [5, 6, 7]]))
+        obs = path.to_indices(gap="mask")
+        npt.assert_array_equal(obs, np.array([[2, 3, 4], [5, 6, 7]]))
+        self.assertFalse(np.ma.getmaskarray(obs).any())
+
+        # one segment which has a gap
+        path = AlignPath(lengths=[2], states=[2], starts=[0, 0])
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, np.array([[0, 1], [-1, -1]]))
+
+        # path produced by an actual alignment
+        path = pair_align(DNA("ACGT"), DNA("ACGT")).paths[0]
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, np.array([[0, 1, 2, 3], [0, 1, 2, 3]]))
+
+        # a path with only one sequence
+        path = AlignPath(lengths=[3, 1, 2], states=[0, 1, 0], starts=[0])
+        obs = path.to_indices()
+        npt.assert_array_equal(obs, np.array([[0, 1, 2, -1, 3, 4]]))
+
     def test_from_indices(self):
         # test no mask
         indices = np.array([
@@ -802,12 +841,83 @@ class TestPairAlignPath(unittest.TestCase):
             path.to_cigar(seqs=seqs)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_to_cigar_single_segment(self):
+        # a gap-free alignment is a path with only one segment
+        path = PairAlignPath(lengths=[4], states=[0], starts=[0, 0])
+        self.assertEqual(path.to_cigar(), "4M")
+        self.assertEqual(path.to_cigar(seqs=["ACGT", "ACTT"]), "2=1X1=")
+        self.assertEqual(path.to_cigar(seqs=[DNA("ACGT"), DNA("ACGT")]), "4=")
+
+        # one segment which is a gap
+        path = PairAlignPath(lengths=[3], states=[1], starts=[0, 0])
+        self.assertEqual(path.to_cigar(), "3I")
+        self.assertEqual(path.to_cigar(seqs=["", "ACG"]), "3I")
+
+        # path produced by an actual alignment
+        seqs = [DNA("ACGT"), DNA("ACTT")]
+        path = pair_align(*seqs).paths[0]
+        self.assertEqual(path.to_cigar(seqs=seqs), "2=1X1=")
+
 
 class TestMisc(unittest.TestCase):
-    def test_run_length_encode(self):
-        obs = _run_length_encode("ABBCCCDDDD")
+    def test_rle_string(self):
+        obs = _rle_string("ABBCCCDDDD")
         exp = "1A2B3C4D"
         self.assertEqual(obs, exp)
+
+
+class TestAllPaths(unittest.TestCase):
+
+    def test_all_pair_paths(self):
+        obs = all_pair_paths(1, 1)
+        self.assertEqual(len(obs), 3)
+        exp = ["1M", "1D1I", "1I1D"]
+        for o, e in zip(obs, exp):
+            self.assertIs(type(o), PairAlignPath)
+            self.assertEqual(o.to_cigar(), e)
+
+        obs = _all_pair_paths(0, 0)
+        exp = [()]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(0, 1)
+        exp = [(1,)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(1, 1)
+        exp = [(0,), (2, 1), (1, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(1, 2)
+        exp = [(0, 1), (2, 1, 1), (1, 0), (1, 2, 1), (1, 1, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(2, 1)
+        exp = [(0, 2), (2, 0), (2, 2, 1), (2, 1, 2), (1, 2, 2)]
+        self.assertListEqual(obs, exp)
+        obs = _all_pair_paths(2, 3)
+        exp = [(0, 0, 1),
+               (0, 2, 1, 1),
+               (0, 1, 0),
+               (0, 1, 2, 1),
+               (0, 1, 1, 2),
+               (2, 0, 1, 1),
+               (2, 2, 1, 1, 1),
+               (2, 1, 0, 1),
+               (2, 1, 2, 1, 1),
+               (2, 1, 1, 0),
+               (2, 1, 1, 2, 1),
+               (2, 1, 1, 1, 2),
+               (1, 0, 0),
+               (1, 0, 2, 1),
+               (1, 0, 1, 2),
+               (1, 2, 0, 1),
+               (1, 2, 2, 1, 1),
+               (1, 2, 1, 0),
+               (1, 2, 1, 2, 1),
+               (1, 2, 1, 1, 2),
+               (1, 1, 0, 2),
+               (1, 1, 2, 0),
+               (1, 1, 2, 2, 1),
+               (1, 1, 2, 1, 2),
+               (1, 1, 1, 2, 2)]
+        self.assertListEqual(obs, exp)
 
 
 if __name__ == "__main__":

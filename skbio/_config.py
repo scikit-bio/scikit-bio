@@ -25,7 +25,10 @@ Configuration options
 **engine** : *{"cython", "numba"}, default="cython"*
     The default compute engine for functions that support multiple engines.
     Functions accept an ``engine`` argument to override this per call. The
-    ``"numba"`` engine requires the optional Numba dependency.
+    ``"numba"`` engine requires the optional Numba dependency. A function call
+    may also pass ``engine="fast"``, which lets scikit-bio pick whichever
+    engine it expects to be fastest for that function, falling back to the
+    default when it has no faster option available.
 
 """  # noqa: D205, D415
 
@@ -40,9 +43,13 @@ Configuration options
 from typing import Any
 
 
+# The conservative engine. Also what "fast" degrades to when a function offers
+# nothing faster, so it cannot depend on the current value of the option.
+_DEFAULT_ENGINE = "cython"
+
 _SKBIO_OPTIONS = {
     "table_output": "pandas",
-    "engine": "cython",
+    "engine": _DEFAULT_ENGINE,
 }
 
 
@@ -107,7 +114,7 @@ def get_config(option: str) -> Any:
         raise KeyError(f"Unknown option: '{option}'.")
 
 
-def _resolve_engine(engine, supported):
+def _resolve_engine(engine, supported, fast=None):
     """Resolve the compute engine for a function call.
 
     Parameters
@@ -117,6 +124,12 @@ def _resolve_engine(engine, supported):
         (``get_config("engine")``) is used.
     supported : tuple of str
         The engines this function supports (e.g. ``("cython", "numba")``).
+    fast : str, optional
+        What ``engine="fast"`` resolves to for this function. The caller
+        decides, since which engine is fastest depends on the function and on
+        what is installed. If not given, ``"fast"`` resolves to the
+        conservative default engine, which makes it a no-op for functions that
+        have nothing faster to offer.
 
     Returns
     -------
@@ -133,6 +146,12 @@ def _resolve_engine(engine, supported):
     """
     if engine is None:
         engine = get_config("engine")
+    # Resolved after the global default is read, so a single branch handles
+    # "fast" wherever it came from. The fallback is the conservative engine
+    # rather than a re-read of the option, so a function that offers nothing
+    # faster degrades instead of raising.
+    if engine == "fast":
+        engine = fast if fast is not None else _DEFAULT_ENGINE
     if engine not in supported:
         raise ValueError(
             f"engine='{engine}' is not supported here; choose from {supported}."

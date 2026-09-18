@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from functools import lru_cache
 
 import numpy as np
 
@@ -718,7 +719,7 @@ class AlignPath(SkbioObject):
         elif not np.issubdtype(type(gap), np.integer):
             raise TypeError(errmsg)
 
-        bits = np.squeeze(self._to_bits())
+        bits = self._to_bits()
         # TODO: Consider optimization using np.arange.
         # thought: initiate [-1, -1, -1 ... -1], then add slices of arange into it
         pos = np.repeat(1 - bits, self._lengths, axis=1)
@@ -1181,7 +1182,7 @@ class PairAlignPath(AlignPath):
         from skbio.sequence import Sequence
 
         cigar = []
-        states = np.squeeze(self._states)
+        states = self._states[0]
 
         # TODO: Make this compatible with `SequenceLike`.
         if seqs is not None:
@@ -1344,7 +1345,7 @@ def _merge_same_2d(lens, gaps):
     return np.add.reduceat(lens, idx, dtype=lens.dtype), gaps[:, idx]
 
 
-def _run_length_encode(s):
+def _rle_string(s):
     r"""Perform run length encoding on a string.
 
     Parameters
@@ -1357,3 +1358,84 @@ def _run_length_encode(s):
     count = np.diff(np.concatenate((idx, [len(s)])))
     unique = input_arr[idx]
     return "".join(str(c) + u for c, u in zip(count, unique))
+
+
+@lru_cache()
+def all_pair_paths(m, n):
+    """Enumerate all possible pairwise alignment paths between two sequences.
+
+    This function is for testing purposes. It is useful for exhaustively computing all
+    solutions and find the optimum, which is then compared with the solution inferred
+    by an algorithm (e.g., dynamic programming).
+
+    Parameters
+    ----------
+    m, n : int
+        Lengths of two sequences, respectively.
+
+    Returns
+    -------
+    list of PairAlignPath
+        All pairwise alignment paths.
+
+    """
+    return [_encode_path(np.array(x, dtype=np.uint8)) for x in _all_pair_paths(m, n)]
+
+
+def _encode_path(path, i0=None, i1=None, j0=None, j1=None):
+    """Perform run-length encoding (RLE) on a dense alignment path.
+
+    Parameters
+    ----------
+    path : ndarray of uint8 of shape (n_positions,)
+        Dense alignment path.
+    i0, i1 : int, optional
+        Start and stop positions in sequence 1, respectively.
+    j0, j1 : int, optional
+        Start and stop positions in sequence 2, respectively.
+
+    Returns
+    -------
+    PairAlignPath
+        Encoded alignment path.
+
+    See Also
+    --------
+    skbio.alignment.AlignPath.from_bits
+
+    """
+    if L := path.size:
+        segs = np.append(0, np.flatnonzero(path[:-1] != path[1:]) + 1)
+        lens = np.append(segs[1:] - segs[:-1], L - segs[-1])
+        ints = path[segs]
+    else:
+        lens = np.array([], dtype=np.intp)
+        ints = path
+    if i0 is None:
+        return PairAlignPath(lens, ints)
+    ranges = np.array([[i0, i1], [j0, j1]], dtype=np.intp)
+    return PairAlignPath(lens, ints, ranges=ranges)
+
+
+def _all_pair_paths(m, n):
+    """Enumerate and return all paths in dense format without packing.
+
+    Returns
+    -------
+    list of tuple of int
+        Dense alignment paths (0: substitution, 1: insertion, 2: deletion).
+
+    """
+    grid = [[[] for _ in range(n + 1)] for _ in range(m + 1)]
+    grid[0][0] = [()]
+    for i in range(m + 1):
+        row = grid[i]
+        for j in range(n + 1):
+            paths = row[j]
+            if i >= 1 and j >= 1:
+                paths.extend((0,) + path for path in grid[i - 1][j - 1])
+            if i >= 1:
+                paths.extend((2,) + path for path in grid[i - 1][j])
+            if j >= 1:
+                paths.extend((1,) + path for path in grid[i][j - 1])
+    return grid[m][n]

@@ -300,3 +300,49 @@ def copy_array(arr: StdArray) -> StdArray:
     if aac.is_numpy_array(arr):
         return arr.copy()
     return aac.array_namespace(arr).asarray(arr, copy=True)
+
+
+class ArrayWorkspace:
+    r"""Reuse named NumPy work arrays within one computation.
+
+    This workspace owns resizable backing arrays for temporary calculations.
+    Request an array by name, shape, and dtype with :meth:`get`. Its backing
+    storage grows when necessary and is reused by later requests with the same
+    name and dtype.
+
+    Arrays returned by this workspace are uninitialized scratch space. Their
+    contents may be overwritten by subsequent requests, so callers must copy
+    results that need to outlive the computation.
+
+    """
+
+    # TODO: Add array API and GPU support.
+
+    def __init__(self):
+        self.arrays = {}
+
+    def get(self, name, shape, dtype):
+        r"""Return an uninitialized work array with the requested specification.
+
+        Parameters
+        ----------
+        name : str
+            Identifier for the reusable array.
+        shape : tuple of int
+            Shape of the returned array.
+        dtype : data type
+            Data type of the returned array.
+
+        Returns
+        -------
+        ndarray
+            A contiguous array with the requested shape and dtype.
+
+        """
+        size = np.prod(shape)
+        old = self.arrays.get(name)
+        if old is None or old.dtype != dtype:
+            self.arrays[name] = np.empty(size, dtype=dtype)
+        elif old.size < size:
+            self.arrays[name] = np.empty(max(size, 2 * old.size), dtype=dtype)
+        return self.arrays[name][:size].reshape(shape)

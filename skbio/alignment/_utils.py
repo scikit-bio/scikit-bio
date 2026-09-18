@@ -465,6 +465,19 @@ def _check_indices(seqs, gaps=None):
                 raise ValueError(msg.format(i + 1))
 
 
+def _prep_atol(atol, dtype=None):
+    """Check if absolute tolerance (atol) is valid."""
+    if atol is None:
+        atol = 0.0
+    elif not np.isscalar(atol) or not np.isfinite(atol) or atol < 0:
+        raise ValueError("`atol` must be finite and non-negative.")
+    if dtype is not None:
+        atol = dtype(atol)
+        if not np.isfinite(atol):
+            raise ValueError("`atol` must be finite and non-negative.")
+    return atol
+
+
 def _get_align_path(bits):
     """Calculate the path of an alignment.
 
@@ -476,3 +489,52 @@ def _get_align_path(bits):
     lens = np.append(idx[1:] - idx[:-1], bits.shape[1] - idx[-1])
     bits = bits[:, idx]
     return bits, lens
+
+
+def _get_seqids(seqs, ids=None, unique=True):
+    """Extract IDs of provided sequences.
+
+    This helper prepare sequence IDs for multiple sequence alignment and other
+    applications which require identifiers.
+
+    Parameters
+    ----------
+    seqs : sequence of sequence-like
+        Input sequences.
+    ids : iterable of str, optional
+            Unique string identifiers in input order.
+        unique : bool, optional
+                If True (default), enforce unique sequence IDs.
+
+    Returns
+    -------
+    list of str
+        Extracted sequence IDs.
+
+    """
+    # Extract metadata "id" from each sequence, or use incremental integers.
+    if ids is None:
+        has_ids = [
+            isinstance(seq, Sequence) and seq.has_metadata() and "id" in seq.metadata
+            for seq in seqs
+        ]
+        if all(has_ids):
+            ids = [seq.metadata["id"] for seq in seqs]
+        elif any(has_ids):
+            raise ValueError("Metadata 'id' must be present in every sequence or none.")
+        else:
+            ids = list(map(str, range(len(seqs))))
+
+    # Use provided sequence IDs.
+    else:
+        ids = list(ids)
+        if len(ids) != len(seqs):
+            raise ValueError("`ids` must match the number of sequences.")
+
+    if not all(isinstance(x, str) for x in ids):
+        raise ValueError("Sequence IDs must be strings.")
+
+    if unique and len(set(ids)) != len(ids):
+        raise ValueError("Sequence IDs must be unique.")
+
+    return ids
