@@ -706,14 +706,14 @@ class UnifracTests(TestCase):
             dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
 
     @numba_code
-    def test_unifrac_fast_resolves_to_numba_when_numba_is_installed(self):
-        # The engine "fast" picks cannot be pinned by comparing results,
-        # because the two unifrac engines agree to well inside any tolerance a
-        # test could use. It is a named constant, so assert it directly.
+    def test_unifrac_fast_resolves_numba(self):
+        # Comparing results cannot show which engine "fast" picked: the two
+        # unifrac engines agree well within any tolerance a test could use.
+        # The choice is a named constant, so assert that instead.
         self.assertEqual(_UNIFRAC_FAST_ENGINE, "numba")
 
     @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
-    def test_unifrac_fast_resolves_to_cython_without_numba(self):
+    def test_unifrac_fast_resolves_cython(self):
         # The counterpart to the test above, for the lane with no numba.
         self.assertEqual(_UNIFRAC_FAST_ENGINE, "cython")
 
