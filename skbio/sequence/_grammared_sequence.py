@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from warnings import warn
 from abc import ABCMeta, abstractmethod
 from itertools import product
 import re
@@ -321,30 +320,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         return set(cls.degenerate_map)
 
     @classproperty
-    def nondegenerate_chars(cls):
-        """Return non-degenerate characters.
-
-        Returns
-        -------
-        set
-            Non-degenerate characters.
-
-        Warnings
-        --------
-        ``nondegenerate_chars`` is deprecated as of ``0.5.0``. It has been renamed to
-        ``definite_chars``.
-
-        See Also
-        --------
-        definite_chars
-
-        """  # noqa: D416
-        # @deprecated
-        warn("nondegenerate_chars is deprecated as of 0.5.0", DeprecationWarning)
-
-        return cls.definite_chars
-
-    @classproperty
     @abstractmethod
     def definite_chars(cls):
         """Return definite characters.
@@ -574,39 +549,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         return self._definite_hash[self._bytes]
 
-    def nondegenerates(self):
-        """Find positions containing non-degenerate characters in the sequence.
-
-        Returns
-        -------
-        1D np.ndarray (bool)
-            Boolean vector where ``True`` indicates a non-degenerate character
-            is present at that position in the biological sequence.
-
-        Warnings
-        --------
-        ``nondegenerates`` is deprecated as of ``0.5.0``. It has been renamed to
-        ``definites``.
-
-        See Also
-        --------
-        definites
-        has_definites
-        degenerates
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('ACWGN')
-        >>> s.nondegenerates()
-        array([ True,  True, False,  True, False], dtype=bool)
-
-        """  # noqa: D416
-        # @deprecated
-        warn("nondenengerates is deprecated as of 0.5.0.", DeprecationWarning)
-
-        return self.definites()
-
     def has_definites(self):
         """Determine if sequence contains one or more definite characters.
 
@@ -635,44 +577,6 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         """
         # TODO: cache results
         return bool(self.definites().any())
-
-    def has_nondegenerates(self):
-        """Determine if sequence contains one or more non-degenerate characters.
-
-        Returns
-        -------
-        bool
-            Indicates whether there are one or more occurrences of
-            non-degenerate characters in the biological sequence.
-
-        Warnings
-        --------
-        ``has_nondegenerates`` is deprecated as of ``0.5.0``. It has been renamed to
-        ``has_definites``.
-
-        See Also
-        --------
-        definites
-        has_definites
-        degenerates
-        has_degenerates
-
-        Examples
-        --------
-        >>> from skbio import DNA
-        >>> s = DNA('NWNNNNNN')
-        >>> s.has_nondegenerates()
-        False
-        >>> t = DNA('ANCACWWGACGTT')
-        >>> t.has_nondegenerates()
-        True
-
-        """  # noqa: D416
-        # TODO: cache results
-        # @deprecated
-        warn("has_nondegenerates is deprecated as of 0.5.0", DeprecationWarning)
-
-        return self.has_definites()
 
     def degap(self):
         """Return a new sequence with gap characters removed.

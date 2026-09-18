@@ -298,23 +298,6 @@ class TestGrammaredSequence(TestCase):
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').degenerate_chars = set("BAR")
 
-    # TODO: duplicate of test_definite_chars, remove when nondegenerate_chars,
-    # is removed
-    def test_nondegenerate_chars(self):
-        expected = set("ABCQ")
-        self.assertEqual(ExampleGrammaredSequence.nondegenerate_chars,
-                         expected)
-
-        ExampleGrammaredSequence.degenerate_chars.add("D")
-        self.assertEqual(ExampleGrammaredSequence.nondegenerate_chars,
-                         expected)
-
-        self.assertEqual(ExampleGrammaredSequence('').nondegenerate_chars,
-                         expected)
-
-        with self.assertRaises(AttributeError):
-            ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
-
     def test_definite_chars(self):
         expected = set("ABCQ")
         self.assertEqual(ExampleGrammaredSequence.definite_chars,
@@ -439,31 +422,6 @@ class TestGrammaredSequence(TestCase):
         self.assertTrue(ExampleGrammaredSequence("Z").has_degenerates())
         self.assertTrue(ExampleGrammaredSequence("ABC.XYZ-").has_degenerates())
 
-    # TODO: duplicate of test_definites; remove when nondegenerates is removed
-    def test_nondegenerates(self):
-        self.assertIs(type(ExampleGrammaredSequence("").nondegenerates()),
-                      np.ndarray)
-        self.assertIs(ExampleGrammaredSequence("").nondegenerates().dtype,
-                      np.dtype('bool'))
-
-        npt.assert_equal(
-            ExampleGrammaredSequence("XYZYZ-.XY.").nondegenerates(),
-            np.zeros(10).astype(bool))
-
-        npt.assert_equal(ExampleGrammaredSequence("ABABA").nondegenerates(),
-                         np.ones(5).astype(bool))
-
-        npt.assert_equal(
-            ExampleGrammaredSequence("XA.B-AZCXA").nondegenerates(),
-            np.array([0, 1] * 5, dtype=bool))
-
-        npt.assert_equal(
-            ExampleGrammaredSequence("XXAZZB.-C").nondegenerates(),
-            np.array([0, 0, 1] * 3, dtype=bool))
-
-        npt.assert_equal(ExampleGrammaredSequence("YB.-AC").nondegenerates(),
-                         np.array([0, 1, 0, 0, 1, 1], dtype=bool))
-
     def test_definites(self):
         self.assertIs(type(ExampleGrammaredSequence("").definites()),
                       np.ndarray)
@@ -487,22 +445,6 @@ class TestGrammaredSequence(TestCase):
 
         npt.assert_equal(ExampleGrammaredSequence("YB.-AC").definites(),
                          np.array([0, 1, 0, 0, 1, 1], dtype=bool))
-
-    # TODO: duplicate of test_has_definites; remove when has_nondegenerates is
-    # removed.
-    def test_has_nondegenerates(self):
-        self.assertIs(type(ExampleGrammaredSequence("").has_nondegenerates()),
-                      bool)
-        self.assertIs(type(ExampleGrammaredSequence("A").has_nondegenerates()),
-                      bool)
-
-        self.assertFalse(ExampleGrammaredSequence("").has_nondegenerates())
-        self.assertFalse(
-            ExampleGrammaredSequence("X-.YZ").has_nondegenerates())
-
-        self.assertTrue(ExampleGrammaredSequence("C").has_nondegenerates())
-        self.assertTrue(
-            ExampleGrammaredSequence(".XYZ-ABC").has_nondegenerates())
 
     def test_has_definites(self):
         self.assertIs(type(ExampleGrammaredSequence("").has_definites()),
