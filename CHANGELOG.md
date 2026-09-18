@@ -45,6 +45,10 @@
 * Fixed `AlignPath.to_indices` raising `AxisError` and `PairAlignPath.to_cigar` (with `seqs`) raising `TypeError` when the path has only one segment, such as a gap-free alignment returned by `pair_align`. `AlignPath.to_indices` also failed on a path with only one sequence. ([#2579](https://github.com/scikit-bio/scikit-bio/issues/2579))
 
 
+### Bug Fixes
+
+* Fixed the GFF3 reader dropping or duplicating features when a sequence ID's records are not contiguous in the file. GFF3 does not require features to be grouped by sequence ID, but the reader previously only merged consecutive lines. As a result, reading a specific `seq_id` returned only its first block of features, and the generator reader yielded the same `seq_id` multiple times. All features for a sequence ID are now merged regardless of their order in the file ([#2501](https://github.com/scikit-bio/scikit-bio/pull/2501)).
+
 ## Version 0.7.3
 
 ### Features
