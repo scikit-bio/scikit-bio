@@ -153,7 +153,6 @@ def alpha_diversity(
         being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -285,7 +284,6 @@ def beta_diversity(
         metric being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -320,7 +318,7 @@ def beta_diversity(
 
     Returns
     -------
-    :class:`~skbio.stats.distance.DistanceMatrix`
+    DistanceMatrix
         Distances between all pairs of samples (i.e., rows). The number of
         rows and columns will be equal to the number of rows in ``counts``.
 
@@ -451,8 +449,7 @@ def partial_beta_diversity(
         The beta diversity metric to apply to the samples. See :func:`beta_diversity`
         for details.
     counts : table_like of shape (n_samples, n_taxa)
-        Matrix containing count/abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        Matrix containing count/abundance data of the samples.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     id_pairs : iterable of tuple of (str, str)
@@ -465,7 +462,7 @@ def partial_beta_diversity(
 
     Returns
     -------
-    :class:`~skbio.stats.distance.DistanceMatrix`
+    DistanceMatrix
         Distances between pairs of samples indicated by ``id_pairs``. Pairwise
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.

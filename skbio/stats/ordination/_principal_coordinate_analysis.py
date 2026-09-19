@@ -543,7 +543,7 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     Parameters
     ----------
-    centered_distance_matrix : np.array
+    centered_distance_matrix : ndarray
        Numpy matrix representing the distance matrix for which the
        eigenvectors and eigenvalues shall be computed
     dimensions : int
@@ -554,9 +554,9 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     Returns
     -------
-    np.array
+    ndarray
        Array of eigenvectors, each with dimensions length.
-    np.array
+    ndarray
        Array of eigenvalues, a total number of dimensions.
 
     Notes

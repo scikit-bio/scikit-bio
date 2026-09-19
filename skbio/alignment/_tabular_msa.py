@@ -1603,7 +1603,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Returns
         -------
-        1D np.ndarray (int or float)
+        1D ndarray (int or float)
             Vector of gap character frequencies across the specified axis. Will
             have ``int`` dtype if ``relative=False`` and ``float`` dtype if
             ``relative=True``.

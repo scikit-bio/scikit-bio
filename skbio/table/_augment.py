@@ -315,8 +315,7 @@ def mixup(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See
-        :ref:`supported formats <table_like>`.
+        Input data table to be augmented.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -482,8 +481,7 @@ def aitchison_mixup(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See
-        :ref:`supported formats <table_like>`.
+        Input data table to be augmented.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -624,8 +622,7 @@ def compos_cutmix(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See
-        :ref:`supported formats <table_like>`.
+        Input data table to be augmented.
     n : int
         Number of synthetic samples to generate.
     labels : array_like of shape (n_samples,) or (n_samples, n_classes), optional
@@ -820,11 +817,10 @@ def phylomix(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Input data table to be augmented. See
-        :ref:`supported formats <table_like>`.
+        Input data table to be augmented.
     n : int
         Number of synthetic samples to generate.
-    tree : :class:`~skbio.tree.TreeNode`
+    tree : TreeNode
         Tree structure modeling the relationships between features.
     taxa : array_like of shape (n_features,), optional
         Taxa (tip names) in ``tree`` corresponding to individual features. Can be

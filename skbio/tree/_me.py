@@ -159,7 +159,7 @@ def gme(dm, neg_as_zero=True):
 
     Parameters
     ----------
-    dm : skbio.DistanceMatrix
+    dm : DistanceMatrix
         Input distance matrix containing distances between taxa.
     neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
@@ -282,7 +282,7 @@ def bme(dm, neg_as_zero=True, **kwargs):
 
     Parameters
     ----------
-    dm : skbio.DistanceMatrix
+    dm : DistanceMatrix
         Input distance matrix containing distances between taxa.
     neg_as_zero : bool, optional
         If True (default), convert negative branch lengths into zeros.
@@ -424,9 +424,9 @@ def nni(tree, dm, balanced=True, neg_as_zero=True):
 
     Parameters
     ----------
-    tree : skbio.TreeNode
+    tree : TreeNode
         Input phylogenetic tree to be rearranged.
-    dm : skbio.DistanceMatrix
+    dm : DistanceMatrix
         Input distance matrix containing distances between taxa.
     balanced : bool, optional
         Use the OLS framework (False) or the balanced framework (True, default).

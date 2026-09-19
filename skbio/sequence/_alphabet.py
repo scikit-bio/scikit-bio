@@ -14,13 +14,13 @@ def _encode_alphabet(alphabet):
 
     Parameters
     ----------
-    alphabet : str, list, tuple or 1D np.ndarray
+    alphabet : str, list, tuple or 1D ndarray
         Input alphabet. Must consist of single ASCII characters. Elements may
         be string or byte characters, or integers representing code points.
 
     Returns
     -------
-    1D np.ndarray of np.uint8
+    1D ndarray of np.uint8
         Vector of ASCII code points representing the alphabet.
 
     Raises
@@ -260,9 +260,9 @@ def _indices_in_observed(seqs):
 
     Returns
     -------
-    list of 1D np.ndarray
+    list of 1D ndarray
         Vectors of indices representing the sequences.
-    1D np.ndarray
+    1D ndarray
         Sorted vector of unique characters observed in the sequences.
 
     """

@@ -45,7 +45,7 @@ def unweighted_unifrac(u_counts, v_counts, taxa, tree, validate=True):
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
     validate: bool, optional
@@ -179,7 +179,7 @@ def weighted_unifrac(
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
     normalized: boolean, optional
@@ -349,11 +349,11 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
         Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
 
@@ -385,7 +385,7 @@ def _weighted_unifrac(
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
         Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
@@ -394,7 +394,7 @@ def _weighted_unifrac(
         respectively. This could be computed internally, but since this is a
         private method and the calling function has already generated these
         values, this saves an iteration over each of these vectors.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
 
@@ -437,7 +437,7 @@ def _weighted_unifrac_normalized(
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
          Vectors indicating presence (value greater than zero) and absence
          (value equal to zero) of nodes in two samples, `u` and `v`. Order is
          assumed to be the same as in `branch_lengths`.
@@ -446,7 +446,7 @@ def _weighted_unifrac_normalized(
          respectively. This could be computed internally, but since this is a
          private method and the calling function has already generated these
          values, this saves an iteration over each of these vectors.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
     node_to_root_distances : np.ndarray
@@ -501,7 +501,7 @@ def _setup_multiple_unweighted_unifrac(counts, taxa, tree, validate):
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree: skbio.TreeNode
+    tree: TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset.
     validate: bool, optional
@@ -836,7 +836,7 @@ def _setup_multiple_weighted_unifrac(counts, taxa, tree, normalized, validate):
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the
         same length as ``u_counts`` and ``v_counts``. These IDs do not need to
         be in tip order with respect to the tree.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset.
     normalized : bool
