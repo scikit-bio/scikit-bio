@@ -110,8 +110,10 @@ def rda(
        Ecology. Elsevier, Amsterdam.
 
     """
-    Y, y_rows, y_cols = _ingest_table(y)
-    X, x_rows, x_cols = _ingest_table(x)
+    Y, y_rows, y_cols = _ingest_table(y, sample_ids=sample_ids, feature_ids=feature_ids)
+    X, x_rows, x_cols = _ingest_table(
+        x, sample_ids=sample_ids, feature_ids=constraint_ids
+    )
 
     n, p = Y.shape
     n_, m = X.shape
