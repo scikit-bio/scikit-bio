@@ -151,6 +151,9 @@ def dirmult_ttest(
     .. versionchanged:: 0.7.0
         Computational efficiency significantly improved.
 
+    .. versionchanged:: 0.7.4
+        Computational efficiency significantly improved.
+
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
