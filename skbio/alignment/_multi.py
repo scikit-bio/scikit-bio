@@ -142,7 +142,7 @@ def multi_align(
     containing one or more sequences. This function adopts the **profile alignment**
     approach [3]_, which aligns two sub-alignments ("profiles") using the same dynamic
     programming (DP) algorithm for pairwise sequence alignment (:func:`pair_align`).
-    Refer to the later's documentation for settings and considerations.
+    Refer to the latter's documentation for settings and considerations.
 
     The substitution score :math:`S` for two matching columns between profiles is
     calculated as the average substitution score :math:`s` across all pairs of

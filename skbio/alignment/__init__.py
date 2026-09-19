@@ -164,13 +164,13 @@ Pairwise alignment
 ^^^^^^^^^^^^^^^^^^
 
 An alignment algorithm aims to find the optimal alignment path(s) that yield the
-highest possible alignment score for two or more sequences. For decades,
-:wiki:`dynamic programming <Dynamic_programming>` (DP) has been the gold standard for
-pairwise sequence alignment, and is widely covered in many bioinformatics textbooks.
-scikit-bio also implements this algorithm. ``pair_align_nucl`` and ``pair_align_prot``
-are but convenience wrappers for the function :func:`pair_align`, which offers multiple
-customizable parameters and comprehensive documentation explaining the algorithm and
-everything you need to know for using it.
+highest possible alignment score for sequences. For decades, :wiki:`dynamic programming
+<Dynamic_programming>` (DP) has been the gold standard for pairwise sequence alignment,
+and is widely covered in many bioinformatics textbooks. scikit-bio also implements this
+algorithm. ``pair_align_nucl`` and ``pair_align_prot`` are but convenience wrappers for
+the function :func:`pair_align`, which offers multiple customizable parameters and
+comprehensive documentation explaining the algorithm and everything you need to know
+for using it.
 
 >>> from skbio.alignment import pair_align
 

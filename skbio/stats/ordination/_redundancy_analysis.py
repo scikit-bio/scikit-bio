@@ -51,7 +51,7 @@ def rda(
         coefficients into standard regression coefficients.
     scale_Y : bool, optional
         Controls whether the response matrix columns are scaled to have unit standard
-        deviation. Defaults is False.
+        deviation. Default is False.
     scaling : int
         Scaling type 1 produces a distance biplot. It focuses on
         the ordination of rows (samples) because their transformed
