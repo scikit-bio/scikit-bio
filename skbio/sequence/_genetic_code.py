@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -149,20 +150,24 @@ class GeneticCode(SkbioObject):
     def from_ncbi(cls, table_id=1) -> Self:
         r"""Return NCBI genetic code specified by table ID.
 
+        .. versionchanged:: 0.7.4
+            Added definitions of tables 15, 26-33. Updated definition for table 3.
+
         Parameters
         ----------
         table_id : int, optional
-            Table ID of the NCBI genetic code to return.
+            Table ID of the NCBI genetic code to return. At present, tables 1-33 are
+            supported.
 
         Returns
         -------
         GeneticCode
-            NCBI genetic code specified by `table_id`.
+            NCBI genetic code specified by ``table_id``.
 
         Notes
         -----
-        The table IDs and genetic codes available in this method and used
-        throughout the examples are defined in [1]_.
+        The table IDs and genetic codes available in this method and used throughout
+        the examples are defined in [1]_.
 
         References
         ----------

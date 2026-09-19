@@ -1632,7 +1632,7 @@ def paralin(seq1, seq2, pseudocount=None):
     or unequal character frequencies, is zero.
 
     .. note::
-        The LogDet distance computed by PHYLIP's `dnadist` command is actually
+        The LogDet distance computed by PHYLIP's ``dnadist`` command is actually
         consistent with the paralinear distance implemented here.
 
     The function returns NaN when any of the determinants is 0 or negative.
