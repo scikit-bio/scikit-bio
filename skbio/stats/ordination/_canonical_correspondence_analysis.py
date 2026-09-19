@@ -45,9 +45,9 @@ def cca(
     Parameters
     ----------
     y : table_like
-        Samples by features table (n, m). See :ref:`supported formats <table_like>`.
+        Samples by features table (n, m).
     x : table_like
-        Samples by constraints table (n, q). See above.
+        Samples by constraints table (n, q).
     scaling : int, {1, 2}, optional
         Scaling type 1 maintains :math:`\chi^2` distances between rows.
         Scaling type 2 preserves :math:`\chi^2` distances between columns.

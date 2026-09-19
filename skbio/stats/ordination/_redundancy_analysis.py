@@ -42,17 +42,16 @@ def rda(
         of samples and :math:`p` is the number of features. Its columns
         need be dimensionally homogeneous (or you can set `scale_Y=True`).
         This matrix is also referred to as the community matrix that
-        commonly stores information about species abundances. See
-        :ref:`supported formats <table_like>`.
+        commonly stores information about species abundances.
     x : table_like
         :math:`n \times m, n \geq m` matrix of explanatory
         variables, where :math:`n` is the number of samples and
         :math:`m` is the number of metadata variables. Its columns
         need not be standardized, but doing so turns regression
-        coefficients into standard regression coefficients. See above.
+        coefficients into standard regression coefficients.
     scale_Y : bool, optional
-        Controls whether the response matrix columns are scaled to
-        have unit standard deviation. Defaults to `False`.
+        Controls whether the response matrix columns are scaled to have unit standard
+        deviation. Defaults is False.
     scaling : int
         Scaling type 1 produces a distance biplot. It focuses on
         the ordination of rows (samples) because their transformed

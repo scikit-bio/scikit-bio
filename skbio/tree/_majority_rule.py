@@ -20,7 +20,7 @@ def _walk_clades(trees, weights):
     ----------
     trees : list of TreeNode
         The trees to walk.
-    weights : np.array
+    weights : ndarray
         Tree weights.
 
     Returns

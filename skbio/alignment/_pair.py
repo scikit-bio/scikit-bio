@@ -63,10 +63,10 @@ def pair_align(
 
     Parameters
     ----------
-    seq1 : :class:`~skbio.sequence.Sequence`, str, or sequence of scalar
+    seq1 : Sequence, str, or sequence of scalar
         The first sequence to be aligned.
 
-    seq2 : :class:`~skbio.sequence.Sequence`, str, or sequence of scalar
+    seq2 : Sequence, str, or sequence of scalar
         The second sequence to be aligned.
 
     mode : {'global', 'local'}, optional
@@ -82,8 +82,8 @@ def pair_align(
 
         - Tuple of two numbers: Match score (same symbol) and mismatch score (different
           symbols).
-        - :class:`~skbio.sequence.SubstitutionMatrix`: A matrix of substitution scores
-          between all symbols in the alphabet.
+        - ``SubstitutionMatrix``: A matrix of substitution scores between all symbols
+          in the alphabet.
         - String: Name of the substitution matrix that can be recognized by
           ``SubstitutionMatrix.by_name``, such as "NUC.4.4" or "BLOSUM62".
 

@@ -39,7 +39,7 @@ def align_score(
     alignment : TabularMSA, iterable, or (AlignPath, iterable)
         Aligned sequences. Can be any of the following:
 
-        - :class:`~skbio.alignment.TabularMSA`.
+        - ``TabularMSA`` instance.
         - List of *aligned* sequences as raw strings or ``Sequence`` objects.
         - Tuple of :class:`~skbio.alignment.AlignPath` and the corresponding list of
           *original* (unaligned) sequences.

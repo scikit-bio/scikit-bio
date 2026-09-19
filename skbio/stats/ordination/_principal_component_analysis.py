@@ -67,9 +67,9 @@ def pca(
 
     Parameters
     ----------
-    X : table_like
-        Samples by features table (n, p). See :ref:`supported formats <table_like>`.
-    method : str, optional
+    X : table_like of shape (n_samples, n_features)
+        Input data table.
+    method : {'eigh', 'svd'}, optional
         Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
         which computes exact eigenvectors and eigenvalues of the covariance matrix.
         The alternative is "svd" (singular value decomposition), which bypasses
@@ -82,8 +82,8 @@ def pca(
         specified; otherwise, dense algorithms are used regardless.
     dimensions : int, optional
         Number of principal components to compute. Must be a positive integer less
-        than or equal to min(n, p). If not provided, all principal components will
-        be computed.
+        than or equal to min(n_samples, n_features). If not provided, all principal
+        components will be computed.
     sample_ids, feature_ids, output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
 
@@ -100,7 +100,7 @@ def pca(
         If ``dimensions`` is not a positive integer less than or equal to
         min(n_samples, n_features)
     ValueError
-        If ``method`` is not one of "eigh" or "svd"
+        If ``method`` is not one of "eigh" or "svd".
 
     See Also
     --------

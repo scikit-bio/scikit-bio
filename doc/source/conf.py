@@ -129,6 +129,7 @@ numpydoc_show_inherited_class_members = False
 # of supported formats, or external links.
 MY_XREF_ALIASES = {
     "Sequence": "skbio.sequence.Sequence",
+    "GrammaredSequence": "skbio.sequence.GrammaredSequence",
     "DNA": "skbio.sequence.DNA",
     "RNA": "skbio.sequence.RNA",
     "Protein": "skbio.sequence.Protein",
@@ -145,8 +146,8 @@ MY_XREF_ALIASES = {
     "OrdinationResults": "skbio.stats.ordination.OrdinationResults",
     "SampleMetadata": "skbio.metadata.SampleMetadata",
     "Table": "skbio.table.Table",
-    "array_like": ":ref:`array_like <array_like>`",
-    "table_like": ":ref:`table_like <table_like>`",
+    "array_like": ":ref:`array-like <array_like>`",
+    "table_like": ":ref:`table-like <table_like>`",
     "formula": "`formula <https://patsy.readthedocs.io/en/latest/formulas.html>`__",
 }
 

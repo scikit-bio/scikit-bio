@@ -349,11 +349,11 @@ def _unweighted_unifrac(u_node_counts, v_node_counts, branch_lengths):
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
         Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
 
@@ -385,7 +385,7 @@ def _weighted_unifrac(
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
         Vectors indicating presence (value greater than zero) and absence
         (value equal to zero) of nodes in two samples, `u` and `v`. Order is
         assumed to be the same as in `branch_lengths`.
@@ -394,7 +394,7 @@ def _weighted_unifrac(
         respectively. This could be computed internally, but since this is a
         private method and the calling function has already generated these
         values, this saves an iteration over each of these vectors.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
 
@@ -437,7 +437,7 @@ def _weighted_unifrac_normalized(
 
     Parameters
     ----------
-    u_node_counts, v_node_counts : np.array
+    u_node_counts, v_node_counts : ndarray
          Vectors indicating presence (value greater than zero) and absence
          (value equal to zero) of nodes in two samples, `u` and `v`. Order is
          assumed to be the same as in `branch_lengths`.
@@ -446,7 +446,7 @@ def _weighted_unifrac_normalized(
          respectively. This could be computed internally, but since this is a
          private method and the calling function has already generated these
          values, this saves an iteration over each of these vectors.
-    branch_lengths : np.array
+    branch_lengths : ndarray
         Vector of branch lengths of all nodes (tips and internal nodes) in
         postorder representation of their tree.
     node_to_root_distances : np.ndarray

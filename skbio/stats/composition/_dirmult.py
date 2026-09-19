@@ -154,9 +154,9 @@ def dirmult_ttest(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for lower statistical uncertainty. See Notes for details.
+        A matrix containing count or proportional abundance data of the samples. Counts
+        are recommended over proportions for lower statistical uncertainty. See Notes
+        for details.
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. These could be strings
         or integers denoting which group a sample belongs to. If it is a pandas Series
@@ -472,10 +472,9 @@ def dirmult_lme(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for lower statistical uncertainty. See Notes of :func:`dirmult_ttest` for
-        details.
+        A matrix containing count or proportional abundance data of the samples. Counts
+        are recommended over proportions for lower statistical uncertainty. See Notes
+        of :func:`dirmult_ttest` for details.
     metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a

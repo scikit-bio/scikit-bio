@@ -66,10 +66,9 @@ def multi_align(
 
     Parameters
     ----------
-    sequences : iterable of sequence-like
-        Sequences to be aligned. Supports :class:`~skbio.sequence.Sequence`, strings,
-        or sequence of strings or numbers. Sequences must be non-empty and ungapped.
-        At least two sequences must be provided.
+    sequences : iterable of Sequence, str, or sequence of scalar
+        Sequences to be aligned. Must be non-empty and ungapped. At least two
+        sequences must be provided.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional
         Score of a substitution. May be two numbers (match, mismatch), a substitution
         matrix, or its name. See :func:`pair_align` for details. Default is

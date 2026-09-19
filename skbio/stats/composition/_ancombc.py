@@ -61,7 +61,7 @@ def ancombc(
     ----------
     table : table_like of shape (n_samples, n_features)
         A matrix containing strictly positive count or proportional abundance data of
-        the samples. See :ref:`supported formats <table_like>`.
+        the samples.
     metadata : pd.DataFrame or 2-D array_like
         Metadata of the samples. Rows correspond to samples and columns correspond
         to covariates (attributes). Must be a pandas DataFrame or convertible to a
@@ -432,8 +432,7 @@ def ancombc2(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        Matrix containing count or proportional abundance data of the samples.
     metadata : pd.DataFrame or 2-D array_like
         Metadata of the samples. Rows correspond to samples and columns correspond
         to covariates (attributes). Must be a pandas DataFrame or convertible to a
@@ -3771,8 +3770,7 @@ def struc_zero(table, metadata, grouping, neg_lb=False):
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        A matrix containing count or proportional abundance data of the samples.
     metadata : pd.DataFrame or 2-D array_like
         Metadata of the samples. Rows correspond to samples and columns correspond
         to covariates (attributes). Must be a pandas DataFrame or convertible to a

@@ -55,8 +55,7 @@ def ancom(
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        Matrix of strictly positive values (i.e. counts or proportions). See
-        :ref:`supported formats <table_like>`.
+        Matrix of strictly positive values (i.e. counts or proportions).
 
         .. note::
             If the table contains zero values, one should add a pseudocount or apply

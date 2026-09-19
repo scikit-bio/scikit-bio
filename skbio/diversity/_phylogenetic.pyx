@@ -152,11 +152,11 @@ def _nodes_by_counts(np.ndarray counts,
 
     Parameters
     ----------
-    counts : np.array of int
+    counts : ndarray of int
         A 1D or 2D vector in which each row corresponds to the observed counts
         in an environment. The rows are expected to be in order with respect to
         `tip_ids`.
-    tip_ids : np.array of str
+    tip_ids : ndarray of str
         A vector of tip names that correspond to the columns in the `counts`
         matrix.
     indexed : dict
@@ -164,7 +164,7 @@ def _nodes_by_counts(np.ndarray counts,
 
     Returns
     -------
-    np.array of int
+    ndarray of int
         The observed counts of every node and the counts if its descendents.
 
     """
