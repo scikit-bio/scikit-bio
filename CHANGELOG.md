@@ -45,6 +45,7 @@
 
 ### Miscellaneous
 
+* Removed the `natsort` dependency by implementing natural sorting locally in `skbio.stats.gradient` ([#2007](https://github.com/scikit-bio/scikit-bio/issues/2007)).
 * Improved API documentation, including alignment tutorials and links for supported input and output types ([#2584](https://github.com/scikit-bio/scikit-bio/pull/2584)).
 * Improved test discovery and public API imports in tests. Thanks to @RohitKattimani for this and other contributions ([#2514](https://github.com/scikit-bio/scikit-bio/pull/2514), [#2518](https://github.com/scikit-bio/scikit-bio/pull/2518)).
 * Various minor improvements. Thanks to @yousaf-360, @RishiiGamer2201, and @latent-9 ([#2542](https://github.com/scikit-bio/scikit-bio/pull/2542), [#2556](https://github.com/scikit-bio/scikit-bio/pull/2556), [#2525](https://github.com/scikit-bio/scikit-bio/pull/2525)).
