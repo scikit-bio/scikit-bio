@@ -160,11 +160,11 @@ Likewise, we can align protein sequences with :func:`pair_align_prot`:
 PairAlignResult(score=15.0, paths=[<PairAlignPath, positions: 13, segments: 3, ...
 
 
-Alignment algorithm
-^^^^^^^^^^^^^^^^^^^
+Pairwise alignment
+^^^^^^^^^^^^^^^^^^
 
-The alignment algorithm aims to find the optimal alignment path(s) that yield the
-highest possible alignment score for two sequences. For decades,
+An alignment algorithm aims to find the optimal alignment path(s) that yield the
+highest possible alignment score for two or more sequences. For decades,
 :wiki:`dynamic programming <Dynamic_programming>` (DP) has been the gold standard for
 pairwise sequence alignment, and is widely covered in many bioinformatics textbooks.
 scikit-bio also implements this algorithm. ``pair_align_nucl`` and ``pair_align_prot``
@@ -335,6 +335,35 @@ The :meth:`~AlignPath.from_indices` method can parse **Biotite**'s alignment res
     from biotite.sequence.align import align_optimal
     res = align_optimal(...)
     path = AlignPath.from_indices(res[0].trace.T)
+
+
+Multiple alignment
+^^^^^^^^^^^^^^^^^^
+
+Multiple sequence alignment (MSA) is valuable in identifying conserved and variable
+regions among homologous sequences, inferring evolutionary relationships of genes and
+organisms, and constructing sequence profiles. scikit-bio implements the classic
+progressive alignment method for MSA in the :func:`multi_align` function.
+
+>>> from skbio.alignment import multi_align
+>>> seqs = ["CAGCTATATATCGCTACG",
+...         "CTGCTTATATCCCTAGG",
+...         "AAGCTATACATCCAACATG"]
+>>> res = multi_align(seqs)
+>>> res.path
+<AlignPath, sequences: 3, positions: 20, segments: 6>
+
+The output ``AlignPath`` object contains three sequences.
+
+>>> res.path.to_bits(expand=False)
+array([[0, 0, 0, 0, 0, 1],
+       [0, 1, 0, 0, 0, 1],
+       [0, 0, 0, 1, 0, 0]], dtype=uint8)
+
+Construct the aligned sequences.
+
+>>> res.path.to_aligned(seqs)
+['CAGCTATATATCGCTACG--', 'CTGCT-TATATCCCTAGG--', 'AAGCTATACATC-CAACATG']
 
 
 Tabular alignment

@@ -41,8 +41,7 @@ def align_score(
 
         - ``TabularMSA`` instance.
         - List of *aligned* sequences as raw strings or ``Sequence`` objects.
-        - Tuple of :class:`~skbio.alignment.AlignPath` and the corresponding list of
-          *original* (unaligned) sequences.
+        - Tuple of ``AlignPath`` and the corresponding list of *unaligned* sequences.
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a substitution. May be two numbers (match, mismatch), a substitution
@@ -69,13 +68,13 @@ def align_score(
     ------
     ValueError
         If there are less than two sequences in the alignment.
-    ValueError
+
         If the alignment has zero length.
-    ValueError
+
         If any sequence in the alignment contains only gaps.
-    ValueError
-        If any sequence contains characters not present in the designated
-        substitution matrix.
+
+        If any sequence contains characters not present in the designated substitution
+        matrix.
 
     See Also
     --------
@@ -84,13 +83,13 @@ def align_score(
 
     Examples
     --------
-    >>> from skbio.sequence import DNA, Protein
-    >>> from skbio.alignment import TabularMSA, align_score
+    >>> from skbio.alignment import align_score
 
     Calculate the score of a pair of aligned DNA sequences, with match score = 2,
     mismatch score = -3, gap opening penalty = 5, and gap extension penalty = 2 (the
     default BLASTN parameters).
 
+    >>> from skbio.sequence import DNA
     >>> seq1 = DNA("CGGTCGTAACGCGTA---CA")
     >>> seq2 = DNA("CAG--GTAAG-CATACCTCA")
     >>> align_score([seq1, seq2], (2, -3), (5, 2))
@@ -101,11 +100,25 @@ def align_score(
     and 1 (the default BLASTP parameters). Note that terminal gaps are not penalized
     by default unless ``free_ends`` is set to False.
 
+    >>> from skbio.sequence import Protein
+    >>> from skbio.alignment import TabularMSA
     >>> msa = TabularMSA([Protein("MKQ-PSV"),
     ...                   Protein("MKIDTS-"),
     ...                   Protein("MVIDPSS")])
     >>> align_score(msa, "BLOSUM62", (11, 1))
     11.0
+
+    Calculate alignment score directly from an alignment path and original sequences
+    supplied as raw strings, without constructing aligned sequences as scikit-bio
+    objects.
+
+    >>> from skbio.alignment import multi_align
+    >>> seqs = ["CAGCTATATATCGCTACG",
+    ...         "CTGCTTATATCCCTAGG",
+    ...         "AAGCTATACATCCAACATG"]
+    >>> path, *_ = multi_align(seqs)
+    >>> align_score((path, seqs))
+    16.0
 
     """
     # process input alignment

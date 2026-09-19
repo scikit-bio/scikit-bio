@@ -164,7 +164,7 @@ def pair_align(
     score : float
         Optimal alignment score.
 
-    paths : list of :class:`~skbio.alignment.PairAlignPath`, optional
+    paths : list of PairAlignPath, optional
         Alignment paths. Up to ``max_paths`` paths will be returned. Note that all
         paths are optimal and share the same alignment score.
 
@@ -179,7 +179,8 @@ def pair_align(
     See Also
     --------
     align_score
-    skbio.alignment.PairAlignPath
+    multi_align
+    PairAlignPath
 
     Notes
     -----

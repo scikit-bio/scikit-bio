@@ -64,6 +64,10 @@ def multi_align(
 
     .. versionadded:: 0.7.4
 
+    A versatile workflow for multiple sequence alignment (MSA) by integrating the
+    pairwise alignment engine (:func:`pair_align`), alignment distance calculation,
+    and UPGMA tree construction following the progressive alignment approach.
+
     Parameters
     ----------
     sequences : iterable of Sequence, str, or sequence of scalar
@@ -128,31 +132,34 @@ def multi_align(
     This function implements the classic progressive alignment method for multiple
     sequence alignment, originally introduced in [1]_, with later improvements
     described in [2]_ and [3]_. Compared with the historical method, this
-    implementation represents a refined form of progressive alignment commonly
+    implementation represents a refined form of progressive alignment that is often
     described in educational materials. Specifically, the algorithm consists of the
-    following steps, described in reverse order:
+    following steps, detailed in reverse order:
+
+    **Procedures**
 
     An alignment of all sequences is constructed by iteratively merging sub-alignments
-    containing one or more sequences. This function adopts the *profile alignment*
+    containing one or more sequences. This function adopts the **profile alignment**
     approach [3]_, which aligns two sub-alignments ("profiles") using the same dynamic
-    programming (DP) algorithm used for pairwise sequence alignment (see
-    :func:`pair_align`). The score :math:`S` for two matching columns is calculated as
-    the average substitution score :math:`s` across all pairs of characters from the
-    two profiles:
+    programming (DP) algorithm for pairwise sequence alignment (:func:`pair_align`).
+    Refer to the later's documentation for settings and considerations.
+
+    The substitution score :math:`S` for two matching columns between profiles is
+    calculated as the average substitution score :math:`s` across all pairs of
+    characters from the two columns:
 
     .. math::
         S = \frac{1}{mn}\sum_{x\in A}\sum_{y\in B}s(x,y)
 
-    where :math:`x` and :math:`y` are characters in the two columns of profiles
-    :math:`A` and :math:`B`, which contain :math:`m` and :math:`n` rows (sequences),
-    respectively.
+    where :math:`x` and :math:`y` are characters in the two columns :math:`A` and
+    :math:`B`, which contain :math:`m` and :math:`n` rows (sequences), respectively.
 
     Under the "once a gap, always a gap" rule [1]_, existing gaps within each profile
     are treated as neutral characters and assigned a substitution score of 0 with any
     character. Gap penalties are calculated only for gaps introduced during the DP
     alignment.
 
-    The order of merging is determined by a *guide tree*. The program traverses the
+    The order of merging is determined by a **guide tree**. The program traverses the
     tree in postorder and merges the two child sub-alignments at each internal node. If
     the guide tree is not explicitly supplied, the program computes one using the UPGMA
     method (see :func:`~skbio.tree.upgma`) from a distance matrix containing all
@@ -183,7 +190,7 @@ def multi_align(
 
     **Solution quality**
 
-    The *sum-of-pairs* (SP) score is the optimality criterion for multiple sequence
+    The **sum-of-pairs** (SP) score is the optimality criterion for multiple sequence
     alignment. This metric can be calculated by applying the :func:`align_score`
     function to the resulting alignment. It should be noted that progressive alignment
     is a heuristic algorithm and the resulting alignment is not guaranteed to be
@@ -220,9 +227,9 @@ def multi_align(
 
     Examples
     --------
-    >>> from skbio.alignment import multi_align, align_score
+    >>> from skbio.alignment import multi_align
 
-    Align three DNA sequences using default parameters.
+    Align three DNA sequences using default parameters and obtain an alignment path.
 
     >>> from skbio.sequence import DNA
     >>> seqs = [DNA('CATTAACGT'),
@@ -240,15 +247,30 @@ def multi_align(
     -CGTTA-CGGT
     -AGTTAACGG-
 
-    The quality of the alignment can be evaluated using the `align_score` function,
-    which calculates the sum-of-pairs (SP) score. It has the same default parameter
-    settings as `multi_align` does.
+    Or convert the alignment path and sequences into a :class:`TabularMSA` object.
+
+    >>> from skbio.alignment import TabularMSA
+    >>> msa = TabularMSA.from_path_seqs(path, seqs)
+    >>> msa
+    TabularMSA[DNA]
+    ----------------------
+    Stats:
+        sequence count: 3
+        position count: 11
+    ----------------------
+    CA-TTAACGT-
+    -CGTTA-CGGT
+    -AGTTAACGG-
+
+    The quality of the alignment can be evaluated using the :func:`align_score`
+    function, which calculates the sum-of-pairs (SP) score, and has the same default
+    parameter settings as ``multi_align`` does.
 
     >>> from skbio.alignment import align_score
     >>> align_score((path, seqs))
     7.0
 
-    Under the hood, the function performs pairwise alignments, calculates a distance
+    Under the hood, this function performs pairwise alignments, calculates a distance
     matrix, then infers a guide tree which determines the merging order. The tree and
     distance matrix can be retained for diagnostic and educational purposes.
 
@@ -316,9 +338,9 @@ def multi_align(
     file is:
 
     >>> from skbio.io import read as sk_read  # doctest: +SKIP
-    >>> from skbio.alignment import TabularMSA  # doctest: +SKIP
-    >>> it = sk_read('input.fa', format='fasta', constructor=DNA)  # doctest: +SKIP
-    >>> seqs = list(it)  # doctest: +SKIP
+    >>> seqs = list(
+    ...     sk_read('input.fa', format='fasta', constructor=DNA)
+    ... )  # doctest: +SKIP
     >>> path = multi_align(seqs, **params).path  # doctest: +SKIP
     >>> msa = TabularMSA.from_path_seqs(path, seqs)  # doctest: +SKIP
     >>> msa.write('output.fa')  # doctest: +SKIP
