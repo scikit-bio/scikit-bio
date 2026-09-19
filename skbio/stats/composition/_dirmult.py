@@ -14,6 +14,7 @@ import pandas as pd
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table
 from ._base import _check_composition
+from ._lme import _RandIntDesign, _randint_applicable, _randint_fit
 from ._utils import (
     _check_metadata,
     _check_grouping,
@@ -516,10 +517,12 @@ def dirmult_lme(
         Optimization method for model fitting. Can be a single method name, or a list
         of method names to be tried sequentially. See `statsmodels.optimization
         <https://www.statsmodels.org/stable/optimization.html>`_
-        for available methods. If None, a default list of methods will be tried.
+        for available methods. If None (default), the default model is solved in
+        closed form and no iterative optimizer is used. See Notes.
     fit_converge : bool, optional
         If True, model fittings that were completed but did not converge will be
-        excluded from the calculation of final statistics. Default is False.
+        excluded from the calculation of final statistics. Default is False. Setting
+        this selects the iterative optimizer, which is what reports convergence.
     fit_warnings : bool, optional
         Issue warnings if any during the model fitting process. Default is False.
         Warnings are usually issued when the optimization methods do not converge,
@@ -577,6 +580,26 @@ def dirmult_lme(
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
 
+    Notes
+    -----
+    The default model has one random intercept per group, for which the REML fit
+    has a closed form. In that case all features of a replicate are fitted at once
+    by maximizing the one-dimensional profile likelihood over the ratio of the
+    group variance to the residual variance, instead of running one numeric
+    optimization per feature through ``MixedLM.fit``. The estimates, standard
+    errors, *p*-values and confidence intervals are those of ``MixedLM``, computed
+    from the same REML profile likelihood and the same observed information matrix.
+
+    Supplying ``re_formula``, ``vc_formula``, ``model_kwargs``, ``fit_method``,
+    ``fit_kwargs`` or ``fit_converge`` selects a model, an optimizer, or a
+    convergence filter that has no closed form, and falls back to fitting each
+    feature separately with ``MixedLM``.
+
+    .. versionchanged:: 0.7.4
+        The default random-intercept model is fitted for all features at once.
+        Results may differ slightly from earlier versions on replicates where the
+        iterative optimizer of ``MixedLM`` stopped short of the optimum.
+
     Examples
     --------
     >>> import pandas as pd
@@ -607,19 +630,20 @@ def dirmult_lme(
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
       FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue  \
-    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737
-    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057
-    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737
-    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057
+    0        Y1       time   128 -0.210769 -1.532255  1.123699  0.404007
+    1        Y1  treatment   128 -0.744061 -3.401965  1.500992  0.250282
+    2        Y2       time   128  0.210769 -1.123699  1.532255  0.404007
+    3        Y2  treatment   128  0.744061 -1.500992  3.401965  0.250282
     <BLANKLINE>
          qvalue  Signif
-    0  0.644470   False
-    1  0.440581   False
-    2  0.644470   False
-    3  0.440581   False
+    0  0.644793   False
+    1  0.437922   False
+    2  0.644793   False
+    3  0.437922   False
 
     """
     from scipy.optimize import OptimizeWarning
+    from scipy.special import ndtr, ndtri
     from statsmodels.regression.mixed_linear_model import MixedLM, VCSpec
     from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
@@ -712,6 +736,22 @@ def dirmult_lme(
 
     fit_fail_msg = "LME fit failed for feature {} in replicate {}, outputting NaNs."
 
+    # The default model is a single random intercept per group, whose REML fit
+    # has a closed form that can be evaluated for all features at once. Any
+    # setting that changes the random effects structure or the model/fit
+    # arguments falls back to per-feature `MixedLM.fit`.
+    batched = _randint_applicable(
+        re_formula, vc_formula, model_kwargs, fit_kwargs, fit_method, fit_converge
+    )
+    gamma_buf = row_mean_buf = None
+    if batched:
+        design = _RandIntDesign(exog_mat, grouping, n_groups)
+        z975 = ndtri(0.975)
+        # Only the batched path is free to reuse the draw buffers; `MixedLM`
+        # keeps a reference to the response array it is handed.
+        gamma_buf = np.empty(matrix.shape)
+        row_mean_buf = np.empty(matrix.shape[0])
+
     with catch_warnings():
         if not fit_warnings:
             simplefilter("ignore", UserWarning)
@@ -723,7 +763,38 @@ def dirmult_lme(
 
         for i in range(draws):
             # Resample data in a Dirichlet-multinomial distribution.
-            dir_mat = _dirmult_draw(matrix, rng)
+            dir_mat = _dirmult_draw(matrix, rng, gamma_buf, row_mean_buf)
+
+            if batched:
+                # The batched fit screens degenerate features itself, so only a
+                # failure of the shared design reaches this handler.
+                try:
+                    beta, bse, ok = _randint_fit(design, dir_mat)[:3]
+                except Exception:
+                    for j in range(n_feats):
+                        warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    continue
+
+                beta, bse = beta[covar_range].T, bse[covar_range].T
+                # `MixedLM` reports normal, not t, statistics here.
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    pvals = 2.0 * ndtr(-np.abs(beta / bse))
+                half = z975 * bse
+                if ok.all():
+                    coef += beta
+                    pval += pvals
+                    np.minimum(lower, beta - half, out=lower)
+                    np.maximum(upper, beta + half, out=upper)
+                    fitted += 1
+                else:
+                    coef[ok] += beta[ok]
+                    pval[ok] += pvals[ok]
+                    lower[ok] = np.minimum(lower[ok], beta[ok] - half[ok])
+                    upper[ok] = np.maximum(upper[ok], beta[ok] + half[ok])
+                    fitted += ok
+                    for j in np.flatnonzero(~ok):
+                        warn(fit_fail_msg.format(features[j], i), UserWarning)
+                continue
 
             # Fit a linear mixed effects (LME) model for each feature.
             for j in range(n_feats):
