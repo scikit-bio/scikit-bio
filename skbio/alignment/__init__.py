@@ -52,7 +52,7 @@ Convenience wrappers with preset scoring schemes.
 Multiple alignment
 ------------------
 
-Progressive alignment using averaged residue profiles.
+Progressive alignment of multiple sequences.
 
 .. autosummary::
    :toctree: generated/
@@ -81,7 +81,7 @@ Alignment statistics
 Deprecated functionality
 ------------------------
 
-Slow, pure Python algorithms (scheduled for removal in 0.8.0)
+Slow, pure Python algorithms (deprecated)
 
 .. autosummary::
    :toctree: generated/
