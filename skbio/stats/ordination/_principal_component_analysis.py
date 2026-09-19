@@ -140,11 +140,11 @@ def pca(
     References
     ----------
     .. [1] Pearson, K. (1901). On lines and planes of closest fit to systems of
-       points in space. Philosophical Magazine, 2(11), 559–572.
+       points in space. Philosophical Magazine, 2(11), 559-572.
 
     .. [2] Hotelling, H. (1933). Analysis of a complex of statistical variables
        into principal components. Journal of Educational Psychology, 24(6),
-       417–441, 498–520.
+       417-441, 498-520.
 
     """
 
