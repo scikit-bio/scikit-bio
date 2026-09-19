@@ -62,7 +62,7 @@ from skbio.stats.composition._ancombc import (
 
 
 """
-This test module uses the HITChip Atlas dataset ("pseq_sub"), adopted and refined from
+This test module uses the HITChip Atlas dataset ("atlas"), adopted and refined from
 the official ANCOM-BC tutorial:
 
 - https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/
@@ -72,6 +72,10 @@ The original dataset was described in:
 
 - Lahti, Leo, et al. "Tipping elements in the human intestinal ecosystem." Nature
   Communications 5.1 (2014): 4344.
+
+And deposited at Dryad under CC0 1.0 public domain license:
+
+- https://doi.org/10.5061/dryad.pk75d 
 
 A subset of the dataset is used for simplicity and efficiency. We followed the ANCOM-BC
 tutorial to preprocess the data and aggregate taxa at the family level. A total of 300
@@ -89,8 +93,8 @@ library(ANCOMBC)
 
 set.seed(42)
 
-table <- read.csv("pseq_sub_feature_table.csv", row.names = 1)
-meta <- read.csv("pseq_sub_meta_data.csv", row.names = 1)
+table <- read.csv("atlas_feature_table.csv", row.names = 1)
+meta <- read.csv("atlas_meta_data.csv", row.names = 1)
 meta$bmi <- factor(meta$bmi, levels = c("lean", "overweight", "obese"))
 
 res_bc <- ancombc(
@@ -114,8 +118,8 @@ res_bc <- ancombc(
     verbose = FALSE
 )
 
-write.csv(res_bc$res, "pseq_sub_ancombc_main.csv", row.names = FALSE)
-write.csv(res_bc$res_global, "pseq_sub_ancombc_global.csv", row.names = FALSE)
+write.csv(res_bc$res, "atlas_ancombc_main.csv", row.names = FALSE)
+write.csv(res_bc$res_global, "atlas_ancombc_global.csv", row.names = FALSE)
 
 trend_contrast <- list(
     increasing = matrix(c(1, 0, -1, 1), nrow = 2, byrow = TRUE),
@@ -150,11 +154,11 @@ res_bc2 <- ancombc2(
     verbose = FALSE
 )
 
-write.csv(res_bc2$res, "pseq_sub_ancombc2_main.csv", row.names = FALSE)
-write.csv(res_bc2$res_global, "pseq_sub_ancombc2_global.csv", row.names = FALSE)
-write.csv(res_bc2$res_pair, "pseq_sub_ancombc2_pair.csv", row.names = FALSE)
-write.csv(res_bc2$res_dunn, "pseq_sub_ancombc2_dunn.csv", row.names = FALSE)
-write.csv(res_bc2$res_trend, "pseq_sub_ancombc2_trend.csv", row.names = FALSE)
+write.csv(res_bc2$res, "atlas_ancombc2_main.csv", row.names = FALSE)
+write.csv(res_bc2$res_global, "atlas_ancombc2_global.csv", row.names = FALSE)
+write.csv(res_bc2$res_pair, "atlas_ancombc2_pair.csv", row.names = FALSE)
+write.csv(res_bc2$res_dunn, "atlas_ancombc2_dunn.csv", row.names = FALSE)
+write.csv(res_bc2$res_trend, "atlas_ancombc2_trend.csv", row.names = FALSE)
 ```
 
 """
@@ -1538,11 +1542,11 @@ class AncombcTests(TestCase):
         with self.assertRaisesRegex(ValueError, "at least three observed groups"):
             ancombc(table, metadata, "binary + age", grouping="binary")
 
-    def test_ancombc_pseq_sub(self):
+    def test_ancombc_atlas(self):
         """Test on the HITChip Atlas dataset."""
         cats = ["lean", "overweight", "obese"]
-        table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
-        meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
+        table = pd.read_csv(get_data_path("atlas_feature_table.csv"), index_col=0)
+        meta = pd.read_csv(get_data_path("atlas_meta_data.csv"), index_col=0)
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
         # core test
@@ -1550,14 +1554,14 @@ class AncombcTests(TestCase):
             table + 1, meta, formula="age + region + bmi", grouping="bmi"
         )
         obs = res.result
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc_main.tsv"), index_col=(0, 1))
+        exp = pd.read_table(get_data_path("atlas_ancombc_main.tsv"), index_col=(0, 1))
         exp["Signif"] = exp["Signif"].astype("boolean")
         exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
         # global test
         obs = res.global_test()
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc_global.tsv"), index_col=0)
+        exp = pd.read_table(get_data_path("atlas_ancombc_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp, atol=1e-3)
 
 
@@ -1776,17 +1780,17 @@ class Ancombc2Tests(TestCase):
             table.shape[1],
         )
 
-    def test_ancombc2_pseq_sub(self):
+    def test_ancombc2_atlas(self):
         """Test on the HITChip Atlas dataset."""
         cats = ["lean", "overweight", "obese"]
-        table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
-        meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
+        table = pd.read_csv(get_data_path("atlas_feature_table.csv"), index_col=0)
+        meta = pd.read_csv(get_data_path("atlas_meta_data.csv"), index_col=0)
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
         # core test
         res = ancombc2(table, meta, formula="age + region + bmi", grouping="bmi")
         obs = res.result
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1))
+        exp = pd.read_table(get_data_path("atlas_ancombc2_main.tsv"), index_col=(0, 1))
         exp["Signif"] = exp["Signif"].astype("boolean")
         exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         exp_main = exp.iloc[:, :-2]
@@ -1802,32 +1806,32 @@ class Ancombc2Tests(TestCase):
 
         # global test
         obs = res.global_test()
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0)
+        exp = pd.read_table(get_data_path("atlas_ancombc2_global.tsv"), index_col=0)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # pairwise test
         obs = res.pairwise_test()
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1))
+        exp = pd.read_table(get_data_path("atlas_ancombc2_pair.tsv"), index_col=(0, 1))
         exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # dunnett test
         obs = res.dunnett_test(seed=123)
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1))
+        exp = pd.read_table(get_data_path("atlas_ancombc2_dunn.tsv"), index_col=(0, 1))
         exp.rename(columns={"Log2(FC)": "Log(FC)"}, inplace=True)
         pdt.assert_frame_equal(obs, exp.iloc[:, :-2], atol=1e-3)
 
         # trend test
         obs = res.trend_test(seed=123)
-        exp = pd.read_table(get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0)
+        exp = pd.read_table(get_data_path("atlas_ancombc2_trend.tsv"), index_col=0)
         pdt.assert_frame_equal(obs[["W", "Signif"]], exp[["W", "Signif"]], atol=1e-3)
         # NOTE: Trend test is highly stochastic, therefore we cannot directly compare
         # p- and q-values. See its documentation.
 
     def test_ancombc2_sensitivity(self):
         cats = ["lean", "overweight", "obese"]
-        table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
-        meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
+        table = pd.read_csv(get_data_path("atlas_feature_table.csv"), index_col=0)
+        meta = pd.read_csv(get_data_path("atlas_meta_data.csv"), index_col=0)
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
         fits = [
@@ -1845,7 +1849,7 @@ class Ancombc2Tests(TestCase):
         # Primary result
         obs = sensitivity([fit.result for fit in fits])
         exp = pd.read_table(
-            get_data_path("pseq_sub_ancombc2_main.tsv"), index_col=(0, 1)
+            get_data_path("atlas_ancombc2_main.tsv"), index_col=(0, 1)
         )
         pdt.assert_frame_equal(
             obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
@@ -1855,7 +1859,7 @@ class Ancombc2Tests(TestCase):
         global_results = [fit.global_test() for fit in fits]
         obs_global = sensitivity(global_results)
         exp = pd.read_table(
-            get_data_path("pseq_sub_ancombc2_global.tsv"), index_col=0
+            get_data_path("atlas_ancombc2_global.tsv"), index_col=0
         )
         pdt.assert_frame_equal(
             obs_global[["Pass", "Robust"]],
@@ -1866,7 +1870,7 @@ class Ancombc2Tests(TestCase):
         # Pairwise directional test
         obs = sensitivity([fit.pairwise_test() for fit in fits])
         exp = pd.read_table(
-            get_data_path("pseq_sub_ancombc2_pair.tsv"), index_col=(0, 1)
+            get_data_path("atlas_ancombc2_pair.tsv"), index_col=(0, 1)
         )
         pdt.assert_frame_equal(
             obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
@@ -1876,7 +1880,7 @@ class Ancombc2Tests(TestCase):
         # confounded with Monte Carlo variation.
         obs = sensitivity([fit.dunnett_test(seed=123) for fit in fits])
         exp = pd.read_table(
-            get_data_path("pseq_sub_ancombc2_dunn.tsv"), index_col=(0, 1)
+            get_data_path("atlas_ancombc2_dunn.tsv"), index_col=(0, 1)
         )
         pdt.assert_frame_equal(
             obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
@@ -1888,7 +1892,7 @@ class Ancombc2Tests(TestCase):
         obs["Pass"] = obs_global["Pass"]
         obs["Robust"] = obs["Signif"] & obs["Pass"]
         exp = pd.read_table(
-            get_data_path("pseq_sub_ancombc2_trend.tsv"), index_col=0
+            get_data_path("atlas_ancombc2_trend.tsv"), index_col=0
         )
         pdt.assert_frame_equal(
             obs[["Pass", "Robust"]], exp[["Pass", "Robust"]], check_dtype=False
@@ -2115,10 +2119,10 @@ class StrucZeroTests(TestCase):
             index=features, columns=["sick", "well"])  # sorted alphabetically
         pdt.assert_frame_equal(obs, exp)
 
-    def test_struc_zero_pseq_sub(self):
+    def test_struc_zero_atlas(self):
         """Test on the HITChip Atlas dataset."""
-        table = pd.read_csv(get_data_path("pseq_sub_feature_table.csv"), index_col=0)
-        meta = pd.read_csv(get_data_path("pseq_sub_meta_data.csv"), index_col=0)
+        table = pd.read_csv(get_data_path("atlas_feature_table.csv"), index_col=0)
+        meta = pd.read_csv(get_data_path("atlas_meta_data.csv"), index_col=0)
         cats = ["lean", "overweight", "obese"]
         meta["bmi"] = pd.Categorical(meta["bmi"], categories=cats)
 
