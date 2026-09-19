@@ -94,13 +94,24 @@ Control
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import re
 from copy import deepcopy
 from collections import defaultdict
 from numbers import Integral
 
 import numpy as np
-from natsort import realsorted
 from scipy.stats import f_oneway
+
+
+_NUMBER_PATTERN = re.compile(
+    r"([-+]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][-+]?[0-9]+)?)"
+)
+
+
+def _natural_sort_key(value):
+    """Split text into alternating text and signed real-number components."""
+    parts = _NUMBER_PATTERN.split(str(value))
+    return tuple(float(part) if i % 2 else part for i, part in enumerate(parts))
 
 
 def _weight_by_vector(trajectories, w_vector):
@@ -567,7 +578,9 @@ class GradientANOVA:
             # Group samples by category
             gb = self._metadata_map.groupby(cat)
             for g, df in gb:
-                self._groups[cat][g] = realsorted(df.index, key=sort_val)
+                self._groups[cat][g] = sorted(
+                    df.index, key=lambda sid: _natural_sort_key(sort_val(sid))
+                )
 
     def _get_group_trajectories(self, group_name, sids):
         r"""Compute trajectory results for `group_name` containing the samples `sids`.
