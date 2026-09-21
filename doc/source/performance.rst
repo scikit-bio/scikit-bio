@@ -10,11 +10,11 @@ reliable analyses on available resources, whether a laptop or a supercomputer cl
 Most analyses can start with the default settings, which execute efficient, CPU-based
 numerical computing using the vectorized array operations of `NumPy
 <https://numpy.org/>`_ and, if necessary, `Cython <https://cython.org/>`_ for
-loop-intensive calculations. For more demanding work, scikit-bio offers alternative implementations
-of selected analyses, involving parallelization, `Numba <https://numba.pydata.org/>`_
-engines, support for GPU computation, and support for alternative array backends. This
-guide explains these options and how to choose among them. The benefits depend on the
-analysis, dataset size, and computing environment.
+loop-intensive calculations. For more demanding work, scikit-bio offers alternative
+implementations of selected analyses, involving parallelization, `Numba
+<https://numba.pydata.org/>`_ engines, support for GPU computation, and support for
+alternative array backends. This guide explains these options and how to choose among
+them.
 
 
 .. _array_backends:

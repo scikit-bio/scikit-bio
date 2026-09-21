@@ -359,10 +359,9 @@ def permdisp(
         .. versionadded:: 0.6.3
 
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for the permutation test.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Numba if installed, otherwise Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for the permutation test. If None (default), use the global
+        ``compute_engine`` setting. 'fast' selects Numba if installed, otherwise
+        Cython. See :ref:`compute_engines` for details.
 
         .. versionadded:: 0.7.4
 

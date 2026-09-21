@@ -211,16 +211,15 @@ def center_distance_matrix(distance_matrix, inplace=False, engine=None):
 
     Parameters
     ----------
-    distance_matrix : 2D array_like
+    distance_matrix : 2-D array_like
         Distance matrix.
     inplace : bool, optional
         Whether or not to center the given distance matrix in-place, which
         is more efficient in terms of memory and computation.
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for centering the distance matrix.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for centering the distance matrix. If None (default), use the
+        global ``compute_engine`` setting. 'fast' selects Cython. See
+        :ref:`compute_engines` for details.
 
     """
     engine = _resolve_engine(engine, ("cython", "numba"))

@@ -55,15 +55,13 @@ def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     distance_matrix : 2D array_like
         Distance matrix.
     inplace : bool, optional
-        Whether to center the given distance matrix in-place, which is more
-        efficient in terms of memory and computation. Ignored for JAX and
-        CuPy arrays (see Notes); the centered array is always returned.
+        Whether to center the given distance matrix in-place, which is more efficient
+        in terms of memory and computation. Ignored for JAX and CuPy arrays (see
+        Notes).
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for centering NumPy arrays; ignored for other
-        array backends.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for centering NumPy arrays. Ignored for other array backends.
+        If None (default), use the global ``compute_engine`` setting. 'fast' selects
+        Cython. See :ref:`compute_engines` for details.
 
         .. versionadded:: 0.7.4
 
@@ -75,9 +73,9 @@ def center_distance_matrix(distance_matrix, inplace=False, engine=None):
 
     Notes
     -----
-    For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
-    argument is accepted for API compatibility but ignored. The function
-    always returns a centered array.
+    For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace`` argument is
+    accepted for API compatibility but ignored. The function always returns a centered
+    array.
 
     """
     # For true NumPy arrays, use the Cython- or Numba-accelerated
@@ -174,11 +172,9 @@ def pcoa(
     output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for centering NumPy-backed distance matrices,
-        not for the eigendecomposition.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for centering NumPy-backed distance matrices. If None (default),
+        use the global ``compute_engine`` setting. 'fast' selects Cython. See
+        :ref:`compute_engines` for details.
 
         .. versionadded:: 0.7.4
 

@@ -505,39 +505,33 @@ def permanova(
     Parameters
     ----------
     distmat : DistanceMatrix
-        Distance matrix containing distances between objects (e.g., distances
-        between samples of microbial communities).
+        Distance matrix containing distances between samples.
     grouping : 1-D array_like or pandas.DataFrame
-        Vector indicating the assignment of objects to groups. For example,
-        these could be strings or integers denoting which group an object
-        belongs to. If `grouping` is 1-D ``array_like``, it must be the same
-        length and in the same order as the objects in `distmat`. If
-        `grouping` is a ``DataFrame``, the column specified by `column` will be
-        used as the grouping vector. The ``DataFrame`` must be indexed by the
-        IDs in `distmat` (i.e., the row labels must be distance matrix
-        IDs), but the order of IDs between `distmat` and the
-        ``DataFrame`` need not be the same. All IDs in the distance matrix must
-        be present in the ``DataFrame``. Extra IDs in the ``DataFrame`` are
-        allowed (they are ignored in the calculations).
+        Vector indicating the assignment of samples to groups. These could be strings
+        or integers denoting which group a sample belongs to. If 1-D array-like, it
+        must be the same length and in the same order as the samples in ``distmat``. If
+        a DataFrame, the column specified by ``column`` will be used as the grouping
+        vector. The DataFrame must be indexed by the IDs in ``distmat``, but the order
+        of IDs between ``distmat`` and the DataFrame need not be the same. All IDs in
+        the distance matrix must be present in the DataFrame. Extra IDs in the DataFrame
+        are allowed and ignored in the calculation.
     column : str, optional
-        Column name to use as the grouping vector if `grouping` is a
-        ``DataFrame``. Must be provided if `grouping` is a ``DataFrame``.
-        Cannot be provided if `grouping` is 1-D ``array_like``.
+        Column name to use as the grouping vector if ``grouping`` is a DataFrame. Must
+        be provided if ``grouping`` is a DataFrame. Cannot be provided if ``grouping``
+        is 1-D array-like.
     permutations : int, optional
-        Number of permutations to use when assessing statistical
-        significance. Must be greater than or equal to zero. If zero,
-        statistical significance calculations will be skipped and the `p`-value
-        will be ``np.nan``.
+        Number of permutations to use when assessing statistical significance. Must be
+        greater than or equal to zero. If zero, statistical significance calculations
+        will be skipped and the *p*-value will be NaN.
     seed : int, Generator or RandomState, optional
-        A user-provided random seed or random generator instance. See
-        :func:`details <skbio.util.get_rng>`.
+        A user-provided random seed or random generator instance. See :func:`details
+        <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for the PERMANOVA statistic and permutation test.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Numba if installed, otherwise Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for the PERMANOVA statistic and permutation test. If None
+        (default), use the global ``compute_engine`` setting. 'fast' selects Numba if
+        installed, otherwise Cython. See :ref:`compute_engines` for details.
 
         .. versionadded:: 0.7.4
 
@@ -555,30 +549,6 @@ def permanova(
 
     Notes
     -----
-    This function uses parallel computation for improved performance.
-    See the :ref:`parallelization guide <parallelization>` for information on
-    controlling the number of threads used.
-
-    Selecting ``engine='numba'`` bypasses scikit-bio-binaries.
-    Low-level acceleration is available for this function. See
-    :ref:`binary_acceleration` for more information.
-
-    On a GPU-resident distance matrix with ``engine='numba'``, a fused GPU kernel
-    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
-    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
-    ROCm PyTorch has been imported in the same process; those matrices fall back
-    to the array-API path, which runs on the device regardless. The result is
-    identical across all paths.
-
-    With ``engine='numba'``, GPU buffers must belong to the default device. On a
-    system with several devices, the default must be changed to match the buffer
-    ownership before this function is invoked, through
-    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
-    A mismatch is not reported when the kernel is launched, and on ROCm it has
-    been observed to leave the GPU context unusable for the rest of the process.
-    The array-API path, taken when ``engine='numba'`` is not requested, honors
-    whichever device the input is on.
-
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
     available in R's vegan package [2]_.
 
@@ -607,6 +577,29 @@ def permanova(
 
     where :math:`F` is the pseudo-`F` statistic, :math:`n` is the number of
     objects, and :math:`g` is the number of groups.
+
+    **Performance**
+
+    This function uses parallel computation for improved performance. See the
+    :ref:`parallelization guide <parallelization>` for information on controlling the
+    number of threads used. See also :ref:`binary_acceleration` for another option of
+    acceleration.
+
+    On a GPU-resident distance matrix with ``engine='numba'``, a fused GPU kernel
+    runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
+    is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
+    ROCm PyTorch has been imported in the same process; those matrices fall back
+    to the array-API path, which runs on the device regardless. The result is
+    identical across all paths.
+
+    With ``engine='numba'``, GPU buffers must belong to the default device. On a
+    system with several devices, the default must be changed to match the buffer
+    ownership before this function is invoked, through
+    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    A mismatch is not reported when the kernel is launched, and on ROCm it has
+    been observed to leave the GPU context unusable for the rest of the process.
+    The array-API path, taken when ``engine='numba'`` is not requested, honors
+    whichever device the input is on.
 
     References
     ----------

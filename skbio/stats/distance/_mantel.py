@@ -302,13 +302,13 @@ def mantel(
 
     Notes
     -----
-    This function uses parallel computation for improved performance.
-    See the :ref:`parallelization guide <parallelization>` for information on
-    controlling the number of threads used.
-
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
+
+    This function uses parallel computation for improved performance. See the
+    :ref:`parallelization guide <parallelization>` for information on controlling the
+    number of threads used.
 
     On GPU-resident distance matrices with ``engine='numba'``, a fused GPU kernel
     runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception

@@ -298,11 +298,10 @@ def beta_diversity(
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
     engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for 'unweighted_unifrac' and 'weighted_unifrac';
-        ignored for other metrics.
-        If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Numba if installed, otherwise Cython.
-        See :ref:`compute_engines` for details and requirements.
+        Compute engine for 'unweighted_unifrac' and 'weighted_unifrac'. Ignored for
+        other metrics. If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Numba if installed, otherwise Cython. See :ref:`compute_engines`
+        for details.
 
         .. versionadded:: 0.7.4
     kwargs : dict, optional
