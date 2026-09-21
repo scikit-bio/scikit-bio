@@ -144,8 +144,8 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 93]', str(cm.exception))
 
-        obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
-                               [42, 94, 33], variant='sanger')
+        with self.assertWarns(UserWarning):
+            obs = _encode_phred_to_qual([42, 94, 33], variant='sanger')
         self.assertEqual(obs, 'K~B')
 
     def test_illumina13_variant(self):
@@ -160,8 +160,8 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 62]', str(cm.exception))
 
-        obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
-                               [42, 63, 33], variant='illumina1.3')
+        with self.assertWarns(UserWarning):
+            obs = _encode_phred_to_qual([42, 63, 33], variant='illumina1.3')
         self.assertEqual(obs, 'j~a')
 
     def test_illumina18_variant(self):
@@ -176,8 +176,8 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 62]', str(cm.exception))
 
-        obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
-                               [42, 63, 33], variant='illumina1.8')
+        with self.assertWarns(UserWarning):
+            obs = _encode_phred_to_qual([42, 63, 33], variant='illumina1.8')
         self.assertEqual(obs, 'K_B')
 
     def test_custom_phred_offset(self):
@@ -190,8 +190,8 @@ class PhredEncoderTests(unittest.TestCase):
         self.assertIn('-1', str(cm.exception))
         self.assertIn('[0, 84]', str(cm.exception))
 
-        obs = npt.assert_warns(UserWarning, _encode_phred_to_qual,
-                               [42, 255, 33], phred_offset=42)
+        with self.assertWarns(UserWarning):
+            obs = _encode_phred_to_qual([42, 255, 33], phred_offset=42)
         self.assertEqual(obs, 'T~K')
 
 

@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import unittest
+import warnings
 
 import numpy as np
 import numpy.testing as npt
@@ -19,6 +20,8 @@ from skbio.alignment._utils import (
     prep_gapcost,
     prep_identity_matrix,
     _check_seqtype,
+    _get_seqids,
+    _prep_atol,
 )
 
 
@@ -403,6 +406,100 @@ class UtilsTests(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _ = _check_seqtype(TabularMSA([]))
         self.assertEqual(str(cm.exception), msg)
+
+    def test_get_seqids(self):
+        # normal case
+        seqs = [DNA("ACGTC", metadata={"id": "a"}),
+                DNA("TTAGC", metadata={"id": "b"}),
+                DNA("GCTAT", metadata={"id": "c"})]
+        obs = _get_seqids(seqs)
+        exp = list("abc")
+        self.assertListEqual(obs, exp)
+
+        # no "id" in metadata
+        for seq in seqs:
+            seq._metadata = {"description": "whatever"}
+        obs = _get_seqids(seqs)
+        exp = list("012")
+        self.assertListEqual(obs, exp)
+
+        # no metadata
+        for seq in seqs:
+            seq._metadata = None
+        obs = _get_seqids(seqs)
+        self.assertListEqual(obs, exp)
+
+        # not Sequence instances
+        seqs = [str(seq) for seq in seqs]
+        obs = _get_seqids(seqs)
+        self.assertListEqual(obs, exp)
+
+        msg = "Metadata 'id' must be present in every sequence or none."
+        seqs = [DNA("ACGTC", metadata={"id": "a"}),
+                DNA("TTAGC", metadata={"name": "foo"}),
+                DNA("GCTAT")]
+        with self.assertRaises(ValueError) as cm:
+            _get_seqids(seqs)
+        self.assertEqual(str(cm.exception), msg)
+
+        # IDs supplied (override metadata IDs)
+        ids = list("xyz")
+        obs = _get_seqids(seqs, ids=ids)
+        self.assertListEqual(obs, ids)
+
+        for id_, seq in zip("ijk", seqs):
+            seq.metadata["id"] = id_
+        obs = _get_seqids(seqs, ids=ids)
+        self.assertListEqual(obs, ids)
+
+        for id_, seq in zip("ijk", seqs):
+            seq._metadata = None
+        obs = _get_seqids(seqs, ids=ids)
+        self.assertListEqual(obs, ids)
+
+        msg = "`ids` must match the number of sequences."
+        seqs = ["ACCA", "TGTC"]
+        with self.assertRaises(ValueError) as cm:
+            obs = _get_seqids(seqs, ids=list("xyz"))
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence IDs must be strings."
+        with self.assertRaises(ValueError) as cm:
+            obs = _get_seqids(seqs, ids=["a", None])
+        self.assertEqual(str(cm.exception), msg)
+
+        msg = "Sequence IDs must be unique."
+        ids = ["a", "a"]
+        with self.assertRaises(ValueError) as cm:
+            obs = _get_seqids(seqs, ids=ids)
+        self.assertEqual(str(cm.exception), msg)
+
+        # Duplicate is okay
+        obs = _get_seqids(seqs, ids=ids, unique=False)
+        self.assertListEqual(obs, ids)
+
+    def test_prep_atol(self):
+        self.assertEqual(_prep_atol(1e-5), 1e-5)
+        self.assertEqual(_prep_atol(0.01), 0.01)
+        self.assertEqual(_prep_atol(0), 0.0)
+        self.assertEqual(_prep_atol(None), 0.0)
+        for dtype in (np.float64, np.float32, np.float16):
+            obs = _prep_atol(1e-3, dtype)
+            self.assertEqual(obs, 1e-3)
+            self.assertEqual(obs.dtype, dtype)
+
+        msg = "`atol` must be finite and non-negative."
+        for atol in (-1.5, np.inf, -np.inf, np.nan):
+            with self.assertRaises(ValueError) as cm:
+                _prep_atol(atol)
+            self.assertEqual(str(cm.exception), msg)
+
+        # overflow after downcasting
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            with self.assertRaises(ValueError) as cm:
+                _prep_atol(100000, np.float16)
+            self.assertEqual(str(cm.exception), msg)
 
 
 if __name__ == "__main__":

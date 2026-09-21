@@ -278,8 +278,7 @@ def block_beta_diversity(
         The beta diversity metric to apply to the samples. See
         :func:`~skbio.diversity.beta_diversity` for details.
     counts : table_like of shape (n_samples, n_taxa)
-        Matrix containing count/abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        Matrix containing count/abundance data of the samples.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``.
     validate : bool, optional

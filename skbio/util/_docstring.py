@@ -129,6 +129,7 @@ _BACKEND_DISPLAY = {
     "dask": "Dask",
 }
 
+
 def _array_api_compat_section(backends, devices=None):
     """Generate an RST compatibility table for the Array API notes section.
 
@@ -200,14 +201,17 @@ def _array_api_compat_section(backends, devices=None):
         " Compatible array backends:"
     )
 
+    note_body_lines = [intro_text, ""] + lines
+
     # Build a self-contained ``.. note::`` admonition. Every body line (the
     # intro sentence and all table rows) is indented three spaces relative to
     # the directive; blank lines are left empty.
-    note_body_lines = [intro_text, ""] + lines
-    indented_body = "\n".join(
-        "   " + ln if ln.strip() else ln for ln in note_body_lines
-    )
-    return ".. note::\n\n" + indented_body + "\n"
+    # indented_body = "\n".join(
+    #     "   " + ln if ln.strip() else ln for ln in note_body_lines
+    # )
+    # return ".. note::\n\n" + indented_body + "\n"
+
+    return "\n".join(note_body_lines) + "\n"
 
 
 def _insert_into_notes_section(note, doc):
@@ -264,6 +268,7 @@ def _insert_into_notes_section(note, doc):
         f"\n\n{indent}Notes\n{indent}-----\n\n" + indented_note.rstrip() + "\n"
     )
     return doc_stripped + notes_section
+
 
 def _deprecation_note(ver=None, msg=None):
     """Create a note indicating deprecation."""

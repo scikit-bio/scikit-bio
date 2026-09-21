@@ -98,12 +98,14 @@ class FilePathSource(IOSource):
 class HTTPSource(IOSource):
     def can_read(self):
         import requests  # type: ignore[import-untyped]
+
         return isinstance(self.file, str) and requests.compat.urlparse(
             self.file
         ).scheme in {"http", "https"}
 
     def get_reader(self):
         import requests  # type: ignore[import-untyped]
+
         req = requests.get(self.file)
         req.raise_for_status()
         return io.BufferedReader(io.BytesIO(req.content))
@@ -215,7 +217,7 @@ class GzipCompressor(Compressor):
         return self.file.peek(2)[:2] == b"\x1f\x8b"
 
     def get_reader(self):
-        return gzip.GzipFile(fileobj=self.file)
+        return gzip.GzipFile(fileobj=self.file, mode="rb")
 
     def get_writer(self):
         return gzip.GzipFile(

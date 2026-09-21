@@ -1,0 +1,22 @@
+FeatureID	W	pvalue	qvalue	Signif	Pass	Robust
+Actinobacteria	0.1192333	0.2247125	1	False	True	False
+Bacteroidetes	1.13527	0.6454891	1	False	True	False
+Cyanobacteria	65.69037	1.057305e-09	2.22034e-08	True	False	False
+Bacilli	0.9373913	0.785639	1	False	True	False
+Clostridium cluster I	0.7825474	0.916386	1	False	True	False
+Clostridium cluster III	3.688061	0.05237867	0.8380588	False	True	False
+Clostridium cluster IV	1.351764	0.5207848	1	False	True	False
+Clostridium cluster IX	1.81477	0.3294027	1	False	True	False
+Clostridium cluster XI	1.470548	0.4629808	1	False	True	False
+Clostridium cluster XIII	0.01676525	0.03324911	0.598484	False	True	False
+Clostridium cluster XIVa	0.1141033	0.2155893	1	False	True	False
+Clostridium cluster XV	0.3603553	0.6045258	1	False	True	False
+Clostridium cluster XVI	0.02069209	0.04095609	0.6962536	False	True	False
+Clostridium cluster XVII	6.757796	0.002958822	0.05621762	False	False	False
+Clostridium cluster XVIII	0.4445359	0.7168931	1	False	True	False
+Uncultured Clostridiales	8.607298	0.0004662511	0.009325023	True	True	True
+Uncultured Mollicutes	1.319557	0.5376739	1	False	True	False
+Fusobacteria	0.3098824	0.5324534	1	False	True	False
+Proteobacteria	2.195717	0.226213	1	False	True	False
+Spirochaetes	2.862456	0.1383804	1	False	True	False
+Verrucomicrobia	2.411029	0.1830023	1	False	True	False

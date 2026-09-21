@@ -88,17 +88,13 @@ def mmvec(
     ----------
     X : table_like of shape (n_samples, n_features_x)
         Abundance counts for the first modality (e.g., microbes). This modality is
-        treated as the "conditioning" variable. See
-        :ref:`supported formats <table_like>`.
-
+        treated as the "conditioning" variable.
     Y : table_like of shape (n_samples, n_features_y)
         Abundance counts for the second modality (e.g., metabolites). This modality is
-        treated as the "conditioned" variable. See above. Must have the same samples as
-        ``X``.
+        treated as the "conditioned" variable. Must have the same samples as ``X``.
 
     dimensions : int, optional
         Number of latent dimensions for embeddings. Default is 3.
-
     optimizer : {'lbfgs', 'adam'}, optional
         Optimization algorithm to use. Default is 'lbfgs'.
 
@@ -119,7 +115,6 @@ def mmvec(
     y_prior_scale : float, optional
         Scale (std) of Gaussian prior on second modality embeddings. Default is 1.0.
         Smaller values increase regularization.
-
     learning_rate : float, optional
         Adam learning rate. Ignored for 'lbfgs'. Default is 1e-3.
     batch_size : int, optional
@@ -138,7 +133,6 @@ def mmvec(
 
         - 'unbiased' (default): Uses norm = sum(n_features_x) / batch_size.
         - 'legacy': Uses norm = n_samples / batch_size.
-
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.

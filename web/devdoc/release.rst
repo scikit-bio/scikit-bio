@@ -7,7 +7,7 @@ Introduction
 
 This guide explains how to release a new version of scikit-bio. To illustrate examples of commands you might run, let's assume that the current version is **x.y.z-dev** and we want to release version **x.y.z**.
 
-.. note:: The following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted. They also assume that you have [Conda](https://conda.io) installed.
+.. note:: The following commands assume you are in the top-level directory of the scikit-bio repository unless otherwise noted. They also assume that you have `Conda <https://conda.io>`_ installed.
 
 Large portions of the workflow are now automated through GitHub workflows. In order to check that things will work correctly before running the release workflow in ``release.yml``, please follow these steps.
 
@@ -33,9 +33,9 @@ The purpose of these steps is to update the version within the package. At this 
 
     grep -r 'x\.y\.y-dev' .
 
-3. Also make sure to update the current version displayed on website. This can be done by searching for the current version number in the code base. Affected files are typically `versions.json`, `index.rst`, and `README.rst`.
+3. Also make sure to update the current version displayed on website. This can be done by searching for the current version number in the code base. Affected files are typically ``versions.json``, ``index.rst``, and ``README.rst``.
 
-4. Remove any deprecated functionality that was scheduled for removal on or before this release. To find all deprecated functionality, search for `@deprecated` decorators:
+4. Remove any deprecated functionality that was scheduled for removal on or before this release. To find all deprecated functionality, search for ``@deprecated`` decorators:
 
     grep -r '@deprecated' .
 
@@ -69,12 +69,12 @@ This process typically takes some time, but it is well worth the time to ensure 
 Manually check that the correct wheels are built by downloading the artifacts from the workflow run or visually checking the output from ``cibuildwheel`` on the GitHub Actions workflow page.
 If downloading, inspect the zip file containing the wheels provided by workflow for each platform. The zip file should contain all the wheels you are trying to build.
 
-If you find that the desired wheels are not present in the zip files, or you are coming accross unexpected errors in the wheel building process, there are a few places to check:
+If you find that the desired wheels are not present in the zip files, or you are coming across unexpected errors in the wheel building process, there are a few places to check:
 
 1. Check that you have updated the ``cibuildwheel`` portion of the ``pyproject.toml`` configuration file to include all supported Python versions and any other information you want.
 
 2. Ensure that the version of ``cibuildwheel`` used in ``wheels.yml`` is up to date. It may be the case that the latest version of Python is not supported by whichever version is currently in use in ``wheels.yml``.
-In this case, ``cibuildwheel`` will not throw an error or warning, it just won't build wheels for that version of Python.
+   In this case, ``cibuildwheel`` will not throw an error or warning, it just won't build wheels for that version of Python.
 
 3. Check that the version of ``manylinux`` in the ``cibuildwheel`` section of ``pyproject.toml`` is up to date. This is particularly relevant if any of the errors you encounter are related to specific versions of ``glibc``.
 

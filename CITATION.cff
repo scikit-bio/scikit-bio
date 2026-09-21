@@ -1,0 +1,97 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: scikit-bio
+authors:
+- name: scikit-bio development team
+repository-code: https://github.com/scikit-bio/scikit-bio
+url: https://scikit.bio
+preferred-citation:
+  type: article
+  authors:
+  - family-names: Aton
+    given-names: Matthew
+  - family-names: McDonald
+    given-names: Daniel
+  - family-names: Cañardo Alastuey
+    given-names: Jorge
+    orcid: https://orcid.org/0009-0005-6608-2859
+  - family-names: Azom
+    given-names: Raeed
+  - family-names: Batra
+    given-names: Paarth
+  - family-names: Bezshapkin
+    given-names: Valentyn
+  - family-names: Bolyen
+    given-names: Evan
+    orcid: https://orcid.org/0000-0002-5362-6782
+  - family-names: Cagle
+    given-names: Alexander
+    orcid: https://orcid.org/0009-0009-8515-4335
+  - family-names: Caporaso
+    given-names: J. Gregory
+    orcid: https://orcid.org/0000-0002-8865-1670
+  - family-names: Debelius
+    given-names: Justine W.
+  - family-names: Gorlick
+    given-names: Kestrel
+  - family-names: Hamsanipally
+    given-names: Nirmitha
+  - family-names: Hunger
+    given-names: Lars
+  - family-names: Keluskar
+    given-names: Aryan
+    orcid: https://orcid.org/0009-0000-4587-7955
+  - family-names: Liao
+    given-names: Disen
+  - family-names: Lu
+    given-names: Yang Young
+    orcid: https://orcid.org/0000-0003-1686-5917
+  - family-names: Navas-Molina
+    given-names: Jose A.
+    orcid: https://orcid.org/0000-0003-4595-920X
+  - family-names: Pitman
+    given-names: Anders
+    orcid: https://orcid.org/0009-0000-0925-5753
+  - family-names: Rideout
+    given-names: Jai Ram
+    orcid: https://orcid.org/0000-0003-2587-1454
+  - family-names: Sazonov
+    given-names: Anton
+  - family-names: Sathappan
+    given-names: Bharath
+  - family-names: Schwarzberg Lipson
+    given-names: Karen
+  - family-names: Sfiligoi
+    given-names: Igor
+    orcid: https://orcid.org/0000-0002-9308-5327
+  - family-names: Tapo
+    given-names: Chris
+  - family-names: Vázquez-Baeza
+    given-names: Yoshiki
+    orcid: https://orcid.org/0000-0001-6014-2009
+  - family-names: Wu
+    given-names: Zijun
+  - family-names: Xu
+    given-names: Zhenjiang Zech
+    orcid: https://orcid.org/0000-0003-1080-024X
+  - family-names: Ye
+    given-names: Mingsong Sam
+  - family-names: Zhao
+    given-names: Jianshu
+  - family-names: Knight
+    given-names: Rob
+    orcid: https://orcid.org/0000-0002-0975-9019
+  - family-names: Morton
+    given-names: James T.
+  - family-names: Zhu
+    given-names: Qiyun
+    orcid: https://orcid.org/0000-0002-3568-6271
+  title: "Scikit-bio: a fundamental Python library for biological omic data analysis"
+  journal: Nature Methods
+  year: 2026
+  volume: 23
+  issue: 2
+  start: 274
+  end: 276
+  doi: 10.1038/s41592-025-02981-z

@@ -17,9 +17,10 @@ from skbio.stats.composition._utils import (
     _check_grouping,
     _check_trt_ref_groups,
     _check_metadata,
-    _type_cast_to_float,
+    _build_dmatrix,
     _check_sig_test,
-    _check_p_adjust,
+    _adjust_pvalues,
+    _sm_p_adjust,
 )
 
 
@@ -252,17 +253,36 @@ class UtilsTests(TestCase):
             _check_metadata(df, mat)
         self.assertEqual(str(cm.exception), msg)
 
-    def test_type_cast_to_float(self):
-        df = pd.DataFrame([("Alice", 20, 28.0),
-                           ("Bob",   32, 33.0),
-                           ("Carol", 25, 26.5)],
-                          columns=["name", "age", "bmi"])
-        obs = _type_cast_to_float(df)
-        self.assertIsInstance(obs, pd.DataFrame)
-        self.assertIsNot(obs, df)
-        self.assertTrue(pd.api.types.is_string_dtype(obs["name"]))
-        self.assertEqual(obs["age"].dtype, np.float64)
-        self.assertEqual(obs["bmi"].dtype, np.float64)
+    def test_build_dmatrix(self):
+        meta = pd.DataFrame({
+            "num": [1, 2, 3],  # as continuous
+            "str": ["orange", "apple", "pear"],  # sorted alphabetically
+            "num_str": ["1", "2", "3"],  # categorical
+            "bool": [True, False, True],  # categorical
+            "cat": pd.Categorical(["red", "blue", "blue"], categories=[
+                "red", "blue"], ordered=True)})  # no sorting
+        obs = _build_dmatrix(
+            "num + str + num_str + bool + cat", meta)
+        exp_covars = [
+            "Intercept",
+            "str[T.orange]",
+            "str[T.pear]",
+            "num_str[T.2]",
+            "num_str[T.3]",
+            "bool[T.True]",
+            "cat[T.blue]",
+            "num"]  # continuous variable moves after categorical
+        exp_mat = np.array([
+            [1, 1, 0, 0, 0, 1, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 2],
+            [1, 0, 1, 0, 1, 1, 1, 3]], dtype=float)
+        self.assertListEqual(obs.design_info.column_names, exp_covars)
+        npt.assert_array_equal(obs, exp_mat)
+
+        # specify data type
+        obs = _build_dmatrix("num", meta, dtype=np.float32)
+        self.assertEqual(obs.dtype, np.float32)
+        npt.assert_array_equal(obs, [[1, 1], [1, 2], [1, 3]])
 
     def test_check_sig_test(self):
         from scipy.stats import ttest_ind, mannwhitneyu, f_oneway, kruskal
@@ -298,25 +318,335 @@ class UtilsTests(TestCase):
         obs = _check_sig_test(mannwhitneyu, n_groups=2)
         obs = _check_sig_test(kruskal, n_groups=5)
 
-    def test_check_p_adjust(self):
-        self.assertIsNone(_check_p_adjust(None))
 
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("holm-bonferroni")(p)
-        exp = p * np.arange(1, 6)[::-1]
+class AdjustPvaluesTests(TestCase):
+
+    def test_methods(self):
+        pval = np.array([0.04, 0.01, 0.03, 0.2])
+        original = pval.copy()
+        for method in ("holm", "holm-bonferroni", "HOLM"):
+            obs = _adjust_pvalues(pval, method)
+            npt.assert_allclose(obs, [0.09, 0.04, 0.09, 0.2])
+        for method in ("bh", "benjamini-hochberg", "BH"):
+            obs = _adjust_pvalues(pval, method)
+            npt.assert_allclose(obs, [0.16 / 3, 0.04, 0.16 / 3, 0.2])
+        npt.assert_array_equal(_adjust_pvalues(pval), obs)
+        npt.assert_array_equal(pval, original)
+        self.assertFalse(np.shares_memory(obs, pval))
+
+    def test_bonferroni_and_by(self):
+        pval = np.array([0.04, 0.01, 0.03, 0.2])
+        for method in ("bonferroni", "bonf", "BONFERRONI"):
+            npt.assert_allclose(_adjust_pvalues(pval, method),
+                                [0.16, 0.04, 0.12, 0.8])
+        # H_4 = 25/12; scale the BH values by this factor.
+        for method in ("by", "benjamini-yekutieli", "BY"):
+            npt.assert_allclose(_adjust_pvalues(pval, method),
+                                [1 / 9, 1 / 12, 1 / 9, 5 / 12])
+
+    def test_ties_and_bounds(self):
+        for method in ("holm", "bh", "bonf", "by"):
+            obs = _adjust_pvalues([1, 0.5, 0, 0.5], method)
+            exp = ([1, 2 / 3, 0, 2 / 3] if method == "bh" else [1, 1, 0, 1])
+            npt.assert_allclose(obs, exp)
+            npt.assert_array_equal(_adjust_pvalues(np.zeros(5), method), 0)
+            npt.assert_array_equal(_adjust_pvalues(np.ones(5), method), 1)
+
+    def test_nan(self):
+        # Expected results match R p.adjust with its default comparison count.
+        pval = np.array([[0.01, np.nan, 0.4],
+                         [np.nan, np.nan, 0.2],
+                         [0.04, np.nan, np.nan],
+                         [np.nan, np.nan, 0.1]])
+        original = pval.copy()
+        for method in ("holm", "bh"):
+            exp = np.array([[0.02, np.nan, 0.4],
+                            [np.nan, np.nan, 0.4],
+                            [0.04, np.nan, np.nan],
+                            [np.nan, np.nan, 0.3]])
+            if method == "bh":
+                exp[1, 2] = 0.3
+            npt.assert_allclose(_adjust_pvalues(pval, method), exp)
+            npt.assert_array_equal(pval, original)
+            obs = _adjust_pvalues([np.nan, 0.04, np.nan], method)
+            npt.assert_array_equal(obs, [np.nan, 0.04, np.nan])
+
+    def test_axes(self):
+        from statsmodels.stats.multitest import multipletests
+
+        rng = np.random.default_rng(42)
+        pval = rng.random((3, 4, 5)) ** 4
+        pval[0, 1, 2] = np.nan
+        original = pval.copy()
+        for method, sm_method in (("holm", "holm"), ("bh", "fdr_bh"),
+                                  ("bonferroni", "bonferroni"), ("by", "fdr_by")):
+            for axis in range(3):
+                exp = np.empty_like(pval)
+                data = np.moveaxis(pval, axis, -1)
+                result = np.moveaxis(exp, axis, -1)
+                for idx in np.ndindex(data.shape[:-1]):
+                    col = data[idx]
+                    valid = ~np.isnan(col)
+                    result[idx] = np.nan
+                    result[idx][valid] = multipletests(
+                        col[valid], method=sm_method)[1]
+                for ax in (axis, axis - 3, np.int64(axis)):
+                    obs = _adjust_pvalues(pval, method, axis=ax)
+                    npt.assert_allclose(obs, exp, rtol=1e-14, atol=0)
+                view = pval.transpose(2, 1, 0)[::-1]
+                out = np.empty_like(pval).transpose(2, 1, 0)[::-1]
+                obs = _adjust_pvalues(view, method, axis=2 - axis, out=out)
+                self.assertIs(obs, out)
+                npt.assert_allclose(obs, exp.transpose(2, 1, 0)[::-1],
+                                    rtol=1e-14, atol=0)
+        npt.assert_array_equal(pval, original)
+
+    def test_axis_none(self):
+        pval = np.array([[0.04, 0.01], [0.03, 0.2]])
+        exp = [[0.09, 0.04], [0.09, 0.2]]
+        npt.assert_allclose(_adjust_pvalues(pval, "holm", axis=None), exp)
+        for value in (0.04, np.nan):
+            obs = _adjust_pvalues(value, axis=None)
+            self.assertEqual(obs.shape, ())
+            npt.assert_array_equal(obs, value)
+        out = np.array(0.04)
+        self.assertIs(_adjust_pvalues(out, axis=None, out=out), out)
+        npt.assert_array_equal(out, 0.04)
+        pval[0, 0] = np.nan
+        exp = [[np.nan, 0.03], [0.06, 0.2]]
+        npt.assert_allclose(_adjust_pvalues(pval, "holm", axis=None), exp)
+
+    def test_empty_and_singleton(self):
+        for method in ("holm", "bh", "bonferroni", "by"):
+            for shape in ((0,), (0, 3), (3, 0), (2, 0, 4)):
+                pval = np.empty(shape)
+                for axis in (*range(len(shape)), None):
+                    obs = _adjust_pvalues(pval, method, axis=axis)
+                    npt.assert_array_equal(obs, pval)
+            pval = np.array([[0.01, np.nan, 0.8]])
+            npt.assert_array_equal(_adjust_pvalues(pval, method), pval)
+            out = np.empty_like(pval)
+            self.assertIs(_adjust_pvalues(pval, method, out=out), out)
+            npt.assert_array_equal(out, pval)
+
+    def test_dtypes(self):
+        for dtype in (np.float16, np.float32, np.float64, np.longdouble):
+            pval = np.array([0.04, 0.01, 0.03, 0.2], dtype=dtype)
+            for method in ("holm", "bh", "bonferroni", "by"):
+                obs = _adjust_pvalues(pval, method)
+                self.assertEqual(obs.dtype, dtype)
+                exp = _adjust_pvalues(pval.astype(np.float64), method)
+                # The reference is limited to float64 even for longdouble.
+                tol = 2 * max(np.finfo(dtype).eps, np.finfo(np.float64).eps)
+                npt.assert_allclose(obs, exp, rtol=tol)
+
+        # Non-floating point data types are prohibited.
+        msg = "`pval` must have a floating-point data type."
+        for dtype in (np.int8, np.uint64):
+            with self.assertRaises(TypeError) as cm:
+                _adjust_pvalues(np.array([0, 1, 1], dtype=dtype))
+            self.assertEqual(str(cm.exception), msg)
+
+        # Low-precision output must not overflow during intermediate scaling.
+        for method in ("holm", "bh", "bonferroni", "by"):
+            with np.errstate(over="raise", invalid="raise"):
+                obs = _adjust_pvalues(np.ones(70000, dtype=np.float16), method)
+            npt.assert_array_equal(obs, 1)
+
+    def test_layouts_and_out(self):
+        pval = np.array([[0.04, np.nan, 0.1],
+                         [0.01, 0.04, 0.4],
+                         [0.03, 0.01, 0.2],
+                         [0.2, 0.2, np.nan]])
+        for method in ("holm", "bh", "bonferroni", "by"):
+            for p in (pval.copy(), np.asfortranarray(pval), pval.T,
+                      pval[::-1, ::-1], pval[::2, ::2]):
+                original = p.copy()
+                for axis in (0, 1, None):
+                    exp = _adjust_pvalues(p.copy(), method, axis=axis)
+                    npt.assert_allclose(_adjust_pvalues(p, method, axis=axis), exp)
+                    # Use a strided buffer so reshaping it would silently copy.
+                    backing = np.full((p.shape[0] * 2, p.shape[1] * 2), -1.)
+                    out = backing[::2, ::-2]
+                    obs = _adjust_pvalues(p, method, axis=axis, out=out)
+                    self.assertIs(obs, out)
+                    npt.assert_allclose(out, exp)
+                    npt.assert_array_equal(backing[1::2], -1)
+                    npt.assert_array_equal(p, original)
+                    work = p.copy(order="K")
+                    self.assertIs(_adjust_pvalues(
+                        work, method, axis=axis, out=work), work)
+                    npt.assert_allclose(work, exp)
+        # Exact aliasing also works on a reversed, noncontiguous input.
+        work = pval.copy()[::-1, ::-1]
+        exp = _adjust_pvalues(work)
+        _adjust_pvalues(work, out=work)
+        npt.assert_allclose(work, exp)
+        pval.flags.writeable = False
+        npt.assert_allclose(_adjust_pvalues(pval), _adjust_pvalues(pval.copy()))
+        pval = np.array([0.01, 0.04], dtype=np.float32)
+        out = np.empty_like(pval)
+        self.assertIs(_adjust_pvalues(pval, out=out), out)
+        npt.assert_allclose(out, [0.02, 0.04])
+
+    def test_varying_family_sizes(self):
+        from statsmodels.stats.multitest import multipletests
+
+        pval = np.tile([0.04, 0.01, 0.03, 0.2, 0.6], (6, 1)).T
+        pval[:2, 1] = np.nan
+        pval[:4, 2] = np.nan
+        pval[:, 3] = np.nan
+        pval[::2, 4] = np.nan
+        for method, sm_method in (("holm", "holm"), ("bh", "fdr_bh"),
+                                  ("bonferroni", "bonferroni"), ("by", "fdr_by")):
+            exp = np.full_like(pval, np.nan)
+            for col in range(pval.shape[1]):
+                valid = ~np.isnan(pval[:, col])
+                if valid.any():
+                    values = pval[valid, col]
+                    exp[valid, col] = multipletests(
+                        values, method=sm_method)[1]
+            npt.assert_allclose(_adjust_pvalues(pval, method), exp)
+            work = pval.copy()
+            _adjust_pvalues(work, method, out=work)
+            npt.assert_allclose(work, exp)
+
+    def test_n_tests(self):
+        from statsmodels.stats.multitest import multipletests
+
+        pval = np.array([[0.01, 0.4, np.nan], [0.04, np.nan, np.nan],
+                         [0.2, 0.01, np.nan]])
+        original = pval.copy()
+        for method, sm_method in (("bonf", "bonferroni"), ("holm", "holm"),
+                                  ("bh", "fdr_bh"), ("by", "fdr_by"),
+                                  ("sidak", "sidak"), ("hommel", "hommel")):
+            for axis in (0, 1, None):
+                for n_tests in (5, 10, 10.0):
+                    exp = np.full_like(pval, np.nan)
+                    if axis is None:
+                        families = [(pval.ravel(), exp.reshape(-1))]
+                    else:
+                        families = zip(np.moveaxis(pval, axis, -1),
+                                       np.moveaxis(exp, axis, -1))
+                    for col, dest in families:
+                        valid = ~np.isnan(col)
+                        n = valid.sum()
+                        if n:
+                            padded = np.pad(col[valid], (0, int(n_tests) - n),
+                                            constant_values=1.)
+                            dest[valid] = multipletests(padded, method=sm_method)[1][:n]
+                    obs = _adjust_pvalues(pval, method, axis=axis, n_tests=n_tests)
+                    npt.assert_allclose(obs, exp, rtol=1e-14, atol=0)
+                    work = pval.copy()
+                    self.assertIs(_adjust_pvalues(
+                        work, method, axis=axis, n_tests=n_tests, out=work), work)
+                    npt.assert_allclose(work, exp, rtol=1e-14, atol=0)
+        npt.assert_array_equal(pval, original)
+
+    def test_n_tests_fractional(self):
+        # R: p.adjust(c(.01, .02, .03), method, n = 7.5).
+        # BY uses sum(1 / (1:7.5)) = H_7, not a continuous harmonic number.
+        expected = {
+            "bonf": [0.075, 0.15, 0.225],
+            "holm": [0.075, 0.13, 0.165],
+            "bh": [0.075] * 3,
+            "by": [0.1944642857142857] * 3,
+        }
+        aliases = {"bonf": "bonferroni", "holm": "holm-bonferroni",
+                   "bh": "benjamini-hochberg", "by": "benjamini-yekutieli"}
+        for method, exp in expected.items():
+            for name in (method, aliases[method]):
+                pval = np.array([[0.03, np.nan, 0.01, 0.02]])
+                target = np.array([[exp[2], np.nan, exp[0], exp[1]]])
+                for axis in (1, None):
+                    work = pval.copy()
+                    obs = _adjust_pvalues(work, name, axis=axis, n_tests=7.5,
+                                         out=work)
+                    self.assertIs(obs, work)
+                    npt.assert_allclose(obs, target, rtol=1e-14)
+        for method in ("sidak", "hommel", "b", "h", "fdr_bh", "fdr_by"):
+            with self.assertRaisesRegex(ValueError, "Fractional `n_tests`"):
+                _adjust_pvalues(np.array([0.01]), method, n_tests=7.5)
+
+    def test_n_tests_counts_and_clipping(self):
+        pval = np.array([np.nan, 0.01, np.nan, 0.04, np.nan])
+        for method in ("bonf", "holm", "bh", "by", "sidak"):
+            # The specified count need only cover nonmissing entries.
+            obs = _adjust_pvalues(pval, method, n_tests=2)
+            npt.assert_allclose(obs, _adjust_pvalues(pval, method), rtol=1e-14)
+            obs = _adjust_pvalues(np.array([0.6, 0.8]), method, n_tests=5)
+            if method != "sidak":
+                npt.assert_array_equal(obs, [1., 1.])
+            obs = _adjust_pvalues(np.array([np.nan, np.nan]), method, n_tests=0)
+            npt.assert_array_equal(obs, [np.nan, np.nan])
+            npt.assert_array_equal(_adjust_pvalues(np.array([]), method, n_tests=5), [])
+        npt.assert_array_equal(_adjust_pvalues(pval, None, n_tests=10), pval)
+        npt.assert_allclose(_adjust_pvalues(np.array([0.04]), "by", n_tests=1), [0.04])
+
+    def test_n_tests_large(self):
+        # Native methods must not allocate arrays proportional to n_tests.
+        n_tests = 10**12
+        pval = np.array([0.01, 0.02, 0.03]) / n_tests
+        harmonic = np.log(n_tests) + np.euler_gamma + 0.5 / n_tests
+        expected = {
+            "bonf": [0.01, 0.02, 0.03],
+            "holm": pval * (n_tests - np.arange(3)),
+            "bh": np.full(3, 0.01),
+            "by": np.full(3, 0.01 * harmonic),
+        }
+        for method, exp in expected.items():
+            npt.assert_allclose(_adjust_pvalues(pval, method, n_tests=n_tests),
+                                exp, rtol=1e-14, atol=0)
+
+    def test_fallback(self):
+        from statsmodels.stats.multitest import multipletests
+
+        pval = np.array([[0.01, np.nan, 0.03],
+                         [np.nan, np.nan, 0.2],
+                         [0.04, np.nan, 0.5]])
+        original = pval.copy()
+        for method in ("sidak", "holm-sidak"):
+            exp = np.full_like(pval, np.nan)
+            for col in (0, 2):
+                valid = ~np.isnan(pval[:, col])
+                exp[valid, col] = multipletests(
+                    pval[valid, col], method=method)[1]
+            npt.assert_allclose(_adjust_pvalues(pval, method), exp)
+            work = pval.copy()
+            self.assertIs(_adjust_pvalues(work, method, out=work), work)
+            npt.assert_allclose(work, exp)
+            npt.assert_array_equal(pval, original)
+        npt.assert_array_equal(_adjust_pvalues(np.empty((0, 2)), "sidak"),
+                               np.empty((0, 2)))
+
+    def test_no_adjustment(self):
+        pval = np.array([[0.01, np.nan], [0.04, 0.2]])
+        obs = _adjust_pvalues(pval, None)
+        npt.assert_array_equal(obs, pval)
+        self.assertFalse(np.shares_memory(obs, pval))
+        out = np.empty_like(pval)
+        self.assertIs(_adjust_pvalues(pval, None, out=out), out)
+        npt.assert_array_equal(out, pval)
+        self.assertIs(_adjust_pvalues(pval, None, out=pval), pval)
+
+    def test_sm_p_adjust(self):
+        self.assertIsNone(_sm_p_adjust(None))
+
+        pval = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _sm_p_adjust("holm")(pval)
+        exp = pval * np.arange(1, 6)[::-1]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
-        p = [0.005, 0.011, 0.02, 0.04, 0.13]
-        obs = _check_p_adjust("benjamini-hochberg")(p)
+        pval = [0.005, 0.011, 0.02, 0.04, 0.13]
+        obs = _sm_p_adjust("fdr_bh")(pval)
         exp = [0.025, 0.0275, 0.03333333, 0.05, 0.13]
         for a, b in zip(obs, exp):
             self.assertAlmostEqual(a, b)
 
-        msg = '"hello" is not an available FDR correction method.'
-        with self.assertRaises(ValueError) as cm:
-            _check_p_adjust("hello")(p)
-        self.assertEqual(str(cm.exception), msg)
+        msg = "'hello' is not an available multiple testing correction method."
+        with self.assertRaisesRegex(ValueError, msg):
+            _sm_p_adjust("hello")(pval)
 
 
 if __name__ == "__main__":

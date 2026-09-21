@@ -1,0 +1,22 @@
+FeatureID	Log(FC):bmi[T.overweight]	Log(FC):bmi[T.obese]	SE:bmi[T.overweight]	SE:bmi[T.obese]	W	pvalue	qvalue	Signif	Pass	Robust
+Actinobacteria	0	-0.0425828	0.1743564	0.1812871	0.0425828	0.933	1	False	True	False
+Bacteroidetes	0	0.1772684	0.2241097	0.2154839	0.1772684	0.499	1	False	True	False
+Cyanobacteria	1.110223e-16	-1.107204	0.1848298	0.2484133	1.107204	0	0	True	False	False
+Bacilli	0	-0.146549	0.1638065	0.1631987	0.146549	0.429	1	False	True	False
+Clostridium cluster I	-0.02926812	-0.09061806	0.116753	0.1038685	0.09061806	0.469	1	False	True	False
+Clostridium cluster III	0	0.2785393	0.1566724	0.1503227	0.2785393	0.075	1	False	True	False
+Clostridium cluster IV	-0.09951411	-0.09951411	0.1199833	0.1156804	0.09951411	0.443	1	False	True	False
+Clostridium cluster IX	0.1485852	0.2234966	0.1906891	0.1815915	0.2234966	0.228	1	False	True	False
+Clostridium cluster XI	-0.1152767	-0.1568528	0.1429068	0.1481289	0.1568528	0.329	1	False	True	False
+Clostridium cluster XIII	0	0.01215445	0.09909363	0.09446378	0.01215445	0.98	1	False	True	False
+Clostridium cluster XIVa	0.0256193	0.03782228	0.1352957	0.1232779	0.03782228	0.9	1	False	True	False
+Clostridium cluster XV	-0.03529089	-0.06371183	0.1202011	0.1134295	0.06371183	0.715	1	False	True	False
+Clostridium cluster XVI	-0.01185891	-0.01185891	0.1365849	0.1294928	0.01185891	0.989	1	False	True	False
+Clostridium cluster XVII	0	-0.4161862	0.1953995	0.2055736	0.4161862	0.037	0.703	False	False	False
+Clostridium cluster XVIII	0.03995934	0.03995934	0.1355334	0.1195288	0.03995934	0.868	1	False	True	False
+Uncultured Clostridiales	-0.4199959	-0.4199959	0.1788753	0.1940907	0.4199959	0.035	0.7	False	True	False
+Uncultured Mollicutes	-0.08542875	-0.1793384	0.1778945	0.1569095	0.1793384	0.278	1	False	True	False
+Fusobacteria	0.01023416	0.05363419	0.09809224	0.09691392	0.05363419	0.723	1	False	True	False
+Proteobacteria	0.09296965	0.09296965	0.1540237	0.1196462	0.09296965	0.538	1	False	True	False
+Spirochaetes	0.1573286	0.3979882	0.1794868	0.2416155	0.3979882	0.113	1	False	True	False
+Verrucomicrobia	-0.052593	-0.2317347	0.1764495	0.149243	0.2317347	0.133	1	False	True	False

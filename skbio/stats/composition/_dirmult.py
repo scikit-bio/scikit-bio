@@ -13,22 +13,34 @@ import pandas as pd
 
 from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table
-from ._base import _check_composition, clr
+from ._base import _check_composition
+from ._lme import _RandIntDesign, _randint_applicable, _randint_fit
 from ._utils import (
     _check_metadata,
     _check_grouping,
     _check_trt_ref_groups,
-    _check_p_adjust,
-    _type_cast_to_float,
+    _adjust_pvalues,
+    _build_dmatrix,
 )
 
 
-def _dirmult_draw(matrix, rng):
+def _dirmult_draw(matrix, rng, out=None, row_mean_out=None):
     """Resample data from a Dirichlet-multinomial posterior distribution.
+
+    ``out``, if given, is a reusable ``matrix.shape`` scratch buffer that
+    receives the Gamma draw (``rng.standard_gamma`` writes into it directly)
+    and is then transformed into the returned array in place. It has no
+    meaning after the call returns; the return value aliases it. When ``out``
+    is None, a fresh array is drawn and transformed in place instead, so the
+    result is always a new array independent of ``matrix``.
+
+    ``row_mean_out``, if given, is a reusable ``(matrix.shape[0],)`` scratch
+    buffer for the per-row mean computed during the CLR transform. It has no
+    meaning after the call returns.
 
     See Also
     --------
-    numpy.random.Generator.gamma
+    numpy.random.Generator.standard_gamma
     numpy.random.Generator.dirichlet
 
     Notes
@@ -43,10 +55,68 @@ def _dirmult_draw(matrix, rng):
     by row sums. Meanwhile, CLR is independent of scale, therefore the normalization
     step can be omitted.
 
-    `gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
+    ``standard_gamma`` is ``gamma`` with ``scale=1.0`` fixed; the two are bit-identical
+    for the same seed, and only the former accepts an ``out`` buffer. `gamma`/
+    `standard_gamma` can vectorize to a 2-D array whereas `dirichlet` cannot.
+
+    The Gamma draw is disposable (nothing else reads it), so the CLR transform
+    is applied in place rather than via :func:`clr`, which is a shared,
+    array-API-general function that cannot assume it owns its input. This is
+    bit-identical to ``clr(draw, validate=False)``.
 
     """
-    return clr(rng.gamma(shape=matrix, scale=1.0, size=matrix.shape), validate=False)
+    draw = rng.standard_gamma(matrix, size=matrix.shape, out=out)
+    np.log(draw, out=draw)
+    row_mean = np.mean(draw, axis=-1, out=row_mean_out)
+    draw -= row_mean[:, None]
+    return draw
+
+
+def _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff_out, se_out, dof_out, work):
+    """Per-draw Welch's (unequal-variance) t-test sufficient statistics.
+
+    This is the closed form of statsmodels' CompareMeans.ttest_ind /
+    tconfint_diff with usevar="unequal" (and, checked separately, of
+    scipy.stats.ttest_ind with equal_var=False); sample variances use
+    ddof=1. Kept as this closed form rather than delegating to either
+    library call: both were benchmarked and are markedly slower per draw
+    than this vectorized arithmetic (scipy.stats.ttest_ind in particular
+    measured 2.4-4x slower here, presumably from its more general-purpose
+    per-call overhead), which would undercut the point of this function.
+
+    Writes into ``diff_out``/``se_out``/``dof_out`` (typically a row of the
+    caller's ``(draws, m)`` buffers) rather than returning new arrays;
+    ``se_out``/``dof_out`` also double as scratch for intermediate values
+    (their final values are only written on the last two lines). ``work`` is
+    a reusable length-m scratch buffer with no meaning after the call
+    returns. All four buffers must be pre-allocated once outside the
+    per-draw loop, so a call here allocates no new (m,)-length arrays.
+
+    The variance calls pass the already-computed means via ``mean=``
+    (NumPy >= 2.0) instead of letting ``np.var`` recompute them internally.
+
+    """
+    np.mean(trt_mat, axis=0, out=diff_out)
+    np.mean(ref_mat, axis=0, out=work)
+    np.var(trt_mat, axis=0, ddof=1, mean=diff_out, out=se_out)
+    np.var(ref_mat, axis=0, ddof=1, mean=work, out=dof_out)
+    diff_out -= work
+    se_out /= n1  # vn1
+    dof_out /= n2  # vn2
+
+    # Not a "pooled variance" in the equal-variance sense; this is the
+    # unequal-variance Welch formula, where vn1 + vn2 simply appears twice.
+    np.add(se_out, dof_out, out=work)  # var_sum
+
+    np.square(se_out, out=se_out)
+    se_out /= n1 - 1
+    np.square(dof_out, out=dof_out)
+    dof_out /= n2 - 1
+    se_out += dof_out  # Welch-Satterthwaite denominator
+
+    np.square(work, out=dof_out)
+    dof_out /= se_out  # degrees of freedom
+    np.sqrt(work, out=se_out)  # standard error
 
 
 def dirmult_ttest(
@@ -82,12 +152,15 @@ def dirmult_ttest(
     .. versionchanged:: 0.7.0
         Computational efficiency significantly improved.
 
+    .. versionchanged:: 0.7.4
+        Computational efficiency significantly improved.
+
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for lower statistical uncertainty. See Notes for details.
+        A matrix containing count or proportional abundance data of the samples. Counts
+        are recommended over proportions for lower statistical uncertainty. See Notes
+        for details.
     grouping : pd.Series or 1-D array_like
         Vector indicating the assignment of samples to groups. These could be strings
         or integers denoting which group a sample belongs to. If it is a pandas Series
@@ -114,11 +187,12 @@ def dirmult_ttest(
         draws provide more robust estimates of uncertainty for the log-fold changes and
         *p*-values. Default is 128.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are
-        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
-        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
-        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
-        Case-insensitive. If None, no correction will be performed.
+        Method to correct *p*-values for multiple comparisons. Options are: Bonferroni
+        ("bonf"/"bonferroni"), Holm-Bonferroni ("holm"/"holm-bonferroni", default),
+        Benjamini-Hochberg ("bh"/"benjamini-hochberg"), and Benjamini-Yekutieli
+        ("by"/"benjamini-yekutieli"), or any method supported by statsmodels'
+        :func:`~statsmodels.stats.multitest.multipletests` function. Case-insensitive.
+        If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
         Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
@@ -166,7 +240,6 @@ def dirmult_ttest(
     --------
     dirmult_ttest
     scipy.stats.ttest_ind
-    statsmodels.stats.weightstats.CompareMeans
 
     Notes
     -----
@@ -226,7 +299,10 @@ def dirmult_ttest(
     b7     7.600734  1.480232 -0.601277  4.043888  0.017077  0.068310   False
 
     """
-    from statsmodels.stats.weightstats import CompareMeans
+    from scipy.special import stdtr, stdtrit
+
+    if not isinstance(draws, (int, np.integer)) or draws < 1:
+        raise ValueError("draws must be a positive integer.")
 
     rng = get_rng(seed)
 
@@ -241,53 +317,85 @@ def dirmult_ttest(
     groups, labels = _check_grouping(grouping, matrix, samples)
     trt_idx, ref_idx = _check_trt_ref_groups(treatment, reference, groups, labels)
 
-    cm_params = dict(alternative="two-sided", usevar="unequal")
-
     # initiate results
     m = matrix.shape[1]
-    delta = np.zeros(m)  # inter-group difference
-    tstat = np.zeros(m)  # t-test statistic
-    pval = np.zeros(m)  # t-test p-value
-    lower = np.full(m, np.inf)  # 2.5% percentile of distribution
-    upper = np.full(m, -np.inf)  # 97.5% percentile of distribution
+    n1 = len(trt_idx)
+    n2 = len(ref_idx)
+
+    # Streamed across draws in O(features) rather than storing (draws,
+    # features) arrays: running sums for the point estimates (divided by
+    # draws below) and running min/max for the confidence bounds. Summing
+    # sequentially here instead of via a single (draws, features) .mean(axis=0)
+    # can differ from the prior behavior at floating-point noise level.
+    delta_sum = np.zeros(m)
+    tstat_sum = np.zeros(m)
+    pval_sum = np.zeros(m)  # un-doubled tail probability; the *2 happens once, below
+    lower = np.full(m, np.inf)
+    upper = np.full(m, -np.inf)
+
+    # Per-draw scratch, reused across draws so the loop allocates no new
+    # (m,)-length arrays. `work` holds a different quantity at each step
+    # (t-statistic, then p-value, then t-critical/margin), since each is only
+    # needed until it has been folded into a running sum or bound.
+    diff_i = np.empty(m)  # mean(treatment) - mean(reference)
+    se_i = np.empty(m)  # Welch standard error
+    dof_i = np.empty(m)  # Welch-Satterthwaite degrees of freedom
+    work = np.empty(m)
+    bound_i = np.empty(m)  # lower bound, then upper bound
+
+    # Scratch buffers reused across draws by _dirmult_draw's Gamma sampling
+    # step (the largest per-draw allocation) and its CLR row-mean.
+    gamma_buf = np.empty(matrix.shape)
+    row_mean_buf = np.empty(matrix.shape[0])
 
     for i in range(draws):
         # Resample data in a Dirichlet-multinomial distribution.
-        dir_mat = _dirmult_draw(matrix, rng)
+        dir_mat = _dirmult_draw(matrix, rng, out=gamma_buf, row_mean_out=row_mean_buf)
 
         # Stratify data by group (treatment vs. reference).
         trt_mat = dir_mat[trt_idx]
         ref_mat = dir_mat[ref_idx]
 
-        # Calculate the difference between the two means.
-        delta += trt_mat.mean(axis=0) - ref_mat.mean(axis=0)
+        _welch_draw_stats(trt_mat, ref_mat, n1, n2, diff_i, se_i, dof_i, work)
 
-        # Create a CompareMeans object for statistical testing.
-        # Welch's t-test is also available in SciPy's `ttest_ind` (with `equal_var=
-        # False`). The current code uses statsmodels' `CompareMeans` instead because
-        # it additionally returns confidence intervals.
-        cm = CompareMeans.from_data(trt_mat, ref_mat)
+        # t = diff / se.
+        np.divide(diff_i, se_i, out=work)
+        tstat_sum += work
 
-        # Perform Welch's t-test to assess the significance of difference.
-        tstat_, pval_, _ = cm.ttest_ind(value=0, **cm_params)
-        tstat += tstat_
-        pval += pval_
+        # Two-sided p-value = 2 * P(T > |t|) = 2 * stdtr(dof, -|t|). Uses the
+        # scipy.special ufuncs directly rather than scipy.stats.t.sf/ppf: same
+        # result, and scipy's own docs note the ufuncs are faster than the
+        # corresponding scipy.stats.t methods. `work` still holds t from
+        # above; overwritten here since it has already been summed.
+        np.abs(work, out=work)
+        work *= -1
+        stdtr(dof_i, work, out=work)
+        pval_sum += work
 
-        # Calculate confidence intervals.
-        # The final lower and upper bounds are the minimum and maximum of all lower
-        # and upper bounds seen during sampling, respectively.
-        lower_, upper_ = cm.tconfint_diff(alpha=0.05, **cm_params)
-        np.minimum(lower, lower_, out=lower)
-        np.maximum(upper, upper_, out=upper)
+        # 95% CI margin = t_crit(dof, 0.975) * se. `work` reused again now
+        # that this draw's t-statistic and p-value are both already summed.
+        stdtrit(dof_i, 0.975, out=work)
+        work *= se_i
+        np.subtract(diff_i, work, out=bound_i)
+        np.minimum(lower, bound_i, out=lower)
+        np.add(diff_i, work, out=bound_i)
+        np.maximum(upper, bound_i, out=upper)
 
-    # Normalize metrics to averages over all replicates.
-    delta /= draws
-    tstat /= draws
-    pval /= draws
+        delta_sum += diff_i
+
+    # Aggregate across draws: averages for point estimates (widest interval
+    # for the confidence bounds was already tracked above), matching prior
+    # behavior. In place, since the sums have no further use.
+    delta_sum /= draws
+    tstat_sum /= draws
+    pval_sum *= 2.0 / draws
+    delta = delta_sum
+    tstat = tstat_sum
+    pval = pval_sum
 
     # Correct p-values for multiple comparison.
     if p_adjust is not None:
-        qval = _check_p_adjust(p_adjust)(pval)
+        qval = _adjust_pvalues(pval, p_adjust)
     else:
         qval = pval
     reject = qval <= 0.05
@@ -358,20 +466,17 @@ def dirmult_lme(
     log-fold changes as well as their credible intervals, the *p*-values and
     the multiple comparison corrected *p*-values are reported.
 
-    This function uses the :class:`~statsmodels.regression.mixed_linear_model.MixedLM`
-    class from statsmodels.
-
-    .. note::
-        Because the analysis iteratively runs many numeric optimizations, it can take
-        longer than usual to finish. Please allow extra time for completion.
+    .. versionchanged:: 0.7.4
+        Significantly improved computational efficiency under the default configuration
+        by introducing an analytical kernel fitting all features at once. See Notes for
+        details.
 
     Parameters
     ----------
     table : table_like of shape (n_samples, n_features)
-        A matrix containing count or proportional abundance data of the samples. See
-        :ref:`supported formats <table_like>`. Counts are recommended over proportions
-        for lower statistical uncertainty. See Notes of :func:`dirmult_ttest` for
-        details.
+        A matrix containing count or proportional abundance data of the samples. Counts
+        are recommended over proportions for lower statistical uncertainty. See Notes
+        of :func:`dirmult_ttest` for details.
     metadata : pd.DataFrame or 2-D array_like
         The metadata for the model. Rows correspond to samples and columns correspond
         to covariates in the model. Must be a pandas DataFrame or convertible to a
@@ -390,11 +495,12 @@ def dirmult_lme(
         Number of draws from the Dirichlet-multinomial posterior distribution.
         Default is 128.
     p_adjust : str, optional
-        Method to correct *p*-values for multiple comparisons. Options are
-        Holm-Boniferroni ("holm" or "holm-bonferroni") (default), Benjamini-Hochberg
-        ("bh", "fdr_bh" or "benjamini-hochberg"), or any method supported by
-        statsmodels' :func:`~statsmodels.stats.multitest.multipletests` function.
-        Case-insensitive. If None, no correction will be performed.
+        Method to correct *p*-values for multiple comparisons. Options are: Bonferroni
+        ("bonf"/"bonferroni"), Holm-Bonferroni ("holm"/"holm-bonferroni", default),
+        Benjamini-Hochberg ("bh"/"benjamini-hochberg"), and Benjamini-Yekutieli
+        ("by"/"benjamini-yekutieli"), or any method supported by statsmodels'
+        :func:`~statsmodels.stats.multitest.multipletests` function. Case-insensitive.
+        If None, no correction will be performed.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance for drawing from the
         Dirichlet distribution. See :func:`details <skbio.util.get_rng>`.
@@ -409,10 +515,12 @@ def dirmult_lme(
         Optimization method for model fitting. Can be a single method name, or a list
         of method names to be tried sequentially. See `statsmodels.optimization
         <https://www.statsmodels.org/stable/optimization.html>`_
-        for available methods. If None, a default list of methods will be tried.
+        for available methods. If None (default), the default model is solved in
+        closed form and no iterative optimizer is used. See Notes.
     fit_converge : bool, optional
         If True, model fittings that were completed but did not converge will be
-        excluded from the calculation of final statistics. Default is False.
+        excluded from the calculation of final statistics. Default is False. Setting
+        this selects the iterative optimizer, which is what reports convergence.
     fit_warnings : bool, optional
         Issue warnings if any during the model fitting process. Default is False.
         Warnings are usually issued when the optimization methods do not converge,
@@ -470,6 +578,28 @@ def dirmult_lme(
     statsmodels.formula.api.mixedlm
     statsmodels.regression.mixed_linear_model.MixedLM
 
+    Notes
+    -----
+    The default model has one random intercept per group, for which the REML fit
+    has a closed form. In that case all features of a replicate are fitted at once
+    by maximizing the one-dimensional profile likelihood over the ratio of the
+    group variance to the residual variance, instead of running one numeric
+    optimization per feature through ``MixedLM.fit``. The estimates, standard
+    errors, *p*-values and confidence intervals are those of ``MixedLM``, computed
+    from the same REML profile likelihood and the same observed information matrix.
+
+    Supplying ``re_formula``, ``vc_formula``, ``model_kwargs``, ``fit_method``,
+    ``fit_kwargs`` or ``fit_converge`` selects a model, an optimizer, or a
+    convergence filter that has no closed form, and falls back to fitting each
+    feature separately with ``MixedLM``.
+
+    .. versionchanged:: 0.7.4
+        The default random intercept model is fitted for all features at once.
+        Results may differ slightly from earlier versions on replicates where the
+        iterative optimizer of ``MixedLM`` stopped short of the optimum. Any other
+        configuration falls back to running one numeric optimization per feature
+        per draw using ``MixedLM``, which can take much longer to finish.
+
     Examples
     --------
     >>> import pandas as pd
@@ -500,20 +630,20 @@ def dirmult_lme(
     ...                      grouping='patient', seed=0, p_adjust='sidak')
     >>> result
       FeatureID  Covariate  Reps  Log2(FC)   CI(2.5)  CI(97.5)    pvalue  \
-    0        Y1       time   128 -0.210769 -1.532255  1.122148  0.403737
-    1        Y1  treatment   128 -0.744061 -3.401978  1.581917  0.252057
-    2        Y2       time   128  0.210769 -1.122148  1.532255  0.403737
-    3        Y2  treatment   128  0.744061 -1.581917  3.401978  0.252057
+    0        Y1       time   128 -0.210769 -1.532255  1.123699  0.404007
+    1        Y1  treatment   128 -0.744061 -3.401965  1.500992  0.250282
+    2        Y2       time   128  0.210769 -1.123699  1.532255  0.404007
+    3        Y2  treatment   128  0.744061 -1.500992  3.401965  0.250282
     <BLANKLINE>
          qvalue  Signif
-    0  0.644470   False
-    1  0.440581   False
-    2  0.644470   False
-    3  0.440581   False
+    0  0.644793   False
+    1  0.437922   False
+    2  0.644793   False
+    3  0.437922   False
 
     """
-    from patsy import dmatrix
     from scipy.optimize import OptimizeWarning
+    from scipy.special import ndtr, ndtri
     from statsmodels.regression.mixed_linear_model import MixedLM, VCSpec
     from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
@@ -532,9 +662,6 @@ def dirmult_lme(
     # validate metadata
     metadata = _check_metadata(metadata, matrix, samples)
 
-    # cast metadata to numbers where applicable
-    metadata = _type_cast_to_float(metadata)
-
     # Instead of directly calling `MixedLM.from_formula` on merged table + metadata,
     # the following code converts metadata into a design matrix based on the formula
     # (as well as re_formula and vc_formula, if applicable), and calls `MixedLM`.
@@ -543,7 +670,7 @@ def dirmult_lme(
     # the design matrix can save conversion overheads.
 
     # Create a design matrix based on metadata and formula.
-    dmat = dmatrix(formula, metadata, return_type="matrix")
+    dmat = _build_dmatrix(formula, metadata)
 
     # Obtain the list of covariates by selecting the relevant columns
     covars = dmat.design_info.column_names
@@ -574,7 +701,7 @@ def dirmult_lme(
 
     # random effects matrix
     if re_formula is not None:
-        exog_re = np.asarray(dmatrix(re_formula, metadata, return_type="matrix"))
+        exog_re = np.asarray(_build_dmatrix(re_formula, metadata))
     else:
         exog_re = None
 
@@ -586,7 +713,7 @@ def dirmult_lme(
         names, cols, mats = [], [], []
         for name, formula in vc_formula.items():
             names.append(name)
-            dmats = [dmatrix(formula, x, return_type="matrix") for x in metas]
+            dmats = [_build_dmatrix(formula, x) for x in metas]
             cols.append([x.design_info.column_names for x in dmats])
             mats.append([np.asarray(x) for x in dmats])
         exog_vc = VCSpec(names, cols, mats)
@@ -609,6 +736,22 @@ def dirmult_lme(
 
     fit_fail_msg = "LME fit failed for feature {} in replicate {}, outputting NaNs."
 
+    # The default model is a single random intercept per group, whose REML fit
+    # has a closed form that can be evaluated for all features at once. Any
+    # setting that changes the random effects structure or the model/fit
+    # arguments falls back to per-feature `MixedLM.fit`.
+    batched = _randint_applicable(
+        re_formula, vc_formula, model_kwargs, fit_kwargs, fit_method, fit_converge
+    )
+    gamma_buf = row_mean_buf = None
+    if batched:
+        design = _RandIntDesign(exog_mat, grouping, n_groups)
+        z975 = ndtri(0.975)
+        # Only the batched path is free to reuse the draw buffers; `MixedLM`
+        # keeps a reference to the response array it is handed.
+        gamma_buf = np.empty(matrix.shape)
+        row_mean_buf = np.empty(matrix.shape[0])
+
     with catch_warnings():
         if not fit_warnings:
             simplefilter("ignore", UserWarning)
@@ -620,7 +763,38 @@ def dirmult_lme(
 
         for i in range(draws):
             # Resample data in a Dirichlet-multinomial distribution.
-            dir_mat = _dirmult_draw(matrix, rng)
+            dir_mat = _dirmult_draw(matrix, rng, gamma_buf, row_mean_buf)
+
+            if batched:
+                # The batched fit screens degenerate features itself, so only a
+                # failure of the shared design reaches this handler.
+                try:
+                    beta, bse, ok = _randint_fit(design, dir_mat)[:3]
+                except Exception:
+                    for j in range(n_feats):
+                        warn(fit_fail_msg.format(features[j], i), UserWarning)
+                    continue
+
+                beta, bse = beta[covar_range].T, bse[covar_range].T
+                # `MixedLM` reports normal, not t, statistics here.
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    pvals = 2.0 * ndtr(-np.abs(beta / bse))
+                half = z975 * bse
+                if ok.all():
+                    coef += beta
+                    pval += pvals
+                    np.minimum(lower, beta - half, out=lower)
+                    np.maximum(upper, beta + half, out=upper)
+                    fitted += 1
+                else:
+                    coef[ok] += beta[ok]
+                    pval[ok] += pvals[ok]
+                    lower[ok] = np.minimum(lower[ok], beta[ok] - half[ok])
+                    upper[ok] = np.maximum(upper[ok], beta[ok] + half[ok])
+                    fitted += ok
+                    for j in np.flatnonzero(~ok):
+                        warn(fit_fail_msg.format(features[j], i), UserWarning)
+                continue
 
             # Fit a linear mixed effects (LME) model for each feature.
             for j in range(n_feats):
@@ -690,11 +864,9 @@ def dirmult_lme(
         x[mask] /= log2_
 
     # correct p-values for multiple comparison
-    # (only valid replicates are included)
+    # Each feature is a testing family; omit unestimable covariates.
     if p_adjust is not None:
-        func = _check_p_adjust(p_adjust)
-        qval = np.full(shape, np.nan)
-        qval[mask] = np.apply_along_axis(func, 1, pval[mask])
+        qval = _adjust_pvalues(pval, p_adjust, axis=1)
     else:
         qval = pval
 

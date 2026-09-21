@@ -6,17 +6,22 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import warnings
 from io import StringIO
-from unittest import main, TestCase
+from unittest import main, TestCase, skipIf
 
 import numpy as np
 
-from skbio import TreeNode
+from skbio import TreeNode, DistanceMatrix
 from skbio.tree import DuplicateNodeError, MissingNodeError
+from skbio.diversity import beta_diversity
 from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
 from skbio.diversity.beta._unifrac import (_unweighted_unifrac,
                                            _weighted_unifrac,
-                                           _weighted_unifrac_branch_correction)
+                                           _weighted_unifrac_branch_correction,
+                                           NUMBA_AVAILABLE)
+from skbio.diversity._driver import _UNIFRAC_FAST_ENGINE
+from skbio.util import numba_code
 
 
 class UnifracTests(TestCase):
@@ -685,6 +690,225 @@ class UnifracTests(TestCase):
             _weighted_unifrac(m[:, 0], m[:, 2], m0s, m2s, bl)[0], 6.0)
         self.assertAlmostEqual(
             _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl)[0], 4.5)
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_matches_cython(self):
+        dm_cy = beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
+
+    @numba_code
+    def test_unifrac_fast_resolves_numba(self):
+        # Comparing results cannot show which engine "fast" picked: the two
+        # unifrac engines agree well within any tolerance a test could use.
+        # The choice is a named constant, so assert that instead.
+        self.assertEqual(_UNIFRAC_FAST_ENGINE, "numba")
+
+    @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_unifrac_fast_resolves_cython(self):
+        # The counterpart to the test above, for the lane with no numba.
+        self.assertEqual(_UNIFRAC_FAST_ENGINE, "cython")
+
+    @numba_code
+    def test_unifrac_engine_fast_is_accepted(self):
+        # Checks that "fast" is plumbed through and gives the same answer,
+        # not which engine ran. The numba and cython unifrac kernels agree to
+        # well inside this tolerance, which the two
+        # engine_numba_matches_cython tests in this file already show, so no
+        # comparison of their results can tell the two engines apart. Which
+        # engine "fast" resolves to is covered in skbio/tests/test_config.py.
+        for metric in ("unweighted_unifrac", "weighted_unifrac"):
+            dm_fast = beta_diversity(
+                metric, self.b1, ids=self.sids1, taxa=self.oids1,
+                tree=self.t1, engine="fast")
+            dm_nb = beta_diversity(
+                metric, self.b1, ids=self.sids1, taxa=self.oids1,
+                tree=self.t1, engine="numba")
+            np.testing.assert_allclose(dm_fast.data, dm_nb.data,
+                                       rtol=1e-12, atol=1e-12)
+
+    @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_unifrac_engine_fast_is_cython_without_numba(self):
+        # The counterpart to test_unifrac_engine_fast_is_accepted above.
+        # Without numba installed, "fast" resolves to "cython" and runs the
+        # identical cython call, so unlike that one this is an exact
+        # comparison, and it does pin which engine ran.
+        for metric in ("unweighted_unifrac", "weighted_unifrac"):
+            dm_fast = beta_diversity(
+                metric, self.b1, ids=self.sids1, taxa=self.oids1,
+                tree=self.t1, engine="fast")
+            dm_cy = beta_diversity(
+                metric, self.b1, ids=self.sids1, taxa=self.oids1,
+                tree=self.t1, engine="cython")
+            np.testing.assert_array_equal(dm_fast.data, dm_cy.data)
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_larger_random(self):
+        rng = np.random.default_rng(0)
+        counts = rng.integers(0, 10, size=(12, 5))
+        # cover the "both samples empty" (observed == 0) branch: rows 0 and 1
+        # are both all-zero, guaranteed rather than left to chance
+        counts[0] = 0
+        counts[1] = 0
+        ids = [f"S{i}" for i in range(counts.shape[0])]
+
+        dm_cy = beta_diversity(
+            "unweighted_unifrac", counts, ids=ids, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", counts, ids=ids, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-12, atol=1e-12)
+        # rows 0 and 1 are both all-zero, so their pairwise distance must be 0
+        self.assertEqual(dm_nb.data[0, 1], 0.0)
+
+    @numba_code
+    def test_unweighted_unifrac_engine_numba_single_sample(self):
+        dm_nb = beta_diversity(
+            "unweighted_unifrac", self.b1[:1], ids=self.sids1[:1],
+            taxa=self.oids1, tree=self.t1, engine="numba")
+
+        self.assertEqual(dm_nb.shape, (1, 1))
+        self.assertEqual(dm_nb.data[0, 0], 0.0)
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_matches_cython(self):
+        dm_cy = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython")
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba")
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        # weighted UniFrac involves a division and a sum whose ordering
+        # differs between NumPy's pairwise summation (Cython/pdist path)
+        # and the kernel's sequential accumulation, so use a looser
+        # tolerance than the unweighted comparison.
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_normalized_matches_cython(self):
+        dm_cy = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="cython", normalized=True)
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba", normalized=True)
+
+        self.assertIsInstance(dm_nb, DistanceMatrix)
+        self.assertEqual(list(dm_nb.ids), list(dm_cy.ids))
+        np.testing.assert_allclose(
+            dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+        self.assertTrue((dm_nb.data <= 1.0 + 1e-9).all())
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_larger_random(self):
+        rng = np.random.default_rng(0)
+        counts = rng.integers(0, 10, size=(12, 5))
+        # cover both the unnormalized zero-total path and the normalized
+        # both-empty 0/0 guard
+        counts[0] = 0
+        counts[1] = 0
+        ids = [f"S{i}" for i in range(counts.shape[0])]
+
+        for normalized in (False, True):
+            dm_cy = beta_diversity(
+                "weighted_unifrac", counts, ids=ids, taxa=self.oids1,
+                tree=self.t1, engine="cython", normalized=normalized)
+            dm_nb = beta_diversity(
+                "weighted_unifrac", counts, ids=ids, taxa=self.oids1,
+                tree=self.t1, engine="numba", normalized=normalized)
+
+            np.testing.assert_allclose(
+                dm_nb.data, dm_cy.data, rtol=1e-10, atol=1e-12)
+
+        # both rows 0 and 1 are all-zero -> normalized 0/0 guard -> 0.0
+        self.assertEqual(dm_nb.data[0, 1], 0.0)
+
+    @numba_code
+    def test_weighted_unifrac_engine_numba_single_sample(self):
+        dm_nb = beta_diversity(
+            "weighted_unifrac", self.b1[:1], ids=self.sids1[:1],
+            taxa=self.oids1, tree=self.t1, engine="numba")
+
+        self.assertEqual(dm_nb.shape, (1, 1))
+        self.assertEqual(dm_nb.data[0, 0], 0.0)
+
+    def test_beta_diversity_engine_invalid(self):
+        with self.assertRaisesRegex(
+                ValueError, "engine='julia' is not supported"):
+            beta_diversity(
+                "unweighted_unifrac", self.b1, ids=self.sids1,
+                taxa=self.oids1, tree=self.t1, engine="julia")
+
+    @numba_code
+    def test_beta_diversity_engine_numba_with_pairwise_func_is_used(self):
+        calls = []
+
+        def recording_pdist(counts, metric, **kwargs):
+            calls.append(metric)
+            from scipy.spatial.distance import pdist
+            return pdist(counts, metric=metric, **kwargs)
+
+        beta_diversity(
+            "unweighted_unifrac", self.b1, ids=self.sids1, taxa=self.oids1,
+            tree=self.t1, engine="numba", pairwise_func=recording_pdist)
+
+        self.assertEqual(len(calls), 1)
+
+    @numba_code
+    def test_beta_diversity_engine_fast_with_pairwise_func_is_quiet(self):
+        # engine="numba" warns when a pairwise_func stops the numba kernels
+        # being used, because the caller asked for numba and did not get it.
+        # "fast" asks scikit-bio to choose, so nothing the caller asked for is
+        # overridden and there is nothing to warn about; it just uses the
+        # pairwise_func, the same as engine="cython" and the default do.
+        #
+        # There is no no-numba counterpart to this one, unlike the two tests
+        # above. Without numba "fast" resolves to cython, which cannot reach
+        # the warning at all, so the test would pass whatever this code did.
+        calls = []
+
+        def recording_pdist(counts, metric, **kwargs):
+            calls.append(metric)
+            from scipy.spatial.distance import pdist
+            return pdist(counts, metric=metric, **kwargs)
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            beta_diversity(
+                "unweighted_unifrac", self.b1, ids=self.sids1,
+                taxa=self.oids1, tree=self.t1, engine="fast",
+                pairwise_func=recording_pdist)
+
+        self.assertEqual(len(calls), 1)
+        # Look for the engine warning specifically rather than asserting that
+        # nothing at all was raised, so an unrelated warning from a dependency
+        # cannot fail this on some other environment.
+        self.assertEqual(
+            [str(w.message) for w in caught if "engine=" in str(w.message)], [])
+
+    @numba_code
+    def test_beta_diversity_engine_numba_bogus_kwarg_raises(self):
+        for engine in ("cython", "numba"):
+            with self.assertRaises(TypeError):
+                beta_diversity(
+                    "unweighted_unifrac", self.b1, ids=self.sids1,
+                    taxa=self.oids1, tree=self.t1, engine=engine,
+                    bogus_kwarg=True)
 
 
 if __name__ == '__main__':

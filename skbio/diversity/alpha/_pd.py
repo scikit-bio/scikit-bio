@@ -72,7 +72,7 @@ def faith_pd(counts, taxa, tree, validate=True):
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the same
         length as ``counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset of
         ``taxa``, but not a subset. Required.
     validate : bool, optional
@@ -249,7 +249,7 @@ def phydiv(counts, taxa, tree, rooted=None, weight=False, validate=True):
     taxa : list, np.array
         Vector of taxon IDs corresponding to tip names in ``tree``. Must be the same
         length as ``counts``. Required.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset of
         ``taxa``, but not a subset. Required.
     rooted : bool, optional

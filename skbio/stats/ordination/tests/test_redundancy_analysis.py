@@ -27,6 +27,73 @@ class TestRDAErrors(TestCase):
             with self.assertRaises(ValueError):
                 rda(Y, X, None, None)
 
+
+class TestRDAIdentifiers(TestCase):
+    def setUp(self):
+        self.y = np.array(
+            [
+                [10.0, 2.0, 5.0],
+                [3.0, 8.0, 1.0],
+                [6.0, 4.0, 9.0],
+                [1.0, 7.0, 2.0],
+                [8.0, 3.0, 6.0],
+            ]
+        )
+        self.x = np.array(
+            [
+                [1.0, 0.5],
+                [0.0, 1.5],
+                [1.0, 2.5],
+                [0.0, 3.5],
+                [1.0, 4.5],
+            ]
+        )
+        self.sample_ids = ["S1", "S2", "S3", "S4", "S5"]
+        self.feature_ids = ["F1", "F2", "F3"]
+        self.constraint_ids = ["pH", "depth"]
+
+    def test_numpy_ids(self):
+        res = rda(
+            self.y,
+            self.x,
+            sample_ids=self.sample_ids,
+            feature_ids=self.feature_ids,
+            constraint_ids=self.constraint_ids,
+        )
+        self.assertEqual(list(res.samples.index), self.sample_ids)
+        self.assertEqual(list(res.features.index), self.feature_ids)
+        self.assertEqual(list(res.biplot_scores.index), self.constraint_ids)
+        self.assertEqual(list(res.sample_ids), self.sample_ids)
+        self.assertEqual(list(res.feature_ids), self.feature_ids)
+        self.assertEqual(list(res.constraint_ids), self.constraint_ids)
+
+    def test_dataframe_ids_override(self):
+        ydf = pd.DataFrame(
+            self.y, index=["a", "b", "c", "d", "e"], columns=["u", "v", "w"]
+        )
+        xdf = pd.DataFrame(self.x, index=["a", "b", "c", "d", "e"], columns=["m", "n"])
+        res = rda(
+            ydf,
+            xdf,
+            sample_ids=self.sample_ids,
+            feature_ids=self.feature_ids,
+            constraint_ids=self.constraint_ids,
+        )
+        self.assertEqual(list(res.samples.index), self.sample_ids)
+        self.assertEqual(list(res.features.index), self.feature_ids)
+        self.assertEqual(list(res.biplot_scores.index), self.constraint_ids)
+        self.assertEqual(list(res.sample_ids), self.sample_ids)
+        self.assertEqual(list(res.feature_ids), self.feature_ids)
+        self.assertEqual(list(res.constraint_ids), self.constraint_ids)
+
+    def test_sample_ids_length_mismatch(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "Input table has 5 samples whereas 2 sample IDs were provided.",
+        ):
+            rda(self.y, self.x, sample_ids=["only", "two"])
+
+
 class TestRDAResults(TestCase):
     # STATUS: L&L only shows results with scaling 1, and they agree
     # with vegan's (module multiplying by a constant). I can also

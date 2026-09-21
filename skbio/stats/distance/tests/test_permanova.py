@@ -8,7 +8,7 @@
 
 import io
 from functools import partial
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 import numpy as np
 import pandas as pd
@@ -17,17 +17,28 @@ from scipy.spatial.distance import squareform
 
 from skbio import DistanceMatrix
 from skbio.stats.distance import permanova
-from skbio.util import get_data_path
+from skbio.stats.distance import _permanova as permanova_mod
+from skbio.stats.distance._permanova import NUMBA_AVAILABLE
+from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
+                                          permanova_f_stat_sW_condensed_cy)
+from skbio.util import get_data_path, numba_code, get_rng
+from skbio.util._testing import ArrayAPITestMixin, array_backends
 from skbio.stats.distance._base import _preprocess_input_sng
+from skbio.stats.distance import _gpu as gpu_mod
+from skbio.stats.distance._permanova_gpu import _assemble_fp, _permutation_batch
 
 
-class PERMANOVATests(TestCase):
-    """All results were verified with R (vegan::adonis)."""
+class PERMANOVATestData(TestCase):
+    """Shared fixtures for the PERMANOVA test classes.
+
+    Subclasses (``PERMANOVATests``, ``PERMANOVACondensedTests``,
+    ``InternalPERMANOVATests``) call ``super().setUp()`` and add their
+    own class-specific derivatives.
+    """
 
     def setUp(self):
-        # Distance matrices with and without ties in the ranks, with 2 groups
-        # of equal size.
-        dm_ids = ['s1', 's2', 's3', 's4']
+        # 4-sample, 2-group equal-size data.
+        dm_ids_equal = ['s1', 's2', 's3', 's4']
         self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
         self.df = pd.read_csv(
             io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
@@ -36,14 +47,15 @@ class PERMANOVATests(TestCase):
         self.dm_ties = DistanceMatrix([[0, 1, 1, 4],
                                        [1, 0, 3, 2],
                                        [1, 3, 0, 3],
-                                       [4, 2, 3, 0]], dm_ids)
+                                       [4, 2, 3, 0]], dm_ids_equal)
 
         self.dm_no_ties = DistanceMatrix([[0, 1, 5, 4],
                                           [1, 0, 3, 2],
                                           [5, 3, 0, 3],
-                                          [4, 2, 3, 0]], dm_ids)
+                                          [4, 2, 3, 0]], dm_ids_equal)
 
-        # Test with 3 groups of unequal size.
+        # 6-sample, 3-group unequal-size data.
+        dm_ids_unequal = ['s1', 's2', 's3', 's4', 's5', 's6']
         self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
                                  'Treatment1', 'Control', 'Control']
 
@@ -58,7 +70,7 @@ class PERMANOVATests(TestCase):
              [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
              [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
              [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
-            ['s1', 's2', 's3', 's4', 's5', 's6'])
+            dm_ids_unequal)
 
         # Expected series index is the same across all tests.
         self.exp_index = ['method name', 'test statistic name', 'sample size',
@@ -69,6 +81,10 @@ class PERMANOVATests(TestCase):
         self.assert_series_equal = partial(assert_series_equal,
                                            check_index_type=True,
                                            check_series_type=True)
+
+
+class PERMANOVATests(PERMANOVATestData):
+    """All results were verified with R (vegan::adonis)."""
 
     def test_call_ties(self):
         # Ensure we get the same results if we rerun the method using the same
@@ -189,74 +205,57 @@ class PERMANOVATests(TestCase):
         with self.assertRaises(TypeError):
             permanova(self.dm_ties.data, self.grouping_equal, seed=42)
 
+    def test_float32_matches_float64(self):
+        # A float32 distance matrix must give the same pseudo-F as its float64
+        # equivalent. s_T is accumulated in float64; a float32 sum there loses
+        # accuracy because s_T and s_W nearly cancel in the ratio, which showed
+        # up as a several-percent error on real (float32) UniFrac matrices. Weak
+        # grouping (F ~ 1) makes the cancellation strongest.
+        rng = np.random.default_rng(1)
+        n = 2000
+        a = rng.random((n, n)).astype(np.float32)
+        a = ((a + a.T) / 2).astype(np.float32)
+        np.fill_diagonal(a, 0.0)
+        grouping = rng.integers(0, 3, n).astype(str).tolist()
+        f32 = permanova(
+            DistanceMatrix(a), grouping, permutations=0)['test statistic']
+        f64 = permanova(
+            DistanceMatrix(a.astype(np.float64)), grouping,
+            permutations=0)['test statistic']
+        self.assertAlmostEqual(float(f32), float(f64), places=5)
 
-class PERMANOVACondensedTests(TestCase):
+
+class PERMANOVACondensedTests(PERMANOVATestData):
     """Tests for PERMANOVA with condensed distance matrices.
-    
+
     These tests verify that condensed and redundant forms of the same
     distance matrix produce identical results.
     """
 
     def setUp(self):
-        # Distance matrices with and without ties in the ranks, with 2 groups
-        # of equal size.
-        dm_ids = ['s1', 's2', 's3', 's4']
-        self.grouping_equal = ['Control', 'Control', 'Fast', 'Fast']
-        self.df = pd.read_csv(
-            io.StringIO('ID,Group\ns2,Control\ns3,Fast\ns4,Fast\ns5,Control\n'
-                        's1,Control'), index_col=0)
-
-        # Create both redundant and condensed versions
-        self.dm_ties_redundant = DistanceMatrix([[0, 1, 1, 4],
-                                                  [1, 0, 3, 2],
-                                                  [1, 3, 0, 3],
-                                                  [4, 2, 3, 0]], dm_ids)
-        
+        super().setUp()
+        # Build condensed forms from the inherited matrices. The
+        # ``_redundant`` aliases let this class's existing test methods
+        # reuse the inherited DistanceMatrix objects without renaming
+        # every call site.
+        self.dm_ties_redundant = self.dm_ties
         self.dm_ties_condensed = DistanceMatrix(
-            squareform(self.dm_ties_redundant.data), #, checks=False),
-            dm_ids,
+            squareform(self.dm_ties.data),
+            self.dm_ties.ids,
             condensed=True
         )
-
-        self.dm_no_ties_redundant = DistanceMatrix([[0, 1, 5, 4],
-                                                     [1, 0, 3, 2],
-                                                     [5, 3, 0, 3],
-                                                     [4, 2, 3, 0]], dm_ids)
-        
+        self.dm_no_ties_redundant = self.dm_no_ties
         self.dm_no_ties_condensed = DistanceMatrix(
-            squareform(self.dm_no_ties_redundant.data), #, checks=False),
-            dm_ids,
+            squareform(self.dm_no_ties.data),
+            self.dm_no_ties.ids,
             condensed=True
         )
-
-        # Test with 3 groups of unequal size.
-        self.grouping_unequal = ['Control', 'Treatment1', 'Treatment2',
-                                 'Treatment1', 'Control', 'Control']
-
-        self.dm_unequal_redundant = DistanceMatrix(
-            [[0.0, 1.0, 0.1, 0.5678, 1.0, 1.0],
-             [1.0, 0.0, 0.002, 0.42, 0.998, 0.0],
-             [0.1, 0.002, 0.0, 1.0, 0.123, 1.0],
-             [0.5678, 0.42, 1.0, 0.0, 0.123, 0.43],
-             [1.0, 0.998, 0.123, 0.123, 0.0, 0.5],
-             [1.0, 0.0, 1.0, 0.43, 0.5, 0.0]],
-            ['s1', 's2', 's3', 's4', 's5', 's6'])
-        
+        self.dm_unequal_redundant = self.dm_unequal
         self.dm_unequal_condensed = DistanceMatrix(
-            squareform(self.dm_unequal_redundant.data), #, checks=False),
-            ['s1', 's2', 's3', 's4', 's5', 's6'],
+            squareform(self.dm_unequal.data),
+            self.dm_unequal.ids,
             condensed=True
         )
-
-        # Expected series index is the same across all tests.
-        self.exp_index = ['method name', 'test statistic name', 'sample size',
-                          'number of groups', 'test statistic', 'p-value',
-                          'number of permutations']
-
-        # Stricter series equality testing than the default.
-        self.assert_series_equal = partial(assert_series_equal,
-                                           check_index_type=True,
-                                           check_series_type=True)
 
     def test_condensed_vs_redundant_ties(self):
         """Test that condensed and redundant forms give identical results with ties."""
@@ -406,6 +405,383 @@ class PERMANOVACondensedTests(TestCase):
 
         self.assertEqual(len(self.dm_ties_condensed.data), expected_condensed_length)
         self.assertEqual(self.dm_ties_redundant.data.shape, (n, n))
+
+
+class InternalPERMANOVATests(PERMANOVATestData):
+    """Tests for the Numba-accelerated s_W helpers and dispatch."""
+
+    # Expected within-group sum-of-squares for self.dm_unequal with
+    # grouping [0, 1, 2, 1, 0, 0]. Pre-computed using the existing
+    # scikit-bio Cython implementation.
+    EXPECTED_SW = 0.8382
+
+    def setUp(self):
+        super().setUp()
+        # The internal _cy/_numba helpers take raw np arrays rather than
+        # DistanceMatrix wrappers, so derive those forms from the inherited
+        # dm_unequal. The integer grouping is hand-encoded to match
+        # grouping_unequal's first-seen order
+        # (Control=0, Treatment1=1, Treatment2=2).
+        self.dm_full = np.ascontiguousarray(self.dm_unequal.data)
+        self.dm_condensed = squareform(
+            self.dm_full, force='tovector', checks=False
+        )
+        self.grouping = np.asarray([0, 1, 2, 1, 0, 0], dtype=np.intp)
+        self.group_sizes = np.bincount(self.grouping).astype(np.intp)
+        self.ids = self.dm_unequal.ids
+        self.grouping_labels = self.grouping_unequal
+
+    def _assert_sW(self, func, dm):
+        obs = func(dm, self.group_sizes, self.grouping)
+        self.assertAlmostEqual(obs, self.EXPECTED_SW)
+
+    def test_sW_full_cy(self):
+        self._assert_sW(permanova_f_stat_sW_cy, self.dm_full)
+
+    @numba_code
+    def test_sW_full_nb(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_nb, self.dm_full)
+
+    def test_sW_condensed_cy(self):
+        self._assert_sW(permanova_f_stat_sW_condensed_cy, self.dm_condensed)
+
+    @numba_code
+    def test_sW_condensed_nb(self):
+        self._assert_sW(permanova_mod._permanova_f_stat_sW_condensed_nb,
+                        self.dm_condensed)
+
+    @numba_code
+    def test_permanova_engine_numba_matches_cython(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+
+        # The numba and cython engines should produce the same result for
+        # the same input matrix and permutation seed.
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="cython")
+
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_engine_fast_is_accepted(self):
+        # Checks that "fast" is plumbed through and gives the same answer, not
+        # which engine ran: permanova's numba kernel reduces in parallel, so
+        # its last bits shift with the thread state and a cython-versus-numba
+        # comparison is not stable inside a full test session. Which engine
+        # "fast" resolves to is covered in skbio/tests/test_config.py.
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="fast")
+        exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="numba")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    @skipIf(NUMBA_AVAILABLE, "covers the branch taken when numba is absent")
+    def test_permanova_engine_fast_is_cython_without_numba(self):
+        # The counterpart to test_permanova_engine_fast_is_accepted above.
+        # Without numba installed, "fast" resolves to "cython" and the call
+        # runs through the exact same cython code as engine="cython", so
+        # unlike the numba comparison this one is exact, not approximate.
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="fast")
+        exp = permanova(dm, self.grouping_labels, permutations=99, seed=42,
+                        engine="cython")
+        self.assertEqual(obs['test statistic'], exp['test statistic'])
+        self.assertEqual(obs['p-value'], exp['p-value'])
+
+    def test_bad_engine_raises(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
+            permanova(dm, self.grouping_labels, permutations=0, engine="julia")
+
+    @numba_code
+    def test_permanova_float32_matches_cython(self):
+        # On float32 input the Numba kernel must agree with Cython: both
+        # promote distances to float64 before squaring. Guards against a
+        # float32-accumulation regression in the squaring step.
+        dm32 = DistanceMatrix(self.dm_full.astype(np.float32), self.ids)
+        obs = permanova(dm32, self.grouping_labels, permutations=99,
+                        seed=42, engine="numba")
+        exp = permanova(dm32, self.grouping_labels, permutations=99,
+                        seed=42, engine="cython")
+        # float32 input -> agreement at float32 precision (Cython returns a
+        # float32 statistic; Numba accumulates in float64). 5 places is well
+        # within float32's ~7 significant digits.
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'],
+                               places=5)
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_nb_no_permutations(self):
+        # permutations=0 must yield a nan p-value, matching the cython path
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=0,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=0,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertTrue(np.isnan(obs['p-value']))
+        self.assertTrue(np.isnan(exp['p-value']))
+
+    @numba_code
+    def test_permanova_rowtile_nb_negative_permutations_raises(self):
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        with self.assertRaisesRegex(ValueError, "greater than or equal to zero"):
+            permanova(dm, self.grouping_labels, permutations=-1,
+                      engine="numba")
+
+    @numba_code
+    def test_permanova_condensed_nb_matches_cython(self):
+        # condensed matrices now take the row-tile fast path under numba;
+        # the result must still match the cython monte-carlo engine.
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=99,
+                        seed=42, engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=99,
+                        seed=42, engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_stat_matches_cython(self):
+        # observed F-stat is deterministic at permutations=0 (no RNG); the
+        # condensed row-tile numba kernel must agree with condensed cython to
+        # near machine precision.
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=0,
+                        engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=0,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'],
+                               places=12)
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_matches_full_nb(self):
+        # condensed and full inputs both use the row-tile numba path; with the
+        # same seed the permutations are identical, so results must match.
+        dm_full = DistanceMatrix(self.dm_full, self.ids)
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs_full = permanova(dm_full, self.grouping_labels, permutations=99,
+                             seed=42, engine="numba")
+        obs_cond = permanova(dm_condensed, self.grouping_labels,
+                             permutations=99, seed=42, engine="numba")
+        self.assertAlmostEqual(obs_full['test statistic'],
+                               obs_cond['test statistic'], places=12)
+        self.assertEqual(obs_full['p-value'], obs_cond['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_crosses_chunk_boundary(self):
+        # >256 permutations spans multiple driver chunks; RNG must stay in
+        # sync so the condensed numba result still matches cython.
+        dm_condensed = DistanceMatrix(
+            squareform(self.dm_full), self.ids, condensed=True
+        )
+        obs = permanova(dm_condensed, self.grouping_labels, permutations=600,
+                        seed=42, engine="numba")
+        exp = permanova(dm_condensed, self.grouping_labels, permutations=600,
+                        seed=42, engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+    @numba_code
+    def test_permanova_rowtile_condensed_nb_odd_n(self):
+        # The condensed row-tile kernel is only exercised above at n=6 (via
+        # dm_unequal); an odd sample count changes how n // 2 rows get
+        # paired against their mirror row, so exercise it directly against
+        # the reference sW kernel.
+        rng = get_rng(0)
+        n = 51
+        condensed = rng.random(n * (n - 1) // 2)
+        grouping = rng.integers(0, 3, size=n).astype(np.intp)
+        group_sizes = np.bincount(grouping).astype(np.intp)
+
+        exp = permanova_mod._permanova_f_stat_sW_condensed_nb(
+            condensed, group_sizes, grouping
+        )
+
+        inv_group_sizes = 1.0 / group_sizes.astype(np.float64)
+        groupings_T = np.ascontiguousarray(
+            grouping.reshape(n, 1).astype(np.int32)
+        )
+        partials = np.empty((n // 2, 1), np.float64)
+        permanova_mod._permanova_f_stat_sW_rowtile_condensed_nb(
+            condensed, groupings_T, inv_group_sizes, partials
+        )
+        obs = partials[:, 0].sum()
+
+        self.assertAlmostEqual(obs, exp, places=10)
+
+    @numba_code
+    def test_permanova_rowtile_nb_crosses_chunk_boundary(self):
+        # permutations exceeding the driver's internal chunk size exercises
+        # multiple batches; the RNG must stay in sync across chunks so the
+        # result is still identical to the cython engine.
+        dm = DistanceMatrix(self.dm_full, self.ids)
+        obs = permanova(dm, self.grouping_labels, permutations=600, seed=42,
+                        engine="numba")
+        exp = permanova(dm, self.grouping_labels, permutations=600, seed=42,
+                        engine="cython")
+        self.assertAlmostEqual(obs['test statistic'], exp['test statistic'])
+        self.assertAlmostEqual(obs['p-value'], exp['p-value'])
+
+
+class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
+    """permanova on a DistanceMatrix backed by a non-NumPy array-API buffer."""
+
+    def setUp(self):
+        rng = np.random.default_rng(1)
+        a = rng.random((12, 12))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        self.data = a
+        self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
+                         'c', 'c', 'c', 'd', 'd', 'd']
+        self.ref = permanova(
+            DistanceMatrix(a), self.grouping, permutations=99, seed=0
+        )
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_backends(self, xp, device):
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        res = permanova(dm, self.grouping, permutations=99, seed=0)
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=10
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_numba_engine_backends(self, xp, device):
+        # `engine="numba"` on a device-resident matrix is what routes to the
+        # fused GPU kernel; on NumPy it exercises the CPU numba engine. Skipped
+        # automatically where Numba or the device is unavailable.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        res = permanova(
+            dm, self.grouping, permutations=99, seed=0, engine="numba"
+        )
+        # Default tolerance, as in the other engine="numba" tests above: the
+        # fused kernel sums in a different order than Cython, so the statistic
+        # is not expected to agree bit for bit.
+        self.assertAlmostEqual(res['test statistic'], self.ref['test statistic'])
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_numba_engine_float32_backends(self, xp, device):
+        # the kernel's per-element math stays in the matrix dtype; float32 is
+        # the common case on consumer GPUs and untested on this path otherwise.
+        dm = DistanceMatrix(
+            self.make_array(xp, device, self.data, dtype=xp.float32)
+        )
+        res = permanova(
+            dm, self.grouping, permutations=99, seed=0, engine="numba"
+        )
+        # float32 input -> agreement at float32 precision, as in the CPU numba
+        # float32 test: the kernel accumulates in float64 but reads float32.
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=5
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
+    def test_permanova_array_api_numpy_backend(self):
+        # NumPy is array-API compatible, so the array-API compute path runs on a
+        # NumPy array. The dispatch routes a NumPy DistanceMatrix to the
+        # cython/numba path, so a normal permanova() call never reaches these
+        # helpers; call them directly here so the array-API path is exercised
+        # under ordinary (NumPy-only) CI, matching the reference result.
+        ids = [str(i) for i in range(self.data.shape[0])]
+        res = permanova_mod._permanova_array_api(
+            self.data, self.grouping, None, 99, 0, ids=ids
+        )
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=10
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
+
+
+class PermanovaGpuHostTests(TestCase):
+    """Host-side helpers of the GPU permanova path, exercised without a GPU.
+
+    These cover the pieces that are the same regardless of how the GPU buffer is
+    obtained: the permutation batch follows the CPU Monte-Carlo RNG order, and the
+    pseudo-F / p-value assembly reproduces the cython engine.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(3)
+        a = rng.random((40, 40))
+        a = (a + a.T) / 2.0
+        np.fill_diagonal(a, 0.0)
+        self.dm = DistanceMatrix(a)
+        self.grouping = np.repeat(np.arange(4), 10).astype(str).tolist()
+
+    def test_permutation_batch_matches_cpu_rng_order(self):
+        # observed grouping first, then permutations drawn with get_rng(seed) in
+        # the same order as _run_monte_carlo_stats, so the p-value agrees.
+        n = self.dm.shape[0]
+        _, grouping = _preprocess_input_sng(self.dm.ids, n, self.grouping, None)
+        batch = _permutation_batch(grouping, 50, 0)
+        self.assertEqual(batch.shape, (51, n))
+        np.testing.assert_array_equal(batch[0], grouping)
+        rng = get_rng(0)
+        for i in range(50):
+            np.testing.assert_array_equal(batch[i + 1], rng.permutation(grouping))
+
+    def test_assemble_fp_matches_cython(self):
+        # build s_W on the host exactly as the kernel does (upper triangle,
+        # inverse group-size weight) for the observed grouping and the permutation
+        # batch, then check _assemble_fp reproduces the cython pseudo-F and p-value.
+        dm = self.dm
+        n = dm.shape[0]
+        num_groups, grouping = _preprocess_input_sng(dm.ids, n, self.grouping, None)
+        inv_gs = 1.0 / np.bincount(grouping)
+        s_T = (dm.data ** 2).sum() / n / 2.0
+        i0, j0 = np.triu_indices(n, 1)
+        d2 = dm.data[i0, j0] ** 2
+        batch = _permutation_batch(grouping, 99, 0)
+        s_W = np.array(
+            [(d2 * (g[i0] == g[j0]) * inv_gs[g[i0]]).sum() for g in batch]
+        )
+        f, p = _assemble_fp(s_W, s_T, n, num_groups, 99)
+        ref = permanova(dm, self.grouping, permutations=99, seed=0, engine="cython")
+        self.assertAlmostEqual(f, ref['test statistic'], places=10)
+        self.assertEqual(p, ref['p-value'])
+
+    def test_mark_gpu_unavailable_warns_once(self):
+        # The first failure for a backend warns and records it; later calls are
+        # silent. Uses a real NumPy array (backend name "numpy"), no patching.
+        import warnings
+
+        arr = np.zeros((3, 3))
+        gpu_mod._unavailable.discard("numpy")
+        try:
+            with self.assertWarns(UserWarning):
+                gpu_mod._mark_gpu_unavailable(arr)
+            self.assertIn("numpy", gpu_mod._unavailable)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                gpu_mod._mark_gpu_unavailable(arr)  # must not warn again
+        finally:
+            gpu_mod._unavailable.discard("numpy")
+
+    def test_assemble_fp_no_permutations(self):
+        # permutations=0 -> NaN p-value rather than a count over an empty slice.
+        # pseudo-F for s_T=10, s_W=2, n=8, k=2 is (8/1) / (2/6) = 24.
+        f, p = _assemble_fp(
+            np.array([2.0]), s_T=10.0, sample_size=8, num_groups=2, permutations=0
+        )
+        self.assertAlmostEqual(f, 24.0)
+        self.assertTrue(np.isnan(p))
 
 
 if __name__ == '__main__':

@@ -1603,7 +1603,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         Returns
         -------
-        1D np.ndarray (int or float)
+        1D ndarray (int or float)
             Vector of gap character frequencies across the specified axis. Will
             have ``int`` dtype if ``relative=False`` and ``float`` dtype if
             ``relative=True``.
@@ -1666,8 +1666,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
 
         gap_freqs = np.asarray(gap_freqs, dtype=float if relative else int)
 
-        if relative:
+        if relative and length:
             gap_freqs /= length
+        elif relative:
+            gap_freqs.fill(np.nan)
 
         return gap_freqs
 
@@ -2530,6 +2532,10 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
     def from_path_seqs(cls, path, seqs) -> Self:
         """Create a tabular MSA from an alignment path and the original sequences.
 
+        .. versionchanged:: 0.7.4
+            Metadata of the original sequences will be copied to the new sequences in
+            the tabular MSA.
+
         Parameters
         ----------
         path : AlignPath
@@ -2582,4 +2588,9 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         gap_code = ord(seqtype.default_gap_char)
         byte_lst = [x._bytes for x in seqs]
         byte_arr = path._to_matrices(byte_lst, gap_code)[0]
-        return cls([seqtype(x) for x in byte_arr])
+        return cls(
+            [
+                seqtype(byte_, metadata=seq.metadata)
+                for byte_, seq in zip(byte_arr, seqs)
+            ]
+        )

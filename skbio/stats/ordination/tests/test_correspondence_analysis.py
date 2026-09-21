@@ -277,6 +277,8 @@ class TestCAResults_NumPy(TestCase):
             features=features,
             samples=samples,
             proportion_explained=proportion_explained,
+            feature_ids=self.feature_ids,
+            sample_ids=self.sample_ids,
         )
 
         # using global config
@@ -310,6 +312,8 @@ class TestCAResults_NumPy(TestCase):
             features=features,
             samples=samples,
             proportion_explained=proportion_explained,
+            feature_ids=self.feature_ids,
+            sample_ids=self.sample_ids,
         )
         obs = ca(self.X, 1, sample_ids=self.sample_ids, feature_ids=self.feature_ids)
 
@@ -320,7 +324,9 @@ class TestCAResults_NumPy(TestCase):
         euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies)
-        transformed_sites = ca(self.X, 1).samples
+        transformed_sites = ca(
+            self.X, 1, sample_ids=self.sample_ids, feature_ids=self.feature_ids
+        ).samples
         euclidean_distances = pdist(transformed_sites, "euclidean")
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
@@ -329,7 +335,9 @@ class TestCAResults_NumPy(TestCase):
         equal to euclidean distance between them in transformed space."""
         frequencies = self.X / self.X.sum()
         chi2_distances = chi_square_distance(frequencies, between_rows=False)
-        transformed_species = ca(self.X, 2).features
+        transformed_species = ca(
+            self.X, 2, sample_ids=self.sample_ids, feature_ids=self.feature_ids
+        ).features
         euclidean_distances = pdist(transformed_species, "euclidean")
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 

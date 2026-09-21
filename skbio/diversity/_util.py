@@ -129,7 +129,7 @@ def vectorize_counts_and_tree(counts, taxa, tree):
         Counts/abundances of taxa in one or multiple samples.
     taxa : array_like of shape (n_taxa,)
         Taxon IDs corresponding to tip names in `tree`.
-    tree : skbio.TreeNode
+    tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of `taxa`, but not a subset.
 

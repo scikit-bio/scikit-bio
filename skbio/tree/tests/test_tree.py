@@ -156,6 +156,58 @@ class TreeTests(TestCase):
         cp.dummy[1].append(0)
         self.assertListEqual(t.dummy[1], [2, 3])
 
+    def test_copy_remaps_node_reference_attribute(self):
+        """Deep copy redirects a node-referencing attribute to the new tree."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        # the attribute points to the corresponding node in the copy, not to
+        # a detached duplicate or the original node
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIsNot(cp_a.partner, b)
+
+    def test_copy_remaps_node_reference_attribute_shallow(self):
+        """Shallow copy redirects a node-referencing attribute to the new tree."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+
+        cp = t.copy(deep=False)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIsNot(cp_a.partner, b)
+
+    def test_copy_handles_cyclic_node_references(self):
+        """Copying a tree with cyclic node references does not infinitely recurse."""
+        t = self.simple_t
+        a, b = t.find("a"), t.find("b")
+        a.partner = b
+        b.partner = a
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b = cp.find("a"), cp.find("b")
+
+        self.assertIs(cp_a.partner, cp_b)
+        self.assertIs(cp_b.partner, cp_a)
+
+    def test_copy_remaps_nested_node_references(self):
+        """Deep copy redirects node references nested inside containers."""
+        t = self.simple_t
+        a, b, c = t.find("a"), t.find("b"), t.find("c")
+        a.links = [b, c]
+
+        cp = t.copy(deep=True)
+        cp_a, cp_b, cp_c = cp.find("a"), cp.find("b"), cp.find("c")
+
+        self.assertIs(cp_a.links[0], cp_b)
+        self.assertIs(cp_a.links[1], cp_c)
+        self.assertIsNot(cp_a.links[0], b)
+
     # ------------------------------------------------
     # Tree navigation
     # ------------------------------------------------
@@ -723,6 +775,30 @@ class TreeTests(TestCase):
         self.assertIs(n.parent, c)
         self.assertAlmostEqual(n.length, 6)
 
+    def test_prune_inplace(self):
+        """prune supports the inplace parameter and returns the tree."""
+        exp_before = "((a,b)c)extra;\n"
+        exp_after = "(a,b)c;\n"
+
+        # inplace=True (default): mutates self and returns self
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune()
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=True explicitly
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune(inplace=True)
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=False: original is untouched and a pruned copy is returned
+        t = TreeNode.read(["((a,b)c)extra;"])
+        obs = t.prune(inplace=False)
+        self.assertIsNot(obs, t)
+        self.assertEqual(str(t), exp_before)
+        self.assertEqual(str(obs), exp_after)
+
     def test_shear(self):
         """Shear tree to keep given tips."""
         # LCA is root, and root is retained
@@ -951,6 +1027,30 @@ class TreeTests(TestCase):
 
         for node in tree.traverse():
             self.assertIs(type(node), TreeNodeSubclass)
+
+    def test_bifurcate_inplace(self):
+        """bifurcate supports the inplace parameter and returns the tree."""
+        exp_before = "((a,b,c));\n"
+        exp_after = "((c,(a,b)));\n"
+
+        # inplace=True (default): mutates self and returns self
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate()
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=True explicitly
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate(inplace=True)
+        self.assertIs(obs, t)
+        self.assertEqual(str(t), exp_after)
+
+        # inplace=False: original is untouched and a bifurcated copy is returned
+        t = TreeNode.read(["((a,b,c));"])
+        obs = t.bifurcate(inplace=False)
+        self.assertIsNot(obs, t)
+        self.assertEqual(str(t), exp_before)
+        self.assertEqual(str(obs), exp_after)
 
     def test_shuffle(self):
         # default behavior: all tips are shuffled, only one tree is yielded

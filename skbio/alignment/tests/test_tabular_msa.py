@@ -21,8 +21,7 @@ import scipy.stats
 from skbio import Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.alignment import AlignPath
 from skbio.sequence import GrammaredSequence
-from skbio.util import classproperty
-from skbio.util._decorator import overrides
+from skbio.util import classproperty, overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests)
@@ -905,6 +904,13 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         obs = TabularMSA.from_path_seqs(path=path, seqs=seqs)
         for o, e in zip(obs, exp):
             self.assertEqual(str(o), e)
+
+        # with metadata
+        for seq, i in zip(seqs, range(len(seqs))):
+            seq.metadata["id"] = "S" + str(i)
+        obs = TabularMSA.from_path_seqs(path, seqs)
+        for seq, i in zip(obs, range(len(seqs))):
+            self.assertEqual(seq.metadata["id"], "S" + str(i))
 
         msg = "`seqs` must be of skbio.Sequence type."
         with self.assertRaises(ValueError) as cm:
@@ -3456,8 +3462,9 @@ class TestGapFrequencies(unittest.TestCase):
     def test_no_positions_relative(self):
         msa = TabularMSA([DNA('')])
 
-        seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
-        pos_freqs = msa.gap_frequencies(axis='position', relative=True)
+        with np.errstate(divide='raise', invalid='raise'):
+            seq_freqs = msa.gap_frequencies(axis='sequence', relative=True)
+            pos_freqs = msa.gap_frequencies(axis='position', relative=True)
 
         npt.assert_array_equal(np.array([]), seq_freqs)
         npt.assert_array_equal(np.array([np.nan]), pos_freqs)

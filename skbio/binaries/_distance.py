@@ -24,15 +24,15 @@ def permanova_available(
 ):
     """Is binaries permanova available?
 
-    Check if the scikit-bio-binaries shared library provides
-    the permanova functionality.
+    Check if the scikit-bio-binaries shared library provides the permanova
+    functionality.
 
     Parameters
     ----------
-    distance_matrix : np.ndarray or DistanceMatrix
+    distance_matrix : ndarray or DistanceMatrix
         Distance matrix containing distances between objects (e.g., distances
         between samples of microbial communities).
-    grouping : 1-D np.ndarray
+    grouping : 1-D ndarray
         Vector indicating the assignment of objects to groups.
         These integers denote which group an object belongs to.
         It must be the same length and in the same order

@@ -17,7 +17,7 @@ def upgma(dm, weighted=False):
 
     Parameters
     ----------
-    dm : skbio.DistanceMatrix
+    dm : DistanceMatrix
         The input distance matrix.
     weighted : bool, optional
         If True, WPGMA is performed instead of UPGMA. WPGMA is a variant of UPGMA

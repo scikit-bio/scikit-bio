@@ -11,6 +11,12 @@ on:
 env:
   latest_python: "3.14"
 
+# Limit the automatically-provided GITHUB_TOKEN to read-only access (principle
+# of least privilege). The website is deployed to the website repo via an SSH
+# deploy key, not the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
 
   build:
@@ -21,7 +27,7 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up conda
         uses: conda-incubator/setup-miniconda@v4
@@ -62,7 +68,7 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: Check out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Load website package
         uses: actions/download-artifact@v8
@@ -71,7 +77,7 @@ jobs:
           path: webpack
 
       - name: Check out website repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: scikit-bio/scikit-bio.github.io
           path: website

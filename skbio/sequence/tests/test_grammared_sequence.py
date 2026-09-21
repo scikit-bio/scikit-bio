@@ -761,6 +761,65 @@ class TestGrammaredSequence(TestCase):
         with self.assertRaises(ValueError):
             seq.to_definites(degenerate='nonsense')
 
+    def _no_noncanonical_class(self):
+        # Defined inside a method so that each test gets a class with empty
+        # (uncached) character masks.
+        class NoNoncanonicalSequence(GrammaredSequence):
+            @classproperty
+            def degenerate_map(cls):
+                return {"X": set("AB"), "Y": set("BC")}
+
+            @classproperty
+            def definite_chars(cls):
+                return set("ABC")
+
+            @classproperty
+            def default_gap_char(cls):
+                return '-'
+
+            @classproperty
+            def gap_chars(cls):
+                return set('-.')
+
+            @classproperty
+            def wildcard_char(cls):
+                return "A"
+
+        return NoNoncanonicalSequence
+
+    def _chars_of(self, mask):
+        return "".join(chr(i) for i in np.where(mask)[0])
+
+    def test_degen_nonca_hash(self):
+        # type with non-canonical characters: degenerates plus non-canonicals
+        self.assertEqual(
+            self._chars_of(ExampleGrammaredSequence._degen_nonca_hash),
+            "QWXYZ")
+
+        # type without non-canonical characters: degenerates only
+        cls = self._no_noncanonical_class()
+        mask = cls._degen_nonca_hash
+        self.assertIsInstance(mask, np.ndarray)
+        self.assertEqual(mask.dtype, np.dtype(bool))
+        self.assertEqual(self._chars_of(mask), "XY")
+
+    def test_degen_nonca_hash_does_not_alter_canonical_hash(self):
+        cls = self._no_noncanonical_class()
+        self.assertEqual(self._chars_of(cls._canonical_hash), "ABC")
+        # building the degenerate/non-canonical mask must leave the
+        # canonical-character mask alone
+        self.assertIsNotNone(cls._degen_nonca_hash)
+        self.assertEqual(self._chars_of(cls._canonical_hash), "ABC")
+
+    def test_to_definites_without_noncanonical_chars(self):
+        cls = self._no_noncanonical_class()
+        seq = cls("ABCXY-")
+        self.assertEqual(seq.to_definites(), cls("ABCAA-"))
+        self.assertEqual(seq.to_definites(noncanonical=True), cls("ABCAA-"))
+        self.assertEqual(seq.to_definites(noncanonical=False), cls("ABCAA-"))
+        self.assertEqual(seq.to_definites(degenerate="gap"), cls("ABC---"))
+        self.assertEqual(seq.to_definites(degenerate="del"), cls("ABC-"))
+
     def test_noncanonical_chars(self):
         self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
         self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)

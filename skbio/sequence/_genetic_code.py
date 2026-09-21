@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -149,20 +150,24 @@ class GeneticCode(SkbioObject):
     def from_ncbi(cls, table_id=1) -> Self:
         r"""Return NCBI genetic code specified by table ID.
 
+        .. versionchanged:: 0.7.4
+            Added definitions of tables 15, 26-33. Updated definition for table 3.
+
         Parameters
         ----------
         table_id : int, optional
-            Table ID of the NCBI genetic code to return.
+            Table ID of the NCBI genetic code to return. At present, tables 1-33 are
+            supported.
 
         Returns
         -------
         GeneticCode
-            NCBI genetic code specified by `table_id`.
+            NCBI genetic code specified by ``table_id``.
 
         Notes
         -----
-        The table IDs and genetic codes available in this method and used
-        throughout the examples are defined in [1]_.
+        The table IDs and genetic codes available in this method and used throughout
+        the examples are defined in [1]_.
 
         References
         ----------
@@ -767,7 +772,17 @@ class GeneticCode(SkbioObject):
             )
 
 
-# defined at https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+# The amino_acids/starts data below are derived from NCBI's "Genetic Codes"
+# resource, compiled by NCBI's Taxonomy Group (Elzanowski & Ostell):
+#   https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+#   ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt (machine-readable source)
+# This data is produced by the U.S. government and is in the public domain
+# (see https://www.ncbi.nlm.nih.gov/home/about/policies/); no license terms
+# apply, but it is credited here as its original source per scikit-bio's
+# contribution guidelines. `Starts` positions that NCBI marks as ambiguous
+# stop/sense codons (rather than an alternative start codon) are recorded
+# here as non-start ("-"), since scikit-bio's `starts` field only models
+# start-codon status.
 _ncbi_genetic_codes = {
     1: GeneticCode(
         "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
@@ -781,7 +796,7 @@ _ncbi_genetic_codes = {
     ),
     3: GeneticCode(
         "FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
-        "----------------------------------MM----------------------------",
+        "----------------------------------MM---------------M------------",
         "Yeast Mitochondrial",
     ),
     4: GeneticCode(
@@ -829,6 +844,11 @@ _ncbi_genetic_codes = {
         "-----------------------------------M----------------------------",
         "Alternative Flatworm Mitochondrial",
     ),
+    15: GeneticCode(
+        "FFLLSSSSYY*QCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Blepharisma Macronuclear",
+    ),
     16: GeneticCode(
         "FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "-----------------------------------M----------------------------",
@@ -858,5 +878,45 @@ _ncbi_genetic_codes = {
         "FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
         "---M-------------------------------M---------------M------------",
         "Candidate Division SR1 and Gracilibacteria",
+    ),
+    26: GeneticCode(
+        "FFLLSSSSYY**CC*WLLLAPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-------------------M---------------M----------------------------",
+        "Pachysolen tannophilus Nuclear",
+    ),
+    27: GeneticCode(
+        "FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Karyorelict Nuclear",
+    ),
+    28: GeneticCode(
+        "FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Condylostoma Nuclear",
+    ),
+    29: GeneticCode(
+        "FFLLSSSSYYYYCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Mesodinium Nuclear",
+    ),
+    30: GeneticCode(
+        "FFLLSSSSYYEECC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Peritrich Nuclear",
+    ),
+    31: GeneticCode(
+        "FFLLSSSSYYEECCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "-----------------------------------M----------------------------",
+        "Blastocrithidia Nuclear",
+    ),
+    32: GeneticCode(
+        "FFLLSSSSYY*WCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG",
+        "---M---------------M------------MMMM---------------M------------",
+        "Balanophoraceae Plastid",
+    ),
+    33: GeneticCode(
+        "FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG",
+        "---M---------------M---------------M---------------M------------",
+        "Cephalodiscidae Mitochondrial",
     ),
 }

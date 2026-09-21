@@ -14,6 +14,7 @@ import pandas as pd
 
 from scipy.linalg import eigh as scipy_eigh
 
+from skbio._config import _resolve_engine
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
@@ -23,7 +24,7 @@ from skbio.binaries import (
     pcoa_fsvd_available as _skbb_pcoa_fsvd_available,
     pcoa_fsvd as _skbb_pcoa_fsvd,
 )
-from skbio.util._decorator import params_aliased
+from skbio.util._decorator import params_aliased, array_api_doc
 from skbio.util._array import ingest_array, _to_numpy
 
 
@@ -45,17 +46,44 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix(distance_matrix, inplace=False):
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
+def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     """Center a distance matrix.
 
-    Note: For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace``
-    argument is accepted for API compatibility but ignored — the function
-    always returns a centered array.
+    Parameters
+    ----------
+    distance_matrix : 2D array_like
+        Distance matrix.
+    inplace : bool, optional
+        Whether to center the given distance matrix in-place, which is more efficient
+        in terms of memory and computation. Ignored for JAX and CuPy arrays (see
+        Notes).
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for centering NumPy arrays. Ignored for other array backends.
+        If None (default), use the global ``compute_engine`` setting. 'fast' selects
+        Cython. See :ref:`compute_engines` for details.
+
+        .. versionadded:: 0.7.4
+
+    Returns
+    -------
+    ndarray or array
+        The centered distance matrix, of the same type and on the same device
+        as the input.
+
+    Notes
+    -----
+    For JAX arrays (immutable) and CuPy arrays (GPU), the ``inplace`` argument is
+    accepted for API compatibility but ignored. The function always returns a centered
+    array.
+
     """
-    # For true NumPy arrays, use the Cython-accelerated implementation,
-    # which also supports in-place modification.
+    # For true NumPy arrays, use the Cython- or Numba-accelerated
+    # implementation, which also supports in-place modification.
     if isinstance(distance_matrix, np.ndarray):
-        return center_distance_matrix_np(distance_matrix, inplace=inplace)
+        return center_distance_matrix_np(
+            distance_matrix, inplace=inplace, engine=engine
+        )
 
     # For JAX/CuPy and other array-API backends, use the generic
     # double-centering path; `inplace` is ignored for these backends.
@@ -91,6 +119,7 @@ def _host_partial_eigh(matrix_any, subidx):
         ("distmat", "distance_matrix", "0.7.0", False),
     ]
 )
+@array_api_doc(backends=["numpy", "jax", "torch", "cupy"])
 def pcoa(
     distmat,
     method="eigh",
@@ -99,6 +128,7 @@ def pcoa(
     seed=None,
     warn_neg_eigval=0.01,
     output_format=None,
+    engine=None,
 ):
     r"""Perform Principal Coordinate Analysis (PCoA).
 
@@ -111,9 +141,9 @@ def pcoa(
     distmat : DistanceMatrix
         The input distance matrix.
     method : str, optional
-        Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
+        Matrix decomposition method to use. Default is 'eigh' (eigendecomposition),
         which computes exact eigenvectors and eigenvalues for all dimensions. The
-        alternate is "fsvd" (fast singular value decomposition), a heuristic that can
+        alternate is 'fsvd' (fast singular value decomposition), a heuristic that can
         compute only a given number of dimensions.
     dimensions : int or float, optional
         Dimensions to reduce the distance matrix to. This number determines how many
@@ -125,7 +155,7 @@ def pcoa(
         If True, the input distance matrix will be centered in-place to reduce memory
         consumption, at the cost of losing the original distances. Default is False.
     seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance for method "fsvd".
+        A user-provided random seed or random generator instance for method 'fsvd'.
         See :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
@@ -141,6 +171,12 @@ def pcoa(
 
     output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for centering NumPy-backed distance matrices. If None (default),
+        use the global ``compute_engine`` setting. 'fast' selects Cython. See
+        :ref:`compute_engines` for details.
+
+        .. versionadded:: 0.7.4
 
     Returns
     -------
@@ -155,11 +191,12 @@ def pcoa(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
+    Selecting ``engine='numba'`` bypasses scikit-bio-binaries.
     Low-level acceleration is available for this function. See
-    :install:`scikit-bio-binaries <#acceleration>` for more information.
+    :ref:`binary_acceleration` for more information.
 
     Principal Coordinate Analysis (PCoA) was first described in [1]_.
 
@@ -255,11 +292,17 @@ def pcoa(
     # non-int values)
     ndim = dimensions
 
+    # Resolve the global setting before deciding whether to use optional binaries.
+    if isinstance(distmat.data, np.ndarray):
+        engine = _resolve_engine(engine, ("cython", "numba"))
+
     # Perform eigendecomposition
     if method == "eigh":
         long_method_name = "Principal Coordinate Analysis"
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(
+            distmat.data, inplace=inplace, engine=engine
+        )
         if 0 < dimensions < 1:
             if matrix_data.shape[0] > 10:
                 warn(
@@ -292,7 +335,7 @@ def pcoa(
                     RuntimeWarning,
                 )
             ndim = distmat.data.shape[0]
-        if _skbb_pcoa_fsvd_available(
+        if engine != "numba" and _skbb_pcoa_fsvd_available(
             distmat.data, dimensions, inplace, seed
         ):  # pragma: no cover
             # unlikely to throw here, but just in case
@@ -326,7 +369,9 @@ def pcoa(
                 )
         # if we got here, we could not use skbb
         # Center distance matrix, a requirement for PCoA here
-        matrix_data = center_distance_matrix(distmat.data, inplace=inplace)
+        matrix_data = center_distance_matrix(
+            distmat.data, inplace=inplace, engine=engine
+        )
 
         eigvals, eigvecs = _fsvd(matrix_data, ndim, seed=seed)
     else:
@@ -341,12 +386,12 @@ def pcoa(
     # by L&L to deal with negative eigenvalues. We raise a warning
     # in that case. First, we make values close to 0 equal to 0.
     xp, eigvals = ingest_array(eigvals)
-    negative_close_to_zero = xp.isclose(eigvals, 0)
+    negative_close_to_zero = xp.isclose(eigvals, xp.zeros_like(eigvals))
     eigvals = xp.where(negative_close_to_zero, 0, eigvals)
 
     # eigvals might not be ordered, so we first sort them, then analogously
     # sort the eigenvectors by the ordering of the eigenvalues too
-    idxs_descending = eigvals.argsort()[::-1]
+    idxs_descending = xp.flip(eigvals.argsort(), axis=0)
     eigvals = eigvals[idxs_descending]
     eigvecs = eigvecs[:, idxs_descending]
 
@@ -374,7 +419,9 @@ def pcoa(
     num_positive = (eigvals >= 0).sum()
     # Create a mask to set negative eigenvalues to 0 and their corresponding
     # eigenvectors to 0 because JAX does not have in-place operations.
-    idx = xp.arange(eigvals.shape[0])
+    # `num_positive` lives on the eigenvalues' device, so `idx` has to be created
+    # there as well; otherwise the comparison mixes a host and a device array.
+    idx = xp.arange(eigvals.shape[0], device=eigvals.device)
     mask = idx < num_positive
 
     eigvals = xp.where(mask, eigvals, 0)
@@ -496,7 +543,7 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     Parameters
     ----------
-    centered_distance_matrix : np.array
+    centered_distance_matrix : ndarray
        Numpy matrix representing the distance matrix for which the
        eigenvectors and eigenvalues shall be computed
     dimensions : int
@@ -507,9 +554,9 @@ def _fsvd(centered_distance_matrix, dimensions=10, seed=None):
 
     Returns
     -------
-    np.array
+    ndarray
        Array of eigenvectors, each with dimensions length.
-    np.array
+    ndarray
        Array of eigenvalues, a total number of dimensions.
 
     Notes

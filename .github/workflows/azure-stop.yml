@@ -1,0 +1,78 @@
+name: Azure VM Stop
+
+# This workflow is triggered by the completion of the "GPU CI" workflow. It shuts down
+# the Azure VM to avoid charges when it is not needed. If there are other workflows
+# queued or running, the current workflow will abort in order not to break them.
+
+on:
+  workflow_run:
+    workflows: ["GPU CI"]
+    types: [completed]
+
+concurrency:
+  group: azure-control
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  stop-gpu-vm:
+    name: Stop Azure GPU VM
+
+    if: |
+      github.event_name == 'workflow_run'
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+
+    steps:
+      - name: Check for active GPU workflows
+        id: active-runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+
+        # This step checks for any other queued or running GPU workflows. If there are
+        # any, we will not stop the VM yet, because the next workflow will use it.
+        run: |
+          jq_filter="[.workflow_runs[] | select(.id != ${SOURCE_RUN_ID}
+            and .status != \"completed\")] | length"
+
+          active="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/gpu.yml/runs?per_page=100" \
+              --jq "$jq_filter"
+          )"
+
+          echo "count=$active" >> "$GITHUB_OUTPUT"
+          echo "Other queued or running GPU workflows: $active"
+
+      - name: Log in to Azure using OIDC
+        if: steps.active-runs.outputs.count == '0'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deallocate VM
+        if: steps.active-runs.outputs.count == '0'
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          VM_NAME: ${{ vars.AZURE_VM_NAME }}
+        run: |
+          az vm deallocate \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME"
+
+      - name: Keep VM running for remaining tests
+        if: steps.active-runs.outputs.count != '0'
+        run: |
+          echo "Another GPU workflow is queued or running."
+          echo "The final workflow will deallocate the VM."

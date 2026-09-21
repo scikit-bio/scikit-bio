@@ -1,0 +1,62 @@
+name: Azure VM Start
+
+# This workflow starts the Azure GPU VM used for GPU testing. It is typically triggered
+# by a "gpu-ci" label added to a pull request. It listens to the `pull_request_target`
+# event instead of `pull_request`, because it needs to access the Azure credentials
+# stored in the repo.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [labeled]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+
+concurrency:
+  group: azure-control
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  start-gpu-vm:
+    name: Start Azure GPU VM
+
+    # A maintainer must add this exact label. New commits do not satisfy this
+    # condition; remove and re-add the label after reviewing updated commits.
+    if: |
+      (github.event_name == 'schedule') ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request_target' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'gpu-ci')
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # This workflow must never check out or execute pull-request code.
+
+      - name: Log in to Azure using OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Start VM
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          VM_NAME: ${{ vars.AZURE_VM_NAME }}
+        run: |
+          az vm start \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$VM_NAME"

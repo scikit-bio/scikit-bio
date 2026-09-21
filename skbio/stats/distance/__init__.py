@@ -46,21 +46,11 @@ Functions
 
    randdm
 
-Exceptions
-^^^^^^^^^^
-
-.. autosummary::
-
-   PairwiseMatrixError
-   SymmetricMatrixError
-   DistanceMatrixError
-   MissingIDError
-
 
 Distance-based statistics
 -------------------------
 
-Categorical Variable Stats
+Categorical Variable Tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
@@ -70,13 +60,14 @@ Categorical Variable Stats
    permanova
    permdisp
 
-Continuous Variable Stats
+Continuous Variable Tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
    :toctree:
 
    bioenv
+
 
 Distance Matrix Comparisons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -86,6 +77,17 @@ Distance Matrix Comparisons
 
    mantel
    pwmantel
+
+
+Exceptions
+^^^^^^^^^^
+
+.. autosummary::
+
+   PairwiseMatrixError
+   SymmetricMatrixError
+   DistanceMatrixError
+   MissingIDError
 
 
 Examples

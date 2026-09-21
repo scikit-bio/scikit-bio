@@ -112,7 +112,7 @@ Supported array-like formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Scikit-bio supports a wide range of array libraries in the Python ecosystem. A
-parameter annotated as ``array_like`` accepts any of the following formats:
+parameter annotated as ``array-like`` accepts any of the following formats:
 
 - Numpy :class:`~numpy.ndarray`, the "native" format which most of scikit-bio's
   functions are optimized for (e.g., utilizing vectorization if possible).
@@ -127,7 +127,8 @@ parameter annotated as ``array_like`` accepts any of the following formats:
    libraries. For instance, log-ratio transformations like
    :func:`~skbio.stats.composition.clr` can consume and return GPU-resident
    tensors with arbitrary dimensions, eliminating the overhead of round-tripping
-   through NumPy and significantly accelerating computation.
+   through NumPy and significantly accelerating computation. See :ref:`details
+   <array_backends>`.
 
 
 .. _samples_and_features:

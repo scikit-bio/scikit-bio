@@ -36,7 +36,6 @@ classifiers = [
 dependencies = [
     "requests >= 2.20.0",
     "decorator >= 3.4.2",
-    "natsort >= 4.0.3",
     "numpy >= 2.0",
     "pandas >= 1.5.0",
     "scipy >= 1.9.0",
@@ -129,7 +128,7 @@ skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*", "cp39-win_arm64", 
 build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
 # Test dependencies
-test-requires = ["pytest", "coverage", "responses"]
+test-requires = ["pytest", "coverage", "responses", "matplotlib"]
 
 # Install dependencies before building
 before-build = "pip install numpy cython"
@@ -151,11 +150,11 @@ doctest_optionflags = [
 ]
 markers = [
     "array_api: tests that exercise the Array API across backends",
+    "numba: tests that exercise optional Numba-accelerated code paths",
 ]
 
 [tool.check-manifest]
 ignore = [
-    ".coveragerc",
     ".dockerignore",
     ".editorconfig",
     "checklist.py",
@@ -180,4 +179,28 @@ ignore = [
     "D213",  # puts summary on second line
     "D400",  # redundant with D415 in place
     "D301",  # forces raw string literals
+]
+
+[tool.coverage.run]
+source = ["skbio"]
+branch = true
+relative_files = true
+omit = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/__init__.py",
+]
+
+[tool.coverage.report]
+omit = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/__init__.py",
+    "util/_typing.py",
+    "util/_testing.py",
+]
+exclude_also = [
+    "pass",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
 ]

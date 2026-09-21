@@ -414,21 +414,21 @@ class SubstitutionMatrix(PairwiseMatrix):
 
         Notes
         -----
-        Names are case-insensitive. For instance, `BLOSUM62` and `blosum62`
+        Names are case-insensitive. For instance, ``'BLOSUM62'`` and ``'blosum62'``
         point to the same substitution matrix.
 
         Available substitution matrix names can be obtained by ``get_names``.
         Currently, the following names are supported:
 
-        - `NUC.4.4` (a.k.a. DNAfull): A nucleotide substitution matrix covering
+        - ``'NUC.4.4'`` (a.k.a. DNAfull): A nucleotide substitution matrix covering
           all definite and degenerate nucleotides.
 
         - Point Accepted Mutation (PAM) [1]_: A set of amino acid substitution
-          matrices, including `PAM30`, `PAM70` and `PAM250`.
+          matrices, including ``'PAM30'``, ``'PAM70'`` and ``'PAM250'``.
 
         - BLOcks SUbstitution Matrix (BLOSUM) [2]_: A set of amino acid
-          substitution matrices, including `BLOSUM45`, `BLOSUM50`, `BLOSUM62`,
-          `BLOSUM80` and `BLOSUM90`.
+          substitution matrices, including ``'BLOSUM45'``, ``'BLOSUM50'``,
+          ``'BLOSUM62'``, ``'BLOSUM80'`` and ``'BLOSUM90'``.
 
         References
         ----------

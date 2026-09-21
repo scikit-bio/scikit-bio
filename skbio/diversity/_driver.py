@@ -23,6 +23,9 @@ from skbio.diversity.beta._unifrac import (
     _setup_multiple_unweighted_unifrac,
     _setup_multiple_weighted_unifrac,
     _normalize_weighted_unifrac_by_default,
+    _unweighted_unifrac_pdist_numba,
+    _weighted_unifrac_pdist_numba,
+    NUMBA_AVAILABLE,
 )
 from skbio.stats.distance import DistanceMatrix
 from skbio.diversity._util import (
@@ -32,6 +35,7 @@ from skbio.diversity._util import (
 )
 from skbio.util._decorator import deprecated
 from skbio.table._tabular import _ingest_table
+from skbio._config import _resolve_engine
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Callable
@@ -149,7 +153,6 @@ def alpha_diversity(
         being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -228,12 +231,45 @@ def alpha_diversity(
     return pd.Series(results, index=ids)
 
 
+# What engine="fast" resolves to for the unifrac metrics. Both call sites want
+# the same answer, so it is computed once here rather than repeating the
+# conditional at each one. NUMBA_AVAILABLE is fixed at import, so this is too.
+_UNIFRAC_FAST_ENGINE = "numba" if NUMBA_AVAILABLE else "cython"
+
+
+def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
+    """Whether beta_diversity's numba unifrac kernels can be used as-is.
+
+    Those kernels compute the whole distance matrix directly, bypassing
+    pairwise_func and any leftover metric kwargs entirely, so the fast path
+    only applies when neither was supplied. Warn if the caller explicitly
+    asked for engine="numba" but can't get it, so that case stays visible
+    instead of silently falling back to the cython/pairwise_func path.
+    """
+    if pairwise_func is None and not kwargs:
+        return True
+    if engine == "numba":
+        reason = (
+            "a pairwise_func was provided"
+            if pairwise_func is not None
+            else f"unrecognized keyword argument(s) {sorted(kwargs)} were provided"
+        )
+        warnings.warn(
+            f"engine='numba' was requested but {reason}, which the numba "
+            "unifrac kernels cannot use; falling back to the cython/"
+            "pairwise_func path instead.",
+            stacklevel=3,
+        )
+    return False
+
+
 def beta_diversity(
     metric: str | Callable,
     counts: TableLike,
     ids: ArrayLike | None = None,
     validate: bool = True,
     pairwise_func: Callable | None = None,
+    engine: str | None = None,
     **kwargs: Any,
 ) -> DistanceMatrix:
     r"""Compute distances between all pairs of samples.
@@ -248,7 +284,6 @@ def beta_diversity(
         metric being used.
     counts : table_like of shape (n_samples, n_taxa) or (n_taxa,)
         Vector or matrix containing count/abundance data of one or multiple samples.
-        See :ref:`supported formats <table_like>`.
     ids : array_like of shape (n_samples,), optional
         Identifiers for each sample in ``counts``. If not provided, will extract sample
         IDs from ``counts``, if available, or assign integer identifiers in the order
@@ -262,6 +297,13 @@ def beta_diversity(
         Examples of functions that can be provided are SciPy's
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for 'unweighted_unifrac' and 'weighted_unifrac'. Ignored for
+        other metrics. If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Numba if installed, otherwise Cython. See :ref:`compute_engines`
+        for details.
+
+        .. versionadded:: 0.7.4
     kwargs : dict, optional
         Metric-specific parameters. Refer to the documentation of the chosen metric.
         A special parameter is ``taxa``, needed by some phylogenetic metrics. If not
@@ -270,7 +312,7 @@ def beta_diversity(
 
     Returns
     -------
-    :class:`~skbio.stats.distance.DistanceMatrix`
+    DistanceMatrix
         Distances between all pairs of samples (i.e., rows). The number of
         rows and columns will be equal to the number of rows in ``counts``.
 
@@ -306,6 +348,16 @@ def beta_diversity(
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
+        resolved_engine = _resolve_engine(
+            engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
+        )
+        if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
+            engine, pairwise_func, kwargs
+        ):
+            distances = _unweighted_unifrac_pdist_numba(
+                counts, taxa=taxa, tree=tree, validate=validate
+            )
+            return DistanceMatrix(distances, ids)
         metric, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
@@ -313,6 +365,20 @@ def beta_diversity(
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
+        resolved_engine = _resolve_engine(
+            engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
+        )
+        if resolved_engine == "numba" and _numba_unifrac_fast_path_eligible(
+            engine, pairwise_func, kwargs
+        ):
+            distances = _weighted_unifrac_pdist_numba(
+                counts,
+                taxa=taxa,
+                tree=tree,
+                normalized=normalized,
+                validate=validate,
+            )
+            return DistanceMatrix(distances, ids)
         metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
@@ -377,8 +443,7 @@ def partial_beta_diversity(
         The beta diversity metric to apply to the samples. See :func:`beta_diversity`
         for details.
     counts : table_like of shape (n_samples, n_taxa)
-        Matrix containing count/abundance data of the samples. See
-        :ref:`supported formats <table_like>`.
+        Matrix containing count/abundance data of the samples.
     ids : iterable of strs
         Identifiers for each sample in ``counts``.
     id_pairs : iterable of tuple of (str, str)
@@ -391,7 +456,7 @@ def partial_beta_diversity(
 
     Returns
     -------
-    :class:`~skbio.stats.distance.DistanceMatrix`
+    DistanceMatrix
         Distances between pairs of samples indicated by ``id_pairs``. Pairwise
         distances not defined by id_pairs will be 0.0. Use this resulting
         DistanceMatrix with caution as 0.0 is a valid distance.

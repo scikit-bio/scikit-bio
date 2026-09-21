@@ -58,3 +58,4 @@ Please browse individual modules to see the API reference and tutorials for thei
    workflow
    util
    config
+   performance

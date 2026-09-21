@@ -21,6 +21,7 @@ from skbio.util._array import (
     _to_numpy,
     _move_to_device,
     _get_backend_name,
+    ArrayWorkspace,
 )
 
 # import optional dependencies
@@ -462,6 +463,85 @@ class TestIngestArray(TestCase):
         self.assertIs(xp, np_xp)
         self.assertIsInstance(oa, np.ndarray)
         self.assertIs(ob, b)
+
+
+# =====================================================================
+# Tests for ArrayWorkspace
+# =====================================================================
+
+
+class TestArrayWorkspace(TestCase):
+
+    def test_array_workspace_numpy(self):
+        works = ArrayWorkspace()
+        self.assertDictEqual(works.arrays, {})
+        self.assertNotIn("foo", works.arrays)
+
+        # request a new array => allocate new space
+        arr1 = works.get("foo", (3, 4), np.intp)
+        self.assertTupleEqual(arr1.shape, (3, 4))
+        self.assertEqual(arr1.dtype, np.intp)
+        self.assertTrue(arr1.flags.c_contiguous)
+        self.assertIn("foo", works.arrays)
+        base = works.arrays["foo"]
+        self.assertTupleEqual(base.shape, (12,))
+        self.assertIs(arr1.base, base)
+
+        # request a smaller array => use the same space
+        arr2 = works.get("foo", (2, 3), np.intp)
+        self.assertTupleEqual(arr2.shape, (2, 3))
+        self.assertTupleEqual(base.shape, (12,))
+        self.assertIs(arr2.base, base)
+
+        # total size, not each dimension, matters 
+        arr3 = works.get("foo", (5, 2), np.intp)
+        self.assertTupleEqual(arr3.shape, (5, 2))
+        self.assertTupleEqual(base.shape, (12,))
+        self.assertIs(arr3.base, base)
+
+        # request an array of the same size but different shape
+        arr4 = works.get("foo", (4, 3), np.intp)
+        self.assertTupleEqual(arr4.shape, (4, 3))
+        self.assertTupleEqual(base.shape, (12,))
+        self.assertIs(arr4.base, base)
+
+        # request a larger array => allocate new space
+        arr5 = works.get("foo", (4, 5), np.intp)
+        self.assertTupleEqual(arr5.shape, (4, 5))
+        self.assertTupleEqual(base.shape, (12,))
+        self.assertIsNot(arr5.base, base)
+
+        # new space = 2x old space if new array can fit
+        base = works.arrays["foo"]
+        self.assertTupleEqual(base.shape, (24,))
+        self.assertIs(arr5.base, base)
+
+        # otherwise, new space = new array size
+        arr6 = works.get("foo", (7, 8), np.intp)
+        self.assertTupleEqual(arr6.shape, (7, 8))
+        base = works.arrays["foo"]
+        self.assertTupleEqual(base.shape, (56,))
+        self.assertIs(arr6.base, base)
+
+        # different dtype => allocate new space
+        arr7 = works.get("foo", (5, 6), np.float32)
+        self.assertTupleEqual(arr7.shape, (5, 6))
+        self.assertEqual(arr7.dtype, np.float32)
+        self.assertTupleEqual(base.shape, (56,))
+        self.assertIsNot(arr7.base, base)
+        base = works.arrays["foo"]
+        self.assertTupleEqual(base.shape, (30,))
+        self.assertIs(arr7.base, base)
+
+        # different name => allocate new space
+        arr8 = works.get("bar", (4, 5), np.float32)
+        self.assertTupleEqual(arr8.shape, (4, 5))
+        self.assertIsNot(arr8.base, arr7.base)
+        self.assertIn("foo", works.arrays)
+        self.assertIn("bar", works.arrays)
+        base = works.arrays["bar"]
+        self.assertIs(arr8.base, base)
+        self.assertTupleEqual(base.shape, (20,)) 
 
 
 if __name__ == "__main__":

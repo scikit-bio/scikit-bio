@@ -49,6 +49,25 @@ Convenience wrappers with preset scoring schemes.
     pair_align_prot
 
 
+Multiple alignment
+------------------
+
+Progressive alignment of multiple sequences.
+
+.. autosummary::
+   :toctree: generated/
+
+    multi_align
+
+Convenience wrappers with preset scoring schemes.
+
+.. autosummary::
+   :toctree: generated/
+
+    multi_align_nucl
+    multi_align_prot
+
+
 Alignment statistics
 --------------------
 
@@ -62,7 +81,7 @@ Alignment statistics
 Deprecated functionality
 ------------------------
 
-Pure Python algorithms (slow; educational-purposes only)
+Slow, pure Python algorithms (deprecated)
 
 .. autosummary::
    :toctree: generated/
@@ -141,17 +160,17 @@ Likewise, we can align protein sequences with :func:`pair_align_prot`:
 PairAlignResult(score=15.0, paths=[<PairAlignPath, positions: 13, segments: 3, ...
 
 
-Alignment algorithm
-^^^^^^^^^^^^^^^^^^^
+Pairwise alignment
+^^^^^^^^^^^^^^^^^^
 
-The alignment algorithm aims to find the optimal alignment path(s) that yield the
-highest possible alignment score for two sequences. For decades,
-:wiki:`dynamic programming <Dynamic_programming>` (DP) has been the gold standard for
-pairwise sequence alignment, and is widely covered in many bioinformatics textbooks.
-scikit-bio also implements this algorithm. ``pair_align_nucl`` and ``pair_align_prot``
-are but convenience wrappers for the function :func:`pair_align`, which offers multiple
-customizable parameters and comprehensive documentation explaining the algorithm and
-everything you need to know for using it.
+An alignment algorithm aims to find the optimal alignment path(s) that yield the
+highest possible alignment score for sequences. For decades, :wiki:`dynamic programming
+<Dynamic_programming>` (DP) has been the gold standard for pairwise sequence alignment,
+and is widely covered in many bioinformatics textbooks. scikit-bio also implements this
+algorithm. ``pair_align_nucl`` and ``pair_align_prot`` are but convenience wrappers for
+the function :func:`pair_align`, which offers multiple customizable parameters and
+comprehensive documentation explaining the algorithm and everything you need to know
+for using it.
 
 >>> from skbio.alignment import pair_align
 
@@ -318,6 +337,35 @@ The :meth:`~AlignPath.from_indices` method can parse **Biotite**'s alignment res
     path = AlignPath.from_indices(res[0].trace.T)
 
 
+Multiple alignment
+^^^^^^^^^^^^^^^^^^
+
+Multiple sequence alignment (MSA) is valuable in identifying conserved and variable
+regions among homologous sequences, inferring evolutionary relationships of genes and
+organisms, and constructing sequence profiles. scikit-bio implements the classic
+progressive alignment method for MSA in the :func:`multi_align` function.
+
+>>> from skbio.alignment import multi_align
+>>> seqs = ["CAGCTATATATCGCTACG",
+...         "CTGCTTATATCCCTAGG",
+...         "AAGCTATACATCCAACATG"]
+>>> res = multi_align(seqs)
+>>> res.path
+<AlignPath, sequences: 3, positions: 20, segments: 6>
+
+The output ``AlignPath`` object contains three sequences.
+
+>>> res.path.to_bits(expand=False)
+array([[0, 0, 0, 0, 0, 1],
+       [0, 1, 0, 0, 0, 1],
+       [0, 0, 0, 1, 0, 0]], dtype=uint8)
+
+Construct the aligned sequences.
+
+>>> res.path.to_aligned(seqs)
+['CAGCTATATATCGCTACG--', 'CTGCT-TATATCCCTAGG--', 'AAGCTATACATC-CAACATG']
+
+
 Tabular alignment
 ^^^^^^^^^^^^^^^^^
 
@@ -437,6 +485,7 @@ from skbio.alignment._path import AlignPath, PairAlignPath
 from skbio.alignment._score import align_score
 from skbio.alignment._distance import align_dists
 from skbio.alignment._pair import pair_align, pair_align_nucl, pair_align_prot
+from skbio.alignment._multi import multi_align, multi_align_nucl, multi_align_prot
 
 __all__ = [
     "TabularMSA",
@@ -453,4 +502,7 @@ __all__ = [
     "pair_align",
     "pair_align_nucl",
     "pair_align_prot",
+    "multi_align",
+    "multi_align_nucl",
+    "multi_align_prot",
 ]

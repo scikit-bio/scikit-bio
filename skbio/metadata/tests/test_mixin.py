@@ -11,7 +11,7 @@ import unittest
 from skbio.metadata._mixin import (MetadataMixin,
                                    PositionalMetadataMixin,
                                    IntervalMetadataMixin)
-from skbio.util._decorator import overrides
+from skbio.util import overrides
 from skbio.util._testing import ReallyEqualMixin
 from skbio.metadata._testing import (MetadataMixinTests,
                                      PositionalMetadataMixinTests,

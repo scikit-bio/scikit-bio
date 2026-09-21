@@ -1,6 +1,62 @@
 # scikit-bio changelog
 
-## Version 0.7.4-dev
+## Version 0.7.4
+
+### Features
+
+* Added `ancombc2` for ANCOM-BC2 differential abundance testing, with post-hoc analyses (global, pairwise, Dunnett and trend tests) through `ANCOMBCResult`. Thanks to @iiiime for the initial implementation ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
+* Added `multi_align` progressive multiple sequence alignment, with and nucleotide and protein wrappers `multi_align_nucl` and `multi_align_prot` ([#2582](https://github.com/scikit-bio/scikit-bio/pull/2582)).
+* Added nucleotide transition probability matrices under `skbio.sequence.transition` for the JC69, K2P, F81, HKY85 and TN93 models. Thanks to @keder ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).
+* Added inverse robust centered log-ratio transformation, `skbio.stats.composition.rclr_inv` ([#2527](https://github.com/scikit-bio/scikit-bio/pull/2527)).
+* Added an optional Numba engine for `permanova`, `mantel`, `permdisp` and `pcoa`. Thanks to @LarytheLord for this and other contributions ([#2483](https://github.com/scikit-bio/scikit-bio/pull/2483), [#2508](https://github.com/scikit-bio/scikit-bio/pull/2508), [#2547](https://github.com/scikit-bio/scikit-bio/pull/2547)). See also [#2569](https://github.com/scikit-bio/scikit-bio/pull/2569), [#2523](https://github.com/scikit-bio/scikit-bio/pull/2523), [#2510](https://github.com/scikit-bio/scikit-bio/pull/2510).
+* Added option `engine="fast"` to `permanova`, `mantel`, `permdisp` and UniFrac metrics in `beta_diversity` to automatically select Numba when installed and Cython otherwise. Defaults are unchanged ([#2575](https://github.com/scikit-bio/scikit-bio/pull/2575), [#2581](https://github.com/scikit-bio/scikit-bio/pull/2581)).
+* Added Array API and GPU support for distance matrix storage and operations, `permanova`, `mantel` and `center_distance_matrix`. Added Numba GPU acceleration for PERMANOVA and Mantel on NVIDIA and AMD devices ([#2523](https://github.com/scikit-bio/scikit-bio/pull/2523)).
+* Added global configuration option `compute_engine` to provide centralized control of engines. Added `skbio.get_config()` to retrieve all current settings ([#2590](https://github.com/scikit-bio/scikit-bio/pull/2590)).
+* `TreeNode.prune` and `TreeNode.bifurcate` now return the resulting tree and accept `inplace=False` to operate on a copy. Thanks to @jissen706 for this and other contributions ([#2495](https://github.com/scikit-bio/scikit-bio/pull/2495)).
+
+### Performance enhancements
+
+* Added a top-level documentation page "Computation and Performance", providing a guide to enhance performance ([#2590](https://github.com/scikit-bio/scikit-bio/pull/2590)).
+* Added parallel Numba computation of unweighted and weighted UniFrac distance matrices in `beta_diversity`. Thanks to @l1joseph for this and other contributions ([#2558](https://github.com/scikit-bio/scikit-bio/pull/2558)).
+* Accelerated `permanova` with parallel Numba kernels for square and condensed distance matrices ([#2488](https://github.com/scikit-bio/scikit-bio/pull/2488), [#2557](https://github.com/scikit-bio/scikit-bio/pull/2557)).
+* Accelerated `dirmult_ttest` by vectorizing Welch's t-test calculations and reusing sampling buffers ([#2561](https://github.com/scikit-bio/scikit-bio/pull/2561)).
+* Accelerated `dirmult_lme`'s default random-intercept model by fitting all features at once in closed form, instead of executing `MixedLM.fit` optimization per feature ([#2578](https://github.com/scikit-bio/scikit-bio/pull/2578)).
+* Added efficient native implementations of Bonferroni, Holm, Benjamini-Hochberg and Benjamini-Yekutieli corrections for p-values. This improved the performance of differential abundance tests, including `ancom`, `ancombc`, `ancombc2`, `dirmult_ttest` and `dirmult_lme`. NaN p-values are excluded from each testing family, matching the behavior of R's `p.adjust`. Other p-value adjustment methods fall back to statsmodels ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
+* Improved performance of `ancombc` ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
+* `TabularMSA.from_path_seqs` now preserves metadata from the original sequences ([#2582](https://github.com/scikit-bio/scikit-bio/pull/2582)).
+
+### Bug Fixes
+
+* Fixed `rda` ignoring `sample_ids`, `feature_ids` and `constraint_ids`. Thanks to @Arthur031221 for reporting ([#2585](https://github.com/scikit-bio/scikit-bio/pull/2585)).
+* Fixed gzip readers incorrectly opening read/write file objects in write mode on Python 3.15. Thanks to Maximiliano Curia, Andreas Tille and @ChristaCode ([#2577](https://github.com/scikit-bio/scikit-bio/pull/2577)).
+* Fixed `permdisp` raising `ZeroDivisionError` with `test="median"` when all samples in a group have identical coordinates ([#2574](https://github.com/scikit-bio/scikit-bio/pull/2574)).
+* Fixed `ancombc` producing inaccurate global test results. The global test is now available through `ANCOMBCResult.global_test()` (see below) ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
+* Fixed `GrammaredSequence.to_definites` failing on sequence types without non-canonical characters, including `DNA` and `RNA`. Thanks to @dylanpulver ([#2562](https://github.com/scikit-bio/scikit-bio/pull/2562)).
+* Fixed `permdisp` ignoring `seed` during PCoA with `method="fsvd"`, causing irreproducible results ([#2546](https://github.com/scikit-bio/scikit-bio/pull/2546)).
+* Fixed `ancombc` and `dirmult_lme` treating numeric-looking strings in metadata (e.g., `['1', '2', '3']`) as numbers instead of categories ([#2539](https://github.com/scikit-bio/scikit-bio/issues/2539)).
+* Fixed overly strict floating-point comparisons in `pair_align` with linear gap penalties and small `atol` values ([#2513](https://github.com/scikit-bio/scikit-bio/pull/2513)).
+* Fixed `pair_align` raising `TypeError` with `atol=None`, which is equivalent to `atol=0`. Thanks to @steps-re ([#2504](https://github.com/scikit-bio/scikit-bio/pull/2504)).
+* Fixed zero division warnings from `TabularMSA.gap_frequencies(relative=True)` and `Sequence.frequencies(relative=True)` on empty inputs ([#2543](https://github.com/scikit-bio/scikit-bio/pull/2543)).
+* Fixed zero division warnings in `rclr` ([#2526](https://github.com/scikit-bio/scikit-bio/pull/2526)).
+* `dirmult_ttest` now raises `ValueError` when `draws < 1` ([#2561](https://github.com/scikit-bio/scikit-bio/pull/2561)).
+* Fixed inaccurate pseudo-F statistics from `permanova` on float32 distance matrices ([#2509](https://github.com/scikit-bio/scikit-bio/pull/2509)).
+* Fixed `SymmetricMatrix.filter` and `permute` losing non-zero diagonals in condensed form. Thanks to @youdie006 for the fix ([#2536](https://github.com/scikit-bio/scikit-bio/pull/2536)).
+* Fixed `TreeNode.copy` so attributes referencing other nodes in the tree point to the corresponding copied nodes ([#2497](https://github.com/scikit-bio/scikit-bio/pull/2497)).
+* Added missing NCBI genetic code tables 15 and 26-33 to `GeneticCode.from_ncbi` and the alternative start codon `GTG` to table 3 ([#2563](https://github.com/scikit-bio/scikit-bio/pull/2563)).
+* FASTA validation errors now identify the offending record ([#2573](https://github.com/scikit-bio/scikit-bio/pull/2573)).
+* Fixed `AlignPath.to_indices` and `PairAlignPath.to_cigar` failing on single-segment paths, and `AlignPath.to_indices` failing on single-sequence paths. Thanks to @haeganm ([#2580](https://github.com/scikit-bio/scikit-bio/pull/2580)).
+
+### Miscellaneous
+
+* Removed the `natsort` dependency by implementing natural sorting locally in `skbio.stats.gradient` ([#2007](https://github.com/scikit-bio/scikit-bio/issues/2007)).
+* Improved API documentation, including alignment tutorials and links for supported input and output types ([#2584](https://github.com/scikit-bio/scikit-bio/pull/2584)).
+* Improved test discovery and public API imports in tests. Thanks to @RohitKattimani for this and other contributions ([#2514](https://github.com/scikit-bio/scikit-bio/pull/2514), [#2518](https://github.com/scikit-bio/scikit-bio/pull/2518)).
+* Various minor improvements. Thanks to @yousaf-360, @RishiiGamer2201, and @latent-9 ([#2542](https://github.com/scikit-bio/scikit-bio/pull/2542), [#2556](https://github.com/scikit-bio/scikit-bio/pull/2556), [#2525](https://github.com/scikit-bio/scikit-bio/pull/2525)).
+
+### Backward-incompatible changes
+
+* `ancombc` now returns an `ANCOMBCResult` object instead of a DataFrame or tuple of two. The primary table can be accessed through `.result` or simply the object itself. This largely preserves the behavior when the global test is not requested (without specifying `grouping`). However, the global test is now deferred to `ANCOMBCResult.global_test()` (see also a relevant bug fix above). The `Log2(FC)` column is now named `Log(FC)` to reflect its natural-log scale ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
+
 
 ### Features
 

@@ -404,7 +404,6 @@ def assert_series_almost_equal(left, right):
         check_series_type=True,
         check_names=True,
         check_exact=False,
-        check_datetimelike_compat=False,
         obj="Series",
     )
     # this check ensures that empty Series with different indices do not
@@ -728,6 +727,23 @@ def array_backends(*backend_names, cpu_only=False):
         return wrapper
 
     return decorator
+
+
+def numba_code(test_func):
+    """Decorator: mark a test as requiring optional Numba support."""
+    try:
+        import pytest
+
+        test_func = pytest.mark.numba(test_func)
+    except ImportError:
+        pass
+
+    try:
+        import numba  # noqa: F401
+    except ImportError:
+        test_func = unittest.skip("Numba is not installed.")(test_func)
+
+    return test_func
 
 
 class ArrayAPITestMixin:

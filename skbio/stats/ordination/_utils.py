@@ -8,6 +8,8 @@
 
 import numpy as np
 
+from skbio._config import _resolve_engine
+
 from ._cutils import center_distance_matrix_cy
 
 
@@ -197,7 +199,7 @@ def f_matrix(E_matrix):
     return E_matrix - row_means - col_means + matrix_mean
 
 
-def center_distance_matrix(distance_matrix, inplace=False):
+def center_distance_matrix(distance_matrix, inplace=False, engine=None):
     """Centers a distance matrix.
 
     Note: If the used distance was euclidean, pairwise distances
@@ -209,23 +211,34 @@ def center_distance_matrix(distance_matrix, inplace=False):
 
     Parameters
     ----------
-    distance_matrix : 2D array_like
+    distance_matrix : 2-D array_like
         Distance matrix.
     inplace : bool, optional
         Whether or not to center the given distance matrix in-place, which
         is more efficient in terms of memory and computation.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for centering the distance matrix. If None (default), use the
+        global ``compute_engine`` setting. 'fast' selects Cython. See
+        :ref:`compute_engines` for details.
 
     """
+    engine = _resolve_engine(engine, ("cython", "numba"))
+
+    if engine == "numba":
+        from ._center_distance_matrix_numba import center_distance_matrix_nb as center
+    else:
+        center = center_distance_matrix_cy
+
     if not distance_matrix.flags.c_contiguous:
-        # center_distance_matrix_cy requires c_contiguous, so make a copy
+        # the centering kernels require c_contiguous, so make a copy
         distance_matrix = np.asarray(distance_matrix, order="C")
 
     if inplace:
-        center_distance_matrix_cy(distance_matrix, distance_matrix)
+        center(distance_matrix, distance_matrix)
         return distance_matrix
     else:
         centered = np.empty(distance_matrix.shape, distance_matrix.dtype)
-        center_distance_matrix_cy(distance_matrix, centered)
+        center(distance_matrix, centered)
         return centered
 
 

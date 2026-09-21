@@ -55,8 +55,8 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Notes
     -----
-    According to the IUPAC DNA character set [1]_ , a DNA sequence may contain
-    the following four definite characters (canonical nucleotides):
+    According to the IUPAC DNA character set [1]_ , a DNA sequence may contain the
+    following four definite characters (canonical nucleotides):
 
     +-----+-----------+
     |Code |Nucleobase |
@@ -101,15 +101,14 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Plus two gap characters: ``-`` and ``.``.
 
-    Characters other than the above 17 are not allowed. If you intend to use
-    additional characters to represent non-canonical nucleobases, such as ``I``
-    (Inosine), you may create a custom alphabet using ``GrammaredSequence``.
-    Directly modifying the alphabet of ``DNA`` may break methods that rely on
-    the IUPAC alphabet.
+    Characters other than the above 17 are not allowed. If you intend to use additional
+    characters to represent non-canonical nucleobases, such as ``I`` (Inosine), you may
+    create a custom alphabet using ``GrammaredSequence``. Directly modifying the
+    alphabet of ``DNA`` may break methods that rely on the IUPAC alphabet.
 
-    It should be noted that some functions do not support degenerate characters
-    characters. In such cases, they will be replaced with `N` to represent any
-    of the canonical nucleotides.
+    It should be noted that some functions do not support degenerate characters. In
+    such cases, they will be replaced with `N` to represent any of the canonical
+    nucleotides.
 
     References
     ----------

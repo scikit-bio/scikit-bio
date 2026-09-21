@@ -53,7 +53,7 @@ import functools
 
 import numpy as np
 
-from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA, Protein
+from skbio.sequence import Sequence, GrammaredSequence, DNA, RNA
 from skbio.sequence._alphabet import _encode_alphabet
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -1632,7 +1632,7 @@ def paralin(seq1, seq2, pseudocount=None):
     or unequal character frequencies, is zero.
 
     .. note::
-        The LogDet distance computed by PHYLIP's `dnadist` command is actually
+        The LogDet distance computed by PHYLIP's ``dnadist`` command is actually
         consistent with the paralinear distance implemented here.
 
     The function returns NaN when any of the determinants is 0 or negative.
