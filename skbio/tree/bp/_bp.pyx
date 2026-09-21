@@ -14,6 +14,8 @@
 ### http://www.dcc.uchile.cl/~gnavarro/ps/tcs16.2.pdf
 
 from libc.math cimport ceil, log as ln, pow, log2
+import types
+
 import numpy as np
 cimport numpy as cnp
 cimport cython
@@ -22,6 +24,7 @@ from ._bp_binary_tree cimport *
 from ._ba cimport *
 
 from ..._base import SkbioObject
+from ...io.descriptors import Read, Write
 
 cnp.import_array()
 
@@ -149,6 +152,52 @@ cdef class mM:
                 self.r[node] = self.r[lchild]
 
 
+class _BPRead(Read):
+    """``Read`` descriptor specialized for ``BPTree``.
+
+    ``BPTree`` is a Cython ``cdef class`` whose type dict is immutable, so the
+    base :class:`~skbio.io.descriptors.Read` cannot cache the generated method
+    on the class (``cls._read_method = ...`` raises ``TypeError``). Cache it on
+    the descriptor instead, reusing the base's dynamic-docstring machinery so
+    ``BPTree.read`` still documents its supported file formats.
+    """
+
+    def __init__(self):
+        self._methods = {}
+
+    def __get__(self, instance, cls):
+        method = self._methods.get(cls)
+        if method is None:
+            def _read_method(file, format=None, **kwargs):
+                import skbio.io
+
+                return skbio.io.read(file, into=cls, format=format, **kwargs)
+
+            _read_method.__doc__ = self._make_docstring(cls)
+            method = self._methods[cls] = _read_method
+        return method
+
+
+class _BPWrite(Write):
+    """``Write`` counterpart to :class:`_BPRead` for ``BPTree``.
+
+    Caches the generated write method on the descriptor (not the immutable
+    ``cdef class`` dict, and not the ``__dict__``-less instances) and binds it
+    per instance on access.
+    """
+
+    def __init__(self):
+        self._methods = {}
+
+    def __get__(self, instance, cls):
+        method = self._methods.get(cls)
+        if method is None:
+            method = self._methods[cls] = self._generate_write_method(cls)
+        if instance is None:
+            return method
+        return types.MethodType(method, instance)
+
+
 @cython.final
 cdef class BPTree:
     """A balanced parentheses succinct data structure tree representation.
@@ -255,63 +304,14 @@ cdef class BPTree:
 
     default_write_format = "newick"
 
-    def write(self, object file, format=None, **kwargs):
-        """Write the tree to a file via the ``skbio.io`` registry.
-
-        Parameters
-        ----------
-        file : str or file-like object
-            Path or open file handle to write to.
-        format : str, optional
-            The file format to write. Defaults to ``"newick"``.
-        kwargs : dict, optional
-            Format-specific parameters passed to the writer.
-
-        See Also
-        --------
-        read
-        to_npz
-        skbio.io.registry.write
-        skbio.io.format.newick
-
-        """
-        # imported lazily to avoid an import cycle at module load time
-        import skbio.io
-
-        return skbio.io.write(
-            self, into=file, format=format or self.default_write_format, **kwargs
-        )
-
-    @staticmethod
-    def read(object file, format=None, **kwargs):
-        """Read a tree from a file via the ``skbio.io`` registry.
-
-        Parameters
-        ----------
-        file : str or file-like object
-            Path or open file handle to read from.
-        format : str, optional
-            The file format to read. If omitted, the format is inferred.
-        kwargs : dict, optional
-            Format-specific parameters passed to the reader.
-
-        Returns
-        -------
-        BPTree
-            The parsed tree.
-
-        See Also
-        --------
-        write
-        from_npz
-        skbio.io.registry.read
-        skbio.io.format.newick
-
-        """
-        # imported lazily to avoid an import cycle at module load time
-        import skbio.io
-
-        return skbio.io.read(file, into=BPTree, format=format, **kwargs)
+    # ``read`` and ``write`` are provided by the ``skbio.io`` registry via the
+    # descriptor protocol, exactly as for ``TreeNode`` and other SkbioObjects,
+    # giving BPTree the dynamically generated "Supported file formats"
+    # documentation. BPTree-specific descriptor subclasses (defined above) are
+    # used because a Cython ``cdef class`` cannot cache the generated methods on
+    # its immutable type dict the way the stock descriptors do.
+    read = _BPRead()
+    write = _BPWrite()
 
     def to_npz(self, object file):
         """Save the tree to a compressed NumPy ``.npz`` archive.

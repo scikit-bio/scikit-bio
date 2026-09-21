@@ -85,6 +85,12 @@ class NewickFormatError(FileFormatError):
     pass
 
 
+class JplaceFormatError(FileFormatError):
+    """Raised when a ``jplace`` formatted file cannot be parsed."""
+
+    pass
+
+
 class FASTQFormatError(FileFormatError):
     """Raised when a ``fastq`` formatted file cannot be parsed."""
 

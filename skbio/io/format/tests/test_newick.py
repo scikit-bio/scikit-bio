@@ -387,6 +387,8 @@ class TestNewickBPTree(unittest.TestCase):
         "((A:.01, B:.01)D:.01, C:.01)r;",
         "(a:1e-3,b:2.5E2)r;",
         "((:0.25,:0.5):0.0,x)r;",
+        "((a[comment],b)c,d)r;",
+        "('O''Brien':1,'a b':2)r;",
     ]
 
     def _read_bp(self, s):
@@ -448,6 +450,61 @@ class TestNewickBPTree(unittest.TestCase):
         buf.seek(0)
         obs = BPTree.read(buf)
         npt.assert_equal(obs.data, bp.data)
+
+    def _names(self, bp):
+        return [bp.name(i) for i in range(bp.data.size)]
+
+    def test_comments_ignored(self):
+        # [comment] regions are dropped and never affect topology or names,
+        # even when they contain parentheses, commas, or nest.
+        plain = self._read_bp("((a,b)c,d)r;")
+        for s in ("((a[c1],b)[c2]c,d)r;",
+                  "((a[x(,)[y]z],b)c,d[trailing])r;",
+                  "[pre]((a,b)c,d)r;"):
+            obs = self._read_bp(s)
+            npt.assert_equal(obs.data, plain.data, err_msg=s)
+            self.assertEqual(self._names(obs), self._names(plain))
+
+    def test_apostrophe_roundtrip(self):
+        # An embedded apostrophe is read as a single ' (a doubled '' is
+        # collapsed) and written back doubled inside quotes.
+        bp = self._read_bp("('O''Brien':1,b:2)r;")
+        self.assertIn("O'Brien", self._names(bp))
+        buf = io.StringIO()
+        _bp_to_newick(bp, buf)
+        self.assertIn("'O''Brien'", buf.getvalue())
+        buf.seek(0)
+        self.assertIn("O'Brien", self._names(self._read_bp(buf.getvalue())))
+
+    def test_whitespace_label_quoted_on_write(self):
+        # A label with whitespace must be quoted so the output re-parses.
+        bp = self._read_bp("('a b':1,c:2)r;")
+        self.assertIn("a b", self._names(bp))
+        buf = io.StringIO()
+        _bp_to_newick(bp, buf)
+        self.assertIn("'a b'", buf.getvalue())
+        buf.seek(0)
+        self.assertIn("a b", self._names(self._read_bp(buf.getvalue())))
+
+    def test_convert_underscores(self):
+        from skbio.tree.bp._bp_io import parse_newick
+
+        s = "('a_b':1,c_d:2)r;"
+        # default (True): a quoted label is literal, an unquoted '_' -> space
+        obs = self._read_bp(s)
+        self.assertIn("a_b", self._names(obs))
+        self.assertIn("c d", self._names(obs))
+        # opt out: underscores preserved literally
+        off = parse_newick(s, convert_underscores=False)
+        self.assertIn("a_b", self._names(off))
+        self.assertIn("c_d", self._names(off))
+
+    def test_convert_underscores_via_registry(self):
+        s = "(c_d:2,e:1)r;"
+        conv = BPTree.read([s], format="newick")
+        self.assertIn("c d", self._names(conv))
+        lit = BPTree.read([s], format="newick", convert_underscores=False)
+        self.assertIn("c_d", self._names(lit))
 
     def test_invalid_missing_semicolon(self):
         with self.assertRaises(NewickFormatError):
