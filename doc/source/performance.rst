@@ -2,15 +2,15 @@ Computation and performance
 ===========================
 
 Biological datasets continue to grow in size and complexity. scikit-bio prioritizes
-computational efficiency and scalability to very large datasets, while guaranteeing
+computational efficiency and scalability to very large datasets, alongside
 numerical correctness and reproducibility. Broad support for computer architectures
-and environments are also central goals. The aim is to help researchers carry out
+and environments is also a central goal. The aim is to help researchers carry out
 reliable analyses on available resources, whether a laptop or a supercomputer cluster.
 
 Most analyses can start with the default settings, which execute efficient, CPU-based
-numerical computing by exploiting `NumPy <https://numpy.org/>`_'s vectorized array
-operations and, if necessary, `Cython <https://cython.org/>`_ for loop-intensive
-calculations. For more demanding work, scikit-bio offers alternative implementations
+numerical computing using the vectorized array operations of `NumPy
+<https://numpy.org/>`_ and, if necessary, `Cython <https://cython.org/>`_ for
+loop-intensive calculations. For more demanding work, scikit-bio offers alternative implementations
 of selected analyses, involving parallelization, `Numba <https://numba.pydata.org/>`_
 engines, support for GPU computation, and support for alternative array backends. This
 guide explains these options and how to choose among them. The benefits depend on the
@@ -24,16 +24,16 @@ Array backends
 
 Multiple array libraries are available or emerging in the Python scientific computing
 ecosystem to support diverse computational requirements. The `Python array API standard
-<https://data-apis.org/array-api/latest/>`_ defines a common API which many array
+<https://data-apis.org/array-api/latest/>`_ defines a common API with which many array
 libraries comply. An increasing number of scikit-bio functions are implemented using
-using array-API-compatible code such that any compliant array backends automatically
-receive **native support**. This means that when a function is supplied with an array
-in a supported format, the entire computation will be performed using the corresponding
-backend, without converting the data to NumPy on the CPU. The output will also use the
-same format when applicable.
+array-API-compatible code to provide **native support** for multiple array backends.
+This allows supported computations to use the corresponding backend without converting
+the input array to NumPy on the CPU. Support and any limitations depend on the function
+and backend, and are noted in each function's documentation. The output will also use
+the same format when applicable.
 
 We will demonstrate this using the :func:`~skbio.stats.composition.clr` function, which
-performs centered log-ratio (CLR) transformation of compositional data. A NumPy array
+performs the centered log-ratio (CLR) transformation of compositional data. A NumPy array
 is created and supplied to the function, which returns a new NumPy array containing the
 result::
 
@@ -46,7 +46,8 @@ result::
 
 Let's now use `JAX <https://docs.jax.dev/en/latest/>`_ as the array backend. One just
 needs to cast the NumPy array into a JAX array before the function call. This simple
-move will instantly boost performance in many computational environments::
+change can significantly improve performance, depending on the workload and computing
+environment::
 
     import jax.numpy as jnp
 
@@ -55,8 +56,8 @@ move will instantly boost performance in many computational environments::
 
 While any compliant array backend may work automatically, scikit-bio focuses on
 validated support for five common backends. A table of backend and device support is
-provided in the documentation page of each function that supports array backends.
-For example:
+provided on the documentation page of each function that supports array backends.
+For example, the CLR function supports the following combinations:
 
 +---------+---------+---------+
 | Backend | CPU     | GPU     |
@@ -73,11 +74,10 @@ For example:
 +---------+---------+---------+
 
 scikit-bio is not dependent on any of these array libraries except for NumPy. To
-utilize a particular array backend that best fits your task and computational resource,
+utilize a particular array backend that best fits your task and computational resources,
 you will need to *install that library separately*.
 
-See below for :ref:`performing GPU computing <gpu_computing>` via choices of array
-backends.
+See below for :ref:`GPU computing <gpu_computing>` using array backends.
 
 
 .. _compute_engines:
@@ -92,32 +92,30 @@ Each implementation is referred to as a **compute engine**. Such functions have 
 currently available:
 
 - ``cython``: The default engine implemented in `Cython <https://cython.org/>`_,
-  which is translated into C code and compiled into binaries during installation. It
+  which is translated into C code and compiled into binaries when scikit-bio is built. It
   often offers C-level performance in heavy computing tasks. Cython is the legacy
   engine of many scikit-bio functions. Pure Python implementations are also referred
   to as ``cython`` for simplicity.
 
 - ``numba``: An alternative engine implemented in `Numba <https://numba.pydata.org/>`_,
   which stays as source code at deployment and is only compiled before execution
-  (a.k.a., just-in-time (JIT) compilation). This process has an overhead for the first
-  call of each function. Once compiled, the binaries are cached for reuse in later
-  calls, which will become faster. Numba is not a required dependency of scikit-bio.
-  To utilize the Numba engine, you will need to :install:`install Numba <#numba>`
-  separately.
+  (just-in-time (JIT) compilation). This process adds overhead to the first call of
+  the function. Once compiled, the binaries are cached for reuse in subsequent calls,
+  avoiding that overhead. Numba is not a required dependency of scikit-bio. To utilize
+  the Numba engine, you will need to :install:`install Numba <#numba>` separately.
 
-- ``fast``: Let the function choose the faster available engine for you. This
-  selection is determined based on the development team's benchmarks on representative
-  datasets, though it does not guarantee faster execution for every dataset. Each
-  function's documentation page explains the choice and its impact.
+- ``fast``: Let the function choose the faster available engine for you. This selection
+  is determined based on the development team's benchmarks on representative datasets,
+  though it does not guarantee faster execution for every dataset. Each function's
+  documentation page explains the choice and its impact.
 
 .. note::
     The scikit-bio development team is currently expanding Numba engines for valuable
     functions. They are often more efficient than the legacy Cython engines.
 
 Both Cython and Numba engines of each function perform the same task and the results
-are usually consistent, although numerical identity is not guaranteed, due to the
-different numerical and stochastic behaviors between the engines. With the same engine
-and stochastic setting (via ``seed``), the result is always precisely reproducible.
+are usually consistent, although numerical identity is not guaranteed due to the
+different numerical and stochastic behaviors between the engines.
 
 Without explicitly specifying an engine in the function call (i.e., ``engine=None``),
 the choice of an engine will be controlled by the :ref:`global configuration
@@ -135,7 +133,7 @@ global option once prior to execution::
 GPU computing
 -------------
 
-GPUs are often advantageous over CPUs in large-scale analyses as they enable massive
+GPUs are often advantageous over CPUs in large-scale analyses as they enable massively
 parallel calculations. Support for GPU computing in scikit-bio is provided via two
 mechanisms:
 
@@ -151,31 +149,33 @@ and the subsequent CLR transformation will take place on the GPU automatically::
     result = clr(carr)
 
 For backends that support both CPU and GPU, one may need to specify which device to
-store the data using the ``device`` parameter. The following example uses `PyTorch
+store the data on using the ``device`` parameter. The following example uses `PyTorch
 <https://pytorch.org/>`_, a common deep learning library supporting both CPU- and
 GPU-resident arrays (tensors)::
 
     import torch
 
     assert torch.cuda.is_available()
-    tensor = torch.tensor(np_array, device='cuda')
+    tensor = torch.tensor(arr, device='cuda')
     result = clr(tensor)
 
-2\. :ref:`The Numba engine <compute_engines>` of some functions are capable of GPU
-computing through extensions `numba-cuda <https://nvidia.github.io/numba-cuda/>`_ (for
-CUDA GPUs) and `numba-hip <https://github.com/ROCm/numba-hip>`_ (for ROCm GPUs). Refer
-to the :install:`installation instructions <#numba>`. Once installed, capable Numba
-engines will automatically perform computation on the GPU if the input array is
-resident on that GPU, regardless of the backend.
+2\. :ref:`The Numba engines <compute_engines>` of some functions are capable of GPU
+computing through the extensions `numba-cuda <https://nvidia.github.io/numba-cuda/>`_
+(for CUDA GPUs) and `numba-hip <https://github.com/ROCm/numba-hip>`_ (for ROCm GPUs).
+Refer to the :install:`installation instructions <#numba>`. With a compatible GPU
+extension installed, these Numba engines can automatically use GPU computation for
+supported CuPy and PyTorch arrays residing on the GPU. The function will fall back to
+the array-API implementation for other array formats or if the GPU kernel is
+unavailable.
 
 We will demonstrate this using the :func:`~skbio.stats.distance.permanova` function,
 which performs the Permutational Multivariate Analysis of Variance (PERMANOVA) on a
-distance matrix and a grouping vector. By defaul, the input distance matrix is a
+distance matrix and a grouping vector. By default, the input distance matrix is a
 CPU-resident NumPy array and the compute engine is Cython (see compute_engines_)::
 
     from skbio.stats.distance import permanova, randdm
 
-    dm = randdm(10000, random_fn=42)
+    dm = randdm(10000)
     grouping = [0] * 5000 + [1] * 5000
     res = permanova(dm, grouping)
 
@@ -192,10 +192,10 @@ scikit-bio's :class:`~skbio.stats.distance.DistanceMatrix` class::
 
     cdm = DistanceMatrix(cp.asarray(dm.data), dm.ids)
 
-Then call the ``permanova`` function with ``engine='numba'``. This not only executes
-the Numba engine on the GPU, but the non-Numba part of the algorithm will also run on
-the GPU using CuPy. No CPU round-tripping is ever needed. Significant performance
-gain is expected in many GPU-equipped computer systems::
+Then call the ``permanova`` function with ``engine='numba'``. With a compatible GPU,
+the Numba kernel and some additional array operations run on the GPU, and the distance
+matrix avoids a CPU round-trip. This can provide significant performance gains,
+depending on the dataset and computing environment::
 
     res = permanova(cdm, grouping, engine='numba')
 
@@ -218,10 +218,10 @@ functions in scikit-bio utilize all available CPU cores when possible. Currently
 is no per-function parameter to control the number of threads used. However, you can
 still control this behavior using the approaches described below.
 
-:ref:`Cython engines <compute_engines>` utilize `OpenMP <https://www.openmp.org/>`_ to
-manage threads. You can specify the number of threads to use by a Python program by
-setting the ``OMP_NUM_THREADS`` environment variable. For example, the follow code
-grants at most four threads to be used by ``script.py``::
+Parallel :ref:`Cython engines <compute_engines>` use `OpenMP <https://www.openmp.org/>`_
+to manage threads. You can control the number of OpenMP threads used by a Python program
+by setting the ``OMP_NUM_THREADS`` environment variable. For example, the following
+command sets the default OpenMP thread count to four for ``script.py``::
 
     OMP_NUM_THREADS=4 python script.py
 
@@ -235,8 +235,8 @@ set before the ``import`` statement of whichever functionality you will be using
 
 More granular control can be achieved using `threadpoolctl
 <https://github.com/joblib/threadpoolctl>`_, which needs to be installed separately.
-This lets you specify the number of threads for individual code blocks. This approach
-simultaneously limits the thread use by upstream libraries such as NumPy and SciPy::
+This lets you limit the number of threads for individual code blocks, including those
+used by upstream libraries such as NumPy and SciPy::
 
     from skbio import some_function
     from threadpoolctl import threadpool_limits
@@ -247,8 +247,8 @@ simultaneously limits the thread use by upstream libraries such as NumPy and Sci
 See the :install:`installation instructions <#parallelization>` for building scikit-bio
 with or without OpenMP support.
 
-:ref:`Numba engines <compute_engines>` manages threads through Numba itself. One may
-specify the number of threads by setting the ``OMP_NUM_THREADS`` environment
+Parallel :ref:`Numba engines <compute_engines>` manage threads through Numba itself.
+One may specify the number of threads by setting the ``NUMBA_NUM_THREADS`` environment
 variable::
 
     NUMBA_NUM_THREADS=4 python script.py
@@ -258,8 +258,8 @@ engines::
 
     OMP_NUM_THREADS=4 NUMBA_NUM_THREADS=4 python script.py
 
-Within Python, ``numba.set_num_threads`` can configure Numba's active thread count
-Numba was imported. See the `Numba thread controls
+Within Python, ``numba.set_num_threads`` can configure Numba's maximum thread count
+before Numba is imported. See the `Numba thread controls
 <https://numba.readthedocs.io/en/stable/user/threading-layer.html#setting-the-number-of-threads>`_
 for details.
 
@@ -279,8 +279,9 @@ package is installed and the calculation's inputs are supported. See the
 :install:`installation instructions <#binary-acceleration>` for setup. Each function's
 Notes describe where it can be used.
 
-This option is only available when the Cython engine is selected (and it will be
-replaced by the external implementation). The Numba engine always uses the Numba route.
+This option is only available when the Cython engine is selected (including when
+``fast`` selects Cython), and an eligible calculation may use the external
+implementation. Selecting Numba bypasses this package.
 
 
 .. |check| unicode:: U+2713
