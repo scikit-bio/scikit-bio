@@ -612,7 +612,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         Notes
         -----
         This function uses parallel computation for improved performance.
-        See the :install:`parallelization guide <#parallelization>` for information on
+        See the :ref:`parallelization guide <parallelization>` for information on
         controlling the number of threads used.
 
         """
@@ -1922,7 +1922,7 @@ class SymmetricMatrix(PairwiseMatrix):
         Notes
         -----
         This function uses parallel computation for improved performance.
-        See the :install:`parallelization guide <#parallelization>` for information on
+        See the :ref:`parallelization guide <parallelization>` for information on
         controlling the number of threads used.
 
         This method does not modify the distance matrix that it is called on.

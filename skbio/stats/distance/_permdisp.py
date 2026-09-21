@@ -28,6 +28,7 @@ from skbio._config import _resolve_engine
 
 try:
     from numba import njit, prange, get_num_threads
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -338,8 +339,8 @@ def permdisp(
         statistical significance calculations will be skipped and the p-value
         will be ``np.nan``.
     method : {'eigh', 'fsvd'}, optional
-        Matrix decomposition method to use. Options are "eigh" (eigendecomposition,
-        default) and "fsvd" (fast singular value decomposition). See
+        Matrix decomposition method to use. Options are 'eigh' (eigendecomposition,
+        default) and 'fsvd' (fast singular value decomposition). See
         :func:`~skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
         distmat is a OrdinationResults object.
     dimensions : int, optional
@@ -357,14 +358,11 @@ def permdisp(
 
         .. versionadded:: 0.6.3
 
-    engine : {"cython", "numba", "fast"}, optional
-        Compute engine to use for the permutation test. ``"cython"`` (default)
-        uses the existing implementation. ``"numba"`` uses the optional Numba
-        implementation and requires Numba to be installed. If not provided, the
-        global default is used (see :func:`skbio.set_config`). ``"fast"`` lets
-        scikit-bio pick whichever engine it expects to be quicker here, which
-        is Numba when it is installed and Cython otherwise; results may differ
-        from the default in the last bits.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for the permutation test.
+        If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Numba if installed, otherwise Cython.
+        See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
 
@@ -406,7 +404,7 @@ def permdisp(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     This function uses Marti Anderson's PERMDISP2 procedure.
@@ -524,7 +522,7 @@ def permdisp(
     If IDs (rows) are present in the ``DataFrame`` but not in the distance
     matrix, they are ignored. The previous example's ``s7`` ID illustrates this
     behavior: note that even though the ``DataFrame`` had 7 objects, only 6
-    were used in the test (see the "Sample size" row in the results above to
+    were used in the test (see the 'Sample size' row in the results above to
     confirm this). Thus, the ``DataFrame`` can be a superset of the distance
     matrix IDs. Note that the reverse is not true: IDs in the distance matrix
     *must* be present in the ``DataFrame`` or an error will be raised.

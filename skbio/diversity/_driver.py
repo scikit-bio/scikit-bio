@@ -297,17 +297,12 @@ def beta_diversity(
         Examples of functions that can be provided are SciPy's
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
-    engine : {"cython", "numba", "fast"}, optional
-        Compute engine for metrics that support it. Currently only
-        ``"unweighted_unifrac"`` and ``"weighted_unifrac"`` honor this; the
-        ``"numba"`` engine requires the optional Numba dependency and computes
-        the full distance matrix in one parallel pass. If not provided, the
-        global default is used (see :func:`~skbio.set_config`). ``"fast"`` lets
-        scikit-bio pick whichever engine it expects to be quicker here, which
-        is Numba when it is installed and Cython otherwise; results may differ
-        from the default in the last bits, and Numba pays a one-off compilation
-        cost on the first call, so a single small run can be slower. Ignored by
-        metrics without a Numba implementation.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for 'unweighted_unifrac' and 'weighted_unifrac';
+        ignored for other metrics.
+        If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Numba if installed, otherwise Cython.
+        See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
     kwargs : dict, optional

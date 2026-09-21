@@ -24,7 +24,7 @@ from skbio.metadata import SampleMetadata
 import skbio.diversity  # noqa
 import skbio.binaries  # noqa
 import skbio.stats.evolve  # noqa
-from ._config import get_config, set_config
+from ._config import get_config, set_config, reset_config
 
 
 __all__ = [
@@ -50,6 +50,7 @@ __all__ = [
     "SampleMetadata",
     "get_config",
     "set_config",
+    "reset_config",
 ]
 
 __credits__ = "https://github.com/scikit-bio/scikit-bio/graphs/contributors"

@@ -36,7 +36,7 @@ def is_symmetric_and_hollow(mat):
     namespace; a NumPy array uses the parallel Cython kernel.
 
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     """
@@ -76,7 +76,7 @@ def is_symmetric(mat):
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     """
@@ -149,7 +149,7 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     via the array namespace; a NumPy array uses the parallel Cython kernel.
 
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     """
@@ -212,7 +212,7 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     via the array namespace; a NumPy array uses the parallel Cython kernel.
 
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     """

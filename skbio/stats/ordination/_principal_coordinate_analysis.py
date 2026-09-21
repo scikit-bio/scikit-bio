@@ -14,6 +14,7 @@ import pandas as pd
 
 from scipy.linalg import eigh as scipy_eigh
 
+from skbio._config import _resolve_engine
 from skbio.util import get_rng
 from skbio.stats.distance import DistanceMatrix
 from skbio.table._tabular import _create_table, _create_table_1d
@@ -57,13 +58,12 @@ def center_distance_matrix(distance_matrix, inplace=False, engine=None):
         Whether to center the given distance matrix in-place, which is more
         efficient in terms of memory and computation. Ignored for JAX and
         CuPy arrays (see Notes); the centered array is always returned.
-    engine : {"cython", "numba"}, optional
-        Compute engine to use for a NumPy-backed distance matrix. ``"cython"``
-        (default) uses the Cython implementation. ``"numba"`` uses the
-        optional Numba implementation and requires Numba to be installed. If
-        not provided, the global default is used (see
-        :func:`skbio.set_config`). Ignored for non-NumPy array-API buffers,
-        which always take the backend-agnostic double-centering path.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for centering NumPy arrays; ignored for other
+        array backends.
+        If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Cython.
+        See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
 
@@ -143,9 +143,9 @@ def pcoa(
     distmat : DistanceMatrix
         The input distance matrix.
     method : str, optional
-        Matrix decomposition method to use. Default is "eigh" (eigendecomposition),
+        Matrix decomposition method to use. Default is 'eigh' (eigendecomposition),
         which computes exact eigenvectors and eigenvalues for all dimensions. The
-        alternate is "fsvd" (fast singular value decomposition), a heuristic that can
+        alternate is 'fsvd' (fast singular value decomposition), a heuristic that can
         compute only a given number of dimensions.
     dimensions : int or float, optional
         Dimensions to reduce the distance matrix to. This number determines how many
@@ -157,7 +157,7 @@ def pcoa(
         If True, the input distance matrix will be centered in-place to reduce memory
         consumption, at the cost of losing the original distances. Default is False.
     seed : int or np.random.Generator, optional
-        A user-provided random seed or random generator instance for method "fsvd".
+        A user-provided random seed or random generator instance for method 'fsvd'.
         See :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
@@ -173,13 +173,12 @@ def pcoa(
 
     output_format : optional
         Standard table parameters. See :ref:`table_params` for details.
-    engine : {"cython", "numba"}, optional
-        Compute engine to use for centering NumPy-backed distance matrices.
-        ``"cython"`` (default) uses the Cython implementation. ``"numba"``
-        uses the optional Numba implementation and requires Numba to be
-        installed. If not provided, the global default is used (see
-        :func:`skbio.set_config`). When ``"numba"`` is selected, the optional
-        scikit-bio-binaries acceleration is not used.
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for centering NumPy-backed distance matrices,
+        not for the eigendecomposition.
+        If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Cython.
+        See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
 
@@ -196,11 +195,12 @@ def pcoa(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
+    Selecting ``engine='numba'`` bypasses scikit-bio-binaries.
     Low-level acceleration is available for this function. See
-    :install:`scikit-bio-binaries <#acceleration>` for more information.
+    :ref:`binary_acceleration` for more information.
 
     Principal Coordinate Analysis (PCoA) was first described in [1]_.
 
@@ -295,6 +295,10 @@ def pcoa(
     # new parameter for ndim = number of dimensions (accounting for
     # non-int values)
     ndim = dimensions
+
+    # Resolve the global setting before deciding whether to use optional binaries.
+    if isinstance(distmat.data, np.ndarray):
+        engine = _resolve_engine(engine, ("cython", "numba"))
 
     # Perform eigendecomposition
     if method == "eigh":

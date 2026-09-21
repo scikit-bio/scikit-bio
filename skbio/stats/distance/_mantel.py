@@ -30,6 +30,7 @@ import array_api_compat as _aac
 
 try:
     from numba import njit, prange
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -213,7 +214,7 @@ def mantel(
     is computed for each permutation and the p-value is the proportion of
     permuted correlation coefficients that are equal to or more extreme
     than the original (unpermuted) correlation coefficient. Whether a permuted
-    correlation coefficient is "more extreme" than the original correlation
+    correlation coefficient is 'more extreme' than the original correlation
     coefficient depends on the alternative hypothesis (controlled via
     `alternative`).
 
@@ -261,18 +262,11 @@ def mantel(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
-    engine : {"cython", "numba", "fast"}, optional
-        Compute engine to use. ``"cython"`` (default) uses the Cython
-        implementation. ``"numba"`` uses the optional Numba implementation
-        and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`). ``"fast"`` lets
-        scikit-bio pick whichever engine it expects to be quicker here, which
-        is Numba when it is installed and Cython otherwise; results may differ
-        from the default in the last bits. Only applies to the ``"pearson"``
-        and ``"spearman"`` methods. When both distance matrices are resident on
-        a CuPy- or PyTorch-backed GPU (CUDA or ROCm) and ``engine="numba"``, a
-        fused GPU kernel is used; matrices on other backends use the array-API
-        path instead (see Notes for the ROCm-PyTorch case).
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for permutation calculations with the 'pearson' and 'spearman'
+        methods. Other methods are not impacted. If None (default), the global
+        ``compute_engine`` setting will be used. 'fast' selects Numba if installed,
+        otherwise Cython. See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
 
@@ -309,27 +303,27 @@ def mantel(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     The Mantel test was first described in [2]_. The general algorithm and
     interface are similar to ``vegan::mantel``, available in R's vegan
     package [3]_.
 
-    On GPU-resident distance matrices with ``engine="numba"``, a fused GPU kernel
+    On GPU-resident distance matrices with ``engine='numba'``, a fused GPU kernel
     runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
     is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
     ROCm PyTorch has been imported in the same process; those matrices fall back
     to the array-API path, which runs on the device regardless. The result is
     identical across all paths.
 
-    With ``engine="numba"``, GPU buffers must belong to the default device. On a
+    With ``engine='numba'``, GPU buffers must belong to the default device. On a
     system with several devices, the default must be changed to match the buffer
     ownership before this function is invoked, through
     ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
     A mismatch is not reported when the kernel is launched, and on ROCm it has
     been observed to leave the GPU context unusable for the rest of the process.
-    The array-API path, taken when ``engine="numba"`` is not requested, honors
+    The array-API path, taken when ``engine='numba'`` is not requested, honors
     whichever device the input is on.
 
     ``np.nan`` will be returned for the p-value if `permutations` is zero or if
@@ -494,7 +488,12 @@ def mantel(
             if gpu is not None:
                 try:
                     return _run_mantel_gpu(
-                        gpu, x.data, y.data, permutations, seed, alternative,
+                        gpu,
+                        x.data,
+                        y.data,
+                        permutations,
+                        seed,
+                        alternative,
                         spearman=(method == "spearman"),
                     )
                 except Exception:
@@ -502,7 +501,11 @@ def mantel(
                     # it and fall back to the array-API path (correct anywhere).
                     _mark_gpu_unavailable(x.data)
             return _mantel_stats_pearson_xp(
-                x.data, y.data, permutations, seed, alternative,
+                x.data,
+                y.data,
+                permutations,
+                seed,
+                alternative,
                 spearman=(method == "spearman"),
             )
 
@@ -945,7 +948,7 @@ def pwmantel(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
     Passing a list of filepaths can be useful as it allows for a smaller amount

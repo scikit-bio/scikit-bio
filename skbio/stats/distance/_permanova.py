@@ -37,6 +37,7 @@ import array_api_compat as _aac
 
 try:
     from numba import njit, prange
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -163,8 +164,7 @@ if NUMBA_AVAILABLE:
             for col_idx in range(row_idx + 1, n):
                 if grouping[col_idx] == group_idx:
                     condensed_idx = (
-                        row_idx * n + col_idx
-                        - ((row_idx + 2) * (row_idx + 1)) // 2
+                        row_idx * n + col_idx - ((row_idx + 2) * (row_idx + 1)) // 2
                     )
                     val = np.float64(condensed_matrix[condensed_idx])
                     local_sum += val * val
@@ -178,7 +178,8 @@ if NUMBA_AVAILABLE:
                 for col_idx in range(mirror_row + 1, n):
                     if grouping[col_idx] == group_idx:
                         condensed_idx = (
-                            mirror_row * n + col_idx
+                            mirror_row * n
+                            + col_idx
                             - ((mirror_row + 2) * (mirror_row + 1)) // 2
                         )
                         val = condensed_matrix[condensed_idx]
@@ -270,9 +271,7 @@ if NUMBA_AVAILABLE:
                             groupings_T[col, p] == groupings_T[mirror_row, p]
                         )
                 for p in range(n_perm):
-                    local_sW[p] += (
-                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
-                    )
+                    local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
 
     @njit(inline="always")
     def _condensed_row_base(row, n):
@@ -349,13 +348,10 @@ if NUMBA_AVAILABLE:
                             groupings_T[col, p] == groupings_T[mirror_row, p]
                         )
                 for p in range(n_perm):
-                    local_sW[p] += (
-                        rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
-                    )
+                    local_sW[p] += rsum[p] * inv_group_sizes[groupings_T[mirror_row, p]]
 
     def _run_permanova_rowtile_nb(
-        distmat, grouping, group_sizes, s_T, num_groups, sample_size,
-        permutations, seed
+        distmat, grouping, group_sizes, s_T, num_groups, sample_size, permutations, seed
     ):
         """Run PERMANOVA with the row-tile (single matrix pass) strategy.
 
@@ -537,19 +533,11 @@ def permanova(
         :func:`details <skbio.util.get_rng>`.
 
         .. versionadded:: 0.6.3
-    engine : {"cython", "numba", "fast"}, optional
-        Compute engine to use. ``"cython"`` (default) uses the Cython
-        implementation. ``"numba"`` uses the optional Numba implementation
-        and requires Numba to be installed. If not provided, the global
-        default is used (see :func:`skbio.set_config`). ``"fast"`` lets
-        scikit-bio pick whichever engine it expects to be quicker here, which
-        is Numba when it is installed and Cython otherwise; results may differ
-        from the default in the last bits. When ``"numba"`` is selected, the
-        optional scikit-bio-binaries acceleration is not used. When the
-        distance matrix is resident on a CuPy- or PyTorch-backed GPU (CUDA or
-        ROCm) and ``engine="numba"``, a fused GPU kernel is used; matrices on
-        other backends use the array-API path instead (see Notes for the
-        ROCm-PyTorch case).
+    engine : {'cython', 'numba', 'fast'}, optional
+        Compute engine for the PERMANOVA statistic and permutation test.
+        If None (default), use the global ``compute_engine`` setting.
+        'fast' selects Numba if installed, otherwise Cython.
+        See :ref:`compute_engines` for details and requirements.
 
         .. versionadded:: 0.7.4
 
@@ -568,26 +556,27 @@ def permanova(
     Notes
     -----
     This function uses parallel computation for improved performance.
-    See the :install:`parallelization guide <#parallelization>` for information on
+    See the :ref:`parallelization guide <parallelization>` for information on
     controlling the number of threads used.
 
+    Selecting ``engine='numba'`` bypasses scikit-bio-binaries.
     Low-level acceleration is available for this function. See
-    :install:`scikit-bio-binaries <#acceleration>` for more information.
+    :ref:`binary_acceleration` for more information.
 
-    On a GPU-resident distance matrix with ``engine="numba"``, a fused GPU kernel
+    On a GPU-resident distance matrix with ``engine='numba'``, a fused GPU kernel
     runs on CuPy or PyTorch matrices, on both CUDA and ROCm devices. The exception
     is ROCm PyTorch on stacks where a Numba HIP kernel cannot be compiled after
     ROCm PyTorch has been imported in the same process; those matrices fall back
     to the array-API path, which runs on the device regardless. The result is
     identical across all paths.
 
-    With ``engine="numba"``, GPU buffers must belong to the default device. On a
+    With ``engine='numba'``, GPU buffers must belong to the default device. On a
     system with several devices, the default must be changed to match the buffer
     ownership before this function is invoked, through
     ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
     A mismatch is not reported when the kernel is launched, and on ROCm it has
     been observed to leave the GPU context unusable for the rest of the process.
-    The array-API path, taken when ``engine="numba"`` is not requested, honors
+    The array-API path, taken when ``engine='numba'`` is not requested, honors
     whichever device the input is on.
 
     See [1]_ for the original method reference, as well as ``vegan::adonis``,
@@ -650,7 +639,12 @@ def permanova(
         if gpu is not None:
             try:
                 return _run_permanova_gpu(
-                    gpu, distmat.data, grouping, column, permutations, seed,
+                    gpu,
+                    distmat.data,
+                    grouping,
+                    column,
+                    permutations,
+                    seed,
                     ids=distmat.ids,
                 )
             except Exception:
@@ -704,8 +698,14 @@ def permanova(
 
     if engine == "numba":
         stat, p_value = _run_permanova_rowtile_nb(
-            distmat, grouping, group_sizes, s_T,
-            num_groups, sample_size, permutations, seed
+            distmat,
+            grouping,
+            group_sizes,
+            s_T,
+            num_groups,
+            sample_size,
+            permutations,
+            seed,
         )
     else:
         test_stat_function = partial(
@@ -772,9 +772,7 @@ def _permanova_array_api(distmat, grouping, column, permutations, seed, ids=None
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
     group_sizes = np.bincount(grouping)
-    inv_group_sizes = xp.asarray(
-        1.0 / group_sizes, dtype=dm.dtype, device=dm.device
-    )
+    inv_group_sizes = xp.asarray(1.0 / group_sizes, dtype=dm.dtype, device=dm.device)
     # full 2-D matrix (array-API input is never condensed); halve to count each
     # unordered pair once, matching the DistanceMatrix full-matrix path.
     s_T = xp.sum(dm * dm, dtype=xp.float64) / sample_size / 2.0

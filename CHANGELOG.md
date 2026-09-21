@@ -4,6 +4,7 @@
 
 ### Features
 
+* Renamed the development-only global configuration option `engine` to `compute_engine`, including support for `"fast"`. Added `skbio.get_config()` to inspect all current settings and `skbio.reset_config()` to restore defaults. Centralized engine and runtime performance guidance in the documentation. `skbio.stats.ordination.pcoa` now honors the global Numba setting before considering optional binary acceleration.
 * Added `ancombc2` for ANCOM-BC2 differential abundance testing, with post-hoc analyses (global, pairwise, Dunnett and trend tests) through `ANCOMBCResult`. Thanks to @iiiime for the initial implementation ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
 * Added `multi_align` progressive multiple sequence alignment, with and nucleotide and protein wrappers `multi_align_nucl` and `multi_align_prot` ([#2582](https://github.com/scikit-bio/scikit-bio/pull/2582)).
 * Added nucleotide transition probability matrices under `skbio.sequence.transition` for the JC69, K2P, F81, HKY85 and TN93 models. Thanks to @keder ([#2496](https://github.com/scikit-bio/scikit-bio/pull/2496)).

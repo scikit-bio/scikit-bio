@@ -20,6 +20,7 @@ scikit-bio requires `Python <https://www.python.org/>`_ 3.10 or later installed 
 
 Environment based
 -----------------
+
 Conda
 ^^^^^
 
@@ -100,33 +101,34 @@ Or, if you have downloaded the repository::
 
     DISABLE_OPENMP=1 pip install .
 
-Many scikit-bio functions automatically take advantage of parallel processing to improve performance. By default, they utilize all available CPU cores when possible. There is currently no per-function parameter to control the number of threads used. You can set the environment variable ``OMP_NUM_THREADS`` to control the global parallelization behavior::
-
-    # Setting OMP_NUM_THREADS inside a script.
-    # Note that the environmental variable must be set before the import statement of
-    # whichever functionality you are using from scikit-bio.
-    import os
-    os.environ["OMP_NUM_THREADS"] = "4"
-    from skbio import some_function
-
-    # Alternatively, set it before launching your script.
-    OMP_NUM_THREADS=4 python script.py
-
-If more granular control over thread use is desired, we recommend using `threadpoolctl <https://github.com/joblib/threadpoolctl>`_::
-
-    from skbio import some_function
-    from threadpoolctl import threadpool_limits
-
-    with threadpool_limits(limits=4):
-        some_function()
+For runtime thread controls, including OpenMP, Numba, and numerical libraries, see the `parallelization guide <https://scikit.bio/docs/latest/performance.html#parallelization>`_.
 
 
-Acceleration
-------------
+Numba
+-----
 
-The new `scikit-bio-binaries <https://github.com/scikit-bio/scikit-bio-binaries>`_ package is a separate package from scikit-bio, written in C++, which when installed in the same environment as scikit-bio will dramatically increase performance of select functions. Installation of scikit-bio-binaries is currently available with conda::
+Some scikit-bio functions offer an alternative Numba engine to replace the default Python/Cython engine for efficient computing. To utilize the Numba engine, install Numba with::
+
+    pip install numba
+
+See the `compute engine guide <https://scikit.bio/docs/latest/performance.html#compute-engines>`_ for details.
+
+Some functions' Numba engines support GPU computing if available. To enable GPU computing via Numba, you need to install an architecture-specific Numba extension that matches your GPU device::
+
+    pip install numba-cuda  # for NVIDIA CUDA GPUs
+    pip install numba-hip   # for AMD ROCm GPUs
+
+see the `GPU computing guide <https://scikit.bio/docs/latest/performance.html#gpu-computing>`_. for details.
+
+
+Binary acceleration
+-------------------
+
+`scikit-bio-binaries <https://github.com/scikit-bio/scikit-bio-binaries>`_ is a separate package from scikit-bio, written in C++, which when installed in the same environment as scikit-bio will dramatically increase performance of select functions. Installation of scikit-bio-binaries is currently available with conda::
 
     conda install -c conda-forge scikit-bio-binaries
+
+For applicability and interaction with compute engines, see the `computation and performance guide <https://scikit.bio/docs/latest/performance.html#binary-acceleration>`_.
 
 
 Python version support
