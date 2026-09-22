@@ -2503,14 +2503,18 @@ class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assert_close(dm_1d.redundant_form(), self.data)
 
     @array_backends("numpy", "jax", "torch", "cupy")
-    def test_plot_and_to_data_frame_backend(self, xp, device):
-        # plot() and to_data_frame() hand off to matplotlib/pandas, which are
-        # host-only; a non-NumPy buffer must be materialized rather than
-        # erroring or silently misbehaving.
+    def test_to_data_frame_backend(self, xp, device):
+        # A non-NumPy buffer must be materialized for pandas.
         dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=list("abcde"))
         df = dm.to_data_frame()
         self.assertEqual(df.shape, (5, 5))
         self.assert_close(df.to_numpy(), self.data)
+
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_plot_backend(self, xp, device):
+        # A non-NumPy buffer must be materialized for matplotlib.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=list("abcde"))
         fig = dm.plot()
         self.assertEqual(len(fig.axes), 2)  # heatmap axis + colorbar axis
 

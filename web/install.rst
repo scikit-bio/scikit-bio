@@ -85,8 +85,14 @@ After installing scikit-bio, verify the installation by running the following in
 
 This should print the installed version of scikit-bio without errors.
 
-For a more robust verification of the installation you may run the scikit-bio's unit tests in the environment where scikit-bio is installed. This will require the `pytest <https://github.com/pytest-dev/pytest>`_ package to be installed::
+For a more robust verification, install `pytest <https://github.com/pytest-dev/pytest>`_ and run scikit-bio's unit tests in the same environment::
 
+    pip install pytest
+    python -m skbio.test
+
+Tests requiring optional packages such as Matplotlib are skipped when those packages are absent. To run the full test suite, install the test dependencies instead::
+
+    pip install "scikit-bio[test]"
     python -m skbio.test
 
 
