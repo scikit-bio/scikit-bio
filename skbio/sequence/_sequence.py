@@ -35,7 +35,8 @@ from skbio.io.descriptors import Read, Write
 
 
 if TYPE_CHECKING:
-    from typing import Self, Iterable
+    from collections.abc import Iterable
+    from typing import Self
 
 
 class Sequence(

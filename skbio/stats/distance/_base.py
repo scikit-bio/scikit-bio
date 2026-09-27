@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from itertools import combinations
-from typing import Any, ClassVar, Type, TYPE_CHECKING
+from typing import Any, ClassVar, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -2355,7 +2355,7 @@ class DistanceMatrix(SymmetricMatrix):
 def randdm(
     num_objects: int,
     ids: Sequence[str] | None = None,
-    constructor: Type[PairwiseMatrix | DistanceMatrix] | None = None,
+    constructor: type[PairwiseMatrix | DistanceMatrix] | None = None,
     random_fn: int | Generator | Callable | None = None,
 ) -> PairwiseMatrix:
     r"""Generate a distance matrix populated with random distances.

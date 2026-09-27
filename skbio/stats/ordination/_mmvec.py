@@ -33,6 +33,7 @@ from skbio.util import get_rng
 from skbio.table._tabular import _ingest_table, _create_table, _create_table_1d
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing import Self
     from skbio.util._typing import SeedLike, TableLike
 
     Grad4Tuple = tuple[
@@ -580,7 +581,7 @@ class MMvec(SkbioObject):
         self.verbose = verbose
         self.output_format = output_format
 
-    def fit(self, X: TableLike, y: TableLike) -> MMvec:
+    def fit(self, X: TableLike, y: TableLike) -> Self:
         """Fit MMvec model.
 
         Parameters
@@ -748,7 +749,7 @@ class MMvec(SkbioObject):
             "output_format": self.output_format,
         }
 
-    def set_params(self, **params: object) -> MMvec:
+    def set_params(self, **params: object) -> Self:
         """Set estimator parameters for sklearn compatibility."""
         for key, value in params.items():
             if not hasattr(self, key):
