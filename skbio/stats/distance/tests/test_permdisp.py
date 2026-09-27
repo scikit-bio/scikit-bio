@@ -204,6 +204,43 @@ class PERMDISPTests(TestCase):
 
         self.assert_series_equal(obs, exp)
 
+    def test_non_euclidean_distances_use_signed_pcoa_space(self):
+        dm = DistanceMatrix([
+            [0, 0.5, 0.75, 1, 0.66, 0.33],
+            [0.5, 0, 0.25, 0.33, 0.77, 0.61],
+            [0.75, 0.25, 0, 0.1, 0.44, 0.55],
+            [1, 0.33, 0.1, 0, 0.75, 0.88],
+            [0.66, 0.77, 0.44, 0.75, 0, 0.77],
+            [0.33, 0.61, 0.55, 0.88, 0.77, 0],
+        ])
+        grouping = ["G1"] * 3 + ["G2"] * 3
+
+        centroid = permdisp(
+            dm, grouping, test="centroid", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+        median = permdisp(
+            dm, grouping, test="median", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+
+        self.assertAlmostEqual(centroid["test statistic"], 3.184337557270807)
+        self.assertAlmostEqual(median["test statistic"], 1.147198818499995)
+
+    def test_euclidean_distances_are_unchanged_by_signed_space(self):
+        from scipy.spatial.distance import pdist, squareform
+
+        points = np.array([[0, 0], [1, 0], [0, 1], [4, 0], [5, 0], [4, 2]])
+        dm = DistanceMatrix(squareform(pdist(points)))
+        grouping = ["A"] * 3 + ["B"] * 3
+
+        result = permdisp(
+            dm, grouping, test="centroid", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+
+        self.assertAlmostEqual(result["test statistic"], 3.1412147380153312)
+
     @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
         exp = pd.Series(index=self.exp_index,
