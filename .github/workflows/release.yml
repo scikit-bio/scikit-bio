@@ -6,7 +6,7 @@ on:
       - '*'
 
 env:
-  earliest_python: "3.10"
+  earliest_python: "3.11"
   latest_python: "3.14"
 
 # Limit the automatically-provided GITHUB_TOKEN to read-only access (principle

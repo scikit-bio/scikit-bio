@@ -7,7 +7,7 @@ name = "scikit-bio"
 dynamic = ["version"]
 description = "Data structures, algorithms and educational resources for bioinformatics."
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 license-files = ["LICENSE.txt"]
 authors = [
@@ -23,7 +23,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -120,11 +119,11 @@ packages = ["skbio"]
 
 [tool.cibuildwheel]
 # Skip 32-bit builds, PyPy, musllinux and unavailble Win-ARM64 Python builds
-skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*", "cp39-win_arm64", "cp310-win_arm64"]
+skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 
 # Python versions to build
 # UPDATE BEFORE RELEASE
-build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+build = "cp311-* cp312-* cp313-* cp314-*"
 
 # Test dependencies
 test-requires = ["pytest", "coverage", "responses", "matplotlib"]
@@ -164,7 +163,7 @@ ignore = [
 # Basic configurations for Ruff.
 # See https://docs.astral.sh/ruff/configuration/
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 exclude = [
     "skbio/**/tests/*",  # ignoring to be able to implement pydocstyle
     "doc/**",  # documentation
