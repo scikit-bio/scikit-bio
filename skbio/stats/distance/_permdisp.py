@@ -10,32 +10,33 @@ from __future__ import annotations
 
 from functools import partial
 from typing import TYPE_CHECKING
+from warnings import warn
 
 import numpy as np
 from scipy.stats import f_oneway
-
-from ._cutils import geomedian_axis_one
-from ._base import (
-    _preprocess_input_sng,
-    _run_monte_carlo_stats,
-    _build_results,
-    DistanceMatrix,
-)
-from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio._config import _resolve_engine
+from skbio.stats.ordination import OrdinationResults, center_distance_matrix, pcoa
 from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
-from skbio._config import _resolve_engine
+
+from ._base import (
+    DistanceMatrix,
+    _build_results,
+    _preprocess_input_sng,
+    _run_monte_carlo_stats,
+)
+from ._cutils import geomedian_axis_one
 
 try:
-    from numba import njit, prange, get_num_threads
+    from numba import get_num_threads, njit, prange
 
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import ArrayLike
     import pandas as pd
+    from numpy.typing import ArrayLike
     from skbio.util._typing import SeedLike
 
 
@@ -276,12 +277,164 @@ if NUMBA_AVAILABLE:
             out[p] = _permdisp_f_stat_median_nb(samples, perm_codes[p], num_groups)
         return out
 
+    @njit
+    def _permdisp_f_stat_centroid_signed_nb(samples, signs, codes, num_groups):
+        """Centroid PERMDISP statistic in a signed PCoA space."""
+        n, d = samples.shape
+        counts = np.zeros(num_groups, np.int64)
+        centroids = np.zeros((num_groups, d), np.float64)
+        for i in range(n):
+            g = codes[i]
+            counts[g] += 1
+            for j in range(d):
+                centroids[g, j] += samples[i, j]
+        for g in range(num_groups):
+            for j in range(d):
+                centroids[g, j] /= counts[g]
+
+        dists = np.empty(n, np.float64)
+        group_sums = np.zeros(num_groups, np.float64)
+        for i in range(n):
+            g = codes[i]
+            acc = 0.0
+            for j in range(d):
+                diff = samples[i, j] - centroids[g, j]
+                acc += signs[j] * diff * diff
+            val = np.sqrt(max(0.0, acc))
+            dists[i] = val
+            group_sums[g] += val
+        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
+
+    @njit(parallel=True)
+    def _permdisp_perm_stats_centroid_signed_nb(samples, signs, perm_codes, num_groups):
+        """Signed-space centroid statistics for a batch of groupings."""
+        n_perm = perm_codes.shape[0]
+        out = np.empty(n_perm, np.float64)
+        for p in prange(n_perm):
+            out[p] = _permdisp_f_stat_centroid_signed_nb(
+                samples, signs, perm_codes[p], num_groups
+            )
+        return out
+
+    @njit
+    def _permdisp_f_stat_median_signed_nb(samples, signs, codes, num_groups):
+        """Median PERMDISP statistic in a signed PCoA space."""
+        n, d = samples.shape
+        counts = np.zeros(num_groups, np.int64)
+        n_pos = np.sum(signs > 0)
+        n_neg = d - n_pos
+        for i in range(n):
+            counts[codes[i]] += 1
+
+        dists = np.empty(n, np.float64)
+        group_sums = np.zeros(num_groups, np.float64)
+        for g in range(num_groups):
+            size = counts[g]
+            positive = np.empty((n_pos, size), np.float64)
+            negative = np.empty((n_neg, size), np.float64)
+            idx = np.empty(size, np.int64)
+            k = 0
+            for i in range(n):
+                if codes[i] == g:
+                    idx[k] = i
+                    ipos = 0
+                    ineg = 0
+                    for j in range(d):
+                        if signs[j] > 0:
+                            positive[ipos, k] = samples[i, j]
+                            ipos += 1
+                        else:
+                            negative[ineg, k] = samples[i, j]
+                            ineg += 1
+                    k += 1
+            center_pos = _geomedian_nb(positive)
+            center_neg = _geomedian_nb(negative)
+            for m in range(size):
+                acc = 0.0
+                ipos = 0
+                ineg = 0
+                for j in range(d):
+                    if signs[j] > 0:
+                        diff = samples[idx[m], j] - center_pos[ipos]
+                        acc += diff * diff
+                        ipos += 1
+                    else:
+                        diff = samples[idx[m], j] - center_neg[ineg]
+                        acc -= diff * diff
+                        ineg += 1
+                val = np.sqrt(max(0.0, acc))
+                dists[idx[m]] = val
+                group_sums[g] += val
+        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
+
+    @njit(parallel=True)
+    def _permdisp_perm_stats_median_signed_nb(samples, signs, perm_codes, num_groups):
+        """Signed-space median statistics for a batch of groupings."""
+        n_perm = perm_codes.shape[0]
+        out = np.empty(n_perm, np.float64)
+        for p in prange(n_perm):
+            out[p] = _permdisp_f_stat_median_signed_nb(
+                samples, signs, perm_codes[p], num_groups
+            )
+        return out
+
 
 # Permutations processed per batched kernel call, per thread. The permutation is
 # the parallel axis here, so this is what keeps every worker supplied; it is
 # deliberately a few dozen per thread rather than one so the kernel launch is
 # amortized, and it bounds the grouping buffer to (CHUNK x n).
 _PERM_CHUNK_PER_THREAD = 32
+
+
+def _pcoa_signed(distmat, dimensions, warn_neg_eigval):
+    """Return PCoA coordinates and axis signs without discarding negatives."""
+    if dimensions == 0 and distmat.shape[0] > 10:
+        warn(
+            "EIGH: since no value for dimensions is specified, PCoA for all "
+            "dimensions will be computed, which may result in long computation "
+            "time if the original distance matrix is large.",
+            RuntimeWarning,
+        )
+    if warn_neg_eigval and not 0 <= warn_neg_eigval <= 1:
+        raise ValueError(
+            "warn_neg_eigval must be Boolean or a floating-point number between 0 "
+            "and 1."
+        )
+
+    centered = center_distance_matrix(distmat.data)
+    eigvals, eigvecs = np.linalg.eigh(centered)
+    close_to_zero = np.isclose(eigvals, np.zeros_like(eigvals))
+    eigvals[close_to_zero] = 0.0
+    order = np.argsort(eigvals)[::-1]
+    eigvals = eigvals[order]
+    eigvecs = eigvecs[:, order]
+
+    if (
+        warn_neg_eigval
+        and eigvals[-1] < 0
+        and (warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval)
+    ):
+        warn(
+            "The result contains negative eigenvalues that are large in "
+            "magnitude, which may suggest result inaccuracy. See PCoA Notes "
+            f"for details. The negative-most eigenvalue is {eigvals[-1]} "
+            f"whereas the largest positive one is {eigvals[0]}.",
+            RuntimeWarning,
+        )
+
+    positive = np.flatnonzero(eigvals > 0)
+    negative = np.flatnonzero(eigvals < 0)
+    if dimensions == 0:
+        n_positive = positive.size
+    elif not isinstance(dimensions, (int, np.integer)) or dimensions < 0:
+        raise ValueError("dimensions must be a non-negative integer for PERMDISP.")
+    else:
+        n_positive = min(dimensions, positive.size)
+    keep = np.concatenate((positive[:n_positive], negative))
+    values = eigvals[keep]
+    coordinates = eigvecs[:, keep] * np.sqrt(np.abs(values))
+    signs = np.where(values > 0, 1.0, -1.0)
+    return coordinates, signs
 
 
 @params_aliased(
@@ -408,6 +561,12 @@ def permdisp(
 
     This function uses Marti Anderson's PERMDISP2 procedure.
 
+    With a distance-matrix input and ``method="eigh"``, negative PCoA axes
+    are retained as a signed space: their squared distances are subtracted
+    from squared distances on positive axes, following ``vegan::betadisper``.
+    An ``OrdinationResults`` input cannot recover axes already discarded by
+    PCoA and therefore keeps the coordinates supplied by the caller.
+
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
     variability the F-statistic results may vary slightly.
@@ -451,7 +610,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
+    test statistic            1.147199
     p-value                       ...
     number of permutations          99
     Name: PERMDISP results, dtype: object
@@ -468,7 +627,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic             1.03296
+    test statistic            1.147199
     p-value                        NaN
     number of permutations           0
     Name: PERMDISP results, dtype: object
@@ -488,7 +647,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic            3.670816
+    test statistic            3.184338
     p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
@@ -508,7 +667,7 @@ def permdisp(
     test statistic name        F-value
     sample size                      6
     number of groups                 2
-    test statistic            3.670816
+    test statistic            3.184338
     p-value                   0.285714
     number of permutations           6
     Name: PERMDISP results, dtype: object
@@ -536,6 +695,7 @@ def permdisp(
     if test not in ("centroid", "median"):
         raise ValueError("Test must be centroid or median.")
 
+    axis_signs = None
     if isinstance(distmat, OrdinationResults):
         ordination = distmat
         ids = ordination.samples.axes[0].to_list()
@@ -554,18 +714,22 @@ def permdisp(
 
         ids = distmat.ids
         sample_size = distmat.shape[0]
-
-        ordination = pcoa(
-            distmat,
-            method=method,
-            dimensions=dimensions,
-            seed=seed,
-            warn_neg_eigval=warn_neg_eigval,
-        )
+        if method == "eigh":
+            sample_data, axis_signs = _pcoa_signed(distmat, dimensions, warn_neg_eigval)
+            ordination = None
+        else:
+            ordination = pcoa(
+                distmat,
+                method=method,
+                dimensions=dimensions,
+                seed=seed,
+                warn_neg_eigval=warn_neg_eigval,
+            )
     else:
         raise TypeError("Input must be a DistanceMatrix or OrdinationResults.")
 
-    sample_data = ordination.samples.to_numpy(copy=False)
+    if ordination is not None:
+        sample_data = ordination.samples.to_numpy(copy=False)
 
     num_groups, grouping = _preprocess_input_sng(ids, sample_size, grouping, column)
 
@@ -579,10 +743,21 @@ def permdisp(
     # definitions.
     if engine == "numba":
         stat, p_value = _run_permdisp_numba(
-            sample_data, grouping, num_groups, permutations, seed, test
+            sample_data,
+            grouping,
+            num_groups,
+            permutations,
+            seed,
+            test,
+            axis_signs,
         )
     else:
-        test_stat_function = partial(_compute_groups, sample_data, test)
+        if axis_signs is None or np.all(axis_signs > 0):
+            test_stat_function = partial(_compute_groups, sample_data, test)
+        else:
+            test_stat_function = partial(
+                _compute_groups_signed, sample_data, axis_signs, test
+            )
 
         stat, p_value = _run_monte_carlo_stats(
             test_stat_function, grouping, permutations, seed
@@ -593,7 +768,9 @@ def permdisp(
     )
 
 
-def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, test):
+def _run_permdisp_numba(
+    sample_data, grouping, num_groups, permutations, seed, test, axis_signs=None
+):
     """Observed statistic and p-value via the Numba engine.
 
     Draws the permutations on the host in the same order as
@@ -629,8 +806,13 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
     codes = np.ascontiguousarray(grouping, dtype=np.int32)
     sample_size = codes.shape[0]
 
-    if test == "centroid":
+    signed = axis_signs is not None and np.any(axis_signs < 0)
+    if test == "centroid" and signed:
+        batch = _permdisp_perm_stats_centroid_signed_nb
+    elif test == "centroid":
         batch = _permdisp_perm_stats_centroid_nb
+    elif signed:
+        batch = _permdisp_perm_stats_median_signed_nb
     else:
         batch = _permdisp_perm_stats_median_nb
 
@@ -657,7 +839,12 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
                 buf[0] = codes
             else:
                 buf[i - start] = rng.permutation(codes)
-        stats[start:end] = batch(samples, buf[: end - start], num_groups)
+        if signed:
+            stats[start:end] = batch(
+                samples, axis_signs, buf[: end - start], num_groups
+            )
+        else:
+            stats[start:end] = batch(samples, buf[: end - start], num_groups)
 
     stat = float(stats[0])
     if permutations == 0:
@@ -681,6 +868,33 @@ def _compute_groups(samples, test_type, grouping):
 
         # Distances from each sample in this group to the group center.
         groups.append(np.linalg.norm(group_data - center, axis=1))
+
+    stat, _ = f_oneway(*groups)
+    return float(np.ravel(stat)[0])
+
+
+def _compute_groups_signed(samples, signs, test_type, grouping):
+    """Compute PERMDISP in the signed space of a non-Euclidean distance."""
+    data = np.asarray(samples)
+    positive = signs > 0
+    groups = []
+    grouping_array = np.asarray(grouping)
+    for group_id in np.unique(grouping_array):
+        group_data = data[grouping_array == group_id]
+        if test_type == "centroid":
+            center_positive = group_data[:, positive].mean(axis=0)
+            center_negative = group_data[:, ~positive].mean(axis=0)
+        else:
+            center_positive = np.asarray(geomedian_axis_one(group_data[:, positive].T))
+            center_negative = np.asarray(geomedian_axis_one(group_data[:, ~positive].T))
+
+        positive_squared = np.sum(
+            (group_data[:, positive] - center_positive) ** 2, axis=1
+        )
+        negative_squared = np.sum(
+            (group_data[:, ~positive] - center_negative) ** 2, axis=1
+        )
+        groups.append(np.sqrt(np.maximum(0.0, positive_squared - negative_squared)))
 
     stat, _ = f_oneway(*groups)
     return float(np.ravel(stat)[0])
