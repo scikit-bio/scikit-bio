@@ -2,6 +2,9 @@
 
 ## Version 0.7.5-dev
 
+### Miscellaneous
+
+* Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
 
 ## Version 0.7.4
 
