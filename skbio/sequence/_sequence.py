@@ -38,6 +38,37 @@ if TYPE_CHECKING:
     from typing import Self, Iterable
 
 
+class _ASCIIValidated:
+    """Mark a buffer that already contains only ASCII code points 0-127.
+
+    Internal construction (slicing, copying, concatenation, and k-mers) wraps
+    buffers so ``Sequence`` does not rescan data that already satisfies the
+    ASCII invariant. Not part of the public API.
+    """
+
+    __slots__ = ("sequence",)
+
+    def __init__(self, sequence):
+        self.sequence = sequence
+
+
+def _validate_ascii(sequence):
+    """Raise if ``sequence`` contains a byte outside 7-bit ASCII.
+
+    ``sequence`` is a ``uint8`` array. The check is a reduction and does not
+    copy. Empty buffers are valid.
+
+    """
+    if sequence.size == 0:
+        return
+    max_byte = int(sequence.max())
+    if max_byte >= 128:
+        raise ValueError(
+            "Sequence characters must be ASCII (code points 0-127). "
+            f"Found byte value {max_byte}."
+        )
+
+
 class Sequence(
     MetadataMixin,
     PositionalMetadataMixin,
@@ -47,13 +78,11 @@ class Sequence(
 ):
     """Store generic sequence data and optional associated metadata.
 
-    ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
-    most generic objects for storing sequence data. ``Sequence`` objects do not
-    necessarily represent biological sequences. For example, ``Sequence`` can
-    be used to represent a position in a multiple sequence alignment.
-    Subclasses ``DNA``, ``RNA``, and ``Protein`` enforce the IUPAC character
-    set [1]_ for, and provide operations specific to, each respective molecule
-    type.
+    A ``Sequence`` object stores arbitrary ASCII characters (code points 0-127). It
+    does not enforce a biological alphabet or grammar and is thus a generic object for
+    storing sequence data. Subclasses ``DNA``, ``RNA``, and ``Protein`` additionally
+    enforce the IUPAC character set [1]_ for, and provide operations specific to, each
+    respective molecule type.
 
     ``Sequence`` objects consist of the underlying sequence data, as well
     as optional metadata and positional metadata. The underlying sequence
@@ -62,7 +91,8 @@ class Sequence(
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\\|S1')
-        Characters representing the sequence itself.
+        Characters representing the sequence itself. Must be 7-bit ASCII
+        (code points 0-127), whether supplied as text, bytes, or an array.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence. A shallow copy
         of the ``dict`` will be made (see Examples section below for details).
@@ -82,6 +112,18 @@ class Sequence(
         the object. All lowercase characters will be converted to uppercase,
         and a ``True`` value will be stored in a boolean array in the
         positional metadata under the key.
+
+    Raises
+    ------
+    UnicodeEncodeError
+        If ``sequence`` is text containing a non-ASCII character (>255).
+    ValueError
+        If ``sequence`` contains a byte value outside 7-bit ASCII (128-255).
+
+    .. versionchanged:: 0.7.5
+        Construction now rejects byte values 128-255. Previously, some bytes
+        and NumPy paths accepted those values even though text conversion
+        assumes ASCII.
 
     See Also
     --------
@@ -372,8 +414,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
     read = Read()
     write = Write()
 
-    _num_ascii_codes = 128
-    _num_extended_ascii_codes = 256
+    _num_ascii_codes = 128  # ASCII code domain (0-127)
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -586,7 +627,10 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
 
-        return cls(bytes_, positional_metadata=pm, interval_metadata=im)
+        # Each input sequence already satisfies the ASCII invariant.
+        return cls(
+            _ASCIIValidated(bytes_), positional_metadata=pm, interval_metadata=im
+        )
 
     @classmethod
     def _assert_can_cast_to(cls, target):
@@ -609,8 +653,18 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         interval_metadata=None,
         lowercase=False,
     ):
+        # Trusted internal paths wrap buffers that already satisfy the
+        # invariant. Do not rescan them: contiguous slicing must stay a view.
+        if isinstance(sequence, _ASCIIValidated):
+            sequence = sequence.sequence
+            is_ascii = True
+        else:
+            is_ascii = False
+
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
+                if not is_ascii:
+                    _validate_ascii(sequence)
                 self._set_bytes_contiguous(sequence)
             elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
@@ -618,6 +672,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 # this).
                 if sequence.shape == ():
                     sequence = np.array([sequence], dtype=np.uint8)
+                if not is_ascii:
+                    _validate_ascii(sequence)
                 self._set_bytes_contiguous(sequence)
             else:
                 raise TypeError(
@@ -626,7 +682,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 )
         elif isinstance(sequence, Sequence):
             # Sequence casting is acceptable between direct
-            # descendants/ancestors
+            # descendants/ancestors. The source already satisfies the
+            # invariant, so this path is not scanned again.
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -642,6 +699,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             # Encode as ascii to raise UnicodeEncodeError if necessary.
             if isinstance(sequence, str):
                 sequence = sequence.encode("ascii")
+                is_ascii = True
             s = np.frombuffer(sequence, dtype=np.uint8)
 
             # There are two possibilities (to our knowledge) at this point:
@@ -653,6 +711,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
+            if not is_ascii:
+                _validate_ascii(s)
             sequence = s
             self._owns_bytes = False
             self._set_bytes(sequence)
@@ -1816,15 +1876,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         number of A and C characters (4 + 2 = 6).
 
         """
-        freqs = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
+        freqs = np.bincount(self._bytes, minlength=self._num_ascii_codes)
 
         if chars is not None:
             chars, indices = self._chars_to_indices(chars)
         else:
             (indices,) = np.nonzero(freqs)
             # Downcast from int64 to uint8 then convert to str. This is safe
-            # because we are guaranteed to have indices in the range 0 to 255
-            # inclusive.
+            # because Sequence bytes are 7-bit ASCII (0-127).
             chars = indices.astype(np.uint8).tobytes().decode("ascii")
 
         obs_counts = freqs[indices]
@@ -1863,7 +1922,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 )
 
             index = ord(char)
-            if index >= self._num_extended_ascii_codes:
+            if index >= self._num_ascii_codes:
                 raise ValueError(
                     "Character %r in `chars` is outside the range of "
                     "allowable characters in a `Sequence` object." % char
@@ -2284,6 +2343,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             return indices, observed
 
     def _constructor(self, **kwargs):
+        # Rebuilding from an existing Sequence does not rescan for ASCII.
+        if "sequence" in kwargs:
+            kwargs["sequence"] = _ASCIIValidated(kwargs["sequence"])
         return self.__class__(**kwargs)
 
     def _munge_to_index_array(self, sliceable):

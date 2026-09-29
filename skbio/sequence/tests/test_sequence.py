@@ -486,6 +486,34 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         with self.assertRaises(UnicodeEncodeError):
             Sequence('abc\u1F30')
 
+    def test_init_non_7bit_ascii(self):
+        msg = r'Found byte value %d'
+
+        def assert_rejected(payload, bad_byte):
+            with self.assertRaisesRegex(ValueError, msg % bad_byte):
+                Sequence(payload)
+
+        # 128 and 255 exceed 7-bit ASCII
+        assert_rejected(bytes([65, 255]), 255)
+        assert_rejected(bytearray([128]), 128)
+        assert_rejected(memoryview(bytes([65, 128, 255])), 255)
+        assert_rejected(np.array([65, 128], dtype=np.uint8), 128)
+        assert_rejected(np.array([255], dtype=np.uint8), 255)
+        assert_rejected(np.array([1, 200, 128], dtype=np.uint8), 200)
+
+        # Non-contiguous view that still contains an invalid byte.
+        assert_rejected(np.array([65, 1, 128], dtype=np.uint8)[::2], 128)
+        assert_rejected(np.array([b'A', b'\xff'], dtype='|S1'), 255)
+        assert_rejected(np.array([b'\x80'], dtype='|S1'), 128)
+
+        # 0 and 127 are valid ASCII
+        obs = Sequence(np.array([0, 65, 127], dtype=np.uint8))
+        self.assertIsInstance(obs, Sequence)
+
+        # Text still fails through ASCII encoding, not the byte check.
+        with self.assertRaises(UnicodeEncodeError):
+            Sequence('Aé')
+
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
         # provided by the property: that it can be accessed, can't be
@@ -1581,6 +1609,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         with self.assertRaisesRegex(ValueError, r'outside the range'):
             seq.frequencies(chars='\u1F30')
+
+        # Byte 127 is a valid character; 128 is outside the ASCII domain.
+        bound = Sequence(np.array([127], dtype=np.uint8))
+        self.assertEqual(bound.frequencies(chars=chr(127)), {chr(127): 1})
+        with self.assertRaisesRegex(ValueError, r'outside the range'):
+            bound.frequencies(chars=chr(128))
+        with self.assertRaisesRegex(ValueError, r'outside the range'):
+            bound.frequencies(chars=b'\x80')
 
         with self.assertRaisesRegex(ValueError, r'outside the range'):
             seq.frequencies(chars={'c', '\u1F30'})

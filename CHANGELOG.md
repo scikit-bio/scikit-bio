@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Bug Fixes
+
+* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array, despite `Sequence` and downstream operations are built under the assumption of ASCII codes (0-127). Now construction rejects byte values >127. A successfully created `Sequence` always contains 7-bit ASCII code points (0–127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+
 
 ## Version 0.7.4
 

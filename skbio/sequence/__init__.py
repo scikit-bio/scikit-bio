@@ -8,6 +8,12 @@ molecular sequences based on IUPAC-defined alphabets (:class:`DNA`, :class:`RNA`
 :class:`Protein`), sequences based on custom alphabets (:class:`GrammaredSequence`),
 and generic/non-biological sequences with no alphabet restrictions (:class:`Sequence`).
 
+Sequence data are represented by ASCII codes (0-127) and stored as immutable arrays of
+bytes for efficient operations. Sequence objects can optionally carry metadata about
+the whole record, individual positions, and intervals describing features such as
+genes, domains, and other annotated regions. Keeping sequence data and annotations
+together facilitates biologically meaningful analyses within scikit-bio.
+
 Additionally, this module defines the :class:`GeneticCode` class, which represents an
 immutable object that translates DNA or RNA sequences into protein sequences, and
 the :class:`SubstitutionMatrix` class, which stores scores of substitutions between
@@ -211,7 +217,8 @@ compact storage and efficient, vectorized operations.
 array([b'G', b'C', b'C', b'R', b'C', b'C', b'A', b'T', b'G', b'G'],
       dtype='|S1')
 
-This array can also be viewed as ASCII code points:
+This array can also be viewed as ASCII code points (0-127). Note that the ``uint8``
+storage format does not accept byte values 128-255.
 
 >>> seq.values.view('uint8')
 array([71, 67, 67, 82, 67, 67, 65, 84, 71, 71], dtype=uint8)

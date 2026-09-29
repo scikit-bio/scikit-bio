@@ -153,7 +153,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     """
 
-    # pre-cached Boolean mask (256,) of valid characters (False)
+    # pre-cached Boolean mask (128,) of valid characters (False)
     __validation_mask = None
 
     @classproperty
@@ -165,7 +165,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             cls.__validation_mask = np.invert(
                 np.bincount(
                     np.frombuffer(as_bytes, dtype=np.uint8),
-                    minlength=cls._num_extended_ascii_codes,
+                    minlength=cls._num_ascii_codes,
                 ).astype(bool)
             )
         return cls.__validation_mask
@@ -429,7 +429,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         # numbers and remove counts of valid numbers, so that we need only
         # see if the array is empty to determine validity.
         invalid_characters = (
-            np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
+            np.bincount(self._bytes, minlength=self._num_ascii_codes)
             * self._validation_mask
         )
         if np.any(invalid_characters):
@@ -956,7 +956,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @overrides(Sequence)
     def _constructor(self, **kwargs):
-        return self.__class__(validate=False, lowercase=False, **kwargs)
+        # Grammar was already checked on the parent object. ASCII validation
+        # is skipped by ``Sequence._constructor`` for the same reason.
+        kwargs["validate"] = False
+        kwargs["lowercase"] = False
+        return super()._constructor(**kwargs)
 
     @overrides(Sequence)
     def _repr_stats(self):
