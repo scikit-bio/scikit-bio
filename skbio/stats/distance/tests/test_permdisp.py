@@ -104,7 +104,7 @@ class PERMDISPTests(TestCase):
              [0.740681707488, 0.680785600439, 0.725100672826, 0.632524644216,
               0.727154987937, 0.699880573956, 0.560605525642, 0.575788039321,
               0.0]], unif_ids)
-        
+
         # condensed form
         self.unifrac_dm_condensed = DistanceMatrix(self.unifrac_dm)
 
@@ -203,6 +203,64 @@ class PERMDISPTests(TestCase):
                        dimensions=self.unifrac_dm_condensed.shape[0])
 
         self.assert_series_equal(obs, exp)
+
+    def test_non_euclidean_distances_use_signed_pcoa_space(self):
+        dm = DistanceMatrix([
+            [0, 0.5, 0.75, 1, 0.66, 0.33],
+            [0.5, 0, 0.25, 0.33, 0.77, 0.61],
+            [0.75, 0.25, 0, 0.1, 0.44, 0.55],
+            [1, 0.33, 0.1, 0, 0.75, 0.88],
+            [0.66, 0.77, 0.44, 0.75, 0, 0.77],
+            [0.33, 0.61, 0.55, 0.88, 0.77, 0],
+        ])
+        grouping = ["G1"] * 3 + ["G2"] * 3
+
+        centroid = permdisp(
+            dm, grouping, test="centroid", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+        median = permdisp(
+            dm, grouping, test="median", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+
+        self.assertAlmostEqual(centroid["test statistic"], 3.184337557270807)
+        self.assertAlmostEqual(median["test statistic"], 1.147198818499995)
+
+    @numba_code
+    def test_non_euclidean_signed_engines_agree(self):
+        dm = DistanceMatrix([
+            [0, .5, .75, 1, .66, .33],
+            [.5, 0, .25, .33, .77, .61],
+            [.75, .25, 0, .1, .44, .55],
+            [1, .33, .1, 0, .75, .88],
+            [.66, .77, .44, .75, 0, .77],
+            [.33, .61, .55, .88, .77, 0],
+        ])
+        # Unequal group sizes avoid complementary partitions tied to roundoff.
+        grouping = ["G1"] * 2 + ["G2"] * 4
+        for test in ("centroid", "median"):
+            results = [permdisp(dm, grouping, test=test, permutations=99,
+                                dimensions=0, seed=42, warn_neg_eigval=False,
+                                engine=engine)
+                       for engine in ("cython", "numba")]
+            npt.assert_allclose(results[0]["test statistic"],
+                                results[1]["test statistic"], rtol=1e-9)
+            self.assertEqual(results[0]["p-value"], results[1]["p-value"])
+
+    def test_euclidean_distances_are_unchanged_by_signed_space(self):
+        from scipy.spatial.distance import pdist, squareform
+
+        points = np.array([[0, 0], [1, 0], [0, 1], [4, 0], [5, 0], [4, 2]])
+        dm = DistanceMatrix(squareform(pdist(points)))
+        grouping = ["A"] * 3 + ["B"] * 3
+
+        result = permdisp(
+            dm, grouping, test="centroid", permutations=0,
+            dimensions=dm.shape[0], warn_neg_eigval=False,
+        )
+
+        self.assertAlmostEqual(result["test statistic"], 3.1412147380153312)
 
     @skipIf(IS_INTEL_MAC, "See issue #2382.")
     def test_median_normal(self):
@@ -383,8 +441,9 @@ class PERMDISPTests(TestCase):
         obs_cen_mp = permdisp(mp_dm, mp_mf, column='BodySite', test='centroid',
                               seed=42, dimensions=mp_dm.shape[0])
 
-        exp_data_m = ['PERMDISP', 'F-value', 33, 4, 10.1956, 0.001, 999]
-        exp_data_c = ['PERMDISP', 'F-value', 33, 4, 17.4242, 0.001, 999]
+        # The old values (10.1956, 17.4242) omitted two negative PCoA axes.
+        exp_data_m = ['PERMDISP', 'F-value', 33, 4, 10.4104, 0.001, 999]
+        exp_data_c = ['PERMDISP', 'F-value', 33, 4, 17.7275, 0.001, 999]
         exp_ind = ['method name', 'test statistic name', 'sample size',
                    'number of groups', 'test statistic', 'p-value',
                    'number of permutations']
@@ -429,9 +488,9 @@ class PERMDISPTests(TestCase):
     def test_no_mutation_of_ordination_results(self):
         po = pcoa(self.unifrac_dm, warn_neg_eigval=False)
         original_columns = po.samples.columns.tolist()
-        
+
         permdisp(po, self.unif_grouping, permutations=0, warn_neg_eigval=False)
-        
+
         self.assertEqual(po.samples.columns.tolist(), original_columns)
         self.assertNotIn("grouping", po.samples.columns.tolist())
 
@@ -612,6 +671,7 @@ class PERMDISPEngineTests(TestCase):
             exp = _compute_groups(samples, "centroid", codes)
             obs = _permdisp_f_stat_centroid_nb(
                 np.ascontiguousarray(samples),
+                np.ones(samples.shape[1]),
                 np.ascontiguousarray(codes, dtype=np.int32), 2)
             npt.assert_array_equal(obs, exp)
 

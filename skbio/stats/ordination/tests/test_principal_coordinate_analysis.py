@@ -24,6 +24,7 @@ from skbio.stats.ordination._principal_coordinate_analysis import (
     f_matrix,
     center_distance_matrix,
     _host_partial_eigh,
+    _pcoa_signed,
     _fsvd,
 )
 
@@ -62,6 +63,21 @@ class TestPCoA(TestCase):
 
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
+
+    def test_signed_axes_reconstruct_non_euclidean_distances(self):
+        dm = DistanceMatrix([
+            [0, .5, .75, 1, .66, .33],
+            [.5, 0, .25, .33, .77, .61],
+            [.75, .25, 0, .1, .44, .55],
+            [1, .33, .1, 0, .75, .88],
+            [.66, .77, .44, .75, 0, .77],
+            [.33, .61, .55, .88, .77, 0],
+        ])
+        samples, signs = _pcoa_signed(dm, 0, False)
+        delta = samples[:, None, :] - samples[None, :, :]
+        reconstructed = np.sum(signs * delta ** 2, axis=-1)
+        self.assertTrue(np.any(signs < 0))
+        npt.assert_allclose(reconstructed, dm.data ** 2, atol=1e-12)
 
     @numba_code
     def test_engine_numba_matches_cython(self):

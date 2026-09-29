@@ -2,6 +2,9 @@
 
 ## Version 0.7.5-dev
 
+### Bug Fixes
+
+* Fixed `permdisp` dropping negative PCoA axes for non-Euclidean distance matrices, which could change F statistics and permutation p-values relative to the signed-space method.
 
 ## Version 0.7.4
 
