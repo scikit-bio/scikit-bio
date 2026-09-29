@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Miscellaneous
+
+* Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).
+
 
 ## Version 0.7.4
 
