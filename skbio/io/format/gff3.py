@@ -214,6 +214,7 @@ Specifications/blob/master/gff3.md
 
 import re
 from collections.abc import Iterable
+from urllib.parse import unquote
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
@@ -462,6 +463,10 @@ def _parse_attr(s):
     s = s.rstrip(";")
     for attr in s.split(";"):
         k, v = attr.split("=")
+        # reserved characters are percent-encoded in column 9, decode them
+        # so that the values match what the writer would have escaped
+        k = unquote(k)
+        v = unquote(v)
         if k in voca_change:
             k = voca_change[k]
         md[k] = v

@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Bug Fixes
+
+* Fixed the GFF3 reader not percent-decoding attribute values in column 9, which made read/write/read round trips lossy for values containing reserved characters (`;`, `=`, `&`, `,`) ([#2454](https://github.com/scikit-bio/scikit-bio/issues/2454)).
+
 
 ## Version 0.7.4
 
