@@ -469,6 +469,86 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertIs(seq._bytes.base, data)
         self.assertEqual(seq, Sequence("ABA"))
 
+    def test_init_copy_false_ndarray(self):
+        data = np.array([65, 66, 65], dtype=np.uint8)
+        seq = Sequence(data, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(np.shares_memory(seq._bytes, data))
+        # Sequence must not make the caller's ndarray read-only.
+        self.assertTrue(data.flags.writeable)
+        with self.assertRaises(ValueError):
+            seq._bytes[0] = 66
+
+    def test_init_copy_false_bytearray(self):
+        data = bytearray(b"ABA")
+        seq = Sequence(data, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(
+            np.shares_memory(seq._bytes, np.frombuffer(data, dtype=np.uint8))
+        )
+
+    def test_init_copy_false_noncontiguous_raises(self):
+        data = np.array([65, 66, 65, 66], dtype=np.uint8)[::2]
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(data, copy=False)
+
+    def test_init_copy_false_text_raises(self):
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence("ABA", copy=False)
+
+    def test_init_copy_false_lowercase_conversion_raises(self):
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(b"aBA", lowercase=True, copy=False)
+
+        # No copy is needed when there is nothing to convert.
+        seq = Sequence(b"ABA", lowercase=True, copy=False)
+        self.assertEqual(seq, Sequence("ABA"))
+        self.assertFalse(seq._owns_bytes)
+
+    def test_init_copy_true(self):
+        data = b"ABA"
+        seq = Sequence(data, copy=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNone(seq._bytes.base)
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_sequence(self):
+        source = Sequence("ABA")
+
+        shared = Sequence(source, copy=False)
+        self.assertFalse(shared._owns_bytes)
+        self.assertTrue(np.shares_memory(shared._bytes, source._bytes))
+
+        copied = Sequence(source, copy=True)
+        self.assertTrue(copied._owns_bytes)
+        self.assertFalse(np.shares_memory(copied._bytes, source._bytes))
+
+    def test_init_invalid_copy(self):
+        with self.assertRaisesRegex(ValueError, r"`copy` must be"):
+            Sequence(b"ABA", copy="never")
+
+    def test_init_validate_false(self):
+        # Validation is an assertion supplied by the caller. Invalid input is
+        # unsupported, but construction itself does not scan when disabled.
+        seq = Sequence(bytes([255]), validate=False)
+        self.assertEqual(int(seq._bytes[0]), 255)
+
+        data = np.array([128], dtype=np.uint8)
+        seq = Sequence(data, validate=False)
+        self.assertEqual(int(seq._bytes[0]), 128)
+        # Safe ownership policy is independent of validation policy.
+        self.assertTrue(seq._owns_bytes)
+
+    def test_init_validate_false_copy_false(self):
+        data = np.array([255], dtype=np.uint8)
+        seq = Sequence(data, validate=False, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(np.shares_memory(seq._bytes, data))
+
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
         with self.assertRaises(TypeError):

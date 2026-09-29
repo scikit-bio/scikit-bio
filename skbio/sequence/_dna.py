@@ -47,6 +47,8 @@ class DNA(GrammaredSequence, NucleotideMixin):
         work or behave as expected.** Only turn off validation if you are
         certain that the sequence characters are valid. To store sequence data
         that is not IUPAC-compliant, use ``Sequence``.
+    copy : {None, True, False}, optional
+        Control copying of sequence data. See ``Sequence`` for details.
 
     See Also
     --------

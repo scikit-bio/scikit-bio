@@ -408,6 +408,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         interval_metadata=None,
         lowercase=False,
         validate=True,
+        copy=None,
     ):
         super(GrammaredSequence, self).__init__(
             sequence,
@@ -415,6 +416,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
             positional_metadata,
             interval_metadata,
             lowercase,
+            validate=validate,
+            copy=copy,
         )
 
         if validate:

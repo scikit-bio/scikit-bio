@@ -114,20 +114,42 @@ class Sequence(
         the object. All lowercase characters will be converted to uppercase,
         and a ``True`` value will be stored in a boolean array in the
         positional metadata under the key.
+    validate : bool, optional
+        If ``True`` (default), byte-oriented input is validated to contain only
+        7-bit ASCII code points (0-127). If ``False``, this validation is
+        skipped. In that case, the caller is responsible for ensuring that the
+        sequence satisfies the ASCII requirement. Supplying invalid data with
+        validation disabled results in undefined behavior.
+    copy : {None, True, False}, optional
+        Control copying of sequence data, following NumPy's tri-state ``copy``
+        convention. If ``None`` (default), a copy is made when needed for a
+        safe, contiguous internal representation; immutable or trusted storage
+        may be shared. If ``True``, sequence data are copied. If ``False``, a
+        copy is forbidden and ``ValueError`` is raised when one would be
+        required, for example for a non-contiguous array, text encoding, or
+        lowercase conversion.
+
+        When ``copy=False`` shares externally owned storage, the caller must
+        not mutate that storage, or any writable alias of it, for the lifetime
+        of this sequence and any sequence objects derived from it. Violating
+        this requirement results in undefined behavior.
 
     Raises
     ------
     UnicodeEncodeError
-        If ``sequence`` is text containing a non-ASCII character (>255).
+        If ``sequence`` is text containing a non-ASCII character.
     ValueError
         If ``sequence`` contains a byte value outside 7-bit ASCII (128-255).
+        Also raised if ``copy=False`` is requested but a copy is required.
 
     .. versionchanged:: 0.7.5
         Construction now rejects byte values 128-255. Previously, some bytes
         and NumPy paths accepted those values even though text conversion
         assumes ASCII.
-        Mutable external buffers and NumPy arrays are copied so subsequent
-        mutation of the input cannot change the sequence contents.
+        Mutable external buffers and NumPy arrays are copied by default so
+        subsequent mutation of the input cannot change the sequence contents.
+        The ``validate`` and ``copy`` parameters were added to permit explicit
+        expert control over validation and data ownership.
 
     See Also
     --------
@@ -656,7 +678,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         positional_metadata=None,
         interval_metadata=None,
         lowercase=False,
+        validate=True,
+        copy=None,
     ):
+        if copy is not None:
+            if not isinstance(copy, (bool, np.bool_)):
+                raise ValueError("`copy` must be True, False, or None.")
+            copy = bool(copy)
+
         # Trusted internal paths wrap buffers that already satisfy the
         # invariant. Do not rescan them: contiguous slicing must stay a view.
         if isinstance(sequence, _ASCIIValidated):
@@ -667,40 +696,49 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
-                if is_ascii:
-                    self._set_bytes_contiguous(sequence)
-                else:
-                    # External arrays may have writable aliases. Take an
-                    # independent snapshot so the Sequence remains immutable
-                    # and the ASCII invariant cannot be invalidated later.
-                    sequence = sequence.copy(order="C")
-                    _validate_ascii(sequence)
-                    self._owns_bytes = True
-                    self._set_bytes(sequence)
+                pass
             elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
-                # Guarantee the sequence is an array (might be scalar before
-                # this).
+                # Guarantee the sequence is a 1-D array (might be scalar before
+                # this). Reshaping a scalar array to length one is a view.
                 if sequence.shape == ():
-                    sequence = np.array([sequence], dtype=np.uint8)
-                if is_ascii:
-                    self._set_bytes_contiguous(sequence)
-                else:
-                    # As above, detach from caller-owned NumPy storage before
-                    # validating and retaining the data.
-                    sequence = sequence.copy(order="C")
-                    _validate_ascii(sequence)
-                    self._owns_bytes = True
-                    self._set_bytes(sequence)
+                    sequence = sequence.reshape(1)
             else:
                 raise TypeError(
                     "Can only create sequence from numpy.ndarray of dtype "
                     "np.uint8 or '|S1'. Invalid dtype: %s" % sequence.dtype
                 )
+
+            if copy is None and is_ascii:
+                # Trusted internal data may be shared. The helper copies only
+                # when contiguity requires it.
+                self._set_bytes_contiguous(sequence)
+            else:
+                if copy is False:
+                    if not sequence.flags["C_CONTIGUOUS"]:
+                        raise ValueError(
+                            "`copy=False` was specified, but a copy is required "
+                            "to make sequence data contiguous."
+                        )
+                    # Use a separate view so making Sequence data read-only does
+                    # not change the caller's ndarray flags.
+                    sequence = sequence.view()
+                    self._owns_bytes = False
+                else:
+                    # ``copy=True`` always detaches. With the safe default
+                    # (``copy=None``), external ndarrays are also detached
+                    # because writable aliases may otherwise mutate Sequence.
+                    sequence = sequence.copy(order="C")
+                    self._owns_bytes = True
+
+                if validate and not is_ascii:
+                    _validate_ascii(sequence)
+                self._set_bytes(sequence)
         elif isinstance(sequence, Sequence):
             # Sequence casting is acceptable between direct
-            # descendants/ancestors. The source already satisfies the
-            # invariant, so this path is not scanned again.
+            # descendants/ancestors. A Sequence is trusted to satisfy the
+            # invariant, including when its caller explicitly opted out of
+            # validation or copying.
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -709,12 +747,23 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 positional_metadata = sequence.positional_metadata
             if interval_metadata is None and sequence.has_interval_metadata():
                 interval_metadata = sequence.interval_metadata
-            sequence = sequence._bytes
-            self._owns_bytes = False
+            if copy is True:
+                sequence = sequence._bytes.copy()
+                self._owns_bytes = True
+            else:
+                sequence = sequence._bytes.view()
+                self._owns_bytes = False
             self._set_bytes(sequence)
         else:
-            # Encode as ascii to raise UnicodeEncodeError if necessary.
+            # Text must be encoded to obtain the byte-oriented internal
+            # representation. This necessarily allocates, so it is
+            # incompatible with strict ``copy=False``.
             if isinstance(sequence, str):
+                if copy is False:
+                    raise ValueError(
+                        "`copy=False` was specified, but a copy is required "
+                        "to encode text as ASCII."
+                    )
                 sequence = sequence.encode("ascii")
                 is_ascii = True
             s = np.frombuffer(sequence, dtype=np.uint8)
@@ -728,20 +777,28 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
-            if is_ascii:
-                # ``str`` was encoded above to an immutable ``bytes`` object.
+            if copy is True:
+                s = s.copy()
+                self._owns_bytes = True
+            elif copy is False:
+                # ``np.frombuffer`` already creates a separate ndarray view,
+                # so making it read-only does not modify the source object's
+                # own writeability.
                 self._owns_bytes = False
-            elif isinstance(sequence, bytes):
-                # Immutable bytes can be shared safely.
-                _validate_ascii(s)
+            elif is_ascii or isinstance(sequence, bytes):
+                # Text has just been encoded into immutable bytes, and bytes
+                # supplied directly by the caller are immutable. Both are safe
+                # to share under the default policy.
                 self._owns_bytes = False
             else:
-                # ``bytearray``, ``memoryview``, and other buffer providers may
-                # have writable backing storage, even when the exposed view is
-                # read-only. Detach before validation and retention.
+                # bytearray, memoryview, and other buffer providers may have
+                # writable backing storage, even when their exposed view is
+                # read-only. Detach under the safe default policy.
                 s = s.copy()
-                _validate_ascii(s)
                 self._owns_bytes = True
+
+            if validate and not is_ascii:
+                _validate_ascii(s)
 
             sequence = s
             self._set_bytes(sequence)
@@ -754,6 +811,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             pass
         elif lowercase is True or isinstance(lowercase, str):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            if copy is False and np.any(lowercase_mask):
+                raise ValueError(
+                    "`copy=False` was specified, but a copy is required "
+                    "to convert lowercase sequence characters to uppercase."
+                )
             self._convert_to_uppercase(lowercase_mask)
 
             # If it isn't True, it must be a string_type
