@@ -399,24 +399,17 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         # sequence should be what we'd expect
         self.assertEqual(seq, Sequence('A*B'))
+        # External ndarray storage is copied so aliases remain independently
+        # mutable without affecting the Sequence.
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNot(seq._bytes, view)
+        self.assertTrue(view.flags.writeable)
 
-        # we shouldn't own the memory because no copy should have been made
-        self.assertFalse(seq._owns_bytes)
-
-        # can't mutate view because it isn't writeable anymore
-        with self.assertRaises(ValueError):
-            view[1] = 100
-
-        # sequence shouldn't have changed
+        # Mutate both the base array and the supplied view, including inserting
+        # a byte outside ASCII. The Sequence must remain unchanged.
+        bytes[0] = 255
+        view[1] = 100
         self.assertEqual(seq, Sequence('A*B'))
-
-        # mutate bytes (*not* the view)
-        bytes[0] = 99
-
-        # Sequence changed because we are only able to make the view read-only,
-        # not its source (bytes). This is somewhat inconsistent behavior that
-        # is (to the best of our knowledge) outside our control.
-        self.assertEqual(seq, Sequence('c*B'))
 
     def test_init_from_noncontiguous_sequence_bytes_view(self):
         bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
@@ -436,17 +429,45 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # sequence shouldn't have changed
         self.assertEqual(seq, Sequence('ABA'))
 
-    def test_init_no_copy_of_sequence(self):
+    def test_init_copy_of_external_ndarray(self):
         bytes = np.array([65, 66, 65], dtype=np.uint8)
         seq = Sequence(bytes)
 
-        # should share the same memory
-        self.assertIs(seq._bytes, bytes)
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNot(seq._bytes, bytes)
+        self.assertTrue(bytes.flags.writeable)
 
-        # shouldn't be able to mutate the Sequence object's internals by
-        # mutating the shared memory
-        with self.assertRaises(ValueError):
-            bytes[1] = 42
+        # Caller-owned storage can change after construction without changing
+        # the Sequence or invalidating its ASCII invariant.
+        bytes[1] = 255
+        self.assertEqual(seq, Sequence('ABA'))
+
+    def test_init_copy_of_bytearray(self):
+        data = bytearray(b"ABA")
+        seq = Sequence(data)
+
+        self.assertTrue(seq._owns_bytes)
+        data[1] = 255
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_of_readonly_memoryview(self):
+        data = bytearray(b"ABA")
+        view = memoryview(data).toreadonly()
+        seq = Sequence(view)
+
+        # A read-only view can still alias writable backing storage, so it
+        # cannot safely be shared.
+        self.assertTrue(seq._owns_bytes)
+        data[1] = 255
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_no_copy_of_immutable_bytes(self):
+        data = b"ABA"
+        seq = Sequence(data)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertIs(seq._bytes.base, data)
+        self.assertEqual(seq, Sequence("ABA"))
 
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)

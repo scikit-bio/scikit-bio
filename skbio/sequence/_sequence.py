@@ -39,11 +39,13 @@ if TYPE_CHECKING:
 
 
 class _ASCIIValidated:
-    """Mark a buffer that already contains only ASCII code points 0-127.
+    """Mark trusted internal data that satisfies the ASCII invariant.
 
     Internal construction (slicing, copying, concatenation, and k-mers) wraps
     buffers so ``Sequence`` does not rescan data that already satisfies the
-    ASCII invariant. Not part of the public API.
+    ASCII invariant. Wrapped buffers must originate from immutable or
+    ``Sequence``-owned storage so external mutation cannot invalidate this
+    invariant. Not part of the public API.
     """
 
     __slots__ = ("sequence",)
@@ -124,6 +126,8 @@ class Sequence(
         Construction now rejects byte values 128-255. Previously, some bytes
         and NumPy paths accepted those values even though text conversion
         assumes ASCII.
+        Mutable external buffers and NumPy arrays are copied so subsequent
+        mutation of the input cannot change the sequence contents.
 
     See Also
     --------
@@ -663,18 +667,31 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         if isinstance(sequence, np.ndarray):
             if sequence.dtype == np.uint8:
-                if not is_ascii:
+                if is_ascii:
+                    self._set_bytes_contiguous(sequence)
+                else:
+                    # External arrays may have writable aliases. Take an
+                    # independent snapshot so the Sequence remains immutable
+                    # and the ASCII invariant cannot be invalidated later.
+                    sequence = sequence.copy(order="C")
                     _validate_ascii(sequence)
-                self._set_bytes_contiguous(sequence)
+                    self._owns_bytes = True
+                    self._set_bytes(sequence)
             elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
                 # Guarantee the sequence is an array (might be scalar before
                 # this).
                 if sequence.shape == ():
                     sequence = np.array([sequence], dtype=np.uint8)
-                if not is_ascii:
+                if is_ascii:
+                    self._set_bytes_contiguous(sequence)
+                else:
+                    # As above, detach from caller-owned NumPy storage before
+                    # validating and retaining the data.
+                    sequence = sequence.copy(order="C")
                     _validate_ascii(sequence)
-                self._set_bytes_contiguous(sequence)
+                    self._owns_bytes = True
+                    self._set_bytes(sequence)
             else:
                 raise TypeError(
                     "Can only create sequence from numpy.ndarray of dtype "
@@ -711,10 +728,22 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
-            if not is_ascii:
+            if is_ascii:
+                # ``str`` was encoded above to an immutable ``bytes`` object.
+                self._owns_bytes = False
+            elif isinstance(sequence, bytes):
+                # Immutable bytes can be shared safely.
                 _validate_ascii(s)
+                self._owns_bytes = False
+            else:
+                # ``bytearray``, ``memoryview``, and other buffer providers may
+                # have writable backing storage, even when the exposed view is
+                # read-only. Detach before validation and retention.
+                s = s.copy()
+                _validate_ascii(s)
+                self._owns_bytes = True
+
             sequence = s
-            self._owns_bytes = False
             self._set_bytes(sequence)
 
         MetadataMixin._init_(self, metadata=metadata)
