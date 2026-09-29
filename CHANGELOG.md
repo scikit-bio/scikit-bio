@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Miscellaneous
+
+* Dropped support for Python 3.10 as it has reached end-of-life (EOL). scikit-bio now supports Python 3.11 through 3.14 ([#2601](https://github.com/scikit-bio/scikit-bio/pull/2601)).
+
 
 ## Version 0.7.4
 
