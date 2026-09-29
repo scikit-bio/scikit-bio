@@ -2276,6 +2276,42 @@ class CategoricalStatsHelperFunctionTests(TestCase):
             _run_monte_carlo_stats(lambda e: 42, self.grouping, -1)
 
 
+class FromIterableMetricKeywordsTests(TestCase):
+    def test_kmer_distance(self):
+        seqs = [
+            Sequence("AACC", metadata={"id": "a"}),
+            Sequence("ACAC", metadata={"id": "b"}),
+        ]
+        cases = [(PairwiseMatrix, {})]
+        for cls in (SymmetricMatrix, DistanceMatrix):
+            for validate in (True, False):
+                for condensed in (True, False):
+                    cases.append((cls, dict(validate=validate, condensed=condensed)))
+        for cls, options in cases:
+            with self.subTest(cls=cls, **options):
+                # Non-overlapping 2-mers are {AA, CC} and {AC}, respectively.
+                obs = cls.from_iterable(
+                    iter(seqs),
+                    skbio.sequence.distance.kmer_distance,
+                    key="id",
+                    k=2,
+                    overlap=False,
+                    **options,
+                )
+                npt.assert_array_equal(
+                    obs.redundant_form() if options else obs.data, [[0, 1], [1, 0]]
+                )
+                self.assertEqual(obs.ids, ("a", "b"))
+
+    def test_asymmetric_metric(self):
+        def metric(a, b, *, scale):
+            return (b - a) * scale
+
+        obs = PairwiseMatrix.from_iterable([1, 3], metric, keys=["a", "b"], scale=2)
+        npt.assert_array_equal(obs.data, [[0, 4], [-4, 0]])
+        self.assertEqual(obs.ids, ("a", "b"))
+
+
 class PairwiseMatrixTests(PairwiseMatrixTestBase, TestCase):
     @classmethod
     def get_matrix_class(cls):

@@ -2,6 +2,9 @@
 
 ## Version 0.7.5-dev
 
+### Features
+
+* `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
 
 ## Version 0.7.4
 
