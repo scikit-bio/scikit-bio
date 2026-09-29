@@ -1634,7 +1634,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for each object in the ``iterable``. If None, the default IDs will be used.
         keys : iterable of str, optional
             IDs of the objects. Must be the same length as ``iterable``.
-        validate : boolean, optional
+        validate : bool, optional
             If True, all pairwise relationships are computed, including upper
             and lower triangles and the diagonal. If False, ``metric`` is
             assumed to be symmetric and only the lower triangle (excluding the
@@ -1648,7 +1648,7 @@ class SymmetricMatrix(PairwiseMatrix):
 
         Returns
         -------
-        PairwiseMatrix
+        SymmetricMatrix
             The ``metric`` applied to all pairwise elements in the ``iterable``.
 
         Raises

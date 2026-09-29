@@ -75,9 +75,9 @@ def is_symmetric_and_hollow_cy(TReal[:, ::1] mat):
 
     Result:
     -------
-    is_symmetric: Boolean
+    is_symmetric : bool
         not (mat.T != mat).any()
-    is_hollow: Boolean
+    is_hollow : bool
         np.trace(mat) == 0
     """
     cdef Py_ssize_t in_n = mat.shape[0]
