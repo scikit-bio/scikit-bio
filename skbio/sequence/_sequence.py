@@ -61,6 +61,10 @@ def _validate_ascii(sequence):
     copy. Empty buffers are valid.
 
     """
+    # Normalize ndarray subclasses so validation cannot be affected by
+    # overridden reduction behavior (for example, MaskedArray.max ignores
+    # masked values).
+    sequence = np.asarray(sequence)
     if sequence.size == 0:
         return
     max_byte = int(sequence.max())
@@ -695,6 +699,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             is_ascii = False
 
         if isinstance(sequence, np.ndarray):
+            # Sequence does not preserve ndarray-subclass semantics. Keeping a
+            # base ndarray also ensures validation observes every stored byte.
+            sequence = np.asarray(sequence)
             if sequence.dtype == np.uint8:
                 pass
             elif sequence.dtype == "|S1":
@@ -766,7 +773,23 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     )
                 sequence = sequence.encode("ascii")
                 is_ascii = True
-            s = np.frombuffer(sequence, dtype=np.uint8)
+            buffer_copied = False
+            try:
+                s = np.frombuffer(sequence, dtype=np.uint8)
+            except BufferError as error:
+                if copy is False:
+                    raise ValueError(
+                        "`copy=False` was specified, but a copy is required "
+                        "to make sequence data contiguous."
+                    ) from error
+
+                # ``frombuffer`` requires C-contiguous storage. Pack the
+                # buffer's logical contents, then create independently owned,
+                # writable ndarray storage. The final copy is necessary
+                # because ``tobytes`` returns an immutable ``bytes`` object.
+                packed = memoryview(sequence).tobytes()
+                s = np.frombuffer(packed, dtype=np.uint8).copy()
+                buffer_copied = True
 
             # There are two possibilities (to our knowledge) at this point:
             # Either the sequence we were given was something string-like,
@@ -777,7 +800,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                     "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
-            if copy is True:
+            if buffer_copied:
+                self._owns_bytes = True
+            elif copy is True:
                 s = s.copy()
                 self._owns_bytes = True
             elif copy is False:

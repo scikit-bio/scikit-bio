@@ -461,6 +461,40 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         data[1] = 255
         self.assertEqual(seq, Sequence("ABA"))
 
+    def test_init_copy_of_noncontiguous_memoryview(self):
+        data = bytearray(b"aBcD")
+        view = memoryview(data)[::2]
+        seq = Sequence(view, lowercase=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertEqual(seq, Sequence("AC"))
+
+        # The packed Sequence storage is independent of the source buffer.
+        data[0] = 255
+        self.assertEqual(seq, Sequence("AC"))
+
+    def test_init_copy_true_of_noncontiguous_memoryview(self):
+        data = bytearray(b"ABCD")
+        view = memoryview(data)[::2]
+        seq = Sequence(view, copy=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertEqual(seq, Sequence("AC"))
+
+    def test_init_copy_false_of_noncontiguous_memoryview_raises(self):
+        data = bytearray(b"ABCD")
+        view = memoryview(data)[::2]
+
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(view, copy=False)
+
+    def test_init_noncontiguous_memoryview_is_validated(self):
+        data = bytearray([65, 0, 255])
+        view = memoryview(data)[::2]
+
+        with self.assertRaisesRegex(ValueError, r"Found byte value 255"):
+            Sequence(view)
+
     def test_init_no_copy_of_immutable_bytes(self):
         data = b"ABA"
         seq = Sequence(data)
@@ -614,6 +648,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # Text still fails through ASCII encoding, not the byte check.
         with self.assertRaises(UnicodeEncodeError):
             Sequence('Aé')
+
+    def test_init_masked_array_does_not_bypass_ascii_validation(self):
+        data = np.ma.array([65, 255], mask=[False, True], dtype=np.uint8)
+
+        for copy in (None, True, False):
+            with self.subTest(copy=copy):
+                with self.assertRaisesRegex(ValueError, r"Found byte value 255"):
+                    Sequence(data, copy=copy)
 
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
