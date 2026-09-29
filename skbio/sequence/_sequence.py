@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from __future__ import annotations
 
 import re
@@ -82,7 +83,7 @@ class Sequence(
     collections.abc.Sequence,
     SkbioObject,
 ):
-    """Store generic sequence data and optional associated metadata.
+    r"""Store generic sequence data and optional associated metadata.
 
     A ``Sequence`` object stores arbitrary ASCII characters (code points 0-127). It
     does not enforce a biological alphabet or grammar and is thus a generic object for
@@ -96,7 +97,7 @@ class Sequence(
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\\|S1')
+    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
         Characters representing the sequence itself. Must be 7-bit ASCII
         (code points 0-127), whether supplied as text, bytes, or an array.
     metadata : dict, optional
@@ -215,9 +216,8 @@ class Sequence(
 
     Retrieve underlying sequence:
 
-    >>> seq.values # doctest: +NORMALIZE_WHITESPACE
-    array([b'A', b'C', b'G', b'T'],
-          dtype='|S1')
+    >>> seq.values
+    array([b'A', b'C', b'G', b'T'], dtype='|S1')
 
     Underlying sequence immutable:
 
@@ -253,8 +253,7 @@ class Sequence(
     >>> seq.interval_metadata   # doctest: +ELLIPSIS
     1 interval feature
     ------------------
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], \
-fuzzy=[(False, False)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], ..., metadata={'gene': 'sagA'})
 
     **Updating sequence metadata:**
 
@@ -308,8 +307,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     -----------------------------
     0 CG
     >>> subseq.metadata
-    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice', 'Bob'], \
-'pubmed': 12345}
+    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice', 'Bob'], 'pubmed': 12345}
 
     The subsequence has inherited the metadata of its parent sequence. If we
     update the subsequence's author list, we see the changes propagated in the
@@ -423,12 +421,10 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     You can update directly on the ``Interval`` object:
 
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], \
-fuzzy=[(False, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], ..., metadata={'gene': 'foo'})
     >>> interval.bounds = [(0, 2)]
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(0, 2)], \
-fuzzy=[(False, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], ..., metadata={'gene': 'foo'})
 
     You can also query and obtain the interval features you are
     interested and then modify them:
@@ -436,8 +432,7 @@ fuzzy=[(False, False)], metadata={'gene': 'foo'})
     >>> intervals = list(seq.interval_metadata.query(metadata={'gene': 'foo'}))
     >>> intervals[0].fuzzy = [(True, False)]
     >>> print(intervals[0])  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(0, 2)], \
-fuzzy=[(True, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], ..., metadata={'gene': 'foo'})
 
     """
 
@@ -465,9 +460,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AACGA')
-        >>> s.values # doctest: +NORMALIZE_WHITESPACE
-        array([b'A', b'A', b'C', b'G', b'A'],
-              dtype='|S1')
+        >>> s.values
+        array([b'A', b'A', b'C', b'G', b'A'], dtype='|S1')
 
         """
         return self._bytes.view("|S1")
@@ -488,9 +482,8 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         >>> import numpy as np
         >>> from skbio import Sequence
         >>> seq = Sequence('ABC123')
-        >>> np.asarray(seq) # doctest: +NORMALIZE_WHITESPACE
-        array([b'A', b'B', b'C', b'1', b'2', b'3'],
-              dtype='|S1')
+        >>> np.asarray(seq)
+        array([b'A', b'B', b'C', b'1', b'2', b'3'], dtype='|S1')
 
         """
         return self.values.__array_interface__
