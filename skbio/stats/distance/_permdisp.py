@@ -10,33 +10,33 @@ from __future__ import annotations
 
 from functools import partial
 from typing import TYPE_CHECKING
-from warnings import warn
 
 import numpy as np
 from scipy.stats import f_oneway
-from skbio._config import _resolve_engine
-from skbio.stats.ordination import OrdinationResults, center_distance_matrix, pcoa
-from skbio.util import get_rng
-from skbio.util._decorator import params_aliased
 
+from ._cutils import geomedian_axis_one
 from ._base import (
-    DistanceMatrix,
-    _build_results,
     _preprocess_input_sng,
     _run_monte_carlo_stats,
+    _build_results,
+    DistanceMatrix,
 )
-from ._cutils import geomedian_axis_one
+from skbio.stats.ordination import pcoa, OrdinationResults
+from skbio.stats.ordination._principal_coordinate_analysis import _pcoa_signed
+from skbio.util import get_rng
+from skbio.util._decorator import params_aliased
+from skbio._config import _resolve_engine
 
 try:
-    from numba import get_num_threads, njit, prange
+    from numba import njit, prange, get_num_threads
 
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
 
 if TYPE_CHECKING:  # pragma: no cover
-    import pandas as pd
     from numpy.typing import ArrayLike
+    import pandas as pd
     from skbio.util._typing import SeedLike
 
 
@@ -80,7 +80,7 @@ if NUMBA_AVAILABLE:
         return ms_between / ms_within
 
     @njit
-    def _permdisp_f_stat_centroid_nb(samples, codes, num_groups):
+    def _permdisp_f_stat_centroid_nb(samples, signs, codes, num_groups):
         """Levene-style F statistic on distances to each group's centroid.
 
         Reproduces one call of ``_compute_groups(samples, "centroid", codes)``:
@@ -110,8 +110,8 @@ if NUMBA_AVAILABLE:
             acc = 0.0
             for j in range(d):
                 diff = samples[i, j] - centroids[g, j]
-                acc += diff * diff
-            val = np.sqrt(acc)
+                acc += signs[j] * diff * diff
+            val = np.sqrt(max(0.0, acc))
             dists[i] = val
             group_sums[g] += val
 
@@ -119,7 +119,7 @@ if NUMBA_AVAILABLE:
         return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
 
     @njit(parallel=True)
-    def _permdisp_perm_stats_centroid_nb(samples, perm_codes, num_groups):
+    def _permdisp_perm_stats_centroid_nb(samples, signs, perm_codes, num_groups):
         """F statistic for a batch of groupings, one per row of ``perm_codes``.
 
         The permutation loop is batched, one call per chunk, because the
@@ -131,7 +131,9 @@ if NUMBA_AVAILABLE:
         n_perm = perm_codes.shape[0]
         out = np.empty(n_perm, np.float64)
         for p in prange(n_perm):
-            out[p] = _permdisp_f_stat_centroid_nb(samples, perm_codes[p], num_groups)
+            out[p] = _permdisp_f_stat_centroid_nb(
+                samples, signs, perm_codes[p], num_groups
+            )
         return out
 
     @njit
@@ -229,13 +231,14 @@ if NUMBA_AVAILABLE:
         return y
 
     @njit
-    def _permdisp_f_stat_median_nb(samples, codes, num_groups):
+    def _permdisp_f_stat_median_nb(samples, signs, codes, num_groups):
         """As :func:`_permdisp_f_stat_centroid_nb`, but around group medians.
 
         The center of each group is its geometric median rather than its mean,
         which is what ``test="median"`` selects.
         """
         n, d = samples.shape
+        n_pos = np.sum(signs > 0)
 
         counts = np.zeros(num_groups, np.int64)
         for i in range(n):
@@ -245,135 +248,42 @@ if NUMBA_AVAILABLE:
         group_sums = np.zeros(num_groups, np.float64)
         for g in range(num_groups):
             size = counts[g]
-            # geomedian_axis_one takes (dims, samples), so the group is gathered
-            # transposed.
-            grp = np.empty((d, size), np.float64)
+            # Positive axes precede negative axes in the signed ordination.
+            positive = np.empty((n_pos, size), np.float64)
+            negative = np.empty((d - n_pos, size), np.float64)
             idx = np.empty(size, np.int64)
             k = 0
             for i in range(n):
                 if codes[i] == g:
                     idx[k] = i
-                    for j in range(d):
-                        grp[j, k] = samples[i, j]
+                    for j in range(n_pos):
+                        positive[j, k] = samples[i, j]
+                    for j in range(d - n_pos):
+                        negative[j, k] = samples[i, n_pos + j]
                     k += 1
-            center = _geomedian_nb(grp)
+            center_pos = _geomedian_nb(positive)
+            center_neg = _geomedian_nb(negative) if n_pos < d else np.empty(0)
             for m in range(size):
                 acc = 0.0
-                for j in range(d):
-                    diff = samples[idx[m], j] - center[j]
+                for j in range(n_pos):
+                    diff = samples[idx[m], j] - center_pos[j]
                     acc += diff * diff
-                val = np.sqrt(acc)
+                for j in range(d - n_pos):
+                    diff = samples[idx[m], n_pos + j] - center_neg[j]
+                    acc -= diff * diff
+                val = np.sqrt(max(0.0, acc))
                 dists[idx[m]] = val
                 group_sums[g] += val
 
         return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
 
     @njit(parallel=True)
-    def _permdisp_perm_stats_median_nb(samples, perm_codes, num_groups):
+    def _permdisp_perm_stats_median_nb(samples, signs, perm_codes, num_groups):
         """F statistic for a batch of groupings, around group medians."""
         n_perm = perm_codes.shape[0]
         out = np.empty(n_perm, np.float64)
         for p in prange(n_perm):
-            out[p] = _permdisp_f_stat_median_nb(samples, perm_codes[p], num_groups)
-        return out
-
-    @njit
-    def _permdisp_f_stat_centroid_signed_nb(samples, signs, codes, num_groups):
-        """Centroid PERMDISP statistic in a signed PCoA space."""
-        n, d = samples.shape
-        counts = np.zeros(num_groups, np.int64)
-        centroids = np.zeros((num_groups, d), np.float64)
-        for i in range(n):
-            g = codes[i]
-            counts[g] += 1
-            for j in range(d):
-                centroids[g, j] += samples[i, j]
-        for g in range(num_groups):
-            for j in range(d):
-                centroids[g, j] /= counts[g]
-
-        dists = np.empty(n, np.float64)
-        group_sums = np.zeros(num_groups, np.float64)
-        for i in range(n):
-            g = codes[i]
-            acc = 0.0
-            for j in range(d):
-                diff = samples[i, j] - centroids[g, j]
-                acc += signs[j] * diff * diff
-            val = np.sqrt(max(0.0, acc))
-            dists[i] = val
-            group_sums[g] += val
-        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
-
-    @njit(parallel=True)
-    def _permdisp_perm_stats_centroid_signed_nb(samples, signs, perm_codes, num_groups):
-        """Signed-space centroid statistics for a batch of groupings."""
-        n_perm = perm_codes.shape[0]
-        out = np.empty(n_perm, np.float64)
-        for p in prange(n_perm):
-            out[p] = _permdisp_f_stat_centroid_signed_nb(
-                samples, signs, perm_codes[p], num_groups
-            )
-        return out
-
-    @njit
-    def _permdisp_f_stat_median_signed_nb(samples, signs, codes, num_groups):
-        """Median PERMDISP statistic in a signed PCoA space."""
-        n, d = samples.shape
-        counts = np.zeros(num_groups, np.int64)
-        n_pos = np.sum(signs > 0)
-        n_neg = d - n_pos
-        for i in range(n):
-            counts[codes[i]] += 1
-
-        dists = np.empty(n, np.float64)
-        group_sums = np.zeros(num_groups, np.float64)
-        for g in range(num_groups):
-            size = counts[g]
-            positive = np.empty((n_pos, size), np.float64)
-            negative = np.empty((n_neg, size), np.float64)
-            idx = np.empty(size, np.int64)
-            k = 0
-            for i in range(n):
-                if codes[i] == g:
-                    idx[k] = i
-                    ipos = 0
-                    ineg = 0
-                    for j in range(d):
-                        if signs[j] > 0:
-                            positive[ipos, k] = samples[i, j]
-                            ipos += 1
-                        else:
-                            negative[ineg, k] = samples[i, j]
-                            ineg += 1
-                    k += 1
-            center_pos = _geomedian_nb(positive)
-            center_neg = _geomedian_nb(negative)
-            for m in range(size):
-                acc = 0.0
-                ipos = 0
-                ineg = 0
-                for j in range(d):
-                    if signs[j] > 0:
-                        diff = samples[idx[m], j] - center_pos[ipos]
-                        acc += diff * diff
-                        ipos += 1
-                    else:
-                        diff = samples[idx[m], j] - center_neg[ineg]
-                        acc -= diff * diff
-                        ineg += 1
-                val = np.sqrt(max(0.0, acc))
-                dists[idx[m]] = val
-                group_sums[g] += val
-        return _anova_f_nb(dists, codes, counts, group_sums, num_groups)
-
-    @njit(parallel=True)
-    def _permdisp_perm_stats_median_signed_nb(samples, signs, perm_codes, num_groups):
-        """Signed-space median statistics for a batch of groupings."""
-        n_perm = perm_codes.shape[0]
-        out = np.empty(n_perm, np.float64)
-        for p in prange(n_perm):
-            out[p] = _permdisp_f_stat_median_signed_nb(
+            out[p] = _permdisp_f_stat_median_nb(
                 samples, signs, perm_codes[p], num_groups
             )
         return out
@@ -384,57 +294,6 @@ if NUMBA_AVAILABLE:
 # deliberately a few dozen per thread rather than one so the kernel launch is
 # amortized, and it bounds the grouping buffer to (CHUNK x n).
 _PERM_CHUNK_PER_THREAD = 32
-
-
-def _pcoa_signed(distmat, dimensions, warn_neg_eigval):
-    """Return PCoA coordinates and axis signs without discarding negatives."""
-    if dimensions == 0 and distmat.shape[0] > 10:
-        warn(
-            "EIGH: since no value for dimensions is specified, PCoA for all "
-            "dimensions will be computed, which may result in long computation "
-            "time if the original distance matrix is large.",
-            RuntimeWarning,
-        )
-    if warn_neg_eigval and not 0 <= warn_neg_eigval <= 1:
-        raise ValueError(
-            "warn_neg_eigval must be Boolean or a floating-point number between 0 "
-            "and 1."
-        )
-
-    centered = center_distance_matrix(distmat.data)
-    eigvals, eigvecs = np.linalg.eigh(centered)
-    close_to_zero = np.isclose(eigvals, np.zeros_like(eigvals))
-    eigvals[close_to_zero] = 0.0
-    order = np.argsort(eigvals)[::-1]
-    eigvals = eigvals[order]
-    eigvecs = eigvecs[:, order]
-
-    if (
-        warn_neg_eigval
-        and eigvals[-1] < 0
-        and (warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval)
-    ):
-        warn(
-            "The result contains negative eigenvalues that are large in "
-            "magnitude, which may suggest result inaccuracy. See PCoA Notes "
-            f"for details. The negative-most eigenvalue is {eigvals[-1]} "
-            f"whereas the largest positive one is {eigvals[0]}.",
-            RuntimeWarning,
-        )
-
-    positive = np.flatnonzero(eigvals > 0)
-    negative = np.flatnonzero(eigvals < 0)
-    if dimensions == 0:
-        n_positive = positive.size
-    elif not isinstance(dimensions, (int, np.integer)) or dimensions < 0:
-        raise ValueError("dimensions must be a non-negative integer for PERMDISP.")
-    else:
-        n_positive = min(dimensions, positive.size)
-    keep = np.concatenate((positive[:n_positive], negative))
-    values = eigvals[keep]
-    coordinates = eigvecs[:, keep] * np.sqrt(np.abs(values))
-    signs = np.where(values > 0, 1.0, -1.0)
-    return coordinates, signs
 
 
 @params_aliased(
@@ -497,8 +356,10 @@ def permdisp(
         :func:`~skbio.stats.ordination.pcoa <pcoa>` for details. Not used if
         distmat is a OrdinationResults object.
     dimensions : int, optional
-        Dimensions to reduce the distance matrix to if using the `fsvd` method.
-        Not used if the `eigh` method is being selected.
+        Number of positive PCoA axes to retain with ``eigh`` (default 10), in
+        addition to all negative axes needed for signed distances. Set to 0
+        to use all axes, as in ``vegan::betadisper``. Passed to PCoA unchanged
+        when using ``fsvd``.
     seed : int, Generator or RandomState, optional
         A user-provided random seed or random generator instance. See
         :func:`details <skbio.util.get_rng>`.
@@ -564,6 +425,8 @@ def permdisp(
     With a distance-matrix input and ``method="eigh"``, negative PCoA axes
     are retained as a signed space: their squared distances are subtracted
     from squared distances on positive axes, following ``vegan::betadisper``.
+    Full-space results require ``dimensions=0`` (or at least as many dimensions
+    as samples); the default retains only the leading ten positive axes.
     An ``OrdinationResults`` input cannot recover axes already discarded by
     PCoA and therefore keeps the coordinates supplied by the caller.
 
@@ -807,12 +670,9 @@ def _run_permdisp_numba(
     sample_size = codes.shape[0]
 
     signed = axis_signs is not None and np.any(axis_signs < 0)
-    if test == "centroid" and signed:
-        batch = _permdisp_perm_stats_centroid_signed_nb
-    elif test == "centroid":
+    signs = axis_signs if signed else np.ones(samples.shape[1], np.float64)
+    if test == "centroid":
         batch = _permdisp_perm_stats_centroid_nb
-    elif signed:
-        batch = _permdisp_perm_stats_median_signed_nb
     else:
         batch = _permdisp_perm_stats_median_nb
 
@@ -839,12 +699,7 @@ def _run_permdisp_numba(
                 buf[0] = codes
             else:
                 buf[i - start] = rng.permutation(codes)
-        if signed:
-            stats[start:end] = batch(
-                samples, axis_signs, buf[: end - start], num_groups
-            )
-        else:
-            stats[start:end] = batch(samples, buf[: end - start], num_groups)
+        stats[start:end] = batch(samples, signs, buf[: end - start], num_groups)
 
     stat = float(stats[0])
     if permutations == 0:

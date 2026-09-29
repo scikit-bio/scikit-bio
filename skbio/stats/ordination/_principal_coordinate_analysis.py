@@ -113,6 +113,55 @@ def _host_partial_eigh(matrix_any, subidx):
     return xp.asarray(eigvals_np), xp.asarray(eigvecs_np)
 
 
+def _pcoa_signed(distmat, dimensions, warn_neg_eigval):
+    """PCoA coordinates and signs, retaining the negative eigenvalue axes.
+
+    Private to ordination: public ``pcoa`` returns Euclidean coordinates and
+    zeros negative axes, while distance-based dispersion needs both subspaces.
+    """
+    n = distmat.shape[0]
+    if not isinstance(dimensions, Integral) or dimensions < 0:
+        raise ValueError("dimensions must be a non-negative integer for PERMDISP.")
+    if dimensions == 0 and n > 10:
+        warn(
+            "EIGH: since no value for dimensions is specified, PCoA for all "
+            "dimensions will be computed, which may result in long computation "
+            "time if the original distance matrix is large.",
+            RuntimeWarning,
+        )
+    if warn_neg_eigval and not 0 <= warn_neg_eigval <= 1:
+        raise ValueError(
+            "warn_neg_eigval must be Boolean or a floating-point number between 0 "
+            "and 1."
+        )
+
+    centered = center_distance_matrix(distmat.data)
+    eigvals, eigvecs = np.linalg.eigh(centered)
+    eigvals[np.isclose(eigvals, 0)] = 0
+    order = np.argsort(eigvals)[::-1]
+    eigvals, eigvecs = eigvals[order], eigvecs[:, order]
+    if (
+        warn_neg_eigval
+        and eigvals[-1] < 0
+        and (warn_neg_eigval is True or -eigvals[-1] > eigvals[0] * warn_neg_eigval)
+    ):
+        warn(
+            "The result contains negative eigenvalues that are large in magnitude, "
+            "which may suggest result inaccuracy. See PCoA Notes for details. "
+            f"The negative-most eigenvalue is {eigvals[-1]} whereas the largest "
+            f"positive one is {eigvals[0]}.",
+            RuntimeWarning,
+        )
+
+    positive = np.flatnonzero(eigvals > 0)
+    negative = np.flatnonzero(eigvals < 0)
+    # ``dimensions`` limits real axes; every imaginary axis is still needed
+    # to compute the signed distance. Zero means all real axes.
+    keep = np.concatenate((positive[:dimensions] if dimensions else positive, negative))
+    values = eigvals[keep]
+    return eigvecs[:, keep] * np.sqrt(np.abs(values)), np.where(values > 0, 1.0, -1.0)
+
+
 @params_aliased(
     [
         ("dimensions", "number_of_dimensions", "0.7.0", False),
