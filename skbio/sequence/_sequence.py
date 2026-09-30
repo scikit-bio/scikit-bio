@@ -68,8 +68,7 @@ def _validate_ascii(sequence):
     sequence = np.asarray(sequence)
     if sequence.size == 0:
         return
-    max_byte = int(sequence.max())
-    if max_byte >= 128:
+    if (max_byte := int(sequence.max())) >= 128:
         raise ValueError(
             "Sequence characters must be ASCII (code points 0-127). "
             f"Found byte value {max_byte}."
@@ -97,7 +96,7 @@ class Sequence(
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+    sequence : str, bytes-like, 1D ndarray (uint8 or '\|S1'), or Sequence
         Characters representing the sequence itself. Must be ASCII (code points 0-127),
         whether supplied as text, bytes, or an array.
     metadata : dict, optional
@@ -132,23 +131,17 @@ class Sequence(
 
     copy : bool, optional
         Whether to copy sequence data. If None (default), a copy is made when needed
-        for an immutable and contiguous internal representation. If True, data are
-        always copied. If False, data is not copied or a ``ValueError`` is raised if
-        copying is necessary. When ``copy=False`` and the sequence data shares mutable
-        external storage, such as an array, the caller is responsible for not mutating
-        that storage for the lifetime of this sequence and any derivatives. Violating
-        this requirement will result in undefined behavior.
+        for an immutable and contiguous internal representation. Typically, copying
+        is skipped when the input is ``bytes`` or another instance of ``Sequence``.
+        If True, data are always copied. If False, no copy is made or a ``ValueError``
+        is raised if copying is necessary. When ``copy=False`` and the sequence data
+        shares mutable external storage, such as an array, the caller is responsible
+        for not mutating that storage. Violation will result in undefined behavior.
 
         .. versionchanged:: 0.7.5
             Mutable external storage is now copied by default so subsequent mutation of
             the input cannot change the sequence content. Parameter ``copy`` was added
             to control data ownership.
-
-        .. note::
-            When ``copy=False`` and the sequence data shares mutable external storage,
-            such as an array, the caller is responsible for not mutating that storage
-            for the lifetime of this sequence and any derivatives. Violating this
-            requirement will result in undefined behavior.
 
     Raises
     ------
@@ -174,7 +167,7 @@ class Sequence(
     >>> from skbio import Sequence
     >>> from skbio.metadata import IntervalMetadata
 
-    **Creating sequences:**
+    **Creating sequences**
 
     Create a sequence without any metadata:
 
@@ -186,6 +179,94 @@ class Sequence(
         length: 12
     ---------------
     0 GGUCGUGAAG GA
+
+    Retrieve the string representation of the sequence:
+
+    >>> str(seq)
+    'GGUCGUGAAGGA'
+
+    **Underlying sequence data**
+
+    >>> seq = Sequence('ACGT')
+
+    Retrieve underlying sequence (an array of bytes):
+
+    >>> seq.values
+    array([b'A', b'C', b'G', b'T'], dtype='|S1')
+
+    View underlying sequence as an array of ASCII code points:
+
+    >>> seq.values.view('uint8')
+    array([65, 67, 71, 84], dtype=uint8)
+
+    Underlying sequence is immutable:
+
+    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> seq.values = values # doctest: +SKIP
+    Traceback (most recent call last):
+        ...
+    AttributeError: property 'values' of 'Sequence' object has no setter
+
+    >>> seq.values[0] = b'T'
+    Traceback (most recent call last):
+        ...
+    ValueError: assignment destination is read-only
+
+    **Data copying or referencing**
+
+    When a ``Sequence`` object is constructed from a string, a copy of the sequence
+    data is made through encoding the string into ASCII codes.
+
+    >>> seq = Sequence('ACGT')
+
+    If the input is provided as bytes, which is immutable, it is not copied under the
+    default policy (``copy=None``). Rather, the ``Sequence`` object directly refers to
+    the original data. Creating a ``Sequence`` from another ``Sequence`` also has this
+    zero-copy behavior. This improves performance, particularly for large or many
+    sequences.
+
+    >>> data = b'ACGT'
+    >>> seq = Sequence(data)
+
+    Confirm that memory space is shared:
+
+    >>> import numpy as np
+    >>> buf = np.frombuffer(data, dtype=np.uint8)
+    >>> np.shares_memory(seq.values, buf)
+    True
+
+    If making a copy is desired, add ``copy=True``:
+
+    >>> seq = Sequence(data, copy=True)
+    >>> np.shares_memory(seq.values, buf)
+    False
+
+    In contrast, if the input is a NumPy array, which is mutable, a copy is always made
+    even though the array already matches the underlying data structure of ``Sequence``.
+    Making a copy protects against accidental modification of the original data.
+
+    >>> data = np.array([65, 67, 71, 84], dtype=np.uint8)
+    >>> seq = Sequence(data)
+    >>> np.shares_memory(seq.values, data)
+    False
+
+    However, if the goal is to maximize performance and you know you won't mutate the
+    original data, consider overriding this with ``copy=False``.
+
+    >>> seq = Sequence(data, copy=False)
+    >>> np.shares_memory(seq.values, data)
+    True
+
+    To ensure efficient operations of sequences, scikit-bio requires that sequence data
+    is contiguous in memory. In the input array is not contiguous but ``copy=False`` is
+    specified, an error will be raised.
+
+    >>> seq = Sequence(data[::2], copy=False)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: ... a copy is required to make sequence data contiguous.
+
+    **Sequence metadata**
 
     Create a sequence with metadata, positional metadata and interval metadata:
 
@@ -213,28 +294,6 @@ class Sequence(
         length: 4
     -----------------------------
     0 ACGT
-
-    **Retrieving underlying sequence data:**
-
-    Retrieve underlying sequence:
-
-    >>> seq.values
-    array([b'A', b'C', b'G', b'T'], dtype='|S1')
-
-    Underlying sequence immutable:
-
-    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
-    >>> seq.values = values # doctest: +SKIP
-    Traceback (most recent call last):
-        ...
-    AttributeError: can't set attribute
-
-    >>> seq.values[0] = b'T'
-    Traceback (most recent call last):
-        ...
-    ValueError: assignment destination is read-only
-
-    **Retrieving sequence metadata:**
 
     Retrieve metadata:
 
@@ -683,8 +742,7 @@ class Sequence(
                 raise ValueError("`copy` must be True, False, or None.")
             copy = bool(copy)
 
-        # Trusted internal paths wrap buffers that already satisfy the
-        # invariant. Do not rescan them: contiguous slicing must stay a view.
+        # Trusted internal paths wrap buffers that already satisfy the invariant.
         if isinstance(sequence, _ASCIIValidated):
             sequence = sequence.sequence
             is_ascii = True
@@ -692,8 +750,8 @@ class Sequence(
             is_ascii = False
 
         if isinstance(sequence, np.ndarray):
-            # Sequence does not preserve ndarray-subclass semantics. Keeping a
-            # base ndarray also ensures validation observes every stored byte.
+            # Cast into a base ndarray. This ensures that all stored bytes can be
+            # validated. Otherwise, e.g., a masked array can break the validation.
             sequence = np.asarray(sequence)
             if sequence.dtype == np.uint8:
                 pass
@@ -734,11 +792,11 @@ class Sequence(
                 if validate and not is_ascii:
                     _validate_ascii(sequence)
                 self._set_bytes(sequence)
+
         elif isinstance(sequence, Sequence):
-            # Sequence casting is acceptable between direct
-            # descendants/ancestors. A Sequence is trusted to satisfy the
-            # invariant, including when its caller explicitly opted out of
-            # validation or copying.
+            # Sequence casting is acceptable between direct descendants/ancestors. A
+            # Sequence is trusted to satisfy the invariant, including when its caller
+            # explicitly opted out of validation or copying.
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -754,10 +812,10 @@ class Sequence(
                 sequence = sequence._bytes.view()
                 self._owns_bytes = False
             self._set_bytes(sequence)
+
         else:
-            # Text must be encoded to obtain the byte-oriented internal
-            # representation. This necessarily allocates, so it is
-            # incompatible with strict ``copy=False``.
+            # Text must be encoded to obtain the byte-oriented internal representation.
+            # This necessarily allocates, so it is incompatible with `copy=False`.
             if isinstance(sequence, str):
                 if copy is False:
                     raise ValueError(
@@ -776,18 +834,18 @@ class Sequence(
                         "to make sequence data contiguous."
                     ) from error
 
-                # ``frombuffer`` requires C-contiguous storage. Pack the
-                # buffer's logical contents, then create independently owned,
-                # writable ndarray storage. The final copy is necessary
-                # because ``tobytes`` returns an immutable ``bytes`` object.
+                # `frombuffer` requires C-contiguous storage. Pack the buffer's logical
+                # contents, then create independently owned, writable ndarray storage.
+                # The final copy is necessary because `tobytes` returns an immutable
+                # `bytes` object.
                 packed = memoryview(sequence).tobytes()
                 s = np.frombuffer(packed, dtype=np.uint8).copy()
                 buffer_copied = True
 
-            # There are two possibilities (to our knowledge) at this point:
-            # Either the sequence we were given was something string-like,
-            # (else it would not have made it past frombuffer), or it was a
-            # numpy scalar, and so our length must be 1.
+            # There are two possibilities (to our knowledge) at this point: Either the
+            # sequence we were given was something string-like (else it would not have
+            # made it past frombuffer), or it was a NumPy scalar, and so the length
+            # must be 1.
             if isinstance(sequence, np.generic) and len(s) != 1:
                 raise TypeError(
                     "Can cannot create a sequence with %r" % type(sequence).__name__
@@ -799,19 +857,18 @@ class Sequence(
                 s = s.copy()
                 self._owns_bytes = True
             elif copy is False:
-                # ``np.frombuffer`` already creates a separate ndarray view,
-                # so making it read-only does not modify the source object's
-                # own writeability.
+                # `frombuffer` already creates a separate ndarray view, so making it
+                # read-only does not modify the source object's own writeability.
                 self._owns_bytes = False
             elif is_ascii or isinstance(sequence, bytes):
-                # Text has just been encoded into immutable bytes, and bytes
-                # supplied directly by the caller are immutable. Both are safe
-                # to share under the default policy.
+                # Text has just been encoded into immutable bytes, and bytes supplied
+                # directly by the caller are immutable. Both are safe to share under
+                # the default policy.
                 self._owns_bytes = False
             else:
-                # bytearray, memoryview, and other buffer providers may have
-                # writable backing storage, even when their exposed view is
-                # read-only. Detach under the safe default policy.
+                # bytearray, memoryview, and other buffer providers may have writable
+                # backing storage, even when their exposed view is read-only. Detach
+                # under the safe default policy.
                 s = s.copy()
                 self._owns_bytes = True
 
@@ -847,12 +904,11 @@ class Sequence(
 
     def _set_bytes_contiguous(self, sequence):
         r"""Munge the sequence data into a numpy array of dtype uint8."""
+        # NumPy doesn't support views of non-contiguous arrays. Since we're making
+        # heavy use of views internally, and users may also supply us with a view,
+        # make sure we *always* store a contiguous array to avoid hard-to-track
+        # bugs. See: https://github.com/numpy/numpy/issues/5716
         if not sequence.flags["C_CONTIGUOUS"]:
-            # numpy doesn't support views of non-contiguous arrays. Since we're
-            # making heavy use of views internally, and users may also supply
-            # us with a view, make sure we *always* store a contiguous array to
-            # avoid hard-to-track bugs. See
-            # https://github.com/numpy/numpy/issues/5716
             sequence = np.ascontiguousarray(sequence)
             self._owns_bytes = True
         else:

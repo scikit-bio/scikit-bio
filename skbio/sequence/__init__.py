@@ -387,6 +387,13 @@ aligned sequences.
 >>> seq1.mismatch_frequency(seq2, relative=True)
 0.4
 
+The :mod:`skbio.sequence.distance` submodule offers multiple metrics for calculating
+sequence distance under specific evolutionary models. The following example calculates
+the JC69 distance.
+
+>>> from skbio.sequence.distance import jc69
+>>> round(jc69(seq1, seq2), 3)
+0.304
 
 .. _annotate_sequences:
 

@@ -18,7 +18,7 @@ class RNA(GrammaredSequence, NucleotideMixin):
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
+    sequence : str, bytes-like, 1D ndarray (uint8 or '\|S1'), or Sequence
         Characters representing the RNA sequence.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence.
