@@ -51,6 +51,17 @@
       ~{{ name }}.height
       ~{{ name }}.count
 
+   .. rubric:: Batch operations
+
+   .. autosummary::
+      :toctree:
+
+      ~{{ name }}.close_batch
+      ~{{ name }}.parent_batch
+      ~{{ name }}.lca_batch
+      ~{{ name }}.level_ancestor_batch
+      ~{{ name }}.cophenet
+
    .. rubric:: Tree manipulation
 
    .. autosummary::

@@ -184,20 +184,16 @@ extensions = [
 
 # Balanced parentheses (BP) tree backend, ported from improved-octo-waddle.
 # All BP modules live under the `skbio.tree.bp` subpackage.
-_bitarray_dir = "skbio/tree/bp/_bitarray"
-_bitarray_c = _bitarray_dir + "/bit_array.c"
-_bp_includes = [np.get_include(), _bitarray_dir]
+_bp_includes = [np.get_include()]
 
 extensions += [
+    # compiled engine of the (pure-Python) BPTree class
     Extension(
-        "skbio.tree.bp._ba",
-        ["skbio/tree/bp/_ba.pyx", _bitarray_c],
+        "skbio.tree.bp._bp_cy",
+        ["skbio/tree/bp/_bp_cy.pyx"],
         include_dirs=_bp_includes,
-    ),
-    Extension(
-        "skbio.tree.bp._bp",
-        ["skbio/tree/bp/_bp.pyx", _bitarray_c],
-        include_dirs=_bp_includes,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
     ),
     Extension(
         "skbio.tree.bp._bp_io",

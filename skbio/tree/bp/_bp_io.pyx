@@ -11,7 +11,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._bp cimport BPTree
+from ._bp_cy cimport _BPKernel
+from ._bp import BPTree
 import numpy as np
 import pandas as pd
 import json
@@ -193,7 +194,14 @@ cdef void _set_node_metadata(cnp.uint32_t ptr, unicode token,
     edges[ptr] = edge
 
 
-def write_newick(BPTree tree, object output, bint include_edge):
+def _check_bptree(object tree):
+    if not isinstance(tree, BPTree):
+        raise TypeError(
+            "Expected a BPTree, not %s." % type(tree).__name__
+        )
+
+
+def write_newick(object tree, object output, bint include_edge):
     """Write a BPTree as a Newick string.
 
     Parameters
@@ -226,20 +234,24 @@ def write_newick(BPTree tree, object output, bint include_edge):
         Py_ssize_t idx
         cnp.uint8_t v
         Py_ssize_t root_close
+        _BPKernel k
+
+    _check_bptree(tree)
+    k = tree._kernel
 
     length_stack = []
     name_stack = []
     edge_stack = []
     open_paren_stack = []
-    root_close = tree.close(0)
+    root_close = k.close(0)
 
     for idx, v in enumerate(tree.data):
         if v:
-            if not tree.is_tip(idx):
+            if not k.is_tip(idx):
                 output.write('(')
-            name_stack.append(tree.name(idx))
-            length_stack.append(tree.length(idx))
-            edge_stack.append(tree.edge(idx))
+            name_stack.append(k.name(idx))
+            length_stack.append(k.length(idx))
+            edge_stack.append(k.edge(idx))
             open_paren_stack.append(idx)
         else:
             name = name_stack.pop()
@@ -261,7 +273,7 @@ def write_newick(BPTree tree, object output, bint include_edge):
             else:
                 output.write(':%s' % length)
 
-            if tree.next_sibling(open_paren_stack.pop()) == 0:
+            if k.next_sibling(open_paren_stack.pop()) == 0:
                 if idx != root_close:
                     output.write(')')
             else:
@@ -300,7 +312,8 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
     cdef:
         cnp.uint32_t ptr, open_ptr
         Py_ssize_t token_ptr, tmp, lag, datalen
-        BPTree topology
+        object topology
+        _BPKernel k
         unicode token, last_token
         cnp.ndarray[object, ndim=1] names
         cnp.ndarray[cnp.double_t, ndim=1] lengths
@@ -312,6 +325,7 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
 
     datalen = len(data)
     topology = _newick_to_bp(data)
+    k = topology._kernel
 
     if len(topology.data) <= 2:
         raise ValueError("Only trees with more than 1 node supported")
@@ -342,11 +356,11 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
             ptr += lag
             lag = 0
 
-            open_ptr = topology.open(ptr)
+            open_ptr = k.open(ptr)
             _set_node_metadata(open_ptr, token, names, lengths, edges,
                                convert_underscores)
 
-            if topology.is_tip(ptr):
+            if k.is_tip(ptr):
                 ptr += 2
             else:
                 ptr += 1
@@ -525,7 +539,7 @@ def parse_jplace(object data):
         unicode frag, newick
         Py_ssize_t placement_idx, placement_inner_idx, fragment_idx
         Py_ssize_t n_fragments
-        BPTree tree
+        object tree
         object df, parsed
         set edges
 
@@ -603,7 +617,7 @@ def _json_default(object obj):
     )
 
 
-def write_jplace(BPTree tree, object output, object fields=None,
+def write_jplace(object tree, object output, object fields=None,
                  object version=None, object metadata=None):
     """Write a reference tree as a jplace document.
 
@@ -644,6 +658,8 @@ def write_jplace(BPTree tree, object output, object fields=None,
         unicode tree_str
         list field_names, edge_vals
         object buf, document
+
+    _check_bptree(tree)
 
     from io import StringIO
 
