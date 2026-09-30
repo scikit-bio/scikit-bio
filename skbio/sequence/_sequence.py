@@ -87,9 +87,9 @@ class Sequence(
 
     A ``Sequence`` object stores arbitrary ASCII characters (code points 0-127). It
     does not enforce a biological alphabet or grammar and is thus a generic object for
-    storing sequence data. Subclasses ``DNA``, ``RNA``, and ``Protein`` additionally
-    enforce the IUPAC character set [1]_ for, and provide operations specific to, each
-    respective molecule type.
+    storing sequence data. Subclasses :class:`DNA`, :class:`RNA`, and :class:`Protein`
+    additionally enforce the IUPAC character set [1]_ for, and provide operations
+    specific to, each respective molecule type.
 
     ``Sequence`` objects consist of the underlying sequence data, as well
     as optional metadata and positional metadata. The underlying sequence
@@ -98,63 +98,65 @@ class Sequence(
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the sequence itself. Must be 7-bit ASCII
-        (code points 0-127), whether supplied as text, bytes, or an array.
+        Characters representing the sequence itself. Must be ASCII (code points 0-127),
+        whether supplied as text, bytes, or an array.
     metadata : dict, optional
-        Arbitrary metadata which applies to the entire sequence. A shallow copy
-        of the ``dict`` will be made (see Examples section below for details).
+        Arbitrary metadata which applies to the entire sequence. A shallow copy of the
+        dictionary will be made (see Examples section below for details).
     positional_metadata : pd.DataFrame consumable, optional
-        Arbitrary per-character metadata (e.g., sequence read quality
-        scores). Must be able to be passed directly to ``pd.DataFrame``
-        constructor. Each column of metadata must be the same length as
-        `sequence`. A shallow copy of the positional metadata will be made if
-        necessary (see Examples section below for details).
-    interval_metadata : IntervalMetadata
-        Arbitrary metadata which applies to intervals within a sequence to
-        store interval features (such as genes, ncRNA on the sequence).
+        Arbitrary per-character metadata (e.g., sequence read quality scores). Must be
+        able to be passed directly to ``pd.DataFrame`` constructor. Each column of
+        metadata must be the same length as ``sequence``. A shallow copy of the
+        positional metadata will be made if necessary (see Examples section below for
+        details).
+    interval_metadata : IntervalMetadata, optional
+        Arbitrary metadata which applies to intervals within ``sequence`` to store
+        interval features (such as genes and non-coding RNAs on the sequence).
     lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters. If ``False``, no characters will be converted.
-        If a str, it will be treated as a key into the positional metadata of
-        the object. All lowercase characters will be converted to uppercase,
-        and a ``True`` value will be stored in a boolean array in the
-        positional metadata under the key.
+        If True, lowercase sequence characters will be converted to uppercase. If False
+        (default), characters will not be converted. If a string, in addition to the
+        uppercase conversion, a boolean array indicating which positions were originally
+        lowercase will be stored in the positional metadata under this key.
     validate : bool, optional
-        If ``True`` (default), byte-oriented input is validated to contain only
-        7-bit ASCII code points (0-127). If ``False``, this validation is
-        skipped. In that case, the caller is responsible for ensuring that the
-        sequence satisfies the ASCII requirement. Supplying invalid data with
-        validation disabled results in undefined behavior.
-    copy : {None, True, False}, optional
-        Control copying of sequence data, following NumPy's tri-state ``copy``
-        convention. If ``None`` (default), a copy is made when needed for a
-        safe, contiguous internal representation; immutable or trusted storage
-        may be shared. If ``True``, sequence data are copied. If ``False``, a
-        copy is forbidden and ``ValueError`` is raised when one would be
-        required, for example for a non-contiguous array, text encoding, or
-        lowercase conversion.
+        If True (default), byte or array input is validated to contain only ASCII code
+        points (0-127). If False, this validation is skipped, and the caller is
+        responsible for ensuring that the sequence satisfies the ASCII requirement.
+        Supplying invalid data with validation disabled will result in undefined
+        behavior.
 
-        When ``copy=False`` shares externally owned storage, the caller must
-        not mutate that storage, or any writable alias of it, for the lifetime
-        of this sequence and any sequence objects derived from it. Violating
-        this requirement results in undefined behavior.
+        .. versionchanged:: 0.7.5
+            Construction now rejects byte values 128-255. Previously, they were taken
+            if supplied as bytes or an array, even though text input and subsequent
+            operations assume ASCII. Parameter ``validate`` was added to control data
+            validation.
+
+    copy : bool, optional
+        Whether to copy sequence data. If None (default), a copy is made when needed
+        for an immutable and contiguous internal representation. If True, data are
+        always copied. If False, data is not copied or a ``ValueError`` is raised if
+        copying is necessary. When ``copy=False`` and the sequence data shares mutable
+        external storage, such as an array, the caller is responsible for not mutating
+        that storage for the lifetime of this sequence and any derivatives. Violating
+        this requirement will result in undefined behavior.
+
+        .. versionchanged:: 0.7.5
+            Mutable external storage is now copied by default so subsequent mutation of
+            the input cannot change the sequence content. Parameter ``copy`` was added
+            to control data ownership.
+
+        .. note::
+            When ``copy=False`` and the sequence data shares mutable external storage,
+            such as an array, the caller is responsible for not mutating that storage
+            for the lifetime of this sequence and any derivatives. Violating this
+            requirement will result in undefined behavior.
 
     Raises
     ------
     UnicodeEncodeError
         If ``sequence`` is text containing a non-ASCII character.
     ValueError
-        If ``sequence`` contains a byte value outside 7-bit ASCII (128-255).
-        Also raised if ``copy=False`` is requested but a copy is required.
-
-    .. versionchanged:: 0.7.5
-        Construction now rejects byte values 128-255. Previously, some bytes
-        and NumPy paths accepted those values even though text conversion
-        assumes ASCII.
-        Mutable external buffers and NumPy arrays are copied by default so
-        subsequent mutation of the input cannot change the sequence contents.
-        The ``validate`` and ``copy`` parameters were added to permit explicit
-        expert control over validation and data ownership.
+        If ``sequence`` contains a byte value outside 7-bit ASCII (128-255), or
+        ``copy=False`` is requested but a copy is necessary.
 
     See Also
     --------
@@ -468,14 +470,14 @@ class Sequence(
 
     @property
     def __array_interface__(self):
-        r"""Array interface for compatibility with numpy.
+        r"""Array interface for compatibility with NumPy.
 
         This property allows a ``Sequence`` object to share its underlying data
-        buffer (``Sequence.values``) with numpy. See [1]_ for more details.
+        buffer (``Sequence.values``) with NumPy. See [1]_ for more details.
 
         References
         ----------
-        .. [1] http://docs.scipy.org/doc/numpy/reference/arrays.interface.html
+        .. [1] https://numpy.org/doc/stable/reference/arrays.interface.html
 
         Examples
         --------
@@ -516,14 +518,14 @@ class Sequence(
 
         Parameters
         ----------
-        sequences : iterable (Sequence)
+        sequences : iterable of Sequence
             An iterable of ``Sequence`` objects or appropriate subclasses.
         how : {'strict', 'inner', 'outer'}, optional
-            How to intersect the `positional_metadata` of the sequences.
-            If 'strict': the `positional_metadata` must have the exact same
-            columns; 'inner': an inner-join of the columns (only the shared set
-            of columns are used); 'outer': an outer-join of the columns
-            (all columns are used: missing values will be padded with NaN).
+            How to intersect the ``positional_metadata`` of the sequences. If 'strict':
+            ``positional_metadata`` must have the exact same columns; 'inner': an
+            inner-join of the columns (only the shared set of columns are used);
+            'outer': an outer-join of the columns (all columns are used; missing values
+            will be padded with NaN).
 
         Returns
         -------
@@ -534,23 +536,21 @@ class Sequence(
         Raises
         ------
         ValueError
-            If `how` is not one of: 'strict', 'inner', or 'outer'.
+            If ``how`` is not one of: 'strict', 'inner', or 'outer'.
         ValueError
-            If `how` is 'strict' and the `positional_metadata` of each sequence
-            does not have the same columns.
+            If ``how`` is 'strict' and the `positional_metadata` of each sequence does
+            not have the same columns.
         TypeError
             If the sequences cannot be cast as the calling class.
 
         Notes
         -----
-        The sequence-wide metadata (``Sequence.metadata``) is not retained
-        during concatenation.
+        The sequence-wide metadata (``metadata``) is not retained during concatenation.
 
-        Sequence objects can be cast to a different type only when the new
-        type is an ancestor or child of the original type. Casting between
-        sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
-        allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
-        would be.
+        Sequence objects can be cast to a different type only when the new type is an
+        ancestor or child of the original type. Casting between sibling types is not
+        allowed, e.g. ``DNA`` -> ``RNA`` is not allowed, but ``DNA`` -> ``Sequence`` or
+        ``Sequence`` -> ``DNA`` would be.
 
         Examples
         --------

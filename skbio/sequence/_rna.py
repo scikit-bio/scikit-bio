@@ -19,35 +19,32 @@ class RNA(GrammaredSequence, NucleotideMixin):
     Parameters
     ----------
     sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the RNA sequence itself.
+        Characters representing the RNA sequence.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence.
-    positional_metadata : Pandas DataFrame consumable, optional
-        Arbitrary per-character metadata. For example, quality data from
-        sequencing reads. Must be able to be passed directly to the Pandas
-        DataFrame constructor.
-    interval_metadata : IntervalMetadata
-        Arbitrary metadata which applies to intervals within a sequence to
-        store interval features (such as exons or introns on the sequence).
+    positional_metadata : pd.DataFrame consumable, optional
+        Arbitrary per-character metadata. For example, quality scores of sequencing
+        reads. Must be able to pass directly to the ``pd.DataFrame`` constructor.
+    interval_metadata : IntervalMetadata, optional
+        Arbitrary metadata which applies to intervals within the sequence to store
+        interval features (such as exons or introns on the RNA sequence).
     lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC RNA characters. If
-        ``False``, no characters will be converted. If a str, it will be
-        treated as a key into the positional metadata of the object. All
-        lowercase characters will be converted to uppercase, and a ``True``
-        value will be stored in a boolean array in the positional metadata
-        under the key.
+        If True, lowercase sequence characters will be converted to uppercase to ensure
+        they are valid IUPAC RNA characters. If False (default), characters will not be
+        converted. If a string, in addition to the uppercase conversion, a boolean array
+        indicating which positions were originally lowercase will be stored in the
+        positional metadata under this key.
     validate : bool, optional
-        If ``True``, validation will be performed to ensure that all sequence
-        characters are in the IUPAC RNA character set. If ``False``, validation
-        will not be performed. Turning off validation will improve runtime
-        performance. If invalid characters are present, however, there is
-        **no guarantee that operations performed on the resulting object will
-        work or behave as expected.** Only turn off validation if you are
-        certain that the sequence characters are valid. To store sequence data
-        that is not IUPAC-compliant, use ``Sequence``.
+        If True (default), validation will be performed to ensure that all sequence
+        characters are in the IUPAC RNA character set. Turning off validation (False)
+        will improve performance. If invalid characters are present, however, there is
+        **no guarantee that subsequent operations will retain the expected behavior.**
+        Only turn off validation if you are certain that the sequence characters are
+        valid. To store sequence data that is not IUPAC-compliant, use ``Sequence``.
     copy : bool, optional
-        Control copying of sequence data. See ``Sequence`` for details.
+        Control copying of sequence data. See :class:`Sequence` for details.
+
+        .. versionadded:: 0.7.5
 
     See Also
     --------

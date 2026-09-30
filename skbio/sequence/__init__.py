@@ -8,16 +8,18 @@ molecular sequences based on IUPAC-defined alphabets (:class:`DNA`, :class:`RNA`
 :class:`Protein`), sequences based on custom alphabets (:class:`GrammaredSequence`),
 and generic/non-biological sequences with no alphabet restrictions (:class:`Sequence`).
 
-Sequence data are represented by ASCII codes (0-127) and stored as immutable arrays of
-bytes for efficient operations. Sequence objects can optionally carry metadata about
-the whole record, individual positions, and intervals describing features such as
+Sequence data are represented by ASCII codes (0-127) and stored as immutable, contiguous
+arrays of bytes for efficient operations. Sequence objects can optionally carry metadata
+about the whole record, individual positions, and intervals describing features such as
 genes, domains, and other annotated regions. Keeping sequence data and annotations
 together facilitates biologically meaningful analyses within scikit-bio.
 
-Additionally, this module defines the :class:`GeneticCode` class, which represents an
-immutable object that translates DNA or RNA sequences into protein sequences, and
-the :class:`SubstitutionMatrix` class, which stores scores of substitutions between
-sequence characters.
+Additionally, this module provides the :class:`GeneticCode` class, which translates DNA
+or RNA sequences into protein sequences, and the :class:`SubstitutionMatrix` class,
+which stores scores of substitutions between sequence characters. Submodule
+:mod:`~skbio.sequence.distance` provides metrics for calculating distances between
+sequences, and :mod:`~skbio.sequence.transition` provides models for constructing
+transition probability matrices.
 
 See the |sequence_tutorial|_ section for working with biological sequences using
 scikit-bio.
