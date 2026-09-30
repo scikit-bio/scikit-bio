@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Bug Fixes
+
+* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array, despite `Sequence` and downstream operations being built under the assumption of ASCII codes (0-127). By default, construction now validates 7-bit ASCII and copies mutable external storage so later upstream mutation cannot violate this invariant. Added `validate` and NumPy-style tri-state `copy` parameters to let expert callers explicitly skip validation and/or require zero-copy construction. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+
 
 ## Version 0.7.4
 

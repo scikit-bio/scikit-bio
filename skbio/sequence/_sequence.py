@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+
 from __future__ import annotations
 
 import re
@@ -38,6 +39,42 @@ if TYPE_CHECKING:
     from typing import Self, Iterable
 
 
+class _ASCIIValidated:
+    """Mark trusted internal data that satisfies the ASCII invariant.
+
+    Internal construction (slicing, copying, concatenation, and k-mers) wraps
+    buffers so ``Sequence`` does not rescan data that already satisfies the
+    ASCII invariant. Wrapped buffers must originate from immutable or
+    ``Sequence``-owned storage so external mutation cannot invalidate this
+    invariant. Not part of the public API.
+    """
+
+    __slots__ = ("sequence",)
+
+    def __init__(self, sequence):
+        self.sequence = sequence
+
+
+def _validate_ascii(sequence):
+    """Raise if ``sequence`` contains a byte outside 7-bit ASCII.
+
+    ``sequence`` is a ``uint8`` array. The check is a reduction and does not
+    copy. Empty buffers are valid.
+
+    """
+    # Normalize ndarray subclasses so validation cannot be affected by
+    # overridden reduction behavior (for example, MaskedArray.max ignores
+    # masked values).
+    sequence = np.asarray(sequence)
+    if sequence.size == 0:
+        return
+    if (max_byte := int(sequence.max())) >= 128:
+        raise ValueError(
+            "Sequence characters must be ASCII (code points 0-127). "
+            f"Found byte value {max_byte}."
+        )
+
+
 class Sequence(
     MetadataMixin,
     PositionalMetadataMixin,
@@ -45,15 +82,13 @@ class Sequence(
     collections.abc.Sequence,
     SkbioObject,
 ):
-    """Store generic sequence data and optional associated metadata.
+    r"""Store generic sequence data and optional associated metadata.
 
-    ``Sequence`` objects do not enforce an alphabet or grammar and are thus the
-    most generic objects for storing sequence data. ``Sequence`` objects do not
-    necessarily represent biological sequences. For example, ``Sequence`` can
-    be used to represent a position in a multiple sequence alignment.
-    Subclasses ``DNA``, ``RNA``, and ``Protein`` enforce the IUPAC character
-    set [1]_ for, and provide operations specific to, each respective molecule
-    type.
+    A ``Sequence`` object stores arbitrary ASCII characters (code points 0-127). It
+    does not enforce a biological alphabet or grammar and is thus a generic object for
+    storing sequence data. Subclasses :class:`DNA`, :class:`RNA`, and :class:`Protein`
+    additionally enforce the IUPAC character set [1]_ for, and provide operations
+    specific to, each respective molecule type.
 
     ``Sequence`` objects consist of the underlying sequence data, as well
     as optional metadata and positional metadata. The underlying sequence
@@ -61,27 +96,60 @@ class Sequence(
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\\|S1')
-        Characters representing the sequence itself.
+    sequence : str, bytes-like, 1D ndarray (uint8 or '\|S1'), or Sequence
+        Characters representing the sequence itself. Must be ASCII (code points 0-127),
+        whether supplied as text, bytes, or an array.
     metadata : dict, optional
-        Arbitrary metadata which applies to the entire sequence. A shallow copy
-        of the ``dict`` will be made (see Examples section below for details).
+        Arbitrary metadata which applies to the entire sequence. A shallow copy of the
+        dictionary will be made (see Examples section below for details).
     positional_metadata : pd.DataFrame consumable, optional
-        Arbitrary per-character metadata (e.g., sequence read quality
-        scores). Must be able to be passed directly to ``pd.DataFrame``
-        constructor. Each column of metadata must be the same length as
-        `sequence`. A shallow copy of the positional metadata will be made if
-        necessary (see Examples section below for details).
-    interval_metadata : IntervalMetadata
-        Arbitrary metadata which applies to intervals within a sequence to
-        store interval features (such as genes, ncRNA on the sequence).
+        Arbitrary per-character metadata (e.g., sequence read quality scores). Must be
+        able to be passed directly to ``pd.DataFrame`` constructor. Each column of
+        metadata must be the same length as ``sequence``. A shallow copy of the
+        positional metadata will be made if necessary (see Examples section below for
+        details).
+    interval_metadata : IntervalMetadata, optional
+        Arbitrary metadata which applies to intervals within ``sequence`` to store
+        interval features (such as genes and non-coding RNAs on the sequence).
     lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters. If ``False``, no characters will be converted.
-        If a str, it will be treated as a key into the positional metadata of
-        the object. All lowercase characters will be converted to uppercase,
-        and a ``True`` value will be stored in a boolean array in the
-        positional metadata under the key.
+        If True, lowercase sequence characters will be converted to uppercase. If False
+        (default), characters will not be converted. If a string, in addition to the
+        uppercase conversion, a boolean array indicating which positions were originally
+        lowercase will be stored in the positional metadata under this key.
+    validate : bool, optional
+        If True (default), byte or array input is validated to contain only ASCII code
+        points (0-127). If False, this validation is skipped, and the caller is
+        responsible for ensuring that the sequence satisfies the ASCII requirement.
+        Supplying invalid data with validation disabled will result in undefined
+        behavior.
+
+        .. versionchanged:: 0.7.5
+            Construction now rejects byte values 128-255. Previously, they were taken
+            if supplied as bytes or an array, even though text input and subsequent
+            operations assume ASCII. Parameter ``validate`` was added to control data
+            validation.
+
+    copy : bool, optional
+        Whether to copy sequence data. If None (default), a copy is made when needed
+        for an immutable and contiguous internal representation. Typically, copying
+        is skipped when the input is ``bytes`` or another instance of ``Sequence``.
+        If True, data are always copied. If False, no copy is made or a ``ValueError``
+        is raised if copying is necessary. When ``copy=False`` and the sequence data
+        shares mutable external storage, such as an array, the caller is responsible
+        for not mutating that storage. Violation will result in undefined behavior.
+
+        .. versionchanged:: 0.7.5
+            Mutable external storage is now copied by default so subsequent mutation of
+            the input cannot change the sequence content. Parameter ``copy`` was added
+            to control data ownership.
+
+    Raises
+    ------
+    UnicodeEncodeError
+        If ``sequence`` is text containing a non-ASCII character.
+    ValueError
+        If ``sequence`` contains a byte value outside 7-bit ASCII (128-255), or
+        ``copy=False`` is requested but a copy is necessary.
 
     See Also
     --------
@@ -99,7 +167,7 @@ class Sequence(
     >>> from skbio import Sequence
     >>> from skbio.metadata import IntervalMetadata
 
-    **Creating sequences:**
+    **Creating sequences**
 
     Create a sequence without any metadata:
 
@@ -111,6 +179,94 @@ class Sequence(
         length: 12
     ---------------
     0 GGUCGUGAAG GA
+
+    Retrieve the string representation of the sequence:
+
+    >>> str(seq)
+    'GGUCGUGAAGGA'
+
+    **Underlying sequence data**
+
+    >>> seq = Sequence('ACGT')
+
+    Retrieve underlying sequence (an array of bytes):
+
+    >>> seq.values
+    array([b'A', b'C', b'G', b'T'], dtype='|S1')
+
+    View underlying sequence as an array of ASCII code points:
+
+    >>> seq.values.view('uint8')
+    array([65, 67, 71, 84], dtype=uint8)
+
+    Underlying sequence is immutable:
+
+    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
+    >>> seq.values = values # doctest: +SKIP
+    Traceback (most recent call last):
+        ...
+    AttributeError: property 'values' of 'Sequence' object has no setter
+
+    >>> seq.values[0] = b'T'
+    Traceback (most recent call last):
+        ...
+    ValueError: assignment destination is read-only
+
+    **Data copying or referencing**
+
+    When a ``Sequence`` object is constructed from a string, a copy of the sequence
+    data is made through encoding the string into ASCII codes.
+
+    >>> seq = Sequence('ACGT')
+
+    If the input is provided as bytes, which is immutable, it is not copied under the
+    default policy (``copy=None``). Rather, the ``Sequence`` object directly refers to
+    the original data. Creating a ``Sequence`` from another ``Sequence`` also has this
+    zero-copy behavior. This improves performance, particularly for large or many
+    sequences.
+
+    >>> data = b'ACGT'
+    >>> seq = Sequence(data)
+
+    Confirm that memory space is shared:
+
+    >>> import numpy as np
+    >>> buf = np.frombuffer(data, dtype=np.uint8)
+    >>> np.shares_memory(seq.values, buf)
+    True
+
+    If making a copy is desired, add ``copy=True``:
+
+    >>> seq = Sequence(data, copy=True)
+    >>> np.shares_memory(seq.values, buf)
+    False
+
+    In contrast, if the input is a NumPy array, which is mutable, a copy is always made
+    even though the array already matches the underlying data structure of ``Sequence``.
+    Making a copy protects against accidental modification of the original data.
+
+    >>> data = np.array([65, 67, 71, 84], dtype=np.uint8)
+    >>> seq = Sequence(data)
+    >>> np.shares_memory(seq.values, data)
+    False
+
+    However, if the goal is to maximize performance and you know you won't mutate the
+    original data, consider overriding this with ``copy=False``.
+
+    >>> seq = Sequence(data, copy=False)
+    >>> np.shares_memory(seq.values, data)
+    True
+
+    To ensure efficient operations of sequences, scikit-bio requires that sequence data
+    is contiguous in memory. In the input array is not contiguous but ``copy=False`` is
+    specified, an error will be raised.
+
+    >>> seq = Sequence(data[::2], copy=False)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: ... a copy is required to make sequence data contiguous.
+
+    **Sequence metadata**
 
     Create a sequence with metadata, positional metadata and interval metadata:
 
@@ -139,29 +295,6 @@ class Sequence(
     -----------------------------
     0 ACGT
 
-    **Retrieving underlying sequence data:**
-
-    Retrieve underlying sequence:
-
-    >>> seq.values # doctest: +NORMALIZE_WHITESPACE
-    array([b'A', b'C', b'G', b'T'],
-          dtype='|S1')
-
-    Underlying sequence immutable:
-
-    >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
-    >>> seq.values = values # doctest: +SKIP
-    Traceback (most recent call last):
-        ...
-    AttributeError: can't set attribute
-
-    >>> seq.values[0] = b'T'
-    Traceback (most recent call last):
-        ...
-    ValueError: assignment destination is read-only
-
-    **Retrieving sequence metadata:**
-
     Retrieve metadata:
 
     >>> seq.metadata
@@ -181,8 +314,7 @@ class Sequence(
     >>> seq.interval_metadata   # doctest: +ELLIPSIS
     1 interval feature
     ------------------
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], \
-fuzzy=[(False, False)], metadata={'gene': 'sagA'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], ..., metadata={'gene': 'sagA'})
 
     **Updating sequence metadata:**
 
@@ -236,8 +368,7 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     -----------------------------
     0 CG
     >>> subseq.metadata
-    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice', 'Bob'], \
-'pubmed': 12345}
+    {'id': 'new-id', 'desc': 'seq desc', 'authors': ['Alice', 'Bob'], 'pubmed': 12345}
 
     The subsequence has inherited the metadata of its parent sequence. If we
     update the subsequence's author list, we see the changes propagated in the
@@ -351,12 +482,10 @@ fuzzy=[(False, False)], metadata={'gene': 'sagA'})
     You can update directly on the ``Interval`` object:
 
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(1, 3)], \
-fuzzy=[(False, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(1, 3)], ..., metadata={'gene': 'foo'})
     >>> interval.bounds = [(0, 2)]
     >>> interval  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(0, 2)], \
-fuzzy=[(False, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], ..., metadata={'gene': 'foo'})
 
     You can also query and obtain the interval features you are
     interested and then modify them:
@@ -364,16 +493,14 @@ fuzzy=[(False, False)], metadata={'gene': 'foo'})
     >>> intervals = list(seq.interval_metadata.query(metadata={'gene': 'foo'}))
     >>> intervals[0].fuzzy = [(True, False)]
     >>> print(intervals[0])  # doctest: +ELLIPSIS
-    Interval(interval_metadata=<...>, bounds=[(0, 2)], \
-fuzzy=[(True, False)], metadata={'gene': 'foo'})
+    Interval(interval_metadata=<...>, bounds=[(0, 2)], ..., metadata={'gene': 'foo'})
 
     """
 
     read = Read()
     write = Write()
 
-    _num_ascii_codes = 128
-    _num_extended_ascii_codes = 256
+    _num_ascii_codes = 128  # ASCII code domain (0-127)
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
@@ -394,32 +521,30 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         --------
         >>> from skbio import Sequence
         >>> s = Sequence('AACGA')
-        >>> s.values # doctest: +NORMALIZE_WHITESPACE
-        array([b'A', b'A', b'C', b'G', b'A'],
-              dtype='|S1')
+        >>> s.values
+        array([b'A', b'A', b'C', b'G', b'A'], dtype='|S1')
 
         """
         return self._bytes.view("|S1")
 
     @property
     def __array_interface__(self):
-        r"""Array interface for compatibility with numpy.
+        r"""Array interface for compatibility with NumPy.
 
         This property allows a ``Sequence`` object to share its underlying data
-        buffer (``Sequence.values``) with numpy. See [1]_ for more details.
+        buffer (``Sequence.values``) with NumPy. See [1]_ for more details.
 
         References
         ----------
-        .. [1] http://docs.scipy.org/doc/numpy/reference/arrays.interface.html
+        .. [1] https://numpy.org/doc/stable/reference/arrays.interface.html
 
         Examples
         --------
         >>> import numpy as np
         >>> from skbio import Sequence
         >>> seq = Sequence('ABC123')
-        >>> np.asarray(seq) # doctest: +NORMALIZE_WHITESPACE
-        array([b'A', b'B', b'C', b'1', b'2', b'3'],
-              dtype='|S1')
+        >>> np.asarray(seq)
+        array([b'A', b'B', b'C', b'1', b'2', b'3'], dtype='|S1')
 
         """
         return self.values.__array_interface__
@@ -452,14 +577,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         Parameters
         ----------
-        sequences : iterable (Sequence)
+        sequences : iterable of Sequence
             An iterable of ``Sequence`` objects or appropriate subclasses.
         how : {'strict', 'inner', 'outer'}, optional
-            How to intersect the `positional_metadata` of the sequences.
-            If 'strict': the `positional_metadata` must have the exact same
-            columns; 'inner': an inner-join of the columns (only the shared set
-            of columns are used); 'outer': an outer-join of the columns
-            (all columns are used: missing values will be padded with NaN).
+            How to intersect the ``positional_metadata`` of the sequences. If 'strict':
+            ``positional_metadata`` must have the exact same columns; 'inner': an
+            inner-join of the columns (only the shared set of columns are used);
+            'outer': an outer-join of the columns (all columns are used; missing values
+            will be padded with NaN).
 
         Returns
         -------
@@ -470,23 +595,21 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         Raises
         ------
         ValueError
-            If `how` is not one of: 'strict', 'inner', or 'outer'.
+            If ``how`` is not one of: 'strict', 'inner', or 'outer'.
         ValueError
-            If `how` is 'strict' and the `positional_metadata` of each sequence
-            does not have the same columns.
+            If ``how`` is 'strict' and the `positional_metadata` of each sequence does
+            not have the same columns.
         TypeError
             If the sequences cannot be cast as the calling class.
 
         Notes
         -----
-        The sequence-wide metadata (``Sequence.metadata``) is not retained
-        during concatenation.
+        The sequence-wide metadata (``metadata``) is not retained during concatenation.
 
-        Sequence objects can be cast to a different type only when the new
-        type is an ancestor or child of the original type. Casting between
-        sibling types is not allowed, e.g. ``DNA`` -> ``RNA`` is not
-        allowed, but ``DNA`` -> ``Sequence`` or ``Sequence`` -> ``DNA``
-        would be.
+        Sequence objects can be cast to a different type only when the new type is an
+        ancestor or child of the original type. Casting between sibling types is not
+        allowed, e.g. ``DNA`` -> ``RNA`` is not allowed, but ``DNA`` -> ``Sequence`` or
+        ``Sequence`` -> ``DNA`` would be.
 
         Examples
         --------
@@ -586,7 +709,10 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
         im = IntervalMetadata.concat(i.interval_metadata for i in seqs)
 
-        return cls(bytes_, positional_metadata=pm, interval_metadata=im)
+        # Each input sequence already satisfies the ASCII invariant.
+        return cls(
+            _ASCIIValidated(bytes_), positional_metadata=pm, interval_metadata=im
+        )
 
     @classmethod
     def _assert_can_cast_to(cls, target):
@@ -608,25 +734,69 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         positional_metadata=None,
         interval_metadata=None,
         lowercase=False,
+        validate=True,
+        copy=None,
     ):
+        if copy is not None:
+            if not isinstance(copy, (bool, np.bool_)):
+                raise ValueError("`copy` must be True, False, or None.")
+            copy = bool(copy)
+
+        # Trusted internal paths wrap buffers that already satisfy the invariant.
+        if isinstance(sequence, _ASCIIValidated):
+            sequence = sequence.sequence
+            is_ascii = True
+        else:
+            is_ascii = False
+
         if isinstance(sequence, np.ndarray):
+            # Cast into a base ndarray. This ensures that all stored bytes can be
+            # validated. Otherwise, e.g., a masked array can break the validation.
+            sequence = np.asarray(sequence)
             if sequence.dtype == np.uint8:
-                self._set_bytes_contiguous(sequence)
+                pass
             elif sequence.dtype == "|S1":
                 sequence = sequence.view(np.uint8)
-                # Guarantee the sequence is an array (might be scalar before
-                # this).
+                # Guarantee the sequence is a 1-D array (might be scalar before
+                # this). Reshaping a scalar array to length one is a view.
                 if sequence.shape == ():
-                    sequence = np.array([sequence], dtype=np.uint8)
-                self._set_bytes_contiguous(sequence)
+                    sequence = sequence.reshape(1)
             else:
                 raise TypeError(
                     "Can only create sequence from numpy.ndarray of dtype "
                     "np.uint8 or '|S1'. Invalid dtype: %s" % sequence.dtype
                 )
+
+            if copy is None and is_ascii:
+                # Trusted internal data may be shared. The helper copies only
+                # when contiguity requires it.
+                self._set_bytes_contiguous(sequence)
+            else:
+                if copy is False:
+                    if not sequence.flags["C_CONTIGUOUS"]:
+                        raise ValueError(
+                            "`copy=False` was specified, but a copy is required "
+                            "to make sequence data contiguous."
+                        )
+                    # Use a separate view so making Sequence data read-only does
+                    # not change the caller's ndarray flags.
+                    sequence = sequence.view()
+                    self._owns_bytes = False
+                else:
+                    # ``copy=True`` always detaches. With the safe default
+                    # (``copy=None``), external ndarrays are also detached
+                    # because writable aliases may otherwise mutate Sequence.
+                    sequence = sequence.copy(order="C")
+                    self._owns_bytes = True
+
+                if validate and not is_ascii:
+                    _validate_ascii(sequence)
+                self._set_bytes(sequence)
+
         elif isinstance(sequence, Sequence):
-            # Sequence casting is acceptable between direct
-            # descendants/ancestors
+            # Sequence casting is acceptable between direct descendants/ancestors. A
+            # Sequence is trusted to satisfy the invariant, including when its caller
+            # explicitly opted out of validation or copying.
             sequence._assert_can_cast_to(type(self))
 
             if metadata is None and sequence.has_metadata():
@@ -635,26 +805,77 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 positional_metadata = sequence.positional_metadata
             if interval_metadata is None and sequence.has_interval_metadata():
                 interval_metadata = sequence.interval_metadata
-            sequence = sequence._bytes
-            self._owns_bytes = False
+            if copy is True:
+                sequence = sequence._bytes.copy()
+                self._owns_bytes = True
+            else:
+                sequence = sequence._bytes.view()
+                self._owns_bytes = False
             self._set_bytes(sequence)
-        else:
-            # Encode as ascii to raise UnicodeEncodeError if necessary.
-            if isinstance(sequence, str):
-                sequence = sequence.encode("ascii")
-            s = np.frombuffer(sequence, dtype=np.uint8)
 
-            # There are two possibilities (to our knowledge) at this point:
-            # Either the sequence we were given was something string-like,
-            # (else it would not have made it past frombuffer), or it was a
-            # numpy scalar, and so our length must be 1.
+        else:
+            # Text must be encoded to obtain the byte-oriented internal representation.
+            # This necessarily allocates, so it is incompatible with `copy=False`.
+            if isinstance(sequence, str):
+                if copy is False:
+                    raise ValueError(
+                        "`copy=False` was specified, but a copy is required "
+                        "to encode text as ASCII."
+                    )
+                sequence = sequence.encode("ascii")
+                is_ascii = True
+            buffer_copied = False
+            try:
+                s = np.frombuffer(sequence, dtype=np.uint8)
+            except BufferError as error:
+                if copy is False:
+                    raise ValueError(
+                        "`copy=False` was specified, but a copy is required "
+                        "to make sequence data contiguous."
+                    ) from error
+
+                # `frombuffer` requires C-contiguous storage. Pack the buffer's logical
+                # contents, then create independently owned, writable ndarray storage.
+                # The final copy is necessary because `tobytes` returns an immutable
+                # `bytes` object.
+                packed = memoryview(sequence).tobytes()
+                s = np.frombuffer(packed, dtype=np.uint8).copy()
+                buffer_copied = True
+
+            # There are two possibilities (to our knowledge) at this point: Either the
+            # sequence we were given was something string-like (else it would not have
+            # made it past frombuffer), or it was a NumPy scalar, and so the length
+            # must be 1.
             if isinstance(sequence, np.generic) and len(s) != 1:
                 raise TypeError(
                     "Can cannot create a sequence with %r" % type(sequence).__name__
                 )
 
+            if buffer_copied:
+                self._owns_bytes = True
+            elif copy is True:
+                s = s.copy()
+                self._owns_bytes = True
+            elif copy is False:
+                # `frombuffer` already creates a separate ndarray view, so making it
+                # read-only does not modify the source object's own writeability.
+                self._owns_bytes = False
+            elif is_ascii or isinstance(sequence, bytes):
+                # Text has just been encoded into immutable bytes, and bytes supplied
+                # directly by the caller are immutable. Both are safe to share under
+                # the default policy.
+                self._owns_bytes = False
+            else:
+                # bytearray, memoryview, and other buffer providers may have writable
+                # backing storage, even when their exposed view is read-only. Detach
+                # under the safe default policy.
+                s = s.copy()
+                self._owns_bytes = True
+
+            if validate and not is_ascii:
+                _validate_ascii(s)
+
             sequence = s
-            self._owns_bytes = False
             self._set_bytes(sequence)
 
         MetadataMixin._init_(self, metadata=metadata)
@@ -665,6 +886,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             pass
         elif lowercase is True or isinstance(lowercase, str):
             lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            if copy is False and np.any(lowercase_mask):
+                raise ValueError(
+                    "`copy=False` was specified, but a copy is required "
+                    "to convert lowercase sequence characters to uppercase."
+                )
             self._convert_to_uppercase(lowercase_mask)
 
             # If it isn't True, it must be a string_type
@@ -678,12 +904,11 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
 
     def _set_bytes_contiguous(self, sequence):
         r"""Munge the sequence data into a numpy array of dtype uint8."""
+        # NumPy doesn't support views of non-contiguous arrays. Since we're making
+        # heavy use of views internally, and users may also supply us with a view,
+        # make sure we *always* store a contiguous array to avoid hard-to-track
+        # bugs. See: https://github.com/numpy/numpy/issues/5716
         if not sequence.flags["C_CONTIGUOUS"]:
-            # numpy doesn't support views of non-contiguous arrays. Since we're
-            # making heavy use of views internally, and users may also supply
-            # us with a view, make sure we *always* store a contiguous array to
-            # avoid hard-to-track bugs. See
-            # https://github.com/numpy/numpy/issues/5716
             sequence = np.ascontiguousarray(sequence)
             self._owns_bytes = True
         else:
@@ -1816,15 +2041,14 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
         number of A and C characters (4 + 2 = 6).
 
         """
-        freqs = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
+        freqs = np.bincount(self._bytes, minlength=self._num_ascii_codes)
 
         if chars is not None:
             chars, indices = self._chars_to_indices(chars)
         else:
             (indices,) = np.nonzero(freqs)
             # Downcast from int64 to uint8 then convert to str. This is safe
-            # because we are guaranteed to have indices in the range 0 to 255
-            # inclusive.
+            # because Sequence bytes are 7-bit ASCII (0-127).
             chars = indices.astype(np.uint8).tobytes().decode("ascii")
 
         obs_counts = freqs[indices]
@@ -1863,7 +2087,7 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
                 )
 
             index = ord(char)
-            if index >= self._num_extended_ascii_codes:
+            if index >= self._num_ascii_codes:
                 raise ValueError(
                     "Character %r in `chars` is outside the range of "
                     "allowable characters in a `Sequence` object." % char
@@ -2284,6 +2508,9 @@ fuzzy=[(True, False)], metadata={'gene': 'foo'})
             return indices, observed
 
     def _constructor(self, **kwargs):
+        # Rebuilding from an existing Sequence does not rescan for ASCII.
+        if "sequence" in kwargs:
+            kwargs["sequence"] = _ASCIIValidated(kwargs["sequence"])
         return self.__class__(**kwargs)
 
     def _munge_to_index_array(self, sliceable):
