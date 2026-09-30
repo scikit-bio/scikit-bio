@@ -16,14 +16,17 @@ import math
 from operator import attrgetter
 
 import numpy as np
+import array_api_compat as aac
 
 from skbio._base import SkbioObject
 from skbio._config import _resolve_engine
 from skbio.io.descriptors import Read, Write
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree._exception import DuplicateNodeError, MissingNodeError
+from skbio.util._array import _get_backend_name, _to_numpy
 
-from . import _bp_cy, _bp_numba
+from . import _bp_cy, _bp_gpu, _bp_numba
+from ._gpu import _mark_gpu_unavailable, _numba_gpu_module_for
 from ._bp_cy import _BPKernel
 from ._bp_numba import NUMBA_AVAILABLE
 
@@ -64,8 +67,31 @@ _KERNEL_METHODS = (
 _get_kernel_methods = attrgetter(*_KERNEL_METHODS)
 
 # Compute engines of the batch operations. What ``engine="fast"`` resolves to
-# depends on the build: see ``BPTree._fast_engine``.
+# depends on the tree and the build: see ``BPTree._fast_engine``.
 _ENGINES = ("cython", "numba")
+
+
+def _non_integer(is_position, dtype):
+    what = "Node positions" if is_position else "Levels"
+    raise TypeError(f"{what} must be integers, not {dtype}.")
+
+
+def _out_of_range(size):
+    raise IndexError("Node positions must be in [0, %d)." % size)
+
+
+def _query_namespace(*arrays):
+    """Namespace and device of a batch's queries.
+
+    Those of its non-NumPy arrays (e.g. on a GPU), or ``(None, None)`` if every
+    query is a NumPy array, a list or a scalar.
+    """
+    foreign = [
+        a for a in arrays if aac.is_array_api_obj(a) and not aac.is_numpy_array(a)
+    ]
+    if not foreign:
+        return None, None
+    return aac.array_namespace(*foreign), aac.device(foreign[0])
 
 
 def _rmm_geometry(n):
@@ -140,10 +166,11 @@ class BPTree(SkbioObject):
 
     Parameters
     ----------
-    B : numpy.ndarray of uint8
+    B : array of uint8
         The parentheses bit array encoding the tree topology, where an open
         parenthesis is 1 and a close parenthesis is 0. A bool array is also
-        accepted, and is viewed as uint8.
+        accepted, and is viewed as uint8. It may belong to any array API
+        backend (e.g., CuPy, PyTorch or JAX) and live on any device; see Notes.
     lengths : numpy.ndarray of float64, optional
         Branch length per parenthesis (read at opening parentheses). Defaults
         to 0.
@@ -156,9 +183,10 @@ class BPTree(SkbioObject):
 
     Attributes
     ----------
-    data : numpy.ndarray of uint8
+    data : array of uint8
         The parentheses bit array encoding the tree topology, where an open
-        parenthesis is 1 and a close parenthesis is 0.
+        parenthesis is 1 and a close parenthesis is 0, in the array backend and
+        on the device of ``B``.
 
     Notes
     -----
@@ -168,23 +196,47 @@ class BPTree(SkbioObject):
     :meth:`lca`) are bound directly to the engine when the tree is created, so
     they run at compiled speed.
 
+    A tree created from a non-NumPy ``B``, e.g. a CuPy array or a PyTorch
+    tensor on a GPU, keeps ``B`` as its ``data`` and a host copy of it, from
+    which it is built and navigated as any other tree. The node attributes
+    (``lengths``, ``names``, ``edges``) are NumPy arrays on the host.
+
+    - The batch operations (e.g. :meth:`lca_batch`) and :meth:`cophenet` with
+      ``engine="numba"`` run on the GPU if ``B`` is on a CUDA or ROCm device
+      and a Numba GPU extension for it is installed (numba-cuda-mlir, or the
+      deprecated numba-cuda, on CUDA; numba-hip on ROCm). Otherwise, or if the GPU
+      kernel cannot be built on the system (which is warned about once), they
+      run on the host.
+    - The batch operations return their result in the array backend and on
+      the device of their queries, and :meth:`cophenet` a distance matrix in
+      those of ``data``.
+    - Operations creating a new tree (:meth:`shear`, :meth:`collapse`,
+      pickling) and those exporting it (:meth:`to_array`, :meth:`to_npz`)
+      work on the host copy, and create NumPy trees and arrays.
+
     **The** ``fast`` **engine.** The batch operations and :meth:`cophenet`
     run the same algorithm, with bit-identical results, on either engine, so
-    ``engine="fast"`` is chosen from how scikit-bio was built, rather than
-    fixed:
+    ``engine="fast"`` is chosen from where the tree is and how scikit-bio was
+    built, rather than fixed:
 
-    1. ``"cython"`` if scikit-bio was built with OpenMP, as it is with GCC on
-       Linux: its multithreaded kernels are up to twice as fast as Numba's on
-       ``close_batch``, ``parent_batch`` and ``level_ancestor_batch``, equal on
-       :meth:`cophenet`, and compile nothing at the first call, where Numba
-       compiles each kernel (from a fraction of a second to a couple of
-       seconds).
-    2. Otherwise ``"numba"`` if Numba is installed, as the Cython kernels then
-       run on a single thread.
-    3. Otherwise ``"cython"``.
+    1. ``"numba"`` if the tree's ``data`` is on a GPU the Numba kernels can
+       use (see above): 6-16x faster than the CPU engines on batches of a
+       million queries.
+    2. Otherwise ``"cython"`` if scikit-bio was built with OpenMP, as it is
+       with GCC on Linux: its multithreaded kernels are up to twice as fast as
+       Numba's on ``close_batch``, ``parent_batch`` and
+       ``level_ancestor_batch``, equal on :meth:`cophenet`, and compile
+       nothing at the first call, where Numba compiles each kernel (from a
+       fraction of a second to a couple of seconds).
+    3. Otherwise ``"numba"`` if Numba is installed, as the Cython kernels
+       then run on a single thread.
+    4. Otherwise ``"cython"``.
 
-    The exception, not worth a rule of its own: on the CPU, Numba is up to a
-    quarter faster on :meth:`lca_batch`.
+    The exceptions, not worth a rule of their own: on the CPU, Numba is up to
+    a quarter faster on :meth:`lca_batch`; on a GPU, a batch of fewer than
+    roughly 10,000 queries is faster on the CPU, as each GPU call has a fixed
+    cost of a fraction of a millisecond. After a GPU kernel has failed on the
+    system, ``"fast"`` follows rules 2-4.
 
     References
     ----------
@@ -199,6 +251,12 @@ class BPTree(SkbioObject):
     write = Write()
 
     def __init__(self, B, lengths=None, names=None, edges=None):
+        # a non-NumPy array (e.g. on a GPU) is kept as the tree's data, and the
+        # tree is built from a host copy of it, as from a NumPy array
+        array = None
+        if aac.is_array_api_obj(B) and not aac.is_numpy_array(B):
+            array = B
+            B = _to_numpy(B)
         # a bool array has the same one-byte 0/1 layout, which the compiled
         # engine has always accepted: view it as uint8, without a copy
         if isinstance(B, np.ndarray) and B.dtype == np.bool_:
@@ -232,8 +290,20 @@ class BPTree(SkbioObject):
             edges = _check_array(edges, np.int32, "edges", size)
             edge_lookup = self._edge_lookup_for(B, edges)
 
+        # the host tree and its navigation index, and where the data lives
         index = _build_index(B)
         self._data = B
+        self._xp = self._device = None
+        if array is None:
+            self._array = B
+        else:
+            self._xp = aac.array_namespace(array)
+            self._device = aac.device(array)
+            if array.dtype != self._xp.uint8:
+                array = self._xp.astype(array, self._xp.uint8)
+            self._array = array
+        # the index arrays uploaded to a GPU, by Numba GPU module (_bp_gpu)
+        self._gpu_arrays = {}
         self._size = size
         self._names = names
         self._lengths = lengths
@@ -267,8 +337,12 @@ class BPTree(SkbioObject):
 
     @property
     def data(self):
-        """The parentheses bit array (1 = open, 0 = close)."""
-        return self._data
+        """The parentheses bit array (1 = open, 0 = close).
+
+        It is in the array backend and on the device of the array the tree was
+        created from.
+        """
+        return self._array
 
     @staticmethod
     def _edge_lookup_for(B, edges):
@@ -1065,15 +1139,6 @@ class BPTree(SkbioObject):
     # Batch operations (computed by the selected engine)
     # ------------------------------------------------------------------
 
-    def _fast_engine(self):
-        """What ``engine="fast"`` resolves to for this tree.
-
-        See the Notes of :class:`BPTree` for the rules and their measurements.
-        """
-        if _bp_cy.OPENMP or not NUMBA_AVAILABLE:
-            return "cython"  # multithreaded Cython, or nothing else installed
-        return "numba"  # Cython runs serially here; Numba runs in parallel
-
     def _run(self, kernel, engine, *args):
         """Run a batch kernel of the selected compute engine on this tree."""
         engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
@@ -1081,20 +1146,120 @@ class BPTree(SkbioObject):
             return getattr(_bp_numba, kernel)(_bp_numba.bp_arrays(self), *args)
         return getattr(_bp_cy, kernel)(self._kernel, *args)
 
-    def _positions(self, *arrays):
-        """Validate node positions: broadcast, flatten, check the range."""
-        arrays = np.broadcast_arrays(*(np.asarray(a) for a in arrays))
-        shape = arrays[0].shape
+    def _fast_engine(self):
+        """What ``engine="fast"`` resolves to for this tree.
+
+        See the Notes of :class:`BPTree` for the rules and their measurements.
+        """
+        if self._gpu_module("numba") is not None:
+            return "numba"  # the tree is on a GPU the Numba kernels can use
+        if _bp_cy.OPENMP or not NUMBA_AVAILABLE:
+            return "cython"  # multithreaded Cython, or nothing else installed
+        return "numba"  # Cython runs serially here; Numba runs in parallel
+
+    def _gpu_module(self, engine):
+        """The Numba GPU module to compute on, or None for the CPU engines.
+
+        A GPU computes only for ``engine="numba"`` on a tree whose data is on a
+        CUDA or ROCm device, as the permutation tests of
+        :mod:`skbio.stats.distance` do.
+        """
+        if engine != "numba" or not hasattr(self._array, "__cuda_array_interface__"):
+            return None
+        return _numba_gpu_module_for(self._array)
+
+    def _queries(self, positions, levels=None):
+        """Validate a batch of queries: broadcast, check, flatten.
+
+        The queries are validated where they are: on the host, or on the device
+        of their (non-NumPy) arrays.
+
+        Returns
+        -------
+        shape : tuple
+            The broadcast shape of the queries.
+        arrays : list of array of int64
+            The flat node positions, followed by the flat levels if given.
+        xp, device
+            The namespace and device of the queries, or None for the host.
+        """
+        arrays = list(positions) if levels is None else [*positions, levels]
+        n_positions = len(positions)
+        xp, device = _query_namespace(*arrays)
+        if xp is None:
+            # plain NumPy: a small batch costs microseconds, and the array API
+            # wrappers would more than double it
+            arrays = np.broadcast_arrays(*(np.asarray(a) for a in arrays))
+            shape = arrays[0].shape
+            out = []
+            for k, arr in enumerate(arrays):
+                # an empty list is float64 but holds no queries to check
+                if arr.size and arr.dtype.kind not in "iu":
+                    _non_integer(k < n_positions, arr.dtype)
+                arr = np.ascontiguousarray(arr.ravel(), dtype=np.intp)
+                if k < n_positions and arr.size:
+                    if arr.min() < 0 or arr.max() >= self._size:
+                        _out_of_range(self._size)
+                out.append(arr)
+            return shape, out, None, None
+
+        arrays = xp.broadcast_arrays(*(xp.asarray(a, device=device) for a in arrays))
+        shape = tuple(arrays[0].shape)
+        empty = math.prod(shape) == 0
         out = []
-        for arr in arrays:
-            # an empty list is float64 but holds no positions to check
-            if arr.size and arr.dtype.kind not in "iu":
-                raise TypeError("Node positions must be integers, not %s." % arr.dtype)
-            arr = np.ascontiguousarray(arr.ravel(), dtype=np.intp)
-            if arr.size and (arr.min() < 0 or arr.max() >= self._size):
-                raise IndexError("Node positions must be in [0, %d)." % self._size)
+        for k, arr in enumerate(arrays):
+            if not empty and not xp.isdtype(arr.dtype, "integral"):
+                _non_integer(k < n_positions, arr.dtype)
+            arr = xp.reshape(xp.astype(arr, xp.int64, copy=False), (-1,))
+            if k < n_positions and not empty:
+                if bool(xp.any((arr < 0) | (arr >= self._size))):
+                    _out_of_range(self._size)
             out.append(arr)
-        return shape, out
+        return shape, out, xp, device
+
+    def _batch(self, kernel, engine, positions, levels=None):
+        """Run a batch navigation operation on the selected engine.
+
+        The result is in the array backend and on the device of the queries.
+        On a GPU (see :meth:`_gpu_module`), queries on the device are read in
+        place and host queries are uploaded; otherwise the queries are computed
+        on the host, from a copy if they are on a device.
+        """
+        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        shape, args, xp, device = self._queries(positions, levels)
+        gpu = self._gpu_module(engine)
+        if gpu is not None:
+            # the result goes straight into an array of the queries' backend if
+            # that is on the device too
+            out = None
+            if xp is not None:
+                out = xp.empty(args[0].shape, dtype=xp.int64, device=device)
+                if not hasattr(out, "__cuda_array_interface__"):
+                    out = None
+            try:
+                res = _bp_gpu.run_batch(
+                    gpu,
+                    _get_backend_name(aac.array_namespace(self._array)),
+                    _bp_gpu.tree_arrays(gpu, self),
+                    kernel,
+                    args,
+                    out,
+                )
+            except Exception:
+                # the kernel could not build or run on this stack: warn once
+                # and compute this and later calls on the CPU
+                _mark_gpu_unavailable(self._array)
+            else:
+                if xp is None:
+                    return res.reshape(shape)
+                if out is None:
+                    res = xp.asarray(res, device=device)
+                return xp.reshape(res, shape)
+        if xp is None:
+            return self._run(kernel, engine, *args).reshape(shape)
+        args = [np.ascontiguousarray(_to_numpy(a), dtype=np.intp) for a in args]
+        res = self._run(kernel, engine, *args).reshape(shape)
+        return xp.asarray(res, device=device)
 
     def close_batch(self, i, engine=None):
         """Matching closing parenthesis of each position in a batch.
@@ -1113,16 +1278,17 @@ class BPTree(SkbioObject):
 
         Returns
         -------
-        numpy.ndarray of intp
-            ``close(i)`` for each position, in the shape of ``i``.
+        array of intp
+            ``close(i)`` for each position, in the shape of ``i``. It is a
+            NumPy array unless ``i`` is an array of another backend, whose
+            backend and device it then has (see :class:`BPTree`).
 
         See Also
         --------
         close
 
         """
-        shape, (i,) = self._positions(i)
-        return self._run("close_batch", engine, i).reshape(shape)
+        return self._batch("close_batch", engine, (i,))
 
     def parent_batch(self, i, engine=None):
         """Parent of each node in a batch.
@@ -1141,17 +1307,17 @@ class BPTree(SkbioObject):
 
         Returns
         -------
-        numpy.ndarray of intp
+        array of intp
             ``parent(i)`` for each position (-1 for the root), in the shape of
-            ``i``.
+            ``i``. Its array backend and device are those of ``i`` (see
+            :meth:`close_batch`).
 
         See Also
         --------
         parent
 
         """
-        shape, (i,) = self._positions(i)
-        return self._run("parent_batch", engine, i).reshape(shape)
+        return self._batch("parent_batch", engine, (i,))
 
     def lca_batch(self, i, j, engine=None):
         """Lowest common ancestor of each pair of nodes in a batch.
@@ -1174,17 +1340,17 @@ class BPTree(SkbioObject):
 
         Returns
         -------
-        numpy.ndarray of intp
+        array of intp
             The position of the lowest common ancestor of each pair, in the
-            broadcast shape of ``i`` and ``j``.
+            broadcast shape of ``i`` and ``j``. Its array backend and device
+            are those of ``i`` and ``j`` (see :meth:`close_batch`).
 
         See Also
         --------
         lca
 
         """
-        shape, (i, j) = self._positions(i, j)
-        return self._run("lca_batch", engine, i, j).reshape(shape)
+        return self._batch("lca_batch", engine, (i, j))
 
     def level_ancestor_batch(self, i, d, engine=None):
         """Ancestor a given number of levels above each node in a batch.
@@ -1205,21 +1371,17 @@ class BPTree(SkbioObject):
 
         Returns
         -------
-        numpy.ndarray of intp
+        array of intp
             ``level_ancestor(i, d)`` for each pair, in the broadcast shape of
-            ``i`` and ``d``.
+            ``i`` and ``d``. Its array backend and device are those of ``i``
+            and ``d`` (see :meth:`close_batch`).
 
         See Also
         --------
         level_ancestor
 
         """
-        i, d = np.broadcast_arrays(np.asarray(i), np.asarray(d))
-        if d.size and d.dtype.kind not in "iu":
-            raise TypeError("Levels must be integers, not %s." % d.dtype)
-        shape, (i,) = self._positions(i)
-        d = np.ascontiguousarray(d.ravel(), dtype=np.intp)
-        return self._run("level_ancestor_batch", engine, i, d).reshape(shape)
+        return self._batch("level_ancestor_batch", engine, (i,), levels=d)
 
     def cophenet(self, endpoints=None, use_length=True, engine=None):
         r"""Return a distance matrix between each pair of tips in the tree.
@@ -1244,7 +1406,8 @@ class BPTree(SkbioObject):
         Returns
         -------
         DistanceMatrix
-            The cophenetic distance matrix.
+            The cophenetic distance matrix. Its data is in the array backend
+            and on the device of the tree's ``data``.
 
         Raises
         ------
@@ -1267,7 +1430,8 @@ class BPTree(SkbioObject):
         ancestor :math:`c` is :math:`d(a) + d(b) - 2d(c)`, where :math:`d` is
         the sum of branch lengths (or the number of branches) from the root.
         The tip pairs are independent and are computed in parallel by the
-        selected engine. Missing branch lengths are 0.
+        selected engine, on a GPU for a tree on one (see :class:`BPTree`).
+        Missing branch lengths are 0.
 
         Examples
         --------
@@ -1320,14 +1484,16 @@ class BPTree(SkbioObject):
             tips = np.array(positions, dtype=np.intp)
 
         tips = np.ascontiguousarray(tips, dtype=np.intp)
+        xp, device = self._xp, self._device
         # resolved before the early return below, so an unsupported or
         # unavailable engine is rejected whatever the number of tips
         engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
         if tips.size < 2:
             # no pairs; an empty condensed vector would expand to 1 x 1
-            return DistanceMatrix(
-                np.zeros((tips.size, tips.size)), taxa, validate=False
-            )
+            matrix = np.zeros((tips.size, tips.size))
+            if xp is not None:
+                matrix = xp.asarray(matrix, device=device)
+            return DistanceMatrix(matrix, taxa, validate=False)
 
         # the kernel takes the tips in tree order, and the output row (slot) of
         # each: its place in the requested order
@@ -1350,9 +1516,59 @@ class BPTree(SkbioObject):
             dist = self._run("root_distances", engine, self._lengths)
         else:
             dist = self._e_index.astype(np.float64)
+
+        gpu = self._gpu_module(engine)
+        if gpu is not None:
+            matrix = self._tip_distances_gpu(gpu, sorted_tips, slot, parent, end, dist)
+            if matrix is not None:
+                return DistanceMatrix(matrix, taxa, validate=False)
         kernels = _bp_numba if engine == "numba" else _bp_cy
         matrix = kernels.tip_distances(sorted_tips, slot, parent, end, dist)
+        if xp is not None:
+            matrix = xp.asarray(matrix, device=device)
         return DistanceMatrix(matrix, taxa, validate=False)
+
+    def _tip_distances_gpu(self, gpu, tips, slot, parent, end, dist):
+        """The cophenetic matrix computed on the tree's device, or None.
+
+        None if the kernel cannot build or run, after which the caller (and
+        every later call) computes on the CPU. The matrix is allocated by the
+        tree's array backend; failing that (e.g. out of device memory) raises
+        a :class:`MemoryError` rather than falling back.
+        """
+        n = tips.shape[0]
+        xp, device = self._xp, self._device
+        out = None
+        if hasattr(self._array, "__cuda_array_interface__"):
+            try:
+                out = xp.empty((n, n), dtype=xp.float64, device=device)
+            except Exception as exc:
+                raise MemoryError(
+                    "Cannot allocate the %d x %d cophenetic matrix (%.2f GB) on %s."
+                    % (n, n, 8 * n * n / 1e9, device)
+                ) from exc
+        # the number of the sorted tips before each node's opening parenthesis
+        selected = np.zeros(self._size, dtype=np.intp)
+        selected[tips] = 1
+        begin = np.cumsum(selected) - selected
+        try:
+            matrix = _bp_gpu.tip_distances(
+                gpu,
+                _get_backend_name(aac.array_namespace(self._array)),
+                tips,
+                slot,
+                parent,
+                begin,
+                end,
+                dist,
+                out,
+            )
+        except Exception:
+            _mark_gpu_unavailable(self._array)
+            return None
+        if out is None and xp is not None:
+            matrix = xp.asarray(matrix, device=device)
+        return matrix
 
     # ------------------------------------------------------------------
     # Whole-tree operations
