@@ -830,7 +830,7 @@ class MMvec(SkbioObject):
         return X_props @ self._get_probs()
 
     def predict(self, X: TableLike) -> TableLike:
-        """Predict target distributions given feature compositions.
+        r"""Predict target distributions given feature compositions.
 
         Parameters
         ----------
