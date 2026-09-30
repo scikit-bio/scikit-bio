@@ -14,14 +14,27 @@ import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.testing import assert_series_equal
+from scipy.spatial.distance import pdist, squareform
 from scipy.stats import f_oneway, ConstantInputWarning
 
 from skbio import DistanceMatrix
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.stats.distance import permdisp
-from skbio.stats.distance._permdisp import _compute_groups, NUMBA_AVAILABLE
+from skbio.stats.distance._permdisp import (
+    _compute_groups,
+    _try_permdisp_gpu,
+    NUMBA_AVAILABLE,
+)
+from skbio.stats.distance import _permdisp_gpu as permdisp_gpu
+from skbio.stats.distance._permdisp_gpu import (
+    _kernel_supports_shape,
+    _MAX_DIMS,
+    _MAX_GROUPS,
+)
 from skbio.stats.distance._cutils import geomedian_axis_one
 from skbio.util import get_data_path, numba_code
+from skbio.util._array import _get_backend_name
+from skbio.util._testing import ArrayAPITestMixin, array_backends
 
 IS_INTEL_MAC = platform.system() == "Darwin" and platform.machine() == "x86_64"
 
@@ -787,6 +800,154 @@ class PERMDISPEngineTests(TestCase):
     def test_bad_engine_raises(self):
         with self.assertRaisesRegex(ValueError, "engine='julia' is not supported"):
             permdisp(self.dm, self.grouping, permutations=0, engine="julia")
+
+
+class PermdispArrayAPITests(TestCase, ArrayAPITestMixin):
+    """permdisp on a DistanceMatrix backed by a non-NumPy array-API buffer."""
+
+    def setUp(self):
+        # Distances between real points, not a random symmetric matrix: pcoa on
+        # a non-Euclidean matrix warns about large negative eigenvalues, and
+        # this file should not add that noise to the suite.
+        rng = np.random.default_rng(1)
+        points = rng.random((12, 11))
+        a = squareform(pdist(points))
+        self.data = a
+        self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
+                         'c', 'c', 'c', 'd', 'd', 'd']
+        # The reference comes from a separate pcoa on a NumPy matrix, so these
+        # comparisons cross two eigendecompositions AND two array backends.
+        # #2595 fixed a sibling test that failed on macOS at 4e-15 for the
+        # single-backend version of exactly this; its fix, reusing one
+        # ordination, is not available here because the GPU dispatch only
+        # engages for a DistanceMatrix. The tolerances below are set for that.
+        self.ref = {
+            test: permdisp(
+                DistanceMatrix(a), self.grouping, test=test,
+                permutations=99, seed=0,
+            )
+            for test in ("centroid", "median")
+        }
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permdisp_backends(self, xp, device):
+        # Without engine="numba" this is the cython path, which must keep
+        # working on a device-resident matrix: pcoa brings the coordinates to
+        # the host and the statistic is computed there as before.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        for test in ("centroid", "median"):
+            with self.subTest(test=test):
+                res = permdisp(dm, self.grouping, test=test,
+                               permutations=99, seed=0)
+                ref = self.ref[test]
+                self.assertAlmostEqual(
+                    res['test statistic'], ref['test statistic'], places=7
+                )
+                self.assertAlmostEqual(res['p-value'], ref['p-value'], places=7)
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permdisp_numba_engine_backends(self, xp, device):
+        # engine="numba" on a device-resident matrix is what routes to the
+        # fused GPU kernel; on NumPy it exercises the CPU numba engine. Skipped
+        # automatically where Numba or the device is unavailable. This asserts
+        # the answer, not which path produced it: the two agree by design, so
+        # it cannot tell them apart and is not meant to.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        for test in ("centroid", "median"):
+            with self.subTest(test=test):
+                res = permdisp(dm, self.grouping, test=test, permutations=99,
+                               seed=0, engine="numba")
+                ref = self.ref[test]
+                # Default tolerance, as in the other engine="numba" tests: the
+                # fused kernel sums in a different order than Cython, so the
+                # statistic is not expected to agree bit for bit.
+                self.assertAlmostEqual(
+                    res['test statistic'], ref['test statistic']
+                )
+                self.assertAlmostEqual(res['p-value'], ref['p-value'])
+
+
+class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
+    """Whether the fused kernel is reached, asked of the kernel cache itself.
+
+    Result values cannot answer this: the GPU and host paths agree by design, so
+    comparing them proves nothing about which one ran. The module's kernel cache
+    is empty until a kernel is compiled and only a dispatch can populate it, so
+    it is the one witness available without patching anything.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(1)
+        points = rng.random((12, 11))
+        self.data = squareform(pdist(points))
+        self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
+                         'c', 'c', 'c', 'd', 'd', 'd']
+
+    def _run(self, dm):
+        permdisp_gpu._kernels.clear()
+        permdisp(dm, self.grouping, test="centroid", permutations=9, seed=0,
+                 engine="numba")
+        return permdisp_gpu._kernels
+
+    @numba_code
+    def test_numpy_input_never_reaches_kernel(self):
+        # A host matrix must stay on the host. Both the residency gate and
+        # _numba_gpu_module_for's own decline for the "numpy" backend enforce
+        # that, so this asserts the outcome, not which one produced it.
+        self.assertEqual(self._run(DistanceMatrix(self.data)), {})
+
+    @numba_code
+    @array_backends("jax", "torch", "cupy")
+    def test_gpu_kernel_is_used_on_device_input(self, xp, device):
+        # The only test here that fails if the GPU dispatch is deleted outright.
+        # It needs a real device, so it runs in the GPU CI lane and on a GPU
+        # node, and is skipped everywhere else. JAX has no Numba GPU path and is
+        # skipped too; it is listed because the harness errors on a GPU lane that
+        # runs no backend.
+        if device == "cpu" or _get_backend_name(xp) == "jax":
+            self.skipTest("needs a device-resident CuPy or PyTorch matrix")
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        self.assertTrue(self._run(dm), "dispatch never reached the GPU kernel")
+
+
+class PermdispGpuHostTests(TestCase):
+    """The GPU dispatch decisions that are checkable without a GPU."""
+
+    def setUp(self):
+        self.sample_data = np.arange(24, dtype=np.float64).reshape(8, 3)
+        self.codes = np.array([0, 0, 0, 0, 1, 1, 1, 1], dtype=np.int32)
+        # A real NumPy array, so _numba_gpu_module_for reports backend "numpy".
+        self.buf = np.zeros((8, 8))
+
+    def test_returns_none_without_gpu_module(self):
+        # NumPy is not a Numba GPU backend, so the helper declines and the
+        # caller runs the host engine instead. No patching: the decline is
+        # driven by the buffer's real backend.
+        self.assertIsNone(
+            _try_permdisp_gpu(self.buf, self.sample_data, self.codes, 2,
+                              9, 0, "median")
+        )
+
+    def test_gpu_negative_permutations_raises(self):
+        # The guard is shared with the host engine rather than living inside
+        # it, so the GPU path cannot accept a count the host path rejects.
+        with self.assertRaisesRegex(ValueError, "greater than or equal to zero"):
+            _try_permdisp_gpu(self.buf, self.sample_data, self.codes, 2,
+                              -1, 0, "median")
+
+    def test_gpu_non_float_median_raises(self):
+        # Same reason: engine and device must not change which inputs are legal.
+        ints = self.sample_data.astype(np.int64)
+        with self.assertRaisesRegex(TypeError, "np.float32 or np.float64"):
+            _try_permdisp_gpu(self.buf, ints, self.codes, 2, 9, 0, "median")
+
+    def test_kernel_shape_limits_are_inclusive(self):
+        # The maximum itself must be accepted and one past it refused. The
+        # dimension limit is what sizes the kernel's shared arrays.
+        self.assertTrue(_kernel_supports_shape(_MAX_DIMS, _MAX_GROUPS))
+        self.assertFalse(_kernel_supports_shape(_MAX_DIMS + 1, _MAX_GROUPS))
+        self.assertFalse(_kernel_supports_shape(_MAX_DIMS, _MAX_GROUPS + 1))
 
 
 if __name__ == '__main__':

@@ -85,14 +85,16 @@ def _mark_gpu_unavailable(arr):
 
     Called by the statistic dispatchers when the fused kernel raises (for example
     a numba-hip build that fails to compile on the running ROCm stack). Warns once
-    per backend, then routes that backend to the array-API path from then on.
+    per backend, then routes that backend to its fallback from then on. That is
+    the array-API path for permanova and mantel; permdisp has no array-API path,
+    so it falls back to the host Numba engine.
     """
     name = _get_backend_name(_aac.array_namespace(arr))
     if name not in _unavailable:
         _unavailable.add(name)
         warn(
             f"The Numba GPU kernel could not be used for the '{name}' backend on "
-            "this system; using the array-API fallback instead.",
+            "this system; using the fallback path instead.",
             UserWarning,
         )
 

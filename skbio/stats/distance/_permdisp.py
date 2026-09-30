@@ -21,10 +21,18 @@ from ._base import (
     _build_results,
     DistanceMatrix,
 )
+from ._gpu import _mark_gpu_unavailable, _numba_gpu_module_for
+from ._permdisp_gpu import (
+    _kernel_supports_shape,
+    _run_permdisp_centroid_gpu,
+    _run_permdisp_median_gpu,
+)
 from skbio.stats.ordination import pcoa, OrdinationResults
 from skbio.util import get_rng
 from skbio.util._decorator import params_aliased
 from skbio._config import _resolve_engine
+
+import array_api_compat as _aac
 
 try:
     from numba import njit, prange, get_num_threads
@@ -361,7 +369,9 @@ def permdisp(
     engine : {'cython', 'numba', 'fast'}, optional
         Compute engine for the permutation test. If None (default), use the global
         ``compute_engine`` setting. 'fast' selects Numba if installed, otherwise
-        Cython. See :ref:`compute_engines` for details.
+        Cython. See :ref:`compute_engines` for details. With 'numba' and a
+        GPU-resident distance matrix, the permutation loop runs on the device;
+        see :ref:`gpu_computing`.
 
         .. versionadded:: 0.7.4
 
@@ -407,6 +417,26 @@ def permdisp(
     controlling the number of threads used.
 
     This function uses Marti Anderson's PERMDISP2 procedure.
+
+    On a GPU-resident distance matrix with ``engine='numba'``, the permutation
+    loop runs in a fused GPU kernel, on CuPy or PyTorch matrices and on both
+    CUDA and ROCm devices. PCoA returns its coordinates to the host either way,
+    so the kernel reads that smaller array rather than the matrix itself.
+    Permutations are drawn on the host in the same order as the CPU engines, so
+    the p-value matches; the F-statistic can differ in its last digits, because
+    the kernel accumulates in a different order.
+
+    The kernel falls back to the CPU Numba engine, with no change in behavior,
+    when the backend has no usable Numba GPU module, when the ordination retains
+    more than 64 dimensions, which its fixed-size shared arrays hold, or when
+    the grouping has more than 64 groups.
+
+    With ``engine='numba'``, GPU buffers must belong to the default device. On a
+    system with several devices, the default must be changed to match the buffer
+    ownership before this function is invoked, through
+    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    A mismatch is not reported when the kernel is launched, and on ROCm it has
+    been observed to leave the GPU context unusable for the rest of the process.
 
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
@@ -536,6 +566,11 @@ def permdisp(
     if test not in ("centroid", "median"):
         raise ValueError("Test must be centroid or median.")
 
+    # A distance matrix backed by a non-NumPy (e.g. GPU-resident) buffer says the
+    # caller is already computing on a device. Held onto here so the permutation
+    # loop below can run there too, rather than handing the work to the host.
+    device_buf = None
+
     if isinstance(distmat, OrdinationResults):
         ordination = distmat
         ids = ordination.samples.axes[0].to_list()
@@ -554,6 +589,8 @@ def permdisp(
 
         ids = distmat.ids
         sample_size = distmat.shape[0]
+        if not _aac.is_numpy_array(distmat.data):
+            device_buf = distmat.data
 
         ordination = pcoa(
             distmat,
@@ -576,11 +613,20 @@ def permdisp(
     )
 
     # The Numba engine batches the permutation loop, for both center
-    # definitions.
+    # definitions. On a device-resident matrix it runs that loop on the GPU;
+    # pcoa has already brought the much smaller ordination coordinates across,
+    # which is the one crossing this path cannot avoid.
     if engine == "numba":
-        stat, p_value = _run_permdisp_numba(
-            sample_data, grouping, num_groups, permutations, seed, test
-        )
+        result = None
+        if device_buf is not None:
+            result = _try_permdisp_gpu(
+                device_buf, sample_data, grouping, num_groups, permutations, seed, test
+            )
+        if result is None:
+            result = _run_permdisp_numba(
+                sample_data, grouping, num_groups, permutations, seed, test
+            )
+        stat, p_value = result
     else:
         test_stat_function = partial(_compute_groups, sample_data, test)
 
@@ -593,25 +639,21 @@ def permdisp(
     )
 
 
-def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, test):
-    """Observed statistic and p-value via the Numba engine.
+def _check_permdisp_inputs(sample_data, permutations, test):
+    """Reject the inputs every engine rejects, before one of them is picked.
 
-    Draws the permutations on the host in the same order as
-    :func:`._base._run_monte_carlo_stats` (observed grouping first, then one
-    ``rng.permutation`` per replicate) so the two engines see the same groupings
-    in the same order, then evaluates them in one batched kernel call per chunk.
+    Reject exactly what the Cython path rejects, so that engine= selects an
+    implementation without changing which inputs are legal. The median test
+    reaches geomedian_axis_one, which is fused over float32 and float64 and
+    raises on anything else. The centroid test never reaches that kernel and is
+    computed with numpy, which handles any numeric dtype but not object, string
+    or datetime64 arrays.
     """
     if permutations < 0:
         raise ValueError(
             "Number of permutations must be greater than or equal to zero."
         )
 
-    # Reject exactly what the Cython path rejects, so that engine= selects an
-    # implementation without changing which inputs are legal. The median test
-    # reaches geomedian_axis_one, which is fused over float32 and float64 and
-    # raises on anything else. The centroid test never reaches that kernel and
-    # is computed with numpy, which handles any numeric dtype but not object,
-    # string or datetime64 arrays.
     dtype = np.asarray(sample_data).dtype
     if test == "median":
         if dtype not in (np.float32, np.float64):
@@ -620,6 +662,52 @@ def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, t
             )
     elif not (np.issubdtype(dtype, np.number) or dtype == np.bool_):
         raise TypeError("Ordination coordinates must be of a numeric type.")
+
+
+def _try_permdisp_gpu(buf, sample_data, codes, num_groups, permutations, seed, test):
+    """Observed statistic and p-value via the GPU kernel, or None if unavailable.
+
+    ``buf`` is the caller's device-resident distance matrix buffer. Its contents
+    are not read here; it only names the device and the array library, and it is
+    what gets flagged if the kernel turns out not to run on this stack.
+    """
+    _check_permdisp_inputs(sample_data, permutations, test)
+
+    # The kernel's shape limits are a property of this call, not of the machine,
+    # so an ordination that is too wide declines quietly here. Routing it through
+    # the failure path below would blame the backend and disable it for calls
+    # that would have worked.
+    if not _kernel_supports_shape(sample_data.shape[1], num_groups):
+        return None
+
+    gpu = _numba_gpu_module_for(buf)
+    if gpu is None:
+        return None
+    runner = (
+        _run_permdisp_centroid_gpu if test == "centroid" else _run_permdisp_median_gpu
+    )
+
+    try:
+        return runner(gpu, sample_data, codes, num_groups, permutations, seed)
+    except Exception:
+        # The fused kernel could not be compiled or launched here. Flag the
+        # backend so later calls go straight to the host, and take that now.
+        # Both branches are handed ``seed`` rather than a live generator, the
+        # shape #2537 settled on for mantel and permanova, so a failed attempt
+        # does not shift the permutations the host path then draws.
+        _mark_gpu_unavailable(buf)
+        return None
+
+
+def _run_permdisp_numba(sample_data, grouping, num_groups, permutations, seed, test):
+    """Observed statistic and p-value via the Numba engine.
+
+    Draws the permutations on the host in the same order as
+    :func:`._base._run_monte_carlo_stats` (observed grouping first, then one
+    ``rng.permutation`` per replicate) so the two engines see the same groupings
+    in the same order, then evaluates them in one batched kernel call per chunk.
+    """
+    _check_permdisp_inputs(sample_data, permutations, test)
 
     # The kernels accumulate in float64 whatever comes in, for the same reason
     # as #2509. Cython computes in the input dtype instead, so the engines

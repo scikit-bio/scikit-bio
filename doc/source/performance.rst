@@ -164,9 +164,9 @@ computing through the extensions `numba-cuda <https://nvidia.github.io/numba-cud
 (for CUDA GPUs) and `numba-hip <https://github.com/ROCm/numba-hip>`_ (for ROCm GPUs).
 Refer to the :install:`installation instructions <#numba>`. With a compatible GPU
 extension installed, these Numba engines can automatically use GPU computation for
-supported CuPy and PyTorch arrays residing on the GPU. The function will fall back to
-the array-API implementation for other array formats or if the GPU kernel is
-unavailable.
+supported CuPy and PyTorch arrays residing on the GPU. For other array formats, or if
+the GPU kernel is unavailable, the function falls back to its array-API implementation
+where it has one, and to the CPU Numba engine otherwise.
 
 We will demonstrate this using the :func:`~skbio.stats.distance.permanova` function,
 which performs the Permutational Multivariate Analysis of Variance (PERMANOVA) on a
