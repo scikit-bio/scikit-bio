@@ -2,6 +2,11 @@
 
 ## Version 0.7.5-dev
 
+### Features
+
+* Added instruction on optionally zero-copy data sharing between scikit-bio and BioPython sequences ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617)).
+
+
 ### Bug Fixes
 
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
