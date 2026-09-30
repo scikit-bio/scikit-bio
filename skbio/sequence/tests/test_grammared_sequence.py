@@ -217,6 +217,26 @@ class TestGrammaredSequence(TestCase):
 
         ExampleGrammaredSequence(seq, validate=False)
 
+    def test_init_skip_ascii_validation(self):
+        # The caller assertion applies to both Sequence's ASCII requirement
+        # and GrammaredSequence's alphabet requirement.
+        seq = ExampleGrammaredSequence(bytes([255]), validate=False)
+        self.assertEqual(int(seq._bytes[0]), 255)
+
+        with self.assertRaisesRegex(ValueError, r"ASCII"):
+            ExampleGrammaredSequence(bytes([255]), validate=True)
+
+    def test_init_copy_forward(self):
+        data = np.array([65, 66, 65], dtype=np.uint8)
+        seq = ExampleGrammaredSequence(data, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(np.shares_memory(seq._bytes, data))
+        self.assertTrue(data.flags.writeable)
+
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            ExampleGrammaredSequence(data[::2], copy=False)
+
     def test_init_lowercase_all_lowercase(self):
         s = 'cbcbbbazcbbzbxyz-.x'
 
