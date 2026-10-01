@@ -10,6 +10,7 @@ from unittest import TestCase, main
 
 import numpy as np
 import pandas as pd
+import scipy as sp
 import numpy.testing as npt
 
 from skbio import TreeNode
@@ -30,6 +31,19 @@ class VectorizeTests(TestCase):
         count_array, indexed, branch_lengths = \
             vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
+        npt.assert_equal(count_array, exp_counts.T)
+
+    # May need to modify this class depending on whether we stick with
+    # the input being a tree or a BIOM table
+    # Right now I am assuming we want tree as input
+    def test_vectorize_counts_and_tree_sparse(self):
+        tree = TreeNode.read(["((a:1, b:2)c:3)root;"])
+        counts = np.array([[0, 1], [1, 5], [10, 1]])
+        counts = sp.csr_array(counts)
+        count_array, indexed, branch_lengths = \
+            vectorize_counts_and_tree(counts, np.array(['a', 'b']), tree)
+        exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
+        exp_counts = sp.csr_array(exp_counts)
         npt.assert_equal(count_array, exp_counts.T)
 
 
