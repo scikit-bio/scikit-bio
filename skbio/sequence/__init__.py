@@ -219,8 +219,7 @@ compact storage and efficient, vectorized operations.
 array([b'G', b'C', b'C', b'R', b'C', b'C', b'A', b'T', b'G', b'G'],
       dtype='|S1')
 
-This array can also be viewed as ASCII code points (0-127). Note that the ``uint8``
-storage format does not accept byte values 128-255.
+This array can also be viewed as ASCII code points (0-127).
 
 >>> seq.values.view('uint8')
 array([71, 67, 67, 82, 67, 67, 65, 84, 71, 71], dtype=uint8)
@@ -577,6 +576,37 @@ If the GFF3 contains the sequence, one can read the sequence and annotation all 
 once:
 
 >>> seq = DNA.read('genomic.gff', format='gff3')  # doctest: +SKIP
+
+
+Interoperability
+^^^^^^^^^^^^^^^^
+
+**BioPython**
+
+scikit-bio and BioPython (since 1.79) both store sequence data as bytes, making the
+conversion straightforward. In particular, a defined BioPython ``Seq`` object can be
+converted into a scikit-bio ``Sequence`` object **without copying the underlying
+data**, enabling efficient data sharing.
+
+>>> from Bio.Seq import Seq  # doctest: +SKIP
+>>> bp_seq = Seq('GAGTCT')  # doctest: +SKIP
+>>> sk_seq = DNA(bytes(bp_seq))  # doctest: +SKIP
+
+Verify that both objects share the same memory. (This check uses private attributes,
+therefore is not recommended for production code.)
+
+>>> assert sk_seq._bytes.base is bp_seq._data  # doctest: +SKIP
+
+If detaching the objects is intended, one can pass ``copy=True`` to force data copying.
+See :class:`Sequence` for details. A BioPython ``MutableSeq`` can be converted into a
+scikit-bio sequence using the same approach, but the data will be copied. Calling
+``bytes()`` on undefined or partially defined BioPython sequences will raise an error.
+
+Vice versa, a scikit-bio ``Sequence`` can be converted into a BioPython ``Seq`` as
+follows. This conversion does copy the underlying sequence data.
+
+>>> sk_seq = DNA('GAGTCT')  # doctest: +SKIP
+>>> bp_seq = Seq(sk_seq.values.tobytes())  # doctest: +SKIP
 
 """  # noqa: D205, D415
 

@@ -5,8 +5,12 @@
 ### Features
 
 * `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
+* Added instruction on optionally zero-copy data sharing between scikit-bio and BioPython sequences ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617)).
+
+
 ### Bug Fixes
 
+* Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array, despite `Sequence` and downstream operations being built under the assumption of ASCII codes (0-127). By default, construction now validates 7-bit ASCII and copies mutable external storage so later upstream mutation cannot violate this invariant. Added `validate` and NumPy-style tri-state `copy` parameters to let expert callers explicitly skip validation and/or require zero-copy construction. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 
 
