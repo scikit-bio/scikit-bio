@@ -583,7 +583,7 @@ Interoperability
 
 **BioPython**
 
-scikit-bio and BioPython (since 1.7.9) both store sequence data as bytes, making the
+scikit-bio and BioPython (since 1.79) both store sequence data as bytes, making the
 conversion straightforward. In particular, a defined BioPython ``Seq`` object can be
 converted into a scikit-bio ``Sequence`` object **without copying the underlying
 data**, enabling efficient data sharing.
