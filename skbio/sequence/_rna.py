@@ -74,9 +74,9 @@ class RNA(GrammaredSequence, NucleotideMixin):
     be replaced with ``U`` for RNA sequences.
 
     Characters other than the above 17 are not allowed. To include additional
-    characters, you may create a custom alphabet using ``GrammaredSequence``.
-    Directly modifying the alphabet of ``RNA`` may break methods that rely on
-    the IUPAC alphabet.
+    characters, you may create a custom alphabet using :class:`GrammaredSequence`.
+    Directly modifying the alphabet of ``RNA`` may break methods that rely on the
+    IUPAC alphabet.
 
     It should be noted that some functions do not support degenerate characters
     characters. In such cases, they will be replaced with `N` to represent any
