@@ -202,7 +202,7 @@ class Sequence(
     Underlying sequence is immutable:
 
     >>> values = np.array([b'T', b'C', b'G', b'A'], dtype='|S1')
-    >>> seq.values = values # doctest: +SKIP
+    >>> seq.values = values  # doctest: +SKIP
     Traceback (most recent call last):
         ...
     AttributeError: property 'values' of 'Sequence' object has no setter
@@ -243,7 +243,8 @@ class Sequence(
 
     In contrast, if the input is a NumPy array, which is mutable, a copy is always made
     even though the array already matches the underlying data structure of ``Sequence``.
-    Making a copy protects against accidental modification of the original data.
+    Likewise, bytearray input (like bytes but mutable) is also copied. Making a copy
+    protects against accidental modification of the original data.
 
     >>> data = np.array([65, 67, 71, 84], dtype=np.uint8)
     >>> seq = Sequence(data)
@@ -265,6 +266,46 @@ class Sequence(
     Traceback (most recent call last):
         ...
     ValueError: ... a copy is required to make sequence data contiguous.
+
+    **Data validation**
+
+    scikit-bio ``Sequence`` objects allow characters within the range of ASCII code
+    points 0-127 (i.e., 7-bit ASCII). This is guaranteed if the input is a string,
+    because the encoding process automatically rejects characters outside this range.
+
+    >>> seq = Sequence('αβγδε')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    UnicodeEncodeError: 'ascii' codec can't encode characters in position ...
+
+    However, if the input is bytes, bytearray or a NumPy array that matches the
+    underlying data structure of ``Sequence``, one may choose whether to validate
+    the data to reject characters in the range of 128-255. Validation is enabled by
+    default.
+
+    >>> seq = Sequence(b'\x86\xa7\xb6\xf8')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: Sequence characters must be ASCII (code points 0-127). Found ...
+
+    Built-in subclasses such as ``DNA``, ``RNA`` and ``Protein`` have additional checks
+    to ensure that all characters are within their defined alphabet.
+
+    >>> from skbio import DNA
+    >>> seq = DNA('TAXI')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: Invalid character in sequence: ...
+
+    Turning off validation (``validation=False``) can improve performance, given that
+    you know the input data is valid. If not, this risks admitting invalid characters
+    and invalidating downstream operations (e.g., you cannot print the sequence).
+
+    >>> seq = Sequence('café'.encode(), validate=False)
+
+    Collectively, the most performant approach to ingest trusted data is:
+
+    >>> seq = Sequence(<bytes or array>, validate=False, copy=False)  # doctest: +SKIP
 
     **Sequence metadata**
 

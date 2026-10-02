@@ -602,6 +602,11 @@ See :class:`Sequence` for details. A BioPython ``MutableSeq`` can be converted i
 scikit-bio sequence using the same approach, but the data will be copied. Calling
 ``bytes()`` on undefined or partially defined BioPython sequences will raise an error.
 
+Adding ``validate=False`` can further improve performance, if you know the input only
+contains valid characters. See :class:`Sequence` for details.
+
+>>> sk_seq = DNA(bytes(bp_seq), validate=False)  # doctest: +SKIP
+
 Vice versa, a scikit-bio ``Sequence`` can be converted into a BioPython ``Seq`` as
 follows. This conversion does copy the underlying sequence data.
 
