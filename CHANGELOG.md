@@ -5,12 +5,22 @@
 ### Features
 
 * Added instruction on optionally zero-copy data sharing between scikit-bio and BioPython sequences ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617)).
+* Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 
 
 ### Bug Fixes
 
+* Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
-* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array, despite `Sequence` and downstream operations being built under the assumption of ASCII codes (0-127). By default, construction now validates 7-bit ASCII and copies mutable external storage so later upstream mutation cannot violate this invariant. Added `validate` and NumPy-style tri-state `copy` parameters to let expert callers explicitly skip validation and/or require zero-copy construction. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+
+
+### Miscellaneous
+
+* `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
 
 
 ## Version 0.7.4

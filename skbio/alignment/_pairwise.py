@@ -837,12 +837,16 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
             current_row -= 1
             current_col -= 1
         elif current_value == vgap:
+            if gap_character is None:
+                gap_character = aln1.dtype._check_default_gap_char()
             for aligned_seq in aligned_seqs1:
                 aligned_seq.append(gap_character)
             for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
                 aligned_seq.append(str(input_seq[current_row - 1]))
             current_row -= 1
         elif current_value == hgap:
+            if gap_character is None:
+                gap_character = aln1.dtype._check_default_gap_char()
             for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
                 aligned_seq.append(str(input_seq[current_col - 1]))
             for aligned_seq in aligned_seqs2:
