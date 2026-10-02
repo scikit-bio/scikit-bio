@@ -1424,16 +1424,21 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if self.has_positional_metadata():
             positional_metadata = self.positional_metadata
 
+        gap_chars = getattr(dtype, "gap_chars", None)
+        has_gap_chars = bool(gap_chars)
+        if has_gap_chars:
+            default_gap_char = dtype.default_gap_char
+
         consensus = []
         for position in self.iter_positions(ignore_metadata=True):
             freqs = position.frequencies()
-
-            gap_freq = 0
-            for gap_char in dtype.gap_chars:
-                if gap_char in freqs:
-                    gap_freq += freqs.pop(gap_char)
-            assert dtype.default_gap_char not in freqs
-            freqs[dtype.default_gap_char] = gap_freq
+            if has_gap_chars:
+                gap_freq = 0
+                for gap_char in gap_chars:
+                    if gap_char in freqs:
+                        gap_freq += freqs.pop(gap_char)
+                assert default_gap_char not in freqs
+                freqs[default_gap_char] = gap_freq
 
             consensus.append(Counter(freqs).most_common(1)[0][0])
 
@@ -2410,7 +2415,8 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if label in self.index:
             return self.loc[label]
         else:
-            return self.dtype(self.dtype.default_gap_char * self.shape.position)
+            gap_char = self.dtype._check_default_gap_char()
+            return self.dtype(gap_char * self.shape.position)
 
     def sort(self, level=None, ascending=True):
         """Sort sequences by index label in-place.
@@ -2548,6 +2554,11 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         TabularMSA
             The created tabular MSA object.
 
+        Raises
+        ------
+        ValueError
+            If the sequence type does not define a default gap character.
+
         See Also
         --------
         skbio.alignment.AlignPath.from_tabular
@@ -2585,7 +2596,7 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if len(seqs) != path._shape[0]:
             raise ValueError("Sequence counts in `path` and `seqs` do not match.")
         seqtype = seqs[0].__class__
-        gap_code = ord(seqtype.default_gap_char)
+        gap_code = ord(seqtype._check_default_gap_char())
         byte_lst = [x._bytes for x in seqs]
         byte_arr = path._to_matrices(byte_lst, gap_code)[0]
         return cls(

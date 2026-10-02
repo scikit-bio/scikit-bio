@@ -401,18 +401,8 @@ class TestReaders(unittest.TestCase):
 
             @classproperty
             @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '-'
-
-            @classproperty
-            @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set(string.ascii_letters)
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
 
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:

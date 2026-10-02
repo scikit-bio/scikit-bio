@@ -35,18 +35,8 @@ class CustomSequence(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def default_gap_char(cls):
-        return '-'
-
-    @classproperty
-    @overrides(GrammaredSequence)
     def definite_chars(cls):
         return set(string.ascii_letters)
-
-    @classproperty
-    @overrides(GrammaredSequence)
-    def degenerate_map(cls):
-        return {}
 
 
 class SnifferTests(TestCase):

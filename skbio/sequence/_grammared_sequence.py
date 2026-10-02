@@ -8,8 +8,6 @@
 
 from warnings import warn
 from abc import ABCMeta, abstractmethod
-from itertools import product
-import re
 
 import numpy as np
 
@@ -18,73 +16,131 @@ from skbio.util._misc import MiniRegistry
 from ._sequence import Sequence
 
 
+def validate_chars(chars, attr, name):
+    """Validate that all characters are length-1 strings."""
+    if any(not isinstance(char, str) or len(char) != 1 for char in chars):
+        raise TypeError(
+            f"`{attr}` must contain only single-character strings for class {name}."
+        )
+
+
 class GrammaredSequenceMeta(ABCMeta, type):
     def __new__(mcs, name, bases, dct):
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
-        abstract_methods = cls.__abstractmethods__
-        concrete_gap_chars = "gap_chars" not in abstract_methods
-        concrete_degenerate_map = "degenerate_map" not in abstract_methods
-        concrete_definite_chars = "definite_chars" not in abstract_methods
-        concrete_default_gap_char = "default_gap_char" not in abstract_methods
-        # degenerate_chars is not abstract but it depends on degenerate_map
-        # which is abstract.
-        concrete_degenerate_chars = concrete_degenerate_map
+        # Grammar-derived caches must not be inherited by subclasses.
+        if any(isinstance(base, GrammaredSequenceMeta) for base in bases):
+            for attr in (
+                "validation_mask",
+                "degenerate_codes",
+                "definite_codes",
+                "gap_codes",
+                "canonical_codes",
+                "noncanonical_codes",
+                "definite_hash",
+                "degenerate_hash",
+                "gap_hash",
+                "canonical_hash",
+                "nongap_hash",
+                "degen_nonca_hash",
+            ):
+                setattr(cls, f"_GrammaredSequence__{attr}", None)
 
-        # Only perform metaclass checks if none of the attributes on the class
-        # are abstract.
-        # TODO: Rather than hard-coding a list of attributes to check, we can
-        # probably check all the attributes on the class and make sure none of
-        # them are abstract.
+        # Set default gap char as the first gap char in sorted order.
         if (
-            concrete_gap_chars
-            and concrete_degenerate_map
-            and concrete_definite_chars
-            and concrete_default_gap_char
-            and concrete_degenerate_chars
+            "gap_chars" in dct
+            and "default_gap_char" not in dct
+            and "gap_chars" not in cls.__abstractmethods__
         ):
-            if cls.default_gap_char not in cls.gap_chars:
+            char_ = sorted(cls.gap_chars)[0] if cls.gap_chars else None
+
+            def default_gap_char(cls):
+                return char_
+
+            cls.default_gap_char = classproperty(default_gap_char)
+
+        # Set degenerate chars based on map.
+        if (
+            "degenerate_map" in dct
+            and "degenerate_chars" not in dct
+            and "degenerate_map" not in cls.__abstractmethods__
+        ):
+            chars_ = set(cls.degenerate_map)
+
+            def degenerate_chars(cls):
+                return set(chars_)
+
+            cls.degenerate_chars = classproperty(degenerate_chars)
+
+        # Only perform metaclass checks when all attributes are concrete.
+        if not cls.__abstractmethods__:
+            validate_chars(cls.gap_chars, "gap_chars", name)
+            validate_chars(cls.definite_chars, "definite_chars", name)
+            validate_chars(cls.noncanonical_chars, "noncanonical_chars", name)
+            validate_chars(cls.degenerate_map, "degenerate_map keys", name)
+            for definite_characters in cls.degenerate_map.values():
+                validate_chars(definite_characters, "degenerate_map values", name)
+            validate_chars(cls.degenerate_chars, "degenerate_chars", name)
+
+            if cls.default_gap_char is not None:
+                validate_chars([cls.default_gap_char], "default_gap_char", name)
+            if cls.wildcard_char is not None:
+                validate_chars([cls.wildcard_char], "wildcard_char", name)
+
+            if cls.gap_chars and cls.default_gap_char not in cls.gap_chars:
                 raise TypeError(
-                    "default_gap_char must be in gap_chars for class %s" % name
+                    f"`default_gap_char` must be in `gap_chars` for class {name}."
+                )
+
+            if not cls.gap_chars and cls.default_gap_char is not None:
+                raise TypeError(
+                    "`default_gap_char` must be None when `gap_chars` is empty "
+                    f"for class {name}."
                 )
 
             if len(cls.gap_chars & cls.degenerate_chars) > 0:
                 raise TypeError(
-                    "gap_chars and degenerate_chars must not share any "
-                    "characters for class %s" % name
+                    "`gap_chars` and `degenerate_chars` must not share any "
+                    f"characters for class {name}."
                 )
 
             for key in cls.degenerate_map.keys():
                 for definite_char in cls.degenerate_map[key]:
                     if definite_char not in cls.definite_chars:
                         raise TypeError(
-                            "degenerate_map must expand only to "
-                            "characters included in definite_chars "
-                            "for class %s" % name
+                            "`degenerate_map` must expand only to characters included "
+                            f"in `definite_chars` for class {name}."
                         )
 
             if len(cls.degenerate_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "degenerate_chars and definite_chars must not "
-                    "share any characters for class %s" % name
+                    "`degenerate_chars` and `definite_chars` must not "
+                    f"share any characters for class {name}."
                 )
 
             if len(cls.gap_chars & cls.definite_chars) > 0:
                 raise TypeError(
-                    "gap_chars and definite_chars must not share any "
-                    "characters for class %s" % name
+                    "`gap_chars` and `definite_chars` must not share any "
+                    f"characters for class {name}."
+                )
+
+            if cls.wildcard_char is not None and cls.wildcard_char not in (
+                cls.definite_chars | cls.degenerate_chars
+            ):
+                raise TypeError(
+                    "`wildcard_char` must be a definite or degenerate character "
+                    f"for class {name}."
                 )
 
         return cls
 
 
 class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
-    """Store sequence data conforming to a character set.
-
-    This is an abstract base class (ABC) that cannot be instantiated.
+    r"""Store sequence data conforming to a character set.
 
     This class is intended to be inherited from to create grammared sequences
-    with custom alphabets.
+    with custom alphabets. It is an abstract base class (ABC) that cannot be
+    directly instantiated.
 
     Raises
     ------
@@ -104,52 +160,175 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     Examples
     --------
-    Note in the example below that properties either need to be static or
-    use skbio's `classproperty` decorator.
+    ``GrammaredSequence`` can be subclassed to create custom sequence types.
+
+    **A minimal alphabet**
+
+    This example demonstrates **RY-coding**: Representing a nucleotide sequence with
+    just two states: ``R`` (purines, including ``A`` and ``G``) and ``Y`` (pyrimidines,
+    including ``C`` and ``T/U``). This technique reduces the alphabet to binary thus
+    facilitating computation, and has practical benefits in phylogenetic analysis.
+
+    A minimum RY sequence type only needs to declare its **definite** characters: ``R``
+    and ``Y`` (even though they are degenerate characters in the IUPAC DNA alphabet).
 
     >>> from skbio.sequence import GrammaredSequence
     >>> from skbio.util import classproperty
-    >>> class CustomSequence(GrammaredSequence):
-    ...     @classproperty
-    ...     def degenerate_map(cls):
-    ...         return {"X": set("AB")}
-    ...
+
+    >>> class RYSequence(GrammaredSequence):
     ...     @classproperty
     ...     def definite_chars(cls):
-    ...         return set("ABC")
-    ...
-    ...
+    ...         return set("RY")
+
+    The new type validates its alphabet just like other grammared sequences:
+
+    >>> seq = RYSequence("RYYRYR")
+    >>> str(seq)
+    'RYYRYR'
+    >>> seq.has_definites()
+    True
+
+    >>> seq = RYSequence("ACGT")  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: Invalid characters in sequence: ['A', 'C', 'G', 'T']...
+
+    Choice of characters spans ASCII code points 0-127. Even unprintable characters
+    are valid. The following example uses 0 and 1 as characters.
+
+    >>> class Sequence01(GrammaredSequence):
     ...     @classproperty
-    ...     def default_gap_char(cls):
-    ...         return '-'
+    ...     def definite_chars(cls):
+    ...         return {chr(0), chr(1)}
+
+    >>> import numpy as np
+    >>> seq = Sequence01(np.array([0, 1, 1, 0, 0, 0, 1], dtype=np.uint8))
+    >>> seq.values.tobytes()
+    b'\x00\x01\x01\x00\x00\x00\x01'
+
+    **Enriching grammar**
+
+    More specialized grammars can additionally define gap characters, degenerate
+    characters, a wildcard, and other properties when they are useful. The following
+    example adds gap character ``^`` to the sequence type.
+
+    >>> class RYSequence(GrammaredSequence):
+    ...     @classproperty
+    ...     def definite_chars(cls):
+    ...         return set("RY")
     ...
     ...     @classproperty
     ...     def gap_chars(cls):
-    ...         return set('-.')
+    ...         return set("^")
 
-    >>> seq = CustomSequence('ABABACAC')
-    >>> seq
-    CustomSequence
+    Then one can perform pairwise alignment of two RY sequences and construct a tabular
+    alignment. (Note: ``pair_align`` does not need a defined gap character, but
+    ``TabularMSA`` does.)
+
+    >>> from skbio import TabularMSA
+    >>> from skbio.alignment import pair_align
+    >>> seq1 = RYSequence('YRYRRRYYRY')
+    >>> seq2 = RYSequence('RYRRRYRYYY')
+    >>> path = pair_align(seq1, seq2).paths[0]
+    >>> msa = TabularMSA.from_path_seqs(path, (seq1, seq2))
+    >>> msa
+    TabularMSA[RYSequence]
+    ----------------------
+    Stats:
+        sequence count: 2
+        position count: 12
+    ----------------------
+    YRYRRRYYRY^^
+    ^RYRRRY^RYYY
+
+    **Adding utilities**
+
+    You can add custom class properties and methods to perform specific operations. The
+    following code lets one construct an RY sequence from a DNA sequence. Only the four
+    canonical nucleotides are recognized; otherwise, an error will be raised.
+
+    >>> class RYSequence(GrammaredSequence):
+    ...     @classproperty
+    ...     def definite_chars(cls):
+    ...         return set("RY")
+    ...
+    ...     @classproperty
+    ...     def code_map(cls):
+    ...         return bytes.maketrans(b"ACGT", b"RYRY")
+    ...
+    ...     @classmethod
+    ...     def from_dna(cls, seq):
+    ...         return cls(seq.values.tobytes().translate(cls.code_map))
+
+    >>> from skbio import DNA
+    >>> RYSequence.from_dna(DNA('GAATTC'))
+    RYSequence
     --------------------------
     Stats:
-        length: 8
+        length: 6
         has gaps: False
         has degenerates: False
         has definites: True
     --------------------------
-    0 ABABACAC
+    0 RRRYYY
 
-    >>> seq = CustomSequence('XXXXXX')
-    >>> seq
-    CustomSequence
-    -------------------------
-    Stats:
-        length: 6
-        has gaps: False
-        has degenerates: True
-        has definites: False
-    -------------------------
-    0 XXXXXX
+    **Extending existing sequence types**
+
+    One may subclass an existing sequence type and modify its grammar and operations.
+    The following example creates a methylated DNA type by introducing a new definite
+    character: ``Z``, representing 5-methylcytosine (5mC). It also introduces methods
+    for demethylation of ``Z`` to ``C``, and for bisulfite treatment to preserve the
+    methylation state for DNA sequencing.
+
+    >>> class MethylatedDNA(DNA):
+    ...     @classproperty
+    ...     def definite_chars(cls):
+    ...         return DNA.definite_chars | {'Z'}
+    ...
+    ...     @classproperty
+    ...     def complement_map(cls):
+    ...         return DNA.complement_map | {'Z': 'G'}
+    ...
+    ...     def demethylate(self):
+    ...         chars = self.values.copy()
+    ...         chars[chars == b'Z'] = b'C'
+    ...         return DNA(chars)
+    ...
+    ...     def bisulfite_convert(self):
+    ...         chars = self.values.copy()
+    ...         chars[chars == b'C'] = b'T'
+    ...         chars[chars == b'Z'] = b'C'
+    ...         return DNA(chars)
+    ...
+    ...     def transcribe(self):
+    ...         return self.demethylate().transcribe()
+
+    The subclass accepts both ordinary DNA characters and the added 5mC state:
+
+    >>> seq = MethylatedDNA("ACZCG")
+    >>> str(seq)
+    'ACZCG'
+
+    It also provides a conversion specific to this sequence type. In this simplified
+    example, unmethylated cytosine is converted to uracil (read as thymine during
+    sequencing) while 5mC is retained as cytosine:
+
+    >>> converted = seq.bisulfite_convert()
+    >>> str(converted)
+    'ATCTG'
+    >>> type(converted) is DNA
+    True
+
+    ``MethylatedDNA`` inherits the rest of the ``DNA`` interface, but adding a
+    character can require revisiting inherited operations. Here, ``complement_map`` and
+    ``transcribe`` are modified to establish that 5mC should be considered as cytosine
+    in these operations.
+
+    Other inherited operations may likewise need to be reviewed or overridden. For
+    example, a subclass should decide how a newly introduced nucleotide impacts
+    GC-content calculation, degeneracy handling, and any other operation whose meaning
+    depends on the alphabet. Therefore, be very careful with extending existing
+    sequence types, and consider limiting downstream analysis to what you can oversee.
 
     """
 
@@ -266,7 +445,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     @classproperty
     def alphabet(cls):
-        """Return valid characters.
+        r"""All valid characters in the alphabet.
 
         This includes gap, definite, and degenerate characters.
 
@@ -275,26 +454,35 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         set
             Valid characters.
 
+        See Also
+        --------
+        gap_chars
+        definite_chars
+        degenerate_chars
+
+        Notes
+        -----
+        This property should not be defined. It is automatically populated during class
+        creation.
+
         """
         return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
 
     @classproperty
-    @abstractmethod
     def gap_chars(cls):
-        """Return characters defined as gaps.
+        r"""Characters representing gaps in the sequence.
 
         Returns
         -------
         set
-            Characters defined as gaps.
+            Characters defined as gaps. Default is an empty set.
 
         """
-        raise NotImplementedError
+        return set()
 
     @classproperty
-    @abstractmethod
     def default_gap_char(cls):
-        """Gap character to use when constructing a new gapped sequence.
+        r"""Gap character to use when constructing a new gapped sequence.
 
         This character is used when it is necessary to represent gap characters
         in a new sequence. For example, a majority consensus sequence will use
@@ -302,27 +490,55 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Returns
         -------
-        str
-            Default gap character.
+        str or None
+            Default gap character, or None if gaps are not defined.
+
+        See Also
+        --------
+        gap_char
+
+        Notes
+        -----
+        When a subclass defines a non-empty ``gap_chars`` without defining this
+        property, the first gap character in sorted order will be designated as the
+        default gap character during class creation.
 
         """
-        raise NotImplementedError
+        return None
+
+    @classmethod
+    def _check_default_gap_char(cls):
+        gap_char = cls.default_gap_char
+        if gap_char is None:
+            raise ValueError(
+                f"{cls.__name__} does not define a default gap character."
+            )
+        return gap_char
 
     @classproperty
     def degenerate_chars(cls):
-        """Return degenerate characters.
+        r"""Degenerate characters representing sets of definite characters.
 
         Returns
         -------
         set
             Degenerate characters.
 
+        See Also
+        --------
+        degenerate_map
+
+        Notes
+        -----
+        This property should not be defined. It is automatically populated from
+        ``degenerate_map`` during class creation.
+
         """
         return set(cls.degenerate_map)
 
     @classproperty
     def nondegenerate_chars(cls):
-        """Return non-degenerate characters.
+        """Non-degenerate characters.
 
         Returns
         -------
@@ -347,50 +563,65 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     @abstractmethod
     def definite_chars(cls):
-        """Return definite characters.
+        r"""Characters representing definite states.
 
         Returns
         -------
         set
             Definite characters.
 
+        Notes
+        -----
+        This character set is the minimum requirement for creating a subclass of
+        ``GrammaredSequence``.
+
         """
         raise NotImplementedError
 
     @classproperty
     def noncanonical_chars(cls):
-        """Return non-canonical characters.
+        r"""Non-canonical characters.
 
         Returns
         -------
         set
-            Non-canonical characters.
+            Non-canonical characters. Default is an empty set.
+
+        Notes
+        -----
+        This character set serves as an exclusion from definite characters to obtain
+        canonical characters.
 
         """
         return set()
 
     @classproperty
-    @abstractmethod
     def degenerate_map(cls):
-        """Return mapping of degenerate to definite characters.
+        r"""Mapping of degenerate to definite characters.
 
         Returns
         -------
-        dict (set)
-            Mapping of each degenerate character to the set of
-            definite characters it represents.
+        dict of set
+            Mapping of each degenerate character to the set of definite characters it
+            represents. Default is an empty dictionary.
+
+        Notes
+        -----
+        Each degenerate character may represent an arbitrary number of definite
+        characters.
 
         """
-        raise NotImplementedError
+        return {}
 
     @classproperty
     def wildcard_char(cls):
-        """Return wildcard character.
+        r"""Character representing any other non-gap character in the alphabet.
 
         Returns
         -------
         str of length 1
-            Wildcard character.
+            Wildcard character. Default is None. When set, it must be a definite or
+            degenerate character in the alphabet.
 
         """
         return None
@@ -770,6 +1001,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         <BLANKLINE>
 
         """
+        from itertools import product
+
         degen_chars = self.degenerate_map
         nonexpansion_chars = self.definite_chars.union(self.gap_chars)
 
@@ -830,6 +1063,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         ('TAG',)
 
         """
+        import re
+
         regex_parts = []
         for base in str(self):
             if base in self.degenerate_chars:
