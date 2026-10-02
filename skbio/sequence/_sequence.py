@@ -297,9 +297,9 @@ class Sequence(
         ...
     ValueError: Invalid character in sequence: ...
 
-    Turning off validation (``validation=False``) can improve performance, given that
-    you know the input data is valid. If not, this risks admitting invalid characters
-    and invalidating downstream operations (e.g., you cannot print the sequence).
+    Turning off validation (``validate=False``) can improve performance, given that you
+    know the input data is valid. If not, this risks admitting invalid characters and
+    invalidating downstream operations (e.g., you cannot print the sequence).
 
     >>> seq = Sequence('café'.encode(), validate=False)
 

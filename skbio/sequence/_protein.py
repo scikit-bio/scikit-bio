@@ -125,7 +125,7 @@ class Protein(GrammaredSequence):
     +-----+---------+------------+
     |``J``|Xle      |I or L      |
     +-----+---------+------------+
-    |``X``|Xaa      |All 20      |
+    |``X``|Xaa      |All 22      |
     +-----+---------+------------+
 
     Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and ``.``.
