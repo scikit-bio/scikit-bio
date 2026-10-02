@@ -4,7 +4,7 @@
 
 ### Features
 
-* Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
+* Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 
@@ -15,7 +15,7 @@
 * Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
-* Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
+* Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
 
 
