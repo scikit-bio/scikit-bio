@@ -105,8 +105,8 @@ class DNA(GrammaredSequence, NucleotideMixin):
     alphabet of ``DNA`` may break methods that rely on the IUPAC alphabet.
 
     It should be noted that some functions do not support degenerate characters. In
-    such cases, they will be replaced with ``N`` to represent any of the canonical
-    nucleotides.
+    such cases, they will be replaced with the wildcard character ``N`` to represent
+    any of the canonical nucleotides.
 
     References
     ----------

@@ -54,7 +54,7 @@ class Protein(GrammaredSequence):
     Notes
     -----
     According to the IUPAC notation [1]_ , a protein sequence may contain the
-    following 20 definite characters (canonical amino acids):
+    following 20 canonical amino acids:
 
     +-----+---------+--------------+
     |Code |3-letter |Amino acid    |
@@ -100,8 +100,21 @@ class Protein(GrammaredSequence):
     |``Y``|Tyr      |Tyrosine      |
     +-----+---------+--------------+
 
-    And the following four degenerate characters, each of which representing
-    two or more amino acids:
+    And the following two non-canonical amino acids:
+
+    +-----+---------+--------------+
+    |Code |3-letter |Amino acid    |
+    +=====+=========+==============+
+    |``O``|Pyl      |Pyrrolysine   |
+    +-----+---------+--------------+
+    |``U``|Sec      |Selenocysteine|
+    +-----+---------+--------------+
+
+    The total of 22 amino acids listed above constitute the definite character set of
+    the ``Protein`` sequence type.
+
+    Additionally, the following four degenerate characters are defined, each of which
+    representing two or more amino acids:
 
     +-----+---------+------------+
     |Code |3-letter |Amino acids |
@@ -117,16 +130,15 @@ class Protein(GrammaredSequence):
 
     Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and ``.``.
 
-    Characters other than the above 27 are not allowed. If you intend to use
-    additional characters to represent non-canonical amino acids, such as ``U``
-    (Sec, Selenocysteine) and ``O`` (Pyl, Pyrrolysine), you may create a custom
-    alphabet using ``GrammaredSequence``. Directly modifying the alphabet of
-    ``Protein`` may break functions that rely on the IUPAC alphabet.
+    Characters other than the above 29 are not allowed. To include additional
+    characters, you may create a custom alphabet using :class:`GrammaredSequence`.
+    Directly modifying the alphabet of ``Protein`` may break functions that rely on the
+    IUPAC alphabet.
 
-    It should be noted that some functions do not support certain characters.
-    For example, the BLOSUM and PAM substitution matrices do not support ``J``
-    (Xle). In such circumstances, unsupported characters will be replaced with
-    ``X`` to represent any of the canonical amino acids.
+    It should be noted that some functions do not support certain valid characters. For
+    example, the BLOSUM and PAM substitution matrices do not contain ``J`` (Xle). In
+    such circumstances, unsupported characters will be replaced with the wildchard
+    character ``X`` to represent any of the definite amino acids.
 
     References
     ----------
