@@ -18,9 +18,13 @@ from ._sequence import Sequence
 
 def validate_chars(chars, attr, name):
     """Validate that all characters are length-1 strings."""
-    if any(not isinstance(char, str) or len(char) != 1 for char in chars):
+    if any(
+        not isinstance(char, str) or len(char) != 1 or not char.isascii()
+        for char in chars
+    ):
         raise TypeError(
-            f"`{attr}` must contain only single-character strings for class {name}."
+            f"`{attr}` must contain only single-character ASCII strings for class "
+            f"{name}."
         )
 
 
