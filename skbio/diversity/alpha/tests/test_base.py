@@ -14,6 +14,7 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import TreeNode
+from skbio.diversity import alpha_diversity
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
     goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
@@ -238,6 +239,15 @@ class BaseTests(TestCase):
         self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
         self.assertTrue(np.isnan(kempton_taylor_q([0, 0])))
+
+        # A single taxon has no quantile range: nan, not IndexError.
+        self.assertTrue(np.isnan(kempton_taylor_q([5])))
+        self.assertTrue(np.isnan(kempton_taylor_q([0, 5, 0])))
+
+        # One such sample must not abort a table-wide computation.
+        obs = alpha_diversity("kempton_taylor_q", [[5, 0, 0], [1, 2, 3]])
+        self.assertTrue(np.isnan(obs.iloc[0]))
+        self.assertTrue(np.isfinite(obs.iloc[1]))
 
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
