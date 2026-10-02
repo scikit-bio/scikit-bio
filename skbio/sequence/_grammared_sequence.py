@@ -245,7 +245,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
     You can add custom class properties and methods to perform specific operations. The
     following code lets one construct an RY sequence from a DNA sequence. Only the four
-    canonical nucleotides are recognized; otherwise, an error will be raised.
+    canonical nucleotides are recognized. Otherwise, an error will be raised.
 
     >>> class RYSequence(GrammaredSequence):
     ...     @classproperty
@@ -275,10 +275,10 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     **Extending existing sequence types**
 
     One may subclass an existing sequence type and modify its grammar and operations.
-    The following example creates a methylated DNA type by introducing a new definite
-    character: ``Z``, representing 5-methylcytosine (5mC). It also introduces methods
-    for demethylation of ``Z`` to ``C``, and for bisulfite treatment to preserve the
-    methylation state for DNA sequencing.
+    The following example creates a **methylated DNA** type by introducing a new
+    definite character: ``Z``, representing 5-methylcytosine (5mC). It also introduces
+    methods for demethylation of ``Z`` to ``C``, and for bisulfite treatment to
+    preserve the methylation state for DNA sequencing.
 
     >>> class MethylatedDNA(DNA):
     ...     @classproperty
@@ -495,7 +495,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         See Also
         --------
-        gap_char
+        gap_chars
 
         Notes
         -----
