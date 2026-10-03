@@ -18,6 +18,7 @@
 * Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
+* Fixed the Stockholm reader to forward extra keyword arguments, such as `lowercase`, to the sequence constructor, so that Stockholm files with lowercase characters can be read ([#1543](https://github.com/scikit-bio/scikit-bio/issues/1543)).
 
 
 ### Miscellaneous
