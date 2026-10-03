@@ -156,6 +156,20 @@ class TestGrammaredSequence(TestCase):
                 def definite_chars(cls):
                     return set("ABCX")
 
+    def test_noncanonical_chars_must_be_definite(self):
+        with self.assertRaisesRegex(
+            TypeError,
+            r"`noncanonical_chars` must be a subset of `definite_chars`",
+        ):
+            class GrammaredSequenceInvalid(GrammaredSequence):
+                @classproperty
+                def definite_chars(cls):
+                    return {"A"}
+
+                @classproperty
+                def noncanonical_chars(cls):
+                    return {"B"}
+
     def test_grammar_chars_len1_str(self):
         for attribute, value in (
             ("definite_chars", {"AB"}),

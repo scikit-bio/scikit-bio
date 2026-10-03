@@ -131,6 +131,12 @@ class GrammaredSequenceMeta(ABCMeta, type):
                     f"for class {name}."
                 )
 
+            if not set(cls.noncanonical_chars).issubset(cls.definite_chars):
+                raise TypeError(
+                    "`noncanonical_chars` must be a subset of `definite_chars` "
+                    f"for class {name}."
+                )
+
         return cls
 
 
