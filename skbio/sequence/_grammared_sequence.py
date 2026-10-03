@@ -64,11 +64,7 @@ class GrammaredSequenceMeta(ABCMeta, type):
             cls.default_gap_char = classproperty(default_gap_char)
 
         # Set degenerate chars based on map.
-        if (
-            "degenerate_map" in dct
-            and "degenerate_chars" not in dct
-            and "degenerate_map" not in cls.__abstractmethods__
-        ):
+        if "degenerate_map" not in cls.__abstractmethods__:
             degenerate_chars_ = set(cls.degenerate_map)
 
             def degenerate_chars(cls):
@@ -77,7 +73,7 @@ class GrammaredSequenceMeta(ABCMeta, type):
             cls.degenerate_chars = classproperty(degenerate_chars)
 
         # Set canonical chars based on definite and non-canonical chars.
-        if "canonical_chars" not in dct and not cls.__abstractmethods__:
+        if not cls.__abstractmethods__:
             canonical_chars_ = cls.definite_chars.difference(cls.noncanonical_chars)
 
             def canonical_chars(cls):

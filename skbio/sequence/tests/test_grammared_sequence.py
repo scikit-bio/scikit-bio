@@ -160,7 +160,6 @@ class TestGrammaredSequence(TestCase):
         for attribute, value in (
             ("definite_chars", {"AB"}),
             ("gap_chars", {"--"}),
-            ("degenerate_chars", {"XX"}),
             ("noncanonical_chars", {"AA"}),
         ):
             with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
@@ -522,6 +521,31 @@ class TestGrammaredSequence(TestCase):
         DynamicGrammaredSequence._definite_chars.add("D")
         DynamicGrammaredSequence._noncanonical_chars.add("A")
         self.assertEqual(DynamicGrammaredSequence.canonical_chars, set("ABC"))
+
+    def test_derived_chars_cannot_be_overridden(self):
+        class OverrideDerivedChars(GrammaredSequence):
+            @classproperty
+            def definite_chars(cls):
+                return set("ABC")
+
+            @classproperty
+            def noncanonical_chars(cls):
+                return set("C")
+
+            @classproperty
+            def degenerate_map(cls):
+                return {"X": set("AB")}
+
+            @classproperty
+            def canonical_chars(cls):
+                return set("ABC")
+
+            @classproperty
+            def degenerate_chars(cls):
+                return set("Y")
+
+        self.assertEqual(OverrideDerivedChars.canonical_chars, set("AB"))
+        self.assertEqual(OverrideDerivedChars.degenerate_chars, set("X"))
 
     def test_definite_chars(self):
         expected = set("ABCQ")
