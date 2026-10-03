@@ -10,8 +10,8 @@
 
 Analogous to the PERMANOVA GPU backend: it is taken when both distance matrices
 are resident on a matching GPU device and ``engine="numba"`` is requested (CUDA
-CuPy / PyTorch compile through ``numba.cuda``, ROCm CuPy / PyTorch through
-``numba.hip``).
+CuPy / PyTorch compile through ``numba_cuda_mlir.cuda`` or ``numba.cuda``, ROCm
+CuPy / PyTorch through ``numba.hip``).
 One thread block per permutation walks the upper triangle and accumulates the
 permuted Pearson correlation, reducing across the block in shared memory. The
 statistic and p-value are assembled on the host in the same RNG order as the
@@ -38,7 +38,8 @@ _kernels = {}  # backend name -> compiled kernel (built on first use)
 
 def _build_kernel(gpu):
     """Compile the permuted-Pearson kernel for ``gpu`` (a Numba GPU module)."""
-    from numba import float64 as nb_f64
+    # numpy's float64 rather than numba's, which numba-cuda-mlir does not accept.
+    nb_f64 = np.float64
 
     @gpu.jit
     def _mantel_r(n_dims, mat, perm_order, ym_norm, mul, add, out):  # pragma: no cover
@@ -198,9 +199,11 @@ def _run_mantel_gpu(gpu, x, y, permutations, seed, alternative, spearman=False):
     kernel = _get_kernel(_kernels, _build_kernel, gpu, _get_backend_name(xp))
     d_perm = gpu.to_device(perm_order)
     d_out = gpu.device_array(permutations + 1, dtype=np.float64)
-    # Xsrc and ym_norm are already on the device; the kernel reads them in place
-    # via their __cuda_array_interface__ (no host round-trip).
-    kernel[permutations + 1, _TPB](n, Xsrc, d_perm, ym_norm, mul, add, d_out)
+    # Xsrc and ym_norm are already on the device; as_cuda_array wraps them in place
+    # (no host round-trip), since numba-cuda-mlir does not take a tensor directly.
+    kernel[permutations + 1, _TPB](
+        n, gpu.as_cuda_array(Xsrc), d_perm, gpu.as_cuda_array(ym_norm), mul, add, d_out
+    )
     gpu.synchronize()
 
     stats = d_out.copy_to_host()

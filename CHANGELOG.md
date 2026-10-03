@@ -9,6 +9,7 @@
 * Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
 
 
 ### Bug Fixes
