@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import numpy.testing as npt
 
-from skbio.sequence import Sequence, DNA, Protein, SequenceLike, SubstitutionMatrix
+from skbio.sequence import Sequence, DNA, Protein, SubstitutionMatrix
 from skbio.alignment import TabularMSA
 from skbio.alignment._utils import (
     encode_sequences,
@@ -255,9 +255,6 @@ class UtilsTests(unittest.TestCase):
         ]
         _, _, gaps = encode_sequences(seqs, (1, -1), aligned=True)
         npt.assert_array_equal(gaps, [[False, True, False], [False, False, True]])
-
-    def test_sequence_like(self):
-        self.assertIsNotNone(SequenceLike)
 
     def test_encode_sequences_error(self):
         msg = "Sequences are of different types."

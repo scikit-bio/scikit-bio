@@ -314,6 +314,15 @@ class TestAlignPath(unittest.TestCase):
         npt.assert_array_equal(obs.lengths, [1, 1, 1, 1])
         npt.assert_array_equal(obs.states[0], [0, 6, 0, 1])
 
+        # arbitrary hashable symbols with the default gap symbol
+        aln = [
+            [("codon", "ATG"), "-", frozenset({"x"})],
+            [("codon", "ATG"), frozenset({"x"}), "-"],
+        ]
+        obs = AlignPath.from_aligned(aln)
+        npt.assert_array_equal(obs.lengths, [1, 1, 1])
+        npt.assert_array_equal(obs.states[0], [0, 1, 2])
+
         msg = "Sequence lengths do not match."
         with self.assertRaises(ValueError) as cm:
             _ = AlignPath.from_aligned(["A", "AA", "AAA"])

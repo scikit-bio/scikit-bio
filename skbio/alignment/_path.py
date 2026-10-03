@@ -17,8 +17,10 @@ from skbio._base import SkbioObject
 from skbio.util._decorator import classonlymethod
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Hashable, Iterable
     from numpy.typing import ArrayLike, NDArray
     from skbio.sequence import Sequence
+    from skbio.sequence._typing import SequenceLike
     from typing import Self
 
 
@@ -497,18 +499,22 @@ class AlignPath(SkbioObject):
         return res
 
     @classonlymethod
-    def from_aligned(cls, aln, gap_chars="-", starts=None) -> Self:
+    def from_aligned(
+        cls,
+        aln: Iterable[SequenceLike],
+        gap_chars: Iterable[Hashable] = "-",
+        starts: ArrayLike | None = None,
+    ) -> Self:
         r"""Create an alignment path from aligned sequences.
 
         Parameters
         ----------
-        aln : iterable of :class:`~skbio.sequence.Sequence`, str or sequence
-            Aligned sequences. Can be skbio sequences, strings or sequences of any
-            scalars.
-        gap_chars : str or container, optional
-            Characters that should be treated as gaps in aligned sequences. Default
-            is "-".
-        starts : array_like of int of shape (2,), optional
+        aln : iterable of sequence_like
+            Aligned sequences.
+        gap_chars : iterable of hashable, optional
+            Symbols that should be treated as gaps in aligned sequences. Default is
+            "-".
+        starts : array_like of int of shape (n_sequences,), optional
             Start positions of sequences. If omitted, will be all zeros.
 
         Returns
@@ -541,11 +547,12 @@ class AlignPath(SkbioObject):
         """
         from skbio.sequence import Sequence
 
+        gap_symbols = set(gap_chars)
         gaps = []
         for seq in aln:
             if isinstance(seq, Sequence):
                 seq = str(seq)
-            row = [x in gap_chars for x in seq]
+            row = [x in gap_symbols for x in seq]
             gaps.append(np.array(row, dtype=int))
         try:
             gaps = np.vstack(gaps)
