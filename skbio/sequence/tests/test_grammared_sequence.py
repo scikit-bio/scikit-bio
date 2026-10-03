@@ -6,13 +6,14 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from abc import abstractmethod
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 
-from skbio.sequence import GrammaredSequence
+from skbio.sequence import DNA, RNA, GrammaredSequence
 from skbio.util import classproperty
 from skbio.util import assert_data_frame_almost_equal
 from skbio.metadata import IntervalMetadata
@@ -58,7 +59,7 @@ class TestGrammaredSequence(TestCase):
     def test_default_gap_must_be_in_gap_chars(self):
         with self.assertRaisesRegex(
                 TypeError,
-                r"default_gap_char must be in gap_chars for class "
+                r"`default_gap_char` must be in `gap_chars` for class "
                 "GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
@@ -69,9 +70,8 @@ class TestGrammaredSequence(TestCase):
     def test_degenerates_must_expand_to_valid_definites(self):
         with self.assertRaisesRegex(
                 TypeError,
-                r"degenerate_map must expand only to characters included in "
-                "definite_chars for class "
-                "GrammaredSequenceInvalidDefaultGap"):
+                r"`degenerate_map` must expand only to characters included in "
+                "`definite_chars` for class GrammaredSequenceInvalidDefaultGap"):
 
             class GrammaredSequenceInvalidDefaultGap(ExampleGrammaredSequence):
                 @classproperty
@@ -85,7 +85,7 @@ class TestGrammaredSequence(TestCase):
     def test_gap_chars_and_degenerates_share(self):
         with self.assertRaisesRegex(
                 TypeError,
-                r"gap_chars and degenerate_chars must not share any characters"
+                r"`gap_chars` and `degenerate_chars` must not share any characters"
                 " for class GrammaredSequenceGapInDegenerateMap"):
 
             class GrammaredSequenceGapInDegenerateMap(
@@ -105,7 +105,7 @@ class TestGrammaredSequence(TestCase):
     def test_gap_chars_and_definites_share(self):
         with self.assertRaisesRegex(
             TypeError,
-            (r"gap_chars and definite_chars must not share any characters "
+            (r"`gap_chars` and `definite_chars` must not share any characters "
              "for class GrammaredSequenceGapInDefiniteMap")):
 
             class GrammaredSequenceGapInDefiniteMap(
@@ -122,10 +122,29 @@ class TestGrammaredSequence(TestCase):
                 def gap_chars(cls):
                     return set(".-A")
 
+    def test_wildcard_char_in_alphabet_and_nongap(self):
+        for wildcard_char in ("-", "X"):
+            with self.assertRaisesRegex(
+                TypeError,
+                r"`wildcard_char` must be a definite or degenerate character "
+                r"for class InvalidWildcard",
+            ):
+                type(
+                    "InvalidWildcard",
+                    (GrammaredSequence,),
+                    {
+                        "definite_chars": classproperty(lambda cls: {"A"}),
+                        "gap_chars": classproperty(lambda cls: {"-"}),
+                        "wildcard_char": classproperty(
+                            lambda cls, wildcard_char=wildcard_char: wildcard_char
+                        ),
+                    },
+                )
+
     def test_degenerates_and_definites_share(self):
         with self.assertRaisesRegex(
             TypeError,
-            (r"degenerate_chars and definite_chars must not share any "
+            (r"`degenerate_chars` and `definite_chars` must not share any "
              "characters for class GrammaredSequenceInvalid")):
 
             class GrammaredSequenceInvalid(ExampleGrammaredSequence):
@@ -137,6 +156,71 @@ class TestGrammaredSequence(TestCase):
                 def definite_chars(cls):
                     return set("ABCX")
 
+    def test_noncanonical_chars_must_be_definite(self):
+        with self.assertRaisesRegex(
+            TypeError,
+            r"`noncanonical_chars` must be a subset of `definite_chars`",
+        ):
+            class GrammaredSequenceInvalid(GrammaredSequence):
+                @classproperty
+                def definite_chars(cls):
+                    return {"A"}
+
+                @classproperty
+                def noncanonical_chars(cls):
+                    return {"B"}
+
+    def test_grammar_chars_len1_str(self):
+        for attribute, value in (
+            ("definite_chars", {"AB"}),
+            ("gap_chars", {"--"}),
+            ("degenerate_chars", {"XX"}),
+            ("canonical_chars", {"A"}),
+            ("noncanonical_chars", {"AA"}),
+        ):
+            with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
+                type(
+                    "InvalidCharacters",
+                    (GrammaredSequence,),
+                    {
+                        "definite_chars": classproperty(
+                            lambda cls: {"A"}
+                        ),
+                        attribute: classproperty(lambda cls, value=value: value),
+                    },
+                )
+
+        for degenerate_map, attribute in (
+            ({"XX": {"A"}}, "degenerate_map keys"),
+            ({"X": {"AA"}}, "degenerate_map values"),
+        ):
+            with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
+                type(
+                    "InvalidDegenerateMap",
+                    (GrammaredSequence,),
+                    {
+                        "definite_chars": classproperty(lambda cls: {"A"}),
+                        "degenerate_map": classproperty(
+                            lambda cls, degenerate_map=degenerate_map: degenerate_map
+                        ),
+                    },
+                )
+
+        for attribute, value in (
+            ("default_gap_char", "--"),
+            ("wildcard_char", "XX"),
+        ):
+            with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
+                type(
+                    "InvalidCharacter",
+                    (GrammaredSequence,),
+                    {
+                        "definite_chars": classproperty(lambda cls: {"A"}),
+                        "gap_chars": classproperty(lambda cls: {"-"}),
+                        attribute: classproperty(lambda cls, value=value: value),
+                    },
+                )
+
     def test_instantiation_with_no_implementation(self):
         class GrammaredSequenceSubclassNoImplementation(GrammaredSequence):
             pass
@@ -146,7 +230,92 @@ class TestGrammaredSequence(TestCase):
 
         self.assertIn("abstract class", str(cm.exception))
         self.assertIn("definite_chars", str(cm.exception))
-        self.assertIn("degenerate_map", str(cm.exception))
+
+    def test_abstract_subclass_defers_grammar_validation(self):
+        class AbstractSequence(GrammaredSequence):
+            @classproperty
+            def definite_chars(cls):
+                return set("A")
+
+            @classproperty
+            def gap_chars(cls):
+                return set("A")
+
+            @classproperty
+            @abstractmethod
+            def wildcard_char(cls):
+                pass
+
+        self.assertIn("wildcard_char", AbstractSequence.__abstractmethods__)
+
+    def test_init_with_default_grammar_properties(self):
+        class RYSequence(GrammaredSequence):
+            @classproperty
+            def definite_chars(cls):
+                return set("RY")
+
+        seq = RYSequence("YRYRRYRY")
+
+        self.assertEqual(str(seq), "YRYRRYRY")
+        self.assertEqual(RYSequence.degenerate_map, {})
+        self.assertIsNone(RYSequence.default_gap_char)
+        self.assertEqual(RYSequence.gap_chars, set())
+
+    def test_subclass_with_extended_definite_chars(self):
+        DNA("ACG")
+
+        class MethylatedDNA(DNA):
+            @classproperty
+            def definite_chars(cls):
+                return DNA.definite_chars | {"Z"}
+
+            @classproperty
+            def complement_map(cls):
+                return DNA.complement_map | {"Z": "G"}
+
+            def demethylate(self):
+                chars = np.asarray(self)
+                return DNA(self.replace(chars == b"Z", "C"))
+
+            def transcribe(self):
+                chars = np.asarray(self)
+                converted = self.replace(chars == b"Z", "C")
+                return DNA.transcribe(converted)
+
+        seq = MethylatedDNA("ACZCG")
+
+        self.assertEqual(str(seq), "ACZCG")
+        self.assertIn(ord("Z"), MethylatedDNA._definite_codes)
+        self.assertEqual(seq.demethylate(), DNA("ACCCG"))
+        self.assertEqual(seq.transcribe(), RNA("ACCCG"))
+
+    def test_default_gap_char_from_gap_chars(self):
+        class GappedSequence(GrammaredSequence):
+            @classproperty
+            def definite_chars(cls):
+                return set("RY")
+
+            @classproperty
+            def gap_chars(cls):
+                return set(".-")
+
+        self.assertEqual(GappedSequence.default_gap_char, "-")
+        self.assertIn("default_gap_char", GappedSequence.__dict__)
+
+    def test_default_gap_char_with_empty_gap_chars(self):
+        with self.assertRaisesRegex(
+            TypeError,
+            r"`default_gap_char` must be None when `gap_chars` is empty",
+        ):
+
+            class GrammaredSequenceInvalidDefaultGap(GrammaredSequence):
+                @classproperty
+                def definite_chars(cls):
+                    return set("RY")
+
+                @classproperty
+                def default_gap_char(cls):
+                    return "-"
 
     def test_init_default_parameters(self):
         seq = ExampleGrammaredSequence('.-ABCXYZ')
@@ -296,6 +465,10 @@ class TestGrammaredSequence(TestCase):
         definite_char_codes = set(ExampleGrammaredSequence._definite_codes)
         self.assertEqual(definite_char_codes, set([65, 66, 67, 81]))
 
+    def test_canonical_codes(self):
+        canonical_char_codes = set(ExampleGrammaredSequence._canonical_codes)
+        self.assertEqual(canonical_char_codes, set([65, 66, 67]))
+
     def test_gap_codes(self):
         gap_codes = set(ExampleGrammaredSequence._gap_codes)
         self.assertEqual(gap_codes, set([45, 46]))
@@ -334,6 +507,16 @@ class TestGrammaredSequence(TestCase):
 
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
+
+    def test_canonical_chars(self):
+        expected = set("ABC")
+        self.assertIs(type(ExampleGrammaredSequence.canonical_chars), set)
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
+        self.assertEqual(ExampleGrammaredSequence("").canonical_chars, expected)
+
+        # The returned set is a copy, so mutating it does not alter the grammar.
+        ExampleGrammaredSequence.canonical_chars.add("Q")
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
 
     def test_definite_chars(self):
         expected = set("ABCQ")
@@ -772,10 +955,13 @@ class TestGrammaredSequence(TestCase):
             seq.to_definites("P")
 
         # test that an invalid wildcard (not a string) will throw an error
-        ExampleGrammaredSequence.wildcard_char = 1
+        class NoWildcardSequence(ExampleGrammaredSequence):
+            @classproperty
+            def wildcard_char(cls):
+                return None
+
         with self.assertRaises(ValueError):
-            seq.to_definites()
-        ExampleGrammaredSequence.wildcard_char = 'W'
+            NoWildcardSequence("ABCQXYZ").to_definites()
 
         # test that nonsense input for 'to' will throw error
         with self.assertRaises(ValueError):
@@ -831,6 +1017,10 @@ class TestGrammaredSequence(TestCase):
         self.assertIsNotNone(cls._degen_nonca_hash)
         self.assertEqual(self._chars_of(cls._canonical_hash), "ABC")
 
+    def test_canonical_chars_without_noncanonical_chars(self):
+        cls = self._no_noncanonical_class()
+        self.assertEqual(cls.canonical_chars, cls.definite_chars)
+
     def test_to_definites_without_noncanonical_chars(self):
         cls = self._no_noncanonical_class()
         seq = cls("ABCXY-")
@@ -843,7 +1033,7 @@ class TestGrammaredSequence(TestCase):
     def test_noncanonical_chars(self):
         self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
         self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)
-    
+
     def test_wildcard_char(self):
         exp = None
         self.assertEqual(GrammaredSequence.wildcard_char, exp)

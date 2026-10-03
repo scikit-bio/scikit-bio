@@ -5,13 +5,25 @@
 ### Features
 
 * `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
-* Added instruction on optionally zero-copy data sharing between scikit-bio and BioPython sequences ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617)).
+* Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars` ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
+* Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
+* Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 
 
 ### Bug Fixes
 
+* Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
-* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array, despite `Sequence` and downstream operations being built under the assumption of ASCII codes (0-127). By default, construction now validates 7-bit ASCII and copies mutable external storage so later upstream mutation cannot violate this invariant. Added `validate` and NumPy-style tri-state `copy` parameters to let expert callers explicitly skip validation and/or require zero-copy construction. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+
+
+### Miscellaneous
+
+* `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
 
 
 ## Version 0.7.4
@@ -1268,7 +1280,7 @@ This is a pre-alpha release. At this stage, major backwards-incompatible API cha
 
 ### Features
 
-* Added Python implementations of Smith-Waterman and Needleman-Wunsch alignment as ``skbio.core.alignment.pairwise.local_pairwise_align`` and ``skbio.core.alignment.pairwise.global_pairwise_align``. These are much slower than native C implementations (e.g., ``skbio.core.alignment.local_pairwise_align_ssw``) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as they’re simple to experiment with.
+* Added Python implementations of Smith-Waterman and Needleman-Wunsch alignment as ``skbio.core.alignment.pairwise.local_pairwise_align`` and ``skbio.core.alignment.pairwise.global_pairwise_align``. These are much slower than native C implementations (e.g., ``skbio.core.alignment.local_pairwise_align_ssw``) and as a result raise an ``EfficencyWarning`` when called, but are included as they serve as useful educational examples as theyâ€™re simple to experiment with.
 * Added ``skbio.core.diversity.beta.pw_distances`` and ``skbio.core.diversity.beta.pw_distances_from_table``. These provide convenient access to the ``scipy.spatial.distance.pdist`` *beta diversity* metrics from within scikit-bio. The ``skbio.core.diversity.beta.pw_distances_from_table`` function will only be available temporarily, until the ``biom.table.Table`` object is merged into scikit-bio (see [#489](https://github.com/scikit-bio/scikit-bio/issues/489)), at which point ``skbio.core.diversity.beta.pw_distances`` will be updated to use that.
 * Added ``skbio.core.alignment.StockholmAlignment``, which provides support for parsing [Stockholm-formatted alignment files](http://sonnhammer.sbc.su.se/Stockholm.html) and working with those alignments in the context RNA secondary structural information.
 * Added ``skbio.core.tree.majority_rule`` function for computing consensus trees from a list of trees.

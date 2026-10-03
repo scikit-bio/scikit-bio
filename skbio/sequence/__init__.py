@@ -140,15 +140,24 @@ The three common biological sequence types: ``DNA``, ``RNA`` and ``Protein``, ar
 :class:`grammared sequences <GrammaredSequence>`. That is, each of them has a defined
 alphabet (character set), which typically consists of:
 
-- :attr:`definite characters <GrammaredSequence.definite_chars>`, such as ``ACGT``,
-  which represent the four canonical nucleotides in a DNA sequence,
-- :attr:`degenerate characters <GrammaredSequence.degenerate_chars>`, such as ``R``,
-  which represents ``A`` or ``G``,
-- :attr:`gap character(s) <GrammaredSequence.gap_chars>`, such as ``-``, and
-- a :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as ``N``, which
-  is also a degenerate character.
+- :attr:`definite characters <GrammaredSequence.definite_chars>`, each representing a
+  single sequence state. They include:
 
-Use of any of these characters in the sequence data is valid. For example:
+  - :attr:`canonical characters <GrammaredSequence.canonical_chars>`, such as ``A``,
+    ``C``, ``G`` and ``T`` in DNA sequences, which represent the conventional core
+    alphabet.
+  - :attr:`non-canonical characters <GrammaredSequence.noncanonical_chars>`, such as
+    ``O`` and ``U`` in protein sequences, which are definite but outside the
+    conventional core alphabet.
+- :attr:`degenerate characters <GrammaredSequence.degenerate_chars>`, such as ``R``,
+  which represents ``A`` or ``G`` in nucleotide sequences.
+- :attr:`gap character(s) <GrammaredSequence.gap_chars>`, such as ``-``,
+- a single :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as ``N``
+  in nucleotide sequences.
+- Type-specific characters, such as the :attr:`stop character <Protein.stop_chars>`
+  ``*`` in protein sequences.
+
+Use of any of these characters in the sequence is valid. For example:
 
 >>> seq = DNA('GCCRCCATGG', metadata={'name': 'Kozak consensus sequence'})
 >>> seq
@@ -602,11 +611,72 @@ See :class:`Sequence` for details. A BioPython ``MutableSeq`` can be converted i
 scikit-bio sequence using the same approach, but the data will be copied. Calling
 ``bytes()`` on undefined or partially defined BioPython sequences will raise an error.
 
+Adding ``validate=False`` can further improve performance, if you know the input only
+contains valid characters. See :class:`Sequence` for details.
+
+>>> sk_seq = DNA(bytes(bp_seq), validate=False)  # doctest: +SKIP
+
 Vice versa, a scikit-bio ``Sequence`` can be converted into a BioPython ``Seq`` as
 follows. This conversion does copy the underlying sequence data.
 
 >>> sk_seq = DNA('GAGTCT')  # doctest: +SKIP
 >>> bp_seq = Seq(sk_seq.values.tobytes())  # doctest: +SKIP
+
+**Biotite**
+
+Biotite stores sequence data as an array of indices in a defined alphabet, which differs
+from scikit-bio and therefore the two packages cannot directly share sequence data in
+the memory. However, conversion can be performed efficiently using the following method
+without round-tripping through Python strings.
+
+scikit-bio provides :meth:`Sequence.to_indices`, which converts sequence characters into
+indices in a specified alphabet. This matches Biotite's sequence representation. For
+example, a scikit-bio sequence can be converted into a Biotite ``GeneralSequence``
+object as follows:
+
+>>> from biotite.sequence import GeneralSequence, LetterAlphabet  # doctest: +SKIP
+>>> sk_seq = Sequence('a_good_day')  # doctest: +SKIP
+>>> indices, alphabet = sk_seq.to_indices()  # doctest: +SKIP
+>>> bt_seq = GeneralSequence(LetterAlphabet(alphabet))  # doctest: +SKIP
+>>> bt_seq.code = indices  # doctest: +SKIP
+>>> print(bt_seq)  # doctest: +SKIP
+a_good_day
+
+This method requires that all characters are printable and non-whitespace. Otherwise,
+you need to replace ``LetterAlphabet`` with ``Alphabet``.
+
+Pre-defined sequence types can also be matched between the two packages. For example,
+a scikit-bio DNA sequence without gaps can be converted into a Biotite
+``NucleotideSequence`` with:
+
+>>> from biotite.sequence import NucleotideSequence  # doctest: +SKIP
+>>> sk_seq = DNA('ACGGTC')  # doctest: +SKIP
+>>> bt_seq = NucleotideSequence(ambiguous=True)  # doctest: +SKIP
+>>> bt_seq.code = sk_seq.to_indices(bt_seq.alphabet.get_symbols())  # doctest: +SKIP
+>>> bt_seq  # doctest: +SKIP
+NucleotideSequence("ACGGTC", ambiguous=True)
+
+You may replace ``ambiguous=True`` with ``False`` if you know the sequence doesn't
+contain degenerate characters (can be checked using ``sk_seq.has_degenerates()``).
+
+Converting a Biotite sequence into a scikit-bio one requires decoding alphabet indices
+back into characters. The following method (available since Biotite 1.7) makes this
+process efficient:
+
+>>> bt_seq = NucleotideSequence('ACGGTC')  # doctest: +SKIP
+>>> chars = bt_seq.alphabet.decode_multiple_into_bytes(bt_seq.code)  # doctest: +SKIP
+>>> sk_seq = DNA(chars, validate=False, copy=False)  # doctest: +SKIP
+>>> sk_seq  # doctest: +SKIP
+DNA
+--------------------------
+Stats:
+    length: 6
+    has gaps: False
+    has degenerates: False
+    has definites: True
+    GC-content: 66.67%
+--------------------------
+0 ACGGTC
 
 """  # noqa: D205, D415
 

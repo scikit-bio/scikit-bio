@@ -247,23 +247,13 @@ class PairAlignTests(unittest.TestCase):
         class CustomSequence(GrammaredSequence):
             @classproperty
             @overrides(GrammaredSequence)
-            def gap_chars(cls):
-                return set('^$')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '^'
-
-            @classproperty
-            @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set('WXYZ')
 
             @classproperty
             @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
+            def gap_chars(cls):
+                return set('^')
 
         seq1 = CustomSequence("WXYZ")
         seq2 = CustomSequence("WXYYZZ")
