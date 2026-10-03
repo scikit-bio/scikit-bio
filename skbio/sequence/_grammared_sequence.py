@@ -29,7 +29,15 @@ def validate_chars(chars, attr, name):
 
 
 class GrammaredSequenceMeta(ABCMeta, type):
+    _derived_attrs = frozenset({"canonical_chars", "degenerate_chars"})
+
     def __new__(mcs, name, bases, dct):
+        if any(isinstance(base, GrammaredSequenceMeta) for base in bases):
+            specified = mcs._derived_attrs.intersection(dct)
+            if specified:
+                attrs = ", ".join(f"`{attr}`" for attr in sorted(specified))
+                raise TypeError(f"{attrs} must not be defined by class {name}.")
+
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
         # Grammar-derived caches must not be inherited by subclasses.

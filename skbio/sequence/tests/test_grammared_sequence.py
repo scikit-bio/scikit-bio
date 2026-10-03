@@ -161,6 +161,7 @@ class TestGrammaredSequence(TestCase):
             ("definite_chars", {"AB"}),
             ("gap_chars", {"--"}),
             ("degenerate_chars", {"XX"}),
+            ("canonical_chars", {"A"}),
             ("noncanonical_chars", {"AA"}),
         ):
             with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
