@@ -150,11 +150,10 @@ alphabet (character set), which typically consists of:
     ``O`` and ``U`` in protein sequences, which are definite but outside the
     conventional core alphabet.
 - :attr:`degenerate characters <GrammaredSequence.degenerate_chars>`, such as ``R``,
-  which represents ``A`` or ``G`` in nucleotide sequences. They may include:
-
-  - a single :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as
-    ``N`` in nucleotide sequences.
+  which represents ``A`` or ``G`` in nucleotide sequences.
 - :attr:`gap character(s) <GrammaredSequence.gap_chars>`, such as ``-``,
+- a single :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as ``N``
+  in nucleotide sequences.
 - Type-specific characters, such as the :attr:`stop character <Protein.stop_chars>`
   ``*`` in protein sequences.
 
