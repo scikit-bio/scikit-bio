@@ -148,6 +148,7 @@ MY_XREF_ALIASES = {
     "Table": "skbio.table.Table",
     "array_like": ":ref:`array-like <array_like>`",
     "table_like": ":ref:`table-like <table_like>`",
+    "sequence_like": ":ref:`sequence-like <sequence_like>`",
     "formula": "`formula <https://patsy.readthedocs.io/en/latest/formulas.html>`__",
 }
 

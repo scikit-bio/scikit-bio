@@ -16,16 +16,11 @@ from numpy.typing import NDArray
 
 from skbio.alignment import TabularMSA, AlignPath
 from skbio.sequence import Sequence, GrammaredSequence, SubstitutionMatrix
+from skbio.sequence._typing import SequenceLike
 from skbio.sequence._alphabet import (
     _encode_alphabet,
     _alphabet_to_hashes,
     _indices_in_observed,
-)
-
-
-# This could be exposed as a public API.
-SequenceLike: TypeAlias = (
-    Sequence | str | bytes | Iterable[str | bytes | int | float | bool] | NDArray
 )
 
 
@@ -57,7 +52,7 @@ def encode_sequences(
 
     Parameters
     ----------
-    seqs : iterable of Sequence, str, or sequence of scalar
+    seqs : iterable of sequence_like
         Input sequences.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Substitution scoring method. Can be two numbers (match, mismatch), a
@@ -101,8 +96,12 @@ def encode_sequences(
 
     """
     # Determine type of sequences. They can be skbio sequences (grammared or not),
-    # raw strings or any iterables of scalars. Heterogeneous sequences are not allowed.
+    # raw strings or sequence-like objects. Heterogeneous sequences are not allowed.
     seqtype = _check_seqtype(seqs)
+    if issubclass(seqtype, np.ndarray):
+        for seq in seqs:
+            if seq.ndim != 1:
+                raise ValueError("Sequence-like NumPy arrays must be one-dimensional.")
     if issubclass(seqtype, GrammaredSequence):
         is_sequence = has_grammar = True
     else:
@@ -166,7 +165,7 @@ def encode_sequences(
             else:
                 gap_codes = list(gap_chars)
 
-        gaps = _mask_gaps(seqs, gap_codes)
+        gaps = _mask_gaps(seqs, gap_codes, is_ascii)
 
     # Index sequences according to a given substitution matrix.
     if is_submat:
@@ -193,8 +192,8 @@ def encode_sequences(
         if is_ascii:
             key = seqtype if has_grammar else "ascii"
         else:
-            seqs, uniq = _indices_in_observed(seqs)
-            key = uniq.size
+            seqs, alphabet = _indices_in_observed(seqs)
+            key = len(alphabet)
         seqs, submat = prep_identity_matrix(seqs, key, match, mismatch)
 
     if not_empty:
@@ -406,12 +405,24 @@ def _check_seqtype(seqs: Iterable[SequenceLike]) -> type[SequenceLike]:
     return dtype
 
 
-def _mask_gaps(seqs, gap_codes):
+def _mask_gaps(seqs, gap_codes, is_ascii):
     """Mask gap positions in aligned sequences."""
-    if isinstance(seqs[0], str):
+    if is_ascii:
         gaps = [np.isin(list(x), gap_codes) for x in seqs]
     else:
-        gaps = [np.isin(x, gap_codes) for x in seqs]
+        gap_codes = set(gap_codes)
+        gaps = []
+        for seq_idx, seq in enumerate(seqs):
+            mask = np.empty(len(seq), dtype=bool)
+            for pos_idx, symbol in enumerate(seq):
+                try:
+                    mask[pos_idx] = symbol in gap_codes
+                except TypeError:
+                    raise TypeError(
+                        f"Sequence {seq_idx + 1} contains an unhashable symbol at "
+                        f"position {pos_idx}: {type(symbol).__name__}."
+                    ) from None
+            gaps.append(mask)
     try:
         return np.vstack(gaps)
     except ValueError:
@@ -444,7 +455,19 @@ def _map_chars(seqs, mapping, wild=None):
 
     """
     wild = -1 if wild is None else mapping.get(wild, -1)
-    return [np.array([mapping.get(x, wild) for x in y], dtype=np.intp) for y in seqs]
+    encoded = []
+    for seq_idx, seq in enumerate(seqs):
+        indices = np.empty(len(seq), dtype=np.intp)
+        for pos_idx, symbol in enumerate(seq):
+            try:
+                indices[pos_idx] = mapping.get(symbol, wild)
+            except TypeError:
+                raise TypeError(
+                    f"Sequence {seq_idx + 1} contains an unhashable symbol at "
+                    f"position {pos_idx}: {type(symbol).__name__}."
+                ) from None
+        encoded.append(indices)
+    return encoded
 
 
 def _check_indices(seqs, gaps=None):

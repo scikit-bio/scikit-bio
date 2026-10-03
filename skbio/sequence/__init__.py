@@ -8,12 +8,6 @@ molecular sequences based on IUPAC-defined alphabets (:class:`DNA`, :class:`RNA`
 :class:`Protein`), sequences based on custom alphabets (:class:`GrammaredSequence`),
 and generic/non-biological sequences with no alphabet restrictions (:class:`Sequence`).
 
-Sequence data are represented by ASCII codes (0-127) and stored as immutable, contiguous
-arrays of bytes for efficient operations. Sequence objects can optionally carry metadata
-about the whole record, individual positions, and intervals describing features such as
-genes, domains, and other annotated regions. Keeping sequence data and annotations
-together facilitates biologically meaningful analyses within scikit-bio.
-
 Additionally, this module provides the :class:`GeneticCode` class, which translates DNA
 or RNA sequences into protein sequences, and the :class:`SubstitutionMatrix` class,
 which stores scores of substitutions between sequence characters. Submodule
@@ -27,6 +21,11 @@ scikit-bio.
 
 Sequence types
 --------------
+
+Sequence data are represented by ASCII codes (0-127) and stored as immutable, contiguous
+arrays of bytes for efficient operations. Sequence objects can optionally carry metadata
+about the whole record, individual positions, and intervals describing features such as
+genes, domains, and other annotated regions.
 
 .. autosummary::
    :toctree: generated/
@@ -73,6 +72,19 @@ Abstract classes
    :toctree: generated/
 
    NucleotideMixin
+
+   
+.. _sequence_like:
+
+Sequence-like formats
+---------------------
+
+A sequence-like object is a finite, ordered sequence of hashable symbols, including
+scikit-bio :class:`Sequence` or its subclasses, str, bytes/bytearray, Python sequences
+(such as tuple/list), and 1-D NumPy arrays. Symbols are not limited to biological
+characters, but can be numbers, words, tuples, or other hashable objects. Supporting
+scikit-bio functions such as :func:`~skbio.alignment.pair_align` can consume these
+inputs directly without converting them to ``Sequence`` objects.
 
 
 .. |sequence_tutorial| replace:: **Tutorial**

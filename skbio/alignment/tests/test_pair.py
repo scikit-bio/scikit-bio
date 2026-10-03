@@ -189,6 +189,26 @@ class PairAlignTests(unittest.TestCase):
         self.assertEqual(obs.score, 3)
         self.assertEqual(obs.paths[0].to_cigar(), "1I3M1I")
 
+    def test_pair_align_hashable_symbols(self):
+        """Align sequences containing arbitrary hashable symbols."""
+        seq1 = [("codon", "ATG"), None, frozenset({"x"})]
+        seq2 = [("codon", "ATG"), frozenset({"x"})]
+        result = pair_align(seq1, seq2, gap_cost=0, max_paths=0)
+        self.assertEqual(result.score, 2)
+
+        alphabet = ["abc", b"xyz", None, frozenset("x")]
+        submat = SubstitutionMatrix(
+            alphabet,
+            [[0, 1, 2, 3], [1, 0, 4, 5], [2, 4, 0, 6], [3, 5, 6, 0]],
+        )
+        result = pair_align(
+            ["abc", None, frozenset("x")],
+            [b"xyz", None, frozenset("x")],
+            sub_score=submat,
+            max_paths=0,
+        )
+        self.assertEqual(result.score, 10)
+
         # one gap
         obs = pair_align("CGT", "ACGTA")
         self.assertEqual(obs.score, 3)
