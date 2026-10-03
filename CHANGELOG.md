@@ -84,6 +84,10 @@
 * `ancombc` now returns an `ANCOMBCResult` object instead of a DataFrame or tuple of two. The primary table can be accessed through `.result` or simply the object itself. This largely preserves the behavior when the global test is not requested (without specifying `grouping`). However, the global test is now deferred to `ANCOMBCResult.global_test()` (see also a relevant bug fix above). The `Log2(FC)` column is now named `Log(FC)` to reflect its natural-log scale ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
 
 
+### Miscellaneous
+
+* Clarified the error message raised when an `Embedding` does not have one row per id. The message now states "The number of rows in the embedding (X) must match the number of ids (Y).", and `SequenceEmbedding`/`ProteinEmbedding` report "characters in the sequence" instead of "ids". The `ids` parameter is also better documented ([#2494](https://github.com/scikit-bio/scikit-bio/pull/2494)).
+
 ## Version 0.7.3
 
 ### Features

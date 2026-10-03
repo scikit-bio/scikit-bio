@@ -48,7 +48,10 @@ class EmbeddingTests(TestCase):
             Embedding(self.emb, self.seq).__str__()
 
     def test_assert_length(self):
-        msg = "The embedding (62) must have the same length as the ids (63)."
+        msg = (
+            "The number of rows in the embedding (62) must match the number "
+            "of ids (63)."
+        )
         with self.assertRaises(ValueError) as cm:
             Embedding(self.emb, self.seq + "A")
         self.assertEqual(str(cm.exception), msg)
@@ -99,7 +102,10 @@ class SequenceEmbeddingTests(TestCase):
         self.assertTupleEqual(p_emb.embedding.shape, (62, 10))
 
     def test_assert_length(self):
-        msg = "The embedding (62) must have the same length as the ids (63)."
+        msg = (
+            "The number of rows in the embedding (62) must match the number "
+            "of characters in the sequence (63)."
+        )
         with self.assertRaises(ValueError) as cm:
             SequenceEmbedding(self.emb, self.seq + "A")
         self.assertEqual(str(cm.exception), msg)
