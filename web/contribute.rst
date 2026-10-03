@@ -177,16 +177,16 @@ When done, activate the environment::
 
    Then install dependencies in the environment::
 
-       pip install -r ci/requirements.txt -r ci/requirements.test.txt -r ci/requirements.lint.txt -r ci/requirements.doc.txt
+       uv sync --group dev
 
 4. Install scikit-bio from source code::
 
-    pip install --no-deps -e .
+    uv pip install --no-deps -e .
 
-This will install scikit-bio to the current conda environment. After this, you can use scikit-bio like a normal user (e.g., you can do ``import skbio`` in Python code). When you edit the code in the this directory, the changes will be immediately reflected as you use the software.
+This will install scikit-bio to the current uv environment. After this, you can use scikit-bio like a normal user (e.g., you can do ``import skbio`` in Python code). When you edit the code in the this directory, the changes will be immediately reflected as you use the software.
 
 .. note::
-    
+
    If you run into OpenMP compile issues (or have other reasons to avoid OpenMP), you can avoid it by setting ``DISABLE_OPENMP=1`` in the build environment.
 
 5. Test the installation::

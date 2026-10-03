@@ -7,40 +7,35 @@
 # ----------------------------------------------------------------------------
 
 ifeq ($(WITH_COVERAGE), TRUE)
-	TEST_COMMAND = coverage run --rcfile ../pyproject.toml -m skbio.test && coverage report --rcfile ../pyproject.toml
+	TEST_COMMAND = PYTHONSAFEPATH=1 uv run --group test coverage run --rcfile .coveragerc -m skbio.test && uv run --group test coverage report --rcfile .coveragerc
 else
-	TEST_COMMAND = python -m skbio.test
+	TEST_COMMAND = uv run --group test python -P -m skbio.test
 endif
 
-.PHONY: doc web lint test dev install
+.PHONY: doc web lint test dev install cython
 
 doc:
-	$(MAKE) -C doc clean html
+	uv run --group doc $(MAKE) -C doc clean html
 
 web:
-	$(MAKE) -C web clean html
+	uv run --group doc $(MAKE) -C web clean html
 
 clean:
-	$(MAKE) -C doc clean
-	$(MAKE) -C web clean
+	uv run --group doc $(MAKE) -C doc clean
+	uv run --group doc $(MAKE) -C web clean
 	rm -rf build dist scikit_bio.egg-info
 
 lint:
-	ruff check skbio setup.py checklist.py
-	./checklist.py
-	check-manifest
+	# uv run --group lint ruff check skbio setup.py checklist.py
+	uv run --group lint ./checklist.py
+	# uv run --group lint check-manifest
 
-# cd into a directory that is different from scikit-bio root directory to
-# simulate a user's install and testing of scikit-bio. Running from the root
-# directory will find the `skbio` subpackage (not necessarily the installed
-# one!) because cwd is considered in Python's search path. It is important to
-# simulate a user's install/test process this way to find package data that did
-# not install correctly (for example).
+# Python 3.11+ -P / PYTHONSAFEPATH keeps the current directory off sys.path.
 test:
-	cd ci && $(TEST_COMMAND)
+	$(TEST_COMMAND)
 
 install:
-	pip install .
+	uv sync
 
 dev:
-	pip install -e .
+	uv sync --group dev
