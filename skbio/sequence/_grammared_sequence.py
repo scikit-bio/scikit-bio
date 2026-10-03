@@ -63,24 +63,6 @@ class GrammaredSequenceMeta(ABCMeta, type):
 
             cls.default_gap_char = classproperty(default_gap_char)
 
-        # Set degenerate chars based on map.
-        if "degenerate_map" not in cls.__abstractmethods__:
-            degenerate_chars_ = set(cls.degenerate_map)
-
-            def degenerate_chars(cls):
-                return set(degenerate_chars_)
-
-            cls.degenerate_chars = classproperty(degenerate_chars)
-
-        # Set canonical chars based on definite and non-canonical chars.
-        if not cls.__abstractmethods__:
-            canonical_chars_ = cls.definite_chars.difference(cls.noncanonical_chars)
-
-            def canonical_chars(cls):
-                return set(canonical_chars_)
-
-            cls.canonical_chars = classproperty(canonical_chars)
-
         # Only perform metaclass checks when all attributes are concrete.
         if not cls.__abstractmethods__:
             validate_chars(cls.gap_chars, "gap_chars", name)
@@ -471,8 +453,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        This property should not be defined. It is automatically populated during class
-        creation.
+        This property is derived from ``degenerate_chars``, ``definite_chars``, and
+        ``gap_chars``.
 
         """
         return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
@@ -539,8 +521,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        This property should not be defined. It is automatically populated from
-        ``degenerate_map`` during class creation.
+        This property is derived from ``degenerate_map``.
 
         """
         return set(cls.degenerate_map)
@@ -602,8 +583,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        This property should not be defined. It is automatically populated by excluding
-        ``noncanonical_chars`` from ``definite_chars`` during class creation.
+        This property is derived by excluding ``noncanonical_chars`` from
+        ``definite_chars``.
 
         See Also
         --------

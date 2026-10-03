@@ -160,6 +160,7 @@ class TestGrammaredSequence(TestCase):
         for attribute, value in (
             ("definite_chars", {"AB"}),
             ("gap_chars", {"--"}),
+            ("degenerate_chars", {"XX"}),
             ("noncanonical_chars", {"AA"}),
         ):
             with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
@@ -465,7 +466,6 @@ class TestGrammaredSequence(TestCase):
         expected = set("WXYZ")
         self.assertIs(type(ExampleGrammaredSequence.degenerate_chars), set)
         self.assertEqual(ExampleGrammaredSequence.degenerate_chars, expected)
-        self.assertIn("degenerate_chars", ExampleGrammaredSequence.__dict__)
 
         ExampleGrammaredSequence.degenerate_chars.add("W")
         self.assertEqual(ExampleGrammaredSequence.degenerate_chars, expected)
@@ -502,50 +502,6 @@ class TestGrammaredSequence(TestCase):
         # The returned set is a copy, so mutating it does not alter the grammar.
         ExampleGrammaredSequence.canonical_chars.add("Q")
         self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
-
-    def test_canonical_chars_fixed_at_class_creation(self):
-        class DynamicGrammaredSequence(GrammaredSequence):
-            _definite_chars = set("ABCQ")
-            _noncanonical_chars = set("Q")
-
-            @classproperty
-            def definite_chars(cls):
-                return cls._definite_chars
-
-            @classproperty
-            def noncanonical_chars(cls):
-                return cls._noncanonical_chars
-
-        self.assertEqual(DynamicGrammaredSequence.canonical_chars, set("ABC"))
-
-        DynamicGrammaredSequence._definite_chars.add("D")
-        DynamicGrammaredSequence._noncanonical_chars.add("A")
-        self.assertEqual(DynamicGrammaredSequence.canonical_chars, set("ABC"))
-
-    def test_derived_chars_cannot_be_overridden(self):
-        class OverrideDerivedChars(GrammaredSequence):
-            @classproperty
-            def definite_chars(cls):
-                return set("ABC")
-
-            @classproperty
-            def noncanonical_chars(cls):
-                return set("C")
-
-            @classproperty
-            def degenerate_map(cls):
-                return {"X": set("AB")}
-
-            @classproperty
-            def canonical_chars(cls):
-                return set("ABC")
-
-            @classproperty
-            def degenerate_chars(cls):
-                return set("Y")
-
-        self.assertEqual(OverrideDerivedChars.canonical_chars, set("AB"))
-        self.assertEqual(OverrideDerivedChars.degenerate_chars, set("X"))
 
     def test_definite_chars(self):
         expected = set("ABCQ")
@@ -984,10 +940,13 @@ class TestGrammaredSequence(TestCase):
             seq.to_definites("P")
 
         # test that an invalid wildcard (not a string) will throw an error
-        ExampleGrammaredSequence.wildcard_char = 1
+        class NoWildcardSequence(ExampleGrammaredSequence):
+            @classproperty
+            def wildcard_char(cls):
+                return None
+
         with self.assertRaises(ValueError):
-            seq.to_definites()
-        ExampleGrammaredSequence.wildcard_char = 'W'
+            NoWildcardSequence("ABCQXYZ").to_definites()
 
         # test that nonsense input for 'to' will throw error
         with self.assertRaises(ValueError):

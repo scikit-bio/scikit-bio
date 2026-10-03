@@ -4,7 +4,7 @@
 
 ### Features
 
-* Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars`.
+* Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars` ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
 * Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
