@@ -160,8 +160,7 @@ class Sequence(
     Notes
     -----
     scikit-bio's ``Sequence`` shares its name with Python's
-    :class:`~collections.abc.Sequence`, although they are distinct types. Be careful of
-    name collison in the code.
+    :class:`~collections.abc.Sequence`, although they are distinct types.
 
     References
     ----------

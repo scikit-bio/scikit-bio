@@ -73,7 +73,7 @@ Abstract classes
 
    NucleotideMixin
 
-   
+
 .. _sequence_like:
 
 Sequence-like formats
