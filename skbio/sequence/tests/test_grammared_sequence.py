@@ -450,6 +450,10 @@ class TestGrammaredSequence(TestCase):
         definite_char_codes = set(ExampleGrammaredSequence._definite_codes)
         self.assertEqual(definite_char_codes, set([65, 66, 67, 81]))
 
+    def test_canonical_codes(self):
+        canonical_char_codes = set(ExampleGrammaredSequence._canonical_codes)
+        self.assertEqual(canonical_char_codes, set([65, 66, 67]))
+
     def test_gap_codes(self):
         gap_codes = set(ExampleGrammaredSequence._gap_codes)
         self.assertEqual(gap_codes, set([45, 46]))
@@ -489,6 +493,35 @@ class TestGrammaredSequence(TestCase):
 
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
+
+    def test_canonical_chars(self):
+        expected = set("ABC")
+        self.assertIs(type(ExampleGrammaredSequence.canonical_chars), set)
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
+        self.assertEqual(ExampleGrammaredSequence("").canonical_chars, expected)
+
+        # The returned set is a copy, so mutating it does not alter the grammar.
+        ExampleGrammaredSequence.canonical_chars.add("Q")
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
+
+    def test_canonical_chars_fixed_at_class_creation(self):
+        class DynamicGrammaredSequence(GrammaredSequence):
+            _definite_chars = set("ABCQ")
+            _noncanonical_chars = set("Q")
+
+            @classproperty
+            def definite_chars(cls):
+                return cls._definite_chars
+
+            @classproperty
+            def noncanonical_chars(cls):
+                return cls._noncanonical_chars
+
+        self.assertEqual(DynamicGrammaredSequence.canonical_chars, set("ABC"))
+
+        DynamicGrammaredSequence._definite_chars.add("D")
+        DynamicGrammaredSequence._noncanonical_chars.add("A")
+        self.assertEqual(DynamicGrammaredSequence.canonical_chars, set("ABC"))
 
     def test_definite_chars(self):
         expected = set("ABCQ")
@@ -986,6 +1019,10 @@ class TestGrammaredSequence(TestCase):
         self.assertIsNotNone(cls._degen_nonca_hash)
         self.assertEqual(self._chars_of(cls._canonical_hash), "ABC")
 
+    def test_canonical_chars_without_noncanonical_chars(self):
+        cls = self._no_noncanonical_class()
+        self.assertEqual(cls.canonical_chars, cls.definite_chars)
+
     def test_to_definites_without_noncanonical_chars(self):
         cls = self._no_noncanonical_class()
         seq = cls("ABCXY-")
@@ -998,7 +1035,7 @@ class TestGrammaredSequence(TestCase):
     def test_noncanonical_chars(self):
         self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
         self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)
-    
+
     def test_wildcard_char(self):
         exp = None
         self.assertEqual(GrammaredSequence.wildcard_char, exp)

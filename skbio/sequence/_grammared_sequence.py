@@ -56,10 +56,10 @@ class GrammaredSequenceMeta(ABCMeta, type):
             and "default_gap_char" not in dct
             and "gap_chars" not in cls.__abstractmethods__
         ):
-            char_ = sorted(cls.gap_chars)[0] if cls.gap_chars else None
+            default_gap_char_ = sorted(cls.gap_chars)[0] if cls.gap_chars else None
 
             def default_gap_char(cls):
-                return char_
+                return default_gap_char_
 
             cls.default_gap_char = classproperty(default_gap_char)
 
@@ -69,12 +69,21 @@ class GrammaredSequenceMeta(ABCMeta, type):
             and "degenerate_chars" not in dct
             and "degenerate_map" not in cls.__abstractmethods__
         ):
-            chars_ = set(cls.degenerate_map)
+            degenerate_chars_ = set(cls.degenerate_map)
 
             def degenerate_chars(cls):
-                return set(chars_)
+                return set(degenerate_chars_)
 
             cls.degenerate_chars = classproperty(degenerate_chars)
+
+        # Set canonical chars based on definite and non-canonical chars.
+        if "canonical_chars" not in dct and not cls.__abstractmethods__:
+            canonical_chars_ = cls.definite_chars.difference(cls.noncanonical_chars)
+
+            def canonical_chars(cls):
+                return set(canonical_chars_)
+
+            cls.canonical_chars = classproperty(canonical_chars)
 
         # Only perform metaclass checks when all attributes are concrete.
         if not cls.__abstractmethods__:
@@ -384,7 +393,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _canonical_codes(cls):
         if cls.__canonical_codes is None:
-            chars = sorted(cls.definite_chars - cls.noncanonical_chars)
+            chars = sorted(cls.canonical_chars)
             cls.__canonical_codes = np.asarray([ord(c) for c in chars], dtype=int)
         return cls.__canonical_codes
 
@@ -583,8 +592,37 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         raise NotImplementedError
 
     @classproperty
+    def canonical_chars(cls):
+        r"""Characters in the conventional core alphabet.
+
+        Such as the four nucleotides and the 20 basic amino acids.
+
+        .. versionadded:: 0.7.5
+
+        Returns
+        -------
+        set
+            Canonical characters.
+
+        Notes
+        -----
+        This property should not be defined. It is automatically populated by excluding
+        ``noncanonical_chars`` from ``definite_chars`` during class creation.
+
+        See Also
+        --------
+        definite_chars
+        noncanonical_chars
+
+        """
+        return cls.definite_chars.difference(cls.noncanonical_chars)
+
+    @classproperty
     def noncanonical_chars(cls):
         r"""Non-canonical characters.
+
+        They are definite characters outside the conventional core alphabet of a
+        sequence type.
 
         Returns
         -------
@@ -595,6 +633,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         -----
         This character set serves as an exclusion from definite characters to obtain
         canonical characters.
+
+        See Also
+        --------
+        definite_chars
+        canonical_chars
 
         """
         return set()
