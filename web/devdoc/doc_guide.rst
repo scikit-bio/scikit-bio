@@ -11,7 +11,7 @@ Build the documentation
 
 To build the documentation, you'll need a scikit-bio development environment set up. See :doc:`../contribute` for instructions. In addition, you will also need to install `Sphinx <https://www.sphinx-doc.org/>`_ and relevant extensions within the same environment for the documentation, you can do that with::
 
-    conda install -c conda-forge --file ci/requirements.doc.txt
+    uv sync --group doc
 
 .. warning:: The documentation will be built for whatever version of scikit-bio is *currently installed* on your system (i.e., the version imported by ``import skbio``). This may not match the code located in this repository. You will need to either install this version of scikit-bio somewhere (e.g., in a virtualenv) or point your ``PYTHONPATH`` environment variable to this code, *before* building the documentation.
 
