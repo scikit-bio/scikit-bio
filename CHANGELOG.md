@@ -84,6 +84,10 @@
 * `ancombc` now returns an `ANCOMBCResult` object instead of a DataFrame or tuple of two. The primary table can be accessed through `.result` or simply the object itself. This largely preserves the behavior when the global test is not requested (without specifying `grouping`). However, the global test is now deferred to `ANCOMBCResult.global_test()` (see also a relevant bug fix above). The `Log2(FC)` column is now named `Log(FC)` to reflect its natural-log scale ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
 
 
+### Miscellaneous
+
+* `beta_diversity` now emits a `UserWarning` when the returned distance matrix contains `nan` values, which can happen, for example, when two or more samples all have an all-zero count vector and the chosen metric (e.g., `'braycurtis'`) divides by the total count. Previously this passed silently ([#1702](https://github.com/scikit-bio/scikit-bio/issues/1702)).
+
 ## Version 0.7.3
 
 ### Features
