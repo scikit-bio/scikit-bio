@@ -29,7 +29,15 @@ def validate_chars(chars, attr, name):
 
 
 class GrammaredSequenceMeta(ABCMeta, type):
+    _derived_attrs = frozenset({"canonical_chars", "degenerate_chars"})
+
     def __new__(mcs, name, bases, dct):
+        if any(isinstance(base, GrammaredSequenceMeta) for base in bases):
+            specified = mcs._derived_attrs.intersection(dct)
+            if specified:
+                attrs = ", ".join(f"`{attr}`" for attr in sorted(specified))
+                raise TypeError(f"{attrs} must not be defined by class {name}.")
+
         cls = super(GrammaredSequenceMeta, mcs).__new__(mcs, name, bases, dct)
 
         # Grammar-derived caches must not be inherited by subclasses.
@@ -56,25 +64,12 @@ class GrammaredSequenceMeta(ABCMeta, type):
             and "default_gap_char" not in dct
             and "gap_chars" not in cls.__abstractmethods__
         ):
-            char_ = sorted(cls.gap_chars)[0] if cls.gap_chars else None
+            default_gap_char_ = sorted(cls.gap_chars)[0] if cls.gap_chars else None
 
             def default_gap_char(cls):
-                return char_
+                return default_gap_char_
 
             cls.default_gap_char = classproperty(default_gap_char)
-
-        # Set degenerate chars based on map.
-        if (
-            "degenerate_map" in dct
-            and "degenerate_chars" not in dct
-            and "degenerate_map" not in cls.__abstractmethods__
-        ):
-            chars_ = set(cls.degenerate_map)
-
-            def degenerate_chars(cls):
-                return set(chars_)
-
-            cls.degenerate_chars = classproperty(degenerate_chars)
 
         # Only perform metaclass checks when all attributes are concrete.
         if not cls.__abstractmethods__:
@@ -133,6 +128,12 @@ class GrammaredSequenceMeta(ABCMeta, type):
             ):
                 raise TypeError(
                     "`wildcard_char` must be a definite or degenerate character "
+                    f"for class {name}."
+                )
+
+            if not set(cls.noncanonical_chars).issubset(cls.definite_chars):
+                raise TypeError(
+                    "`noncanonical_chars` must be a subset of `definite_chars` "
                     f"for class {name}."
                 )
 
@@ -384,7 +385,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _canonical_codes(cls):
         if cls.__canonical_codes is None:
-            chars = sorted(cls.definite_chars - cls.noncanonical_chars)
+            chars = sorted(cls.canonical_chars)
             cls.__canonical_codes = np.asarray([ord(c) for c in chars], dtype=int)
         return cls.__canonical_codes
 
@@ -466,8 +467,8 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        This property should not be defined. It is automatically populated during class
-        creation.
+        This property is derived from ``degenerate_chars``, ``definite_chars``, and
+        ``gap_chars``.
 
         """
         return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
@@ -534,8 +535,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
 
         Notes
         -----
-        This property should not be defined. It is automatically populated from
-        ``degenerate_map`` during class creation.
+        This property is derived from ``degenerate_map``.
 
         """
         return set(cls.degenerate_map)
@@ -583,8 +583,37 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         raise NotImplementedError
 
     @classproperty
+    def canonical_chars(cls):
+        r"""Characters in the conventional core alphabet.
+
+        Such as the four nucleotides and the 20 basic amino acids.
+
+        .. versionadded:: 0.7.5
+
+        Returns
+        -------
+        set
+            Canonical characters.
+
+        Notes
+        -----
+        This property is derived by excluding ``noncanonical_chars`` from
+        ``definite_chars``.
+
+        See Also
+        --------
+        definite_chars
+        noncanonical_chars
+
+        """
+        return cls.definite_chars.difference(cls.noncanonical_chars)
+
+    @classproperty
     def noncanonical_chars(cls):
         r"""Non-canonical characters.
+
+        They are definite characters outside the conventional core alphabet of a
+        sequence type.
 
         Returns
         -------
@@ -595,6 +624,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         -----
         This character set serves as an exclusion from definite characters to obtain
         canonical characters.
+
+        See Also
+        --------
+        definite_chars
+        canonical_chars
 
         """
         return set()

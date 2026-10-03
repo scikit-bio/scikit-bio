@@ -156,11 +156,26 @@ class TestGrammaredSequence(TestCase):
                 def definite_chars(cls):
                     return set("ABCX")
 
+    def test_noncanonical_chars_must_be_definite(self):
+        with self.assertRaisesRegex(
+            TypeError,
+            r"`noncanonical_chars` must be a subset of `definite_chars`",
+        ):
+            class GrammaredSequenceInvalid(GrammaredSequence):
+                @classproperty
+                def definite_chars(cls):
+                    return {"A"}
+
+                @classproperty
+                def noncanonical_chars(cls):
+                    return {"B"}
+
     def test_grammar_chars_len1_str(self):
         for attribute, value in (
             ("definite_chars", {"AB"}),
             ("gap_chars", {"--"}),
             ("degenerate_chars", {"XX"}),
+            ("canonical_chars", {"A"}),
             ("noncanonical_chars", {"AA"}),
         ):
             with self.assertRaisesRegex(TypeError, rf"`{attribute}`"):
@@ -450,6 +465,10 @@ class TestGrammaredSequence(TestCase):
         definite_char_codes = set(ExampleGrammaredSequence._definite_codes)
         self.assertEqual(definite_char_codes, set([65, 66, 67, 81]))
 
+    def test_canonical_codes(self):
+        canonical_char_codes = set(ExampleGrammaredSequence._canonical_codes)
+        self.assertEqual(canonical_char_codes, set([65, 66, 67]))
+
     def test_gap_codes(self):
         gap_codes = set(ExampleGrammaredSequence._gap_codes)
         self.assertEqual(gap_codes, set([45, 46]))
@@ -462,7 +481,6 @@ class TestGrammaredSequence(TestCase):
         expected = set("WXYZ")
         self.assertIs(type(ExampleGrammaredSequence.degenerate_chars), set)
         self.assertEqual(ExampleGrammaredSequence.degenerate_chars, expected)
-        self.assertIn("degenerate_chars", ExampleGrammaredSequence.__dict__)
 
         ExampleGrammaredSequence.degenerate_chars.add("W")
         self.assertEqual(ExampleGrammaredSequence.degenerate_chars, expected)
@@ -489,6 +507,16 @@ class TestGrammaredSequence(TestCase):
 
         with self.assertRaises(AttributeError):
             ExampleGrammaredSequence('').nondegenerate_chars = set("BAR")
+
+    def test_canonical_chars(self):
+        expected = set("ABC")
+        self.assertIs(type(ExampleGrammaredSequence.canonical_chars), set)
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
+        self.assertEqual(ExampleGrammaredSequence("").canonical_chars, expected)
+
+        # The returned set is a copy, so mutating it does not alter the grammar.
+        ExampleGrammaredSequence.canonical_chars.add("Q")
+        self.assertEqual(ExampleGrammaredSequence.canonical_chars, expected)
 
     def test_definite_chars(self):
         expected = set("ABCQ")
@@ -927,10 +955,13 @@ class TestGrammaredSequence(TestCase):
             seq.to_definites("P")
 
         # test that an invalid wildcard (not a string) will throw an error
-        ExampleGrammaredSequence.wildcard_char = 1
+        class NoWildcardSequence(ExampleGrammaredSequence):
+            @classproperty
+            def wildcard_char(cls):
+                return None
+
         with self.assertRaises(ValueError):
-            seq.to_definites()
-        ExampleGrammaredSequence.wildcard_char = 'W'
+            NoWildcardSequence("ABCQXYZ").to_definites()
 
         # test that nonsense input for 'to' will throw error
         with self.assertRaises(ValueError):
@@ -986,6 +1017,10 @@ class TestGrammaredSequence(TestCase):
         self.assertIsNotNone(cls._degen_nonca_hash)
         self.assertEqual(self._chars_of(cls._canonical_hash), "ABC")
 
+    def test_canonical_chars_without_noncanonical_chars(self):
+        cls = self._no_noncanonical_class()
+        self.assertEqual(cls.canonical_chars, cls.definite_chars)
+
     def test_to_definites_without_noncanonical_chars(self):
         cls = self._no_noncanonical_class()
         seq = cls("ABCXY-")
@@ -998,7 +1033,7 @@ class TestGrammaredSequence(TestCase):
     def test_noncanonical_chars(self):
         self.assertTrue(isinstance(GrammaredSequence.noncanonical_chars, set))
         self.assertEqual(len(GrammaredSequence.noncanonical_chars), 0)
-    
+
     def test_wildcard_char(self):
         exp = None
         self.assertEqual(GrammaredSequence.wildcard_char, exp)

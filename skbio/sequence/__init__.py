@@ -140,15 +140,24 @@ The three common biological sequence types: ``DNA``, ``RNA`` and ``Protein``, ar
 :class:`grammared sequences <GrammaredSequence>`. That is, each of them has a defined
 alphabet (character set), which typically consists of:
 
-- :attr:`definite characters <GrammaredSequence.definite_chars>`, such as ``ACGT``,
-  which represent the four canonical nucleotides in a DNA sequence,
-- :attr:`degenerate characters <GrammaredSequence.degenerate_chars>`, such as ``R``,
-  which represents ``A`` or ``G``,
-- :attr:`gap character(s) <GrammaredSequence.gap_chars>`, such as ``-``, and
-- a :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as ``N``, which
-  is also a degenerate character.
+- :attr:`definite characters <GrammaredSequence.definite_chars>`, each representing a
+  single sequence state. They include:
 
-Use of any of these characters in the sequence data is valid. For example:
+  - :attr:`canonical characters <GrammaredSequence.canonical_chars>`, such as ``A``,
+    ``C``, ``G`` and ``T`` in DNA sequences, which represent the conventional core
+    alphabet.
+  - :attr:`non-canonical characters <GrammaredSequence.noncanonical_chars>`, such as
+    ``O`` and ``U`` in protein sequences, which are definite but outside the
+    conventional core alphabet.
+- :attr:`degenerate characters <GrammaredSequence.degenerate_chars>`, such as ``R``,
+  which represents ``A`` or ``G`` in nucleotide sequences.
+- :attr:`gap character(s) <GrammaredSequence.gap_chars>`, such as ``-``,
+- a single :attr:`wildcard character <GrammaredSequence.wildcard_char>`, such as ``N``
+  in nucleotide sequences.
+- Type-specific characters, such as the :attr:`stop character <Protein.stop_chars>`
+  ``*`` in protein sequences.
+
+Use of any of these characters in the sequence is valid. For example:
 
 >>> seq = DNA('GCCRCCATGG', metadata={'name': 'Kozak consensus sequence'})
 >>> seq
