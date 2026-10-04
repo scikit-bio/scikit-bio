@@ -509,8 +509,8 @@ class AlignPath(SkbioObject):
 
         Parameters
         ----------
-        aln : iterable of sequence_like
-            Aligned sequences.
+        aln : TabularMSA or iterable of equal-length sequence_like
+            Aligned sequences. All sequences must have equal length.
         gap_chars : iterable of hashable, optional
             Symbols that should be treated as gaps in aligned sequences. Default is
             "-".
@@ -529,8 +529,9 @@ class AlignPath(SkbioObject):
 
         Notes
         -----
-        This method is more general but less efficient than ``from_tabular``. It works
-        with various sequence formats.
+        This method consumes aligned sequences, i.e., sequences with gaps inserted to
+        make them equal in length. It is more general but less efficient than
+        :meth:`from_tabular`.
 
         Examples
         --------

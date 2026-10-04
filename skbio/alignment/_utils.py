@@ -8,8 +8,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import TypeAlias
+from collections.abc import Iterable, Sequence as PySequence
+from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,8 +25,12 @@ from skbio.sequence._alphabet import (
 
 
 # This could be exposed as a public API.
+AlignedSequences: TypeAlias = PySequence[SequenceLike] | NDArray[Any]
+
+
+# This could be exposed as a public API.
 AlignmentLike: TypeAlias = (
-    TabularMSA | Iterable[SequenceLike] | tuple[AlignPath, Iterable[SequenceLike]]
+    TabularMSA | AlignedSequences | tuple[AlignPath, AlignedSequences]
 )
 
 
@@ -211,7 +215,7 @@ def encode_alignment(
     sub_score: tuple[float, float] | SubstitutionMatrix | str,
     gap_chars: str = "-",
 ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
-    """Encode sequences for alignment operations.
+    """Encode an alignment-like object for alignment operations.
 
     This function transforms an alignment into a 2D array of indices in a
     substitution matrix, and run-length encoded gaps, which will facilitate
@@ -219,8 +223,10 @@ def encode_alignment(
 
     Parameters
     ----------
-    aln : TabularMSA, iterable, or (AlignPath, iterable)
-        Input alignment.
+    aln : alignment_like
+        Input alignment. Supported forms are a ``TabularMSA``, a sequence of aligned,
+        equal-length sequence-like objects, or an ``AlignPath`` paired with the
+        corresponding sequence of unaligned sequence-like objects.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Substitution scoring method. Can be two numbers (match, mismatch), a
         substitution matrix, or its name.
