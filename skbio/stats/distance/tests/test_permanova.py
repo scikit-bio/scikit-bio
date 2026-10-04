@@ -22,9 +22,11 @@ from skbio.stats.distance._permanova import NUMBA_AVAILABLE
 from skbio.stats.distance._cutils import (permanova_f_stat_sW_cy,
                                           permanova_f_stat_sW_condensed_cy)
 from skbio.util import get_data_path, numba_code, get_rng
+from skbio.util._array import _get_backend_name
 from skbio.util._testing import ArrayAPITestMixin, array_backends
 from skbio.stats.distance._base import _preprocess_input_sng
 from skbio.stats.distance import _gpu as gpu_mod
+from skbio.stats.distance import _permanova_gpu as permanova_gpu
 from skbio.stats.distance._permanova_gpu import _assemble_fp, _permutation_batch
 
 
@@ -674,6 +676,22 @@ class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
         # is not expected to agree bit for bit.
         self.assertAlmostEqual(res['test statistic'], self.ref['test statistic'])
         self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
+    @numba_code
+    @array_backends("jax", "torch", "cupy")
+    def test_gpu_kernel_is_used_on_device_input(self, xp, device):
+        # Result values cannot tell the GPU and array-API paths apart, so this asks
+        # the kernel cache, which only a dispatch to the kernel populates, and checks
+        # the backend was not marked unavailable, as a kernel that fails to compile
+        # or launch would be. JAX has no Numba GPU path and is skipped; it is listed
+        # because the harness errors on a GPU lane that runs no backend.
+        if device == "cpu" or _get_backend_name(xp) == "jax":
+            self.skipTest("needs a device-resident CuPy or PyTorch matrix")
+        permanova_gpu._kernels.clear()
+        dm = DistanceMatrix(self.make_array(xp, device, self.data))
+        permanova(dm, self.grouping, permutations=9, seed=0, engine="numba")
+        self.assertTrue(permanova_gpu._kernels, "dispatch never reached the GPU kernel")
+        self.assertNotIn(_get_backend_name(xp), gpu_mod._unavailable)
 
     @numba_code
     @array_backends("numpy", "jax", "torch", "cupy")
