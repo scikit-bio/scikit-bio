@@ -267,7 +267,9 @@ to the reader call.
 
 Any additional keyword arguments, such as ``lowercase``, are passed to the
 sequence constructor. For example, ``lowercase=True`` allows a file containing
-lowercase sequence characters to be read.
+lowercase sequence characters to be read. If ``lowercase`` is a string, the
+resulting boolean positional metadata column cannot be written back to
+Stockholm format.
 
 Examples
 --------
