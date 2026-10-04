@@ -14,7 +14,7 @@ def _encode_alphabet(alphabet):
 
     Parameters
     ----------
-    alphabet : str, list, tuple or 1D ndarray
+    alphabet : str, bytes, bytearray, list, tuple or 1D ndarray
         Input alphabet. Must consist of single ASCII characters. Elements may
         be string or byte characters, or integers representing code points.
 
@@ -46,10 +46,15 @@ def _encode_alphabet(alphabet):
     """
     errmsg = "Alphabet is of an invalid data type."
 
-    # string
+    # strings and byte buffers
     if isinstance(alphabet, str):
         alphabet = alphabet.encode("ascii")
         return np.frombuffer(alphabet, dtype=np.uint8)
+    elif isinstance(alphabet, (bytes, bytearray)):
+        alphabet = np.frombuffer(alphabet, dtype=np.uint8)
+        if np.all(alphabet <= 127):
+            return alphabet
+        raise ValueError("Not all code points are within the ASCII range.")
 
     # list or tuple
     elif isinstance(alphabet, (list, tuple)):
@@ -58,8 +63,8 @@ def _encode_alphabet(alphabet):
     # 1d numpy array
     elif not isinstance(alphabet, np.ndarray):
         raise TypeError(errmsg)
-    # if alphabet.ndim != 1:
-    #     raise TypeError(errmsg)
+    if alphabet.ndim != 1:
+        raise ValueError("Alphabet must be one-dimensional.")
     dtype = alphabet.dtype
 
     # integers represent ascii code points
@@ -250,20 +255,30 @@ def _indices_in_alphabet_ascii(seq, alphabet, wildcard=None, gaps=None):
     return pos
 
 
-def _indices_in_observed(seqs):
+def _indices_in_sorted(seqs):
     """Convert sequences into vectors of indices in observed characters.
 
     Parameters
     ----------
-    seqs : iterable of iterable
-        Input sequences.
+    seqs : iterable of iterable of sortable
+        Input sequences. Symbols must be mutually sortable.
 
     Returns
     -------
     list of 1D ndarray
         Vectors of indices representing the sequences.
     1D ndarray
-        Sorted vector of unique characters observed in the sequences.
+        Sorted vector of unique symbols observed in the sequences.
+
+    See Also
+    --------
+    _indices_in_observed
+
+    Notes
+    -----
+    This function uses :func:`numpy.unique`, which sorts observed symbols. Use
+    :func:`_indices_in_observed` when symbols are hashable but not mutually sortable.
+    The two functions return equivalent encodings but with different alphabet orders.
 
     """
     # This function uses np.unique to extract unique characters and their
@@ -280,3 +295,57 @@ def _indices_in_observed(seqs):
     index_chunks = np.split(index_union, index_bounds)
     index_lst_trans = [x[y] for x, y in zip(index_chunks, index_lst)]
     return index_lst_trans, alpha_union
+
+
+def _indices_in_observed(seqs):
+    """Convert sequences into vectors of indices in observed hashable symbols.
+
+    Parameters
+    ----------
+    seqs : iterable of iterable of hashable
+        Input sequences. Symbols need not be mutually sortable.
+
+    Returns
+    -------
+    list of 1D ndarray
+        Vectors of indices representing the sequences.
+    tuple
+        Unique symbols observed in the sequences, in first-observed order.
+
+    Raises
+    ------
+    TypeError
+        If a symbol is unhashable.
+
+    See Also
+    --------
+    _indices_in_sorted
+
+    Notes
+    -----
+    Symbols are assigned indices in first-observed order, processing each sequence in
+    input order. Unlike :func:`_indices_in_sorted`, this function does not sort symbols
+    and supports hashable symbols that are not mutually sortable. The two functions
+    return equivalent encodings but with different alphabet orders.
+
+    """
+    mapping = {}
+    alphabet = []
+    encoded = []
+    for seq_idx, seq in enumerate(seqs):
+        indices = np.empty(len(seq), dtype=np.intp)
+        for pos_idx, symbol in enumerate(seq):
+            try:
+                index = mapping[symbol]
+            except KeyError:
+                index = len(mapping)
+                mapping[symbol] = index
+                alphabet.append(symbol)
+            except TypeError:
+                raise TypeError(
+                    f"Sequence {seq_idx + 1} contains an unhashable symbol at "
+                    f"position {pos_idx}: {type(symbol).__name__}."
+                ) from None
+            indices[pos_idx] = index
+        encoded.append(indices)
+    return encoded, tuple(alphabet)

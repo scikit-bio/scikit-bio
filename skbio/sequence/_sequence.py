@@ -28,7 +28,7 @@ from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.sequence._alphabet import (
     _alphabet_to_hashes,
     _indices_in_alphabet_ascii,
-    _indices_in_observed,
+    _indices_in_sorted,
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
@@ -90,9 +90,9 @@ class Sequence(
     additionally enforce the IUPAC character set [1]_ for, and provide operations
     specific to, each respective molecule type.
 
-    ``Sequence`` objects consist of the underlying sequence data, as well
-    as optional metadata and positional metadata. The underlying sequence
-    is immutable, while the metdata and positional metadata are mutable.
+    ``Sequence`` objects consist of the underlying sequence data, as well as optional
+    metadata and positional metadata. The underlying sequence is immutable, while the
+    metdata and positional metadata are mutable.
 
     Parameters
     ----------
@@ -156,6 +156,11 @@ class Sequence(
     DNA
     RNA
     Protein
+
+    Notes
+    -----
+    scikit-bio's ``Sequence`` shares its name with Python's
+    :class:`~collections.abc.Sequence`, although they are distinct types.
 
     References
     ----------
@@ -2533,7 +2538,7 @@ class Sequence(
 
         # according to observed characters
         else:
-            (indices,), observed = _indices_in_observed([seq])
+            (indices,), observed = _indices_in_sorted([seq])
             if return_codes is False:
                 observed = observed.tobytes().decode("ascii")
 

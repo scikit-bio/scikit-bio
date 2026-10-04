@@ -36,12 +36,14 @@ def align_score(
 
     Parameters
     ----------
-    alignment : TabularMSA, iterable, or (AlignPath, iterable)
+    alignment : TabularMSA, iterable of sequence_like, or
+        (AlignPath, iterable of sequence_like)
         Aligned sequences. Can be any of the following:
 
         - ``TabularMSA`` instance.
-        - List of *aligned* sequences as raw strings or ``Sequence`` objects.
-        - Tuple of ``AlignPath`` and the corresponding list of *unaligned* sequences.
+        - Iterable of *aligned* sequence-like objects.
+        - Tuple of ``AlignPath`` and the corresponding iterable of *unaligned*
+          sequence-like objects.
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a substitution. May be two numbers (match, mismatch), a substitution
@@ -55,9 +57,9 @@ def align_score(
     free_ends : bool, optional
         If True (default), gaps at the sequence terminals are free from penalization.
 
-    gap_chars : iterable of 1-length str, optional
-        Character(s) that represent gaps. Only relevant when ``alignment`` is
-        a list of aligned sequences.
+    gap_chars : iterable of hashable, optional
+        Symbols that represent gaps. Only relevant when ``alignment`` is an iterable
+        of aligned sequences.
 
     Returns
     -------
