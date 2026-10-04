@@ -548,11 +548,19 @@ class AlignPath(SkbioObject):
         from skbio.sequence import Sequence
 
         gap_symbols = set(gap_chars)
+        byte_gaps = None
         gaps = []
         for seq in aln:
             if isinstance(seq, Sequence):
                 seq = str(seq)
-            row = [x in gap_symbols for x in seq]
+            if isinstance(seq, (bytes, bytearray)):
+                if byte_gaps is None:
+                    from skbio.alignment._utils import _convert_ascii_gaps
+
+                    byte_gaps = set(_convert_ascii_gaps(gap_symbols))
+                row = [x in byte_gaps for x in seq]
+            else:
+                row = [x in gap_symbols for x in seq]
             gaps.append(np.array(row, dtype=int))
         try:
             gaps = np.vstack(gaps)

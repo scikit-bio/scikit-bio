@@ -158,10 +158,12 @@ def encode_sequences(
             if has_grammar:
                 gap_codes = seqtype._gap_codes
             else:
-                gap_codes = [ord(x) for x in gap_chars]
+                gap_codes = _convert_ascii_gaps(gap_chars)
         else:
             if has_grammar:
                 gap_codes = list(seqtype.gap_chars)
+            elif seqtype in (bytes, bytearray):
+                gap_codes = _convert_ascii_gaps(gap_chars)
             else:
                 gap_codes = list(gap_chars)
 
@@ -427,6 +429,21 @@ def _mask_gaps(seqs, gap_codes, is_ascii):
         return np.vstack(gaps)
     except ValueError:
         raise ValueError("Sequence lengths do not match.")
+
+
+def _convert_ascii_gaps(gap_symbols):
+    """Convert one-character string gap symbols to ASCII code points."""
+    ascii_gaps = []
+    for gap_symbol in gap_symbols:
+        if isinstance(gap_symbol, str):
+            if len(gap_symbol) != 1:
+                raise ValueError(
+                    "String gap symbols for ASCII-encoded sequences must be one "
+                    "character."
+                )
+            gap_symbol = ord(gap_symbol)
+        ascii_gaps.append(gap_symbol)
+    return ascii_gaps
 
 
 def _map_chars_ascii(seqs, mapping, wild=None):

@@ -191,6 +191,14 @@ class UtilsTests(unittest.TestCase):
             npt.assert_array_equal(obs[0][0], [65, 67, 71, 84])
             self.assertEqual(obs[1].shape, (128, 128))
 
+            # non-ASCII bytes use generic symbol encoding
+            obs = encode_sequences(
+                [seq_type(b"A"), seq_type(b"\xff")], (match, mismatch)
+            )
+            npt.assert_array_equal(obs[0][0], [0])
+            npt.assert_array_equal(obs[0][1], [1])
+            self.assertEqual(obs[1].shape, (2, 2))
+
         # one-dimensional object arrays support arbitrary hashable symbols
         seq1 = np.empty(3, dtype=object)
         seq1[:] = [("codon", "ATG"), frozenset({"modified"}), None]
@@ -255,6 +263,25 @@ class UtilsTests(unittest.TestCase):
         ]
         _, _, gaps = encode_sequences(seqs, (1, -1), aligned=True)
         npt.assert_array_equal(gaps, [[False, True, False], [False, False, True]])
+
+        # byte buffers use integer symbols, even with a non-ASCII matrix
+        submat = SubstitutionMatrix([65, None], [[1, -1], [-1, 1]])
+        for seq_type in (bytes, bytearray):
+            seqs, _, gaps = encode_sequences(
+                [seq_type(b"A-"), seq_type(b"AA")], submat, aligned=True
+            )
+            npt.assert_array_equal(seqs[0], [0, -1])
+            npt.assert_array_equal(seqs[1], [0, 0])
+            npt.assert_array_equal(gaps, [[False, True], [False, False]])
+
+        # numeric ASCII sequences retain numeric gap symbols
+        seqs, _, gaps = encode_sequences(
+            [np.array([1, 0]), np.array([1, 2])], (1, -1), aligned=True,
+            gap_chars=[0]
+        )
+        npt.assert_array_equal(seqs[0], [1, 0])
+        npt.assert_array_equal(seqs[1], [1, 2])
+        npt.assert_array_equal(gaps, [[False, True], [False, False]])
 
     def test_encode_sequences_error(self):
         msg = "Sequences are of different types."

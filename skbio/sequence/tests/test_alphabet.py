@@ -43,6 +43,10 @@ class TestAlphabet(TestCase):
         # bytes
         npt.assert_array_equal(_encode_alphabet(b"ACGT"), exp)
         npt.assert_array_equal(_encode_alphabet(bytearray(b"ACGT")), exp)
+        with self.assertRaises(ValueError):
+            _encode_alphabet(b"\xff")
+        with self.assertRaises(ValueError):
+            _encode_alphabet(bytearray(b"\xff"))
 
         # wrong data types
         with self.assertRaises(TypeError):

@@ -51,7 +51,10 @@ def _encode_alphabet(alphabet):
         alphabet = alphabet.encode("ascii")
         return np.frombuffer(alphabet, dtype=np.uint8)
     elif isinstance(alphabet, (bytes, bytearray)):
-        return np.frombuffer(alphabet, dtype=np.uint8)
+        alphabet = np.frombuffer(alphabet, dtype=np.uint8)
+        if np.all(alphabet <= 127):
+            return alphabet
+        raise ValueError("Not all code points are within the ASCII range.")
 
     # list or tuple
     elif isinstance(alphabet, (list, tuple)):
