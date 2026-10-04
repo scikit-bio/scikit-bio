@@ -105,8 +105,8 @@ represents two or more aligned sequences. It may be:
 - a :class:`TabularMSA`, or
 - an ordered collection (e.g., list or tuple) of equal-length :ref:`sequence-like
   <sequence_like>` that are already aligned (i.e., with gaps inserted), or
-- a tuple of an :class:`AlignPath` together and the corresponding ordered collection of
-  original, unaligned sequence-like objects.
+- a tuple of an :class:`AlignPath` together with the corresponding ordered collection
+  of original, unaligned sequence-like objects.
 
 The latter path-based form separates alignment structure from sequence content and can
 avoid constructing gapped sequence copies. Use ``TabularMSA`` when labels, metadata, or

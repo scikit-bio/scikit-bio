@@ -160,6 +160,17 @@ class ScoreTests(unittest.TestCase):
             scores = [align_score(aln, (2, -1), (3, 1)) for aln in alignments]
             self.assertListEqual(scores, [scores[0]] * len(scores))
 
+        # A 2-D NumPy array represents a collection of 1-D sequences.
+        aligned = np.array([[65, 45, 67], [65, 67, 45]], dtype=np.uint8)
+        path = AlignPath.from_aligned(aligned, gap_chars=[45])
+        unaligned = np.array([[65, 67], [65, 67]], dtype=np.uint8)
+        alignments = (aligned, (path, unaligned))
+        scores = [
+            align_score(aln, (1, -1), gap_cost=0, gap_chars=[45])
+            for aln in alignments
+        ]
+        self.assertListEqual(scores, [1, 1])
+
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
         # single internal gap, no terminal gap

@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence as PySequence
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,8 +25,12 @@ from skbio.sequence._alphabet import (
 
 
 # This could be exposed as a public API.
+AlignedSequences: TypeAlias = PySequence[SequenceLike] | NDArray[Any]
+
+
+# This could be exposed as a public API.
 AlignmentLike: TypeAlias = (
-    TabularMSA | PySequence[SequenceLike] | tuple[AlignPath, PySequence[SequenceLike]]
+    TabularMSA | AlignedSequences | tuple[AlignPath, AlignedSequences]
 )
 
 
