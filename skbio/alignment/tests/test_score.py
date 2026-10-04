@@ -131,6 +131,19 @@ class ScoreTests(unittest.TestCase):
         obs = align_score((path, seqs), (5, -4), (5, 2), gap_chars="A")
         self.assertEqual(obs, 53)
 
+        # aligned arbitrary hashable symbols
+        seqs = [
+            [("codon", "ATG"), "-", frozenset({"x"})],
+            [("codon", "ATG"), frozenset({"x"}), "-"],
+        ]
+        obs = align_score(seqs, (1, -1), gap_cost=0)
+        self.assertEqual(obs, 1)
+
+        # aligned numeric ASCII sequences can use a numeric gap symbol
+        seqs = [np.array([1, 0]), np.array([1, 2])]
+        obs = align_score(seqs, (1, -1), gap_cost=0, gap_chars=[0])
+        self.assertEqual(obs, 1)
+
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
         # single internal gap, no terminal gap
