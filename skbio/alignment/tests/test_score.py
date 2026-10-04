@@ -144,6 +144,22 @@ class ScoreTests(unittest.TestCase):
         obs = align_score(seqs, (1, -1), gap_cost=0, gap_chars=[0])
         self.assertEqual(obs, 1)
 
+    def test_align_score_alignment_like(self):
+        """Equivalent alignment-like representations have identical scores."""
+        for aligned in (
+            ["AC-GT", "ACGGT"],
+            ["AC-GT", "ACGGT", "A--GT"],
+        ):
+            path = AlignPath.from_aligned(aligned)
+            unaligned = [seq.replace("-", "") for seq in aligned]
+            alignments = (
+                TabularMSA([DNA(seq) for seq in aligned]),
+                aligned,
+                (path, unaligned),
+            )
+            scores = [align_score(aln, (2, -1), (3, 1)) for aln in alignments]
+            self.assertListEqual(scores, [scores[0]] * len(scores))
+
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
         # single internal gap, no terminal gap
