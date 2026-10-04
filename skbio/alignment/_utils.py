@@ -162,7 +162,7 @@ def encode_sequences(
         else:
             if has_grammar:
                 gap_codes = list(seqtype.gap_chars)
-            elif seqtype in (bytes, bytearray):
+            elif issubclass(seqtype, (bytes, bytearray)):
                 gap_codes = _convert_ascii_gaps(gap_chars)
             else:
                 gap_codes = list(gap_chars)
