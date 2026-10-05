@@ -1320,12 +1320,14 @@ class BPTree(SkbioObject):
             tips = np.array(positions, dtype=np.intp)
 
         tips = np.ascontiguousarray(tips, dtype=np.intp)
+        # resolved before the early return below, so an unsupported or
+        # unavailable engine is rejected whatever the number of tips
+        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
         if tips.size < 2:
             # no pairs; an empty condensed vector would expand to 1 x 1
             return DistanceMatrix(
                 np.zeros((tips.size, tips.size)), taxa, validate=False
             )
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
 
         # the kernel takes the tips in tree order, and the output row (slot) of
         # each: its place in the requested order

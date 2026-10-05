@@ -943,6 +943,15 @@ class BPBatchCythonTests(_BatchTests, TestCase):
                                [bp.close(0)])
         npt.assert_array_equal(bp.close_batch([0]), [bp.close(0)])
 
+    def test_cophenet_engine_checked_for_few_tips(self):
+        # with fewer than two tips there are no pairs to compute, but the
+        # engine is still checked, as it is for larger trees
+        B = np.array([1, 1, 0, 1, 0, 0], dtype=np.uint8)
+        named = np.array([None, 'a', None, None, None, None], dtype=object)
+        for names in (None, named):
+            with self.assertRaises(ValueError):
+                BPTree(B, names=names).cophenet(engine='julia')
+
 
 @numba_code
 class BPBatchNumbaTests(_BatchTests, TestCase):
