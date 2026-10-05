@@ -447,14 +447,16 @@ cdef class _BPKernel:
         return self.open(self.select(0, k))
 
     cpdef BOOL_t is_ancestor(self, Py_ssize_t i, Py_ssize_t j) noexcept nogil:
-        """Whether node ``i`` is an ancestor of node ``j``."""
-        if i == j:
-            return False
+        """Whether node ``i`` is an ancestor of node ``j``.
 
+        Either parenthesis names a node. Strictly inside ``i``'s span means a
+        descendant; ``i``'s own parentheses, its two ends, are not, so a node
+        is not its own ancestor whichever parenthesis names it.
+        """
         if not self._b_ptr[i]:
             i = self.open(i)
 
-        return i <= j < self.close(i)
+        return i < j < self.close(i)
 
     cpdef Py_ssize_t count(self, Py_ssize_t i=0, bint tips=False) noexcept nogil:
         """Count of nodes (or tips) in the subtree rooted at node ``i``."""
@@ -495,18 +497,31 @@ cdef class _BPKernel:
         return self.fwdsearch(self.close(i), 1)
 
     cpdef Py_ssize_t lca(self, Py_ssize_t i, Py_ssize_t j) noexcept nogil:
-        """The lowest common ancestor of nodes ``i`` and ``j``."""
+        """The lowest common ancestor of nodes ``i`` and ``j``.
+
+        Either parenthesis of a node names it, and the order of ``i`` and ``j``
+        does not matter. The search below holds only for opening parentheses
+        with ``i < j``, so both are brought to that form first; for the usual
+        opening-parenthesis arguments that is two byte tests and a compare.
+        """
+        cdef Py_ssize_t t
+        if not self._b_ptr[i]:
+            i = self.open(i)
+        if not self._b_ptr[j]:
+            j = self.open(j)
+        if i > j:
+            t = i
+            i = j
+            j = t
         if i == j:
             # a node is its own lowest common ancestor; the search below would
-            # return its parent, and read past the end for the root's closing
-            # parenthesis
-            return self.open(i)
-        if self.is_ancestor(i, j):
+            # return its parent
             return i
-        elif self.is_ancestor(j, i):
-            return j
-        else:
-            return self.parent(self.rmq(i, j) + 1)
+        if j < self.close(i):
+            # i encloses j. The converse cannot hold: an ancestor opens before
+            # its descendants, and j opens after i.
+            return i
+        return self.parent(self.rmq(i, j) + 1)
 
     cpdef Py_ssize_t deepest_node(self, Py_ssize_t i) noexcept nogil:
         """Index of the deepest node descending from node ``i``."""
@@ -1120,17 +1135,14 @@ def parent_batch(_BPKernel k, const Py_ssize_t[::1] idx):
 
 
 def lca_batch(_BPKernel k, const Py_ssize_t[::1] i, const Py_ssize_t[::1] j):
-    """Kernel of :meth:`skbio.tree.BPTree.lca_batch`.
-
-    Each pair is ordered before the query, as ``lca`` requires ``i <= j``.
-    """
+    """Kernel of :meth:`skbio.tree.BPTree.lca_batch`."""
     cdef:
         Py_ssize_t t, n = i.shape[0]
         Py_ssize_t[::1] out
     out_arr = np.empty(n, dtype=SIZE)
     out = out_arr
     for t in prange(n, nogil=True):
-        out[t] = k.lca(min(i[t], j[t]), max(i[t], j[t]))
+        out[t] = k.lca(i[t], j[t])
     return out_arr
 
 

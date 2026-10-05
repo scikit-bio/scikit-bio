@@ -548,12 +548,14 @@ def define_primitives(jit, jit_inline=None):
 
     @jit_inline
     def is_ancestor(T, i, j):
-        """Whether node ``i`` is an ancestor of node ``j``."""
-        if i == j:
-            return False
+        """Whether node ``i`` is an ancestor of node ``j``.
+
+        Strictly inside ``i``'s span, so a node is not its own ancestor
+        whichever parenthesis names it, as in the Cython kernel.
+        """
         if not T.B[i]:
             i = open(T, i)
-        return i <= j < close(T, i)
+        return i < j < close(T, i)
 
     @jit
     def count(T, i, tips):
@@ -587,13 +589,25 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def lca(T, i, j):
-        """Lowest common ancestor of nodes ``i <= j``."""
+        """Lowest common ancestor of nodes ``i`` and ``j``.
+
+        Either parenthesis of a node names it, and the order does not matter:
+        both are brought to opening parentheses with ``i <= j``, the form the
+        search requires, as in the Cython kernel.
+        """
+        if not T.B[i]:
+            i = open(T, i)
+        if not T.B[j]:
+            j = open(T, j)
+        if i > j:
+            t = i
+            i = j
+            j = t
         if i == j:
-            return open(T, i)
-        if is_ancestor(T, i, j):
             return i
-        elif is_ancestor(T, j, i):
-            return j
+        if j < close(T, i):
+            # i encloses j; j opens after i, so it cannot enclose i
+            return i
         return parent(T, rmq(T, i, j) + 1)
 
     @jit
@@ -667,7 +681,7 @@ if NUMBA_AVAILABLE:
         """Kernel of :meth:`skbio.tree.BPTree.lca_batch`."""
         out = np.empty(i.shape[0], dtype=np.intp)
         for t in prange(i.shape[0]):
-            out[t] = _lca(T, min(i[t], j[t]), max(i[t], j[t]))
+            out[t] = _lca(T, i[t], j[t])
         return out
 
     @njit(parallel=True)

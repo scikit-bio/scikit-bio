@@ -55,6 +55,58 @@ def _caterpillar(n_tips):
     return np.array(out, dtype=np.uint8)
 
 
+def _naive_lca(B):
+    """Lowest common ancestors by parent pointers, independent of the engines.
+
+    The reference for ``lca`` and ``lca_batch``. Checking those against each
+    other proves nothing, as both run the same kernel. Returns a function of
+    two positions -- either parenthesis of each node, in either order -- giving
+    the opening position of their lowest common ancestor.
+    """
+    B = np.asarray(B)
+    node = np.empty(B.size, dtype=np.intp)  # the opening position of each node
+    parent = {}
+    stack = []
+    for p in range(B.size):
+        if B[p]:
+            parent[p] = stack[-1] if stack else -1
+            stack.append(p)
+            node[p] = p
+        else:
+            node[p] = stack.pop()
+
+    def lca(i, j):
+        a, b = node[i], node[j]
+        ancestors = set()
+        while a != -1:
+            ancestors.add(a)
+            a = parent[a]
+        while b not in ancestors:
+            b = parent[b]
+        return b
+
+    return lca
+
+
+def _all_topologies(max_nodes):
+    """Every tree of 1 to ``max_nodes`` nodes, as a parenthesis array."""
+    out = []
+
+    def grow(seq, n_open, n_close, nodes):
+        if n_open == nodes and n_close == nodes:
+            out.append(np.array(seq, dtype=np.uint8))
+            return
+        if n_open < nodes and (n_open == n_close == 0 or n_open > n_close):
+            grow(seq + [1], n_open + 1, n_close, nodes)
+        # a single root: the excess may reach 0 only at the very end
+        if n_close < n_open and (n_close + 1 < n_open or n_open == nodes):
+            grow(seq + [0], n_open, n_close + 1, nodes)
+
+    for nodes in range(1, max_nodes + 1):
+        grow([], 0, 0, nodes)
+    return out
+
+
 def _index_test_topologies():
     rng = np.random.default_rng(42)
     trees = [np.array([1, 0], dtype=np.uint8),  # a single node
@@ -326,6 +378,73 @@ class BPTests(TestCase):
         self.assertEqual(bp.preorder_rank(2), 2)
         self.assertFalse(bp.is_ancestor(2, 0))
         self.assertEqual(bp.lca(2, 2), 1)
+
+    def test_lca_any_parenthesis_and_order(self):
+        # Either parenthesis of a node names it, the order of the two does not
+        # matter, and the answer is always an opening parenthesis. Checked
+        # against parent pointers: every pair of a small tree, else a sample.
+        # Before, lca(j, i) with j > i could return the wrong node, and a
+        # closing parenthesis could come back as the answer.
+        rng = np.random.default_rng(13)
+        for B in _index_test_topologies():
+            if B.size > 5000:
+                continue
+            bp = BPTree(B)
+            ref = _naive_lca(B)
+            if B.size <= 70:
+                i, j = np.meshgrid(np.arange(B.size), np.arange(B.size))
+                i, j = i.ravel(), j.ravel()
+            else:
+                i, j = rng.integers(0, B.size, (2, 3000))
+            for a, b in zip(i.tolist(), j.tolist()):
+                self.assertEqual(bp.lca(a, b), ref(a, b), (B.size, a, b))
+
+    def test_small_trees_exhaustively(self):
+        # Every tree of up to 7 nodes, where the rmM blocks are at their
+        # smallest and every boundary case is reachable, against a stack scan.
+        # Any parenthesis may name a node. Two bugs this caught:
+        # - in (()) the block size was 1 and the backward search missed
+        #   position 0, so e.g. the root's last_child came back as none;
+        # - is_ancestor(close(x), x) was True: a node, named by its closing
+        #   parenthesis, counted as its own ancestor.
+        topologies = _all_topologies(7)
+        self.assertEqual(len(topologies), 1 + 1 + 2 + 5 + 14 + 42 + 132)
+        for B in topologies:
+            bp = BPTree(B)
+            ref = _naive_lca(B)
+            stack, node, parent, children = [], {}, {}, {}
+            for p, bit in enumerate(B):
+                if bit:
+                    parent[p] = stack[-1] if stack else -1
+                    children.setdefault(parent[p], []).append(p)
+                    stack.append(p)
+                    node[p] = p
+                else:
+                    node[p] = stack.pop()
+            close = {node[p]: p for p in range(B.size) if not B[p]}
+
+            def ancestors(x):
+                out = set()
+                while parent[x] != -1:
+                    x = parent[x]
+                    out.add(x)
+                return out
+
+            tag = ''.join('(' if bit else ')' for bit in B)
+            for p in range(B.size):
+                x = node[p]
+                kids = children.get(x, [])
+                if B[p]:
+                    self.assertEqual(bp.close(p), close[x], (tag, p))
+                    self.assertEqual(bp.parent(p), parent[x], (tag, p))
+                self.assertEqual(bp.first_child(p), kids[0] if kids else 0,
+                                 (tag, p))
+                self.assertEqual(bp.last_child(p), kids[-1] if kids else 0,
+                                 (tag, p))
+                for q in range(B.size):
+                    self.assertEqual(bp.lca(p, q), ref(p, q), (tag, p, q))
+                    self.assertEqual(bool(bp.is_ancestor(p, q)),
+                                     x in ancestors(node[q]), (tag, p, q))
 
     def test_deepest_node(self):
         # deepest_node(i) = rMq(i, close(i)),
@@ -710,12 +829,17 @@ class _BatchTests:
     def test_lca_batch(self):
         for bp in self.trees:
             n = bp.data.size
+            # any position (closing parentheses too), pairs in either order;
+            # the reference is independent of the engines (see _naive_lca)
             i = self.rng.integers(0, n, 500)
             j = self.rng.integers(0, n, 500)
-            exp = [bp.lca(min(a, b), max(a, b)) for a, b in zip(i, j)]
+            ref = _naive_lca(bp.data)
+            exp = [ref(a, b) for a, b in zip(i.tolist(), j.tolist())]
             npt.assert_array_equal(bp.lca_batch(i, j, engine=self.engine), exp)
-            # the order within a pair does not matter
             npt.assert_array_equal(bp.lca_batch(j, i, engine=self.engine), exp)
+            # and the single-node method gives the same answers
+            npt.assert_array_equal(
+                [bp.lca(a, b) for a, b in zip(i.tolist(), j.tolist())], exp)
 
     def test_level_ancestor_batch(self):
         for bp in self.trees:

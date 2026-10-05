@@ -1003,15 +1003,16 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            A node index to evaluate
+            A node index to evaluate. Either parenthesis of a node names it.
         j : int
-            A node index to evaluate
+            A node index to evaluate. Either parenthesis of a node names it.
 
         Returns
         -------
         int
-           The index of the lowest common ancestor. A node is its own lowest
-           common ancestor.
+           The index (opening parenthesis) of the lowest common ancestor. A
+           node is its own lowest common ancestor, and the order of ``i`` and
+           ``j`` does not matter.
         """
         return self._kernel.lca(i, j)
 
@@ -1163,8 +1164,9 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i, j : array_like of int
-            Node positions of each pair, broadcast against each other. The
-            order within a pair does not matter.
+            Node positions of each pair, broadcast against each other. As for
+            :meth:`lca`, either parenthesis of a node names it and the order
+            within a pair does not matter.
         engine : {'cython', 'numba', 'fast'}, optional
             The :ref:`compute engine <compute_engines>`. Defaults to the global
             ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
@@ -1179,11 +1181,6 @@ class BPTree(SkbioObject):
         See Also
         --------
         lca
-
-        Notes
-        -----
-        Unlike :meth:`lca`, which requires ``i <= j``, each pair is ordered
-        before the query.
 
         """
         shape, (i, j) = self._positions(i, j)

@@ -144,6 +144,8 @@ class NumbaPrimitiveTests(TestCase):
                     self.check(getattr(P, name)(T, i, j),
                                getattr(bp, name)(i, j), name, i, j)
                 self.check(P.is_ancestor(T, j, i), bp.is_ancestor(j, i), j, i)
+                # lca takes its pair in either order
+                self.check(P.lca(T, j, i), bp.lca(j, i), "lca", j, i)
 
     def test_minselect(self):
         P = self.P
@@ -166,12 +168,12 @@ class NumbaPrimitiveTests(TestCase):
         def lca_depths(T, i, j):
             out = np.empty(i.shape[0], dtype=np.intp)
             for t in range(i.shape[0]):
-                out[t] = depth(T, lca(T, min(i[t], j[t]), max(i[t], j[t])))
+                out[t] = depth(T, lca(T, i[t], j[t]))
             return out
 
         bp = self.trees[-1]
         i, j = self.rng.integers(0, bp.data.size, (2, 500))
-        exp = [bp.depth(bp.lca(min(a, b), max(a, b))) for a, b in zip(i, j)]
+        exp = [bp.depth(bp.lca(a, b)) for a, b in zip(i.tolist(), j.tolist())]
         np.testing.assert_array_equal(lca_depths(_bp_numba.bp_arrays(bp), i, j), exp)
 
 
@@ -212,7 +214,7 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
             G.preorder_rank(T, i), G.preorder_select(T, i % n),
             G.postorder_rank(T, i), G.postorder_select(T, i % (n + 1)),
             G.is_ancestor(T, lo, hi), G.count(T, i, True),
-            G.level_ancestor(T, i, 1), G.lca(T, lo, hi), G.height(T, i),
+            G.level_ancestor(T, i, 1), G.lca(T, i, j), G.height(T, i),
         )
         for c in range(len(row)):
             out[i, c] = row[c]
@@ -238,7 +240,7 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
             C.preorder_rank(H, i), C.preorder_select(H, i % n),
             C.postorder_rank(H, i), C.postorder_select(H, i % (n + 1)),
             C.is_ancestor(H, lo, hi), C.count(H, i, True),
-            C.level_ancestor(H, i, 1), C.lca(H, lo, hi), C.height(H, i),
+            C.level_ancestor(H, i, 1), C.lca(H, i, j), C.height(H, i),
         )
         assert len(exp) == COLUMNS
         assert out[i].tolist() == [int(v) for v in exp], (i, out[i], exp)
