@@ -312,6 +312,21 @@ class BPTests(TestCase):
         for i, exp in enumerate(opening):
             self.assertEqual(self.bptree.lca(i, i), exp)
 
+    def test_two_node_tree(self):
+        # (()): a root with a single tip. Its rmM blocks used to hold one
+        # parenthesis each, too few for the backward search, which then missed
+        # position 0: the root's last child came back as none, and the tip's
+        # closing parenthesis resolved to the root.
+        bp = BPTree(np.array([1, 1, 0, 0], dtype=np.uint8))
+        self.assertEqual(bp.last_child(0), 1)
+        self.assertEqual(bp.last_child(3), 1)
+        self.assertEqual(bp.first_child(2), 0)  # a tip has no children
+        self.assertEqual(bp.count(2), 1)
+        self.assertEqual(bp.height(2), 0)
+        self.assertEqual(bp.preorder_rank(2), 2)
+        self.assertFalse(bp.is_ancestor(2, 0))
+        self.assertEqual(bp.lca(2, 2), 1)
+
     def test_deepest_node(self):
         # deepest_node(i) = rMq(i, close(i)),
         exp = [7, 7, 2, 2, 4, 4, 7, 7, 7, 7, 7, 11, 11, 15, 15, 15, 15, 17, 17, 15, 15, 7]

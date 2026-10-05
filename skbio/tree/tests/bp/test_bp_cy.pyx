@@ -374,8 +374,10 @@ def reference_index(cnp.ndarray[BOOL_t, ndim=1] B):
         Py_ssize_t[::1] rr, e_index
 
     b = <Py_ssize_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
-    if b < 1:
-        b = 1
+    if b < 2:
+        # as _bp._rmm_geometry: the backward search needs two parentheses per
+        # block, and the formula gives fewer for n = 2 and n = 4
+        b = 2
     n_tip = <Py_ssize_t>ceil(B_size / <double> b)
     height = <Py_ssize_t>ceil(log2(n_tip))
     n_internal = <Py_ssize_t>(pow(2, height)) - 1

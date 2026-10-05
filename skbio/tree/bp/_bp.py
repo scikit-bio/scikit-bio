@@ -71,11 +71,15 @@ _ENGINES = ("cython", "numba")
 def _rmm_geometry(n):
     """Block size and height of the range min-max tree for ``n`` parentheses.
 
-    The block size is ``ceil(ln(n) * ln(ln(n)))``, at least 1 (the product is
-    not positive for ``n = 2``, a single-node tree). The ``ceil(n / b)`` blocks
-    are the leaves of a complete binary tree of height ``ceil(log2(n / b))``.
+    The block size is ``ceil(ln(n) * ln(ln(n)))``, but at least 2. The formula
+    gives less than that for ``n = 2`` (it is not even positive) and for
+    ``n = 4``, where it gives 1, and the backward search does not work with
+    one parenthesis per block: in ``(())`` it missed position 0, so
+    ``open(2)``, and every ``lca`` through it, answered 0 instead of 1. The
+    ``ceil(n / b)`` blocks are the leaves of a complete binary tree of height
+    ``ceil(log2(n / b))``.
     """
-    b = max(1, math.ceil(math.log(n) * math.log(math.log(n))))
+    b = max(2, math.ceil(math.log(n) * math.log(math.log(n))))
     n_tip = -(-n // b)
     height = (n_tip - 1).bit_length()  # exact ceil(log2(n_tip))
     return b, height
