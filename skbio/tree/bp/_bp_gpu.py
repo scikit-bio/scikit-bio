@@ -82,10 +82,6 @@ def _build_kernels(gpu):
     # (c, a). Floating-point addition is commutative, so the matrix is
     # bit-identical to the CPU engines' and symmetric, and with no multiply
     # there is no fused multiply-add to change a rounding.
-    #
-    # Rows rather than one thread per element: that alternative searches the
-    # lca of each pair, and measured 5-13x slower on an RTX 4070 (equal only on
-    # caterpillar trees, whose one-tip runs leave a row's threads idle).
 
     @gpu.jit
     def tip_distance_rows(

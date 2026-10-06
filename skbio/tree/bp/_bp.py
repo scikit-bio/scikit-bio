@@ -33,9 +33,9 @@ from ._bp_numba import NUMBA_AVAILABLE
 
 # Navigation methods implemented by the compiled kernel. ``BPTree`` binds each
 # of these onto the instance at construction, so ``bp.close(i)`` resolves in the
-# instance ``__dict__`` straight to the kernel's compiled method (~5 ns over a
-# direct call) instead of running the class-level forwarding method (~35 ns).
-# The class-level methods remain the documented API and serve unbound calls.
+# instance ``__dict__`` straight to the kernel's compiled method instead of
+# running the class-level forwarding method. The class-level methods remain the
+# documented API and serve unbound calls.
 _KERNEL_METHODS = (
     "name",
     "length",
@@ -220,23 +220,15 @@ class BPTree(SkbioObject):
     built, rather than fixed:
 
     1. ``"numba"`` if the tree's ``data`` is on a GPU the Numba kernels can
-       use (see above): 6-16x faster than the CPU engines on batches of a
-       million queries.
+       use (see above).
     2. Otherwise ``"cython"`` if scikit-bio was built with OpenMP, as it is
-       with GCC on Linux: its multithreaded kernels are up to twice as fast as
-       Numba's on ``close_batch``, ``parent_batch`` and
-       ``level_ancestor_batch``, equal on :meth:`cophenet`, and compile
-       nothing at the first call, where Numba compiles each kernel (from a
-       fraction of a second to a couple of seconds).
+       with GCC on Linux: its kernels are multithreaded, and compile nothing
+       at the first call, where Numba compiles each kernel.
     3. Otherwise ``"numba"`` if Numba is installed, as the Cython kernels
        then run on a single thread.
     4. Otherwise ``"cython"``.
 
-    The exceptions, not worth a rule of their own: on the CPU, Numba is up to
-    a quarter faster on :meth:`lca_batch`; on a GPU, a batch of fewer than
-    roughly 10,000 queries is faster on the CPU, as each GPU call has a fixed
-    cost of a fraction of a millisecond. After a GPU kernel has failed on the
-    system, ``"fast"`` follows rules 2-4.
+    After a GPU kernel has failed on the system, ``"fast"`` follows rules 2-4.
 
     References
     ----------
@@ -1187,8 +1179,8 @@ class BPTree(SkbioObject):
         n_positions = len(positions)
         xp, device = _query_namespace(*arrays)
         if xp is None:
-            # plain NumPy: a small batch costs microseconds, and the array API
-            # wrappers would more than double it
+            # plain NumPy: the array API wrappers would cost more than a small
+            # batch itself
             arrays = np.broadcast_arrays(*(np.asarray(a) for a in arrays))
             shape = arrays[0].shape
             out = []

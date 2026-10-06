@@ -14,11 +14,6 @@ kernel (:mod:`._bp_gpu`) that compiles through ``numba_cuda_mlir.cuda`` or
 they share: choosing the Numba GPU module for a tree's device-resident data,
 and a correctness-first fallback to the CPU engines whenever a kernel is
 unavailable or fails to build on the running stack.
-
-It follows :mod:`skbio.stats.distance._gpu`, the helpers of the permutation
-tests, but keeps its own record of failed backends, so that a BPTree kernel
-failing on a backend does not disable the PERMANOVA and Mantel kernels there,
-or the reverse.
 """
 
 from warnings import warn

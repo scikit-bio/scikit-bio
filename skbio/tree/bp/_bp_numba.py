@@ -35,8 +35,8 @@ opening parenthesis first.
 
 They are meant to be called from compiled code: a batch kernel, a per-sample
 kernel, or a user's own ``@njit`` function. A single call from Python pays
-Numba's argument dispatch (about a microsecond), far more than the operation
-itself, which is why ``BPTree``'s per-node methods use the Cython engine.
+Numba's argument dispatch, which costs far more than the operation itself,
+which is why ``BPTree``'s per-node methods use the Cython engine.
 
 Single source for CPU and GPU
 -----------------------------
