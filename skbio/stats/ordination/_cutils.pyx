@@ -32,7 +32,7 @@ def e_matrix_means_cy(TReal[:, ::1] mat, TReal[:, ::1] centered, TReal[::1] row_
     centered : 2D array_like
         Output, E matrix. Must be pre-allocated and same shape as mat.
         Can point to mat (i.e. in-place)
-    row_means : 1D_array_like
+    row_means : 1D array_like
         Output, Mean values of each row in `centered`
     Returns
     -------
@@ -85,7 +85,7 @@ def f_matrix_inplace_cy(TReal[::1] row_means, TReal global_mean, TReal[:, ::1] c
 
     Parameters
     ----------
-    row_means : 1D_array_like
+    row_means : 1D array_like
         Mean values of each row in `centered`
     global_mean : real
         Global mean value in `centered`

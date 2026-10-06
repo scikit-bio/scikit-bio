@@ -28,22 +28,18 @@ class CustomSequence(GrammaredSequence):
     @classproperty
     @overrides(GrammaredSequence)
     def gap_chars(cls):
-        return set('^$')
-
-    @classproperty
-    @overrides(GrammaredSequence)
-    def default_gap_char(cls):
-        return '^'
+        return set('^')
 
     @classproperty
     @overrides(GrammaredSequence)
     def definite_chars(cls):
         return set('WXYZ')
 
+
+class NoGapSequence(GrammaredSequence):
     @classproperty
-    @overrides(GrammaredSequence)
-    def degenerate_map(cls):
-        return {}
+    def definite_chars(cls):
+        return set("WXYZ")
 
 
 class PairwiseAlignmentTests(TestCase):
@@ -113,6 +109,20 @@ class PairwiseAlignmentTests(TestCase):
                                                  CustomSequence('WXYYZZ')]))
         self.assertEqual(custom_score, 2.0)
         self.assertEqual(custom_start_end, [(0, 3), (0, 5)])
+
+    def test_global_pairwise_align_no_gap_char(self):
+        substitution_matrix = SubstitutionMatrix.identity(
+            sorted(NoGapSequence.definite_chars), 1, -1
+        ).to_dict()
+
+        with self.assertRaisesRegex(ValueError, r"does not define a default gap"):
+            global_pairwise_align(
+                NoGapSequence("WXYZ"),
+                NoGapSequence("WXYYZZ"),
+                10.0,
+                5.0,
+                substitution_matrix,
+            )
 
     # TODO: duplicate of test_local_pairwise_align_custom_alphabet, remove
     # when nondegenerate_chars is removed.

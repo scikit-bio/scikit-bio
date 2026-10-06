@@ -29,18 +29,8 @@ class CustomSequence(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def default_gap_char(cls):
-        return '-'
-
-    @classproperty
-    @overrides(GrammaredSequence)
     def definite_chars(cls):
         return set(string.ascii_letters)
-
-    @classproperty
-    @overrides(GrammaredSequence)
-    def degenerate_map(cls):
-        return {}
 
 
 class ClustalHelperTests(TestCase):
@@ -225,8 +215,7 @@ UGCUGCAUCA---------------- 33
 *     ***""")]
 
     def test_tabular_msa_to_clustal_with_empty_input(self):
-        result = _clustal_to_tabular_msa(StringIO(),
-                                         constructor=CustomSequence)
+        result = _clustal_to_tabular_msa(StringIO(), constructor=CustomSequence)
         self.assertEqual(dict(result), {})
 
     def test_tabular_msa_to_clustal_with_bad_input(self):
@@ -242,15 +231,13 @@ UGCUGCAUCA---------------- 33
             with StringIO() as fh:
                 _tabular_msa_to_clustal(result_before, fh)
                 fh.seek(0)
-                result_after = _clustal_to_tabular_msa(
-                        fh, constructor=CustomSequence)
+                result_after = _clustal_to_tabular_msa(fh, constructor=CustomSequence)
             self.assertEqual(result_before, result_after)
 
     def test_invalid_tabular_msa_to_clustal_and_clustal_to_tabular_msa(self):
         for invalid_out in self.invalid_clustal_out:
             with self.assertRaises(ClustalFormatError):
-                dict(_clustal_to_tabular_msa(invalid_out,
-                                             constructor=CustomSequence))
+                dict(_clustal_to_tabular_msa(invalid_out, constructor=CustomSequence))
 
     def test_clustal_sniffer_valid_files(self):
         for valid_out in self.valid_clustal_out:

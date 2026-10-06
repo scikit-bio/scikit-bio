@@ -18,34 +18,34 @@ class Protein(GrammaredSequence):
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the protein sequence itself.
+    sequence : str, bytes-like, 1D ndarray (uint8 or '\|S1'), or Sequence
+        Characters representing the protein sequence.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence.
-    positional_metadata : Pandas DataFrame consumable, optional
-        Arbitrary per-character metadata. For example, quality data from
-        sequencing reads. Must be able to be passed directly to the Pandas
-        DataFrame constructor.
-    interval_metadata : IntervalMetadata
-        Arbitrary interval metadata which applies to intervals within
-        a sequence to store interval features (such as protein domains).
+    positional_metadata : pd.DataFrame consumable, optional
+        Arbitrary per-character metadata. For example, quality scores of sequencing
+        reads. Must be able to pass directly to the ``pd.DataFrame`` constructor.
+    interval_metadata : IntervalMetadata, optional
+        Arbitrary interval metadata which applies to intervals within the a sequence to
+        store interval features (such as domains of the protein sequence).
     lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC Protein characters. If
-        ``False``, no characters will be converted. If a str, it will be
-        treated as a key into the positional metadata of the object. All
-        lowercase characters will be converted to uppercase, and a ``True``
-        value will be stored in a boolean array in the positional metadata
-        under the key.
+        If True, lowercase sequence characters will be converted to uppercase to ensure
+        they are valid IUPAC protein characters. If False (default), characters will not
+        be converted. If a string, in addition to the uppercase conversion, a boolean
+        array indicating which positions were originally lowercase will be stored in the
+        positional metadata under this key.
     validate : bool, optional
-        If ``True``, validation will be performed to ensure that all sequence
-        characters are in the IUPAC protein character set. If ``False``,
-        validation will not be performed. Turning off validation will improve
-        runtime performance. If invalid characters are present, however, there
-        is **no guarantee that operations performed on the resulting object
-        will work or behave as expected.** Only turn off validation if you are
-        certain that the sequence characters are valid. To store sequence data
-        that is not IUPAC-compliant, use ``Sequence``.
+        If True (default), validation will be performed to ensure that all sequence
+        characters are in the IUPAC protein character set. Turning off validation
+        (False) will improve performance. If invalid characters are present, however,
+        there is **no guarantee that subsequent operations will retain the expected
+        behavior.** Only turn off validation if you are certain that the sequence
+        characters are valid. To store sequence data that is not IUPAC-compliant, use
+        ``Sequence``.
+    copy : bool, optional
+        Control copying of sequence data. See :class:`Sequence` for details.
+
+        .. versionadded:: 0.7.5
 
     See Also
     --------
@@ -54,7 +54,7 @@ class Protein(GrammaredSequence):
     Notes
     -----
     According to the IUPAC notation [1]_ , a protein sequence may contain the
-    following 20 definite characters (canonical amino acids):
+    following 20 canonical amino acids:
 
     +-----+---------+--------------+
     |Code |3-letter |Amino acid    |
@@ -100,8 +100,21 @@ class Protein(GrammaredSequence):
     |``Y``|Tyr      |Tyrosine      |
     +-----+---------+--------------+
 
-    And the following four degenerate characters, each of which representing
-    two or more amino acids:
+    And the following two non-canonical amino acids:
+
+    +-----+---------+--------------+
+    |Code |3-letter |Amino acid    |
+    +=====+=========+==============+
+    |``O``|Pyl      |Pyrrolysine   |
+    +-----+---------+--------------+
+    |``U``|Sec      |Selenocysteine|
+    +-----+---------+--------------+
+
+    The total of 22 amino acids listed above constitute the definite character set of
+    the ``Protein`` sequence type.
+
+    Additionally, the following four degenerate characters are defined, each of which
+    representing two or more amino acids:
 
     +-----+---------+------------+
     |Code |3-letter |Amino acids |
@@ -112,21 +125,20 @@ class Protein(GrammaredSequence):
     +-----+---------+------------+
     |``J``|Xle      |I or L      |
     +-----+---------+------------+
-    |``X``|Xaa      |All 20      |
+    |``X``|Xaa      |All 22      |
     +-----+---------+------------+
 
     Plus one stop character: ``*`` (Ter), and two gap characters: ``-`` and ``.``.
 
-    Characters other than the above 27 are not allowed. If you intend to use
-    additional characters to represent non-canonical amino acids, such as ``U``
-    (Sec, Selenocysteine) and ``O`` (Pyl, Pyrrolysine), you may create a custom
-    alphabet using ``GrammaredSequence``. Directly modifying the alphabet of
-    ``Protein`` may break functions that rely on the IUPAC alphabet.
+    Characters other than the above 29 are not allowed. To include additional
+    characters, you may create a custom alphabet using :class:`GrammaredSequence`.
+    Directly modifying the alphabet of ``Protein`` may break functions that rely on the
+    IUPAC alphabet.
 
-    It should be noted that some functions do not support certain characters.
-    For example, the BLOSUM and PAM substitution matrices do not support ``J``
-    (Xle). In such circumstances, unsupported characters will be replaced with
-    ``X`` to represent any of the canonical amino acids.
+    It should be noted that some functions do not support certain valid characters. For
+    example, the BLOSUM and PAM substitution matrices do not contain ``J`` (Xle). In
+    such circumstances, unsupported characters will be replaced with the wildchard
+    character ``X`` to represent any of the definite amino acids.
 
     References
     ----------

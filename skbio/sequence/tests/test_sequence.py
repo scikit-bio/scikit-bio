@@ -399,24 +399,17 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         # sequence should be what we'd expect
         self.assertEqual(seq, Sequence('A*B'))
+        # External ndarray storage is copied so aliases remain independently
+        # mutable without affecting the Sequence.
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNot(seq._bytes, view)
+        self.assertTrue(view.flags.writeable)
 
-        # we shouldn't own the memory because no copy should have been made
-        self.assertFalse(seq._owns_bytes)
-
-        # can't mutate view because it isn't writeable anymore
-        with self.assertRaises(ValueError):
-            view[1] = 100
-
-        # sequence shouldn't have changed
+        # Mutate both the base array and the supplied view, including inserting
+        # a byte outside ASCII. The Sequence must remain unchanged.
+        bytes[0] = 255
+        view[1] = 100
         self.assertEqual(seq, Sequence('A*B'))
-
-        # mutate bytes (*not* the view)
-        bytes[0] = 99
-
-        # Sequence changed because we are only able to make the view read-only,
-        # not its source (bytes). This is somewhat inconsistent behavior that
-        # is (to the best of our knowledge) outside our control.
-        self.assertEqual(seq, Sequence('c*B'))
 
     def test_init_from_noncontiguous_sequence_bytes_view(self):
         bytes = np.array([65, 42, 66, 42, 65], dtype=np.uint8)
@@ -436,17 +429,159 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # sequence shouldn't have changed
         self.assertEqual(seq, Sequence('ABA'))
 
-    def test_init_no_copy_of_sequence(self):
+    def test_init_copy_of_external_ndarray(self):
         bytes = np.array([65, 66, 65], dtype=np.uint8)
         seq = Sequence(bytes)
 
-        # should share the same memory
-        self.assertIs(seq._bytes, bytes)
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNot(seq._bytes, bytes)
+        self.assertTrue(bytes.flags.writeable)
 
-        # shouldn't be able to mutate the Sequence object's internals by
-        # mutating the shared memory
+        # Caller-owned storage can change after construction without changing
+        # the Sequence or invalidating its ASCII invariant.
+        bytes[1] = 255
+        self.assertEqual(seq, Sequence('ABA'))
+
+    def test_init_copy_of_bytearray(self):
+        data = bytearray(b"ABA")
+        seq = Sequence(data)
+
+        self.assertTrue(seq._owns_bytes)
+        data[1] = 255
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_of_readonly_memoryview(self):
+        data = bytearray(b"ABA")
+        view = memoryview(data).toreadonly()
+        seq = Sequence(view)
+
+        # A read-only view can still alias writable backing storage, so it
+        # cannot safely be shared.
+        self.assertTrue(seq._owns_bytes)
+        data[1] = 255
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_of_noncontiguous_memoryview(self):
+        data = bytearray(b"aBcD")
+        view = memoryview(data)[::2]
+        seq = Sequence(view, lowercase=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertEqual(seq, Sequence("AC"))
+
+        # The packed Sequence storage is independent of the source buffer.
+        data[0] = 255
+        self.assertEqual(seq, Sequence("AC"))
+
+    def test_init_copy_true_of_noncontiguous_memoryview(self):
+        data = bytearray(b"ABCD")
+        view = memoryview(data)[::2]
+        seq = Sequence(view, copy=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertEqual(seq, Sequence("AC"))
+
+    def test_init_copy_false_of_noncontiguous_memoryview_raises(self):
+        data = bytearray(b"ABCD")
+        view = memoryview(data)[::2]
+
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(view, copy=False)
+
+    def test_init_noncontiguous_memoryview_is_validated(self):
+        data = bytearray([65, 0, 255])
+        view = memoryview(data)[::2]
+
+        with self.assertRaisesRegex(ValueError, r"Found byte value 255"):
+            Sequence(view)
+
+    def test_init_no_copy_of_immutable_bytes(self):
+        data = b"ABA"
+        seq = Sequence(data)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertIs(seq._bytes.base, data)
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_false_ndarray(self):
+        data = np.array([65, 66, 65], dtype=np.uint8)
+        seq = Sequence(data, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(np.shares_memory(seq._bytes, data))
+        # Sequence must not make the caller's ndarray read-only.
+        self.assertTrue(data.flags.writeable)
         with self.assertRaises(ValueError):
-            bytes[1] = 42
+            seq._bytes[0] = 66
+
+    def test_init_copy_false_bytearray(self):
+        data = bytearray(b"ABA")
+        seq = Sequence(data, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(
+            np.shares_memory(seq._bytes, np.frombuffer(data, dtype=np.uint8))
+        )
+
+    def test_init_copy_false_noncontiguous_raises(self):
+        data = np.array([65, 66, 65, 66], dtype=np.uint8)[::2]
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(data, copy=False)
+
+    def test_init_copy_false_text_raises(self):
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence("ABA", copy=False)
+
+    def test_init_copy_false_lowercase_conversion_raises(self):
+        with self.assertRaisesRegex(ValueError, r"`copy=False`"):
+            Sequence(b"aBA", lowercase=True, copy=False)
+
+        # No copy is needed when there is nothing to convert.
+        seq = Sequence(b"ABA", lowercase=True, copy=False)
+        self.assertEqual(seq, Sequence("ABA"))
+        self.assertFalse(seq._owns_bytes)
+
+    def test_init_copy_true(self):
+        data = b"ABA"
+        seq = Sequence(data, copy=True)
+
+        self.assertTrue(seq._owns_bytes)
+        self.assertIsNone(seq._bytes.base)
+        self.assertEqual(seq, Sequence("ABA"))
+
+    def test_init_copy_sequence(self):
+        source = Sequence("ABA")
+
+        shared = Sequence(source, copy=False)
+        self.assertFalse(shared._owns_bytes)
+        self.assertTrue(np.shares_memory(shared._bytes, source._bytes))
+
+        copied = Sequence(source, copy=True)
+        self.assertTrue(copied._owns_bytes)
+        self.assertFalse(np.shares_memory(copied._bytes, source._bytes))
+
+    def test_init_invalid_copy(self):
+        with self.assertRaisesRegex(ValueError, r"`copy` must be"):
+            Sequence(b"ABA", copy="never")
+
+    def test_init_validate_false(self):
+        # Validation is an assertion supplied by the caller. Invalid input is
+        # unsupported, but construction itself does not scan when disabled.
+        seq = Sequence(bytes([255]), validate=False)
+        self.assertEqual(int(seq._bytes[0]), 255)
+
+        data = np.array([128], dtype=np.uint8)
+        seq = Sequence(data, validate=False)
+        self.assertEqual(int(seq._bytes[0]), 128)
+        # Safe ownership policy is independent of validation policy.
+        self.assertTrue(seq._owns_bytes)
+
+    def test_init_validate_false_copy_false(self):
+        data = np.array([255], dtype=np.uint8)
+        seq = Sequence(data, validate=False, copy=False)
+
+        self.assertFalse(seq._owns_bytes)
+        self.assertTrue(np.shares_memory(seq._bytes, data))
 
     def test_init_invalid_sequence(self):
         # invalid dtype (numpy.ndarray input)
@@ -485,6 +620,42 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         # out of ASCII range
         with self.assertRaises(UnicodeEncodeError):
             Sequence('abc\u1F30')
+
+    def test_init_non_7bit_ascii(self):
+        msg = r'Found byte value %d'
+
+        def assert_rejected(payload, bad_byte):
+            with self.assertRaisesRegex(ValueError, msg % bad_byte):
+                Sequence(payload)
+
+        # 128 and 255 exceed 7-bit ASCII
+        assert_rejected(bytes([65, 255]), 255)
+        assert_rejected(bytearray([128]), 128)
+        assert_rejected(memoryview(bytes([65, 128, 255])), 255)
+        assert_rejected(np.array([65, 128], dtype=np.uint8), 128)
+        assert_rejected(np.array([255], dtype=np.uint8), 255)
+        assert_rejected(np.array([1, 200, 128], dtype=np.uint8), 200)
+
+        # Non-contiguous view that still contains an invalid byte.
+        assert_rejected(np.array([65, 1, 128], dtype=np.uint8)[::2], 128)
+        assert_rejected(np.array([b'A', b'\xff'], dtype='|S1'), 255)
+        assert_rejected(np.array([b'\x80'], dtype='|S1'), 128)
+
+        # 0 and 127 are valid ASCII
+        obs = Sequence(np.array([0, 65, 127], dtype=np.uint8))
+        self.assertIsInstance(obs, Sequence)
+
+        # Text still fails through ASCII encoding, not the byte check.
+        with self.assertRaises(UnicodeEncodeError):
+            Sequence('Aé')
+
+    def test_init_masked_array_does_not_bypass_ascii_validation(self):
+        data = np.ma.array([65, 255], mask=[False, True], dtype=np.uint8)
+
+        for copy in (None, True, False):
+            with self.subTest(copy=copy):
+                with self.assertRaisesRegex(ValueError, r"Found byte value 255"):
+                    Sequence(data, copy=copy)
 
     def test_values_property(self):
         # Property tests are only concerned with testing the interface
@@ -1581,6 +1752,14 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
 
         with self.assertRaisesRegex(ValueError, r'outside the range'):
             seq.frequencies(chars='\u1F30')
+
+        # Byte 127 is a valid character; 128 is outside the ASCII domain.
+        bound = Sequence(np.array([127], dtype=np.uint8))
+        self.assertEqual(bound.frequencies(chars=chr(127)), {chr(127): 1})
+        with self.assertRaisesRegex(ValueError, r'outside the range'):
+            bound.frequencies(chars=chr(128))
+        with self.assertRaisesRegex(ValueError, r'outside the range'):
+            bound.frequencies(chars=b'\x80')
 
         with self.assertRaisesRegex(ValueError, r'outside the range'):
             seq.frequencies(chars={'c', '\u1F30'})

@@ -9,11 +9,11 @@
 """Shared helpers for the single-source Numba CUDA/HIP GPU backends.
 
 The permutation-test statistics (PERMANOVA, Mantel) each ship a fused kernel that
-compiles through ``numba.cuda`` on NVIDIA and ``numba.hip`` on AMD. This module
-holds the piece they share: choosing the Numba GPU module for a given
-device-resident array (``numba.cuda`` for CUDA CuPy / PyTorch, ``numba.hip`` for
-ROCm CuPy / PyTorch), and a correctness-first fallback to the array-API path
-whenever the fused kernel is unavailable or fails to build on the running stack.
+compiles through ``numba_cuda_mlir.cuda`` or ``numba.cuda`` on NVIDIA and
+``numba.hip`` on AMD. This module holds the piece they share: choosing the Numba
+GPU module for a given device-resident array, and a correctness-first fallback to
+the array-API path whenever the fused kernel is unavailable or fails to build on
+the running stack.
 """
 
 from warnings import warn
@@ -35,9 +35,10 @@ _unavailable = set()
 def _numba_gpu_module_for(arr):
     """Return the Numba GPU module for ``arr``'s device, or None.
 
-    CUDA-built CuPy and PyTorch map to ``numba.cuda``; ROCm-built CuPy and PyTorch
-    map to ``numba.hip`` (both report the same array-API namespace, so the build's
-    own flag disambiguates them). Returns None for any other namespace (e.g. JAX,
+    CUDA-built CuPy and PyTorch map to ``numba_cuda_mlir.cuda`` if it is installed,
+    and to ``numba.cuda`` otherwise; ROCm-built CuPy and PyTorch map to
+    ``numba.hip`` (both report the same array-API namespace, so the build's own
+    flag disambiguates them). Returns None for any other namespace (e.g. JAX,
     Dask), an unavailable backend, when Numba GPU support is not installed, or when
     this backend's fused kernel has already failed once in this process (see
     :func:`_mark_gpu_unavailable`); the caller then takes the array-API path.
@@ -70,8 +71,19 @@ def _numba_gpu_module_for(arr):
     else:
         return None
 
+    if want == "cuda":
+        # numba-cuda is in maintenance mode and does not support NumPy 2.5, so its
+        # successor, numba-cuda-mlir, is preferred when it is installed.
+        mod = _available_module("numba_cuda_mlir", "cuda")
+        if mod is not None:
+            return mod
+    return _available_module("numba", want)
+
+
+def _available_module(package, name):
+    """Return ``package.name`` if it imports and reports a usable GPU, else None."""
     try:
-        mod = getattr(__import__("numba", fromlist=[want]), want)
+        mod = getattr(__import__(package, fromlist=[name]), name)
     except Exception:
         return None
     try:

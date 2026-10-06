@@ -702,11 +702,12 @@ class PERMDISPEngineTests(TestCase):
     def test_engine_fast_is_cython_without_numba(self):
         # The counterpart to test_engine_fast_is_accepted above. Without numba
         # installed, "fast" resolves to "cython" and runs the exact same
-        # cython call as engine="cython", so unlike the numba comparison this
-        # one is exact.
-        obs = permdisp(self.dm, self.grouping, permutations=99, seed=42,
+        # cython call as engine="cython". Reuse the ordination so separate
+        # eigendecompositions cannot introduce floating-point differences.
+        ordination = pcoa(self.dm, dimensions=10)
+        obs = permdisp(ordination, self.grouping, permutations=99, seed=42,
                        engine="fast")
-        exp = permdisp(self.dm, self.grouping, permutations=99, seed=42,
+        exp = permdisp(ordination, self.grouping, permutations=99, seed=42,
                        engine="cython")
         self.assertEqual(obs['test statistic'], exp['test statistic'])
         self.assertEqual(obs['p-value'], exp['p-value'])

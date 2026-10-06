@@ -1,5 +1,34 @@
 # scikit-bio changelog
 
+## Version 0.7.5-dev
+
+### Features
+
+* Documented "alignment-like", an abstract for inputs that represent two or more aligned sequences ([#2627](https://github.com/scikit-bio/scikit-bio/pull/2627)). 
+* Alignment encoding now supports arbitrary hashable symbols such as strings, tuples, `None`, and `frozenset` objects while retaining the optimized ASCII path. `bytes` and `bytearray` inputs are handled directly. Documented "sequence-like", an abstract for finite, ordered sequences of hashable symbols. ([#2626](https://github.com/scikit-bio/scikit-bio/pull/2626)).
+* `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
+* Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars` ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
+* Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
+* Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
+
+
+### Bug Fixes
+
+* Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
+* Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
+
+
+### Miscellaneous
+
+* `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
+
+
 ## Version 0.7.4
 
 ### Features

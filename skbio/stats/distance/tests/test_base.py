@@ -320,6 +320,30 @@ class PairwiseMatrixTestBase(PairwiseMatrixTestData):
         with self.assertRaises(PairwiseMatrixError):
             self.matobj(data, [])
 
+    def test_from_iterable_metric_keywords(self):
+        seqs = [
+            Sequence("AACC", metadata={"id": "a"}),
+            Sequence("ACAC", metadata={"id": "b"}),
+        ]
+        # Non-overlapping 2-mers are {AA, CC} and {AC}, respectively.
+        obs = self.matobj.from_iterable(
+            iter(seqs),
+            skbio.sequence.distance.kmer_distance,
+            key="id",
+            k=2,
+            overlap=False,
+        )
+        npt.assert_array_equal(obs.data, [[0, 1], [1, 0]])
+        self.assertEqual(obs.ids, ("a", "b"))
+
+    def test_from_iterable_asymmetric_metric_keywords(self):
+        def metric(a, b, *, scale):
+            return (b - a) * scale
+
+        obs = self.matobj.from_iterable([1, 3], metric, keys=["a", "b"], scale=2)
+        npt.assert_array_equal(obs.data, [[0, 4], [-4, 0]])
+        self.assertEqual(obs.ids, ("a", "b"))
+
     def test_from_iterable_non_hollow_data(self):
         iterable = (x for x in range(4))
 
@@ -830,6 +854,27 @@ class SymmetricMatrixTestBase(PairwiseMatrixTestData):
             np.array([0.123]),
             np.array([0.01, 4.2, 12.0]),
         ] * 2
+
+    def test_from_iterable_metric_keywords(self):
+        seqs = [
+            Sequence("AACC", metadata={"id": "a"}),
+            Sequence("ACAC", metadata={"id": "b"}),
+        ]
+        for validate in (True, False):
+            for condensed in (True, False):
+                with self.subTest(validate=validate, condensed=condensed):
+                    # Non-overlapping 2-mers are {AA, CC} and {AC}, respectively.
+                    obs = self.matobj.from_iterable(
+                        iter(seqs),
+                        skbio.sequence.distance.kmer_distance,
+                        key="id",
+                        k=2,
+                        overlap=False,
+                        validate=validate,
+                        condensed=condensed,
+                    )
+                    npt.assert_array_equal(obs.redundant_form(), [[0, 1], [1, 0]])
+                    self.assertEqual(obs.ids, ("a", "b"))
 
     def test_get_element_from_condensed(self):
         # check that it gets diagonal values correct
@@ -1496,6 +1541,27 @@ class DistanceMatrixTestBase(PairwiseMatrixTestData):
     def test_init_nans_condensed(self):
         with self.assertRaisesRegex(DistanceMatrixError, r"NaNs"):
             self.matobj([[0.0, np.nan], [np.nan, 0.0]], ["a", "b"], condensed=True)
+
+    def test_from_iterable_metric_keywords(self):
+        seqs = [
+            Sequence("AACC", metadata={"id": "a"}),
+            Sequence("ACAC", metadata={"id": "b"}),
+        ]
+        for validate in (True, False):
+            for condensed in (True, False):
+                with self.subTest(validate=validate, condensed=condensed):
+                    # Non-overlapping 2-mers are {AA, CC} and {AC}, respectively.
+                    obs = self.matobj.from_iterable(
+                        iter(seqs),
+                        skbio.sequence.distance.kmer_distance,
+                        key="id",
+                        k=2,
+                        overlap=False,
+                        validate=validate,
+                        condensed=condensed,
+                    )
+                    npt.assert_array_equal(obs.redundant_form(), [[0, 1], [1, 0]])
+                    self.assertEqual(obs.ids, ("a", "b"))
 
     def test_from_iterable_no_key(self):
         iterable = (x for x in range(4))
@@ -2503,14 +2569,18 @@ class DistanceMatrixArrayAPITests(TestCase, ArrayAPITestMixin):
         self.assert_close(dm_1d.redundant_form(), self.data)
 
     @array_backends("numpy", "jax", "torch", "cupy")
-    def test_plot_and_to_data_frame_backend(self, xp, device):
-        # plot() and to_data_frame() hand off to matplotlib/pandas, which are
-        # host-only; a non-NumPy buffer must be materialized rather than
-        # erroring or silently misbehaving.
+    def test_to_data_frame_backend(self, xp, device):
+        # A non-NumPy buffer must be materialized for pandas.
         dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=list("abcde"))
         df = dm.to_data_frame()
         self.assertEqual(df.shape, (5, 5))
         self.assert_close(df.to_numpy(), self.data)
+
+    @skipUnless(has_matplotlib, "Matplotlib not available.")
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_plot_backend(self, xp, device):
+        # A non-NumPy buffer must be materialized for matplotlib.
+        dm = DistanceMatrix(self.make_array(xp, device, self.data), ids=list("abcde"))
         fig = dm.plot()
         self.assertEqual(len(fig.axes), 2)  # heatmap axis + colorbar axis
 

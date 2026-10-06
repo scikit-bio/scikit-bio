@@ -131,6 +131,46 @@ class ScoreTests(unittest.TestCase):
         obs = align_score((path, seqs), (5, -4), (5, 2), gap_chars="A")
         self.assertEqual(obs, 53)
 
+        # aligned arbitrary hashable symbols
+        seqs = [
+            [("codon", "ATG"), "-", frozenset({"x"})],
+            [("codon", "ATG"), frozenset({"x"}), "-"],
+        ]
+        obs = align_score(seqs, (1, -1), gap_cost=0)
+        self.assertEqual(obs, 1)
+
+        # aligned numeric ASCII sequences can use a numeric gap symbol
+        seqs = [np.array([1, 0]), np.array([1, 2])]
+        obs = align_score(seqs, (1, -1), gap_cost=0, gap_chars=[0])
+        self.assertEqual(obs, 1)
+
+    def test_align_score_alignment_like(self):
+        """Equivalent alignment-like representations have identical scores."""
+        for aligned in (
+            ["AC-GT", "ACGGT"],
+            ["AC-GT", "ACGGT", "A--GT"],
+        ):
+            path = AlignPath.from_aligned(aligned)
+            unaligned = [seq.replace("-", "") for seq in aligned]
+            alignments = (
+                TabularMSA([DNA(seq) for seq in aligned]),
+                aligned,
+                (path, unaligned),
+            )
+            scores = [align_score(aln, (2, -1), (3, 1)) for aln in alignments]
+            self.assertListEqual(scores, [scores[0]] * len(scores))
+
+        # A 2-D NumPy array represents a collection of 1-D sequences.
+        aligned = np.array([[65, 45, 67], [65, 67, 45]], dtype=np.uint8)
+        path = AlignPath.from_aligned(aligned, gap_chars=[45])
+        unaligned = np.array([[65, 67], [65, 67]], dtype=np.uint8)
+        alignments = (aligned, (path, unaligned))
+        scores = [
+            align_score(aln, (1, -1), gap_cost=0, gap_chars=[45])
+            for aln in alignments
+        ]
+        self.assertListEqual(scores, [1, 1])
+
     def test_align_score_pair(self):
         """Test on pairwise alignments."""
         # single internal gap, no terminal gap

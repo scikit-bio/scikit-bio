@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   test-gpu:
-    name: Array API (${{ matrix.backend }}, cuda)
+    name: Array API (${{ matrix.backend }}, cuda, ${{ matrix.numba }})
     if: |
       (github.event_name == 'pull_request' &&
        github.event.action == 'labeled' &&
@@ -47,14 +47,26 @@ jobs:
       # with different backends at the same time.
       max-parallel: 1
 
+      # numba-cuda-mlir is the maintained Numba GPU layer. numba-cuda is deprecated
+      # and does not support NumPy 2.5; its jobs keep the older installations
+      # working. JAX has no Numba GPU path, so it runs once.
       matrix:
         include:
           - backend: torch
             device: cuda
+            numba: numba-cuda-mlir
           - backend: jax
             device: cuda
+            numba: numba-cuda-mlir
           - backend: cupy
             device: cuda
+            numba: numba-cuda-mlir
+          - backend: torch
+            device: cuda
+            numba: numba-cuda
+          - backend: cupy
+            device: cuda
+            numba: numba-cuda
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -76,10 +88,13 @@ jobs:
             cupy)  pip install cupy-cuda12x[ctk] ;;
           esac
           pip install -r ci/requirements.txt -r ci/requirements.test.txt
-          # numba-cuda is what lets the fused GPU kernels actually run here.
-          # Without it `engine="numba"` cannot resolve and the kernel modules
-          # are never executed, so they show up as uncovered.
-          pip install "numba-cuda[cu12]"
+          # The Numba GPU layer is what lets the fused GPU kernels actually run
+          # here. numba-cuda-mlir does not bring in numba itself, which
+          # `engine="numba"` needs to resolve.
+          case "${{ matrix.numba }}" in
+            numba-cuda-mlir) pip install numba "numba-cuda-mlir[cu12]" ;;
+            numba-cuda)      pip install "numba-cuda[cu12]" "numpy<2.5" ;;
+          esac
 
       - name: Verify GPU is visible to backend
         env:
@@ -106,22 +121,34 @@ jobs:
           PY
 
       - name: Verify Numba can target the GPU
-        # Without this the job still passes when numba-cuda is missing or cannot
-        # find NVVM: the fused kernel is simply skipped and every test takes the
-        # array-API fallback, so the GPU kernels would look tested when they were
-        # never run.
+        # Without this the job still passes when the Numba GPU layer is missing or
+        # cannot find NVVM: the fused kernel is simply skipped and every test takes
+        # the array-API fallback, so the GPU kernels would look tested when they
+        # were never run. A kernel that fails to build is caught by the warning
+        # filter in the test step instead.
+        env:
+          NUMBA_GPU: ${{ matrix.numba }}
         run: |
           python - <<'PY'
-          from numba import cuda
-          assert cuda.is_available(), "numba.cuda cannot target this GPU"
-          print("numba.cuda devices:", cuda.gpus)
+          import os
+          if os.environ["NUMBA_GPU"] == "numba-cuda-mlir":
+              from numba_cuda_mlir import cuda
+          else:
+              from numba import cuda
+          assert cuda.is_available(), "Numba cannot target this GPU"
+          print(os.environ["NUMBA_GPU"], "devices:", cuda.gpus)
           PY
 
       - name: Run tests
+        # The dispatchers catch a kernel failure, warn once and fall back, which
+        # passes every test. Turning that warning into an error makes the job
+        # fail when a kernel did not run.
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
           SKBIO_DEVICE: ${{ matrix.device }}
-        run: cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio
+        run: |
+          cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio \
+            -W "error:The Numba GPU kernel could not be used:UserWarning"
 
       - name: Generate coverage reports
         run: cd ci && coverage lcov --rcfile ../pyproject.toml

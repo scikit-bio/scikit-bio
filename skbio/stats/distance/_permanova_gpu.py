@@ -9,17 +9,19 @@
 """PERMANOVA GPU backend: a fused single-source Numba CUDA/HIP kernel.
 
 This is the fast path taken when a DistanceMatrix is already on a GPU device and
-``engine="numba"`` is requested: the same source compiles through ``numba.cuda``
-on NVIDIA and ``numba.hip`` on AMD, and the kernel reads the device-resident
-matrix in place (no host round-trip). It follows the coalesced design of
+``engine="numba"`` is requested: the same source compiles through
+``numba_cuda_mlir.cuda`` or ``numba.cuda`` on NVIDIA and ``numba.hip`` on AMD,
+and the kernel reads the device-resident matrix in place (no host round-trip).
+It follows the coalesced design of
 scikit-bio-binaries (``pmn_f_stat_sW_cuda_one``): one block per permutation,
 threads walk the columns so global reads are coalesced, group labels cached in
 shared memory, s_W reduced in shared memory.
 
 Correctness-first stays the rule: this backend runs only when the device maps to
-an available Numba GPU module (CUDA CuPy / PyTorch -> ``numba.cuda``, ROCm CuPy /
-PyTorch -> ``numba.hip``). If the fused kernel cannot build or run on the current stack,
-the caller catches it, marks the backend, and keeps the vendor-neutral xp path.
+an available Numba GPU module (CUDA CuPy / PyTorch -> ``numba_cuda_mlir.cuda`` or
+``numba.cuda``, ROCm CuPy / PyTorch -> ``numba.hip``). If the fused kernel cannot
+build or run on the current stack, the caller catches it, marks the backend, and
+keeps the vendor-neutral xp path.
 Permutations are drawn on the host in the same RNG order as the CPU Monte-Carlo
 path, so the p-value is identical to the cython, numba and xp engines.
 
@@ -40,7 +42,8 @@ _kernels = {}  # backend name -> compiled kernel (built on first use)
 
 def _build_kernel(gpu):
     """Compile the within-group sum-of-squares kernel for ``gpu`` (cuda or hip)."""
-    from numba import float64 as nb_f64, int64 as nb_i64
+    # numpy's types rather than numba's, which numba-cuda-mlir does not accept.
+    nb_f64, nb_i64 = np.float64, np.int64
 
     @gpu.jit
     def _pmn_sW(n_dims, mat, groupings, inv_gs, out_sW):  # pragma: no cover
@@ -170,9 +173,11 @@ def _run_permanova_gpu(gpu, distmat, grouping, column, permutations, seed, ids=N
     d_grp = gpu.to_device(groupings)
     d_inv = gpu.to_device(inv_gs)
     d_out = gpu.device_array(permutations + 1, dtype=np.float64)
-    # dm is already on the device; the kernel reads it in place via the array's
-    # __cuda_array_interface__ (no host round-trip).
-    kernel[permutations + 1, _TPB](sample_size, dm, d_grp, d_inv, d_out)
+    # dm is already on the device; as_cuda_array wraps it in place (no host
+    # round-trip), since numba-cuda-mlir does not take a tensor directly.
+    kernel[permutations + 1, _TPB](
+        sample_size, gpu.as_cuda_array(dm), d_grp, d_inv, d_out
+    )
     gpu.synchronize()
 
     stat, p_value = _assemble_fp(
