@@ -10,19 +10,28 @@
 import numpy.testing as npt
 import numpy as np
 cimport numpy as cnp
+from numpy cimport uint8_t as BOOL_t
 
-from skbio.tree.bp._bp cimport BPTree, mM
+cdef extern from "Python.h":
+    cdef Py_ssize_t PY_SSIZE_T_MAX
+
+from libc.math cimport ceil, log as ln, pow, log2
+
+from skbio.tree import BPTree
+from skbio.tree.bp._bp_cy cimport _BPKernel
+from skbio.tree.bp._bp_binary_tree cimport (
+    bt_node_from_left, bt_left_child, bt_right_child)
 
 fig1_B = np.array([1, 1, 1, 0, 1, 0, 1, 1 ,0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0,
                    0, 0, 0], dtype=np.uint8)
 
 
 def get_test_obj():
-    return BPTree(fig1_B)
+    return BPTree(fig1_B)._kernel
 
 
 def test_rank():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     counts_1 = fig1_B.cumsum()
     counts_0 = (1 - fig1_B).cumsum()
     for exp, t in zip((counts_1, counts_0), (1, 0)):
@@ -31,7 +40,7 @@ def test_rank():
 
 
 def test_select():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
     pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
 
@@ -41,13 +50,13 @@ def test_select():
 
 
 def test_rank_property():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     for i in range(len(fig1_B)):
         npt.assert_equal(obj.rank(1, i) + obj.rank(0, i), i+1)
 
 
 def test_rank_select_property():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
     pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
     for t, pos in zip((0, 1), (pos_0, pos_1)):
@@ -57,7 +66,7 @@ def test_rank_select_property():
 
 
 def test_excess():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     # from fig 2
     exp = [1, 2, 3, 2, 3, 2, 3, 4, 3, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 2, 1, 0]
     for idx, e in enumerate(exp):
@@ -65,7 +74,7 @@ def test_excess():
 
 
 def test_depth():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     # from fig 2
     exp = [1, 2, 3, 2, 3, 2, 3, 4, 3, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 2, 1, 0]
     for idx, e in enumerate(exp):
@@ -73,7 +82,7 @@ def test_depth():
 
 
 def test_close():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [21, 10, 3, 5, 9, 8, 12, 20, 19, 16, 18]
     for i, e in zip(np.argwhere(fig1_B == 1).squeeze(), exp):
         npt.assert_equal(obj.close(i), e)
@@ -81,7 +90,7 @@ def test_close():
 
 
 def test_open():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [2, 4, 7, 6, 1, 11, 15, 17, 14, 13, 0]
     for i, e in zip(np.argwhere(fig1_B == 0).squeeze(), exp):
         npt.assert_equal(obj.open(i), e)
@@ -90,7 +99,7 @@ def test_open():
 
 
 def test_enclose():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     # i > 0 and i < (len(B) - 1)
     exp = [0, 1, 1, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 13, 14, 14, 14, 14, 13, 0]
     for i, e in zip(range(1, len(fig1_B) - 1), exp):
@@ -98,7 +107,7 @@ def test_enclose():
 
 
 def test_parent():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [-1, 0, 1, 1, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 13, 14, 14, 14, 14, 13,
            0, -1]
     for i, e in zip(range(len(fig1_B)), exp):
@@ -106,12 +115,12 @@ def test_parent():
 
 
 def test_root():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     npt.assert_equal(obj.root(), 0)
 
 
 def test_is_tip():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
 
     exp = [0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
     for i, e in enumerate(exp):
@@ -119,7 +128,7 @@ def test_is_tip():
 
 
 def test_first_child():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [1, 2, 0, 0, 0, 0, 7, 0, 0, 7, 2, 0, 0, 14, 15, 0, 0, 0, 0, 15, 14,
            1]
     for i, e in enumerate(exp):
@@ -127,7 +136,7 @@ def test_first_child():
 
 
 def test_last_child():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [obj.preorder_select(7),
            obj.preorder_select(4),
            0,
@@ -155,7 +164,7 @@ def test_last_child():
 
 
 def test_next_sibling():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [0, 11, 4, 4, 6, 6, 0, 0, 0, 0, 11, 13, 13, 0, 0, 17, 17, 0, 0, 0, 0,
            0]
     for i, e in enumerate(exp):
@@ -163,7 +172,7 @@ def test_next_sibling():
 
 
 def test_previous_sibling():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = [0, 0, 0, 0, 2, 2, 4, 0, 0, 4, 0, 1, 1, 11, 0, 0, 0, 15, 15, 0, 11,
            0]
     for i, e in enumerate(exp):
@@ -171,7 +180,7 @@ def test_previous_sibling():
 
 
 def test_fwdsearch():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = {(0, 0): 10,   # close of first child
            (3, -2): 21,  # close of root
            (11, 2): 15}  # from one tip to the next
@@ -181,7 +190,7 @@ def test_fwdsearch():
 
 
 def test_bwdsearch():
-    cdef BPTree obj = get_test_obj()
+    cdef _BPKernel obj = get_test_obj()
     exp = {(3, 0): 1,  # open of parent
            (21, 4): 17,  # nested tip
            (9, 2): 7}  # open of the node
@@ -191,9 +200,9 @@ def test_bwdsearch():
 
 
 def test_fwdsearch_more():
-    cdef BPTree bp
+    cdef _BPKernel bp
     from skbio.tree.bp import parse_newick
-    bp = parse_newick('((a,b,(c)),d,((e,f)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f)));')._kernel
 
     # simulating close so only testing open parentheses. A "close" on a closed
     # parenthesis does not make sense, so the result is not useful.
@@ -213,7 +222,7 @@ def test_fwdsearch_more():
     # this translates into:
     # 012345678901234567890123
     # ((()()(()))()((()()())))
-    bp = parse_newick('((a,b,(c)),d,((e,f,g)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f,g)));')._kernel
 
     # [(open_idx, close_idx), ...]
     exp = [(0, 23), (1, 10), (2, 3), (4, 5), (6, 9), (7, 8), (11, 12),
@@ -225,9 +234,9 @@ def test_fwdsearch_more():
 
 
 def test_bwdsearch_more():
-    cdef BPTree bp
+    cdef _BPKernel bp
     from skbio.tree.bp import parse_newick
-    bp = parse_newick('((a,b,(c)),d,((e,f)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f)));')._kernel
 
     # simulating open so only testing closed parentheses.
     # [(close_idx, open_idx), ...]
@@ -244,7 +253,7 @@ def test_bwdsearch_more():
     # this translates into:
     # 012345678901234567890123
     # ((()()(()))()((()()())))
-    bp = parse_newick('((a,b,(c)),d,((e,f,g)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f,g)));')._kernel
 
     # [(close_idx, open_idx), ...]
     exp = [(23, 0), (10, 1), (3, 2), (5, 4), (9, 6), (8, 7), (12, 11),
@@ -256,9 +265,9 @@ def test_bwdsearch_more():
 
 
 def test_scan_block_forward():
-    cdef BPTree bp
+    cdef _BPKernel bp
     from skbio.tree.bp import parse_newick
-    bp = parse_newick('((a,b,(c)),d,((e,f)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f)));')._kernel
 
     # [(open, close), ...]
     b = 4
@@ -293,9 +302,9 @@ def test_scan_block_forward():
 
 
 def test_scan_block_backward():
-    cdef BPTree bp
+    cdef _BPKernel bp
     from skbio.tree.bp import parse_newick
-    bp = parse_newick('((a,b,(c)),d,((e,f)));')
+    bp = parse_newick('((a,b,(c)),d,((e,f)));')._kernel
 
     # adding +1 to simluate "open" so calls on open parentheses are weird
     # [(open, close), ...]
@@ -330,20 +339,135 @@ def test_scan_block_backward():
 
 
 def test_rmm():
-    cdef BPTree bp
     from skbio.tree.bp import parse_newick
     # test tree is ((a,b,(c)),d,((e,f)));
     # this is from fig 2 of Cordova and Navarro:
     # http://www.dcc.uchile.cl/~gnavarro/ps/tcs16.2.pdf
-    bp = parse_newick('((a,b,(c)),d,((e,f)));')
+    tree = parse_newick('((a,b,(c)),d,((e,f)));')
     exp = np.array([[0, 1, 0, 1, 1, 0, 0, 1, 2, 1, 1, 2, 0],   # m
                     [4, 4, 4, 4, 4, 4, 0, 3, 4, 3, 4, 4, 1]],  # M
-                   dtype=np.intp).T
-    obs = mM(bp.data, bp.data.size)
+                   dtype=np.intp)
+    npt.assert_equal(tree._m, exp[0])
+    npt.assert_equal(tree._M, exp[1])
 
-    assert exp.shape[0] == obs.mM.shape[0]
-    assert exp.shape[1] == obs.mM.shape[1]
+    # and the scan-based reference construction agrees
+    ref = reference_index(tree.data)
+    npt.assert_equal(ref['m'], exp[0])
+    npt.assert_equal(ref['M'], exp[1])
 
-    for i in range(exp.shape[0]):
-        for j in range(exp.shape[1]):
-            assert obs.mM[i, j] == exp[i, j]
+
+def reference_index(cnp.ndarray[BOOL_t, ndim=1] B):
+    """Scan-based construction of the BP navigation index.
+
+    A direct port of the original compiled construction (the rmM tree of
+    Navarro and Sadakane, http://www.dcc.uchile.cl/~gnavarro/ps/talg12.pdf, and
+    the excess and select indexes), kept as the oracle for the vectorized
+    ``skbio.tree.bp._bp._build_index``.
+    """
+    cdef:
+        Py_ssize_t B_size = B.shape[0]
+        Py_ssize_t b, n_tip, height, n_internal, n_total
+        Py_ssize_t i, j, k, lvl, pos, node, lchild, rchild, offset
+        Py_ssize_t lower_limit, upper_limit
+        Py_ssize_t min_, max_, excess = 0, r = 0, rank
+        Py_ssize_t[:, ::1] mM
+        Py_ssize_t[::1] rr, e_index
+
+    b = <Py_ssize_t>ceil(ln(<double> B_size) * ln(ln(<double> B_size)))
+    if b < 2:
+        # as _bp._rmm_geometry: the backward search needs two parentheses per
+        # block, and the formula gives fewer for n = 2 and n = 4
+        b = 2
+    n_tip = <Py_ssize_t>ceil(B_size / <double> b)
+    height = <Py_ssize_t>ceil(log2(n_tip))
+    n_internal = <Py_ssize_t>(pow(2, height)) - 1
+    n_total = n_tip + n_internal
+
+    mM = np.zeros((n_total, 2), dtype=np.intp)
+    rr = np.zeros(n_total, dtype=np.intp)
+
+    i = 0
+    while i < B_size:
+        offset = i // b
+        lower_limit = i
+        upper_limit = min(i + b, B_size)
+        min_ = PY_SSIZE_T_MAX
+        max_ = 0
+
+        rr[offset + n_internal] = r
+        for j in range(lower_limit, upper_limit):
+            excess += -1 + (2 * B[j])
+            r += B[j]
+            if excess < min_:
+                min_ = excess
+            if excess > max_:
+                max_ = excess
+
+        mM[offset + n_internal, 0] = min_
+        mM[offset + n_internal, 1] = max_
+        i += b
+
+    for lvl in range(height - 1, -1, -1):
+        for pos in range(<Py_ssize_t>pow(2, lvl)):
+            node = bt_node_from_left(pos, lvl)
+            lchild = bt_left_child(node)
+            rchild = bt_right_child(node)
+
+            if lchild >= n_total:
+                continue
+            elif rchild >= n_total:
+                mM[node, 0] = mM[lchild, 0]
+                mM[node, 1] = mM[lchild, 1]
+            else:
+                mM[node, 0] = min(mM[lchild, 0], mM[rchild, 0])
+                mM[node, 1] = max(mM[lchild, 1], mM[rchild, 1])
+
+            rr[node] = rr[lchild]
+
+    # excess via rank, as the original _excess: 2 * rank(1, i) - i - 1, where
+    # rank(1, i) is the block's starting rank plus a scan within the block
+    e_index = np.empty(B_size, dtype=np.intp)
+    for i in range(B_size):
+        k = i // b
+        rank = rr[bt_node_from_left(k, height)]
+        for j in range(k * b, min((k + 1) * b, B_size, i + 1)):
+            rank += B[j]
+        e_index[i] = 2 * rank - i - 1
+
+    step = B.astype(bool)
+    step[0] = True
+    k_index_1 = np.flatnonzero(step).astype(np.intp)
+    step = (B == 0)
+    step[0] = True
+    k_index_0 = np.flatnonzero(step).astype(np.intp)
+
+    return {'e_index': np.asarray(e_index), 'k_index_0': k_index_0,
+            'k_index_1': k_index_1, 'm': np.asarray(mM[:, 0]),
+            'M': np.asarray(mM[:, 1]), 'r': np.asarray(rr), 'b': b,
+            'height': height}
+
+
+def kernel_index_op(tree, str op, Py_ssize_t a, Py_ssize_t b=0):
+    """Call an index operation of the Cython engine that Python cannot reach.
+
+    The oracle of the Numba engine's parity tests (``test_bp_numba``) for the
+    ``cdef`` methods of ``_BPKernel``: ``rank(t, i)``, ``select(t, k)``,
+    ``excess(i)``, ``fwdsearch(i, d)``, ``bwdsearch(i, d)``, ``open(i)`` and
+    ``enclose(i)``.
+    """
+    cdef _BPKernel k = tree._kernel
+    if op == "rank":
+        return k.rank(a, b)
+    elif op == "select":
+        return k.select(a, b)
+    elif op == "excess":
+        return k.excess(a)
+    elif op == "fwdsearch":
+        return k.fwdsearch(a, b)
+    elif op == "bwdsearch":
+        return k.bwdsearch(a, b)
+    elif op == "open":
+        return k.open(a)
+    elif op == "enclose":
+        return k.enclose(a)
+    raise ValueError(op)

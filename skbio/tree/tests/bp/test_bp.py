@@ -9,17 +9,115 @@
 # line length is useful here, so disabling check
 # flake8: noqa: E501
 
+import copy
 import io
 import os
+import pickle
 import tempfile
-from unittest import TestCase, main
+from unittest import TestCase, main, mock
 
 import numpy as np
 import numpy.testing as npt
 
-from skbio.tree import BPTree
-from skbio.tree.bp import parse_newick
+from skbio._base import SkbioObject
+from skbio._config import _resolve_engine, get_config, set_config
+from skbio.tree import BPTree, TreeNode
+from skbio.tree._exception import DuplicateNodeError, MissingNodeError
+from skbio.tree.bp import _bp_cy, parse_newick
+from skbio.tree.bp._bp import _build_index, _KERNEL_METHODS
+from skbio.tree.bp._bp_numba import NUMBA_AVAILABLE
+from skbio.util._testing import numba_code
 import skbio.tree.tests.bp.test_bp_cy as tbc
+
+
+def _random_topology(n_nodes, rng):
+    """Parentheses of a random tree with ``n_nodes`` nodes."""
+    # attach each new node under a uniformly chosen earlier node, then emit the
+    # parentheses by an iterative depth-first walk
+    children = [[] for _ in range(n_nodes)]
+    for v in range(1, n_nodes):
+        children[rng.integers(v)].append(v)
+    out = []
+    stack = [(0, False)]
+    while stack:
+        v, done = stack.pop()
+        if done:
+            out.append(0)
+            continue
+        out.append(1)
+        stack.append((v, True))
+        stack.extend((c, False) for c in reversed(children[v]))
+    return np.array(out, dtype=np.uint8)
+
+
+def _caterpillar(n_tips):
+    out = [1, 1, 0] * (n_tips - 1) + [1, 0] + [0] * (n_tips - 1)
+    return np.array(out, dtype=np.uint8)
+
+
+def _naive_lca(B):
+    """Lowest common ancestors by parent pointers, independent of the engines.
+
+    The reference for ``lca`` and ``lca_batch``. Checking those against each
+    other proves nothing, as both run the same kernel. Returns a function of
+    two positions -- either parenthesis of each node, in either order -- giving
+    the opening position of their lowest common ancestor.
+    """
+    B = np.asarray(B)
+    node = np.empty(B.size, dtype=np.intp)  # the opening position of each node
+    parent = {}
+    stack = []
+    for p in range(B.size):
+        if B[p]:
+            parent[p] = stack[-1] if stack else -1
+            stack.append(p)
+            node[p] = p
+        else:
+            node[p] = stack.pop()
+
+    def lca(i, j):
+        a, b = node[i], node[j]
+        ancestors = set()
+        while a != -1:
+            ancestors.add(a)
+            a = parent[a]
+        while b not in ancestors:
+            b = parent[b]
+        return b
+
+    return lca
+
+
+def _all_topologies(max_nodes):
+    """Every tree of 1 to ``max_nodes`` nodes, as a parenthesis array."""
+    out = []
+
+    def grow(seq, n_open, n_close, nodes):
+        if n_open == nodes and n_close == nodes:
+            out.append(np.array(seq, dtype=np.uint8))
+            return
+        if n_open < nodes and (n_open == n_close == 0 or n_open > n_close):
+            grow(seq + [1], n_open + 1, n_close, nodes)
+        # a single root: the excess may reach 0 only at the very end
+        if n_close < n_open and (n_close + 1 < n_open or n_open == nodes):
+            grow(seq + [0], n_open, n_close + 1, nodes)
+
+    for nodes in range(1, max_nodes + 1):
+        grow([], 0, 0, nodes)
+    return out
+
+
+def _index_test_topologies():
+    rng = np.random.default_rng(42)
+    trees = [np.array([1, 0], dtype=np.uint8),  # a single node
+             np.array([1, 1, 0, 0], dtype=np.uint8),
+             np.array([1] + [1, 0] * 50 + [0], dtype=np.uint8)]  # a star
+    trees += [_caterpillar(n) for n in (2, 3, 17, 500)]
+    # sizes straddle rmM block and level boundaries
+    trees += [_random_topology(n, rng) for n in
+              (3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33, 100, 257, 1000, 4097,
+               20000)]
+    return trees
 
 
 class BPCythonTests(TestCase):
@@ -151,6 +249,12 @@ class BPTests(TestCase):
         for (i, j, q), e in exp.items():
             self.assertEqual(self.bptree.minselect(i, j, q), e)
 
+    def test_minselect_rank_below_one(self):
+        # there is no 0th or earlier minimum (not the last ones, as a negative
+        # index would give)
+        for q in (0, -1, -5):
+            self.assertIsNone(self.bptree.minselect(0, 20, q))
+
     def test_preorder_rank(self):
         exp = [1, 2, 3, 3, 4, 4, 5, 6, 6, 5, 2, 7, 7, 8, 9, 10, 10, 11, 11, 9, 8, 1]
         for i, e in enumerate(exp):
@@ -246,6 +350,101 @@ class BPTests(TestCase):
                (nodes[1], nodes[8]): nodes[0]}
         for (i, j), e in exp.items():
             self.assertEqual(self.bptree.lca(i, j), e)
+
+    def test_lca_same_node(self):
+        # a node is its own lowest common ancestor, at either parenthesis (the
+        # root's closing one is the last position)
+        opening, stack = [], []
+        for i, bit in enumerate(self.fig1_B):
+            if bit:
+                stack.append(i)
+                opening.append(i)
+            else:
+                opening.append(stack.pop())
+        for i, exp in enumerate(opening):
+            self.assertEqual(self.bptree.lca(i, i), exp)
+
+    def test_two_node_tree(self):
+        # (()): a root with a single tip. Its rmM blocks used to hold one
+        # parenthesis each, too few for the backward search, which then missed
+        # position 0: the root's last child came back as none, and the tip's
+        # closing parenthesis resolved to the root.
+        bp = BPTree(np.array([1, 1, 0, 0], dtype=np.uint8))
+        self.assertEqual(bp.last_child(0), 1)
+        self.assertEqual(bp.last_child(3), 1)
+        self.assertEqual(bp.first_child(2), 0)  # a tip has no children
+        self.assertEqual(bp.count(2), 1)
+        self.assertEqual(bp.height(2), 0)
+        self.assertEqual(bp.preorder_rank(2), 2)
+        self.assertFalse(bp.is_ancestor(2, 0))
+        self.assertEqual(bp.lca(2, 2), 1)
+
+    def test_lca_any_parenthesis_and_order(self):
+        # Either parenthesis of a node names it, the order of the two does not
+        # matter, and the answer is always an opening parenthesis. Checked
+        # against parent pointers: every pair of a small tree, else a sample.
+        # Before, lca(j, i) with j > i could return the wrong node, and a
+        # closing parenthesis could come back as the answer.
+        rng = np.random.default_rng(13)
+        for B in _index_test_topologies():
+            if B.size > 5000:
+                continue
+            bp = BPTree(B)
+            ref = _naive_lca(B)
+            if B.size <= 70:
+                i, j = np.meshgrid(np.arange(B.size), np.arange(B.size))
+                i, j = i.ravel(), j.ravel()
+            else:
+                i, j = rng.integers(0, B.size, (2, 3000))
+            for a, b in zip(i.tolist(), j.tolist()):
+                self.assertEqual(bp.lca(a, b), ref(a, b), (B.size, a, b))
+
+    def test_small_trees_exhaustively(self):
+        # Every tree of up to 7 nodes, where the rmM blocks are at their
+        # smallest and every boundary case is reachable, against a stack scan.
+        # Any parenthesis may name a node. Two bugs this caught:
+        # - in (()) the block size was 1 and the backward search missed
+        #   position 0, so e.g. the root's last_child came back as none;
+        # - is_ancestor(close(x), x) was True: a node, named by its closing
+        #   parenthesis, counted as its own ancestor.
+        topologies = _all_topologies(7)
+        self.assertEqual(len(topologies), 1 + 1 + 2 + 5 + 14 + 42 + 132)
+        for B in topologies:
+            bp = BPTree(B)
+            ref = _naive_lca(B)
+            stack, node, parent, children = [], {}, {}, {}
+            for p, bit in enumerate(B):
+                if bit:
+                    parent[p] = stack[-1] if stack else -1
+                    children.setdefault(parent[p], []).append(p)
+                    stack.append(p)
+                    node[p] = p
+                else:
+                    node[p] = stack.pop()
+            close = {node[p]: p for p in range(B.size) if not B[p]}
+
+            def ancestors(x):
+                out = set()
+                while parent[x] != -1:
+                    x = parent[x]
+                    out.add(x)
+                return out
+
+            tag = ''.join('(' if bit else ')' for bit in B)
+            for p in range(B.size):
+                x = node[p]
+                kids = children.get(x, [])
+                if B[p]:
+                    self.assertEqual(bp.close(p), close[x], (tag, p))
+                    self.assertEqual(bp.parent(p), parent[x], (tag, p))
+                self.assertEqual(bp.first_child(p), kids[0] if kids else 0,
+                                 (tag, p))
+                self.assertEqual(bp.last_child(p), kids[-1] if kids else 0,
+                                 (tag, p))
+                for q in range(B.size):
+                    self.assertEqual(bp.lca(p, q), ref(p, q), (tag, p, q))
+                    self.assertEqual(bool(bp.is_ancestor(p, q)),
+                                     x in ancestors(node[q]), (tag, p, q))
 
     def test_deepest_node(self):
         # deepest_node(i) = rMq(i, close(i)),
@@ -417,6 +616,419 @@ class BPTests(TestCase):
             self.assertEqual(obs.name(i), self.bptree.name(i))
             self.assertEqual(obs.length(i), self.bptree.length(i))
         self.assertEqual(obs.count(tips=True), self.bptree.count(tips=True))
+
+
+class BPIndexTests(TestCase):
+    """The navigation index matches the scan-based construction."""
+
+    def assert_index_equal(self, obs, exp):
+        for key in ('e_index', 'k_index_0', 'k_index_1', 'm', 'M', 'r'):
+            npt.assert_array_equal(obs[key], exp[key], err_msg=key)
+        self.assertEqual(obs['b'], exp['b'])
+        self.assertEqual(obs['height'], exp['height'])
+
+    def test_build_index_matches_reference(self):
+        for B in _index_test_topologies():
+            with self.subTest(size=B.size):
+                self.assert_index_equal(_build_index(B), tbc.reference_index(B))
+
+    def test_tree_index_matches_reference(self):
+        # the arrays held by the tree (and viewed by the kernel) are the index
+        for B in _index_test_topologies()[:8]:
+            bp = BPTree(B)
+            exp = tbc.reference_index(B)
+            for key in ('e_index', 'k_index_0', 'k_index_1', 'm', 'M', 'r'):
+                obs = getattr(bp, '_' + key)
+                npt.assert_array_equal(obs, exp[key], err_msg=key)
+                self.assertEqual(obs.dtype, np.intp)
+                self.assertFalse(obs.flags.writeable)
+
+
+
+class BPTreeClassTests(TestCase):
+    """``BPTree`` is a Python class delegating navigation to its kernel."""
+
+    def setUp(self):
+        self.B = np.array([1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0,
+                           1, 0, 0, 0, 0], dtype=np.uint8)
+        self.names = np.array(['r', '2', '3', None, '4', None, '5', '6', None,
+                               None, None, '7', None, '8', '9', '10', None,
+                               '11', None, None, None, None])
+        self.lengths = np.arange(self.B.size, dtype=np.double)
+        self.bp = BPTree(self.B, lengths=self.lengths, names=self.names)
+
+    def test_skbio_object_subclass(self):
+        self.assertTrue(issubclass(BPTree, SkbioObject))
+        self.assertIn(SkbioObject, BPTree.__mro__)
+        self.assertEqual(str(self.bp), repr(self.bp))
+
+    def test_navigation_bound_to_kernel(self):
+        # instance lookups resolve to the compiled kernel's bound methods
+        for name in _KERNEL_METHODS:
+            meth = getattr(self.bp, name)
+            self.assertIs(meth.__self__, self.bp._kernel, name)
+
+    def test_class_methods_match_bound(self):
+        # the documented class-level methods give the same answers
+        for i in range(self.B.size - 1):
+            for name in ('close', 'parent', 'depth', 'is_tip', 'first_child',
+                         'last_child', 'next_sibling', 'previous_sibling',
+                         'preorder_rank', 'postorder_rank', 'deepest_node',
+                         'height', 'level_next', 'name', 'length', 'edge',
+                         'count'):
+                self.assertEqual(getattr(BPTree, name)(self.bp, i),
+                                 getattr(self.bp, name)(i), (name, i))
+        self.assertEqual(BPTree.lca(self.bp, 2, 7), self.bp.lca(2, 7))
+        self.assertEqual(BPTree.count(self.bp, 0, True),
+                         self.bp.count(0, tips=True))
+
+    def test_return_types(self):
+        self.assertIs(type(self.bp.length(1)), float)
+        self.assertIs(type(self.bp.edge(1)), int)
+        self.assertIs(type(self.bp.depth(1)), int)
+        self.assertIs(type(self.bp.name(1)), str)
+        self.assertIs(type(len(self.bp)), int)
+
+    def test_data_read_only_attribute(self):
+        npt.assert_array_equal(self.bp.data, self.B)
+        with self.assertRaises(AttributeError):
+            self.bp.data = self.B
+
+    def test_single_node(self):
+        bp = BPTree(np.array([1, 0], dtype=np.uint8))
+        self.assertEqual(len(bp), 1)
+        self.assertEqual(bp.close(0), 1)
+        self.assertEqual(bp.parent(0), -1)
+        self.assertEqual(bp.count(tips=True), 1)
+        self.assertTrue(bp.is_tip(0))
+
+    def test_invalid_input(self):
+        with self.assertRaises(TypeError):
+            BPTree([1, 0])
+        with self.assertRaises(ValueError):
+            BPTree(self.B.astype(np.int64))
+        with self.assertRaises(ValueError):
+            BPTree(np.array([], dtype=np.uint8))
+        with self.assertRaises(ValueError):
+            BPTree(self.B, names=self.names[:-1])
+        with self.assertRaises(ValueError):
+            BPTree(self.B, lengths=self.lengths.astype(np.float32))
+        with self.assertRaises(ValueError):
+            self.bp.set_edges(np.full(self.B.size, self.B.size, dtype=np.int32))
+        with self.assertRaises(TypeError):
+            self.bp.shear(['4'])
+
+    def test_bool_topology(self):
+        # accepted as uint8, as the compiled class always did (e.g. trees
+        # saved from one built from a bool array)
+        B = self.B.astype(bool)
+        bp = BPTree(B, lengths=self.lengths, names=self.names)
+        self.assertEqual(bp.data.dtype, np.uint8)
+        self.assertTrue(np.shares_memory(bp.data, B))
+        npt.assert_array_equal(bp.data, self.B)
+        for i in range(self.B.size):
+            self.assertEqual(bp.close(i), self.bp.close(i))
+            self.assertEqual(bp.parent(i), self.bp.parent(i))
+        # non-contiguous too
+        wide = np.zeros(2 * self.B.size, dtype=bool)
+        wide[::2] = B
+        npt.assert_array_equal(BPTree(wide[::2]).data, self.B)
+
+        # a saved tree whose topology is bool: .npz and pickle
+        with io.BytesIO() as fh:
+            np.savez_compressed(fh, names=self.names, lengths=self.lengths, B=B)
+            fh.seek(0)
+            obs = BPTree.from_npz(fh)
+        npt.assert_array_equal(obs.data, self.B)
+        self.assertEqual(obs.name(2), self.bp.name(2))
+
+        class Saved:  # pickles as a tree pickled with a bool topology does
+            def __reduce__(self_):
+                return BPTree, (B, self.lengths, self.names)
+
+        obs = pickle.loads(pickle.dumps(Saved()))
+        self.assertIsInstance(obs, BPTree)
+        npt.assert_array_equal(obs.data, self.B)
+
+    def test_non_contiguous_topology(self):
+        wide = np.zeros(2 * self.B.size, dtype=np.uint8)
+        wide[::2] = self.B
+        bp = BPTree(wide[::2])
+        npt.assert_array_equal(bp.data, self.B)
+        self.assertEqual(bp.close(1), 10)
+
+    def test_set_attributes_update_kernel(self):
+        names = np.full(self.B.size, None, dtype=object)
+        names[1] = 'x'
+        self.bp.set_names(names)
+        self.assertEqual(self.bp.name(1), 'x')
+
+        lengths = np.zeros(self.B.size, dtype=np.double)
+        lengths[1] = 2.5
+        self.bp.set_lengths(lengths)
+        self.assertEqual(self.bp.length(1), 2.5)
+
+        edges = np.arange(self.B.size, dtype=np.int32)
+        self.bp.set_edges(edges)
+        self.assertEqual(self.bp.edge(4), 4)
+        self.assertEqual(self.bp.edge_from_number(4), 4)
+
+    def test_pickle_and_copy(self):
+        for obs in (pickle.loads(pickle.dumps(self.bp)), copy.copy(self.bp),
+                    copy.deepcopy(self.bp)):
+            self.assertIsNot(obs._kernel, self.bp._kernel)
+            npt.assert_array_equal(obs.data, self.bp.data)
+            for i in range(self.B.size):
+                self.assertEqual(obs.name(i), self.bp.name(i))
+                self.assertEqual(obs.length(i), self.bp.length(i))
+                self.assertEqual(obs.close(i), self.bp.close(i))
+
+    def test_io_descriptors(self):
+        self.assertIn('newick', BPTree.read.__doc__)
+        self.assertIn('newick', self.bp.write.__doc__)
+
+
+def _named_tree(n_nodes, rng):
+    """Random tree with named tips and random branch lengths."""
+    B = _random_topology(n_nodes, rng)
+    tip = np.zeros(B.size, dtype=bool)
+    tip[:-1] = (B[:-1] == 1) & (B[1:] == 0)
+    names = np.full(B.size, None, dtype=object)
+    names[tip] = ['t%d' % k for k in range(tip.sum())]
+    lengths = rng.random(B.size)
+    return BPTree(B, lengths=lengths, names=names)
+
+
+class _BatchTests:
+    """Batch operations of one compute engine (``engine``)."""
+
+    engine = None
+
+    def setUp(self):
+        self.rng = np.random.default_rng(11)
+        self.trees = [BPTree(np.array([1, 0], dtype=np.uint8)),
+                      BPTree(_caterpillar(30))]
+        self.trees += [_named_tree(n, self.rng) for n in (2, 7, 64, 1500)]
+        # a named caterpillar: the deepest tree for its size
+        B = _caterpillar(200)
+        names = np.full(B.size, None, dtype=object)
+        names[np.flatnonzero(B[:-1] > B[1:])] = ['c%d' % k for k in range(200)]
+        self.trees.append(
+            BPTree(B, lengths=self.rng.random(B.size), names=names))
+
+    def test_close_parent_batch(self):
+        for bp in self.trees:
+            pos = np.arange(bp.data.size - 1)
+            npt.assert_array_equal(
+                bp.close_batch(pos, engine=self.engine),
+                [bp.close(int(i)) for i in pos])
+            npt.assert_array_equal(
+                bp.parent_batch(pos, engine=self.engine),
+                [bp.parent(int(i)) for i in pos])
+
+    def test_lca_batch(self):
+        for bp in self.trees:
+            n = bp.data.size
+            # any position (closing parentheses too), pairs in either order;
+            # the reference is independent of the engines (see _naive_lca)
+            i = self.rng.integers(0, n, 500)
+            j = self.rng.integers(0, n, 500)
+            ref = _naive_lca(bp.data)
+            exp = [ref(a, b) for a, b in zip(i.tolist(), j.tolist())]
+            npt.assert_array_equal(bp.lca_batch(i, j, engine=self.engine), exp)
+            npt.assert_array_equal(bp.lca_batch(j, i, engine=self.engine), exp)
+            # and the single-node method gives the same answers
+            npt.assert_array_equal(
+                [bp.lca(a, b) for a, b in zip(i.tolist(), j.tolist())], exp)
+
+    def test_level_ancestor_batch(self):
+        for bp in self.trees:
+            pos = np.arange(bp.data.size - 1)
+            d = self.rng.integers(-1, 5, pos.size)
+            npt.assert_array_equal(
+                bp.level_ancestor_batch(pos, d, engine=self.engine),
+                [bp.level_ancestor(int(a), int(b)) for a, b in zip(pos, d)])
+            # a scalar level broadcasts
+            npt.assert_array_equal(
+                bp.level_ancestor_batch(pos, 1, engine=self.engine),
+                [bp.level_ancestor(int(a), 1) for a in pos])
+
+    def test_shapes(self):
+        bp = self.trees[-1]
+        pos = np.flatnonzero(bp.data)[:12].reshape(3, 4)
+        obs = bp.parent_batch(pos, engine=self.engine)
+        self.assertEqual(obs.shape, (3, 4))
+        self.assertEqual(obs.dtype, np.intp)
+        npt.assert_array_equal(obs.ravel(),
+                               bp.parent_batch(pos.ravel(), engine=self.engine))
+        # broadcasting a column against a row
+        obs = bp.lca_batch(pos[:, :1], pos[0], engine=self.engine)
+        self.assertEqual(obs.shape, (3, 4))
+        # a list and an empty input
+        self.assertEqual(
+            bp.close_batch([0], engine=self.engine).tolist(), [bp.close(0)])
+        self.assertEqual(bp.close_batch([], engine=self.engine).shape, (0,))
+
+    def test_invalid_positions(self):
+        bp = self.trees[-1]
+        with self.assertRaises(IndexError):
+            bp.close_batch([bp.data.size], engine=self.engine)
+        with self.assertRaises(IndexError):
+            bp.lca_batch([0], [-1], engine=self.engine)
+        with self.assertRaises(TypeError):
+            bp.parent_batch([1.5], engine=self.engine)
+        with self.assertRaises(TypeError):
+            bp.level_ancestor_batch([1], [1.0], engine=self.engine)
+
+    def test_cophenet_matches_treenode(self):
+        for bp in self.trees[2:]:
+            self.assertGreater(bp.count(tips=True), 0)
+            tn = TreeNode.from_bptree(bp)
+            for use_length in (True, False):
+                obs = bp.cophenet(use_length=use_length, engine=self.engine)
+                exp = tn.cophenet(use_length=use_length)
+                self.assertEqual(obs.ids, exp.ids)
+                npt.assert_allclose(obs.data, exp.data, rtol=1e-12, atol=1e-12)
+
+    def test_cophenet_endpoints(self):
+        bp = self.trees[-2]
+        tn = TreeNode.from_bptree(bp)
+        endpoints = ['t5', 't0', 't30', 't2']
+        obs = bp.cophenet(endpoints, engine=self.engine)
+        exp = tn.cophenet(endpoints)
+        self.assertEqual(obs.ids, tuple(endpoints))
+        npt.assert_allclose(obs.data, exp.data, rtol=1e-12, atol=1e-12)
+
+        # a large shuffled subset, on the deep tree as well
+        for bp in (self.trees[-2], self.trees[-1]):
+            tn = TreeNode.from_bptree(bp)
+            names = [tip.name for tip in tn.tips()]
+            endpoints = list(self.rng.permutation(names)[: len(names) // 2])
+            obs = bp.cophenet(endpoints, engine=self.engine)
+            exp = tn.cophenet(endpoints)
+            self.assertEqual(obs.ids, exp.ids)
+            npt.assert_allclose(obs.data, exp.data, rtol=1e-12, atol=1e-12)
+
+    def test_cophenet_errors(self):
+        bp = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        with self.assertRaises(MissingNodeError):
+            bp.cophenet(['a', 'x'], engine=self.engine)
+        with self.assertRaises(DuplicateNodeError):
+            bp.cophenet(['a', 'b', 'a'], engine=self.engine)
+        with self.assertRaises(ValueError):
+            bp.cophenet(['a', 'c'], engine=self.engine)
+        dup = BPTree.read(["((a:1,a:2)c:3,d:4)root;"])
+        with self.assertRaises(DuplicateNodeError):
+            dup.cophenet(engine=self.engine)
+
+    def test_cophenet_few_tips(self):
+        B = np.array([1, 1, 0, 1, 0, 0], dtype=np.uint8)
+        obs = BPTree(B).cophenet(engine=self.engine)
+        self.assertEqual(obs.shape, (0, 0))
+        names = np.array([None, 'a', None, None, None, None], dtype=object)
+        obs = BPTree(B, names=names).cophenet(engine=self.engine)
+        self.assertEqual(obs.shape, (1, 1))
+        self.assertEqual(obs.ids, ('a',))
+
+
+class BPBatchCythonTests(_BatchTests, TestCase):
+    engine = 'cython'
+
+    def test_engine_resolution(self):
+        bp = self.trees[-1]
+        with self.assertRaises(ValueError):
+            bp.close_batch([0], engine='julia')
+        # "fast" and the global default resolve to an available engine
+        npt.assert_array_equal(bp.close_batch([0], engine='fast'),
+                               [bp.close(0)])
+        npt.assert_array_equal(bp.close_batch([0]), [bp.close(0)])
+
+    def test_cophenet_engine_checked_for_few_tips(self):
+        # with fewer than two tips there are no pairs to compute, but the
+        # engine is still checked, as it is for larger trees
+        B = np.array([1, 1, 0, 1, 0, 0], dtype=np.uint8)
+        named = np.array([None, 'a', None, None, None, None], dtype=object)
+        for names in (None, named):
+            with self.assertRaises(ValueError):
+                BPTree(B, names=names).cophenet(engine='julia')
+
+
+@numba_code
+class BPBatchNumbaTests(_BatchTests, TestCase):
+    engine = 'numba'
+
+    def test_engines_identical(self):
+        # the engines run the same algorithm: identical results, bit for bit
+        for bp in self.trees:
+            n = bp.data.size
+            i = self.rng.integers(0, n, 300)
+            j = self.rng.integers(0, n, 300)
+            npt.assert_array_equal(bp.lca_batch(i, j, engine='numba'),
+                                   bp.lca_batch(i, j, engine='cython'))
+            for use_length in (True, False):
+                npt.assert_array_equal(
+                    bp.cophenet(use_length=use_length, engine='numba').data,
+                    bp.cophenet(use_length=use_length, engine='cython').data)
+
+    def test_global_engine(self):
+        bp = self.trees[-1]
+        default = get_config('compute_engine')
+        try:
+            set_config('compute_engine', 'numba')
+            npt.assert_array_equal(bp.close_batch([0]), [bp.close(0)])
+        finally:
+            set_config('compute_engine', default)
+
+
+class BPFastEngineTests(TestCase):
+    """What engine="fast" resolves to: see the Notes of BPTree."""
+
+    def setUp(self):
+        self.bp = _named_tree(30, np.random.default_rng(3))
+
+    def resolve(self, openmp, numba):
+        """The fast engine of self.bp with the build and install patched."""
+        with mock.patch.object(_bp_cy, 'OPENMP', openmp), \
+                mock.patch('skbio.tree.bp._bp.NUMBA_AVAILABLE', numba):
+            return self.bp._fast_engine()
+
+    def test_openmp_flag(self):
+        self.assertIsInstance(_bp_cy.OPENMP, bool)
+
+    def test_rules(self):
+        # 1. multithreaded Cython
+        self.assertEqual(self.resolve(True, True), 'cython')
+        self.assertEqual(self.resolve(True, False), 'cython')
+        # 2. serial Cython, and Numba installed
+        self.assertEqual(self.resolve(False, True), 'numba')
+        # 3. serial Cython, nothing else
+        self.assertEqual(self.resolve(False, False), 'cython')
+
+    def test_resolution_on_this_build(self):
+        exp = 'cython' if _bp_cy.OPENMP or not NUMBA_AVAILABLE else 'numba'
+        self.assertEqual(self.bp._fast_engine(), exp)
+
+    def test_fast_runs_the_chosen_engine(self):
+        bp = self.bp
+        exp = bp._fast_engine()
+        resolved = []
+
+        def record(*args, **kwargs):
+            engine = _resolve_engine(*args, **kwargs)
+            resolved.append(engine)
+            return engine
+
+        with mock.patch('skbio.tree.bp._bp._resolve_engine', side_effect=record):
+            bp.lca_batch([1, 2], [3, 4], engine='fast')
+            bp.cophenet(engine='fast')
+            default = get_config('compute_engine')
+            try:
+                set_config('compute_engine', 'fast')
+                bp.parent_batch([1])
+            finally:
+                set_config('compute_engine', default)
+        self.assertTrue(resolved)
+        self.assertEqual(set(resolved), {exp})
 
 
 if __name__ == '__main__':
