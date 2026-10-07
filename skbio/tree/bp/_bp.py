@@ -199,7 +199,9 @@ class BPTree(SkbioObject):
     A tree created from a non-NumPy ``B``, e.g. a CuPy array or a PyTorch
     tensor on a GPU, keeps ``B`` as its ``data`` and a host copy of it, from
     which it is built and navigated as any other tree. The node attributes
-    (``lengths``, ``names``, ``edges``) are NumPy arrays on the host.
+    (``lengths``, ``names``, ``edges``) are NumPy arrays on the host. A tree
+    created otherwise, e.g. read from a file, is moved to a GPU (or any
+    backend and device) with :meth:`to_device`, which rebuilds nothing.
 
     - The batch operations (e.g. :meth:`lca_batch`) and :meth:`cophenet` with
       ``engine="numba"`` run on the GPU if ``B`` is on a CUDA or ROCm device
@@ -282,8 +284,14 @@ class BPTree(SkbioObject):
             edges = _check_array(edges, np.int32, "edges", size)
             edge_lookup = self._edge_lookup_for(B, edges)
 
-        # the host tree and its navigation index, and where the data lives
-        index = _build_index(B)
+        self._assemble(B, _build_index(B), names, lengths, edges, edge_lookup, array)
+
+    def _assemble(self, B, index, names, lengths, edges, edge_lookup, array):
+        """Set up the tree from its validated host arrays and navigation index.
+
+        ``array`` is the non-NumPy array the tree's data lives in, or None for
+        a NumPy tree.
+        """
         self._data = B
         self._xp = self._device = None
         if array is None:
@@ -296,7 +304,7 @@ class BPTree(SkbioObject):
             self._array = array
         # the index arrays uploaded to a GPU, by Numba GPU module (_bp_gpu)
         self._gpu_arrays = {}
-        self._size = size
+        self._size = B.shape[0]
         self._names = names
         self._lengths = lengths
         self._edges = edges
@@ -310,6 +318,8 @@ class BPTree(SkbioObject):
         self._b = index["b"]
         self._height = index["height"]
 
+        # each tree has a kernel of its own, as the node attribute setters
+        # replace the kernel's arrays
         self._kernel = _BPKernel(
             B,
             self._e_index,
@@ -326,6 +336,97 @@ class BPTree(SkbioObject):
             edge_lookup,
         )
         self.__dict__.update(zip(_KERNEL_METHODS, _get_kernel_methods(self._kernel)))
+
+    def to_device(self, xp, device=None):
+        """Return this tree with its data in an array backend and on a device.
+
+        This is how a tree is moved to a GPU, e.g. after it was read from a
+        file, so that its batch operations and :meth:`cophenet` can run there
+        (see Notes of :class:`BPTree`). It is also how a tree is moved back to
+        NumPy, or between devices.
+
+        Parameters
+        ----------
+        xp : module
+            The array backend, e.g. ``cupy``, ``torch``, ``jax.numpy`` or
+            ``numpy``, or its array API namespace.
+        device : device, optional
+            The device, in the terms of ``xp``: e.g. ``"cuda"`` or ``"cuda:1"``
+            for PyTorch, a device number or a ``cupy.cuda.Device`` for CuPy, or
+            the ``device`` of an existing array of ``xp``. Defaults to the
+            default device of ``xp``: the current GPU for CuPy, and the CPU for
+            PyTorch and NumPy.
+
+        Returns
+        -------
+        BPTree
+            A new tree whose :attr:`data` is a copy of the topology in ``xp``
+            on ``device``. It shares this tree's navigation index and node
+            attributes (``lengths``, ``names``, ``edges``), which stay on the
+            host, so nothing is rebuilt. Setting an attribute of either tree
+            (e.g. with :meth:`set_names`) does not change the other.
+
+        Raises
+        ------
+        TypeError
+            If ``xp`` is not a supported array backend.
+
+        See Also
+        --------
+        data
+
+        Notes
+        -----
+        The topology is copied from the host, one byte per parenthesis. On a
+        GPU, the navigation index follows at the first operation that needs it
+        there, and is then kept on the device with the tree.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+
+        On a GPU with CuPy, for example, ``tree.to_device(cupy)`` returns the
+        tree with its data there, and ``tree.to_device(torch, "cuda")`` does
+        the same with PyTorch. Moved to NumPy, the tree is on the host:
+
+        >>> host = tree.to_device(np)
+        >>> type(host.data).__name__
+        'ndarray'
+        >>> host.lca_batch([2], [4])  # the lowest common ancestor of a and b: c
+        array([1])
+
+        """
+        # the backend's array API namespace takes the device as its own type
+        try:
+            namespace = aac.array_namespace(xp.asarray(self._data[:0]))
+        except (AttributeError, TypeError):
+            raise TypeError(f"{xp!r} is not a supported array backend.") from None
+        array = namespace.asarray(self._data, device=device)
+        if aac.is_numpy_array(array):
+            array = None  # a NumPy tree holds the host array itself
+        index = {
+            "e_index": self._e_index,
+            "k_index_0": self._k_index_0,
+            "k_index_1": self._k_index_1,
+            "m": self._m,
+            "M": self._M,
+            "r": self._r,
+            "b": self._b,
+            "height": self._height,
+        }
+        tree = type(self).__new__(type(self))
+        tree._assemble(
+            self._data,
+            index,
+            self._names,
+            self._lengths,
+            self._edges,
+            self._edge_lookup,
+            array,
+        )
+        return tree
 
     @property
     def data(self):

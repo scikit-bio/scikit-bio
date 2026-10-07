@@ -18,6 +18,7 @@ import types
 import warnings
 from unittest import TestCase, main, mock
 
+import array_api_compat as aac
 import numpy as np
 import numpy.testing as npt
 
@@ -1147,6 +1148,63 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
         # no pairs
         obs = self.on(xp, device, BPTree(np.array([1, 1, 0, 0], np.uint8)))
         self.assertEqual(obs.cophenet().shape, (0, 0))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_to_device(self, xp, device):
+        # the device as the backend names it (e.g. a cupy.cuda.Device)
+        target = aac.device(self.make_array(xp, device, [0], dtype=xp.uint8))
+        for host in self.host[1:]:
+            bp = host.to_device(xp, target)
+            self.assert_type_preserved(bp.data, xp, device)
+            npt.assert_array_equal(_to_numpy(bp.data), host.data)
+            # the host index and attributes are shared, not rebuilt
+            for key in ('_data', '_e_index', '_k_index_0', '_k_index_1', '_m',
+                        '_M', '_r', '_names', '_lengths', '_edges'):
+                self.assertIs(getattr(bp, key), getattr(host, key), key)
+            self.assertIsNot(bp._kernel, host._kernel)
+            for i in range(host.data.size - 1):
+                self.assertEqual(bp.parent(i), host.parent(i))
+                self.assertEqual(bp.name(i), host.name(i))
+            n = host.data.size
+            i = self.rng.integers(0, n, 300)
+            j = self.rng.integers(0, n, 300)
+            dev = lambda a: self.make_array(xp, device, a, dtype=xp.int64)
+            for engine in _engines():
+                obs = bp.lca_batch(dev(i), dev(j), engine=engine)
+                self.assert_type_preserved(obs, xp, device)
+                npt.assert_array_equal(_to_numpy(obs), host.lca_batch(i, j))
+                obs = bp.cophenet(engine=engine)
+                self.assert_type_preserved(obs.data, xp, device)
+                npt.assert_array_equal(_to_numpy(obs.data), host.cophenet().data)
+            self.assert_ran_on_gpu(bp, xp, device)
+            # and back to the host, from where the tree lives now
+            back = bp.to_device(np)
+            self.assertIsInstance(back.data, np.ndarray)
+            self.assertIs(back.data, host.data)
+            npt.assert_array_equal(back.lca_batch(i, j), host.lca_batch(i, j))
+
+        # setting an attribute of one tree leaves the other as it was (on a
+        # tree of its own: the fixtures are shared by the backends' subtests)
+        h = self.host[2]
+        host = BPTree(h.data, lengths=h._lengths.copy(), names=h._names.copy())
+        bp = host.to_device(xp, target)
+        names = np.full(host.data.size, 'x', dtype=object)
+        bp.set_names(names)
+        self.assertEqual(bp.name(0), 'x')
+        self.assertNotEqual(host.name(0), 'x')
+        lengths = np.full(host.data.size, 9.0)
+        host.set_lengths(lengths)
+        self.assertEqual(host.length(1), 9.0)
+        self.assertNotEqual(bp.length(1), 9.0)
+        # the default device of the backend: the current GPU for CuPy
+        if _get_backend_name(xp) == 'cupy':
+            self.assert_type_preserved(host.to_device(xp).data, xp, device)
+
+    def test_to_device_invalid_backend(self):
+        bp = self.host[1]
+        for xp in (object(), np.ndarray, 'numpy'):
+            with self.assertRaisesRegex(TypeError, 'not a supported array backend'):
+                bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_host_operations(self, xp, device):
