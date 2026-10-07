@@ -35,8 +35,8 @@ opening parenthesis first.
 
 They are meant to be called from compiled code: a batch kernel, a per-sample
 kernel, or a user's own ``@njit`` function. A single call from Python pays
-Numba's argument dispatch (about a microsecond), far more than the operation
-itself, which is why ``BPTree``'s per-node methods use the Cython engine.
+Numba's argument dispatch, which costs far more than the operation itself,
+which is why ``BPTree``'s per-node methods use the Cython engine.
 
 Single source for CPU and GPU
 -----------------------------
@@ -87,7 +87,7 @@ def bp_arrays(tree, asarray=None):
     tree : skbio.tree.BPTree
         The tree.
     asarray : callable, optional
-        Applied to each array, e.g. ``numba.cuda.to_device`` to place them on
+        Applied to each array, e.g. ``to_device`` of a Numba GPU module to place them on
         a GPU. By default the tree's own (host) arrays are used as they are.
 
     Returns
@@ -633,8 +633,8 @@ def gpu_primitives(gpu):
     Parameters
     ----------
     gpu : module
-        ``numba.cuda`` or ``numba.hip`` (e.g. from
-        ``skbio.stats.distance._gpu._numba_gpu_module_for``).
+        ``numba_cuda_mlir.cuda``, ``numba.cuda`` or ``numba.hip`` (e.g. from
+        ``skbio.tree.bp._gpu._numba_gpu_module_for``).
 
     Returns
     -------

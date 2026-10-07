@@ -15,11 +15,12 @@ from unittest import TestCase, main
 import numpy as np
 
 from skbio.tree import BPTree
-from skbio.tree.bp import _bp_numba
+from skbio.tree.bp import _bp_numba, _gpu
 from skbio.tree.bp._bp import _KERNEL_METHODS
 from skbio.tree.tests.bp import test_bp_cy as tbc
 from skbio.tree.tests.bp.test_bp import _index_test_topologies, _random_topology
-from skbio.util._testing import numba_code
+from skbio.util._array import _get_backend_name
+from skbio.util._testing import ArrayAPITestMixin, array_backends, numba_code
 
 
 # Per-position operations with the same signature on BPTree and the primitives.
@@ -189,7 +190,7 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
         print("SKIP"); sys.exit(0)
 
     from skbio.tree import BPTree
-    from skbio.tree.bp import _bp_numba
+    from skbio.tree.bp import _bp_numba, _gpu
     from skbio.tree.tests.bp.test_bp import _random_topology
 
     G = _bp_numba.gpu_primitives(cuda)
@@ -248,18 +249,145 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
 """)
 
 
+# Runs the GPU kernels of BPTree (``_bp_gpu``) through BPTree's own dispatch on
+# the CUDA simulator, against the Cython engine. The kernels reach the GPU
+# module through a closure, where the simulator does not substitute its
+# per-launch API (``grid``, ``blockIdx``, ...); a proxy module supplies it.
+_SIMULATOR_BPTREE_SCRIPT = textwrap.dedent("""
+    import sys
+    import types
+    import warnings
+    import numpy as np
+    try:
+        from numba import cuda
+        from numba.cuda.simulator import kernel as simulator
+    except ImportError:
+        print("SKIP"); sys.exit(0)
+
+    from skbio.tree import BPTree
+    from skbio.tree.bp import _bp
+    from skbio.tree.tests.bp.test_bp import _caterpillar, _named_tree
+
+    class SimulatedGPU(types.ModuleType):
+        def __getattr__(self, name):
+            launch = simulator._get_kernel_context()
+            if launch is not None and hasattr(launch, name):
+                return getattr(launch, name)
+            return getattr(cuda, name)
+
+    gpu = SimulatedGPU("numba.cuda")
+
+    def failed(*args):
+        raise  # the kernel's own exception, rather than a fallback
+    _bp._mark_gpu_unavailable = failed
+    warnings.simplefilter("error")
+
+    rng = np.random.default_rng(3)
+    B = _caterpillar(12)
+    names = np.full(B.size, None, dtype=object)
+    names[np.flatnonzero(B[:-1] > B[1:])] = ["c%d" % k for k in range(12)]
+    trees = [_named_tree(2, rng), _named_tree(30, rng),
+             BPTree(B, lengths=rng.random(B.size), names=names)]
+    for bp in trees:
+        bp._gpu_module = lambda engine: gpu if engine == "numba" else None
+        n = bp.data.size
+        pos = np.arange(n)
+        def check(name, *args):
+            obs = getattr(bp, name)(*args, engine="numba")
+            exp = getattr(bp, name)(*args, engine="cython")
+            assert np.array_equal(obs, exp), (name, obs, exp)
+        check("close_batch", pos[:-1])
+        check("parent_batch", pos)
+        # includes i == j, at the last position too
+        check("lca_batch", np.r_[pos, rng.integers(0, n, 50)],
+              np.r_[pos, rng.integers(0, n, 50)])
+        check("level_ancestor_batch", pos[:-1], rng.integers(-1, 4, n - 1))
+        check("parent_batch", pos[: 2 * (n // 2)].reshape(2, -1))
+        check("close_batch", np.array([], dtype=np.intp))
+        tips = [bp.name(int(p)) for p in pos[:-1] if bp.is_tip(int(p))]
+        subset = list(rng.permutation(tips)[: len(tips) // 2 + 1])
+        for endpoints in (None, subset):
+            for use_length in (True, False):
+                obs = bp.cophenet(endpoints, use_length, engine="numba")
+                exp = bp.cophenet(endpoints, use_length, engine="cython")
+                assert obs.ids == exp.ids
+                assert np.array_equal(obs.data, exp.data)
+    print("OK")
+""")
+
+
+# The first-use check of the primitives on a real device (not the simulator):
+# ``BPArrays`` as a kernel argument, and primitives bound to names in a kernel.
+_DEVICE_SCRIPT = textwrap.dedent("""
+    import importlib
+    import os
+    import numpy as np
+
+    # the Numba GPU module that BPTree's dispatch chose (see test_device)
+    cuda = importlib.import_module(os.environ["SKBIO_TEST_GPU_MODULE"])
+    from skbio.tree import BPTree
+    from skbio.tree.bp import _bp_numba as nbm
+
+    G = nbm.gpu_primitives(cuda)
+    lca, parent = G.lca, G.parent
+
+    @cuda.jit
+    def kernel(T, i, j, out):
+        t = cuda.grid(1)
+        if t < out.shape[0]:
+            out[t, 0] = lca(T, i[t], j[t])
+            out[t, 1] = parent(T, i[t])
+
+    bp = BPTree.read(["((a:1,b:2)c:3,(d:4,(e:5,f:6)g:7)h:8)r;"])
+    n = bp.data.size
+    I = np.arange(n, dtype=np.intp)
+    J = I[::-1].copy()
+    T = nbm.bp_arrays(bp, asarray=cuda.to_device)
+    out = cuda.device_array((n, 2), dtype=np.intp)
+    kernel[1, 32](T, cuda.to_device(I), cuda.to_device(J), out)
+    exp = [[bp.lca(a, b), bp.parent(a)] for a, b in zip(I.tolist(), J.tolist())]
+    assert out.copy_to_host().tolist() == exp
+    print("OK")
+""")
+
+
+def _run_script(test, script, env):
+    res = subprocess.run([sys.executable, "-c", script], env=env,
+                         capture_output=True, text=True)
+    if res.stdout.strip() == "SKIP":
+        test.skipTest("numba.cuda is not available.")
+    test.assertEqual(res.returncode, 0, res.stderr)
+    test.assertEqual(res.stdout.strip(), "OK")
+
+
 @numba_code
-class GPUPrimitiveTests(TestCase):
+class GPUPrimitiveTests(TestCase, ArrayAPITestMixin):
     def test_simulator(self):
         # the same source compiles as device functions: checked on Numba's CUDA
-        # simulator, which needs no GPU (a real device is not tested here)
+        # simulator, which needs no GPU
         env = dict(os.environ, NUMBA_ENABLE_CUDASIM="1")
-        res = subprocess.run([sys.executable, "-c", _SIMULATOR_SCRIPT], env=env,
-                             capture_output=True, text=True)
-        if res.stdout.strip() == "SKIP":
-            self.skipTest("numba.cuda is not available.")
-        self.assertEqual(res.returncode, 0, res.stderr)
-        self.assertEqual(res.stdout.strip(), "OK")
+        _run_script(self, _SIMULATOR_SCRIPT, env)
+
+    def test_simulator_bptree_kernels(self):
+        # the GPU kernels of BPTree give the CPU engines' results, bit for bit
+        env = dict(os.environ, NUMBA_ENABLE_CUDASIM="1")
+        _run_script(self, _SIMULATOR_BPTREE_SCRIPT, env)
+
+    @array_backends("jax", "torch", "cupy")
+    def test_device(self, xp, device):
+        # on a real GPU (the GPU workflow), through the Numba GPU module that
+        # BPTree's dispatch chooses for the device; a GPU it cannot use then
+        # fails rather than skips. JAX has no Numba GPU path and is skipped; it
+        # is listed because the harness errors on a GPU lane that runs no backend.
+        if device == "cpu" or _get_backend_name(xp) == "jax":
+            self.skipTest("needs a device-resident CuPy or PyTorch array")
+        gpu = _gpu._numba_gpu_module_for(self.make_array(xp, device, np.zeros(2)))
+        self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s: is "
+                             "numba-cuda-mlir (or numba-cuda) installed?"
+                             % (_get_backend_name(xp), device))
+        env = {k: v for k, v in os.environ.items() if k != "NUMBA_ENABLE_CUDASIM"}
+        env["SKBIO_TEST_GPU_MODULE"] = gpu.__name__
+        _run_script(self, _DEVICE_SCRIPT, env)
 
 
 if __name__ == "__main__":

@@ -77,5 +77,6 @@
 
       ~{{ name }}.from_treenode
       ~{{ name }}.to_array
+      ~{{ name }}.to_device
 
    {% endblock %}

@@ -9,13 +9,17 @@
 # line length is useful here, so disabling check
 # flake8: noqa: E501
 
+import contextlib
 import copy
 import io
 import os
 import pickle
 import tempfile
+import types
+import warnings
 from unittest import TestCase, main, mock
 
+import array_api_compat as aac
 import numpy as np
 import numpy.testing as npt
 
@@ -23,10 +27,13 @@ from skbio._base import SkbioObject
 from skbio._config import _resolve_engine, get_config, set_config
 from skbio.tree import BPTree, TreeNode
 from skbio.tree._exception import DuplicateNodeError, MissingNodeError
-from skbio.tree.bp import _bp_cy, parse_newick
+from skbio.tree.bp import parse_newick
+from skbio.tree.bp import _bp_cy, _bp_gpu, _gpu
 from skbio.tree.bp._bp import _build_index, _KERNEL_METHODS
 from skbio.tree.bp._bp_numba import NUMBA_AVAILABLE
-from skbio.util._testing import numba_code
+from skbio.stats.distance import _gpu as _stats_gpu
+from skbio.util._array import _get_backend_name, _to_numpy
+from skbio.util._testing import ArrayAPITestMixin, array_backends, numba_code
 import skbio.tree.tests.bp.test_bp_cy as tbc
 
 
@@ -980,31 +987,455 @@ class BPBatchNumbaTests(_BatchTests, TestCase):
             set_config('compute_engine', default)
 
 
+def _engines():
+    try:
+        import numba  # noqa: F401
+    except ImportError:
+        return ('cython', 'fast')
+    return ('cython', 'numba', 'fast')
+
+
+class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
+    """A tree of a non-NumPy array (e.g. on a GPU) matches the NumPy tree.
+
+    With ``SKBIO_DEVICE=cuda`` and CuPy or a CUDA PyTorch, the batch operations
+    and ``cophenet`` with ``engine="numba"`` run on the GPU.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(7)
+        self.host = [_named_tree(n, rng) for n in (2, 9, 300)]
+        B = _caterpillar(60)
+        names = np.full(B.size, None, dtype=object)
+        names[np.flatnonzero(B[:-1] > B[1:])] = ['c%d' % k for k in range(60)]
+        self.host.append(BPTree(B, lengths=rng.random(B.size), names=names))
+        self.rng = rng
+
+    def on(self, xp, device, bp, dtype=None):
+        B = self.make_array(xp, device, bp.data, dtype=dtype or xp.uint8)
+        return BPTree(B, lengths=bp._lengths, names=bp._names)
+
+    def assert_ran_on_gpu(self, bp, xp, device):
+        """``engine="numba"`` ran the GPU kernels, rather than falling back.
+
+        A fallback gives the same results, so without this a GPU run whose
+        kernels cannot compile (e.g. numba-cuda on NumPy 2.5) would
+        pass while testing the CPU. It applies to a CUDA device, with a backend
+        Numba can read (CuPy, PyTorch) and Numba installed.
+        """
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            return
+        if not NUMBA_AVAILABLE:
+            return
+        self.assertIsNotNone(
+            bp._gpu_module("numba"),
+            "No Numba GPU module for a %s tree on %s: is numba-cuda-mlir (or "
+            "numba-cuda) installed, "
+            "and can it use this GPU?" % (name, device))
+        self.assertNotIn(
+            name, _gpu._unavailable,
+            "The BPTree GPU kernels failed on %s and fell back to the CPU." % name)
+        self.assertIn(name, _bp_gpu._kernels,
+                      "The BPTree GPU kernels were never built for %s." % name)
+        self.assertEqual(bp._fast_engine(), "numba",
+                         "engine='fast' does not choose the GPU for a %s tree." % name)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_construction(self, xp, device):
+        for host in self.host:
+            bp = self.on(xp, device, host)
+            self.assert_type_preserved(bp.data, xp, device)
+            npt.assert_array_equal(_to_numpy(bp.data), host.data)
+            exp = tbc.reference_index(host.data)
+            for key in ('e_index', 'k_index_0', 'k_index_1', 'm', 'M', 'r'):
+                npt.assert_array_equal(getattr(bp, '_' + key), exp[key])
+            # every single-node method on the host copy
+            for i in range(host.data.size - 1):
+                for name in ('close', 'parent', 'depth', 'is_tip', 'name',
+                             'length', 'first_child', 'next_sibling',
+                             'preorder_rank', 'height', 'count'):
+                    self.assertEqual(getattr(bp, name)(i),
+                                     getattr(host, name)(i), (name, i))
+        # a bool array is held as uint8
+        bp = self.on(xp, device, self.host[1], dtype=xp.bool)
+        self.assertEqual(bp.data.dtype, xp.uint8)
+        self.assert_type_preserved(bp.data, xp, device)
+        npt.assert_array_equal(_to_numpy(bp.data), self.host[1].data)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_invalid_input(self, xp, device):
+        with self.assertRaises(ValueError):
+            BPTree(self.make_array(xp, device, [1, 1, 0], dtype=xp.uint8))
+        with self.assertRaises(ValueError):
+            BPTree(self.make_array(xp, device, [1, 0], dtype=xp.int32))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_batch(self, xp, device):
+        for host in self.host:
+            bp = self.on(xp, device, host)
+            n = host.data.size
+            pos = np.arange(n - 1)
+            i = self.rng.integers(0, n, 400)
+            j = self.rng.integers(0, n, 400)
+            d = self.rng.integers(-1, 5, pos.size)
+            dev = lambda a: self.make_array(xp, device, a, dtype=xp.int64)
+            for engine in _engines():
+                cases = [
+                    ('close_batch', (pos,), host.close_batch(pos)),
+                    ('parent_batch', (pos,), host.parent_batch(pos)),
+                    ('lca_batch', (i, j), host.lca_batch(i, j)),
+                    ('level_ancestor_batch', (pos, d),
+                     host.level_ancestor_batch(pos, d)),
+                ]
+                for name, args, exp in cases:
+                    with self.subTest(engine=engine, op=name, n=n):
+                        # queries on the device: a result on the device
+                        obs = getattr(bp, name)(*map(dev, args), engine=engine)
+                        self.assert_type_preserved(obs, xp, device)
+                        npt.assert_array_equal(_to_numpy(obs), exp)
+                        # host queries: a host result
+                        obs = getattr(bp, name)(*args, engine=engine)
+                        self.assertIsInstance(obs, np.ndarray)
+                        npt.assert_array_equal(obs, exp)
+            self.assert_ran_on_gpu(bp, xp, device)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_batch_shapes_and_errors(self, xp, device):
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        pos = np.flatnonzero(host.data)[:12].reshape(3, 4)
+        for engine in _engines():
+            obs = bp.lca_batch(self.make_array(xp, device, pos[:, :1],
+                                               dtype=xp.int64),
+                               pos[0], engine=engine)
+            self.assertEqual(tuple(obs.shape), (3, 4))
+            self.assert_type_preserved(obs, xp, device)
+            npt.assert_array_equal(_to_numpy(obs),
+                                   host.lca_batch(pos[:, :1], pos[0]))
+            empty = self.make_array(xp, device, [], dtype=xp.int64)
+            self.assertEqual(tuple(bp.close_batch(empty, engine=engine).shape),
+                             (0,))
+            with self.assertRaises(IndexError):
+                bp.close_batch(self.make_array(xp, device, [host.data.size],
+                                               dtype=xp.int64), engine=engine)
+            with self.assertRaises(TypeError):
+                bp.parent_batch(self.make_array(xp, device, [1.5]),
+                                engine=engine)
+            with self.assertRaises(TypeError):
+                bp.level_ancestor_batch(
+                    self.make_array(xp, device, [1], dtype=xp.int64),
+                    self.make_array(xp, device, [1.0]), engine=engine)
+        self.assert_ran_on_gpu(bp, xp, device)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_cophenet(self, xp, device):
+        for host in self.host[1:]:
+            bp = self.on(xp, device, host)
+            names = [host.name(int(p)) for p in np.flatnonzero(host.data)
+                     if host.is_tip(int(p))]
+            subset = list(self.rng.permutation(names)[: len(names) // 2 + 1])
+            for engine in _engines():
+                for endpoints in (None, subset):
+                    for use_length in (True, False):
+                        exp = host.cophenet(endpoints, use_length=use_length)
+                        obs = bp.cophenet(endpoints, use_length=use_length,
+                                          engine=engine)
+                        self.assertEqual(obs.ids, exp.ids)
+                        self.assert_type_preserved(obs.data, xp, device)
+                        # the same algorithm on every device: bit-identical
+                        npt.assert_array_equal(_to_numpy(obs.data), exp.data)
+            self.assert_ran_on_gpu(bp, xp, device)
+        # no pairs
+        obs = self.on(xp, device, BPTree(np.array([1, 1, 0, 0], np.uint8)))
+        self.assertEqual(obs.cophenet().shape, (0, 0))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_to_device(self, xp, device):
+        # the device as the backend names it (e.g. a cupy.cuda.Device)
+        target = aac.device(self.make_array(xp, device, [0], dtype=xp.uint8))
+        for host in self.host[1:]:
+            bp = host.to_device(xp, target)
+            self.assert_type_preserved(bp.data, xp, device)
+            npt.assert_array_equal(_to_numpy(bp.data), host.data)
+            # the host index and attributes are shared, not rebuilt
+            for key in ('_data', '_e_index', '_k_index_0', '_k_index_1', '_m',
+                        '_M', '_r', '_names', '_lengths', '_edges'):
+                self.assertIs(getattr(bp, key), getattr(host, key), key)
+            self.assertIsNot(bp._kernel, host._kernel)
+            for i in range(host.data.size - 1):
+                self.assertEqual(bp.parent(i), host.parent(i))
+                self.assertEqual(bp.name(i), host.name(i))
+            n = host.data.size
+            i = self.rng.integers(0, n, 300)
+            j = self.rng.integers(0, n, 300)
+            dev = lambda a: self.make_array(xp, device, a, dtype=xp.int64)
+            for engine in _engines():
+                obs = bp.lca_batch(dev(i), dev(j), engine=engine)
+                self.assert_type_preserved(obs, xp, device)
+                npt.assert_array_equal(_to_numpy(obs), host.lca_batch(i, j))
+                obs = bp.cophenet(engine=engine)
+                self.assert_type_preserved(obs.data, xp, device)
+                npt.assert_array_equal(_to_numpy(obs.data), host.cophenet().data)
+            self.assert_ran_on_gpu(bp, xp, device)
+            # and back to the host, from where the tree lives now
+            back = bp.to_device(np)
+            self.assertIsInstance(back.data, np.ndarray)
+            self.assertIs(back.data, host.data)
+            npt.assert_array_equal(back.lca_batch(i, j), host.lca_batch(i, j))
+
+        # setting an attribute of one tree leaves the other as it was (on a
+        # tree of its own: the fixtures are shared by the backends' subtests)
+        h = self.host[2]
+        host = BPTree(h.data, lengths=h._lengths.copy(), names=h._names.copy())
+        bp = host.to_device(xp, target)
+        names = np.full(host.data.size, 'x', dtype=object)
+        bp.set_names(names)
+        self.assertEqual(bp.name(0), 'x')
+        self.assertNotEqual(host.name(0), 'x')
+        lengths = np.full(host.data.size, 9.0)
+        host.set_lengths(lengths)
+        self.assertEqual(host.length(1), 9.0)
+        self.assertNotEqual(bp.length(1), 9.0)
+        # the default device of the backend: the current GPU for CuPy
+        if _get_backend_name(xp) == 'cupy':
+            self.assert_type_preserved(host.to_device(xp).data, xp, device)
+
+    def test_to_device_invalid_backend(self):
+        bp = self.host[1]
+        for xp in (object(), np.ndarray, 'numpy'):
+            with self.assertRaisesRegex(TypeError, 'not a supported array backend'):
+                bp.to_device(xp)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_non_default_stream(self, xp, device):
+        # queries made, cast and read on a stream of their own: PyTorch does
+        # not tell Numba which stream produced a tensor, so the kernels must
+        # wait for it (see _gpu._sync_stream)
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        delay = contextlib.nullcontext()
+        if name == "torch":
+            import torch
+            import array_api_compat.torch as compat
+            stream = torch.cuda.Stream()
+            context = torch.cuda.stream(stream)
+            # widen the window of the race: keep the stream busy before each
+            # int32 cast, so that a kernel not waiting for it reads it unfinished
+            cast = compat.astype
+
+            def slow_cast(x, dtype, *args, **kwargs):
+                if x.dtype == torch.int32:
+                    torch.cuda._sleep(100_000_000)
+                return cast(x, dtype, *args, **kwargs)
+
+            delay = mock.patch.object(compat, "astype", slow_cast)
+        else:
+            stream = xp.cuda.Stream(non_blocking=True)
+            context = stream
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        n = host.data.size
+        pos = self.rng.integers(0, n, 5000)
+        d = self.rng.integers(0, 6, pos.size)
+        # warm: the index is on the device, so nothing synchronizes before
+        # the launch but the kernels' own wait
+        bp.level_ancestor_batch(pos[:2], d[:2], engine="numba")
+        for _ in range(3):
+            with delay, context:
+                obs = bp.level_ancestor_batch(
+                    self.make_array(xp, device, pos, dtype=xp.int64),
+                    self.make_array(xp, device, d, dtype=xp.int32),
+                    engine="numba")
+                lca = bp.lca_batch(
+                    self.make_array(xp, device, pos, dtype=xp.int32),
+                    self.make_array(xp, device, pos[::-1].copy(), dtype=xp.int32),
+                    engine="numba")
+                dm = bp.cophenet(engine="numba")
+            npt.assert_array_equal(_to_numpy(obs), host.level_ancestor_batch(pos, d))
+            npt.assert_array_equal(_to_numpy(lca),
+                                   host.lca_batch(pos, pos[::-1].copy()))
+            npt.assert_array_equal(_to_numpy(dm.data), host.cophenet().data)
+        self.assert_ran_on_gpu(bp, xp, device)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_write(self, xp, device):
+        # the writers read the host copy, not ``data``, which may be on a GPU
+        for host in self.host[1:]:
+            edges = np.arange(host.data.size, dtype=np.int32)
+            host = BPTree(host.data, lengths=host._lengths, names=host._names,
+                          edges=edges)
+            bp = BPTree(self.make_array(xp, device, host.data, dtype=xp.uint8),
+                        lengths=host._lengths, names=host._names, edges=edges)
+            for fmt in ('newick', 'jplace'):
+                exp, obs = io.StringIO(), io.StringIO()
+                host.write(exp, format=fmt)
+                bp.write(obs, format=fmt)
+                self.assertEqual(obs.getvalue(), exp.getvalue(), fmt)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_host_operations(self, xp, device):
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        # new trees and exports are made from the host copy
+        for tree in (pickle.loads(pickle.dumps(bp)), copy.deepcopy(bp),
+                     bp.shear({'t0', 't1', 't2'}), bp.collapse()):
+            self.assertIsInstance(tree.data, np.ndarray)
+        npt.assert_array_equal(pickle.loads(pickle.dumps(bp)).data, host.data)
+        self.assertEqual(bp.to_array()['name'].tolist(),
+                         host.to_array()['name'].tolist())
+
+
+@numba_code
+class BPGPUFallbackTests(TestCase):
+    """A GPU kernel that cannot run falls back to the CPU engines."""
+
+    def setUp(self):
+        self.bp = _named_tree(40, np.random.default_rng(2))
+        self.key = 'numpy'
+        _gpu._unavailable.discard(self.key)
+        # a Numba GPU module lacking everything the kernels need
+        broken = types.SimpleNamespace(__name__='broken')
+        self.bp._gpu_module = lambda engine: broken if engine == 'numba' else None
+
+    def tearDown(self):
+        _gpu._unavailable.discard(self.key)
+
+    def test_fallback_warns_once(self):
+        bp = self.bp
+        n = bp.data.size
+        i = np.arange(n)
+        j = i[::-1].copy()
+        exp = bp.lca_batch(i, j, engine='cython')
+        with self.assertWarnsRegex(UserWarning, 'using the CPU engines'):
+            obs = bp.lca_batch(i, j, engine='numba')
+        npt.assert_array_equal(obs, exp)
+        self.assertIn(self.key, _gpu._unavailable)
+        # the permutation tests' kernels on the backend are unaffected
+        self.assertNotIn('numpy', _stats_gpu._unavailable)
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
+            npt.assert_array_equal(
+                bp.parent_batch(i[:-1], engine='numba'),
+                bp.parent_batch(i[:-1], engine='cython'))
+            npt.assert_array_equal(
+                bp.cophenet(engine='numba').data,
+                bp.cophenet(engine='cython').data)
+
+    def test_cophenet_fallback(self):
+        with self.assertWarns(UserWarning):
+            obs = self.bp.cophenet(engine='numba')
+        npt.assert_array_equal(obs.data, self.bp.cophenet(engine='cython').data)
+
+    def test_other_engines_stay_on_host(self):
+        # the GPU is only reached for engine="numba"
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
+            self.bp.lca_batch([1], [2], engine='cython')
+            self.bp.cophenet(engine='cython')
+        self.assertNotIn(self.key, _gpu._unavailable)
+
+
+class BPGPUModuleTests(TestCase):
+    """Which Numba GPU module the tree's kernels compile through."""
+
+    def setUp(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("PyTorch is not installed.")
+        if torch.version.hip is not None:
+            self.skipTest("a ROCm build of PyTorch maps to numba.hip.")
+        # a CPU tensor reports the same namespace as a CUDA one
+        self.arr = torch.zeros(2)
+        self.mlir = types.SimpleNamespace(__name__='numba_cuda_mlir.cuda')
+        self.cuda = types.SimpleNamespace(__name__='numba.cuda')
+
+    def probe(self, installed):
+        def available(package, name):
+            return installed.get(package + '.' + name)
+
+        with mock.patch.object(_gpu, '_available_module', side_effect=available):
+            return _gpu._numba_gpu_module_for(self.arr)
+
+    def test_prefers_numba_cuda_mlir(self):
+        installed = {'numba_cuda_mlir.cuda': self.mlir, 'numba.cuda': self.cuda}
+        self.assertIs(self.probe(installed), self.mlir)
+
+    def test_falls_back_to_numba_cuda(self):
+        self.assertIs(self.probe({'numba.cuda': self.cuda}), self.cuda)
+
+    def test_none_without_an_extension(self):
+        self.assertIsNone(self.probe({}))
+
+    def test_none_after_a_failure(self):
+        installed = {'numba_cuda_mlir.cuda': self.mlir}
+        _gpu._unavailable.add('torch')
+        try:
+            self.assertIsNone(self.probe(installed))
+        finally:
+            _gpu._unavailable.discard('torch')
+
+
+class BPGPUStreamTests(TestCase):
+    """A GPU backend's array is read only after its stream's queued work."""
+
+    def test_sync_before_reading_in_place(self):
+        calls = []
+        arr = types.SimpleNamespace(__cuda_array_interface__={})
+        gpu = types.SimpleNamespace(
+            as_cuda_array=lambda a: calls.append('read') or a)
+        with mock.patch.object(_bp_gpu, '_sync_stream',
+                               side_effect=lambda a: calls.append('sync')):
+            self.assertIs(_bp_gpu._on_device(gpu, arr), arr)
+        self.assertEqual(calls, ['sync', 'read'])
+
+    def test_host_array_is_uploaded_without_sync(self):
+        gpu = types.SimpleNamespace(to_device=lambda a: ('uploaded', a))
+        with mock.patch.object(_bp_gpu, '_sync_stream') as sync:
+            res = _bp_gpu._on_device(gpu, np.arange(3))
+        sync.assert_not_called()
+        self.assertEqual(res[0], 'uploaded')
+
+    def test_other_arrays_are_ignored(self):
+        # e.g. a Numba device array, which no array API namespace takes
+        _gpu._sync_stream(types.SimpleNamespace(__cuda_array_interface__={}))
+        _gpu._sync_stream(np.arange(3))
+
+
 class BPFastEngineTests(TestCase):
     """What engine="fast" resolves to: see the Notes of BPTree."""
 
     def setUp(self):
         self.bp = _named_tree(30, np.random.default_rng(3))
 
-    def resolve(self, openmp, numba):
+    def resolve(self, openmp, numba, gpu=None):
         """The fast engine of self.bp with the build and install patched."""
         with mock.patch.object(_bp_cy, 'OPENMP', openmp), \
-                mock.patch('skbio.tree.bp._bp.NUMBA_AVAILABLE', numba):
+                mock.patch('skbio.tree.bp._bp.NUMBA_AVAILABLE', numba), \
+                mock.patch.object(self.bp, '_gpu_module', return_value=gpu):
             return self.bp._fast_engine()
 
     def test_openmp_flag(self):
         self.assertIsInstance(_bp_cy.OPENMP, bool)
 
     def test_rules(self):
-        # 1. multithreaded Cython
+        gpu = types.SimpleNamespace(__name__='numba.cuda')
+        # 1. a tree on a GPU the Numba kernels can use
+        self.assertEqual(self.resolve(True, True, gpu), 'numba')
+        self.assertEqual(self.resolve(False, True, gpu), 'numba')
+        # 2. multithreaded Cython
         self.assertEqual(self.resolve(True, True), 'cython')
         self.assertEqual(self.resolve(True, False), 'cython')
-        # 2. serial Cython, and Numba installed
+        # 3. serial Cython, and Numba installed
         self.assertEqual(self.resolve(False, True), 'numba')
-        # 3. serial Cython, nothing else
+        # 4. serial Cython, nothing else
         self.assertEqual(self.resolve(False, False), 'cython')
 
-    def test_resolution_on_this_build(self):
+    def test_host_tree_reaches_no_gpu(self):
+        # a NumPy tree is never on a GPU: the rule is decided by the build
+        self.assertIsNone(self.bp._gpu_module('numba'))
         exp = 'cython' if _bp_cy.OPENMP or not NUMBA_AVAILABLE else 'numba'
         self.assertEqual(self.bp._fast_engine(), exp)
 
