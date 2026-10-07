@@ -312,6 +312,11 @@ def define_primitives(jit, jit_inline=None):
         if T.m[node] <= d <= T.M[node]:
             result = scan_block_forward(T, i, k, d)
         if result == -1:
+            # nothing lies after the last block. Its leaf is the last node
+            # stored: when it is a left child, its right sibling is not, and
+            # the internal nodes right of it are stored but empty
+            if node == T.m.shape[0] - 1:
+                return -1
             while not bt_is_root(node):
                 if bt_is_left_child(node):
                     node += 1

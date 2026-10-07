@@ -136,6 +136,19 @@ class NumbaPrimitiveTests(TestCase):
                     self.check(P.bwdsearch(T, i, d),
                                tbc.kernel_index_op(bp, "bwdsearch", i, d), i, d)
 
+    def test_fwdsearch_in_bounds(self):
+        # a forward search that reaches the last block and finds nothing stops
+        # there, rather than read the last leaf's right sibling, which is not
+        # stored (one past the end of the rmM tree: on a GPU, a read that can
+        # fault). Run as Python, where NumPy checks every index.
+        search = self.P.fwdsearch.py_func
+        for bp in self.trees:
+            T = _bp_numba.bp_arrays(bp)
+            for i in range(bp.data.size):
+                for d in (-2, -1, 0, 1, 2):
+                    self.check(search(T, i, d),
+                               tbc.kernel_index_op(bp, "fwdsearch", i, d), i, d)
+
     def test_pairwise(self):
         P = self.P
         for bp in self.trees:

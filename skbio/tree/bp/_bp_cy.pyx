@@ -648,6 +648,12 @@ cdef class _BPKernel:
 
         # if we do not have a result, we need to begin traversal of the tree
         if result == -1:
+            # nothing lies after the last block. Its leaf is the last node
+            # stored: when it is a left child, its right sibling is not, and the
+            # internal nodes right of it are stored but empty
+            if node == self._m.shape[0] - 1:
+                return -1
+
             # walk up the tree
             while not bt_is_root(node):
                 if bt_is_left_child(node):
