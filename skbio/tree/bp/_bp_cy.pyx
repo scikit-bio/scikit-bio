@@ -178,11 +178,14 @@ cdef class _BPKernel:
             return (i - r) + 1
 
     cdef inline Py_ssize_t select(self, Py_ssize_t t, Py_ssize_t k) noexcept nogil:
-        """The position in B of the kth occurrence of the bit t."""
+        """The position in B of the kth occurrence of the bit t (k from 1).
+
+        The inverse of ``rank``: ``rank(t, select(t, k)) == k``.
+        """
         if t:
-            return self._k_index_1[k]
+            return self._k_index_1[k - 1]
         else:
-            return self._k_index_0[k]
+            return self._k_index_0[k - 1]
 
     cdef Py_ssize_t excess(self, Py_ssize_t i) noexcept nogil:
         """the number of opening minus closing parentheses in B[1, i]"""
@@ -432,7 +435,9 @@ cdef class _BPKernel:
             return self.preorder_rank(self.open(i))
 
     cpdef Py_ssize_t preorder_select(self, Py_ssize_t k) noexcept nogil:
-        """Index of the node with preorder rank ``k``."""
+        """Index of the node with preorder rank ``k``, or -1 for no such rank."""
+        if k < 1 or k > self.size // 2:
+            return -1
         return self.select(1, k)
 
     cpdef Py_ssize_t postorder_rank(self, Py_ssize_t i) noexcept nogil:
@@ -443,7 +448,9 @@ cdef class _BPKernel:
             return self.rank(0, i)
 
     cpdef Py_ssize_t postorder_select(self, Py_ssize_t k) noexcept nogil:
-        """Index of the node with postorder rank ``k``."""
+        """Index of the node with postorder rank ``k``, or -1 for no such rank."""
+        if k < 1 or k > self.size // 2:
+            return -1
         return self.open(self.select(0, k))
 
     cpdef BOOL_t is_ancestor(self, Py_ssize_t i, Py_ssize_t j) noexcept nogil:
@@ -784,8 +791,8 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
     -------
     dict
         ``e_index`` (excess at each position), ``k_index_1`` and ``k_index_0``
-        (select indexes: position of the k-th opening / closing parenthesis,
-        with position 0 at k = 0 for the bit that is absent there), ``m``,
+        (select indexes: the positions of the opening / closing parentheses,
+        in order, so the k-th is at ``k - 1``), ``m``,
         ``M`` and ``r`` (minimum excess, maximum excess and rank of the rmM tree
         nodes in heap order), ``b`` (block size) and ``height`` (rmM tree
         height). Arrays are of intp.
@@ -799,14 +806,11 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         Py_ssize_t n_open, i, j, k, upper, lvl, pos, node, lchild, rchild
         Py_ssize_t excess = 0, rank = 0, min_, max_, ptr_0 = 0, ptr_1 = 0
         Py_ssize_t[::1] e_index, k_index_0, k_index_1, m, M, r
-        BOOL_t first_open = B[0] != 0
 
     n_open = np.count_nonzero(B)
     e_index_arr = np.empty(n, dtype=SIZE)
-    # position 0 is in both select indexes: the bit found there, plus a
-    # leading 0 for the other bit
-    k_index_1_arr = np.empty(n_open + (0 if first_open else 1), dtype=SIZE)
-    k_index_0_arr = np.empty(n - n_open + (1 if first_open else 0), dtype=SIZE)
+    k_index_1_arr = np.empty(n_open, dtype=SIZE)
+    k_index_0_arr = np.empty(n - n_open, dtype=SIZE)
     m_arr = np.zeros(n_total, dtype=SIZE)
     M_arr = np.zeros(n_total, dtype=SIZE)
     r_arr = np.zeros(n_total, dtype=SIZE)
@@ -814,13 +818,6 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
     m, M, r = m_arr, M_arr, r_arr
 
     with nogil:
-        if first_open:
-            k_index_0[0] = 0
-            ptr_0 = 1
-        else:
-            k_index_1[0] = 0
-            ptr_1 = 1
-
         # leaves: one block of b parentheses each
         for k in range(n_tip):
             upper = min((k + 1) * b, n)
@@ -995,7 +992,7 @@ def to_node_arrays(_BPKernel k):
 
     root = k.root()
     for i in range(n):
-        node_idx = k.preorder_select(i)
+        node_idx = k.preorder_select(i + 1)
         name[i] = k.name(node_idx)
         length[i] = k.length(node_idx)
         edge[i] = k.edge(node_idx)
@@ -1088,7 +1085,7 @@ def collapse_mask(_BPKernel k):
 
     with nogil:
         for i in range(n):
-            current = k.preorder_select(i)
+            current = k.preorder_select(i + 1)
 
             if k.is_tip(current):
                 mask[current] = 1

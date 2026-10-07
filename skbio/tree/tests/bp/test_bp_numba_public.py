@@ -298,7 +298,7 @@ _GPU_SCRIPT = textwrap.dedent("""
             out[t, 16] = gnav.level_ancestor(T, i, 1)
             out[t, 17] = gnav.level_ancestor(T, i, 3)
             out[t, 18] = gnav.root(T)
-            out[t, 19] = gnav.preorder_select(T, ks[t] - 1)  # ranks from 0
+            out[t, 19] = gnav.preorder_select(T, ks[t])
             out[t, 20] = gnav.postorder_select(T, ks[t])
 
     @cuda.jit
@@ -322,14 +322,14 @@ _GPU_SCRIPT = textwrap.dedent("""
     Th = bp.numba_arrays()
     n = Th.size
     idx = np.arange(n - 1)
-    ks = idx % (n // 2) + 1
+    ks = idx % (n // 2 + 2)  # every rank, and 0 and n + 1, which are not
     out = cuda.device_array((idx.size, 21), dtype=np.intp)
     nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
                                         cuda.to_device(ks), out)
     obs = out.copy_to_host()
     for t, i in enumerate(idx.tolist()):
         exp = [call(Th, e, i) for e in one]
-        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]) - 1)),
+        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]))),
                 int(nav.postorder_select(Th, int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
 

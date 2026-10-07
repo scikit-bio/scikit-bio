@@ -134,7 +134,9 @@ So the sentinels are those of the methods:
   beyond the node's depth: it stops at the root rather than signal that it
   overshot;
 - ``minselect`` returns -1 when there is no ``q``-th minimum, including for
-  ``q < 1``.
+  ``q < 1``;
+- ``preorder_select`` and ``postorder_select`` return -1 for a rank outside
+  ``1`` to ``T.size // 2`` (the number of nodes).
 
 Warnings
 --------
