@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 
 from . import _bp_numba
-from ._gpu import _TPB, _get_kernel
+from ._gpu import _TPB, _get_kernel, _sync_stream
 
 # Compiled kernels, by backend name (see ``_get_kernel``).
 _kernels = {}
@@ -137,8 +137,13 @@ def _launch(kernel, grid, block, *args):
 
 
 def _on_device(gpu, arr):
-    """A Numba device array of ``arr``: in place if on the device, else a copy."""
+    """A Numba device array of ``arr``: in place if on the device, else a copy.
+
+    An array of a GPU backend is read in place once the work queued for it on
+    that backend's stream is done (see :func:`._gpu._sync_stream`).
+    """
     if hasattr(arr, "__cuda_array_interface__"):
+        _sync_stream(arr)
         return gpu.as_cuda_array(arr)
     return gpu.to_device(np.ascontiguousarray(arr))
 

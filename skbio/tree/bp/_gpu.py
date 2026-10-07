@@ -91,6 +91,39 @@ def _available_module(package, name):
         return None
 
 
+def _sync_stream(arr):
+    """Wait for the work queued on the current stream of ``arr``'s backend.
+
+    The kernels run on a stream of the Numba GPU module, not on the stream of
+    the array's backend. CuPy tells Numba which stream produced an array
+    (``__cuda_array_interface__`` version 3), but PyTorch does not (version 2),
+    so work still queued on a PyTorch stream, e.g. a cast made just before the
+    launch, could be read unfinished, and memory that PyTorch's allocator
+    reuses could be written while queued work still reads it. Waiting for the
+    backend's stream before handing it the array orders the two, whatever the
+    backend and the Numba GPU module.
+
+    Parameters
+    ----------
+    arr : array
+        A CuPy array or PyTorch tensor on a GPU. Other arrays, e.g. a Numba
+        device array, are ignored.
+    """
+    try:
+        name = _get_backend_name(_aac.array_namespace(arr))
+    except TypeError:
+        return
+    if name == "torch":
+        import torch
+
+        torch.cuda.current_stream(arr.device).synchronize()
+    elif name == "cupy":
+        import cupy
+
+        with arr.device:
+            cupy.cuda.get_current_stream().synchronize()
+
+
 def _mark_gpu_unavailable(arr):
     """Record that ``arr``'s backend cannot run the BPTree kernels this process.
 

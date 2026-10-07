@@ -9,6 +9,7 @@
 # line length is useful here, so disabling check
 # flake8: noqa: E501
 
+import contextlib
 import copy
 import io
 import os
@@ -1207,6 +1208,58 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
                 bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
+    def test_non_default_stream(self, xp, device):
+        # queries made, cast and read on a stream of their own: PyTorch does
+        # not tell Numba which stream produced a tensor, so the kernels must
+        # wait for it (see _gpu._sync_stream)
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        delay = contextlib.nullcontext()
+        if name == "torch":
+            import torch
+            import array_api_compat.torch as compat
+            stream = torch.cuda.Stream()
+            context = torch.cuda.stream(stream)
+            # widen the window of the race: keep the stream busy before each
+            # int32 cast, so that a kernel not waiting for it reads it unfinished
+            cast = compat.astype
+
+            def slow_cast(x, dtype, *args, **kwargs):
+                if x.dtype == torch.int32:
+                    torch.cuda._sleep(100_000_000)
+                return cast(x, dtype, *args, **kwargs)
+
+            delay = mock.patch.object(compat, "astype", slow_cast)
+        else:
+            stream = xp.cuda.Stream(non_blocking=True)
+            context = stream
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        n = host.data.size
+        pos = self.rng.integers(0, n, 5000)
+        d = self.rng.integers(0, 6, pos.size)
+        # warm: the index is on the device, so nothing synchronizes before
+        # the launch but the kernels' own wait
+        bp.level_ancestor_batch(pos[:2], d[:2], engine="numba")
+        for _ in range(3):
+            with delay, context:
+                obs = bp.level_ancestor_batch(
+                    self.make_array(xp, device, pos, dtype=xp.int64),
+                    self.make_array(xp, device, d, dtype=xp.int32),
+                    engine="numba")
+                lca = bp.lca_batch(
+                    self.make_array(xp, device, pos, dtype=xp.int32),
+                    self.make_array(xp, device, pos[::-1].copy(), dtype=xp.int32),
+                    engine="numba")
+                dm = bp.cophenet(engine="numba")
+            npt.assert_array_equal(_to_numpy(obs), host.level_ancestor_batch(pos, d))
+            npt.assert_array_equal(_to_numpy(lca),
+                                   host.lca_batch(pos, pos[::-1].copy()))
+            npt.assert_array_equal(_to_numpy(dm.data), host.cophenet().data)
+        self.assert_ran_on_gpu(bp, xp, device)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_write(self, xp, device):
         # the writers read the host copy, not ``data``, which may be on a GPU
         for host in self.host[1:]:
@@ -1323,6 +1376,32 @@ class BPGPUModuleTests(TestCase):
             self.assertIsNone(self.probe(installed))
         finally:
             _gpu._unavailable.discard('torch')
+
+
+class BPGPUStreamTests(TestCase):
+    """A GPU backend's array is read only after its stream's queued work."""
+
+    def test_sync_before_reading_in_place(self):
+        calls = []
+        arr = types.SimpleNamespace(__cuda_array_interface__={})
+        gpu = types.SimpleNamespace(
+            as_cuda_array=lambda a: calls.append('read') or a)
+        with mock.patch.object(_bp_gpu, '_sync_stream',
+                               side_effect=lambda a: calls.append('sync')):
+            self.assertIs(_bp_gpu._on_device(gpu, arr), arr)
+        self.assertEqual(calls, ['sync', 'read'])
+
+    def test_host_array_is_uploaded_without_sync(self):
+        gpu = types.SimpleNamespace(to_device=lambda a: ('uploaded', a))
+        with mock.patch.object(_bp_gpu, '_sync_stream') as sync:
+            res = _bp_gpu._on_device(gpu, np.arange(3))
+        sync.assert_not_called()
+        self.assertEqual(res[0], 'uploaded')
+
+    def test_other_arrays_are_ignored(self):
+        # e.g. a Numba device array, which no array API namespace takes
+        _gpu._sync_stream(types.SimpleNamespace(__cuda_array_interface__={}))
+        _gpu._sync_stream(np.arange(3))
 
 
 class BPFastEngineTests(TestCase):
