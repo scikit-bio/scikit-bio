@@ -245,7 +245,9 @@ def write_newick(object tree, object output, bint include_edge):
     open_paren_stack = []
     root_close = k.close(0)
 
-    for idx, v in enumerate(tree.data):
+    # the host copy of the topology: ``tree.data`` may be on a GPU, where
+    # reading it one element at a time costs a transfer per parenthesis
+    for idx, v in enumerate(tree._data):
         if v:
             if not k.is_tip(idx):
                 output.write('(')
@@ -680,7 +682,7 @@ def write_jplace(object tree, object output, object fields=None,
     # 0 and may coincide with a real edge 0, so it is excluded here (the root is
     # the first node in the parentheses array). A tree with no real edge numbers
     # has 0 on every edge and would produce ambiguous, invalid jplace.
-    edge_vals = [tree.edge(i) for i, v in enumerate(tree.data) if v][1:]
+    edge_vals = [tree.edge(i) for i, v in enumerate(tree._data) if v][1:]
     if len(set(edge_vals)) != len(edge_vals):
         raise ValueError(
             "cannot write jplace: the tree's edge numbers are not unique. jplace "

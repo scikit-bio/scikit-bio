@@ -1207,6 +1207,21 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
                 bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
+    def test_write(self, xp, device):
+        # the writers read the host copy, not ``data``, which may be on a GPU
+        for host in self.host[1:]:
+            edges = np.arange(host.data.size, dtype=np.int32)
+            host = BPTree(host.data, lengths=host._lengths, names=host._names,
+                          edges=edges)
+            bp = BPTree(self.make_array(xp, device, host.data, dtype=xp.uint8),
+                        lengths=host._lengths, names=host._names, edges=edges)
+            for fmt in ('newick', 'jplace'):
+                exp, obs = io.StringIO(), io.StringIO()
+                host.write(exp, format=fmt)
+                bp.write(obs, format=fmt)
+                self.assertEqual(obs.getvalue(), exp.getvalue(), fmt)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_host_operations(self, xp, device):
         host = self.host[2]
         bp = self.on(xp, device, host)
