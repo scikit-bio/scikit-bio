@@ -87,6 +87,10 @@
 * `ancombc` now returns an `ANCOMBCResult` object instead of a DataFrame or tuple of two. The primary table can be accessed through `.result` or simply the object itself. This largely preserves the behavior when the global test is not requested (without specifying `grouping`). However, the global test is now deferred to `ANCOMBCResult.global_test()` (see also a relevant bug fix above). The `Log2(FC)` column is now named `Log(FC)` to reflect its natural-log scale ([#2572](https://github.com/scikit-bio/scikit-bio/pull/2572)).
 
 
+### Bug Fixes
+
+* Fixed the GFF3 reader dropping or duplicating features when a sequence ID's records are not contiguous in the file. GFF3 does not require features to be grouped by sequence ID, but the reader previously only merged consecutive lines. As a result, reading a specific `seq_id` returned only its first block of features, and the generator reader yielded the same `seq_id` multiple times. All features for a sequence ID are now merged regardless of their order in the file ([#2501](https://github.com/scikit-bio/scikit-bio/pull/2501)).
+
 ## Version 0.7.3
 
 ### Features
