@@ -199,10 +199,12 @@ def _parse_loc_str(loc_str):
 
     Notes
     -----
-    This does not fully handle (e) case. It will discard the remote
-    entry part and only keep the local part. When it parses locations
-    across strand (e.g. "complement(123..145),200..209"), it will
-    record all the span parts but will record strand as negative.
+    This does not fully handle the (e) case. Remote entry references (e.g.
+    "J00194.1:1..9") are discarded entirely, because their coordinates refer
+    to a different sequence than the one being described; this includes
+    references with fuzzy boundaries (e.g. "AB000684.1:<1..>275"). When it
+    parses locations across strand (e.g. "complement(123..145),200..209"), it
+    will record all the span parts but will record strand as negative.
 
     References
     ----------
@@ -223,7 +225,12 @@ def _parse_loc_str(loc_str):
     b = r"(?P<B>\d+\^\d+)"
     c = r"(?P<C>\d+\.\d+)"
     d = r"(?P<D><?\d+\.\.>?\d+)"
-    e_left = r"(?P<EL><?[a-zA-Z_0-9\.]+:\d+\.\.>?\d+)"
+    # Remote entry references (INSDC case e), e.g. "J00194.1:1..9". The local
+    # range may carry the same `<`/`>` fuzzy markers as case (d); these belong
+    # to the base positions (after the colon), not to the accession (issue
+    # #1489). The whole reference is dropped below, since its coordinates refer
+    # to a different sequence.
+    e_left = r"(?P<EL>[a-zA-Z_0-9\.]+:<?\d+\.\.>?\d+)"
     e_right = r"(?P<ER><?\d+\.\.>?[a-zA-Z_0-9\.]+:\d+)"
     illegal = r"(?P<ILLEGAL>.+)"
     # The order of tokens in the master regular expression also
