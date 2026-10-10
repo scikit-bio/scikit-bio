@@ -265,17 +265,13 @@ _GPU_SCRIPT = textwrap.dedent("""
     one = [("close",), ("depth",), ("parent",), ("is_tip",), ("first_child",),
            ("last_child",), ("next_sibling",), ("previous_sibling",),
            ("preorder_rank",), ("postorder_rank",), ("deepest_node",),
-           ("height",), ("count", True), ("count", False),
+           ("height",), ("level_next",), ("count", True), ("count", False),
            ("level_ancestor", 0), ("level_ancestor", 1),
            ("level_ancestor", 3)]
     two = [("lca",), ("is_ancestor",), ("rmq",), ("rMq",), ("mincount",),
            ("minselect", -1), ("minselect", 1), ("minselect", 2)]
     covered = {c[0] for c in one + two}
     covered |= {"root", "preorder_select", "postorder_select"}
-    # level_next's forward search reads past the end of the rmM tree when it
-    # starts in the last block (an issue of the index, fixed separately),
-    # which the simulator's bounds checks reject; it is tested on the CPU
-    covered |= {"level_next"}
     assert covered == set(bpn.Navigation._fields), covered
 
     @cuda.jit
@@ -295,14 +291,15 @@ _GPU_SCRIPT = textwrap.dedent("""
             out[t, 9] = gnav.postorder_rank(T, i)
             out[t, 10] = gnav.deepest_node(T, i)
             out[t, 11] = gnav.height(T, i)
-            out[t, 12] = gnav.count(T, i, True)
-            out[t, 13] = gnav.count(T, i, False)
-            out[t, 14] = gnav.level_ancestor(T, i, 0)
-            out[t, 15] = gnav.level_ancestor(T, i, 1)
-            out[t, 16] = gnav.level_ancestor(T, i, 3)
-            out[t, 17] = gnav.root(T)
-            out[t, 18] = gnav.preorder_select(T, ks[t] - 1)  # ranks from 0
-            out[t, 19] = gnav.postorder_select(T, ks[t])
+            out[t, 12] = gnav.level_next(T, i)
+            out[t, 13] = gnav.count(T, i, True)
+            out[t, 14] = gnav.count(T, i, False)
+            out[t, 15] = gnav.level_ancestor(T, i, 0)
+            out[t, 16] = gnav.level_ancestor(T, i, 1)
+            out[t, 17] = gnav.level_ancestor(T, i, 3)
+            out[t, 18] = gnav.root(T)
+            out[t, 19] = gnav.preorder_select(T, ks[t])
+            out[t, 20] = gnav.postorder_select(T, ks[t])
 
     @cuda.jit
     def pairs(T, ii, jj, out):
@@ -325,14 +322,14 @@ _GPU_SCRIPT = textwrap.dedent("""
     Th = bp.numba_arrays()
     n = Th.size
     idx = np.arange(n - 1)
-    ks = idx % (n // 2) + 1
-    out = cuda.device_array((idx.size, 20), dtype=np.intp)
+    ks = idx % (n // 2 + 2)  # every rank, and 0 and n + 1, which are not
+    out = cuda.device_array((idx.size, 21), dtype=np.intp)
     nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
                                         cuda.to_device(ks), out)
     obs = out.copy_to_host()
     for t, i in enumerate(idx.tolist()):
         exp = [call(Th, e, i) for e in one]
-        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]) - 1)),
+        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]))),
                 int(nav.postorder_select(Th, int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
 

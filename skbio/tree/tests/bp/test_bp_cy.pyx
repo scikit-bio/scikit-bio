@@ -40,13 +40,12 @@ def test_rank():
 
 
 def test_select():
+    # the position of the k-th t bit, k from 1
     cdef _BPKernel obj = get_test_obj()
-    pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
-    pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
-
-    for exp, t in zip((pos_1, pos_0), (1, 0)):
-        for k in range(1, len(exp)):
-            npt.assert_equal(obj.select(t, k), exp[k])
+    for t in (1, 0):
+        exp = np.flatnonzero(fig1_B == t)
+        for k in range(1, len(exp) + 1):
+            npt.assert_equal(obj.select(t, k), exp[k - 1])
 
 
 def test_rank_property():
@@ -57,12 +56,10 @@ def test_rank_property():
 
 def test_rank_select_property():
     cdef _BPKernel obj = get_test_obj()
-    pos_1 = np.unique(fig1_B.cumsum(), return_index=True)[1] #- 1
-    pos_0 = np.unique((1 - fig1_B).cumsum(), return_index=True)[1]
-    for t, pos in zip((0, 1), (pos_0, pos_1)):
-        for k in range(len(pos)):
-            # needed +t on expectation, unclear at this time why.
-            npt.assert_equal(obj.rank(t, obj.select(t, k)), k + t)
+    # select is the inverse of rank, for either bit
+    for t in (0, 1):
+        for k in range(1, int((fig1_B == t).sum()) + 1):
+            npt.assert_equal(obj.rank(t, obj.select(t, k)), k)
 
 
 def test_excess():
@@ -137,28 +134,28 @@ def test_first_child():
 
 def test_last_child():
     cdef _BPKernel obj = get_test_obj()
-    exp = [obj.preorder_select(7),
-           obj.preorder_select(4),
-           0,
-           0,
-           0,
-           0,
+    exp = [obj.preorder_select(8),
            obj.preorder_select(5),
            0,
            0,
+           0,
+           0,
+           obj.preorder_select(6),
+           0,
+           0,
+           obj.preorder_select(6),
            obj.preorder_select(5),
-           obj.preorder_select(4),
            0,
            0,
-           obj.preorder_select(8),
-           obj.preorder_select(10),
+           obj.preorder_select(9),
+           obj.preorder_select(11),
            0,
            0,
            0,
            0,
-           obj.preorder_select(10),
-           obj.preorder_select(8),
-           obj.preorder_select(7)]
+           obj.preorder_select(11),
+           obj.preorder_select(9),
+           obj.preorder_select(8)]
     for i, e in enumerate(exp):
         npt.assert_equal(obj.last_child(i), e)
 
@@ -434,12 +431,9 @@ def reference_index(cnp.ndarray[BOOL_t, ndim=1] B):
             rank += B[j]
         e_index[i] = 2 * rank - i - 1
 
-    step = B.astype(bool)
-    step[0] = True
-    k_index_1 = np.flatnonzero(step).astype(np.intp)
-    step = (B == 0)
-    step[0] = True
-    k_index_0 = np.flatnonzero(step).astype(np.intp)
+    # the positions of each bit, in order: select(t, k) reads entry k - 1
+    k_index_1 = np.flatnonzero(B).astype(np.intp)
+    k_index_0 = np.flatnonzero(B == 0).astype(np.intp)
 
     return {'e_index': np.asarray(e_index), 'k_index_0': k_index_0,
             'k_index_1': k_index_1, 'm': np.asarray(mM[:, 0]),

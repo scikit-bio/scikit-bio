@@ -66,8 +66,8 @@ BPArrays = namedtuple(
     [
         "B",  # parentheses (uint8)
         "e_index",  # excess at each position
-        "k_index_0",  # position of the k-th closing parenthesis
-        "k_index_1",  # position of the k-th opening parenthesis
+        "k_index_0",  # positions of the closing parentheses, in order
+        "k_index_1",  # positions of the opening parentheses, in order
         "m",  # rmM tree: minimum excess per node, heap order
         "M",  # rmM tree: maximum excess per node, heap order
         "r",  # rmM tree: rank (opening parentheses) before each node
@@ -271,8 +271,8 @@ def define_primitives(jit, jit_inline=None):
     def select(T, t, k):
         """Position of the ``k``-th ``t`` bit (``k`` from 1)."""
         if t:
-            return T.k_index_1[k]
-        return T.k_index_0[k]
+            return T.k_index_1[k - 1]
+        return T.k_index_0[k - 1]
 
     @jit_inline
     def excess(T, i):
@@ -312,6 +312,11 @@ def define_primitives(jit, jit_inline=None):
         if T.m[node] <= d <= T.M[node]:
             result = scan_block_forward(T, i, k, d)
         if result == -1:
+            # nothing lies after the last block. Its leaf is the last node
+            # stored: when it is a left child, its right sibling is not, and
+            # the internal nodes right of it are stored but empty
+            if node == T.m.shape[0] - 1:
+                return -1
             while not bt_is_root(node):
                 if bt_is_left_child(node):
                     node += 1
@@ -534,7 +539,12 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def preorder_select(T, k):
-        return select(T, 1, k)
+        # -1 for no such rank, without a branch: a branch makes the function too
+        # large for LLVM to inline where it is called through Navigation, and a
+        # call costs far more than the select
+        j = min(max(k, 1), T.size // 2)
+        pos = select(T, 1, j)
+        return pos if j == k else -1
 
     @jit
     def postorder_rank(T, i):
@@ -544,6 +554,8 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def postorder_select(T, k):
+        if k < 1 or k > T.size // 2:
+            return -1
         return open(T, select(T, 0, k))
 
     @jit_inline
