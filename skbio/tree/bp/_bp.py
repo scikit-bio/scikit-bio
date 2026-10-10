@@ -140,6 +140,11 @@ def _readonly(arr):
     return arr
 
 
+def _readonly_view(arr):
+    """A read-only view of an array, leaving the array itself as it is."""
+    return _readonly(arr.view())
+
+
 class BPTree(SkbioObject):
     """A balanced parentheses succinct data structure tree representation.
 
@@ -436,6 +441,24 @@ class BPTree(SkbioObject):
         created from.
         """
         return self._array
+
+    @property
+    def lengths(self):
+        """Branch length per parenthesis (read at opening parentheses).
+
+        A read-only view: use :meth:`set_lengths` to change the lengths. It is
+        a NumPy array on the host, whatever the backend of :attr:`data`.
+        """
+        return _readonly_view(self._lengths)
+
+    @property
+    def edges(self):
+        """Edge number per parenthesis (read at opening parentheses).
+
+        A read-only view: use :meth:`set_edges` to change the edge numbers. It
+        is a NumPy array on the host, whatever the backend of :attr:`data`.
+        """
+        return _readonly_view(self._edges)
 
     @staticmethod
     def _edge_lookup_for(B, edges):
@@ -1542,8 +1565,7 @@ class BPTree(SkbioObject):
 
         """
         B = self._data
-        is_tip = np.zeros(self._size, dtype=bool)
-        is_tip[:-1] = (B[:-1] == 1) & (B[1:] == 0)
+        is_tip = self._tip_mask()
         tips = np.flatnonzero(is_tip)
 
         if not endpoints:
@@ -1554,24 +1576,15 @@ class BPTree(SkbioObject):
             if len(set(taxa)) < len(taxa):
                 raise DuplicateNodeError("Tree contains duplicate tip names.")
         else:
-            # name lookup as TreeNode.find: tips first, then the first internal
-            # node (in preorder) with the name
-            lookup = {}
-            for pos in tips.tolist():
-                lookup.setdefault(self._names[pos], pos)
-            for pos in np.flatnonzero(B & ~is_tip).tolist():
-                lookup.setdefault(self._names[pos], pos)
-            taxa, positions = [], []
+            lookup = self._name_lookup(is_tip)
+            taxa, positions, seen = [], [], set()
             for name in endpoints:
-                if name is None:
-                    raise MissingNodeError("Cannot find a node without a name.")
-                if name in taxa:
+                if name in seen:
                     raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
-                pos = lookup.get(name)
-                if pos is None:
-                    raise MissingNodeError(f"Node '{name}' is not found in the tree.")
+                pos = self._find(lookup, name)
                 if not is_tip[pos]:
                     raise ValueError(f"Node with name '{name}' is not a tip.")
+                seen.add(name)
                 taxa.append(name)
                 positions.append(pos)
             tips = np.array(positions, dtype=np.intp)
@@ -1662,6 +1675,158 @@ class BPTree(SkbioObject):
         if out is None and xp is not None:
             matrix = xp.asarray(matrix, device=device)
         return matrix
+
+    # ------------------------------------------------------------------
+    # Positions of nodes, and arrays for compiled kernels
+    # ------------------------------------------------------------------
+
+    def _tip_mask(self):
+        """Whether each position is a tip's opening parenthesis."""
+        B = self._data
+        is_tip = np.zeros(self._size, dtype=bool)
+        is_tip[:-1] = (B[:-1] == 1) & (B[1:] == 0)
+        return is_tip
+
+    def _name_lookup(self, is_tip):
+        """Position by name, as :meth:`TreeNode.find` resolves a name.
+
+        A tip first, then the first internal node in preorder with the name.
+        """
+        lookup = {}
+        for pos in np.flatnonzero(is_tip).tolist():
+            lookup.setdefault(self._names[pos], pos)
+        for pos in np.flatnonzero(self._data & ~is_tip).tolist():
+            lookup.setdefault(self._names[pos], pos)
+        lookup.pop(None, None)
+        return lookup
+
+    @staticmethod
+    def _find(lookup, name):
+        if name is None:
+            raise MissingNodeError("Cannot find a node without a name.")
+        pos = lookup.get(name)
+        if pos is None:
+            raise MissingNodeError(f"Node '{name}' is not found in the tree.")
+        return pos
+
+    def tip_positions(self):
+        """Positions of the tips, in tree order.
+
+        Returns
+        -------
+        numpy.ndarray of intp
+            The opening parenthesis of each tip, in the order the tips appear
+            in the tree (left to right).
+
+        See Also
+        --------
+        positions
+        is_tip
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree.tip_positions()
+        array([ 2,  4,  8, 10])
+        >>> [tree.name(i) for i in tree.tip_positions()]
+        ['a', 'b', 'd', 'e']
+
+        """
+        return np.flatnonzero(self._tip_mask())
+
+    def positions(self, names):
+        """Positions of named nodes.
+
+        A name is resolved as :meth:`skbio.tree.TreeNode.find` resolves it: to
+        the tip of that name if there is one, else to the first internal node
+        of that name in preorder.
+
+        Parameters
+        ----------
+        names : str or iterable of str
+            A name, or names, of nodes.
+
+        Returns
+        -------
+        int or numpy.ndarray of intp
+            The position (opening parenthesis) of the node of each name: an int
+            for a single name, else an array in the order of ``names``.
+
+        Raises
+        ------
+        MissingNodeError
+            If a name is not found in the tree, or is None.
+
+        See Also
+        --------
+        tip_positions
+        name
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree.positions(["e", "c", "root"])
+        array([10,  1,  0])
+        >>> tree.positions("f")
+        7
+
+        """
+        lookup = self._name_lookup(self._tip_mask())
+        if isinstance(names, str):
+            return self._find(lookup, names)
+        return np.array([self._find(lookup, name) for name in names], dtype=np.intp)
+
+    def numba_arrays(self, gpu=None):
+        """The tree's arrays, for the Numba navigation functions.
+
+        Parameters
+        ----------
+        gpu : module, optional
+            A Numba GPU module (``numba_cuda_mlir.cuda`` or ``numba.cuda`` on
+            NVIDIA, ``numba.hip`` on AMD) to place the arrays on that module's
+            current device. By default they stay on the host, for CPU code.
+
+        Returns
+        -------
+        tuple
+            An opaque bundle ``T`` of the tree's topology and navigation index,
+            passed to the functions of :mod:`skbio.tree.bp.numba` as their
+            first argument, e.g. ``nav.parent(T, i)``. ``T.size`` is the number
+            of parentheses.
+
+        See Also
+        --------
+        skbio.tree.bp.numba
+        lengths
+        edges
+
+        Notes
+        -----
+        On the host, ``T`` holds read-only views of the tree's own arrays: no
+        copy is made. On a GPU, they are uploaded on the first call and cached
+        on the tree, so later calls (and the batch operations with
+        ``engine="numba"``) reuse them. This is so whether or not the tree was
+        created from an array on the device.
+
+        The topology cannot change once the tree exists, so ``T`` stays valid
+        as long as the tree. Node attributes can be replaced (e.g. with
+        :meth:`set_lengths`), which is why they are not part of ``T``: pass
+        :attr:`lengths` or :attr:`edges` to a kernel as arguments of their own.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> T = tree.numba_arrays()
+        >>> T.size
+        14
+
+        """
+        if gpu is None:
+            return _bp_numba.bp_arrays(self, asarray=_readonly_view)
+        return _bp_gpu.tree_arrays(gpu, self)
 
     # ------------------------------------------------------------------
     # Whole-tree operations

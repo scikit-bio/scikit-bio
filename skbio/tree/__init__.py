@@ -88,6 +88,14 @@ directly from :mod:`skbio.tree`.
 
     BPTree
 
+The navigation operations of a ``BPTree`` are also available as functions for
+your own Numba code, on the CPU or a GPU:
+
+.. autosummary::
+   :toctree: generated/
+
+    bp.numba
+
 
 Exceptions
 ^^^^^^^^^^

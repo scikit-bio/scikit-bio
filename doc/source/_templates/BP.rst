@@ -62,6 +62,16 @@
       ~{{ name }}.level_ancestor_batch
       ~{{ name }}.cophenet
 
+   .. rubric:: Node positions and compiled kernels
+
+   .. autosummary::
+      :toctree:
+
+      ~{{ name }}.tip_positions
+      ~{{ name }}.positions
+      ~{{ name }}.name
+      ~{{ name }}.numba_arrays
+
    .. rubric:: Tree manipulation
 
    .. autosummary::
