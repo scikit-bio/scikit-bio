@@ -24,6 +24,7 @@
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
 * Fixed `Sequence` case conversion altering characters that are not letters. `Sequence.lowercase` (used by the `lowercase` option of the FASTA and FASTQ writers) flipped the case bit of every selected character. When a lowercase mask covered non-letter positions, gaps (`-`), dots (`.`) and stop codons (`*`) were turned into control characters (e.g., `\r` and `\n`), and lowercase letters were converted to uppercase. The `lowercase` parameter of `Sequence` treated every character after `Z` as lowercase, rewriting `[`, `\`, `]`, `^`, `_`, `` ` ``, `{`, `|`, `}` and `~`. Case conversion is now restricted to the letters A-Z and a-z.
 
+* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan`, as `margalef` and `mcintosh_d` do for the same input.
 
 ### Miscellaneous
 

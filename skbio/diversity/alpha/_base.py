@@ -634,6 +634,8 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     S = counts.size
     lower = int(np.ceil(S * lower_quantile))
     upper = int(S * upper_quantile)
+    if lower >= S:
+        return np.nan
     sorted_counts = np.sort(counts)
     return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
 
