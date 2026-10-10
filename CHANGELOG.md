@@ -4,10 +4,14 @@
 
 ### Features
 
+* Documented "alignment-like", an abstract for inputs that represent two or more aligned sequences ([#2627](https://github.com/scikit-bio/scikit-bio/pull/2627)). 
+* Alignment encoding now supports arbitrary hashable symbols such as strings, tuples, `None`, and `frozenset` objects while retaining the optimized ASCII path. `bytes` and `bytearray` inputs are handled directly. Documented "sequence-like", an abstract for finite, ordered sequences of hashable symbols. ([#2626](https://github.com/scikit-bio/scikit-bio/pull/2626)).
+* `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
 * Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars` ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
 * Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
+* Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
 
 
 ### Bug Fixes
@@ -19,6 +23,7 @@
 * Corrected an inaccurate statement in the documentation of `Protein`, which should have 22 definite characters (including 'O' and 'U') instead of 20 ([#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
 * Fixed the Stockholm reader to forward extra keyword arguments, such as `lowercase`, to the sequence constructor, so that Stockholm files with lowercase characters can be read ([#1543](https://github.com/scikit-bio/scikit-bio/issues/1543)).
+* Fixed `Sequence` case conversion altering characters that are not letters. `Sequence.lowercase` (used by the `lowercase` option of the FASTA and FASTQ writers) flipped the case bit of every selected character. When a lowercase mask covered non-letter positions, gaps (`-`), dots (`.`) and stop codons (`*`) were turned into control characters (e.g., `\r` and `\n`), and lowercase letters were converted to uppercase. The `lowercase` parameter of `Sequence` treated every character after `Z` as lowercase, rewriting `[`, `\`, `]`, `^`, `_`, `` ` ``, `{`, `|`, `}` and `~`. Case conversion is now restricted to the letters A-Z and a-z.
 
 
 ### Miscellaneous

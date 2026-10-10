@@ -28,7 +28,7 @@ from skbio.sequence._repr import _SequenceReprBuilder
 from skbio.sequence._alphabet import (
     _alphabet_to_hashes,
     _indices_in_alphabet_ascii,
-    _indices_in_observed,
+    _indices_in_sorted,
 )
 from skbio.util import find_duplicates
 from skbio.util._decorator import classonlymethod, overrides
@@ -90,9 +90,9 @@ class Sequence(
     additionally enforce the IUPAC character set [1]_ for, and provide operations
     specific to, each respective molecule type.
 
-    ``Sequence`` objects consist of the underlying sequence data, as well
-    as optional metadata and positional metadata. The underlying sequence
-    is immutable, while the metdata and positional metadata are mutable.
+    ``Sequence`` objects consist of the underlying sequence data, as well as optional
+    metadata and positional metadata. The underlying sequence is immutable, while the
+    metdata and positional metadata are mutable.
 
     Parameters
     ----------
@@ -115,7 +115,8 @@ class Sequence(
         If True, lowercase sequence characters will be converted to uppercase. If False
         (default), characters will not be converted. If a string, in addition to the
         uppercase conversion, a boolean array indicating which positions were originally
-        lowercase will be stored in the positional metadata under this key.
+        lowercase will be stored in the positional metadata under this key. Only the
+        letters a-z are considered lowercase; other characters are kept as is.
     validate : bool, optional
         If True (default), byte or array input is validated to contain only ASCII code
         points (0-127). If False, this validation is skipped, and the caller is
@@ -156,6 +157,11 @@ class Sequence(
     DNA
     RNA
     Protein
+
+    Notes
+    -----
+    scikit-bio's ``Sequence`` shares its name with Python's
+    :class:`~collections.abc.Sequence`, although they are distinct types.
 
     References
     ----------
@@ -545,7 +551,11 @@ class Sequence(
     # ASCII is built such that the difference between uppercase and lowercase
     # is the 6th bit.
     _ascii_invert_case_bit_offset = 32
-    _ascii_lowercase_boundary = 90
+    # ASCII code ranges of uppercase (A-Z) and lowercase (a-z) letters. Case
+    # conversion is restricted to these, so that other characters (e.g., gaps,
+    # stop codons, brackets) are never altered by flipping the case bit.
+    _ascii_uppercase_range = (65, 90)
+    _ascii_lowercase_range = (97, 122)
     default_write_format = "fasta"
     """Default write format for this object: ``fasta``."""
     __hash__ = None  # type: ignore[assignment]
@@ -926,7 +936,8 @@ class Sequence(
         if lowercase is False:
             pass
         elif lowercase is True or isinstance(lowercase, str):
-            lowercase_mask = self._bytes > self._ascii_lowercase_boundary
+            lo, hi = self._ascii_lowercase_range
+            lowercase_mask = (self._bytes >= lo) & (self._bytes <= hi)
             if copy is False and np.any(lowercase_mask):
                 raise ValueError(
                     "`copy=False` was specified, but a copy is required "
@@ -1557,6 +1568,8 @@ class Sequence(
             is a str, it is treated like a key into the positional metadata,
             pointing to a column which must be a boolean vector.
             That boolean vector is then used as described previously.
+            Only the letters A-Z are converted; other characters at the
+            specified positions are kept as is.
 
         Returns
         -------
@@ -1589,7 +1602,14 @@ class Sequence(
         """
         index = self._munge_to_index_array(lowercase)
         outbytes = self._bytes.copy()
-        outbytes[index] ^= self._ascii_invert_case_bit_offset
+        # Only uppercase letters are converted. Other characters, including those
+        # already in lowercase, are kept as is.
+        selected = outbytes[index]
+        lo, hi = self._ascii_uppercase_range
+        selected[(selected >= lo) & (selected <= hi)] |= (
+            self._ascii_invert_case_bit_offset
+        )
+        outbytes[index] = selected
         return str(outbytes.tobytes().decode("ascii"))
 
     def count(self, subsequence, start=None, end=None):
@@ -2533,7 +2553,7 @@ class Sequence(
 
         # according to observed characters
         else:
-            (indices,), observed = _indices_in_observed([seq])
+            (indices,), observed = _indices_in_sorted([seq])
             if return_codes is False:
                 observed = observed.tobytes().decode("ascii")
 
