@@ -39,12 +39,14 @@ from scipy.linalg import svd, qr, solve_triangular
 from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
-# Tuning constants for the S-Jacobian basis (see :func:`_s_jacobian_basis`).
-# Both were fixed from the empirical sweeps reported on the pull request that
-# introduced the Gram path: peak memory of the blocked accumulation stays flat
-# from 1e5 to 1e7 observed entries at this block size, and the Gram solve
-# tracks the pivoted QR solve to machine precision while ``kappa(A)`` stays
-# below 1e3, reaching a relative error of 1e-12 by ``kappa(A) = 1e4``.
+# Default tuning values for the S-Jacobian basis, shared by the ``chunk_size``
+# parameter of :func:`_gram_from_chunks` and the ``kappa_max`` parameter of
+# :func:`_s_jacobian_basis`. Both were fixed from the empirical sweeps reported
+# on the pull request that introduced the Gram path: peak memory of the blocked
+# accumulation stays flat from 1e5 to 1e7 observed entries at this block size,
+# and the Gram solve tracks the pivoted QR solve to machine precision while
+# ``kappa(A)`` stays below 1e3, reaching a relative error of 1e-12 by
+# ``kappa(A) = 1e4``.
 _GRAM_CHUNK_SIZE = 200_000
 _KAPPA_MAX = 1e3
 
@@ -126,7 +128,36 @@ def _svd_init(X_trimmed, r):
     return U, V
 
 
-def _gram_from_chunks(Ui, Vj):
+def _kron_rows(X, Y):
+    """Build the row-wise Kronecker products of two sets of factor rows.
+
+    Returns the ``(n_rows, r ** 2)`` array whose ``k``-th row is
+    ``kron(X[k], Y[k])``,
+
+    out[k, a * r + b] = X[k, a] * Y[k, b],
+
+    which is the row-major ordering matching the ``s.reshape(r, r)`` convention
+    used throughout this module. This is the matrix form of ``J_S`` restricted
+    to the rows passed in, so it builds either all of ``A``
+    (:func:`_obs_basis`) or one block of its rows (:func:`_gram_from_chunks`).
+
+    Parameters
+    ----------
+    X, Y : ndarray of shape (n_rows, r)
+        Factor rows gathered at the observed entries.
+
+    Returns
+    -------
+    ndarray of shape (n_rows, r ** 2)
+        The row-wise Kronecker products.
+    """
+
+    r = X.shape[1]
+
+    return (X[:, :, None] * Y[:, None, :]).reshape(-1, r**2)
+
+
+def _gram_from_chunks(Ui, Vj, chunk_size=_GRAM_CHUNK_SIZE):
     """Accumulate the Gram matrix of the S-Jacobian in blocks.
 
     The matrix form of ``J_S`` is ``A[k] = kron(Ui[k], Vj[k])`` with one row per
@@ -139,12 +170,12 @@ def _gram_from_chunks(Ui, Vj):
 
     G = sum_blocks A_block^T A_block,
 
-    materializing at most ``_GRAM_CHUNK_SIZE`` rows of ``A`` at once. Peak
-    memory is therefore ``O(_GRAM_CHUNK_SIZE * r ** 2)`` and independent of
-    ``n_observed``, whereas forming all of ``A`` costs
-    ``O(n_observed * r ** 2)`` and reaches gigabytes on large inputs. The
-    arithmetic cost stays ``O(n_observed * r ** 4)``, the same as forming ``A``
-    in one shot and multiplying.
+    materializing at most ``chunk_size`` rows of ``A`` at once. Peak memory is
+    therefore ``O(chunk_size * r ** 2)`` and independent of ``n_observed``,
+    whereas forming all of ``A`` costs ``O(n_observed * r ** 2)`` and reaches
+    gigabytes on large inputs. The arithmetic cost stays
+    ``O(n_observed * r ** 4)``, the same as forming ``A`` in one shot and
+    multiplying.
 
     Parameters
     ----------
@@ -152,6 +183,10 @@ def _gram_from_chunks(Ui, Vj):
         Rows of ``U`` gathered at the observed row indices.
     Vj : ndarray of shape (n_observed, r)
         Rows of ``V`` gathered at the observed column indices.
+    chunk_size : int, optional
+        Number of rows of ``A`` materialized at a time. Defaults to
+        ``_GRAM_CHUNK_SIZE``. The result does not depend on it, only the peak
+        memory of the accumulation does.
 
     Returns
     -------
@@ -163,19 +198,17 @@ def _gram_from_chunks(Ui, Vj):
 
     G = np.zeros((r**2, r**2), dtype=np.result_type(Ui, Vj))
 
-    for start in range(0, n_observed, _GRAM_CHUNK_SIZE):
-        stop = start + _GRAM_CHUNK_SIZE
+    for start in range(0, n_observed, chunk_size):
+        stop = start + chunk_size
 
-        # A_block[k, a * r + b] = Ui[k, a] * Vj[k, b]
-        U_block, V_block = Ui[start:stop], Vj[start:stop]
-        A_block = (U_block[:, :, None] * V_block[:, None, :]).reshape(-1, r**2)
+        A_block = _kron_rows(Ui[start:stop], Vj[start:stop])
 
         G += A_block.T @ A_block
 
     return G
 
 
-def _gram_is_well_conditioned(G, tol=1e-12):
+def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
     """Test whether solving through the Gram matrix is numerically safe.
 
     The normal equations square the conditioning of the problem,
@@ -190,29 +223,37 @@ def _gram_is_well_conditioned(G, tol=1e-12):
     A smallest eigenvalue that is non-positive or negligible relative to the
     largest means ``A`` does not have full column rank, in which case
     ``kappa(A)`` is infinite and the Gram solve is rejected without dividing
-    by a near-zero value. This is the same relative threshold used for rank
-    detection by :func:`_obs_basis`.
+    by a near-zero value.
+
+    The eigenvalues are passed in rather than ``G`` itself because
+    :func:`_s_jacobian_basis` needs the full eigendecomposition anyway to build
+    the inverse of ``G``, so decomposing once and sharing the result here
+    avoids a second decomposition of the same matrix.
 
     Parameters
     ----------
-    G : ndarray of shape (r ** 2, r ** 2)
-        Gram matrix of the S-Jacobian, as returned by :func:`_gram_from_chunks`.
+    eigvals : ndarray of shape (r ** 2,)
+        Eigenvalues of the Gram matrix of the S-Jacobian in ascending order,
+        as returned by ``np.linalg.eigh`` or ``np.linalg.eigvalsh``.
     tol : float, optional
         Relative threshold below which the smallest eigenvalue counts as zero.
+    kappa_max : float, optional
+        Largest ``kappa(A)`` for which the Gram solve is accepted. Defaults to
+        ``_KAPPA_MAX``.
 
     Returns
     -------
     bool
-        Whether ``kappa(A)`` is finite and below ``_KAPPA_MAX``.
+        Whether ``kappa(A)`` is finite and below ``kappa_max``.
     """
 
-    eigvals = np.linalg.eigvalsh(G)
+    # np.linalg.eigh and np.linalg.eigvalsh both order eigenvalues ascending.
     largest, smallest = eigvals[-1], eigvals[0]
 
     if largest <= 0.0 or smallest <= tol * largest:
         return False
 
-    return np.sqrt(largest / smallest) < _KAPPA_MAX
+    return np.sqrt(largest / smallest) < kappa_max
 
 
 def _obs_basis(Ui, Vj, tol=1e-12):
@@ -223,8 +264,7 @@ def _obs_basis(Ui, Vj, tol=1e-12):
 
     A[k, a * r + b] = U[i, a] * V[j, b],
 
-    i.e. ``A[k] = kron(U[i], V[j])``, which matches the row-major
-    ``s.reshape(r, r)`` convention used throughout this module. ``A`` is
+    i.e. ``A[k] = kron(U[i], V[j])``, built by :func:`_kron_rows`. ``A`` is
     ``(n_observed, r ** 2)``, so it is thin (only 9 columns at the default rank
     of 3) and can be factorized once per outer iteration and reused by every
     matrix-vector product.
@@ -264,10 +304,7 @@ def _obs_basis(Ui, Vj, tol=1e-12):
         Indices of the retained columns of ``A``.
     """
 
-    r = Ui.shape[1]
-
-    # A[k, a * r + b] = Ui[k, a] * Vj[k, b]
-    A = (Ui[:, :, None] * Vj[:, None, :]).reshape(-1, r**2)
+    A = _kron_rows(Ui, Vj)
 
     Q, R, perm = qr(A, mode="economic", pivoting=True)
 
@@ -363,15 +400,17 @@ def _solve_S(Q, R, perm, b, r):
     return s.reshape(r, r)
 
 
-def _s_jacobian_basis(Ui, Vj, tol=1e-12):
+def _s_jacobian_basis(Ui, Vj, tol=1e-12, kappa_max=_KAPPA_MAX):
     """Build the reusable S-Jacobian operators for the current (U, V).
 
     Both downstream operations, the least-squares solve for ``S`` and the
     projection onto the orthogonal complement of ``range(J_S)``, need a
     factorization of the S-Jacobian ``A[k] = kron(Ui[k], Vj[k])``. That
-    factorization depends only on ``(U, V)``, so it is built once per outer
-    iteration and reused by every solve, Jacobian product and line search
-    trial within it.
+    factorization depends only on ``(U, V)``, so it is built once and reused by
+    every solve and Jacobian product computed against the current ``(U, V)``
+    within this outer iteration. Line search trials do not reuse it: each
+    trial objective in ``_compute_obj`` rebuilds its own factorization for its
+    own candidate ``(U, V)``.
 
     Two factorizations are available and this function selects between them:
 
@@ -383,7 +422,7 @@ def _s_jacobian_basis(Ui, Vj, tol=1e-12):
       backward stable at any conditioning and handles rank deficiency, but
       materializes all ``O(n_observed * r ** 2)`` entries of ``A``.
 
-    The Gram path is used while ``kappa(A) < _KAPPA_MAX``, which covers the
+    The Gram path is used while ``kappa(A) < kappa_max``, which covers the
     well-conditioned case the algorithm spends nearly all of its iterations in,
     and the QR is the fallback above that. Rank-deficient problems have an
     infinite ``kappa(A)`` and so take the fallback automatically.
@@ -395,7 +434,19 @@ def _s_jacobian_basis(Ui, Vj, tol=1e-12):
     Vj : ndarray of shape (n_observed, r)
         Rows of ``V`` gathered at the observed column indices.
     tol : float, optional
-        Relative threshold for rank detection, shared by both paths.
+        Relative threshold for rank detection. The same numeric value is
+        passed to both paths, but each applies it to a different quantity: the
+        QR path thresholds pivot magnitudes of ``A``, which scale like the
+        singular values of ``A``, while the Gram path thresholds eigenvalues of
+        ``G``, which are those singular values squared. The two are therefore
+        not calibrated identically in terms of ``kappa(A)``: the same ``tol``
+        flags rank deficiency around ``kappa(A) > 1 / tol`` for the QR and
+        around ``kappa(A) > 1 / sqrt(tol)`` for the Gram. Neither bound governs
+        the choice of path in practice, because ``kappa_max`` is far smaller
+        than both and is reached first.
+    kappa_max : float, optional
+        Largest ``kappa(A)`` for which the Gram path is used. Defaults to
+        ``_KAPPA_MAX``. This is what actually decides which path is taken.
 
     Returns
     -------
@@ -411,13 +462,19 @@ def _s_jacobian_basis(Ui, Vj, tol=1e-12):
 
     G = _gram_from_chunks(Ui, Vj)
 
-    if _gram_is_well_conditioned(G, tol):
+    # G is symmetric positive semidefinite, so one eigendecomposition serves
+    # both the conditioning test and the inverse built from it below.
+    eigvals, eigvecs = np.linalg.eigh(G)
+
+    if _gram_is_well_conditioned(eigvals, tol, kappa_max):
         # Normal equations: S = G^-1 A^T b, where A^T b is J_S*(b), which is
-        # already computed without forming A.
-        G_pinv = np.linalg.pinv(G, hermitian=True)
+        # already computed without forming A. Every eigenvalue is positive and
+        # above tol * max(eigvals) here, since that is what the conditioning
+        # test just checked, so the reciprocals are safe to take directly.
+        G_inv = (eigvecs / eigvals) @ eigvecs.T
 
         def solve_fn(b):
-            return (G_pinv @ jacobian_S_adj(Ui, Vj, b)).reshape(r, r)
+            return (G_inv @ jacobian_S_adj(Ui, Vj, b)).reshape(r, r)
 
         def project_fn(w):
             # P_perp w = w - A (A^T A)^-1 A^T w, applied A-free.

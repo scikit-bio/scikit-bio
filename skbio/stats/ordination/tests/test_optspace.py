@@ -428,8 +428,7 @@ class TestGramBasis(unittest.TestCase):
         # 1 and 7 split the rows into many blocks, 1000 into a single block.
         for block in [1, 7, 137, 1000]:
             with self.subTest(block=block):
-                with patch("skbio.stats.ordination._optspace._GRAM_CHUNK_SIZE", block):
-                    observed = _gram_from_chunks(Ui, Vj)
+                observed = _gram_from_chunks(Ui, Vj, chunk_size=block)
                 np.testing.assert_allclose(observed, expected, atol=1e-12)
 
     def test_gram_is_symmetric_psd(self):
@@ -458,14 +457,12 @@ class TestSJacobianBasis(unittest.TestCase):
     def factors_with_kappa(n_observed, r, kappa, seed):
         """Factor rows whose Jacobian has a condition number near ``kappa``.
 
-        Scaling the columns of an orthonormal factor by a geometric spread of
-        singular values sets ``kappa(Ui)``, and hence ``kappa(A)``, directly.
+        Scaling the columns of the orthonormal ``Ui`` built by
+        :meth:`TestGramBasis.random_factors` by a geometric spread of singular
+        values sets ``kappa(Ui)``, and hence ``kappa(A)``, directly.
         """
-        rng = np.random.default_rng(seed)
-        Ui = np.linalg.qr(rng.normal(size=(n_observed, r)))[0]
-        Ui = Ui * np.geomspace(kappa, 1.0, r)
-        Vj = np.linalg.qr(rng.normal(size=(n_observed, r)))[0]
-        return Ui, Vj, rng
+        Ui, Vj, rng = TestGramBasis.random_factors(n_observed, r, seed)
+        return Ui * np.geomspace(kappa, 1.0, r), Vj, rng
 
     def assert_path(self, Ui, Vj, expected):
         """Run the dispatcher and assert which factorization it selected.
@@ -530,10 +527,26 @@ class TestSJacobianBasis(unittest.TestCase):
             with self.subTest(kappa=kappa):
                 Ui, Vj, _ = self.factors_with_kappa(300, 3, kappa, 7)
                 G = _gram_from_chunks(Ui, Vj)
+                eigvals = np.linalg.eigvalsh(G)
 
                 # The predicate reports kappa(A) = sqrt(kappa(G)) < _KAPPA_MAX
-                self.assertEqual(_gram_is_well_conditioned(G), expected)
+                self.assertEqual(_gram_is_well_conditioned(eigvals), expected)
                 self.assertEqual(np.sqrt(np.linalg.cond(G)) < _KAPPA_MAX, expected)
+
+    def test_dispatch_honors_kappa_max(self):
+        """A tighter kappa_max sends an otherwise Gram-eligible basis to QR.
+
+        ``kappa(A)`` is about 1e2 for this basis, below the default threshold
+        of 1e3 but above the 1e1 passed here.
+        """
+        Ui, Vj, _ = self.factors_with_kappa(300, 3, 1e2, 8)
+
+        with patch(
+            "skbio.stats.ordination._optspace._obs_basis", wraps=_obs_basis
+        ) as mock_obs_basis:
+            _s_jacobian_basis(Ui, Vj, kappa_max=1e1)
+
+        self.assertTrue(mock_obs_basis.called)
 
     def test_dispatch_below_threshold_uses_gram(self):
         """A basis with kappa(A) below the threshold takes the Gram path."""
@@ -560,12 +573,17 @@ class TestSJacobianBasis(unittest.TestCase):
 class TestRankDeficient(unittest.TestCase):
     """Tests for the rank-deficient fallback in the S-Jacobian factorization."""
 
-    def test_fewer_observations_than_unknowns(self):
-        """A is rank deficient when n_observed < r ** 2."""
-        rng = np.random.default_rng(1)
-        r = 3
+    @staticmethod
+    def fewer_observations_than_unknowns(r=3, seed=1):
+        """A 4 by 4 problem with 6 observed entries but r ** 2 unknowns in S.
 
-        # 6 observed entries but 9 unknowns in S
+        Returns the partially observed matrix along with the factor rows
+        gathered at its observed entries, which form a rank-deficient ``A``.
+        The observed values of ``M`` are ``M[~np.isnan(M)]``, in the same
+        row-major order as the returned factor rows.
+        """
+        rng = np.random.default_rng(seed)
+
         M = np.full((4, 4), np.nan)
         for i, j in [(0, 0), (1, 1), (2, 2), (3, 3), (0, 1), (2, 3)]:
             M[i, j] = rng.normal()
@@ -574,12 +592,34 @@ class TestRankDeficient(unittest.TestCase):
         U = np.linalg.qr(rng.normal(size=(4, r)))[0]
         V = np.linalg.qr(rng.normal(size=(4, r)))[0]
 
-        Q, R, perm = _obs_basis(U[rows], V[cols])
+        return M, U[rows], V[cols], rng
+
+    @staticmethod
+    def degenerate_factors(r=3, seed=1):
+        """Factor rows of a fully observed 6 by 6 problem, with U degenerate.
+
+        Repeating a single row of ``U`` across all of its rows collapses ``A``
+        to rank ``r`` instead of ``r ** 2``.
+        """
+        rng = np.random.default_rng(seed)
+
+        rows, cols = np.where(np.ones((6, 6), dtype=bool))
+        U = np.tile(np.linalg.qr(rng.normal(size=(6, r)))[0][:1], (6, 1))
+        V = np.linalg.qr(rng.normal(size=(6, r)))[0]
+
+        return U[rows], V[cols], rng
+
+    def test_fewer_observations_than_unknowns(self):
+        """A is rank deficient when n_observed < r ** 2."""
+        r = 3
+        M, Ui, Vj, _ = self.fewer_observations_than_unknowns(r)
+
+        Q, R, perm = _obs_basis(Ui, Vj)
         self.assertLess(Q.shape[1], r**2)
         self.assertEqual(Q.shape[1], R.shape[0])
         self.assertEqual(Q.shape[1], perm.size)
 
-        S = _solve_S(Q, R, perm, M[rows, cols], r)
+        S = _solve_S(Q, R, perm, M[~np.isnan(M)], r)
         self.assertTrue(np.all(np.isfinite(S)))
 
         # The dropped coefficients are exactly zero, not garbage.
@@ -588,26 +628,18 @@ class TestRankDeficient(unittest.TestCase):
 
     def test_degenerate_factors(self):
         """A is rank deficient when the factor rows are degenerate."""
-        rng = np.random.default_rng(1)
         r = 3
+        Ui, Vj, rng = self.degenerate_factors(r)
 
-        rows, cols = np.where(np.ones((6, 6), dtype=bool))
-        U = np.tile(np.linalg.qr(rng.normal(size=(6, r)))[0][:1], (6, 1))
-        V = np.linalg.qr(rng.normal(size=(6, r)))[0]
-
-        Q, R, perm = _obs_basis(U[rows], V[cols])
+        Q, R, perm = _obs_basis(Ui, Vj)
         self.assertEqual(Q.shape[1], r)
 
-        S = _solve_S(Q, R, perm, rng.normal(size=rows.size), r)
+        S = _solve_S(Q, R, perm, rng.normal(size=Ui.shape[0]), r)
         self.assertTrue(np.all(np.isfinite(S)))
 
     def test_completion_of_degenerate_input(self):
         """Matrix completion of a rank-deficient problem does not blow up."""
-        rng = np.random.default_rng(1)
-
-        M = np.full((4, 4), np.nan)
-        for i, j in [(0, 0), (1, 1), (2, 2), (3, 3), (0, 1), (2, 3)]:
-            M[i, j] = rng.normal()
+        M = self.fewer_observations_than_unknowns()[0]
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
@@ -623,28 +655,19 @@ class TestRankDeficient(unittest.TestCase):
         the Gram path safe to prefer: it is never reached by a basis whose
         dropped columns the pivoted QR has to handle.
         """
-        rng = np.random.default_rng(1)
         r = 3
+        _, Ui_few, Vj_few, rng = self.fewer_observations_than_unknowns(r)
+        Ui_deg, Vj_deg, _ = self.degenerate_factors(r)
 
-        # Fewer observed entries than unknowns in S
-        M = np.full((4, 4), np.nan)
-        for i, j in [(0, 0), (1, 1), (2, 2), (3, 3), (0, 1), (2, 3)]:
-            M[i, j] = rng.normal()
-        rows, cols = np.where(~np.isnan(M))
-        U = np.linalg.qr(rng.normal(size=(4, r)))[0]
-        V = np.linalg.qr(rng.normal(size=(4, r)))[0]
-        bases = [("fewer observations than unknowns", U[rows], V[cols])]
-
-        # Degenerate factor rows
-        rows, cols = np.where(np.ones((6, 6), dtype=bool))
-        U = np.tile(np.linalg.qr(rng.normal(size=(6, r)))[0][:1], (6, 1))
-        V = np.linalg.qr(rng.normal(size=(6, r)))[0]
-        bases.append(("degenerate factors", U[rows], V[cols]))
+        bases = [
+            ("fewer observations than unknowns", Ui_few, Vj_few),
+            ("degenerate factors", Ui_deg, Vj_deg),
+        ]
 
         for name, Ui, Vj in bases:
             with self.subTest(basis=name):
                 G = _gram_from_chunks(Ui, Vj)
-                self.assertFalse(_gram_is_well_conditioned(G))
+                self.assertFalse(_gram_is_well_conditioned(np.linalg.eigvalsh(G)))
 
                 with patch(
                     "skbio.stats.ordination._optspace._obs_basis", wraps=_obs_basis
@@ -661,11 +684,7 @@ class TestRankDeficient(unittest.TestCase):
 
     def test_degenerate_completion_dispatches_to_qr(self):
         """Every iteration of a degenerate completion takes the QR path."""
-        rng = np.random.default_rng(1)
-
-        M = np.full((4, 4), np.nan)
-        for i, j in [(0, 0), (1, 1), (2, 2), (3, 3), (0, 1), (2, 3)]:
-            M[i, j] = rng.normal()
+        M = self.fewer_observations_than_unknowns()[0]
 
         # The dispatcher builds the Gram matrix on every call but reaches
         # _obs_basis only when it falls back, so equal call counts mean every
