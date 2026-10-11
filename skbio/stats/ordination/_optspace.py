@@ -39,6 +39,16 @@ from scipy.linalg import svd, qr, solve_triangular
 from scipy.sparse.linalg import svds, lsmr, LinearOperator
 
 
+# Tuning constants for the S-Jacobian basis (see :func:`_s_jacobian_basis`).
+# Both were fixed from the empirical sweeps reported on the pull request that
+# introduced the Gram path: peak memory of the blocked accumulation stays flat
+# from 1e5 to 1e7 observed entries at this block size, and the Gram solve
+# tracks the pivoted QR solve to machine precision while ``kappa(A)`` stays
+# below 1e3, reaching a relative error of 1e-12 by ``kappa(A) = 1e4``.
+_GRAM_CHUNK_SIZE = 200_000
+_KAPPA_MAX = 1e3
+
+
 def _check_unobserved(observed_mask):
 
     # Check for fully unobserved rows or columns
@@ -116,6 +126,95 @@ def _svd_init(X_trimmed, r):
     return U, V
 
 
+def _gram_from_chunks(Ui, Vj):
+    """Accumulate the Gram matrix of the S-Jacobian in blocks.
+
+    The matrix form of ``J_S`` is ``A[k] = kron(Ui[k], Vj[k])`` with one row per
+    observed entry (see :func:`_obs_basis`). Its Gram matrix
+
+    G = A^T A
+
+    is only ``(r ** 2, r ** 2)``, so it can be accumulated one block of rows at
+    a time,
+
+    G = sum_blocks A_block^T A_block,
+
+    materializing at most ``_GRAM_CHUNK_SIZE`` rows of ``A`` at once. Peak
+    memory is therefore ``O(_GRAM_CHUNK_SIZE * r ** 2)`` and independent of
+    ``n_observed``, whereas forming all of ``A`` costs
+    ``O(n_observed * r ** 2)`` and reaches gigabytes on large inputs. The
+    arithmetic cost stays ``O(n_observed * r ** 4)``, the same as forming ``A``
+    in one shot and multiplying.
+
+    Parameters
+    ----------
+    Ui : ndarray of shape (n_observed, r)
+        Rows of ``U`` gathered at the observed row indices.
+    Vj : ndarray of shape (n_observed, r)
+        Rows of ``V`` gathered at the observed column indices.
+
+    Returns
+    -------
+    ndarray of shape (r ** 2, r ** 2)
+        The Gram matrix ``A^T A``, symmetric positive semidefinite.
+    """
+
+    n_observed, r = Ui.shape
+
+    G = np.zeros((r**2, r**2), dtype=np.result_type(Ui, Vj))
+
+    for start in range(0, n_observed, _GRAM_CHUNK_SIZE):
+        stop = start + _GRAM_CHUNK_SIZE
+
+        # A_block[k, a * r + b] = Ui[k, a] * Vj[k, b]
+        U_block, V_block = Ui[start:stop], Vj[start:stop]
+        A_block = (U_block[:, :, None] * V_block[:, None, :]).reshape(-1, r**2)
+
+        G += A_block.T @ A_block
+
+    return G
+
+
+def _gram_is_well_conditioned(G, tol=1e-12):
+    """Test whether solving through the Gram matrix is numerically safe.
+
+    The normal equations square the conditioning of the problem,
+
+    kappa(G) = kappa(A^T A) = kappa(A) ** 2,
+
+    so the Gram solve is only usable while ``A`` itself is well conditioned.
+    ``G`` is symmetric positive semidefinite and at most ``(r ** 2, r ** 2)``
+    (9 by 9 at the default rank of 3), so its extreme eigenvalues, and hence
+    ``kappa(A) = sqrt(kappa(G))``, are cheap to obtain exactly.
+
+    A smallest eigenvalue that is non-positive or negligible relative to the
+    largest means ``A`` does not have full column rank, in which case
+    ``kappa(A)`` is infinite and the Gram solve is rejected without dividing
+    by a near-zero value. This is the same relative threshold used for rank
+    detection by :func:`_obs_basis`.
+
+    Parameters
+    ----------
+    G : ndarray of shape (r ** 2, r ** 2)
+        Gram matrix of the S-Jacobian, as returned by :func:`_gram_from_chunks`.
+    tol : float, optional
+        Relative threshold below which the smallest eigenvalue counts as zero.
+
+    Returns
+    -------
+    bool
+        Whether ``kappa(A)`` is finite and below ``_KAPPA_MAX``.
+    """
+
+    eigvals = np.linalg.eigvalsh(G)
+    largest, smallest = eigvals[-1], eigvals[0]
+
+    if largest <= 0.0 or smallest <= tol * largest:
+        return False
+
+    return np.sqrt(largest / smallest) < _KAPPA_MAX
+
+
 def _obs_basis(Ui, Vj, tol=1e-12):
     """Factorize the S-Jacobian restricted to the observed entries.
 
@@ -140,6 +239,11 @@ def _obs_basis(Ui, Vj, tol=1e-12):
     non-increasingly. Trailing columns whose pivot falls below ``tol`` relative
     to the leading pivot are dropped, giving the basic (minimum-column-support)
     least-squares solution rather than a division by a near-zero pivot.
+
+    This factorization is backward stable for any conditioning of ``A``, but it
+    materializes ``A``. It is therefore used as the fallback of
+    :func:`_s_jacobian_basis`, which prefers the cheaper Gram matrix whenever
+    ``A`` is well enough conditioned for it.
 
     Parameters
     ----------
@@ -259,7 +363,79 @@ def _solve_S(Q, R, perm, b, r):
     return s.reshape(r, r)
 
 
-def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q):
+def _s_jacobian_basis(Ui, Vj, tol=1e-12):
+    """Build the reusable S-Jacobian operators for the current (U, V).
+
+    Both downstream operations, the least-squares solve for ``S`` and the
+    projection onto the orthogonal complement of ``range(J_S)``, need a
+    factorization of the S-Jacobian ``A[k] = kron(Ui[k], Vj[k])``. That
+    factorization depends only on ``(U, V)``, so it is built once per outer
+    iteration and reused by every solve, Jacobian product and line search
+    trial within it.
+
+    Two factorizations are available and this function selects between them:
+
+    - The Gram matrix ``G = A^T A`` (:func:`_gram_from_chunks`), accumulated in
+      blocks so that ``A`` is never fully materialized. Memory is independent of
+      ``n_observed`` and it is several times faster than the QR, but solving
+      through ``G`` squares the conditioning of ``A``.
+    - The pivoted QR factorization of ``A`` (:func:`_obs_basis`), which is
+      backward stable at any conditioning and handles rank deficiency, but
+      materializes all ``O(n_observed * r ** 2)`` entries of ``A``.
+
+    The Gram path is used while ``kappa(A) < _KAPPA_MAX``, which covers the
+    well-conditioned case the algorithm spends nearly all of its iterations in,
+    and the QR is the fallback above that. Rank-deficient problems have an
+    infinite ``kappa(A)`` and so take the fallback automatically.
+
+    Parameters
+    ----------
+    Ui : ndarray of shape (n_observed, r)
+        Rows of ``U`` gathered at the observed row indices.
+    Vj : ndarray of shape (n_observed, r)
+        Rows of ``V`` gathered at the observed column indices.
+    tol : float, optional
+        Relative threshold for rank detection, shared by both paths.
+
+    Returns
+    -------
+    solve_fn : callable
+        ``solve_fn(b)`` returns the ``(r, r)`` least-squares solution ``S`` of
+        ``J_S(S) = b`` over the observed entries (see :func:`_solve_S`).
+    project_fn : callable
+        ``project_fn(w)`` returns ``w`` projected onto the orthogonal
+        complement of ``range(J_S)`` (see :func:`_project_S_complement`).
+    """
+
+    r = Ui.shape[1]
+
+    G = _gram_from_chunks(Ui, Vj)
+
+    if _gram_is_well_conditioned(G, tol):
+        # Normal equations: S = G^-1 A^T b, where A^T b is J_S*(b), which is
+        # already computed without forming A.
+        G_pinv = np.linalg.pinv(G, hermitian=True)
+
+        def solve_fn(b):
+            return (G_pinv @ jacobian_S_adj(Ui, Vj, b)).reshape(r, r)
+
+        def project_fn(w):
+            # P_perp w = w - A (A^T A)^-1 A^T w, applied A-free.
+            return w - jacobian_S(Ui, Vj, solve_fn(w))
+
+    else:
+        Q, R, perm = _obs_basis(Ui, Vj, tol)
+
+        def solve_fn(b):
+            return _solve_S(Q, R, perm, b, r)
+
+        def project_fn(w):
+            return _project_S_complement(Q, w)
+
+    return solve_fn, project_fn
+
+
+def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn):
     """Compute J_UV(dU, dV).
 
     The Jacobian is
@@ -280,8 +456,9 @@ def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q):
     iteration and no dense ``(m, n)`` array is ever formed.
 
     This is pre-composed with projection of the pair (dU, dV) onto the tangent
-    space of (U, V), and post-composed with projection onto the orthogonal
-    complement of the S tangent space.
+    space of (U, V), and post-composed with ``project_fn``, the projection onto
+    the orthogonal complement of the S tangent space built for the current
+    ``(U, V)`` by :func:`_s_jacobian_basis`.
     """
 
     # Project input onto (U, V) tangent space
@@ -293,10 +470,10 @@ def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q):
     w += (US[rows] * dV_t[cols]).sum(axis=1)
 
     # Project output onto complement of S tangent space
-    return _project_S_complement(Q, w)
+    return project_fn(w)
 
 
-def jacobian_UV_adj(U, V, w, rows, cols, US, VST, Q):
+def jacobian_UV_adj(U, V, w, rows, cols, US, VST, project_fn):
     """Compute J*(W).
 
     The Jacobian adjoint is defined with respect to the inner product by
@@ -312,16 +489,16 @@ def jacobian_UV_adj(U, V, w, rows, cols, US, VST, Q):
     dU[i] += w[k] * (V S^T)[j],   dV[j] += w[k] * (U S)[i].
 
     The input is first projected onto the orthogonal complement of the S tangent
-    space and the output is projected back to the tangent space of (U, V). Both
-    projections are self-adjoint, so this is the exact adjoint of
-    :func:`jacobian_UV`.
+    space by ``project_fn`` and the output is projected back to the tangent
+    space of (U, V). Both projections are self-adjoint, so this is the exact
+    adjoint of :func:`jacobian_UV`.
     """
 
     m, r = U.shape
     n = V.shape[0]
 
     # Project input onto complement of S tangent space
-    w = _project_S_complement(Q, w)
+    w = project_fn(w)
 
     # Compute Jacobian adjoint by scattering into the factor rows
     dU = np.empty((m, r), dtype=U.dtype)
@@ -352,7 +529,7 @@ def unpack(x, U_shape, V_shape):
     return dU, dV
 
 
-def solve_gauss_newton_step(U, V, rows, cols, US, VST, Q_S, residual, tol, damp):
+def solve_gauss_newton_step(U, V, rows, cols, US, VST, project_fn, residual, tol, damp):
     """Solve (J_UV* J_UV)dx = -J_UV* residual.
 
     The Gauss-Newton step is the vector dx = (dU, dV), where dU and dV are
@@ -360,8 +537,8 @@ def solve_gauss_newton_step(U, V, rows, cols, US, VST, Q_S, residual, tol, damp)
     least-squares solution of the system J_UV dx = -residual, and it is
     computed using the LSMR algorithm.
 
-    ``US``, ``VST`` and ``Q_S`` depend only on the current ``(U, V, S)``, which
-    are fixed for the duration of this call, so they are computed once by the
+    ``US``, ``VST`` and ``project_fn`` depend only on the current ``(U, V, S)``,
+    which are fixed for the duration of this call, so they are built once by the
     caller and closed over by the matrix-vector products rather than being
     rebuilt on every LSMR iteration.
     """
@@ -370,10 +547,10 @@ def solve_gauss_newton_step(U, V, rows, cols, US, VST, Q_S, residual, tol, damp)
 
     def matvec(x):
         dU, dV = unpack(x, U.shape, V.shape)
-        return jacobian_UV(U, V, dU, dV, rows, cols, US, VST, Q_S)
+        return jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn)
 
     def rmatvec(y):
-        dU, dV = jacobian_UV_adj(U, V, y, rows, cols, US, VST, Q_S)
+        dU, dV = jacobian_UV_adj(U, V, y, rows, cols, US, VST, project_fn)
         return pack(dU, dV)
 
     J_UV = LinearOperator(
@@ -593,10 +770,10 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
     def _compute_obj(U, V):
         # Gather the factor rows at the observed entries and factorize J_S
         Ui_curr, Vj_curr = U[rows], V[cols]
-        Q_curr, R_curr, perm_curr = _obs_basis(Ui_curr, Vj_curr)
+        solve_curr, _ = _s_jacobian_basis(Ui_curr, Vj_curr)
 
         # Compute optimal S given current U, V
-        S_curr = _solve_S(Q_curr, R_curr, perm_curr, b, r)
+        S_curr = solve_curr(b)
 
         # Compute current error
         E_curr = jacobian_S(Ui_curr, Vj_curr, S_curr) - b
@@ -607,14 +784,14 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         return obj_curr
 
     for _ in range(max_iter):
-        # Gather the factor rows at the observed entries. The basis Q of
-        # range(J_S) and its triangular factor depend only on (U, V), so they
-        # are built once per iteration and reused by every Jacobian product.
+        # Gather the factor rows at the observed entries. The factorization of
+        # J_S depends only on (U, V), so it is built once per iteration and
+        # reused by every solve and Jacobian product.
         Ui, Vj = U[rows], V[cols]
-        Q_S, R_S, perm_S = _obs_basis(Ui, Vj)
+        solve_fn, project_fn = _s_jacobian_basis(Ui, Vj)
 
         # Compute optimal S given current U, V
-        S = _solve_S(Q_S, R_S, perm_S, b, r)
+        S = solve_fn(b)
 
         # Precompute the S-scaled factors used by the Jacobian products
         US = U @ S
@@ -647,7 +824,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         # Update via gradient descent with line search
         if method == "GD":
             # Compute gradient directions
-            dU, dV = jacobian_UV_adj(U, V, -R, rows, cols, US, VST, Q_S)
+            dU, dV = jacobian_UV_adj(U, V, -R, rows, cols, US, VST, project_fn)
 
             # Perform backtracking line search
             U, V, obj, alpha = line_search(
@@ -658,7 +835,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         if method == "GN":
             # Compute Gauss-Newton step
             dU, dV = solve_gauss_newton_step(
-                U, V, rows, cols, US, VST, Q_S, R, tol, damp
+                U, V, rows, cols, US, VST, project_fn, R, tol, damp
             )
 
             # Retract updates back to Grassmann manifold
