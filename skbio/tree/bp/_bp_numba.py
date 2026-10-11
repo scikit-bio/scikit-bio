@@ -541,7 +541,9 @@ def define_primitives(jit, jit_inline=None):
     def preorder_select(T, k):
         # -1 for no such rank, without a branch: a branch makes the function too
         # large for LLVM to inline where it is called through Navigation, and a
-        # call costs far more than the select
+        # call costs far more than the select. The rank is made signed first,
+        # as min and max of an unsigned 64-bit and a signed integer are floats
+        k = np.intp(k)
         j = min(max(k, 1), T.size // 2)
         pos = select(T, 1, j)
         return pos if j == k else -1

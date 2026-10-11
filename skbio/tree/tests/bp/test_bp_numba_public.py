@@ -333,6 +333,12 @@ _GPU_SCRIPT = textwrap.dedent("""
                 int(nav.postorder_select(Th, int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
 
+    # the same ranks as unsigned 64-bit integers give the same nodes
+    out64 = cuda.device_array((idx.size, 21), dtype=np.intp)
+    nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
+                                        cuda.to_device(ks.astype(np.uint64)), out64)
+    assert (out64.copy_to_host()[:, 19:] == obs[:, 19:]).all()
+
     ij = np.sort(rng.integers(0, n, (300, 2)), axis=1)
     out = cuda.device_array((ij.shape[0], len(two)), dtype=np.intp)
     pairs[(ij.shape[0] + 127) // 128, 128](

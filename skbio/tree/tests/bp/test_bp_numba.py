@@ -122,6 +122,31 @@ class NumbaPrimitiveTests(TestCase):
                     self.check(P.select(T, t, k),
                                tbc.kernel_index_op(bp, "select", t, k), t, k)
 
+    def test_select_rank_dtypes(self):
+        # a kernel's ranks may be of any integer dtype, unsigned 64-bit
+        # included, and give the same nodes (and -1 outside the ranks)
+        from numba import njit
+
+        P = self.P
+
+        @njit
+        def selects(T, ks):
+            out = np.empty((2, ks.size), np.intp)
+            for t in range(ks.size):
+                out[0, t] = P.preorder_select(T, ks[t])
+                out[1, t] = P.postorder_select(T, ks[t])
+            return out
+
+        for bp in self.trees[:3] + self.trees[-1:]:
+            T = _bp_numba.bp_arrays(bp)
+            ranks = np.arange(0, len(bp) + 2)
+            exp = selects(T, ranks.astype(np.int64))
+            for dt in (np.int32, np.uint32, np.uint64, np.intp):
+                np.testing.assert_array_equal(selects(T, ranks.astype(dt)), exp, dt)
+            # ranks beyond the signed range are not ranks either
+            huge = np.array([2**63, 2**64 - 1], dtype=np.uint64)
+            np.testing.assert_array_equal(selects(T, huge), -1)
+
     def test_index_operations(self):
         P = self.P
         for bp in self.trees:
