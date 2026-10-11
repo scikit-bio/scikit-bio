@@ -572,72 +572,78 @@ def hill(counts, order=2):
         return (probs**order).sum() ** (1 / (1 - order))
 
 
-@_validate_alpha(empty=np.nan)
+@_validate_alpha()
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     r"""Calculate Kempton-Taylor Q index of alpha diversity.
 
     Kempton-Taylor Q index measures diversity based on the middle-ranking taxa
-    in the abundance distribution. Specifically, it estimates the slope of the
-    cumulative abundance curve in the interquantile range. It is defined as:
+    in the abundance distribution. It estimates the slope of the cumulative
+    distribution of species log abundance over an interquantile range:
 
     .. math::
 
-       Q = \frac{S_{lower..upper}}{\ln n_{lower} - \ln n_{upper}}
+       Q = \frac{S(q_{upper} - q_{lower})}
+                {\ln n_{upper} - \ln n_{lower}}
 
-    where "lower" and "upper" are the taxa at the lower and upper quantiles of
-    the abundance distribution, :math:`S` is the number of taxa, and :math:`n`
-    is the number of individuals.
-
-    By default, the lower and upper quartiles are used. Therefore:
+    where :math:`S` is the number of observed taxa, :math:`q` is a quantile
+    probability, and :math:`n` is the abundance at that quantile. Abundances are
+    ordered from smallest to largest. With the default quartiles, this becomes:
 
     .. math::
 
-       Q = \frac{S}{2(\ln n_{0.25} - \ln n_{0.75})}
-
-    The quantiles are rounded inwards in this implementation.
+       Q = \frac{S}{2(\ln n_{0.75} - \ln n_{0.25})}
 
     Parameters
     ----------
     counts : 1-D array_like, int
         Vector of counts.
     lower_quantile : float, optional
-        Lower bound of the interquantile range. Defaults to lower quartile.
+        Lower bound of the interquantile range, between 0 and 1. Defaults to
+        the lower quartile. Must be smaller than ``upper_quantile``.
     upper_quantile : float, optional
-        Upper bound of the interquantile range. Defaults to upper quartile.
+        Upper bound of the interquantile range, between 0 and 1. Defaults to
+        the upper quartile.
 
     Returns
     -------
     float
-        Kempton-Taylor Q index of alpha diversity.
+        Kempton-Taylor Q index of alpha diversity. Returns ``nan`` for fewer
+        than two observed taxa and ``inf`` when the abundance quantiles coincide.
+
+    Raises
+    ------
+    ValueError
+        If the quantiles do not satisfy
+        ``0 <= lower_quantile < upper_quantile <= 1``.
 
     Notes
     -----
-    The index is defined in [1]_. The implementation here is based on the
-    description given in the SDR-IV online manual [2]_.
-
-    The implementation provided here differs slightly from the results given in
-    Magurran 1998. Specifically, we have 14 in the numerator rather than 15.
-    Magurran recommends counting half of the taxa with the same # counts as the
-    point where the UQ falls and the point where the LQ falls, but the
-    justification for this is unclear (e.g. if there were a very large # taxa
-    that just overlapped one of the quantiles, the results would be
-    considerably off). Leaving the calculation as-is for now, but consider
-    changing.
+    The interquartile slope is defined in [1]_ and described in [2]_. This
+    implementation uses linear interpolation of abundances to estimate the
+    quantiles, as in :func:`numpy.quantile`. Other quantile ranges use the
+    corresponding fraction of observed taxa in the numerator.
 
     References
     ----------
     .. [1] Kempton, R. A. and Taylor, L. R. (1976) Models and statistics for
        species diversity. Nature, 262, 818-820.
-    .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
+    .. [2] Kempton, R. A. (2002) Species diversity. Encyclopedia of Environmetrics,
+       4, 2086-2092. https://doi.org/10.1002/9780470057339.vas046
 
     """
+    if not 0 <= lower_quantile < upper_quantile <= 1:
+        raise ValueError("Quantiles must satisfy 0 <= lower_quantile < "
+                         "upper_quantile <= 1.")
     S = counts.size
-    lower = int(np.ceil(S * lower_quantile))
-    upper = int(S * upper_quantile)
-    if lower >= S:
+    if S < 2:
         return np.nan
-    sorted_counts = np.sort(counts)
-    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
+    if counts.dtype == np.bool_:
+        counts = counts.astype(np.int8)
+    lower, upper = np.quantile(counts, [lower_quantile, upper_quantile],
+                               method="linear")
+    if lower == upper:
+        return np.inf
+    return S * (upper_quantile - lower_quantile) / np.log(upper / lower)
 
 
 def inv_simpson(counts, finite=False):

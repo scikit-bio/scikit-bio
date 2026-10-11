@@ -16,8 +16,11 @@
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Fixed a broken link to `Sequence.iter_kmers` in the feature highlights on the documentation front page ([#2605](https://github.com/scikit-bio/scikit-bio/issues/2605)).
+* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` for fewer than two observed taxa ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 
-* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan`, as `margalef` and `mcintosh_d` do for the same input.
+### Backward-incompatible changes
+
+* Changed `kempton_taylor_q` to use linearly interpolated abundance quantiles and the fraction of observed taxa between the requested quantiles. This changes numerical results from the previous inward-rounded calculation. Quantiles must satisfy `0 <= lower_quantile < upper_quantile <= 1` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 
 ### Miscellaneous
 
