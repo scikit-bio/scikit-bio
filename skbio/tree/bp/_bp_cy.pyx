@@ -1048,7 +1048,7 @@ def shear_mask(_BPKernel k, set tips):
                     mask[i + 1] = 1
 
                     p = k.parent(i)
-                    while p != 0 and mask[p] == 0:
+                    while p > 0 and mask[p] == 0:
                         mask[p] = 1
                         mask[k.close(p)] = 1
 

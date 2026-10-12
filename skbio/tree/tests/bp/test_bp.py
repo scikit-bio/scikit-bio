@@ -514,6 +514,13 @@ class BPTests(TestCase):
         obs = self.bptree.shear(in_).data
         npt.assert_equal(obs, exp)
 
+    def test_shear_single_node(self):
+        bp = BPTree(np.array([1, 0], dtype=np.uint8),
+                    names=np.array(['a', None], dtype=object))
+        obs = bp.shear({'a'})
+        npt.assert_equal(obs.data, [1, 0])
+        self.assertEqual(obs.name(0), 'a')
+
     def test_shear_raise_tree_is_empty(self):
         names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None, None, '7', None, '8', '9', '10', None,
                           '11', None, None, None, None])
