@@ -141,9 +141,10 @@ So the sentinels are those of the methods:
 Warnings
 --------
 The functions do not check their arguments: a position outside
-``[0, T.size)`` reads outside the tree's arrays. On a CPU that returns an
-arbitrary result; on a GPU it can fault and leave the device unusable for the
-rest of the process. The batch methods of ``BPTree`` check their queries.
+``[0, T.size)`` reads outside the tree's arrays, where the ``BPTree`` method
+returns -1. On a CPU that returns an arbitrary result; on a GPU it can fault
+and leave the device unusable for the rest of the process. The batch methods
+of ``BPTree`` check their queries.
 
 Test a result for its sentinel before passing it on: a sentinel given to
 another function does not fail, it answers for a different node.

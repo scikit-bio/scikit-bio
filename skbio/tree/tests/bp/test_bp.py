@@ -147,6 +147,29 @@ class BPTests(TestCase):
         with self.assertRaises(ValueError):
             BPTree(np.array([1, 1, 0], dtype=np.uint8))
 
+    def test_positions_outside_tree(self):
+        # any position outside the tree, e.g. a -1 returned for no such node,
+        # gives -1 (False for a test) rather than reading outside the arrays
+        bp = self.bptree
+        n = self.fig1_B.size
+        for i in (-1, -n, n, n + 5):
+            for name in ('close', 'depth', 'parent', 'first_child', 'last_child',
+                         'next_sibling', 'previous_sibling', 'preorder_rank',
+                         'postorder_rank', 'count', 'level_next',
+                         'deepest_node', 'height'):
+                self.assertEqual(getattr(bp, name)(i), -1, (name, i))
+            self.assertEqual(bp.level_ancestor(i, 1), -1)
+            self.assertFalse(bp.is_tip(i))
+            for a, b in ((i, 1), (1, i)):
+                self.assertEqual(bp.lca(a, b), -1)
+                self.assertEqual(bp.rmq(a, b), -1)
+                self.assertEqual(bp.rMq(a, b), -1)
+                self.assertFalse(bp.is_ancestor(a, b))
+
+        # the -1 of one method passed to another
+        self.assertEqual(bp.first_child(bp.parent(0)), -1)
+        self.assertEqual(bp.preorder_rank(bp.preorder_select(0)), -1)
+
     def test_rmq(self):
         #       (  (  (  )  (  )  (  (  )  )   )   (   )   (   (   (   )   (   )   )   )   )
         #excess 1  2  3  2  3  2  3  4  3  2   1   2   1   2   3   4   3   4   3   2   1   0

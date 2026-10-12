@@ -201,6 +201,12 @@ class BPTree(SkbioObject):
     :meth:`lca`) are bound directly to the engine when the tree is created, so
     they run at compiled speed.
 
+    The navigation methods take positions in ``data``, from 0 to
+    ``data.size - 1``. For any other position, e.g. the -1 that :meth:`parent`
+    returns for the root, they return -1 (:meth:`is_tip` and
+    :meth:`is_ancestor` return False) rather than read outside the tree's
+    arrays, so a -1 passed from one method to another gives -1 again.
+
     A tree created from a non-NumPy ``B``, e.g. a CuPy array or a PyTorch
     tensor on a GPU, keeps ``B`` as its ``data`` and a host copy of it, from
     which it is built and navigated as any other tree. The node attributes
