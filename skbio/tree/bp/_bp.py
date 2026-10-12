@@ -120,6 +120,27 @@ def _build_index(B):
     return _bp_cy.build_index(B, b, height)
 
 
+def _check_single_tree(index, size):
+    """Check that balanced parentheses describe a single tree.
+
+    The excess (opening minus closing parentheses up to each position) of a
+    single tree is at least 1 until the root closes, at the last position. The
+    navigation relies on it: it reads outside the tree's arrays otherwise.
+    """
+    i = index["root_close"]
+    if i == size - 1:
+        return
+    if index["e_index"][i] < 0:
+        raise ValueError(
+            "The topology array is unbalanced: the closing parenthesis at "
+            "position %d closes no node." % i
+        )
+    raise ValueError(
+        "The topology array describes more than one tree: the root closes at "
+        "position %d, before the end." % i
+    )
+
+
 def _check_array(arr, dtype, name, size=None):
     """Validate a 1-D NumPy array of an exact dtype, made C-contiguous."""
     if not isinstance(arr, np.ndarray):
@@ -272,6 +293,11 @@ class BPTree(SkbioObject):
             raise ValueError("The topology array is empty.")
 
         # the tree is only valid if it is balanced (equal opens and closes)
+        if B.max() > 1:
+            raise ValueError(
+                "The topology array must contain only opening (1) and closing (0) "
+                "parentheses."
+            )
         if int(B.sum()) * 2 != size:
             raise ValueError(
                 "The topology array is unbalanced; it must contain an equal "
@@ -295,7 +321,9 @@ class BPTree(SkbioObject):
             edges = _check_array(edges, np.int32, "edges", size)
             edge_lookup = self._edge_lookup_for(B, edges)
 
-        self._assemble(B, _build_index(B), names, lengths, edges, edge_lookup, array)
+        index = _build_index(B)
+        _check_single_tree(index, size)
+        self._assemble(B, index, names, lengths, edges, edge_lookup, array)
 
     def _assemble(self, B, index, names, lengths, edges, edge_lookup, array):
         """Set up the tree from its validated host arrays and navigation index.

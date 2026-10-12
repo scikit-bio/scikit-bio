@@ -841,7 +841,8 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         in order, so the k-th is at ``k - 1``), ``m``,
         ``M`` and ``r`` (minimum excess, maximum excess and rank of the rmM tree
         nodes in heap order), ``b`` (block size) and ``height`` (rmM tree
-        height). Arrays are of intp.
+        height), ``root_close`` (the first position where the excess drops below 1).
+        Arrays are of intp.
 
     """
     cdef:
@@ -851,6 +852,7 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         Py_ssize_t n_total = n_tip + n_internal
         Py_ssize_t n_open, i, j, k, upper, lvl, pos, node, lchild, rchild
         Py_ssize_t excess = 0, rank = 0, min_, max_, ptr_0 = 0, ptr_1 = 0
+        Py_ssize_t root_close = -1
         Py_ssize_t[::1] e_index, k_index_0, k_index_1, m, M, r
 
     n_open = np.count_nonzero(B)
@@ -875,6 +877,8 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
                 excess += -1 + (2 * B[j])
                 rank += B[j]
                 e_index[j] = excess
+                if excess < 1 and root_close < 0:
+                    root_close = j
                 if B[j]:
                     k_index_1[ptr_1] = j
                     ptr_1 += 1
@@ -915,6 +919,7 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         "r": r_arr,
         "b": b,
         "height": height,
+        "root_close": root_close,
     }
 
 

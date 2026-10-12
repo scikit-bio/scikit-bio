@@ -147,6 +147,18 @@ class BPTests(TestCase):
         with self.assertRaises(ValueError):
             BPTree(np.array([1, 1, 0], dtype=np.uint8))
 
+    def test_init_not_a_tree_raises(self):
+        # bytes other than 0 and 1
+        with self.assertRaisesRegex(ValueError, "only opening"):
+            BPTree(np.array([2, 0, 0, 0], dtype=np.uint8))
+        # a closing parenthesis before its opening one
+        with self.assertRaisesRegex(ValueError, "position 0 closes no node"):
+            BPTree(np.array([0, 1, 1, 0], dtype=np.uint8))
+        # more than one tree
+        for B in ([1, 0, 0, 1], [1, 0, 1, 0], [1, 1, 0, 0, 1, 1, 0, 0]):
+            with self.assertRaisesRegex(ValueError, "more than one tree"):
+                BPTree(np.array(B, dtype=np.uint8))
+
     def test_positions_outside_tree(self):
         # any position outside the tree, e.g. a -1 returned for no such node,
         # gives -1 (False for a test) rather than reading outside the arrays
@@ -690,7 +702,10 @@ class BPIndexTests(TestCase):
     def test_build_index_matches_reference(self):
         for B in _index_test_topologies():
             with self.subTest(size=B.size):
-                self.assert_index_equal(_build_index(B), tbc.reference_index(B))
+                obs = _build_index(B)
+                self.assert_index_equal(obs, tbc.reference_index(B))
+                # a single tree: its root closes at the end
+                self.assertEqual(obs['root_close'], B.size - 1)
 
     def test_tree_index_matches_reference(self):
         # the arrays held by the tree (and viewed by the kernel) are the index
