@@ -228,10 +228,10 @@ class BaseTests(TestCase):
         self.assertTrue(np.isnan(inv_simpson([0, 0])))
 
     def test_kempton_taylor_q(self):
-        # Quartile slope with linearly interpolated abundances.
+        # Approximate Magurran 1998 calculation p143.
         arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
                         15, 15, 20, 29, 33, 34, 36, 37, 53, 57, 138, 146, 170])
-        exp = 15 / np.log(33.75 / 4)
+        exp = 14 / np.log(34 / 4)
         self.assertAlmostEqual(kempton_taylor_q(arr), exp)
 
         # Should get same answer regardless of input order.
@@ -240,57 +240,57 @@ class BaseTests(TestCase):
 
         self.assertTrue(np.isnan(kempton_taylor_q([0, 0])))
 
-        # A single taxon has no quantile range: nan, not IndexError.
-        self.assertTrue(np.isnan(kempton_taylor_q([5])))
-        self.assertTrue(np.isnan(kempton_taylor_q([0, 5, 0])))
+    def test_kempton_taylor_q_single_taxon(self):
+        for counts in [[], [0, 0], [5], [0, 5, 0], [False, True, False]]:
+            for lower, upper in [(0.25, 0.75), (0, 0.75), (0.8, 0.9)]:
+                with self.subTest(counts=counts, lower=lower, upper=upper):
+                    self.assertTrue(np.isnan(
+                        kempton_taylor_q(counts, lower, upper)))
 
-        # One such sample must not abort a table-wide computation.
-        obs = alpha_diversity("kempton_taylor_q", [[5, 0, 0], [1, 2, 3]])
-        self.assertTrue(np.isnan(obs.iloc[0]))
-        self.assertAlmostEqual(obs.iloc[1], 1.5 / np.log(2.5 / 1.5))
-
-    def test_kempton_taylor_q_small_samples(self):
-        self.assertAlmostEqual(kempton_taylor_q([1, 2]),
-                               1 / np.log(1.75 / 1.25))
-        self.assertAlmostEqual(kempton_taylor_q([1, 2, 3]),
-                               1.5 / np.log(2.5 / 1.5))
-
-    def test_kempton_taylor_q_quantiles(self):
-        # These probabilities previously produced crossed rounded indices.
-        self.assertAlmostEqual(kempton_taylor_q([1, 2, 3], 0.1, 0.2),
-                               0.3 / np.log(1.4 / 1.2))
-        self.assertAlmostEqual(kempton_taylor_q([1, 2, 3], 0, 1),
-                               3 / np.log(3))
-        self.assertAlmostEqual(kempton_taylor_q([1, 2, 3], 0.8, 0.9),
-                               0.3 / np.log(2.8 / 2.6))
-        for lower, upper in [(0, 1), (0.1, 0.2), (0.8, 0.9)]:
-            with self.subTest(lower=lower, upper=upper):
-                self.assertTrue(np.isnan(kempton_taylor_q([0, 5], lower, upper)))
-
-    def test_kempton_taylor_q_equal_abundances(self):
-        self.assertEqual(kempton_taylor_q([5, 5]), np.inf)
-        self.assertEqual(kempton_taylor_q([1, 2, 2, 2, 3]), np.inf)
-
-    def test_kempton_taylor_q_boolean_counts(self):
-        self.assertTrue(np.isnan(kempton_taylor_q([False, False, False])))
-        self.assertTrue(np.isnan(kempton_taylor_q([True, False, False])))
-        self.assertEqual(kempton_taylor_q([True, True, True]), np.inf)
+    def test_kempton_taylor_q_table(self):
         for metric in ["kempton_taylor_q", kempton_taylor_q]:
             with self.subTest(metric=metric):
-                obs = alpha_diversity(metric, [[True, False, False],
-                                               [True, True, True]])
+                obs = alpha_diversity(metric, [[5, 0, 0], [1, 2, 3]])
                 self.assertTrue(np.isnan(obs.iloc[0]))
-                self.assertEqual(obs.iloc[1], np.inf)
+                self.assertAlmostEqual(obs.iloc[1], 1 / np.log(3 / 2))
+
+    def test_kempton_taylor_q_quantiles(self):
+        counts = np.arange(1, 11)
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0.1, 0.9),
+                               8 / np.log(10 / 2))
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0, 0.9),
+                               9 / np.log(10))
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0, np.nextafter(1., 0.)),
+                               9 / np.log(10))
+
+    def test_kempton_taylor_q_degenerate_intervals(self):
+        # Preserve the existing calculation when the rounded indices coincide
+        # or the selected abundances are tied.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            self.assertTrue(np.isnan(kempton_taylor_q([1, 2])))
+            self.assertTrue(np.isnan(kempton_taylor_q([5, 5])))
+            self.assertEqual(kempton_taylor_q([5, 5, 5, 5]), np.inf)
+            self.assertEqual(kempton_taylor_q([True, True, True]), np.inf)
+            self.assertTrue(np.isnan(kempton_taylor_q([1, 2, 3], 0.1, 0.4)))
 
     def test_kempton_taylor_q_invalid_quantiles(self):
-        for lower, upper in [(-0.1, 0.75), (0.25, 1.1), (0.75, 0.25),
-                             (0.5, 0.5), (np.nan, 0.75), (0.25, np.nan),
+        for lower, upper in [(-0.1, 0.75), (0.25, 1), (0.25, 1.1),
+                             (0.75, 0.25), (0.5, 0.5), (1.25, 0.25),
+                             (np.nan, 0.75), (0.25, np.nan),
                              (-np.inf, 0.75), (0.25, np.inf)]:
-            with self.subTest(lower=lower, upper=upper):
-                with self.assertRaisesRegex(ValueError, "Quantiles must satisfy"):
-                    kempton_taylor_q([1, 2, 3], lower, upper)
-                with self.assertRaisesRegex(ValueError, "Quantiles must satisfy"):
-                    kempton_taylor_q([], lower, upper)
+            for counts in [[], [0, 0], [5], [1, 2, 3]]:
+                with self.subTest(counts=counts, lower=lower, upper=upper):
+                    with self.assertRaisesRegex(ValueError,
+                                                "Quantiles must satisfy"):
+                        kempton_taylor_q(counts, lower, upper)
+
+    def test_kempton_taylor_q_invalid_intervals(self):
+        for counts, lower, upper in [([1, 2, 3], 0.1, 0.2),
+                                      ([1, 2, 3], 0.8, 0.9),
+                                      ([1, 2], 0.6, 0.9)]:
+            with self.subTest(counts=counts, lower=lower, upper=upper):
+                with self.assertRaisesRegex(ValueError, "Inward rounding"):
+                    kempton_taylor_q(counts, lower, upper)
 
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))

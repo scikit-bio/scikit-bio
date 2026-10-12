@@ -11,7 +11,7 @@
 
 ### Bug Fixes
 
-* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` for fewer than two observed taxa ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
+* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` for fewer than two observed taxa. Invalid quantile probabilities and reversed or out-of-bounds rounded indices raise `ValueError` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 * Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
@@ -25,7 +25,6 @@
 
 ### Backward-incompatible changes
 
-* Changed `kempton_taylor_q` to use linearly interpolated abundance quantiles and the fraction of observed taxa between the requested quantiles. This changes numerical results from the previous inward-rounded calculation. Quantiles must satisfy `0 <= lower_quantile < upper_quantile <= 1` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 
 ## Version 0.7.4
 
