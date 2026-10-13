@@ -37,9 +37,13 @@ from skbio.diversity.beta.tests._fixtures import (
 
 # Measured max abs deviation, array-API path vs CPU-numba kernel, for the
 # method/normalized combinations both implement (no variance_adjust) on the
-# qiime-191-tt table: ~3.3e-16 (ordinary float64 noise). 1e-10 matches the
+# qiime-191-tt table: ~3.3e-16 (ordinary float64 noise) for weighted_unifrac,
+# which still has its own independent @njit kernel. 1e-10 matches the
 # tolerance used for the equivalent GPU-vs-CPU-numba comparison in
-# test_unifrac_gpu.py.
+# test_unifrac_gpu.py. unweighted_unifrac's non-variance_adjust numba path
+# now delegates to _unweighted_unifrac_xp directly (see _unifrac.py's
+# _unweighted_unifrac_pdist_numba), so that comparison is exact (0.0), not
+# independently-measured noise.
 XP_CPU_TOLERANCE = 1e-10
 
 # variance_adjust and unweighted_unifrac's normalized=False have no CPU/numba

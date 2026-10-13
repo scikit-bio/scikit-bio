@@ -671,123 +671,48 @@ if NUMBA_AVAILABLE:
         """Flat offset such that out[base + j] is pair (i, j), for j > i."""
         return i * n_samples - (i * (i + 1)) // 2 - i - 1
 
-    @njit(inline="always")
-    def _unweighted_unifrac_row_nb(
-        row, n_samples, n_nodes, counts_by_node, branch_lengths, out
-    ):
-        """Fill out[] with row's distance to every sample j > row.
-
-        Factored out of _unweighted_unifrac_pdist_nb so its prange loop can
-        call it once for a row and once for that row's mirror without
-        duplicating the body; inline="always" makes this compile to the same
-        code as writing it out twice.
-        """
-        base = _condensed_row_base(row, n_samples)
-        present_row = np.empty(n_nodes, np.bool_)
-        for k in range(n_nodes):
-            present_row[k] = counts_by_node[row, k] > 0
-        for j in range(row + 1, n_samples):
-            unique = 0.0
-            observed = 0.0
-            for k in range(n_nodes):
-                u_present = present_row[k]
-                v_present = counts_by_node[j, k] > 0
-                if u_present or v_present:
-                    bl = branch_lengths[k]
-                    observed += bl
-                    if u_present != v_present:
-                        unique += bl
-            idx = base + j
-            if observed == 0.0:
-                out[idx] = 0.0
-            else:
-                out[idx] = unique / observed
-
-    @njit(parallel=True)
-    def _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths):
-        """Full unweighted UniFrac distance matrix (condensed) via Numba.
-
-        Computes the condensed pairwise unweighted UniFrac distance vector in a
-        single parallel pass, replacing the O(n^2) SciPy ``pdist`` Python-callable
-        dispatch. Parallelised over the first sample index ``i`` (``prange``); the
-        inner ``j`` and node loops are sequential. Each ``(i, j)`` pair writes a
-        unique condensed index, so there are no write races.
-
-        Reproduces exactly the reference algorithm in ``_unweighted_unifrac``:
-        for each pair, sum branch lengths of nodes present in exactly one sample
-        (``unique``) and of nodes present in either sample (``observed``); the
-        distance is ``unique / observed``, or ``0.0`` when ``observed == 0``.
-
-        Sample ``i``'s node-presence row is computed once per ``i`` (outside the
-        ``j`` loop) rather than recomputed for every ``j``, since it doesn't
-        depend on ``j``; ``counts_by_node`` is expected to already be
-        C-contiguous (the caller arranges this), so both that row and the inner
-        per-``k`` reads stay cache-friendly.
-
-        Parameters
-        ----------
-        counts_by_node : np.ndarray of shape (n_samples, n_nodes)
-            Per-node counts (tips + internal), summed up the tree. Only
-            presence (> 0) is used. Integer dtype.
-        branch_lengths : np.ndarray of shape (n_nodes,), float64
-            Branch length of each node, postorder.
-
-        Returns
-        -------
-        np.ndarray of shape (n_samples * (n_samples - 1) // 2,), float64
-            Condensed (upper-triangle) distance vector, ordered as
-            ``scipy.spatial.distance.pdist``.
-
-        """
-        n_samples = counts_by_node.shape[0]
-        n_nodes = counts_by_node.shape[1]
-        n_pairs = n_samples * (n_samples - 1) // 2
-        out = np.empty(n_pairs, np.float64)
-        n_half = n_samples // 2
-
-        # Row i has n_samples - 1 - i pairs to compute, so a plain
-        # prange(n_samples - 1) gives thread 0 far more work than the last
-        # thread. Pairing row i with mirror_i = n_samples - i - 2 (as
-        # _permanova_f_stat_sW_condensed_nb does) keeps the work per prange
-        # iteration roughly constant (~n_samples) regardless of i. This also
-        # halves the number of schedulable prange tasks (from n_samples - 1
-        # to n_half), which caps usable parallelism at n_half threads on
-        # machines with more cores than that -- the same tradeoff
-        # _permanova_f_stat_sW_condensed_nb already makes.
-        for i in prange(n_half):
-            _unweighted_unifrac_row_nb(
-                i, n_samples, n_nodes, counts_by_node, branch_lengths, out
-            )
-            mirror_i = n_samples - i - 2
-            if mirror_i != i:
-                _unweighted_unifrac_row_nb(
-                    mirror_i, n_samples, n_nodes, counts_by_node, branch_lengths, out
-                )
-
-        return out
-
 
 def _unweighted_unifrac_pdist_numba(counts, taxa, tree, *, validate=True):
     """Compute the condensed unweighted UniFrac distance vector (Numba engine).
 
-    Builds the per-node counts and branch lengths (reusing
-    ``_setup_multiple_unifrac``) and dispatches to the parallel Numba kernel.
-    Returns a condensed distance vector consumable by ``DistanceMatrix``.
+    Delegates to :func:`skbio.diversity.beta._unifrac_xp._unweighted_unifrac_xp`,
+    the array-API-generic implementation that also backs ``engine='gpu'``'s
+    CPU fallback. Its non-``variance_adjust`` path (the only case reachable
+    here -- see below) reduces the per-pair observed/differs branch-length
+    sums to two matrix products instead of an explicit per-node loop (see
+    that module's docstring and ``_unweighted_unifrac_xp_core``), which
+    plain NumPy's BLAS-backed ``@`` computes faster than the
+    ``@njit(parallel=True)`` loop this function used before -- measured
+    ~8.6x at n_samples=5000 on a 48-core CPU node (old 11.5s, new 1.35s).
+    ``engine='numba'``
+    remains the name callers ask for (and Numba must still be installed to
+    request it, enforced by ``_resolve_engine`` upstream in
+    ``beta_diversity``), even though the computation this function now
+    reaches no longer itself runs through Numba.
+
+    This is **not** bit-for-bit identical to the original #2558 loop
+    implementation any more: the summation order changed from sequential
+    per-node accumulation to a BLAS reduction. It matches that
+    implementation, and the ssu-generated fixtures, within
+    ``GPU_CPU_TOLERANCE`` (1e-10) -- see test_unifrac.py and
+    test_unifrac_xp.py.
+
+    ``variance_adjust=True`` has no CPU implementation for
+    ``unweighted_unifrac`` (GPU-only in this release -- see
+    ``_reject_gpu_only_options``, which runs before this function is ever
+    reached), so this function is never asked to compute it and takes no
+    ``variance_adjust`` parameter.
 
     ``validate`` is keyword-only: the three ``*_pdist_numba`` kernels take
     different options, and passing them positionally made the orders easy to
     confuse.
 
     """
-    counts_by_node, _, branch_lengths = _setup_multiple_unifrac(
-        counts, taxa, tree, validate
+    from skbio.diversity.beta._unifrac_xp import _unweighted_unifrac_xp
+
+    return _unweighted_unifrac_xp(
+        counts, taxa, tree, normalized=True, variance_adjust=False, validate=validate
     )
-    # counts_by_node is a transposed view (see _setup_multiple_unifrac) and so
-    # not C-contiguous along the node axis the kernel's inner loop walks;
-    # ascontiguousarray pays that cost once here instead of on every strided
-    # read inside the O(n_samples^2 * n_nodes) kernel.
-    counts_by_node = np.ascontiguousarray(counts_by_node)
-    return _unweighted_unifrac_pdist_nb(counts_by_node, branch_lengths)
 
 
 if NUMBA_AVAILABLE:
@@ -899,10 +824,15 @@ if NUMBA_AVAILABLE:
         out = np.empty(n_pairs, np.float64)
         n_half = n_samples // 2
 
-        # See the matching comment in _unweighted_unifrac_pdist_nb: pairing
-        # row i with mirror_i = n_samples - i - 2 keeps the work per prange
-        # iteration roughly constant instead of triangularly imbalanced (at
-        # the cost of capping usable parallelism at n_half threads).
+        # Row i has n_samples - 1 - i pairs to compute, so a plain
+        # prange(n_samples - 1) gives thread 0 far more work than the last
+        # thread. Pairing row i with mirror_i = n_samples - i - 2 (as
+        # _permanova_f_stat_sW_condensed_nb does) keeps the work per prange
+        # iteration roughly constant (~n_samples) regardless of i. This also
+        # halves the number of schedulable prange tasks (from n_samples - 1
+        # to n_half), which caps usable parallelism at n_half threads on
+        # machines with more cores than that -- the same tradeoff
+        # _permanova_f_stat_sW_condensed_nb already makes.
         for i in prange(n_half):
             _weighted_unifrac_row_nb(
                 i,

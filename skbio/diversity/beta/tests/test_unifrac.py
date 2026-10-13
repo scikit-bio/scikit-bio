@@ -765,6 +765,22 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
             )
 
     @numba_code
+    def test_unweighted_unifrac_numba_matches_ssu_fixture(self):
+        # _unweighted_unifrac_pdist_numba's non-variance_adjust path now
+        # delegates to _unweighted_unifrac_xp's BLAS-matmul reduction
+        # instead of running its own @njit loop (see that function's
+        # docstring), which changes summation order and so is no longer
+        # bit-for-bit identical to the original #2558 kernel. Pin it
+        # against the independent ssu reference directly, the same way
+        # test_generalized_unifrac_matches_ssu_fixture does, rather than
+        # relying only on agreement with the (now literally identical)
+        # xp core.
+        table, taxa, tree, sample_ids = self._load_qiime_191_tt()
+        condensed = _unweighted_unifrac_pdist_numba(table, taxa, tree, validate=True)
+        self._assert_pairs_match_ssu_fixture(
+            condensed, sample_ids, 'unweighted_unifrac_dm.txt')
+
+    @numba_code
     def test_generalized_unifrac_matches_ssu_fixture(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         for alpha, fname in [(0.5, 'generalized_unifrac_alpha0.5_dm.txt'),

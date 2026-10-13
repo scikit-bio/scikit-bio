@@ -9,6 +9,10 @@
 * Added `normalized=False` and `variance_adjust` to `unweighted_unifrac`, and `variance_adjust` to `weighted_unifrac`, downweighting branches whose node counts across the two samples have high variance. Both are currently only supported with `engine='gpu'`; CPU/Numba support is planned for a future release.
 * Added an optional `gpu-nvidia` extra for installing the NVIDIA GPU backend (`numba-cuda`). AMD support requires `numba-hip`, which is published only on test.pypi and must be pinned to match the installed ROCm version, so it has no extra and must be installed manually.
 
+### Performance enhancements
+
+* `unweighted_unifrac`'s `engine='numba'` path (as used directly and through `beta_diversity`) now delegates its non-`variance_adjust` case to the array-API BLAS-matmul implementation added for the `engine='gpu'` CPU fallback, instead of running its own `@njit(parallel=True)` loop kernel from [#2558](https://github.com/scikit-bio/scikit-bio/pull/2558). Measured ~8.6x faster at 5000 samples on a 48-core CPU node (11.5s to 1.35s). This is **not** bit-for-bit identical to the original #2558 kernel any more -- summation order changed from sequential per-node accumulation to a BLAS reduction -- but matches it, and the `ssu`-generated reference fixtures, well within floating-point tolerance (max abs deviation ~6e-15, far inside the 1e-10 bar used elsewhere for this kind of comparison). `weighted_unifrac` and `generalized_unifrac`'s CPU kernels are unaffected.
+
 ### Backward-incompatible changes
 
 * `unweighted_unifrac`, `weighted_unifrac` and `generalized_unifrac` now require all parameters after `tree` to be passed as keyword arguments. Previously these were positional-or-keyword, so a call like `unweighted_unifrac(u, v, taxa, tree, False)` relied on positional order and silently changed meaning whenever a new parameter was inserted. Code calling these functions with more than 4 positional arguments must switch to keyword arguments.
