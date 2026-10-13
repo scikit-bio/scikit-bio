@@ -208,6 +208,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
             branch_lengths,
             method,
             alpha,
+            alpha_mode,
             variance_adjust,
             block_i,
             block_j,
@@ -324,7 +325,27 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                         elif method == GENERALIZED:
                             if s == 0.0:
                                 continue
-                            sum_pow = length * s**alpha
+                            # alpha arrives as a runtime float, so s**alpha
+                            # lowers to a real pow() call per node in the
+                            # general case. alpha_mode (classified host-side
+                            # in `_run_unifrac_kernel`, since alpha is fixed
+                            # for the whole launch) lets the 3 exact,
+                            # common alpha values skip that: alpha=1.0 is
+                            # algebraically identical to weighted_normalized
+                            # (confirmed: sum_pow*(d/s) = length*s*(d/s) =
+                            # length*d, denominator = length*s -- exactly
+                            # that method's formula), alpha=0.5 replaces
+                            # pow with a plain sqrt, and alpha=0.0 makes
+                            # s**alpha == 1.0 for any s != 0 (already ruled
+                            # out by the `s == 0.0: continue` above).
+                            if alpha_mode == 1:
+                                sum_pow = length * s
+                            elif alpha_mode == 2:
+                                sum_pow = length * math.sqrt(s)
+                            elif alpha_mode == 3:
+                                sum_pow = length
+                            else:
+                                sum_pow = length * s**alpha
                             numerator += sum_pow * (d / s)
                             denominator += sum_pow
 
@@ -385,6 +406,22 @@ def _launch_unifrac_kernel(
     d_block_j = cuda.to_device(block_j)
     d_out = cuda.device_array(n_pairs, dtype=np.float64)
 
+    # Classified here, the one choke point every launch (production and the
+    # tile probe alike) goes through, rather than threading a new parameter
+    # into every caller: alpha is fixed for the whole launch, so this is a
+    # one-time-per-call classification, not a per-node cost. Only the
+    # GENERALIZED method's kernel branch reads `alpha_mode` (see
+    # `_unifrac_block_kernel`); every other method ignores it exactly like
+    # it already ignores `alpha`.
+    if alpha == 1.0:
+        alpha_mode = 1
+    elif alpha == 0.5:
+        alpha_mode = 2
+    elif alpha == 0.0:
+        alpha_mode = 3
+    else:
+        alpha_mode = 0
+
     kernel = _make_unifrac_kernel(cuda, tile, node_chunk)
     try:
         kernel[block_i.shape[0], (tile, tile)](
@@ -394,6 +431,7 @@ def _launch_unifrac_kernel(
             d_branch_lengths,
             method,
             alpha,
+            alpha_mode,
             variance_adjust,
             d_block_i,
             d_block_j,
