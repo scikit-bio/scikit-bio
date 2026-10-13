@@ -16,6 +16,7 @@ and a correctness-first fallback to the CPU engines whenever a kernel is
 unavailable or fails to build on the running stack.
 """
 
+from functools import lru_cache
 from warnings import warn
 
 import array_api_compat as _aac
@@ -79,8 +80,14 @@ def _numba_gpu_module_for(arr):
     return _available_module("numba", want)
 
 
+@lru_cache(maxsize=None)
 def _available_module(package, name):
-    """Return ``package.name`` if it imports and reports a usable GPU, else None."""
+    """Return ``package.name`` if it imports and reports a usable GPU, else None.
+
+    Cached, as what is installed does not change within a process: an import
+    that fails, e.g. of a GPU extension that is not installed, is otherwise
+    attempted again on every batch call.
+    """
     try:
         mod = getattr(__import__(package, fromlist=[name]), name)
     except Exception:

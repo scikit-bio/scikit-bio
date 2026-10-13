@@ -1522,6 +1522,29 @@ class BPFastEngineTests(TestCase):
         exp = 'cython' if _bp_cy.OPENMP or not NUMBA_AVAILABLE else 'numba'
         self.assertEqual(self.bp._fast_engine(), exp)
 
+    def test_fast_resolved_only_when_asked(self):
+        # what "fast" resolves to is worked out only for engine="fast", once
+        # per call, however many kernels the call runs
+        bp = self.bp
+        with mock.patch.object(bp, '_fast_engine', return_value='cython') as fast:
+            bp.lca_batch([1, 2], [3, 4], engine='cython')
+            bp.cophenet(engine='cython')
+            self.assertEqual(fast.call_count, 0)
+            bp.lca_batch([1, 2], [3, 4], engine='fast')
+            self.assertEqual(fast.call_count, 1)
+            bp.cophenet(engine='fast')
+            self.assertEqual(fast.call_count, 2)
+
+    def test_gpu_module_probe_cached(self):
+        # an import that fails (a GPU extension that is not installed) is not
+        # attempted again on every call
+        probe = _gpu._available_module
+        probe.cache_clear()
+        with mock.patch('builtins.__import__', side_effect=ImportError) as imp:
+            self.assertIsNone(probe('skbio_no_such_gpu_package', 'cuda'))
+            self.assertIsNone(probe('skbio_no_such_gpu_package', 'cuda'))
+        self.assertEqual(imp.call_count, 1)
+
     def test_fast_runs_the_chosen_engine(self):
         bp = self.bp
         exp = bp._fast_engine()

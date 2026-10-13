@@ -19,7 +19,7 @@ import numpy as np
 import array_api_compat as aac
 
 from skbio._base import SkbioObject
-from skbio._config import _resolve_engine
+from skbio._config import _resolve_engine, get_config
 from skbio.io.descriptors import Read, Write
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree._exception import DuplicateNodeError, MissingNodeError
@@ -1290,9 +1290,18 @@ class BPTree(SkbioObject):
     # Batch operations (computed by the selected engine)
     # ------------------------------------------------------------------
 
+    def _engine(self, engine):
+        """The compute engine to run on: ``engine`` resolved, as by its callers.
+
+        What ``"fast"`` resolves to is worked out only when it is asked for.
+        """
+        if engine is None:
+            engine = get_config("compute_engine")
+        fast = self._fast_engine() if engine == "fast" else None
+        return _resolve_engine(engine, _ENGINES, fast=fast)
+
     def _run(self, kernel, engine, *args):
-        """Run a batch kernel of the selected compute engine on this tree."""
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        """Run a batch kernel of a resolved compute engine on this tree."""
         if engine == "numba":
             return getattr(_bp_numba, kernel)(_bp_numba.bp_arrays(self), *args)
         return getattr(_bp_cy, kernel)(self._kernel, *args)
@@ -1376,7 +1385,7 @@ class BPTree(SkbioObject):
         place and host queries are uploaded; otherwise the queries are computed
         on the host, from a copy if they are on a device.
         """
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        engine = self._engine(engine)
         shape, args, xp, device = self._queries(positions, levels)
         gpu = self._gpu_module(engine)
         if gpu is not None:
@@ -1633,7 +1642,7 @@ class BPTree(SkbioObject):
         xp, device = self._xp, self._device
         # resolved before the early return below, so an unsupported or
         # unavailable engine is rejected whatever the number of tips
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        engine = self._engine(engine)
         if tips.size < 2:
             # no pairs; an empty condensed vector would expand to 1 x 1
             matrix = np.zeros((tips.size, tips.size))
