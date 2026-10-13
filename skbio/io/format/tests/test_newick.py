@@ -467,12 +467,13 @@ class TestNewickBPTree(unittest.TestCase):
 
     def test_apostrophe_roundtrip(self):
         # An embedded apostrophe is read as a single ' (a doubled '' is
-        # collapsed) and written back doubled inside quotes.
+        # collapsed) and written back doubled, unquoted as by the TreeNode
+        # writer, as it needs no quotes.
         bp = self._read_bp("('O''Brien':1,b:2)r;")
         self.assertIn("O'Brien", self._names(bp))
         buf = io.StringIO()
         _bp_to_newick(bp, buf)
-        self.assertIn("'O''Brien'", buf.getvalue())
+        self.assertIn("(O''Brien:", buf.getvalue())
         buf.seek(0)
         self.assertIn("O'Brien", self._names(self._read_bp(buf.getvalue())))
 

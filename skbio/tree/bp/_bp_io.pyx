@@ -50,19 +50,35 @@ cdef inline cnp.int32_t number_from_edge(unicode token):
 
 
 cdef inline unicode _unquote_name(unicode token, bint convert_underscores):
-    """Recover a node name from a raw token.
+    """Recover a node name from a raw token, as the TreeNode reader does.
 
-    A single-quoted label is de-quoted and its doubled apostrophes (``''``) are
-    collapsed to one (``'``), matching the Newick spec and the TreeNode reader.
-    An unquoted label optionally has underscores converted to spaces (the
-    classic Newick convention); quoted content is always taken literally.
+    Each single quote opens or closes a quoted part and is dropped, and a quote
+    right after a dropped one is kept, so ``''`` is an apostrophe anywhere in
+    the label. Underscores are converted to spaces (the classic Newick convention)
+    if ``convert_underscores``, unless the label ends with a quote that closes a
+    quoted part.
     """
+    cdef:
+        list out
+        bint dropped = False
+        Py_UCS4 c
+
     token = token.strip()
-    if len(token) >= 2 and token[0] == u"'" and token[len(token) - 1] == u"'":
-        return token[1:len(token) - 1].replace(u"''", u"'")
-    if convert_underscores:
-        return token.replace(u'_', u' ')
-    return token
+    if u"'" not in token:
+        return token.replace(u'_', u' ') if convert_underscores else token
+
+    out = []
+    for c in token:
+        if c == u"'" and not dropped:
+            dropped = True
+        else:
+            out.append(c)
+            dropped = False
+    name = u''.join(out)
+    # ``dropped``: the last character is a quote that closes a quoted part
+    if convert_underscores and not dropped:
+        name = name.replace(u'_', u' ')
+    return name
 
 
 cdef inline Py_ssize_t _find_length_colon(unicode token):
@@ -220,8 +236,9 @@ def write_newick(object tree, object output, bint include_edge):
     -----
     The string is written in place to ``output``; the function returns nothing.
     Node names containing whitespace or any of the characters
-    ``' _ ; , : ( ) [ ]`` are wrapped in single quotes, and embedded apostrophes
-    are doubled (``'`` -> ``''``), so the output re-parses losslessly.
+    ``_ ; , : ( ) [ ]`` are wrapped in single quotes, and apostrophes are
+    doubled (``'`` -> ``''``) whether quoted or not, as by the TreeNode writer,
+    so the output re-parses losslessly with either reader.
 
     """
     cdef:
@@ -262,13 +279,16 @@ def write_newick(object tree, object output, bint include_edge):
 
             if name is not None:
                 # Quote names with structural characters or whitespace, and
-                # double embedded apostrophes, so the output re-parses cleanly.
+                # double apostrophes, so the output re-parses cleanly. An
+                # apostrophe alone needs no quotes, and a quoted name made of
+                # apostrophes only would read back with one too many
                 chars = set(name)
-                if (chars & {"'", "_", ";", ",", ":", "(", ")", "[", "]"}
+                escaped = name.replace("'", "''")
+                if (chars & {"_", ";", ",", ":", "(", ")", "[", "]"}
                         or any(ch.isspace() for ch in chars)):
-                    output.write("'%s'" % name.replace("'", "''"))
+                    output.write("'%s'" % escaped)
                 else:
-                    output.write(name)
+                    output.write(escaped)
 
             if include_edge:
                 output.write(':%s{%d}' % (length, edge))
