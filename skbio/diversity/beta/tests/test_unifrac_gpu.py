@@ -22,11 +22,11 @@ from skbio.diversity.beta._unifrac_gpu import (
     _make_unifrac_kernel,
     _probe_tile_config,
     _probe_tile_config_candidate,
-    detect_gpu_backend,
-    generalized_unifrac_gpu,
-    get_cuda_module,
-    unweighted_unifrac_gpu,
-    weighted_unifrac_gpu,
+    _detect_gpu_backend,
+    _generalized_unifrac_gpu,
+    _get_cuda_module,
+    _unweighted_unifrac_gpu,
+    _weighted_unifrac_gpu,
 )
 from skbio.diversity.beta.tests._fixtures import QiimeTinyTestMixin
 
@@ -64,14 +64,14 @@ GPU_FIXTURE_TOLERANCE = 1.5e-6
 class GpuBackendTests(TestCase):
 
     def test_detect_gpu_backend_returns_known_value(self):
-        self.assertIn(detect_gpu_backend(), ("cuda", "hip", None))
+        self.assertIn(_detect_gpu_backend(), ("cuda", "hip", None))
 
     def test_get_cuda_module_raises_cleanly_when_no_gpu(self):
-        backend = detect_gpu_backend()
+        backend = _detect_gpu_backend()
         if backend is not None:
             self.skipTest("a GPU backend is available in this environment")
         with self.assertRaises(ImportError):
-            get_cuda_module()
+            _get_cuda_module()
 
 
 class NumbaOptionalImportTests(QiimeTinyTestMixin, TestCase):
@@ -135,14 +135,14 @@ class NumbaOptionalImportTests(QiimeTinyTestMixin, TestCase):
         # would raise ModuleNotFoundError right here, before engine='gpu'
         # ever gets a chance to fall back to the array-API path.
         fresh_mod = self._load_unifrac_gpu_without_numba()
-        self.assertIsNone(fresh_mod.detect_gpu_backend())
+        self.assertIsNone(fresh_mod._detect_gpu_backend())
 
     def test_gpu_or_xp_dispatch_works_without_numba(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fresh_mod = self._load_unifrac_gpu_without_numba()
-        # detect_gpu_backend() is None (numba unimportable), so this must use
+        # _detect_gpu_backend() is None (numba unimportable), so this must use
         # the array-API fallback, not raise.
-        obs = fresh_mod.weighted_unifrac_gpu_or_xp(
+        obs = fresh_mod._weighted_unifrac_gpu_or_xp(
             table, taxa, tree, normalized=True, validate=True
         )
         self.assertEqual(len(obs), len(table) * (len(table) - 1) // 2)
@@ -477,7 +477,7 @@ class _GpuRequiredTestCase(QiimeTinyTestMixin, TestCase):
     """
 
     def setUp(self):
-        if detect_gpu_backend() is None:
+        if _detect_gpu_backend() is None:
             self.skipTest("no GPU backend available")
 
 
@@ -486,7 +486,7 @@ class WeightedUnifracGpuTests(_GpuRequiredTestCase):
     def test_weighted_unifrac_gpu_matches_cpu_unnormalized(self):
         from skbio.diversity.beta._unifrac import _weighted_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = weighted_unifrac_gpu(
+        gpu = _weighted_unifrac_gpu(
             table, taxa, tree,
             normalized=False, variance_adjust=False, validate=True,
         )
@@ -498,7 +498,7 @@ class WeightedUnifracGpuTests(_GpuRequiredTestCase):
     def test_weighted_unifrac_gpu_matches_cpu_normalized(self):
         from skbio.diversity.beta._unifrac import _weighted_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = weighted_unifrac_gpu(
+        gpu = _weighted_unifrac_gpu(
             table, taxa, tree,
             normalized=True, variance_adjust=False, validate=True,
         )
@@ -514,7 +514,7 @@ class WeightedUnifracGpuTests(_GpuRequiredTestCase):
         # qiime-191-tt SSU fixture directly rather than against the CPU
         # kernel.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = weighted_unifrac_gpu(
+        gpu = _weighted_unifrac_gpu(
             table, taxa, tree,
             normalized=False, variance_adjust=True, validate=True,
         )
@@ -524,7 +524,7 @@ class WeightedUnifracGpuTests(_GpuRequiredTestCase):
 
     def test_weighted_unifrac_gpu_matches_fixture_variance_adjusted_normalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = weighted_unifrac_gpu(
+        gpu = _weighted_unifrac_gpu(
             table, taxa, tree,
             normalized=True, variance_adjust=True, validate=True,
         )
@@ -542,7 +542,7 @@ class UnweightedUnifracGpuTests(_GpuRequiredTestCase):
 
     def test_unweighted_unifrac_gpu_matches_fixture_unnormalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = unweighted_unifrac_gpu(
+        gpu = _unweighted_unifrac_gpu(
             table, taxa, tree,
             normalized=False, variance_adjust=False, validate=True,
         )
@@ -552,7 +552,7 @@ class UnweightedUnifracGpuTests(_GpuRequiredTestCase):
 
     def test_unweighted_unifrac_gpu_matches_fixture_normalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = unweighted_unifrac_gpu(
+        gpu = _unweighted_unifrac_gpu(
             table, taxa, tree,
             normalized=True, variance_adjust=False, validate=True,
         )
@@ -564,7 +564,7 @@ class UnweightedUnifracGpuTests(_GpuRequiredTestCase):
         self,
     ):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = unweighted_unifrac_gpu(
+        gpu = _unweighted_unifrac_gpu(
             table, taxa, tree,
             normalized=False, variance_adjust=True, validate=True,
         )
@@ -576,7 +576,7 @@ class UnweightedUnifracGpuTests(_GpuRequiredTestCase):
         self,
     ):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        gpu = unweighted_unifrac_gpu(
+        gpu = _unweighted_unifrac_gpu(
             table, taxa, tree,
             normalized=True, variance_adjust=True, validate=True,
         )
@@ -590,7 +590,7 @@ class GeneralizedUnifracGpuTests(_GpuRequiredTestCase):
     def test_generalized_unifrac_gpu_matches_cpu_alpha_half(self):
         from skbio.diversity.beta._unifrac import _generalized_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = generalized_unifrac_gpu(
+        gpu = _generalized_unifrac_gpu(
             table, taxa, tree, alpha=0.5, variance_adjust=False, validate=True,
         )
         cpu = _generalized_unifrac_pdist_numba(
@@ -601,7 +601,7 @@ class GeneralizedUnifracGpuTests(_GpuRequiredTestCase):
     def test_generalized_unifrac_gpu_matches_cpu_alpha_one(self):
         from skbio.diversity.beta._unifrac import _generalized_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = generalized_unifrac_gpu(
+        gpu = _generalized_unifrac_gpu(
             table, taxa, tree, alpha=1.0, variance_adjust=False, validate=True,
         )
         cpu = _generalized_unifrac_pdist_numba(
@@ -612,7 +612,7 @@ class GeneralizedUnifracGpuTests(_GpuRequiredTestCase):
     def test_generalized_unifrac_gpu_matches_cpu_variance_adjusted(self):
         from skbio.diversity.beta._unifrac import _generalized_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = generalized_unifrac_gpu(
+        gpu = _generalized_unifrac_gpu(
             table, taxa, tree, alpha=0.5, variance_adjust=True, validate=True,
         )
         cpu = _generalized_unifrac_pdist_numba(
@@ -623,7 +623,7 @@ class GeneralizedUnifracGpuTests(_GpuRequiredTestCase):
     def test_generalized_unifrac_gpu_matches_cpu_variance_adjusted_alpha_one(self):
         from skbio.diversity.beta._unifrac import _generalized_unifrac_pdist_numba
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        gpu = generalized_unifrac_gpu(
+        gpu = _generalized_unifrac_gpu(
             table, taxa, tree, alpha=1.0, variance_adjust=True, validate=True,
         )
         cpu = _generalized_unifrac_pdist_numba(

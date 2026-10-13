@@ -228,13 +228,13 @@ def _prepare(counts, taxa, tree, validate):
     return xp, counts_by_node, sample_totals, branch_lengths, proportions
 
 
-def weighted_unifrac_xp(
+def _weighted_unifrac_xp(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute the condensed weighted UniFrac distance vector, array-API-generic.
 
     Array-API-generic counterpart of
-    :func:`skbio.diversity.beta._unifrac_gpu.weighted_unifrac_gpu`: computes
+    :func:`skbio.diversity.beta._unifrac_gpu._weighted_unifrac_gpu`: computes
     the same quantity without a GPU backend (``numba-cuda``/``numba.hip``),
     working on any array-API-compliant array (including plain NumPy).
 
@@ -248,13 +248,13 @@ def weighted_unifrac_xp(
     ))
 
 
-def unweighted_unifrac_xp(
+def _unweighted_unifrac_xp(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute the condensed unweighted UniFrac distance vector, array-API-generic.
 
     Array-API-generic counterpart of
-    :func:`skbio.diversity.beta._unifrac_gpu.unweighted_unifrac_gpu`.
+    :func:`skbio.diversity.beta._unifrac_gpu._unweighted_unifrac_gpu`.
 
     """
     xp, counts_by_node, sample_totals, branch_lengths, _ = _prepare(
@@ -266,13 +266,13 @@ def unweighted_unifrac_xp(
     ))
 
 
-def generalized_unifrac_xp(
+def _generalized_unifrac_xp(
     counts, taxa, tree, alpha, variance_adjust=False, validate=True
 ):
     """Compute the condensed generalized UniFrac distance vector, array-API-generic.
 
     Array-API-generic counterpart of
-    :func:`skbio.diversity.beta._unifrac_gpu.generalized_unifrac_gpu`.
+    :func:`skbio.diversity.beta._unifrac_gpu._generalized_unifrac_gpu`.
 
     """
     xp, counts_by_node, sample_totals, branch_lengths, proportions = _prepare(

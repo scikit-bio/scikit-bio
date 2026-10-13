@@ -18,7 +18,7 @@ from skbio.util._testing import get_data_path
 
 
 def patch_gpu_backend(backend):
-    """Patch `detect_gpu_backend` to report ``backend``.
+    """Patch `_detect_gpu_backend` to report ``backend``.
 
     ``None`` forces the no-usable-backend branch of the `*_gpu_or_xp`
     dispatch wrappers (i.e. the array-API fallback), and 'cuda'/'hip' force
@@ -26,7 +26,7 @@ def patch_gpu_backend(backend):
     machine running the tests actually has.
     """
     return patch(
-        'skbio.diversity.beta._unifrac_gpu.detect_gpu_backend', return_value=backend
+        'skbio.diversity.beta._unifrac_gpu._detect_gpu_backend', return_value=backend
     )
 
 

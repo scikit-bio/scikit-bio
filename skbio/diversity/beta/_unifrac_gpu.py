@@ -8,7 +8,7 @@
 
 """GPU UniFrac (:mod:`skbio.diversity.beta._unifrac_gpu`).
 
-Backend detection (``detect_gpu_backend``/``get_cuda_module``), the fused
+Backend detection (``_detect_gpu_backend``/``_get_cuda_module``), the fused
 Numba CUDA/HIP kernel shared by all five UniFrac methods, the runtime probe
 that picks a safe tile configuration for it, and the ``*_gpu_or_xp``
 wrappers that fall back to :mod:`skbio.diversity.beta._unifrac_xp` when the
@@ -31,6 +31,15 @@ _backend_cache = None
 
 # Compiled kernels, keyed by id() of the cuda-API module they were built
 # against. The module itself is stored alongside so the id stays valid.
+#
+# (`skbio.stats.distance._gpu._get_kernel` is the PERMANOVA/Mantel precedent
+# for a "compile once per backend, cache it" helper, but its cache key is
+# backend name alone; UniFrac's cache key needs an extra dimension -- `tile`,
+# `node_chunk` -- since the tile-probe below tries several kernel builds per
+# backend, and the probe also needs to evict one specific failed entry
+# (`_evict_kernel_cache_entry`), which `_get_kernel`'s simpler contract has no
+# equivalent of. So a small UniFrac-local cache is used here instead of
+# reusing or extending that helper.)
 _KERNEL_CACHE = {}
 
 # Guards the check-compile-store sequence in `_make_unifrac_kernel` so
@@ -40,7 +49,7 @@ _KERNEL_CACHE = {}
 _KERNEL_CACHE_LOCK = threading.Lock()
 
 
-def detect_gpu_backend():
+def _detect_gpu_backend():
     """Detect which GPU backend, if any, is usable.
 
     Returns
@@ -74,7 +83,7 @@ def detect_gpu_backend():
     return _backend_cache
 
 
-def get_cuda_module():
+def _get_cuda_module():
     """Return a ``numba.cuda``-API-compatible module for the detected backend.
 
     Returns
@@ -104,7 +113,7 @@ def get_cuda_module():
     for the full install path.
 
     """
-    backend = detect_gpu_backend()
+    backend = _detect_gpu_backend()
     if backend == "cuda":
         from numba import cuda
 
@@ -116,8 +125,10 @@ def get_cuda_module():
         return hip
     raise ImportError(
         "No usable GPU backend found (checked numba-cuda and numba.hip). "
-        "Install one of these optional dependencies, or use engine='numba' "
-        "for the CPU path."
+        "Install one of these optional dependencies to call this function "
+        "directly, or use one of the `*_gpu_or_xp` wrappers (what "
+        "engine='gpu' calls), which fall back to the array-API "
+        "implementation automatically when no GPU backend is available."
     )
 
 
@@ -172,7 +183,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
         # Imported here, not at module level: this module must stay
         # importable (and the array-API fallback reachable) on a system with
         # no numba installed at all. This function is only ever reached via
-        # `_launch_unifrac_kernel`, after `get_cuda_module()` has already
+        # `_launch_unifrac_kernel`, after `_get_cuda_module()` has already
         # succeeded, which means some numba variant (numba-cuda or
         # numba.hip, both of which depend on core numba) is installed.
         from numba import float64
@@ -538,7 +549,7 @@ def _probe_tile_config(cuda, backend):
     #     different exception shape): this probably is not a tile-size
     #     problem at all -- it's more likely a toolchain/driver issue on
     #     this specific machine. Don't just shrink the ladder in that case;
-    #     investigate why `get_cuda_module()` returned a module that can't
+    #     investigate why `_get_cuda_module()` returned a module that can't
     #     actually compile this kernel.
     raise RuntimeError(
         f"No safe (TILE, NODE_CHUNK) tile configuration could be found for "
@@ -594,11 +605,11 @@ def _run_unifrac_kernel(
     Shared host-side body of the three ``*_unifrac_gpu`` drivers below: the
     five methods differ only in the ``method``/``alpha`` the one kernel is
     launched with, and in whether it reads node proportions or raw counts.
-    Requires a GPU backend detected by ``detect_gpu_backend``.
+    Requires a GPU backend detected by ``_detect_gpu_backend``.
     """
     from skbio.diversity.beta._unifrac import _setup_multiple_unifrac, _get_tip_indices
 
-    cuda = get_cuda_module()
+    cuda = _get_cuda_module()
     # Validate before any GPU-specific code, including tile-config probing:
     # probing now does a real compile+launch against this device (unlike
     # the old fixed-dict lookup), so it must not run ahead of input
@@ -620,7 +631,7 @@ def _run_unifrac_kernel(
         )
     except Exception as exc:
         raise _ValidationFailure(exc) from exc
-    tile, node_chunk = _get_tile_config(cuda, detect_gpu_backend())
+    tile, node_chunk = _get_tile_config(cuda, _detect_gpu_backend())
     counts_by_node = np.ascontiguousarray(counts_by_node, dtype=np.float64)
     tip_indices = _get_tip_indices(tree_index)
     sample_totals = counts_by_node[:, tip_indices].sum(axis=1)
@@ -650,7 +661,7 @@ def _run_unifrac_kernel(
     )
 
 
-def weighted_unifrac_gpu(
+def _weighted_unifrac_gpu(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute the condensed weighted UniFrac distance vector on a GPU.
@@ -670,7 +681,7 @@ def weighted_unifrac_gpu(
     )
 
 
-def unweighted_unifrac_gpu(
+def _unweighted_unifrac_gpu(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute the condensed unweighted UniFrac distance vector on a GPU.
@@ -690,7 +701,7 @@ def unweighted_unifrac_gpu(
     )
 
 
-def generalized_unifrac_gpu(
+def _generalized_unifrac_gpu(
     counts, taxa, tree, alpha, variance_adjust=False, validate=True
 ):
     """Compute the condensed generalized UniFrac distance vector on a GPU.
@@ -715,7 +726,7 @@ def generalized_unifrac_gpu(
 # -----------------------------------------------------------------------------
 #
 # The three driver functions above require a real, detected GPU backend
-# (``get_cuda_module`` raises ``ImportError`` otherwise): they already run
+# (``_get_cuda_module`` raises ``ImportError`` otherwise): they already run
 # correctly on real NVIDIA/AMD hardware, including proactively moving plain
 # NumPy input onto the device for the fused-kernel speedup. The wrappers below
 # add the fallback: when no GPU backend is detected, or when the fused kernel
@@ -728,7 +739,7 @@ def generalized_unifrac_gpu(
 # straight to the array-API path instead of retrying a failing kernel.
 # (`skbio.stats.distance._gpu._mark_gpu_unavailable` is the PERMANOVA/Mantel
 # precedent for this, but it keys off an array-API array's device/backend;
-# UniFrac's GPU dispatch is keyed off `detect_gpu_backend()`'s backend name
+# UniFrac's GPU dispatch is keyed off `_detect_gpu_backend()`'s backend name
 # instead -- plain NumPy input has no device of its own -- so a small
 # UniFrac-local equivalent is used here rather than reusing that helper.)
 _unavailable_backends = set()
@@ -793,7 +804,7 @@ def _dispatch_gpu_or_xp(gpu_func, xp_func, *args, **kwargs):
     """
     from skbio.tree import TreeError
 
-    backend = detect_gpu_backend()
+    backend = _detect_gpu_backend()
     with _UNAVAILABLE_BACKENDS_LOCK:
         backend_usable = backend is not None and backend not in _unavailable_backends
     if backend_usable:
@@ -808,22 +819,22 @@ def _dispatch_gpu_or_xp(gpu_func, xp_func, *args, **kwargs):
     return xp_func(*args, **kwargs)
 
 
-def weighted_unifrac_gpu_or_xp(
+def _weighted_unifrac_gpu_or_xp(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute weighted UniFrac, preferring the fused GPU kernel when usable.
 
-    Runs :func:`weighted_unifrac_gpu` when a GPU backend is detected and its
+    Runs :func:`_weighted_unifrac_gpu` when a GPU backend is detected and its
     fused kernel builds/runs successfully; otherwise falls back to
-    :func:`skbio.diversity.beta._unifrac_xp.weighted_unifrac_xp`, which is
+    :func:`skbio.diversity.beta._unifrac_xp._weighted_unifrac_xp`, which is
     correct (if slower) on any array-API backend, including plain NumPy.
 
     """
-    from skbio.diversity.beta._unifrac_xp import weighted_unifrac_xp
+    from skbio.diversity.beta._unifrac_xp import _weighted_unifrac_xp
 
     return _dispatch_gpu_or_xp(
-        weighted_unifrac_gpu,
-        weighted_unifrac_xp,
+        _weighted_unifrac_gpu,
+        _weighted_unifrac_xp,
         counts,
         taxa,
         tree,
@@ -833,20 +844,20 @@ def weighted_unifrac_gpu_or_xp(
     )
 
 
-def unweighted_unifrac_gpu_or_xp(
+def _unweighted_unifrac_gpu_or_xp(
     counts, taxa, tree, normalized, variance_adjust=False, validate=True
 ):
     """Compute unweighted UniFrac, preferring the fused GPU kernel when usable.
 
-    See :func:`weighted_unifrac_gpu_or_xp`; falls back to
-    :func:`skbio.diversity.beta._unifrac_xp.unweighted_unifrac_xp`.
+    See :func:`_weighted_unifrac_gpu_or_xp`; falls back to
+    :func:`skbio.diversity.beta._unifrac_xp._unweighted_unifrac_xp`.
 
     """
-    from skbio.diversity.beta._unifrac_xp import unweighted_unifrac_xp
+    from skbio.diversity.beta._unifrac_xp import _unweighted_unifrac_xp
 
     return _dispatch_gpu_or_xp(
-        unweighted_unifrac_gpu,
-        unweighted_unifrac_xp,
+        _unweighted_unifrac_gpu,
+        _unweighted_unifrac_xp,
         counts,
         taxa,
         tree,
@@ -856,20 +867,20 @@ def unweighted_unifrac_gpu_or_xp(
     )
 
 
-def generalized_unifrac_gpu_or_xp(
+def _generalized_unifrac_gpu_or_xp(
     counts, taxa, tree, alpha, variance_adjust=False, validate=True
 ):
     """Compute generalized UniFrac, preferring the fused GPU kernel when usable.
 
-    See :func:`weighted_unifrac_gpu_or_xp`; falls back to
-    :func:`skbio.diversity.beta._unifrac_xp.generalized_unifrac_xp`.
+    See :func:`_weighted_unifrac_gpu_or_xp`; falls back to
+    :func:`skbio.diversity.beta._unifrac_xp._generalized_unifrac_xp`.
 
     """
-    from skbio.diversity.beta._unifrac_xp import generalized_unifrac_xp
+    from skbio.diversity.beta._unifrac_xp import _generalized_unifrac_xp
 
     return _dispatch_gpu_or_xp(
-        generalized_unifrac_gpu,
-        generalized_unifrac_xp,
+        _generalized_unifrac_gpu,
+        _generalized_unifrac_xp,
         counts,
         taxa,
         tree,

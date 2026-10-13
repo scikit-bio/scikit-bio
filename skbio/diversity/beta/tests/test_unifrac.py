@@ -802,14 +802,14 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         # that test only pins the dead/unreachable CPU reference kernel
         # (_generalized_unifrac) directly. This exercises the same
         # both-samples-empty case through the live dispatch path
-        # (generalized_unifrac_gpu_or_xp) that real callers of
+        # (_generalized_unifrac_gpu_or_xp) that real callers of
         # generalized_unifrac(engine='gpu')/beta_diversity actually hit --
         # the fused kernel when a GPU backend is usable, otherwise the
         # array-API fallback, either way without needing real GPU hardware
         # to run this test.
-        from skbio.diversity.beta._unifrac_gpu import generalized_unifrac_gpu_or_xp
+        from skbio.diversity.beta._unifrac_gpu import _generalized_unifrac_gpu_or_xp
         table = np.array([[0, 0, 0], [0, 0, 0]])
-        obs = generalized_unifrac_gpu_or_xp(
+        obs = _generalized_unifrac_gpu_or_xp(
             table, self.oids1[:3], self.t1, alpha=1.0, variance_adjust=False,
         )
         np.testing.assert_allclose(obs, [0.0])
@@ -1232,7 +1232,7 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
     # engine='gpu' now always produces a result: a fused kernel when a GPU
     # backend is usable, or the array-API fallback (_unifrac_xp.py)
     # otherwise. These tests force the no-backend case by monkeypatching
-    # detect_gpu_backend(), deterministically exercising the fallback path
+    # _detect_gpu_backend(), deterministically exercising the fallback path
     # regardless of what hardware this machine actually has, and check the
     # result against the CPU reference. GPU-available fused-kernel
     # correctness coverage for the underlying *_gpu drivers lives in
@@ -1315,7 +1315,7 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
 
         self.addCleanup(_unifrac_gpu._unavailable_backends.discard, "cuda")
         with patch_gpu_backend("cuda"), patch(
-            "skbio.diversity.beta._unifrac_gpu.weighted_unifrac_gpu",
+            "skbio.diversity.beta._unifrac_gpu._weighted_unifrac_gpu",
             side_effect=RuntimeError("kernel build failed"),
         ):
             with warnings.catch_warnings():

@@ -400,10 +400,10 @@ def beta_diversity(
         if engine == "gpu":
             _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
             from skbio.diversity.beta._unifrac_gpu import (
-                unweighted_unifrac_gpu_or_xp,
+                _unweighted_unifrac_gpu_or_xp,
             )
 
-            distances = unweighted_unifrac_gpu_or_xp(
+            distances = _unweighted_unifrac_gpu_or_xp(
                 counts,
                 taxa,
                 tree,
@@ -436,10 +436,10 @@ def beta_diversity(
         if engine == "gpu":
             _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
             from skbio.diversity.beta._unifrac_gpu import (
-                weighted_unifrac_gpu_or_xp,
+                _weighted_unifrac_gpu_or_xp,
             )
 
-            distances = weighted_unifrac_gpu_or_xp(
+            distances = _weighted_unifrac_gpu_or_xp(
                 counts,
                 taxa,
                 tree,
@@ -480,10 +480,10 @@ def beta_diversity(
         if not (0.0 <= alpha <= 1.0):
             raise ValueError(f"alpha must be in [0, 1], got {alpha}.")
         from skbio.diversity.beta._unifrac_gpu import (
-            generalized_unifrac_gpu_or_xp,
+            _generalized_unifrac_gpu_or_xp,
         )
 
-        distances = generalized_unifrac_gpu_or_xp(
+        distances = _generalized_unifrac_gpu_or_xp(
             counts,
             taxa,
             tree,

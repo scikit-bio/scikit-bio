@@ -45,9 +45,17 @@ def _validate_unifrac_engine(engine):
     Only ``None`` (CPU) and ``'gpu'`` are meaningful here. Without this
     check, a typo such as ``engine='cuda'`` or ``engine='GPU'`` would fall
     through to the CPU path and silently ignore the request.
+
+    Deliberately not a call to :func:`skbio._config._resolve_engine`: that
+    helper would let the global ``compute_engine`` config silently select
+    ``'gpu'``, which UniFrac does not want -- ``'gpu'`` must stay an
+    explicit, per-call opt-in. The message below still matches
+    ``_resolve_engine``'s phrasing for a consistent reading experience.
     """
     if engine not in (None, "gpu"):
-        raise ValueError(f"engine must be None or 'gpu', got {engine!r}.")
+        raise ValueError(
+            f"engine='{engine}' is not supported here; choose from (None, 'gpu')."
+        )
 
 
 def _reject_gpu_only_options(metric, *, normalized=True, variance_adjust=False):
@@ -237,10 +245,10 @@ def unweighted_unifrac(
     """
     _validate_unifrac_engine(engine)
     if engine == "gpu":
-        from skbio.diversity.beta._unifrac_gpu import unweighted_unifrac_gpu_or_xp
+        from skbio.diversity.beta._unifrac_gpu import _unweighted_unifrac_gpu_or_xp
 
         return _unifrac_pair_via_pdist(
-            unweighted_unifrac_gpu_or_xp,
+            _unweighted_unifrac_gpu_or_xp,
             u_counts,
             v_counts,
             taxa,
@@ -410,10 +418,10 @@ def weighted_unifrac(
     """
     _validate_unifrac_engine(engine)
     if engine == "gpu":
-        from skbio.diversity.beta._unifrac_gpu import weighted_unifrac_gpu_or_xp
+        from skbio.diversity.beta._unifrac_gpu import _weighted_unifrac_gpu_or_xp
 
         return _unifrac_pair_via_pdist(
-            weighted_unifrac_gpu_or_xp,
+            _weighted_unifrac_gpu_or_xp,
             u_counts,
             v_counts,
             taxa,
@@ -1193,10 +1201,10 @@ def generalized_unifrac(
         raise NotImplementedError(_GENERALIZED_UNIFRAC_GPU_ONLY)
     if not (0.0 <= alpha <= 1.0):
         raise ValueError(f"alpha must be in [0, 1], got {alpha}.")
-    from skbio.diversity.beta._unifrac_gpu import generalized_unifrac_gpu_or_xp
+    from skbio.diversity.beta._unifrac_gpu import _generalized_unifrac_gpu_or_xp
 
     return _unifrac_pair_via_pdist(
-        generalized_unifrac_gpu_or_xp,
+        _generalized_unifrac_gpu_or_xp,
         u_counts,
         v_counts,
         taxa,

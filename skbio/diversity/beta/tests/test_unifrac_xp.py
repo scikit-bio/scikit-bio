@@ -20,15 +20,15 @@ from skbio.diversity.beta._unifrac import (
 from skbio.diversity.beta._unifrac_gpu import (
     _dispatch_gpu_or_xp,
     _unavailable_backends,
-    generalized_unifrac_gpu_or_xp,
-    unweighted_unifrac_gpu_or_xp,
-    weighted_unifrac_gpu,
-    weighted_unifrac_gpu_or_xp,
+    _generalized_unifrac_gpu_or_xp,
+    _unweighted_unifrac_gpu_or_xp,
+    _weighted_unifrac_gpu,
+    _weighted_unifrac_gpu_or_xp,
 )
 from skbio.diversity.beta._unifrac_xp import (
-    generalized_unifrac_xp,
-    unweighted_unifrac_xp,
-    weighted_unifrac_xp,
+    _generalized_unifrac_xp,
+    _unweighted_unifrac_xp,
+    _weighted_unifrac_xp,
 )
 from skbio.diversity.beta.tests._fixtures import (
     QiimeTinyTestMixin,
@@ -53,7 +53,7 @@ class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_weighted_unifrac_xp_matches_cpu_unnormalized(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = weighted_unifrac_xp(
+        xp_res = _weighted_unifrac_xp(
             table, taxa, tree, normalized=False, validate=True)
         cpu = _weighted_unifrac_pdist_numba(
             table, taxa, tree, normalized=False, validate=True)
@@ -61,7 +61,7 @@ class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_weighted_unifrac_xp_matches_cpu_normalized(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = weighted_unifrac_xp(
+        xp_res = _weighted_unifrac_xp(
             table, taxa, tree, normalized=True, validate=True)
         cpu = _weighted_unifrac_pdist_numba(
             table, taxa, tree, normalized=True, validate=True)
@@ -69,7 +69,7 @@ class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_weighted_unifrac_xp_matches_fixture_variance_adjusted_unnormalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        xp_res = weighted_unifrac_xp(
+        xp_res = _weighted_unifrac_xp(
             table, taxa, tree, normalized=False, variance_adjust=True,
             validate=True,
         )
@@ -78,7 +78,7 @@ class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_weighted_unifrac_xp_matches_fixture_variance_adjusted_normalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        xp_res = weighted_unifrac_xp(
+        xp_res = _weighted_unifrac_xp(
             table, taxa, tree, normalized=True, variance_adjust=True,
             validate=True,
         )
@@ -91,14 +91,14 @@ class UnweightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_unweighted_unifrac_xp_matches_cpu_normalized(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = unweighted_unifrac_xp(
+        xp_res = _unweighted_unifrac_xp(
             table, taxa, tree, normalized=True, validate=True)
         cpu = _unweighted_unifrac_pdist_numba(table, taxa, tree, validate=True)
         np.testing.assert_allclose(xp_res, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
     def test_unweighted_unifrac_xp_matches_fixture_unnormalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        xp_res = unweighted_unifrac_xp(
+        xp_res = _unweighted_unifrac_xp(
             table, taxa, tree, normalized=False, validate=True)
         self._assert_matches_dm_fixture(
             xp_res, sample_ids, 'unweighted_unnormalized_unifrac_dm.txt',
@@ -108,7 +108,7 @@ class UnweightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
         self,
     ):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        xp_res = unweighted_unifrac_xp(
+        xp_res = _unweighted_unifrac_xp(
             table, taxa, tree, normalized=False, variance_adjust=True,
             validate=True,
         )
@@ -118,7 +118,7 @@ class UnweightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_unweighted_unifrac_xp_matches_fixture_variance_adjusted_normalized(self):
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
-        xp_res = unweighted_unifrac_xp(
+        xp_res = _unweighted_unifrac_xp(
             table, taxa, tree, normalized=True, variance_adjust=True,
             validate=True,
         )
@@ -130,7 +130,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_generalized_unifrac_xp_matches_cpu_alpha_half(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = generalized_unifrac_xp(
+        xp_res = _generalized_unifrac_xp(
             table, taxa, tree, alpha=0.5, variance_adjust=False, validate=True)
         cpu = _generalized_unifrac_pdist_numba(
             table, taxa, tree, alpha=0.5, variance_adjust=False, validate=True)
@@ -138,7 +138,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_generalized_unifrac_xp_matches_cpu_alpha_one(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = generalized_unifrac_xp(
+        xp_res = _generalized_unifrac_xp(
             table, taxa, tree, alpha=1.0, variance_adjust=False, validate=True)
         cpu = _generalized_unifrac_pdist_numba(
             table, taxa, tree, alpha=1.0, variance_adjust=False, validate=True)
@@ -146,7 +146,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_generalized_unifrac_xp_matches_cpu_variance_adjusted(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = generalized_unifrac_xp(
+        xp_res = _generalized_unifrac_xp(
             table, taxa, tree, alpha=0.5, variance_adjust=True, validate=True)
         cpu = _generalized_unifrac_pdist_numba(
             table, taxa, tree, alpha=0.5, variance_adjust=True, validate=True)
@@ -154,7 +154,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
     def test_generalized_unifrac_xp_matches_cpu_variance_adjusted_alpha_one(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
-        xp_res = generalized_unifrac_xp(
+        xp_res = _generalized_unifrac_xp(
             table, taxa, tree, alpha=1.0, variance_adjust=True, validate=True)
         cpu = _generalized_unifrac_pdist_numba(
             table, taxa, tree, alpha=1.0, variance_adjust=True, validate=True)
@@ -165,7 +165,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
     """Unit coverage for the `*_gpu_or_xp` dispatch wrappers themselves.
 
     Forces the no-usable-backend branch by monkeypatching
-    `detect_gpu_backend` to return None, independent of what hardware this
+    `_detect_gpu_backend` to return None, independent of what hardware this
     machine actually has, and checks the result against the CPU reference.
     Public-API-level coverage of the same fallback (through
     unweighted_unifrac/weighted_unifrac/generalized_unifrac and
@@ -175,7 +175,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
     def test_weighted_unifrac_gpu_or_xp_falls_back_without_gpu(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         with patch_gpu_backend(None):
-            obs = weighted_unifrac_gpu_or_xp(
+            obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True)
         cpu = _weighted_unifrac_pdist_numba(
             table, taxa, tree, normalized=True, validate=True)
@@ -184,7 +184,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
     def test_unweighted_unifrac_gpu_or_xp_falls_back_without_gpu(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         with patch_gpu_backend(None):
-            obs = unweighted_unifrac_gpu_or_xp(
+            obs = _unweighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True)
         cpu = _unweighted_unifrac_pdist_numba(table, taxa, tree, validate=True)
         np.testing.assert_allclose(obs, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
@@ -195,7 +195,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
         # -- it is the regression this whole fallback exists to fix.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         with patch_gpu_backend(None):
-            obs = generalized_unifrac_gpu_or_xp(
+            obs = _generalized_unifrac_gpu_or_xp(
                 table, taxa, tree, alpha=0.5, validate=True)
         cpu = _generalized_unifrac_pdist_numba(
             table, taxa, tree, alpha=0.5, validate=True)
@@ -260,31 +260,31 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
         self.assertIn("hip", _unavailable_backends)
 
     def test_invalid_taxa_under_engine_gpu_raises_and_keeps_backend_usable(self):
-        # End-to-end version through the real `weighted_unifrac_gpu` driver:
-        # `_setup_multiple_unifrac` (called inside `weighted_unifrac_gpu`,
+        # End-to-end version through the real `_weighted_unifrac_gpu` driver:
+        # `_setup_multiple_unifrac` (called inside `_weighted_unifrac_gpu`,
         # before any GPU-specific code) raises on duplicate taxa (a
         # ValueError -- "All taxa must be unique" -- distinct from the
         # DuplicateNodeError the same validator raises for duplicate *tip
         # names in the tree*; both are TreeError/ValueError cases this fix
         # covers). A fake, never-actually-used cuda module stands in for
-        # `get_cuda_module`'s real backend-presence check, so this is
+        # `_get_cuda_module`'s real backend-presence check, so this is
         # exercisable without real GPU hardware; what is under test is
         # purely the exception classification in
-        # `_dispatch_gpu_or_xp`/`weighted_unifrac_gpu`, not the kernel
+        # `_dispatch_gpu_or_xp`/`_weighted_unifrac_gpu`, not the kernel
         # itself.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         duplicate_taxa = list(taxa)
         duplicate_taxa[1] = duplicate_taxa[0]
 
         with patch_gpu_backend("hip"), patch(
-            "skbio.diversity.beta._unifrac_gpu.get_cuda_module",
+            "skbio.diversity.beta._unifrac_gpu._get_cuda_module",
             return_value=object(),
         ), patch(
-            "skbio.diversity.beta._unifrac_gpu.weighted_unifrac_gpu",
-            wraps=weighted_unifrac_gpu,
+            "skbio.diversity.beta._unifrac_gpu._weighted_unifrac_gpu",
+            wraps=_weighted_unifrac_gpu,
         ) as spy_gpu_func:
             with self.assertRaises(ValueError):
-                weighted_unifrac_gpu_or_xp(
+                _weighted_unifrac_gpu_or_xp(
                     table, duplicate_taxa, tree, normalized=True, validate=True
                 )
             self.assertNotIn("hip", _unavailable_backends)
@@ -294,7 +294,7 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
             # attempt the real kernel driver, rather than having been
             # silently routed to the fallback by the first call's
             # (correctly re-raised) validation error.
-            obs = weighted_unifrac_gpu_or_xp(
+            obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
             self.assertEqual(spy_gpu_func.call_count, 2)
@@ -325,14 +325,14 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
         mismatched_taxa[0] = "not-a-real-tip-name"
 
         with patch_gpu_backend("hip"), patch(
-            "skbio.diversity.beta._unifrac_gpu.get_cuda_module",
+            "skbio.diversity.beta._unifrac_gpu._get_cuda_module",
             return_value=object(),
         ), patch(
-            "skbio.diversity.beta._unifrac_gpu.weighted_unifrac_gpu",
-            wraps=weighted_unifrac_gpu,
+            "skbio.diversity.beta._unifrac_gpu._weighted_unifrac_gpu",
+            wraps=_weighted_unifrac_gpu,
         ) as spy_gpu_func:
             with self.assertRaises(KeyError):
-                weighted_unifrac_gpu_or_xp(
+                _weighted_unifrac_gpu_or_xp(
                     table, mismatched_taxa, tree, normalized=True, validate=False
                 )
             self.assertNotIn("hip", _unavailable_backends)
@@ -341,7 +341,7 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
             # A second, valid request on the still-usable backend must still
             # attempt the real kernel driver, exactly as in the validate=True
             # test above.
-            obs = weighted_unifrac_gpu_or_xp(
+            obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
             self.assertEqual(spy_gpu_func.call_count, 2)
