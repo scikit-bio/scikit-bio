@@ -16,6 +16,7 @@
 
 ### Bug Fixes
 
+* Fixed `ancombc2` producing NaN results when Gaussian mixture densities underflow to zero during bias estimation ([#2631](https://github.com/scikit-bio/scikit-bio/issues/2631)).
 * Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
