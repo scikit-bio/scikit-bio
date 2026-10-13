@@ -304,7 +304,19 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
                 cuda.syncthreads()
 
                 if valid:
-                    for col in range(chunk_len):
+                    # NODE_CHUNK (compile-time constant), not the runtime
+                    # chunk_len: the cooperative load above zero-pads every
+                    # shared tile this loop touches (sh_prop_i/sh_prop_j,
+                    # sh_cnt_i/sh_cnt_j when VARIANCE_ADJUST, and sh_branch)
+                    # for col >= chunk_len on the final, partial chunk, so
+                    # every method's per-node branch is already a no-op
+                    # there: WEIGHTED gets length=0 (zero contribution);
+                    # UNWEIGHTED and GENERALIZED both see s == 0.0 and
+                    # `continue`; the variance_adjust branch sees mi == 0.0
+                    # (both sh_cnt_i/sh_cnt_j zero-padded), so vaw == 0.0
+                    # and also `continue`s. A compile-time bound may let the
+                    # compiler fully unroll this loop.
+                    for col in range(NODE_CHUNK):
                         p_u = sh_prop_i[tx, col]
                         p_v = sh_prop_j[ty, col]
                         length = sh_branch[col]
