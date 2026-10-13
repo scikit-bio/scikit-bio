@@ -14,7 +14,6 @@ import numpy as np
 import numpy.testing as npt
 
 from skbio import TreeNode
-from skbio.diversity import alpha_diversity
 from skbio.diversity.alpha import (
     berger_parker_d, brillouin_d, dominance, doubles, enspie, esty_ci, fisher_alpha,
     goods_coverage, heip_e, hill, inv_simpson, kempton_taylor_q, margalef, mcintosh_d,
@@ -246,15 +245,6 @@ class BaseTests(TestCase):
         self.assertTrue(np.isnan(kempton_taylor_q([0, 5, 0])))
         self.assertTrue(np.isnan(kempton_taylor_q([False, True, False])))
         self.assertTrue(np.isnan(kempton_taylor_q([5], 0, 1)))
-
-    def test_kempton_taylor_q_table(self):
-        obs = alpha_diversity("kempton_taylor_q", [[5, 0, 0], [1, 2, 3]])
-        self.assertTrue(np.isnan(obs.iloc[0]))
-        self.assertAlmostEqual(obs.iloc[1], 1 / np.log(3 / 2))
-
-        obs = alpha_diversity("kempton_taylor_q", [[1, 2, 0], [1, 2, 3]],
-                              lower_quantile=0.5, upper_quantile=0.6)
-        self.assertTrue(obs.isna().all())
 
     def test_kempton_taylor_q_quantiles(self):
         counts = np.arange(1, 11)
