@@ -107,17 +107,45 @@ class NumbaPrimitiveTests(TestCase):
                                bp.level_ancestor(i, d), i, d)
 
     def test_select(self):
+        # ranks count from 1, for either parenthesis
         P = self.P
         for bp in self.trees:
             T = _bp_numba.bp_arrays(bp)
-            n = len(bp)
-            for k in range(n):
+            # -1 outside the ranks
+            for k in (-1, 0, len(bp) + 1):
+                self.check(P.preorder_select(T, k), -1, k)
+                self.check(P.postorder_select(T, k), -1, k)
+            for k in range(1, len(bp) + 1):
                 self.check(P.preorder_select(T, k), bp.preorder_select(k), k)
-                self.check(P.select(T, 1, k), tbc.kernel_index_op(bp, "select", 1, k))
-            # the closing-parenthesis select index counts from 1
-            for k in range(n + 1):
                 self.check(P.postorder_select(T, k), bp.postorder_select(k), k)
-                self.check(P.select(T, 0, k), tbc.kernel_index_op(bp, "select", 0, k))
+                for t in (0, 1):
+                    self.check(P.select(T, t, k),
+                               tbc.kernel_index_op(bp, "select", t, k), t, k)
+
+    def test_select_rank_dtypes(self):
+        # a kernel's ranks may be of any integer dtype, unsigned 64-bit
+        # included, and give the same nodes (and -1 outside the ranks)
+        from numba import njit
+
+        P = self.P
+
+        @njit
+        def selects(T, ks):
+            out = np.empty((2, ks.size), np.intp)
+            for t in range(ks.size):
+                out[0, t] = P.preorder_select(T, ks[t])
+                out[1, t] = P.postorder_select(T, ks[t])
+            return out
+
+        for bp in self.trees[:3] + self.trees[-1:]:
+            T = _bp_numba.bp_arrays(bp)
+            ranks = np.arange(0, len(bp) + 2)
+            exp = selects(T, ranks.astype(np.int64))
+            for dt in (np.int32, np.uint32, np.uint64, np.intp):
+                np.testing.assert_array_equal(selects(T, ranks.astype(dt)), exp, dt)
+            # ranks beyond the signed range are not ranks either
+            huge = np.array([2**63, 2**64 - 1], dtype=np.uint64)
+            np.testing.assert_array_equal(selects(T, huge), -1)
 
     def test_index_operations(self):
         P = self.P
@@ -135,6 +163,19 @@ class NumbaPrimitiveTests(TestCase):
                                tbc.kernel_index_op(bp, "fwdsearch", i, d), i, d)
                     self.check(P.bwdsearch(T, i, d),
                                tbc.kernel_index_op(bp, "bwdsearch", i, d), i, d)
+
+    def test_fwdsearch_in_bounds(self):
+        # a forward search that reaches the last block and finds nothing stops
+        # there, rather than read the last leaf's right sibling, which is not
+        # stored (one past the end of the rmM tree: on a GPU, a read that can
+        # fault). Run as Python, where NumPy checks every index.
+        search = self.P.fwdsearch.py_func
+        for bp in self.trees:
+            T = _bp_numba.bp_arrays(bp)
+            for i in range(bp.data.size):
+                for d in (-2, -1, 0, 1, 2):
+                    self.check(search(T, i, d),
+                               tbc.kernel_index_op(bp, "fwdsearch", i, d), i, d)
 
     def test_pairwise(self):
         P = self.P
@@ -206,14 +247,14 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
         lo, hi = min(i, j), max(i, j)
         row = (
             G.close(T, i), G.open(T, i), G.enclose(T, i), G.excess(T, i),
-            G.rank(T, 0, i), G.rank(T, 1, i), G.select(T, 1, i % n),
-            G.select(T, 0, i % (n + 1)), G.fwdsearch(T, i, -1),
+            G.rank(T, 0, i), G.rank(T, 1, i), G.select(T, 1, i % n + 1),
+            G.select(T, 0, i % n + 1), G.fwdsearch(T, i, -1),
             G.bwdsearch(T, i, 0), G.rmq(T, lo, hi), G.rMq(T, lo, hi),
             G.mincount(T, lo, hi), G.minselect(T, lo, hi, 1), G.root(T),
             G.depth(T, i), G.parent(T, i), G.is_tip(T, i), G.first_child(T, i),
             G.last_child(T, i), G.next_sibling(T, i), G.previous_sibling(T, i),
-            G.preorder_rank(T, i), G.preorder_select(T, i % n),
-            G.postorder_rank(T, i), G.postorder_select(T, i % (n + 1)),
+            G.preorder_rank(T, i), G.preorder_select(T, i % (n + 2)),
+            G.postorder_rank(T, i), G.postorder_select(T, i % (n + 2)),
             G.is_ancestor(T, lo, hi), G.count(T, i, True),
             G.level_ancestor(T, i, 1), G.lca(T, i, j), G.height(T, i),
         )
@@ -232,14 +273,14 @@ _SIMULATOR_SCRIPT = textwrap.dedent("""
         lo, hi = min(i, j), max(i, j)
         exp = (
             C.close(H, i), C.open(H, i), C.enclose(H, i), C.excess(H, i),
-            C.rank(H, 0, i), C.rank(H, 1, i), C.select(H, 1, i % n),
-            C.select(H, 0, i % (n + 1)), C.fwdsearch(H, i, -1),
+            C.rank(H, 0, i), C.rank(H, 1, i), C.select(H, 1, i % n + 1),
+            C.select(H, 0, i % n + 1), C.fwdsearch(H, i, -1),
             C.bwdsearch(H, i, 0), C.rmq(H, lo, hi), C.rMq(H, lo, hi),
             C.mincount(H, lo, hi), C.minselect(H, lo, hi, 1), C.root(H),
             C.depth(H, i), C.parent(H, i), C.is_tip(H, i), C.first_child(H, i),
             C.last_child(H, i), C.next_sibling(H, i), C.previous_sibling(H, i),
-            C.preorder_rank(H, i), C.preorder_select(H, i % n),
-            C.postorder_rank(H, i), C.postorder_select(H, i % (n + 1)),
+            C.preorder_rank(H, i), C.preorder_select(H, i % (n + 2)),
+            C.postorder_rank(H, i), C.postorder_select(H, i % (n + 2)),
             C.is_ancestor(H, lo, hi), C.count(H, i, True),
             C.level_ancestor(H, i, 1), C.lca(H, i, j), C.height(H, i),
         )

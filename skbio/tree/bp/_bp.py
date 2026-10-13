@@ -986,7 +986,8 @@ class BPTree(SkbioObject):
         Returns
         -------
         int
-            The position of node ``i`` in a preorder traversal of the tree.
+            The position of node ``i`` in a preorder traversal of the tree,
+            counting from 1: the root's rank is 1.
 
         See Also
         --------
@@ -1008,12 +1009,13 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         k : int
-            Preorder rank to look up.
+            Preorder rank to look up, from 1 (the root) to the number of nodes.
 
         Returns
         -------
         int
-            Index of the node whose preorder rank is ``k``.
+            Index of the node whose preorder rank is ``k``, or -1 if ``k`` is
+            not a rank of this tree.
 
         See Also
         --------
@@ -1025,6 +1027,18 @@ class BPTree(SkbioObject):
         The inverse of :meth:`preorder_rank`. Returns an integer index into
         the parentheses bit array, not a node object.
         :meth:`~skbio.tree.TreeNode.preorder` yields the nodes in this order.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a,b)c,(d,e)f)r;"])
+        >>> [tree.name(tree.preorder_select(k)) for k in range(1, len(tree) + 1)]
+        ['r', 'c', 'a', 'b', 'f', 'd', 'e']
+        >>> tree.preorder_rank(tree.preorder_select(4))
+        4
+        >>> tree.preorder_select(0)
+        -1
+
         """
         return self._kernel.preorder_select(k)
 
@@ -1039,7 +1053,8 @@ class BPTree(SkbioObject):
         Returns
         -------
         int
-            The position of node ``i`` in a postorder traversal of the tree.
+            The position of node ``i`` in a postorder traversal of the tree,
+            counting from 1: the root's rank is the number of nodes.
 
         See Also
         --------
@@ -1061,12 +1076,14 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         k : int
-            Postorder rank to look up.
+            Postorder rank to look up, from 1 to the number of nodes (the
+            root).
 
         Returns
         -------
         int
-            Index of the node whose postorder rank is ``k``.
+            Index of the node whose postorder rank is ``k``, or -1 if ``k`` is
+            not a rank of this tree.
 
         See Also
         --------
@@ -1078,6 +1095,18 @@ class BPTree(SkbioObject):
         The inverse of :meth:`postorder_rank`. Returns an integer index into
         the parentheses bit array, not a node object.
         :meth:`~skbio.tree.TreeNode.postorder` yields the nodes in this order.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a,b)c,(d,e)f)r;"])
+        >>> [tree.name(tree.postorder_select(k)) for k in range(1, len(tree) + 1)]
+        ['a', 'b', 'c', 'd', 'e', 'f', 'r']
+        >>> tree.postorder_rank(tree.postorder_select(4))
+        4
+        >>> tree.postorder_select(len(tree) + 1)
+        -1
+
         """
         return self._kernel.postorder_select(k)
 

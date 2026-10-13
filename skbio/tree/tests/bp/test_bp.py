@@ -268,9 +268,10 @@ class BPTests(TestCase):
             self.assertEqual(self.bptree.preorder_rank(i), e)
 
     def test_preorder_select(self):
+        # ranks count from 1, as preorder_rank's
         exp = [0, 1, 2, 4, 6, 7, 11, 13, 14, 15, 17]
         for k, e in enumerate(exp):
-            self.assertEqual(self.bptree.preorder_select(k), e)
+            self.assertEqual(self.bptree.preorder_select(k + 1), e)
 
     def test_postorder_rank(self):
         exp = [11, 5, 1, 1, 2, 2, 4, 3, 3, 4, 5, 6, 6, 10, 9, 7, 7, 8, 8, 9, 10, 11]
@@ -281,6 +282,27 @@ class BPTests(TestCase):
         exp = [2, 4, 7, 6, 1, 11, 15, 17, 14, 13, 0]
         for k, e in enumerate(exp):
             self.assertEqual(self.bptree.postorder_select(k + 1), e)
+
+    def test_select_inverts_rank(self):
+        # for every node of trees of every shape, in both orders
+        rng = np.random.default_rng(5)
+        trees = [self.bptree, BPTree(np.array([1, 0], dtype=np.uint8)),
+                 BPTree(np.array([1, 1, 0, 0], dtype=np.uint8)),
+                 BPTree(_caterpillar(30))]
+        trees += [BPTree(_random_topology(n, rng)) for n in (3, 17, 250)]
+        for bp in trees:
+            opens = np.flatnonzero(bp.data).tolist()
+            for rank, select in ((bp.preorder_rank, bp.preorder_select),
+                                 (bp.postorder_rank, bp.postorder_select)):
+                ranks = [rank(i) for i in opens]
+                self.assertEqual(sorted(ranks), list(range(1, len(bp) + 1)))
+                for i, k in zip(opens, ranks):
+                    self.assertEqual(select(k), i)
+                    # either parenthesis names the node
+                    self.assertEqual(rank(bp.close(i)), k)
+                # no node has another rank
+                for k in (0, -1, len(bp) + 1, len(bp) + 2, -len(bp)):
+                    self.assertEqual(select(k), -1, k)
 
     def test_is_ancestor(self):
         exp = {(0, 0): False,  # identity test
@@ -349,7 +371,8 @@ class BPTests(TestCase):
         # lca(i, j) = parent(rmq(i, j) + 1)
         # unless is_ancestor(i, j)
         # (so lca(i, j) = i) or is_ancestor(j, i) (so lca(i, j) = j),
-        nodes = [self.bptree.preorder_select(k) for k in range(self.fig1_B.sum())]
+        nodes = [self.bptree.preorder_select(k)
+                 for k in range(1, self.fig1_B.sum() + 1)]
         exp = {(nodes[2], nodes[3]): nodes[1],
                (nodes[2], nodes[5]): nodes[1],
                (nodes[2], nodes[9]): nodes[0],
@@ -537,10 +560,10 @@ class BPTests(TestCase):
         lengths = np.zeros(self.bptree.data.size, dtype=np.double)
 
         names[0] = 'root'
-        names[self.bptree.preorder_select(7)] = 'other'
+        names[self.bptree.preorder_select(8)] = 'other'
 
         lengths[1] = 1.23
-        lengths[self.bptree.preorder_select(5)] = 5.43
+        lengths[self.bptree.preorder_select(6)] = 5.43
 
         self.bptree.set_names(names)
         self.bptree.set_lengths(lengths)
