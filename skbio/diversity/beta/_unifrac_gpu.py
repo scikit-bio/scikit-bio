@@ -190,6 +190,15 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
 
         TILE = tile
         NODE_CHUNK = node_chunk
+        # A plain Python int, not an expression evaluated inside the jitted
+        # function: `numba.hip`'s `cuda.shared.array` typing requires every
+        # shape element to already be a literal int and cannot constant-fold
+        # `NODE_CHUNK + 1` itself (confirmed on real AMD hardware -- that
+        # form types as a non-literal int64 and fails with a TypingError on
+        # the hip backend, even though the identical source compiles fine
+        # under numba-cuda). Precomputing it here as its own closure
+        # variable keeps both backends happy.
+        NODE_CHUNK_PADDED = node_chunk + 1
 
         @cuda.jit
         def _unifrac_block_kernel(
@@ -231,9 +240,9 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
             # [ty, col], a warp-uniform access (every lane in a
             # warp/wavefront reads the same address), which has no bank
             # conflict to fix, so they are left unpadded.
-            sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK + 1), dtype=float64)
+            sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
             sh_prop_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
-            sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK + 1), dtype=float64)
+            sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
             sh_cnt_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
             sh_branch = cuda.shared.array(NODE_CHUNK, dtype=float64)
 
