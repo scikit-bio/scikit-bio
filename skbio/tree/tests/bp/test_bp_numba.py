@@ -177,6 +177,32 @@ class NumbaPrimitiveTests(TestCase):
                     self.check(search(T, i, d),
                                tbc.kernel_index_op(bp, "fwdsearch", i, d), i, d)
 
+    def test_searches_match_brute_force(self):
+        # the nearest position before (bwdsearch) or after (fwdsearch) i whose
+        # excess is excess(i) + d, for every position and every reachable
+        # excess, in both engines. Position 0 included: bwdsearch from 1 used
+        # to skip it. Numba runs as Python, where NumPy checks every index
+        bwd, fwd = self.P.bwdsearch.py_func, self.P.fwdsearch.py_func
+        for bp in self.trees:
+            # up to 43 blocks in an rmM tree of height 6
+            if bp.data.size > 600:
+                continue
+            T = _bp_numba.bp_arrays(bp)
+            e = np.cumsum(2 * bp.data.astype(np.intp) - 1)
+            for i in range(bp.data.size):
+                for target in range(-1, e.max() + 2):
+                    d = target - e[i]
+                    before = np.flatnonzero(e[:i] == target)
+                    after = np.flatnonzero(e[i + 1:] == target)
+                    exp_b = before[-1] if before.size else -1
+                    exp_f = i + 1 + after[0] if after.size else -1
+                    self.check(bwd(T, i, d), exp_b, "bwdsearch", i, d)
+                    self.check(tbc.kernel_index_op(bp, "bwdsearch", i, d), exp_b,
+                               "bwdsearch", i, d)
+                    self.check(fwd(T, i, d), exp_f, "fwdsearch", i, d)
+                    self.check(tbc.kernel_index_op(bp, "fwdsearch", i, d), exp_f,
+                               "fwdsearch", i, d)
+
     def test_pairwise(self):
         P = self.P
         for bp in self.trees:

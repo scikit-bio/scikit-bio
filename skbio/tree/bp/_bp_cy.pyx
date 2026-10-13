@@ -658,9 +658,6 @@ cdef class _BPKernel:
         upper_bound = min((k + 1) * b, self.size) - 1
         upper_bound = min(i - 1, upper_bound)
 
-        if upper_bound <= 0:
-            return -1
-
         for j in range(upper_bound, lower_bound, -1):
             if self.excess(j) == d:
                 return j

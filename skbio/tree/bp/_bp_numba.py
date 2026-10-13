@@ -295,8 +295,6 @@ def define_primitives(jit, jit_inline=None):
             lower -= 1
         upper = min((k + 1) * T.b, T.size) - 1
         upper = min(i - 1, upper)
-        if upper <= 0:
-            return -1
         for j in range(upper, lower, -1):
             if T.e_index[j] == d:
                 return j
