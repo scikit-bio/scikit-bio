@@ -155,7 +155,7 @@ def _build_block_pair_index(n_samples, tile):
     return block_i.astype(np.int32), block_j.astype(np.int32)
 
 
-def _make_unifrac_kernel(cuda, tile, node_chunk):
+def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
     """Return the UniFrac pair kernel compiled against a cuda-API module.
 
     Shared by all 5 UniFrac methods (``UNWEIGHTED``, ``UNWEIGHTED_UNNORMALIZED``,
@@ -166,15 +166,24 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
     ``tile``/``node_chunk`` are closed over as compile-time constants, since
     the shared-memory tiles are sized from them; which pair is safe differs
     per device, so it is discovered at runtime (see ``_get_tile_config``).
+    ``variance_adjust`` is *also* closed over as a compile-time constant
+    (unlike ``method``/``alpha``, which stay runtime kernel arguments): the
+    ``sh_cnt_i``/``sh_cnt_j`` shared tiles and the cooperative load that
+    fills them are needed only when ``variance_adjust`` is True, so baking
+    it in at compile time lets the ``variance_adjust=False`` variant (the
+    overwhelmingly common case) skip declaring those 2 shared tiles and
+    the counts-loading half of the cooperative load entirely, rather than
+    allocating and filling shared memory the kernel body then never reads.
 
     ``cuda.jit`` returns a fresh Dispatcher (and so pays full compilation
     cost, seconds) each time this runs, which would otherwise happen on every
     single ``*_unifrac_gpu`` call. The result is therefore memoized per
-    backend module (and tile config) in ``_KERNEL_CACHE``; only the compiled
-    kernel object is cached, never any per-call state.
+    backend module, tile config, and now ``variance_adjust`` in
+    ``_KERNEL_CACHE``; only the compiled kernel object is cached, never any
+    per-call state.
 
     """
-    cache_key = (id(cuda), tile, node_chunk)
+    cache_key = (id(cuda), tile, node_chunk, variance_adjust)
     with _KERNEL_CACHE_LOCK:
         cached = _KERNEL_CACHE.get(cache_key)
         if cached is not None:
@@ -199,6 +208,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
         # under numba-cuda). Precomputing it here as its own closure
         # variable keeps both backends happy.
         NODE_CHUNK_PADDED = node_chunk + 1
+        VARIANCE_ADJUST = variance_adjust
 
         @cuda.jit
         def _unifrac_block_kernel(
@@ -209,7 +219,6 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
             method,
             alpha,
             alpha_mode,
-            variance_adjust,
             block_i,
             block_j,
             n_samples,
@@ -243,8 +252,9 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
             # conflict to fix, so they are left unpadded.
             sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
             sh_prop_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
-            sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
-            sh_cnt_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
+            if VARIANCE_ADJUST:
+                sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
+                sh_cnt_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
             sh_branch = cuda.shared.array(NODE_CHUNK, dtype=float64)
 
             lin_tid = ty * TILE + tx
@@ -272,16 +282,20 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                     samp_j = bj * TILE + row
                     if col < chunk_len and samp_i < n_samples:
                         sh_prop_i[row, col] = proportions[samp_i, node]
-                        sh_cnt_i[row, col] = counts[samp_i, node]
+                        if VARIANCE_ADJUST:
+                            sh_cnt_i[row, col] = counts[samp_i, node]
                     else:
                         sh_prop_i[row, col] = 0.0
-                        sh_cnt_i[row, col] = 0.0
+                        if VARIANCE_ADJUST:
+                            sh_cnt_i[row, col] = 0.0
                     if col < chunk_len and samp_j < n_samples:
                         sh_prop_j[row, col] = proportions[samp_j, node]
-                        sh_cnt_j[row, col] = counts[samp_j, node]
+                        if VARIANCE_ADJUST:
+                            sh_cnt_j[row, col] = counts[samp_j, node]
                     else:
                         sh_prop_j[row, col] = 0.0
-                        sh_cnt_j[row, col] = 0.0
+                        if VARIANCE_ADJUST:
+                            sh_cnt_j[row, col] = 0.0
 
                 for e in range(lin_tid, NODE_CHUNK, n_threads_blk):
                     node = chunk_start + e
@@ -296,7 +310,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                         length = sh_branch[col]
                         s = p_u + p_v
                         d = abs(p_u - p_v)
-                        if variance_adjust:
+                        if VARIANCE_ADJUST:
                             m = sample_totals[i] + sample_totals[j]
                             mi = sh_cnt_i[tx, col] + sh_cnt_j[ty, col]
                             vaw = math.sqrt(mi * (m - mi))
@@ -316,7 +330,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                             observed = p_u > 0.0 or p_v > 0.0
                             differs = (p_u > 0.0) != (p_v > 0.0)
                             if observed:
-                                if variance_adjust:
+                                if VARIANCE_ADJUST:
                                     numerator += length / vaw if differs else 0.0
                                     denominator += length / vaw
                                 else:
@@ -422,7 +436,7 @@ def _launch_unifrac_kernel(
     else:
         alpha_mode = 0
 
-    kernel = _make_unifrac_kernel(cuda, tile, node_chunk)
+    kernel = _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust)
     try:
         kernel[block_i.shape[0], (tile, tile)](
             d_proportions,
@@ -432,7 +446,6 @@ def _launch_unifrac_kernel(
             method,
             alpha,
             alpha_mode,
-            variance_adjust,
             d_block_i,
             d_block_j,
             n_samples,
@@ -447,20 +460,22 @@ def _launch_unifrac_kernel(
         # unusable entry -- holding a reference to the CUDA module and a
         # broken Dispatcher -- for the rest of the process. Evict it so a
         # failed candidate does not linger; nothing else looks up this
-        # specific (tile, node_chunk) key again once probing has moved on
-        # (`_get_tile_config` only returns the config that actually worked).
-        _evict_kernel_cache_entry(cuda, tile, node_chunk)
+        # specific (tile, node_chunk, variance_adjust) key again once
+        # probing has moved on (`_get_tile_config` only returns the config
+        # that actually worked).
+        _evict_kernel_cache_entry(cuda, tile, node_chunk, variance_adjust)
         raise
 
 
-def _evict_kernel_cache_entry(cuda, tile, node_chunk):
-    """Remove ``(id(cuda), tile, node_chunk)`` from ``_KERNEL_CACHE``, if present.
+def _evict_kernel_cache_entry(cuda, tile, node_chunk, variance_adjust):
+    """Remove ``(id(cuda), tile, node_chunk, variance_adjust)`` from
+    ``_KERNEL_CACHE``, if present.
 
     See the ``except`` clause in ``_launch_unifrac_kernel`` for why this is
     needed: a kernel is cached as soon as it compiles, before it is ever
     launched.
     """
-    cache_key = (id(cuda), tile, node_chunk)
+    cache_key = (id(cuda), tile, node_chunk, variance_adjust)
     with _KERNEL_CACHE_LOCK:
         _KERNEL_CACHE.pop(cache_key, None)
 
@@ -556,6 +571,14 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk):
 
     Raises whatever exception the backend produces; the caller decides
     whether to try the next candidate.
+
+    Probes with ``variance_adjust=True``: since that compiles and launches
+    the higher shared-memory-pressure of the 2 ``variance_adjust`` kernel
+    variants (see `_make_unifrac_kernel`), a tile config that is safe for
+    it is presumptively safe for the ``variance_adjust=False`` variant too
+    (strictly less shared memory, nothing added) -- but that variant is
+    never itself launched during probing, only compiled fresh later from
+    the same cache-safe tile config on first real use.
     """
     # Minimal data: 2 samples (one valid i<j pair) and 2 nodes (one real
     # node-chunk iteration), just enough to exercise one full (tile, tile)
@@ -575,7 +598,7 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk):
         np.zeros(n_nodes, dtype=np.float64),
         UNWEIGHTED,
         1.0,
-        False,
+        True,
     )
 
 

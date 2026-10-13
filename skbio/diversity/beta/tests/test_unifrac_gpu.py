@@ -34,12 +34,16 @@ from skbio.diversity.beta.tests._fixtures import QiimeTinyTestMixin
 def _cleanup_kernel_cache(fake_cuda):
     """Drop every `_KERNEL_CACHE` entry a fake cuda module may have created.
 
-    Entries are keyed by ``(id(module), tile, node_chunk)``, and a fake
-    module's id can be reused by a later object once it is garbage collected,
-    so its entries must not outlive the test that made them.
+    Entries are keyed by ``(id(module), tile, node_chunk, variance_adjust)``,
+    and a fake module's id can be reused by a later object once it is
+    garbage collected, so its entries must not outlive the test that made
+    them.
     """
     for tile, node_chunk in _TILE_CANDIDATES:
-        _KERNEL_CACHE.pop((id(fake_cuda), tile, node_chunk), None)
+        for variance_adjust in (True, False):
+            _KERNEL_CACHE.pop(
+                (id(fake_cuda), tile, node_chunk, variance_adjust), None
+            )
 
 
 # Measured max abs deviation, GPU vs CPU-numba, across all 12
@@ -269,7 +273,10 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
     def test_failed_launch_does_not_linger_in_kernel_cache(self):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
         self.addCleanup(_cleanup_kernel_cache, fake)
-        cache_key = (id(fake), 16, 32)
+        # `_probe_tile_config_candidate` always probes the variance_adjust=
+        # True variant (see its docstring/A2): that's the key shape that
+        # must not linger after a failed launch.
+        cache_key = (id(fake), 16, 32, True)
         with self.assertRaisesRegex(RuntimeError, "boom"):
             _probe_tile_config_candidate(fake, 16, 32)
         self.assertNotIn(cache_key, _KERNEL_CACHE)
@@ -280,7 +287,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
         # trigger on failure).
         fake = _ProbingFakeCuda(launch_outcomes=[None])
         self.addCleanup(_cleanup_kernel_cache, fake)
-        cache_key = (id(fake), 16, 32)
+        cache_key = (id(fake), 16, 32, True)
         _probe_tile_config_candidate(fake, 16, 32)
         self.assertIn(cache_key, _KERNEL_CACHE)
 
@@ -444,28 +451,50 @@ class MakeUnifracKernelTests(TestCase):
 
     def test_kernel_is_compiled_once_per_backend(self):
         fake = self._fake_cuda_module()
-        cache_key = (id(fake), 32, 32)
+        cache_key = (id(fake), 32, 32, True)
         self.addCleanup(_KERNEL_CACHE.pop, cache_key, None)
-        first = _make_unifrac_kernel(fake, 32, 32)
-        second = _make_unifrac_kernel(fake, 32, 32)
+        first = _make_unifrac_kernel(fake, 32, 32, True)
+        second = _make_unifrac_kernel(fake, 32, 32, True)
         self.assertIs(first, second)
 
     def test_distinct_backends_get_distinct_kernels(self):
         fake1 = self._fake_cuda_module()
         fake2 = self._fake_cuda_module()
-        self.addCleanup(_KERNEL_CACHE.pop, (id(fake1), 32, 32), None)
-        self.addCleanup(_KERNEL_CACHE.pop, (id(fake2), 32, 32), None)
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake1), 32, 32, True), None)
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake2), 32, 32, True), None)
         self.assertIsNot(
-            _make_unifrac_kernel(fake1, 32, 32), _make_unifrac_kernel(fake2, 32, 32)
+            _make_unifrac_kernel(fake1, 32, 32, True),
+            _make_unifrac_kernel(fake2, 32, 32, True),
         )
 
     def test_distinct_tile_configs_get_distinct_kernels(self):
         fake = self._fake_cuda_module()
-        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32), None)
-        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 16, 32), None)
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, True), None)
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 16, 32, True), None)
         self.assertIsNot(
-            _make_unifrac_kernel(fake, 32, 32), _make_unifrac_kernel(fake, 16, 32)
+            _make_unifrac_kernel(fake, 32, 32, True),
+            _make_unifrac_kernel(fake, 16, 32, True),
         )
+
+    def test_distinct_variance_adjust_values_get_distinct_kernels(self):
+        # A2: variance_adjust is now closed over as a compile-time constant
+        # (2 shared tiles declared instead of 4 when False) rather than
+        # passed as a runtime kernel argument, so it is its own axis of the
+        # cache key, same as tile/node_chunk.
+        fake = self._fake_cuda_module()
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, True), None)
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, False), None)
+        self.assertIsNot(
+            _make_unifrac_kernel(fake, 32, 32, True),
+            _make_unifrac_kernel(fake, 32, 32, False),
+        )
+
+    def test_same_variance_adjust_value_is_memoized(self):
+        fake = self._fake_cuda_module()
+        self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, False), None)
+        first = _make_unifrac_kernel(fake, 32, 32, False)
+        second = _make_unifrac_kernel(fake, 32, 32, False)
+        self.assertIs(first, second)
 
 
 class _GpuRequiredTestCase(QiimeTinyTestMixin, TestCase):
