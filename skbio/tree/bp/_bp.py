@@ -27,9 +27,11 @@ from skbio.util._array import _get_backend_name, _to_numpy
 
 from . import _bp_cy, _bp_gpu, _bp_numba
 from ._gpu import (
+    _device_index,
     _mark_gpu_unavailable,
     _numba_gpu_module_for,
     _out_of_memory,
+    _use_device,
     _warn_out_of_memory,
 )
 from ._bp_cy import _BPKernel
@@ -220,6 +222,8 @@ class BPTree(SkbioObject):
       kernel cannot be built on the system (which is warned about once), they
       run on the host. A call that runs out of device memory runs on the host,
       with a warning, and later calls still run on the GPU.
+    - On a GPU, they run on the device of ``data``, whichever device is current;
+      queries on another GPU raise a :class:`ValueError`.
     - The batch operations return their result in the array backend and on
       the device of their queries, and :meth:`cophenet` a distance matrix in
       those of ``data``.
@@ -1389,6 +1393,14 @@ class BPTree(SkbioObject):
         shape, args, xp, device = self._queries(positions, levels)
         gpu = self._gpu_module(engine)
         if gpu is not None:
+            # the kernel runs on the GPU of the tree, where queries on a GPU
+            # must be too
+            index = _device_index(self._array)
+            if xp is not None and _device_index(args[0]) not in (None, index):
+                raise ValueError(
+                    "The queries are on GPU %d, but the tree is on GPU %d."
+                    % (_device_index(args[0]), index)
+                )
             # the result goes straight into an array of the queries' backend if
             # that is on the device too
             out = None
@@ -1397,14 +1409,15 @@ class BPTree(SkbioObject):
                 if not hasattr(out, "__cuda_array_interface__"):
                     out = None
             try:
-                res = _bp_gpu.run_batch(
-                    gpu,
-                    _get_backend_name(aac.array_namespace(self._array)),
-                    _bp_gpu.tree_arrays(gpu, self),
-                    kernel,
-                    args,
-                    out,
-                )
+                with _use_device(gpu, index):
+                    res = _bp_gpu.run_batch(
+                        gpu,
+                        _get_backend_name(aac.array_namespace(self._array)),
+                        _bp_gpu.tree_arrays(gpu, self),
+                        kernel,
+                        args,
+                        out,
+                    )
             except Exception as exc:
                 if _out_of_memory(exc):
                     # this call does not fit on the device: compute it on the
@@ -1708,17 +1721,18 @@ class BPTree(SkbioObject):
         selected[tips] = 1
         begin = np.cumsum(selected) - selected
         try:
-            matrix = _bp_gpu.tip_distances(
-                gpu,
-                _get_backend_name(aac.array_namespace(self._array)),
-                tips,
-                slot,
-                parent,
-                begin,
-                end,
-                dist,
-                out,
-            )
+            with _use_device(gpu, _device_index(self._array)):
+                matrix = _bp_gpu.tip_distances(
+                    gpu,
+                    _get_backend_name(aac.array_namespace(self._array)),
+                    tips,
+                    slot,
+                    parent,
+                    begin,
+                    end,
+                    dist,
+                    out,
+                )
         except Exception as exc:
             if _out_of_memory(exc):
                 _warn_out_of_memory(self._array)
@@ -1838,8 +1852,9 @@ class BPTree(SkbioObject):
         ----------
         gpu : module, optional
             A Numba GPU module (``numba_cuda_mlir.cuda`` or ``numba.cuda`` on
-            NVIDIA, ``numba.hip`` on AMD) to place the arrays on that module's
-            current device. By default they stay on the host, for CPU code.
+            NVIDIA, ``numba.hip`` on AMD) to place the arrays on a GPU: that of
+            the tree's data if it is on one, else the module's current device.
+            By default they stay on the host, for CPU code.
 
         Returns
         -------

@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 
 from . import _bp_numba
-from ._gpu import _TPB, _get_kernel, _sync_stream
+from ._gpu import _TPB, _device_index, _get_kernel, _sync_stream, _use_device
 
 # Compiled kernels, by backend name (see ``_get_kernel``).
 _kernels = {}
@@ -152,12 +152,14 @@ def tree_arrays(gpu, tree):
     """The :class:`._bp_numba.BPArrays` of a tree on the device.
 
     Uploaded from the tree's host index, which the device index would equal,
-    and cached on the tree per GPU module.
+    and cached on the tree per GPU module: to the GPU of the tree's data, or
+    the module's current device for a tree on the host.
     """
     cache = tree._gpu_arrays
     name = gpu.__name__
     if name not in cache:
-        cache[name] = _bp_numba.bp_arrays(tree, asarray=gpu.to_device)
+        with _use_device(gpu, _device_index(tree._array)):
+            cache[name] = _bp_numba.bp_arrays(tree, asarray=gpu.to_device)
     return cache[name]
 
 

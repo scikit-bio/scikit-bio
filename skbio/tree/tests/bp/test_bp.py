@@ -1231,6 +1231,49 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
                 bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
+    def test_kernels_on_the_tree_gpu(self, xp, device):
+        # the index is uploaded to, and the kernels run on, the GPU of the
+        # tree's data, whichever device is current; queries on another GPU
+        # are rejected. With one GPU, the tree is made to report GPU 1, and
+        # the selection is recorded rather than made
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        if bp._gpu_module("numba") is None:
+            self.skipTest("no Numba GPU module for this device")
+        self.assertEqual(_gpu._device_index(bp.data), 0)
+        real = _gpu._device_index
+        selected = []
+
+        @contextlib.contextmanager
+        def record(gpu, index):
+            selected.append(index)
+            yield
+
+        def index(arr):
+            return 1 if arr is bp._array else real(arr)
+
+        with mock.patch('skbio.tree.bp._bp._device_index', index), \
+                mock.patch.object(_bp_gpu, '_device_index', index), \
+                mock.patch('skbio.tree.bp._bp._use_device', record), \
+                mock.patch.object(_bp_gpu, '_use_device', record):
+            i = np.flatnonzero(host.data)
+            npt.assert_array_equal(
+                bp.lca_batch(i, i[::-1].copy(), engine='numba'),
+                host.lca_batch(i, i[::-1].copy()))
+            npt.assert_array_equal(_to_numpy(bp.cophenet(engine='numba').data),
+                                   host.cophenet().data)
+            # queries on GPU 0 for a tree on GPU 1
+            queries = self.make_array(xp, device, i, dtype=xp.int64)
+            with self.assertRaisesRegex(ValueError, 'on GPU 0, but the tree'):
+                bp.lca_batch(queries, queries, engine='numba')
+        # the upload (once), the batch, and cophenet's matrix
+        self.assertTrue(selected)
+        self.assertEqual(set(selected), {1})
+
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_out_of_memory_recognized(self, xp, device):
         # an allocation the device cannot hold, through the Numba GPU module
         # and through the backend, raises an error told apart from a kernel
@@ -1396,6 +1439,32 @@ class BPGPUFallbackTests(TestCase):
                 obs = bp.cophenet(engine='numba')
         npt.assert_array_equal(obs.data, exp)
         self.assertNotIn(self.key, _gpu._unavailable)
+
+    def test_use_device(self):
+        # the tree's GPU is made current for the block; nothing for data on the
+        # host, or for a module without a list of devices
+        entered = []
+
+        class Device:
+            def __init__(self, k):
+                self.k = k
+
+            def __enter__(self):
+                entered.append(self.k)
+
+            def __exit__(self, *exc):
+                entered.append(-self.k - 1)
+
+        gpu = types.SimpleNamespace(gpus=[Device(0), Device(1)])
+        with _gpu._use_device(gpu, 1):
+            self.assertEqual(entered, [1])
+        self.assertEqual(entered, [1, -2])
+        for module, index in ((gpu, None), (types.SimpleNamespace(), 1)):
+            with _gpu._use_device(module, index):
+                pass
+        self.assertEqual(entered, [1, -2])
+        self.assertIsNone(_gpu._device_index(None))
+        self.assertIsNone(_gpu._device_index(np.zeros(2)))
 
     def test_out_of_memory_recognized(self):
         # as raised by CuPy, PyTorch, the Numba CUDA modules and HIP

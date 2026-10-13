@@ -16,6 +16,7 @@ and a correctness-first fallback to the CPU engines whenever a kernel is
 unavailable or fails to build on the running stack.
 """
 
+from contextlib import contextmanager
 from functools import lru_cache
 from warnings import warn
 
@@ -129,6 +130,48 @@ def _sync_stream(arr):
 
         with arr.device:
             cupy.cuda.get_current_stream().synchronize()
+
+
+def _device_index(arr):
+    """The index of the GPU holding ``arr``, or None if it is not on a GPU.
+
+    For a CuPy array or a PyTorch tensor on a CUDA or ROCm device. A PyTorch
+    tensor on ``"cuda"``, with no index, is on PyTorch's current device.
+    """
+    if arr is None or not hasattr(arr, "__cuda_array_interface__"):
+        return None
+    try:
+        name = _get_backend_name(_aac.array_namespace(arr))
+    except TypeError:
+        return None
+    if name == "cupy":
+        return arr.device.id
+    if name == "torch":
+        index = arr.device.index
+        if index is None:
+            import torch
+
+            index = torch.cuda.current_device()
+        return index
+    return None
+
+
+@contextmanager
+def _use_device(gpu, index):
+    """Make GPU ``index`` the current device of the Numba GPU module ``gpu``.
+
+    The module uploads arrays to, and launches kernels on, its current device:
+    device 0 unless selected. A tree's arrays and kernels must be on the GPU
+    of its data, and its queries on that GPU too. Nothing is selected for an
+    index of None (data on the host), or for a module without the ``gpus``
+    list of devices.
+    """
+    gpus = getattr(gpu, "gpus", None)
+    if index is None or gpus is None:
+        yield
+        return
+    with gpus[index]:
+        yield
 
 
 def _mark_gpu_unavailable(arr):
