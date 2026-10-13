@@ -664,20 +664,51 @@ def _run_unifrac_kernel(
         raise _ValidationFailure(exc) from exc
     tile, node_chunk = _get_tile_config(cuda, _detect_gpu_backend())
     counts_by_node = np.ascontiguousarray(counts_by_node, dtype=np.float64)
-    tip_indices = _get_tip_indices(tree_index)
-    sample_totals = counts_by_node[:, tip_indices].sum(axis=1)
+
+    # B2: sample_totals is read by the kernel only inside its own
+    # `if variance_adjust:` guard, and by the proportions division just
+    # below, which is itself skipped for unweighted methods -- so unweighted
+    # + variance_adjust=False needs it nowhere at all. Skip computing it in
+    # that one combination.
+    needs_sample_totals = variance_adjust or method not in (
+        UNWEIGHTED,
+        UNWEIGHTED_UNNORMALIZED,
+    )
+    if needs_sample_totals:
+        tip_indices = _get_tip_indices(tree_index)
+        # A matrix-vector product against a 0/1 tip mask reduces directly,
+        # without materializing the full fancy-indexed temporary
+        # `counts_by_node[:, tip_indices]` first.
+        tip_mask = np.zeros(counts_by_node.shape[1], dtype=np.float64)
+        tip_mask[tip_indices] = 1.0
+        sample_totals = counts_by_node @ tip_mask
+    else:
+        sample_totals = np.zeros(counts_by_node.shape[0], dtype=np.float64)
+
     if method in (UNWEIGHTED, UNWEIGHTED_UNNORMALIZED):
         # The unweighted kernel branch only tests "proportions" for > 0
         # (presence/absence), so raw counts can be passed directly in place of
         # proportions, no division needed.
         proportions = counts_by_node
     else:
-        proportions = np.divide(
-            counts_by_node,
-            sample_totals[:, None],
-            out=np.zeros_like(counts_by_node),
-            where=sample_totals[:, None] > 0,
-        )
+        # B3: sample_totals[i] == 0 implies that whole row of counts_by_node
+        # is zero (counts are non-negative -- a `validate=False` caller that
+        # passes negative counts would violate this and get a wrong, not
+        # just masked, result here, same as it already would have upstream),
+        # so dividing by `where(sample_totals > 0, sample_totals, 1.0)` gives
+        # the identical result in one pass, without np.divide's separate
+        # np.zeros_like fill (which here mostly got overwritten anyway).
+        proportions = counts_by_node / np.where(
+            sample_totals > 0, sample_totals, 1.0
+        )[:, None]
+        if not variance_adjust:
+            # B1: the kernel only reads its `counts` argument when
+            # variance_adjust is True. Alias to `proportions` (mirroring the
+            # unweighted case above) so `_launch_unifrac_kernel`'s
+            # `counts_by_node is proportions` check collapses this transfer
+            # instead of uploading the same data twice.
+            counts_by_node = proportions
+
     return _launch_unifrac_kernel(
         cuda,
         tile,
@@ -685,7 +716,10 @@ def _run_unifrac_kernel(
         proportions,
         counts_by_node,
         sample_totals,
-        branch_lengths.astype(np.float64),
+        # B4: elides the copy astype() always makes, even when
+        # branch_lengths is already float64 -- ascontiguousarray is already
+        # used for counts_by_node above, for the same reason.
+        np.ascontiguousarray(branch_lengths, dtype=np.float64),
         method,
         alpha,
         variance_adjust,
