@@ -234,6 +234,16 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
             numerator = 0.0
             denominator = 0.0
 
+            # i/j are fixed for this thread's whole lifetime (unlike the
+            # per-node sh_cnt_i/sh_cnt_j terms below), so this sum is the
+            # same on every chunk/node iteration -- hoisted out of both
+            # loops instead of being recomputed per node. Guarded by
+            # `valid`: an out-of-range thread (i or j >= n_samples) cannot
+            # safely index `sample_totals`, and its result is never used
+            # below anyway (the per-node block is itself `if valid:`).
+            if valid:
+                m = sample_totals[i] + sample_totals[j]
+
             n_chunks = (n_nodes + NODE_CHUNK - 1) // NODE_CHUNK
             for c in range(n_chunks):
                 chunk_start = c * NODE_CHUNK
@@ -276,14 +286,22 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                         length = sh_branch[col]
                         s = p_u + p_v
                         d = abs(p_u - p_v)
+                        # One reciprocal instead of dividing s/d (and, for
+                        # the unweighted branch below, length) by vaw
+                        # separately -- up to 4 fp64 divisions/node down to
+                        # 1 division + multiplies. inv_vaw stays 1.0 (a
+                        # no-op multiplier) when variance_adjust is off, so
+                        # the unweighted branch below no longer needs its
+                        # own variance_adjust/else duplication.
+                        inv_vaw = 1.0
                         if variance_adjust:
-                            m = sample_totals[i] + sample_totals[j]
                             mi = sh_cnt_i[tx, col] + sh_cnt_j[ty, col]
                             vaw = math.sqrt(mi * (m - mi))
                             if vaw <= 0.0:
                                 continue
-                            s = s / vaw
-                            d = d / vaw
+                            inv_vaw = 1.0 / vaw
+                            s = s * inv_vaw
+                            d = d * inv_vaw
                         if (
                             method == WEIGHTED_NORMALIZED
                             or method == WEIGHTED_UNNORMALIZED
@@ -291,17 +309,23 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
                             numerator += length * d
                             denominator += length * s
                         elif method == UNWEIGHTED or method == UNWEIGHTED_UNNORMALIZED:
+                            # s's sign is unaffected by the inv_vaw scale
+                            # (inv_vaw > 0 whenever variance_adjust took the
+                            # `vaw <= 0.0: continue` exit above), so this
+                            # still means "both p_u and p_v are 0" exactly
+                            # as it did pre-A4 -- kept rather than relying
+                            # solely on the `if observed:` guard below
+                            # (which would short-circuit the same pairs
+                            # anyway, but only after computing `observed`/
+                            # `differs`, work this early exit still skips
+                            # for what sparse tables make a common case).
                             if s <= 0.0:
                                 continue
                             observed = p_u > 0.0 or p_v > 0.0
                             differs = (p_u > 0.0) != (p_v > 0.0)
                             if observed:
-                                if variance_adjust:
-                                    numerator += length / vaw if differs else 0.0
-                                    denominator += length / vaw
-                                else:
-                                    numerator += length if differs else 0.0
-                                    denominator += length
+                                numerator += length * inv_vaw if differs else 0.0
+                                denominator += length * inv_vaw
                         elif method == GENERALIZED:
                             if s == 0.0:
                                 continue
