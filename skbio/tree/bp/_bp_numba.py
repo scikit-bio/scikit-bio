@@ -251,6 +251,16 @@ def define_primitives(jit, jit_inline=None):
             hi = (hi - 1) // 2
         return res
 
+    @jit_inline
+    def outside(T, i):
+        """Whether ``i`` is not a position of the tree.
+
+        The navigation functions taking positions return -1 (False for a test)
+        for such a position rather than read outside the arrays. The check is
+        in each function, not in a wrapper around it.
+        """
+        return i < 0 or i >= T.size
+
     # -- index operations --------------------------------------------------
 
     @jit_inline
@@ -369,6 +379,8 @@ def define_primitives(jit, jit_inline=None):
 
     @jit_inline
     def close(T, i):
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             return i
         return fwdsearch(T, i, -1)
@@ -382,6 +394,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def rmq(T, i, j):
         """Leftmost position of the minimum excess in ``[i, j]``."""
+        if outside(T, i) or outside(T, j):
+            return -1
         if i >= j:
             return i
         b = T.b
@@ -411,6 +425,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def rMq(T, i, j):
         """Leftmost position of the maximum excess in ``[i, j]``."""
+        if outside(T, i) or outside(T, j):
+            return -1
         if i >= j:
             return i
         b = T.b
@@ -440,6 +456,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def mincount(T, i, j):
         """Number of occurrences of the minimum excess in ``[i, j]``."""
+        if outside(T, i) or outside(T, j):
+            return -1
         lo = T.e_index[i]
         c = 0
         for p in range(i, j + 1):
@@ -454,6 +472,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def minselect(T, i, j, q):
         """Position of the ``q``-th (from 1) minimum excess in ``[i, j]``, or -1."""
+        if outside(T, i) or outside(T, j):
+            return -1
         lo = T.e_index[i]
         for p in range(i + 1, j + 1):
             if T.e_index[p] < lo:
@@ -475,23 +495,31 @@ def define_primitives(jit, jit_inline=None):
 
     @jit_inline
     def depth(T, i):
+        if outside(T, i):
+            return -1
         return T.e_index[i]
 
     @jit_inline
     def parent(T, i):
         """Parent of node ``i``, or -1 for the root."""
+        if outside(T, i):
+            return -1
         if i == 0 or i == T.size - 1:
             return -1
         return enclose(T, i)
 
     @jit_inline
     def is_tip(T, i):
+        if outside(T, i):
+            return False
         # a closing parenthesis short-circuits, so ``i + 1`` stays in range
         return T.B[i] == 1 and T.B[i + 1] == 0
 
     @jit
     def first_child(T, i):
         """First child of node ``i``, or 0 for a tip."""
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         if is_tip(T, i):
@@ -501,6 +529,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def last_child(T, i):
         """Last child of node ``i``, or 0 for a tip."""
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         if is_tip(T, i):
@@ -510,6 +540,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def next_sibling(T, i):
         """Next sibling of node ``i``, or 0 if none."""
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         pos = close(T, i) + 1
@@ -520,6 +552,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def previous_sibling(T, i):
         """Previous sibling of node ``i``, or 0 if none."""
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         if T.B[max(0, i - 1)]:
@@ -531,6 +565,8 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def preorder_rank(T, i):
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         return rank(T, 1, i)
@@ -548,6 +584,8 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def postorder_rank(T, i):
+        if outside(T, i):
+            return -1
         if T.B[i]:
             return rank(T, 0, close(T, i))
         return rank(T, 0, i)
@@ -565,6 +603,8 @@ def define_primitives(jit, jit_inline=None):
         Strictly inside ``i``'s span, so a node is not its own ancestor
         whichever parenthesis names it, as in the Cython kernel.
         """
+        if outside(T, i) or outside(T, j):
+            return False
         if not T.B[i]:
             i = open(T, i)
         return i < j < close(T, i)
@@ -572,6 +612,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def count(T, i, tips):
         """Number of nodes (or of tips) in the subtree of node ``i``."""
+        if outside(T, i):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         last = close(T, i)
@@ -589,6 +631,8 @@ def define_primitives(jit, jit_inline=None):
     @jit
     def level_ancestor(T, i, d):
         """Ancestor ``d`` levels above node ``i``, or -1 for ``d <= 0``."""
+        if outside(T, i):
+            return -1
         if d <= 0:
             return -1
         if not T.B[i]:
@@ -597,6 +641,8 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def level_next(T, i):
+        if outside(T, i):
+            return -1
         return fwdsearch(T, close(T, i), 1)
 
     @jit
@@ -607,6 +653,8 @@ def define_primitives(jit, jit_inline=None):
         both are brought to opening parentheses with ``i <= j``, the form the
         search requires, as in the Cython kernel.
         """
+        if outside(T, i) or outside(T, j):
+            return -1
         if not T.B[i]:
             i = open(T, i)
         if not T.B[j]:
@@ -624,11 +672,15 @@ def define_primitives(jit, jit_inline=None):
 
     @jit
     def deepest_node(T, i):
+        if outside(T, i):
+            return -1
         return rMq(T, open(T, i), close(T, i))
 
     @jit
     def height(T, i):
         """Height of node ``i``, in edges."""
+        if outside(T, i):
+            return -1
         return T.e_index[deepest_node(T, i)] - T.e_index[open(T, i)]
 
     scope = locals()
