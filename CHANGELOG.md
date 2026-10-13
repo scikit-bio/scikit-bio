@@ -11,8 +11,8 @@
 
 ### Bug Fixes
 
-* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` if the interquantile range is empty or constant, and accepts `upper_quantile=1`. Quantiles that do not satisfy `0 <= lower_quantile < upper_quantile <= 1` raise `ValueError` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 * Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
+* Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` if the interquantile range is empty or constant, and accepts `upper_quantile=1`. Quantiles that do not satisfy `0 <= lower_quantile < upper_quantile <= 1` raise `ValueError` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
 * Fixed `GrammaredSequence` grammar definitions with multi-character symbols so they fail upon class creation rather than later during sequence operations ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed a loophole in `Sequence` construction admitting extended ASCII codes (128-255) if supplied as bytes or a uint8 array. Construction now by default validates ASCII codes (0-127) ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Fixed a loophole in `Sequence` construction referring to an external array while flagging it as read-only, whereas one can still unflag the array and mutate its content. Construction now by default enforces immutability, and an external array is copied rather than referred ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
