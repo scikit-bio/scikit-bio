@@ -18,7 +18,12 @@ plain NumPy on CPU, or CuPy/PyTorch on CUDA or ROCm -- with no GPU backend
 
 It serves as the fallback taken by ``engine='gpu'`` when no usable GPU
 backend is detected, or when the fused kernel fails to build/run on the
-running stack; see ``_unifrac_gpu.py``'s ``*_gpu_or_xp`` wrappers.
+running stack; see ``_unifrac_gpu.py``'s ``*_gpu_or_xp`` wrappers. Within
+that fallback, ``_prepare`` (below) itself prefers a GPU-backed array-API
+module (CuPy, else PyTorch) when one is genuinely usable -- see
+``_detect_array_api_gpu_module`` -- so the full dispatch is really three
+tiers: the fused kernel, then this module running on a real GPU via CuPy/
+PyTorch, then this module running on plain NumPy on CPU.
 
 To avoid materializing an ``O(n_samples**2, n_nodes)`` tensor, the pairwise
 loop runs over sample ``i`` in plain Python (cheap, ``n_samples``
@@ -31,9 +36,119 @@ their per-pair terms are separable across samples; variance adjustment
 breaks that separability, so those paths keep the per-``i`` loop.
 """
 
+from warnings import warn
+
 import numpy as np
 
 from skbio.util._array import ingest_array, _to_numpy
+
+# Cache for `_detect_array_api_gpu_module`, mirroring
+# `_unifrac_gpu._backend_cache`: computed once per process. `None` means
+# either "not yet computed" or "no GPU array-API module usable" -- same
+# ambiguity `_backend_cache` has (a no-GPU process re-probes every call);
+# `_array_api_gpu_disabled` below is the separate, one-way flag for "was
+# usable, but failed for real at runtime", so a genuine hardware/library
+# failure is not retried forever.
+_array_api_gpu_module_cache = None
+
+# Set by `_mark_array_api_gpu_unavailable` the first time the module
+# `_detect_array_api_gpu_module` returned fails for real (e.g. a CuPy
+# out-of-memory or device error while moving data onto it in `_prepare`).
+# Once set, `_detect_array_api_gpu_module` short-circuits to None for the
+# rest of the process, mirroring `_unifrac_gpu._unavailable_backends`.
+_array_api_gpu_disabled = False
+
+
+def _detect_array_api_gpu_module():
+    """Detect a GPU-backed array-API module usable for the ``xp`` fallback.
+
+    Independent of
+    :func:`skbio.diversity.beta._unifrac_gpu._detect_gpu_backend`, which
+    checks specifically for ``numba-cuda``/``numba.hip`` -- the toolchain
+    the *fused* kernel needs. This function instead answers "is a real CUDA
+    or ROCm device reachable through an array-API library", a genuinely
+    different dependency stack: a machine can have CuPy-ROCm working while
+    numba.hip's own JIT toolchain is broken, or vice versa.
+
+    Tries CuPy first (preferred -- directly confirmed correct and fast on
+    real NVIDIA hardware; see
+    ``.superpowers/sdd/2026-10-02-gpu-agnostic-unifrac/benchmark-xp-on-gpu-report.md``),
+    then falls back to PyTorch's CUDA/ROCm device if CuPy is not installed
+    or not usable. Neither is a hard dependency of scikit-bio; both are
+    optional and detected best-effort.
+
+    Returns
+    -------
+    module or None
+        The ``cupy`` module, or the ``torch`` module, whichever is usable;
+        ``None`` if neither is usable.
+
+    """
+    global _array_api_gpu_module_cache
+    if _array_api_gpu_disabled:
+        return None
+    if _array_api_gpu_module_cache is not None:
+        return _array_api_gpu_module_cache
+    try:
+        import cupy
+
+        if cupy.cuda.runtime.getDeviceCount() > 0:
+            # A real allocation, not just an import/device-count check --
+            # the array-API-module analogue of why `_detect_gpu_backend`
+            # calls `cuda.is_available()` rather than stopping at "numba-cuda
+            # imported successfully".
+            cupy.empty(1)
+            _array_api_gpu_module_cache = cupy
+            return _array_api_gpu_module_cache
+    except Exception:
+        pass
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.empty(1, device="cuda")
+            _array_api_gpu_module_cache = torch
+            return _array_api_gpu_module_cache
+    except Exception:
+        pass
+    _array_api_gpu_module_cache = None
+    return None
+
+
+def _mark_array_api_gpu_unavailable():
+    """Record that the detected array-API GPU module failed for real.
+
+    Called from `_prepare` when actually moving data onto the module
+    `_detect_array_api_gpu_module` returned raises (a genuine CuPy
+    out-of-memory or device error, not a validation problem). Mirrors
+    `_unifrac_gpu._mark_backend_unavailable`'s warn-once-then-permanently-
+    fall-back pattern: later `_prepare` calls go straight to plain NumPy
+    for the rest of the process, rather than retrying a failure that is
+    very unlikely to be transient.
+    """
+    global _array_api_gpu_disabled, _array_api_gpu_module_cache
+    first = not _array_api_gpu_disabled
+    _array_api_gpu_disabled = True
+    _array_api_gpu_module_cache = None
+    if first:
+        warn(
+            "The GPU array-API fallback (CuPy/PyTorch) failed on this "
+            "system; using plain NumPy on CPU instead.",
+            UserWarning,
+        )
+
+
+def _move_to_array_api_gpu(module, *arrays):
+    """Move plain-NumPy ``arrays`` onto ``module``'s GPU device.
+
+    ``module`` is whatever `_detect_array_api_gpu_module` returned (``cupy``
+    or ``torch``). Each array comes back as that module's own GPU-resident
+    array type, so the ``ingest_array`` call in `_prepare` picks up the
+    right (non-NumPy) ``xp`` namespace downstream.
+    """
+    if module.__name__ == "torch":
+        return tuple(module.as_tensor(arr, device="cuda") for arr in arrays)
+    return tuple(module.asarray(arr) for arr in arrays)
 
 
 def _condensed_offset(i, n_samples):
@@ -299,6 +414,19 @@ def _prepare(counts, taxa, tree, validate, need_proportions=True):
     proportions matrix for callers that only need ``counts_by_node`` (e.g.
     unweighted UniFrac, which works on presence/absence), returning ``None``
     in its place.
+
+    Tree traversal (``_setup_multiple_unifrac``) is Cython/NumPy-based and
+    always returns plain NumPy regardless of what a caller might wish to
+    pass in -- that part is correctly NumPy-only, not something this
+    changes. What happens *after* traversal is what decides which backend
+    the pairwise math below actually runs on: when
+    `_detect_array_api_gpu_module` finds a real, usable GPU array-API
+    module (CuPy, else PyTorch), the resulting arrays are moved onto it
+    before `ingest_array` ever sees them, so `ingest_array` picks up that
+    module's namespace (not NumPy) as ``xp``. A failure moving the data
+    (e.g. a genuine CuPy out-of-memory/device error) falls back to plain
+    NumPy for this call, and -- via `_mark_array_api_gpu_unavailable` --
+    every later one too, rather than crashing.
     """
     from skbio.diversity.beta._unifrac import _setup_multiple_unifrac, _get_tip_indices
 
@@ -309,6 +437,20 @@ def _prepare(counts, taxa, tree, validate, need_proportions=True):
     branch_lengths = np.ascontiguousarray(branch_lengths, dtype=np.float64)
     tip_indices = _get_tip_indices(tree_index)
     sample_totals = counts_by_node[:, tip_indices].sum(axis=1)
+
+    gpu_module = _detect_array_api_gpu_module()
+    if gpu_module is not None:
+        try:
+            counts_by_node, sample_totals, branch_lengths = _move_to_array_api_gpu(
+                gpu_module, counts_by_node, sample_totals, branch_lengths
+            )
+        except Exception:
+            # Moving the data itself failed (OOM, device error, etc) --
+            # `counts_by_node`/`sample_totals`/`branch_lengths` are untouched
+            # (the failed tuple-unpack never assigns), so falling through
+            # below runs on the plain-NumPy arrays computed above exactly as
+            # if no GPU module had been detected at all.
+            _mark_array_api_gpu_unavailable()
 
     xp, counts_by_node, sample_totals, branch_lengths = ingest_array(
         counts_by_node, sample_totals, branch_lengths
