@@ -1231,6 +1231,26 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
                 bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
+    def test_out_of_memory_recognized(self, xp, device):
+        # an allocation the device cannot hold, through the Numba GPU module
+        # and through the backend, raises an error told apart from a kernel
+        # that cannot run
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        bp = self.on(xp, device, self.host[2])
+        gpu = bp._gpu_module("numba")
+        if gpu is None:
+            self.skipTest("no Numba GPU module for this device")
+        ns, dev = aac.array_namespace(bp.data), aac.device(bp.data)
+        huge = 1 << 42  # 4 TiB
+        for alloc in (lambda: gpu.device_array(huge, dtype=np.uint8),
+                      lambda: ns.empty(huge, dtype=ns.uint8, device=dev)):
+            with self.assertRaises(Exception) as cm:
+                alloc()
+            self.assertTrue(_gpu._out_of_memory(cm.exception), repr(cm.exception))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_non_default_stream(self, xp, device):
         # queries made, cast and read on a stream of their own: PyTorch does
         # not tell Numba which stream produced a tensor, so the kernels must
@@ -1350,6 +1370,46 @@ class BPGPUFallbackTests(TestCase):
         with self.assertWarns(UserWarning):
             obs = self.bp.cophenet(engine='numba')
         npt.assert_array_equal(obs.data, self.bp.cophenet(engine='cython').data)
+
+    def test_out_of_memory_keeps_the_gpu(self):
+        # a call that does not fit on the device is computed on the CPU, with a
+        # warning each time, and later calls still try the GPU
+        bp = self.bp
+        n = bp.data.size
+        i = np.arange(n)
+        j = i[::-1].copy()
+        exp = bp.lca_batch(i, j, engine='cython')
+        oom = Exception('[CUresult.CUDA_ERROR_OUT_OF_MEMORY: 2] Call to cuMemAlloc '
+                        'results in CUDA_ERROR_OUT_OF_MEMORY')
+        with mock.patch.object(_bp_gpu, 'tree_arrays'), \
+                mock.patch.object(_bp_gpu, 'run_batch', side_effect=oom) as run:
+            for _ in range(2):
+                with self.assertWarnsRegex(UserWarning, 'ran out of memory'):
+                    obs = bp.lca_batch(i, j, engine='numba')
+                npt.assert_array_equal(obs, exp)
+        self.assertEqual(run.call_count, 2)
+        self.assertNotIn(self.key, _gpu._unavailable)
+
+        exp = bp.cophenet(engine='cython').data
+        with mock.patch.object(_bp_gpu, 'tip_distances', side_effect=MemoryError):
+            with self.assertWarnsRegex(UserWarning, 'ran out of memory'):
+                obs = bp.cophenet(engine='numba')
+        npt.assert_array_equal(obs.data, exp)
+        self.assertNotIn(self.key, _gpu._unavailable)
+
+    def test_out_of_memory_recognized(self):
+        # as raised by CuPy, PyTorch, the Numba CUDA modules and HIP
+        for exc in (MemoryError('Out of memory allocating 40,000,000,000 bytes'),
+                    RuntimeError('CUDA out of memory. Tried to allocate 37.25 GiB.'),
+                    Exception('[CUresult.CUDA_ERROR_OUT_OF_MEMORY: 2] Call to '
+                              'cuMemAlloc results in CUDA_ERROR_OUT_OF_MEMORY'),
+                    Exception('hipErrorOutOfMemory')):
+            self.assertTrue(_gpu._out_of_memory(exc), exc)
+        # other failures disable the kernels, as before
+        for exc in (Exception('CUDA_ERROR_ILLEGAL_ADDRESS'),
+                    AttributeError("'broken' has no attribute 'jit'"),
+                    RuntimeError('CUDA_ERROR_NO_BINARY_FOR_GPU')):
+            self.assertFalse(_gpu._out_of_memory(exc), exc)
 
     def test_other_engines_stay_on_host(self):
         # the GPU is only reached for engine="numba"

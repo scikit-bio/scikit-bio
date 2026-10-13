@@ -142,6 +142,34 @@ def _mark_gpu_unavailable(arr):
         )
 
 
+def _out_of_memory(exc):
+    """Whether ``exc`` reports that a GPU ran out of memory.
+
+    CuPy raises a ``MemoryError``, PyTorch a ``torch.OutOfMemoryError`` ("CUDA
+    out of memory"), and the Numba GPU modules a driver error naming
+    ``CUDA_ERROR_OUT_OF_MEMORY`` (``hipErrorOutOfMemory`` on ROCm). Matched by
+    message, as each library raises its own class.
+    """
+    if isinstance(exc, MemoryError):
+        return True
+    return "outofmemory" in "".join(str(exc).replace("_", " ").lower().split())
+
+
+def _warn_out_of_memory(arr):
+    """Warn that one call did not fit in the memory of ``arr``'s device.
+
+    Unlike a kernel that cannot run (see :func:`_mark_gpu_unavailable`), this
+    is a property of the call, e.g. a batch larger than the free memory: that
+    call is computed on the CPU, and later calls still use the GPU.
+    """
+    name = _get_backend_name(_aac.array_namespace(arr))
+    warn(
+        f"The GPU of the '{name}' backend ran out of memory for this BPTree "
+        "operation; computing it on the CPU instead.",
+        UserWarning,
+    )
+
+
 def _get_kernel(cache, builder, gpu, backend_name):
     """Return the compiled kernels for a Numba GPU module, building them once.
 

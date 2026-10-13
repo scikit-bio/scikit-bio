@@ -26,7 +26,12 @@ from skbio.tree._exception import DuplicateNodeError, MissingNodeError
 from skbio.util._array import _get_backend_name, _to_numpy
 
 from . import _bp_cy, _bp_gpu, _bp_numba
-from ._gpu import _mark_gpu_unavailable, _numba_gpu_module_for
+from ._gpu import (
+    _mark_gpu_unavailable,
+    _numba_gpu_module_for,
+    _out_of_memory,
+    _warn_out_of_memory,
+)
 from ._bp_cy import _BPKernel
 from ._bp_numba import NUMBA_AVAILABLE
 
@@ -213,7 +218,8 @@ class BPTree(SkbioObject):
       and a Numba GPU extension for it is installed (numba-cuda-mlir, or the
       deprecated numba-cuda, on CUDA; numba-hip on ROCm). Otherwise, or if the GPU
       kernel cannot be built on the system (which is warned about once), they
-      run on the host.
+      run on the host. A call that runs out of device memory runs on the host,
+      with a warning, and later calls still run on the GPU.
     - The batch operations return their result in the array backend and on
       the device of their queries, and :meth:`cophenet` a distance matrix in
       those of ``data``.
@@ -1390,10 +1396,15 @@ class BPTree(SkbioObject):
                     args,
                     out,
                 )
-            except Exception:
-                # the kernel could not build or run on this stack: warn once
-                # and compute this and later calls on the CPU
-                _mark_gpu_unavailable(self._array)
+            except Exception as exc:
+                if _out_of_memory(exc):
+                    # this call does not fit on the device: compute it on the
+                    # CPU, and later calls still on the GPU
+                    _warn_out_of_memory(self._array)
+                else:
+                    # the kernel could not build or run on this stack: warn
+                    # once and compute this and later calls on the CPU
+                    _mark_gpu_unavailable(self._array)
             else:
                 if xp is None:
                     return res.reshape(shape)
@@ -1667,9 +1678,10 @@ class BPTree(SkbioObject):
         """The cophenetic matrix computed on the tree's device, or None.
 
         None if the kernel cannot build or run, after which the caller (and
-        every later call) computes on the CPU. The matrix is allocated by the
-        tree's array backend; failing that (e.g. out of device memory) raises
-        a :class:`MemoryError` rather than falling back.
+        every later call) computes on the CPU, or if the call runs out of
+        device memory, after which only this call does. The matrix is
+        allocated by the tree's array backend; failing that (e.g. out of
+        device memory) raises a :class:`MemoryError` rather than falling back.
         """
         n = tips.shape[0]
         xp, device = self._xp, self._device
@@ -1698,8 +1710,11 @@ class BPTree(SkbioObject):
                 dist,
                 out,
             )
-        except Exception:
-            _mark_gpu_unavailable(self._array)
+        except Exception as exc:
+            if _out_of_memory(exc):
+                _warn_out_of_memory(self._array)
+            else:
+                _mark_gpu_unavailable(self._array)
             return None
         if out is None and xp is not None:
             matrix = xp.asarray(matrix, device=device)
