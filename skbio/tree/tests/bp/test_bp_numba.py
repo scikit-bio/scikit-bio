@@ -46,7 +46,7 @@ class PrimitiveCoverageTests(TestCase):
     def test_bp_arrays(self):
         bp = BPTree(_random_topology(50, np.random.default_rng(0)))
         T = _bp_numba.bp_arrays(bp)
-        self.assertIs(T.B, bp.data)
+        self.assertIs(T.B, bp._data)
         self.assertEqual(T.n_internal, (1 << T.height) - 1)
         self.assertEqual(T.size, bp.data.size)
         # a transfer function is applied to every array, not to the geometry

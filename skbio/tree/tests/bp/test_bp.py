@@ -793,6 +793,18 @@ class BPTreeClassTests(TestCase):
         with self.assertRaises(TypeError):
             self.bp.shear(['4'])
 
+    def test_data_read_only(self):
+        # the parentheses the index was built from cannot be changed through
+        # the tree: a read-only view of them, with no copy
+        B = self.B.copy()
+        bp = BPTree(B)
+        self.assertFalse(bp.data.flags.writeable)
+        self.assertTrue(np.shares_memory(bp.data, B))
+        with self.assertRaises(ValueError):
+            bp.data[0] = 0
+        # the caller's array is left as it was
+        self.assertTrue(B.flags.writeable)
+
     def test_bool_topology(self):
         # accepted as uint8, as the compiled class always did (e.g. trees
         # saved from one built from a bool array)
@@ -1249,7 +1261,7 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
             # and back to the host, from where the tree lives now
             back = bp.to_device(np)
             self.assertIsInstance(back.data, np.ndarray)
-            self.assertIs(back.data, host.data)
+            self.assertIs(back._data, host._data)
             npt.assert_array_equal(back.lca_batch(i, j), host.lca_batch(i, j))
 
         # setting an attribute of one tree leaves the other as it was (on a

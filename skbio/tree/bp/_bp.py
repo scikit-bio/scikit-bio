@@ -472,8 +472,13 @@ class BPTree(SkbioObject):
         """The parentheses bit array (1 = open, 0 = close).
 
         It is in the array backend and on the device of the array the tree was
-        created from.
+        created from. For a NumPy array, it is a read-only view: the topology
+        cannot change once the tree exists, as the navigation index is built
+        from it. The tree keeps the array it was created from, without a copy,
+        so that array must not be changed either.
         """
+        if self._xp is None:
+            return _readonly_view(self._array)
         return self._array
 
     @property
