@@ -221,9 +221,19 @@ def _make_unifrac_kernel(cuda, tile, node_chunk):
 
             n_nodes = proportions.shape[1]
 
-            sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
+            # sh_prop_i/sh_cnt_i are indexed [tx, col] in the inner loop below,
+            # with tx (a lane index) fast-varying and col loop-invariant
+            # within a warp/wavefront -- a column stride of exactly
+            # NODE_CHUNK, which is always a power of two in
+            # `_TILE_CANDIDATES`, causing shared-memory bank conflicts
+            # (conflict-free 8-byte access wants an odd element stride). Pad
+            # by one column to break that. sh_prop_j/sh_cnt_j are read
+            # [ty, col], a warp-uniform access (every lane in a
+            # warp/wavefront reads the same address), which has no bank
+            # conflict to fix, so they are left unpadded.
+            sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK + 1), dtype=float64)
             sh_prop_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
-            sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
+            sh_cnt_i = cuda.shared.array((TILE, NODE_CHUNK + 1), dtype=float64)
             sh_cnt_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
             sh_branch = cuda.shared.array(NODE_CHUNK, dtype=float64)
 
@@ -410,41 +420,52 @@ def _evict_kernel_cache_entry(cuda, tile, node_chunk):
 
 # Block-tiling parameters for the 2D node-chunked kernel (see
 # `_make_unifrac_kernel`). A block is (TILE, TILE) threads, i.e. TILE**2
-# threads/block, using 4 shared (TILE, NODE_CHUNK) float64 tiles plus one
-# (NODE_CHUNK,) tile. The safe choice is hardware-specific, not just
-# backend-specific: it depends on the GPU's actual register file and
-# shared-memory budget, which varies across SKUs of the *same* vendor, not
-# only between vendors. There is no reliable way to pick it from a static
-# per-backend table, so it is discovered at runtime instead (see
-# `_get_tile_config`/`_probe_tile_config` below) by actually compiling and
-# launching the real kernel against trivial dummy data.
+# threads/block, using 2 shared (TILE, NODE_CHUNK + 1) float64 tiles
+# (`sh_prop_i`/`sh_cnt_i`, padded by one column to avoid the shared-memory
+# bank conflict their `[tx, col]` access pattern would otherwise cause --
+# see the comment above their declaration in `_make_unifrac_kernel`), 2
+# unpadded shared (TILE, NODE_CHUNK) tiles (`sh_prop_j`/`sh_cnt_j`, read
+# warp-uniformly so padding buys nothing there), plus one (NODE_CHUNK,)
+# tile. The safe choice is hardware-specific, not just backend-specific: it
+# depends on the GPU's actual register file and shared-memory budget, which
+# varies across SKUs of the *same* vendor, not only between vendors. There
+# is no reliable way to pick it from a static per-backend table, so it is
+# discovered at runtime instead (see `_get_tile_config`/`_probe_tile_config`
+# below) by actually compiling and launching the real kernel against
+# trivial dummy data.
 #
 # `_TILE_CANDIDATES`, most aggressive (most shared memory, most
 # threads/block, fastest when it works) to least, are real data points from
 # tuning this kernel on specific hardware, not invented, and double as the
-# starting ladder for the runtime probe:
-#   (32, 32): 1024 threads/block, 4*32*32*8 = 32KB shared mem. Fastest
-#       config measured, on AMD MI300A (gfx942) at n_samples=5000 (~12.5M
-#       pairs), median 0.952s. Crashes at kernel *launch* on every NVIDIA
-#       GPU tested (RTX 2080 Ti/Turing, A10/Ampere) with
+# starting ladder for the runtime probe. Shared-memory totals below are
+# post-padding (2*TILE*(NODE_CHUNK+1)*8 + 2*TILE*NODE_CHUNK*8 bytes for the
+# 4 node tiles, plus NODE_CHUNK*8 for the branch-length tile):
+#   (32, 32): 1024 threads/block, 2*32*33*8 + 2*32*32*8 = 33280 bytes
+#       (~32.5KB) shared mem. Fastest config measured, on AMD MI300A
+#       (gfx942) at n_samples=5000 (~12.5M pairs), median 0.952s (measured
+#       before the A1 padding fix below; see that commit for the
+#       post-padding re-measurement). Crashes at kernel *launch* on every
+#       NVIDIA GPU tested (RTX 2080 Ti/Turing, A10/Ampere) with
 #       CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES: this kernel's numba-cuda/NVVM
 #       compilation uses more registers/thread at 1024 threads/block than
 #       fit NVIDIA's per-SM register budget, even though the identical
 #       source is fine on AMD's CU register file.
 #   (16, 64): also 1024 threads/block but a narrower, taller shared tile
-#       (4*16*64*8 = 32KB, same total). Measured on AMD MI300A: works, but
-#       slower than (32, 32) (median 1.325s).
-#   (16, 32): 256 threads/block, 4*16*32*8 = 16KB shared mem. The config
-#       known to launch and run correctly on both NVIDIA cards tested
-#       (RTX 2080 Ti, A10); previously the hardcoded NVIDIA default.
-#   (8, 32): 64 threads/block, 4*8*32*8 = 8KB shared mem. A defensive floor
-#       rung below anything actually tuned, for hardware with even tighter
-#       per-block limits than tested (untested itself, but conservative
-#       enough that it should be broadly safe).
+#       (2*16*65*8 + 2*16*64*8 = 33024 bytes, ~32.25KB). Measured on AMD
+#       MI300A: works, but slower than (32, 32) (median 1.325s).
+#   (16, 32): 256 threads/block, 2*16*33*8 + 2*16*32*8 = 16640 bytes
+#       (~16.25KB) shared mem. The config known to launch and run correctly
+#       on both NVIDIA cards tested (RTX 2080 Ti, A10); previously the
+#       hardcoded NVIDIA default.
+#   (8, 32): 64 threads/block, 2*8*33*8 + 2*8*32*8 = 8320 bytes (~8.125KB)
+#       shared mem. A defensive floor rung below anything actually tuned,
+#       for hardware with even tighter per-block limits than tested
+#       (untested itself, but conservative enough that it should be broadly
+#       safe).
 # A real candidate that failed to compile during tuning: (16, 128) on AMD
-# -- "local memory (66560) exceeds limit (65536)" (4 shared tiles of
-# 16*128*8 = 16KB each = 64KB, right at AMD's 64KB LDS/block limit and
-# pushed over by other locals). Not included in the ladder since (32, 32)
+# -- "local memory (66560) exceeds limit (65536)" (pre-padding: 4 shared
+# tiles of 16*128*8 = 16KB each = 64KB, right at AMD's 64KB LDS/block limit
+# and pushed over by other locals). Not included in the ladder since (32, 32)
 # already dominates it on the one backend where it even compiles.
 _TILE_CANDIDATES = [
     (32, 32),
