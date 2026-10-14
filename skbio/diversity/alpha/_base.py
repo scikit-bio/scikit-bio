@@ -572,7 +572,7 @@ def hill(counts, order=2):
         return (probs**order).sum() ** (1 / (1 - order))
 
 
-@_validate_alpha(empty=np.nan)
+@_validate_alpha()
 def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     r"""Calculate Kempton-Taylor Q index of alpha diversity.
 
@@ -601,17 +601,28 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     counts : 1-D array_like, int
         Vector of counts.
     lower_quantile : float, optional
-        Lower bound of the interquantile range. Defaults to lower quartile.
+        Lower bound of the interquantile range. Must be greater than or equal
+        to 0, and smaller than 1. Defaults to lower quartile (0.25).
     upper_quantile : float, optional
-        Upper bound of the interquantile range. Defaults to upper quartile.
+        Upper bound of the interquantile range. Must be greater than
+        ``lower_quantile``, and smaller than or equal to 1. Defaults to upper
+        quartile (0.75).
 
     Returns
     -------
     float
         Kempton-Taylor Q index of alpha diversity.
 
+    Raises
+    ------
+    ValueError
+        If the quantiles do not satisfy
+        ``0 <= lower_quantile < upper_quantile <= 1``.
+
     Notes
     -----
+    This function returns NaN if the interquantile range is empty or constant.
+
     The index is defined in [1]_. The implementation here is based on the
     description given in the SDR-IV online manual [2]_.
 
@@ -631,11 +642,20 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
     .. [2] http://www.pisces-conservation.com/sdrhelp/index.html
 
     """
+    if not 0 <= lower_quantile < upper_quantile <= 1:
+        raise ValueError(
+            "Quantiles must satisfy 0 <= lower_quantile < upper_quantile <= 1."
+        )
     S = counts.size
     lower = int(np.ceil(S * lower_quantile))
-    upper = int(S * upper_quantile)
+    upper = min(S - 1, int(S * upper_quantile))
+    if lower >= upper:
+        return np.nan
     sorted_counts = np.sort(counts)
-    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
+    denom = np.log(sorted_counts[upper] / sorted_counts[lower])
+    if denom == 0:
+        return np.nan
+    return (upper - lower) / denom
 
 
 def inv_simpson(counts, finite=False):
