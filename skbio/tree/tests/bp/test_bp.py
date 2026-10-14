@@ -281,7 +281,7 @@ class BPTests(TestCase):
         exp = {(0, 20, 1): 0,
                (0, 21, 1): 21,
                (0, 20, 2): 10,
-               (0, 21, 2): None,
+               (0, 21, 2): -1,
                (0, 20, 3): 12,
                (0, 20, 4): 20,
                (8, 15, 1): 10,
@@ -295,7 +295,20 @@ class BPTests(TestCase):
         # there is no 0th or earlier minimum (not the last ones, as a negative
         # index would give)
         for q in (0, -1, -5):
-            self.assertIsNone(self.bptree.minselect(0, 20, q))
+            self.assertEqual(self.bptree.minselect(0, 20, q), -1)
+
+    def test_min_empty_range_and_outside(self):
+        # no minimum in an empty range, and -1 for a position outside the
+        # tree, as the Numba functions give
+        n = len(self.fig1_B)
+        self.assertEqual(self.bptree.mincount(5, 4), 0)
+        self.assertEqual(self.bptree.minselect(5, 4, 1), -1)
+        for i, j in ((-1, 3), (3, n), (-1, n), (-n, -1), (n, n + 1)):
+            self.assertEqual(self.bptree.mincount(i, j), -1)
+            for q in (0, 1, 2):
+                self.assertEqual(self.bptree.minselect(i, j, q), -1)
+        self.assertIsInstance(self.bptree.mincount(0, 20), int)
+        self.assertIsInstance(self.bptree.minselect(0, 20, 1), int)
 
     def test_preorder_rank(self):
         exp = [1, 2, 3, 3, 4, 4, 5, 6, 6, 5, 2, 7, 7, 8, 9, 10, 10, 11, 11, 9, 8, 1]

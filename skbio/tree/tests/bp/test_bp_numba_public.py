@@ -178,11 +178,12 @@ class NavigationTests(TestCase):
                               bool(bp.is_ancestor(i, j)))
                 self.assertEqual(nav.rmq(T, i, j), bp.rmq(i, j))
                 self.assertEqual(nav.rMq(T, i, j), bp.rMq(i, j))
-                self.assertEqual(nav.mincount(T, i, j), bp.mincount(i, j))
-                for q in (-1, 0, 1, 2, 3):
-                    exp = bp.minselect(i, j, q)
-                    self.assertEqual(nav.minselect(T, i, j, q),
-                                     -1 if exp is None else exp)
+                # also the empty range j > i
+                for a, b in ((i, j), (j, i)):
+                    self.assertEqual(nav.mincount(T, a, b), bp.mincount(a, b))
+                    for q in (-1, 0, 1, 2, 3):
+                        self.assertEqual(nav.minselect(T, a, b, q),
+                                         bp.minselect(a, b, q))
 
     def test_positions_outside_tree(self):
         # -1 (False for a test) for a position outside the tree, as from the
@@ -209,6 +210,8 @@ class NavigationTests(TestCase):
                     self.assertEqual(nav.rMq(T, a, b), -1)
                     self.assertEqual(nav.mincount(T, a, b), -1)
                     self.assertEqual(nav.minselect(T, a, b, 1), -1)
+                    self.assertEqual(bp.mincount(a, b), -1)
+                    self.assertEqual(bp.minselect(a, b, 1), -1)
             self.assertEqual(nav.first_child(T, nav.parent(T, 0)), -1)
             self.assertEqual(nav.depth(T, nav.parent(T, 0)), -1)
 
@@ -288,9 +291,8 @@ _GPU_SCRIPT = textwrap.dedent("""
         exp.append(a)
     assert out.copy_to_host().tolist() == exp, (out.copy_to_host(), exp)
 
-    # every function, compiled as a device function, against the CPU's
-    nav = bpn.cpu()
-    one = [("close",), ("depth",), ("parent",), ("is_tip",), ("first_child",),
+    # every function, compiled as a device function, against the methods
+    one =[("close",), ("depth",), ("parent",), ("is_tip",), ("first_child",),
            ("last_child",), ("next_sibling",), ("previous_sibling",),
            ("preorder_rank",), ("postorder_rank",), ("deepest_node",),
            ("height",), ("level_next",), ("count", True), ("count", False),
@@ -345,11 +347,8 @@ _GPU_SCRIPT = textwrap.dedent("""
             out[t, 7] = gnav.minselect(T, i, j, 2)
 
     # the expected values from the BPTree methods, which the CPU tests check
-    # against the CPU functions, so that these need no compiling here; but
-    # mincount and minselect, whose methods give no -1 for a missing result
-    def call(T, entry, *args):
-        if entry[0] in ("mincount", "minselect"):
-            return int(getattr(nav, entry[0])(T, *args, *entry[1:]))
+    # against the CPU functions, so that these need no compiling here
+    def call(entry, *args):
         return int(getattr(bp, entry[0])(*args, *entry[1:]))
 
     Th = bp.numba_arrays()
@@ -362,7 +361,7 @@ _GPU_SCRIPT = textwrap.dedent("""
                                         cuda.to_device(ks), out)
     obs = out.copy_to_host()
     for t, i in enumerate(idx.tolist()):
-        exp = [call(Th, e, i) for e in one]
+        exp = [call(e, i) for e in one]
         exp += [int(bp.root()), int(bp.preorder_select(int(ks[t]))),
                 int(bp.postorder_select(int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
@@ -388,7 +387,7 @@ _GPU_SCRIPT = textwrap.dedent("""
         T, cuda.to_device(ij[:, 0].copy()), cuda.to_device(ij[:, 1].copy()), out)
     obs = out.copy_to_host()
     for t, (i, j) in enumerate(ij.tolist()):
-        exp = [call(Th, e, i, j) for e in two]
+        exp = [call(e, i, j) for e in two]
         assert obs[t].tolist() == exp, ((i, j), obs[t].tolist(), exp)
     print("OK")
 """)
