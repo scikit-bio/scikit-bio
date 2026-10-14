@@ -195,7 +195,7 @@ def _nodes_by_counts(np.ndarray counts,
     node_lookup = {}
     for i in range(nodes.shape[0]):
         n = nodes[i]
-        if n in observed_ids_set:
+        if n in observed_ids_set and indexed['id_index'][i].is_tip():
             node_lookup[n] = i
 
     # determine the positions of the observed IDs in nodes

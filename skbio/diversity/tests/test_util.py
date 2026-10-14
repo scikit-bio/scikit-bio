@@ -32,6 +32,17 @@ class VectorizeTests(TestCase):
         exp_counts = np.array([[0, 1, 10], [1, 5, 1], [1, 6, 11], [1, 6, 11]])
         npt.assert_equal(count_array, exp_counts.T)
 
+    def test_vectorize_counts_and_tree_internal_tip_names(self):
+        counts = np.array([[1, 0, 0], [1, 0, 1]])
+        taxa = np.array(['A', 'B', 'C'])
+        exp_counts = np.array([[1, 0, 1, 0, 1], [1, 0, 1, 1, 2]])
+        for newick in ("((A:1,B:2)A:3,C:4)root;",
+                       "((A:1,B:2)A:3,C:4)A;"):
+            with self.subTest(newick=newick):
+                tree = TreeNode.read([newick])
+                count_array, _, _ = vectorize_counts_and_tree(counts, taxa, tree)
+                npt.assert_equal(count_array, exp_counts)
+
 
 class ValidationTests(TestCase):
 
