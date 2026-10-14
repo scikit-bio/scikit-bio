@@ -13,9 +13,9 @@
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
 
-
 ### Bug Fixes
 
+* Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).
 * Fixed `ancombc2` producing NaN results when Gaussian mixture densities underflow to zero during bias estimation ([#2631](https://github.com/scikit-bio/scikit-bio/issues/2631)).
 * Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Fixed `kempton_taylor_q` raising `IndexError` on a sample containing a single taxon, which aborted `alpha_diversity` for the whole table. It now returns `nan` if the interquantile range is empty or constant, and accepts `upper_quantile=1`. Quantiles that do not satisfy `0 <= lower_quantile < upper_quantile <= 1` raise `ValueError` ([#2619](https://github.com/scikit-bio/scikit-bio/pull/2619)).
