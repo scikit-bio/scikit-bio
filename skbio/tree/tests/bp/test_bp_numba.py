@@ -35,6 +35,15 @@ _PAIRWISE = ("rmq", "rMq", "lca", "is_ancestor", "mincount")
 _INDEX = ("open", "enclose", "excess")
 
 
+def _python(func):
+    """The Python function of a Numba primitive.
+
+    With NUMBA_DISABLE_JIT (the coverage run), ``njit`` returns the Python
+    function itself, which has no ``py_func``.
+    """
+    return getattr(func, "py_func", func)
+
+
 class PrimitiveCoverageTests(TestCase):
     def test_every_navigation_operation(self):
         # every navigation method of BPTree has a primitive; node attributes are
@@ -169,7 +178,7 @@ class NumbaPrimitiveTests(TestCase):
         # there, rather than read the last leaf's right sibling, which is not
         # stored (one past the end of the rmM tree: on a GPU, a read that can
         # fault). Run as Python, where NumPy checks every index.
-        search = self.P.fwdsearch.py_func
+        search = _python(self.P.fwdsearch)
         for bp in self.trees:
             T = _bp_numba.bp_arrays(bp)
             for i in range(bp.data.size):
@@ -182,7 +191,7 @@ class NumbaPrimitiveTests(TestCase):
         # excess is excess(i) + d, for every position and every reachable
         # excess, in both engines. Position 0 included: bwdsearch from 1 used
         # to skip it. Numba runs as Python, where NumPy checks every index
-        bwd, fwd = self.P.bwdsearch.py_func, self.P.fwdsearch.py_func
+        bwd, fwd = _python(self.P.bwdsearch), _python(self.P.fwdsearch)
         for bp in self.trees:
             # up to 43 blocks in an rmM tree of height 6
             if bp.data.size > 600:
