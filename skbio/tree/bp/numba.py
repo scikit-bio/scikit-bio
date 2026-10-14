@@ -115,15 +115,10 @@ Conventions
 Each function takes ``T`` first, then the arguments of the ``BPTree`` method
 of the same name, and returns what that method returns, except that:
 
-- ``minselect`` returns -1 where the method returns None;
 - ``is_tip`` and ``is_ancestor`` return a boolean;
 - ``count`` takes its ``tips`` argument positionally: ``count(T, i, tips)``.
 
-The -1 is because a compiled function returns one type: an integer that is
-sometimes None would need a check wherever it is used, and cannot be the
-return value of a GPU device function at all. -1 is never a position.
-
-So the sentinels are those of the methods:
+The sentinels are those of the methods:
 
 - ``parent`` of the root is -1;
 - ``first_child``, ``last_child``, ``next_sibling`` and ``previous_sibling``
@@ -134,7 +129,7 @@ So the sentinels are those of the methods:
   beyond the node's depth: it stops at the root rather than signal that it
   overshot;
 - ``minselect`` returns -1 when there is no ``q``-th minimum, including for
-  ``q < 1``;
+  ``q < 1`` and for an empty range (``i > j``), where ``mincount`` returns 0;
 - ``preorder_select`` and ``postorder_select`` return -1 for a rank outside
   ``1`` to ``T.size // 2`` (the number of nodes);
 - every function taking positions returns -1 for a position outside

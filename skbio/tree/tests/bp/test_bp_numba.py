@@ -35,6 +35,15 @@ _PAIRWISE = ("rmq", "rMq", "lca", "is_ancestor", "mincount")
 _INDEX = ("open", "enclose", "excess")
 
 
+def _python(func):
+    """The Python function of a Numba primitive.
+
+    With NUMBA_DISABLE_JIT (the coverage run), ``njit`` returns the Python
+    function itself, which has no ``py_func``.
+    """
+    return getattr(func, "py_func", func)
+
+
 class PrimitiveCoverageTests(TestCase):
     def test_every_navigation_operation(self):
         # every navigation method of BPTree has a primitive; node attributes are
@@ -169,7 +178,7 @@ class NumbaPrimitiveTests(TestCase):
         # there, rather than read the last leaf's right sibling, which is not
         # stored (one past the end of the rmM tree: on a GPU, a read that can
         # fault). Run as Python, where NumPy checks every index.
-        search = self.P.fwdsearch.py_func
+        search = _python(self.P.fwdsearch)
         for bp in self.trees:
             T = _bp_numba.bp_arrays(bp)
             for i in range(bp.data.size):
@@ -182,7 +191,7 @@ class NumbaPrimitiveTests(TestCase):
         # excess is excess(i) + d, for every position and every reachable
         # excess, in both engines. Position 0 included: bwdsearch from 1 used
         # to skip it. Numba runs as Python, where NumPy checks every index
-        bwd, fwd = self.P.bwdsearch.py_func, self.P.fwdsearch.py_func
+        bwd, fwd = _python(self.P.bwdsearch), _python(self.P.fwdsearch)
         for bp in self.trees:
             # up to 43 blocks in an rmM tree of height 6
             if bp.data.size > 600:
@@ -444,10 +453,12 @@ class GPUPrimitiveTests(TestCase, ArrayAPITestMixin):
     def test_device(self, xp, device):
         # on a real GPU (the GPU workflow), through the Numba GPU module that
         # BPTree's dispatch chooses for the device; a GPU it cannot use then
-        # fails rather than skips. JAX has no Numba GPU path and is skipped; it
-        # is listed because the harness errors on a GPU lane that runs no backend.
-        if device == "cpu" or _get_backend_name(xp) == "jax":
-            self.skipTest("needs a device-resident CuPy or PyTorch array")
+        # fails rather than skips. The script takes no arrays of the backend, so
+        # it runs on the CuPy lanes only, once per Numba GPU module. PyTorch and
+        # JAX are listed because the harness errors on a GPU lane that runs no
+        # backend.
+        if device == "cpu" or _get_backend_name(xp) != "cupy":
+            self.skipTest("runs on a device-resident CuPy array only")
         gpu = _gpu._numba_gpu_module_for(self.make_array(xp, device, np.zeros(2)))
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s: is "
                              "numba-cuda-mlir (or numba-cuda) installed?"

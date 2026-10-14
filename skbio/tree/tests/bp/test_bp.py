@@ -281,7 +281,7 @@ class BPTests(TestCase):
         exp = {(0, 20, 1): 0,
                (0, 21, 1): 21,
                (0, 20, 2): 10,
-               (0, 21, 2): None,
+               (0, 21, 2): -1,
                (0, 20, 3): 12,
                (0, 20, 4): 20,
                (8, 15, 1): 10,
@@ -295,7 +295,20 @@ class BPTests(TestCase):
         # there is no 0th or earlier minimum (not the last ones, as a negative
         # index would give)
         for q in (0, -1, -5):
-            self.assertIsNone(self.bptree.minselect(0, 20, q))
+            self.assertEqual(self.bptree.minselect(0, 20, q), -1)
+
+    def test_min_empty_range_and_outside(self):
+        # no minimum in an empty range, and -1 for a position outside the
+        # tree, as the Numba functions give
+        n = len(self.fig1_B)
+        self.assertEqual(self.bptree.mincount(5, 4), 0)
+        self.assertEqual(self.bptree.minselect(5, 4, 1), -1)
+        for i, j in ((-1, 3), (3, n), (-1, n), (-n, -1), (n, n + 1)):
+            self.assertEqual(self.bptree.mincount(i, j), -1)
+            for q in (0, 1, 2):
+                self.assertEqual(self.bptree.minselect(i, j, q), -1)
+        self.assertIsInstance(self.bptree.mincount(0, 20), int)
+        self.assertIsInstance(self.bptree.minselect(0, 20, 1), int)
 
     def test_preorder_rank(self):
         exp = [1, 2, 3, 3, 4, 4, 5, 6, 6, 5, 2, 7, 7, 8, 9, 10, 10, 11, 11, 9, 8, 1]
@@ -1106,7 +1119,7 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
         self.rng = rng
 
     def on(self, xp, device, bp, dtype=None):
-        B = self.make_array(xp, device, bp.data, dtype=dtype or xp.uint8)
+        B = self.make_array(xp, device, bp.data.copy(), dtype=dtype or xp.uint8)
         return BPTree(B, lengths=bp._lengths, names=bp._names)
 
     def assert_ran_on_gpu(self, bp, xp, device):
@@ -1278,6 +1291,15 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
             self.assertIs(back._data, host._data)
             npt.assert_array_equal(back.lca_batch(i, j), host.lca_batch(i, j))
 
+        # the topology is copied, also on the CPU, so that the new tree's data
+        # cannot change the index, even for read-only host data (from which
+        # PyTorch warns once per process, so the copy is what is checked)
+        if _get_backend_name(xp) == 'torch' and device in (None, 'cpu'):
+            readonly = BPTree(self.host[1].data)
+            moved = readonly.to_device(xp, target)
+            self.assertFalse(np.shares_memory(moved.data.numpy(),
+                                              readonly._data))
+
         # setting an attribute of one tree leaves the other as it was (on a
         # tree of its own: the fixtures are shared by the backends' subtests)
         h = self.host[2]
@@ -1423,7 +1445,7 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
             edges = np.arange(host.data.size, dtype=np.int32)
             host = BPTree(host.data, lengths=host._lengths, names=host._names,
                           edges=edges)
-            bp = BPTree(self.make_array(xp, device, host.data, dtype=xp.uint8),
+            bp = BPTree(self.make_array(xp, device, host.data.copy(), dtype=xp.uint8),
                         lengths=host._lengths, names=host._names, edges=edges)
             for fmt in ('newick', 'jplace'):
                 exp, obs = io.StringIO(), io.StringIO()

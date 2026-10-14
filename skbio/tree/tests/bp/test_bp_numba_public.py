@@ -178,11 +178,12 @@ class NavigationTests(TestCase):
                               bool(bp.is_ancestor(i, j)))
                 self.assertEqual(nav.rmq(T, i, j), bp.rmq(i, j))
                 self.assertEqual(nav.rMq(T, i, j), bp.rMq(i, j))
-                self.assertEqual(nav.mincount(T, i, j), bp.mincount(i, j))
-                for q in (-1, 0, 1, 2, 3):
-                    exp = bp.minselect(i, j, q)
-                    self.assertEqual(nav.minselect(T, i, j, q),
-                                     -1 if exp is None else exp)
+                # also the empty range j > i
+                for a, b in ((i, j), (j, i)):
+                    self.assertEqual(nav.mincount(T, a, b), bp.mincount(a, b))
+                    for q in (-1, 0, 1, 2, 3):
+                        self.assertEqual(nav.minselect(T, a, b, q),
+                                         bp.minselect(a, b, q))
 
     def test_positions_outside_tree(self):
         # -1 (False for a test) for a position outside the tree, as from the
@@ -209,6 +210,8 @@ class NavigationTests(TestCase):
                     self.assertEqual(nav.rMq(T, a, b), -1)
                     self.assertEqual(nav.mincount(T, a, b), -1)
                     self.assertEqual(nav.minselect(T, a, b, 1), -1)
+                    self.assertEqual(bp.mincount(a, b), -1)
+                    self.assertEqual(bp.minselect(a, b, 1), -1)
             self.assertEqual(nav.first_child(T, nav.parent(T, 0)), -1)
             self.assertEqual(nav.depth(T, nav.parent(T, 0)), -1)
 
@@ -288,9 +291,8 @@ _GPU_SCRIPT = textwrap.dedent("""
         exp.append(a)
     assert out.copy_to_host().tolist() == exp, (out.copy_to_host(), exp)
 
-    # every function, compiled as a device function, against the CPU's
-    nav = bpn.cpu()
-    one = [("close",), ("depth",), ("parent",), ("is_tip",), ("first_child",),
+    # every function, compiled as a device function, against the methods
+    one =[("close",), ("depth",), ("parent",), ("is_tip",), ("first_child",),
            ("last_child",), ("next_sibling",), ("previous_sibling",),
            ("preorder_rank",), ("postorder_rank",), ("deepest_node",),
            ("height",), ("level_next",), ("count", True), ("count", False),
@@ -344,8 +346,10 @@ _GPU_SCRIPT = textwrap.dedent("""
             out[t, 6] = gnav.minselect(T, i, j, 1)
             out[t, 7] = gnav.minselect(T, i, j, 2)
 
-    def call(T, entry, *args):
-        return int(getattr(nav, entry[0])(T, *args, *entry[1:]))
+    # the expected values from the BPTree methods, which the CPU tests check
+    # against the CPU functions, so that these need no compiling here
+    def call(entry, *args):
+        return int(getattr(bp, entry[0])(*args, *entry[1:]))
 
     Th = bp.numba_arrays()
     n = Th.size
@@ -357,16 +361,24 @@ _GPU_SCRIPT = textwrap.dedent("""
                                         cuda.to_device(ks), out)
     obs = out.copy_to_host()
     for t, i in enumerate(idx.tolist()):
-        exp = [call(Th, e, i) for e in one]
-        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]))),
-                int(nav.postorder_select(Th, int(ks[t])))]
+        exp = [call(e, i) for e in one]
+        exp += [int(bp.root()), int(bp.preorder_select(int(ks[t]))),
+                int(bp.postorder_select(int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
 
-    # the same ranks as unsigned 64-bit integers give the same nodes
-    out64 = cuda.device_array((idx.size, 21), dtype=np.intp)
-    nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
-                                        cuda.to_device(ks.astype(np.uint64)), out64)
-    assert (out64.copy_to_host()[:, 19:] == obs[:, 19:]).all()
+    # the same ranks as unsigned 64-bit integers give the same nodes, in a
+    # kernel of their own: compiling nodes again for them takes far longer
+    @cuda.jit
+    def selects(T, ks, out):
+        t = cuda.grid(1)
+        if t < ks.shape[0]:
+            out[t, 0] = gnav.preorder_select(T, ks[t])
+            out[t, 1] = gnav.postorder_select(T, ks[t])
+
+    out64 = cuda.device_array((idx.size, 2), dtype=np.intp)
+    selects[(idx.size + 127) // 128, 128](T, cuda.to_device(ks.astype(np.uint64)),
+                                          out64)
+    assert (out64.copy_to_host() == obs[:, 19:]).all()
 
     ij = np.sort(rng.integers(0, n, (300, 2)), axis=1)
     ij = np.concatenate([ij, [[-1, 3], [3, n], [-1, n], [-n, -1]]])
@@ -375,7 +387,7 @@ _GPU_SCRIPT = textwrap.dedent("""
         T, cuda.to_device(ij[:, 0].copy()), cuda.to_device(ij[:, 1].copy()), out)
     obs = out.copy_to_host()
     for t, (i, j) in enumerate(ij.tolist()):
-        exp = [call(Th, e, i, j) for e in two]
+        exp = [call(e, i, j) for e in two]
         assert obs[t].tolist() == exp, ((i, j), obs[t].tolist(), exp)
     print("OK")
 """)
@@ -398,11 +410,12 @@ class GPUNavigationTests(TestCase, ArrayAPITestMixin):
     @array_backends("jax", "torch", "cupy")
     def test_device(self, xp, device):
         # on a real GPU (the GPU workflow), through the Numba GPU module that
-        # BPTree's dispatch chooses for the device. JAX has no Numba GPU path
-        # and is skipped; it is listed because the harness errors on a GPU lane
-        # that runs no backend.
-        if device == "cpu" or _get_backend_name(xp) == "jax":
-            self.skipTest("needs a device-resident CuPy or PyTorch array")
+        # BPTree's dispatch chooses for the device. The script takes no arrays
+        # of the backend, so it runs on the CuPy lanes only, once per Numba
+        # GPU module. PyTorch and JAX are listed because the harness errors on
+        # a GPU lane that runs no backend.
+        if device == "cpu" or _get_backend_name(xp) != "cupy":
+            self.skipTest("runs on a device-resident CuPy array only")
         gpu = _gpu._numba_gpu_module_for(self.make_array(xp, device, np.zeros(2)))
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s: is "
                              "numba-cuda-mlir (or numba-cuda) installed?"
@@ -418,7 +431,7 @@ class GPUNavigationTests(TestCase, ArrayAPITestMixin):
         if device == "cpu" or _get_backend_name(xp) == "jax":
             self.skipTest("needs a device-resident CuPy or PyTorch array")
         host = _named_tree(200, np.random.default_rng(9))
-        B = self.make_array(xp, device, host.data, dtype=xp.uint8)
+        B = self.make_array(xp, device, host.data.copy(), dtype=xp.uint8)
         gpu = _gpu._numba_gpu_module_for(B)
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s"
                              % (_get_backend_name(xp), device))

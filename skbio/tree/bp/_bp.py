@@ -449,12 +449,15 @@ class BPTree(SkbioObject):
         """
         # the backend's array API namespace takes the device as its own type
         try:
-            namespace = aac.array_namespace(xp.asarray(self._data[:0]))
+            namespace = aac.array_namespace(xp.asarray([]))
         except (AttributeError, TypeError):
             raise TypeError(f"{xp!r} is not a supported array backend.") from None
-        array = namespace.asarray(self._data, device=device)
-        if aac.is_numpy_array(array):
+        if aac.is_numpy_namespace(namespace):
             array = None  # a NumPy tree holds the host array itself
+        else:
+            # a copy, also on the CPU: the host array may be read-only (PyTorch
+            # warns), and the index must not change with the new tree's data
+            array = namespace.asarray(self._data, device=device, copy=True)
         index = {
             "e_index": self._e_index,
             "k_index_0": self._k_index_0,
@@ -944,10 +947,25 @@ class BPTree(SkbioObject):
         """
         return self._kernel.last_child(i)
 
+    def _excess_range(self, i, j):
+        """Excess of the positions ``i`` to ``j``, or None if one is outside."""
+        n = self._e_index.size
+        if not (0 <= i < n and 0 <= j < n):
+            return None
+        return self._e_index[i : j + 1]
+
     def mincount(self, i, j):
-        """Number of occurrences of the minimum in excess(i), ..., excess(j)."""
-        excess, counts = np.unique(self._e_index[i : j + 1], return_counts=True)
-        return counts[excess.argmin()]
+        """Number of occurrences of the minimum in excess(i), ..., excess(j).
+
+        Returns 0 for an empty range (``i > j``), and -1 if ``i`` or ``j`` is
+        outside the tree.
+        """
+        excess = self._excess_range(i, j)
+        if excess is None:
+            return -1
+        if excess.size == 0:
+            return 0
+        return int(np.count_nonzero(excess == excess.min()))
 
     def minselect(self, i, j, q):
         """Position of the qth minimum in excess(i), ..., excess(j).
@@ -961,21 +979,20 @@ class BPTree(SkbioObject):
 
         Returns
         -------
-        int or None
+        int
             The position of the ``q``-th occurrence of the minimum excess in
-            the range, or None if there is no such occurrence: fewer than ``q``
-            of them, or ``q < 1``.
+            the range, or -1 if there is no such occurrence (fewer than ``q`` of
+            them, ``q < 1``, or an empty range), or if ``i`` or ``j`` is outside
+            the tree.
         """
-        if q < 1:
-            # ranks count from 1; a lower q would index from the end
-            return None
-        counts = self._e_index[i : j + 1]
-        index = counts == counts.min()
-
-        if index.sum() < q:
-            return None
-        else:
-            return i + index.nonzero()[0][q - 1]
+        excess = self._excess_range(i, j)
+        # ranks count from 1; a lower q would index from the end
+        if excess is None or excess.size == 0 or q < 1:
+            return -1
+        found = np.flatnonzero(excess == excess.min())
+        if found.size < q:
+            return -1
+        return i + int(found[q - 1])
 
     def next_sibling(self, i):
         """Index of the next (right) sibling of a node.
