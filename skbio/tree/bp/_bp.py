@@ -630,7 +630,14 @@ class BPTree(SkbioObject):
         return _bp_cy.to_node_arrays(self._kernel)
 
     def __reduce__(self):
-        return (BPTree, (self._data, self._lengths, self._names))
+        """Return the constructor and arguments that rebuild the tree.
+
+        Used by :mod:`pickle` and :mod:`copy`. The topology, lengths, names and
+        edge numbers are passed to the constructor, which builds the index
+        again. A tree on a GPU is rebuilt on the host.
+        """
+        edges = None if self._edge_lookup is None else self._edges
+        return (BPTree, (self._data, self._lengths, self._names, edges))
 
     # ------------------------------------------------------------------
     # Node attributes

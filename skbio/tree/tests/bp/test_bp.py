@@ -870,6 +870,20 @@ class BPTreeClassTests(TestCase):
                 self.assertEqual(obs.length(i), self.bp.length(i))
                 self.assertEqual(obs.close(i), self.bp.close(i))
 
+    def test_pickle_and_copy_edges(self):
+        # edge numbers and their lookup are kept
+        edges = np.arange(self.B.size, dtype=np.int32)
+        self.bp.set_edges(edges)
+        for obs in (pickle.loads(pickle.dumps(self.bp)), copy.copy(self.bp),
+                    copy.deepcopy(self.bp)):
+            npt.assert_array_equal(obs.edges, edges)
+            for i in np.flatnonzero(self.B):
+                self.assertEqual(obs.edge_from_number(edges[i]), i)
+
+        # a tree without edge numbers gets no lookup
+        bp = BPTree(self.B)
+        self.assertIsNone(copy.deepcopy(bp)._edge_lookup)
+
     def test_io_descriptors(self):
         self.assertIn('newick', BPTree.read.__doc__)
         self.assertIn('newick', self.bp.write.__doc__)

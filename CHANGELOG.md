@@ -127,6 +127,9 @@
 * `BPTree.data` of a NumPy tree is now a read-only view, as `lengths` and `edges` are, so that the topology cannot be changed under the tree's navigation index ([#2635](https://github.com/scikit-bio/scikit-bio/pull/2635)).
 * Fixed `BPTree.shear` looping forever on a single-node tree ([#2635](https://github.com/scikit-bio/scikit-bio/pull/2635)).
 * Fixed `BPTree`'s backward search of its index never finding position 0 when searching from position 1. No navigation method asked for that result, so none returned a wrong node ([#2635](https://github.com/scikit-bio/scikit-bio/pull/2635)).
+* Fixed `BPTree`'s Newick reader overflowing its buffer, or crashing, on valid trees with tips that have no label (e.g. `(,);`), and assigning the labels after such a tip to the wrong nodes (e.g. `(,b);` named the first tip `b`). A double quote (`"`) is now an ordinary character, as in the `TreeNode` reader, rather than a quote that could crash the reader, and input that is not a single tree, such as unbalanced parentheses or quotes, raises an error ([#2634](https://github.com/scikit-bio/scikit-bio/pull/2634)).
+* Fixed `BPTree`'s Newick reader taking `''` as an apostrophe only inside a fully quoted label: it now reads labels as the `TreeNode` reader does, e.g. `O''Brien` as `O'Brien` ([#2634](https://github.com/scikit-bio/scikit-bio/pull/2634)).
+* Fixed pickling and copying a `BPTree` losing its edge numbers ([#2634](https://github.com/scikit-bio/scikit-bio/pull/2634)).
 
 ## Version 0.7.3
 
