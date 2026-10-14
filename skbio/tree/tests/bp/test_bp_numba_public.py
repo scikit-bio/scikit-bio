@@ -418,7 +418,7 @@ class GPUNavigationTests(TestCase, ArrayAPITestMixin):
         if device == "cpu" or _get_backend_name(xp) == "jax":
             self.skipTest("needs a device-resident CuPy or PyTorch array")
         host = _named_tree(200, np.random.default_rng(9))
-        B = self.make_array(xp, device, host.data, dtype=xp.uint8)
+        B = self.make_array(xp, device, host.data.copy(), dtype=xp.uint8)
         gpu = _gpu._numba_gpu_module_for(B)
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s"
                              % (_get_backend_name(xp), device))

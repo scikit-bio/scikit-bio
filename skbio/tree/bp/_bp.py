@@ -449,12 +449,15 @@ class BPTree(SkbioObject):
         """
         # the backend's array API namespace takes the device as its own type
         try:
-            namespace = aac.array_namespace(xp.asarray(self._data[:0]))
+            namespace = aac.array_namespace(xp.asarray([]))
         except (AttributeError, TypeError):
             raise TypeError(f"{xp!r} is not a supported array backend.") from None
-        array = namespace.asarray(self._data, device=device)
-        if aac.is_numpy_array(array):
+        if aac.is_numpy_namespace(namespace):
             array = None  # a NumPy tree holds the host array itself
+        else:
+            # a copy, also on the CPU: the host array may be read-only (PyTorch
+            # warns), and the index must not change with the new tree's data
+            array = namespace.asarray(self._data, device=device, copy=True)
         index = {
             "e_index": self._e_index,
             "k_index_0": self._k_index_0,
