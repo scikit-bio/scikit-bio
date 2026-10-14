@@ -136,24 +136,18 @@ So the sentinels are those of the methods:
 - ``minselect`` returns -1 when there is no ``q``-th minimum, including for
   ``q < 1``;
 - ``preorder_select`` and ``postorder_select`` return -1 for a rank outside
-  ``1`` to ``T.size // 2`` (the number of nodes).
+  ``1`` to ``T.size // 2`` (the number of nodes);
+- every function taking positions returns -1 for a position outside
+  ``[0, T.size)`` (``is_tip`` and ``is_ancestor`` return False) rather than
+  read outside the tree's arrays, as the methods do. ``mincount`` and
+  ``minselect`` return -1 for it too. So -1 passed from one function to
+  another, e.g. ``nav.depth(T, nav.parent(T, 0))``, gives -1 again.
 
 Warnings
 --------
-The functions do not check their arguments: a position outside
-``[0, T.size)`` reads outside the tree's arrays. On a CPU that returns an
-arbitrary result; on a GPU it can fault and leave the device unusable for the
-rest of the process. The batch methods of ``BPTree`` check their queries.
-
-Test a result for its sentinel before passing it on: a sentinel given to
-another function does not fail, it answers for a different node.
-
-- -1 indexes from the end, as in NumPy, so ``nav.depth(T, nav.parent(T, 0))``
-  returns the excess at the last position (0), with no error. Numba's
-  ``boundscheck=True`` does not catch it either, since -1 is in range once
-  wrapped.
-- 0 is the root, so ``nav.first_child(T, nav.first_child(T, tip))`` returns
-  the root's first child rather than "none".
+Test a result for its sentinel before passing it on where the sentinel is 0:
+0 is the root, so ``nav.first_child(T, nav.first_child(T, tip))`` returns the
+root's first child rather than "none".
 
 .. code-block:: python
 

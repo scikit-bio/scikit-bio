@@ -184,6 +184,34 @@ class NavigationTests(TestCase):
                     self.assertEqual(nav.minselect(T, i, j, q),
                                      -1 if exp is None else exp)
 
+    def test_positions_outside_tree(self):
+        # -1 (False for a test) for a position outside the tree, as from the
+        # methods, rather than reading outside its arrays: so a sentinel passed
+        # from one function to another gives -1 again
+        nav = bpn.cpu()
+        for bp in self.trees:
+            T = bp.numba_arrays()
+            n = bp.data.size
+            for i in (-n, -2, -1, n, n + 1):
+                for name in ('close', 'depth', 'parent', 'first_child',
+                             'last_child', 'next_sibling', 'previous_sibling',
+                             'preorder_rank', 'postorder_rank', 'deepest_node',
+                             'height', 'level_next'):
+                    self.assertEqual(getattr(nav, name)(T, i), -1, (name, i))
+                    self.assertEqual(getattr(bp, name)(i), -1, (name, i))
+                self.assertFalse(nav.is_tip(T, i))
+                self.assertEqual(nav.count(T, i, True), -1)
+                self.assertEqual(nav.level_ancestor(T, i, 2), -1)
+                for a, b in ((i, 0), (0, i), (i, i)):
+                    self.assertEqual(nav.lca(T, a, b), -1)
+                    self.assertFalse(nav.is_ancestor(T, a, b))
+                    self.assertEqual(nav.rmq(T, a, b), -1)
+                    self.assertEqual(nav.rMq(T, a, b), -1)
+                    self.assertEqual(nav.mincount(T, a, b), -1)
+                    self.assertEqual(nav.minselect(T, a, b, 1), -1)
+            self.assertEqual(nav.first_child(T, nav.parent(T, 0)), -1)
+            self.assertEqual(nav.depth(T, nav.parent(T, 0)), -1)
+
     def test_documented_kernels(self):
         # the lca of each sample's tips, against TreeNode.lca of the set
         bp = self.trees[-1]
@@ -321,7 +349,8 @@ _GPU_SCRIPT = textwrap.dedent("""
 
     Th = bp.numba_arrays()
     n = Th.size
-    idx = np.arange(n - 1)
+    # every position, and some outside the tree
+    idx = np.concatenate([np.arange(n - 1), [-n, -1, n, n + 1]])
     ks = idx % (n // 2 + 2)  # every rank, and 0 and n + 1, which are not
     out = cuda.device_array((idx.size, 21), dtype=np.intp)
     nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
@@ -340,6 +369,7 @@ _GPU_SCRIPT = textwrap.dedent("""
     assert (out64.copy_to_host()[:, 19:] == obs[:, 19:]).all()
 
     ij = np.sort(rng.integers(0, n, (300, 2)), axis=1)
+    ij = np.concatenate([ij, [[-1, 3], [3, n], [-1, n], [-n, -1]]])
     out = cuda.device_array((ij.shape[0], len(two)), dtype=np.intp)
     pairs[(ij.shape[0] + 127) // 128, 128](
         T, cuda.to_device(ij[:, 0].copy()), cuda.to_device(ij[:, 1].copy()), out)
