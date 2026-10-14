@@ -50,19 +50,35 @@ cdef inline cnp.int32_t number_from_edge(unicode token):
 
 
 cdef inline unicode _unquote_name(unicode token, bint convert_underscores):
-    """Recover a node name from a raw token.
+    """Recover a node name from a raw token, as the TreeNode reader does.
 
-    A single-quoted label is de-quoted and its doubled apostrophes (``''``) are
-    collapsed to one (``'``), matching the Newick spec and the TreeNode reader.
-    An unquoted label optionally has underscores converted to spaces (the
-    classic Newick convention); quoted content is always taken literally.
+    Each single quote opens or closes a quoted part and is dropped, and a quote
+    right after a dropped one is kept, so ``''`` is an apostrophe anywhere in
+    the label. Underscores are converted to spaces (the classic Newick convention)
+    if ``convert_underscores``, unless the label ends with a quote that closes a
+    quoted part.
     """
+    cdef:
+        list out
+        bint dropped = False
+        Py_UCS4 c
+
     token = token.strip()
-    if len(token) >= 2 and token[0] == u"'" and token[len(token) - 1] == u"'":
-        return token[1:len(token) - 1].replace(u"''", u"'")
-    if convert_underscores:
-        return token.replace(u'_', u' ')
-    return token
+    if u"'" not in token:
+        return token.replace(u'_', u' ') if convert_underscores else token
+
+    out = []
+    for c in token:
+        if c == u"'" and not dropped:
+            dropped = True
+        else:
+            out.append(c)
+            dropped = False
+    name = u''.join(out)
+    # ``dropped``: the last character is a quote that closes a quoted part
+    if convert_underscores and not dropped:
+        name = name.replace(u'_', u' ')
+    return name
 
 
 cdef inline Py_ssize_t _find_length_colon(unicode token):
@@ -143,7 +159,7 @@ cdef unicode _strip_comments(unicode data):
     return u''.join(out)
 
 
-cdef void _set_node_metadata(cnp.uint32_t ptr, unicode token,
+cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
                              cnp.ndarray[object, ndim=1] names,
                              cnp.ndarray[cnp.double_t, ndim=1] lengths,
                              cnp.ndarray[cnp.int32_t, ndim=1] edges,
@@ -220,8 +236,9 @@ def write_newick(object tree, object output, bint include_edge):
     -----
     The string is written in place to ``output``; the function returns nothing.
     Node names containing whitespace or any of the characters
-    ``' _ ; , : ( ) [ ]`` are wrapped in single quotes, and embedded apostrophes
-    are doubled (``'`` -> ``''``), so the output re-parses losslessly.
+    ``_ ; , : ( ) [ ]`` are wrapped in single quotes, and apostrophes are
+    doubled (``'`` -> ``''``) whether quoted or not, as by the TreeNode writer,
+    so the output re-parses losslessly with either reader.
 
     """
     cdef:
@@ -262,13 +279,16 @@ def write_newick(object tree, object output, bint include_edge):
 
             if name is not None:
                 # Quote names with structural characters or whitespace, and
-                # double embedded apostrophes, so the output re-parses cleanly.
+                # double apostrophes, so the output re-parses cleanly. An
+                # apostrophe alone needs no quotes, and a quoted name made of
+                # apostrophes only would read back with one too many
                 chars = set(name)
-                if (chars & {"'", "_", ";", ",", ":", "(", ")", "[", "]"}
+                escaped = name.replace("'", "''")
+                if (chars & {"_", ";", ",", ":", "(", ")", "[", "]"}
                         or any(ch.isspace() for ch in chars)):
-                    output.write("'%s'" % name.replace("'", "''"))
+                    output.write("'%s'" % escaped)
                 else:
-                    output.write(name)
+                    output.write(escaped)
 
             if include_edge:
                 output.write(':%s{%d}' % (length, edge))
@@ -307,16 +327,17 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
     Raises
     ------
     ValueError
-        If ``data`` is not terminated with a semicolon, or if it describes a
-        tree with only a single node.
+        If ``data`` is not terminated with a semicolon, if it describes a
+        tree with only a single node, or if it does not describe a single tree
+        (e.g. its parentheses or single quotes are unbalanced).
 
     """
     cdef:
-        cnp.uint32_t ptr, open_ptr
-        Py_ssize_t token_ptr, tmp, lag, datalen
-        object topology
-        _BPKernel k
-        unicode token, last_token
+        Py_ssize_t ptr, last, size, token_ptr, tmp, datalen
+        bint expect_child
+        unicode token
+        list stack
+        cnp.ndarray[cnp.uint8_t, ndim=1] topology
         cnp.ndarray[object, ndim=1] names
         cnp.ndarray[cnp.double_t, ndim=1] lengths
         cnp.ndarray[cnp.int32_t, ndim=1] edges
@@ -326,112 +347,98 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
         raise ValueError("Newick does not appear terminated with a semicolon")
 
     datalen = len(data)
-    topology = _newick_to_bp(data)
-    k = topology._kernel
-
-    if len(topology.data) <= 2:
+    size = 2 * _count_nodes(data, datalen)
+    if size <= 2:
         raise ValueError("Only trees with more than 1 node supported")
 
-    names = np.full(len(topology.data), None, dtype=object)
-    lengths = np.zeros(len(topology.data), dtype=np.double)
-    edges = np.full(len(topology.data), 0, dtype=np.int32)
+    topology = np.empty(size, dtype=np.uint8)
+    names = np.full(size, None, dtype=object)
+    lengths = np.zeros(size, dtype=np.double)
+    edges = np.full(size, 0, dtype=np.int32)
 
-    ptr = 0
-    token_ptr = _ctoken(data, datalen, 0)
-    token = data[0:token_ptr]
-    last_token = None
-
-    # lag reflects the scenario where ((x))y, where the label y gets may end
-    # up being associated with an earlier unnamed vertex. lag represents the
-    # offset between the topology pointer and the token pointer effectively.
-    lag = 0
-    while token != ';':
-        if token == '(':
-            # an open parenthesis never has metadata associated with it
-            ptr += 1
-
-        if (token == ')' or token == ',') and last_token == ')':
-            # determine if there are unnamed/unlengthed nodes
-            lag += 1
-
-        elif token not in '(),:;':
-            ptr += lag
-            lag = 0
-
-            open_ptr = k.open(ptr)
-            _set_node_metadata(open_ptr, token, names, lengths, edges,
-                               convert_underscores)
-
-            if k.is_tip(ptr):
-                ptr += 2
-            else:
-                ptr += 1
-
-        last_token = token
+    # One pass over the tokens writes the parentheses and the node metadata
+    # together. Each '(' and ',' starts a child. A child that does not start
+    # with '(' is a tip, whether or not it has a label. A label belongs to the
+    # node it follows: the tip it starts, or the node closed by the ')' before
+    # it. ``stack`` holds the open position of every unclosed node, and
+    # ``last`` the node a label would belong to.
+    stack = []
+    ptr = last = 0
+    expect_child = True
+    token_ptr = 0
+    while True:
         tmp = _ctoken(data, datalen, token_ptr)
         token = data[token_ptr:tmp]
         token_ptr = tmp
+        if len(token) == 0:
+            raise ValueError("Newick does not appear terminated with a semicolon")
+        if token == ';':
+            break
 
-    topology.set_names(names)
-    topology.set_lengths(lengths)
-    topology.set_edges(edges)
+        if token == '(':
+            if not expect_child or ptr >= size:
+                raise ValueError("Newick does not describe a single tree")
+            topology[ptr] = 1
+            stack.append(ptr)
+            ptr += 1
+            continue
 
-    return topology
+        if expect_child and not token.isspace():
+            # a child that is not a '(' is a tip; a label starts it, and a ','
+            # or ')' ends a tip without one
+            if ptr + 2 > size:
+                raise ValueError("Newick does not describe a single tree")
+            topology[ptr] = 1
+            topology[ptr + 1] = 0
+            last = ptr
+            ptr += 2
+            expect_child = False
+
+        if token == ',':
+            if len(stack) == 0:
+                raise ValueError("Newick does not describe a single tree")
+            expect_child = True
+        elif token == ')':
+            if len(stack) == 0 or ptr >= size:
+                raise ValueError("Unbalanced parentheses in newick string")
+            topology[ptr] = 0
+            ptr += 1
+            last = stack.pop()
+        elif not token.isspace():
+            _set_node_metadata(last, token, names, lengths, edges,
+                               convert_underscores)
+
+    if len(stack) != 0 or ptr != size:
+        raise ValueError("Unbalanced parentheses in newick string")
+
+    return BPTree(topology, lengths, names, edges)
 
 
-cdef object _newick_to_bp(unicode data):
-    """Convert newick to balanced parentheses"""
+cdef Py_ssize_t _count_nodes(unicode data, Py_ssize_t datalen):
+    """Number of nodes in the first tree of a Newick string.
+
+    Each '(' outside quotes opens a node and starts its first child, and each
+    ',' starts another child. Every node but the root is a child.
+    """
     cdef:
-        Py_ssize_t i, topology_ptr, single_descendent
-        Py_UCS4 c, last_c
-        cnp.ndarray[cnp.uint8_t, ndim=1] topology
+        Py_ssize_t i, n = 1
+        bint in_quote = False
+        Py_UCS4 c
 
-    potential_single_descendant = False
-
-    topology = np.empty(len(data), dtype=np.uint8)
-    topology_ptr = 0
-    last_c = u'x'
-    in_quote = False
-
-    for i in range(len(data)):
+    for i in range(datalen):
         c = data[i]
         if c == u"'":
             in_quote = not in_quote
-        else:
-            if in_quote:
-                continue
-            elif c == u'(':
-                # opening of a node
-                topology[topology_ptr] = 1
-                topology_ptr += 1
-                last_c = c
-                potential_single_descendant = True
-            elif c == u')':
-                # closing of a node
-                if potential_single_descendant or last_c == u',':
-                    # we have a single descendant or a last child (i.e., ",)")
-                    topology[topology_ptr] = 1
-                    topology[topology_ptr + 1] = 0
-                    topology[topology_ptr + 2] = 0
-                    topology_ptr += 3
-                    potential_single_descendant = False
-                else:
-                    topology[topology_ptr] = 0
-                    topology_ptr += 1
-                last_c = c
-            elif c == u',':
-                if last_c != u')':
-                    # we have a new tip
-                    topology[topology_ptr] = 1
-                    topology[topology_ptr + 1] = 0
-                    topology_ptr += 2
-                potential_single_descendant = False
-                last_c = c
-            else:
-                # ignore non-structure
-                pass
+        elif in_quote:
+            continue
+        elif c == u'(' or c == u',':
+            n += 1
+        elif c == u';':
+            return n
 
-    return BPTree(topology[:topology_ptr])
+    if in_quote:
+        raise ValueError("Unbalanced quote in newick string")
+    return n
 
 
 cdef inline int _ccheck(Py_UCS4 c):
@@ -452,9 +459,7 @@ cdef inline int _ccheck(Py_UCS4 c):
 
 
 cdef inline int _is_quote(Py_UCS4 c):
-    if c == u'"':
-        return 1
-    elif c == u"'":
+    if c == u"'":
         return 1
     else:
         return 0
@@ -465,8 +470,8 @@ cdef inline Py_ssize_t _ctoken(unicode data, Py_ssize_t datalen, Py_ssize_t star
         Py_ssize_t idx, in_quote = 0
         Py_UCS4 c
 
-    if start == (datalen - 1):
-        return start + 1
+    if start >= (datalen - 1):
+        return datalen
 
     for idx in range(start, datalen):
         c = data[idx]
