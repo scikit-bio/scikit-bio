@@ -1302,6 +1302,69 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
                 bp.to_device(xp)
 
     @array_backends("numpy", "jax", "torch", "cupy")
+    def test_kernels_on_the_tree_gpu(self, xp, device):
+        # the index is uploaded to, and the kernels run on, the GPU of the
+        # tree's data, whichever device is current; queries on another GPU
+        # are rejected. With one GPU, the tree is made to report GPU 1, and
+        # the selection is recorded rather than made
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        host = self.host[2]
+        bp = self.on(xp, device, host)
+        if bp._gpu_module("numba") is None:
+            self.skipTest("no Numba GPU module for this device")
+        self.assertEqual(_gpu._device_index(bp.data), 0)
+        real = _gpu._device_index
+        selected = []
+
+        @contextlib.contextmanager
+        def record(gpu, index):
+            selected.append(index)
+            yield
+
+        def index(arr):
+            return 1 if arr is bp._array else real(arr)
+
+        with mock.patch('skbio.tree.bp._bp._device_index', index), \
+                mock.patch.object(_bp_gpu, '_device_index', index), \
+                mock.patch('skbio.tree.bp._bp._use_device', record), \
+                mock.patch.object(_bp_gpu, '_use_device', record):
+            i = np.flatnonzero(host.data)
+            npt.assert_array_equal(
+                bp.lca_batch(i, i[::-1].copy(), engine='numba'),
+                host.lca_batch(i, i[::-1].copy()))
+            npt.assert_array_equal(_to_numpy(bp.cophenet(engine='numba').data),
+                                   host.cophenet().data)
+            # queries on GPU 0 for a tree on GPU 1
+            queries = self.make_array(xp, device, i, dtype=xp.int64)
+            with self.assertRaisesRegex(ValueError, 'on GPU 0, but the tree'):
+                bp.lca_batch(queries, queries, engine='numba')
+        # the upload (once), the batch, and cophenet's matrix
+        self.assertTrue(selected)
+        self.assertEqual(set(selected), {1})
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_out_of_memory_recognized(self, xp, device):
+        # an allocation the device cannot hold, through the Numba GPU module
+        # and through the backend, raises an error told apart from a kernel
+        # that cannot run
+        name = _get_backend_name(xp)
+        if device in (None, "cpu") or name not in ("cupy", "torch"):
+            self.skipTest("needs a CuPy or PyTorch array on a GPU")
+        bp = self.on(xp, device, self.host[2])
+        gpu = bp._gpu_module("numba")
+        if gpu is None:
+            self.skipTest("no Numba GPU module for this device")
+        ns, dev = aac.array_namespace(bp.data), aac.device(bp.data)
+        huge = 1 << 42  # 4 TiB
+        for alloc in (lambda: gpu.device_array(huge, dtype=np.uint8),
+                      lambda: ns.empty(huge, dtype=ns.uint8, device=dev)):
+            with self.assertRaises(Exception) as cm:
+                alloc()
+            self.assertTrue(_gpu._out_of_memory(cm.exception), repr(cm.exception))
+
+    @array_backends("numpy", "jax", "torch", "cupy")
     def test_non_default_stream(self, xp, device):
         # queries made, cast and read on a stream of their own: PyTorch does
         # not tell Numba which stream produced a tensor, so the kernels must
@@ -1422,6 +1485,72 @@ class BPGPUFallbackTests(TestCase):
             obs = self.bp.cophenet(engine='numba')
         npt.assert_array_equal(obs.data, self.bp.cophenet(engine='cython').data)
 
+    def test_out_of_memory_keeps_the_gpu(self):
+        # a call that does not fit on the device is computed on the CPU, with a
+        # warning each time, and later calls still try the GPU
+        bp = self.bp
+        n = bp.data.size
+        i = np.arange(n)
+        j = i[::-1].copy()
+        exp = bp.lca_batch(i, j, engine='cython')
+        oom = Exception('[CUresult.CUDA_ERROR_OUT_OF_MEMORY: 2] Call to cuMemAlloc '
+                        'results in CUDA_ERROR_OUT_OF_MEMORY')
+        with mock.patch.object(_bp_gpu, 'tree_arrays'), \
+                mock.patch.object(_bp_gpu, 'run_batch', side_effect=oom) as run:
+            for _ in range(2):
+                with self.assertWarnsRegex(UserWarning, 'ran out of memory'):
+                    obs = bp.lca_batch(i, j, engine='numba')
+                npt.assert_array_equal(obs, exp)
+        self.assertEqual(run.call_count, 2)
+        self.assertNotIn(self.key, _gpu._unavailable)
+
+        exp = bp.cophenet(engine='cython').data
+        with mock.patch.object(_bp_gpu, 'tip_distances', side_effect=MemoryError):
+            with self.assertWarnsRegex(UserWarning, 'ran out of memory'):
+                obs = bp.cophenet(engine='numba')
+        npt.assert_array_equal(obs.data, exp)
+        self.assertNotIn(self.key, _gpu._unavailable)
+
+    def test_use_device(self):
+        # the tree's GPU is made current for the block; nothing for data on the
+        # host, or for a module without a list of devices
+        entered = []
+
+        class Device:
+            def __init__(self, k):
+                self.k = k
+
+            def __enter__(self):
+                entered.append(self.k)
+
+            def __exit__(self, *exc):
+                entered.append(-self.k - 1)
+
+        gpu = types.SimpleNamespace(gpus=[Device(0), Device(1)])
+        with _gpu._use_device(gpu, 1):
+            self.assertEqual(entered, [1])
+        self.assertEqual(entered, [1, -2])
+        for module, index in ((gpu, None), (types.SimpleNamespace(), 1)):
+            with _gpu._use_device(module, index):
+                pass
+        self.assertEqual(entered, [1, -2])
+        self.assertIsNone(_gpu._device_index(None))
+        self.assertIsNone(_gpu._device_index(np.zeros(2)))
+
+    def test_out_of_memory_recognized(self):
+        # as raised by CuPy, PyTorch, the Numba CUDA modules and HIP
+        for exc in (MemoryError('Out of memory allocating 40,000,000,000 bytes'),
+                    RuntimeError('CUDA out of memory. Tried to allocate 37.25 GiB.'),
+                    Exception('[CUresult.CUDA_ERROR_OUT_OF_MEMORY: 2] Call to '
+                              'cuMemAlloc results in CUDA_ERROR_OUT_OF_MEMORY'),
+                    Exception('hipErrorOutOfMemory')):
+            self.assertTrue(_gpu._out_of_memory(exc), exc)
+        # other failures disable the kernels, as before
+        for exc in (Exception('CUDA_ERROR_ILLEGAL_ADDRESS'),
+                    AttributeError("'broken' has no attribute 'jit'"),
+                    RuntimeError('CUDA_ERROR_NO_BINARY_FOR_GPU')):
+            self.assertFalse(_gpu._out_of_memory(exc), exc)
+
     def test_other_engines_stay_on_host(self):
         # the GPU is only reached for engine="numba"
         with warnings.catch_warnings():
@@ -1532,6 +1661,29 @@ class BPFastEngineTests(TestCase):
         self.assertIsNone(self.bp._gpu_module('numba'))
         exp = 'cython' if _bp_cy.OPENMP or not NUMBA_AVAILABLE else 'numba'
         self.assertEqual(self.bp._fast_engine(), exp)
+
+    def test_fast_resolved_only_when_asked(self):
+        # what "fast" resolves to is worked out only for engine="fast", once
+        # per call, however many kernels the call runs
+        bp = self.bp
+        with mock.patch.object(bp, '_fast_engine', return_value='cython') as fast:
+            bp.lca_batch([1, 2], [3, 4], engine='cython')
+            bp.cophenet(engine='cython')
+            self.assertEqual(fast.call_count, 0)
+            bp.lca_batch([1, 2], [3, 4], engine='fast')
+            self.assertEqual(fast.call_count, 1)
+            bp.cophenet(engine='fast')
+            self.assertEqual(fast.call_count, 2)
+
+    def test_gpu_module_probe_cached(self):
+        # an import that fails (a GPU extension that is not installed) is not
+        # attempted again on every call
+        probe = _gpu._available_module
+        probe.cache_clear()
+        with mock.patch('builtins.__import__', side_effect=ImportError) as imp:
+            self.assertIsNone(probe('skbio_no_such_gpu_package', 'cuda'))
+            self.assertIsNone(probe('skbio_no_such_gpu_package', 'cuda'))
+        self.assertEqual(imp.call_count, 1)
 
     def test_fast_runs_the_chosen_engine(self):
         bp = self.bp

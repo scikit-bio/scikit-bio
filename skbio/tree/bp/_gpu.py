@@ -16,6 +16,8 @@ and a correctness-first fallback to the CPU engines whenever a kernel is
 unavailable or fails to build on the running stack.
 """
 
+from contextlib import contextmanager
+from functools import lru_cache
 from warnings import warn
 
 import array_api_compat as _aac
@@ -79,8 +81,14 @@ def _numba_gpu_module_for(arr):
     return _available_module("numba", want)
 
 
+@lru_cache(maxsize=None)
 def _available_module(package, name):
-    """Return ``package.name`` if it imports and reports a usable GPU, else None."""
+    """Return ``package.name`` if it imports and reports a usable GPU, else None.
+
+    Cached, as what is installed does not change within a process: an import
+    that fails, e.g. of a GPU extension that is not installed, is otherwise
+    attempted again on every batch call.
+    """
     try:
         mod = getattr(__import__(package, fromlist=[name]), name)
     except Exception:
@@ -124,6 +132,48 @@ def _sync_stream(arr):
             cupy.cuda.get_current_stream().synchronize()
 
 
+def _device_index(arr):
+    """The index of the GPU holding ``arr``, or None if it is not on a GPU.
+
+    For a CuPy array or a PyTorch tensor on a CUDA or ROCm device. A PyTorch
+    tensor on ``"cuda"``, with no index, is on PyTorch's current device.
+    """
+    if arr is None or not hasattr(arr, "__cuda_array_interface__"):
+        return None
+    try:
+        name = _get_backend_name(_aac.array_namespace(arr))
+    except TypeError:
+        return None
+    if name == "cupy":
+        return arr.device.id
+    if name == "torch":
+        index = arr.device.index
+        if index is None:
+            import torch
+
+            index = torch.cuda.current_device()
+        return index
+    return None
+
+
+@contextmanager
+def _use_device(gpu, index):
+    """Make GPU ``index`` the current device of the Numba GPU module ``gpu``.
+
+    The module uploads arrays to, and launches kernels on, its current device:
+    device 0 unless selected. A tree's arrays and kernels must be on the GPU
+    of its data, and its queries on that GPU too. Nothing is selected for an
+    index of None (data on the host), or for a module without the ``gpus``
+    list of devices.
+    """
+    gpus = getattr(gpu, "gpus", None)
+    if index is None or gpus is None:
+        yield
+        return
+    with gpus[index]:
+        yield
+
+
 def _mark_gpu_unavailable(arr):
     """Record that ``arr``'s backend cannot run the BPTree kernels this process.
 
@@ -140,6 +190,34 @@ def _mark_gpu_unavailable(arr):
             "this system; using the CPU engines instead.",
             UserWarning,
         )
+
+
+def _out_of_memory(exc):
+    """Whether ``exc`` reports that a GPU ran out of memory.
+
+    CuPy raises a ``MemoryError``, PyTorch a ``torch.OutOfMemoryError`` ("CUDA
+    out of memory"), and the Numba GPU modules a driver error naming
+    ``CUDA_ERROR_OUT_OF_MEMORY`` (``hipErrorOutOfMemory`` on ROCm). Matched by
+    message, as each library raises its own class.
+    """
+    if isinstance(exc, MemoryError):
+        return True
+    return "outofmemory" in "".join(str(exc).replace("_", " ").lower().split())
+
+
+def _warn_out_of_memory(arr):
+    """Warn that one call did not fit in the memory of ``arr``'s device.
+
+    Unlike a kernel that cannot run (see :func:`_mark_gpu_unavailable`), this
+    is a property of the call, e.g. a batch larger than the free memory: that
+    call is computed on the CPU, and later calls still use the GPU.
+    """
+    name = _get_backend_name(_aac.array_namespace(arr))
+    warn(
+        f"The GPU of the '{name}' backend ran out of memory for this BPTree "
+        "operation; computing it on the CPU instead.",
+        UserWarning,
+    )
 
 
 def _get_kernel(cache, builder, gpu, backend_name):

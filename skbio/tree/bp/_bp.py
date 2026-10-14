@@ -19,14 +19,21 @@ import numpy as np
 import array_api_compat as aac
 
 from skbio._base import SkbioObject
-from skbio._config import _resolve_engine
+from skbio._config import _resolve_engine, get_config
 from skbio.io.descriptors import Read, Write
 from skbio.stats.distance import DistanceMatrix
 from skbio.tree._exception import DuplicateNodeError, MissingNodeError
 from skbio.util._array import _get_backend_name, _to_numpy
 
 from . import _bp_cy, _bp_gpu, _bp_numba
-from ._gpu import _mark_gpu_unavailable, _numba_gpu_module_for
+from ._gpu import (
+    _device_index,
+    _mark_gpu_unavailable,
+    _numba_gpu_module_for,
+    _out_of_memory,
+    _use_device,
+    _warn_out_of_memory,
+)
 from ._bp_cy import _BPKernel
 from ._bp_numba import NUMBA_AVAILABLE
 
@@ -240,7 +247,10 @@ class BPTree(SkbioObject):
       and a Numba GPU extension for it is installed (numba-cuda-mlir, or the
       deprecated numba-cuda, on CUDA; numba-hip on ROCm). Otherwise, or if the GPU
       kernel cannot be built on the system (which is warned about once), they
-      run on the host.
+      run on the host. A call that runs out of device memory runs on the host,
+      with a warning, and later calls still run on the GPU.
+    - On a GPU, they run on the device of ``data``, whichever device is current;
+      queries on another GPU raise a :class:`ValueError`.
     - The batch operations return their result in the array backend and on
       the device of their queries, and :meth:`cophenet` a distance matrix in
       those of ``data``.
@@ -1330,9 +1340,18 @@ class BPTree(SkbioObject):
     # Batch operations (computed by the selected engine)
     # ------------------------------------------------------------------
 
+    def _engine(self, engine):
+        """The compute engine to run on: ``engine`` resolved, as by its callers.
+
+        What ``"fast"`` resolves to is worked out only when it is asked for.
+        """
+        if engine is None:
+            engine = get_config("compute_engine")
+        fast = self._fast_engine() if engine == "fast" else None
+        return _resolve_engine(engine, _ENGINES, fast=fast)
+
     def _run(self, kernel, engine, *args):
-        """Run a batch kernel of the selected compute engine on this tree."""
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        """Run a batch kernel of a resolved compute engine on this tree."""
         if engine == "numba":
             return getattr(_bp_numba, kernel)(_bp_numba.bp_arrays(self), *args)
         return getattr(_bp_cy, kernel)(self._kernel, *args)
@@ -1416,10 +1435,18 @@ class BPTree(SkbioObject):
         place and host queries are uploaded; otherwise the queries are computed
         on the host, from a copy if they are on a device.
         """
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        engine = self._engine(engine)
         shape, args, xp, device = self._queries(positions, levels)
         gpu = self._gpu_module(engine)
         if gpu is not None:
+            # the kernel runs on the GPU of the tree, where queries on a GPU
+            # must be too
+            index = _device_index(self._array)
+            if xp is not None and _device_index(args[0]) not in (None, index):
+                raise ValueError(
+                    "The queries are on GPU %d, but the tree is on GPU %d."
+                    % (_device_index(args[0]), index)
+                )
             # the result goes straight into an array of the queries' backend if
             # that is on the device too
             out = None
@@ -1428,18 +1455,24 @@ class BPTree(SkbioObject):
                 if not hasattr(out, "__cuda_array_interface__"):
                     out = None
             try:
-                res = _bp_gpu.run_batch(
-                    gpu,
-                    _get_backend_name(aac.array_namespace(self._array)),
-                    _bp_gpu.tree_arrays(gpu, self),
-                    kernel,
-                    args,
-                    out,
-                )
-            except Exception:
-                # the kernel could not build or run on this stack: warn once
-                # and compute this and later calls on the CPU
-                _mark_gpu_unavailable(self._array)
+                with _use_device(gpu, index):
+                    res = _bp_gpu.run_batch(
+                        gpu,
+                        _get_backend_name(aac.array_namespace(self._array)),
+                        _bp_gpu.tree_arrays(gpu, self),
+                        kernel,
+                        args,
+                        out,
+                    )
+            except Exception as exc:
+                if _out_of_memory(exc):
+                    # this call does not fit on the device: compute it on the
+                    # CPU, and later calls still on the GPU
+                    _warn_out_of_memory(self._array)
+                else:
+                    # the kernel could not build or run on this stack: warn
+                    # once and compute this and later calls on the CPU
+                    _mark_gpu_unavailable(self._array)
             else:
                 if xp is None:
                     return res.reshape(shape)
@@ -1668,7 +1701,7 @@ class BPTree(SkbioObject):
         xp, device = self._xp, self._device
         # resolved before the early return below, so an unsupported or
         # unavailable engine is rejected whatever the number of tips
-        engine = _resolve_engine(engine, _ENGINES, fast=self._fast_engine())
+        engine = self._engine(engine)
         if tips.size < 2:
             # no pairs; an empty condensed vector would expand to 1 x 1
             matrix = np.zeros((tips.size, tips.size))
@@ -1713,9 +1746,10 @@ class BPTree(SkbioObject):
         """The cophenetic matrix computed on the tree's device, or None.
 
         None if the kernel cannot build or run, after which the caller (and
-        every later call) computes on the CPU. The matrix is allocated by the
-        tree's array backend; failing that (e.g. out of device memory) raises
-        a :class:`MemoryError` rather than falling back.
+        every later call) computes on the CPU, or if the call runs out of
+        device memory, after which only this call does. The matrix is
+        allocated by the tree's array backend; failing that (e.g. out of
+        device memory) raises a :class:`MemoryError` rather than falling back.
         """
         n = tips.shape[0]
         xp, device = self._xp, self._device
@@ -1733,19 +1767,23 @@ class BPTree(SkbioObject):
         selected[tips] = 1
         begin = np.cumsum(selected) - selected
         try:
-            matrix = _bp_gpu.tip_distances(
-                gpu,
-                _get_backend_name(aac.array_namespace(self._array)),
-                tips,
-                slot,
-                parent,
-                begin,
-                end,
-                dist,
-                out,
-            )
-        except Exception:
-            _mark_gpu_unavailable(self._array)
+            with _use_device(gpu, _device_index(self._array)):
+                matrix = _bp_gpu.tip_distances(
+                    gpu,
+                    _get_backend_name(aac.array_namespace(self._array)),
+                    tips,
+                    slot,
+                    parent,
+                    begin,
+                    end,
+                    dist,
+                    out,
+                )
+        except Exception as exc:
+            if _out_of_memory(exc):
+                _warn_out_of_memory(self._array)
+            else:
+                _mark_gpu_unavailable(self._array)
             return None
         if out is None and xp is not None:
             matrix = xp.asarray(matrix, device=device)
@@ -1860,8 +1898,9 @@ class BPTree(SkbioObject):
         ----------
         gpu : module, optional
             A Numba GPU module (``numba_cuda_mlir.cuda`` or ``numba.cuda`` on
-            NVIDIA, ``numba.hip`` on AMD) to place the arrays on that module's
-            current device. By default they stay on the host, for CPU code.
+            NVIDIA, ``numba.hip`` on AMD) to place the arrays on a GPU: that of
+            the tree's data if it is on one, else the module's current device.
+            By default they stay on the host, for CPU code.
 
         Returns
         -------
