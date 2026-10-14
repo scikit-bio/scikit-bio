@@ -643,17 +643,19 @@ def kempton_taylor_q(counts, lower_quantile=0.25, upper_quantile=0.75):
 
     """
     if not 0 <= lower_quantile < upper_quantile <= 1:
-        raise ValueError("Quantiles must satisfy 0 <= lower_quantile < "
-                         "upper_quantile <= 1.")
+        raise ValueError(
+            "Quantiles must satisfy 0 <= lower_quantile < upper_quantile <= 1."
+        )
     S = counts.size
     lower = int(np.ceil(S * lower_quantile))
     upper = min(S - 1, int(S * upper_quantile))
     if lower >= upper:
         return np.nan
     sorted_counts = np.sort(counts)
-    if sorted_counts[lower] == sorted_counts[upper]:
+    denom = np.log(sorted_counts[upper] / sorted_counts[lower])
+    if denom == 0:
         return np.nan
-    return (upper - lower) / np.log(sorted_counts[upper] / sorted_counts[lower])
+    return (upper - lower) / denom
 
 
 def inv_simpson(counts, finite=False):
