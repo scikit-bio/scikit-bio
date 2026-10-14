@@ -344,8 +344,13 @@ _GPU_SCRIPT = textwrap.dedent("""
             out[t, 6] = gnav.minselect(T, i, j, 1)
             out[t, 7] = gnav.minselect(T, i, j, 2)
 
+    # the expected values from the BPTree methods, which the CPU tests check
+    # against the CPU functions, so that these need no compiling here; but
+    # mincount and minselect, whose methods give no -1 for a missing result
     def call(T, entry, *args):
-        return int(getattr(nav, entry[0])(T, *args, *entry[1:]))
+        if entry[0] in ("mincount", "minselect"):
+            return int(getattr(nav, entry[0])(T, *args, *entry[1:]))
+        return int(getattr(bp, entry[0])(*args, *entry[1:]))
 
     Th = bp.numba_arrays()
     n = Th.size
@@ -358,15 +363,23 @@ _GPU_SCRIPT = textwrap.dedent("""
     obs = out.copy_to_host()
     for t, i in enumerate(idx.tolist()):
         exp = [call(Th, e, i) for e in one]
-        exp += [int(nav.root(Th)), int(nav.preorder_select(Th, int(ks[t]))),
-                int(nav.postorder_select(Th, int(ks[t])))]
+        exp += [int(bp.root()), int(bp.preorder_select(int(ks[t]))),
+                int(bp.postorder_select(int(ks[t])))]
         assert obs[t].tolist() == exp, (i, obs[t].tolist(), exp)
 
-    # the same ranks as unsigned 64-bit integers give the same nodes
-    out64 = cuda.device_array((idx.size, 21), dtype=np.intp)
-    nodes[(idx.size + 127) // 128, 128](T, cuda.to_device(idx),
-                                        cuda.to_device(ks.astype(np.uint64)), out64)
-    assert (out64.copy_to_host()[:, 19:] == obs[:, 19:]).all()
+    # the same ranks as unsigned 64-bit integers give the same nodes, in a
+    # kernel of their own: compiling nodes again for them takes far longer
+    @cuda.jit
+    def selects(T, ks, out):
+        t = cuda.grid(1)
+        if t < ks.shape[0]:
+            out[t, 0] = gnav.preorder_select(T, ks[t])
+            out[t, 1] = gnav.postorder_select(T, ks[t])
+
+    out64 = cuda.device_array((idx.size, 2), dtype=np.intp)
+    selects[(idx.size + 127) // 128, 128](T, cuda.to_device(ks.astype(np.uint64)),
+                                          out64)
+    assert (out64.copy_to_host() == obs[:, 19:]).all()
 
     ij = np.sort(rng.integers(0, n, (300, 2)), axis=1)
     ij = np.concatenate([ij, [[-1, 3], [3, n], [-1, n], [-n, -1]]])
@@ -398,11 +411,12 @@ class GPUNavigationTests(TestCase, ArrayAPITestMixin):
     @array_backends("jax", "torch", "cupy")
     def test_device(self, xp, device):
         # on a real GPU (the GPU workflow), through the Numba GPU module that
-        # BPTree's dispatch chooses for the device. JAX has no Numba GPU path
-        # and is skipped; it is listed because the harness errors on a GPU lane
-        # that runs no backend.
-        if device == "cpu" or _get_backend_name(xp) == "jax":
-            self.skipTest("needs a device-resident CuPy or PyTorch array")
+        # BPTree's dispatch chooses for the device. The script takes no arrays
+        # of the backend, so it runs on the CuPy lanes only, once per Numba
+        # GPU module. PyTorch and JAX are listed because the harness errors on
+        # a GPU lane that runs no backend.
+        if device == "cpu" or _get_backend_name(xp) != "cupy":
+            self.skipTest("runs on a device-resident CuPy array only")
         gpu = _gpu._numba_gpu_module_for(self.make_array(xp, device, np.zeros(2)))
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s: is "
                              "numba-cuda-mlir (or numba-cuda) installed?"

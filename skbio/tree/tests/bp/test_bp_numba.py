@@ -453,10 +453,12 @@ class GPUPrimitiveTests(TestCase, ArrayAPITestMixin):
     def test_device(self, xp, device):
         # on a real GPU (the GPU workflow), through the Numba GPU module that
         # BPTree's dispatch chooses for the device; a GPU it cannot use then
-        # fails rather than skips. JAX has no Numba GPU path and is skipped; it
-        # is listed because the harness errors on a GPU lane that runs no backend.
-        if device == "cpu" or _get_backend_name(xp) == "jax":
-            self.skipTest("needs a device-resident CuPy or PyTorch array")
+        # fails rather than skips. The script takes no arrays of the backend, so
+        # it runs on the CuPy lanes only, once per Numba GPU module. PyTorch and
+        # JAX are listed because the harness errors on a GPU lane that runs no
+        # backend.
+        if device == "cpu" or _get_backend_name(xp) != "cupy":
+            self.skipTest("runs on a device-resident CuPy array only")
         gpu = _gpu._numba_gpu_module_for(self.make_array(xp, device, np.zeros(2)))
         self.assertIsNotNone(gpu, "No Numba GPU module for %s on %s: is "
                              "numba-cuda-mlir (or numba-cuda) installed?"
