@@ -220,9 +220,8 @@ def dirmult_ttest(
           of the per-draw *p*-values across all posterior draws.
 
         - ``qvalue``: Corrected *p*-value of Welch's *t*-test for multiple comparisons.
-          The reported value is the result of a single multiple testing correction
-          applied to the average of the per-draw *p*-values across all posterior
-          draws.
+          The reported value is the result of a single correction applied to the average
+          per-draw *p*-values across all posterior draws.
 
         - ``Signif``: Whether feature is significantly differentially abundant between
           the treatment and reference groups. A feature marked as "True" suffice: 1)
@@ -564,8 +563,8 @@ def dirmult_lme(
           draws.
 
         - ``qvalue``: Corrected *p*-value of the linear mixed effects model for multiple
-          comparisons. The reported value is the average of all of the *q*-values
-          computed from each of the posterior draws.
+          comparisons. The reported value is the result of a single correction applied
+          to the average per-draw *p*-values across all posterior draws.
 
         - ``Signif``: Whether the covariate category is significantly differentially
           abundant from the reference category. A feature-covariate pair marked as
